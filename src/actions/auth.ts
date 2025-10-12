@@ -80,9 +80,11 @@ export async function signUp(
       };
     }
 
+    const rawEmail = (formData.get('email') as string | null) ?? '';
+    const email = rawEmail.trim().toLowerCase();
     const data = {
-      email: formData.get('email') as string,
-      password: formData.get('password') as string,
+      email,
+      password: (formData.get('password') as string | null) ?? '',
     };
 
     const result = signUpSchema.safeParse(data);
@@ -103,7 +105,7 @@ export async function signUp(
 
     const supabase = await createClient();
 
-    const { error } = await supabase.auth.signUp({
+    const { data: signUpResult, error } = await supabase.auth.signUp({
       email: result.data.email,
       password: result.data.password,
       options: {
@@ -121,6 +123,16 @@ export async function signUp(
 
       return {
         error: error.message || 'We could not sign you up. Please try again.',
+        success: false,
+      };
+    }
+
+    const identities = signUpResult.user?.identities ?? [];
+    if (identities.length === 0) {
+      await resendVerificationEmail(supabase, result.data.email, siteUrl);
+      return {
+        error:
+          'An account with this email already exists. We just sent a fresh verification link to your inbox.',
         success: false,
       };
     }
@@ -152,9 +164,12 @@ export async function signIn(
     return { error: 'Too many login attempts. Please wait a moment and try again.' };
   }
 
+  const rawEmail = (formData.get('email') as string | null) ?? '';
+  const email = rawEmail.trim().toLowerCase();
+  const password = (formData.get('password') as string | null) ?? '';
   const data = {
-    email: formData.get('email') as string,
-    password: formData.get('password') as string,
+    email,
+    password,
   };
 
   const result = signInSchema.safeParse(data);
@@ -167,7 +182,11 @@ export async function signIn(
   const { error } = await supabase.auth.signInWithPassword(result.data);
 
   if (error) {
-    return { error: mapSupabaseSignInError(error) };
+    const siteUrl = resolveSiteUrl(headersList);
+    if (isEmailNotConfirmedError(error) && siteUrl) {
+      await resendVerificationEmail(supabase, email, siteUrl);
+    }
+    return { error: mapSupabaseSignInError(error, email) };
   }
 
   revalidatePath('/', 'layout');
@@ -176,13 +195,23 @@ export async function signIn(
   return { error: null };
 }
 
-function mapSupabaseSignInError(error: AuthError): string {
+function isEmailNotConfirmedError(error: AuthError): boolean {
+  return (
+    error.message === 'Email not confirmed' ||
+    /confirm/gi.test(error.message) ||
+    error.status === 422
+  );
+}
+
+function mapSupabaseSignInError(error: AuthError, email?: string): string {
   if (error.status === 400 || error.status === 401) {
     return 'Email or password is incorrect.';
   }
 
-  if (error.status === 422 || /confirm/gi.test(error.message)) {
-    return 'Please verify your email before logging in. Check your inbox for the verification link.';
+  if (isEmailNotConfirmedError(error)) {
+    const messagePrefix =
+      'Please verify your email before logging in. Check your inbox for the verification link';
+    return email ? `${messagePrefix} we just re-sent to ${email}.` : `${messagePrefix}.`;
   }
 
   switch (error.message) {
@@ -190,9 +219,29 @@ function mapSupabaseSignInError(error: AuthError): string {
     case 'Invalid email or password':
       return 'Email or password is incorrect.';
     case 'Email not confirmed':
-      return 'Please verify your email before logging in. Check your inbox for the verification link.';
+      return email
+        ? `Please verify your email before logging in. Check your inbox for the verification link we just re-sent to ${email}.`
+        : 'Please verify your email before logging in. Check your inbox for the verification link.';
     default:
       return 'We could not log you in. Please try again or reset your password.';
+  }
+}
+
+async function resendVerificationEmail(
+  supabase: ReturnType<typeof createClient>,
+  email: string,
+  siteUrl: string
+) {
+  try {
+    await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: {
+        emailRedirectTo: `${siteUrl}/auth/callback`,
+      },
+    });
+  } catch (resendError) {
+    console.error('Failed to resend verification email:', resendError);
   }
 }
 
