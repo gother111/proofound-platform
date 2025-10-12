@@ -2,14 +2,18 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema';
 
-const connectionString = process.env.NEXT_PUBLIC_SUPABASE_DB_URL || process.env.DATABASE_URL;
+const connectionString = process.env.DATABASE_URL;
 
 if (!connectionString) {
-  throw new Error('Missing database connection string. Set NEXT_PUBLIC_SUPABASE_DB_URL.');
+  throw new Error('Missing DATABASE_URL environment variable.');
 }
 
-// For migrations and queries
-const queryClient = postgres(connectionString);
+const queryClient = postgres(connectionString, {
+  idle_timeout: 10,
+  max_lifetime: 60 * 30,
+  ssl: 'require',
+});
+
 export const db = drizzle(queryClient, { schema });
 
 export * from './schema';
