@@ -26,7 +26,7 @@ const resetPasswordSchema = z.object({
   email: z.string().email(),
 });
 
-const oauthProviderSchema = z.enum(['google', 'apple']);
+const oauthProviderSchema = z.enum(['google']);
 
 export type SignUpState = {
   error: string | null;
