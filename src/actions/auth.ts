@@ -177,23 +177,27 @@ export async function signIn(
 }
 
 function mapSupabaseSignInError(error: AuthError): string {
-  if (error.status === 400 || error.status === 401) {
-    return 'Email or password is incorrect.';
-  }
+  const message = error.message ?? '';
+  const normalizedMessage = message.toLowerCase();
 
-  if (error.status === 422 || /confirm/gi.test(error.message)) {
+  if (
+    normalizedMessage.includes('email not confirmed') ||
+    normalizedMessage.includes('confirm your email') ||
+    error.status === 422
+  ) {
     return 'Please verify your email before logging in. Check your inbox for the verification link.';
   }
 
-  switch (error.message) {
-    case 'Invalid login credentials':
-    case 'Invalid email or password':
-      return 'Email or password is incorrect.';
-    case 'Email not confirmed':
-      return 'Please verify your email before logging in. Check your inbox for the verification link.';
-    default:
-      return 'We could not log you in. Please try again or reset your password.';
+  if (
+    normalizedMessage.includes('invalid login credentials') ||
+    normalizedMessage.includes('invalid email or password') ||
+    error.status === 400 ||
+    error.status === 401
+  ) {
+    return 'Email or password is incorrect.';
   }
+
+  return 'We could not log you in. Please try again or reset your password.';
 }
 
 export async function signOut() {
@@ -285,41 +289,49 @@ export async function signInWithOAuth(
   _prevState: OAuthState | undefined,
   formData: FormData
 ): Promise<OAuthState> {
-  const provider = formData.get('provider');
-  const result = oauthProviderSchema.safeParse(provider);
+  try {
+    const provider = formData.get('provider');
+    const result = oauthProviderSchema.safeParse(provider);
 
-  if (!result.success) {
-    return { error: 'Unsupported sign-in provider.' };
-  }
+    if (!result.success) {
+      return { error: 'Unsupported sign-in provider.' };
+    }
 
-  const headersList = await headers();
-  const siteUrl = resolveSiteUrl(headersList);
+    const headersList = await headers();
+    const siteUrl = resolveSiteUrl(headersList);
 
-  if (!siteUrl) {
-    return { error: 'Unable to start the sign-in flow. Please try again later.' };
-  }
+    if (!siteUrl) {
+      return { error: 'Unable to start the sign-in flow. Please try again later.' };
+    }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: result.data,
-    options: {
-      redirectTo: `${siteUrl}/auth/callback`,
-    },
-  });
+    const supabase = await createClient();
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: result.data,
+      options: {
+        redirectTo: `${siteUrl}/auth/callback`,
+      },
+    });
 
-  if (error) {
-    if (/not enabled/i.test(error.message)) {
-      return {
-        error: 'This sign-in provider is not available. Please use email and password instead.',
-      };
+    if (error) {
+      const message = error.message ?? '';
+
+      if (/not enabled|not available|signups not allowed/i.test(message)) {
+        return {
+          error: 'This sign-in provider is not available. Please use email and password instead.',
+        };
+      }
+
+      return { error: 'We could not start the sign-in flow. Please try again.' };
+    }
+
+    if (data?.url) {
+      redirect(data.url);
     }
 
     return { error: 'We could not start the sign-in flow. Please try again.' };
+  } catch (_error) {
+    return {
+      error: 'We could not start the sign-in flow. Please try again later.',
+    };
   }
-
-  if (data?.url) {
-    redirect(data.url);
-  }
-
-  return { error: 'We could not start the sign-in flow. Please try again.' };
 }
