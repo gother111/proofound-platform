@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { checkRateLimit, getRateLimitIdentifier } from '@/lib/rate-limit';
 import { headers } from 'next/headers';
+import type { AuthError } from '@supabase/supabase-js';
 
 const signUpSchema = z.object({
   email: z.string().email(),
@@ -16,6 +17,10 @@ const signInSchema = z.object({
   email: z.string().email(),
   password: z.string(),
 });
+
+export type SignInState = {
+  error: string | null;
+};
 
 const resetPasswordSchema = z.object({
   email: z.string().email(),
@@ -60,14 +65,17 @@ export async function signUp(formData: FormData) {
   return { success: true };
 }
 
-export async function signIn(formData: FormData) {
+export async function signIn(
+  _prevState: SignInState | undefined,
+  formData: FormData
+): Promise<SignInState> {
   const headersList = await headers();
   const ip = headersList.get('x-forwarded-for') || 'unknown';
   const identifier = getRateLimitIdentifier(ip);
 
   const allowed = await checkRateLimit(identifier, 'signin');
   if (!allowed) {
-    return { error: 'Too many requests. Please try again later.' };
+    return { error: 'Too many login attempts. Please wait a moment and try again.' };
   }
 
   const data = {
@@ -77,7 +85,7 @@ export async function signIn(formData: FormData) {
 
   const result = signInSchema.safeParse(data);
   if (!result.success) {
-    return { error: 'Invalid email or password' };
+    return { error: 'Enter a valid email address and password.' };
   }
 
   const supabase = await createClient();
@@ -85,11 +93,33 @@ export async function signIn(formData: FormData) {
   const { error } = await supabase.auth.signInWithPassword(result.data);
 
   if (error) {
-    return { error: error.message };
+    return { error: mapSupabaseSignInError(error) };
   }
 
   revalidatePath('/', 'layout');
   redirect('/app/i/home');
+
+  return { error: null };
+}
+
+function mapSupabaseSignInError(error: AuthError): string {
+  if (error.status === 400 || error.status === 401) {
+    return 'Email or password is incorrect.';
+  }
+
+  if (error.status === 422 || /confirm/gi.test(error.message)) {
+    return 'Please verify your email before logging in. Check your inbox for the verification link.';
+  }
+
+  switch (error.message) {
+    case 'Invalid login credentials':
+    case 'Invalid email or password':
+      return 'Email or password is incorrect.';
+    case 'Email not confirmed':
+      return 'Please verify your email before logging in. Check your inbox for the verification link.';
+    default:
+      return 'We could not log you in. Please try again or reset your password.';
+  }
 }
 
 export async function signOut() {

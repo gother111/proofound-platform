@@ -1,18 +1,50 @@
-import { signIn } from '@/actions/auth';
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import { useFormState, useFormStatus } from 'react-dom';
+import { signIn, type SignInState } from '@/actions/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import Link from 'next/link';
+
+const initialState: SignInState = {
+  error: null,
+};
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button type="submit" className="w-full" disabled={pending}>
+      {pending ? 'Logging in...' : 'Log in'}
+    </Button>
+  );
+}
 
 export default function LoginPage() {
+  const [state, formAction] = useFormState(signIn, initialState);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-secondary-100 px-4">
       <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg">
         <h1 className="text-3xl font-display font-semibold text-primary-500 mb-2">Welcome back</h1>
-        <p className="text-neutral-dark-600 mb-8">Log in to your Proofound account</p>
+        <p className="text-neutral-dark-600 mb-6">Log in to your Proofound account</p>
 
-        <form action={signIn as any} className="space-y-6">
-          <div>
+        {state.error && (
+          <div
+            id="login-error"
+            role="alert"
+            className="mb-6 rounded-xl border border-error/30 bg-error/10 px-4 py-3 text-sm text-error"
+          >
+            {state.error}
+          </div>
+        )}
+
+        <form action={formAction} className="space-y-6">
+          <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
@@ -21,10 +53,13 @@ export default function LoginPage() {
               required
               autoComplete="email"
               placeholder="you@example.com"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              aria-describedby={state.error ? 'login-error' : undefined}
             />
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
             <Input
               id="password"
@@ -33,12 +68,12 @@ export default function LoginPage() {
               required
               autoComplete="current-password"
               placeholder="••••••••"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
             />
           </div>
 
-          <Button type="submit" className="w-full">
-            Log in
-          </Button>
+          <SubmitButton />
         </form>
 
         <div className="mt-6 text-center">
