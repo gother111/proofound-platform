@@ -24,19 +24,19 @@ function ConfirmResetPasswordForm() {
   const [isAuthenticating, setIsAuthenticating] = useState(true);
 
   useEffect(() => {
-    const code = searchParams.get('code');
+    const codeParam = searchParams.get('code');
 
-    if (!code) {
+    if (!codeParam) {
       setIsAuthenticating(false);
       return;
     }
 
     let isMounted = true;
 
-    async function exchangeCode() {
+    async function exchangeCode(currentCode: string) {
       try {
         const supabase = createClient();
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        const { error } = await supabase.auth.exchangeCodeForSession(currentCode);
 
         if (!isMounted) {
           return;
@@ -58,7 +58,7 @@ function ConfirmResetPasswordForm() {
       }
     }
 
-    exchangeCode();
+    exchangeCode(codeParam);
 
     return () => {
       isMounted = false;
