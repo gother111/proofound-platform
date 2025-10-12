@@ -1,120 +1,314 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { User, Building2, Shield, Users, CheckCircle, ArrowRight } from 'lucide-react';
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-secondary-100">
+    <div className="min-h-screen bg-gradient-to-b from-secondary-100 to-white">
       {/* Hero Section */}
-      <div className="container mx-auto px-4 py-20 text-center">
-        <h1 className="text-5xl md:text-6xl font-display font-semibold text-primary-500 mb-6">
-          Proofound
-        </h1>
-        <p className="text-2xl md:text-3xl font-display text-neutral-dark-700 mb-4">
-          Focus on what matters
-        </p>
-        <p className="text-lg text-neutral-dark-500 max-w-2xl mx-auto mb-12">
-          A credibility and connection platform built for authenticity, not algorithms.
-        </p>
-        <div className="flex gap-4 justify-center">
-          <Button asChild size="lg">
-            <Link href="/signup">Join Proofound</Link>
-          </Button>
-          <Button asChild variant="outline" size="lg">
-            <Link href="/login">Log in</Link>
-          </Button>
-        </div>
-      </div>
-
-      {/* Problem Section */}
-      <section className="container mx-auto px-4 py-20">
-        <h2 className="text-3xl font-display font-semibold text-center text-primary-500 mb-8">
-          The Problem
-        </h2>
-        <p className="text-lg text-center text-neutral-dark-600 max-w-3xl mx-auto mb-12">
-          Professional profiles have become cluttered, biased, and exhausting.
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
-          {[
-            'Signal lost in noise',
-            'Credential inflation',
-            'Wasted time verifying',
-            'Mental health toll',
-          ].map((item) => (
-            <div key={item} className="bg-white p-6 rounded-xl shadow-sm">
-              <p className="text-neutral-dark-700 font-medium">{item}</p>
-            </div>
-          ))}
+      <section className="container mx-auto px-4 py-20 md:py-32">
+        <div className="max-w-4xl mx-auto text-center">
+          <h1 className="text-5xl md:text-6xl font-display font-semibold text-primary-500 mb-6">
+            Proofound
+          </h1>
+          <p className="text-xl md:text-2xl text-neutral-dark-600 mb-4">
+            Credibility you can trust. Connections that matter.
+          </p>
+          <p className="text-lg text-neutral-dark-500 mb-8 max-w-2xl mx-auto">
+            A platform that puts proof first—where credentials are verified, achievements are
+            authentic, and professional relationships are built on trust.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button asChild size="lg" className="text-lg px-8">
+              <Link href="/signup">Get Started</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="text-lg px-8">
+              <Link href="/login">Sign In</Link>
+            </Button>
+          </div>
         </div>
       </section>
 
-      {/* Solution Section */}
-      <section className="container mx-auto px-4 py-20">
-        <h2 className="text-3xl font-display font-semibold text-center text-primary-500 mb-4">
-          Proof-first Profiles
-        </h2>
-        <p className="text-xl text-center text-neutral-dark-600 max-w-2xl mx-auto mb-16">
-          Show your work. Build trust. Connect with purpose.
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          <div className="bg-primary-50 p-8 rounded-xl">
-            <h3 className="text-2xl font-display font-medium text-primary-700 mb-4">
-              For Individuals
-            </h3>
-            <p className="text-neutral-dark-600">
-              Build a credible profile backed by verifiable achievements.
-            </p>
-          </div>
-          <div className="bg-accent-50 p-8 rounded-xl">
-            <h3 className="text-2xl font-display font-medium text-accent-700 mb-4">
-              For Organizations
-            </h3>
-            <p className="text-neutral-dark-600">
-              Showcase your team, mission, and impact transparently.
-            </p>
-          </div>
+      {/* For Individuals & Organizations */}
+      <section className="container mx-auto px-4 py-16">
+        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          <Card className="border-2 hover:border-primary-300 transition-all hover:shadow-lg">
+            <CardHeader className="text-center pb-4">
+              <div className="mx-auto w-16 h-16 rounded-full bg-primary-50 flex items-center justify-center mb-4">
+                <User className="w-8 h-8 text-primary-500" />
+              </div>
+              <CardTitle className="text-2xl">For Individuals</CardTitle>
+              <CardDescription className="text-base mt-2">
+                Build a credible professional profile
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-primary-500 mt-0.5 flex-shrink-0" />
+                  <span className="text-neutral-dark-600">
+                    Showcase verified skills and achievements
+                  </span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-primary-500 mt-0.5 flex-shrink-0" />
+                  <span className="text-neutral-dark-600">
+                    Connect with opportunities based on proof
+                  </span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-primary-500 mt-0.5 flex-shrink-0" />
+                  <span className="text-neutral-dark-600">Control your data and privacy</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-primary-500 mt-0.5 flex-shrink-0" />
+                  <span className="text-neutral-dark-600">
+                    Build authentic professional relationships
+                  </span>
+                </li>
+              </ul>
+              <Button asChild className="w-full mt-6">
+                <Link href="/signup">
+                  Create Individual Profile
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="border-2 hover:border-primary-300 transition-all hover:shadow-lg">
+            <CardHeader className="text-center pb-4">
+              <div className="mx-auto w-16 h-16 rounded-full bg-primary-50 flex items-center justify-center mb-4">
+                <Building2 className="w-8 h-8 text-primary-500" />
+              </div>
+              <CardTitle className="text-2xl">For Organizations</CardTitle>
+              <CardDescription className="text-base mt-2">
+                Build trust and manage your team
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-primary-500 mt-0.5 flex-shrink-0" />
+                  <span className="text-neutral-dark-600">
+                    Establish organizational credibility
+                  </span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-primary-500 mt-0.5 flex-shrink-0" />
+                  <span className="text-neutral-dark-600">Manage team members and permissions</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-primary-500 mt-0.5 flex-shrink-0" />
+                  <span className="text-neutral-dark-600">
+                    Track organizational activity and audit logs
+                  </span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-primary-500 mt-0.5 flex-shrink-0" />
+                  <span className="text-neutral-dark-600">
+                    Collaborate with verified professionals
+                  </span>
+                </li>
+              </ul>
+              <Button asChild className="w-full mt-6">
+                <Link href="/signup">
+                  Create Organization
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </section>
 
       {/* Principles Section */}
-      <section className="container mx-auto px-4 py-20">
-        <h2 className="text-3xl font-display font-semibold text-center text-primary-500 mb-12">
-          Guiding Principles
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-          {[
-            { title: 'Privacy by design', desc: 'Your data, your control' },
-            { title: 'Steward-owned', desc: 'Governed for the long term' },
-            { title: 'Anti-bias guardrails', desc: 'Fair and inclusive by default' },
-          ].map((principle) => (
-            <div key={principle.title} className="text-center">
-              <h3 className="text-xl font-semibold text-primary-600 mb-2">{principle.title}</h3>
-              <p className="text-neutral-dark-600">{principle.desc}</p>
+      <section className="bg-primary-50 py-16">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-display font-semibold text-primary-500 mb-4">
+              Built on Trust
+            </h2>
+            <p className="text-lg text-neutral-dark-600">
+              Our platform is guided by principles that put people first
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            <div className="text-center">
+              <div className="mx-auto w-14 h-14 rounded-full bg-primary-100 flex items-center justify-center mb-4">
+                <Shield className="w-7 h-7 text-primary-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-primary-700 mb-2">Privacy First</h3>
+              <p className="text-neutral-dark-600">
+                You control your data. No tracking, no selling your information, no hidden agendas.
+              </p>
             </div>
-          ))}
+
+            <div className="text-center">
+              <div className="mx-auto w-14 h-14 rounded-full bg-primary-100 flex items-center justify-center mb-4">
+                <Users className="w-7 h-7 text-primary-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-primary-700 mb-2">Community Owned</h3>
+              <p className="text-neutral-dark-600">
+                Built for steward ownership—the community guides the platform&apos;s future.
+              </p>
+            </div>
+
+            <div className="text-center">
+              <div className="mx-auto w-14 h-14 rounded-full bg-primary-100 flex items-center justify-center mb-4">
+                <CheckCircle className="w-7 h-7 text-primary-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-primary-700 mb-2">Bias-Free</h3>
+              <p className="text-neutral-dark-600">
+                Proof-based profiles reduce bias and focus on what truly matters: your work.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="container mx-auto px-4 py-16">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-display font-semibold text-primary-500 mb-8 text-center">
+            Frequently Asked Questions
+          </h2>
+
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">What is Proofound?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-neutral-dark-600">
+                  Proofound is a credibility and connection platform that helps individuals and
+                  organizations build trust through verified achievements and transparent profiles.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">How do I get started?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-neutral-dark-600">
+                  Sign up with your email, verify your account, and choose whether you want to
+                  create an individual profile or an organization. Our onboarding guide will walk
+                  you through the rest.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">Is Proofound free?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-neutral-dark-600">
+                  Yes! Proofound is currently free during our early access phase. We&apos;re
+                  building the platform with the community and will always offer a generous free
+                  tier.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">How is my data protected?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-neutral-dark-600">
+                  We use industry-standard encryption and security practices. Your data is stored
+                  securely, never sold to third parties, and you have full control over what you
+                  share.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="bg-primary-500 text-white py-16">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl md:text-4xl font-display font-semibold mb-4">
+            Ready to build your credibility?
+          </h2>
+          <p className="text-lg mb-8 text-primary-50 max-w-2xl mx-auto">
+            Join early adopters who are creating a more trustworthy professional world.
+          </p>
+          <Button asChild size="lg" variant="secondary" className="text-lg px-8">
+            <Link href="/signup">
+              Get Started Now
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Link>
+          </Button>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-neutral-light-300 py-12 bg-white">
+      <footer className="bg-neutral-dark-700 text-neutral-light-200 py-12">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-neutral-dark-500">
-              &copy; 2025 Proofound. All rights reserved.
-            </p>
-            <div className="flex gap-6">
-              <Link
-                href="/legal/privacy"
-                className="text-sm text-neutral-dark-600 hover:text-primary-500"
-              >
-                Privacy
-              </Link>
-              <Link
-                href="/legal/terms"
-                className="text-sm text-neutral-dark-600 hover:text-primary-500"
-              >
-                Terms
-              </Link>
+          <div className="grid md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <h3 className="text-white font-semibold text-lg mb-4">Proofound</h3>
+              <p className="text-sm text-neutral-light-300">
+                Building trust through verified credentials and authentic connections.
+              </p>
             </div>
+
+            <div>
+              <h4 className="text-white font-medium mb-4">Platform</h4>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <Link href="/signup" className="hover:text-white transition-colors">
+                    Sign Up
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/login" className="hover:text-white transition-colors">
+                    Sign In
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-white font-medium mb-4">Legal</h4>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <Link href="#" className="hover:text-white transition-colors">
+                    Privacy Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#" className="hover:text-white transition-colors">
+                    Terms of Service
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-white font-medium mb-4">Connect</h4>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <a
+                    href="mailto:hello@proofound.io"
+                    className="hover:text-white transition-colors"
+                  >
+                    Contact Us
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="border-t border-neutral-dark-600 pt-8 text-center text-sm">
+            <p>&copy; {new Date().getFullYear()} Proofound. All rights reserved.</p>
           </div>
         </div>
       </footer>
