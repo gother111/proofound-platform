@@ -1,0 +1,152 @@
+{
+  "common": {
+    "join": "Join",
+    "login": "Log in",
+    "logout": "Log out",
+    "signup": "Sign up",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "continue": "Continue",
+    "back": "Back",
+    "submit": "Submit",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "success": "Success!"
+  },
+  "landing": {
+    "hero": {
+      "title": "Proofound",
+      "tagline": "Focus on what matters",
+      "subtitle": "A credibility and connection platform built for authenticity, not algorithms.",
+      "cta": {
+        "join": "Join Proofound",
+        "login": "Log in"
+      }
+    },
+    "problem": {
+      "title": "The Problem",
+      "subtitle": "Professional profiles have become cluttered, biased, and exhausting.",
+      "items": [
+        "Signal lost in noise",
+        "Credential inflation",
+        "Wasted time verifying",
+        "Mental health toll"
+      ]
+    },
+    "solution": {
+      "title": "Proof-first Profiles",
+      "subtitle": "Show your work. Build trust. Connect with purpose."
+    },
+    "individuals": {
+      "title": "For Individuals",
+      "description": "Build a credible profile backed by verifiable achievements."
+    },
+    "organizations": {
+      "title": "For Organizations",
+      "description": "Showcase your team, mission, and impact transparently."
+    },
+    "principles": {
+      "title": "Guiding Principles",
+      "privacy": "Privacy by design",
+      "ownership": "Steward-owned governance",
+      "antiBias": "Anti-bias guardrails"
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "q1": "What makes Proofound different?",
+      "a1": "Proofound focuses on verifiable proof over self-promotion.",
+      "q2": "Is Proofound free?",
+      "a2": "Yes, core features are free for individuals and organizations.",
+      "q3": "How does verification work?",
+      "a3": "We're building multiple verification methods including endorsements and external proofs."
+    },
+    "footer": {
+      "about": "About",
+      "contact": "Contact",
+      "privacy": "Privacy",
+      "terms": "Terms"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome back",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Log in",
+      "noAccount": "Don't have an account?",
+      "signupLink": "Sign up",
+      "forgotPassword": "Forgot password?"
+    },
+    "signup": {
+      "title": "Create your account",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm password",
+      "submit": "Sign up",
+      "haveAccount": "Already have an account?",
+      "loginLink": "Log in"
+    },
+    "reset": {
+      "title": "Reset password",
+      "email": "Email",
+      "submit": "Send reset link",
+      "backToLogin": "Back to login"
+    }
+  },
+  "onboarding": {
+    "welcome": "Welcome to Proofound!",
+    "choosePersona": "How will you use Proofound?",
+    "individual": {
+      "title": "Individual",
+      "description": "Build your personal profile"
+    },
+    "organization": {
+      "title": "Organization",
+      "description": "Create an org profile"
+    },
+    "setup": {
+      "individual": {
+        "title": "Set up your profile",
+        "handle": "Handle",
+        "displayName": "Display name",
+        "locale": "Language"
+      },
+      "organization": {
+        "title": "Create your organization",
+        "name": "Organization name",
+        "slug": "URL slug",
+        "type": "Organization type",
+        "types": {
+          "company": "Company",
+          "ngo": "NGO",
+          "government": "Government",
+          "network": "Network",
+          "other": "Other"
+        }
+      }
+    }
+  },
+  "app": {
+    "nav": {
+      "home": "Home",
+      "profile": "Profile",
+      "settings": "Settings",
+      "members": "Members"
+    },
+    "profile": {
+      "headline": "Headline",
+      "bio": "Bio",
+      "skills": "Skills",
+      "location": "Location",
+      "visibility": "Visibility"
+    },
+    "settings": {
+      "account": "Account",
+      "notifications": "Notifications",
+      "security": "Security",
+      "language": "Language"
+    }
+  }
+}

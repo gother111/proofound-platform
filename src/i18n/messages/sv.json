@@ -1,0 +1,152 @@
+{
+  "common": {
+    "join": "Gå med",
+    "login": "Logga in",
+    "logout": "Logga ut",
+    "signup": "Registrera dig",
+    "save": "Spara",
+    "cancel": "Avbryt",
+    "delete": "Radera",
+    "edit": "Redigera",
+    "continue": "Fortsätt",
+    "back": "Tillbaka",
+    "submit": "Skicka",
+    "loading": "Laddar...",
+    "error": "Något gick fel",
+    "success": "Lyckades!"
+  },
+  "landing": {
+    "hero": {
+      "title": "Proofound",
+      "tagline": "Fokusera på det som betyder något",
+      "subtitle": "En trovärdig plattform byggd för äkthet, inte algoritmer.",
+      "cta": {
+        "join": "Gå med i Proofound",
+        "login": "Logga in"
+      }
+    },
+    "problem": {
+      "title": "Problemet",
+      "subtitle": "Professionella profiler har blivit röriga, partiska och utmattande.",
+      "items": [
+        "Signal förlorad i brus",
+        "Legitimationsinflation",
+        "Slösad tid på verifiering",
+        "Psykisk hälsa påverkan"
+      ]
+    },
+    "solution": {
+      "title": "Bevisbaserade profiler",
+      "subtitle": "Visa ditt arbete. Bygg förtroende. Anslut med syfte."
+    },
+    "individuals": {
+      "title": "För individer",
+      "description": "Bygg en trovärdig profil med verifierbara prestationer."
+    },
+    "organizations": {
+      "title": "För organisationer",
+      "description": "Visa ditt team, uppdrag och påverkan transparent."
+    },
+    "principles": {
+      "title": "Vägledande principer",
+      "privacy": "Integritet genom design",
+      "ownership": "Förvaltarstyrd styrning",
+      "antiBias": "Anti-bias skydd"
+    },
+    "faq": {
+      "title": "Vanliga frågor",
+      "q1": "Vad gör Proofound annorlunda?",
+      "a1": "Proofound fokuserar på verifierbart bevis över självpromotion.",
+      "q2": "Är Proofound gratis?",
+      "a2": "Ja, kärnfunktioner är gratis för individer och organisationer.",
+      "q3": "Hur fungerar verifiering?",
+      "a3": "Vi bygger flera verifieringsmetoder inklusive rekommendationer och externa bevis."
+    },
+    "footer": {
+      "about": "Om",
+      "contact": "Kontakt",
+      "privacy": "Integritet",
+      "terms": "Villkor"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Välkommen tillbaka",
+      "email": "E-post",
+      "password": "Lösenord",
+      "submit": "Logga in",
+      "noAccount": "Har du inget konto?",
+      "signupLink": "Registrera dig",
+      "forgotPassword": "Glömt lösenord?"
+    },
+    "signup": {
+      "title": "Skapa ditt konto",
+      "email": "E-post",
+      "password": "Lösenord",
+      "confirmPassword": "Bekräfta lösenord",
+      "submit": "Registrera dig",
+      "haveAccount": "Har du redan ett konto?",
+      "loginLink": "Logga in"
+    },
+    "reset": {
+      "title": "Återställ lösenord",
+      "email": "E-post",
+      "submit": "Skicka återställningslänk",
+      "backToLogin": "Tillbaka till inloggning"
+    }
+  },
+  "onboarding": {
+    "welcome": "Välkommen till Proofound!",
+    "choosePersona": "Hur kommer du att använda Proofound?",
+    "individual": {
+      "title": "Individ",
+      "description": "Bygg din personliga profil"
+    },
+    "organization": {
+      "title": "Organisation",
+      "description": "Skapa en organisationsprofil"
+    },
+    "setup": {
+      "individual": {
+        "title": "Konfigurera din profil",
+        "handle": "Användarnamn",
+        "displayName": "Visningsnamn",
+        "locale": "Språk"
+      },
+      "organization": {
+        "title": "Skapa din organisation",
+        "name": "Organisationsnamn",
+        "slug": "URL-slug",
+        "type": "Organisationstyp",
+        "types": {
+          "company": "Företag",
+          "ngo": "NGO",
+          "government": "Regering",
+          "network": "Nätverk",
+          "other": "Annat"
+        }
+      }
+    }
+  },
+  "app": {
+    "nav": {
+      "home": "Hem",
+      "profile": "Profil",
+      "settings": "Inställningar",
+      "members": "Medlemmar"
+    },
+    "profile": {
+      "headline": "Rubrik",
+      "bio": "Bio",
+      "skills": "Färdigheter",
+      "location": "Plats",
+      "visibility": "Synlighet"
+    },
+    "settings": {
+      "account": "Konto",
+      "notifications": "Notiser",
+      "security": "Säkerhet",
+      "language": "Språk"
+    }
+  }
+}

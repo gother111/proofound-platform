@@ -1,0 +1,140 @@
+{
+  "meta": {
+    "project": "Proofound Brand Tokens",
+    "version": "1.0.0",
+    "source": "Figma Style Guidelines",
+    "lastSync": "2025-10-12"
+  },
+  "colors": {
+    "primary": {
+      "50": "#F0F5F3",
+      "100": "#D9E8E1",
+      "200": "#B3D1C3",
+      "300": "#8CBAA5",
+      "400": "#5C9A7E",
+      "500": "#1C4D3A",
+      "600": "#16402F",
+      "700": "#113325",
+      "800": "#0B261A",
+      "900": "#061910"
+    },
+    "secondary": {
+      "50": "#FCFCFA",
+      "100": "#F7F6F1",
+      "200": "#EEECD9",
+      "300": "#E5E2C1",
+      "400": "#D9D4A3",
+      "500": "#CCC685",
+      "600": "#A8A261",
+      "700": "#7D7A47",
+      "800": "#54522F",
+      "900": "#2A2918"
+    },
+    "accent": {
+      "50": "#FBF3F0",
+      "100": "#F5E1D9",
+      "200": "#EBC3B3",
+      "300": "#E0A58C",
+      "400": "#D4886B",
+      "500": "#C76B4A",
+      "600": "#B5542D",
+      "700": "#8A3F21",
+      "800": "#5C2A16",
+      "900": "#2E150B"
+    },
+    "neutralDark": {
+      "50": "#F5F6F5",
+      "100": "#E8E9E8",
+      "200": "#D1D3D1",
+      "300": "#B9BCB9",
+      "400": "#9FA29F",
+      "500": "#6B706B",
+      "600": "#4A4E4A",
+      "700": "#2D3330",
+      "800": "#1E2220",
+      "900": "#0F1110"
+    },
+    "neutralLight": {
+      "50": "#FAFAF8",
+      "100": "#F3F2ED",
+      "200": "#E8E6DD",
+      "300": "#D9D6C8",
+      "400": "#C9C5B3",
+      "500": "#B8B39C",
+      "600": "#9A957E",
+      "700": "#73705D",
+      "800": "#4D4B3E",
+      "900": "#26251F"
+    },
+    "semantic": {
+      "success": "#5C9A7E",
+      "warning": "#D4886B",
+      "error": "#B5542D",
+      "info": "#8CBAA5"
+    }
+  },
+  "typography": {
+    "fontFamilies": {
+      "display": "'Crimson Pro', Georgia, serif",
+      "body": "'Inter', system-ui, -apple-system, sans-serif"
+    },
+    "fontSizes": {
+      "xs": "0.75rem",
+      "sm": "0.875rem",
+      "base": "1rem",
+      "lg": "1.125rem",
+      "xl": "1.25rem",
+      "2xl": "1.5rem",
+      "3xl": "2rem",
+      "4xl": "2.5rem",
+      "5xl": "3rem"
+    },
+    "fontWeights": {
+      "regular": "400",
+      "medium": "500",
+      "semibold": "600"
+    },
+    "lineHeights": {
+      "tight": "1.25",
+      "snug": "1.375",
+      "normal": "1.5",
+      "relaxed": "1.625",
+      "loose": "1.75"
+    },
+    "letterSpacing": {
+      "tight": "-0.02em",
+      "normal": "0",
+      "wide": "0.01em"
+    }
+  },
+  "spacing": {
+    "0": "0",
+    "1": "0.25rem",
+    "2": "0.5rem",
+    "3": "0.75rem",
+    "4": "1rem",
+    "5": "1.25rem",
+    "6": "1.5rem",
+    "8": "2rem",
+    "10": "2.5rem",
+    "12": "3rem",
+    "16": "4rem",
+    "20": "5rem",
+    "24": "6rem"
+  },
+  "borderRadius": {
+    "none": "0",
+    "sm": "0.25rem",
+    "md": "0.375rem",
+    "lg": "0.5rem",
+    "xl": "0.75rem",
+    "2xl": "1rem",
+    "full": "9999px"
+  },
+  "shadows": {
+    "sm": "0 1px 2px 0 rgba(28, 77, 58, 0.05)",
+    "md": "0 4px 6px -1px rgba(28, 77, 58, 0.1), 0 2px 4px -1px rgba(28, 77, 58, 0.06)",
+    "lg": "0 10px 15px -3px rgba(28, 77, 58, 0.1), 0 4px 6px -2px rgba(28, 77, 58, 0.05)",
+    "xl": "0 20px 25px -5px rgba(28, 77, 58, 0.1), 0 10px 10px -5px rgba(28, 77, 58, 0.04)"
+  }
+}

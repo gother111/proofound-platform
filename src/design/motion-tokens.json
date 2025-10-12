@@ -1,0 +1,149 @@
+{
+  "meta": {
+    "project": "Proofound Motion Tokens",
+    "version": "1.0.0",
+    "philosophy": "Calm, purposeful motion that respects user attention",
+    "source": "Figma Style Guidelines"
+  },
+  "durations": {
+    "instant": 100,
+    "fast": 200,
+    "medium": 300,
+    "comfortable": 400,
+    "slow": 500,
+    "verySlow": 600
+  },
+  "easing": {
+    "easeOut": "cubic-bezier(0.33, 1, 0.68, 1)",
+    "easeInOut": "cubic-bezier(0.65, 0, 0.35, 1)",
+    "easeIn": "cubic-bezier(0.32, 0, 0.67, 0)",
+    "springGentle": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+    "linear": "linear"
+  },
+  "transforms": {
+    "translateY": {
+      "subtle": "8px",
+      "moderate": "16px",
+      "strong": "32px"
+    },
+    "translateX": {
+      "subtle": "8px",
+      "moderate": "16px",
+      "strong": "32px"
+    },
+    "scale": {
+      "subtle": "0.97",
+      "moderate": "0.95",
+      "strong": "0.9"
+    }
+  },
+  "components": {
+    "button": {
+      "hover": {
+        "duration": 200,
+        "easing": "easeOut",
+        "transform": "translateY(-1px)"
+      },
+      "active": {
+        "duration": 100,
+        "easing": "easeIn",
+        "transform": "scale(0.98)"
+      }
+    },
+    "card": {
+      "hover": {
+        "duration": 300,
+        "easing": "easeOut",
+        "transform": "translateY(-4px)"
+      },
+      "entrance": {
+        "duration": 400,
+        "easing": "easeOut",
+        "from": {
+          "opacity": 0,
+          "translateY": "16px"
+        },
+        "to": {
+          "opacity": 1,
+          "translateY": "0"
+        }
+      }
+    },
+    "modal": {
+      "entry": {
+        "overlay": {
+          "duration": 300,
+          "easing": "easeOut"
+        },
+        "content": {
+          "duration": 400,
+          "easing": "easeOut",
+          "from": {
+            "opacity": 0,
+            "scale": "0.95",
+            "translateY": "16px"
+          },
+          "delay": 50
+        }
+      },
+      "exit": {
+        "duration": 250,
+        "easing": "easeIn"
+      }
+    },
+    "dropdown": {
+      "entry": {
+        "duration": 200,
+        "easing": "easeOut",
+        "from": {
+          "opacity": 0,
+          "translateY": "-8px"
+        }
+      },
+      "exit": {
+        "duration": 150,
+        "easing": "easeIn"
+      }
+    },
+    "toast": {
+      "entry": {
+        "duration": 300,
+        "easing": "springGentle",
+        "from": {
+          "opacity": 0,
+          "translateX": "100%",
+          "scale": "0.95"
+        }
+      },
+      "exit": {
+        "duration": 250,
+        "easing": "easeIn"
+      }
+    }
+  },
+  "pageTransitions": {
+    "sameLevel": {
+      "duration": 400,
+      "easing": "easeInOut"
+    },
+    "hierarchicalDown": {
+      "duration": 500,
+      "easing": "easeInOut"
+    },
+    "hierarchicalUp": {
+      "duration": 400,
+      "easing": "easeInOut"
+    }
+  },
+  "scroll": {
+    "fadeInViewport": {
+      "duration": 500,
+      "easing": "easeOut",
+      "stagger": 100,
+      "from": {
+        "opacity": 0,
+        "translateY": "24px"
+      }
+    }
+  }
+}
