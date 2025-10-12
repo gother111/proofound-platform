@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useFormState, useFormStatus } from 'react-dom';
 import { signIn, type SignInState } from '@/actions/auth';
+import SocialSignInButtons from '@/components/auth/social-sign-in-buttons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,6 +33,17 @@ export default function LoginPage() {
       <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg">
         <h1 className="text-3xl font-display font-semibold text-primary-500 mb-2">Welcome back</h1>
         <p className="text-neutral-dark-600 mb-6">Log in to your Proofound account</p>
+
+        <SocialSignInButtons className="mb-6" />
+
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center" aria-hidden="true">
+            <span className="w-full border-t border-neutral-light-300" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="px-2 bg-white text-neutral-dark-500">Or continue with email</span>
+          </div>
+        </div>
 
         {state.error && (
           <div

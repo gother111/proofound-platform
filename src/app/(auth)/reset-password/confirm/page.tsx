@@ -1,37 +1,83 @@
 'use client';
 
-import { Suspense, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { confirmPasswordReset } from '@/actions/auth';
-import { Eye, EyeOff, CheckCircle } from 'lucide-react';
+import { Eye, EyeOff, CheckCircle, Loader2, AlertTriangle } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 function ConfirmResetPasswordForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [isAuthenticating, setIsAuthenticating] = useState(true);
+
+  useEffect(() => {
+    const codeParam = searchParams.get('code');
+
+    if (!codeParam) {
+      setIsAuthenticating(false);
+      return;
+    }
+
+    let isMounted = true;
+
+    async function exchangeCode(currentCode: string) {
+      try {
+        const supabase = createClient();
+        const { error } = await supabase.auth.exchangeCodeForSession(currentCode);
+
+        if (!isMounted) {
+          return;
+        }
+
+        if (error) {
+          setAuthError(
+            'This password reset link is invalid or has expired. Please request a new one.'
+          );
+        }
+      } catch (error) {
+        if (isMounted) {
+          setAuthError('We ran into a problem validating your reset link. Please try again.');
+        }
+      } finally {
+        if (isMounted) {
+          setIsAuthenticating(false);
+        }
+      }
+    }
+
+    exchangeCode(codeParam);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [searchParams]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true);
-    setError(null);
+    setFormError(null);
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setFormError('Passwords do not match');
       setIsLoading(false);
       return;
     }
 
     if (password.length < 8) {
-      setError('Password must be at least 8 characters');
+      setFormError('Password must be at least 8 characters');
       setIsLoading(false);
       return;
     }
@@ -42,7 +88,7 @@ function ConfirmResetPasswordForm() {
     const result = await confirmPasswordReset(formData);
 
     if (result.error) {
-      setError(result.error);
+      setFormError(result.error);
       setIsLoading(false);
     } else {
       setIsSuccess(true);
@@ -64,6 +110,46 @@ function ConfirmResetPasswordForm() {
             <CardTitle>Password reset successful</CardTitle>
             <CardDescription>Your password has been reset. Redirecting to login...</CardDescription>
           </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
+  if (isAuthenticating) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-secondary-100 px-4">
+        <Card className="max-w-md w-full">
+          <CardHeader className="text-center">
+            <div className="mx-auto w-12 h-12 rounded-full bg-primary-50 flex items-center justify-center mb-4">
+              <Loader2 className="w-6 h-6 text-primary-500 animate-spin" />
+            </div>
+            <CardTitle>Verifying reset link</CardTitle>
+            <CardDescription>Please wait while we verify your reset link...</CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
+  if (authError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-secondary-100 px-4">
+        <Card className="max-w-md w-full">
+          <CardHeader className="text-center">
+            <div className="mx-auto w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mb-4">
+              <AlertTriangle className="w-6 h-6 text-red-500" />
+            </div>
+            <CardTitle>Reset link invalid</CardTitle>
+            <CardDescription>{authError}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button asChild className="w-full">
+              <Link href="/reset-password">Request a new reset link</Link>
+            </Button>
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/login">Back to login</Link>
+            </Button>
+          </CardContent>
         </Card>
       </div>
     );
@@ -115,9 +201,9 @@ function ConfirmResetPasswordForm() {
               />
             </div>
 
-            {error && (
+            {formError && (
               <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                {error}
+                {formError}
               </div>
             )}
 
