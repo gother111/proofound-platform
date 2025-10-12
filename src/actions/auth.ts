@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { checkRateLimit, getRateLimitIdentifier } from '@/lib/rate-limit';
 import { headers } from 'next/headers';
-import type { AuthError } from '@supabase/supabase-js';
+import type { AuthError, SupabaseClient } from '@supabase/supabase-js';
 
 const signUpSchema = z.object({
   email: z.string().email(),
@@ -227,11 +227,7 @@ function mapSupabaseSignInError(error: AuthError, email?: string): string {
   }
 }
 
-async function resendVerificationEmail(
-  supabase: ReturnType<typeof createClient>,
-  email: string,
-  siteUrl: string
-) {
+async function resendVerificationEmail(supabase: SupabaseClient, email: string, siteUrl: string) {
   try {
     await supabase.auth.resend({
       type: 'signup',
