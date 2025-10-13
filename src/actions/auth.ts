@@ -61,7 +61,13 @@ function normalizeSiteUrl(
       return null;
     }
 
-    if (!allowPreviewHosts && isPreviewHostname(url.hostname) && !isLocalHostname(url.hostname)) {
+    const previewHost = isPreviewHostname(url.hostname);
+    if (
+      !allowPreviewHosts &&
+      previewHost &&
+      !isLocalHostname(url.hostname) &&
+      !isPreviewDeployment()
+    ) {
       return null;
     }
 
@@ -77,6 +83,10 @@ function isLocalHostname(hostname: string): boolean {
 
 function isPreviewHostname(hostname: string): boolean {
   return /\.vercel\.app$/i.test(hostname);
+}
+
+function isPreviewDeployment(): boolean {
+  return process.env.VERCEL_ENV === 'preview' || process.env.NODE_ENV !== 'production';
 }
 
 function resolveSiteUrl(headersList: Headers): string | null {
