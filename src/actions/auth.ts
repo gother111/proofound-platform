@@ -1,12 +1,12 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient, type ServerSupabaseClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { checkRateLimit, getRateLimitIdentifier } from '@/lib/rate-limit';
 import { headers } from 'next/headers';
-import type { AuthError, SupabaseClient } from '@supabase/supabase-js';
+import type { AuthError } from '@supabase/supabase-js';
 
 const signUpSchema = z.object({
   email: z.string().email(),
@@ -129,7 +129,8 @@ export async function signUp(
 
     const identities = signUpResult.user?.identities ?? [];
     if (identities.length === 0) {
-      await resendVerificationEmail(supabase, result.data.email, siteUrl);
+      const verificationEmail = signUpResult.user?.email ?? result.data.email;
+      await resendVerificationEmail(supabase, verificationEmail, siteUrl);
       return {
         error:
           'An account with this email already exists. We just sent a fresh verification link to your inbox.',
@@ -227,7 +228,11 @@ function mapSupabaseSignInError(error: AuthError, email?: string): string {
   }
 }
 
-async function resendVerificationEmail(supabase: SupabaseClient, email: string, siteUrl: string) {
+async function resendVerificationEmail(
+  supabase: ServerSupabaseClient,
+  email: string,
+  siteUrl: string
+) {
   try {
     await supabase.auth.resend({
       type: 'signup',
