@@ -101,7 +101,61 @@ export async function getCurrentUser() {
   }
 
   if (!data) {
-    return null;
+    const fallbackProfile: Partial<ProfileRow> & { id: string } = {
+      id: user.id,
+      displayName:
+        (user.user_metadata?.full_name as string | undefined) ??
+        (user.user_metadata?.name as string | undefined) ??
+        user.email ??
+        null,
+      avatarUrl: (user.user_metadata?.avatar_url as string | undefined) ?? null,
+      locale: ((user.user_metadata?.locale as string | undefined) ?? 'en') as ProfileRow['locale'],
+      persona: ((user.user_metadata?.persona as string | undefined) ??
+        'individual') as ProfileRow['persona'],
+    };
+
+    const { error: upsertError } = await supabase.from('profiles').upsert({
+      id: user.id,
+      display_name: fallbackProfile.displayName ?? user.id,
+      locale: fallbackProfile.locale,
+      persona: fallbackProfile.persona,
+    });
+
+    if (upsertError) {
+      console.error('Failed to bootstrap profile for current user:', {
+        userId: user.id,
+        error: upsertError,
+      });
+      return mapProfile(fallbackProfile);
+    }
+
+    const { data: refreshedProfile, error: refreshError } = await supabase
+      .from('profiles')
+      .select(
+        `
+          id,
+          handle,
+          displayName:display_name,
+          avatarUrl:avatar_url,
+          locale,
+          persona,
+          createdAt:created_at,
+          updatedAt:updated_at
+        `
+      )
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (refreshError) {
+      console.error('Failed to load profile after bootstrap for current user:', refreshError);
+      return mapProfile(fallbackProfile);
+    }
+
+    if (!refreshedProfile) {
+      return mapProfile(fallbackProfile);
+    }
+
+    return mapProfile(refreshedProfile as ProfileRow);
   }
 
   return mapProfile(data as ProfileRow);
