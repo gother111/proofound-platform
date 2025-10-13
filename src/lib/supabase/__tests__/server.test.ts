@@ -34,7 +34,7 @@ describe('createClient', () => {
     const getMock = vi.fn(() => ({ value: 'cookie-value' }));
     const setMock = vi.fn();
 
-    cookies.mockReturnValue({
+    cookies.mockResolvedValue({
       get: getMock,
       set: setMock,
     });
@@ -77,7 +77,7 @@ describe('createClient', () => {
   it('logs a warning when cookie store is read-only', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-    cookies.mockReturnValue({
+    cookies.mockResolvedValue({
       get: vi.fn(),
     });
 

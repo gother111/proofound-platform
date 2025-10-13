@@ -1,7 +1,7 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
-type MutableCookieStore = ReturnType<typeof cookies> & {
+type MutableCookieStore = Awaited<ReturnType<typeof cookies>> & {
   set?: (name: string, value: string, options?: CookieOptions) => void;
 };
 
@@ -31,7 +31,7 @@ function getSupabaseServerConfig() {
 export async function createClient() {
   const { supabaseUrl, supabaseAnonKey } = getSupabaseServerConfig();
 
-  const cookieStore = cookies() as MutableCookieStore;
+  const cookieStore = (await cookies()) as MutableCookieStore;
 
   return createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
