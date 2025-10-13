@@ -58,11 +58,39 @@ function resolveSiteUrl(headersList: Headers): string | null {
 
   const host = headersList.get('host');
   if (host) {
-    const proto = headersList.get('x-forwarded-proto') ?? 'https';
+    const proto = resolveProtocol(headersList, host);
     return `${proto}://${host}`;
   }
 
+  const referer = headersList.get('referer');
+  if (referer) {
+    try {
+      const refererUrl = new URL(referer);
+      return refererUrl.origin;
+    } catch (error) {
+      // Ignore malformed referer header values
+    }
+  }
+
+  const vercelUrl = process.env.VERCEL_URL;
+  if (vercelUrl) {
+    return `https://${vercelUrl.replace(/\/$/, '')}`;
+  }
+
   return null;
+}
+
+function resolveProtocol(headersList: Headers, host: string): string {
+  const forwardedProto = headersList.get('x-forwarded-proto');
+  if (forwardedProto) {
+    return forwardedProto;
+  }
+
+  if (host.startsWith('localhost') || host.startsWith('127.0.0.1')) {
+    return 'http';
+  }
+
+  return 'https';
 }
 
 export async function signUp(

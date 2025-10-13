@@ -1,11 +1,9 @@
 'use server';
 
-import { db } from '@/db';
-import { profiles, individualProfiles } from '@/db/schema';
 import { requireAuth } from '@/lib/auth';
-import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
+import { createClient } from '@/lib/supabase/server';
 
 const updateProfileSchema = z.object({
   displayName: z.string().min(1).max(100).optional(),
@@ -41,20 +39,30 @@ export async function updateProfile(formData: FormData) {
   }
 
   try {
-    await db
-      .update(profiles)
-      .set({
-        ...result.data,
-        updatedAt: new Date(),
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        display_name: result.data.displayName ?? null,
+        handle: result.data.handle?.toLowerCase() ?? null,
+        avatar_url: result.data.avatarUrl ?? null,
+        updated_at: new Date().toISOString(),
       })
-      .where(eq(profiles.id, user.id));
+      .eq('id', user.id);
+
+    if (error) {
+      if (error.code === '23505') {
+        return { error: 'Handle already taken' };
+      }
+
+      console.error('Failed to update profile:', error);
+      return { error: 'Failed to update profile' };
+    }
 
     revalidatePath('/app/i/profile');
     return { success: true };
-  } catch (error: any) {
-    if (error.code === '23505') {
-      return { error: 'Handle already taken' };
-    }
+  } catch (error) {
+    console.error('Unexpected profile update error:', error);
     return { error: 'Failed to update profile' };
   }
 }
@@ -79,14 +87,27 @@ export async function updateIndividualProfile(formData: FormData) {
   }
 
   try {
-    await db
-      .update(individualProfiles)
-      .set(result.data)
-      .where(eq(individualProfiles.userId, user.id));
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from('individual_profiles')
+      .update({
+        headline: result.data.headline ?? null,
+        bio: result.data.bio ?? null,
+        skills: result.data.skills ?? [],
+        location: result.data.location ?? null,
+        visibility: result.data.visibility ?? null,
+      })
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('Failed to update individual profile:', error);
+      return { error: 'Failed to update profile' };
+    }
 
     revalidatePath('/app/i/profile');
     return { success: true };
   } catch (error) {
+    console.error('Unexpected individual profile update error:', error);
     return { error: 'Failed to update profile' };
   }
 }
