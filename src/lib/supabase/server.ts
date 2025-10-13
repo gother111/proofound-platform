@@ -1,10 +1,32 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
+type MutableCookieStore = Awaited<ReturnType<typeof cookies>> & {
+  set?: (name: string, value: string, options?: CookieOptions) => void;
+};
+
+const DEFAULT_COOKIE_OPTIONS: Pick<CookieOptions, 'path' | 'sameSite'> = {
+  path: '/',
+  sameSite: 'lax',
+};
+
+function withDefaultOptions(options?: CookieOptions): CookieOptions {
+  return { ...DEFAULT_COOKIE_OPTIONS, ...options };
+}
+
+function readEnv(name: string) {
+  const value = process.env[name];
+
+  if (!value) {
+    return undefined;
+  }
+
+  return value;
+}
+
 function getSupabaseServerConfig() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
-  const supabaseAnonKey =
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY;
+  const supabaseUrl = readEnv('NEXT_PUBLIC_SUPABASE_URL') ?? readEnv('SUPABASE_URL');
+  const supabaseAnonKey = readEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY') ?? readEnv('SUPABASE_ANON_KEY');
 
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error(
@@ -16,8 +38,9 @@ function getSupabaseServerConfig() {
 }
 
 export async function createClient() {
-  const cookieStore = await cookies();
   const { supabaseUrl, supabaseAnonKey } = getSupabaseServerConfig();
+
+  const cookieStore = (await cookies()) as MutableCookieStore;
 
   return createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -25,18 +48,30 @@ export async function createClient() {
         return cookieStore.get(name)?.value;
       },
       set(name: string, value: string, options: CookieOptions) {
-        try {
-          cookieStore.set({ name, value, ...options });
-        } catch (error) {
-          // Handle cookie setting errors in Server Components
+        if (typeof cookieStore.set === 'function') {
+          cookieStore.set(name, value, withDefaultOptions(options));
+          return;
         }
+
+        console.warn(
+          'Supabase attempted to set an auth cookie in a read-only context. Ensure createClient() is only used inside server actions or route handlers.'
+        );
       },
       remove(name: string, options: CookieOptions) {
-        try {
-          cookieStore.set({ name, value: '', ...options });
-        } catch (error) {
-          // Handle cookie removal errors in Server Components
+        if (typeof cookieStore.set === 'function') {
+          const removalOptions = withDefaultOptions({
+            maxAge: 0,
+            expires: new Date(0),
+            ...options,
+          });
+
+          cookieStore.set(name, '', removalOptions);
+          return;
         }
+
+        console.warn(
+          'Supabase attempted to remove an auth cookie in a read-only context. Ensure createClient() is only used inside server actions or route handlers.'
+        );
       },
     },
   });

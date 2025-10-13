@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
       resetUrl.searchParams.set('code', code);
     }
     if (tokenHash) {
+      resetUrl.searchParams.set('token_hash', tokenHash);
       resetUrl.searchParams.set('token', tokenHash);
     }
     return NextResponse.redirect(resetUrl);

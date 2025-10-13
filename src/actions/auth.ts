@@ -39,30 +39,84 @@ export type OAuthState = {
   error: string | null;
 };
 
+function stripTrailingSlash(url: string) {
+  return url.replace(/\/$/, '');
+}
+
+function resolveConfiguredSiteUrl() {
+  const explicitEnv =
+    process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || process.env.PUBLIC_SITE_URL;
+
+  if (explicitEnv) {
+    return stripTrailingSlash(explicitEnv);
+  }
+
+  const vercelProjectUrl =
+    process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.NEXT_PUBLIC_VERCEL_URL;
+
+  if (vercelProjectUrl) {
+    return `https://${stripTrailingSlash(vercelProjectUrl)}`;
+  }
+
+  return null;
+}
+
 function resolveSiteUrl(headersList: Headers): string | null {
-  const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const configuredSiteUrl = resolveConfiguredSiteUrl();
   if (configuredSiteUrl) {
-    return configuredSiteUrl.replace(/\/$/, '');
+    return configuredSiteUrl;
   }
 
   const origin = headersList.get('origin');
   if (origin) {
-    return origin;
+    return stripTrailingSlash(origin);
   }
 
   const forwardedHost = headersList.get('x-forwarded-host');
   if (forwardedHost) {
     const forwardedProto = headersList.get('x-forwarded-proto') ?? 'https';
-    return `${forwardedProto}://${forwardedHost}`;
+    return `${forwardedProto}://${stripTrailingSlash(forwardedHost)}`;
   }
 
   const host = headersList.get('host');
   if (host) {
-    const proto = headersList.get('x-forwarded-proto') ?? 'https';
-    return `${proto}://${host}`;
+    const proto = resolveProtocol(headersList, host);
+    return `${proto}://${stripTrailingSlash(host)}`;
+  }
+
+  const referer = headersList.get('referer');
+  if (referer) {
+    try {
+      const refererUrl = new URL(referer);
+      return stripTrailingSlash(refererUrl.origin);
+    } catch (error) {
+      // Ignore malformed referer header values
+    }
+  }
+
+  const vercelUrl = process.env.VERCEL_URL;
+  if (vercelUrl) {
+    return `https://${stripTrailingSlash(vercelUrl)}`;
+  }
+
+  if (process.env.NODE_ENV !== 'production') {
+    return 'http://localhost:3000';
   }
 
   return null;
+}
+
+function resolveProtocol(headersList: Headers, host: string): string {
+  const forwardedProto = headersList.get('x-forwarded-proto');
+  if (forwardedProto) {
+    return forwardedProto;
+  }
+
+  if (host.startsWith('localhost') || host.startsWith('127.0.0.1')) {
+    return 'http';
+  }
+
+  return 'https';
 }
 
 export async function signUp(
@@ -281,8 +335,11 @@ export async function requestPasswordReset(formData: FormData) {
 
   const supabase = await createClient();
 
+  const callbackUrl = new URL('/auth/callback', siteUrl);
+  callbackUrl.searchParams.set('next', '/reset-password/confirm');
+
   const { error } = await supabase.auth.resetPasswordForEmail(result.data.email, {
-    redirectTo: `${siteUrl}/reset-password/confirm`,
+    redirectTo: callbackUrl.toString(),
   });
 
   if (error) {
@@ -306,7 +363,15 @@ export async function confirmPasswordReset(formData: FormData) {
   });
 
   if (error) {
-    return { error: error.message };
+    if (
+      error.message === 'Auth session missing' ||
+      /session/i.test(error.message) ||
+      error.status === 401
+    ) {
+      return { error: 'This reset link is invalid or has expired. Please request a new one.' };
+    }
+
+    return { error: 'We were unable to reset your password. Please try again.' };
   }
 
   return { success: true };
