@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { headers } from 'next/headers';
 import { resolveSiteUrl } from '@/lib/site-url';
@@ -17,7 +17,8 @@ function buildLoginErrorRedirect(origin: string, message: string) {
   return NextResponse.redirect(loginUrl);
 }
 
-export async function GET(request: NextRequest, { params }: { params: { provider: string } }) {
+export async function GET(request: Request, context: { params: Promise<{ provider?: string }> }) {
+  const params = await context.params;
   const requestUrl = new URL(request.url);
   const providerParam = params.provider?.toLowerCase();
 
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest, { params }: { params: { provider
 
   const provider: Provider = providerParam;
 
-  const headersList = headers();
+  const headersList = await headers();
   const siteUrl = resolveSiteUrl(headersList);
 
   if (!siteUrl) {

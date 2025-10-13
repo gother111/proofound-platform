@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
@@ -10,6 +10,14 @@ const DEFAULT_REDIRECT = '/app/i/home';
 type Status = 'loading' | 'error';
 
 export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={<AuthCallbackPageShell status="loading" errorMessage={null} />}>
+      <AuthCallbackPageContent />
+    </Suspense>
+  );
+}
+
+function AuthCallbackPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const searchParamsString = searchParams.toString();
@@ -90,6 +98,16 @@ export default function AuthCallbackPage() {
     });
   }, [router, searchParamsString]);
 
+  return <AuthCallbackPageShell status={status} errorMessage={errorMessage} />;
+}
+
+function AuthCallbackPageShell({
+  status,
+  errorMessage,
+}: {
+  status: Status;
+  errorMessage: string | null;
+}) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-secondary-100 px-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-lg">
