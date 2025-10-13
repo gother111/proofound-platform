@@ -196,7 +196,7 @@
 - [ ] `/reset-password` - Password reset form
 - [ ] `/reset-password/confirm` - Reset confirmation
 - [ ] `/verify-email` - Email verification handler
-- [ ] `/auth/callback` - OAuth callback handler
+- [x] `/auth/callback` - OAuth callback handler
 
 ### Components
 

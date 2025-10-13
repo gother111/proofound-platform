@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useFormState, useFormStatus } from 'react-dom';
+import { useSearchParams } from 'next/navigation';
 import { signIn, type SignInState } from '@/actions/auth';
 import SocialSignInButtons from '@/components/auth/social-sign-in-buttons';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,10 @@ export default function LoginPage() {
   const [state, formAction] = useFormState(signIn, initialState);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const searchParams = useSearchParams();
+  const queryError = searchParams.get('error');
+  const normalizedQueryError = queryError && queryError.trim() ? queryError : null;
+  const errorMessage = state.error ?? normalizedQueryError;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-secondary-100 px-4">
@@ -45,13 +50,13 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {state.error && (
+        {errorMessage && (
           <div
             id="login-error"
             role="alert"
             className="mb-6 rounded-xl border border-error/30 bg-error/10 px-4 py-3 text-sm text-error"
           >
-            {state.error}
+            {errorMessage}
           </div>
         )}
 
@@ -67,7 +72,7 @@ export default function LoginPage() {
               placeholder="you@example.com"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              aria-describedby={state.error ? 'login-error' : undefined}
+              aria-describedby={errorMessage ? 'login-error' : undefined}
             />
           </div>
 

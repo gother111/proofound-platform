@@ -1,10 +1,8 @@
 'use client';
 
-import { signInWithOAuth, type OAuthState } from '@/actions/auth';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import type { ReactNode } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useState, type ReactNode } from 'react';
 
 type Provider = 'google';
 
@@ -12,61 +10,50 @@ type SocialSignInButtonsProps = {
   className?: string;
 };
 
-const initialState: OAuthState = {
-  error: null,
-};
-
 export default function SocialSignInButtons({ className }: SocialSignInButtonsProps) {
-  const [state, formAction] = useFormState(signInWithOAuth, initialState);
+  const [pendingProvider, setPendingProvider] = useState<Provider | null>(null);
 
   return (
     <div className={cn('space-y-3', className)}>
-      <OAuthProviderForm provider="google" label="Continue with Google" action={formAction}>
+      <OAuthProviderButton
+        label="Continue with Google"
+        href="/api/auth/google"
+        isPending={pendingProvider === 'google'}
+        onRequestStart={() => setPendingProvider('google')}
+      >
         <GoogleIcon className="h-4 w-4" aria-hidden="true" />
-      </OAuthProviderForm>
-      {state.error ? (
-        <p className="text-sm text-error" role="alert">
-          {state.error}
-        </p>
-      ) : null}
+      </OAuthProviderButton>
     </div>
   );
 }
 
-type OAuthProviderFormProps = {
-  provider: Provider;
+type OAuthProviderButtonProps = {
   label: string;
-  action: (payload: FormData) => void;
+  href: string;
+  isPending: boolean;
+  onRequestStart: () => void;
   children: ReactNode;
 };
 
-function OAuthProviderForm({ provider, label, action, children }: OAuthProviderFormProps) {
+function OAuthProviderButton({
+  label,
+  href,
+  isPending,
+  onRequestStart,
+  children,
+}: OAuthProviderButtonProps) {
   return (
-    <form action={action} className="w-full">
-      <input type="hidden" name="provider" value={provider} />
-      <OAuthSubmitButton>
-        {children}
-        <span className="flex-1 text-center">{label}</span>
-      </OAuthSubmitButton>
-    </form>
-  );
-}
-
-type OAuthSubmitButtonProps = {
-  children: ReactNode;
-};
-
-function OAuthSubmitButton({ children }: OAuthSubmitButtonProps) {
-  const { pending } = useFormStatus();
-
-  return (
-    <Button
-      type="submit"
-      variant="outline"
-      className="w-full flex items-center gap-2"
-      disabled={pending}
-    >
-      {pending ? <span className="flex-1 text-center">Redirecting...</span> : children}
+    <Button asChild variant="outline" className="w-full flex items-center gap-2" aria-live="polite">
+      <a href={href} onClick={onRequestStart} className="flex w-full items-center gap-2">
+        {isPending ? (
+          <span className="flex-1 text-center">Redirecting...</span>
+        ) : (
+          <>
+            {children}
+            <span className="flex-1 text-center">{label}</span>
+          </>
+        )}
+      </a>
     </Button>
   );
 }
