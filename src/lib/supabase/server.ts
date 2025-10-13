@@ -14,10 +14,19 @@ function withDefaultOptions(options?: CookieOptions): CookieOptions {
   return { ...DEFAULT_COOKIE_OPTIONS, ...options };
 }
 
+function readEnv(name: string) {
+  const value = process.env[name];
+
+  if (!value) {
+    return undefined;
+  }
+
+  return value;
+}
+
 function getSupabaseServerConfig() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
-  const supabaseAnonKey =
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY;
+  const supabaseUrl = readEnv('NEXT_PUBLIC_SUPABASE_URL') ?? readEnv('SUPABASE_URL');
+  const supabaseAnonKey = readEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY') ?? readEnv('SUPABASE_ANON_KEY');
 
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error(

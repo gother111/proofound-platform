@@ -93,4 +93,25 @@ describe('createClient', () => {
     expect(warnSpy).toHaveBeenCalledTimes(2);
     warnSpy.mockRestore();
   });
+
+  it('falls back to server-only env vars when NEXT_PUBLIC values are empty', async () => {
+    process.env.NEXT_PUBLIC_SUPABASE_URL = '';
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = '';
+    process.env.SUPABASE_URL = 'https://server-only.supabase.co';
+    process.env.SUPABASE_ANON_KEY = 'server-only-anon';
+
+    cookies.mockResolvedValue({
+      get: vi.fn(),
+      set: vi.fn(),
+    });
+
+    const { createClient } = await import('../server');
+    await createClient();
+
+    expect(createServerClient).toHaveBeenCalledWith(
+      'https://server-only.supabase.co',
+      'server-only-anon',
+      expect.any(Object)
+    );
+  });
 });
