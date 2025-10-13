@@ -16,26 +16,33 @@ function getSupabaseServerConfig() {
 }
 
 export async function createClient() {
-  const cookieStore = await cookies();
   const { supabaseUrl, supabaseAnonKey } = getSupabaseServerConfig();
 
   return createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       get(name: string) {
-        return cookieStore.get(name)?.value;
+        return cookies().get(name)?.value;
       },
       set(name: string, value: string, options: CookieOptions) {
-        try {
-          cookieStore.set({ name, value, ...options });
-        } catch (error) {
-          // Handle cookie setting errors in Server Components
+        const cookieStore = cookies();
+        if (typeof cookieStore.set === 'function') {
+          const cookieOptions: CookieOptions = {
+            path: '/',
+            ...options,
+          };
+          cookieStore.set({ name, value, ...cookieOptions });
         }
       },
       remove(name: string, options: CookieOptions) {
-        try {
-          cookieStore.set({ name, value: '', ...options });
-        } catch (error) {
-          // Handle cookie removal errors in Server Components
+        const cookieStore = cookies();
+        if (typeof cookieStore.set === 'function') {
+          const cookieOptions: CookieOptions = {
+            path: '/',
+            maxAge: 0,
+            expires: new Date(0),
+            ...options,
+          };
+          cookieStore.set({ name, value: '', ...cookieOptions });
         }
       },
     },
