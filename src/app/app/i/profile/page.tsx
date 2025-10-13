@@ -1,22 +1,22 @@
 import { requireAuth } from '@/lib/auth';
-import { db } from '@/db';
-import { individualProfiles } from '@/db/schema';
-import { eq } from 'drizzle-orm';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { updateProfile, updateIndividualProfile } from '@/actions/profile';
+import { createClient } from '@/lib/supabase/server';
+
+export const dynamic = 'force-dynamic';
 
 export default async function IndividualProfilePage() {
   const user = await requireAuth();
 
-  // Fetch individual profile
-  const [profile] = await db
-    .select()
-    .from(individualProfiles)
-    .where(eq(individualProfiles.userId, user.id))
-    .limit(1);
+  const supabase = await createClient();
+  const { data: profile } = await supabase
+    .from('individual_profiles')
+    .select('headline, bio, skills, location, visibility')
+    .eq('user_id', user.id)
+    .maybeSingle();
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
