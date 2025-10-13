@@ -441,12 +441,20 @@ export async function signInWithOAuth(
   }
 
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: result.data,
-    options: {
-      redirectTo: `${siteUrl}/auth/callback`,
-    },
-  });
+  let data: Awaited<ReturnType<typeof supabase.auth.signInWithOAuth>>['data'];
+  let error: Awaited<ReturnType<typeof supabase.auth.signInWithOAuth>>['error'];
+
+  try {
+    ({ data, error } = await supabase.auth.signInWithOAuth({
+      provider: result.data,
+      options: {
+        redirectTo: `${siteUrl}/auth/callback`,
+      },
+    }));
+  } catch (signInError) {
+    console.error('Failed to start OAuth sign-in flow:', signInError);
+    return { error: 'We could not start the sign-in flow. Please try again.' };
+  }
 
   if (error) {
     if (/not enabled/i.test(error.message)) {
