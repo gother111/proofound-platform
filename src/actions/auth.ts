@@ -348,41 +348,56 @@ export async function signInWithOAuth(
   _prevState: OAuthState | undefined,
   formData: FormData
 ): Promise<OAuthState> {
-  const provider = formData.get('provider');
-  const result = oauthProviderSchema.safeParse(provider);
+  try {
+    const provider = formData.get('provider');
+    const result = oauthProviderSchema.safeParse(provider);
 
-  if (!result.success) {
-    return { error: 'Unsupported sign-in provider.' };
-  }
+    if (!result.success) {
+      return { error: 'Unsupported sign-in provider.' };
+    }
 
-  const headersList = await headers();
-  const siteUrl = resolveSiteUrl(headersList);
+    const headersList = await headers();
+    const siteUrl = resolveSiteUrl(headersList);
 
-  if (!siteUrl) {
-    return { error: 'Unable to start the sign-in flow. Please try again later.' };
-  }
+    if (!siteUrl) {
+      return { error: 'Unable to start the sign-in flow. Please try again later.' };
+    }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: result.data,
-    options: {
-      redirectTo: `${siteUrl}/auth/callback`,
-    },
-  });
+    const supabase = await createClient();
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: result.data,
+      options: {
+        redirectTo: `${siteUrl}/auth/callback`,
+      },
+    });
 
-  if (error) {
-    if (/not enabled/i.test(error.message)) {
-      return {
-        error: 'This sign-in provider is not available. Please use email and password instead.',
-      };
+    if (error) {
+      if (/not enabled/i.test(error.message)) {
+        return {
+          error: 'This sign-in provider is not available. Please use email and password instead.',
+        };
+      }
+
+      return { error: mapUnexpectedOAuthError(error) };
+    }
+
+    if (data?.url) {
+      redirect(data.url);
     }
 
     return { error: 'We could not start the sign-in flow. Please try again.' };
+  } catch (error) {
+    console.error('OAuth sign-in failed:', error);
+    return { error: mapUnexpectedOAuthError(error) };
+  }
+}
+
+function mapUnexpectedOAuthError(error: unknown) {
+  if (error instanceof Error) {
+    if (/supabase server client is missing required/i.test(error.message)) {
+      return 'Authentication service is not configured correctly. Please contact support.';
+    }
   }
 
-  if (data?.url) {
-    redirect(data.url);
-  }
-
-  return { error: 'We could not start the sign-in flow. Please try again.' };
+  return 'We could not start the sign-in flow right now. Please try again.';
 }
