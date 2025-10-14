@@ -1,23 +1,19 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
-function getSupabaseServerConfig() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
-  const supabaseAnonKey =
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error(
-      'Supabase server client is missing required NEXT_PUBLIC_SUPABASE_URL/NEXT_PUBLIC_SUPABASE_ANON_KEY (or SUPABASE_URL/SUPABASE_ANON_KEY) environment variables.'
-    );
-  }
-
-  return { supabaseUrl, supabaseAnonKey };
-}
+import { getEnv } from '@/lib/env';
 
 export async function createClient() {
   const cookieStore = await cookies();
-  const { supabaseUrl, supabaseAnonKey } = getSupabaseServerConfig();
+  const { SUPABASE_URL: supabaseUrl, SUPABASE_ANON_KEY: supabaseAnonKey } = getEnv(false);
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    const err = new Error(
+      'Supabase Auth is not configured (missing SUPABASE_URL/ANON_KEY).'
+    ) as Error & { code?: string };
+    err.code = 'ENV_MISCONFIG';
+    throw err;
+  }
 
   return createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
