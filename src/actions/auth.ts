@@ -144,8 +144,9 @@ export async function signUp(
       success: true,
     };
   } catch (error) {
+    console.error('Sign-up failed:', error);
     return {
-      error: 'We could not sign you up right now. Please try again.',
+      error: mapUnexpectedAuthError(error, 'sign up'),
       success: false,
     };
   }
@@ -155,44 +156,49 @@ export async function signIn(
   _prevState: SignInState | undefined,
   formData: FormData
 ): Promise<SignInState> {
-  const headersList = await headers();
-  const ip = headersList.get('x-forwarded-for') || 'unknown';
-  const identifier = getRateLimitIdentifier(ip);
+  try {
+    const headersList = await headers();
+    const ip = headersList.get('x-forwarded-for') || 'unknown';
+    const identifier = getRateLimitIdentifier(ip);
 
-  const allowed = await checkRateLimit(identifier, 'signin');
-  if (!allowed) {
-    return { error: 'Too many login attempts. Please wait a moment and try again.' };
-  }
-
-  const rawEmail = (formData.get('email') as string | null) ?? '';
-  const email = rawEmail.trim().toLowerCase();
-  const password = (formData.get('password') as string | null) ?? '';
-  const data = {
-    email,
-    password,
-  };
-
-  const result = signInSchema.safeParse(data);
-  if (!result.success) {
-    return { error: 'Enter a valid email address and password.' };
-  }
-
-  const supabase = await createClient();
-
-  const { error } = await supabase.auth.signInWithPassword(result.data);
-
-  if (error) {
-    const siteUrl = resolveSiteUrl(headersList);
-    if (isEmailNotConfirmedError(error) && siteUrl) {
-      await resendVerificationEmail(supabase, email, siteUrl);
+    const allowed = await checkRateLimit(identifier, 'signin');
+    if (!allowed) {
+      return { error: 'Too many login attempts. Please wait a moment and try again.' };
     }
-    return { error: mapSupabaseSignInError(error, email) };
+
+    const rawEmail = (formData.get('email') as string | null) ?? '';
+    const email = rawEmail.trim().toLowerCase();
+    const password = (formData.get('password') as string | null) ?? '';
+    const data = {
+      email,
+      password,
+    };
+
+    const result = signInSchema.safeParse(data);
+    if (!result.success) {
+      return { error: 'Enter a valid email address and password.' };
+    }
+
+    const supabase = await createClient();
+
+    const { error } = await supabase.auth.signInWithPassword(result.data);
+
+    if (error) {
+      const siteUrl = resolveSiteUrl(headersList);
+      if (isEmailNotConfirmedError(error) && siteUrl) {
+        await resendVerificationEmail(supabase, email, siteUrl);
+      }
+      return { error: mapSupabaseSignInError(error, email) };
+    }
+
+    revalidatePath('/', 'layout');
+    redirect('/app/i/home');
+
+    return { error: null };
+  } catch (error) {
+    console.error('Sign-in failed:', error);
+    return { error: mapUnexpectedAuthError(error, 'log in') };
   }
-
-  revalidatePath('/', 'layout');
-  redirect('/app/i/home');
-
-  return { error: null };
 }
 
 function isEmailNotConfirmedError(error: AuthError): boolean {
@@ -239,6 +245,18 @@ async function resendVerificationEmail(supabase: SupabaseClient, email: string, 
   } catch (resendError) {
     console.error('Failed to resend verification email:', resendError);
   }
+}
+
+function mapUnexpectedAuthError(error: unknown, action: 'sign up' | 'log in') {
+  if (error instanceof Error) {
+    if (/supabase server client is missing required/i.test(error.message)) {
+      return 'Authentication service is not configured correctly. Please contact support.';
+    }
+  }
+
+  return action === 'sign up'
+    ? 'We could not sign you up right now. Please try again.'
+    : 'We could not log you in right now. Please try again.';
 }
 
 export async function signOut() {
