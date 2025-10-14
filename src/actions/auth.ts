@@ -39,95 +39,56 @@ export type OAuthState = {
   error: string | null;
 };
 
-function normalizeSiteUrl(
-  value: string | null | undefined,
-  { allowPreviewHosts = false }: { allowPreviewHosts?: boolean } = {}
-): string | null {
-  if (!value) {
-    return null;
-  }
-
-  const trimmed = value.trim();
-  if (!trimmed) {
-    return null;
-  }
-
-  const hasScheme = /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(trimmed);
-  const withScheme = hasScheme ? trimmed : `https://${trimmed}`;
-
-  try {
-    const url = new URL(withScheme);
-    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-      return null;
-    }
-
-    const previewHost = isPreviewHostname(url.hostname);
-    if (
-      !allowPreviewHosts &&
-      previewHost &&
-      !isLocalHostname(url.hostname) &&
-      !isPreviewDeployment()
-    ) {
-      return null;
-    }
-
-    return url.origin;
-  } catch (_) {
-    return null;
-  }
+function stripTrailingSlash(url: string) {
+  return url.replace(/\/$/, '');
 }
 
-function isLocalHostname(hostname: string): boolean {
-  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]';
-}
+function resolveConfiguredSiteUrl() {
+  const explicitEnv =
+    process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || process.env.PUBLIC_SITE_URL;
 
-function isPreviewHostname(hostname: string): boolean {
-  return /\.vercel\.app$/i.test(hostname);
-}
+  if (explicitEnv) {
+    return stripTrailingSlash(explicitEnv);
+  }
 
-function isPreviewDeployment(): boolean {
-  return process.env.VERCEL_ENV === 'preview' || process.env.NODE_ENV !== 'production';
+  const vercelProjectUrl =
+    process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.NEXT_PUBLIC_VERCEL_URL;
+
+  if (vercelProjectUrl) {
+    return `https://${stripTrailingSlash(vercelProjectUrl)}`;
+  }
+
+  return null;
 }
 
 function resolveSiteUrl(headersList: Headers): string | null {
-  const configuredSiteUrl = normalizeSiteUrl(process.env.NEXT_PUBLIC_SITE_URL, {
-    allowPreviewHosts: true,
-  });
+  const configuredSiteUrl = resolveConfiguredSiteUrl();
   if (configuredSiteUrl) {
     return configuredSiteUrl;
   }
 
   const origin = normalizeSiteUrl(headersList.get('origin'));
   if (origin) {
-    return origin;
+    return stripTrailingSlash(origin);
   }
 
   const forwardedHost = headersList.get('x-forwarded-host');
   if (forwardedHost) {
     const forwardedProto = headersList.get('x-forwarded-proto') ?? 'https';
-    const forwardedUrl = normalizeSiteUrl(`${forwardedProto}://${forwardedHost}`);
-    if (forwardedUrl) {
-      return forwardedUrl;
-    }
+    return `${forwardedProto}://${stripTrailingSlash(forwardedHost)}`;
   }
 
   const host = headersList.get('host');
   if (host) {
     const proto = resolveProtocol(headersList, host);
-    const hostUrl = normalizeSiteUrl(`${proto}://${host}`);
-    if (hostUrl) {
-      return hostUrl;
-    }
+    return `${proto}://${stripTrailingSlash(host)}`;
   }
 
   const referer = headersList.get('referer');
   if (referer) {
     try {
       const refererUrl = new URL(referer);
-      const normalizedReferer = normalizeSiteUrl(refererUrl.origin);
-      if (normalizedReferer) {
-        return normalizedReferer;
-      }
+      return stripTrailingSlash(refererUrl.origin);
     } catch (error) {
       // Ignore malformed referer header values
     }
@@ -370,8 +331,11 @@ export async function requestPasswordReset(formData: FormData) {
 
   const supabase = await createClient();
 
+  const callbackUrl = new URL('/auth/callback', siteUrl);
+  callbackUrl.searchParams.set('next', '/reset-password/confirm');
+
   const { error } = await supabase.auth.resetPasswordForEmail(result.data.email, {
-    redirectTo: `${siteUrl}/reset-password/confirm`,
+    redirectTo: callbackUrl.toString(),
   });
 
   if (error) {
@@ -395,7 +359,15 @@ export async function confirmPasswordReset(formData: FormData) {
   });
 
   if (error) {
-    return { error: error.message };
+    if (
+      error.message === 'Auth session missing' ||
+      /session/i.test(error.message) ||
+      error.status === 401
+    ) {
+      return { error: 'This reset link is invalid or has expired. Please request a new one.' };
+    }
+
+    return { error: 'We were unable to reset your password. Please try again.' };
   }
 
   return { success: true };
