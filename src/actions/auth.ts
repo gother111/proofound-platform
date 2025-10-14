@@ -248,10 +248,15 @@ async function resendVerificationEmail(supabase: SupabaseClient, email: string, 
 }
 
 function mapUnexpectedAuthError(error: unknown, action: 'sign up' | 'log in') {
-  if (error instanceof Error) {
-    if (/supabase server client is missing required/i.test(error.message)) {
+  const message = getErrorMessage(error);
+
+  if (message) {
+    if (/supabase server client is missing required/i.test(message)) {
       return 'Authentication service is not configured correctly. Please contact support.';
     }
+
+    const actionDescription = action === 'sign up' ? 'sign you up' : 'log you in';
+    return `We could not ${actionDescription} because the authentication service returned an unexpected error: ${message}`;
   }
 
   return action === 'sign up'
@@ -393,11 +398,44 @@ export async function signInWithOAuth(
 }
 
 function mapUnexpectedOAuthError(error: unknown) {
-  if (error instanceof Error) {
-    if (/supabase server client is missing required/i.test(error.message)) {
+  const message = getErrorMessage(error);
+
+  if (message) {
+    if (
+      /supabase server client is missing required/i.test(message) ||
+      /auth-relay supabase project url/i.test(message) ||
+      /redirect.*(not|missing)/i.test(message)
+    ) {
       return 'Authentication service is not configured correctly. Please contact support.';
     }
+
+    return `We could not start the sign-in flow because the authentication service returned an unexpected error: ${message}`;
   }
 
   return 'We could not start the sign-in flow right now. Please try again.';
+}
+
+function getErrorMessage(error: unknown): string | null {
+  if (!error) {
+    return null;
+  }
+
+  if (error instanceof Error) {
+    return error.message?.trim() || null;
+  }
+
+  if (typeof error === 'string') {
+    const trimmed = error.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  }
+
+  if (typeof error === 'object' && 'message' in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === 'string') {
+      const trimmed = message.trim();
+      return trimmed.length > 0 ? trimmed : null;
+    }
+  }
+
+  return null;
 }
