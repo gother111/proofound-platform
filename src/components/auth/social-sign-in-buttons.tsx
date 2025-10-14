@@ -2,7 +2,8 @@
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useState, type ReactNode } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { useCallback, useState, type ReactNode } from 'react';
 
 type Provider = 'google';
 
@@ -13,13 +14,52 @@ type SocialSignInButtonsProps = {
 export default function SocialSignInButtons({ className }: SocialSignInButtonsProps) {
   const [pendingProvider, setPendingProvider] = useState<Provider | null>(null);
 
+  const handleOAuthSignIn = useCallback(async (provider: Provider) => {
+    setPendingProvider(provider);
+
+    try {
+      const supabase = createClient();
+      const origin = typeof window !== 'undefined' ? window.location.origin : null;
+
+      if (!origin) {
+        throw new Error('Unable to determine site origin for OAuth redirect.');
+      }
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${origin}/auth/callback`,
+          skipBrowserRedirect: true,
+        },
+      });
+
+      if (error || !data?.url) {
+        throw error ?? new Error('Supabase did not return an OAuth redirect URL.');
+      }
+
+      window.location.href = data.url;
+    } catch (error) {
+      console.error('Failed to start OAuth sign-in flow:', error);
+
+      setPendingProvider(null);
+
+      if (typeof window !== 'undefined') {
+        const loginUrl = new URL('/login', window.location.origin);
+        loginUrl.searchParams.set(
+          'error',
+          'We could not start the sign-in flow. Please try again.'
+        );
+        window.location.href = loginUrl.toString();
+      }
+    }
+  }, []);
+
   return (
     <div className={cn('space-y-3', className)}>
       <OAuthProviderButton
         label="Continue with Google"
-        href="/api/auth/google"
         isPending={pendingProvider === 'google'}
-        onRequestStart={() => setPendingProvider('google')}
+        onClick={() => handleOAuthSignIn('google')}
       >
         <GoogleIcon className="h-4 w-4" aria-hidden="true" />
       </OAuthProviderButton>
@@ -29,31 +69,29 @@ export default function SocialSignInButtons({ className }: SocialSignInButtonsPr
 
 type OAuthProviderButtonProps = {
   label: string;
-  href: string;
   isPending: boolean;
-  onRequestStart: () => void;
+  onClick: () => void;
   children: ReactNode;
 };
 
-function OAuthProviderButton({
-  label,
-  href,
-  isPending,
-  onRequestStart,
-  children,
-}: OAuthProviderButtonProps) {
+function OAuthProviderButton({ label, isPending, onClick, children }: OAuthProviderButtonProps) {
   return (
-    <Button asChild variant="outline" className="w-full flex items-center gap-2" aria-live="polite">
-      <a href={href} onClick={onRequestStart} className="flex w-full items-center gap-2">
-        {isPending ? (
-          <span className="flex-1 text-center">Redirecting...</span>
-        ) : (
-          <>
-            {children}
-            <span className="flex-1 text-center">{label}</span>
-          </>
-        )}
-      </a>
+    <Button
+      type="button"
+      variant="outline"
+      className="w-full flex items-center gap-2"
+      aria-live="polite"
+      onClick={onClick}
+      disabled={isPending}
+    >
+      {isPending ? (
+        <span className="flex-1 text-center">Redirecting...</span>
+      ) : (
+        <>
+          {children}
+          <span className="flex-1 text-center">{label}</span>
+        </>
+      )}
     </Button>
   );
 }
