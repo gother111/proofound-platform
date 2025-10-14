@@ -1,5 +1,6 @@
 'use server';
 
+import { resolveSiteUrlFromHeaders } from '@/lib/env';
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -37,32 +38,6 @@ export type OAuthState = {
   error: string | null;
 };
 
-function resolveSiteUrl(headersList: Headers): string | null {
-  const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
-  if (configuredSiteUrl) {
-    return configuredSiteUrl.replace(/\/$/, '');
-  }
-
-  const origin = headersList.get('origin');
-  if (origin) {
-    return origin;
-  }
-
-  const forwardedHost = headersList.get('x-forwarded-host');
-  if (forwardedHost) {
-    const forwardedProto = headersList.get('x-forwarded-proto') ?? 'https';
-    return `${forwardedProto}://${forwardedHost}`;
-  }
-
-  const host = headersList.get('host');
-  if (host) {
-    const proto = headersList.get('x-forwarded-proto') ?? 'https';
-    return `${proto}://${host}`;
-  }
-
-  return null;
-}
-
 export async function signUp(
   _prevState: SignUpState | undefined,
   formData: FormData
@@ -95,7 +70,7 @@ export async function signUp(
       };
     }
 
-    const siteUrl = resolveSiteUrl(headersList);
+    const siteUrl = resolveSiteUrlFromHeaders(headersList);
     if (!siteUrl) {
       return {
         error: 'Unable to complete signup. Please try again later or contact support.',
@@ -184,7 +159,7 @@ export async function signIn(
     const { error } = await supabase.auth.signInWithPassword(result.data);
 
     if (error) {
-      const siteUrl = resolveSiteUrl(headersList);
+      const siteUrl = resolveSiteUrlFromHeaders(headersList);
       if (isEmailNotConfirmedError(error) && siteUrl) {
         await resendVerificationEmail(supabase, email, siteUrl);
       }
@@ -248,10 +223,14 @@ async function resendVerificationEmail(supabase: SupabaseClient, email: string, 
 }
 
 function mapUnexpectedAuthError(error: unknown, action: 'sign up' | 'log in') {
+  if (isEnvMisconfigError(error)) {
+    return 'Authentication service is not configured. See README → Environment setup.';
+  }
+
   const message = getErrorMessage(error);
 
   if (message) {
-    if (/supabase server client is missing required/i.test(message)) {
+    if (/supabase server client is missing required/i.test(message) || /Supabase Auth is not configured/i.test(message)) {
       return 'Authentication service is not configured correctly. Please contact support.';
     }
 
@@ -290,7 +269,7 @@ export async function requestPasswordReset(formData: FormData) {
     return { error: 'Invalid email' };
   }
 
-  const siteUrl = resolveSiteUrl(headersList);
+  const siteUrl = resolveSiteUrlFromHeaders(headersList);
   if (!siteUrl) {
     return { error: 'Unable to send reset email. Please try again later.' };
   }
@@ -362,7 +341,7 @@ export async function signInWithOAuth(
     }
 
     const headersList = await headers();
-    const siteUrl = resolveSiteUrl(headersList);
+    const siteUrl = resolveSiteUrlFromHeaders(headersList);
 
     if (!siteUrl) {
       return { error: 'Unable to start the sign-in flow. Please try again later.' };
@@ -398,11 +377,16 @@ export async function signInWithOAuth(
 }
 
 function mapUnexpectedOAuthError(error: unknown) {
+  if (isEnvMisconfigError(error)) {
+    return 'Authentication service is not configured. See README → Environment setup.';
+  }
+
   const message = getErrorMessage(error);
 
   if (message) {
     if (
       /supabase server client is missing required/i.test(message) ||
+      /Supabase Auth is not configured/i.test(message) ||
       /auth-relay supabase project url/i.test(message) ||
       /redirect.*(not|missing)/i.test(message)
     ) {
@@ -438,4 +422,13 @@ function getErrorMessage(error: unknown): string | null {
   }
 
   return null;
+}
+
+function isEnvMisconfigError(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { code?: unknown }).code === 'ENV_MISCONFIG'
+  );
 }

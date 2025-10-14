@@ -435,5 +435,16 @@ For questions or issues:
 Built with ❤️ for authentic human connections.
 
 ### Lint in restricted CI
-`npm run lint` auto-skips when Next.js/deps cannot be installed (restricted CI).  
+`npm run lint` auto-skips when Next.js/deps cannot be installed (restricted CI).
 To force lint, set `FORCE_LINT=true` or run locally after `npm ci`.
+
+### Environment setup (quick)
+1. Copy `.env.example` to `.env.local` and fill the values.
+2. In Supabase → Authentication → URL Configuration:
+   - Set **Site URL** to `NEXT_PUBLIC_SITE_URL`.
+   - Add redirect URLs: `/auth/callback`, `/reset-password/confirm`, `/verify-email`.
+3. Ensure `DATABASE_URL` points to your Postgres (Supabase) connection string (use the `?sslmode=require` variant if provided).
+4. (Optional) Set `SUPABASE_SERVICE_ROLE_KEY` for scripts/cron jobs.
+5. Run `npm run build` (a readiness check will warn if anything is missing).
+
+If you see `ENV_MISCONFIG` in the UI or logs, check the variables above.
