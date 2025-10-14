@@ -495,7 +495,7 @@ Once deployed, users can:
 ## Required environment variables
 - `NEXT_PUBLIC_SUPABASE_URL` **or** `SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` **or** `SUPABASE_ANON_KEY`
-- `NEXT_PUBLIC_SITE_URL`
+- `NEXT_PUBLIC_SITE_URL` *(or `SITE_URL` if you prefer a private env var)*
 - `DATABASE_URL`
 - (Optional) `SUPABASE_SERVICE_ROLE_KEY` for background jobs
 

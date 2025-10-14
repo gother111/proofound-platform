@@ -143,7 +143,7 @@ export function getEnv(strict: boolean = process.env.NODE_ENV === 'production'):
       `Missing required environment variables: ${missing.join(', ')}.\n\n` +
       `How to fix:\n` +
       `- Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY (or SUPABASE_URL/SUPABASE_ANON_KEY) in your hosting env.\n` +
-      `- Set NEXT_PUBLIC_SITE_URL to your deployed domain (e.g., https://your-domain.tld).\n` +
+      `- Set NEXT_PUBLIC_SITE_URL (or SITE_URL) to your deployed domain (e.g., https://your-domain.tld).\n` +
       `- Set DATABASE_URL (or SUPABASE_DB_URL/POSTGRES_URL) to your Postgres connection string (e.g., from Supabase; Prefer ?sslmode=require).\n` +
       `- In Supabase → Auth → URL configuration, set Site URL to NEXT_PUBLIC_SITE_URL and add redirect paths: /auth/callback, /reset-password/confirm, /verify-email.`;
 
@@ -170,12 +170,7 @@ export function getEnv(strict: boolean = process.env.NODE_ENV === 'production'):
 export function resolveSiteUrlFromHeaders(
   h: Headers | Record<string, string | string[] | undefined>
 ): string {
-  const configuredSiteUrl = normalizeSiteUrl(
-    process.env.NEXT_PUBLIC_SITE_URL ?? process.env.SITE_URL,
-    {
-      allowPreviewHosts: true,
-    }
-  );
+  const { SITE_URL: configuredSiteUrl } = aggregateEnv();
   if (configuredSiteUrl) {
     return configuredSiteUrl;
   }
