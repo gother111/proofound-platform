@@ -491,3 +491,21 @@ Once deployed, users can:
 ---
 
 **Need help?** The build is solid and ready to deploy! 🚀
+
+## Required environment variables
+- `NEXT_PUBLIC_SUPABASE_URL` **or** `SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` **or** `SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_SITE_URL`
+- `DATABASE_URL`
+- (Optional) `SUPABASE_SERVICE_ROLE_KEY` for background jobs
+
+## Supabase Auth URL configuration
+- **Site URL**: set to `NEXT_PUBLIC_SITE_URL` (e.g., `https://your-domain.tld`)
+- **Redirect URLs**: add  
+  `/auth/callback`,  
+  `/reset-password/confirm`,  
+  `/verify-email`
+
+## Notes
+- Auth, onboarding, and OAuth flows depend on correct Site/Redirect URLs.
+- Database-backed features require a valid `DATABASE_URL` on every environment.

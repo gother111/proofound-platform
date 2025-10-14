@@ -1,11 +1,18 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
+
+import { getEnv } from '@/lib/env';
+
 import * as schema from './schema';
 
-const connectionString = process.env.DATABASE_URL;
+const { DATABASE_URL: connectionString } = getEnv(false);
 
 if (!connectionString) {
-  throw new Error('Missing DATABASE_URL environment variable.');
+  const err = new Error('Database is not configured (missing DATABASE_URL).') as Error & {
+    code?: string;
+  };
+  err.code = 'ENV_MISCONFIG';
+  throw err;
 }
 
 const queryClient = postgres(connectionString, {
