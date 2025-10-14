@@ -8,9 +8,32 @@ const config: Config = {
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  safelist: [
+    'section-pad',
+    'bg-bg-base',
+    'text-fg-base',
+    'border-border-subtle',
+    'bg-card',
+    'text-muted',
+    'bg-accent',
+    'bg-brand-sage',
+    'bg-brand-terracotta',
+    'bg-brand-teal',
+    'bg-brand-ochre',
+  ],
   theme: {
     extend: {
       colors: {
+        // New token-based colors
+        bg: { base: 'var(--bg-base)' },
+        fg: { base: 'var(--fg-base)' },
+        brand: {
+          sage: 'var(--brand-sage)',
+          terracotta: 'var(--brand-terracotta)',
+          teal: 'var(--brand-teal)',
+          ochre: 'var(--brand-ochre)',
+        },
+        // shadcn/ui semantic tokens
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
@@ -27,8 +50,7 @@ const config: Config = {
           foreground: 'hsl(var(--secondary-foreground))',
         },
         accent: {
-          DEFAULT: brandTokens.colors.accent['500'],
-          ...brandTokens.colors.accent,
+          DEFAULT: 'var(--accent)',
           foreground: 'hsl(var(--accent-foreground))',
         },
         'neutral-dark': {
@@ -44,7 +66,7 @@ const config: Config = {
           foreground: 'hsl(var(--destructive-foreground))',
         },
         muted: {
-          DEFAULT: 'hsl(var(--muted))',
+          DEFAULT: 'var(--muted)',
           foreground: 'hsl(var(--muted-foreground))',
         },
         popover: {
@@ -52,13 +74,22 @@ const config: Config = {
           foreground: 'hsl(var(--popover-foreground))',
         },
         card: {
-          DEFAULT: 'hsl(var(--card))',
+          DEFAULT: 'var(--card)',
           foreground: 'hsl(var(--card-foreground))',
         },
         success: brandTokens.colors.semantic.success,
         warning: brandTokens.colors.semantic.warning,
         error: brandTokens.colors.semantic.error,
         info: brandTokens.colors.semantic.info,
+        // Japandi nature-inspired colors (legacy, bridged to new tokens)
+        sage: 'var(--brand-sage)',
+        terracotta: 'var(--brand-terracotta)',
+        teal: 'var(--brand-teal)',
+        clay: 'hsl(var(--clay))',
+        sand: 'hsl(var(--sand))',
+        bamboo: 'hsl(var(--bamboo))',
+        ochre: 'var(--brand-ochre)',
+        olive: 'hsl(var(--olive))',
       },
       fontFamily: {
         display: brandTokens.typography.fontFamilies.display.split(','),
@@ -74,9 +105,9 @@ const config: Config = {
       letterSpacing: brandTokens.typography.letterSpacing,
       borderRadius: {
         ...brandTokens.borderRadius,
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        lg: 'var(--radius-lg)',
+        md: 'calc(var(--radius-lg) - 2px)',
+        sm: 'calc(var(--radius-lg) - 4px)',
       },
       boxShadow: brandTokens.shadows,
       keyframes: {
@@ -88,10 +119,20 @@ const config: Config = {
           from: { height: 'var(--radix-accordion-content-height)' },
           to: { height: '0' },
         },
+        breathe: {
+          '0%, 100%': { transform: 'scale(1)' },
+          '50%': { transform: 'scale(1.05)' },
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-20px)' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        breathe: 'breathe 4s ease-in-out infinite',
+        float: 'float 6s ease-in-out infinite',
       },
     },
   },

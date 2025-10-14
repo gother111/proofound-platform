@@ -8,18 +8,27 @@ export async function GET(request: NextRequest) {
   const type = requestUrl.searchParams.get('type');
   const next = requestUrl.searchParams.get('next');
 
+  const redirectToLoginWithError = (message: string) => {
+    const errorUrl = new URL('/login', requestUrl.origin);
+    errorUrl.searchParams.set('error', message);
+    return NextResponse.redirect(errorUrl);
+  };
+
   if (code) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    try {
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
 
-    if (error) {
-      const errorUrl = new URL('/login', requestUrl.origin);
-      errorUrl.searchParams.set(
-        'error',
+      if (error) {
+        return redirectToLoginWithError(
+          'We could not validate your authentication link. Please try again.'
+        );
+      }
+    } catch (exchangeError) {
+      console.error('Failed to exchange OAuth code for session:', exchangeError);
+      return redirectToLoginWithError(
         'We could not validate your authentication link. Please try again.'
       );
-
-      return NextResponse.redirect(errorUrl);
     }
   }
 

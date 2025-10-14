@@ -1,31 +1,44 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Crimson+Pro:wght@400;500;600&display=swap');
 
+/* Import Design Tokens */
+@import '../styles/tokens.css';
+@import '../styles/animations.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 50 29% 96%;
-    --foreground: 158 47% 21%;
-    --card: 0 0% 100%;
-    --card-foreground: 158 47% 21%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 158 47% 21%;
-    --primary: 158 47% 21%;
-    --primary-foreground: 50 29% 96%;
-    --secondary: 48 18% 89%;
-    --secondary-foreground: 158 47% 21%;
-    --muted: 48 18% 89%;
-    --muted-foreground: 150 7% 43%;
-    --accent: 16 50% 53%;
-    --accent-foreground: 50 29% 96%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 150 7% 82%;
-    --input: 150 7% 82%;
-    --ring: 158 47% 21%;
-    --radius: 1rem;
+    /* shadcn/ui bridge - Map to new token system */
+    --background: var(--bg-base);
+    --foreground: var(--fg-base);
+    --card: var(--card);
+    --muted: var(--muted);
+    --accent: var(--accent);
+    --border: var(--border-subtle);
+    --radius: var(--radius-lg);
+
+    /* shadcn semantic tokens (HSL format for compatibility) */
+    --card-foreground: 30 6% 16%;
+    --popover: 40 43% 99%;
+    --popover-foreground: 30 6% 16%;
+    --primary: 100 10% 30%; /* #4A5943 - deep sage */
+    --primary-foreground: 40 29% 96%;
+    --secondary: 35 30% 76%; /* #D4C5B0 - warm sand */
+    --secondary-foreground: 30 6% 16%;
+    --muted-foreground: 40 6% 40%; /* #6B6760 - neutral gray */
+    --accent-foreground: 30 6% 16%;
+    --destructive: 10 38% 49%; /* #A85C4F - rust red */
+    --destructive-foreground: 40 29% 96%;
+    --input: 40 20% 90%;
+    --ring: 100 10% 30%;
+
+    /* Legacy Japandi colors (for backward compatibility) */
+    --clay: 35 35% 64%; /* #C9A57B - clay */
+    --sand: 35 30% 82%; /* #E0D5C7 - sand */
+    --bamboo: 100 13% 44%; /* #6B7F5F - bamboo */
+    --olive: 70 28% 46%; /* #8B9556 - olive */
   }
 
   .dark {
@@ -64,5 +77,12 @@
   h2,
   h3 {
     @apply font-display;
+  }
+}
+
+/* Section Spacing Utility */
+@layer utilities {
+  .section-pad {
+    @apply min-h-screen py-20 lg:py-32;
   }
 }

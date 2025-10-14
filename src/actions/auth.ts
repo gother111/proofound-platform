@@ -67,7 +67,7 @@ function resolveSiteUrl(headersList: Headers): string | null {
     return configuredSiteUrl;
   }
 
-  const origin = headersList.get('origin');
+  const origin = normalizeSiteUrl(headersList.get('origin'));
   if (origin) {
     return stripTrailingSlash(origin);
   }
@@ -94,13 +94,9 @@ function resolveSiteUrl(headersList: Headers): string | null {
     }
   }
 
-  const vercelUrl = process.env.VERCEL_URL;
+  const vercelUrl = normalizeSiteUrl(process.env.VERCEL_URL);
   if (vercelUrl) {
-    return `https://${stripTrailingSlash(vercelUrl)}`;
-  }
-
-  if (process.env.NODE_ENV !== 'production') {
-    return 'http://localhost:3000';
+    return vercelUrl;
   }
 
   return null;
@@ -417,12 +413,20 @@ export async function signInWithOAuth(
   }
 
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: result.data,
-    options: {
-      redirectTo: `${siteUrl}/auth/callback`,
-    },
-  });
+  let data: Awaited<ReturnType<typeof supabase.auth.signInWithOAuth>>['data'];
+  let error: Awaited<ReturnType<typeof supabase.auth.signInWithOAuth>>['error'];
+
+  try {
+    ({ data, error } = await supabase.auth.signInWithOAuth({
+      provider: result.data,
+      options: {
+        redirectTo: `${siteUrl}/auth/callback`,
+      },
+    }));
+  } catch (signInError) {
+    console.error('Failed to start OAuth sign-in flow:', signInError);
+    return { error: 'We could not start the sign-in flow. Please try again.' };
+  }
 
   if (error) {
     if (/not enabled/i.test(error.message)) {
