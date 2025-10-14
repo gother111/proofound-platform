@@ -186,6 +186,8 @@ npm run test:e2e         # Run E2E tests (Playwright)
 npm run test:e2e:ui      # Run E2E tests with UI
 ```
 
+> **Troubleshooting:** If `npm run lint` reports that `next` cannot be found, follow the steps in [`docs/TROUBLESHOOTING_LINT.md`](docs/TROUBLESHOOTING_LINT.md).
+
 ## Database Schema
 
 ### Core Tables
