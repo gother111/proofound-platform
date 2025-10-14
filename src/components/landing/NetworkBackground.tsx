@@ -146,6 +146,10 @@ export function NetworkBackground() {
 
   // Self-regulating system: nodes appear/disappear
   useEffect(() => {
+    if (dimensions.width === 0 || dimensions.height === 0) {
+      return;
+    }
+
     const interval = setInterval(() => {
       const nodes = nodesRef.current;
 
@@ -192,6 +196,10 @@ export function NetworkBackground() {
 
   // Animation loop
   useEffect(() => {
+    if (dimensions.width === 0 || dimensions.height === 0) {
+      return;
+    }
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
