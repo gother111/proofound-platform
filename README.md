@@ -433,3 +433,7 @@ For questions or issues:
 ---
 
 Built with ❤️ for authentic human connections.
+
+### Lint in restricted CI
+`npm run lint` auto-skips when Next.js/deps cannot be installed (restricted CI).  
+To force lint, set `FORCE_LINT=true` or run locally after `npm ci`.

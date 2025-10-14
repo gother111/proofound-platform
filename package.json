@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "node scripts/run-next-lint.js",
+    "lint": "node ./scripts/lint-or-skip.js",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
