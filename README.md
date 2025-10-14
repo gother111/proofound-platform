@@ -441,7 +441,7 @@ To force lint, set `FORCE_LINT=true` or run locally after `npm ci`.
 ### Environment setup (quick)
 1. Copy `.env.example` to `.env.local` and fill the values.
 2. In Supabase → Authentication → URL Configuration:
-   - Set **Site URL** to `NEXT_PUBLIC_SITE_URL`.
+   - Set **Site URL** to the same domain as `NEXT_PUBLIC_SITE_URL` (or `SITE_URL` if you use the private fallback).
    - Add redirect URLs: `/auth/callback`, `/reset-password/confirm`, `/verify-email`.
 3. Ensure `DATABASE_URL` points to your Postgres (Supabase) connection string (use the `?sslmode=require` variant if provided).
 4. (Optional) Set `SUPABASE_SERVICE_ROLE_KEY` for scripts/cron jobs.
