@@ -38,6 +38,15 @@ export type OAuthState = {
   error: string | null;
 };
 
+function isRedirectError(error: unknown): error is { digest: string } {
+  if (typeof error !== 'object' || error === null) {
+    return false;
+  }
+
+  const digest = (error as { digest?: unknown }).digest;
+  return typeof digest === 'string' && digest.startsWith('NEXT_REDIRECT');
+}
+
 function resolveRequestSiteUrl(headersList: Headers): string {
   const siteUrlFromHeaders = resolveSiteUrlFromHeaders(headersList);
   if (siteUrlFromHeaders) {
@@ -185,6 +194,9 @@ export async function signIn(
 
     return { error: null };
   } catch (error) {
+    if (isRedirectError(error)) {
+      throw error;
+    }
     console.error('Sign-in failed:', error);
     return { error: mapUnexpectedAuthError(error, 'log in') };
   }
@@ -385,6 +397,9 @@ export async function signInWithOAuth(
 
     return { error: 'We could not start the sign-in flow. Please try again.' };
   } catch (error) {
+    if (isRedirectError(error)) {
+      throw error;
+    }
     console.error('OAuth sign-in failed:', error);
     return { error: mapUnexpectedOAuthError(error) };
   }
