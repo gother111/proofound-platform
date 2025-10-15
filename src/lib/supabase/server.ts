@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 import { getEnv } from '@/lib/env';
 
 export async function createClient() {
-  const cookieStore = await cookies();
+  const cookieJar = cookies();
   const { SUPABASE_URL: supabaseUrl, SUPABASE_ANON_KEY: supabaseAnonKey } = getEnv(false);
 
   if (!supabaseUrl || !supabaseAnonKey) {
@@ -18,18 +18,18 @@ export async function createClient() {
   return createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       get(name: string) {
-        return cookieStore.get(name)?.value;
+        return cookieJar.get(name)?.value;
       },
       set(name: string, value: string, options: CookieOptions) {
         try {
-          cookieStore.set({ name, value, ...options });
+          cookieJar.set({ name, value, ...options });
         } catch (error) {
           // Handle cookie setting errors in Server Components
         }
       },
       remove(name: string, options: CookieOptions) {
         try {
-          cookieStore.set({ name, value: '', ...options });
+          cookieJar.set({ name, value: '', ...options });
         } catch (error) {
           // Handle cookie removal errors in Server Components
         }
