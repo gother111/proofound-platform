@@ -43,3 +43,27 @@ CREATE TRIGGER set_updated_at_organizations
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_updated_at();
 
+DROP TRIGGER IF EXISTS set_updated_at_impact_stories ON public.impact_stories;
+CREATE TRIGGER set_updated_at_impact_stories
+  BEFORE UPDATE ON public.impact_stories
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_updated_at();
+
+DROP TRIGGER IF EXISTS set_updated_at_experiences ON public.experiences;
+CREATE TRIGGER set_updated_at_experiences
+  BEFORE UPDATE ON public.experiences
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_updated_at();
+
+DROP TRIGGER IF EXISTS set_updated_at_education ON public.education;
+CREATE TRIGGER set_updated_at_education
+  BEFORE UPDATE ON public.education
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_updated_at();
+
+DROP TRIGGER IF EXISTS set_updated_at_volunteering ON public.volunteering;
+CREATE TRIGGER set_updated_at_volunteering
+  BEFORE UPDATE ON public.volunteering
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_updated_at();
+

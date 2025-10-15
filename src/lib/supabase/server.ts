@@ -15,6 +15,8 @@ export async function createClient() {
     throw err;
   }
 
+  const cookieStore = (await cookies()) as MutableCookieStore;
+
   return createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       get(name: string) {
@@ -26,6 +28,10 @@ export async function createClient() {
         } catch (error) {
           // Handle cookie setting errors in Server Components
         }
+
+        console.warn(
+          'Supabase attempted to set an auth cookie in a read-only context. Ensure createClient() is only used inside server actions or route handlers.'
+        );
       },
       remove(name: string, options: CookieOptions) {
         try {
@@ -33,6 +39,10 @@ export async function createClient() {
         } catch (error) {
           // Handle cookie removal errors in Server Components
         }
+
+        console.warn(
+          'Supabase attempted to remove an auth cookie in a read-only context. Ensure createClient() is only used inside server actions or route handlers.'
+        );
       },
     },
   });
