@@ -1,6 +1,6 @@
 'use server';
 
-import { resolveSiteUrlFromHeaders } from '@/lib/env';
+import { normalizeSiteUrl, resolveSiteUrlFromHeaders, stripTrailingSlash } from '@/lib/env';
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -38,6 +38,20 @@ export type OAuthState = {
   error: string | null;
 };
 
+function resolveRequestSiteUrl(headersList: Headers): string {
+  const siteUrlFromHeaders = resolveSiteUrlFromHeaders(headersList);
+  if (siteUrlFromHeaders) {
+    return stripTrailingSlash(siteUrlFromHeaders);
+  }
+
+  const origin = normalizeSiteUrl(headersList.get('origin'), { allowPreviewHosts: true });
+  if (origin) {
+    return stripTrailingSlash(origin);
+  }
+
+  return '';
+}
+
 export async function signUp(
   _prevState: SignUpState | undefined,
   formData: FormData
@@ -70,7 +84,7 @@ export async function signUp(
       };
     }
 
-    const siteUrl = resolveSiteUrlFromHeaders(headersList);
+    const siteUrl = resolveRequestSiteUrl(headersList);
     if (!siteUrl) {
       return {
         error: 'Unable to complete signup. Please try again later or contact support.',
@@ -159,7 +173,7 @@ export async function signIn(
     const { error } = await supabase.auth.signInWithPassword(result.data);
 
     if (error) {
-      const siteUrl = resolveSiteUrlFromHeaders(headersList);
+      const siteUrl = resolveRequestSiteUrl(headersList);
       if (isEmailNotConfirmedError(error) && siteUrl) {
         await resendVerificationEmail(supabase, email, siteUrl);
       }
@@ -269,7 +283,7 @@ export async function requestPasswordReset(formData: FormData) {
     return { error: 'Invalid email' };
   }
 
-  const siteUrl = resolveSiteUrlFromHeaders(headersList);
+  const siteUrl = resolveRequestSiteUrl(headersList);
   if (!siteUrl) {
     return { error: 'Unable to send reset email. Please try again later.' };
   }
@@ -341,7 +355,7 @@ export async function signInWithOAuth(
     }
 
     const headersList = await headers();
-    const siteUrl = resolveSiteUrlFromHeaders(headersList);
+    const siteUrl = resolveRequestSiteUrl(headersList);
 
     if (!siteUrl) {
       return { error: 'Unable to start the sign-in flow. Please try again later.' };
