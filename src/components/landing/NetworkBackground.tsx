@@ -67,6 +67,56 @@ export function NetworkBackground() {
     }
   }, []);
 
+  const generateInitialNodes = (width: number, height: number) => {
+    const idealCount = 27; // 3 layers × 9 nodes each
+    const aspectRatio = width / height;
+    const columns = Math.max(4, Math.round(Math.sqrt(idealCount * aspectRatio)));
+    const rows = Math.max(4, Math.ceil(idealCount / columns));
+    const horizontalSpacing = width / (columns + 1);
+    const verticalSpacing = height / (rows + 1);
+
+    const nodeTypes: Array<'person' | 'organization' | 'government'> = [
+      'person',
+      'organization',
+      'government',
+    ];
+
+    const nodes: Node[] = [];
+    let nodeIndex = 0;
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < columns; col++) {
+        if (nodeIndex >= idealCount) {
+          break;
+        }
+
+        const jitterX = (Math.random() - 0.5) * horizontalSpacing * 0.5;
+        const jitterY = (Math.random() - 0.5) * verticalSpacing * 0.5;
+        const baseX = horizontalSpacing * (col + 1) + jitterX;
+        const baseY = verticalSpacing * (row + 1) + jitterY;
+
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 0.25 + Math.random() * 0.55; // keep motion noticeable
+
+        nodes.push({
+          id: `node-${nodeIndex}`,
+          x: Math.min(Math.max(baseX, 0), width),
+          y: Math.min(Math.max(baseY, 0), height),
+          layer: Math.floor(Math.random() * 3),
+          type: nodeTypes[nodeIndex % nodeTypes.length],
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          opacity: 1,
+          appearing: true,
+        });
+
+        nodeIndex += 1;
+      }
+    }
+
+    return nodes;
+  };
+
   // Initialize network
   useEffect(() => {
     const updateDimensions = () => {
@@ -79,33 +129,6 @@ export function NetworkBackground() {
     updateDimensions();
     window.addEventListener('resize', updateDimensions);
 
-    // Initialize nodes across 3 layers
-    const initialNodes: Node[] = [];
-    const nodeTypes: Array<'person' | 'organization' | 'government'> = [
-      'person',
-      'organization',
-      'government',
-    ];
-
-    for (let i = 0; i < 25; i++) {
-      initialNodes.push({
-        id: `node-${i}`,
-        x: Math.random() * window.innerWidth,
-        y: Math.random() * window.innerHeight,
-        layer: Math.floor(Math.random() * 3),
-        type: nodeTypes[Math.floor(Math.random() * nodeTypes.length)],
-        vx: (Math.random() - 0.5) * 0.3,
-        vy: (Math.random() - 0.5) * 0.3,
-        opacity: 1,
-        appearing: true,
-      });
-    }
-
-    nodesRef.current = initialNodes;
-
-    // Initialize connections
-    updateConnections();
-
     return () => {
       window.removeEventListener('resize', updateDimensions);
       if (animationFrameRef.current) {
@@ -114,76 +137,83 @@ export function NetworkBackground() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!dimensions.width || !dimensions.height) {
+      return;
+    }
+
+    const evenlySpaced = generateInitialNodes(dimensions.width, dimensions.height);
+    nodesRef.current = evenlySpaced;
+    updateConnections();
+  }, [dimensions.width, dimensions.height]);
+
   // Update connections based on proximity
   const updateConnections = () => {
     const nodes = nodesRef.current;
     const newConnections: Connection[] = [];
-    const maxDistance = 250;
+    const maxDistance = 260;
+    const maxConnectionsPerNode = 3;
+    const addedPairs = new Set<string>();
 
     for (let i = 0; i < nodes.length; i++) {
-      for (let j = i + 1; j < nodes.length; j++) {
+      const distances: Array<{ index: number; distance: number }> = [];
+
+      for (let j = 0; j < nodes.length; j++) {
+        if (i === j) continue;
         const dx = nodes[i].x - nodes[j].x;
         const dy = nodes[i].y - nodes[j].y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-
+        const distance = Math.hypot(dx, dy);
         if (distance < maxDistance) {
-          // Allow cross-layer connections
-          const layerDiff = Math.abs(nodes[i].layer - nodes[j].layer);
-          const baseOpacity = 1 - distance / maxDistance;
-          const layerOpacity = layerDiff === 0 ? 1 : layerDiff === 1 ? 0.6 : 0.3;
-
-          newConnections.push({
-            from: nodes[i].id,
-            to: nodes[j].id,
-            opacity: baseOpacity * layerOpacity * 0.4,
-          });
+          distances.push({ index: j, distance });
         }
+      }
+
+      distances.sort((a, b) => a.distance - b.distance);
+
+      for (let k = 0; k < Math.min(maxConnectionsPerNode, distances.length); k++) {
+        const { index: j, distance } = distances[k];
+        const fromNode = nodes[i];
+        const toNode = nodes[j];
+        const pairKey = fromNode.id < toNode.id ? `${fromNode.id}-${toNode.id}` : `${toNode.id}-${fromNode.id}`;
+
+        if (addedPairs.has(pairKey)) {
+          continue;
+        }
+
+        const layerDiff = Math.abs(fromNode.layer - toNode.layer);
+        const baseOpacity = 1 - distance / maxDistance;
+        const layerOpacity = layerDiff === 0 ? 1 : layerDiff === 1 ? 0.65 : 0.4;
+
+        newConnections.push({
+          from: fromNode.id,
+          to: toNode.id,
+          opacity: baseOpacity * layerOpacity * 0.5,
+        });
+        addedPairs.add(pairKey);
       }
     }
 
     connectionsRef.current = newConnections;
   };
 
-  // Self-regulating system: nodes appear/disappear
+  // Periodically retarget velocities so nodes keep roaming
   useEffect(() => {
-    if (dimensions.width === 0 || dimensions.height === 0) {
+    if (!dimensions.width || !dimensions.height) {
       return;
     }
 
     const interval = setInterval(() => {
       const nodes = nodesRef.current;
-
-      // Randomly add or remove nodes
-      if (nodes.length < 30 && Math.random() > 0.5) {
-        // Add a new node
-        const nodeTypes: Array<'person' | 'organization' | 'government'> = [
-          'person',
-          'organization',
-          'government',
-        ];
-        const newNode: Node = {
-          id: `node-${Date.now()}`,
-          x: Math.random() * dimensions.width,
-          y: Math.random() * dimensions.height,
-          layer: Math.floor(Math.random() * 3),
-          type: nodeTypes[Math.floor(Math.random() * nodeTypes.length)],
-          vx: (Math.random() - 0.5) * 0.3,
-          vy: (Math.random() - 0.5) * 0.3,
-          opacity: 0,
-          appearing: true,
-        };
-        nodes.push(newNode);
-      } else if (nodes.length > 15 && Math.random() > 0.7) {
-        // Remove a random node
-        const indexToRemove = Math.floor(Math.random() * nodes.length);
-        nodes[indexToRemove].appearing = false;
-      }
-
-      updateConnections();
-    }, 8000);
+      nodes.forEach((node) => {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 0.2 + Math.random() * 0.45;
+        node.vx = node.vx * 0.4 + Math.cos(angle) * speed * 0.6;
+        node.vy = node.vy * 0.4 + Math.sin(angle) * speed * 0.6;
+      });
+    }, 7000);
 
     return () => clearInterval(interval);
-  }, [dimensions]);
+  }, [dimensions.width, dimensions.height]);
 
   // Reconnection dynamics
   useEffect(() => {
@@ -249,6 +279,17 @@ export function NetworkBackground() {
         // Update position with drift
         node.x += node.vx;
         node.y += node.vy;
+
+        // Gentle steering to keep nodes exploring the canvas evenly
+        node.vx += (Math.random() - 0.5) * 0.02;
+        node.vy += (Math.random() - 0.5) * 0.02;
+
+        const maxSpeed = 0.8;
+        const speed = Math.hypot(node.vx, node.vy);
+        if (speed > maxSpeed) {
+          node.vx = (node.vx / speed) * maxSpeed;
+          node.vy = (node.vy / speed) * maxSpeed;
+        }
 
         // Bounce off edges
         if (node.x < 0 || node.x > dimensions.width) node.vx *= -1;
