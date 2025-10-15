@@ -1,12 +1,12 @@
 import { requireAuth } from '@/lib/auth';
-import { db } from '@/db';
-import { orgInvitations, organizations, organizationMembers } from '@/db/schema';
-import { eq, and, gt } from 'drizzle-orm';
 import { notFound, redirect } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { acceptInvitation } from '@/actions/org';
 import { Building2, Mail } from 'lucide-react';
+import { createClient } from '@/lib/supabase/server';
+
+export const dynamic = 'force-dynamic';
 
 export default async function AcceptInvitationPage({
   params,
@@ -16,35 +16,43 @@ export default async function AcceptInvitationPage({
   const user = await requireAuth();
   const { slug, token } = await params;
 
-  // Find invitation
-  const [invitation] = await db
-    .select({
-      invitation: orgInvitations,
-      org: organizations,
-    })
-    .from(orgInvitations)
-    .innerJoin(organizations, eq(orgInvitations.orgId, organizations.id))
-    .where(
-      and(
-        eq(orgInvitations.token, token),
-        eq(organizations.slug, slug),
-        gt(orgInvitations.expiresAt, new Date())
-      )
+  const supabase = await createClient();
+  const invitationQuery = await supabase
+    .from('org_invitations')
+    .select(
+      `
+        id,
+        org_id,
+        email,
+        role,
+        token,
+        expires_at,
+        org:organizations (
+          id,
+          slug,
+          displayName:display_name,
+          mission
+        )
+      `
     )
-    .limit(1);
+    .eq('token', token)
+    .eq('organizations.slug', slug)
+    .gt('expires_at', new Date().toISOString())
+    .maybeSingle();
 
-  if (!invitation) {
+  if (invitationQuery.error || !invitationQuery.data) {
     notFound();
   }
 
-  // Check if user already is a member
-  const [existingMembership] = await db
-    .select()
-    .from(organizationMembers)
-    .where(
-      and(eq(organizationMembers.orgId, invitation.org.id), eq(organizationMembers.userId, user.id))
-    )
-    .limit(1);
+  const invitation = invitationQuery.data;
+  const orgInfo = Array.isArray(invitation.org) ? invitation.org[0] : invitation.org;
+
+  const { data: existingMembership } = await supabase
+    .from('organization_members')
+    .select('user_id')
+    .eq('org_id', invitation.org_id)
+    .eq('user_id', user.id)
+    .maybeSingle();
 
   if (existingMembership) {
     // Already a member, redirect to org
@@ -67,11 +75,9 @@ export default async function AcceptInvitationPage({
               <Building2 className="w-5 h-5 text-primary-600" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-neutral-dark-700">{invitation.org.displayName}</p>
-              {invitation.org.mission && (
-                <p className="text-sm text-neutral-dark-600 mt-1 line-clamp-2">
-                  {invitation.org.mission}
-                </p>
+              <p className="font-semibold text-neutral-dark-700">{orgInfo?.displayName}</p>
+              {orgInfo?.mission && (
+                <p className="text-sm text-neutral-dark-600 mt-1 line-clamp-2">{orgInfo.mission}</p>
               )}
             </div>
           </div>
@@ -80,14 +86,12 @@ export default async function AcceptInvitationPage({
             <div className="flex items-center justify-between text-sm">
               <span className="text-neutral-dark-600">Your role:</span>
               <span className="font-medium text-neutral-dark-700 capitalize">
-                {invitation.invitation.role}
+                {invitation.role}
               </span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-neutral-dark-600">Invited to:</span>
-              <span className="font-medium text-neutral-dark-700">
-                {invitation.invitation.email}
-              </span>
+              <span className="font-medium text-neutral-dark-700">{invitation.email}</span>
             </div>
           </div>
 

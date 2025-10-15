@@ -1,0 +1,60 @@
+/**
+ * Design Tokens - Wireframe Spec
+ * Source: tokens/wireframe-spec.json
+ * Theme: Multidimensional Network - Warm Natural Palette
+ */
+
+:root {
+  /* Color Tokens - Primary */
+  --bg-base: #f5f3ee;
+  --fg-base: #2c2a27;
+
+  /* Color Tokens - Brand (Node Types) */
+  --brand-sage: #7a9278; /* Person nodes */
+  --brand-terracotta: #c67b5c; /* Organization nodes */
+  --brand-teal: #5c8b89; /* Government nodes */
+  --brand-ochre: #d4a574; /* Accent */
+
+  /* Color Tokens - Semantic */
+  --card: #fdfcfa;
+  --muted: #e8e4dc;
+  --accent: #b8a592;
+  --border-subtle: rgba(75, 70, 62, 0.12);
+
+  /* Border Radius */
+  --radius-lg: 1.25rem;
+
+  /* Typography - Base */
+  --font-size-base: 16px;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+
+  /* Typography - Scale (mapped to Tailwind) */
+  --font-size-h1: 1.5rem; /* 2xl */
+  --font-size-h2: 1.25rem; /* xl */
+  --font-size-h3: 1.125rem; /* lg */
+  --font-size-body: 1rem; /* base */
+}
+
+/**
+ * Dark Mode Scaffold
+ * Conservative defaults for future dark theme extension
+ * Uncomment and refine when implementing dark mode
+ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Color Tokens - Dark Mode */
+    /* --bg-base: #121212;
+    --fg-base: #ECECEC;
+    --card: #1A1A1A;
+    --muted: #2A2A2A;
+    --accent: #B8A592;
+    --border-subtle: rgba(255, 255, 255, 0.12);
+    
+    Brand colors remain the same in dark mode for consistency
+    --brand-sage: #7A9278;
+    --brand-terracotta: #C67B5C;
+    --brand-teal: #5C8B89;
+    --brand-ochre: #D4A574; */
+  }
+}

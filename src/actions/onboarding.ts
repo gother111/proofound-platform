@@ -1,13 +1,11 @@
 'use server';
 
-import { db } from '@/db';
-import { profiles, individualProfiles, organizations, organizationMembers } from '@/db/schema';
 import { requireAuth } from '@/lib/auth';
-import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { generateSlug } from '@/lib/utils';
 import { nanoid } from 'nanoid';
+import { createClient } from '@/lib/supabase/server';
 
 const choosePersonaSchema = z.object({
   persona: z.enum(['individual', 'org_member']),
@@ -46,7 +44,16 @@ export async function choosePersona(formData: FormData) {
     return { error: 'Invalid persona choice' };
   }
 
-  await db.update(profiles).set({ persona: result.data.persona }).where(eq(profiles.id, user.id));
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('profiles')
+    .update({ persona: result.data.persona, updated_at: new Date().toISOString() })
+    .eq('id', user.id);
+
+  if (error) {
+    console.error('Failed to update persona:', error);
+    return { error: 'Failed to update persona. Please try again.' };
+  }
 
   revalidatePath('/onboarding');
   return { success: true, persona: result.data.persona };
@@ -71,31 +78,46 @@ export async function completeIndividualOnboarding(formData: FormData) {
   }
 
   try {
-    // Update profile
-    await db
-      .update(profiles)
-      .set({
-        handle: handle.toLowerCase(),
-        displayName,
-        persona: 'individual',
-      })
-      .where(eq(profiles.id, user.id));
+    const supabase = await createClient();
 
-    // Create individual profile
-    await db.insert(individualProfiles).values({
-      userId: user.id,
+    const profileUpdate = await supabase
+      .from('profiles')
+      .update({
+        handle: handle.toLowerCase(),
+        display_name: displayName,
+        persona: 'individual',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', user.id);
+
+    if (profileUpdate.error) {
+      if (profileUpdate.error.code === '23505') {
+        return { error: 'Handle already taken. Please choose another.' };
+      }
+
+      console.error('Failed to update profile during onboarding:', profileUpdate.error);
+      return { error: 'Failed to complete setup. Please try again.' };
+    }
+
+    const individualInsert = await supabase.from('individual_profiles').upsert({
+      user_id: user.id,
       headline: headline || null,
       bio: bio || null,
       location: location || null,
       visibility: 'network',
     });
 
+    if (individualInsert.error) {
+      console.error(
+        'Failed to create individual profile during onboarding:',
+        individualInsert.error
+      );
+      return { error: 'Failed to complete setup. Please try again.' };
+    }
+
     revalidatePath('/app/i');
     return { success: true };
   } catch (error: any) {
-    if (error.code === '23505') {
-      return { error: 'Handle already taken. Please choose another.' };
-    }
     console.error('Individual onboarding error:', error);
     return { error: 'Failed to complete setup. Please try again.' };
   }
@@ -127,37 +149,59 @@ export async function completeOrganizationOnboarding(formData: FormData) {
   }
 
   try {
-    // Create organization
-    const [org] = await db
-      .insert(organizations)
-      .values({
+    const supabase = await createClient();
+
+    const orgInsert = await supabase
+      .from('organizations')
+      .insert({
         slug: slug.toLowerCase(),
-        displayName,
-        legalName: legalName || null,
-        type: type as any,
+        display_name: displayName,
+        legal_name: legalName || null,
+        type,
         mission: mission || null,
         website: website || null,
-        createdBy: user.id,
+        created_by: user.id,
       })
-      .returning();
+      .select(`id, slug`)
+      .maybeSingle();
 
-    // Add user as owner
-    await db.insert(organizationMembers).values({
-      orgId: org.id,
-      userId: user.id,
+    if (orgInsert.error) {
+      if (orgInsert.error.code === '23505') {
+        return { error: 'Organization slug already taken. Please choose another.' };
+      }
+      console.error('Organization onboarding insert error:', orgInsert.error);
+      return { error: 'Failed to create organization. Please try again.' };
+    }
+
+    const org = orgInsert.data;
+    if (!org) {
+      return { error: 'Failed to create organization. Please try again.' };
+    }
+
+    const memberInsert = await supabase.from('organization_members').insert({
+      org_id: org.id,
+      user_id: user.id,
       role: 'owner',
       status: 'active',
     });
 
-    // Update profile persona
-    await db.update(profiles).set({ persona: 'org_member' }).where(eq(profiles.id, user.id));
+    if (memberInsert.error) {
+      console.error('Failed to add organization owner:', memberInsert.error);
+      return { error: 'Failed to create organization. Please try again.' };
+    }
+
+    const personaUpdate = await supabase
+      .from('profiles')
+      .update({ persona: 'org_member', updated_at: new Date().toISOString() })
+      .eq('id', user.id);
+
+    if (personaUpdate.error) {
+      console.error('Failed to update persona after organization onboarding:', personaUpdate.error);
+    }
 
     revalidatePath(`/app/o/${org.slug}`);
     return { success: true, orgSlug: org.slug };
   } catch (error: any) {
-    if (error.code === '23505') {
-      return { error: 'Organization slug already taken. Please choose another.' };
-    }
     console.error('Organization onboarding error:', error);
     return { error: 'Failed to create organization. Please try again.' };
   }

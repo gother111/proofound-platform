@@ -1,5 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Crimson+Pro:wght@400;500;600&display=swap');
 
+/* Import Design Tokens */
+@import '../styles/tokens.css';
+@import '../styles/animations.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -71,5 +75,12 @@
   h2,
   h3 {
     @apply font-display;
+  }
+}
+
+/* Section Spacing Utility */
+@layer utilities {
+  .section-pad {
+    @apply min-h-screen py-20 lg:py-32;
   }
 }

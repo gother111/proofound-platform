@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { checkRateLimit, getRateLimitIdentifier } from '@/lib/rate-limit';
 import { headers } from 'next/headers';
-import type { AuthError, SupabaseClient } from '@supabase/supabase-js';
+import type { AuthError } from '@supabase/supabase-js';
 
 const signUpSchema = z.object({
   email: z.string().email(),
@@ -33,34 +33,86 @@ export type SignUpState = {
   success: boolean;
 };
 
+type ServerSupabaseClient = Awaited<ReturnType<typeof createClient>>;
+
 export type OAuthState = {
   error: string | null;
 };
 
-function resolveSiteUrl(headersList: Headers): string | null {
-  const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
-  if (configuredSiteUrl) {
-    return configuredSiteUrl.replace(/\/$/, '');
+function stripTrailingSlash(url: string) {
+  return url.replace(/\/$/, '');
+}
+
+function resolveConfiguredSiteUrl() {
+  const explicitEnv =
+    process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || process.env.PUBLIC_SITE_URL;
+
+  if (explicitEnv) {
+    return stripTrailingSlash(explicitEnv);
   }
 
-  const origin = headersList.get('origin');
+  const vercelProjectUrl =
+    process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.NEXT_PUBLIC_VERCEL_URL;
+
+  if (vercelProjectUrl) {
+    return `https://${stripTrailingSlash(vercelProjectUrl)}`;
+  }
+
+  return null;
+}
+
+function resolveSiteUrl(headersList: Headers): string | null {
+  const configuredSiteUrl = resolveConfiguredSiteUrl();
+  if (configuredSiteUrl) {
+    return configuredSiteUrl;
+  }
+
+  const origin = normalizeSiteUrl(headersList.get('origin'));
   if (origin) {
-    return origin;
+    return stripTrailingSlash(origin);
   }
 
   const forwardedHost = headersList.get('x-forwarded-host');
   if (forwardedHost) {
     const forwardedProto = headersList.get('x-forwarded-proto') ?? 'https';
-    return `${forwardedProto}://${forwardedHost}`;
+    return `${forwardedProto}://${stripTrailingSlash(forwardedHost)}`;
   }
 
   const host = headersList.get('host');
   if (host) {
-    const proto = headersList.get('x-forwarded-proto') ?? 'https';
-    return `${proto}://${host}`;
+    const proto = resolveProtocol(headersList, host);
+    return `${proto}://${stripTrailingSlash(host)}`;
+  }
+
+  const referer = headersList.get('referer');
+  if (referer) {
+    try {
+      const refererUrl = new URL(referer);
+      return stripTrailingSlash(refererUrl.origin);
+    } catch (error) {
+      // Ignore malformed referer header values
+    }
+  }
+
+  const vercelUrl = normalizeSiteUrl(process.env.VERCEL_URL);
+  if (vercelUrl) {
+    return vercelUrl;
   }
 
   return null;
+}
+
+function resolveProtocol(headersList: Headers, host: string): string {
+  const forwardedProto = headersList.get('x-forwarded-proto');
+  if (forwardedProto) {
+    return forwardedProto;
+  }
+
+  if (host.startsWith('localhost') || host.startsWith('127.0.0.1')) {
+    return 'http';
+  }
+
+  return 'https';
 }
 
 export async function signUp(
@@ -129,7 +181,8 @@ export async function signUp(
 
     const identities = signUpResult.user?.identities ?? [];
     if (identities.length === 0) {
-      await resendVerificationEmail(supabase, result.data.email, siteUrl);
+      const verificationEmail = signUpResult.user?.email ?? result.data.email;
+      await resendVerificationEmail(supabase, verificationEmail, siteUrl);
       return {
         error:
           'An account with this email already exists. We just sent a fresh verification link to your inbox.',
@@ -227,7 +280,11 @@ function mapSupabaseSignInError(error: AuthError, email?: string): string {
   }
 }
 
-async function resendVerificationEmail(supabase: SupabaseClient, email: string, siteUrl: string) {
+async function resendVerificationEmail(
+  supabase: ServerSupabaseClient,
+  email: string,
+  siteUrl: string
+) {
   try {
     await supabase.auth.resend({
       type: 'signup',
@@ -274,8 +331,11 @@ export async function requestPasswordReset(formData: FormData) {
 
   const supabase = await createClient();
 
+  const callbackUrl = new URL('/auth/callback', siteUrl);
+  callbackUrl.searchParams.set('next', '/reset-password/confirm');
+
   const { error } = await supabase.auth.resetPasswordForEmail(result.data.email, {
-    redirectTo: `${siteUrl}/reset-password/confirm`,
+    redirectTo: callbackUrl.toString(),
   });
 
   if (error) {
@@ -299,7 +359,15 @@ export async function confirmPasswordReset(formData: FormData) {
   });
 
   if (error) {
-    return { error: error.message };
+    if (
+      error.message === 'Auth session missing' ||
+      /session/i.test(error.message) ||
+      error.status === 401
+    ) {
+      return { error: 'This reset link is invalid or has expired. Please request a new one.' };
+    }
+
+    return { error: 'We were unable to reset your password. Please try again.' };
   }
 
   return { success: true };
@@ -345,12 +413,20 @@ export async function signInWithOAuth(
   }
 
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: result.data,
-    options: {
-      redirectTo: `${siteUrl}/auth/callback`,
-    },
-  });
+  let data: Awaited<ReturnType<typeof supabase.auth.signInWithOAuth>>['data'];
+  let error: Awaited<ReturnType<typeof supabase.auth.signInWithOAuth>>['error'];
+
+  try {
+    ({ data, error } = await supabase.auth.signInWithOAuth({
+      provider: result.data,
+      options: {
+        redirectTo: `${siteUrl}/auth/callback`,
+      },
+    }));
+  } catch (signInError) {
+    console.error('Failed to start OAuth sign-in flow:', signInError);
+    return { error: 'We could not start the sign-in flow. Please try again.' };
+  }
 
   if (error) {
     if (/not enabled/i.test(error.message)) {

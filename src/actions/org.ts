@@ -1,13 +1,11 @@
 'use server';
 
-import { db } from '@/db';
-import { organizations, organizationMembers, orgInvitations, auditLogs } from '@/db/schema';
 import { requireAuth, assertOrgRole } from '@/lib/auth';
-import { eq, and } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { nanoid } from 'nanoid';
 import { sendOrgInviteEmail } from '@/lib/email';
+import { createClient } from '@/lib/supabase/server';
 
 const updateOrgSchema = z.object({
   displayName: z.string().min(1).max(100).optional(),
@@ -40,29 +38,48 @@ export async function updateOrganization(orgId: string, formData: FormData) {
   }
 
   try {
-    await db
-      .update(organizations)
-      .set({
-        ...result.data,
-        updatedAt: new Date(),
+    const supabase = await createClient();
+    const updateResult = await supabase
+      .from('organizations')
+      .update({
+        display_name: result.data.displayName ?? null,
+        legal_name: result.data.legalName ?? null,
+        mission: result.data.mission ?? null,
+        website: result.data.website ?? null,
+        logo_url: result.data.logoUrl ?? null,
+        updated_at: new Date().toISOString(),
       })
-      .where(eq(organizations.id, orgId));
+      .eq('id', orgId);
 
-    const [org] = await db.select().from(organizations).where(eq(organizations.id, orgId)).limit(1);
+    if (updateResult.error) {
+      console.error('Failed to update organization:', updateResult.error);
+      return { error: 'Failed to update organization' };
+    }
 
-    // Log audit event
-    await db.insert(auditLogs).values({
-      actorId: user.id,
-      orgId,
+    const orgQuery = await supabase
+      .from('organizations')
+      .select('id, slug')
+      .eq('id', orgId)
+      .maybeSingle();
+
+    if (orgQuery.error || !orgQuery.data) {
+      console.error('Failed to load organization after update:', orgQuery.error);
+      return { error: 'Failed to update organization' };
+    }
+
+    await supabase.from('audit_logs').insert({
+      actor_id: user.id,
+      org_id: orgId,
       action: 'org.updated',
-      targetType: 'organization',
-      targetId: orgId,
+      target_type: 'organization',
+      target_id: orgId,
       meta: { changes: result.data },
     });
 
-    revalidatePath(`/app/o/${org.slug}`);
+    revalidatePath(`/app/o/${orgQuery.data.slug}`);
     return { success: true };
   } catch (error) {
+    console.error('Unexpected organization update error:', error);
     return { error: 'Failed to update organization' };
   }
 }
@@ -82,38 +99,58 @@ export async function inviteMember(orgId: string, formData: FormData) {
   }
 
   try {
+    const supabase = await createClient();
     const token = nanoid(32);
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
 
-    await db.insert(orgInvitations).values({
-      orgId,
+    const invitationInsert = await supabase.from('org_invitations').insert({
+      org_id: orgId,
       email: result.data.email,
       role: result.data.role,
       token,
-      expiresAt,
-      invitedBy: user.id,
+      expires_at: expiresAt.toISOString(),
+      invited_by: user.id,
     });
 
-    // Get org details
-    const [org] = await db.select().from(organizations).where(eq(organizations.id, orgId)).limit(1);
+    if (invitationInsert.error) {
+      console.error('Failed to create invitation:', invitationInsert.error);
+      return { error: 'Failed to send invitation' };
+    }
+
+    const orgQuery = await supabase
+      .from('organizations')
+      .select('display_name, slug')
+      .eq('id', orgId)
+      .maybeSingle();
+
+    if (orgQuery.error || !orgQuery.data) {
+      console.error('Failed to load organization for invite:', orgQuery.error);
+      return { error: 'Failed to send invitation' };
+    }
 
     // Send email
-    await sendOrgInviteEmail(result.data.email, org.displayName, result.data.role, token);
+    await sendOrgInviteEmail(
+      result.data.email,
+      orgQuery.data.display_name,
+      result.data.role,
+      token
+    );
 
     // Log audit event
-    await db.insert(auditLogs).values({
-      actorId: user.id,
-      orgId,
+    await supabase.from('audit_logs').insert({
+      actor_id: user.id,
+      org_id: orgId,
       action: 'member.invited',
-      targetType: 'invitation',
-      targetId: result.data.email,
+      target_type: 'invitation',
+      target_id: result.data.email,
       meta: { role: result.data.role },
     });
 
-    revalidatePath(`/app/o/${org.slug}/members`);
+    revalidatePath(`/app/o/${orgQuery.data.slug}/members`);
     return { success: true };
   } catch (error) {
+    console.error('Unexpected invite member error:', error);
     return { error: 'Failed to send invitation' };
   }
 }
@@ -122,55 +159,64 @@ export async function acceptInvitation(token: string) {
   const user = await requireAuth();
 
   try {
-    // Find invitation
-    const [invitation] = await db
-      .select()
-      .from(orgInvitations)
-      .where(eq(orgInvitations.token, token))
-      .limit(1);
+    const supabase = await createClient();
+    const invitationQuery = await supabase
+      .from('org_invitations')
+      .select('id, org_id, email, role, token, expires_at')
+      .eq('token', token)
+      .maybeSingle();
 
-    if (!invitation) {
+    if (invitationQuery.error || !invitationQuery.data) {
       return { error: 'Invitation not found' };
     }
 
-    if (new Date() > new Date(invitation.expiresAt)) {
+    const invitation = invitationQuery.data;
+
+    if (new Date() > new Date(invitation.expires_at)) {
       return { error: 'Invitation expired' };
     }
 
-    // Get org
-    const [org] = await db
-      .select()
-      .from(organizations)
-      .where(eq(organizations.id, invitation.orgId))
-      .limit(1);
+    const orgQuery = await supabase
+      .from('organizations')
+      .select('id, slug, display_name')
+      .eq('id', invitation.org_id)
+      .maybeSingle();
 
-    // Add member
-    await db.insert(organizationMembers).values({
-      orgId: invitation.orgId,
-      userId: user.id,
+    if (orgQuery.error || !orgQuery.data) {
+      return { error: 'Organization not found' };
+    }
+
+    const memberInsert = await supabase.from('organization_members').insert({
+      org_id: invitation.org_id,
+      user_id: user.id,
       role: invitation.role,
       status: 'active',
     });
 
-    // Delete invitation
-    await db.delete(orgInvitations).where(eq(orgInvitations.id, invitation.id));
+    if (memberInsert.error) {
+      if (memberInsert.error.code === '23505') {
+        return { error: 'You are already a member of this organization' };
+      }
+      console.error('Failed to add member:', memberInsert.error);
+      return { error: 'Failed to accept invitation' };
+    }
+
+    await supabase.from('org_invitations').delete().eq('id', invitation.id);
 
     // Log audit event
-    await db.insert(auditLogs).values({
-      actorId: user.id,
-      orgId: invitation.orgId,
+    await supabase.from('audit_logs').insert({
+      actor_id: user.id,
+      org_id: invitation.org_id,
       action: 'member.joined',
-      targetType: 'member',
-      targetId: user.id,
+      target_type: 'member',
+      target_id: user.id,
       meta: { role: invitation.role },
     });
 
-    revalidatePath(`/app/o/${org.slug}`);
-    return { success: true, orgSlug: org.slug };
+    revalidatePath(`/app/o/${orgQuery.data.slug}`);
+    return { success: true, orgSlug: orgQuery.data.slug };
   } catch (error: any) {
-    if (error.code === '23505') {
-      return { error: 'You are already a member of this organization' };
-    }
+    console.error('Unexpected invitation acceptance error:', error);
     return { error: 'Failed to accept invitation' };
   }
 }
@@ -180,23 +226,38 @@ export async function removeMember(orgId: string, userId: string) {
   await assertOrgRole(orgId, user.id, ['owner', 'admin']);
 
   try {
-    await db
-      .delete(organizationMembers)
-      .where(and(eq(organizationMembers.orgId, orgId), eq(organizationMembers.userId, userId)));
+    const supabase = await createClient();
+    const deletion = await supabase
+      .from('organization_members')
+      .delete()
+      .eq('org_id', orgId)
+      .eq('user_id', userId);
 
-    // Log audit event
-    await db.insert(auditLogs).values({
-      actorId: user.id,
-      orgId,
+    if (deletion.error) {
+      console.error('Failed to remove member:', deletion.error);
+      return { error: 'Failed to remove member' };
+    }
+
+    await supabase.from('audit_logs').insert({
+      actor_id: user.id,
+      org_id: orgId,
       action: 'member.removed',
-      targetType: 'member',
-      targetId: userId,
+      target_type: 'member',
+      target_id: userId,
     });
 
-    const [org] = await db.select().from(organizations).where(eq(organizations.id, orgId)).limit(1);
-    revalidatePath(`/app/o/${org.slug}/members`);
+    const orgQuery = await supabase
+      .from('organizations')
+      .select('slug')
+      .eq('id', orgId)
+      .maybeSingle();
+
+    if (orgQuery.data?.slug) {
+      revalidatePath(`/app/o/${orgQuery.data.slug}/members`);
+    }
     return { success: true };
   } catch (error) {
+    console.error('Unexpected remove member error:', error);
     return { error: 'Failed to remove member' };
   }
 }

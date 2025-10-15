@@ -1,0 +1,97 @@
+/**
+ * Animation Utilities - Organic Movement
+ * Based on wireframe spec animation principles:
+ * - Breathing: Subtle scale pulse
+ * - Organic Easing: Natural motion curves
+ * - Staggered: Sequential appearance
+ */
+
+/* Breathing Animation - Subtle scale pulse (1 → 1.05 → 1) */
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Floating Animation - Gentle vertical motion */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Fade In Animation - Organic entrance */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/**
+ * Stagger Utilities
+ * Usage: Add data-stagger attribute to parent container
+ * Child elements will animate sequentially with delay
+ */
+[data-stagger] > * {
+  animation-delay: calc(var(--stagger-delay, 0.1s) * var(--stagger-index, 0));
+}
+
+/* Default stagger increments for first 10 children */
+[data-stagger] > *:nth-child(1) {
+  --stagger-index: 0;
+}
+[data-stagger] > *:nth-child(2) {
+  --stagger-index: 1;
+}
+[data-stagger] > *:nth-child(3) {
+  --stagger-index: 2;
+}
+[data-stagger] > *:nth-child(4) {
+  --stagger-index: 3;
+}
+[data-stagger] > *:nth-child(5) {
+  --stagger-index: 4;
+}
+[data-stagger] > *:nth-child(6) {
+  --stagger-index: 5;
+}
+[data-stagger] > *:nth-child(7) {
+  --stagger-index: 6;
+}
+[data-stagger] > *:nth-child(8) {
+  --stagger-index: 7;
+}
+[data-stagger] > *:nth-child(9) {
+  --stagger-index: 8;
+}
+[data-stagger] > *:nth-child(10) {
+  --stagger-index: 9;
+}
+
+/**
+ * Utility Classes
+ */
+.animate-breathe {
+  animation: breathe 4s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out forwards;
+}
