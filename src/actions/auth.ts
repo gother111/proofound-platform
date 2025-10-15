@@ -4,7 +4,6 @@ import { normalizeSiteUrl, resolveSiteUrlFromHeaders, stripTrailingSlash } from 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { isRedirectError } from 'next/dist/client/components/redirect';
 import { z } from 'zod';
 import { checkRateLimit, getRateLimitIdentifier } from '@/lib/rate-limit';
 import { headers } from 'next/headers';
@@ -38,6 +37,15 @@ export type SignUpState = {
 export type OAuthState = {
   error: string | null;
 };
+
+function isRedirectError(error: unknown): error is { digest: string } {
+  if (typeof error !== 'object' || error === null) {
+    return false;
+  }
+
+  const digest = (error as { digest?: unknown }).digest;
+  return typeof digest === 'string' && digest.startsWith('NEXT_REDIRECT');
+}
 
 function resolveRequestSiteUrl(headersList: Headers): string {
   const siteUrlFromHeaders = resolveSiteUrlFromHeaders(headersList);
