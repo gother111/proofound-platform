@@ -31,7 +31,7 @@ function pickDatabaseUrl(): string | undefined {
   return undefined;
 }
 
-function normalizeSiteUrl(
+export function normalizeSiteUrl(
   value: string | null | undefined,
   { allowPreviewHosts = false }: { allowPreviewHosts?: boolean } = {}
 ): string | null {
