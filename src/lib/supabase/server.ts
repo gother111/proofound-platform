@@ -15,24 +15,38 @@ export async function createClient() {
     throw err;
   }
 
+  const cookieStore = (await cookies()) as MutableCookieStore;
+
   return createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       get(name: string) {
         return cookieStore.get(name)?.value;
       },
       set(name: string, value: string, options: CookieOptions) {
-        try {
-          cookieStore.set({ name, value, ...options });
-        } catch (error) {
-          // Handle cookie setting errors in Server Components
+        if (typeof cookieStore.set === 'function') {
+          cookieStore.set(name, value, withDefaultOptions(options));
+          return;
         }
+
+        console.warn(
+          'Supabase attempted to set an auth cookie in a read-only context. Ensure createClient() is only used inside server actions or route handlers.'
+        );
       },
       remove(name: string, options: CookieOptions) {
-        try {
-          cookieStore.set({ name, value: '', ...options });
-        } catch (error) {
-          // Handle cookie removal errors in Server Components
+        if (typeof cookieStore.set === 'function') {
+          const removalOptions = withDefaultOptions({
+            maxAge: 0,
+            expires: new Date(0),
+            ...options,
+          });
+
+          cookieStore.set(name, '', removalOptions);
+          return;
         }
+
+        console.warn(
+          'Supabase attempted to remove an auth cookie in a read-only context. Ensure createClient() is only used inside server actions or route handlers.'
+        );
       },
     },
   });

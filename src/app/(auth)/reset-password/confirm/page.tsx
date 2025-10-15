@@ -24,9 +24,53 @@ function ConfirmResetPasswordForm() {
   const [isAuthenticating, setIsAuthenticating] = useState(true);
 
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const hash = window.location.hash;
+
+    if (!hash || !hash.startsWith('#')) {
+      return;
+    }
+
+    const hashParams = new URLSearchParams(hash.slice(1));
+
+    if (hashParams.size === 0) {
+      return;
+    }
+
+    const currentParams = new URLSearchParams(window.location.search);
+    let updated = false;
+
+    hashParams.forEach((value, key) => {
+      if (!value) {
+        return;
+      }
+
+      if (currentParams.get(key) !== value) {
+        currentParams.set(key, value);
+        updated = true;
+      }
+    });
+
+    if (updated) {
+      const nextUrl = `${window.location.pathname}?${currentParams.toString()}`;
+      router.replace(nextUrl, { scroll: false });
+    }
+  }, [router]);
+
+  useEffect(() => {
     const codeParam = searchParams.get('code');
 
     if (!codeParam) {
+      if (typeof window !== 'undefined') {
+        const hash = window.location.hash;
+        if (hash && hash.includes('code=')) {
+          return;
+        }
+      }
+
       setIsAuthenticating(false);
       return;
     }

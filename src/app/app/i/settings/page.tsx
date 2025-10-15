@@ -1,6 +1,8 @@
 import { requireAuth } from '@/lib/auth';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 
+export const dynamic = 'force-dynamic';
+
 export default async function IndividualSettingsPage() {
   const user = await requireAuth();
 

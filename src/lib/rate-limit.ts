@@ -1,58 +1,50 @@
-import { db } from '@/db';
-import { rateLimits } from '@/db/schema';
-import { eq } from 'drizzle-orm';
-
 const WINDOW_SECONDS = parseInt(process.env.RATE_LIMIT_WINDOW_SECONDS || '60', 10);
 const MAX_REQUESTS = parseInt(process.env.RATE_LIMIT_MAX || '30', 10);
 
+type RateLimitEntry = {
+  attempts: number;
+  resetAt: number;
+};
+
+type RateLimitStore = Map<string, RateLimitEntry>;
+
+declare global {
+  // eslint-disable-next-line no-var
+  var __PROFOUND_RATE_LIMIT_STORE__: RateLimitStore | undefined;
+}
+
+function getStore(): RateLimitStore {
+  if (!globalThis.__PROFOUND_RATE_LIMIT_STORE__) {
+    globalThis.__PROFOUND_RATE_LIMIT_STORE__ = new Map();
+  }
+
+  return globalThis.__PROFOUND_RATE_LIMIT_STORE__;
+}
+
 export async function checkRateLimit(identifier: string, route: string): Promise<boolean> {
   const id = `${identifier}:${route}`;
-  const now = new Date();
-  const resetAt = new Date(now.getTime() + WINDOW_SECONDS * 1000);
+  const store = getStore();
+  const now = Date.now();
+  const windowMs = WINDOW_SECONDS * 1000;
 
-  try {
-    // Try to get existing rate limit record
-    const [record] = await db.select().from(rateLimits).where(eq(rateLimits.id, id)).limit(1);
+  const existing = store.get(id);
 
-    if (!record) {
-      // Create new record
-      await db.insert(rateLimits).values({
-        id,
-        attempts: 1,
-        resetAt,
-      });
-      return true;
-    }
+  if (!existing || existing.resetAt <= now) {
+    store.set(id, {
+      attempts: 1,
+      resetAt: now + windowMs,
+    });
 
-    // Check if window has expired
-    if (new Date(record.resetAt) < now) {
-      // Reset counter
-      await db
-        .update(rateLimits)
-        .set({
-          attempts: 1,
-          resetAt,
-        })
-        .where(eq(rateLimits.id, id));
-      return true;
-    }
-
-    // Increment attempts
-    const newAttempts = Number(record.attempts) + 1;
-
-    await db
-      .update(rateLimits)
-      .set({
-        attempts: newAttempts,
-      })
-      .where(eq(rateLimits.id, id));
-
-    return newAttempts <= MAX_REQUESTS;
-  } catch (error) {
-    console.error('Rate limit check failed:', error);
-    // Fail open to avoid blocking legitimate requests on errors
     return true;
   }
+
+  const attempts = existing.attempts + 1;
+  store.set(id, {
+    attempts,
+    resetAt: existing.resetAt,
+  });
+
+  return attempts <= MAX_REQUESTS;
 }
 
 export function getRateLimitIdentifier(ip?: string | null): string {
