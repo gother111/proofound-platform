@@ -31,7 +31,7 @@ function pickDatabaseUrl(): string | undefined {
   return undefined;
 }
 
-function normalizeSiteUrl(
+export function normalizeSiteUrl(
   value: string | null | undefined,
   { allowPreviewHosts = false }: { allowPreviewHosts?: boolean } = {}
 ): string | null {
@@ -67,6 +67,15 @@ function normalizeSiteUrl(
   } catch {
     return null;
   }
+}
+
+export function stripTrailingSlash(value: string): string {
+  if (!value) {
+    return value;
+  }
+
+  const stripped = value.replace(/\/+$/, '');
+  return stripped.length > 0 ? stripped : '/';
 }
 
 function isLocalHostname(hostname: string): boolean {
@@ -115,16 +124,15 @@ function aggregateEnv(): EnvShape {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || ''
   ).trim();
   const supabaseServiceRoleKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
-  const siteUrl =
-    normalizeSiteUrl(process.env.NEXT_PUBLIC_SITE_URL ?? process.env.SITE_URL, {
-      allowPreviewHosts: true,
-    }) ?? '';
+  const siteUrl = normalizeSiteUrl(process.env.NEXT_PUBLIC_SITE_URL ?? process.env.SITE_URL, {
+    allowPreviewHosts: true,
+  });
 
   return {
     SUPABASE_URL: supabaseUrl || undefined,
     SUPABASE_ANON_KEY: supabaseAnonKey || undefined,
     SUPABASE_SERVICE_ROLE_KEY: supabaseServiceRoleKey || undefined,
-    SITE_URL: siteUrl || undefined,
+    SITE_URL: siteUrl ? stripTrailingSlash(siteUrl) : undefined,
     DATABASE_URL: pickDatabaseUrl(),
   };
 }
@@ -172,12 +180,12 @@ export function resolveSiteUrlFromHeaders(
 ): string {
   const { SITE_URL: configuredSiteUrl } = aggregateEnv();
   if (configuredSiteUrl) {
-    return configuredSiteUrl;
+    return stripTrailingSlash(configuredSiteUrl);
   }
 
   const origin = normalizeSiteUrl(getHeaderValue(h, 'origin'), { allowPreviewHosts: true });
   if (origin) {
-    return origin;
+    return stripTrailingSlash(origin);
   }
 
   const forwardedHost = getHeaderValue(h, 'x-forwarded-host');
@@ -187,7 +195,7 @@ export function resolveSiteUrlFromHeaders(
       allowPreviewHosts: true,
     });
     if (forwardedUrl) {
-      return forwardedUrl;
+      return stripTrailingSlash(forwardedUrl);
     }
   }
 
@@ -196,7 +204,7 @@ export function resolveSiteUrlFromHeaders(
     const proto = resolveProtocol(host, getHeaderValue(h, 'x-forwarded-proto'));
     const hostUrl = normalizeSiteUrl(`${proto}://${host}`, { allowPreviewHosts: true });
     if (hostUrl) {
-      return hostUrl;
+      return stripTrailingSlash(hostUrl);
     }
   }
 
@@ -206,7 +214,7 @@ export function resolveSiteUrlFromHeaders(
       const refererUrl = new URL(referer);
       const normalizedReferer = normalizeSiteUrl(refererUrl.origin, { allowPreviewHosts: true });
       if (normalizedReferer) {
-        return normalizedReferer;
+        return stripTrailingSlash(normalizedReferer);
       }
     } catch {
       // Ignore malformed referer header values
@@ -215,7 +223,7 @@ export function resolveSiteUrlFromHeaders(
 
   const vercelUrl = normalizeSiteUrl(process.env.VERCEL_URL, { allowPreviewHosts: true });
   if (vercelUrl) {
-    return vercelUrl;
+    return stripTrailingSlash(vercelUrl);
   }
 
   return '';
