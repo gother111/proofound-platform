@@ -39,23 +39,47 @@ export type OAuthState = {
   error: string | null;
 };
 
-function stripTrailingSlash(url: string) {
-  return url.replace(/\/$/, '');
+function stripTrailingSlash(url: string): string {
+  return url.replace(/\/+$/, '');
 }
 
-function resolveConfiguredSiteUrl() {
+function normalizeSiteUrl(value: string | null | undefined): string | null {
+  if (!value) {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const candidate = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+
+  try {
+    const parsedUrl = new URL(candidate);
+    const normalized = `${parsedUrl.origin}${parsedUrl.pathname}`;
+    return stripTrailingSlash(normalized);
+  } catch {
+    return null;
+  }
+}
+
+function resolveConfiguredSiteUrl(): string | null {
   const explicitEnv =
-    process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || process.env.PUBLIC_SITE_URL;
+    normalizeSiteUrl(process.env.NEXT_PUBLIC_SITE_URL) ??
+    normalizeSiteUrl(process.env.SITE_URL) ??
+    normalizeSiteUrl(process.env.PUBLIC_SITE_URL);
 
   if (explicitEnv) {
-    return stripTrailingSlash(explicitEnv);
+    return explicitEnv;
   }
 
   const vercelProjectUrl =
-    process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.NEXT_PUBLIC_VERCEL_URL;
+    normalizeSiteUrl(process.env.VERCEL_PROJECT_PRODUCTION_URL) ??
+    normalizeSiteUrl(process.env.NEXT_PUBLIC_VERCEL_URL);
 
   if (vercelProjectUrl) {
-    return `https://${stripTrailingSlash(vercelProjectUrl)}`;
+    return vercelProjectUrl;
   }
 
   return null;
@@ -69,26 +93,35 @@ function resolveSiteUrl(headersList: Headers): string | null {
 
   const origin = normalizeSiteUrl(headersList.get('origin'));
   if (origin) {
-    return stripTrailingSlash(origin);
+    return origin;
   }
 
   const forwardedHost = headersList.get('x-forwarded-host');
   if (forwardedHost) {
     const forwardedProto = headersList.get('x-forwarded-proto') ?? 'https';
-    return `${forwardedProto}://${stripTrailingSlash(forwardedHost)}`;
+    const forwardedUrl = normalizeSiteUrl(`${forwardedProto}://${forwardedHost}`);
+    if (forwardedUrl) {
+      return forwardedUrl;
+    }
   }
 
   const host = headersList.get('host');
   if (host) {
     const proto = resolveProtocol(headersList, host);
-    return `${proto}://${stripTrailingSlash(host)}`;
+    const hostUrl = normalizeSiteUrl(`${proto}://${host}`);
+    if (hostUrl) {
+      return hostUrl;
+    }
   }
 
   const referer = headersList.get('referer');
   if (referer) {
     try {
       const refererUrl = new URL(referer);
-      return stripTrailingSlash(refererUrl.origin);
+      const normalizedReferer = normalizeSiteUrl(refererUrl.origin);
+      if (normalizedReferer) {
+        return normalizedReferer;
+      }
     } catch (error) {
       // Ignore malformed referer header values
     }

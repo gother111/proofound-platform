@@ -1,137 +1,101 @@
 import { requireAuth } from '@/lib/auth';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { updateProfile, updateIndividualProfile } from '@/actions/profile';
-import { createClient } from '@/lib/supabase/server';
+import { db } from '@/db';
+import {
+  individualProfiles,
+  impactStories,
+  experiences,
+  education,
+  volunteering,
+} from '@/db/schema';
+import { eq } from 'drizzle-orm';
+import { ProfileView } from '@/components/profile/ProfileView';
 
-export const dynamic = 'force-dynamic';
+// Sample data for now - will be replaced with real data from DB
+const sampleData = {
+  profile: {
+    displayName: 'Sarah Chen',
+    location: 'San Francisco, CA',
+    joinedDate: 'March 2024',
+    avatarUrl: null,
+    tagline: 'Building bridges between technology, sustainability, and community empowerment',
+    verified: true,
+    mission:
+      'To create accessible pathways for underrepresented communities to participate in the green economy, ensuring climate solutions are equitable and inclusive.',
+    values: [
+      { icon: 'Heart', label: 'Equity & Justice', verified: true },
+      { icon: 'Sparkles', label: 'Innovation for Good', verified: true },
+      { icon: 'Users', label: 'Community-First', verified: true },
+    ],
+    causes: ['Climate Justice', 'Economic Equity', 'Education Access'],
+    skills: ['Strategic Planning', 'Community Engagement', 'Impact Measurement'],
+  },
+  impactStories: [
+    {
+      id: '1',
+      title: 'Green Skills Training Program',
+      orgDescription: 'Mid-size nonprofit, Climate & Energy sector, Bay Area',
+      impact:
+        'Led development and delivery of renewable energy career training for 200+ individuals from underserved communities, creating pathways to living-wage jobs in the green economy.',
+      businessValue:
+        'Addressed critical workforce gap in clean energy sector while creating economic opportunity for marginalized communities. Program model now adopted by 3 other regions.',
+      outcomes:
+        '85% job placement rate, 12 communities served, $4.5M in cumulative wages earned by graduates',
+      timeline: '2023 - Present',
+      verified: true,
+    },
+  ],
+  experiences: [
+    {
+      id: '1',
+      title: 'Leading systemic change initiatives',
+      orgDescription: 'National nonprofit, Climate Justice, 50-200 employees',
+      duration: '2023 - Present',
+      learning:
+        'Deepening my understanding of policy advocacy and coalition building. Learning how to navigate complex stakeholder landscapes and build consensus across diverse groups.',
+      growth:
+        'Transitioned from program execution to strategic leadership. Now shaping organizational direction and building high-performing teams.',
+      verified: true,
+    },
+  ],
+  education: [
+    {
+      id: '1',
+      institution: 'University',
+      degree: "Master's in Public Policy",
+      duration: '2017 - 2019',
+      skills: 'Policy analysis, stakeholder mapping, impact evaluation, systems thinking',
+      projects:
+        'Thesis: "Equitable Pathways to Clean Energy Access" - Research adopted by state energy commission. Led student coalition for campus sustainability.',
+      verified: true,
+    },
+  ],
+  volunteering: [
+    {
+      id: '1',
+      title: 'Board governance and strategic direction',
+      orgDescription: 'Youth-led climate organization, National reach',
+      duration: '2022 - Present',
+      cause: 'Climate Justice - Amplifying youth voices in climate policy',
+      impact:
+        'Helped secure $500K in funding, expanded to 12 new cities, mentored 30+ young organizers',
+      skillsDeployed: 'Strategic planning, fundraising, mentorship, governance',
+      personalWhy:
+        'Climate action must center the voices of those who will inherit our decisions. Supporting youth leadership is essential.',
+      verified: true,
+    },
+  ],
+};
 
 export default async function IndividualProfilePage() {
   const user = await requireAuth();
 
-  const supabase = await createClient();
-  const { data: profile } = await supabase
-    .from('individual_profiles')
-    .select('headline, bio, skills, location, visibility')
-    .eq('user_id', user.id)
-    .maybeSingle();
+  // TODO: Fetch real data from database once migration is applied
+  // const [profile] = await db
+  //   .select()
+  //   .from(individualProfiles)
+  //   .where(eq(individualProfiles.userId, user.id))
+  //   .limit(1);
 
-  return (
-    <div className="max-w-3xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-4xl font-display font-semibold text-primary-500 mb-2">
-          Edit Your Profile
-        </h1>
-        <p className="text-neutral-dark-600">
-          Update your information to help others connect with you
-        </p>
-      </div>
-
-      {/* Basic Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Basic Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form action={updateProfile as any} className="space-y-6">
-            <div>
-              <Label htmlFor="displayName">Display Name</Label>
-              <Input
-                id="displayName"
-                name="displayName"
-                defaultValue={user.displayName || ''}
-                placeholder="Your full name"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="handle">Handle</Label>
-              <Input
-                id="handle"
-                name="handle"
-                defaultValue={user.handle || ''}
-                placeholder="your-username"
-              />
-              <p className="text-xs text-neutral-dark-500 mt-1">
-                Your unique identifier (letters, numbers, hyphens, underscores)
-              </p>
-            </div>
-
-            <Button type="submit">Save Basic Info</Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      {/* Profile Details */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Profile Details</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form action={updateIndividualProfile as any} className="space-y-6">
-            <div>
-              <Label htmlFor="headline">Headline</Label>
-              <Input
-                id="headline"
-                name="headline"
-                defaultValue={profile?.headline || ''}
-                placeholder="Your professional headline"
-                maxLength={200}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="bio">Bio</Label>
-              <textarea
-                id="bio"
-                name="bio"
-                defaultValue={profile?.bio || ''}
-                placeholder="Tell us about yourself"
-                className="flex min-h-[120px] w-full rounded-lg border border-neutral-light-300 bg-white px-4 py-2 text-base transition-colors placeholder:text-neutral-dark-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 focus-visible:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50"
-                maxLength={2000}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="location">Location</Label>
-              <Input
-                id="location"
-                name="location"
-                defaultValue={profile?.location || ''}
-                placeholder="City, Country"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="skills">Skills (comma-separated)</Label>
-              <Input
-                id="skills"
-                name="skills"
-                defaultValue={profile?.skills?.join(', ') || ''}
-                placeholder="JavaScript, Design, Project Management"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="visibility">Profile Visibility</Label>
-              <select
-                id="visibility"
-                name="visibility"
-                defaultValue={profile?.visibility || 'network'}
-                className="flex h-11 w-full rounded-lg border border-neutral-light-300 bg-white px-4 py-2 text-base"
-              >
-                <option value="public">Public - Anyone can view</option>
-                <option value="network">Network - Only connections can view</option>
-                <option value="private">Private - Only you can view</option>
-              </select>
-            </div>
-
-            <Button type="submit">Save Profile Details</Button>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
-  );
+  // For now, use sample data
+  return <ProfileView data={sampleData} />;
 }
