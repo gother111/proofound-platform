@@ -63,19 +63,6 @@ function resolveRequestSiteUrl(headersList: Headers): string {
   return '';
 }
 
-function resolveProtocol(headersList: Headers, host: string): string {
-  const forwardedProto = headersList.get('x-forwarded-proto');
-  if (forwardedProto) {
-    return forwardedProto;
-  }
-
-  if (host.startsWith('localhost') || host.startsWith('127.0.0.1')) {
-    return 'http';
-  }
-
-  return 'https';
-}
-
 export async function signUp(
   _prevState: SignUpState | undefined,
   formData: FormData
