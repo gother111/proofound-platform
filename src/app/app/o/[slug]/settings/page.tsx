@@ -1,10 +1,10 @@
 import { requireAuth, getActiveOrg, assertOrgRole } from '@/lib/auth';
-import { db } from '@/db';
-import { auditLogs } from '@/db/schema';
-import { eq, desc } from 'drizzle-orm';
 import { notFound, redirect } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { formatDate } from '@/lib/utils';
+import { createClient } from '@/lib/supabase/server';
+
+export const dynamic = 'force-dynamic';
 
 export default async function OrganizationSettingsPage({
   params,
@@ -26,13 +26,15 @@ export default async function OrganizationSettingsPage({
     redirect(`/app/o/${slug}/home`);
   }
 
-  // Get audit logs
-  const logs = await db
-    .select()
-    .from(auditLogs)
-    .where(eq(auditLogs.orgId, org.id))
-    .orderBy(desc(auditLogs.createdAt))
+  const supabase = await createClient();
+  const { data: logsData } = await supabase
+    .from('audit_logs')
+    .select(`id, action, targetType:target_type, targetId:target_id, createdAt:created_at`)
+    .eq('org_id', org.id)
+    .order('created_at', { ascending: false })
     .limit(20);
+
+  const logs = logsData ?? [];
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">

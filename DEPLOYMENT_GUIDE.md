@@ -162,7 +162,14 @@ git push -u origin main
 
 ### 3.3 Set Environment Variables
 
-Click **"Environment Variables"** and add:
+Click **"Environment Variables"** and add each value one at a time:
+
+1. Click **"Add"**.
+2. Type the exact **Name** shown below (e.g. `DATABASE_URL`).
+3. Paste the **Value** (copy from Supabase or Resend as noted).
+4. Press **"Add"** to save it.
+
+Repeat for every variable in this list:
 
 ```env
 # Site
@@ -180,7 +187,9 @@ RESEND_API_KEY=re_...
 EMAIL_FROM=Proofound <no-reply@proofound.io>
 ```
 
-**Important**: Apply to **Production**, **Preview**, and **Development** environments
+> **Tip:** For `DATABASE_URL`, in Supabase go to **Project Settings → Database → Connection string → Node.js** and copy the full URL that includes `?sslmode=require`. Paste that value directly into Vercel.
+
+After you add them, use the tabs at the top of the Environment Variables screen to copy the same values into **Production**, **Preview**, and **Development**. Missing any of these will cause builds to fail or logins to break.
 
 ### 3.4 Deploy
 
