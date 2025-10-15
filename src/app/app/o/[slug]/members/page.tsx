@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { inviteMember, removeMember } from '@/actions/org';
 
+export const runtime = 'nodejs';
+
 export default async function OrganizationMembersPage({
   params,
 }: {

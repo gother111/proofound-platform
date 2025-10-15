@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { acceptInvitation } from '@/actions/org';
 import { Building2, Mail } from 'lucide-react';
 
+export const runtime = 'nodejs';
+
 export default async function AcceptInvitationPage({
   params,
 }: {

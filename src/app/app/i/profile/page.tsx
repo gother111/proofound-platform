@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { updateProfile, updateIndividualProfile } from '@/actions/profile';
 
+export const runtime = 'nodejs';
+
 export default async function IndividualProfilePage() {
   const user = await requireAuth();
 
