@@ -26,6 +26,13 @@
     --input: 150 7% 82%;
     --ring: 158 47% 21%;
     --radius: 1rem;
+
+    /* Japandi Natural Palette - Proofound Profile Colors */
+    --sage: 122 146 120; /* #7A9278 */
+    --terracotta: 198 123 92; /* #C67B5C */
+    --teal: 92 139 137; /* #5C8B89 */
+    --ochre: 212 165 116; /* #D4A574 */
+    --cream: 244 234 213; /* #F4EAD5 */
   }
 
   .dark {
