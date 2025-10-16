@@ -62,7 +62,7 @@ npm install
 cp .env.example .env.local
 ```
 
-Edit `.env.local`:
+Edit `.env.local` (you will copy these values into Vercel later):
 
 ```env
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
@@ -82,6 +82,8 @@ EMAIL_FROM="Proofound <no-reply@proofound.com>"
 RATE_LIMIT_WINDOW_SECONDS=60
 RATE_LIMIT_MAX=30
 ```
+
+> **Heads up:** Once this works locally, open your Vercel project, go to **Settings → Environment Variables**, and add each of the keys above (Production, Preview, and Development tabs). For `DATABASE_URL`, copy the Supabase value from **Project Settings → Database → Connection string → Node.js**.
 
 ### 4. Set Up Database
 

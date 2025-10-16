@@ -1,13 +1,13 @@
 import { requireAuth, getActiveOrg } from '@/lib/auth';
-import { db } from '@/db';
-import { organizationMembers, profiles } from '@/db/schema';
-import { eq } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { inviteMember, removeMember } from '@/actions/org';
+import { createClient } from '@/lib/supabase/server';
+
+export const dynamic = 'force-dynamic';
 
 export default async function OrganizationMembersPage({
   params,
@@ -24,15 +24,45 @@ export default async function OrganizationMembersPage({
 
   const { org, membership } = result;
 
-  // Get all members
-  const members = await db
-    .select({
-      membership: organizationMembers,
-      profile: profiles,
-    })
-    .from(organizationMembers)
-    .innerJoin(profiles, eq(organizationMembers.userId, profiles.id))
-    .where(eq(organizationMembers.orgId, org.id));
+  const supabase = await createClient();
+  const { data: membersData, error } = await supabase
+    .from('organization_members')
+    .select(
+      `
+        orgId:org_id,
+        userId:user_id,
+        role,
+        status,
+        profiles (
+          id,
+          displayName:display_name,
+          handle
+        )
+      `
+    )
+    .eq('org_id', org.id);
+
+  if (error) {
+    console.error('Failed to load organization members:', error);
+  }
+
+  const members = (membersData ?? []).map((item) => {
+    const profileData = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles;
+
+    return {
+      membership: {
+        orgId: item.orgId as string,
+        userId: item.userId as string,
+        role: item.role as string,
+        status: item.status as string,
+      },
+      profile: {
+        id: profileData?.id,
+        displayName: profileData?.displayName,
+        handle: profileData?.handle,
+      },
+    };
+  });
 
   const canManage = membership.role === 'owner' || membership.role === 'admin';
 
