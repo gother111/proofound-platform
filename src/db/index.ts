@@ -1,26 +1,18 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
+
+import { getEnv } from '@/lib/env';
+
 import * as schema from './schema';
 
-const connectionString =
-  process.env.DATABASE_URL ||
-  process.env.SUPABASE_DB_URL ||
-  process.env.SUPABASE_DATABASE_URL ||
-  process.env.POSTGRES_URL ||
-  process.env.POSTGRES_PRISMA_URL ||
-  process.env.POSTGRES_URL_NON_POOLING;
+const { DATABASE_URL: connectionString } = getEnv(false);
 
 if (!connectionString) {
-  throw new Error(
-    [
-      'Missing database connection string.',
-      'Set DATABASE_URL (or POSTGRES_URL/POSTGRES_PRISMA_URL) in your environment.',
-      'Vercel steps:',
-      '1. Open your project → Settings → Environment Variables.',
-      '2. Click "Add", set Name = DATABASE_URL, Value = Supabase connection string (Project Settings → Database → Connection string → Node.js).',
-      '3. Save, then redeploy.',
-    ].join(' ')
-  );
+  const err = new Error('Database is not configured (missing DATABASE_URL).') as Error & {
+    code?: string;
+  };
+  err.code = 'ENV_MISCONFIG';
+  throw err;
 }
 
 const queryClient = postgres(connectionString, {

@@ -1,5 +1,6 @@
 'use server';
 
+import { normalizeSiteUrl, resolveSiteUrlFromHeaders, stripTrailingSlash } from '@/lib/env';
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -39,113 +40,27 @@ export type OAuthState = {
   error: string | null;
 };
 
-function stripTrailingSlash(url: string): string {
-  return url.replace(/\/+$/, '');
+function isRedirectError(error: unknown): error is { digest: string } {
+  if (typeof error !== 'object' || error === null) {
+    return false;
+  }
+
+  const digest = (error as { digest?: unknown }).digest;
+  return typeof digest === 'string' && digest.startsWith('NEXT_REDIRECT');
 }
 
-function normalizeSiteUrl(value: string | null | undefined): string | null {
-  if (!value) {
-    return null;
+function resolveRequestSiteUrl(headersList: Headers): string {
+  const siteUrlFromHeaders = resolveSiteUrlFromHeaders(headersList);
+  if (siteUrlFromHeaders) {
+    return stripTrailingSlash(siteUrlFromHeaders);
   }
 
-  const trimmed = value.trim();
-  if (!trimmed) {
-    return null;
-  }
-
-  const candidate = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
-
-  try {
-    const parsedUrl = new URL(candidate);
-    const normalized = `${parsedUrl.origin}${parsedUrl.pathname}`;
-    return stripTrailingSlash(normalized);
-  } catch {
-    return null;
-  }
-}
-
-function resolveConfiguredSiteUrl(): string | null {
-  const explicitEnv =
-    normalizeSiteUrl(process.env.NEXT_PUBLIC_SITE_URL) ??
-    normalizeSiteUrl(process.env.SITE_URL) ??
-    normalizeSiteUrl(process.env.PUBLIC_SITE_URL);
-
-  if (explicitEnv) {
-    return explicitEnv;
-  }
-
-  const vercelProjectUrl =
-    normalizeSiteUrl(process.env.VERCEL_PROJECT_PRODUCTION_URL) ??
-    normalizeSiteUrl(process.env.NEXT_PUBLIC_VERCEL_URL);
-
-  if (vercelProjectUrl) {
-    return vercelProjectUrl;
-  }
-
-  return null;
-}
-
-function resolveSiteUrl(headersList: Headers): string | null {
-  const configuredSiteUrl = resolveConfiguredSiteUrl();
-  if (configuredSiteUrl) {
-    return configuredSiteUrl;
-  }
-
-  const origin = normalizeSiteUrl(headersList.get('origin'));
+  const origin = normalizeSiteUrl(headersList.get('origin'), { allowPreviewHosts: true });
   if (origin) {
-    return origin;
+    return stripTrailingSlash(origin);
   }
 
-  const forwardedHost = headersList.get('x-forwarded-host');
-  if (forwardedHost) {
-    const forwardedProto = headersList.get('x-forwarded-proto') ?? 'https';
-    const forwardedUrl = normalizeSiteUrl(`${forwardedProto}://${forwardedHost}`);
-    if (forwardedUrl) {
-      return forwardedUrl;
-    }
-  }
-
-  const host = headersList.get('host');
-  if (host) {
-    const proto = resolveProtocol(headersList, host);
-    const hostUrl = normalizeSiteUrl(`${proto}://${host}`);
-    if (hostUrl) {
-      return hostUrl;
-    }
-  }
-
-  const referer = headersList.get('referer');
-  if (referer) {
-    try {
-      const refererUrl = new URL(referer);
-      const normalizedReferer = normalizeSiteUrl(refererUrl.origin);
-      if (normalizedReferer) {
-        return normalizedReferer;
-      }
-    } catch (error) {
-      // Ignore malformed referer header values
-    }
-  }
-
-  const vercelUrl = normalizeSiteUrl(process.env.VERCEL_URL);
-  if (vercelUrl) {
-    return vercelUrl;
-  }
-
-  return null;
-}
-
-function resolveProtocol(headersList: Headers, host: string): string {
-  const forwardedProto = headersList.get('x-forwarded-proto');
-  if (forwardedProto) {
-    return forwardedProto;
-  }
-
-  if (host.startsWith('localhost') || host.startsWith('127.0.0.1')) {
-    return 'http';
-  }
-
-  return 'https';
+  return '';
 }
 
 export async function signUp(
@@ -180,7 +95,7 @@ export async function signUp(
       };
     }
 
-    const siteUrl = resolveSiteUrl(headersList);
+    const siteUrl = resolveRequestSiteUrl(headersList);
     if (!siteUrl) {
       return {
         error: 'Unable to complete signup. Please try again later or contact support.',
@@ -230,8 +145,9 @@ export async function signUp(
       success: true,
     };
   } catch (error) {
+    console.error('Sign-up failed:', error);
     return {
-      error: 'We could not sign you up right now. Please try again.',
+      error: mapUnexpectedAuthError(error, 'sign up'),
       success: false,
     };
   }
@@ -241,44 +157,52 @@ export async function signIn(
   _prevState: SignInState | undefined,
   formData: FormData
 ): Promise<SignInState> {
-  const headersList = await headers();
-  const ip = headersList.get('x-forwarded-for') || 'unknown';
-  const identifier = getRateLimitIdentifier(ip);
+  try {
+    const headersList = await headers();
+    const ip = headersList.get('x-forwarded-for') || 'unknown';
+    const identifier = getRateLimitIdentifier(ip);
 
-  const allowed = await checkRateLimit(identifier, 'signin');
-  if (!allowed) {
-    return { error: 'Too many login attempts. Please wait a moment and try again.' };
-  }
-
-  const rawEmail = (formData.get('email') as string | null) ?? '';
-  const email = rawEmail.trim().toLowerCase();
-  const password = (formData.get('password') as string | null) ?? '';
-  const data = {
-    email,
-    password,
-  };
-
-  const result = signInSchema.safeParse(data);
-  if (!result.success) {
-    return { error: 'Enter a valid email address and password.' };
-  }
-
-  const supabase = await createClient();
-
-  const { error } = await supabase.auth.signInWithPassword(result.data);
-
-  if (error) {
-    const siteUrl = resolveSiteUrl(headersList);
-    if (isEmailNotConfirmedError(error) && siteUrl) {
-      await resendVerificationEmail(supabase, email, siteUrl);
+    const allowed = await checkRateLimit(identifier, 'signin');
+    if (!allowed) {
+      return { error: 'Too many login attempts. Please wait a moment and try again.' };
     }
-    return { error: mapSupabaseSignInError(error, email) };
+
+    const rawEmail = (formData.get('email') as string | null) ?? '';
+    const email = rawEmail.trim().toLowerCase();
+    const password = (formData.get('password') as string | null) ?? '';
+    const data = {
+      email,
+      password,
+    };
+
+    const result = signInSchema.safeParse(data);
+    if (!result.success) {
+      return { error: 'Enter a valid email address and password.' };
+    }
+
+    const supabase = await createClient();
+
+    const { error } = await supabase.auth.signInWithPassword(result.data);
+
+    if (error) {
+      const siteUrl = resolveRequestSiteUrl(headersList);
+      if (isEmailNotConfirmedError(error) && siteUrl) {
+        await resendVerificationEmail(supabase, email, siteUrl);
+      }
+      return { error: mapSupabaseSignInError(error, email) };
+    }
+
+    revalidatePath('/', 'layout');
+    redirect('/app/i/home');
+
+    return { error: null };
+  } catch (error) {
+    if (isRedirectError(error)) {
+      throw error;
+    }
+    console.error('Sign-in failed:', error);
+    return { error: mapUnexpectedAuthError(error, 'log in') };
   }
-
-  revalidatePath('/', 'layout');
-  redirect('/app/i/home');
-
-  return { error: null };
 }
 
 function isEmailNotConfirmedError(error: AuthError): boolean {
@@ -331,6 +255,27 @@ async function resendVerificationEmail(
   }
 }
 
+function mapUnexpectedAuthError(error: unknown, action: 'sign up' | 'log in') {
+  if (isEnvMisconfigError(error)) {
+    return 'Authentication service is not configured. See README → Environment setup.';
+  }
+
+  const message = getErrorMessage(error);
+
+  if (message) {
+    if (/supabase server client is missing required/i.test(message) || /Supabase Auth is not configured/i.test(message)) {
+      return 'Authentication service is not configured correctly. Please contact support.';
+    }
+
+    const actionDescription = action === 'sign up' ? 'sign you up' : 'log you in';
+    return `We could not ${actionDescription} because the authentication service returned an unexpected error: ${message}`;
+  }
+
+  return action === 'sign up'
+    ? 'We could not sign you up right now. Please try again.'
+    : 'We could not log you in right now. Please try again.';
+}
+
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
@@ -357,7 +302,7 @@ export async function requestPasswordReset(formData: FormData) {
     return { error: 'Invalid email' };
   }
 
-  const siteUrl = resolveSiteUrl(headersList);
+  const siteUrl = resolveRequestSiteUrl(headersList);
   if (!siteUrl) {
     return { error: 'Unable to send reset email. Please try again later.' };
   }
@@ -431,49 +376,106 @@ export async function signInWithOAuth(
   _prevState: OAuthState | undefined,
   formData: FormData
 ): Promise<OAuthState> {
-  const provider = formData.get('provider');
-  const result = oauthProviderSchema.safeParse(provider);
-
-  if (!result.success) {
-    return { error: 'Unsupported sign-in provider.' };
-  }
-
-  const headersList = await headers();
-  const siteUrl = resolveSiteUrl(headersList);
-
-  if (!siteUrl) {
-    return { error: 'Unable to start the sign-in flow. Please try again later.' };
-  }
-
-  const supabase = await createClient();
-  let data: Awaited<ReturnType<typeof supabase.auth.signInWithOAuth>>['data'];
-  let error: Awaited<ReturnType<typeof supabase.auth.signInWithOAuth>>['error'];
-
   try {
-    ({ data, error } = await supabase.auth.signInWithOAuth({
+    const provider = formData.get('provider');
+    const result = oauthProviderSchema.safeParse(provider);
+
+    if (!result.success) {
+      return { error: 'Unsupported sign-in provider.' };
+    }
+
+    const headersList = await headers();
+    const siteUrl = resolveRequestSiteUrl(headersList);
+
+    if (!siteUrl) {
+      return { error: 'Unable to start the sign-in flow. Please try again later.' };
+    }
+
+    const supabase = await createClient();
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: result.data,
       options: {
         redirectTo: `${siteUrl}/auth/callback`,
       },
-    }));
-  } catch (signInError) {
-    console.error('Failed to start OAuth sign-in flow:', signInError);
-    return { error: 'We could not start the sign-in flow. Please try again.' };
-  }
+    });
 
-  if (error) {
-    if (/not enabled/i.test(error.message)) {
-      return {
-        error: 'This sign-in provider is not available. Please use email and password instead.',
-      };
+    if (error) {
+      if (/not enabled/i.test(error.message)) {
+        return {
+          error: 'This sign-in provider is not available. Please use email and password instead.',
+        };
+      }
+
+      return { error: mapUnexpectedOAuthError(error) };
+    }
+
+    if (data?.url) {
+      redirect(data.url);
     }
 
     return { error: 'We could not start the sign-in flow. Please try again.' };
+  } catch (error) {
+    if (isRedirectError(error)) {
+      throw error;
+    }
+    console.error('OAuth sign-in failed:', error);
+    return { error: mapUnexpectedOAuthError(error) };
+  }
+}
+
+function mapUnexpectedOAuthError(error: unknown) {
+  if (isEnvMisconfigError(error)) {
+    return 'Authentication service is not configured. See README → Environment setup.';
   }
 
-  if (data?.url) {
-    redirect(data.url);
+  const message = getErrorMessage(error);
+
+  if (message) {
+    if (
+      /supabase server client is missing required/i.test(message) ||
+      /Supabase Auth is not configured/i.test(message) ||
+      /auth-relay supabase project url/i.test(message) ||
+      /redirect.*(not|missing)/i.test(message)
+    ) {
+      return 'Authentication service is not configured correctly. Please contact support.';
+    }
+
+    return `We could not start the sign-in flow because the authentication service returned an unexpected error: ${message}`;
   }
 
-  return { error: 'We could not start the sign-in flow. Please try again.' };
+  return 'We could not start the sign-in flow right now. Please try again.';
+}
+
+function getErrorMessage(error: unknown): string | null {
+  if (!error) {
+    return null;
+  }
+
+  if (error instanceof Error) {
+    return error.message?.trim() || null;
+  }
+
+  if (typeof error === 'string') {
+    const trimmed = error.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  }
+
+  if (typeof error === 'object' && 'message' in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === 'string') {
+      const trimmed = message.trim();
+      return trimmed.length > 0 ? trimmed : null;
+    }
+  }
+
+  return null;
+}
+
+function isEnvMisconfigError(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { code?: unknown }).code === 'ENV_MISCONFIG'
+  );
 }
