@@ -30,7 +30,7 @@ export interface ImpactStory {
   businessValue: string;
   outcomes: string;
   timeline: string;
-  verified: boolean;
+  verified: boolean | null;
 }
 
 export interface Experience {
@@ -40,7 +40,7 @@ export interface Experience {
   duration: string;
   learning: string;
   growth: string;
-  verified: boolean;
+  verified: boolean | null;
 }
 
 export interface Education {
@@ -50,7 +50,7 @@ export interface Education {
   duration: string;
   skills: string;
   projects: string;
-  verified: boolean;
+  verified: boolean | null;
 }
 
 export interface Volunteering {
@@ -62,7 +62,7 @@ export interface Volunteering {
   impact: string;
   skillsDeployed: string;
   personalWhy: string;
-  verified: boolean;
+  verified: boolean | null;
 }
 
 export interface ProfileData {

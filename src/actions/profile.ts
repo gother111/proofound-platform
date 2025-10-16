@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 import { db } from '@/db';
 import {
@@ -46,7 +46,7 @@ export async function getProfileData(): Promise<ProfileData> {
   }
 
   const [profile] = await db
-    .select({ ...individualProfiles })
+    .select()
     .from(individualProfiles)
     .where(eq(individualProfiles.userId, user.id))
     .limit(1);
@@ -220,8 +220,7 @@ export async function deleteImpactStory(id: string) {
   const user = await requireAuth();
   await db
     .delete(impactStories)
-    .where(eq(impactStories.id, id))
-    .where(eq(impactStories.userId, user.id));
+    .where(and(eq(impactStories.id, id), eq(impactStories.userId, user.id)));
   revalidatePath('/app/i/profile');
 }
 
@@ -246,7 +245,7 @@ export async function createExperience(data: Omit<Experience, 'id'>) {
 
 export async function deleteExperience(id: string) {
   const user = await requireAuth();
-  await db.delete(experiences).where(eq(experiences.id, id)).where(eq(experiences.userId, user.id));
+  await db.delete(experiences).where(and(eq(experiences.id, id), eq(experiences.userId, user.id)));
   revalidatePath('/app/i/profile');
 }
 
@@ -271,7 +270,7 @@ export async function createEducation(data: Omit<EducationType, 'id'>) {
 
 export async function deleteEducation(id: string) {
   const user = await requireAuth();
-  await db.delete(education).where(eq(education.id, id)).where(eq(education.userId, user.id));
+  await db.delete(education).where(and(eq(education.id, id), eq(education.userId, user.id)));
   revalidatePath('/app/i/profile');
 }
 
@@ -300,7 +299,6 @@ export async function deleteVolunteering(id: string) {
   const user = await requireAuth();
   await db
     .delete(volunteering)
-    .where(eq(volunteering.id, id))
-    .where(eq(volunteering.userId, user.id));
+    .where(and(eq(volunteering.id, id), eq(volunteering.userId, user.id)));
   revalidatePath('/app/i/profile');
 }
