@@ -1,6 +1,17 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Heart, Sparkles, Users, CheckCircle2 } from 'lucide-react';
+import {
+  Heart,
+  Sparkles,
+  Users,
+  CheckCircle2,
+  Eye,
+  Target,
+  Shield,
+  Leaf,
+  Lightbulb,
+  HandHeart,
+} from 'lucide-react';
 
 interface Value {
   icon: string;
@@ -16,6 +27,12 @@ const iconMap: Record<string, any> = {
   Heart,
   Sparkles,
   Users,
+  Eye,
+  Target,
+  Shield,
+  Leaf,
+  Lightbulb,
+  HandHeart,
 };
 
 export function ValuesCard({ values }: ValuesCardProps) {
