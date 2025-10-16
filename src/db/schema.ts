@@ -35,6 +35,81 @@ export const individualProfiles = pgTable('individual_profiles', {
   visibility: text('visibility', {
     enum: ['public', 'network', 'private'],
   }).default('network'),
+  // New Proofound profile fields
+  tagline: text('tagline'),
+  mission: text('mission'),
+  coverImageUrl: text('cover_image_url'),
+  verified: boolean('verified').default(false),
+  joinedDate: timestamp('joined_date').defaultNow(),
+  values: jsonb('values'), // Array of {icon: string, label: string, verified: boolean}
+  causes: text('causes').array(),
+});
+
+// Impact Stories - verified projects with real outcomes
+export const impactStories = pgTable('impact_stories', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  title: text('title').notNull(),
+  orgDescription: text('org_description').notNull(), // e.g., "Mid-size nonprofit, Climate sector, Bay Area"
+  impact: text('impact').notNull(), // What changed
+  businessValue: text('business_value').notNull(), // Broader impact
+  outcomes: text('outcomes').notNull(), // Measurable results
+  timeline: text('timeline').notNull(),
+  verified: boolean('verified').default(false),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Experiences - work experience focused on growth and learning
+export const experiences = pgTable('experiences', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  title: text('title').notNull(), // "Leading systemic change" not "Director"
+  orgDescription: text('org_description').notNull(), // Size, industry, location
+  duration: text('duration').notNull(),
+  learning: text('learning').notNull(), // What they learned
+  growth: text('growth').notNull(), // How they grew
+  verified: boolean('verified').default(false),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Education - focused on skills and meaningful projects
+export const education = pgTable('education', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  institution: text('institution').notNull(),
+  degree: text('degree').notNull(),
+  duration: text('duration').notNull(),
+  skills: text('skills').notNull(), // Skills gained
+  projects: text('projects').notNull(), // Meaningful projects
+  verified: boolean('verified').default(false),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Volunteering - service work with personal connection
+export const volunteering = pgTable('volunteering', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  title: text('title').notNull(),
+  orgDescription: text('org_description').notNull(),
+  duration: text('duration').notNull(),
+  cause: text('cause').notNull(), // e.g., "Climate Justice - Amplifying youth voices"
+  impact: text('impact').notNull(), // What changed
+  skillsDeployed: text('skills_deployed').notNull(), // Skills used
+  personalWhy: text('personal_why').notNull(), // Personal connection to cause
+  verified: boolean('verified').default(false),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
 // Organizations
@@ -122,6 +197,15 @@ export const rateLimits = pgTable('rate_limits', {
 export type Profile = typeof profiles.$inferSelect;
 export type InsertProfile = typeof profiles.$inferInsert;
 export type IndividualProfile = typeof individualProfiles.$inferSelect;
+export type InsertIndividualProfile = typeof individualProfiles.$inferInsert;
+export type ImpactStory = typeof impactStories.$inferSelect;
+export type InsertImpactStory = typeof impactStories.$inferInsert;
+export type Experience = typeof experiences.$inferSelect;
+export type InsertExperience = typeof experiences.$inferInsert;
+export type Education = typeof education.$inferSelect;
+export type InsertEducation = typeof education.$inferInsert;
+export type Volunteering = typeof volunteering.$inferSelect;
+export type InsertVolunteering = typeof volunteering.$inferInsert;
 export type Organization = typeof organizations.$inferSelect;
 export type OrganizationMember = typeof organizationMembers.$inferSelect;
 export type OrgInvitation = typeof orgInvitations.$inferInsert;

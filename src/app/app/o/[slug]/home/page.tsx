@@ -1,11 +1,11 @@
 import { requireAuth, getActiveOrg } from '@/lib/auth';
-import { db } from '@/db';
-import { organizationMembers } from '@/db/schema';
-import { eq, count } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { createClient } from '@/lib/supabase/server';
+
+export const dynamic = 'force-dynamic';
 
 export default async function OrganizationHomePage({
   params,
@@ -22,11 +22,11 @@ export default async function OrganizationHomePage({
 
   const { org, membership } = result;
 
-  // Get member count
-  const [memberCount] = await db
-    .select({ count: count() })
-    .from(organizationMembers)
-    .where(eq(organizationMembers.orgId, org.id));
+  const supabase = await createClient();
+  const { count: memberCount } = await supabase
+    .from('organization_members')
+    .select('user_id', { count: 'exact', head: true })
+    .eq('org_id', org.id);
 
   return (
     <div className="space-y-8">
@@ -47,7 +47,7 @@ export default async function OrganizationHomePage({
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-display font-semibold text-primary-500 mb-4">
-              {memberCount.count}
+              {memberCount ?? 0}
             </p>
             <Button asChild className="w-full">
               <Link href={`/app/o/${slug}/members`}>Manage Members</Link>
