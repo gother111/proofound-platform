@@ -187,3 +187,107 @@ CREATE POLICY "Everyone can view feature flags"
   ON public.feature_flags FOR SELECT
   USING (true);
 
+-- Impact Stories policies
+ALTER TABLE public.impact_stories ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view public impact stories"
+  ON public.impact_stories FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.individual_profiles
+      WHERE individual_profiles.user_id = impact_stories.user_id
+        AND (individual_profiles.visibility = 'public' OR individual_profiles.user_id = auth.uid())
+    )
+  );
+
+CREATE POLICY "Users can insert own impact stories"
+  ON public.impact_stories FOR INSERT
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "Users can update own impact stories"
+  ON public.impact_stories FOR UPDATE
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "Users can delete own impact stories"
+  ON public.impact_stories FOR DELETE
+  USING (user_id = auth.uid());
+
+-- Experiences policies
+ALTER TABLE public.experiences ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view public experiences"
+  ON public.experiences FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.individual_profiles
+      WHERE individual_profiles.user_id = experiences.user_id
+        AND (individual_profiles.visibility = 'public' OR individual_profiles.user_id = auth.uid())
+    )
+  );
+
+CREATE POLICY "Users can insert own experiences"
+  ON public.experiences FOR INSERT
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "Users can update own experiences"
+  ON public.experiences FOR UPDATE
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "Users can delete own experiences"
+  ON public.experiences FOR DELETE
+  USING (user_id = auth.uid());
+
+-- Education policies
+ALTER TABLE public.education ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view public education"
+  ON public.education FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.individual_profiles
+      WHERE individual_profiles.user_id = education.user_id
+        AND (individual_profiles.visibility = 'public' OR individual_profiles.user_id = auth.uid())
+    )
+  );
+
+CREATE POLICY "Users can insert own education"
+  ON public.education FOR INSERT
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "Users can update own education"
+  ON public.education FOR UPDATE
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "Users can delete own education"
+  ON public.education FOR DELETE
+  USING (user_id = auth.uid());
+
+-- Volunteering policies
+ALTER TABLE public.volunteering ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view public volunteering"
+  ON public.volunteering FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.individual_profiles
+      WHERE individual_profiles.user_id = volunteering.user_id
+        AND (individual_profiles.visibility = 'public' OR individual_profiles.user_id = auth.uid())
+    )
+  );
+
+CREATE POLICY "Users can insert own volunteering"
+  ON public.volunteering FOR INSERT
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "Users can update own volunteering"
+  ON public.volunteering FOR UPDATE
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "Users can delete own volunteering"
+  ON public.volunteering FOR DELETE
+  USING (user_id = auth.uid());
+
