@@ -1,52 +1,25 @@
 import { requireAuth } from '@/lib/auth';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { signOut } from '@/actions/auth';
+import { LeftNav } from '@/components/app/LeftNav';
+import { TopBar } from '@/components/app/TopBar';
 
 export default async function IndividualLayout({ children }: { children: React.ReactNode }) {
   const user = await requireAuth();
 
-  return (
-    <div className="min-h-screen bg-secondary-100">
-      {/* Top Navigation */}
-      <header className="bg-white border-b border-neutral-light-300">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-display font-semibold text-primary-500">Proofound</h1>
-          <nav className="hidden md:flex items-center gap-6">
-            <Link
-              href="/app/i/home"
-              className="text-neutral-dark-700 hover:text-primary-500 transition-colors"
-            >
-              Home
-            </Link>
-            <Link
-              href="/app/i/profile"
-              className="text-neutral-dark-700 hover:text-primary-500 transition-colors"
-            >
-              Profile
-            </Link>
-            <Link
-              href="/app/i/settings"
-              className="text-neutral-dark-700 hover:text-primary-500 transition-colors"
-            >
-              Settings
-            </Link>
-          </nav>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-neutral-dark-600">
-              {user.displayName || user.handle || 'User'}
-            </span>
-            <form action={signOut as any}>
-              <Button variant="ghost" size="sm" type="submit">
-                Log out
-              </Button>
-            </form>
-          </div>
-        </div>
-      </header>
+  const userName = user.displayName || user.handle || 'User';
+  const userInitials = userName
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">{children}</main>
+  return (
+    <div className="flex h-screen" style={{ backgroundColor: '#F5F3EE' }}>
+      <LeftNav basePath="/app/i" />
+      <div className="flex-1 flex flex-col">
+        <TopBar userName={userName} userInitials={userInitials} />
+        <main className="flex-1 overflow-auto">{children}</main>
+      </div>
     </div>
   );
 }

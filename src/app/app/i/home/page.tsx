@@ -1,73 +1,40 @@
 import { requireAuth } from '@/lib/auth';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
+import { WhileAwayCard } from '@/components/dashboard/WhileAwayCard';
+import { GoalsCard } from '@/components/dashboard/GoalsCard';
+import { TasksVerificationsCard } from '@/components/dashboard/TasksVerificationsCard';
+import { ProjectsCard } from '@/components/dashboard/ProjectsCard';
+import { MatchingResultsCard } from '@/components/dashboard/MatchingResultsCard';
+import { ExploreOpportunitiesCard } from '@/components/dashboard/ExploreOpportunitiesCard';
+import { ImpactSnapshotCard } from '@/components/dashboard/ImpactSnapshotCard';
 
 export const dynamic = 'force-dynamic';
 
 export default async function IndividualHomePage() {
   const user = await requireAuth();
+  const persona = 'individual';
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-4xl font-display font-semibold text-primary-500 mb-2">
-          Welcome back, {user.displayName || user.handle}
-        </h1>
-        <p className="text-neutral-dark-600">Here&apos;s what&apos;s happening with your profile</p>
+    <div className="max-w-[1400px] mx-auto px-4 py-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* While Away - hidden by default */}
+        <div className="lg:col-span-3">
+          <WhileAwayCard />
+        </div>
+
+        {/* Row 1 */}
+        <GoalsCard />
+        <TasksVerificationsCard />
+        <ProjectsCard />
+
+        {/* Row 2 - Matching spans 2 cols */}
+        <MatchingResultsCard className="lg:col-span-2" />
+
+        {/* Individual-specific card */}
+        <ImpactSnapshotCard />
+
+        {/* Row 3 - Explore spans full width */}
+        <ExploreOpportunitiesCard className="lg:col-span-3" />
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Your Profile</CardTitle>
-            <CardDescription>Manage your personal information and settings</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full">
-              <Link href="/app/i/profile">View Profile</Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Connections</CardTitle>
-            <CardDescription>Build your professional network</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-neutral-dark-500 mb-4">Coming soon</p>
-            <Button variant="outline" className="w-full" disabled>
-              View Connections
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Verifications</CardTitle>
-            <CardDescription>Showcase your verified achievements</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-neutral-dark-500 mb-4">Coming soon</p>
-            <Button variant="outline" className="w-full" disabled>
-              Add Verification
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-          <CardDescription>Your latest updates and interactions</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-neutral-dark-500">
-            No recent activity yet. Start by completing your profile!
-          </p>
-        </CardContent>
-      </Card>
     </div>
   );
 }

@@ -1,9 +1,12 @@
 import { requireAuth, getActiveOrg } from '@/lib/auth';
 import { notFound } from 'next/navigation';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
-import { createClient } from '@/lib/supabase/server';
+import { WhileAwayCard } from '@/components/dashboard/WhileAwayCard';
+import { GoalsCard } from '@/components/dashboard/GoalsCard';
+import { TasksVerificationsCard } from '@/components/dashboard/TasksVerificationsCard';
+import { ProjectsCard } from '@/components/dashboard/ProjectsCard';
+import { MatchingResultsCard } from '@/components/dashboard/MatchingResultsCard';
+import { ExploreOpportunitiesCard } from '@/components/dashboard/ExploreOpportunitiesCard';
+import { TeamRolesCard } from '@/components/dashboard/TeamRolesCard';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,78 +24,30 @@ export default async function OrganizationHomePage({
   }
 
   const { org, membership } = result;
-
-  const supabase = await createClient();
-  const { count: memberCount } = await supabase
-    .from('organization_members')
-    .select('user_id', { count: 'exact', head: true })
-    .eq('org_id', org.id);
+  const persona = 'organization';
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-4xl font-display font-semibold text-primary-500 mb-2">
-          {org.displayName}
-        </h1>
-        <p className="text-neutral-dark-600">
-          {org.mission || 'Welcome to your organization dashboard'}
-        </p>
+    <div className="max-w-[1400px] mx-auto px-4 py-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* While Away - hidden by default */}
+        <div className="lg:col-span-3">
+          <WhileAwayCard />
+        </div>
+
+        {/* Row 1 */}
+        <GoalsCard />
+        <TasksVerificationsCard />
+        <ProjectsCard />
+
+        {/* Row 2 - Matching spans 2 cols */}
+        <MatchingResultsCard className="lg:col-span-2" />
+
+        {/* Organization-specific card */}
+        <TeamRolesCard />
+
+        {/* Row 3 - Explore spans full width */}
+        <ExploreOpportunitiesCard className="lg:col-span-3" />
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Members</CardTitle>
-            <CardDescription>Team members and collaborators</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-display font-semibold text-primary-500 mb-4">
-              {memberCount ?? 0}
-            </p>
-            <Button asChild className="w-full">
-              <Link href={`/app/o/${slug}/members`}>Manage Members</Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Organization Profile</CardTitle>
-            <CardDescription>Public-facing information</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full" variant="outline">
-              <Link href={`/app/o/${slug}/profile`}>Edit Profile</Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Activity</CardTitle>
-            <CardDescription>Recent updates and changes</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-neutral-dark-500">No recent activity</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-wrap gap-4">
-          {(membership.role === 'owner' || membership.role === 'admin') && (
-            <Button asChild>
-              <Link href={`/app/o/${slug}/members`}>Invite Team Members</Link>
-            </Button>
-          )}
-          <Button asChild variant="outline">
-            <Link href={`/app/o/${slug}/profile`}>Update Organization Info</Link>
-          </Button>
-        </CardContent>
-      </Card>
     </div>
   );
 }
