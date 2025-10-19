@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Upload } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import imageCompression from 'browser-image-compression';
 import { toast } from 'sonner';
 
