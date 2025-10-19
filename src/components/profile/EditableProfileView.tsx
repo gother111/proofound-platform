@@ -24,7 +24,7 @@ import {
   TrendingUp,
   X,
 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { useProfileData } from '@/hooks/useProfileData';
 import { AvatarUpload } from './AvatarUpload';
 import { CoverUpload } from './CoverUpload';
