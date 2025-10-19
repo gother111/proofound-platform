@@ -21,8 +21,8 @@ describe('createClient', () => {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'anon-key';
 
     vi.resetModules();
-    ({ createServerClient } = await import('@supabase/ssr'));
-    ({ cookies } = await import('next/headers'));
+    createServerClient = vi.mocked((await import('@supabase/ssr')).createServerClient);
+    cookies = vi.mocked((await import('next/headers')).cookies);
     vi.clearAllMocks();
   });
 

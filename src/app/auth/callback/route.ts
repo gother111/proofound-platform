@@ -53,7 +53,12 @@ export async function GET(request: NextRequest) {
   if (next) {
     try {
       const nextUrl = new URL(next, requestUrl.origin);
-      return NextResponse.redirect(nextUrl);
+      const isSameOrigin = nextUrl.origin === requestUrl.origin;
+      const isRelativePath = next.startsWith('/') && !next.startsWith('//');
+
+      if (isSameOrigin || isRelativePath) {
+        return NextResponse.redirect(nextUrl);
+      }
     } catch (_) {
       // ignore invalid next parameter
     }
