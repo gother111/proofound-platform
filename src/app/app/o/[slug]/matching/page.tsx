@@ -6,7 +6,6 @@ import { OrganizationMatchingEmpty } from '@/components/matching/OrganizationMat
 import { AssignmentBuilder } from '@/components/matching/AssignmentBuilder';
 import { MatchingOrganizationView } from '@/components/matching/MatchingOrganizationView';
 import { toast } from 'sonner';
-import { MATCHING_ENABLED } from '@/lib/featureFlags';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,11 +17,6 @@ export default function OrgMatchingPage() {
 
   useEffect(() => {
     const fetchAssignments = async () => {
-      if (!MATCHING_ENABLED) {
-        setIsLoading(false);
-        return;
-      }
-
       try {
         const response = await fetch('/api/assignments');
         const data = await response.json();
@@ -36,15 +30,6 @@ export default function OrgMatchingPage() {
 
     fetchAssignments();
   }, []);
-
-  if (!MATCHING_ENABLED) {
-    return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-semibold mb-2">Matching</h1>
-        <p className="text-muted-foreground">Coming soon</p>
-      </div>
-    );
-  }
 
   if (isLoading) {
     return (

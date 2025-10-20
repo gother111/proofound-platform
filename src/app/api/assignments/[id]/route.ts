@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
-import { MATCHING_ENABLED } from '@/lib/featureFlags';
 import { db } from '@/db';
 import { assignments, organizationMembers } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
@@ -83,10 +82,6 @@ async function verifyAssignmentAccess(userId: string, assignmentId: string): Pro
  */
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    if (!MATCHING_ENABLED) {
-      return NextResponse.json({ error: 'Matching feature is not enabled' }, { status: 403 });
-    }
-
     const user = await requireAuth();
     const { id } = params;
 
@@ -146,10 +141,6 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
  */
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    if (!MATCHING_ENABLED) {
-      return NextResponse.json({ error: 'Matching feature is not enabled' }, { status: 403 });
-    }
-
     const user = await requireAuth();
     const { id } = params;
 

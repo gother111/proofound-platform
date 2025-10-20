@@ -6,7 +6,6 @@ import { IndividualMatchingEmpty } from '@/components/matching/IndividualMatchin
 import { MatchingProfileSetup } from '@/components/matching/MatchingProfileSetup';
 import { MatchResultCard } from '@/components/matching/MatchResultCard';
 import { toast } from 'sonner';
-import { MATCHING_ENABLED } from '@/lib/featureFlags';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,11 +18,6 @@ export default function MatchingPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!MATCHING_ENABLED) {
-        setIsLoading(false);
-        return;
-      }
-
       try {
         // Fetch matching profile
         const profileRes = await fetch('/api/matching-profile');
@@ -50,15 +44,6 @@ export default function MatchingPage() {
 
     fetchData();
   }, []);
-
-  if (!MATCHING_ENABLED) {
-    return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-semibold mb-2">Matching</h1>
-        <p className="text-muted-foreground">Coming soon</p>
-      </div>
-    );
-  }
 
   if (isLoading) {
     return (

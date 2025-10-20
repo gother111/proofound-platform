@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
-import { MATCHING_ENABLED } from '@/lib/featureFlags';
 import { db } from '@/db';
 import { matchInterest, assignments } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
@@ -28,10 +27,6 @@ const InterestSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   try {
-    if (!MATCHING_ENABLED) {
-      return NextResponse.json({ error: 'Matching feature is not enabled' }, { status: 403 });
-    }
-
     const user = await requireAuth();
     const body = await request.json();
 
@@ -116,10 +111,6 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
-    if (!MATCHING_ENABLED) {
-      return NextResponse.json({ items: [] });
-    }
-
     const user = await requireAuth();
     const { searchParams } = new URL(request.url);
     const assignmentId = searchParams.get('assignmentId');

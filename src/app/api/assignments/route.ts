@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
-import { MATCHING_ENABLED } from '@/lib/featureFlags';
 import { db } from '@/db';
 import { assignments, organizationMembers } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
@@ -62,10 +61,6 @@ async function getUserOrgId(userId: string): Promise<string | null> {
  */
 export async function GET() {
   try {
-    if (!MATCHING_ENABLED) {
-      return NextResponse.json({ items: [] });
-    }
-
     const user = await requireAuth();
 
     // Check if user is a member of an organization
@@ -98,10 +93,6 @@ export async function GET() {
  */
 export async function POST(request: NextRequest) {
   try {
-    if (!MATCHING_ENABLED) {
-      return NextResponse.json({ error: 'Matching feature is not enabled' }, { status: 403 });
-    }
-
     const user = await requireAuth();
 
     // Check if user is a member of an organization
