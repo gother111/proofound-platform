@@ -16,11 +16,12 @@
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx src/db/seed.ts",
     "tokens:sync": "tsx scripts/sync-figma-tokens.ts",
-    "test": "vitest",
+    "test": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "lighthouse:compare": "echo 'Run Lighthouse manually and compare scores before/after theme refresh'",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "postbuild": "node ./scripts/postbuild-cleanup.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",

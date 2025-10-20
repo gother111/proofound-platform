@@ -67,6 +67,37 @@ export function MatchResultCard({
   // Top 3 skills
   const topSkills = skills.slice(0, 3);
 
+  const displayTags =
+    (isOrgView
+      ? (result.profile?.valuesTags ?? result.profile?.causeTags)
+      : (result.assignment?.valuesRequired ?? result.assignment?.causeTags)) ?? [];
+
+  const locationMode = isOrgView ? result.profile?.workMode : result.assignment?.locationMode;
+  const country = isOrgView ? result.profile?.country : result.assignment?.country;
+  const hoursMin = isOrgView ? result.profile?.hoursMin : result.assignment?.hoursMin;
+  const hoursMax = isOrgView ? result.profile?.hoursMax : result.assignment?.hoursMax;
+  const compMin = isOrgView ? result.profile?.compMin : result.assignment?.compMin;
+  const compMax = isOrgView ? result.profile?.compMax : result.assignment?.compMax;
+  const currency = isOrgView ? result.profile?.currency : result.assignment?.currency;
+
+  const hoursLabel =
+    hoursMin != null && hoursMax != null
+      ? `${hoursMin}-${hoursMax} hrs/week`
+      : hoursMin != null
+        ? `${hoursMin}+ hrs/week`
+        : hoursMax != null
+          ? `Up to ${hoursMax} hrs/week`
+          : null;
+
+  const compensationLabel =
+    compMin != null && compMax != null
+      ? `${compMin.toLocaleString()}-${compMax.toLocaleString()}`
+      : compMin != null
+        ? `${compMin.toLocaleString()}+`
+        : compMax != null
+          ? `Up to ${compMax.toLocaleString()}`
+          : null;
+
   // Match score percentage
   const scorePercent = Math.round(result.score * 100);
 
@@ -155,7 +186,7 @@ export function MatchResultCard({
         )}
 
         {/* Hours */}
-        {(data?.hoursMin || data?.hoursMax) && (
+        {hoursLabel && (
           <div className="flex items-center gap-2">
             <Clock className="w-3 h-3" />
             <span>
@@ -165,7 +196,7 @@ export function MatchResultCard({
         )}
 
         {/* Compensation */}
-        {(data?.compMin || data?.compMax) && (
+        {compensationLabel && (
           <div className="flex items-center gap-2">
             <DollarSign className="w-3 h-3" />
             <span>
