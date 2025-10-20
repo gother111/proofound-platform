@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
-import { MATCHING_ENABLED } from '@/lib/featureFlags';
 import { db } from '@/db';
 import { matchingProfiles, skills } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -50,10 +49,6 @@ const MatchingProfileSchema = z.object({
  */
 export async function GET() {
   try {
-    if (!MATCHING_ENABLED) {
-      return NextResponse.json({ profile: null });
-    }
-
     const user = await requireAuth();
 
     // Fetch matching profile
@@ -92,10 +87,6 @@ export async function GET() {
  */
 export async function PUT(request: NextRequest) {
   try {
-    if (!MATCHING_ENABLED) {
-      return NextResponse.json({ error: 'Matching feature is not enabled' }, { status: 403 });
-    }
-
     const user = await requireAuth();
     const body = await request.json();
 
@@ -105,12 +96,13 @@ export async function PUT(request: NextRequest) {
     // Extract skills separately
     const { skills: skillsInput, ...profileData } = validatedData;
 
-    // Keep ISO date strings for Drizzle date columns
-    const profileToUpsert = {
+    const { availabilityEarliest, availabilityLatest, ...restProfile } = profileData;
+
+    const profileToUpsert: typeof matchingProfiles.$inferInsert = {
       profileId: user.id,
-      ...profileData,
-      availabilityEarliest: profileData.availabilityEarliest ?? undefined,
-      availabilityLatest: profileData.availabilityLatest ?? undefined,
+      ...restProfile,
+      ...(availabilityEarliest !== undefined ? { availabilityEarliest } : {}),
+      ...(availabilityLatest !== undefined ? { availabilityLatest } : {}),
     };
 
     // Upsert matching profile

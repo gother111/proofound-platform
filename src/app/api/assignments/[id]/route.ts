@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
-import { MATCHING_ENABLED } from '@/lib/featureFlags';
 import { db } from '@/db';
 import { assignments, organizationMembers } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
@@ -84,12 +83,11 @@ async function verifyAssignmentAccess(userId: string, assignmentId: string): Pro
 type AssignmentRouteContext = { params: Promise<{ id: string }> };
 
 export async function PUT(request: NextRequest, context: AssignmentRouteContext) {
-  const { id } = await context.params;
+  let id: string | undefined;
 
   try {
-    if (!MATCHING_ENABLED) {
-      return NextResponse.json({ error: 'Matching feature is not enabled' }, { status: 403 });
-    }
+    const params = await context.params;
+    id = params.id;
 
     const user = await requireAuth();
 
@@ -105,11 +103,12 @@ export async function PUT(request: NextRequest, context: AssignmentRouteContext)
     // Validate input
     const validatedData = AssignmentUpdateSchema.parse(body);
 
-    // Keep ISO date strings for Drizzle date columns
-    const updateData = {
-      ...validatedData,
-      startEarliest: validatedData.startEarliest ?? undefined,
-      startLatest: validatedData.startLatest ?? undefined,
+    const { startEarliest, startLatest, ...rest } = validatedData;
+
+    const updateData: Partial<typeof assignments.$inferInsert> = {
+      ...rest,
+      ...(startEarliest !== undefined ? { startEarliest } : {}),
+      ...(startLatest !== undefined ? { startLatest } : {}),
       updatedAt: new Date(),
     };
 
@@ -146,12 +145,11 @@ export async function PUT(request: NextRequest, context: AssignmentRouteContext)
  * Deletes an assignment.
  */
 export async function DELETE(request: NextRequest, context: AssignmentRouteContext) {
-  const { id } = await context.params;
+  let id: string | undefined;
 
   try {
-    if (!MATCHING_ENABLED) {
-      return NextResponse.json({ error: 'Matching feature is not enabled' }, { status: 403 });
-    }
+    const params = await context.params;
+    id = params.id;
 
     const user = await requireAuth();
 

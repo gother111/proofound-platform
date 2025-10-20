@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
-import { MATCHING_ENABLED } from '@/lib/featureFlags';
 import { db } from '@/db';
 import { assignments, matchingProfiles, skills, organizationMembers } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
@@ -56,10 +55,6 @@ export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
   try {
-    if (!MATCHING_ENABLED) {
-      return NextResponse.json({ items: [], meta: {} });
-    }
-
     const user = await requireAuth();
     const body = await request.json();
 
