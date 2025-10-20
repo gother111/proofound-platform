@@ -21,8 +21,7 @@ export const dynamic = 'force-dynamic';
  * Feature flag: MATCHING_ENABLED
  */
 export async function GET(request: NextRequest, context: { params: Promise<{ kind: string }> }) {
-  const params = await context.params;
-  const { kind } = params;
+  const { kind } = await context.params;
 
   try {
     // Feature flag check

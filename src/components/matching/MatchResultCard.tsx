@@ -55,14 +55,14 @@ export function MatchResultCard({
   skills = [],
 }: MatchResultCardProps) {
   const isOrgView = !!result.profileId; // Org viewing candidates
-  const data = isOrgView ? result.profile : result.assignment;
 
   // Top 3 skills
   const topSkills = skills.slice(0, 3);
 
-  const displayTags = isOrgView
-    ? (result.profile?.valuesTags ?? result.profile?.causeTags ?? [])
-    : (result.assignment?.valuesRequired ?? result.assignment?.causeTags ?? []);
+  const displayTags =
+    (isOrgView
+      ? (result.profile?.valuesTags ?? result.profile?.causeTags)
+      : (result.assignment?.valuesRequired ?? result.assignment?.causeTags)) ?? [];
 
   const locationMode = isOrgView ? result.profile?.workMode : result.assignment?.locationMode;
   const country = isOrgView ? result.profile?.country : result.assignment?.country;

@@ -82,8 +82,7 @@ async function verifyAssignmentAccess(userId: string, assignmentId: string): Pro
  * Updates an assignment.
  */
 export async function PUT(request: NextRequest, context: { params: Promise<{ id: string }> }) {
-  const params = await context.params;
-  const { id } = params;
+  const { id } = await context.params;
 
   try {
     if (!MATCHING_ENABLED) {
@@ -104,7 +103,7 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
     // Validate input
     const validatedData = AssignmentUpdateSchema.parse(body);
 
-    // Convert date strings to Date objects
+    // Prepare update payload, keeping date strings for Drizzle date columns
     const updateData = {
       ...validatedData,
       startEarliest: validatedData.startEarliest ?? undefined,
@@ -145,8 +144,7 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
  * Deletes an assignment.
  */
 export async function DELETE(request: NextRequest, context: { params: Promise<{ id: string }> }) {
-  const params = await context.params;
-  const { id } = params;
+  const { id } = await context.params;
 
   try {
     if (!MATCHING_ENABLED) {
