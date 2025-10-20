@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
     // Validate input
     const validatedData = AssignmentSchema.parse(body);
 
-    // Prepare assignment payload, keeping date strings for Drizzle's date columns
+    // Keep ISO date strings for Drizzle date columns
     const assignmentData = {
       orgId,
       ...validatedData,

@@ -20,7 +20,9 @@ export const dynamic = 'force-dynamic';
  * Auth: Required
  * Feature flag: MATCHING_ENABLED
  */
-export async function GET(request: NextRequest, context: { params: Promise<{ kind: string }> }) {
+type TaxonomyRouteContext = { params: Promise<{ kind: string }> };
+
+export async function GET(request: NextRequest, context: TaxonomyRouteContext) {
   const { kind } = await context.params;
 
   try {

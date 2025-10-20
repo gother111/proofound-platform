@@ -105,7 +105,7 @@ export async function PUT(request: NextRequest) {
     // Extract skills separately
     const { skills: skillsInput, ...profileData } = validatedData;
 
-    // Prepare profile payload, keeping ISO strings for date columns
+    // Keep ISO date strings for Drizzle date columns
     const profileToUpsert = {
       profileId: user.id,
       ...profileData,
