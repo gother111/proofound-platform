@@ -96,16 +96,13 @@ export async function PUT(request: NextRequest) {
     // Extract skills separately
     const { skills: skillsInput, ...profileData } = validatedData;
 
-    // Convert date strings to Date objects
-    const profileToUpsert = {
+    const { availabilityEarliest, availabilityLatest, ...restProfile } = profileData;
+
+    const profileToUpsert: typeof matchingProfiles.$inferInsert = {
       profileId: user.id,
-      ...profileData,
-      availabilityEarliest: profileData.availabilityEarliest
-        ? new Date(profileData.availabilityEarliest)
-        : undefined,
-      availabilityLatest: profileData.availabilityLatest
-        ? new Date(profileData.availabilityLatest)
-        : undefined,
+      ...restProfile,
+      ...(availabilityEarliest !== undefined ? { availabilityEarliest } : {}),
+      ...(availabilityLatest !== undefined ? { availabilityLatest } : {}),
     };
 
     // Upsert matching profile
