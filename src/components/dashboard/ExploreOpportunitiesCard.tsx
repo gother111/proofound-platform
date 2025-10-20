@@ -1,17 +1,22 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Briefcase } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 interface ExploreOpportunitiesCardProps {
   className?: string;
+  basePath?: string; // '/app/i' or '/app/o/[slug]'
 }
 
 const tabs = ['People', 'Projects', 'Partners'];
 
-export function ExploreOpportunitiesCard({ className }: ExploreOpportunitiesCardProps) {
+export function ExploreOpportunitiesCard({
+  className,
+  basePath = '/app/i',
+}: ExploreOpportunitiesCardProps) {
   const [activeTab, setActiveTab] = useState('People');
 
   return (
@@ -49,9 +54,16 @@ export function ExploreOpportunitiesCard({ className }: ExploreOpportunitiesCard
         <p className="text-xs mb-3 text-muted-foreground">
           Discover opportunities aligned with your interests.
         </p>
-        <Button size="sm" className="h-7 text-xs">
-          Start exploring
-        </Button>
+        <div className="flex gap-2 justify-center">
+          <Link href={`${basePath}/matching`}>
+            <Button size="sm" className="h-7 text-xs" style={{ backgroundColor: '#1C4D3A' }}>
+              View Matches
+            </Button>
+          </Link>
+          <Button size="sm" variant="outline" className="h-7 text-xs">
+            Start exploring
+          </Button>
+        </div>
       </div>
     </Card>
   );
