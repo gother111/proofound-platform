@@ -105,16 +105,12 @@ export async function PUT(request: NextRequest) {
     // Extract skills separately
     const { skills: skillsInput, ...profileData } = validatedData;
 
-    // Convert date strings to Date objects
+    // Keep ISO date strings for Drizzle date columns
     const profileToUpsert = {
       profileId: user.id,
       ...profileData,
-      availabilityEarliest: profileData.availabilityEarliest
-        ? new Date(profileData.availabilityEarliest)
-        : undefined,
-      availabilityLatest: profileData.availabilityLatest
-        ? new Date(profileData.availabilityLatest)
-        : undefined,
+      availabilityEarliest: profileData.availabilityEarliest ?? undefined,
+      availabilityLatest: profileData.availabilityLatest ?? undefined,
     };
 
     // Upsert matching profile

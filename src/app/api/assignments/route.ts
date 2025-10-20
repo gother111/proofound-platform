@@ -119,14 +119,12 @@ export async function POST(request: NextRequest) {
     // Validate input
     const validatedData = AssignmentSchema.parse(body);
 
-    // Convert date strings to Date objects
+    // Keep ISO date strings for Drizzle date columns
     const assignmentData = {
       orgId,
       ...validatedData,
-      startEarliest: validatedData.startEarliest
-        ? new Date(validatedData.startEarliest)
-        : undefined,
-      startLatest: validatedData.startLatest ? new Date(validatedData.startLatest) : undefined,
+      startEarliest: validatedData.startEarliest ?? undefined,
+      startLatest: validatedData.startLatest ?? undefined,
     };
 
     // Insert assignment
