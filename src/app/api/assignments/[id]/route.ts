@@ -80,10 +80,16 @@ async function verifyAssignmentAccess(userId: string, assignmentId: string): Pro
  *
  * Updates an assignment.
  */
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+type AssignmentRouteContext = { params: Promise<{ id: string }> };
+
+export async function PUT(request: NextRequest, context: AssignmentRouteContext) {
+  let id: string | undefined;
+
   try {
+    const params = await context.params;
+    id = params.id;
+
     const user = await requireAuth();
-    const { id } = params;
 
     // Verify access
     const hasAccess = await verifyAssignmentAccess(user.id, id);
@@ -97,13 +103,12 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     // Validate input
     const validatedData = AssignmentUpdateSchema.parse(body);
 
-    // Convert date strings to Date objects
-    const updateData = {
-      ...validatedData,
-      startEarliest: validatedData.startEarliest
-        ? new Date(validatedData.startEarliest)
-        : undefined,
-      startLatest: validatedData.startLatest ? new Date(validatedData.startLatest) : undefined,
+    const { startEarliest, startLatest, ...rest } = validatedData;
+
+    const updateData: Partial<typeof assignments.$inferInsert> = {
+      ...rest,
+      ...(startEarliest !== undefined ? { startEarliest } : {}),
+      ...(startLatest !== undefined ? { startLatest } : {}),
       updatedAt: new Date(),
     };
 
@@ -126,7 +131,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     }
 
     log.error('assignment.update.failed', {
-      assignmentId: params.id,
+      assignmentId: id,
       error: error instanceof Error ? error.message : 'Unknown error',
     });
 
@@ -139,10 +144,14 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
  *
  * Deletes an assignment.
  */
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, context: AssignmentRouteContext) {
+  let id: string | undefined;
+
   try {
+    const params = await context.params;
+    id = params.id;
+
     const user = await requireAuth();
-    const { id } = params;
 
     // Verify access
     const hasAccess = await verifyAssignmentAccess(user.id, id);
@@ -162,7 +171,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     return NextResponse.json({ success: true });
   } catch (error) {
     log.error('assignment.delete.failed', {
-      assignmentId: params.id,
+      assignmentId: id,
       error: error instanceof Error ? error.message : 'Unknown error',
     });
 

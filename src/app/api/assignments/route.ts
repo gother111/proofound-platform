@@ -110,14 +110,13 @@ export async function POST(request: NextRequest) {
     // Validate input
     const validatedData = AssignmentSchema.parse(body);
 
-    // Convert date strings to Date objects
-    const assignmentData = {
+    const { startEarliest, startLatest, ...rest } = validatedData;
+
+    const assignmentData: typeof assignments.$inferInsert = {
       orgId,
-      ...validatedData,
-      startEarliest: validatedData.startEarliest
-        ? new Date(validatedData.startEarliest)
-        : undefined,
-      startLatest: validatedData.startLatest ? new Date(validatedData.startLatest) : undefined,
+      ...rest,
+      ...(startEarliest !== undefined ? { startEarliest } : {}),
+      ...(startLatest !== undefined ? { startLatest } : {}),
     };
 
     // Insert assignment

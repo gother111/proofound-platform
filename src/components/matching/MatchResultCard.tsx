@@ -55,7 +55,14 @@ export function MatchResultCard({
   skills = [],
 }: MatchResultCardProps) {
   const isOrgView = !!result.profileId; // Org viewing candidates
-  const data = isOrgView ? result.profile : result.assignment;
+  const profileData = result.profile;
+  const assignmentData = result.assignment;
+  const data = isOrgView ? profileData : assignmentData;
+
+  const valueTags = isOrgView ? profileData?.valuesTags : assignmentData?.valuesRequired;
+  const causeTags = isOrgView ? profileData?.causeTags : assignmentData?.causeTags;
+  const tagsToDisplay = (valueTags && valueTags.length > 0 ? valueTags : causeTags) ?? [];
+  const locationLabel = isOrgView ? profileData?.workMode : assignmentData?.locationMode;
 
   // Top 3 skills
   const topSkills = skills.slice(0, 3);
@@ -116,10 +123,10 @@ export function MatchResultCard({
       )}
 
       {/* Values/Causes */}
-      {(data?.valuesTags || data?.valuesRequired) && (
+      {tagsToDisplay.length > 0 && (
         <div className="mb-3">
           <div className="flex flex-wrap gap-1">
-            {(data.valuesTags || data.valuesRequired || []).slice(0, 3).map((tag: string) => (
+            {tagsToDisplay.slice(0, 3).map((tag: string) => (
               <Badge
                 key={tag}
                 variant="outline"
@@ -136,13 +143,13 @@ export function MatchResultCard({
       {/* Key details */}
       <div className="space-y-2 mb-3 text-xs" style={{ color: '#6B6760' }}>
         {/* Location */}
-        {(data?.workMode || data?.locationMode) && (
+        {locationLabel && (
           <div className="flex items-center gap-2">
             <MapPin className="w-3 h-3" />
             <span>
-              {data.workMode || data.locationMode}
-              {data.country && variant === 'revealed' && ` • ${data.country}`}
-              {data.country && variant === 'blind' && ' • Region hidden'}
+              {locationLabel}
+              {data?.country && variant === 'revealed' && ` • ${data.country}`}
+              {data?.country && variant === 'blind' && ' • Region hidden'}
             </span>
           </div>
         )}
@@ -152,7 +159,7 @@ export function MatchResultCard({
           <div className="flex items-center gap-2">
             <Clock className="w-3 h-3" />
             <span>
-              {data.hoursMin}-{data.hoursMax} hrs/week
+              {data?.hoursMin}-{data?.hoursMax} hrs/week
             </span>
           </div>
         )}
@@ -162,7 +169,7 @@ export function MatchResultCard({
           <div className="flex items-center gap-2">
             <DollarSign className="w-3 h-3" />
             <span>
-              {data.currency} {data.compMin?.toLocaleString()}-{data.compMax?.toLocaleString()}
+              {data?.currency} {data?.compMin?.toLocaleString()}-{data?.compMax?.toLocaleString()}
             </span>
           </div>
         )}
