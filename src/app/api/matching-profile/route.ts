@@ -109,12 +109,8 @@ export async function PUT(request: NextRequest) {
     const profileToUpsert = {
       profileId: user.id,
       ...profileData,
-      availabilityEarliest: profileData.availabilityEarliest
-        ? new Date(profileData.availabilityEarliest)
-        : undefined,
-      availabilityLatest: profileData.availabilityLatest
-        ? new Date(profileData.availabilityLatest)
-        : undefined,
+      availabilityEarliest: profileData.availabilityEarliest ?? undefined,
+      availabilityLatest: profileData.availabilityLatest ?? undefined,
     };
 
     // Upsert matching profile

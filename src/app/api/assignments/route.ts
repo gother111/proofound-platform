@@ -123,10 +123,8 @@ export async function POST(request: NextRequest) {
     const assignmentData = {
       orgId,
       ...validatedData,
-      startEarliest: validatedData.startEarliest
-        ? new Date(validatedData.startEarliest)
-        : undefined,
-      startLatest: validatedData.startLatest ? new Date(validatedData.startLatest) : undefined,
+      startEarliest: validatedData.startEarliest ?? undefined,
+      startLatest: validatedData.startLatest ?? undefined,
     };
 
     // Insert assignment

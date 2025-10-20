@@ -81,14 +81,16 @@ async function verifyAssignmentAccess(userId: string, assignmentId: string): Pro
  *
  * Updates an assignment.
  */
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params;
+  const { id } = params;
+
   try {
     if (!MATCHING_ENABLED) {
       return NextResponse.json({ error: 'Matching feature is not enabled' }, { status: 403 });
     }
 
     const user = await requireAuth();
-    const { id } = params;
 
     // Verify access
     const hasAccess = await verifyAssignmentAccess(user.id, id);
@@ -105,10 +107,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     // Convert date strings to Date objects
     const updateData = {
       ...validatedData,
-      startEarliest: validatedData.startEarliest
-        ? new Date(validatedData.startEarliest)
-        : undefined,
-      startLatest: validatedData.startLatest ? new Date(validatedData.startLatest) : undefined,
+      startEarliest: validatedData.startEarliest ?? undefined,
+      startLatest: validatedData.startLatest ?? undefined,
       updatedAt: new Date(),
     };
 
@@ -131,7 +131,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     }
 
     log.error('assignment.update.failed', {
-      assignmentId: params.id,
+      assignmentId: id,
       error: error instanceof Error ? error.message : 'Unknown error',
     });
 
@@ -144,14 +144,16 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
  *
  * Deletes an assignment.
  */
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params;
+  const { id } = params;
+
   try {
     if (!MATCHING_ENABLED) {
       return NextResponse.json({ error: 'Matching feature is not enabled' }, { status: 403 });
     }
 
     const user = await requireAuth();
-    const { id } = params;
 
     // Verify access
     const hasAccess = await verifyAssignmentAccess(user.id, id);
@@ -171,7 +173,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     return NextResponse.json({ success: true });
   } catch (error) {
     log.error('assignment.delete.failed', {
-      assignmentId: params.id,
+      assignmentId: id,
       error: error instanceof Error ? error.message : 'Unknown error',
     });
 
