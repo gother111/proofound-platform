@@ -68,7 +68,8 @@ Edit `.env.local` (you will copy these values into Vercel later):
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 # Optional: force OAuth/email callbacks to use a specific URL (useful for preview deploys).
 # Provide either the base domain (e.g., https://proofound.io) or the full callback URL
-# (e.g., https://your-project.supabase.co/auth/v1/callback).
+# (e.g., https://your-project.supabase.co/auth/v1/callback). Separate multiple values with commas
+# or new lines to support several domains; the entry matching the current host is preferred.
 NEXT_PUBLIC_AUTH_REDIRECT_URL=http://localhost:3000
 NEXT_PUBLIC_APP_ENV=local
 

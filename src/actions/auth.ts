@@ -63,33 +63,136 @@ function resolveRequestSiteUrl(headersList: Headers): string {
   return '';
 }
 
-function resolveAuthCallbackUrl(headersList: Headers): string | null {
-  const overrideValue = process.env.NEXT_PUBLIC_AUTH_REDIRECT_URL ?? process.env.AUTH_REDIRECT_URL;
-  if (overrideValue) {
-    const trimmed = overrideValue.trim();
-    if (trimmed) {
-      const hasScheme = /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(trimmed);
-      const withScheme = hasScheme ? trimmed : `https://${trimmed}`;
+type AuthRedirectOverride = {
+  href: string;
+  host: string;
+  hostname: string;
+};
 
-      try {
-        const overrideUrl = new URL(withScheme);
-        const origin = normalizeSiteUrl(overrideUrl.origin, { allowPreviewHosts: true });
-        if (!origin) {
-          throw new Error('Invalid override origin');
+function parseAuthRedirectOverrides(rawValue: string | undefined): AuthRedirectOverride[] {
+  if (!rawValue) {
+    return [];
+  }
+
+  const entries = rawValue
+    .split(/[\n,]+/)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+
+  const overrides: AuthRedirectOverride[] = [];
+  const seen = new Set<string>();
+
+  for (const entry of entries) {
+    const hasScheme = /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(entry);
+    const withScheme = hasScheme ? entry : `https://${entry}`;
+
+    try {
+      const overrideUrl = new URL(withScheme);
+      const origin = normalizeSiteUrl(overrideUrl.origin, { allowPreviewHosts: true });
+      if (!origin) {
+        continue;
+      }
+
+      if (!overrideUrl.pathname || overrideUrl.pathname === '/') {
+        overrideUrl.pathname = '/auth/callback';
+      }
+
+      overrideUrl.search = '';
+      overrideUrl.hash = '';
+
+      const href = stripTrailingSlash(overrideUrl.toString());
+      if (seen.has(href)) {
+        continue;
+      }
+
+      overrides.push({
+        href,
+        host: overrideUrl.host.toLowerCase(),
+        hostname: overrideUrl.hostname.toLowerCase(),
+      });
+      seen.add(href);
+    } catch {
+      // ignore invalid override
+    }
+  }
+
+  return overrides;
+}
+
+function collectRequestHosts(headersList: Headers): Set<string> {
+  const hosts = new Set<string>();
+
+  const addHostValue = (value: string | null | undefined) => {
+    if (!value) {
+      return;
+    }
+
+    const values = value.split(',');
+    for (const segment of values) {
+      const trimmed = segment.trim();
+      if (!trimmed) {
+        continue;
+      }
+
+      if (/^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(trimmed)) {
+        try {
+          const url = new URL(trimmed);
+          hosts.add(url.host.toLowerCase());
+          hosts.add(url.hostname.toLowerCase());
+        } catch {
+          // ignore invalid URL
         }
+        continue;
+      }
 
-        if (!overrideUrl.pathname || overrideUrl.pathname === '/') {
-          overrideUrl.pathname = '/auth/callback';
-        }
-
-        overrideUrl.search = '';
-        overrideUrl.hash = '';
-
-        return stripTrailingSlash(overrideUrl.toString());
-      } catch {
-        // fall through to header-based resolution when override cannot be parsed
+      const lower = trimmed.toLowerCase();
+      hosts.add(lower);
+      const colonIndex = lower.indexOf(':');
+      if (colonIndex !== -1) {
+        hosts.add(lower.slice(0, colonIndex));
       }
     }
+  };
+
+  addHostValue(headersList.get('x-forwarded-host'));
+  addHostValue(headersList.get('host'));
+
+  const origin = headersList.get('origin');
+  if (origin) {
+    addHostValue(origin);
+  }
+
+  const referer = headersList.get('referer');
+  if (referer) {
+    addHostValue(referer);
+  }
+
+  const siteUrl = resolveRequestSiteUrl(headersList);
+  if (siteUrl) {
+    addHostValue(siteUrl);
+  }
+
+  return hosts;
+}
+
+function resolveAuthCallbackUrl(headersList: Headers): string | null {
+  const rawOverride = process.env.NEXT_PUBLIC_AUTH_REDIRECT_URL ?? process.env.AUTH_REDIRECT_URL;
+  const overrides = parseAuthRedirectOverrides(rawOverride);
+
+  if (overrides.length > 0) {
+    const requestHosts = collectRequestHosts(headersList);
+
+    if (requestHosts.size > 0) {
+      const matchingOverride = overrides.find(
+        (override) => requestHosts.has(override.host) || requestHosts.has(override.hostname)
+      );
+
+      if (matchingOverride) {
+        return matchingOverride.href;
+      }
+    }
+
+    return overrides[0]?.href ?? null;
   }
 
   const siteUrl = resolveRequestSiteUrl(headersList);
