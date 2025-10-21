@@ -301,14 +301,19 @@ export async function resolveUserHomePath(
     return '/app/i/home';
   }
 
-  const { data: membership, error: membershipError } = await supabase
+  const { data: memberships, error: membershipError } = await supabase
     .from('organization_members')
-    .select('org:organizations!inner(slug)')
+    .select(
+      `
+        organizations!inner (
+          slug
+        )
+      `
+    )
     .eq('user_id', user.id)
     .eq('status', 'active')
     .order('joined_at', { ascending: true })
-    .limit(1)
-    .maybeSingle();
+    .limit(1);
 
   if (membershipError) {
     console.error(
@@ -318,9 +323,10 @@ export async function resolveUserHomePath(
     return '/onboarding';
   }
 
-  const orgData = membership?.org;
+  const membership = memberships?.[0];
+  const orgData = membership?.organizations;
   const org = Array.isArray(orgData) ? orgData[0] : orgData;
-  const slug = org?.slug;
+  const slug = (org as { slug?: string } | undefined)?.slug;
   if (slug) {
     if (persona !== 'org_member') {
       const { error: personaUpdateError } = await supabase
