@@ -64,16 +64,31 @@ function resolveRequestSiteUrl(headersList: Headers): string {
 }
 
 function resolveAuthCallbackUrl(headersList: Headers): string | null {
-  const authRedirectOverride = normalizeSiteUrl(
-    process.env.NEXT_PUBLIC_AUTH_REDIRECT_URL ?? process.env.AUTH_REDIRECT_URL,
-    { allowPreviewHosts: true }
-  );
+  const overrideValue = process.env.NEXT_PUBLIC_AUTH_REDIRECT_URL ?? process.env.AUTH_REDIRECT_URL;
+  if (overrideValue) {
+    const trimmed = overrideValue.trim();
+    if (trimmed) {
+      const hasScheme = /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(trimmed);
+      const withScheme = hasScheme ? trimmed : `https://${trimmed}`;
 
-  if (authRedirectOverride) {
-    try {
-      return new URL('/auth/callback', stripTrailingSlash(authRedirectOverride)).toString();
-    } catch {
-      // fall through to header-based resolution
+      try {
+        const overrideUrl = new URL(withScheme);
+        const origin = normalizeSiteUrl(overrideUrl.origin, { allowPreviewHosts: true });
+        if (!origin) {
+          throw new Error('Invalid override origin');
+        }
+
+        if (!overrideUrl.pathname || overrideUrl.pathname === '/') {
+          overrideUrl.pathname = '/auth/callback';
+        }
+
+        overrideUrl.search = '';
+        overrideUrl.hash = '';
+
+        return stripTrailingSlash(overrideUrl.toString());
+      } catch {
+        // fall through to header-based resolution when override cannot be parsed
+      }
     }
   }
 
