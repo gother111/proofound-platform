@@ -301,33 +301,46 @@ export async function resolveUserHomePath(
     return '/app/i/home';
   }
 
-  if (persona === 'org_member') {
-    const { data: membership, error: membershipError } = await supabase
-      .from('organization_members')
-      .select('org:organizations!inner(slug)')
-      .eq('user_id', user.id)
-      .eq('status', 'active')
-      .order('joined_at', { ascending: true })
-      .limit(1)
-      .maybeSingle();
+  const { data: membership, error: membershipError } = await supabase
+    .from('organization_members')
+    .select('org:organizations!inner(slug)')
+    .eq('user_id', user.id)
+    .eq('status', 'active')
+    .order('joined_at', { ascending: true })
+    .limit(1)
+    .maybeSingle();
 
-    if (membershipError) {
-      console.error(
-        'Failed to load organization membership for redirect resolution:',
-        membershipError
-      );
-      return '/onboarding';
-    }
-
-    const orgData = membership?.org;
-    const org = Array.isArray(orgData) ? orgData[0] : orgData;
-    const slug = org?.slug;
-    if (slug) {
-      return `/app/o/${slug}/home`;
-    }
-
-    console.warn('Org member user has no active organization membership', { userId: user.id });
+  if (membershipError) {
+    console.error(
+      'Failed to load organization membership for redirect resolution:',
+      membershipError
+    );
     return '/onboarding';
+  }
+
+  const orgData = membership?.org;
+  const org = Array.isArray(orgData) ? orgData[0] : orgData;
+  const slug = org?.slug;
+  if (slug) {
+    if (persona !== 'org_member') {
+      const { error: personaUpdateError } = await supabase
+        .from('profiles')
+        .update({ persona: 'org_member', updated_at: new Date().toISOString() })
+        .eq('id', user.id);
+
+      if (personaUpdateError) {
+        console.error('Failed to update persona after detecting organization membership:', {
+          userId: user.id,
+          error: personaUpdateError,
+        });
+      }
+    }
+
+    return `/app/o/${slug}/home`;
+  }
+
+  if (persona === 'org_member') {
+    console.warn('Org member user has no active organization membership', { userId: user.id });
   }
 
   return '/onboarding';
