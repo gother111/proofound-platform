@@ -319,7 +319,9 @@ export async function resolveUserHomePath(
       return '/onboarding';
     }
 
-    const slug = membership?.org?.slug;
+    const orgData = membership?.org;
+    const org = Array.isArray(orgData) ? orgData[0] : orgData;
+    const slug = org?.slug;
     if (slug) {
       return `/app/o/${slug}/home`;
     }
