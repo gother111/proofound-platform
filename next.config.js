@@ -35,6 +35,13 @@ const securityHeaders = [
   },
 ];
 
+const cacheControlHeaders = [
+  {
+    key: 'Cache-Control',
+    value: 'no-store, max-age=0, must-revalidate',
+  },
+];
+
 const nextConfig = {
   experimental: {
     serverActions: {
@@ -54,6 +61,17 @@ const nextConfig = {
       {
         source: '/(.*)',
         headers: securityHeaders,
+      },
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'header',
+            key: 'accept',
+            value: 'text/html.*',
+          },
+        ],
+        headers: cacheControlHeaders,
       },
     ];
   },
