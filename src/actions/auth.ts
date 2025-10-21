@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { checkRateLimit, getRateLimitIdentifier } from '@/lib/rate-limit';
 import { headers } from 'next/headers';
 import type { AuthError } from '@supabase/supabase-js';
+import { resolveUserHomePath } from '@/lib/auth';
 
 const signUpSchema = z.object({
   email: z.string().email(),
@@ -192,8 +193,10 @@ export async function signIn(
       return { error: mapSupabaseSignInError(error, email) };
     }
 
+    const destination = await resolveUserHomePath(supabase);
+
     revalidatePath('/', 'layout');
-    redirect('/app/i/home');
+    redirect(destination);
 
     return { error: null };
   } catch (error) {
@@ -263,7 +266,10 @@ function mapUnexpectedAuthError(error: unknown, action: 'sign up' | 'log in') {
   const message = getErrorMessage(error);
 
   if (message) {
-    if (/supabase server client is missing required/i.test(message) || /Supabase Auth is not configured/i.test(message)) {
+    if (
+      /supabase server client is missing required/i.test(message) ||
+      /Supabase Auth is not configured/i.test(message)
+    ) {
       return 'Authentication service is not configured correctly. Please contact support.';
     }
 
