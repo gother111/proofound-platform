@@ -63,6 +63,32 @@ function resolveRequestSiteUrl(headersList: Headers): string {
   return '';
 }
 
+function resolveAuthCallbackUrl(headersList: Headers): string | null {
+  const authRedirectOverride = normalizeSiteUrl(
+    process.env.NEXT_PUBLIC_AUTH_REDIRECT_URL ?? process.env.AUTH_REDIRECT_URL,
+    { allowPreviewHosts: true }
+  );
+
+  if (authRedirectOverride) {
+    try {
+      return new URL('/auth/callback', stripTrailingSlash(authRedirectOverride)).toString();
+    } catch {
+      // fall through to header-based resolution
+    }
+  }
+
+  const siteUrl = resolveRequestSiteUrl(headersList);
+  if (!siteUrl) {
+    return null;
+  }
+
+  try {
+    return new URL('/auth/callback', siteUrl).toString();
+  } catch {
+    return null;
+  }
+}
+
 export async function signUp(
   _prevState: SignUpState | undefined,
   formData: FormData
@@ -95,8 +121,8 @@ export async function signUp(
       };
     }
 
-    const siteUrl = resolveRequestSiteUrl(headersList);
-    if (!siteUrl) {
+    const authCallbackUrl = resolveAuthCallbackUrl(headersList);
+    if (!authCallbackUrl) {
       return {
         error: 'Unable to complete signup. Please try again later or contact support.',
         success: false,
@@ -109,7 +135,7 @@ export async function signUp(
       email: result.data.email,
       password: result.data.password,
       options: {
-        emailRedirectTo: `${siteUrl}/auth/callback`,
+        emailRedirectTo: authCallbackUrl,
       },
     });
 
@@ -130,7 +156,7 @@ export async function signUp(
     const identities = signUpResult.user?.identities ?? [];
     if (identities.length === 0) {
       const verificationEmail = signUpResult.user?.email ?? result.data.email;
-      await resendVerificationEmail(supabase, verificationEmail, siteUrl);
+      await resendVerificationEmail(supabase, verificationEmail, authCallbackUrl);
       return {
         error:
           'An account with this email already exists. We just sent a fresh verification link to your inbox.',
@@ -159,6 +185,7 @@ export async function signIn(
 ): Promise<SignInState> {
   try {
     const headersList = await headers();
+    const authCallbackUrl = resolveAuthCallbackUrl(headersList);
     const ip = headersList.get('x-forwarded-for') || 'unknown';
     const identifier = getRateLimitIdentifier(ip);
 
@@ -185,9 +212,8 @@ export async function signIn(
     const { error } = await supabase.auth.signInWithPassword(result.data);
 
     if (error) {
-      const siteUrl = resolveRequestSiteUrl(headersList);
-      if (isEmailNotConfirmedError(error) && siteUrl) {
-        await resendVerificationEmail(supabase, email, siteUrl);
+      if (isEmailNotConfirmedError(error) && authCallbackUrl) {
+        await resendVerificationEmail(supabase, email, authCallbackUrl);
       }
       return { error: mapSupabaseSignInError(error, email) };
     }
@@ -240,14 +266,14 @@ function mapSupabaseSignInError(error: AuthError, email?: string): string {
 async function resendVerificationEmail(
   supabase: ServerSupabaseClient,
   email: string,
-  siteUrl: string
+  authCallbackUrl: string
 ) {
   try {
     await supabase.auth.resend({
       type: 'signup',
       email,
       options: {
-        emailRedirectTo: `${siteUrl}/auth/callback`,
+        emailRedirectTo: authCallbackUrl,
       },
     });
   } catch (resendError) {
@@ -263,7 +289,10 @@ function mapUnexpectedAuthError(error: unknown, action: 'sign up' | 'log in') {
   const message = getErrorMessage(error);
 
   if (message) {
-    if (/supabase server client is missing required/i.test(message) || /Supabase Auth is not configured/i.test(message)) {
+    if (
+      /supabase server client is missing required/i.test(message) ||
+      /Supabase Auth is not configured/i.test(message)
+    ) {
       return 'Authentication service is not configured correctly. Please contact support.';
     }
 
@@ -302,14 +331,14 @@ export async function requestPasswordReset(formData: FormData) {
     return { error: 'Invalid email' };
   }
 
-  const siteUrl = resolveRequestSiteUrl(headersList);
-  if (!siteUrl) {
+  const authCallbackUrl = resolveAuthCallbackUrl(headersList);
+  if (!authCallbackUrl) {
     return { error: 'Unable to send reset email. Please try again later.' };
   }
 
   const supabase = await createClient();
 
-  const callbackUrl = new URL('/auth/callback', siteUrl);
+  const callbackUrl = new URL(authCallbackUrl);
   callbackUrl.searchParams.set('next', '/reset-password/confirm');
 
   const { error } = await supabase.auth.resetPasswordForEmail(result.data.email, {
@@ -385,17 +414,16 @@ export async function signInWithOAuth(
     }
 
     const headersList = await headers();
-    const siteUrl = resolveRequestSiteUrl(headersList);
-
-    if (!siteUrl) {
+    const supabase = await createClient();
+    const authCallbackUrl = resolveAuthCallbackUrl(headersList);
+    if (!authCallbackUrl) {
       return { error: 'Unable to start the sign-in flow. Please try again later.' };
     }
 
-    const supabase = await createClient();
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: result.data,
       options: {
-        redirectTo: `${siteUrl}/auth/callback`,
+        redirectTo: authCallbackUrl,
       },
     });
 

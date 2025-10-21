@@ -66,6 +66,9 @@ Edit `.env.local` (you will copy these values into Vercel later):
 
 ```env
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+# Optional: force OAuth/email callbacks to use a specific host (useful for preview deploys).
+# Provide the base domain only (no path), e.g., https://proofound.io
+NEXT_PUBLIC_AUTH_REDIRECT_URL=http://localhost:3000
 NEXT_PUBLIC_APP_ENV=local
 
 # Supabase (from step 2)
@@ -281,7 +284,7 @@ E2E tests include `@axe-core/playwright` for WCAG AA compliance checks on key pa
 
 - **Supabase**: URL, anon key, service role key, DATABASE_URL
 - **Resend**: API key, FROM email
-- **App**: NEXT_PUBLIC_SITE_URL, NEXT_PUBLIC_APP_ENV=production
+- **App**: NEXT_PUBLIC_SITE_URL, NEXT_PUBLIC_APP_ENV=production, NEXT_PUBLIC_AUTH_REDIRECT_URL _(optional)_
 
 **Build Settings:**
 
@@ -437,10 +440,12 @@ For questions or issues:
 Built with ❤️ for authentic human connections.
 
 ### Lint in restricted CI
+
 `npm run lint` auto-skips when Next.js/deps cannot be installed (restricted CI).
 To force lint, set `FORCE_LINT=true` or run locally after `npm ci`.
 
 ### Environment setup (quick)
+
 1. Copy `.env.example` to `.env.local` and fill the values.
 2. In Supabase → Authentication → URL Configuration:
    - Set **Site URL** to the same domain as `NEXT_PUBLIC_SITE_URL` (or `SITE_URL` if you use the private fallback).
