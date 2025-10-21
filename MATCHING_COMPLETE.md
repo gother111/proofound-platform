@@ -64,12 +64,8 @@ The **Matching System v0** is now complete and working for both **individuals** 
 
 ### 1. Setup Environment
 
-Add to `.env.local`:
-
-```env
-MATCHING_FEATURE_ENABLED=true
-NEXT_PUBLIC_WIREFRAME_MODE=false
-```
+Matching boots with the platform; no additional environment variables are required.
+`NEXT_PUBLIC_WIREFRAME_MODE=false` is recommended unless you are demoing mock data.
 
 ### 2. Run Migration
 
@@ -360,7 +356,7 @@ Tie-breaking via stable hash(assignmentId + profileId)
 
 ## 📚 Documentation
 
-- [Implementation Status](./MATCHING_IMPLEMENTATION_STATUS.md) - Detailed progress tracker
+- [Core Overview](./MATCHING_CORE_OVERVIEW.md) - Detailed progress tracker
 - [Original Plan](./matching-system.plan.md) - Full specification
 - [Database Schema](./src/db/schema.ts) - Drizzle schema definitions
 - [API Docs](#-api-endpoints) - Endpoint reference (above)
