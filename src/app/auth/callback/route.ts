@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { resolveUserHomePath } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -14,8 +15,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(errorUrl);
   };
 
+  const supabase = await createClient();
+
   if (code) {
-    const supabase = await createClient();
     try {
       const { error } = await supabase.auth.exchangeCodeForSession(code);
 
@@ -64,5 +66,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.redirect(new URL('/app/i/home', requestUrl.origin));
+  const destinationPath = await resolveUserHomePath(supabase);
+
+  return NextResponse.redirect(new URL(destinationPath, requestUrl.origin));
 }
