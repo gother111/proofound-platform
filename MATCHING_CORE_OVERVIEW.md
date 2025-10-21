@@ -1,14 +1,14 @@
-# Matching System v0 - Implementation Status
+# Matching Engine – Core Platform Overview
 
 **Last Updated**: Current Session
-**Status**: Core Infrastructure Complete (~75%)
+**Status**: Core service live and iterating (~75%)
 
 ## ✅ Completed Components
 
-### Phase 0: Feature Flags & Infrastructure
+### Phase 0: Platform Infrastructure
 
 - ✅ Feature flag system (`src/lib/featureFlags.ts`)
-  - `MATCHING_ENABLED` flag for gating routes/APIs
+  - Matching engine boots with the platform (no flag required)
   - `WIREFRAME_MODE` flag for dev-only mock data
 - ✅ Structured logging (`src/lib/log.ts`)
 
@@ -33,7 +33,7 @@
 
 ### Phase 2: Core Matching Logic
 
-- ✅ Pure scoring functions (`src/lib/match/scorers.ts`)
+- ✅ Pure scoring functions (`src/lib/core/matching/scorers.ts`)
   - Jaccard similarity for sets
   - Values, causes, skills scoring
   - Experience (logistic curve)
@@ -44,18 +44,18 @@
   - Language (CEFR levels)
   - Weighted composition with contributions
   - Deterministic tie-breaking
-- ✅ Attribute firewall (`src/lib/match/firewall.ts`)
+- ✅ Attribute firewall (`src/lib/core/matching/firewall.ts`)
   - Scrubs 20+ PII fields
   - Recursive object traversal
   - Validation helpers
-- ✅ Weight presets (`src/lib/match/presets.ts`)
+- ✅ Weight presets (`src/lib/core/matching/presets.ts`)
   - Mission-first (values 35%, skills 25%)
   - Skills-first (skills 40%, experience 25%)
   - Balanced (equal distribution)
   - Normalization utility
 - ✅ Unit tests
-  - `src/lib/match/__tests__/firewall.test.ts` (8 tests)
-  - `src/lib/match/__tests__/scorers.test.ts` (45+ tests)
+  - `src/lib/core/matching/__tests__/firewall.test.ts` (8 tests)
+  - `src/lib/core/matching/__tests__/scorers.test.ts` (45+ tests)
 
 ### Phase 3: API Layer
 
@@ -63,8 +63,8 @@
   - GET /api/taxonomy/values
   - GET /api/taxonomy/causes
   - GET /api/taxonomy/skills
-  - Auth required, feature-flag gated
-- ✅ Matching profile CRUD (`src/app/api/matching-profile/route.ts`)
+  - Auth required, part of core API surface
+- ✅ Matching profile CRUD (`src/app/api/core/matching/matching-profile/route.ts`)
   - GET /api/matching-profile
   - PUT /api/matching-profile (upsert with skills)
   - Zod validation
@@ -73,13 +73,13 @@
   - `src/app/api/assignments/[id]/route.ts` (PUT, DELETE)
   - Org membership verification
   - Zod validation
-- ✅ Match interest tracking (`src/app/api/match/interest/route.ts`)
+- ✅ Match interest tracking (`src/app/api/core/matching/interest/route.ts`)
   - POST /api/match/interest (record interest)
   - GET /api/match/interest (list interests)
   - Mutual reveal detection
 - ✅ Matching computation
-  - `src/app/api/match/assignment/route.ts` (org → candidates)
-  - `src/app/api/match/profile/route.ts` (individual → assignments)
+  - `src/app/api/core/matching/assignment/route.ts` (org → candidates)
+  - `src/app/api/core/matching/profile/route.ts` (individual → assignments)
   - Hard filters enforced
   - PII scrubbed via firewall
   - Deterministic sorting
@@ -123,7 +123,7 @@
   - Saves to /api/matching-profile
   - Completeness indicators
 - ✅ Matching page integration (`src/app/app/i/matching/page.tsx`)
-  - Feature flag check
+  - Loads as part of core pipeline
   - Conditional rendering (empty/setup/filled)
   - Fetches profile & matches
   - Result cards display
@@ -224,12 +224,7 @@
 
 ### 1. Environment Variables
 
-Add to `.env.local`:
-
-```env
-MATCHING_FEATURE_ENABLED=true
-NEXT_PUBLIC_WIREFRAME_MODE=false
-```
+No additional variables are required. Matching boots with the platform by default.
 
 ### 2. Database Migration
 
@@ -271,6 +266,8 @@ Or manually apply `/drizzle/0002_matching_tables.sql` to your database.
 
 ---
 
+> Canonical handlers live under `/api/core/matching/*`; legacy routes above re-export the same logic for backward compatibility.
+
 ## 🧪 Testing Coverage
 
 ### Unit Tests (Complete)
@@ -296,7 +293,7 @@ Or manually apply `/drizzle/0002_matching_tables.sql` to your database.
 
 | Criteria                                         | Status           |
 | ------------------------------------------------ | ---------------- |
-| Feature flag gates routes/APIs                   | ✅               |
+| Matching engine loads with core app              | ✅               |
 | No mock data in production                       | ✅               |
 | Single matching route with conditional rendering | ✅               |
 | Interest endpoint + mutual reveal                | ✅               |
@@ -361,5 +358,5 @@ Or manually apply `/drizzle/0002_matching_tables.sql` to your database.
 
 - All core matching logic is deterministic and tested
 - Privacy firewall is active and tested
-- All APIs are feature-flag gated
+- All APIs load as part of the core platform pipeline
 - Ready for end-to-end testing once remaining UI components are complete
