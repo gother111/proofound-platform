@@ -264,3 +264,69 @@ export async function assertOrgRole(orgId: string, userId: string, roles: string
 }
 
 export type Role = 'owner' | 'admin' | 'member' | 'viewer';
+
+export async function resolveUserHomePath(
+  supabaseClient?: Awaited<ReturnType<typeof createClient>>
+) {
+  const supabase = supabaseClient ?? (await createClient());
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError) {
+    console.error('Failed to get authenticated user for redirect resolution:', authError);
+    return '/app/i/home';
+  }
+
+  if (!user) {
+    return '/app/i/home';
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('persona')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  if (profileError) {
+    console.error('Failed to load profile persona for redirect resolution:', profileError);
+    return '/app/i/home';
+  }
+
+  const persona = (profile?.persona ?? 'unknown') as 'individual' | 'org_member' | 'unknown';
+
+  if (persona === 'individual') {
+    return '/app/i/home';
+  }
+
+  if (persona === 'org_member') {
+    const { data: membership, error: membershipError } = await supabase
+      .from('organization_members')
+      .select('org:organizations!inner(slug)')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .order('joined_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (membershipError) {
+      console.error(
+        'Failed to load organization membership for redirect resolution:',
+        membershipError
+      );
+      return '/onboarding';
+    }
+
+    const slug = membership?.org?.slug;
+    if (slug) {
+      return `/app/o/${slug}/home`;
+    }
+
+    console.warn('Org member user has no active organization membership', { userId: user.id });
+    return '/onboarding';
+  }
+
+  return '/onboarding';
+}

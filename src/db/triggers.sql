@@ -67,3 +67,40 @@ CREATE TRIGGER set_updated_at_volunteering
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_updated_at();
 
+-- Keep profile personas in sync with organization membership
+CREATE OR REPLACE FUNCTION public.ensure_org_member_persona()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.status = 'active' THEN
+    UPDATE public.profiles
+    SET persona = 'org_member'
+    WHERE id = NEW.user_id
+      AND persona IS DISTINCT FROM 'org_member';
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS set_persona_on_org_member_insert ON public.organization_members;
+CREATE TRIGGER set_persona_on_org_member_insert
+  AFTER INSERT ON public.organization_members
+  FOR EACH ROW
+  EXECUTE FUNCTION public.ensure_org_member_persona();
+
+DROP TRIGGER IF EXISTS set_persona_on_org_member_update ON public.organization_members;
+CREATE TRIGGER set_persona_on_org_member_update
+  AFTER UPDATE ON public.organization_members
+  FOR EACH ROW
+  EXECUTE FUNCTION public.ensure_org_member_persona();
+
+-- Backfill personas for existing active organization members
+UPDATE public.profiles
+SET persona = 'org_member'
+WHERE id IN (
+  SELECT user_id
+  FROM public.organization_members
+  WHERE status = 'active'
+)
+AND persona IS DISTINCT FROM 'org_member';
+
