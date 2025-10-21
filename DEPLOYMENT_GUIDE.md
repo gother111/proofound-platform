@@ -273,6 +273,17 @@ In Vercel:
 
 This ensures email links redirect to your domain.
 
+### 5.2 Whitelist Supabase callback in Google Cloud
+
+Google always calls back to Supabase's hosted endpoint during OAuth. If the Supabase URL is missing from your Google Cloud OAuth credentials, Google stops the flow with `redirect_uri_mismatch`.
+
+1. Go to [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials)
+2. Edit the OAuth 2.0 Client ID used in Supabase → Authentication → Providers → Google
+3. In **Authorized redirect URIs**, add `https://<your-project-ref>.supabase.co/auth/v1/callback`
+4. Save — the URI must match exactly (no trailing slash). Supabase adds its own query parameters like `flowName`.
+
+Repeat for each Supabase project/environment you use (preview, staging, production).
+
 ---
 
 ## Step 6: Test Everything! 🎉
@@ -502,13 +513,15 @@ Once deployed, users can:
 **Need help?** The build is solid and ready to deploy! 🚀
 
 ## Required environment variables
+
 - `NEXT_PUBLIC_SUPABASE_URL` **or** `SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` **or** `SUPABASE_ANON_KEY`
-- `NEXT_PUBLIC_SITE_URL` *(or `SITE_URL` if you prefer a private env var)*
+- `NEXT_PUBLIC_SITE_URL` _(or `SITE_URL` if you prefer a private env var)_
 - `DATABASE_URL`
 - (Optional) `SUPABASE_SERVICE_ROLE_KEY` for background jobs
 
 ## Supabase Auth URL configuration
+
 - **Site URL**: set to `NEXT_PUBLIC_SITE_URL` (e.g., `https://your-domain.tld`)
 - **Redirect URLs**: add  
   `/auth/callback`,  
@@ -516,5 +529,6 @@ Once deployed, users can:
   `/verify-email`
 
 ## Notes
+
 - Auth, onboarding, and OAuth flows depend on correct Site/Redirect URLs.
 - Database-backed features require a valid `DATABASE_URL` on every environment.

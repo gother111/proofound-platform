@@ -90,6 +90,17 @@ RATE_LIMIT_MAX=30
 
 > **Heads up:** Once this works locally, open your Vercel project, go to **Settings → Environment Variables**, and add each of the keys above (Production, Preview, and Development tabs). For `DATABASE_URL`, copy the Supabase value from **Project Settings → Database → Connection string → Node.js**.
 
+#### Configure Google OAuth redirect (required for Supabase)
+
+Google always redirects back to Supabase for the OAuth handshake before Supabase forwards the user to your app. Make sure the Supabase callback URL is whitelisted in Google Cloud, otherwise the browser will show `redirect_uri_mismatch`.
+
+1. Open [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials)
+2. Edit the OAuth 2.0 Client ID you connected to Supabase Auth
+3. Under **Authorized redirect URIs**, add `https://<your-project-ref>.supabase.co/auth/v1/callback`
+4. Save the client — the URI must match exactly (no trailing slash). Supabase will append query parameters like `flowName` automatically.
+
+> Tip: keep any additional redirect URIs you need for other environments (e.g., staging) and ensure they point to the Supabase-hosted callback, not your Vercel domain.
+
 ### 4. Set Up Database
 
 Run migrations and triggers:
