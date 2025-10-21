@@ -155,25 +155,22 @@ export async function completeOrganizationOnboarding(formData: FormData) {
     const orgId = randomUUID();
     const orgSlug = slug.toLowerCase();
 
-    const orgInsert = await supabase.from('organizations').insert(
-      {
-        id: orgId,
-        slug: orgSlug,
-        display_name: displayName,
-        legal_name: legalName || null,
-        type,
-        mission: mission || null,
-        website: website || null,
-        created_by: user.id,
-      },
-      { returning: 'minimal' }
-    );
+    const orgInsert = await supabase.from('organizations').insert({
+      id: orgId,
+      slug: orgSlug,
+      display_name: displayName,
+      legal_name: legalName || null,
+      type,
+      mission: mission || null,
+      website: website || null,
+      created_by: user.id,
+    });
 
     if (orgInsert.error) {
       if (orgInsert.error.message?.includes('row-level security')) {
         console.error(
           'Organization insert failed because PostgREST tried to return the new row before any memberships existed.',
-          'Enable minimal returning or adjust policies to allow selecting the freshly inserted organization.',
+          'Avoid immediately selecting the inserted organization (or adjust policies) so onboarding can finish creating the owner membership.',
           orgInsert.error
         );
       }
@@ -184,21 +181,18 @@ export async function completeOrganizationOnboarding(formData: FormData) {
       return { error: 'Failed to create organization. Please try again.' };
     }
 
-    const memberInsert = await supabase.from('organization_members').insert(
-      {
-        org_id: orgId,
-        user_id: user.id,
-        role: 'owner',
-        status: 'active',
-      },
-      { returning: 'minimal' }
-    );
+    const memberInsert = await supabase.from('organization_members').insert({
+      org_id: orgId,
+      user_id: user.id,
+      role: 'owner',
+      status: 'active',
+    });
 
     if (memberInsert.error) {
       if (memberInsert.error.message?.includes('row-level security')) {
         console.error(
           'Organization member insert failed because PostgREST tried to return the row without the user yet meeting the SELECT policy.',
-          'Enable minimal returning or adjust policies to allow selecting the freshly inserted membership.',
+          'Avoid requesting the inserted membership immediately (or adjust policies) so onboarding can finish.',
           memberInsert.error
         );
       }
