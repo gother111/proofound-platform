@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { generateSlug } from '@/lib/utils';
 import { nanoid } from 'nanoid';
+import { randomUUID } from 'crypto';
 import { createClient } from '@/lib/supabase/server';
 
 const choosePersonaSchema = z.object({
@@ -151,21 +152,28 @@ export async function completeOrganizationOnboarding(formData: FormData) {
   try {
     const supabase = await createClient();
 
-    const orgInsert = await supabase
-      .from('organizations')
-      .insert({
-        slug: slug.toLowerCase(),
-        display_name: displayName,
-        legal_name: legalName || null,
-        type,
-        mission: mission || null,
-        website: website || null,
-        created_by: user.id,
-      })
-      .select(`id, slug`)
-      .maybeSingle();
+    const orgId = randomUUID();
+    const orgSlug = slug.toLowerCase();
+
+    const orgInsert = await supabase.from('organizations').insert({
+      id: orgId,
+      slug: orgSlug,
+      display_name: displayName,
+      legal_name: legalName || null,
+      type,
+      mission: mission || null,
+      website: website || null,
+      created_by: user.id,
+    });
 
     if (orgInsert.error) {
+      if (orgInsert.error.message?.includes('row-level security')) {
+        console.error(
+          'Organization insert failed because PostgREST tried to return the new row before any memberships existed.',
+          'Avoid immediately selecting the inserted organization (or adjust policies) so onboarding can finish creating the owner membership.',
+          orgInsert.error
+        );
+      }
       if (orgInsert.error.code === '23505') {
         return { error: 'Organization slug already taken. Please choose another.' };
       }
@@ -173,19 +181,21 @@ export async function completeOrganizationOnboarding(formData: FormData) {
       return { error: 'Failed to create organization. Please try again.' };
     }
 
-    const org = orgInsert.data;
-    if (!org) {
-      return { error: 'Failed to create organization. Please try again.' };
-    }
-
     const memberInsert = await supabase.from('organization_members').insert({
-      org_id: org.id,
+      org_id: orgId,
       user_id: user.id,
       role: 'owner',
       status: 'active',
     });
 
     if (memberInsert.error) {
+      if (memberInsert.error.message?.includes('row-level security')) {
+        console.error(
+          'Organization member insert failed because PostgREST tried to return the row without the user yet meeting the SELECT policy.',
+          'Avoid requesting the inserted membership immediately (or adjust policies) so onboarding can finish.',
+          memberInsert.error
+        );
+      }
       console.error('Failed to add organization owner:', memberInsert.error);
       return { error: 'Failed to create organization. Please try again.' };
     }
@@ -199,8 +209,8 @@ export async function completeOrganizationOnboarding(formData: FormData) {
       console.error('Failed to update persona after organization onboarding:', personaUpdate.error);
     }
 
-    revalidatePath(`/app/o/${org.slug}`);
-    return { success: true, orgSlug: org.slug };
+    revalidatePath(`/app/o/${orgSlug}`);
+    return { success: true, orgSlug };
   } catch (error: any) {
     console.error('Organization onboarding error:', error);
     return { error: 'Failed to create organization. Please try again.' };
