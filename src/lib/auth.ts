@@ -314,7 +314,7 @@ export async function resolveUserHomePath(
         )
       `
     )
-    .returns<MembershipWithOrganization>()
+    .returns<MembershipWithOrganization[]>()
     .eq('user_id', user.id)
     .eq('status', 'active')
     .order('joined_at', { ascending: true })
