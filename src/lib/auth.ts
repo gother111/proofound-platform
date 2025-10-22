@@ -299,7 +299,15 @@ export async function resolveUserHomePath(
 
   const { data: memberships, error: membershipError } = await supabase
     .from('organization_members')
-    .select('org_id')
+    .select(
+      `
+        org_id,
+        joined_at,
+        org:organizations!inner (
+          slug
+        )
+      `
+    )
     .eq('user_id', user.id)
     .eq('status', 'active')
     .order('joined_at', { ascending: true })
@@ -312,34 +320,82 @@ export async function resolveUserHomePath(
     );
   }
 
-  const membershipOrgId = memberships?.[0]?.org_id as string | undefined;
+  const membershipOrgSlug = memberships?.[0]?.org?.slug as string | undefined;
 
-  if (membershipOrgId) {
-    const { data: org, error: orgError } = await supabase
-      .from('organizations')
-      .select('slug')
-      .eq('id', membershipOrgId)
-      .maybeSingle();
+  if (membershipOrgSlug) {
+    if (persona !== 'org_member') {
+      const { error: personaUpdateError } = await supabase
+        .from('profiles')
+        .update({ persona: 'org_member', updated_at: new Date().toISOString() })
+        .eq('id', user.id);
 
-    if (orgError) {
-      console.error('Failed to load organization slug for redirect resolution:', orgError);
-    } else if (org?.slug) {
-      if (persona !== 'org_member') {
-        const { error: personaUpdateError } = await supabase
-          .from('profiles')
-          .update({ persona: 'org_member', updated_at: new Date().toISOString() })
-          .eq('id', user.id);
+      if (personaUpdateError) {
+        console.error('Failed to update persona after detecting organization membership:', {
+          userId: user.id,
+          error: personaUpdateError,
+        });
+      }
+    }
 
-        if (personaUpdateError) {
-          console.error('Failed to update persona after detecting organization membership:', {
+    return `/app/o/${membershipOrgSlug}/home`;
+  }
+
+  const { data: ownedOrganizations, error: ownedOrgError } = await supabase
+    .from('organizations')
+    .select('id, slug')
+    .eq('created_by', user.id)
+    .order('created_at', { ascending: true })
+    .limit(1);
+
+  if (ownedOrgError) {
+    console.error(
+      'Failed to load organizations created by user for redirect resolution:',
+      ownedOrgError
+    );
+  }
+
+  const ownedOrg = ownedOrganizations?.[0];
+
+  if (ownedOrg?.slug) {
+    const { error: ensureMembershipError } = await supabase.from('organization_members').upsert(
+      {
+        org_id: ownedOrg.id,
+        user_id: user.id,
+        role: 'owner',
+        status: 'active',
+      },
+      { onConflict: 'org_id,user_id' }
+    );
+
+    if (ensureMembershipError) {
+      console.error(
+        'Failed to ensure organization membership for creator during redirect resolution:',
+        {
+          userId: user.id,
+          orgId: ownedOrg.id,
+          error: ensureMembershipError,
+        }
+      );
+    }
+
+    if (persona !== 'org_member') {
+      const { error: personaUpdateError } = await supabase
+        .from('profiles')
+        .update({ persona: 'org_member', updated_at: new Date().toISOString() })
+        .eq('id', user.id);
+
+      if (personaUpdateError) {
+        console.error(
+          'Failed to update persona after ensuring organization membership for creator:',
+          {
             userId: user.id,
             error: personaUpdateError,
-          });
-        }
+          }
+        );
       }
-
-      return `/app/o/${org.slug}/home`;
     }
+
+    return `/app/o/${ownedOrg.slug}/home`;
   }
 
   if (persona === 'individual') {
