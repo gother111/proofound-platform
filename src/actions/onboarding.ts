@@ -56,7 +56,7 @@ export async function choosePersona(formData: FormData) {
     return { error: 'Failed to update persona. Please try again.' };
   }
 
-  revalidatePath('/onboarding');
+  revalidatePath('/i/home');
   return { success: true, persona: result.data.persona };
 }
 

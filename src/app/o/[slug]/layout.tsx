@@ -13,6 +13,10 @@ export default async function OrganizationLayout({
   params: { slug: string };
 }) {
   const { slug } = params;
+  const supabase = await createServerClient({ cookies });
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const org = await getOrgBySlug(slug);
 
@@ -20,15 +24,10 @@ export default async function OrganizationLayout({
     console.warn('[org/layout] notFound', {
       reason: 'org-not-found',
       slug,
-      userId: null,
+      userId: user?.id ?? null,
     });
     notFound();
   }
-
-  const supabase = await createServerClient({ cookies });
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
   if (!user) {
     console.warn('[org/layout] notFound', {
