@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { useOrgContext } from './context';
 
 const navItems = [
   { label: 'Dashboard', path: (slug: string) => `/o/${slug}/home` },
@@ -13,8 +14,9 @@ const navItems = [
   { label: 'Settings', path: (slug: string) => `/o/${slug}/settings` },
 ];
 
-export function OrgSubnav({ slug }: { slug: string }) {
+export function OrgSubnav() {
   const pathname = usePathname();
+  const { slug } = useOrgContext();
 
   return (
     <nav className="flex flex-wrap gap-2">

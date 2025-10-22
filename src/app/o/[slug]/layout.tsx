@@ -94,7 +94,7 @@ export default async function OrganizationLayout({
                 {org.display_name ?? 'Organization'}
               </h1>
             </div>
-            <OrgSubnav slug={org.slug} />
+            <OrgSubnav />
           </div>
         </header>
         <main className="mx-auto w-full max-w-6xl px-6 py-8">{children}</main>
