@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { User, Building2 } from 'lucide-react';
 
 interface PersonaChoiceProps {
-  onSelect: (persona: 'individual' | 'organization') => void;
+  onSelect: (persona: 'individual' | 'org_member') => void;
 }
 
 export function PersonaChoice({ onSelect }: PersonaChoiceProps) {
@@ -47,7 +47,7 @@ export function PersonaChoice({ onSelect }: PersonaChoiceProps) {
                 Create an organization, manage your team, and build credibility together
               </CardDescription>
             </div>
-            <Button onClick={() => onSelect('organization')} className="w-full" size="lg">
+            <Button onClick={() => onSelect('org_member')} className="w-full" size="lg">
               Continue as Organization
             </Button>
           </CardHeader>

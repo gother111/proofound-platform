@@ -5,7 +5,7 @@ import { PersonaChoice } from '@/components/onboarding/PersonaChoice';
 import { IndividualSetup } from '@/components/onboarding/IndividualSetup';
 import { OrganizationSetup } from '@/components/onboarding/OrganizationSetup';
 
-type Persona = 'individual' | 'organization' | null;
+type Persona = 'individual' | 'org_member' | null;
 
 export interface OnboardingClientProps {
   initialPersona?: Persona;

@@ -9,8 +9,13 @@ import { randomUUID } from 'crypto';
 import { createClient } from '@/lib/supabase/server';
 
 const choosePersonaSchema = z.object({
-  persona: z.enum(['individual', 'org_member']),
+  persona: z.enum(['individual', 'org_member', 'organization']),
 });
+
+function normalizePersona(value: 'individual' | 'org_member' | 'organization') {
+  if (value === 'organization') return 'org_member';
+  return value;
+}
 
 const individualSetupSchema = z.object({
   handle: z
@@ -45,10 +50,12 @@ export async function choosePersona(formData: FormData) {
     return { error: 'Invalid persona choice' };
   }
 
+  const persona = normalizePersona(result.data.persona);
+
   const supabase = await createClient();
   const { error } = await supabase
     .from('profiles')
-    .update({ persona: result.data.persona, updated_at: new Date().toISOString() })
+    .update({ persona, updated_at: new Date().toISOString() })
     .eq('id', user.id);
 
   if (error) {
@@ -57,7 +64,7 @@ export async function choosePersona(formData: FormData) {
   }
 
   revalidatePath('/onboarding');
-  return { success: true, persona: result.data.persona };
+  return { success: true, persona };
 }
 
 export async function completeIndividualOnboarding(formData: FormData) {
