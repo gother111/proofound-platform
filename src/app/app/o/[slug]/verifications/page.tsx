@@ -1,16 +1,11 @@
 import { requireAuth, getActiveOrg } from '@/lib/auth';
 import { notFound } from 'next/navigation';
-import type { ParamsPromise } from '@/types/next';
 
 export const dynamic = 'force-dynamic';
 
-export default async function OrgVerificationsPage({
-  params,
-}: {
-  params: ParamsPromise<{ slug: string }>;
-}) {
+export default async function OrgVerificationsPage({ params }: { params: { slug: string } }) {
   const user = await requireAuth();
-  const { slug } = params as unknown as { slug: string };
+  const { slug } = params;
   const result = await getActiveOrg(slug, user.id);
 
   if (!result) {

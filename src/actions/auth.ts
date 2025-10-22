@@ -9,11 +9,13 @@ import { checkRateLimit, getRateLimitIdentifier } from '@/lib/rate-limit';
 import { headers } from 'next/headers';
 import type { AuthError } from '@supabase/supabase-js';
 import { resolveUserHomePath } from '@/lib/auth';
-import { ensureOrgContextForUser, type MembershipWithOrganization } from '@/lib/orgs';
+import { ensureOrgSlugForId } from '@/lib/orgs';
+import { PERSONA, normalizePersonaToken, type PersonaValue } from '@/constants/persona';
 
 const signUpSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
+  persona: z.enum([PERSONA.INDIVIDUAL, PERSONA.ORG_MEMBER]),
 });
 
 const signInSchema = z.object({
@@ -84,9 +86,12 @@ export async function signUp(
 
     const rawEmail = (formData.get('email') as string | null) ?? '';
     const email = rawEmail.trim().toLowerCase();
+    const rawPersona = normalizePersonaToken(formData.get('persona'));
+    const persona = rawPersona === PERSONA.ORG_MEMBER ? PERSONA.ORG_MEMBER : PERSONA.INDIVIDUAL;
     const data = {
       email,
       password: (formData.get('password') as string | null) ?? '',
+      persona,
     };
 
     const result = signUpSchema.safeParse(data);
@@ -140,6 +145,24 @@ export async function signUp(
       };
     }
 
+    if (signUpResult.user?.id) {
+      const { error: personaUpsertError } = await supabase.from('profiles').upsert(
+        {
+          id: signUpResult.user.id,
+          persona: result.data.persona,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'id' }
+      );
+
+      if (personaUpsertError) {
+        console.warn('[signUp] failed to persist persona selection', {
+          userId: signUpResult.user.id,
+          error: String(personaUpsertError),
+        });
+      }
+    }
+
     revalidatePath('/', 'layout');
 
     return {
@@ -172,6 +195,28 @@ export async function signIn(
     const rawEmail = (formData.get('email') as string | null) ?? '';
     const email = rawEmail.trim().toLowerCase();
     const password = (formData.get('password') as string | null) ?? '';
+    const personaSelectionRaw = (formData.get('persona') as string | null) ?? '';
+    const normalizedSelection = personaSelectionRaw
+      ? normalizePersonaToken(personaSelectionRaw)
+      : null;
+    const personaSelection: PersonaValue | null = normalizedSelection
+      ? normalizedSelection === PERSONA.UNKNOWN
+        ? null
+        : normalizedSelection
+      : null;
+
+    const organizationSlugInput = ((formData.get('organizationSlug') as string | null) ?? '')
+      .trim()
+      .toLowerCase();
+
+    if (organizationSlugInput && !/^[a-z0-9-]+$/.test(organizationSlugInput)) {
+      return {
+        error: 'Enter a valid organization slug (use lowercase letters, numbers, and hyphens).',
+      };
+    }
+
+    const organizationSlug = organizationSlugInput.length > 0 ? organizationSlugInput : null;
+
     const data = {
       email,
       password,
@@ -214,12 +259,12 @@ export async function signIn(
         });
       }
 
-      let persona = profile?.persona ?? null;
+      let storedPersona = profile?.persona ? normalizePersonaToken(profile.persona) : null;
 
       if (!profile && !profileError) {
         const { error: insertError } = await supabase
           .from('profiles')
-          .insert({ id: user.id, persona: 'unknown' });
+          .insert({ id: user.id, persona: PERSONA.UNKNOWN });
 
         if (insertError) {
           console.warn('[signIn] failed to insert profile row', {
@@ -227,17 +272,34 @@ export async function signIn(
             error: String(insertError),
           });
         } else {
-          persona = 'unknown';
+          storedPersona = PERSONA.UNKNOWN;
+        }
+      } else if (profile?.persona && storedPersona && profile.persona !== storedPersona) {
+        const { error: canonicalizeError } = await supabase
+          .from('profiles')
+          .update({ persona: storedPersona, updated_at: new Date().toISOString() })
+          .eq('id', user.id);
+
+        if (canonicalizeError) {
+          console.warn('[signIn] failed to canonicalize stored persona', {
+            userId: user.id,
+            error: String(canonicalizeError),
+          });
         }
       }
 
-      const { data: membership, error: membershipError } = await supabase
+      type MembershipRecord = {
+        status: string | null;
+        role: string | null;
+        joined_at: string | null;
+        organization: { id: string; slug: string | null; display_name: string | null } | null;
+      };
+
+      const { data: membershipsData, error: membershipError } = await supabase
         .from('organization_members')
-        .select('status, organization:organizations(slug, display_name)')
+        .select('status, role, joined_at, organization:organizations(id, slug, display_name)')
         .eq('user_id', user.id)
-        .order('joined_at', { ascending: false })
-        .limit(1)
-        .maybeSingle<MembershipWithOrganization>();
+        .order('joined_at', { ascending: false });
 
       if (membershipError) {
         console.warn('[signIn] failed to load membership status', {
@@ -246,31 +308,158 @@ export async function signIn(
         });
       }
 
-      let targetSlug = membership?.organization?.slug ?? null;
+      const memberships: MembershipRecord[] = (membershipsData ?? []).map((membership) => {
+        const organizationData = Array.isArray(membership.organization)
+          ? membership.organization[0]
+          : membership.organization;
 
-      const shouldEnsureOrg = membership?.status === 'active' || persona !== 'individual';
+        return {
+          status: membership.status ?? null,
+          role: membership.role ?? null,
+          joined_at: membership.joined_at ?? null,
+          organization: organizationData
+            ? {
+                id: String(organizationData.id),
+                slug: typeof organizationData.slug === 'string' ? organizationData.slug : null,
+                display_name:
+                  typeof organizationData.display_name === 'string'
+                    ? organizationData.display_name
+                    : null,
+              }
+            : null,
+        };
+      });
+      const activeMemberships = memberships.filter(
+        (membership) => membership.status === 'active' && membership.organization
+      );
 
-      if (shouldEnsureOrg) {
-        try {
-          targetSlug = await ensureOrgContextForUser(user.id, {
-            displayNameHint: membership?.organization?.display_name ?? null,
-            email: user.email ?? null,
-          });
-        } catch (ensureError) {
-          console.warn('[signIn] ensureOrgContextForUser failed', {
+      const persistPersonaIfNeeded = async (personaToPersist: PersonaValue | null) => {
+        if (!personaToPersist || personaToPersist === storedPersona) {
+          return;
+        }
+        const { error: personaUpdateError } = await supabase
+          .from('profiles')
+          .update({ persona: personaToPersist, updated_at: new Date().toISOString() })
+          .eq('id', user.id);
+
+        if (personaUpdateError) {
+          console.warn('[signIn] failed to persist persona preference', {
             userId: user.id,
-            error: String(ensureError),
+            persona: personaToPersist,
+            error: String(personaUpdateError),
+          });
+        } else {
+          storedPersona = personaToPersist;
+        }
+      };
+
+      const resolveOrgDestination = async (
+        chosenMembership: MembershipRecord | null
+      ): Promise<string | null> => {
+        if (!chosenMembership?.organization) {
+          return null;
+        }
+
+        let slug = chosenMembership.organization.slug;
+
+        if (!slug) {
+          try {
+            slug = await ensureOrgSlugForId(
+              chosenMembership.organization.id,
+              chosenMembership.organization.display_name ?? undefined
+            );
+          } catch (ensureError) {
+            console.warn('[signIn] ensureOrgSlugForId failed', {
+              userId: user.id,
+              organizationId: chosenMembership.organization.id,
+              error: String(ensureError),
+            });
+            return null;
+          }
+        }
+
+        return slug ? `/app/o/${slug}/home` : null;
+      };
+
+      if (personaSelection === PERSONA.ORG_MEMBER) {
+        await persistPersonaIfNeeded(PERSONA.ORG_MEMBER);
+
+        if (activeMemberships.length === 0) {
+          await supabase.auth.signOut();
+          return {
+            error:
+              'You are not a member of any organization yet. Log in as an individual to continue.',
+          };
+        }
+
+        let chosenMembership = activeMemberships[0];
+
+        if (organizationSlug) {
+          const match = activeMemberships.find(
+            (membership) => membership.organization?.slug === organizationSlug
+          );
+
+          if (!match) {
+            await supabase.auth.signOut();
+            return {
+              error: `We couldn't find an organization with slug "${organizationSlug}" for your account.`,
+            };
+          }
+
+          chosenMembership = match;
+        }
+
+        destination = await resolveOrgDestination(chosenMembership);
+
+        if (!destination) {
+          console.warn('[signIn] organization persona selected but no slug available', {
+            userId: user.id,
           });
         }
-      }
+      } else if (personaSelection === PERSONA.INDIVIDUAL) {
+        await persistPersonaIfNeeded(PERSONA.INDIVIDUAL);
+        destination = '/app/i/home';
+      } else {
+        const personaPreference =
+          storedPersona && storedPersona !== PERSONA.UNKNOWN ? storedPersona : null;
+        const shouldPrioritizeOrg =
+          personaPreference === PERSONA.ORG_MEMBER || activeMemberships.length > 0;
 
-      if (targetSlug) {
-        destination = `/app/o/${targetSlug}/home`;
+        if (shouldPrioritizeOrg) {
+          if (activeMemberships.length === 0) {
+            console.warn('[signIn] expected organization persona but no active memberships', {
+              userId: user.id,
+            });
+          } else {
+            let chosenMembership = activeMemberships[0];
+
+            if (organizationSlug) {
+              const match = activeMemberships.find(
+                (membership) => membership.organization?.slug === organizationSlug
+              );
+              if (match) {
+                chosenMembership = match;
+              }
+            }
+
+            destination = await resolveOrgDestination(chosenMembership);
+
+            if (destination) {
+              await persistPersonaIfNeeded(PERSONA.ORG_MEMBER);
+            }
+          }
+        }
       }
     }
 
     if (!destination) {
       destination = await resolveUserHomePath(supabase);
+
+      if (personaSelection === PERSONA.ORG_MEMBER) {
+        console.warn('[signIn] falling back to resolved home path despite organization selection', {
+          destination,
+        });
+      }
     }
 
     revalidatePath('/', 'layout');
@@ -462,6 +651,19 @@ export async function signInWithOAuth(
 ): Promise<OAuthState> {
   try {
     const provider = formData.get('provider');
+    const personaSelectionRaw = (formData.get('persona') as string | null) ?? '';
+    const normalizedPersona = personaSelectionRaw
+      ? normalizePersonaToken(personaSelectionRaw)
+      : null;
+    const persona =
+      normalizedPersona && normalizedPersona !== PERSONA.UNKNOWN ? normalizedPersona : null;
+    const organizationSlugInput = ((formData.get('organizationSlug') as string | null) ?? '')
+      .trim()
+      .toLowerCase();
+    const organizationSlug =
+      organizationSlugInput && /^[a-z0-9-]+$/.test(organizationSlugInput)
+        ? organizationSlugInput
+        : null;
     const result = oauthProviderSchema.safeParse(provider);
 
     if (!result.success) {
@@ -476,10 +678,18 @@ export async function signInWithOAuth(
     }
 
     const supabase = await createClient();
+    const callbackUrl = new URL('/auth/callback', siteUrl);
+    if (persona) {
+      callbackUrl.searchParams.set('persona', persona);
+    }
+    if (organizationSlug) {
+      callbackUrl.searchParams.set('org', organizationSlug);
+    }
+
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: result.data,
       options: {
-        redirectTo: `${siteUrl}/auth/callback`,
+        redirectTo: callbackUrl.toString(),
       },
     });
 

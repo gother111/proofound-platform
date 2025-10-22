@@ -1,9 +1,7 @@
-import type { ParamsPromise } from '@/types/next';
-
-export default async function OrgTeamPage({ params }: { params: ParamsPromise<{ slug: string }> }) {
+export default async function OrgTeamPage({ params }: { params: { slug: string } }) {
   return (
     <div className="p-6">
-      Team — org <code>{(params as unknown as { slug: string }).slug}</code>
+      Team — org <code>{params.slug}</code>
     </div>
   );
 }

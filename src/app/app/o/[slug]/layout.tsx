@@ -3,16 +3,15 @@ import { createClient } from '@/lib/supabase/server';
 import { LeftNav } from '@/components/app/LeftNav';
 import { TopBar } from '@/components/app/TopBar';
 import { OrgContextProvider } from '@/features/org/context';
-import type { ParamsPromise } from '@/types/next';
 
 export default async function OrganizationLayout({
   children,
   params,
 }: {
   children: React.ReactNode;
-  params: ParamsPromise<{ slug: string }>;
+  params: { slug: string };
 }) {
-  const { slug } = params as unknown as { slug: string };
+  const { slug } = params;
   const supabase = await createClient();
   const {
     data: { user },

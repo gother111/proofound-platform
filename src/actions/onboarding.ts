@@ -3,40 +3,17 @@
 import { requireAuth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { generateSlug } from '@/lib/utils';
-import { nanoid } from 'nanoid';
 import { randomUUID } from 'crypto';
 import { createClient } from '@/lib/supabase/server';
+import { PERSONA, normalizePersonaToken, type PersonaValue } from '@/constants/persona';
 
 const choosePersonaSchema = z.object({
-  persona: z.enum(['individual', 'org_member', 'organization']),
+  persona: z.enum([PERSONA.INDIVIDUAL, PERSONA.ORG_MEMBER, 'organization']),
 });
 
-function normalizePersona(value: 'individual' | 'org_member' | 'organization') {
-  if (value === 'organization') return 'org_member';
-  return value;
+export function normalizePersonaValue(value: unknown): PersonaValue | null {
+  return normalizePersonaToken(value);
 }
-
-const individualSetupSchema = z.object({
-  handle: z
-    .string()
-    .min(3)
-    .max(30)
-    .regex(/^[a-z0-9_-]+$/),
-  displayName: z.string().min(1).max(100),
-  locale: z.string().default('en'),
-});
-
-const orgSetupSchema = z.object({
-  displayName: z.string().min(1).max(100),
-  slug: z
-    .string()
-    .min(3)
-    .max(50)
-    .regex(/^[a-z0-9-]+$/),
-  type: z.enum(['company', 'ngo', 'government', 'network', 'other']),
-  mission: z.string().optional(),
-});
 
 export async function choosePersona(formData: FormData) {
   const user = await requireAuth();
@@ -50,7 +27,7 @@ export async function choosePersona(formData: FormData) {
     return { error: 'Invalid persona choice' };
   }
 
-  const persona = normalizePersona(result.data.persona);
+  const persona = normalizePersonaToken(result.data.persona) ?? PERSONA.UNKNOWN;
 
   const supabase = await createClient();
   const { error } = await supabase
@@ -80,7 +57,6 @@ export async function completeIndividualOnboarding(formData: FormData) {
     return { error: 'Display name and handle are required' };
   }
 
-  // Validate handle format
   if (!/^[a-zA-Z0-9_-]+$/.test(handle)) {
     return { error: 'Handle can only contain letters, numbers, hyphens, and underscores' };
   }
@@ -93,7 +69,7 @@ export async function completeIndividualOnboarding(formData: FormData) {
       .update({
         handle: handle.toLowerCase(),
         display_name: displayName,
-        persona: 'individual',
+        persona: PERSONA.INDIVIDUAL,
         updated_at: new Date().toISOString(),
       })
       .eq('id', user.id);
@@ -145,12 +121,10 @@ export async function completeOrganizationOnboarding(formData: FormData) {
     return { error: 'Organization name, slug, and type are required' };
   }
 
-  // Validate slug format
   if (!/^[a-z0-9-]+$/.test(slug)) {
     return { error: 'Slug can only contain lowercase letters, numbers, and hyphens' };
   }
 
-  // Validate type
   const validTypes = ['company', 'ngo', 'government', 'network', 'other'];
   if (!validTypes.includes(type)) {
     return { error: 'Invalid organization type' };
@@ -228,7 +202,7 @@ export async function completeOrganizationOnboarding(formData: FormData) {
 
     const personaUpdate = await supabase
       .from('profiles')
-      .update({ persona: 'org_member', updated_at: new Date().toISOString() })
+      .update({ persona: PERSONA.ORG_MEMBER, updated_at: new Date().toISOString() })
       .eq('id', user.id);
 
     if (personaUpdate.error) {

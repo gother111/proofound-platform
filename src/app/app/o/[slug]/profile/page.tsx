@@ -1,21 +1,16 @@
-import { requireAuth, getActiveOrg, assertOrgRole } from '@/lib/auth';
+import { requireAuth, getActiveOrg } from '@/lib/auth';
 import { notFound } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { updateOrganization } from '@/actions/org';
-import type { ParamsPromise } from '@/types/next';
 
 export const dynamic = 'force-dynamic';
 
-export default async function OrganizationProfilePage({
-  params,
-}: {
-  params: ParamsPromise<{ slug: string }>;
-}) {
+export default async function OrganizationProfilePage({ params }: { params: { slug: string } }) {
   const user = await requireAuth();
-  const { slug } = params as unknown as { slug: string };
+  const { slug } = params;
   const result = await getActiveOrg(slug, user.id);
 
   if (!result) {

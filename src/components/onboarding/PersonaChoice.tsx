@@ -3,9 +3,10 @@
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { User, Building2 } from 'lucide-react';
+import { PERSONA } from '@/constants/persona';
 
 interface PersonaChoiceProps {
-  onSelect: (persona: 'individual' | 'org_member') => void;
+  onSelect: (persona: typeof PERSONA.INDIVIDUAL | typeof PERSONA.ORG_MEMBER) => void;
 }
 
 export function PersonaChoice({ onSelect }: PersonaChoiceProps) {
@@ -30,7 +31,7 @@ export function PersonaChoice({ onSelect }: PersonaChoiceProps) {
                 Build your personal profile, showcase your skills, and connect with opportunities
               </CardDescription>
             </div>
-            <Button onClick={() => onSelect('individual')} className="w-full" size="lg">
+            <Button onClick={() => onSelect(PERSONA.INDIVIDUAL)} className="w-full" size="lg">
               Continue as Individual
             </Button>
           </CardHeader>
@@ -47,7 +48,7 @@ export function PersonaChoice({ onSelect }: PersonaChoiceProps) {
                 Create an organization, manage your team, and build credibility together
               </CardDescription>
             </div>
-            <Button onClick={() => onSelect('org_member')} className="w-full" size="lg">
+            <Button onClick={() => onSelect(PERSONA.ORG_MEMBER)} className="w-full" size="lg">
               Continue as Organization
             </Button>
           </CardHeader>

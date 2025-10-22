@@ -7,17 +7,12 @@ import { ProjectsCard } from '@/components/dashboard/ProjectsCard';
 import { MatchingResultsCard } from '@/components/dashboard/MatchingResultsCard';
 import { ExploreOpportunitiesCard } from '@/components/dashboard/ExploreOpportunitiesCard';
 import { TeamRolesCard } from '@/components/dashboard/TeamRolesCard';
-import type { ParamsPromise } from '@/types/next';
 
 export const dynamic = 'force-dynamic';
 
-export default async function OrganizationHomePage({
-  params,
-}: {
-  params: ParamsPromise<{ slug: string }>;
-}) {
+export default async function OrganizationHomePage({ params }: { params: { slug: string } }) {
   const user = await requireAuth();
-  const { slug } = params as unknown as { slug: string };
+  const { slug } = params;
   const result = await getActiveOrg(slug, user.id);
 
   if (!result) {
@@ -25,7 +20,6 @@ export default async function OrganizationHomePage({
   }
 
   const { org, membership } = result;
-  const persona = 'organization';
 
   return (
     <div className="max-w-[1400px] mx-auto px-4 py-4">

@@ -4,7 +4,6 @@ import { requireAuth } from '@/lib/auth';
 import { assignments, organizationMembers } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { log } from '@/lib/log';
-import type { ParamsPromise } from '@/types/next';
 
 export const dynamic = 'force-dynamic';
 
@@ -83,15 +82,12 @@ async function verifyAssignmentAccess(userId: string, assignmentId: string): Pro
  */
 type AssignmentParams = { id: string };
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: ParamsPromise<AssignmentParams> }
-) {
+export async function PUT(request: NextRequest, { params }: { params: AssignmentParams }) {
   let id: string | undefined;
 
   try {
     const { db } = await import('@/db');
-    id = (params as unknown as AssignmentParams).id;
+    id = params.id;
 
     const user = await requireAuth();
 
@@ -148,15 +144,12 @@ export async function PUT(
  *
  * Deletes an assignment.
  */
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: ParamsPromise<AssignmentParams> }
-) {
+export async function DELETE(request: NextRequest, { params }: { params: AssignmentParams }) {
   let id: string | undefined;
 
   try {
     const { db } = await import('@/db');
-    id = (params as unknown as AssignmentParams).id;
+    id = params.id;
 
     const user = await requireAuth();
 
