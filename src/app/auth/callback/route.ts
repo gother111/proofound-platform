@@ -66,6 +66,74 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  const {
+    data: { user },
+    error: getUserError,
+  } = await supabase.auth.getUser();
+
+  if (getUserError) {
+    console.warn('[auth-callback] failed to load session user', {
+      error: String(getUserError),
+    });
+  }
+
+  if (user) {
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('persona')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (profileError) {
+      console.warn('[auth-callback] failed to load profile persona', {
+        userId: user.id,
+        error: String(profileError),
+      });
+    }
+
+    if (!profile && !profileError) {
+      const { error: insertError } = await supabase
+        .from('profiles')
+        .insert({ id: user.id, persona: 'individual' });
+
+      if (insertError) {
+        console.warn('[auth-callback] failed to insert profile row', {
+          userId: user.id,
+          error: String(insertError),
+        });
+      }
+    }
+
+    const { data: membership, error: membershipError } = await supabase
+      .from('organization_members')
+      .select('status')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .limit(1)
+      .maybeSingle();
+
+    if (membershipError) {
+      console.warn('[auth-callback] failed to load membership status', {
+        userId: user.id,
+        error: String(membershipError),
+      });
+    }
+
+    if (membership && profile?.persona !== 'org_member') {
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ persona: 'org_member' })
+        .eq('id', user.id);
+
+      if (updateError) {
+        console.warn('[auth-callback] failed to set persona org_member', {
+          userId: user.id,
+          error: String(updateError),
+        });
+      }
+    }
+  }
+
   const destinationPath = await resolveUserHomePath(supabase);
 
   return NextResponse.redirect(new URL(destinationPath, requestUrl.origin));
