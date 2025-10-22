@@ -9,28 +9,29 @@ export default async function OrganizationLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
+  const { slug } = await params;
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    console.warn('[org/layout] 404', { reason: 'no-user', slug: params.slug });
+    console.warn('[org/layout] 404', { reason: 'no-user', slug });
     notFound();
   }
 
   const { data: org, error: orgError } = await supabase
     .from('organizations')
     .select('id, slug, display_name')
-    .eq('slug', params.slug)
+    .eq('slug', slug)
     .maybeSingle();
 
   if (orgError || !org?.id || !org.slug) {
     console.warn('[org/layout] 404', {
       reason: orgError ? 'org-load-error' : 'org-not-found',
-      slug: params.slug,
+      slug,
       user: user.id,
       error: orgError ? String(orgError) : null,
     });
@@ -47,7 +48,7 @@ export default async function OrganizationLayout({
   if (membershipError || !membership || membership.status !== 'active') {
     console.warn('[org/layout] 404', {
       reason: membershipError ? 'membership-error' : 'no-active-membership',
-      slug: params.slug,
+      slug,
       user: user.id,
       error: membershipError ? String(membershipError) : null,
     });
