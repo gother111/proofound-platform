@@ -30,3 +30,7 @@ export function useOrgContext() {
 
   return context;
 }
+
+export function useOptionalOrgContext() {
+  return useContext(OrgContext) ?? null;
+}

@@ -13,6 +13,7 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  UserPlus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -31,6 +32,9 @@ export function LeftNav({ basePath = '/i' }: LeftNavProps) {
     { href: `${basePath}/matching`, icon: Users, label: 'Matching' },
     { href: `${basePath}/verifications`, icon: Shield, label: 'Verifications' },
     { href: `${basePath}/opportunities`, icon: Briefcase, label: 'Opportunities' },
+    ...(basePath.startsWith('/o/')
+      ? [{ href: `${basePath}/team`, icon: UserPlus, label: 'Team' }]
+      : []),
     { href: `${basePath}/settings`, icon: Settings, label: 'Settings' },
   ];
 
