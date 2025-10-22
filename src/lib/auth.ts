@@ -297,27 +297,24 @@ export async function resolveUserHomePath(
 
   const persona = (profile?.persona ?? 'unknown') as 'individual' | 'org_member' | 'unknown';
 
-  type MembershipWithOrganization = {
+  type MembershipRow = {
     org_id: string;
     joined_at: string | null;
-    org: { slug: string } | null;
   };
 
-  const { data: membership, error: membershipError } = await supabase
+  const { data: memberships, error: membershipError } = await supabase
     .from('organization_members')
     .select(
       `
         org_id,
-        joined_at,
-        org:organizations!inner (
-          slug
-        )
+        joined_at
       `
     )
     .eq('user_id', user.id)
     .eq('status', 'active')
     .order('joined_at', { ascending: true })
-    .maybeSingle<MembershipWithOrganization>();
+    .limit(1)
+    .returns<MembershipRow[]>();
 
   if (membershipError) {
     console.error(
@@ -326,7 +323,26 @@ export async function resolveUserHomePath(
     );
   }
 
-  const membershipOrgSlug = membership?.org?.slug ?? undefined;
+  let membershipOrgSlug: string | undefined;
+
+  const membership = memberships?.[0];
+
+  if (membership?.org_id) {
+    const { data: membershipOrg, error: membershipOrgError } = await supabase
+      .from('organizations')
+      .select('slug')
+      .eq('id', membership.org_id)
+      .maybeSingle();
+
+    if (membershipOrgError) {
+      console.error('Failed to load organization slug for membership during redirect resolution:', {
+        membershipOrgId: membership.org_id,
+        error: membershipOrgError,
+      });
+    }
+
+    membershipOrgSlug = membershipOrg?.slug ?? undefined;
+  }
 
   if (membershipOrgSlug) {
     if (persona !== 'org_member') {
