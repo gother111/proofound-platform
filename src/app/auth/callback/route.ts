@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { resolveUserHomePath } from '@/lib/auth';
+import { ensureOrgContextForUser, type MembershipWithOrganization } from '@/lib/orgs';
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -91,26 +92,30 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    let persona = profile?.persona ?? null;
+
     if (!profile && !profileError) {
       const { error: insertError } = await supabase
         .from('profiles')
-        .insert({ id: user.id, persona: 'individual' });
+        .insert({ id: user.id, persona: 'unknown' });
 
       if (insertError) {
         console.warn('[auth-callback] failed to insert profile row', {
           userId: user.id,
           error: String(insertError),
         });
+      } else {
+        persona = 'unknown';
       }
     }
 
     const { data: membership, error: membershipError } = await supabase
       .from('organization_members')
-      .select('status')
+      .select('status, organization:organizations(slug, display_name)')
       .eq('user_id', user.id)
-      .eq('status', 'active')
+      .order('joined_at', { ascending: false })
       .limit(1)
-      .maybeSingle();
+      .maybeSingle<MembershipWithOrganization>();
 
     if (membershipError) {
       console.warn('[auth-callback] failed to load membership status', {
@@ -119,18 +124,26 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    if (membership && profile?.persona !== 'org_member') {
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ persona: 'org_member' })
-        .eq('id', user.id);
+    let targetSlug = membership?.organization?.slug ?? null;
 
-      if (updateError) {
-        console.warn('[auth-callback] failed to set persona org_member', {
+    const shouldEnsureOrg = membership?.status === 'active' || persona !== 'individual';
+
+    if (shouldEnsureOrg) {
+      try {
+        targetSlug = await ensureOrgContextForUser(user.id, {
+          displayNameHint: membership?.organization?.display_name ?? null,
+          email: user.email ?? null,
+        });
+      } catch (error) {
+        console.warn('[auth-callback] ensureOrgContextForUser failed', {
           userId: user.id,
-          error: String(updateError),
+          error: String(error),
         });
       }
+    }
+
+    if (targetSlug) {
+      return NextResponse.redirect(new URL(`/app/o/${targetSlug}/home`, requestUrl.origin));
     }
   }
 
