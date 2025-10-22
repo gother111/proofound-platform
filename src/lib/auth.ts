@@ -297,19 +297,9 @@ export async function resolveUserHomePath(
 
   const persona = (profile?.persona ?? 'unknown') as 'individual' | 'org_member' | 'unknown';
 
-  if (persona === 'individual') {
-    return '/app/i/home';
-  }
-
   const { data: memberships, error: membershipError } = await supabase
     .from('organization_members')
-    .select(
-      `
-        organizations!inner (
-          slug
-        )
-      `
-    )
+    .select('org_id')
     .eq('user_id', user.id)
     .eq('status', 'active')
     .order('joined_at', { ascending: true })
@@ -320,29 +310,40 @@ export async function resolveUserHomePath(
       'Failed to load organization membership for redirect resolution:',
       membershipError
     );
-    return '/onboarding';
   }
 
-  const membership = memberships?.[0];
-  const orgData = membership?.organizations;
-  const org = Array.isArray(orgData) ? orgData[0] : orgData;
-  const slug = (org as { slug?: string } | undefined)?.slug;
-  if (slug) {
-    if (persona !== 'org_member') {
-      const { error: personaUpdateError } = await supabase
-        .from('profiles')
-        .update({ persona: 'org_member', updated_at: new Date().toISOString() })
-        .eq('id', user.id);
+  const membershipOrgId = memberships?.[0]?.org_id as string | undefined;
 
-      if (personaUpdateError) {
-        console.error('Failed to update persona after detecting organization membership:', {
-          userId: user.id,
-          error: personaUpdateError,
-        });
+  if (membershipOrgId) {
+    const { data: org, error: orgError } = await supabase
+      .from('organizations')
+      .select('slug')
+      .eq('id', membershipOrgId)
+      .maybeSingle();
+
+    if (orgError) {
+      console.error('Failed to load organization slug for redirect resolution:', orgError);
+    } else if (org?.slug) {
+      if (persona !== 'org_member') {
+        const { error: personaUpdateError } = await supabase
+          .from('profiles')
+          .update({ persona: 'org_member', updated_at: new Date().toISOString() })
+          .eq('id', user.id);
+
+        if (personaUpdateError) {
+          console.error('Failed to update persona after detecting organization membership:', {
+            userId: user.id,
+            error: personaUpdateError,
+          });
+        }
       }
-    }
 
-    return `/app/o/${slug}/home`;
+      return `/app/o/${org.slug}/home`;
+    }
+  }
+
+  if (persona === 'individual') {
+    return '/app/i/home';
   }
 
   if (persona === 'org_member') {

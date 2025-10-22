@@ -152,19 +152,41 @@ export async function completeOrganizationOnboarding(formData: FormData) {
   try {
     const supabase = await createClient();
 
+    const { data: existingMemberships, error: existingMembershipError } = await supabase
+      .from('organization_members')
+      .select('org_id')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .limit(1);
+
+    if (existingMembershipError) {
+      console.error('Failed to verify existing organization memberships:', existingMembershipError);
+      return { error: 'Unable to verify your existing organizations. Please try again.' };
+    }
+
+    if (existingMemberships && existingMemberships.length > 0) {
+      return {
+        error:
+          'You are already connected to an organization. Please contact support to update your organization membership.',
+      };
+    }
+
     const orgId = randomUUID();
     const orgSlug = slug.toLowerCase();
 
-    const orgInsert = await supabase.from('organizations').insert({
-      id: orgId,
-      slug: orgSlug,
-      display_name: displayName,
-      legal_name: legalName || null,
-      type,
-      mission: mission || null,
-      website: website || null,
-      created_by: user.id,
-    });
+    const orgInsert = await supabase.from('organizations').insert(
+      {
+        id: orgId,
+        slug: orgSlug,
+        display_name: displayName,
+        legal_name: legalName || null,
+        type,
+        mission: mission || null,
+        website: website || null,
+        created_by: user.id,
+      },
+      { returning: 'minimal' }
+    );
 
     if (orgInsert.error) {
       if (orgInsert.error.message?.includes('row-level security')) {
@@ -181,12 +203,15 @@ export async function completeOrganizationOnboarding(formData: FormData) {
       return { error: 'Failed to create organization. Please try again.' };
     }
 
-    const memberInsert = await supabase.from('organization_members').insert({
-      org_id: orgId,
-      user_id: user.id,
-      role: 'owner',
-      status: 'active',
-    });
+    const memberInsert = await supabase.from('organization_members').insert(
+      {
+        org_id: orgId,
+        user_id: user.id,
+        role: 'owner',
+        status: 'active',
+      },
+      { returning: 'minimal' }
+    );
 
     if (memberInsert.error) {
       if (memberInsert.error.message?.includes('row-level security')) {
