@@ -20,7 +20,7 @@ interface LeftNavProps {
   basePath?: string;
 }
 
-export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
+export function LeftNav({ basePath = '/i' }: LeftNavProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const pathname = usePathname();
 

@@ -35,13 +35,13 @@
 **Status**: ❌ **NOT IMPLEMENTED**
 
 - The profile page is currently accessible without authentication
-- Route is at `/app/i/profile` but has no auth check
+- Route is at `/i/profile` but has no auth check
 - Anyone can access the page and see/edit the profile
 
 **Fix Required**:
 
 ```typescript
-// src/app/app/i/profile/page.tsx
+// src/app/i/profile/page.tsx
 import { requireAuth } from '@/lib/auth';
 import { EditableProfileView } from '@/components/profile/EditableProfileView';
 

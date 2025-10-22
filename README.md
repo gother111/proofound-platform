@@ -218,12 +218,12 @@ All tables have RLS enabled with policies:
 2. **Login** → Check persona → Redirect to appropriate shell
 3. **Onboarding**:
    - Choose: Individual or Organization
-   - **Individual**: Set handle, name, locale → `/app/i/home`
+   - **Individual**: Set handle, name, locale → `/i/home`
    - **Organization**: Create org → Invite team → `/o/[slug]/home`
 
 ## App Shells
 
-### Individual Shell (`/app/i/*`)
+### Individual Shell (`/i/*`)
 
 - Home: Dashboard with quick actions
 - Profile: Edit headline, bio, skills, location, visibility

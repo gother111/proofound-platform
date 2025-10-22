@@ -18,7 +18,7 @@
 - ✅ `IndividualSetup` component - Full form with validation:
   - Display name, handle, headline, bio, location
   - Real-time form submission with error handling
-  - Automatic redirect to `/app/i/home` on success
+  - Automatic redirect to `/i/home` on success
 - ✅ `OrganizationSetup` component - Full form with validation:
   - Org name, slug, type, legal name, mission, website
   - Role types (company, NGO, government, network, other)
@@ -42,7 +42,7 @@ Signup → Login → /onboarding
 - `src/components/onboarding/PersonaChoice.tsx`
 - `src/components/onboarding/IndividualSetup.tsx`
 - `src/components/onboarding/OrganizationSetup.tsx`
-- Updated `src/app/onboarding/page.tsx` (client-side state management)
+- Updated `src/onboarding/page.tsx` (client-side state management)
 - Updated `src/actions/onboarding.ts` (server actions)
 
 ---
@@ -165,7 +165,7 @@ Routes:
 - / (landing)
 - /_not-found
 - /login, /signup, /onboarding
-- /app/i/home, profile, settings (Individual)
+- /i/home, profile, settings (Individual)
 - /o/[slug]/home, profile, members, settings, invitations/[token] (Org)
 ```
 
@@ -230,9 +230,9 @@ If you set up Supabase + Resend and run locally:
 1. **Individual Path**:
    - Sign up → Login → Choose "Individual"
    - Fill profile form → Submit
-   - Lands on `/app/i/home` dashboard
-   - Can edit profile at `/app/i/profile`
-   - Can view settings at `/app/i/settings`
+   - Lands on `/i/home` dashboard
+   - Can edit profile at `/i/profile`
+   - Can view settings at `/i/settings`
 
 2. **Organization Path**:
    - Sign up → Login → Choose "Organization"
@@ -346,7 +346,7 @@ Beyond the original plan:
 
 **Pages** (5 new):
 
-- `src/app/onboarding/page.tsx` (rewritten)
+- `src/onboarding/page.tsx` (rewritten)
 - `src/app/error.tsx`
 - `src/app/not-found.tsx`
 - `src → app → o → [slug]/not-found.tsx`

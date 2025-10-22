@@ -64,12 +64,12 @@
 - ⚠️ Individual setup form - Needs completion
 - ⚠️ Organization setup form - Needs completion
 
-#### Individual Shell (`/app/i/*`)
+#### Individual Shell (`/i/*`)
 
 - ✅ Layout with navigation and user menu
-- ✅ `/app/i/home` - Dashboard with quick actions
-- ✅ `/app/i/profile` - Profile editing (basic + individual details)
-- ✅ `/app/i/settings` - Account, notifications, security, language
+- ✅ `/i/home` - Dashboard with quick actions
+- ✅ `/i/profile` - Profile editing (basic + individual details)
+- ✅ `/i/settings` - Account, notifications, security, language
 
 #### Organization Shell (`/o/[slug]/*`)
 
@@ -325,9 +325,9 @@ If you set up the environment variables and database:
 2. ✅ **Signup** - Create account at `/signup`
 3. ✅ **Login** - Sign in at `/login`
 4. ✅ **Onboarding** - Persona selection at `/onboarding`
-5. ✅ **Individual Dashboard** - View at `/app/i/home` (after manual persona setup)
-6. ✅ **Individual Profile** - Edit at `/app/i/profile`
-7. ✅ **Individual Settings** - Configure at `/app/i/settings`
+5. ✅ **Individual Dashboard** - View at `/i/home` (after manual persona setup)
+6. ✅ **Individual Profile** - Edit at `/i/profile`
+7. ✅ **Individual Settings** - Configure at `/i/settings`
 8. ✅ **Organization Dashboard** - View at `/o/[slug]/home` (after manual org creation)
 9. ✅ **Organization Members** - Manage at `/o/[slug]/members`
 10. ✅ **Organization Settings** - View audit log at `/o/[slug]/settings`

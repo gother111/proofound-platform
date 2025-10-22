@@ -47,7 +47,7 @@
 
 #### Main Profile Page ✅
 
-- `src/app/app/i/profile/page.tsx` - Server component with data fetching
+- `src/app/i/profile/page.tsx` - Server component with data fetching
 - `src/components/profile/ProfileView.tsx` - Client component with all UI
 
 #### Features Implemented ✅
@@ -134,7 +134,7 @@ Once the migration is applied:
    npm run dev
    ```
 
-2. **Navigate to**: `http://localhost:3000/app/i/profile`
+2. **Navigate to**: `http://localhost:3000/i/profile`
 
 3. **Verify**:
    - Page loads without errors
@@ -148,7 +148,7 @@ Once the migration is applied:
 
 The profile page currently uses sample data. To connect to real database:
 
-In `src/app/app/i/profile/page.tsx`, uncomment the database queries:
+In `src/app/i/profile/page.tsx`, uncomment the database queries:
 
 ```typescript
 // Fetch user profile
@@ -247,7 +247,7 @@ These are planned but not yet implemented:
 
 ### Pages
 
-- ✅ `src/app/app/i/profile/page.tsx` (replaced edit form with view)
+- ✅ `src/app/i/profile/page.tsx` (replaced edit form with view)
 
 ### Styles
 
@@ -257,7 +257,7 @@ These are planned but not yet implemented:
 
 1. Apply database migration (see "Manual Steps Required" above)
 2. Start dev server: `npm run dev`
-3. Navigate to `/app/i/profile`
+3. Navigate to `/i/profile`
 4. View the profile page with sample data
 5. Replace sample data with real database queries when ready
 

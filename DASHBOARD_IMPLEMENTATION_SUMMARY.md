@@ -115,7 +115,7 @@ All cards follow consistent empty state pattern:
 
 ### 4. Updated Home Pages
 
-#### Individual Home (`/src/app/app/i/home/page.tsx`)
+#### Individual Home (`/src/app/i/home/page.tsx`)
 
 - Replaced old card layout with 3-column dashboard grid
 - Shows: Goals, Tasks, Projects, Matching (2 cols), ImpactSnapshot, Explore (3 cols)
@@ -131,12 +131,12 @@ All cards follow consistent empty state pattern:
 
 ### 5. Updated Layouts
 
-#### Individual Layout (`/src/app/app/i/layout.tsx`)
+#### Individual Layout (`/src/app/i/layout.tsx`)
 
 - Replaced horizontal navigation with LeftNav + TopBar
 - Flex layout: `flex h-screen`
 - Background: `#F5F3EE` (existing token)
-- Passes `basePath="/app/i"` to LeftNav
+- Passes `basePath="/i"` to LeftNav
 - Generates user initials from name
 
 #### Organization Layout (`src → app → o → [slug]/layout.tsx`)
@@ -150,10 +150,10 @@ All cards follow consistent empty state pattern:
 
 **Individual Routes:**
 
-- `/src/app/app/i/projects/page.tsx`
-- `/src/app/app/i/matching/page.tsx`
-- `/src/app/app/i/verifications/page.tsx`
-- `/src/app/app/i/opportunities/page.tsx`
+- `/src/app/i/projects/page.tsx`
+- `/src/app/i/matching/page.tsx`
+- `/src/app/i/verifications/page.tsx`
+- `/src/app/i/opportunities/page.tsx`
 
 **Organization Routes:**
 
@@ -219,7 +219,7 @@ Mobile (< lg):
 ### Individual (`persona = 'individual'`)
 
 - Shows: **ImpactSnapshotCard** (no CTA)
-- Nav routes: `/app/i/*`
+- Nav routes: `/i/*`
 
 ### Organization (`persona = 'organization'`)
 
@@ -252,7 +252,7 @@ Mobile (< lg):
 ### Navigation Routing
 
 - LeftNav is context-aware via `basePath` prop
-- Individual routes: `/app/i/home`, `/app/i/profile`, etc.
+- Individual routes: `/i/home`, `/i/profile`, etc.
 - Organization routes: `/o/[slug]/home`, `/o/[slug]/profile`, etc.
 
 ### Active State Detection
@@ -295,10 +295,10 @@ className = 'grid grid-cols-1 lg:grid-cols-3 gap-4';
 - `/src/components/dashboard/WhileAwayCard.tsx`
 - `/src/components/ui/checkbox.tsx`
 - `/src/app/api/updates/route.ts`
-- `/src/app/app/i/projects/page.tsx`
-- `/src/app/app/i/matching/page.tsx`
-- `/src/app/app/i/verifications/page.tsx`
-- `/src/app/app/i/opportunities/page.tsx`
+- `/src/app/i/projects/page.tsx`
+- `/src/app/i/matching/page.tsx`
+- `/src/app/i/verifications/page.tsx`
+- `/src/app/i/opportunities/page.tsx`
 - `src → app → o → [slug]/projects/page.tsx`
 - `src → app → o → [slug]/matching/page.tsx`
 - `src → app → o → [slug]/verifications/page.tsx`
@@ -306,9 +306,9 @@ className = 'grid grid-cols-1 lg:grid-cols-3 gap-4';
 
 ### Modified (4 files):
 
-- `/src/app/app/i/home/page.tsx` (replaced content)
+- `/src/app/i/home/page.tsx` (replaced content)
 - `src → app → o → [slug]/home/page.tsx` (replaced content)
-- `/src/app/app/i/layout.tsx` (new navigation)
+- `/src/app/i/layout.tsx` (new navigation)
 - `src → app → o → [slug]/layout.tsx` (new navigation)
 
 ### Protected (Not Modified):
@@ -330,7 +330,7 @@ className = 'grid grid-cols-1 lg:grid-cols-3 gap-4';
 ### Manual Testing Checklist
 
 1. **Individual Dashboard**
-   - [ ] Navigate to `/app/i/home`
+   - [ ] Navigate to `/i/home`
    - [ ] Verify 7 empty state cards render
    - [ ] Verify ImpactSnapshotCard appears (no button)
    - [ ] Click "Customize" → modal opens with 5 disabled checkboxes

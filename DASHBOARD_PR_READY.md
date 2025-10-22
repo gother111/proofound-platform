@@ -86,7 +86,7 @@ npm run dev
 
 ### Test Individual Persona
 
-Navigate to: `http://localhost:3000/app/i/home`
+Navigate to: `http://localhost:3000/i/home`
 
 **Expected to see:**
 
@@ -236,7 +236,7 @@ None. This enhances existing routes without breaking changes.
 
 1. `/src/components/app/LeftNav.tsx` - Main navigation
 2. `/src/components/app/TopBar.tsx` - Top bar
-3. `/src/app/app/i/home/page.tsx` - Individual dashboard
+3. `/src/app/i/home/page.tsx` - Individual dashboard
 4. `src → app → o → [slug]/home/page.tsx` - Organization dashboard
 5. `/src/components/dashboard/*.tsx` - All dashboard cards
 

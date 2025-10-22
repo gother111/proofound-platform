@@ -276,29 +276,28 @@ export async function resolveUserHomePath(supabaseClient?: SupabaseClient): Prom
   } = await supabase.auth.getUser();
 
   if (authErr || !user) {
-    console.info('[resolveUserHomePath] no-user-or-auth-error', { authErr: Boolean(authErr) });
-    return '/app/i/home';
+    console.info('[resolveUserHomePath]', {
+      case: 'no-user',
+      authErr: Boolean(authErr),
+    });
+    return '/i/home';
   }
 
   const { data: membership, error: membershipError } = await supabase
     .from('organization_members')
-    .select('status, organization:organizations(slug)')
+    .select('status, organization:organizations(id, slug, display_name)')
     .eq('user_id', user.id)
     .order('joined_at', { ascending: false })
     .limit(1)
     .maybeSingle<MembershipWithOrganization>();
 
-  let targetSlug = membership?.organization?.slug ?? null;
+  let slug = membership?.organization?.slug ?? null;
 
   if (membership?.status === 'active') {
-    if (!targetSlug) {
+    if (!slug) {
       try {
-        targetSlug = await ensureOrgContextForUser(user.id, {
+        slug = await ensureOrgContextForUser(user.id, {
           displayNameHint: membership.organization?.display_name ?? null,
-        });
-        console.info('[resolveUserHomePath] active-org-ensured-slug', {
-          userId: user.id,
-          slug: targetSlug,
         });
       } catch (ensureError) {
         console.warn('[resolveUserHomePath] ensure-org-context-failed', {
@@ -308,21 +307,21 @@ export async function resolveUserHomePath(supabaseClient?: SupabaseClient): Prom
       }
     }
 
-    if (targetSlug) {
-      console.info('[resolveUserHomePath] active-org -> org-home', {
+    if (slug) {
+      console.info('[resolveUserHomePath]', {
+        case: 'active-org',
         userId: user.id,
-        slug: targetSlug,
+        slug,
       });
-      return `/o/${targetSlug}/home`;
+      return `/o/${slug}/home`;
     }
   }
 
   if (membershipError) {
-    console.info('[resolveUserHomePath] membership-error -> individual home', {
+    console.warn('[resolveUserHomePath] membership lookup failed', {
       userId: user.id,
       error: (membershipError as PostgrestError)?.message ?? String(membershipError),
     });
-    return '/app/i/home';
   }
 
   const { data: profile, error: profileErr } = await supabase
@@ -332,22 +331,23 @@ export async function resolveUserHomePath(supabaseClient?: SupabaseClient): Prom
     .maybeSingle();
 
   if (profileErr) {
-    console.info('[resolveUserHomePath] profile-error -> individual home', {
+    console.warn('[resolveUserHomePath] profile lookup failed', {
       userId: user.id,
-      profileErr: String(profileErr),
+      error: String(profileErr),
     });
-    return '/app/i/home';
   }
 
   if (profile?.persona === 'individual') {
-    console.info('[resolveUserHomePath] persona-individual -> individual home', {
+    console.info('[resolveUserHomePath]', {
+      case: 'individual',
       userId: user.id,
+      slug: null,
     });
-    return '/app/i/home';
+    return '/i/home';
   }
 
   try {
-    targetSlug = await ensureOrgContextForUser(user.id, {
+    slug = await ensureOrgContextForUser(user.id, {
       displayNameHint: membership?.organization?.display_name ?? null,
     });
   } catch (ensureError) {
@@ -357,17 +357,19 @@ export async function resolveUserHomePath(supabaseClient?: SupabaseClient): Prom
     });
   }
 
-  if (targetSlug) {
-    console.info('[resolveUserHomePath] persona-org-member -> org-home', {
+  if (slug) {
+    console.info('[resolveUserHomePath]', {
+      case: 'active-org',
       userId: user.id,
-      slug: targetSlug,
+      slug,
     });
-    return `/o/${targetSlug}/home`;
+    return `/o/${slug}/home`;
   }
 
-  console.info('[resolveUserHomePath] no-active-org -> individual home', {
+  console.info('[resolveUserHomePath]', {
+    case: 'onboarding',
     userId: user.id,
-    persona: profile?.persona ?? null,
+    slug: null,
   });
-  return '/app/i/home';
+  return '/onboarding';
 }

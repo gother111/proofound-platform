@@ -8,14 +8,14 @@ import { Button } from '@/components/ui/button';
 
 interface ExploreOpportunitiesCardProps {
   className?: string;
-  basePath?: string; // '/app/i' or '/o/[slug]'
+  basePath?: string; // '/i' or '/o/[slug]'
 }
 
 const tabs = ['People', 'Projects', 'Partners'];
 
 export function ExploreOpportunitiesCard({
   className,
-  basePath = '/app/i',
+  basePath = '/i',
 }: ExploreOpportunitiesCardProps) {
   const [activeTab, setActiveTab] = useState('People');
 

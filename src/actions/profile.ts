@@ -163,7 +163,7 @@ export async function updateBasicInfo(updates: Partial<BasicInfo>) {
     await db.update(profiles).set(profileUpdates).where(eq(profiles.id, user.id));
   }
 
-  revalidatePath('/app/i/profile');
+  revalidatePath('/i/profile');
 }
 
 export async function updateMission(mission: string | null) {
@@ -172,19 +172,19 @@ export async function updateMission(mission: string | null) {
     .update(individualProfiles)
     .set({ mission })
     .where(eq(individualProfiles.userId, user.id));
-  revalidatePath('/app/i/profile');
+  revalidatePath('/i/profile');
 }
 
 export async function replaceValues(values: Value[]) {
   const user = await requireAuth();
   await db.update(individualProfiles).set({ values }).where(eq(individualProfiles.userId, user.id));
-  revalidatePath('/app/i/profile');
+  revalidatePath('/i/profile');
 }
 
 export async function replaceCauses(causes: string[]) {
   const user = await requireAuth();
   await db.update(individualProfiles).set({ causes }).where(eq(individualProfiles.userId, user.id));
-  revalidatePath('/app/i/profile');
+  revalidatePath('/i/profile');
 }
 
 export async function replaceSkills(skills: Skill[]) {
@@ -193,7 +193,7 @@ export async function replaceSkills(skills: Skill[]) {
     .update(individualProfiles)
     .set({ skills: skills.map((skill) => skill.name) })
     .where(eq(individualProfiles.userId, user.id));
-  revalidatePath('/app/i/profile');
+  revalidatePath('/i/profile');
 }
 
 export async function createImpactStory(data: Omit<ImpactStory, 'id'>) {
@@ -212,7 +212,7 @@ export async function createImpactStory(data: Omit<ImpactStory, 'id'>) {
     })
     .returning();
 
-  revalidatePath('/app/i/profile');
+  revalidatePath('/i/profile');
   return inserted;
 }
 
@@ -221,7 +221,7 @@ export async function deleteImpactStory(id: string) {
   await db
     .delete(impactStories)
     .where(and(eq(impactStories.id, id), eq(impactStories.userId, user.id)));
-  revalidatePath('/app/i/profile');
+  revalidatePath('/i/profile');
 }
 
 export async function createExperience(data: Omit<Experience, 'id'>) {
@@ -239,14 +239,14 @@ export async function createExperience(data: Omit<Experience, 'id'>) {
     })
     .returning();
 
-  revalidatePath('/app/i/profile');
+  revalidatePath('/i/profile');
   return inserted;
 }
 
 export async function deleteExperience(id: string) {
   const user = await requireAuth();
   await db.delete(experiences).where(and(eq(experiences.id, id), eq(experiences.userId, user.id)));
-  revalidatePath('/app/i/profile');
+  revalidatePath('/i/profile');
 }
 
 export async function createEducation(data: Omit<EducationType, 'id'>) {
@@ -264,14 +264,14 @@ export async function createEducation(data: Omit<EducationType, 'id'>) {
     })
     .returning();
 
-  revalidatePath('/app/i/profile');
+  revalidatePath('/i/profile');
   return inserted;
 }
 
 export async function deleteEducation(id: string) {
   const user = await requireAuth();
   await db.delete(education).where(and(eq(education.id, id), eq(education.userId, user.id)));
-  revalidatePath('/app/i/profile');
+  revalidatePath('/i/profile');
 }
 
 export async function createVolunteering(data: Omit<VolunteeringType, 'id'>) {
@@ -291,7 +291,7 @@ export async function createVolunteering(data: Omit<VolunteeringType, 'id'>) {
     })
     .returning();
 
-  revalidatePath('/app/i/profile');
+  revalidatePath('/i/profile');
   return inserted;
 }
 
@@ -300,5 +300,5 @@ export async function deleteVolunteering(id: string) {
   await db
     .delete(volunteering)
     .where(and(eq(volunteering.id, id), eq(volunteering.userId, user.id)));
-  revalidatePath('/app/i/profile');
+  revalidatePath('/i/profile');
 }

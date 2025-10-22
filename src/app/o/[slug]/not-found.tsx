@@ -18,7 +18,7 @@ export default function OrgNotFound() {
         </CardHeader>
         <CardContent className="space-y-4">
           <Button asChild className="w-full">
-            <Link href="/app/i/home">Go to your profile</Link>
+            <Link href="/i/home">Go to your profile</Link>
           </Button>
         </CardContent>
       </Card>

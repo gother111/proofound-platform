@@ -63,7 +63,7 @@ export default function MatchingPage() {
         }}
         onCancel={() => {
           setShowSetup(false);
-          router.push('/app/i/home');
+          router.push('/i/home');
         }}
       />
     );

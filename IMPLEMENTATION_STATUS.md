@@ -129,7 +129,7 @@
 - [x] Login page (/login)
 - [x] Signup page (/signup)
 - [x] Onboarding page (/onboarding)
-- [ ] Individual app pages (/app/i/\*)
+- [ ] Individual app pages (/i/\*)
   - Structure defined, pages need implementation
 - [ ] Organization app pages (/o/[slug]/\*)
   - Structure defined, pages need implementation
@@ -168,11 +168,11 @@
 
 ### Application Pages
 
-**Individual Shell (`/app/i/*`)**
+**Individual Shell (`/i/*`)**
 
-- [ ] `/app/i/home` - Dashboard
-- [ ] `/app/i/profile` - Profile editor
-- [ ] `/app/i/settings` - Settings tabs
+- [ ] `/i/home` - Dashboard
+- [ ] `/i/profile` - Profile editor
+- [ ] `/i/settings` - Settings tabs
 
 **Organization Shell (`/o/[slug]/*`)**
 
@@ -314,7 +314,7 @@
 ### High Priority (MVP Core)
 
 1. **Complete Individual Shell**
-   - Implement `/app/i/home`, `/app/i/profile`, `/app/i/settings` pages
+   - Implement `/i/home`, `/i/profile`, `/i/settings` pages
    - Create ProfileForm component
    - Add profile edit functionality
 

@@ -21,9 +21,9 @@
 
 All pages built and working:
 
-- `/app/i/home` - Dashboard with quick actions
-- `/app/i/profile` - Profile editor (display name, handle, headline, bio, skills, location, visibility)
-- `/app/i/settings` - Account settings, notifications, security, language
+- `/i/home` - Dashboard with quick actions
+- `/i/profile` - Profile editor (display name, handle, headline, bio, skills, location, visibility)
+- `/i/settings` - Account settings, notifications, security, language
 
 Features:
 
@@ -94,7 +94,7 @@ Routes built:
 
 - `/` (landing)
 - `/login`, `/signup`, `/onboarding`
-- `/app/i/home`, `/app/i/profile`, `/app/i/settings`
+- `/i/home`, `/i/profile`, `/i/settings`
 - `/o/[slug]/home`, `/o/[slug]/profile`, `/o/[slug]/members`, `/o/[slug]/settings`
 
 #### Configuration
@@ -174,7 +174,7 @@ To get to a working MVP that users can sign up and use:
    - Display name, handle, headline, bio inputs
    - Form validation with Zod
    - Call `completeOnboarding` server action
-   - Redirect to `/app/i/home`
+   - Redirect to `/i/home`
 
 2. Build `OrganizationSetup.tsx` form component
    - Org name, slug, type inputs
@@ -242,10 +242,10 @@ To get to a working MVP that users can sign up and use:
 ### New Files (Major)
 
 ```
-src/app/app/i/layout.tsx
-src/app/app/i/home/page.tsx
-src/app/app/i/profile/page.tsx
-src/app/app/i/settings/page.tsx
+src/app/i/layout.tsx
+src/app/i/home/page.tsx
+src/app/i/profile/page.tsx
+src/app/i/settings/page.tsx
 
 src → app → o → [slug]/layout.tsx
 src → app → o → [slug]/home/page.tsx
@@ -264,9 +264,9 @@ SESSION_SUMMARY.md (this file)
 package.json (updated Next.js, Supabase, React Email)
 src/db/index.ts (build-friendly DB connection)
 src/lib/email.ts (build-friendly Resend init)
-src/app/onboarding/page.tsx (removed build-time DB access)
+src/onboarding/page.tsx (removed build-time DB access)
 src/components/ui/card.tsx (fixed accessibility)
-src/app/app/i/home/page.tsx (fixed escaped quotes)
+src/app/i/home/page.tsx (fixed escaped quotes)
 ```
 
 ---

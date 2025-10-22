@@ -27,7 +27,7 @@ export function IndividualSetup() {
       }
 
       // Success - redirect to individual home
-      router.push('/app/i/home');
+      router.push('/i/home');
     } catch (err) {
       setError('Something went wrong. Please try again.');
       setIsLoading(false);

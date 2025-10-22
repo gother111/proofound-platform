@@ -122,7 +122,7 @@
   - Fetches taxonomies from API
   - Saves to /api/matching-profile
   - Completeness indicators
-- ✅ Matching page integration (`src/app/app/i/matching/page.tsx`)
+- ✅ Matching page integration (`src/app/i/matching/page.tsx`)
   - Loads as part of core pipeline
   - Conditional rendering (empty/setup/filled)
   - Fetches profile & matches
@@ -181,7 +181,7 @@
 
 5. **Dashboard Integration**
    - Update `src/components/dashboard/MatchingResultsCard.tsx`
-     - Link "Open preferences" to `/app/i/matching`
+     - Link "Open preferences" to `/i/matching`
    - Update `src/components/dashboard/ExploreOpportunitiesCard.tsx`
      - Add "View Matches" button if profile exists
 
@@ -238,7 +238,7 @@ Or manually apply `/drizzle/0002_matching_tables.sql` to your database.
 
 ### 3. Verify Installation
 
-1. Navigate to `/app/i/matching`
+1. Navigate to `/i/matching`
 2. You should see the empty state (if no profile)
 3. Click "Set Up Matching Profile"
 4. Complete the wizard

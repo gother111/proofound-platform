@@ -131,7 +131,7 @@ VALUES (
 
 ### 4. Access the App
 
-- **Individual**: http://localhost:3000/app/i/home
+- **Individual**: http://localhost:3000/i/home
 - **Organization**: http://localhost:3000/o/my-org/home
 
 ---

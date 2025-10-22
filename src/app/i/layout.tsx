@@ -15,7 +15,7 @@ export default async function IndividualLayout({ children }: { children: React.R
 
   return (
     <div className="flex h-screen" style={{ backgroundColor: '#F5F3EE' }}>
-      <LeftNav basePath="/app/i" />
+      <LeftNav basePath="/i" />
       <div className="flex-1 flex flex-col">
         <TopBar userName={userName} userInitials={userInitials} />
         <main className="flex-1 overflow-auto">{children}</main>

@@ -116,7 +116,7 @@ export async function completeIndividualOnboarding(formData: FormData) {
       return { error: 'Failed to complete setup. Please try again.' };
     }
 
-    revalidatePath('/app/i');
+    revalidatePath('/i');
     return { success: true };
   } catch (error: any) {
     console.error('Individual onboarding error:', error);

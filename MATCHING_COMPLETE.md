@@ -75,7 +75,7 @@ npm run db:push
 
 ### 3. Test as Individual
 
-1. Navigate to `/app/i/matching`
+1. Navigate to `/i/matching`
 2. Click "Set Up Matching Profile"
 3. Complete the 5-step wizard:
    - Add 3+ skills with levels
