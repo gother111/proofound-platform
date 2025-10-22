@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -154,9 +155,11 @@ export function OrgBasicCard({
             )}
           >
             {org.logo_url ? (
-              <img
+              <Image
                 src={org.logo_url}
                 alt={`${org.display_name} logo`}
+                width={64}
+                height={64}
                 className="h-full w-full object-cover"
               />
             ) : (

@@ -3,13 +3,9 @@ import { notFound } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
-export default async function OrgVerificationsPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+export default async function OrgOpportunitiesPage({ params }: { params: { slug: string } }) {
   const user = await requireAuth();
-  const { slug } = await params;
+  const { slug } = params;
   const result = await getActiveOrg(slug, user.id);
 
   if (!result) {
@@ -18,7 +14,7 @@ export default async function OrgVerificationsPage({
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-semibold mb-2">Verifications</h1>
+      <h1 className="text-2xl font-semibold mb-2">Opportunities</h1>
       <p className="text-muted-foreground">Coming soon</p>
     </div>
   );

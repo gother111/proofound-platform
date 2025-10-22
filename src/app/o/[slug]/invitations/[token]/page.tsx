@@ -11,10 +11,10 @@ export const dynamic = 'force-dynamic';
 export default async function AcceptInvitationPage({
   params,
 }: {
-  params: Promise<{ slug: string; token: string }>;
+  params: { slug: string; token: string };
 }) {
   const user = await requireAuth();
-  const { slug, token } = await params;
+  const { slug, token } = params;
 
   const supabase = await createClient();
   const invitationQuery = await supabase

@@ -6,13 +6,9 @@ import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-export default async function OrganizationSettingsPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+export default async function OrganizationSettingsPage({ params }: { params: { slug: string } }) {
   const user = await requireAuth();
-  const { slug } = await params;
+  const { slug } = params;
   const result = await getActiveOrg(slug, user.id);
 
   if (!result) {
@@ -34,7 +30,21 @@ export default async function OrganizationSettingsPage({
     .order('created_at', { ascending: false })
     .limit(20);
 
-  const logs = logsData ?? [];
+  type AuditLogRow = {
+    id: string;
+    action: string;
+    targetType: string | null;
+    targetId: string | null;
+    createdAt: string;
+  };
+
+  const logs: AuditLogRow[] = (logsData ?? []).map((entry) => ({
+    id: String(entry.id),
+    action: String(entry.action ?? ''),
+    targetType: entry.targetType ? String(entry.targetType) : null,
+    targetId: entry.targetId ? String(entry.targetId) : null,
+    createdAt: String(entry.createdAt ?? ''),
+  }));
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">

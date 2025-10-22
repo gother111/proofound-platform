@@ -1,4 +1,7 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import {
+  createServerClient as createSupabaseServerClient,
+  type CookieOptions,
+} from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
 export async function createClient() {
@@ -53,7 +56,7 @@ export async function createClient() {
     console.warn('Supabase cookie store is read-only. Unable to modify cookie.', { name });
   };
 
-  return createServerClient(supabaseUrl, supabaseAnonKey, {
+  return createSupabaseServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       get(name: string) {
         return cookieStore.get(name)?.value;

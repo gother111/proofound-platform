@@ -80,13 +80,10 @@ async function verifyAssignmentAccess(userId: string, assignmentId: string): Pro
  *
  * Updates an assignment.
  */
-type AssignmentRouteContext = { params: Promise<{ id: string }> };
-
-export async function PUT(request: NextRequest, context: AssignmentRouteContext) {
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   let id: string | undefined;
 
   try {
-    const params = await context.params;
     id = params.id;
 
     const user = await requireAuth();
@@ -144,11 +141,10 @@ export async function PUT(request: NextRequest, context: AssignmentRouteContext)
  *
  * Deletes an assignment.
  */
-export async function DELETE(request: NextRequest, context: AssignmentRouteContext) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   let id: string | undefined;
 
   try {
-    const params = await context.params;
     id = params.id;
 
     const user = await requireAuth();

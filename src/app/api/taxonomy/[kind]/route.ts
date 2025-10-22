@@ -18,7 +18,7 @@ export const dynamic = 'force-dynamic';
  *
  * Auth: Required
  */
-type TaxonomyRouteContext = { params: Promise<{ kind: string }> };
+type TaxonomyRouteContext = { params: { kind: string } };
 
 export async function GET(request: NextRequest, context: TaxonomyRouteContext) {
   let kind: string | undefined;
@@ -28,8 +28,7 @@ export async function GET(request: NextRequest, context: TaxonomyRouteContext) {
     // Auth check
     await requireAuth();
 
-    const params = await context.params;
-    kind = params.kind;
+    kind = context.params.kind;
 
     // Return appropriate taxonomy
     switch (kind) {
