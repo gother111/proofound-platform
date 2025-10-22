@@ -1,6 +1,8 @@
+import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from './supabase/server';
 import type { Organization, OrganizationMember, Profile } from '@/db/schema';
 import { redirect } from 'next/navigation';
+import type { MembershipWithOrganization } from './orgs';
 
 type ProfileRow = Pick<
   Profile,
@@ -265,70 +267,77 @@ export async function assertOrgRole(orgId: string, userId: string, roles: string
 
 export type Role = 'owner' | 'admin' | 'member' | 'viewer';
 
-export async function resolveUserHomePath(
-  supabaseClient?: Awaited<ReturnType<typeof createClient>>
-) {
+export async function resolveUserHomePath(supabaseClient?: SupabaseClient): Promise<string> {
   const supabase = supabaseClient ?? (await createClient());
 
   const {
     data: { user },
-    error: authError,
+    error: authErr,
   } = await supabase.auth.getUser();
 
-  if (authError) {
-    console.error('Failed to get authenticated user for redirect resolution:', authError);
+  if (authErr || !user) {
+    console.info('[resolveUserHomePath] no-user-or-auth-error', { authErr: Boolean(authErr) });
     return '/app/i/home';
   }
 
-  if (!user) {
+  const { data: membership, error: membershipError } = await supabase
+    .from('organization_members')
+    .select('status, organization:organizations(slug)')
+    .eq('user_id', user.id)
+    .order('joined_at', { ascending: false })
+    .limit(1)
+    .maybeSingle<MembershipWithOrganization>();
+
+  const hasActiveOrg = membership?.status === 'active' && Boolean(membership.organization?.slug);
+
+  if (hasActiveOrg) {
+    const slug = membership!.organization!.slug!;
+    console.info('[resolveUserHomePath] active-org -> org-home', {
+      userId: user.id,
+      slug,
+    });
+    return `/app/o/${slug}/home`;
+  }
+
+  if (membershipError) {
+    console.info('[resolveUserHomePath] membership-error -> individual home', {
+      userId: user.id,
+      error: (membershipError as PostgrestError)?.message ?? String(membershipError),
+    });
     return '/app/i/home';
   }
 
-  const { data: profile, error: profileError } = await supabase
+  if (membership?.status === 'active') {
+    console.info('[resolveUserHomePath] active-org-missing-slug -> individual home', {
+      userId: user.id,
+    });
+    return '/app/i/home';
+  }
+
+  const { data: profile, error: profileErr } = await supabase
     .from('profiles')
     .select('persona')
     .eq('id', user.id)
     .maybeSingle();
 
-  if (profileError) {
-    console.error('Failed to load profile persona for redirect resolution:', profileError);
+  if (profileErr) {
+    console.info('[resolveUserHomePath] profile-error -> individual home', {
+      userId: user.id,
+      profileErr: String(profileErr),
+    });
     return '/app/i/home';
   }
 
-  const persona = (profile?.persona ?? 'unknown') as 'individual' | 'org_member' | 'unknown';
-
-  if (persona === 'individual') {
+  if (profile?.persona === 'individual') {
+    console.info('[resolveUserHomePath] persona-individual -> individual home', {
+      userId: user.id,
+    });
     return '/app/i/home';
   }
 
-  if (persona === 'org_member') {
-    const { data: membership, error: membershipError } = await supabase
-      .from('organization_members')
-      .select('org:organizations!inner(slug)')
-      .eq('user_id', user.id)
-      .eq('status', 'active')
-      .order('joined_at', { ascending: true })
-      .limit(1)
-      .maybeSingle();
-
-    if (membershipError) {
-      console.error(
-        'Failed to load organization membership for redirect resolution:',
-        membershipError
-      );
-      return '/onboarding';
-    }
-
-    const orgData = membership?.org;
-    const org = Array.isArray(orgData) ? orgData[0] : orgData;
-    const slug = org?.slug;
-    if (slug) {
-      return `/app/o/${slug}/home`;
-    }
-
-    console.warn('Org member user has no active organization membership', { userId: user.id });
-    return '/onboarding';
-  }
-
-  return '/onboarding';
+  console.info('[resolveUserHomePath] no-active-org -> individual home', {
+    userId: user.id,
+    persona: profile?.persona ?? null,
+  });
+  return '/app/i/home';
 }

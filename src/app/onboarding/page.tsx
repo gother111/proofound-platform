@@ -1,42 +1,23 @@
-'use client';
+import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
+import { resolveUserHomePath } from '@/lib/auth';
 
-import { useState } from 'react';
-import { PersonaChoice } from '@/components/onboarding/PersonaChoice';
-import { IndividualSetup } from '@/components/onboarding/IndividualSetup';
-import { OrganizationSetup } from '@/components/onboarding/OrganizationSetup';
+export default async function OnboardingPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
 
-type Persona = 'individual' | 'organization' | null;
-
-export default function OnboardingPage() {
-  const [selectedPersona, setSelectedPersona] = useState<Persona>(null);
-
-  if (!selectedPersona) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-secondary-100 px-4 py-12">
-        <div className="w-full max-w-4xl">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-display font-semibold text-primary-500 mb-2">
-              Welcome to Proofound
-            </h1>
-            <p className="text-lg text-neutral-dark-600">Let&apos;s get you set up</p>
-          </div>
-          <PersonaChoice onSelect={setSelectedPersona} />
-        </div>
-      </div>
-    );
+  if (userError) {
+    console.error('Failed to load authenticated user for onboarding:', userError);
   }
 
-  return (
-    <div className="min-h-screen bg-secondary-100 px-4 py-12">
-      <div className="w-full max-w-4xl mx-auto">
-        <button
-          onClick={() => setSelectedPersona(null)}
-          className="mb-6 text-sm text-neutral-dark-600 hover:text-primary-500 transition-colors"
-        >
-          ← Back to persona choice
-        </button>
-        {selectedPersona === 'individual' ? <IndividualSetup /> : <OrganizationSetup />}
-      </div>
-    </div>
-  );
+  if (!user) {
+    redirect('/login');
+  }
+
+  const homePath = await resolveUserHomePath(supabase);
+
+  redirect(homePath);
 }

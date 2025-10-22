@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { resolveUserHomePath } from '@/lib/auth';
+import { ensureOrgContextForUser, type MembershipWithOrganization } from '@/lib/orgs';
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -63,6 +64,86 @@ export async function GET(request: NextRequest) {
       }
     } catch (_) {
       // ignore invalid next parameter
+    }
+  }
+
+  const {
+    data: { user },
+    error: getUserError,
+  } = await supabase.auth.getUser();
+
+  if (getUserError) {
+    console.warn('[auth-callback] failed to load session user', {
+      error: String(getUserError),
+    });
+  }
+
+  if (user) {
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('persona')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (profileError) {
+      console.warn('[auth-callback] failed to load profile persona', {
+        userId: user.id,
+        error: String(profileError),
+      });
+    }
+
+    let persona = profile?.persona ?? null;
+
+    if (!profile && !profileError) {
+      const { error: insertError } = await supabase
+        .from('profiles')
+        .insert({ id: user.id, persona: 'unknown' });
+
+      if (insertError) {
+        console.warn('[auth-callback] failed to insert profile row', {
+          userId: user.id,
+          error: String(insertError),
+        });
+      } else {
+        persona = 'unknown';
+      }
+    }
+
+    const { data: membership, error: membershipError } = await supabase
+      .from('organization_members')
+      .select('status, organization:organizations(slug, display_name)')
+      .eq('user_id', user.id)
+      .order('joined_at', { ascending: false })
+      .limit(1)
+      .maybeSingle<MembershipWithOrganization>();
+
+    if (membershipError) {
+      console.warn('[auth-callback] failed to load membership status', {
+        userId: user.id,
+        error: String(membershipError),
+      });
+    }
+
+    let targetSlug = membership?.organization?.slug ?? null;
+
+    const shouldEnsureOrg = membership?.status === 'active' || persona !== 'individual';
+
+    if (shouldEnsureOrg) {
+      try {
+        targetSlug = await ensureOrgContextForUser(user.id, {
+          displayNameHint: membership?.organization?.display_name ?? null,
+          email: user.email ?? null,
+        });
+      } catch (error) {
+        console.warn('[auth-callback] ensureOrgContextForUser failed', {
+          userId: user.id,
+          error: String(error),
+        });
+      }
+    }
+
+    if (targetSlug) {
+      return NextResponse.redirect(new URL(`/app/o/${targetSlug}/home`, requestUrl.origin));
     }
   }
 
