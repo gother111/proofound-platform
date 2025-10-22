@@ -297,9 +297,15 @@ export async function resolveUserHomePath(
 
   const persona = (profile?.persona ?? 'unknown') as 'individual' | 'org_member' | 'unknown';
 
+  type MembershipWithOrganization = {
+    org_id: string;
+    joined_at: string | null;
+    org: { slug: string } | null;
+  };
+
   const { data: memberships, error: membershipError } = await supabase
     .from('organization_members')
-    .select(
+    .select<MembershipWithOrganization>(
       `
         org_id,
         joined_at,
@@ -320,7 +326,7 @@ export async function resolveUserHomePath(
     );
   }
 
-  const membershipOrgSlug = memberships?.[0]?.org?.slug as string | undefined;
+  const membershipOrgSlug = memberships?.[0]?.org?.slug ?? undefined;
 
   if (membershipOrgSlug) {
     if (persona !== 'org_member') {
