@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { VALUES_TAXONOMY, CAUSES_TAXONOMY, SKILLS_TAXONOMY } from '@/lib/taxonomy/data';
 import { log } from '@/lib/log';
+import type { ParamsPromise } from '@/types/next';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,9 +19,12 @@ export const dynamic = 'force-dynamic';
  *
  * Auth: Required
  */
-type TaxonomyRouteContext = { params: Promise<{ kind: string }> };
+type TaxonomyParams = { kind: string };
 
-export async function GET(request: NextRequest, context: TaxonomyRouteContext) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: ParamsPromise<TaxonomyParams> }
+) {
   let kind: string | undefined;
 
   try {
@@ -28,8 +32,7 @@ export async function GET(request: NextRequest, context: TaxonomyRouteContext) {
     // Auth check
     await requireAuth();
 
-    const params = await context.params;
-    kind = params.kind;
+    kind = (params as unknown as TaxonomyParams).kind;
 
     // Return appropriate taxonomy
     switch (kind) {

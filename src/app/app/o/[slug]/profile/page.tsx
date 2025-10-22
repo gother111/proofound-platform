@@ -5,16 +5,17 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { updateOrganization } from '@/actions/org';
+import type { ParamsPromise } from '@/types/next';
 
 export const dynamic = 'force-dynamic';
 
 export default async function OrganizationProfilePage({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: ParamsPromise<{ slug: string }>;
 }) {
   const user = await requireAuth();
-  const { slug } = await params;
+  const { slug } = params as unknown as { slug: string };
   const result = await getActiveOrg(slug, user.id);
 
   if (!result) {

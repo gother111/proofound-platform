@@ -5,16 +5,17 @@ import { Button } from '@/components/ui/button';
 import { acceptInvitation } from '@/actions/org';
 import { Building2, Mail } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
+import type { ParamsPromise } from '@/types/next';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AcceptInvitationPage({
   params,
 }: {
-  params: Promise<{ slug: string; token: string }>;
+  params: ParamsPromise<{ slug: string; token: string }>;
 }) {
   const user = await requireAuth();
-  const { slug, token } = await params;
+  const { slug, token } = params as unknown as { slug: string; token: string };
 
   const supabase = await createClient();
   const invitationQuery = await supabase

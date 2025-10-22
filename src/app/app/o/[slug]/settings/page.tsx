@@ -3,16 +3,17 @@ import { notFound, redirect } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { formatDate } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/server';
+import type { ParamsPromise } from '@/types/next';
 
 export const dynamic = 'force-dynamic';
 
 export default async function OrganizationSettingsPage({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: ParamsPromise<{ slug: string }>;
 }) {
   const user = await requireAuth();
-  const { slug } = await params;
+  const { slug } = params as unknown as { slug: string };
   const result = await getActiveOrg(slug, user.id);
 
   if (!result) {
