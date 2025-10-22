@@ -303,7 +303,7 @@ export async function resolveUserHomePath(
     org: { slug: string } | null;
   };
 
-  const { data: memberships, error: membershipError } = await supabase
+  const { data: membership, error: membershipError } = await supabase
     .from('organization_members')
     .select(
       `
@@ -314,11 +314,10 @@ export async function resolveUserHomePath(
         )
       `
     )
-    .returns<MembershipWithOrganization[]>()
     .eq('user_id', user.id)
     .eq('status', 'active')
     .order('joined_at', { ascending: true })
-    .limit(1);
+    .maybeSingle<MembershipWithOrganization>();
 
   if (membershipError) {
     console.error(
@@ -327,7 +326,7 @@ export async function resolveUserHomePath(
     );
   }
 
-  const membershipOrgSlug = memberships?.[0]?.org?.slug ?? undefined;
+  const membershipOrgSlug = membership?.org?.slug ?? undefined;
 
   if (membershipOrgSlug) {
     if (persona !== 'org_member') {
