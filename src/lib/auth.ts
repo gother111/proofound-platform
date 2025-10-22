@@ -305,7 +305,7 @@ export async function resolveUserHomePath(
 
   const { data: memberships, error: membershipError } = await supabase
     .from('organization_members')
-    .select<MembershipWithOrganization>(
+    .select(
       `
         org_id,
         joined_at,
@@ -314,6 +314,7 @@ export async function resolveUserHomePath(
         )
       `
     )
+    .returns<MembershipWithOrganization>()
     .eq('user_id', user.id)
     .eq('status', 'active')
     .order('joined_at', { ascending: true })
