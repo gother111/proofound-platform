@@ -1,118 +1,109 @@
-import { requireAuth, getActiveOrg, assertOrgRole } from '@/lib/auth';
 import { notFound } from 'next/navigation';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { updateOrganization } from '@/actions/org';
+import { requireAuth } from '@/lib/auth';
+import { Progress } from '@/components/ui/progress';
+import { getOrgBySlug, getViewerOrgMembership, viewerCanEditOrg } from '@/features/org/data';
+import { OrgBasicCard } from '@/features/org/profile/OrgBasicCard';
+import { OrgTagline } from '@/features/org/profile/OrgTagline';
+import { OrgVerifications } from '@/features/org/profile/OrgVerifications';
+import { OrgCauses } from '@/features/org/profile/OrgCauses';
+import { OrgImpactPipeline } from '@/features/org/profile/OrgImpactPipeline';
+import { OrgMissionVision } from '@/features/org/profile/OrgMissionVision';
+import { OrgCoreValues } from '@/features/org/profile/OrgCoreValues';
+import { OrgCommitments } from '@/features/org/profile/OrgCommitments';
 
-export const dynamic = 'force-dynamic';
+function completeness(org: Record<string, unknown>) {
+  const fields = [
+    'logo_url',
+    'tagline',
+    'size',
+    'industry',
+    'founded_date',
+    'legal_form',
+    'locations',
+    'mission',
+    'vision',
+    'core_values',
+    'causes',
+    'verifications',
+    'impact_pipeline',
+    'website_url',
+  ];
 
-export default async function OrganizationProfilePage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+  const score = fields.reduce((acc, field) => {
+    const value = org[field];
+    let filled = false;
+
+    if (Array.isArray(value)) {
+      filled = value.length > 0;
+    } else if (value && typeof value === 'object') {
+      filled = Object.keys(value as Record<string, unknown>).length > 0;
+    } else if (typeof value === 'string') {
+      filled = value.trim().length > 0;
+    } else {
+      filled = Boolean(value);
+    }
+
+    return acc + (filled ? 1 : 0);
+  }, 0);
+
+  return Math.round((score / fields.length) * 100);
+}
+
+export default async function OrganizationProfilePage({ params }: { params: { slug: string } }) {
+  const { slug } = params;
   const user = await requireAuth();
-  const { slug } = await params;
-  const result = await getActiveOrg(slug, user.id);
+  const org = await getOrgBySlug(slug);
 
-  if (!result) {
+  if (!org) {
     notFound();
   }
 
-  const { org, membership } = result;
-
-  // Check if user can edit
-  const canEdit = membership.role === 'owner' || membership.role === 'admin';
+  const membership = await getViewerOrgMembership(org.id, user.id);
+  const canEdit = viewerCanEditOrg(membership?.role);
+  const pct = completeness(org as Record<string, unknown>);
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-4xl font-display font-semibold text-primary-500 mb-2">
-          Organization Profile
-        </h1>
-        <p className="text-neutral-dark-600">
-          {canEdit ? 'Update your organization information' : 'View organization information'}
-        </p>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Basic Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form action={updateOrganization.bind(null, org.id) as any} className="space-y-6">
-            <div>
-              <Label htmlFor="displayName">Organization Name</Label>
-              <Input
-                id="displayName"
-                name="displayName"
-                defaultValue={org.displayName}
-                placeholder="Organization Name"
-                disabled={!canEdit}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="legalName">Legal Name (Optional)</Label>
-              <Input
-                id="legalName"
-                name="legalName"
-                defaultValue={org.legalName || ''}
-                placeholder="Legal company name"
-                disabled={!canEdit}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="mission">Mission Statement</Label>
-              <textarea
-                id="mission"
-                name="mission"
-                defaultValue={org.mission || ''}
-                placeholder="Describe your organization's mission and goals"
-                className="flex min-h-[120px] w-full rounded-lg border border-neutral-light-300 bg-white px-4 py-2 text-base transition-colors placeholder:text-neutral-dark-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 focus-visible:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50"
-                maxLength={2000}
-                disabled={!canEdit}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="website">Website</Label>
-              <Input
-                id="website"
-                name="website"
-                type="url"
-                defaultValue={org.website || ''}
-                placeholder="https://your-organization.com"
-                disabled={!canEdit}
-              />
-            </div>
-
-            {canEdit && <Button type="submit">Save Changes</Button>}
-          </form>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Organization Details</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+    <div className="space-y-8">
+      <div className="rounded-xl border bg-muted px-6 py-5">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-medium text-neutral-dark-700">URL Slug</p>
-            <p className="text-neutral-dark-600">{org.slug}</p>
-            <p className="text-xs text-neutral-dark-500 mt-1">
-              Your organization URL: /app/o/{org.slug}
+            <h2 className="text-xl font-semibold">Welcome to Proofound!</h2>
+            <p className="text-sm text-muted-foreground">
+              Your organization profile is a platform for transparency, impact, and meaningful
+              connections.
             </p>
           </div>
-          <div>
-            <p className="text-sm font-medium text-neutral-dark-700">Type</p>
-            <p className="text-neutral-dark-600 capitalize">{org.type}</p>
-          </div>
-        </CardContent>
-      </Card>
+          <div className="text-sm font-medium text-muted-foreground">{pct}% complete</div>
+        </div>
+        <div className="mt-3">
+          <Progress value={pct} />
+        </div>
+        <div className="mt-2 text-sm text-muted-foreground">
+          Start by adding your logo, mission, and core values
+        </div>
+      </div>
+
+      <OrgBasicCard org={org} orgId={org.id} canEdit={canEdit} />
+      <OrgTagline orgId={org.id} tagline={org.tagline ?? null} canEdit={canEdit} />
+
+      <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
+        <div className="space-y-6">
+          <OrgVerifications orgId={org.id} verifications={org.verifications} canEdit={canEdit} />
+          <OrgCauses orgId={org.id} causes={org.causes ?? []} canEdit={canEdit} />
+        </div>
+        <OrgImpactPipeline orgId={org.id} impactPipeline={org.impact_pipeline} canEdit={canEdit} />
+      </div>
+
+      <OrgMissionVision
+        orgId={org.id}
+        mission={org.mission ?? null}
+        vision={org.vision ?? null}
+        canEdit={canEdit}
+      />
+
+      <OrgCoreValues orgId={org.id} coreValues={org.core_values} canEdit={canEdit} />
+
+      <OrgCommitments orgId={org.id} commitments={org.commitments} canEdit={canEdit} />
     </div>
   );
 }

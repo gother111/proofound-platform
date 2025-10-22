@@ -1,40 +1,58 @@
-import { requireAuth, getActiveOrg } from '@/lib/auth';
 import { notFound } from 'next/navigation';
-import { LeftNav } from '@/components/app/LeftNav';
-import { TopBar } from '@/components/app/TopBar';
+import { requireAuth } from '@/lib/auth';
+import { OrgContextProvider } from '@/features/org/context';
+import { OrgSubnav } from '@/features/org/OrgSubnav';
+import { getOrgBySlug, getViewerOrgMembership, viewerCanEditOrg } from '@/features/org/data';
 
 export default async function OrganizationLayout({
   children,
   params,
 }: {
   children: React.ReactNode;
-  params: Promise<{ slug: string }>;
+  params: { slug: string };
 }) {
   const user = await requireAuth();
-  const { slug } = await params;
-  const result = await getActiveOrg(slug, user.id);
+  const { slug } = params;
 
-  if (!result) {
+  const org = await getOrgBySlug(slug);
+
+  if (!org) {
     notFound();
   }
 
-  const { org, membership } = result;
+  const membership = await getViewerOrgMembership(org.id, user.id);
 
-  const orgName = org.displayName || 'Organization';
-  const orgInitials = orgName
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
+  if (!membership || membership.status !== 'active') {
+    notFound();
+  }
+
+  const canEdit = viewerCanEditOrg(membership.role);
 
   return (
-    <div className="flex h-screen" style={{ backgroundColor: '#F5F3EE' }}>
-      <LeftNav basePath={`/app/o/${slug}`} />
-      <div className="flex-1 flex flex-col">
-        <TopBar userName={orgName} userInitials={orgInitials} />
-        <main className="flex-1 overflow-auto">{children}</main>
+    <OrgContextProvider
+      value={{
+        orgId: org.id,
+        slug: org.slug,
+        displayName: org.display_name ?? 'Organization',
+        canEdit,
+      }}
+    >
+      <div className="min-h-screen bg-muted/20">
+        <header className="border-b bg-background">
+          <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-6">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Organization
+              </p>
+              <h1 className="text-2xl font-semibold text-foreground">
+                {org.display_name ?? 'Organization'}
+              </h1>
+            </div>
+            <OrgSubnav slug={org.slug} />
+          </div>
+        </header>
+        <main className="mx-auto w-full max-w-6xl px-6 py-8">{children}</main>
       </div>
-    </div>
+    </OrgContextProvider>
   );
 }

@@ -1,52 +1,106 @@
-import { requireAuth, getActiveOrg } from '@/lib/auth';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { WhileAwayCard } from '@/components/dashboard/WhileAwayCard';
-import { GoalsCard } from '@/components/dashboard/GoalsCard';
-import { TasksVerificationsCard } from '@/components/dashboard/TasksVerificationsCard';
-import { ProjectsCard } from '@/components/dashboard/ProjectsCard';
-import { MatchingResultsCard } from '@/components/dashboard/MatchingResultsCard';
-import { ExploreOpportunitiesCard } from '@/components/dashboard/ExploreOpportunitiesCard';
-import { TeamRolesCard } from '@/components/dashboard/TeamRolesCard';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { getOrgBySlug, getOrgDashboardStats } from '@/features/org/data';
 
-export const dynamic = 'force-dynamic';
+export default async function OrganizationHome({ params }: { params: { slug: string } }) {
+  const { slug } = params;
+  const org = await getOrgBySlug(slug);
 
-export default async function OrganizationHomePage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
-  const user = await requireAuth();
-  const { slug } = await params;
-  const result = await getActiveOrg(slug, user.id);
-
-  if (!result) {
+  if (!org) {
     notFound();
   }
 
-  const { org, membership } = result;
-  const persona = 'organization';
+  const stats = await getOrgDashboardStats(org.id);
+  const basePath = `/app/o/${slug}`;
 
   return (
-    <div className="max-w-[1400px] mx-auto px-4 py-4">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* While Away - hidden by default */}
-        <div className="lg:col-span-3">
-          <WhileAwayCard />
-        </div>
+    <div className="space-y-6">
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <Card className="min-h-[220px]">
+          <CardHeader>
+            <CardTitle>Goals</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center justify-center text-center">
+            <p className="mb-4 text-muted-foreground">Set one meaningful goal for the week.</p>
+            <Button asChild>
+              <Link href={`${basePath}/goals/new`}>Create Goal</Link>
+            </Button>
+          </CardContent>
+        </Card>
 
-        {/* Row 1 */}
-        <GoalsCard />
-        <TasksVerificationsCard />
-        <ProjectsCard />
+        <Card className="min-h-[220px]">
+          <CardHeader>
+            <CardTitle>Tasks</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center justify-center text-center">
+            <p className="mb-4 text-muted-foreground">Build trust through verification.</p>
+            <Button asChild>
+              <Link href={`${basePath}/settings/verifications`}>Start</Link>
+            </Button>
+          </CardContent>
+        </Card>
 
-        {/* Row 2 - Matching spans 2 cols */}
-        <MatchingResultsCard className="lg:col-span-2" />
+        <Card className="min-h-[220px]">
+          <CardHeader>
+            <CardTitle>Projects</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center justify-center text-center">
+            <p className="mb-2 text-muted-foreground">
+              {stats.projectsCount > 0
+                ? `${stats.projectsCount} active ${stats.projectsCount === 1 ? 'project' : 'projects'}.`
+                : 'No active projects yet.'}
+            </p>
+            <Button asChild>
+              <Link href={`${basePath}/projects`}>Explore</Link>
+            </Button>
+          </CardContent>
+        </Card>
 
-        {/* Organization-specific card */}
-        <TeamRolesCard />
+        <Card className="min-h-[220px] md:col-span-2">
+          <CardHeader>
+            <CardTitle>Matches</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center justify-center text-center">
+            <p className="mb-4 text-muted-foreground">
+              Turn on matching to discover aligned people and projects.
+            </p>
+            <Button asChild>
+              <Link href={`${basePath}/settings/matching`}>Open preferences</Link>
+            </Button>
+          </CardContent>
+        </Card>
 
-        {/* Row 3 - Explore spans full width */}
-        <ExploreOpportunitiesCard className="lg:col-span-3" />
+        <Card className="min-h-[220px]">
+          <CardHeader>
+            <CardTitle>Team</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center justify-center text-center">
+            <p className="mb-2 text-muted-foreground">
+              {stats.membersCount > 0
+                ? `${stats.membersCount} active ${stats.membersCount === 1 ? 'member' : 'members'}.`
+                : 'Build your team.'}
+            </p>
+            <Button asChild>
+              <Link href={`${basePath}/team/invite`}>Add members</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="min-h-[220px] md:col-span-2 xl:col-span-3">
+          <CardHeader>
+            <CardTitle>Explore</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center justify-center text-center">
+            <p className="mb-4 text-muted-foreground">
+              Discover opportunities aligned with your interests.
+            </p>
+            <Button asChild>
+              <Link href="/explore">Start exploring</Link>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
