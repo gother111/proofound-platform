@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { OrgContextProvider } from '@/features/org/context';
 import { OrgSubnav } from '@/features/org/OrgSubnav';
 import { getOrgBySlug, getViewerOrgMembership, viewerCanEditOrg } from '@/features/org/data';
@@ -18,7 +18,30 @@ export default async function OrganizationLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const org = await getOrgBySlug(slug);
+  let org = await getOrgBySlug(slug);
+
+  if (!org) {
+    const { data: legacyMatch, error: legacyErr } = await supabase
+      .from('organization_slug_history')
+      .select('organization:organizations(id, slug, display_name)')
+      .eq('old_slug', slug)
+      .order('changed_at', { ascending: false })
+      .limit(1)
+      .maybeSingle<{
+        organization: { id: string; slug: string; display_name: string | null } | null;
+      }>();
+
+    if (legacyErr) {
+      console.error('[org/layout] legacy slug lookup failed', { slug, error: legacyErr });
+    }
+
+    const canonicalSlug = legacyMatch?.organization?.slug ?? null;
+
+    if (canonicalSlug) {
+      console.info('[org/layout] redirecting legacy slug', { from: slug, to: canonicalSlug });
+      redirect(`/o/${canonicalSlug}/home`);
+    }
+  }
 
   if (!org) {
     console.warn('[org/layout] notFound', {
@@ -55,7 +78,7 @@ export default async function OrganizationLayout({
     <OrgContextProvider
       value={{
         orgId: org.id,
-        slug: org.slug ?? slug,
+        slug: org.slug,
         displayName: org.display_name ?? 'Organization',
         canEdit,
       }}

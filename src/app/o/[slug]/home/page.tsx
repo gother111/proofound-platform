@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { getOrgBySlug, getOrgDashboardStats } from '@/features/org/data';
+import { OrgSlugBanner } from '@/features/org/ui/OrgSlugBanner';
 
 export default async function OrganizationHome({ params }: { params: { slug: string } }) {
   const { slug } = params;
@@ -17,6 +18,12 @@ export default async function OrganizationHome({ params }: { params: { slug: str
 
   return (
     <div className="space-y-6">
+      <OrgSlugBanner
+        orgId={org.id}
+        currentSlug={org.slug}
+        confirmed={org.slug_confirmed}
+        displayName={org.display_name}
+      />
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         <Card className="min-h-[220px]">
           <CardHeader>

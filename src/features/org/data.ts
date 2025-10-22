@@ -3,6 +3,7 @@ import { createServerClient } from '@/lib/supabase/server';
 export type OrgProfileRecord = {
   id: string;
   slug: string;
+  slug_confirmed: boolean;
   display_name: string;
   logo_url: string | null;
   tagline: string | null;
@@ -36,6 +37,7 @@ export async function getOrgBySlug(slug: string): Promise<OrgProfileRecord | nul
       `
         id,
         slug,
+        slug_confirmed,
         display_name,
         logo_url,
         tagline,

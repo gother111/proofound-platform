@@ -122,6 +122,7 @@ export const volunteering = pgTable('volunteering', {
 export const organizations = pgTable('organizations', {
   id: uuid('id').defaultRandom().primaryKey(),
   slug: text('slug').unique().notNull(),
+  slugConfirmed: boolean('slug_confirmed').default(false).notNull(),
   legalName: text('legal_name'),
   displayName: text('display_name').notNull(),
   type: text('type', {
@@ -147,6 +148,15 @@ export const organizations = pgTable('organizations', {
   createdBy: uuid('created_by').references(() => profiles.id),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const organizationSlugHistory = pgTable('organization_slug_history', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  organizationId: uuid('organization_id')
+    .references(() => organizations.id, { onDelete: 'cascade' })
+    .notNull(),
+  oldSlug: text('old_slug').notNull(),
+  changedAt: timestamp('changed_at').defaultNow().notNull(),
 });
 
 // Organization members
