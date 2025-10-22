@@ -28,7 +28,7 @@ export function OrganizationSetup() {
 
       // Success - redirect to org home
       if (result.orgSlug) {
-        router.push(`/app/o/${result.orgSlug}/home`);
+        router.push(`/o/${result.orgSlug}/home`);
       }
     } catch (err) {
       setError('Something went wrong. Please try again.');

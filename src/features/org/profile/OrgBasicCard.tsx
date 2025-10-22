@@ -91,7 +91,7 @@ export function OrgBasicCard({
 
   const locations = useMemo(() => normalizeLocations(org.locations), [org.locations]);
   const formattedFounded = formatDate(org.founded_date);
-  const basePath = `/app/o/${slug}`;
+  const basePath = `/o/${slug}`;
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();

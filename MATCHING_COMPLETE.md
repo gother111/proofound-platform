@@ -89,7 +89,7 @@ npm run db:push
 
 ### 4. Test as Organization
 
-1. Navigate to `/app/o/[your-org-slug]/matching`
+1. Navigate to `/o/[your-org-slug]/matching`
 2. Click "Create Your First Assignment"
 3. Complete the 7-step wizard:
    - Enter role title

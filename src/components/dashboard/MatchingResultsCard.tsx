@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 
 interface MatchingResultsCardProps {
   className?: string;
-  basePath?: string; // '/app/i' or '/app/o/[slug]'
+  basePath?: string; // '/app/i' or '/o/[slug]'
 }
 
 export function MatchingResultsCard({ className, basePath = '/app/i' }: MatchingResultsCardProps) {

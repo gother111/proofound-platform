@@ -2,9 +2,12 @@ import {
   createServerClient as createSupabaseServerClient,
   type CookieOptions,
 } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { cookies as getCookies } from 'next/headers';
 
-export async function createClient() {
+type RequestCookiesStore = ReturnType<typeof getCookies>;
+type CookiesFn = () => RequestCookiesStore | Promise<RequestCookiesStore>;
+
+export async function createClient(options?: { cookies?: CookiesFn }) {
   const supabaseUrl =
     process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || process.env.SUPABASE_URL?.trim() || '';
   const supabaseAnonKey =
@@ -25,7 +28,7 @@ export async function createClient() {
     throw err;
   }
 
-  const cookieStore = await cookies();
+  const cookieStore = await (options?.cookies ? options.cookies() : getCookies());
 
   const applyCookieMutation = (name: string, value: string, overrides?: CookieOptions) => {
     const mergedOptions: CookieOptions = {

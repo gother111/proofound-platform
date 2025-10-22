@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 
 interface ExploreOpportunitiesCardProps {
   className?: string;
-  basePath?: string; // '/app/i' or '/app/o/[slug]'
+  basePath?: string; // '/app/i' or '/o/[slug]'
 }
 
 const tabs = ['People', 'Projects', 'Partners'];

@@ -19,7 +19,7 @@ export default async function OrganizationSettingsPage({ params }: { params: { s
 
   // Only owners and admins can access settings
   if (membership.role !== 'owner' && membership.role !== 'admin') {
-    redirect(`/app/o/${slug}/home`);
+    redirect(`/o/${slug}/home`);
   }
 
   const supabase = await createClient();

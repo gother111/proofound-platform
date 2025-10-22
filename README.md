@@ -219,7 +219,7 @@ All tables have RLS enabled with policies:
 3. **Onboarding**:
    - Choose: Individual or Organization
    - **Individual**: Set handle, name, locale → `/app/i/home`
-   - **Organization**: Create org → Invite team → `/app/o/[slug]/home`
+   - **Organization**: Create org → Invite team → `/o/[slug]/home`
 
 ## App Shells
 
@@ -229,7 +229,7 @@ All tables have RLS enabled with policies:
 - Profile: Edit headline, bio, skills, location, visibility
 - Settings: Account, notifications, security, language
 
-### Organization Shell (`/app/o/[slug]/*`)
+### Organization Shell (`/o/[slug]/*`)
 
 - Home: Org overview, member count, activity
 - Profile: Edit mission, logo, website
@@ -437,10 +437,12 @@ For questions or issues:
 Built with ❤️ for authentic human connections.
 
 ### Lint in restricted CI
+
 `npm run lint` auto-skips when Next.js/deps cannot be installed (restricted CI).
 To force lint, set `FORCE_LINT=true` or run locally after `npm ci`.
 
 ### Environment setup (quick)
+
 1. Copy `.env.example` to `.env.local` and fill the values.
 2. In Supabase → Authentication → URL Configuration:
    - Set **Site URL** to the same domain as `NEXT_PUBLIC_SITE_URL` (or `SITE_URL` if you use the private fallback).

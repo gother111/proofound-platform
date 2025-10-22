@@ -76,7 +76,7 @@ export async function updateOrganization(orgId: string, formData: FormData) {
       meta: { changes: result.data },
     });
 
-    revalidatePath(`/app/o/${orgQuery.data.slug}`);
+    revalidatePath(`/o/${orgQuery.data.slug}`);
     return { success: true };
   } catch (error) {
     console.error('Unexpected organization update error:', error);
@@ -147,7 +147,7 @@ export async function inviteMember(orgId: string, formData: FormData) {
       meta: { role: result.data.role },
     });
 
-    revalidatePath(`/app/o/${orgQuery.data.slug}/members`);
+    revalidatePath(`/o/${orgQuery.data.slug}/members`);
     return { success: true };
   } catch (error) {
     console.error('Unexpected invite member error:', error);
@@ -213,7 +213,7 @@ export async function acceptInvitation(token: string) {
       meta: { role: invitation.role },
     });
 
-    revalidatePath(`/app/o/${orgQuery.data.slug}`);
+    revalidatePath(`/o/${orgQuery.data.slug}`);
     return { success: true, orgSlug: orgQuery.data.slug };
   } catch (error: any) {
     console.error('Unexpected invitation acceptance error:', error);
@@ -253,7 +253,7 @@ export async function removeMember(orgId: string, userId: string) {
       .maybeSingle();
 
     if (orgQuery.data?.slug) {
-      revalidatePath(`/app/o/${orgQuery.data.slug}/members`);
+      revalidatePath(`/o/${orgQuery.data.slug}/members`);
     }
     return { success: true };
   } catch (error) {

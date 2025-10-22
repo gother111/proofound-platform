@@ -36,10 +36,10 @@ Features:
 
 All pages built and working:
 
-- `/app/o/[slug]/home` - Org dashboard with member count and quick actions
-- `/app/o/[slug]/profile` - Organization profile editor (name, legal name, mission, website, type)
-- `/app/o/[slug]/members` - Member management with invite form, member list, role display, remove functionality
-- `/app/o/[slug]/settings` - Org settings with audit log viewer, org details
+- `/o/[slug]/home` - Org dashboard with member count and quick actions
+- `/o/[slug]/profile` - Organization profile editor (name, legal name, mission, website, type)
+- `/o/[slug]/members` - Member management with invite form, member list, role display, remove functionality
+- `/o/[slug]/settings` - Org settings with audit log viewer, org details
 
 Features:
 
@@ -95,7 +95,7 @@ Routes built:
 - `/` (landing)
 - `/login`, `/signup`, `/onboarding`
 - `/app/i/home`, `/app/i/profile`, `/app/i/settings`
-- `/app/o/[slug]/home`, `/app/o/[slug]/profile`, `/app/o/[slug]/members`, `/app/o/[slug]/settings`
+- `/o/[slug]/home`, `/o/[slug]/profile`, `/o/[slug]/members`, `/o/[slug]/settings`
 
 #### Configuration
 
@@ -180,7 +180,7 @@ To get to a working MVP that users can sign up and use:
    - Org name, slug, type inputs
    - Optional: team invite emails
    - Call `completeOnboarding` server action
-   - Redirect to `/app/o/[slug]/home`
+   - Redirect to `/o/[slug]/home`
 
 3. Test full flow: signup → onboarding → app access
 
@@ -199,7 +199,7 @@ To get to a working MVP that users can sign up and use:
 **Why**: Organization invite flow won't work without this
 **Tasks**:
 
-1. `/app/o/[slug]/invitations/[token]/page.tsx`
+1. `/o/[slug]/invitations/[token]/page.tsx`
 2. Token validation
 3. Accept → create membership
 4. Redirect to org dashboard
@@ -247,11 +247,11 @@ src/app/app/i/home/page.tsx
 src/app/app/i/profile/page.tsx
 src/app/app/i/settings/page.tsx
 
-src/app/app/o/[slug]/layout.tsx
-src/app/app/o/[slug]/home/page.tsx
-src/app/app/o/[slug]/profile/page.tsx
-src/app/app/o/[slug]/members/page.tsx
-src/app/app/o/[slug]/settings/page.tsx
+src → app → o → [slug]/layout.tsx
+src → app → o → [slug]/home/page.tsx
+src → app → o → [slug]/profile/page.tsx
+src → app → o → [slug]/members/page.tsx
+src → app → o → [slug]/settings/page.tsx
 
 MVP_STATUS.md (detailed progress)
 QUICKSTART.md (setup guide)

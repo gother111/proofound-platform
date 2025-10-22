@@ -265,7 +265,7 @@ export async function signIn(
       }
 
       if (targetSlug) {
-        destination = `/app/o/${targetSlug}/home`;
+        destination = `/o/${targetSlug}/home`;
       }
     }
 

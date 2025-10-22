@@ -122,7 +122,7 @@ All cards follow consistent empty state pattern:
 - Maintains `requireAuth()` check
 - Persona: `'individual'`
 
-#### Organization Home (`/src/app/app/o/[slug]/home/page.tsx`)
+#### Organization Home (`src → app → o → [slug]/home/page.tsx`)
 
 - Replaced old card layout with 3-column dashboard grid
 - Shows: Goals, Tasks, Projects, Matching (2 cols), TeamRoles, Explore (3 cols)
@@ -139,10 +139,10 @@ All cards follow consistent empty state pattern:
 - Passes `basePath="/app/i"` to LeftNav
 - Generates user initials from name
 
-#### Organization Layout (`/src/app/app/o/[slug]/layout.tsx`)
+#### Organization Layout (`src → app → o → [slug]/layout.tsx`)
 
 - Replaced horizontal navigation with LeftNav + TopBar
-- Passes `basePath="/app/o/${slug}"` to LeftNav
+- Passes `basePath="/o/${slug}"` to LeftNav
 - Uses organization name and initials in TopBar
 - Maintains all existing auth checks
 
@@ -157,10 +157,10 @@ All cards follow consistent empty state pattern:
 
 **Organization Routes:**
 
-- `/src/app/app/o/[slug]/projects/page.tsx`
-- `/src/app/app/o/[slug]/matching/page.tsx`
-- `/src/app/app/o/[slug]/verifications/page.tsx`
-- `/src/app/app/o/[slug]/opportunities/page.tsx`
+- `src → app → o → [slug]/projects/page.tsx`
+- `src → app → o → [slug]/matching/page.tsx`
+- `src → app → o → [slug]/verifications/page.tsx`
+- `src → app → o → [slug]/opportunities/page.tsx`
 
 All pages:
 
@@ -224,7 +224,7 @@ Mobile (< lg):
 ### Organization (`persona = 'organization'`)
 
 - Shows: **TeamRolesCard** (with "Add members" CTA)
-- Nav routes: `/app/o/[slug]/*`
+- Nav routes: `/o/[slug]/*`
 
 ## Acceptance Criteria Status
 
@@ -253,7 +253,7 @@ Mobile (< lg):
 
 - LeftNav is context-aware via `basePath` prop
 - Individual routes: `/app/i/home`, `/app/i/profile`, etc.
-- Organization routes: `/app/o/[slug]/home`, `/app/o/[slug]/profile`, etc.
+- Organization routes: `/o/[slug]/home`, `/o/[slug]/profile`, etc.
 
 ### Active State Detection
 
@@ -299,17 +299,17 @@ className = 'grid grid-cols-1 lg:grid-cols-3 gap-4';
 - `/src/app/app/i/matching/page.tsx`
 - `/src/app/app/i/verifications/page.tsx`
 - `/src/app/app/i/opportunities/page.tsx`
-- `/src/app/app/o/[slug]/projects/page.tsx`
-- `/src/app/app/o/[slug]/matching/page.tsx`
-- `/src/app/app/o/[slug]/verifications/page.tsx`
-- `/src/app/app/o/[slug]/opportunities/page.tsx`
+- `src → app → o → [slug]/projects/page.tsx`
+- `src → app → o → [slug]/matching/page.tsx`
+- `src → app → o → [slug]/verifications/page.tsx`
+- `src → app → o → [slug]/opportunities/page.tsx`
 
 ### Modified (4 files):
 
 - `/src/app/app/i/home/page.tsx` (replaced content)
-- `/src/app/app/o/[slug]/home/page.tsx` (replaced content)
+- `src → app → o → [slug]/home/page.tsx` (replaced content)
 - `/src/app/app/i/layout.tsx` (new navigation)
-- `/src/app/app/o/[slug]/layout.tsx` (new navigation)
+- `src → app → o → [slug]/layout.tsx` (new navigation)
 
 ### Protected (Not Modified):
 
@@ -339,7 +339,7 @@ className = 'grid grid-cols-1 lg:grid-cols-3 gap-4';
    - [ ] Resize browser → grid responds (3 cols → 1 col)
 
 2. **Organization Dashboard**
-   - [ ] Navigate to `/app/o/[slug]/home`
+   - [ ] Navigate to `/o/[slug]/home`
    - [ ] Verify 7 empty state cards render
    - [ ] Verify TeamRolesCard appears (with "Add members" button)
    - [ ] Click nav items → routing works with correct slug

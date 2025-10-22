@@ -131,7 +131,7 @@
 - [x] Onboarding page (/onboarding)
 - [ ] Individual app pages (/app/i/\*)
   - Structure defined, pages need implementation
-- [ ] Organization app pages (/app/o/[slug]/\*)
+- [ ] Organization app pages (/o/[slug]/\*)
   - Structure defined, pages need implementation
 - [ ] Settings pages
 - [ ] Legal pages (privacy, terms)
@@ -174,13 +174,13 @@
 - [ ] `/app/i/profile` - Profile editor
 - [ ] `/app/i/settings` - Settings tabs
 
-**Organization Shell (`/app/o/[slug]/*`)**
+**Organization Shell (`/o/[slug]/*`)**
 
-- [ ] `/app/o/[slug]/home` - Org overview
-- [ ] `/app/o/[slug]/profile` - Org profile editor
-- [ ] `/app/o/[slug]/members` - Members table with invite dialog
-- [ ] `/app/o/[slug]/settings` - Org settings + audit log
-- [ ] `/app/o/[slug]/invitations/[token]` - Accept invite page
+- [ ] `/o/[slug]/home` - Org overview
+- [ ] `/o/[slug]/profile` - Org profile editor
+- [ ] `/o/[slug]/members` - Members table with invite dialog
+- [ ] `/o/[slug]/settings` - Org settings + audit log
+- [ ] `/o/[slug]/invitations/[token]` - Accept invite page
 
 **Shared Pages**
 
@@ -319,7 +319,7 @@
    - Add profile edit functionality
 
 2. **Complete Organization Shell**
-   - Implement all `/app/o/[slug]/*` pages
+   - Implement all `/o/[slug]/*` pages
    - Create org management components
    - Implement invite flow end-to-end
 

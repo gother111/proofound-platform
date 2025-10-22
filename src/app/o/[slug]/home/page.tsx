@@ -13,7 +13,7 @@ export default async function OrganizationHome({ params }: { params: { slug: str
   }
 
   const stats = await getOrgDashboardStats(org.id);
-  const basePath = `/app/o/${slug}`;
+  const basePath = `/o/${slug}`;
 
   return (
     <div className="space-y-6">

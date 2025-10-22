@@ -99,7 +99,7 @@ Navigate to: `http://localhost:3000/app/i/home`
 
 ### Test Organization Persona
 
-Navigate to: `http://localhost:3000/app/o/[slug]/home`
+Navigate to: `http://localhost:3000/o/[slug]/home`
 (Replace [slug] with your organization slug)
 
 **Expected to see:**
@@ -237,7 +237,7 @@ None. This enhances existing routes without breaking changes.
 1. `/src/components/app/LeftNav.tsx` - Main navigation
 2. `/src/components/app/TopBar.tsx` - Top bar
 3. `/src/app/app/i/home/page.tsx` - Individual dashboard
-4. `/src/app/app/o/[slug]/home/page.tsx` - Organization dashboard
+4. `src → app → o → [slug]/home/page.tsx` - Organization dashboard
 5. `/src/components/dashboard/*.tsx` - All dashboard cards
 
 **Supporting Files:**

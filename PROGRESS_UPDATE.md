@@ -22,7 +22,7 @@
 - ✅ `OrganizationSetup` component - Full form with validation:
   - Org name, slug, type, legal name, mission, website
   - Role types (company, NGO, government, network, other)
-  - Automatic redirect to `/app/o/[slug]/home` on success
+  - Automatic redirect to `/o/[slug]/home` on success
 - ✅ Server actions updated:
   - `completeIndividualOnboarding` - Creates profile + individual_profile
   - `completeOrganizationOnboarding` - Creates org + adds user as owner
@@ -62,7 +62,7 @@ Signup → Login → /onboarding
 - ✅ Global 404 page (`src/app/not-found.tsx`)
   - Branded design with icon
   - Return home button
-- ✅ Organization-specific 404 (`src/app/app/o/[slug]/not-found.tsx`)
+- ✅ Organization-specific 404 (`src → app → o → [slug]/not-found.tsx`)
   - Special message for missing/inaccessible orgs
   - Link back to user profile
 
@@ -76,7 +76,7 @@ Signup → Login → /onboarding
 
 - `src/app/error.tsx`
 - `src/app/not-found.tsx`
-- `src/app/app/o/[slug]/not-found.tsx`
+- `src → app → o → [slug]/not-found.tsx`
 
 ---
 
@@ -122,7 +122,7 @@ Signup → Login → /onboarding
 
 **What was built**:
 
-- ✅ Accept invite page (`/app/o/[slug]/invitations/[token]`)
+- ✅ Accept invite page (`/o/[slug]/invitations/[token]`)
   - Displays organization details
   - Shows role being assigned
   - Validates invitation token
@@ -140,15 +140,15 @@ Signup → Login → /onboarding
 
 ```
 Admin invites → Email sent → Click link
-  → /app/o/[slug]/invitations/[token]
+  → /o/[slug]/invitations/[token]
   → Shows org info → Click "Accept"
-  → Redirect to /app/o/[slug]/home
+  → Redirect to /o/[slug]/home
   → User is now a member!
 ```
 
 **Files Created**:
 
-- `src/app/app/o/[slug]/invitations/[token]/page.tsx`
+- `src → app → o → [slug]/invitations/[token]/page.tsx`
 
 ---
 
@@ -166,7 +166,7 @@ Routes:
 - /_not-found
 - /login, /signup, /onboarding
 - /app/i/home, profile, settings (Individual)
-- /app/o/[slug]/home, profile, members, settings, invitations/[token] (Org)
+- /o/[slug]/home, profile, members, settings, invitations/[token] (Org)
 ```
 
 ### Quality Metrics
@@ -237,9 +237,9 @@ If you set up Supabase + Resend and run locally:
 2. **Organization Path**:
    - Sign up → Login → Choose "Organization"
    - Fill org form → Submit
-   - Lands on `/app/o/[slug]/home` dashboard
-   - Can edit org profile at `/app/o/[slug]/profile`
-   - Can manage members at `/app/o/[slug]/members`
+   - Lands on `/o/[slug]/home` dashboard
+   - Can edit org profile at `/o/[slug]/profile`
+   - Can manage members at `/o/[slug]/members`
    - Can invite members (email sent with token)
    - Invitee clicks link → Accept page → Joins org
 
@@ -349,8 +349,8 @@ Beyond the original plan:
 - `src/app/onboarding/page.tsx` (rewritten)
 - `src/app/error.tsx`
 - `src/app/not-found.tsx`
-- `src/app/app/o/[slug]/not-found.tsx`
-- `src/app/app/o/[slug]/invitations/[token]/page.tsx`
+- `src → app → o → [slug]/not-found.tsx`
+- `src → app → o → [slug]/invitations/[token]/page.tsx`
 
 **Actions** (1 modified):
 

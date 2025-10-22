@@ -71,14 +71,14 @@
 - ✅ `/app/i/profile` - Profile editing (basic + individual details)
 - ✅ `/app/i/settings` - Account, notifications, security, language
 
-#### Organization Shell (`/app/o/[slug]/*`)
+#### Organization Shell (`/o/[slug]/*`)
 
 - ✅ Layout with org switcher and navigation
-- ✅ `/app/o/[slug]/home` - Org dashboard with member count
-- ✅ `/app/o/[slug]/profile` - Organization profile editor
-- ✅ `/app/o/[slug]/members` - Member list with invite functionality
-- ✅ `/app/o/[slug]/settings` - Org settings with audit log viewer
-- ⚠️ `/app/o/[slug]/invitations/[token]` - Accept invite page - Needs implementation
+- ✅ `/o/[slug]/home` - Org dashboard with member count
+- ✅ `/o/[slug]/profile` - Organization profile editor
+- ✅ `/o/[slug]/members` - Member list with invite functionality
+- ✅ `/o/[slug]/settings` - Org settings with audit log viewer
+- ⚠️ `/o/[slug]/invitations/[token]` - Accept invite page - Needs implementation
 
 ### 6. Server Actions
 
@@ -226,7 +226,7 @@
    - Test all email flows
 
 3. **Implement Accept Invite Page** (Critical)
-   - `/app/o/[slug]/invitations/[token]` page
+   - `/o/[slug]/invitations/[token]` page
    - Token verification
    - Accept/reject functionality
    - Test invite → accept flow
@@ -328,9 +328,9 @@ If you set up the environment variables and database:
 5. ✅ **Individual Dashboard** - View at `/app/i/home` (after manual persona setup)
 6. ✅ **Individual Profile** - Edit at `/app/i/profile`
 7. ✅ **Individual Settings** - Configure at `/app/i/settings`
-8. ✅ **Organization Dashboard** - View at `/app/o/[slug]/home` (after manual org creation)
-9. ✅ **Organization Members** - Manage at `/app/o/[slug]/members`
-10. ✅ **Organization Settings** - View audit log at `/app/o/[slug]/settings`
+8. ✅ **Organization Dashboard** - View at `/o/[slug]/home` (after manual org creation)
+9. ✅ **Organization Members** - Manage at `/o/[slug]/members`
+10. ✅ **Organization Settings** - View audit log at `/o/[slug]/settings`
 
 ## 🚀 Ready for Production?
 

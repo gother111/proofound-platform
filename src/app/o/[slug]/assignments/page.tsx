@@ -17,7 +17,7 @@ export default function OrganizationAssignmentsPage({ params }: { params: { slug
             assignments to unlock matching across Proofound.
           </p>
           <Button asChild>
-            <Link href={`/app/o/${slug}/matching`}>Open assignment builder</Link>
+            <Link href={`/o/${slug}/matching`}>Open assignment builder</Link>
           </Button>
         </CardContent>
       </Card>

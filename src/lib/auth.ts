@@ -313,7 +313,7 @@ export async function resolveUserHomePath(supabaseClient?: SupabaseClient): Prom
         userId: user.id,
         slug: targetSlug,
       });
-      return `/app/o/${targetSlug}/home`;
+      return `/o/${targetSlug}/home`;
     }
   }
 
@@ -362,7 +362,7 @@ export async function resolveUserHomePath(supabaseClient?: SupabaseClient): Prom
       userId: user.id,
       slug: targetSlug,
     });
-    return `/app/o/${targetSlug}/home`;
+    return `/o/${targetSlug}/home`;
   }
 
   console.info('[resolveUserHomePath] no-active-org -> individual home', {

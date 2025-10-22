@@ -228,7 +228,7 @@ export async function completeOrganizationOnboarding(formData: FormData) {
       console.error('Failed to update persona after organization onboarding:', personaUpdate.error);
     }
 
-    revalidatePath(`/app/o/${orgSlug}`);
+    revalidatePath(`/o/${orgSlug}`);
     return { success: true, orgSlug };
   } catch (error: any) {
     console.error('Organization onboarding error:', error);

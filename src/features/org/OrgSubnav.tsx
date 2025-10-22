@@ -5,12 +5,12 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { label: 'Dashboard', path: (slug: string) => `/app/o/${slug}/home` },
-  { label: 'Profile', path: (slug: string) => `/app/o/${slug}/profile` },
-  { label: 'Projects', path: (slug: string) => `/app/o/${slug}/projects` },
-  { label: 'Assignments', path: (slug: string) => `/app/o/${slug}/assignments` },
-  { label: 'Team', path: (slug: string) => `/app/o/${slug}/team` },
-  { label: 'Settings', path: (slug: string) => `/app/o/${slug}/settings` },
+  { label: 'Dashboard', path: (slug: string) => `/o/${slug}/home` },
+  { label: 'Profile', path: (slug: string) => `/o/${slug}/profile` },
+  { label: 'Projects', path: (slug: string) => `/o/${slug}/projects` },
+  { label: 'Assignments', path: (slug: string) => `/o/${slug}/assignments` },
+  { label: 'Team', path: (slug: string) => `/o/${slug}/team` },
+  { label: 'Settings', path: (slug: string) => `/o/${slug}/settings` },
 ];
 
 export function OrgSubnav({ slug }: { slug: string }) {

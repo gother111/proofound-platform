@@ -1,8 +1,9 @@
+import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
-import { requireAuth } from '@/lib/auth';
 import { OrgContextProvider } from '@/features/org/context';
 import { OrgSubnav } from '@/features/org/OrgSubnav';
 import { getOrgBySlug, getViewerOrgMembership, viewerCanEditOrg } from '@/features/org/data';
+import { createServerClient } from '@/lib/supabase/server';
 
 export default async function OrganizationLayout({
   children,
@@ -11,18 +12,41 @@ export default async function OrganizationLayout({
   children: React.ReactNode;
   params: { slug: string };
 }) {
-  const user = await requireAuth();
   const { slug } = params;
 
   const org = await getOrgBySlug(slug);
 
   if (!org) {
+    console.warn('[org/layout] notFound', {
+      reason: 'org-not-found',
+      slug,
+      userId: null,
+    });
+    notFound();
+  }
+
+  const supabase = await createServerClient({ cookies });
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    console.warn('[org/layout] notFound', {
+      reason: 'no-user',
+      slug,
+    });
     notFound();
   }
 
   const membership = await getViewerOrgMembership(org.id, user.id);
 
   if (!membership || membership.status !== 'active') {
+    console.warn('[org/layout] notFound', {
+      reason: 'no-active-membership',
+      slug,
+      userId: user.id,
+      membership,
+    });
     notFound();
   }
 
@@ -32,7 +56,7 @@ export default async function OrganizationLayout({
     <OrgContextProvider
       value={{
         orgId: org.id,
-        slug: org.slug,
+        slug: org.slug ?? slug,
         displayName: org.display_name ?? 'Organization',
         canEdit,
       }}
