@@ -143,6 +143,10 @@ export async function GET(request: NextRequest) {
     }
 
     if (targetSlug) {
+      console.info('[auth/callback] redirect → org home', {
+        userId: user.id,
+        slug: targetSlug,
+      });
       return NextResponse.redirect(new URL(`/app/o/${targetSlug}/home`, requestUrl.origin));
     }
   }
