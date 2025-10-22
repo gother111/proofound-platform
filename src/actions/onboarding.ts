@@ -174,25 +174,22 @@ export async function completeOrganizationOnboarding(formData: FormData) {
     const orgId = randomUUID();
     const orgSlug = slug.toLowerCase();
 
-    const orgInsert = await supabase.from('organizations').insert(
-      {
-        id: orgId,
-        slug: orgSlug,
-        display_name: displayName,
-        legal_name: legalName || null,
-        type,
-        mission: mission || null,
-        website: website || null,
-        created_by: user.id,
-      },
-      { returning: 'minimal' }
-    );
+    const orgInsert = await supabase.from('organizations').insert({
+      id: orgId,
+      slug: orgSlug,
+      display_name: displayName,
+      legal_name: legalName || null,
+      type,
+      mission: mission || null,
+      website: website || null,
+      created_by: user.id,
+    });
 
     if (orgInsert.error) {
       if (orgInsert.error.message?.includes('row-level security')) {
         console.error(
-          'Organization insert failed because PostgREST tried to return the new row before any memberships existed.',
-          'Avoid immediately selecting the inserted organization (or adjust policies) so onboarding can finish creating the owner membership.',
+          'Organization insert failed because row-level security blocked the insert response before any memberships existed.',
+          'Ensure your policies allow creators to read their organizations immediately or avoid querying the row until the owner membership is established.',
           orgInsert.error
         );
       }
@@ -203,21 +200,18 @@ export async function completeOrganizationOnboarding(formData: FormData) {
       return { error: 'Failed to create organization. Please try again.' };
     }
 
-    const memberInsert = await supabase.from('organization_members').insert(
-      {
-        org_id: orgId,
-        user_id: user.id,
-        role: 'owner',
-        status: 'active',
-      },
-      { returning: 'minimal' }
-    );
+    const memberInsert = await supabase.from('organization_members').insert({
+      org_id: orgId,
+      user_id: user.id,
+      role: 'owner',
+      status: 'active',
+    });
 
     if (memberInsert.error) {
       if (memberInsert.error.message?.includes('row-level security')) {
         console.error(
-          'Organization member insert failed because PostgREST tried to return the row without the user yet meeting the SELECT policy.',
-          'Avoid requesting the inserted membership immediately (or adjust policies) so onboarding can finish.',
+          'Organization member insert failed because row-level security blocked the insert response under the current policies.',
+          'Ensure onboarding policies allow owners to view their memberships immediately after creation.',
           memberInsert.error
         );
       }
