@@ -298,35 +298,81 @@ export async function resolveUserHomePath(supabaseClient?: SupabaseClient): Prom
     });
   }
 
+  if (membership?.status === 'active' && membership.organization?.slug) {
+    console.info('[resolveUserHomePath]', {
+      case: 'active-org',
+      userId: user.id,
+      slug: membership.organization.slug,
+      membershipErr: Boolean(membershipErr),
+    });
+    return `/o/${membership.organization.slug}/home`;
+  }
+
   if (membership?.status === 'active' && membership.organization) {
-    let slug = membership.organization.slug ?? null;
+    try {
+      const ensuredSlug = await ensureOrgContextForUser(user.id, {
+        displayNameHint: membership.organization.display_name ?? null,
+        email: user.email ?? undefined,
+      });
 
-    if (!slug) {
-      try {
-        slug = await ensureOrgContextForUser(user.id, {
-          displayNameHint: membership.organization.display_name ?? null,
-        });
-      } catch (ensureError) {
-        console.warn('[resolveUserHomePath] ensure-org-context-failed', {
-          userId: user.id,
-          error: String(ensureError),
-        });
-      }
-    }
-
-    if (slug) {
       console.info('[resolveUserHomePath]', {
-        case: 'active-org',
+        case: 'ensured-org',
+        userId: user.id,
+        slug: ensuredSlug,
+        membershipErr: Boolean(membershipErr),
+      });
+
+      return `/o/${ensuredSlug}/home`;
+    } catch (ensureError) {
+      console.warn('[resolveUserHomePath] ensure-org-context-failed', {
+        userId: user.id,
+        error: String(ensureError),
+      });
+    }
+  }
+
+  const { data: profile, error: profileErr } = await supabase
+    .from('profiles')
+    .select('display_name, persona')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  if (profileErr) {
+    console.warn('[resolveUserHomePath] profile lookup failed', {
+      userId: user.id,
+      error: String(profileErr),
+    });
+  }
+
+  if ((profile?.persona as string | null) === 'org_member') {
+    try {
+      const slug = await ensureOrgContextForUser(user.id, {
+        displayNameHint: (profile?.display_name as string | null) ?? null,
+        email: user.email ?? undefined,
+      });
+
+      console.info('[resolveUserHomePath]', {
+        case: 'persona-org',
         userId: user.id,
         slug,
+        membershipErr: Boolean(membershipErr),
+        profileErr: Boolean(profileErr),
       });
+
       return `/o/${slug}/home`;
+    } catch (ensureError) {
+      console.warn('[resolveUserHomePath] ensure-org-context-failed-for-persona', {
+        userId: user.id,
+        error: String(ensureError),
+      });
     }
   }
 
   console.info('[resolveUserHomePath]', {
     case: 'individual',
     userId: user.id,
+    membershipErr: Boolean(membershipErr),
+    profileErr: Boolean(profileErr),
   });
   return '/i/home';
 }

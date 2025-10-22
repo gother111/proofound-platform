@@ -89,11 +89,20 @@ export async function ensureOrgContextForUser(
     .maybeSingle<MembershipWithOrganization>();
 
   if (membership?.status === 'active' && membership.organization) {
-    return ensureOrgSlugForId(
+    const slug = await ensureOrgSlugForId(
       membership.organization.id,
       membership.organization.display_name,
       admin
     );
+
+    console.info('[ensureOrgContextForUser] result', {
+      userId,
+      slug,
+      source: 'existing-membership',
+      createdOrg: false,
+    });
+
+    return slug;
   }
 
   const fallbackName =
@@ -134,5 +143,14 @@ export async function ensureOrgContextForUser(
     });
   }
 
-  return ensureOrgSlugForId(org.id, org.display_name, admin);
+  const slug = await ensureOrgSlugForId(org.id, org.display_name, admin);
+
+  console.info('[ensureOrgContextForUser] result', {
+    userId,
+    slug,
+    source: 'provisioned-org',
+    createdOrg: true,
+  });
+
+  return slug;
 }

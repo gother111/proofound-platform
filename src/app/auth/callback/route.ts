@@ -30,5 +30,10 @@ export async function GET(req: Request) {
 
   const slug = await ensureOrgContextForUser(user.id, { email: user.email ?? undefined });
 
+  console.info('[auth/callback] redirecting to org home', {
+    userId: user.id,
+    slug,
+  });
+
   return NextResponse.redirect(new URL(`/o/${slug}/home`, url.origin));
 }
