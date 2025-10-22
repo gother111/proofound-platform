@@ -2,7 +2,7 @@ import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from './supabase/server';
 import type { Organization, OrganizationMember, Profile } from '@/db/schema';
 import { redirect } from 'next/navigation';
-import type { MembershipWithOrganization } from './orgs';
+import { ensureOrgContextForUser, type MembershipWithOrganization } from './orgs';
 
 type ProfileRow = Pick<
   Profile,
@@ -288,28 +288,39 @@ export async function resolveUserHomePath(supabaseClient?: SupabaseClient): Prom
     .limit(1)
     .maybeSingle<MembershipWithOrganization>();
 
-  const hasActiveOrg = membership?.status === 'active' && Boolean(membership.organization?.slug);
+  let targetSlug = membership?.organization?.slug ?? null;
 
-  if (hasActiveOrg) {
-    const slug = membership!.organization!.slug!;
-    console.info('[resolveUserHomePath] active-org -> org-home', {
-      userId: user.id,
-      slug,
-    });
-    return `/app/o/${slug}/home`;
+  if (membership?.status === 'active') {
+    if (!targetSlug) {
+      try {
+        targetSlug = await ensureOrgContextForUser(user.id, {
+          displayNameHint: membership.organization?.display_name ?? null,
+        });
+        console.info('[resolveUserHomePath] active-org-ensured-slug', {
+          userId: user.id,
+          slug: targetSlug,
+        });
+      } catch (ensureError) {
+        console.warn('[resolveUserHomePath] ensure-org-context-failed', {
+          userId: user.id,
+          error: String(ensureError),
+        });
+      }
+    }
+
+    if (targetSlug) {
+      console.info('[resolveUserHomePath] active-org -> org-home', {
+        userId: user.id,
+        slug: targetSlug,
+      });
+      return `/app/o/${targetSlug}/home`;
+    }
   }
 
   if (membershipError) {
     console.info('[resolveUserHomePath] membership-error -> individual home', {
       userId: user.id,
       error: (membershipError as PostgrestError)?.message ?? String(membershipError),
-    });
-    return '/app/i/home';
-  }
-
-  if (membership?.status === 'active') {
-    console.info('[resolveUserHomePath] active-org-missing-slug -> individual home', {
-      userId: user.id,
     });
     return '/app/i/home';
   }
@@ -333,6 +344,25 @@ export async function resolveUserHomePath(supabaseClient?: SupabaseClient): Prom
       userId: user.id,
     });
     return '/app/i/home';
+  }
+
+  try {
+    targetSlug = await ensureOrgContextForUser(user.id, {
+      displayNameHint: membership?.organization?.display_name ?? null,
+    });
+  } catch (ensureError) {
+    console.warn('[resolveUserHomePath] ensure-org-context-persona-failed', {
+      userId: user.id,
+      error: String(ensureError),
+    });
+  }
+
+  if (targetSlug) {
+    console.info('[resolveUserHomePath] persona-org-member -> org-home', {
+      userId: user.id,
+      slug: targetSlug,
+    });
+    return `/app/o/${targetSlug}/home`;
   }
 
   console.info('[resolveUserHomePath] no-active-org -> individual home', {
