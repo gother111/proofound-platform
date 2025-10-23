@@ -80,12 +80,17 @@ async function verifyAssignmentAccess(userId: string, assignmentId: string): Pro
  *
  * Updates an assignment.
  */
-export async function PUT(request: NextRequest, context: { params: { id: string } }) {
+export async function PUT(request: NextRequest) {
   let id: string | undefined;
 
   try {
     const { db } = await import('@/db');
-    id = context.params.id;
+    const match = request.nextUrl.pathname.match(/\/api\/assignments\/(.+)$/);
+    id = match?.[1];
+
+    if (!id) {
+      return NextResponse.json({ error: 'Assignment id missing in request path' }, { status: 400 });
+    }
 
     const user = await requireAuth();
 
@@ -142,12 +147,17 @@ export async function PUT(request: NextRequest, context: { params: { id: string 
  *
  * Deletes an assignment.
  */
-export async function DELETE(request: NextRequest, context: { params: { id: string } }) {
+export async function DELETE(request: NextRequest) {
   let id: string | undefined;
 
   try {
     const { db } = await import('@/db');
-    id = context.params.id;
+    const match = request.nextUrl.pathname.match(/\/api\/assignments\/(.+)$/);
+    id = match?.[1];
+
+    if (!id) {
+      return NextResponse.json({ error: 'Assignment id missing in request path' }, { status: 400 });
+    }
 
     const user = await requireAuth();
 
