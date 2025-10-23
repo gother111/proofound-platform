@@ -18,7 +18,7 @@ export const dynamic = 'force-dynamic';
  *
  * Auth: Required
  */
-export async function GET(request: NextRequest, context: { params: { kind: string } }) {
+export async function GET(request: NextRequest) {
   let kind: string | undefined;
 
   try {
@@ -26,7 +26,13 @@ export async function GET(request: NextRequest, context: { params: { kind: strin
     // Auth check
     await requireAuth();
 
-    kind = context.params.kind;
+    const pathname = request.nextUrl.pathname;
+    const segments = pathname.replace(/\/+$/, '').split('/');
+    kind = segments.at(-1);
+
+    if (!kind) {
+      return NextResponse.json({ error: 'Missing taxonomy kind.' }, { status: 400 });
+    }
 
     // Return appropriate taxonomy
     switch (kind) {
