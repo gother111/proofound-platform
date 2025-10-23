@@ -18,9 +18,7 @@ export const dynamic = 'force-dynamic';
  *
  * Auth: Required
  */
-type TaxonomyParams = { kind: string };
-
-export async function GET(request: NextRequest, { params }: { params: TaxonomyParams }) {
+export async function GET(request: NextRequest, context: { params: { kind: string } }) {
   let kind: string | undefined;
 
   try {
@@ -28,7 +26,7 @@ export async function GET(request: NextRequest, { params }: { params: TaxonomyPa
     // Auth check
     await requireAuth();
 
-    kind = params.kind;
+    kind = context.params.kind;
 
     // Return appropriate taxonomy
     switch (kind) {
