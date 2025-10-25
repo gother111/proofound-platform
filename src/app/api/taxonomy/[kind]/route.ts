@@ -18,18 +18,14 @@ export const dynamic = 'force-dynamic';
  *
  * Auth: Required
  */
-type TaxonomyRouteContext = { params: Promise<{ kind: string }> };
-
-export async function GET(request: NextRequest, context: TaxonomyRouteContext) {
-  let kind: string | undefined;
-
+export async function GET(request: NextRequest, { params }: { params: Promise<{ kind: string }> }) {
   try {
     // Feature flag check
     // Auth check
     await requireAuth();
 
-    const params = await context.params;
-    kind = params.kind;
+    const resolvedParams = await params;
+    const { kind } = resolvedParams;
 
     // Return appropriate taxonomy
     switch (kind) {
@@ -49,8 +45,9 @@ export async function GET(request: NextRequest, context: TaxonomyRouteContext) {
         );
     }
   } catch (error) {
+    const resolvedParams = await params;
     log.error('taxonomy.fetch.failed', {
-      kind,
+      kind: resolvedParams.kind,
       error: error instanceof Error ? error.message : 'Unknown error',
     });
 

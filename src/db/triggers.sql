@@ -1,6 +1,14 @@
--- Trigger to create profile when user signs up
+-- ============================================================================
+-- SECURE DATABASE FUNCTIONS WITH EXPLICIT SEARCH_PATH
+-- ============================================================================
+
+-- Handle new user creation
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
 BEGIN
   INSERT INTO public.profiles (id, display_name, created_at, updated_at)
   VALUES (
@@ -12,23 +20,31 @@ BEGIN
   ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
--- Trigger on auth.users insert
+-- Update updated_at timestamp
+CREATE OR REPLACE FUNCTION public.handle_updated_at()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$;
+
+-- ============================================================================
+-- TRIGGERS
+-- ============================================================================
+
+-- Trigger for new user creation
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_new_user();
-
--- Trigger to auto-update updated_at timestamp
-CREATE OR REPLACE FUNCTION public.handle_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
 
 -- Apply updated_at trigger to relevant tables
 DROP TRIGGER IF EXISTS set_updated_at_profiles ON public.profiles;
@@ -67,40 +83,58 @@ CREATE TRIGGER set_updated_at_volunteering
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_updated_at();
 
--- Keep profile personas in sync with organization membership
-CREATE OR REPLACE FUNCTION public.ensure_org_member_persona()
-RETURNS TRIGGER AS $$
-BEGIN
-  IF NEW.status = 'active' THEN
-    UPDATE public.profiles
-    SET persona = 'org_member'
-    WHERE id = NEW.user_id
-      AND persona IS DISTINCT FROM 'org_member';
-  END IF;
-
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS set_persona_on_org_member_insert ON public.organization_members;
-CREATE TRIGGER set_persona_on_org_member_insert
-  AFTER INSERT ON public.organization_members
+-- Add triggers for new tables
+DROP TRIGGER IF EXISTS set_updated_at_matching_profiles ON public.matching_profiles;
+CREATE TRIGGER set_updated_at_matching_profiles
+  BEFORE UPDATE ON public.matching_profiles
   FOR EACH ROW
-  EXECUTE FUNCTION public.ensure_org_member_persona();
+  EXECUTE FUNCTION public.handle_updated_at();
 
-DROP TRIGGER IF EXISTS set_persona_on_org_member_update ON public.organization_members;
-CREATE TRIGGER set_persona_on_org_member_update
-  AFTER UPDATE ON public.organization_members
+DROP TRIGGER IF EXISTS set_updated_at_skills ON public.skills;
+CREATE TRIGGER set_updated_at_skills
+  BEFORE UPDATE ON public.skills
   FOR EACH ROW
-  EXECUTE FUNCTION public.ensure_org_member_persona();
+  EXECUTE FUNCTION public.handle_updated_at();
 
--- Backfill personas for existing active organization members
-UPDATE public.profiles
-SET persona = 'org_member'
-WHERE id IN (
-  SELECT user_id
-  FROM public.organization_members
-  WHERE status = 'active'
-)
-AND persona IS DISTINCT FROM 'org_member';
+DROP TRIGGER IF EXISTS set_updated_at_assignments ON public.assignments;
+CREATE TRIGGER set_updated_at_assignments
+  BEFORE UPDATE ON public.assignments
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_updated_at();
+
+DROP TRIGGER IF EXISTS set_updated_at_matches ON public.matches;
+CREATE TRIGGER set_updated_at_matches
+  BEFORE UPDATE ON public.matches
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_updated_at();
+
+DROP TRIGGER IF EXISTS set_updated_at_match_interest ON public.match_interest;
+CREATE TRIGGER set_updated_at_match_interest
+  BEFORE UPDATE ON public.match_interest
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_updated_at();
+
+DROP TRIGGER IF EXISTS set_updated_at_capabilities ON public.capabilities;
+CREATE TRIGGER set_updated_at_capabilities
+  BEFORE UPDATE ON public.capabilities
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_updated_at();
+
+DROP TRIGGER IF EXISTS set_updated_at_evidence ON public.evidence;
+CREATE TRIGGER set_updated_at_evidence
+  BEFORE UPDATE ON public.evidence
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_updated_at();
+
+DROP TRIGGER IF EXISTS set_updated_at_skill_endorsements ON public.skill_endorsements;
+CREATE TRIGGER set_updated_at_skill_endorsements
+  BEFORE UPDATE ON public.skill_endorsements
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_updated_at();
+
+DROP TRIGGER IF EXISTS set_updated_at_growth_plans ON public.growth_plans;
+CREATE TRIGGER set_updated_at_growth_plans
+  BEFORE UPDATE ON public.growth_plans
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_updated_at();
 

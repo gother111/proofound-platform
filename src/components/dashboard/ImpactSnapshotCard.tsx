@@ -8,8 +8,10 @@ export function ImpactSnapshotCard() {
         Impact
       </h5>
       <div className="text-center py-6">
-        <TrendingUp className="w-10 h-10 mx-auto mb-2 text-muted" />
-        <p className="text-xs text-muted-foreground">Track your impact as you grow.</p>
+        <TrendingUp className="w-10 h-10 mx-auto mb-2" style={{ color: '#E8E6DD' }} />
+        <p className="text-xs" style={{ color: '#6B6760' }}>
+          Track your impact as you grow.
+        </p>
       </div>
     </Card>
   );

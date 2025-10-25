@@ -37,7 +37,7 @@ export default async function OrganizationHomePage({
         <TasksCard />
 
         {/* Row 2 - Matching spans 2 cols */}
-        <MatchingResultsCard className="lg:col-span-2" />
+        <MatchingResultsCard className="lg:col-span-2" basePath={`/app/o/${slug}`} />
 
         {/* Organization-specific card */}
         <TeamRolesCard />

@@ -5,7 +5,7 @@
  * Users can select a preset or customize weights via the UI.
  */
 
-export interface WeightPreset extends Record<string, number> {
+export interface WeightPreset {
   values: number;
   causes: number;
   skills: number;

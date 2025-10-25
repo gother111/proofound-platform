@@ -9,7 +9,6 @@ import { checkRateLimit, getRateLimitIdentifier } from '@/lib/rate-limit';
 import { headers } from 'next/headers';
 import type { AuthError } from '@supabase/supabase-js';
 import { resolveUserHomePath } from '@/lib/auth';
-import { ensureOrgContextForUser, type MembershipWithOrganization } from '@/lib/orgs';
 
 const signUpSchema = z.object({
   email: z.string().email(),
@@ -134,8 +133,9 @@ export async function signUp(
       const verificationEmail = signUpResult.user?.email ?? result.data.email;
       await resendVerificationEmail(supabase, verificationEmail, siteUrl);
       return {
-        error: null,
-        success: true,
+        error:
+          'An account with this email already exists. We just sent a fresh verification link to your inbox.',
+        success: false,
       };
     }
 
@@ -193,84 +193,7 @@ export async function signIn(
       return { error: mapSupabaseSignInError(error, email) };
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    let destination: string | null = null;
-
-    if (user) {
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('persona')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      if (profileError) {
-        console.warn('[signIn] failed to load profile persona', {
-          userId: user.id,
-          error: String(profileError),
-        });
-      }
-
-      let persona = profile?.persona ?? null;
-
-      if (!profile && !profileError) {
-        const { error: insertError } = await supabase
-          .from('profiles')
-          .insert({ id: user.id, persona: 'unknown' });
-
-        if (insertError) {
-          console.warn('[signIn] failed to insert profile row', {
-            userId: user.id,
-            error: String(insertError),
-          });
-        } else {
-          persona = 'unknown';
-        }
-      }
-
-      const { data: membership, error: membershipError } = await supabase
-        .from('organization_members')
-        .select('status, organization:organizations(slug, display_name)')
-        .eq('user_id', user.id)
-        .order('joined_at', { ascending: false })
-        .limit(1)
-        .maybeSingle<MembershipWithOrganization>();
-
-      if (membershipError) {
-        console.warn('[signIn] failed to load membership status', {
-          userId: user.id,
-          error: String(membershipError),
-        });
-      }
-
-      let targetSlug = membership?.organization?.slug ?? null;
-
-      const shouldEnsureOrg = membership?.status === 'active' || persona !== 'individual';
-
-      if (shouldEnsureOrg) {
-        try {
-          targetSlug = await ensureOrgContextForUser(user.id, {
-            displayNameHint: membership?.organization?.display_name ?? null,
-            email: user.email ?? null,
-          });
-        } catch (ensureError) {
-          console.warn('[signIn] ensureOrgContextForUser failed', {
-            userId: user.id,
-            error: String(ensureError),
-          });
-        }
-      }
-
-      if (targetSlug) {
-        destination = `/app/o/${targetSlug}/home`;
-      }
-    }
-
-    if (!destination) {
-      destination = await resolveUserHomePath(supabase);
-    }
+    const destination = await resolveUserHomePath();
 
     revalidatePath('/', 'layout');
     redirect(destination);

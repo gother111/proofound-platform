@@ -1,9 +1,9 @@
-import { requireAuth } from '@/lib/auth';
+import { requirePersona } from '@/lib/auth';
 import { LeftNav } from '@/components/app/LeftNav';
 import { TopBar } from '@/components/app/TopBar';
 
 export default async function IndividualLayout({ children }: { children: React.ReactNode }) {
-  const user = await requireAuth();
+  const user = await requirePersona('individual');
 
   const userName = user.displayName || user.handle || 'User';
   const userInitials = userName

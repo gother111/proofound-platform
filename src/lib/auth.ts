@@ -1,8 +1,7 @@
-import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from './supabase/server';
 import type { Organization, OrganizationMember, Profile } from '@/db/schema';
 import { redirect } from 'next/navigation';
-import type { MembershipWithOrganization } from './orgs';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 type ProfileRow = Pick<
   Profile,
@@ -285,77 +284,63 @@ export async function assertOrgRole(orgId: string, userId: string, roles: string
 
 export type Role = 'owner' | 'admin' | 'member' | 'viewer';
 
-export async function resolveUserHomePath(supabaseClient?: SupabaseClient): Promise<string> {
-  const supabase = supabaseClient ?? (await createClient());
+export async function getPersona(userId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase.from('profiles').select('persona').eq('id', userId).maybeSingle();
+
+  return (data?.persona as ProfileRow['persona']) ?? 'unknown';
+}
+
+async function getFirstOrganizationSlug(userId: string) {
+  const organizations = await getUserOrganizations(userId);
+  return organizations[0]?.org.slug ?? null;
+}
+
+export async function resolveUserHomePath(client?: SupabaseClient) {
+  const supabase = client ?? (await createClient());
 
   const {
     data: { user },
-    error: authErr,
   } = await supabase.auth.getUser();
 
-  if (authErr || !user) {
-    console.info('[resolveUserHomePath] no-user-or-auth-error', { authErr: Boolean(authErr) });
+  if (!user) {
+    return '/login';
+  }
+
+  const persona = await getPersona(user.id);
+
+  if (persona === 'individual') {
     return '/app/i/home';
   }
 
-  const { data: membership, error: membershipError } = await supabase
-    .from('organization_members')
-    .select('status, organization:organizations(slug)')
-    .eq('user_id', user.id)
-    .order('joined_at', { ascending: false })
-    .limit(1)
-    .maybeSingle<MembershipWithOrganization>();
-
-  const hasActiveOrg = membership?.status === 'active' && Boolean(membership.organization?.slug);
-
-  if (hasActiveOrg) {
-    const slug = membership!.organization!.slug!;
-    console.info('[resolveUserHomePath] active-org -> org-home', {
-      userId: user.id,
-      slug,
-    });
-    return `/app/o/${slug}/home`;
+  if (persona === 'org_member') {
+    const slug = await getFirstOrganizationSlug(user.id);
+    if (slug) {
+      return `/app/o/${slug}/home`;
+    }
   }
 
-  if (membershipError) {
-    console.info('[resolveUserHomePath] membership-error -> individual home', {
-      userId: user.id,
-      error: (membershipError as PostgrestError)?.message ?? String(membershipError),
-    });
-    return '/app/i/home';
+  return '/onboarding';
+}
+
+export async function requirePersona(expected: ProfileRow['persona']) {
+  const user = await requireAuth();
+
+  if (user.persona === expected) {
+    return user;
   }
 
-  if (membership?.status === 'active') {
-    console.info('[resolveUserHomePath] active-org-missing-slug -> individual home', {
-      userId: user.id,
-    });
-    return '/app/i/home';
+  if (user.persona === 'individual') {
+    redirect('/app/i/home');
   }
 
-  const { data: profile, error: profileErr } = await supabase
-    .from('profiles')
-    .select('persona')
-    .eq('id', user.id)
-    .maybeSingle();
-
-  if (profileErr) {
-    console.info('[resolveUserHomePath] profile-error -> individual home', {
-      userId: user.id,
-      profileErr: String(profileErr),
-    });
-    return '/app/i/home';
+  if (user.persona === 'org_member') {
+    const slug = await getFirstOrganizationSlug(user.id);
+    if (slug) {
+      redirect(`/app/o/${slug}/home`);
+    }
+    redirect('/onboarding');
   }
 
-  if (profile?.persona === 'individual') {
-    console.info('[resolveUserHomePath] persona-individual -> individual home', {
-      userId: user.id,
-    });
-    return '/app/i/home';
-  }
-
-  console.info('[resolveUserHomePath] no-active-org -> individual home', {
-    userId: user.id,
-    persona: profile?.persona ?? null,
-  });
-  return '/app/i/home';
+  redirect('/onboarding');
 }
