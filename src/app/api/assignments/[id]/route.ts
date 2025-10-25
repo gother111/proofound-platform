@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
-import { db } from '@/db';
 import { assignments, organizationMembers } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { log } from '@/lib/log';
@@ -56,6 +55,7 @@ const AssignmentUpdateSchema = z.object({
  * Helper to verify user owns the assignment's organization
  */
 async function verifyAssignmentAccess(userId: string, assignmentId: string): Promise<boolean> {
+  const { db } = await import('@/db');
   const assignment = await db.query.assignments.findFirst({
     where: eq(assignments.id, assignmentId),
   });
@@ -80,14 +80,17 @@ async function verifyAssignmentAccess(userId: string, assignmentId: string): Pro
  *
  * Updates an assignment.
  */
-type AssignmentRouteContext = { params: Promise<{ id: string }> };
-
-export async function PUT(request: NextRequest, context: AssignmentRouteContext) {
+export async function PUT(request: NextRequest) {
   let id: string | undefined;
 
   try {
-    const params = await context.params;
-    id = params.id;
+    const { db } = await import('@/db');
+    const match = request.nextUrl.pathname.match(/\/api\/assignments\/(.+)$/);
+    id = match?.[1];
+
+    if (!id) {
+      return NextResponse.json({ error: 'Assignment id missing in request path' }, { status: 400 });
+    }
 
     const user = await requireAuth();
 
@@ -144,12 +147,17 @@ export async function PUT(request: NextRequest, context: AssignmentRouteContext)
  *
  * Deletes an assignment.
  */
-export async function DELETE(request: NextRequest, context: AssignmentRouteContext) {
+export async function DELETE(request: NextRequest) {
   let id: string | undefined;
 
   try {
-    const params = await context.params;
-    id = params.id;
+    const { db } = await import('@/db');
+    const match = request.nextUrl.pathname.match(/\/api\/assignments\/(.+)$/);
+    id = match?.[1];
+
+    if (!id) {
+      return NextResponse.json({ error: 'Assignment id missing in request path' }, { status: 400 });
+    }
 
     const user = await requireAuth();
 

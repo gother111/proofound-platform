@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useFormState, useFormStatus } from 'react-dom';
 import { signUp, type SignUpState } from '@/actions/auth';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import SocialSignInButtons from '@/components/auth/social-sign-in-buttons';
+import { PERSONA, type PersonaValue } from '@/constants/persona';
 
 const initialState: SignUpState = {
   error: null,
@@ -24,16 +25,34 @@ function SubmitButton() {
   );
 }
 
+type PersonaChoice = PersonaValue;
+
+const personaOptions: { value: PersonaChoice; title: string; description: string }[] = [
+  {
+    value: PERSONA.INDIVIDUAL,
+    title: 'Individual',
+    description: 'Create a personal profile and explore opportunities for yourself.',
+  },
+  {
+    value: PERSONA.ORG_MEMBER,
+    title: 'Organization',
+    description: 'Represent an organization, invite team members, and manage your impact.',
+  },
+];
+
 export default function SignUpPage() {
   const [state, formAction] = useFormState(signUp, initialState);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [personaChoice, setPersonaChoice] = useState<PersonaChoice>(PERSONA.INDIVIDUAL);
 
   useEffect(() => {
     if (state.success) {
       setPassword('');
     }
   }, [state.success]);
+
+  const personaForForm = useMemo(() => personaChoice, [personaChoice]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-secondary-100 px-4">
@@ -43,7 +62,33 @@ export default function SignUpPage() {
         </h1>
         <p className="text-neutral-dark-600 mb-8">Join Proofound and get started</p>
 
-        <SocialSignInButtons className="mb-6" />
+        <div className="mb-6 space-y-3">
+          <p className="text-sm font-medium text-neutral-dark-700">How will you use Proofound?</p>
+          <fieldset className="space-y-2">
+            <legend className="sr-only">Persona</legend>
+            {personaOptions.map((option) => {
+              const isSelected = personaChoice === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setPersonaChoice(option.value)}
+                  className={`w-full rounded-xl border px-4 py-3 text-left transition-colors ${
+                    isSelected
+                      ? 'border-primary-400 bg-primary-50 text-primary-800'
+                      : 'border-neutral-light-300 hover:border-primary-300'
+                  }`}
+                  aria-pressed={isSelected}
+                >
+                  <span className="block text-sm font-semibold">{option.title}</span>
+                  <span className="block text-xs text-neutral-dark-500">{option.description}</span>
+                </button>
+              );
+            })}
+          </fieldset>
+        </div>
+
+        <SocialSignInButtons className="mb-6" persona={personaForForm} />
 
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center" aria-hidden="true">
@@ -75,6 +120,8 @@ export default function SignUpPage() {
         )}
 
         <form action={formAction} className="space-y-6">
+          <input type="hidden" name="persona" value={personaForForm} />
+
           <div>
             <Label htmlFor="email">Email</Label>
             <Input

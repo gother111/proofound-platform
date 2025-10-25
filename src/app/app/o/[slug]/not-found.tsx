@@ -2,8 +2,12 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Building2 } from 'lucide-react';
+import { createClient } from '@/lib/supabase/server';
+import { resolveUserHomePath } from '@/lib/auth';
 
-export default function OrgNotFound() {
+export default async function OrgNotFound() {
+  const supabase = await createClient();
+  const fallbackPath = await resolveUserHomePath(supabase);
   return (
     <div className="min-h-screen flex items-center justify-center bg-secondary-100 px-4">
       <Card className="max-w-md w-full">
@@ -18,7 +22,7 @@ export default function OrgNotFound() {
         </CardHeader>
         <CardContent className="space-y-4">
           <Button asChild className="w-full">
-            <Link href="/app/i/home">Go to your profile</Link>
+            <Link href={fallbackPath}>Go to your dashboard</Link>
           </Button>
         </CardContent>
       </Card>

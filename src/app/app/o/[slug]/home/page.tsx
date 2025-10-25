@@ -10,13 +10,9 @@ import { TeamRolesCard } from '@/components/dashboard/TeamRolesCard';
 
 export const dynamic = 'force-dynamic';
 
-export default async function OrganizationHomePage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+export default async function OrganizationHomePage({ params }: { params: { slug: string } }) {
   const user = await requireAuth();
-  const { slug } = await params;
+  const { slug } = params;
   const result = await getActiveOrg(slug, user.id);
 
   if (!result) {
@@ -24,7 +20,6 @@ export default async function OrganizationHomePage({
   }
 
   const { org, membership } = result;
-  const persona = 'organization';
 
   return (
     <div className="max-w-[1400px] mx-auto px-4 py-4">

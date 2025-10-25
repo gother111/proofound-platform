@@ -1,6 +1,7 @@
 'use client';
 
 import { signInWithOAuth, type OAuthState } from '@/actions/auth';
+import type { PersonaValue } from '@/constants/persona';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { ReactNode } from 'react';
@@ -10,18 +11,30 @@ type Provider = 'google';
 
 type SocialSignInButtonsProps = {
   className?: string;
+  persona?: PersonaValue | null;
+  organizationSlug?: string | null;
 };
 
 const initialState: OAuthState = {
   error: null,
 };
 
-export default function SocialSignInButtons({ className }: SocialSignInButtonsProps) {
+export default function SocialSignInButtons({
+  className,
+  persona = null,
+  organizationSlug = null,
+}: SocialSignInButtonsProps) {
   const [state, formAction] = useFormState(signInWithOAuth, initialState);
 
   return (
     <div className={cn('space-y-3', className)}>
-      <OAuthProviderForm provider="google" label="Continue with Google" action={formAction}>
+      <OAuthProviderForm
+        provider="google"
+        label="Continue with Google"
+        action={formAction}
+        persona={persona}
+        organizationSlug={organizationSlug}
+      >
         <GoogleIcon className="h-4 w-4" aria-hidden="true" />
       </OAuthProviderForm>
       {state.error ? (
@@ -38,12 +51,23 @@ type OAuthProviderFormProps = {
   label: string;
   action: (payload: FormData) => void;
   children: ReactNode;
+  persona: PersonaValue | null;
+  organizationSlug: string | null;
 };
 
-function OAuthProviderForm({ provider, label, action, children }: OAuthProviderFormProps) {
+function OAuthProviderForm({
+  provider,
+  label,
+  action,
+  children,
+  persona,
+  organizationSlug,
+}: OAuthProviderFormProps) {
   return (
     <form action={action} className="w-full">
       <input type="hidden" name="provider" value={provider} />
+      <input type="hidden" name="persona" value={persona ?? ''} />
+      <input type="hidden" name="organizationSlug" value={organizationSlug ?? ''} />
       <OAuthSubmitButton>
         {children}
         <span className="flex-1 text-center">{label}</span>

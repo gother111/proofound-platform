@@ -43,11 +43,11 @@ function mapProfile(row: Partial<ProfileRow> & { id: string }): ProfileRow {
 }
 
 function mapOrganization(
-  row: Partial<OrganizationRow> & { id: string; slug: string }
+  row: Partial<OrganizationRow> & { id: string; slug: string | null }
 ): OrganizationRow {
   return {
     id: row.id,
-    slug: row.slug,
+    slug: row.slug ?? null,
     displayName: row.displayName ?? '',
     legalName: row.legalName ?? null,
     type: (row.type as OrganizationRow['type']) ?? null,

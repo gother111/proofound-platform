@@ -1,8 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ComponentType } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import {
   Home,
   User,
@@ -11,28 +10,27 @@ import {
   Shield,
   Briefcase,
   Settings,
+  UsersRound,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useScopeAwareNavLinks } from './NavLinks';
 
-interface LeftNavProps {
-  basePath?: string;
-}
+const iconMap: Record<string, ComponentType<{ className?: string }>> = {
+  Dashboard: Home,
+  Profile: User,
+  Projects: FolderKanban,
+  Matching: Users,
+  Verifications: Shield,
+  Opportunities: Briefcase,
+  Settings: Settings,
+  Team: UsersRound,
+};
 
-export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
+export function LeftNav() {
   const [isExpanded, setIsExpanded] = useState(true);
-  const pathname = usePathname();
-
-  const navItems = [
-    { href: `${basePath}/home`, icon: Home, label: 'Dashboard' },
-    { href: `${basePath}/profile`, icon: User, label: 'Profile' },
-    { href: `${basePath}/projects`, icon: FolderKanban, label: 'Projects' },
-    { href: `${basePath}/matching`, icon: Users, label: 'Matching' },
-    { href: `${basePath}/verifications`, icon: Shield, label: 'Verifications' },
-    { href: `${basePath}/opportunities`, icon: Briefcase, label: 'Opportunities' },
-    { href: `${basePath}/settings`, icon: Settings, label: 'Settings' },
-  ];
+  const { links, pathname } = useScopeAwareNavLinks();
 
   return (
     <nav
@@ -42,9 +40,9 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
       style={{ backgroundColor: '#FDFCFA', borderColor: 'rgba(232, 230, 221, 0.6)' }}
     >
       <div className="flex-1 overflow-y-auto py-4">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = pathname === item.href || pathname?.startsWith(item.href);
+        {links.map((item) => {
+          const Icon = iconMap[item.label] ?? Home;
+          const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
 
           return (
             <Link

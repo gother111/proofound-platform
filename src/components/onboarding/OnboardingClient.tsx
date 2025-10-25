@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { PersonaChoice } from '@/components/onboarding/PersonaChoice';
 import { IndividualSetup } from '@/components/onboarding/IndividualSetup';
 import { OrganizationSetup } from '@/components/onboarding/OrganizationSetup';
+import { PERSONA, type PersonaValue } from '@/constants/persona';
 
-type Persona = 'individual' | 'organization' | null;
+type Persona = PersonaValue | null;
 
 export interface OnboardingClientProps {
   initialPersona?: Persona;
@@ -39,7 +40,7 @@ export function OnboardingClient({ initialPersona = null }: OnboardingClientProp
         >
           ← Back to persona choice
         </button>
-        {selectedPersona === 'individual' ? <IndividualSetup /> : <OrganizationSetup />}
+        {selectedPersona === PERSONA.INDIVIDUAL ? <IndividualSetup /> : <OrganizationSetup />}
       </div>
     </div>
   );

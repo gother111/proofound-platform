@@ -43,6 +43,7 @@ const cacheControlHeaders = [
 ];
 
 const nextConfig = {
+  typedRoutes: false,
   experimental: {
     serverActions: {
       bodySizeLimit: '2mb',

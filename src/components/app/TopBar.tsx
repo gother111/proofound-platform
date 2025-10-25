@@ -1,6 +1,7 @@
-"use client";
+'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { signOut } from '@/actions/auth';
 import { CustomizeModal } from '@/components/dashboard/CustomizeModal';
+import { useScopeAwareNavLinks } from './NavLinks';
 
 interface TopBarProps {
   userName?: string;
@@ -23,6 +25,8 @@ interface TopBarProps {
 
 export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
   const [customizeOpen, setCustomizeOpen] = useState(false);
+  const { links } = useScopeAwareNavLinks();
+  const profileLink = links.find((link) => link.label === 'Profile');
 
   return (
     <>
@@ -70,6 +74,10 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
                 <span className="text-sm font-medium text-foreground">{userName}</span>
                 <span className="text-xs text-muted-foreground">Signed in</span>
               </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href={profileLink?.href ?? '/app/i/profile'}>Profile</Link>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <form action={signOut}>
                 <DropdownMenuItem asChild>

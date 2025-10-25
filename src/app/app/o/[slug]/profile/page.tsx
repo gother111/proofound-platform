@@ -1,4 +1,4 @@
-import { requireAuth, getActiveOrg, assertOrgRole } from '@/lib/auth';
+import { requireAuth, getActiveOrg } from '@/lib/auth';
 import { notFound } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -8,13 +8,9 @@ import { updateOrganization } from '@/actions/org';
 
 export const dynamic = 'force-dynamic';
 
-export default async function OrganizationProfilePage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+export default async function OrganizationProfilePage({ params }: { params: { slug: string } }) {
   const user = await requireAuth();
-  const { slug } = await params;
+  const { slug } = params;
   const result = await getActiveOrg(slug, user.id);
 
   if (!result) {
