@@ -26,10 +26,10 @@ export function OrganizationSetup() {
         return;
       }
 
-      // Success - redirect to org home
-      if (result.orgSlug) {
-        router.push(`/app/o/${result.orgSlug}/home`);
-      }
+      const destination =
+        result.redirectTo ?? (result.orgSlug ? `/app/o/${result.orgSlug}/home` : '/app/i/home');
+
+      router.push(destination);
     } catch (err) {
       setError('Something went wrong. Please try again.');
       setIsLoading(false);

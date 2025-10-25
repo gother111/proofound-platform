@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { resolveDefaultDashboard } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -14,8 +15,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(errorUrl);
   };
 
+  const supabase = await createClient();
+
   if (code) {
-    const supabase = await createClient();
     try {
       const { error } = await supabase.auth.exchangeCodeForSession(code);
 
@@ -59,5 +61,17 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.redirect(new URL('/app/i/home', requestUrl.origin));
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const fallback = new URL('/app/i/home', requestUrl.origin);
+
+  if (!user) {
+    return NextResponse.redirect(fallback);
+  }
+
+  const destination = await resolveDefaultDashboard(user.id, supabase);
+
+  return NextResponse.redirect(new URL(destination, requestUrl.origin));
 }

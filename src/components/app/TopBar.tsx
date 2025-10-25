@@ -5,6 +5,15 @@ import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { signOut } from '@/actions/auth';
 import { CustomizeModal } from '@/components/dashboard/CustomizeModal';
 
 interface TopBarProps {
@@ -44,9 +53,33 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
           <Button variant="outline" size="sm" onClick={() => setCustomizeOpen(true)}>
             Customize
           </Button>
-          <Avatar className="w-7 h-7">
-            <AvatarFallback className="text-xs">{userInitials}</AvatarFallback>
-          </Avatar>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label="Open profile menu"
+                className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#7A9278]"
+              >
+                <Avatar className="w-8 h-8">
+                  <AvatarFallback className="text-xs font-medium">{userInitials}</AvatarFallback>
+                </Avatar>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel className="flex flex-col">
+                <span className="text-sm font-medium text-foreground">{userName}</span>
+                <span className="text-xs text-muted-foreground">Signed in</span>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <form action={signOut}>
+                <DropdownMenuItem asChild>
+                  <button type="submit" className="w-full text-left">
+                    Log out
+                  </button>
+                </DropdownMenuItem>
+              </form>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 
