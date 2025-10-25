@@ -2,6 +2,9 @@
   "mcpServers": {
     "FigmaMCP": {
       "url": "http://127.0.0.1:3845/mcp"
+    },
+    "supabase": {
+      "url": "https://mcp.supabase.com/mcp?project_ref=cjpfrgmsxwxhuomnvciq"
     }
   }
 }

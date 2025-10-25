@@ -130,10 +130,14 @@ export async function GET(request: NextRequest) {
 
     if (shouldEnsureOrg) {
       try {
-        targetSlug = await ensureOrgContextForUser(user.id, {
-          displayNameHint: membership?.organization?.display_name ?? null,
-          email: user.email ?? null,
-        });
+        targetSlug = await ensureOrgContextForUser(
+          user.id,
+          {
+            displayNameHint: membership?.organization?.display_name ?? null,
+            email: user.email ?? null,
+          },
+          { supabase }
+        );
       } catch (error) {
         console.warn('[auth-callback] ensureOrgContextForUser failed', {
           userId: user.id,

@@ -252,10 +252,14 @@ export async function signIn(
 
       if (shouldEnsureOrg) {
         try {
-          targetSlug = await ensureOrgContextForUser(user.id, {
-            displayNameHint: membership?.organization?.display_name ?? null,
-            email: user.email ?? null,
-          });
+          targetSlug = await ensureOrgContextForUser(
+            user.id,
+            {
+              displayNameHint: membership?.organization?.display_name ?? null,
+              email: user.email ?? null,
+            },
+            { supabase }
+          );
         } catch (ensureError) {
           console.warn('[signIn] ensureOrgContextForUser failed', {
             userId: user.id,
