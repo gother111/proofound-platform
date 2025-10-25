@@ -1,7 +1,5 @@
 {
-  "name": "proofound-platform",
-  "version": "0.1.0",
-  "private": true,
+  "type": "module",
   "scripts": {
     "prebuild": "node ./scripts/check-deploy-readiness.mjs || true",
     "dev": "next dev",

@@ -1,7 +1,37 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
-export async function createClient() {
+const mockSupabaseClient = {
+  auth: {
+    getSession: async () => ({ data: { session: null }, error: null }),
+    getUser: async () => ({ data: { user: null }, error: null }),
+    signInWithPassword: async () => ({ data: null, error: new Error('Supabase not configured') }),
+    signOut: async () => ({ error: null }),
+    signUp: async () => ({ data: null, error: new Error('Supabase not configured') }),
+    resetPasswordForEmail: async () => ({
+      data: null,
+      error: new Error('Supabase not configured'),
+    }),
+    verifyOtp: async () => ({ data: null, error: new Error('Supabase not configured') }),
+  },
+  from: () => ({
+    insert: async () => ({ data: null, error: new Error('Supabase not configured') }),
+    update: () => ({
+      eq: async () => ({ data: null, error: new Error('Supabase not configured') }),
+    }),
+    select: () => ({ eq: async () => ({ data: [], error: new Error('Supabase not configured') }) }),
+  }),
+  rpc: async () => ({ data: null, error: new Error('Supabase not configured') }),
+  storage: {
+    from: () => ({
+      upload: async () => ({ data: null, error: new Error('Supabase not configured') }),
+    }),
+  },
+  schema: () => ({}),
+} as unknown as SupabaseClient;
+
+export async function createClient(): Promise<SupabaseClient> {
   const supabaseUrl =
     process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || process.env.SUPABASE_URL?.trim() || '';
   const supabaseAnonKey =
@@ -15,11 +45,10 @@ export async function createClient() {
   };
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    const err = new Error(
-      'Supabase server client is not configured. Set NEXT_PUBLIC_SUPABASE_URL/NEXT_PUBLIC_SUPABASE_ANON_KEY or SUPABASE_URL/SUPABASE_ANON_KEY.'
-    ) as Error & { code?: string };
-    err.code = 'ENV_MISCONFIG';
-    throw err;
+    console.warn(
+      '[supabase] URL or anon key missing; returning mock Supabase client for build-time safety.'
+    );
+    return mockSupabaseClient;
   }
 
   const cookieStore = await cookies();

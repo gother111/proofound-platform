@@ -1,3 +1,7 @@
+import createNextIntlPlugin from 'next-intl/plugin';
+
+const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
+
 /** @type {import('next').NextConfig} */
 const securityHeaders = [
   {
@@ -77,6 +81,4 @@ const nextConfig = {
   },
 };
 
-const withNextIntl = require('next-intl/plugin')('./src/i18n/request.ts');
-
-module.exports = withNextIntl(nextConfig);
+export default withNextIntl(nextConfig);

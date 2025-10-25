@@ -151,18 +151,36 @@ export async function getUserOrganizations(userId: string) {
     return [];
   }
 
+  type SupabaseOrgMembership = {
+    org: OrganizationRow | OrganizationRow[] | null;
+    orgId: string;
+    userId: string;
+    role: OrganizationMemberRow['role'];
+    status: OrganizationMemberRow['status'];
+    joinedAt?: string | null;
+  };
+
   return (data ?? [])
-    .filter((item): item is typeof item & { org: OrganizationRow } => Boolean(item.org))
-    .map((item) => ({
-      org: mapOrganization(item.org as OrganizationRow),
-      membership: mapMembership({
-        orgId: item.orgId as string,
-        userId: item.userId as string,
-        role: item.role as OrganizationMemberRow['role'],
-        status: item.status as OrganizationMemberRow['status'],
-        joinedAt: item.joinedAt ? new Date(item.joinedAt as unknown as string | number) : undefined,
-      }),
-    }));
+    .map((item: SupabaseOrgMembership) => {
+      const orgRecord = Array.isArray(item.org) ? item.org[0] : item.org;
+      if (!orgRecord) {
+        return null;
+      }
+
+      return {
+        org: mapOrganization(orgRecord as OrganizationRow),
+        membership: mapMembership({
+          orgId: item.orgId as string,
+          userId: item.userId as string,
+          role: item.role as OrganizationMemberRow['role'],
+          status: item.status as OrganizationMemberRow['status'],
+          joinedAt: item.joinedAt
+            ? new Date(item.joinedAt as unknown as string | number)
+            : undefined,
+        }),
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null);
 }
 
 export async function getActiveOrg(slug: string, userId: string) {

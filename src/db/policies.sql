@@ -287,7 +287,217 @@ CREATE POLICY "Users can update own volunteering"
   USING (user_id = auth.uid())
   WITH CHECK (user_id = auth.uid());
 
-CREATE POLICY "Users can delete own volunteering"
-  ON public.volunteering FOR DELETE
-  USING (user_id = auth.uid());
+-- ============================================================================
+-- MATCHING SYSTEM RLS POLICIES
+-- ============================================================================
+
+-- Matching Profiles
+ALTER TABLE public.matching_profiles ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own matching profile"
+  ON public.matching_profiles FOR SELECT
+  USING (profile_id = auth.uid());
+
+CREATE POLICY "Users can insert own matching profile"
+  ON public.matching_profiles FOR INSERT
+  WITH CHECK (profile_id = auth.uid());
+
+CREATE POLICY "Users can update own matching profile"
+  ON public.matching_profiles FOR UPDATE
+  USING (profile_id = auth.uid())
+  WITH CHECK (profile_id = auth.uid());
+
+-- Skills
+ALTER TABLE public.skills ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own skills"
+  ON public.skills FOR SELECT
+  USING (profile_id = auth.uid());
+
+CREATE POLICY "Users can insert own skills"
+  ON public.skills FOR INSERT
+  WITH CHECK (profile_id = auth.uid());
+
+CREATE POLICY "Users can update own skills"
+  ON public.skills FOR UPDATE
+  USING (profile_id = auth.uid())
+  WITH CHECK (profile_id = auth.uid());
+
+CREATE POLICY "Users can delete own skills"
+  ON public.skills FOR DELETE
+  USING (profile_id = auth.uid());
+
+-- Assignments
+ALTER TABLE public.assignments ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Org members can view org assignments"
+  ON public.assignments FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.organization_members
+      WHERE organization_members.org_id = assignments.org_id
+        AND organization_members.user_id = auth.uid()
+        AND organization_members.status = 'active'
+    )
+  );
+
+CREATE POLICY "Org admins can create assignments"
+  ON public.assignments FOR INSERT
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.organization_members
+      WHERE organization_members.org_id = assignments.org_id
+        AND organization_members.user_id = auth.uid()
+        AND organization_members.role IN ('owner', 'admin')
+        AND organization_members.status = 'active'
+    )
+  );
+
+CREATE POLICY "Org admins can update assignments"
+  ON public.assignments FOR UPDATE
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.organization_members
+      WHERE organization_members.org_id = assignments.org_id
+        AND organization_members.user_id = auth.uid()
+        AND organization_members.role IN ('owner', 'admin')
+        AND organization_members.status = 'active'
+    )
+  );
+
+-- Matches (blind matching results)
+ALTER TABLE public.matches ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own matches"
+  ON public.matches FOR SELECT
+  USING (profile_id = auth.uid());
+
+CREATE POLICY "Org members can view assignment matches"
+  ON public.matches FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.assignments
+      JOIN public.organization_members ON organization_members.org_id = assignments.org_id
+      WHERE assignments.id = matches.assignment_id
+        AND organization_members.user_id = auth.uid()
+        AND organization_members.status = 'active'
+    )
+  );
+
+-- Match Interest
+ALTER TABLE public.match_interest ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own interest signals"
+  ON public.match_interest FOR SELECT
+  USING (actor_profile_id = auth.uid() OR target_profile_id = auth.uid());
+
+CREATE POLICY "Users can create interest signals"
+  ON public.match_interest FOR INSERT
+  WITH CHECK (actor_profile_id = auth.uid());
+
+-- Rate Limits (service only)
+ALTER TABLE public.rate_limits ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Service can manage rate limits"
+  ON public.rate_limits FOR ALL
+  USING (true)
+  WITH CHECK (true);
+
+-- ============================================================================
+-- EXPERTISE SYSTEM RLS POLICIES
+-- ============================================================================
+
+-- Capabilities
+ALTER TABLE public.capabilities ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own capabilities"
+  ON public.capabilities FOR SELECT
+  USING (profile_id = auth.uid());
+
+CREATE POLICY "Users can view public capabilities"
+  ON public.capabilities FOR SELECT
+  USING (privacy_level = 'public');
+
+CREATE POLICY "Users can insert own capabilities"
+  ON public.capabilities FOR INSERT
+  WITH CHECK (profile_id = auth.uid());
+
+CREATE POLICY "Users can update own capabilities"
+  ON public.capabilities FOR UPDATE
+  USING (profile_id = auth.uid())
+  WITH CHECK (profile_id = auth.uid());
+
+CREATE POLICY "Users can delete own capabilities"
+  ON public.capabilities FOR DELETE
+  USING (profile_id = auth.uid());
+
+-- Evidence
+ALTER TABLE public.evidence ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own evidence"
+  ON public.evidence FOR SELECT
+  USING (profile_id = auth.uid());
+
+CREATE POLICY "Users can view evidence for public capabilities"
+  ON public.evidence FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.capabilities
+      WHERE capabilities.id = evidence.capability_id
+        AND capabilities.privacy_level = 'public'
+    )
+  );
+
+CREATE POLICY "Users can insert own evidence"
+  ON public.evidence FOR INSERT
+  WITH CHECK (profile_id = auth.uid());
+
+CREATE POLICY "Users can update own evidence"
+  ON public.evidence FOR UPDATE
+  USING (profile_id = auth.uid())
+  WITH CHECK (profile_id = auth.uid());
+
+CREATE POLICY "Users can delete own evidence"
+  ON public.evidence FOR DELETE
+  USING (profile_id = auth.uid());
+
+-- Skill Endorsements
+ALTER TABLE public.skill_endorsements ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Owner can view endorsements"
+  ON public.skill_endorsements FOR SELECT
+  USING (owner_profile_id = auth.uid());
+
+CREATE POLICY "Endorser can view own endorsements"
+  ON public.skill_endorsements FOR SELECT
+  USING (endorser_profile_id = auth.uid());
+
+CREATE POLICY "Users can create endorsements"
+  ON public.skill_endorsements FOR INSERT
+  WITH CHECK (endorser_profile_id = auth.uid());
+
+CREATE POLICY "Owner can update endorsement status"
+  ON public.skill_endorsements FOR UPDATE
+  USING (owner_profile_id = auth.uid())
+  WITH CHECK (owner_profile_id = auth.uid());
+
+-- Growth Plans
+ALTER TABLE public.growth_plans ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own growth plans"
+  ON public.growth_plans FOR SELECT
+  USING (profile_id = auth.uid());
+
+CREATE POLICY "Users can insert own growth plans"
+  ON public.growth_plans FOR INSERT
+  WITH CHECK (profile_id = auth.uid());
+
+CREATE POLICY "Users can update own growth plans"
+  ON public.growth_plans FOR UPDATE
+  USING (profile_id = auth.uid())
+  WITH CHECK (profile_id = auth.uid());
+
+CREATE POLICY "Users can delete own growth plans"
+  ON public.growth_plans FOR DELETE
+  USING (profile_id = auth.uid());
 

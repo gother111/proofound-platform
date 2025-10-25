@@ -343,6 +343,116 @@ export const matchInterest = pgTable(
   })
 );
 
+// ============================================================================
+// EXPERTISE SYSTEM TABLES
+// ============================================================================
+
+// Capabilities - skill wrappers with privacy/verification
+export const capabilities = pgTable('capabilities', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  profileId: uuid('profile_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  skillRecordId: uuid('skill_record_id').references(() => skills.id, { onDelete: 'cascade' }),
+  privacyLevel: text('privacy_level', {
+    enum: ['only_me', 'team', 'organization', 'public'],
+  })
+    .default('team')
+    .notNull(),
+  verificationStatus: text('verification_status', {
+    enum: ['unverified', 'pending', 'verified', 'rejected'],
+  })
+    .default('unverified')
+    .notNull(),
+  verificationSource: text('verification_source'),
+  summary: text('summary'),
+  highlights: text('highlights')
+    .array()
+    .default(sql`'{}'::text[]`),
+  metadata: jsonb('metadata').default(sql`'{}'::jsonb`),
+  evidenceCount: integer('evidence_count').default(0).notNull(),
+  lastValidatedAt: timestamp('last_validated_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Evidence - proofs for capabilities
+export const evidence = pgTable('evidence', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  capabilityId: uuid('capability_id')
+    .references(() => capabilities.id, { onDelete: 'cascade' })
+    .notNull(),
+  profileId: uuid('profile_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  title: text('title').notNull(),
+  description: text('description'),
+  evidenceType: text('evidence_type', {
+    enum: ['document', 'link', 'assessment', 'peer_review', 'credential'],
+  })
+    .default('document')
+    .notNull(),
+  url: text('url'),
+  filePath: text('file_path'),
+  issuedAt: timestamp('issued_at'),
+  verified: boolean('verified').default(false).notNull(),
+  metadata: jsonb('metadata').default(sql`'{}'::jsonb`),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Skill endorsements - peer validation
+export const skillEndorsements = pgTable('skill_endorsements', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  capabilityId: uuid('capability_id')
+    .references(() => capabilities.id, { onDelete: 'cascade' })
+    .notNull(),
+  endorserProfileId: uuid('endorser_profile_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  ownerProfileId: uuid('owner_profile_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  message: text('message'),
+  status: text('status', {
+    enum: ['pending', 'accepted', 'declined', 'revoked'],
+  })
+    .default('pending')
+    .notNull(),
+  visibility: text('visibility', {
+    enum: ['private', 'owner_only', 'shared', 'public'],
+  })
+    .default('owner_only')
+    .notNull(),
+  respondedAt: timestamp('responded_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Growth plans - development goals
+export const growthPlans = pgTable('growth_plans', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  profileId: uuid('profile_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  capabilityId: uuid('capability_id').references(() => capabilities.id, {
+    onDelete: 'cascade',
+  }),
+  title: text('title').notNull(),
+  goal: text('goal'),
+  targetLevel: integer('target_level'),
+  targetDate: date('target_date'),
+  status: text('status', {
+    enum: ['planned', 'in_progress', 'blocked', 'completed', 'archived'],
+  })
+    .default('planned')
+    .notNull(),
+  milestones: jsonb('milestones').default(sql`'[]'::jsonb`),
+  supportNeeds: text('support_needs'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
 // Type exports
 export type Profile = typeof profiles.$inferSelect;
 export type InsertProfile = typeof profiles.$inferInsert;
@@ -373,3 +483,13 @@ export type Match = typeof matches.$inferSelect;
 export type InsertMatch = typeof matches.$inferInsert;
 export type MatchInterest = typeof matchInterest.$inferSelect;
 export type InsertMatchInterest = typeof matchInterest.$inferInsert;
+
+// Expertise system types
+export type Capability = typeof capabilities.$inferSelect;
+export type InsertCapability = typeof capabilities.$inferInsert;
+export type Evidence = typeof evidence.$inferSelect;
+export type InsertEvidence = typeof evidence.$inferInsert;
+export type SkillEndorsement = typeof skillEndorsements.$inferSelect;
+export type InsertSkillEndorsement = typeof skillEndorsements.$inferInsert;
+export type GrowthPlan = typeof growthPlans.$inferSelect;
+export type InsertGrowthPlan = typeof growthPlans.$inferInsert;

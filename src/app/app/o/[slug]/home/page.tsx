@@ -2,10 +2,8 @@ import { requireAuth, getActiveOrg } from '@/lib/auth';
 import { notFound } from 'next/navigation';
 import { WhileAwayCard } from '@/components/dashboard/WhileAwayCard';
 import { GoalsCard } from '@/components/dashboard/GoalsCard';
-import { TasksVerificationsCard } from '@/components/dashboard/TasksVerificationsCard';
-import { ProjectsCard } from '@/components/dashboard/ProjectsCard';
+import { TasksCard } from '@/components/dashboard/TasksCard';
 import { MatchingResultsCard } from '@/components/dashboard/MatchingResultsCard';
-import { ExploreOpportunitiesCard } from '@/components/dashboard/ExploreOpportunitiesCard';
 import { TeamRolesCard } from '@/components/dashboard/TeamRolesCard';
 
 export const dynamic = 'force-dynamic';
@@ -36,17 +34,13 @@ export default async function OrganizationHomePage({
 
         {/* Row 1 */}
         <GoalsCard />
-        <TasksVerificationsCard />
-        <ProjectsCard />
+        <TasksCard />
 
         {/* Row 2 - Matching spans 2 cols */}
         <MatchingResultsCard className="lg:col-span-2" />
 
         {/* Organization-specific card */}
         <TeamRolesCard />
-
-        {/* Row 3 - Explore spans full width */}
-        <ExploreOpportunitiesCard className="lg:col-span-3" />
       </div>
     </div>
   );

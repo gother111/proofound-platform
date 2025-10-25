@@ -15,17 +15,6 @@ interface MatchResultCardProps {
     assignmentId?: string;
     profile?: {
       workMode?: string;
-      country?: string;
-      hoursMin?: number;
-      hoursMax?: number;
-      compMin?: number;
-      compMax?: number;
-      currency?: string;
-      valuesTags?: string[];
-      causeTags?: string[];
-    };
-    assignment?: {
-      role?: string;
       locationMode?: string;
       country?: string;
       hoursMin?: number;
@@ -33,7 +22,22 @@ interface MatchResultCardProps {
       compMin?: number;
       compMax?: number;
       currency?: string;
+      valuesTags?: string[];
       valuesRequired?: string[];
+      causeTags?: string[];
+    };
+    assignment?: {
+      role?: string;
+      locationMode?: string;
+      workMode?: string;
+      country?: string;
+      hoursMin?: number;
+      hoursMax?: number;
+      compMin?: number;
+      compMax?: number;
+      currency?: string;
+      valuesRequired?: string[];
+      valuesTags?: string[];
       causeTags?: string[];
     };
     gaps?: Array<{ id: string; required: number; have: number }>;

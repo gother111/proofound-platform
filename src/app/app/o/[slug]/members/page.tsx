@@ -46,23 +46,41 @@ export default async function OrganizationMembersPage({
     console.error('Failed to load organization members:', error);
   }
 
-  const members = (membersData ?? []).map((item) => {
-    const profileData = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles;
+  const members = (membersData ?? []).map(
+    (item: {
+      orgId: string;
+      userId: string;
+      role: string;
+      status: string;
+      profiles:
+        | {
+            id: string;
+            displayName: string | null;
+            handle: string | null;
+          }
+        | Array<{
+            id: string;
+            displayName: string | null;
+            handle: string | null;
+          }>;
+    }) => {
+      const profileData = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles;
 
-    return {
-      membership: {
-        orgId: item.orgId as string,
-        userId: item.userId as string,
-        role: item.role as string,
-        status: item.status as string,
-      },
-      profile: {
-        id: profileData?.id,
-        displayName: profileData?.displayName,
-        handle: profileData?.handle,
-      },
-    };
-  });
+      return {
+        membership: {
+          orgId: item.orgId as string,
+          userId: item.userId as string,
+          role: item.role as string,
+          status: item.status as string,
+        },
+        profile: {
+          id: profileData?.id,
+          displayName: profileData?.displayName,
+          handle: profileData?.handle,
+        },
+      };
+    }
+  );
 
   const canManage = membership.role === 'owner' || membership.role === 'admin';
 
@@ -120,31 +138,39 @@ export default async function OrganizationMembersPage({
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {members.map(({ membership: m, profile: p }) => (
-              <div
-                key={m.userId}
-                className="flex items-center justify-between py-4 border-b border-neutral-light-200 last:border-0"
-              >
-                <div>
-                  <p className="font-medium text-neutral-dark-700">
-                    {p.displayName || p.handle || 'Unnamed User'}
-                  </p>
-                  <p className="text-sm text-neutral-dark-500">{p.handle && `@${p.handle}`}</p>
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className="inline-flex items-center rounded-full bg-primary-50 px-3 py-1 text-sm font-medium text-primary-700 capitalize">
-                    {m.role}
-                  </span>
-                  {canManage && m.userId !== user.id && m.role !== 'owner' && (
-                    <form action={removeMember.bind(null, org.id, m.userId) as any}>
-                      <Button variant="ghost" size="sm" type="submit">
-                        Remove
-                      </Button>
-                    </form>
-                  )}
-                </div>
-              </div>
-            ))}
+            {members.map(
+              (member: {
+                membership: { orgId: string; userId: string; role: string; status: string };
+                profile: { id?: string; displayName?: string | null; handle?: string | null };
+              }) => {
+                const { membership: m, profile: p } = member;
+                return (
+                  <div
+                    key={m.userId}
+                    className="flex items-center justify-between py-4 border-b border-neutral-light-200 last:border-0"
+                  >
+                    <div>
+                      <p className="font-medium text-neutral-dark-700">
+                        {p.displayName || p.handle || 'Unnamed User'}
+                      </p>
+                      <p className="text-sm text-neutral-dark-500">{p.handle && `@${p.handle}`}</p>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="inline-flex items-center rounded-full bg-primary-50 px-3 py-1 text-sm font-medium text-primary-700 capitalize">
+                        {m.role}
+                      </span>
+                      {canManage && m.userId !== user.id && m.role !== 'owner' && (
+                        <form action={removeMember.bind(null, org.id, m.userId) as any}>
+                          <Button variant="ghost" size="sm" type="submit">
+                            Remove
+                          </Button>
+                        </form>
+                      )}
+                    </div>
+                  </div>
+                );
+              }
+            )}
           </div>
         </CardContent>
       </Card>
