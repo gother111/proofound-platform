@@ -13,6 +13,8 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  Brain,
+  Flower2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -29,6 +31,8 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
     { href: `${basePath}/profile`, icon: User, label: 'Profile' },
     { href: `${basePath}/projects`, icon: FolderKanban, label: 'Projects' },
     { href: `${basePath}/matching`, icon: Users, label: 'Matching' },
+    { href: `${basePath}/expertise`, icon: Brain, label: 'Expertise' },
+    { href: `${basePath}/zen`, icon: Flower2, label: 'Zen Hub' },
     { href: `${basePath}/verifications`, icon: Shield, label: 'Verifications' },
     { href: `${basePath}/opportunities`, icon: Briefcase, label: 'Opportunities' },
     { href: `${basePath}/settings`, icon: Settings, label: 'Settings' },
