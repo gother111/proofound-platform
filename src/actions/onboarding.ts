@@ -1,9 +1,8 @@
 'use server';
 
-import { requireAuth } from '@/lib/auth';
+import { requireAuth, resolveDefaultDashboard } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { generateSlug } from '@/lib/utils';
 import { nanoid } from 'nanoid';
 import { createClient } from '@/lib/supabase/server';
 
@@ -116,7 +115,10 @@ export async function completeIndividualOnboarding(formData: FormData) {
     }
 
     revalidatePath('/app/i');
-    return { success: true };
+
+    const destination = await resolveDefaultDashboard(user.id, supabase);
+
+    return { success: true, redirectTo: destination };
   } catch (error: any) {
     console.error('Individual onboarding error:', error);
     return { error: 'Failed to complete setup. Please try again.' };
@@ -200,7 +202,10 @@ export async function completeOrganizationOnboarding(formData: FormData) {
     }
 
     revalidatePath(`/app/o/${org.slug}`);
-    return { success: true, orgSlug: org.slug };
+
+    const destination = await resolveDefaultDashboard(user.id, supabase);
+
+    return { success: true, orgSlug: org.slug, redirectTo: destination };
   } catch (error: any) {
     console.error('Organization onboarding error:', error);
     return { error: 'Failed to create organization. Please try again.' };

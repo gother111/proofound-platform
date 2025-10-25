@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { checkRateLimit, getRateLimitIdentifier } from '@/lib/rate-limit';
+import { resolveDefaultDashboard, requireAuth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import type { AuthError } from '@supabase/supabase-js';
 
@@ -192,8 +193,14 @@ export async function signIn(
       return { error: mapSupabaseSignInError(error, email) };
     }
 
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const destination = user ? await resolveDefaultDashboard(user.id, supabase) : '/app/i/home';
+
     revalidatePath('/', 'layout');
-    redirect('/app/i/home');
+    redirect(destination);
 
     return { error: null };
   } catch (error) {
@@ -263,7 +270,10 @@ function mapUnexpectedAuthError(error: unknown, action: 'sign up' | 'log in') {
   const message = getErrorMessage(error);
 
   if (message) {
-    if (/supabase server client is missing required/i.test(message) || /Supabase Auth is not configured/i.test(message)) {
+    if (
+      /supabase server client is missing required/i.test(message) ||
+      /Supabase Auth is not configured/i.test(message)
+    ) {
       return 'Authentication service is not configured correctly. Please contact support.';
     }
 

@@ -1,11 +1,14 @@
 import { createClient } from './supabase/server';
 import type { Organization, OrganizationMember, Profile } from '@/db/schema';
 import { redirect } from 'next/navigation';
+import type { PostgrestResponse, PostgrestSingleResponse } from '@supabase/supabase-js';
 
 type ProfileRow = Pick<
   Profile,
   'id' | 'handle' | 'displayName' | 'avatarUrl' | 'locale' | 'persona' | 'createdAt' | 'updatedAt'
 >;
+
+type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
 type OrganizationRow = Pick<
   Organization,
@@ -264,3 +267,88 @@ export async function assertOrgRole(orgId: string, userId: string, roles: string
 }
 
 export type Role = 'owner' | 'admin' | 'member' | 'viewer';
+
+function castPersona(persona: unknown): ProfileRow['persona'] {
+  if (persona === 'individual' || persona === 'org_member' || persona === 'unknown') {
+    return persona;
+  }
+  return 'unknown';
+}
+
+type OrgMembershipRecord = {
+  status: string | null;
+  joinedAt?: string | null;
+  org?: {
+    slug: string | null;
+  } | null;
+};
+
+function resolveDashboardFromMemberships(
+  persona: ProfileRow['persona'],
+  membershipsResponse: PostgrestResponse<OrgMembershipRecord>
+) {
+  if (persona === 'individual') {
+    return '/app/i/home';
+  }
+
+  if (membershipsResponse.error) {
+    console.error(
+      'Failed to load organization memberships for redirect:',
+      membershipsResponse.error
+    );
+  }
+
+  const orgMemberships = Array.isArray(membershipsResponse.data) ? membershipsResponse.data : [];
+
+  const activeMembership = orgMemberships.find(
+    (membership): membership is OrgMembershipRecord & { org: { slug: string } } =>
+      Boolean(membership?.org?.slug)
+  );
+
+  if (activeMembership?.org?.slug) {
+    return `/app/o/${activeMembership.org.slug}/home`;
+  }
+
+  if (persona === 'org_member') {
+    return '/onboarding';
+  }
+
+  return persona === 'unknown' ? '/onboarding' : '/app/i/home';
+}
+
+export async function resolveDefaultDashboard(userId: string, client?: SupabaseClient) {
+  const supabase = client ?? (await createClient());
+
+  const { data: profileData, error: profileError } = await supabase
+    .from('profiles')
+    .select('persona')
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (profileError) {
+    console.error('Failed to load persona for redirect:', profileError);
+  }
+
+  const persona = castPersona(profileData?.persona);
+
+  if (persona === 'individual') {
+    return '/app/i/home';
+  }
+
+  const membershipsResponse = await supabase
+    .from('organization_members')
+    .select(
+      `
+        status,
+        joinedAt:joined_at,
+        org:organizations!inner (
+          slug
+        )
+      `
+    )
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .order('joined_at', { ascending: true });
+
+  return resolveDashboardFromMemberships(persona, membershipsResponse);
+}
