@@ -134,9 +134,8 @@ export async function signUp(
       const verificationEmail = signUpResult.user?.email ?? result.data.email;
       await resendVerificationEmail(supabase, verificationEmail, siteUrl);
       return {
-        error:
-          'An account with this email already exists. We just sent a fresh verification link to your inbox.',
-        success: false,
+        error: null,
+        success: true,
       };
     }
 
