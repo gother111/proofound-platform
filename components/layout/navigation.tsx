@@ -20,7 +20,7 @@ export function Navigation({ userName, accountType }: NavigationProps) {
     { name: "Matches", href: "/matches" },
     { name: "Profile", href: "/profile" },
     ...(accountType === "organization"
-      ? [{ name: "Organization", href: "/organization/dashboard" }]
+      ? [{ name: "Organization", href: "/organization" }]
       : []),
     { name: "Settings", href: "/settings" },
   ];
