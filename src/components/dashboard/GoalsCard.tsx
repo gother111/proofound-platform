@@ -9,9 +9,15 @@ export function GoalsCard() {
         Goals
       </h5>
       <div className="text-center py-6">
-        <Target className="w-10 h-10 mx-auto mb-2 text-muted" />
-        <p className="text-xs mb-3 text-muted-foreground">Set one meaningful goal for the week.</p>
-        <Button size="sm" className="h-7 text-xs">
+        <Target className="w-10 h-10 mx-auto mb-2" style={{ color: '#E8E6DD' }} />
+        <p className="text-xs mb-3" style={{ color: '#6B6760' }}>
+          Set one meaningful goal for the week.
+        </p>
+        <Button
+          size="sm"
+          className="h-7 text-xs"
+          style={{ backgroundColor: '#1C4D3A', color: '#F7F6F1' }}
+        >
           <Plus className="w-3 h-3 mr-1" />
           Create Goal
         </Button>

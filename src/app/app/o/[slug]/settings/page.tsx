@@ -78,22 +78,30 @@ export default async function OrganizationSettingsPage({
             <p className="text-neutral-dark-500">No audit logs yet</p>
           ) : (
             <div className="space-y-2">
-              {logs.map((log) => (
-                <div
-                  key={log.id}
-                  className="flex items-start justify-between py-3 border-b border-neutral-light-200 last:border-0"
-                >
-                  <div>
-                    <p className="text-sm font-medium text-neutral-dark-700">{log.action}</p>
-                    {log.targetType && (
-                      <p className="text-xs text-neutral-dark-500">
-                        {log.targetType}: {log.targetId}
-                      </p>
-                    )}
+              {logs.map(
+                (log: {
+                  id: string;
+                  action: string;
+                  targetType?: string | null;
+                  targetId?: string | null;
+                  createdAt: string;
+                }) => (
+                  <div
+                    key={log.id}
+                    className="flex items-start justify-between py-3 border-b border-neutral-light-200 last:border-0"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-neutral-dark-700">{log.action}</p>
+                      {log.targetType && (
+                        <p className="text-xs text-neutral-dark-500">
+                          {log.targetType}: {log.targetId}
+                        </p>
+                      )}
+                    </div>
+                    <p className="text-xs text-neutral-dark-500">{formatDate(log.createdAt)}</p>
                   </div>
-                  <p className="text-xs text-neutral-dark-500">{formatDate(log.createdAt)}</p>
-                </div>
-              ))}
+                )
+              )}
             </div>
           )}
         </CardContent>

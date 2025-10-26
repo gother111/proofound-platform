@@ -15,17 +15,6 @@ interface MatchResultCardProps {
     assignmentId?: string;
     profile?: {
       workMode?: string;
-      country?: string;
-      hoursMin?: number;
-      hoursMax?: number;
-      compMin?: number;
-      compMax?: number;
-      currency?: string;
-      valuesTags?: string[];
-      causeTags?: string[];
-    };
-    assignment?: {
-      role?: string;
       locationMode?: string;
       country?: string;
       hoursMin?: number;
@@ -33,7 +22,22 @@ interface MatchResultCardProps {
       compMin?: number;
       compMax?: number;
       currency?: string;
+      valuesTags?: string[];
       valuesRequired?: string[];
+      causeTags?: string[];
+    };
+    assignment?: {
+      role?: string;
+      locationMode?: string;
+      workMode?: string;
+      country?: string;
+      hoursMin?: number;
+      hoursMax?: number;
+      compMin?: number;
+      compMax?: number;
+      currency?: string;
+      valuesRequired?: string[];
+      valuesTags?: string[];
       causeTags?: string[];
     };
     gaps?: Array<{ id: string; required: number; have: number }>;
@@ -55,48 +59,10 @@ export function MatchResultCard({
   skills = [],
 }: MatchResultCardProps) {
   const isOrgView = !!result.profileId; // Org viewing candidates
-  const profileData = result.profile;
-  const assignmentData = result.assignment;
-  const data = isOrgView ? profileData : assignmentData;
-
-  const valueTags = isOrgView ? profileData?.valuesTags : assignmentData?.valuesRequired;
-  const causeTags = isOrgView ? profileData?.causeTags : assignmentData?.causeTags;
-  const tagsToDisplay = (valueTags && valueTags.length > 0 ? valueTags : causeTags) ?? [];
-  const locationLabel = isOrgView ? profileData?.workMode : assignmentData?.locationMode;
+  const data = isOrgView ? result.profile : result.assignment;
 
   // Top 3 skills
   const topSkills = skills.slice(0, 3);
-
-  const displayTags =
-    (isOrgView
-      ? (result.profile?.valuesTags ?? result.profile?.causeTags)
-      : (result.assignment?.valuesRequired ?? result.assignment?.causeTags)) ?? [];
-
-  const locationMode = isOrgView ? result.profile?.workMode : result.assignment?.locationMode;
-  const country = isOrgView ? result.profile?.country : result.assignment?.country;
-  const hoursMin = isOrgView ? result.profile?.hoursMin : result.assignment?.hoursMin;
-  const hoursMax = isOrgView ? result.profile?.hoursMax : result.assignment?.hoursMax;
-  const compMin = isOrgView ? result.profile?.compMin : result.assignment?.compMin;
-  const compMax = isOrgView ? result.profile?.compMax : result.assignment?.compMax;
-  const currency = isOrgView ? result.profile?.currency : result.assignment?.currency;
-
-  const hoursLabel =
-    hoursMin != null && hoursMax != null
-      ? `${hoursMin}-${hoursMax} hrs/week`
-      : hoursMin != null
-        ? `${hoursMin}+ hrs/week`
-        : hoursMax != null
-          ? `Up to ${hoursMax} hrs/week`
-          : null;
-
-  const compensationLabel =
-    compMin != null && compMax != null
-      ? `${compMin.toLocaleString()}-${compMax.toLocaleString()}`
-      : compMin != null
-        ? `${compMin.toLocaleString()}+`
-        : compMax != null
-          ? `Up to ${compMax.toLocaleString()}`
-          : null;
 
   // Match score percentage
   const scorePercent = Math.round(result.score * 100);
@@ -154,10 +120,10 @@ export function MatchResultCard({
       )}
 
       {/* Values/Causes */}
-      {tagsToDisplay.length > 0 && (
+      {(data?.valuesTags || data?.valuesRequired) && (
         <div className="mb-3">
           <div className="flex flex-wrap gap-1">
-            {tagsToDisplay.slice(0, 3).map((tag: string) => (
+            {(data.valuesTags || data.valuesRequired || []).slice(0, 3).map((tag: string) => (
               <Badge
                 key={tag}
                 variant="outline"
@@ -174,33 +140,33 @@ export function MatchResultCard({
       {/* Key details */}
       <div className="space-y-2 mb-3 text-xs" style={{ color: '#6B6760' }}>
         {/* Location */}
-        {locationLabel && (
+        {(data?.workMode || data?.locationMode) && (
           <div className="flex items-center gap-2">
             <MapPin className="w-3 h-3" />
             <span>
-              {locationLabel}
-              {data?.country && variant === 'revealed' && ` • ${data.country}`}
-              {data?.country && variant === 'blind' && ' • Region hidden'}
+              {data.workMode || data.locationMode}
+              {data.country && variant === 'revealed' && ` • ${data.country}`}
+              {data.country && variant === 'blind' && ' • Region hidden'}
             </span>
           </div>
         )}
 
         {/* Hours */}
-        {hoursLabel && (
+        {(data?.hoursMin || data?.hoursMax) && (
           <div className="flex items-center gap-2">
             <Clock className="w-3 h-3" />
             <span>
-              {data?.hoursMin}-{data?.hoursMax} hrs/week
+              {data.hoursMin}-{data.hoursMax} hrs/week
             </span>
           </div>
         )}
 
         {/* Compensation */}
-        {compensationLabel && (
+        {(data?.compMin || data?.compMax) && (
           <div className="flex items-center gap-2">
             <DollarSign className="w-3 h-3" />
             <span>
-              {data?.currency} {data?.compMin?.toLocaleString()}-{data?.compMax?.toLocaleString()}
+              {data.currency} {data.compMin?.toLocaleString()}-{data.compMax?.toLocaleString()}
             </span>
           </div>
         )}

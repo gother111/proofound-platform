@@ -5,7 +5,7 @@
  * Users can select a preset or customize weights via the UI.
  */
 
-export interface WeightPreset extends Record<string, number> {
+export interface WeightPreset {
   values: number;
   causes: number;
   skills: number;
@@ -15,6 +15,7 @@ export interface WeightPreset extends Record<string, number> {
   location: number;
   compensation: number;
   language: number;
+  [key: string]: number;
 }
 
 export const MATCH_PRESETS: Record<string, WeightPreset> = {
@@ -66,10 +67,13 @@ export function normalizeWeights(weights: Partial<WeightPreset>): WeightPreset {
     return MATCH_PRESETS.balanced;
   }
 
-  const normalized: Record<string, number> = {};
-  for (const [key, value] of Object.entries(weights)) {
-    normalized[key] = (value || 0) / sum;
-  }
+  const normalizedEntries = Object.entries(weights).reduce<Record<string, number>>(
+    (acc, [key, value]) => {
+      acc[key] = (value ?? 0) / sum;
+      return acc;
+    },
+    {}
+  );
 
-  return normalized as WeightPreset;
+  return { ...MATCH_PRESETS.balanced, ...normalizedEntries } as WeightPreset;
 }

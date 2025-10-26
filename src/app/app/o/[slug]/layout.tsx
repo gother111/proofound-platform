@@ -1,4 +1,4 @@
-import { requireAuth, getActiveOrg } from '@/lib/auth';
+import { requirePersona, getActiveOrg } from '@/lib/auth';
 import { notFound } from 'next/navigation';
 import { LeftNav } from '@/components/app/LeftNav';
 import { TopBar } from '@/components/app/TopBar';
@@ -10,7 +10,7 @@ export default async function OrganizationLayout({
   children: React.ReactNode;
   params: Promise<{ slug: string }>;
 }) {
-  const user = await requireAuth();
+  const user = await requirePersona('org_member');
   const { slug } = await params;
   const result = await getActiveOrg(slug, user.id);
 

@@ -80,19 +80,15 @@ async function verifyAssignmentAccess(userId: string, assignmentId: string): Pro
  *
  * Updates an assignment.
  */
-type AssignmentRouteContext = { params: Promise<{ id: string }> };
-
-export async function PUT(request: NextRequest, context: AssignmentRouteContext) {
-  let id: string | undefined;
-
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  let assignmentId: string | undefined;
   try {
-    const params = await context.params;
-    id = params.id;
-
     const user = await requireAuth();
+    const resolvedParams = await params;
+    assignmentId = resolvedParams.id;
 
     // Verify access
-    const hasAccess = await verifyAssignmentAccess(user.id, id);
+    const hasAccess = await verifyAssignmentAccess(user.id, assignmentId);
 
     if (!hasAccess) {
       return NextResponse.json({ error: 'Assignment not found or access denied' }, { status: 404 });
@@ -103,12 +99,11 @@ export async function PUT(request: NextRequest, context: AssignmentRouteContext)
     // Validate input
     const validatedData = AssignmentUpdateSchema.parse(body);
 
-    const { startEarliest, startLatest, ...rest } = validatedData;
-
-    const updateData: Partial<typeof assignments.$inferInsert> = {
-      ...rest,
-      ...(startEarliest !== undefined ? { startEarliest } : {}),
-      ...(startLatest !== undefined ? { startLatest } : {}),
+    // Convert date strings to Date objects
+    const updateData = {
+      ...validatedData,
+      startEarliest: validatedData.startEarliest,
+      startLatest: validatedData.startLatest,
       updatedAt: new Date(),
     };
 
@@ -116,11 +111,11 @@ export async function PUT(request: NextRequest, context: AssignmentRouteContext)
     const [updatedAssignment] = await db
       .update(assignments)
       .set(updateData)
-      .where(eq(assignments.id, id))
+      .where(eq(assignments.id, assignmentId))
       .returning();
 
     log.info('assignment.updated', {
-      assignmentId: id,
+      assignmentId,
       userId: user.id,
     });
 
@@ -131,7 +126,7 @@ export async function PUT(request: NextRequest, context: AssignmentRouteContext)
     }
 
     log.error('assignment.update.failed', {
-      assignmentId: id,
+      assignmentId,
       error: error instanceof Error ? error.message : 'Unknown error',
     });
 
@@ -144,34 +139,35 @@ export async function PUT(request: NextRequest, context: AssignmentRouteContext)
  *
  * Deletes an assignment.
  */
-export async function DELETE(request: NextRequest, context: AssignmentRouteContext) {
-  let id: string | undefined;
-
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  let assignmentId: string | undefined;
   try {
-    const params = await context.params;
-    id = params.id;
-
     const user = await requireAuth();
+    const resolvedParams = await params;
+    assignmentId = resolvedParams.id;
 
     // Verify access
-    const hasAccess = await verifyAssignmentAccess(user.id, id);
+    const hasAccess = await verifyAssignmentAccess(user.id, assignmentId);
 
     if (!hasAccess) {
       return NextResponse.json({ error: 'Assignment not found or access denied' }, { status: 404 });
     }
 
     // Delete assignment (cascade will delete related matches and interests)
-    await db.delete(assignments).where(eq(assignments.id, id));
+    await db.delete(assignments).where(eq(assignments.id, assignmentId));
 
     log.info('assignment.deleted', {
-      assignmentId: id,
+      assignmentId,
       userId: user.id,
     });
 
     return NextResponse.json({ success: true });
   } catch (error) {
     log.error('assignment.delete.failed', {
-      assignmentId: id,
+      assignmentId,
       error: error instanceof Error ? error.message : 'Unknown error',
     });
 
