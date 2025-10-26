@@ -36,8 +36,8 @@ export default async function OnboardingPage() {
       return <OnboardingClient initialPersona="individual" />;
     }
   } else if (persona === 'unknown') {
-    // Show persona choice
-    return <OnboardingClient initialPersona={null} />;
+    // Persona should be set during signup - redirect to signup if missing
+    redirect('/signup');
   }
 
   // Profile is complete, redirect to their home page
