@@ -1,5 +1,7 @@
 import { Resend } from 'resend';
 import { VerifyEmail } from '../../emails/VerifyEmail';
+import { VerifyEmailIndividual } from '../../emails/VerifyEmailIndividual';
+import { VerifyEmailOrganization } from '../../emails/VerifyEmailOrganization';
 import { ResetPassword } from '../../emails/ResetPassword';
 import { OrgInvite } from '../../emails/OrgInvite';
 
@@ -7,15 +9,30 @@ import { OrgInvite } from '../../emails/OrgInvite';
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder_key');
 const fromEmail = process.env.EMAIL_FROM || 'Proofound <no-reply@proofound.com>';
 
-export async function sendVerificationEmail(email: string, token: string) {
+export async function sendVerificationEmail(email: string, token: string, persona?: string) {
   const verifyUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/verify-email?token=${token}`;
 
   try {
+    // Choose template based on persona
+    let subject = 'Verify your email - Proofound';
+    let template;
+
+    if (persona === 'individual') {
+      subject = 'Welcome to Proofound! Verify your email';
+      template = VerifyEmailIndividual({ verifyUrl });
+    } else if (persona === 'org_member') {
+      subject = 'Welcome to Proofound! Verify your organization email';
+      template = VerifyEmailOrganization({ verifyUrl });
+    } else {
+      // Default template for 'unknown' or missing persona
+      template = VerifyEmail({ verifyUrl });
+    }
+
     await resend.emails.send({
       from: fromEmail,
       to: email,
-      subject: 'Verify your email - Proofound',
-      react: VerifyEmail({ verifyUrl }),
+      subject,
+      react: template,
     });
   } catch (error) {
     console.error('Failed to send verification email:', error);
