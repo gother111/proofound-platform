@@ -8,12 +8,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { completeOrganizationOnboarding } from '@/actions/onboarding';
 import { createClient } from '@/lib/supabase/client';
+import { CheckCircle } from 'lucide-react';
 
 export function OrganizationSetup() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [checkingExisting, setCheckingExisting] = useState(true);
+  const [success, setSuccess] = useState<{ orgName: string; orgSlug: string } | null>(null);
 
   // Check if user already has an organization on mount
   useEffect(() => {
@@ -81,14 +83,68 @@ export function OrganizationSetup() {
         return;
       }
 
-      // Success - redirect to org home
+      // Success - show success message and redirect after delay
       if (result.orgSlug) {
-        router.push(`/app/o/${result.orgSlug}/home`);
+        const orgName = formData.get('displayName') as string;
+        setSuccess({ orgName, orgSlug: result.orgSlug });
+
+        // Redirect after 2 seconds to show success message
+        setTimeout(() => {
+          router.push(`/app/o/${result.orgSlug}/home`);
+        }, 2000);
       }
     } catch (err) {
       setError('Something went wrong. Please try again.');
       setIsLoading(false);
     }
+  }
+
+  // Show success message
+  if (success) {
+    return (
+      <Card className="max-w-2xl mx-auto">
+        <CardContent className="py-12 px-8">
+          <div className="text-center space-y-6">
+            <div className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+              <CheckCircle className="w-10 h-10 text-green-600" />
+            </div>
+
+            <div className="space-y-2">
+              <h2 className="text-2xl font-display font-semibold text-primary-500">
+                Organization Created Successfully!
+              </h2>
+              <p className="text-3xl font-bold text-neutral-dark-900">
+                Welcome to {success.orgName}!
+              </p>
+            </div>
+
+            <div className="bg-neutral-light-100 rounded-xl p-6 text-left space-y-3">
+              <p className="font-medium text-neutral-dark-900">
+                Your organization has been created and you&apos;re now ready to:
+              </p>
+              <ul className="space-y-2 text-sm text-neutral-dark-600">
+                <li className="flex items-start gap-2">
+                  <span className="text-primary-500 font-bold mt-0.5">•</span>
+                  <span>Invite team members</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary-500 font-bold mt-0.5">•</span>
+                  <span>Set up your organization profile</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary-500 font-bold mt-0.5">•</span>
+                  <span>Start collaborating</span>
+                </li>
+              </ul>
+            </div>
+
+            <p className="text-sm text-neutral-dark-500 animate-pulse">
+              Redirecting to your dashboard...
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
