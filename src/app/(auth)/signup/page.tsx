@@ -7,6 +7,8 @@ import { signUp, type SignUpState } from '@/actions/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { User, Building2 } from 'lucide-react';
 import SocialSignInButtons from '@/components/auth/social-sign-in-buttons';
 
 const initialState: SignUpState = {
@@ -25,6 +27,8 @@ function SubmitButton() {
 }
 
 export default function SignUpPage() {
+  const [step, setStep] = useState<'persona' | 'credentials'>('persona');
+  const [persona, setPersona] = useState<'individual' | 'org_member' | null>(null);
   const [state, formAction] = useFormState(signUp, initialState);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,13 +39,94 @@ export default function SignUpPage() {
     }
   }, [state.success]);
 
+  // Show persona selection first
+  if (step === 'persona') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-secondary-100 px-4 py-12">
+        <div className="w-full max-w-4xl">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-display font-semibold text-primary-500 mb-2">
+              Welcome to Proofound
+            </h1>
+            <p className="text-lg text-neutral-dark-600">Choose how you want to use Proofound</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card
+              className="border-2 hover:border-primary-300 transition-colors cursor-pointer group"
+              onClick={() => {
+                setPersona('individual');
+                setStep('credentials');
+              }}
+            >
+              <CardHeader className="text-center space-y-4 p-8">
+                <div className="mx-auto w-16 h-16 rounded-full bg-primary-50 flex items-center justify-center group-hover:bg-primary-100 transition-colors">
+                  <User className="w-8 h-8 text-primary-500" />
+                </div>
+                <div>
+                  <CardTitle className="mb-2">Individual</CardTitle>
+                  <CardDescription className="text-base">
+                    Build your personal profile, showcase your skills, and connect with
+                    opportunities
+                  </CardDescription>
+                </div>
+                <Button className="w-full" size="lg">
+                  Continue as Individual
+                </Button>
+              </CardHeader>
+            </Card>
+
+            <Card
+              className="border-2 hover:border-primary-300 transition-colors cursor-pointer group"
+              onClick={() => {
+                setPersona('org_member');
+                setStep('credentials');
+              }}
+            >
+              <CardHeader className="text-center space-y-4 p-8">
+                <div className="mx-auto w-16 h-16 rounded-full bg-primary-50 flex items-center justify-center group-hover:bg-primary-100 transition-colors">
+                  <Building2 className="w-8 h-8 text-primary-500" />
+                </div>
+                <div>
+                  <CardTitle className="mb-2">Organization</CardTitle>
+                  <CardDescription className="text-base">
+                    Create an organization, manage your team, and build credibility together
+                  </CardDescription>
+                </div>
+                <Button className="w-full" size="lg">
+                  Continue as Organization
+                </Button>
+              </CardHeader>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show credentials form after persona selection
   return (
     <div className="min-h-screen flex items-center justify-center bg-secondary-100 px-4">
       <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg">
-        <h1 className="text-3xl font-display font-semibold text-primary-500 mb-2">
-          Create your account
-        </h1>
-        <p className="text-neutral-dark-600 mb-8">Join Proofound and get started</p>
+        <div className="mb-6">
+          <button
+            onClick={() => setStep('persona')}
+            className="text-sm text-neutral-dark-600 hover:text-primary-500 transition-colors flex items-center gap-2 mb-4"
+          >
+            ← Back
+          </button>
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-8 h-8 rounded-full bg-primary-500 flex items-center justify-center">
+              <span className="text-white text-sm font-medium">2</span>
+            </div>
+            <h1 className="text-2xl font-display font-semibold text-primary-500">
+              Create your account
+            </h1>
+          </div>
+          <p className="text-neutral-dark-600">
+            Join Proofound as an {persona === 'individual' ? 'Individual' : 'Organization'}
+          </p>
+        </div>
 
         <SocialSignInButtons className="mb-6" />
 
@@ -75,6 +160,8 @@ export default function SignUpPage() {
         )}
 
         <form action={formAction} className="space-y-6">
+          <input type="hidden" name="persona" value={persona || ''} />
+
           <div>
             <Label htmlFor="email">Email</Label>
             <Input

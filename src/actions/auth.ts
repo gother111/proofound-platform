@@ -83,6 +83,16 @@ export async function signUp(
 
     const rawEmail = (formData.get('email') as string | null) ?? '';
     const email = rawEmail.trim().toLowerCase();
+    const persona = (formData.get('persona') as string | null) ?? 'unknown';
+
+    // Validate persona
+    if (persona !== 'individual' && persona !== 'org_member') {
+      return {
+        error: 'Please select Individual or Organization.',
+        success: false,
+      };
+    }
+
     const data = {
       email,
       password: (formData.get('password') as string | null) ?? '',
@@ -111,6 +121,9 @@ export async function signUp(
       password: result.data.password,
       options: {
         emailRedirectTo: `${siteUrl}/auth/callback`,
+        data: {
+          persona: persona, // Store persona in user metadata
+        },
       },
     });
 
