@@ -1,17 +1,72 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { completeOrganizationOnboarding } from '@/actions/onboarding';
+import { createClient } from '@/lib/supabase/client';
 
 export function OrganizationSetup() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [checkingExisting, setCheckingExisting] = useState(true);
+
+  // Check if user already has an organization on mount
+  useEffect(() => {
+    async function checkExistingOrg() {
+      try {
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (!user) {
+          setCheckingExisting(false);
+          return;
+        }
+
+        const { data: existingMemberships } = await supabase
+          .from('organization_members')
+          .select('org_id')
+          .eq('user_id', user.id)
+          .eq('status', 'active')
+          .limit(1);
+
+        if (existingMemberships && existingMemberships.length > 0) {
+          const { data: orgData } = await supabase
+            .from('organizations')
+            .select('slug')
+            .eq('id', existingMemberships[0].org_id)
+            .single();
+
+          if (orgData?.slug) {
+            router.push(`/app/o/${orgData.slug}/home`);
+            return;
+          }
+        }
+      } catch (err) {
+        console.error('Error checking for existing organization:', err);
+      } finally {
+        setCheckingExisting(false);
+      }
+    }
+
+    checkExistingOrg();
+  }, [router]);
+
+  if (checkingExisting) {
+    return (
+      <Card className="max-w-2xl mx-auto">
+        <CardContent className="py-8 text-center">
+          <div className="animate-pulse text-neutral-dark-600">Loading...</div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   async function handleSubmit(formData: FormData) {
     setIsLoading(true);
