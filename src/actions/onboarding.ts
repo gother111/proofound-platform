@@ -160,8 +160,19 @@ export async function completeOrganizationOnboarding(formData: FormData) {
       .eq('status', 'active')
       .limit(1);
 
-    // If they already have an org, prevent creating another
+    // If they already have an org, get the org slug and redirect to it
     if (existingMemberships && existingMemberships.length > 0) {
+      const { data: orgData } = await supabase
+        .from('organizations')
+        .select('slug')
+        .eq('id', existingMemberships[0].org_id)
+        .single();
+
+      if (orgData?.slug) {
+        revalidatePath(`/app/o/${orgData.slug}`);
+        return { success: true, orgSlug: orgData.slug, redirected: true };
+      }
+
       return {
         error:
           'You are already connected to an organization. Please contact support to update your organization membership.',
