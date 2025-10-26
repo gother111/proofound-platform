@@ -36,7 +36,32 @@ export default async function OnboardingPage() {
       return <OnboardingClient initialPersona="individual" />;
     }
   } else if (persona === 'unknown') {
-    // Persona should be set during signup - redirect to signup if missing
+    // Check if they have an existing organization (legacy users)
+    const orgs = await getUserOrganizations(user.id);
+    if (orgs.length > 0) {
+      // They have an org - update persona and redirect to org home
+      await supabase
+        .from('profiles')
+        .update({ persona: 'org_member', updated_at: new Date().toISOString() })
+        .eq('id', user.id);
+
+      const slug = orgs[0].org.slug;
+      redirect(`/app/o/${slug}/home`);
+    }
+
+    // Check if they have an individual profile
+    const profile = await getCurrentUser();
+    if (profile?.handle) {
+      // They have a profile - update persona and redirect to individual home
+      await supabase
+        .from('profiles')
+        .update({ persona: 'individual', updated_at: new Date().toISOString() })
+        .eq('id', user.id);
+
+      redirect('/app/i/home');
+    }
+
+    // Truly new user - redirect to signup
     redirect('/signup');
   }
 
