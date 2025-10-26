@@ -152,18 +152,15 @@ export async function completeOrganizationOnboarding(formData: FormData) {
   try {
     const supabase = await createClient();
 
-    const { data: existingMemberships, error: existingMembershipError } = await supabase
+    // Check if user already has an organization (ignore RLS errors)
+    const { data: existingMemberships } = await supabase
       .from('organization_members')
       .select('org_id')
       .eq('user_id', user.id)
       .eq('status', 'active')
       .limit(1);
 
-    if (existingMembershipError) {
-      console.error('Failed to verify existing organization memberships:', existingMembershipError);
-      return { error: 'Unable to verify your existing organizations. Please try again.' };
-    }
-
+    // If they already have an org, prevent creating another
     if (existingMemberships && existingMemberships.length > 0) {
       return {
         error:

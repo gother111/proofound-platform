@@ -126,7 +126,7 @@ export function OrganizationSetup() {
           </div>
 
           <div>
-            <Label htmlFor="website">Website</Label>
+            <Label htmlFor="website">Website (optional)</Label>
             <Input
               id="website"
               name="website"
@@ -134,6 +134,9 @@ export function OrganizationSetup() {
               placeholder="https://your-website.com"
               disabled={isLoading}
             />
+            <p className="text-xs text-neutral-dark-500 mt-1">
+              You can add this later in your organization profile
+            </p>
           </div>
 
           {error && (
