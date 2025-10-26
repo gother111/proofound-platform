@@ -1,8 +1,7 @@
 /**
  * Feature flags for gating experimental or in-development features.
  *
- * Matching is now part of the core platform pipeline and always loads during boot.
- * Use flags here only for UI-level experiments (e.g., EXPERIMENT_MATCHING_UI).
+ * MATCHING_ENABLED: Gates the entire matching system (routes, APIs, UI).
  */
 
-export const WIREFRAME_MODE = process.env.NEXT_PUBLIC_WIREFRAME_MODE === 'true';
+export const MATCHING_ENABLED = process.env.MATCHING_FEATURE_ENABLED === 'true';
