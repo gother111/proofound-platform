@@ -258,22 +258,32 @@ function MinimalHeader({
           exit={{ opacity: 0, y: -20 }}
           className="absolute top-full left-0 right-0 mt-4 mx-6 md:mx-12 bg-white/95 dark:bg-[#2a2a2a]/95 backdrop-blur-xl rounded-3xl border border-[#1C4D3A]/10 dark:border-[#D4C4A8]/10 p-8 shadow-2xl"
         >
-          <nav className="space-y-4">
-            {['The Problem', 'How It Works', 'Principles', 'For Whom', 'Roadmap'].map(
-              (item, idx) => (
-                <motion.a
-                  key={item}
-                  href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                  className="block text-lg text-[#2D3330] dark:text-[#D4C4A8] hover:text-[#1C4D3A] dark:hover:text-white transition-colors"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  {item}
-                </motion.a>
-              )
-            )}
+          <nav className="flex flex-col items-center space-y-4">
+            {['The Problem', 'How It Works', 'Principles', 'For Whom'].map((item, idx) => (
+              <motion.a
+                key={item}
+                href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                className="text-lg text-[#2D3330] dark:text-[#D4C4A8] hover:text-[#1C4D3A] dark:hover:text-white transition-colors text-center"
+                onClick={() => setMenuOpen(false)}
+              >
+                {item}
+              </motion.a>
+            ))}
+
+            {/* Login Button */}
+            <motion.a
+              href="/login"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="mt-4 px-8 py-3 rounded-full bg-[#1C4D3A] hover:bg-[#2D5D4A] text-white transition-colors text-center"
+              onClick={() => setMenuOpen(false)}
+            >
+              Login
+            </motion.a>
           </nav>
         </motion.div>
       )}
