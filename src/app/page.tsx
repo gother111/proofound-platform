@@ -1,320 +1,867 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { User, Building2, Shield, Users, CheckCircle, ArrowRight } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import {
+  CheckCircle,
+  ArrowRight,
+  Heart,
+  Clock,
+  Eye,
+  TrendingUp,
+  FileText,
+  DollarSign,
+  RefreshCw,
+  Layers,
+  X,
+  Smile,
+  Award,
+  Zap,
+  Globe,
+  Shield,
+  Users,
+  Minus,
+  Target,
+  Lock,
+  Sparkles,
+  Star,
+} from 'lucide-react';
 import { NetworkBackground } from '@/components/landing/NetworkBackground';
+import { Header } from '@/components/landing/Header';
+import { ProgressBar } from '@/components/landing/ProgressBar';
+import { StickyCTA } from '@/components/landing/StickyCTA';
+
+type Persona = 'individual' | 'organization';
+type PricingType = 'individual' | 'organization';
 
 export default function LandingPage() {
+  const [persona, setPersona] = useState<Persona>('individual');
+  const [pricingType, setPricingType] = useState<PricingType>('individual');
+  const [selectedRole, setSelectedRole] = useState<Persona | ''>('');
+
+  const handleSignup = (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    const email = formData.get('email');
+    console.log('Signup:', { email, role: selectedRole });
+    alert("Thank you for joining the waitlist! We'll be in touch soon.");
+  };
+
+  const scrollToSignup = () => {
+    document.getElementById('signup')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
-    <div className="min-h-screen bg-bg-base relative">
-      {/* Living Network Background - subtle */}
+    <div className="min-h-screen bg-bg-base relative overflow-x-hidden">
       <NetworkBackground />
+      <ProgressBar />
+      <Header />
+      <StickyCTA />
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 section-pad relative z-10">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl md:text-6xl font-display font-semibold text-brand-sage mb-6">
+      <section className="min-h-[85vh] flex items-center justify-center text-center px-4 md:px-12 pt-24 relative z-10">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-6xl md:text-8xl font-display font-semibold text-brand-sage mb-6 animate-in">
             Proofound
           </h1>
-          <p className="text-xl md:text-2xl text-fg-base opacity-80 mb-4">
-            Credibility you can trust. Connections that matter.
-          </p>
-          <p className="text-lg text-fg-base opacity-60 mb-8 max-w-2xl mx-auto">
-            A platform that puts proof first—where credentials are verified, achievements are
-            authentic, and professional relationships are built on trust.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="text-lg px-8">
-              <Link href="/signup">Get Started</Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="text-lg px-8">
-              <Link href="/login">Sign In</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* For Individuals & Organizations */}
-      <section className="container mx-auto px-4 py-16 relative z-10">
-        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          <Card className="border-2 hover:border-brand-sage transition-all hover:shadow-lg">
-            <CardHeader className="text-center pb-4">
-              <div className="mx-auto w-16 h-16 rounded-full bg-brand-sage bg-opacity-10 flex items-center justify-center mb-4">
-                <User className="w-8 h-8 text-brand-sage" />
-              </div>
-              <CardTitle className="text-2xl">For Individuals</CardTitle>
-              <CardDescription className="text-base mt-2">
-                Build a credible professional profile
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-3">
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-brand-sage mt-0.5 flex-shrink-0" />
-                  <span className="text-fg-base opacity-80">
-                    Showcase verified skills and achievements
-                  </span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-brand-sage mt-0.5 flex-shrink-0" />
-                  <span className="text-fg-base opacity-80">
-                    Connect with opportunities based on proof
-                  </span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-brand-sage mt-0.5 flex-shrink-0" />
-                  <span className="text-fg-base opacity-80">Control your data and privacy</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-brand-sage mt-0.5 flex-shrink-0" />
-                  <span className="text-fg-base opacity-80">
-                    Build authentic professional relationships
-                  </span>
-                </li>
-              </ul>
-              <Button asChild className="w-full mt-6">
-                <Link href="/signup">
-                  Create Individual Profile
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="border-2 hover:border-brand-terracotta transition-all hover:shadow-lg">
-            <CardHeader className="text-center pb-4">
-              <div className="mx-auto w-16 h-16 rounded-full bg-brand-terracotta bg-opacity-10 flex items-center justify-center mb-4">
-                <Building2 className="w-8 h-8 text-brand-terracotta" />
-              </div>
-              <CardTitle className="text-2xl">For Organizations</CardTitle>
-              <CardDescription className="text-base mt-2">
-                Build trust and manage your team
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-3">
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-brand-terracotta mt-0.5 flex-shrink-0" />
-                  <span className="text-fg-base opacity-80">
-                    Establish organizational credibility
-                  </span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-brand-terracotta mt-0.5 flex-shrink-0" />
-                  <span className="text-fg-base opacity-80">
-                    Manage team members and permissions
-                  </span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-brand-terracotta mt-0.5 flex-shrink-0" />
-                  <span className="text-fg-base opacity-80">
-                    Track organizational activity and audit logs
-                  </span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-brand-terracotta mt-0.5 flex-shrink-0" />
-                  <span className="text-fg-base opacity-80">
-                    Collaborate with verified professionals
-                  </span>
-                </li>
-              </ul>
-              <Button asChild className="w-full mt-6">
-                <Link href="/signup">
-                  Create Organization
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
-      {/* Principles Section */}
-      <section className="bg-muted py-16 relative z-10">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-display font-semibold text-brand-sage mb-4">
-              Built on Trust
-            </h2>
-            <p className="text-lg text-fg-base opacity-80">
-              Our platform is guided by principles that put people first
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <div className="text-center">
-              <div className="mx-auto w-14 h-14 rounded-full bg-brand-sage bg-opacity-20 flex items-center justify-center mb-4">
-                <Shield className="w-7 h-7 text-brand-sage" />
-              </div>
-              <h3 className="text-xl font-semibold text-brand-sage mb-2">Privacy First</h3>
-              <p className="text-fg-base opacity-80">
-                You control your data. No tracking, no selling your information, no hidden agendas.
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="mx-auto w-14 h-14 rounded-full bg-brand-sage bg-opacity-20 flex items-center justify-center mb-4">
-                <Users className="w-7 h-7 text-brand-sage" />
-              </div>
-              <h3 className="text-xl font-semibold text-brand-sage mb-2">Community Owned</h3>
-              <p className="text-fg-base opacity-80">
-                Built for steward ownership—the community guides the platform&apos;s future.
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="mx-auto w-14 h-14 rounded-full bg-brand-sage bg-opacity-20 flex items-center justify-center mb-4">
-                <CheckCircle className="w-7 h-7 text-brand-sage" />
-              </div>
-              <h3 className="text-xl font-semibold text-brand-sage mb-2">Bias-Free</h3>
-              <p className="text-fg-base opacity-80">
-                Proof-based profiles reduce bias and focus on what truly matters: your work.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ Section */}
-      <section className="container mx-auto px-4 py-16 relative z-10">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-display font-semibold text-brand-sage mb-8 text-center">
-            Frequently Asked Questions
+          <h2 className="text-3xl md:text-5xl font-display text-brand-sage mb-6">
+            A credibility engineering platform for impactful connections
           </h2>
-
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">What is Proofound?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-fg-base opacity-80">
-                  Proofound is a credibility and connection platform that helps individuals and
-                  organizations build trust through verified achievements and transparent profiles.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">How do I get started?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-fg-base opacity-80">
-                  Sign up with your email, verify your account, and choose whether you want to
-                  create an individual profile or an organization. Our onboarding guide will walk
-                  you through the rest.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">Is Proofound free?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-fg-base opacity-80">
-                  Yes! Proofound is currently free during our early access phase. We&apos;re
-                  building the platform with the community and will always offer a generous free
-                  tier.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">How is my data protected?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-fg-base opacity-80">
-                  We use industry-standard encryption and security practices. Your data is stored
-                  securely, never sold to third parties, and you have full control over what you
-                  share.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="bg-brand-sage text-white py-16 relative z-10">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-display font-semibold mb-4">
-            Ready to build your credibility?
-          </h2>
-          <p className="text-lg mb-8 opacity-90 max-w-2xl mx-auto">
-            Join early adopters who are creating a more trustworthy professional world.
+          <p className="text-lg md:text-xl text-fg-base/70 mb-8 max-w-3xl mx-auto">
+            Unprecedented possibilities for work, business, and individual transformation. Backed by
+            evidence, not vanity metrics.
           </p>
-          <Button asChild size="lg" variant="secondary" className="text-lg px-8">
-            <Link href="/signup">
-              Get Started Now
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Link>
+          <Button size="lg" onClick={scrollToSignup} className="text-lg px-8 py-6">
+            Become a contributor
           </Button>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-fg-base text-white py-12 relative z-10">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <h3 className="text-white font-semibold text-lg mb-4">Proofound</h3>
-              <p className="text-sm opacity-80">
-                Building trust through verified credentials and authentic connections.
-              </p>
-            </div>
+      {/* The Problem Section */}
+      <section id="the-problem" className="px-4 md:px-12 py-16 relative z-10">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-display text-brand-sage mb-4">
+              The problems we solve
+            </h2>
+            <p className="text-lg text-fg-base/70">
+              Today&apos;s connection and verification systems are broken.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              {
+                icon: Heart,
+                text: 'Mental health toll of endless job searches and networking',
+              },
+              {
+                icon: Clock,
+                text: 'Wasted time on connection rituals and manual verification',
+              },
+              {
+                icon: Eye,
+                text: 'Bias, misalignment, and opacity in matching systems',
+              },
+              {
+                icon: TrendingUp,
+                text: 'Vanity metrics that obscure real impact',
+              },
+              {
+                icon: FileText,
+                text: "Outdated CVs and portfolios that don't tell the full story",
+              },
+              {
+                icon: DollarSign,
+                text: 'Profit-only capital disconnected from mission alignment',
+              },
+              {
+                icon: X,
+                text: 'AI anxiety and lack of transparency in algorithmic decisions',
+              },
+              {
+                icon: Layers,
+                text: 'No universal problem-solving framework for collaboration',
+              },
+              {
+                icon: RefreshCw,
+                text: 'Massive waste of time, talent, and resources',
+              },
+            ].map((problem, index) => (
+              <Card
+                key={index}
+                className="p-6 bg-white/60 backdrop-blur-sm border border-brand-sage/10 hover:border-brand-sage/30 hover:shadow-lg transition-all"
+              >
+                <div className="flex gap-4">
+                  <div className="w-10 h-10 rounded-full bg-brand-terracotta/10 flex items-center justify-center flex-shrink-0">
+                    <problem.icon className="w-5 h-5 text-brand-terracotta" />
+                  </div>
+                  <p className="text-fg-base">{problem.text}</p>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
 
+      {/* How It Works Section */}
+      <section id="how-it-works" className="px-4 md:px-12 py-16 relative z-10">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-display text-brand-sage mb-4">
+              How Proofound works
+            </h2>
+            <p className="text-lg text-fg-base/70">
+              A platform built on evidence, transparency, and dignity.
+            </p>
+          </div>
+          <div className="overflow-x-auto pb-4 -mx-4 md:-mx-12">
+            <div className="flex gap-8 px-4 md:px-12 min-w-max">
+              {[
+                {
+                  icon: Smile,
+                  title: 'AI-powered matching',
+                  description:
+                    'Evidence-based algorithms that connect you to aligned opportunities, not vanity metrics',
+                },
+                {
+                  icon: Award,
+                  title: 'Proof-based profiles',
+                  description:
+                    'Verified skills, impact stories, and credentials—all traceable and transparent',
+                },
+                {
+                  icon: Target,
+                  title: 'Transferable verification',
+                  description:
+                    'Once verified, your proofs travel with you across contexts and time',
+                },
+                {
+                  icon: Lock,
+                  title: 'Granular privacy controls',
+                  description:
+                    "You decide what's visible, to whom, and when - data dignity at every layer",
+                },
+                {
+                  icon: Eye,
+                  title: 'Decluttered UX',
+                  description:
+                    'Clean, Japandi-inspired design that respects your attention and mental space',
+                },
+                {
+                  icon: Heart,
+                  title: 'Mental health tools',
+                  description:
+                    'Built-in well-being support, not an afterthought - ikigai, safety planning, reflection',
+                },
+              ].map((feature, index) => (
+                <Card
+                  key={index}
+                  className="min-w-[320px] flex-shrink-0 p-8 bg-white/60 backdrop-blur-sm border border-brand-sage/10 hover:border-brand-sage/30 hover:shadow-lg transition-all"
+                >
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-sage to-brand-teal flex items-center justify-center mb-6">
+                    <feature.icon className="w-7 h-7 text-white" />
+                  </div>
+                  <h3 className="text-xl md:text-2xl font-display text-brand-sage mb-3">
+                    {feature.title}
+                  </h3>
+                  <p className="text-fg-base/80">{feature.description}</p>
+                </Card>
+              ))}
+            </div>
+          </div>
+          <p className="text-center text-sm text-fg-base/50 mt-6">
+            Scroll horizontally to explore all features →
+          </p>
+        </div>
+      </section>
+
+      {/* Principles Section */}
+      <section
+        id="principles"
+        className="px-4 md:px-12 py-16 relative z-10"
+        style={{ background: 'linear-gradient(to bottom, transparent, rgba(122, 146, 120, 0.05))' }}
+      >
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-display text-brand-sage mb-4">
+              What makes it trustworthy
+            </h2>
+            <p className="text-lg text-fg-base/70">Principles that guide every decision we make.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              {
+                icon: Globe,
+                title: "Eleanor Ostrom's commons principles",
+                description: 'Governance designed for collective stewardship, not extraction',
+              },
+              {
+                icon: Zap,
+                title: 'Distributed systems mindset',
+                description: 'Resilient, federated architecture that respects sovereignty',
+              },
+              {
+                icon: Shield,
+                title: 'Anti-bias guardrails',
+                description: 'Auditable algorithms with continuous monitoring and transparency',
+              },
+              {
+                icon: Heart,
+                title: 'Steward-ownership ethos',
+                description: 'We never monetize inequality—mission comes first',
+              },
+              {
+                icon: Minus,
+                title: 'Remove the excess',
+                description: 'Minimalism in design, maximalism in meaning',
+              },
+              {
+                icon: TrendingUp,
+                title: 'Information quality drives decisions',
+                description: 'Every choice backed by evidence, not assumptions',
+              },
+            ].map((principle, index) => (
+              <Card
+                key={index}
+                className="p-8 bg-white/60 backdrop-blur-sm border border-brand-sage/10 hover:border-brand-sage/30 hover:shadow-lg transition-all"
+              >
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-sage to-brand-teal flex items-center justify-center mb-6">
+                  <principle.icon className="w-7 h-7 text-white" />
+                </div>
+                <h3 className="text-xl md:text-2xl font-display text-brand-sage mb-3">
+                  {principle.title}
+                </h3>
+                <p className="text-fg-base/80">{principle.description}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Roadmap Section */}
+      <section id="roadmap" className="px-4 md:px-12 py-16 relative z-10">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-display text-brand-sage mb-4">
+              Show, don&apos;t tell
+            </h2>
+            <p className="text-lg text-fg-base/70">Explore the modules that power Proofound.</p>
+          </div>
+          <div className="overflow-x-auto pb-4 -mx-4 md:-mx-12 relative">
+            {/* Timeline line */}
+            <div className="absolute top-10 left-0 right-0 h-0.5 bg-gradient-to-r from-brand-sage via-brand-teal to-brand-terracotta mx-12 hidden md:block" />
+            <div className="flex gap-8 px-4 md:px-12 min-w-max">
+              {[
+                {
+                  color: 'bg-brand-sage',
+                  badge: 'Live',
+                  badgeColor: 'bg-brand-sage/10 text-brand-sage',
+                  title: 'Verification v1.0',
+                  description: 'Badges and proofs with transparent provenance',
+                },
+                {
+                  color: 'bg-brand-teal',
+                  badge: 'Live',
+                  badgeColor: 'bg-brand-sage/10 text-brand-sage',
+                  title: 'Clusters',
+                  description: 'Network signals that reveal alignment without exposing identities',
+                },
+                {
+                  color: 'bg-brand-terracotta',
+                  badge: 'Live',
+                  badgeColor: 'bg-brand-sage/10 text-brand-sage',
+                  title: 'Expertise Atlas',
+                  description: 'Skills mapped to evidence and artifacts',
+                },
+                {
+                  color: 'bg-brand-ochre',
+                  badge: 'Live',
+                  badgeColor: 'bg-brand-sage/10 text-brand-sage',
+                  title: 'Zen Hub',
+                  description: 'Ikigai planning, well-being tools, and mental health support',
+                },
+                {
+                  color: 'bg-brand-terracotta',
+                  badge: 'Coming Soon',
+                  badgeColor: 'bg-brand-terracotta/10 text-brand-terracotta',
+                  title: 'Dev Hub',
+                  description: 'Personalized learning pathways and partner benefits',
+                },
+                {
+                  color: 'bg-brand-teal',
+                  badge: 'Coming Soon',
+                  badgeColor: 'bg-brand-terracotta/10 text-brand-terracotta',
+                  title: 'Matching',
+                  description: 'Evidence-based connections powered by transparent algorithms',
+                },
+                {
+                  color: 'bg-brand-sage',
+                  badge: 'Coming Soon',
+                  badgeColor: 'bg-brand-terracotta/10 text-brand-terracotta',
+                  title: 'Opportunities & Projects',
+                  description: 'Mission-aligned work connections',
+                },
+              ].map((item, index) => (
+                <div key={index} className="min-w-[320px] flex-shrink-0 relative">
+                  <div
+                    className={`w-10 h-10 rounded-full ${item.color} mx-auto mb-4 border-4 border-bg-base`}
+                  />
+                  <Card className="p-6 bg-white/60 backdrop-blur-sm border border-brand-sage/10 hover:border-brand-sage/30 hover:shadow-lg transition-all">
+                    <span
+                      className={`inline-block px-3 py-1 rounded-full text-xs font-medium mb-4 ${item.badgeColor}`}
+                    >
+                      {item.badge}
+                    </span>
+                    <h3 className="text-xl md:text-2xl font-display text-brand-sage mb-3">
+                      {item.title}
+                    </h3>
+                    <p className="text-sm text-fg-base/80">{item.description}</p>
+                  </Card>
+                </div>
+              ))}
+            </div>
+          </div>
+          <p className="text-center text-sm text-fg-base/50 mt-6">
+            Scroll horizontally to see the roadmap →
+          </p>
+        </div>
+      </section>
+
+      {/* For Whom Section */}
+      <section id="for-whom" className="px-4 md:px-12 py-16 relative z-10">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-display text-brand-sage mb-4">
+              Built for you
+            </h2>
+            <p className="text-lg text-fg-base/70 mb-8">
+              Whether you&apos;re an individual or an organization, Proofound empowers you.
+            </p>
+            <div className="inline-flex bg-white rounded-full p-1 border border-brand-sage/10">
+              <button
+                onClick={() => setPersona('individual')}
+                className={`px-8 py-3 rounded-full text-base font-medium transition-all ${
+                  persona === 'individual'
+                    ? 'bg-brand-sage text-white'
+                    : 'text-fg-base hover:bg-brand-sage/5'
+                }`}
+              >
+                Individuals
+              </button>
+              <button
+                onClick={() => setPersona('organization')}
+                className={`px-8 py-3 rounded-full text-base font-medium transition-all ${
+                  persona === 'organization'
+                    ? 'bg-brand-sage text-white'
+                    : 'text-fg-base hover:bg-brand-sage/5'
+                }`}
+              >
+                Organizations
+              </button>
+            </div>
+          </div>
+          <Card className="p-12 bg-white/60 backdrop-blur-sm border border-brand-sage/10">
+            <h3 className="text-2xl md:text-3xl font-display text-brand-sage mb-6">
+              {persona === 'individual' ? 'For Individuals' : 'For Organizations'}
+            </h3>
+            <div className="space-y-4 mb-8">
+              {persona === 'individual'
+                ? [
+                    'Find mission-aligned opportunities without the mental health toll',
+                    'Build a verified, portable profile that tells your real story',
+                    'Access well-being tools and career planning support',
+                  ].map((benefit, index) => (
+                    <div key={index} className="flex gap-3 items-center">
+                      <CheckCircle className="w-5 h-5 text-brand-sage flex-shrink-0" />
+                      <p className="text-fg-base">{benefit}</p>
+                    </div>
+                  ))
+                : [
+                    'Discover talent based on evidence and alignment, not resumes',
+                    'Reduce bias in hiring and partnership decisions',
+                    'Build trust with transparent verification and matching',
+                  ].map((benefit, index) => (
+                    <div key={index} className="flex gap-3 items-center">
+                      <CheckCircle className="w-5 h-5 text-brand-sage flex-shrink-0" />
+                      <p className="text-fg-base">{benefit}</p>
+                    </div>
+                  ))}
+            </div>
+            <Button onClick={scrollToSignup} className="w-full text-lg py-6">
+              {persona === 'individual' ? 'Join as an Individual' : 'Partner with Us'}
+            </Button>
+          </Card>
+        </div>
+      </section>
+
+      {/* Why Now Section */}
+      <section
+        className="px-4 md:px-12 py-16 relative z-10"
+        style={{
+          background: 'linear-gradient(to bottom, transparent, rgba(198, 123, 92, 0.05))',
+        }}
+      >
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-display text-brand-sage mb-4">Why now</h2>
+            <p className="text-lg text-fg-base/70">The timing has never been more critical.</p>
+          </div>
+          <div className="space-y-6">
+            {[
+              {
+                title: 'AI and Technology advancements are shifting global paradigms',
+                description: 'New tools demand new trust models and possibilities',
+              },
+              {
+                title: 'Simplicity of faking and growing trust challenges',
+                description: 'Misinformation and deepfakes erode credibility everywhere',
+              },
+              {
+                title: 'Global mental health challenges grow',
+                description: 'Unprecedented uncertainty drives need for well-being infrastructure',
+              },
+              {
+                title: 'Obsoletion of outdated CV and recruitment standards',
+                description:
+                  "Traditional credentials don't capture real capability or values alignment",
+              },
+              {
+                title: 'Rapid globalization calls for unprecedented coordination',
+                description:
+                  'Cross-border collaboration requires new verification and trust systems',
+              },
+            ].map((reason, index) => (
+              <Card
+                key={index}
+                className="p-6 bg-white/60 backdrop-blur-sm border border-brand-sage/10 hover:border-brand-sage/30 hover:shadow-lg transition-all"
+              >
+                <div className="flex gap-6 items-center">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-terracotta to-brand-ochre flex items-center justify-center text-white font-semibold flex-shrink-0">
+                    {index + 1}
+                  </div>
+                  <div>
+                    <h3 className="text-lg md:text-xl font-display text-brand-sage mb-1">
+                      {reason.title}
+                    </h3>
+                    <p className="text-sm text-fg-base/80">{reason.description}</p>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Products & Subscriptions Section */}
+      <section className="px-4 md:px-12 py-16 relative z-10">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-display text-brand-sage mb-4">
+              Products & Subscriptions
+            </h2>
+            <p className="text-lg text-fg-base/70 mb-8 max-w-4xl mx-auto">
+              Proofound pledges a lifelong commitment never to monetize by creating disparity or
+              selling exposure. The core tools that fulfill our mission will always remain free for
+              humans.
+            </p>
+            <div className="inline-flex bg-white rounded-full p-1 border border-brand-sage/10">
+              <button
+                onClick={() => setPricingType('individual')}
+                className={`px-8 py-3 rounded-full text-base font-medium transition-all ${
+                  pricingType === 'individual'
+                    ? 'bg-brand-sage text-white'
+                    : 'text-fg-base hover:bg-brand-sage/5'
+                }`}
+              >
+                Individuals
+              </button>
+              <button
+                onClick={() => setPricingType('organization')}
+                className={`px-8 py-3 rounded-full text-base font-medium transition-all ${
+                  pricingType === 'organization'
+                    ? 'bg-brand-sage text-white'
+                    : 'text-fg-base hover:bg-brand-sage/5'
+                }`}
+              >
+                Organizations
+              </button>
+            </div>
+          </div>
+          <div
+            className={`grid gap-6 ${pricingType === 'individual' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 md:grid-cols-2'}`}
+          >
+            {pricingType === 'individual' ? (
+              <>
+                {[
+                  {
+                    icon: Smile,
+                    title: 'Development Hub Subscription',
+                    description: 'Access resources, templates, and guided learning paths.',
+                    price: '€19',
+                    period: '/month',
+                    trial: '14 days free trial',
+                  },
+                  {
+                    icon: Sparkles,
+                    title: 'AI Co-Founder Tool',
+                    description: 'Subscription + tokenized usage model for scalable assistance.',
+                    price: '€39',
+                    period: '/month',
+                    trial: '7 days free trial',
+                  },
+                  {
+                    icon: Heart,
+                    title: 'Zen Hub Premium',
+                    description: 'Extended well-being and productivity ecosystem.',
+                    price: '€12',
+                    period: '/month',
+                    trial: '30 days free trial',
+                  },
+                  {
+                    icon: Star,
+                    title: 'Full Bundle Package',
+                    description:
+                      'All premium features: Development Hub, AI Co-Founder, and Zen Hub.',
+                    price: '€59',
+                    period: '/month',
+                    trial: '30 days free trial',
+                    highlight: true,
+                    savings: 'Save €11/month',
+                  },
+                ].map((product, index) => (
+                  <Card
+                    key={index}
+                    className={`p-8 bg-white/60 backdrop-blur-sm border transition-all relative ${
+                      product.highlight
+                        ? 'border-brand-terracotta shadow-lg shadow-brand-terracotta/20'
+                        : 'border-brand-sage/10 hover:border-brand-sage/30 hover:shadow-lg'
+                    }`}
+                  >
+                    {product.highlight && (
+                      <span className="absolute -top-3 -right-3 bg-brand-terracotta text-white text-xs px-3 py-1 rounded-full shadow-lg">
+                        Best Value
+                      </span>
+                    )}
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-sage to-brand-teal flex items-center justify-center mb-6">
+                      <product.icon className="w-7 h-7 text-white" />
+                    </div>
+                    <h3 className="text-xl font-display text-brand-sage mb-3">{product.title}</h3>
+                    <p className="text-sm text-fg-base/80 mb-6">{product.description}</p>
+                    <div className="text-3xl font-display text-brand-sage mb-2">
+                      {product.price}
+                      <span className="text-sm text-fg-base/70">{product.period}</span>
+                    </div>
+                    {product.savings && (
+                      <p className="text-sm text-brand-terracotta font-medium mb-2">
+                        {product.savings}
+                      </p>
+                    )}
+                    <p className="text-sm text-fg-base/70 mb-6">{product.trial}</p>
+                    <Button className="w-full">Start Free Trial</Button>
+                  </Card>
+                ))}
+              </>
+            ) : (
+              <>
+                {[
+                  {
+                    icon: Users,
+                    title: 'Platform Subscription',
+                    description: 'Access to organizational dashboards and verification tools.',
+                  },
+                  {
+                    icon: Target,
+                    title: 'Assignment Completion Fees',
+                    description: 'Pay-per-mission or project delivery model.',
+                  },
+                  {
+                    icon: Heart,
+                    title: 'Zen Hub Enterprise',
+                    description: 'Tailored well-being and collaboration environment.',
+                  },
+                  {
+                    icon: TrendingUp,
+                    title: 'Employee Development Hubs',
+                    description: 'Empower internal growth with curated learning ecosystems.',
+                  },
+                ].map((product, index) => (
+                  <Card
+                    key={index}
+                    className="p-8 bg-white/60 backdrop-blur-sm border border-brand-sage/10 hover:border-brand-sage/30 hover:shadow-lg transition-all"
+                  >
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-sage to-brand-teal flex items-center justify-center mb-6">
+                      <product.icon className="w-7 h-7 text-white" />
+                    </div>
+                    <h3 className="text-xl font-display text-brand-sage mb-3">{product.title}</h3>
+                    <p className="text-sm text-fg-base/80 mb-6">{product.description}</p>
+                    <div className="pt-6 border-t border-brand-sage/10">
+                      <p className="text-sm text-fg-base/70 text-center mb-4">
+                        Custom pricing based on your needs
+                      </p>
+                      <Button variant="outline" className="w-full">
+                        Contact for inquiries
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+              </>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA Section */}
+      <section id="signup" className="px-4 md:px-12 py-16 relative z-10">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-6xl font-display text-brand-sage mb-6">
+              Join the founding cohort
+            </h2>
+            <p className="text-lg md:text-xl text-fg-base/70">
+              Be part of building a credibility infrastructure that respects your dignity, protects
+              your privacy, and amplifies your impact.
+            </p>
+          </div>
+          <Card className="p-12 bg-white/60 backdrop-blur-sm border border-brand-sage/10">
+            <form onSubmit={handleSignup} className="space-y-6">
+              <input
+                type="email"
+                name="email"
+                placeholder="Enter your email"
+                required
+                className="w-full px-6 py-4 rounded-full border border-brand-sage/20 bg-bg-base focus:outline-none focus:ring-2 focus:ring-brand-sage/40 focus:border-transparent text-base"
+              />
+              <div className="flex gap-4 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => setSelectedRole('individual')}
+                  className={`flex-1 min-w-[140px] px-6 py-4 rounded-full border text-base font-medium transition-all ${
+                    selectedRole === 'individual'
+                      ? 'bg-brand-sage text-white border-brand-sage'
+                      : 'bg-transparent text-brand-sage border-brand-sage hover:bg-brand-sage/5'
+                  }`}
+                >
+                  Individual
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedRole('organization')}
+                  className={`flex-1 min-w-[140px] px-6 py-4 rounded-full border text-base font-medium transition-all ${
+                    selectedRole === 'organization'
+                      ? 'bg-brand-sage text-white border-brand-sage'
+                      : 'bg-transparent text-brand-sage border-brand-sage hover:bg-brand-sage/5'
+                  }`}
+                >
+                  Organization
+                </button>
+              </div>
+              <Button type="submit" size="lg" className="w-full text-lg py-6">
+                Get Early Access
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+              <p className="text-center text-sm text-fg-base/50 mt-6">
+                We respect your privacy. No spam, no data sold.{' '}
+                <a href="#" className="underline">
+                  Read our privacy stance
+                </a>
+                .
+              </p>
+            </form>
+          </Card>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-brand-sage/10 bg-white/50 backdrop-blur-xl px-4 md:px-12 py-20 relative z-10">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
             <div>
-              <h4 className="text-white font-medium mb-4">Platform</h4>
-              <ul className="space-y-2 text-sm">
+              <div className="flex items-center gap-2 mb-6">
+                <CheckCircle className="w-8 h-8 text-brand-sage" strokeWidth={2} />
+                <span className="text-xl font-display text-brand-sage">Proofound</span>
+              </div>
+              <p className="text-sm text-fg-base/70 mb-6 leading-relaxed">
+                Building multidimensional connections with evidence-based transparency.
+              </p>
+              <div className="text-sm text-fg-base/70 space-y-2">
+                <p className="flex gap-2">
+                  <span>📍</span>
+                  <span>Stockholm, Sweden</span>
+                </p>
+                <p className="flex gap-2">
+                  <span>✉️</span>
+                  <a
+                    href="mailto:hello@proofound.com"
+                    className="hover:text-brand-sage transition-colors"
+                  >
+                    hello@proofound.com
+                  </a>
+                </p>
+              </div>
+            </div>
+            <div>
+              <h4 className="text-lg font-display text-brand-sage mb-6">Platform</h4>
+              <ul className="space-y-3 text-sm">
                 <li>
-                  <Link href="/signup" className="opacity-80 hover:opacity-100 transition-opacity">
-                    Sign Up
+                  <Link
+                    href="#about"
+                    className="text-fg-base/70 hover:text-brand-sage transition-colors"
+                  >
+                    About Proofound
                   </Link>
                 </li>
                 <li>
-                  <Link href="/login" className="opacity-80 hover:opacity-100 transition-opacity">
-                    Sign In
+                  <Link
+                    href="#how-it-works"
+                    className="text-fg-base/70 hover:text-brand-sage transition-colors"
+                  >
+                    How It Works
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#principles"
+                    className="text-fg-base/70 hover:text-brand-sage transition-colors"
+                  >
+                    Principles
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#faq"
+                    className="text-fg-base/70 hover:text-brand-sage transition-colors"
+                  >
+                    FAQ
                   </Link>
                 </li>
               </ul>
             </div>
-
             <div>
-              <h4 className="text-white font-medium mb-4">Legal</h4>
-              <ul className="space-y-2 text-sm">
+              <h4 className="text-lg font-display text-brand-sage mb-6">Resources</h4>
+              <ul className="space-y-3 text-sm">
                 <li>
-                  <Link href="#" className="opacity-80 hover:opacity-100 transition-opacity">
+                  <Link
+                    href="#docs"
+                    className="text-fg-base/70 hover:text-brand-sage transition-colors"
+                  >
+                    Documentation
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#blog"
+                    className="text-fg-base/70 hover:text-brand-sage transition-colors"
+                  >
+                    Blog & Insights
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#community"
+                    className="text-fg-base/70 hover:text-brand-sage transition-colors"
+                  >
+                    Community
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#support"
+                    className="text-fg-base/70 hover:text-brand-sage transition-colors"
+                  >
+                    Support
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-lg font-display text-brand-sage mb-6">Legal</h4>
+              <ul className="space-y-3 text-sm">
+                <li>
+                  <Link
+                    href="#terms"
+                    className="text-fg-base/70 hover:text-brand-sage transition-colors"
+                  >
+                    Terms of Service
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#privacy"
+                    className="text-fg-base/70 hover:text-brand-sage transition-colors"
+                  >
                     Privacy Policy
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="opacity-80 hover:opacity-100 transition-opacity">
-                    Terms of Service
+                  <Link
+                    href="#gdpr"
+                    className="text-fg-base/70 hover:text-brand-sage transition-colors"
+                  >
+                    Data Protection
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#accessibility"
+                    className="text-fg-base/70 hover:text-brand-sage transition-colors"
+                  >
+                    Accessibility
                   </Link>
                 </li>
               </ul>
             </div>
-
-            <div>
-              <h4 className="text-white font-medium mb-4">Connect</h4>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <a
-                    href="mailto:hello@proofound.io"
-                    className="opacity-80 hover:opacity-100 transition-opacity"
-                  >
-                    Contact Us
-                  </a>
-                </li>
-              </ul>
-            </div>
           </div>
-
-          <div className="border-t border-white border-opacity-20 pt-8 text-center text-sm">
-            <p>&copy; {new Date().getFullYear()} Proofound. All rights reserved.</p>
+          <div className="border-t border-brand-sage/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-fg-base/50">
+            <p>© {new Date().getFullYear()} Proofound. All rights reserved.</p>
+            <div className="flex items-center gap-4 flex-wrap justify-center">
+              <span>Anti-bias certified</span>
+              <span>•</span>
+              <span>GDPR compliant</span>
+              <span>•</span>
+              <span>Steward-owned</span>
+            </div>
           </div>
         </div>
       </footer>
