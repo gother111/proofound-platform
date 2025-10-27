@@ -342,7 +342,7 @@ function HeroSection({
       <div className="gsap-hero-content relative z-10 max-w-4xl mx-auto text-center space-y-6">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className="space-y-6"
         >
@@ -360,7 +360,7 @@ function HeroSection({
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
           transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
         >
           <Button
@@ -393,6 +393,16 @@ function ProblemSection({ shouldReduceMotion }: { shouldReduceMotion: boolean | 
     { icon: Recycle, text: 'Massive waste of time, talent, and resources' },
   ];
 
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+  };
+
+  const headerVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { opacity: 1, y: 0 },
+  };
+
   return (
     <section
       id="the-problem"
@@ -401,8 +411,9 @@ function ProblemSection({ shouldReduceMotion }: { shouldReduceMotion: boolean | 
     >
       <div className="max-w-6xl mx-auto w-full">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 30 }}
+          initial="hidden"
+          animate={isInView ? 'visible' : 'hidden'}
+          variants={headerVariants}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-10 md:mb-12"
         >
@@ -418,8 +429,9 @@ function ProblemSection({ shouldReduceMotion }: { shouldReduceMotion: boolean | 
           {problems.map((problem, idx) => (
             <motion.div
               key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 20 }}
+              initial="hidden"
+              animate={isInView ? 'visible' : 'hidden'}
+              variants={cardVariants}
               transition={{ duration: 0.6, delay: idx * 0.05, ease: [0.22, 1, 0.36, 1] }}
               className="gsap-problem-card flex gap-4 p-6 bg-white/60 dark:bg-[#2a2a2a]/60 backdrop-blur-sm rounded-2xl border border-[#1C4D3A]/10 dark:border-[#D4C4A8]/10"
             >
@@ -503,7 +515,7 @@ function OurAnswerSection({ shouldReduceMotion }: { shouldReduceMotion: boolean 
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-10 md:mb-12"
         >
@@ -529,7 +541,7 @@ function OurAnswerSection({ shouldReduceMotion }: { shouldReduceMotion: boolean 
                 <motion.div
                   key={idx}
                   initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 20 }}
+                  animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
                   transition={{ duration: 0.6, delay: idx * 0.05, ease: [0.22, 1, 0.36, 1] }}
                   className="w-72 bg-white dark:bg-[#2a2a2a] rounded-3xl p-8 border border-[#1C4D3A]/10 dark:border-[#D4C4A8]/10 hover:border-[#1C4D3A]/30 dark:hover:border-[#D4C4A8]/30 transition-all shadow-lg hover:shadow-xl flex-shrink-0"
                 >
@@ -596,6 +608,16 @@ function TrustworthySection({ shouldReduceMotion }: { shouldReduceMotion: boolea
     },
   ];
 
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20, scale: 0.95 },
+    visible: { opacity: 1, y: 0, scale: 1 },
+  };
+
+  const headerVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { opacity: 1, y: 0 },
+  };
+
   return (
     <section
       id="principles"
@@ -604,8 +626,9 @@ function TrustworthySection({ shouldReduceMotion }: { shouldReduceMotion: boolea
     >
       <div className="max-w-6xl mx-auto w-full">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 30 }}
+          initial="hidden"
+          animate={isInView ? 'visible' : 'hidden'}
+          variants={headerVariants}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-10 md:mb-12"
         >
@@ -621,12 +644,9 @@ function TrustworthySection({ shouldReduceMotion }: { shouldReduceMotion: boolea
           {principles.map((principle, idx) => (
             <motion.div
               key={idx}
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-              animate={{
-                opacity: isInView ? 1 : 0,
-                y: isInView ? 0 : 20,
-                scale: isInView ? 1 : 0.95,
-              }}
+              initial="hidden"
+              animate={isInView ? 'visible' : 'hidden'}
+              variants={cardVariants}
               transition={{ duration: 0.6, delay: idx * 0.1, ease: [0.22, 1, 0.36, 1] }}
               whileHover={{ scale: 1.02, y: -4 }}
               className="gsap-principle-card bg-white dark:bg-[#2a2a2a] rounded-3xl p-8 border border-[#1C4D3A]/10 dark:border-[#D4C4A8]/10 shadow-lg hover:shadow-xl transition-shadow"
@@ -716,7 +736,7 @@ function ModuleTeasersSection({ shouldReduceMotion }: { shouldReduceMotion: bool
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-10 md:mb-12"
         >
@@ -748,7 +768,7 @@ function ModuleTeasersSection({ shouldReduceMotion }: { shouldReduceMotion: bool
                 <motion.div
                   key={idx}
                   initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 20 }}
+                  animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
                   transition={{ duration: 0.6, delay: idx * 0.08, ease: [0.22, 1, 0.36, 1] }}
                   className="relative flex flex-col items-center w-64"
                 >
@@ -840,7 +860,7 @@ function PersonasSection({
       <div className="max-w-5xl mx-auto w-full">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-10"
         >
@@ -947,7 +967,7 @@ function WhyNowSection({ shouldReduceMotion }: { shouldReduceMotion: boolean | n
       <div className="max-w-4xl mx-auto w-full">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-10 md:mb-12"
         >
@@ -964,7 +984,7 @@ function WhyNowSection({ shouldReduceMotion }: { shouldReduceMotion: boolean | n
             <motion.div
               key={idx}
               initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: isInView ? 1 : 0, x: isInView ? 0 : -20 }}
+              animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
               transition={{ duration: 0.6, delay: idx * 0.1, ease: [0.22, 1, 0.36, 1] }}
               className="flex items-center gap-6 bg-white/80 dark:bg-[#2a2a2a]/80 backdrop-blur-sm rounded-2xl p-6 border border-[#1C4D3A]/10 dark:border-[#D4C4A8]/10"
             >
@@ -995,7 +1015,7 @@ function ProofSection({ shouldReduceMotion }: { shouldReduceMotion: boolean | nu
       <div className="max-w-5xl mx-auto w-full">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-10 md:mb-12"
         >
@@ -1009,7 +1029,7 @@ function ProofSection({ shouldReduceMotion }: { shouldReduceMotion: boolean | nu
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
           transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
           className="bg-white dark:bg-[#2a2a2a] rounded-3xl p-12 border border-[#1C4D3A]/10 dark:border-[#D4C4A8]/10 space-y-8"
         >
@@ -1093,7 +1113,7 @@ function StewardOwnershipSection({ shouldReduceMotion }: { shouldReduceMotion: b
       <div className="max-w-6xl mx-auto w-full">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-10 md:mb-12"
         >
@@ -1111,7 +1131,7 @@ function StewardOwnershipSection({ shouldReduceMotion }: { shouldReduceMotion: b
             <motion.div
               key={idx}
               initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 20 }}
+              animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               transition={{ duration: 0.6, delay: idx * 0.1, ease: [0.22, 1, 0.36, 1] }}
               className="bg-white dark:bg-[#2a2a2a] rounded-3xl p-8 border border-[#1C4D3A]/10 dark:border-[#D4C4A8]/10 hover:border-[#1C4D3A]/30 dark:hover:border-[#D4C4A8]/30 transition-all shadow-lg hover:shadow-xl"
             >
@@ -1224,7 +1244,7 @@ function ProductsSubscriptionsSection({
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-10 md:mb-12"
         >
@@ -1275,7 +1295,7 @@ function ProductsSubscriptionsSection({
             <motion.div
               key={idx}
               initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 20 }}
+              animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               transition={{ duration: 0.6, delay: idx * 0.1, ease: [0.22, 1, 0.36, 1] }}
               whileHover={{ y: -4 }}
               className={`bg-white dark:bg-[#2a2a2a] rounded-3xl p-8 border transition-all shadow-lg hover:shadow-xl flex flex-col relative ${
@@ -1416,7 +1436,7 @@ function FinalCTASection({
       <div className="gsap-final-cta relative z-10 max-w-3xl mx-auto w-full text-center">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 40 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className="space-y-6 mb-10"
         >
@@ -1431,7 +1451,7 @@ function FinalCTASection({
 
         <motion.form
           initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
           transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
           onSubmit={handleSubmit}
           className="bg-white dark:bg-[#2a2a2a] rounded-3xl p-8 md:p-12 border border-[#1C4D3A]/10 dark:border-[#D4C4A8]/10 shadow-2xl space-y-6"
@@ -1492,7 +1512,7 @@ function FinalCTASection({
 
         <motion.p
           initial={{ opacity: 0 }}
-          animate={{ opacity: isInView ? 1 : 0 }}
+          animate={isInView ? { opacity: 1 } : { opacity: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
           className="mt-8 text-sm text-[#2D3330]/50 dark:text-[#D4C4A8]/50"
         >
@@ -1628,7 +1648,7 @@ function FooterSection() {
     <motion.footer
       ref={ref}
       initial={{ opacity: 0 }}
-      animate={{ opacity: isInView ? 1 : 0 }}
+      animate={isInView ? { opacity: 1 } : { opacity: 0 }}
       transition={{ duration: 1 }}
       className="border-t border-[#1C4D3A]/10 dark:border-[#D4C4A8]/10 bg-white/50 dark:bg-[#2a2a2a]/50 backdrop-blur-xl"
     >
@@ -1638,7 +1658,7 @@ function FooterSection() {
           {/* Brand Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
             transition={{ delay: 0.1 }}
           >
             <div className="flex items-center gap-2 mb-6">
@@ -1672,7 +1692,7 @@ function FooterSection() {
           {/* Platform Links */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
             transition={{ delay: 0.2 }}
           >
             <h4 className="mb-6 font-['Crimson_Pro'] text-[#1C4D3A] dark:text-[#D4C4A8]">
@@ -1695,7 +1715,7 @@ function FooterSection() {
           {/* Resources Links */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
             transition={{ delay: 0.3 }}
           >
             <h4 className="mb-6 font-['Crimson_Pro'] text-[#1C4D3A] dark:text-[#D4C4A8]">
@@ -1718,7 +1738,7 @@ function FooterSection() {
           {/* Legal Links */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
             transition={{ delay: 0.4 }}
           >
             <h4 className="mb-6 font-['Crimson_Pro'] text-[#1C4D3A] dark:text-[#D4C4A8]">Legal</h4>
@@ -1741,7 +1761,7 @@ function FooterSection() {
         <div className="border-t border-[#1C4D3A]/10 dark:border-[#D4C4A8]/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-6">
           <motion.p
             initial={{ opacity: 0 }}
-            animate={{ opacity: isInView ? 1 : 0 }}
+            animate={isInView ? { opacity: 1 } : { opacity: 0 }}
             transition={{ delay: 0.5 }}
             className="text-sm text-[#2D3330]/50 dark:text-[#D4C4A8]/50"
           >
@@ -1750,7 +1770,7 @@ function FooterSection() {
 
           <motion.div
             initial={{ opacity: 0 }}
-            animate={{ opacity: isInView ? 1 : 0 }}
+            animate={isInView ? { opacity: 1 } : { opacity: 0 }}
             transition={{ delay: 0.6 }}
             className="flex items-center gap-6 text-sm text-[#2D3330]/50 dark:text-[#D4C4A8]/50"
           >
