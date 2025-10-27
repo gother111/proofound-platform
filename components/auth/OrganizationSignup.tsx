@@ -44,9 +44,9 @@ export function OrganizationSignup({ onClose, onComplete }: OrganizationSignupPr
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password || !confirmPassword) return;
-    
+
     setError(null);
-    
+
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -61,7 +61,7 @@ export function OrganizationSignup({ onClose, onComplete }: OrganizationSignupPr
 
     try {
       const supabase = createClient();
-      
+
       // Create auth account
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
@@ -81,7 +81,33 @@ export function OrganizationSignup({ onClose, onComplete }: OrganizationSignupPr
 
       if (data.user) {
         await trackSignUp('email');
-        setStep('verification');
+
+        // Check if email confirmation is required
+        if (data.session) {
+          // User is auto-confirmed, create profile and redirect
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: data.user.id,
+              full_name: companyName,
+              email: email,
+              account_type: 'organization',
+            });
+
+          if (profileError) {
+            console.error('Profile creation error:', profileError);
+          }
+
+          // Redirect to organization dashboard
+          setStep('success');
+          setTimeout(() => {
+            router.push('/organization');
+            router.refresh();
+          }, 1500);
+        } else {
+          // Email confirmation required
+          setStep('verification');
+        }
       }
     } catch (err) {
       setError(getErrorMessage(err));
@@ -92,12 +118,8 @@ export function OrganizationSignup({ onClose, onComplete }: OrganizationSignupPr
 
   const handleVerificationSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (verificationCode.length === 6) {
-      setStep('success');
-      setTimeout(() => {
-        onComplete?.() || router.push('/home');
-      }, 2000);
-    }
+    // Just show success message - actual verification happens via email link
+    setStep('success');
   };
 
   const getStepTitle = () => {

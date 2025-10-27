@@ -40,9 +40,9 @@ export function IndividualSignup({ onClose, onComplete }: IndividualSignupProps)
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!password || !confirmPassword) return;
-    
+
     setError(null);
-    
+
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -72,7 +72,32 @@ export function IndividualSignup({ onClose, onComplete }: IndividualSignupProps)
 
       if (data.user) {
         await trackSignUp('email');
-        setStep('verification');
+
+        // Check if email confirmation is required
+        if (data.session) {
+          // User is auto-confirmed, create profile and redirect
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: data.user.id,
+              email: email,
+              account_type: 'individual',
+            });
+
+          if (profileError) {
+            console.error('Profile creation error:', profileError);
+          }
+
+          // Redirect to home dashboard
+          setStep('success');
+          setTimeout(() => {
+            router.push('/home');
+            router.refresh();
+          }, 1500);
+        } else {
+          // Email confirmation required
+          setStep('verification');
+        }
       }
     } catch (err) {
       setError(getErrorMessage(err));
@@ -83,12 +108,8 @@ export function IndividualSignup({ onClose, onComplete }: IndividualSignupProps)
 
   const handleVerificationSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (verificationCode.length === 6) {
-      setStep('success');
-      setTimeout(() => {
-        onComplete?.() || router.push('/home');
-      }, 2000);
-    }
+    // Just show success message - actual verification happens via email link
+    setStep('success');
   };
 
   const getStepTitle = () => {
