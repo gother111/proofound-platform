@@ -18,20 +18,24 @@ import {
   X,
   Smile,
   Award,
-  Zap,
-  Globe,
-  Shield,
-  Users,
-  Minus,
   Target,
   Lock,
   Sparkles,
   Star,
+  Globe,
+  Zap,
+  Shield,
+  Users,
+  Minus,
+  TrendingUp as TrendingUpIcon,
+  Circle,
+  Book,
 } from 'lucide-react';
 import { NetworkBackground } from '@/components/landing/NetworkBackground';
 import { Header } from '@/components/landing/Header';
 import { ProgressBar } from '@/components/landing/ProgressBar';
 import { StickyCTA } from '@/components/landing/StickyCTA';
+import { useGSAPAnimations } from '@/lib/gsap-animations';
 
 type Persona = 'individual' | 'organization';
 type PricingType = 'individual' | 'organization';
@@ -40,6 +44,9 @@ export default function LandingPage() {
   const [persona, setPersona] = useState<Persona>('individual');
   const [pricingType, setPricingType] = useState<PricingType>('individual');
   const [selectedRole, setSelectedRole] = useState<Persona | ''>('');
+
+  // Initialize GSAP animations
+  useGSAPAnimations();
 
   const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,9 +68,9 @@ export default function LandingPage() {
       <StickyCTA />
 
       {/* Hero Section */}
-      <section className="min-h-[85vh] flex items-center justify-center text-center px-4 md:px-12 pt-24 relative z-10">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-6xl md:text-8xl font-display font-semibold text-brand-sage mb-6 animate-in">
+      <section className="gsap-hero-section min-h-[85vh] flex items-center justify-center text-center px-4 md:px-12 pt-24 relative z-10">
+        <div className="gsap-hero-content max-w-4xl mx-auto">
+          <h1 className="text-6xl md:text-8xl font-display font-semibold text-brand-sage mb-6">
             Proofound
           </h1>
           <h2 className="text-3xl md:text-5xl font-display text-brand-sage mb-6">
@@ -80,7 +87,7 @@ export default function LandingPage() {
       </section>
 
       {/* The Problem Section */}
-      <section id="the-problem" className="px-4 md:px-12 py-16 relative z-10">
+      <section id="the-problem" className="gsap-problem-section px-4 md:px-12 py-16 relative z-10">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-4xl md:text-5xl font-display text-brand-sage mb-4">
@@ -131,7 +138,7 @@ export default function LandingPage() {
             ].map((problem, index) => (
               <Card
                 key={index}
-                className="p-6 bg-white/60 backdrop-blur-sm border border-brand-sage/10 hover:border-brand-sage/30 hover:shadow-lg transition-all"
+                className="gsap-problem-card p-6 bg-white/60 backdrop-blur-sm border border-brand-sage/10 hover:border-brand-sage/30 hover:shadow-lg transition-all"
               >
                 <div className="flex gap-4">
                   <div className="w-10 h-10 rounded-full bg-brand-terracotta/10 flex items-center justify-center flex-shrink-0">
@@ -195,6 +202,28 @@ export default function LandingPage() {
                   description:
                     'Built-in well-being support, not an afterthought - ikigai, safety planning, reflection',
                 },
+                {
+                  icon: Circle,
+                  title: 'Life & career planning',
+                  description: 'Map your journey with purpose, not just the next job title',
+                },
+                {
+                  icon: TrendingUpIcon,
+                  title: 'Data democratization',
+                  description:
+                    'Your data, your insights—we give you the tools to understand and control it',
+                },
+                {
+                  icon: Users,
+                  title: 'Talent mobility',
+                  description:
+                    'Skills and evidence are portable, opening doors across sectors and geographies',
+                },
+                {
+                  icon: Book,
+                  title: 'Education & guidance',
+                  description: 'Contextual learning pathways tailored to your goals and gaps',
+                },
               ].map((feature, index) => (
                 <Card
                   key={index}
@@ -220,7 +249,7 @@ export default function LandingPage() {
       {/* Principles Section */}
       <section
         id="principles"
-        className="px-4 md:px-12 py-16 relative z-10"
+        className="gsap-trustworthy-section px-4 md:px-12 py-16 relative z-10"
         style={{ background: 'linear-gradient(to bottom, transparent, rgba(122, 146, 120, 0.05))' }}
       >
         <div className="max-w-7xl mx-auto">
@@ -265,7 +294,7 @@ export default function LandingPage() {
             ].map((principle, index) => (
               <Card
                 key={index}
-                className="p-8 bg-white/60 backdrop-blur-sm border border-brand-sage/10 hover:border-brand-sage/30 hover:shadow-lg transition-all"
+                className="gsap-principle-card p-8 bg-white/60 backdrop-blur-sm border border-brand-sage/10 hover:border-brand-sage/30 hover:shadow-lg transition-all"
               >
                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-sage to-brand-teal flex items-center justify-center mb-6">
                   <principle.icon className="w-7 h-7 text-white" />
@@ -281,7 +310,7 @@ export default function LandingPage() {
       </section>
 
       {/* Roadmap Section */}
-      <section id="roadmap" className="px-4 md:px-12 py-16 relative z-10">
+      <section id="roadmap" className="modules-section px-4 md:px-12 py-16 relative z-10">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-4xl md:text-5xl font-display text-brand-sage mb-4">
@@ -343,10 +372,25 @@ export default function LandingPage() {
                   title: 'Opportunities & Projects',
                   description: 'Mission-aligned work connections',
                 },
+                {
+                  color: 'bg-brand-teal',
+                  badge: 'Coming Soon',
+                  badgeColor: 'bg-brand-terracotta/10 text-brand-terracotta',
+                  title: 'AI Cofounder',
+                  description:
+                    "A trustworthy companion designed to make doing business and driving projects like it's magic",
+                },
+                {
+                  color: 'bg-brand-ochre',
+                  badge: 'Coming Soon',
+                  badgeColor: 'bg-brand-terracotta/10 text-brand-terracotta',
+                  title: 'Governance Node',
+                  description: 'Finally feel connected in real time to those who govern',
+                },
               ].map((item, index) => (
                 <div key={index} className="min-w-[320px] flex-shrink-0 relative">
                   <div
-                    className={`w-10 h-10 rounded-full ${item.color} mx-auto mb-4 border-4 border-bg-base`}
+                    className={`timeline-dot w-10 h-10 rounded-full ${item.color} mx-auto mb-4 border-4 border-bg-base`}
                   />
                   <Card className="p-6 bg-white/60 backdrop-blur-sm border border-brand-sage/10 hover:border-brand-sage/30 hover:shadow-lg transition-all">
                     <span
@@ -459,26 +503,28 @@ export default function LandingPage() {
                 description: 'Misinformation and deepfakes erode credibility everywhere',
               },
               {
-                title: 'Global mental health challenges grow',
+                title:
+                  'Global mental health challenges grow as people question their immediate future and seek new transformation tools',
                 description: 'Unprecedented uncertainty drives need for well-being infrastructure',
               },
               {
-                title: 'Obsoletion of outdated CV and recruitment standards',
+                title:
+                  'Obsoletion of outdated CV and recruitment standards that become less and less efficient',
                 description:
                   "Traditional credentials don't capture real capability or values alignment",
               },
               {
-                title: 'Rapid globalization calls for unprecedented coordination',
+                title: 'Rapid globalization calls for coordination on an unprecedented scale',
                 description:
                   'Cross-border collaboration requires new verification and trust systems',
               },
             ].map((reason, index) => (
               <Card
                 key={index}
-                className="p-6 bg-white/60 backdrop-blur-sm border border-brand-sage/10 hover:border-brand-sage/30 hover:shadow-lg transition-all"
+                className="reason-card p-6 bg-white/60 backdrop-blur-sm border border-brand-sage/10 hover:border-brand-sage/30 hover:shadow-lg transition-all"
               >
                 <div className="flex gap-6 items-center">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-terracotta to-brand-ochre flex items-center justify-center text-white font-semibold flex-shrink-0">
+                  <div className="reason-number w-12 h-12 rounded-full bg-gradient-to-br from-brand-terracotta to-brand-ochre flex items-center justify-center text-white font-semibold flex-shrink-0">
                     {index + 1}
                   </div>
                   <div>
@@ -488,6 +534,101 @@ export default function LandingPage() {
                     <p className="text-sm text-fg-base/80">{reason.description}</p>
                   </div>
                 </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Proof & Credibility Section */}
+      <section className="px-4 md:px-12 py-16 relative z-10">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-display text-brand-sage mb-4">
+              Proof & credibility
+            </h2>
+            <p className="text-lg text-fg-base/70">How we ensure transparency and trust.</p>
+          </div>
+          <Card className="p-8 md:p-12 bg-white/60 backdrop-blur-sm border border-brand-sage/10">
+            <div className="space-y-8">
+              <div>
+                <h3 className="text-2xl font-display text-brand-sage mb-3">
+                  How verification works
+                </h3>
+                <p className="text-fg-base/80 mb-3">
+                  Every proof is traceable to its source. We use cryptographic signatures,
+                  time-stamped evidence, and transparent provenance chains to ensure authenticity.
+                </p>
+                <a href="#" className="text-brand-sage hover:underline">
+                  See how this is verified →
+                </a>
+              </div>
+              <div>
+                <h3 className="text-2xl font-display text-brand-sage mb-3">Privacy stance</h3>
+                <p className="text-fg-base/80 mb-3">
+                  Granular privacy controls at every layer. You decide what&apos;s visible, to whom,
+                  and when. We never sell your data or use it for purposes you haven&apos;t
+                  explicitly consented to.
+                </p>
+                <a href="#" className="text-brand-sage hover:underline">
+                  What we keep private →
+                </a>
+              </div>
+              <div>
+                <h3 className="text-2xl font-display text-brand-sage mb-3">
+                  Audits in plain language
+                </h3>
+                <p className="text-fg-base/80">
+                  Our anti-bias algorithms are continuously monitored and audited. We publish
+                  transparency reports that anyone can understand—no technical jargon required.
+                </p>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </section>
+
+      {/* Steward Ownership Section */}
+      <section id="steward-ownership" className="px-4 md:px-12 py-16 relative z-10">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-display text-brand-sage mb-4">
+              Steward Ownership — Business Model of the Future
+            </h2>
+            <p className="text-lg text-fg-base/70">
+              Steward ownership ensures that a company&apos;s purpose and independence are protected
+              by giving control to stewards, not external shareholders.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                icon: Circle,
+                title: 'Purpose Before Profit',
+                description: "Mission is locked in; profits serve the company's long-term purpose.",
+              },
+              {
+                icon: Users,
+                title: 'Self-Governance',
+                description:
+                  'Control stays with active stewards who are committed to the mission, not to selling shares.',
+              },
+              {
+                icon: Heart,
+                title: 'Legacy Preservation',
+                description:
+                  "Ownership can't be sold; it's passed on to future stewards who uphold the same values.",
+              },
+            ].map((principle, index) => (
+              <Card
+                key={index}
+                className="p-8 bg-white/60 backdrop-blur-sm border border-brand-sage/10 hover:border-brand-sage/30 hover:shadow-lg transition-all"
+              >
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-sage to-brand-teal flex items-center justify-center mb-6">
+                  <principle.icon className="w-7 h-7 text-white" />
+                </div>
+                <h3 className="text-xl font-display text-brand-sage mb-3">{principle.title}</h3>
+                <p className="text-sm text-fg-base/80">{principle.description}</p>
               </Card>
             ))}
           </div>
@@ -504,7 +645,9 @@ export default function LandingPage() {
             <p className="text-lg text-fg-base/70 mb-8 max-w-4xl mx-auto">
               Proofound pledges a lifelong commitment never to monetize by creating disparity or
               selling exposure. The core tools that fulfill our mission will always remain free for
-              humans.
+              humans. Our purpose is to enable people to do more — paid tools exist only to create
+              pure positive value at no one else&apos;s expense. We are fully transparent about
+              profit distribution, a cornerstone of our Steward Ownership model.
             </p>
             <div className="inline-flex bg-white rounded-full p-1 border border-brand-sage/10">
               <button
@@ -653,7 +796,7 @@ export default function LandingPage() {
       </section>
 
       {/* Final CTA Section */}
-      <section id="signup" className="px-4 md:px-12 py-16 relative z-10">
+      <section id="signup" className="gsap-final-cta px-4 md:px-12 py-16 relative z-10">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-4xl md:text-6xl font-display text-brand-sage mb-6">
@@ -709,12 +852,44 @@ export default function LandingPage() {
                 .
               </p>
             </form>
+            <p className="text-center text-sm text-fg-base/70 mt-6">
+              Organizations:{' '}
+              <a href="#partner" className="underline hover:text-brand-sage">
+                Partner with us
+              </a>{' '}
+              • Learn more:{' '}
+              <a href="#principles" className="underline hover:text-brand-sage">
+                Read the principles
+              </a>
+            </p>
           </Card>
         </div>
       </section>
 
+      {/* Final Quote Animation Section */}
+      <section className="final-quote-section px-4 md:px-12 py-16 relative z-10">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="relative min-h-[300px] flex items-center justify-center">
+            <div className="space-y-4 text-4xl md:text-6xl font-display text-brand-sage">
+              <div className="quote-line-1">When work becomes</div>
+              <div className="quote-line-2 flex items-center justify-center gap-4">
+                <span className="word-proof font-bold">proof</span>
+                <span className="word-middle">of who we</span>
+              </div>
+              <div className="quote-line-3 flex items-center justify-center gap-4">
+                <span className="word-middle2">are — a deeper purpose is</span>
+                <span className="word-found font-bold">found</span>
+              </div>
+              <div className="quote-merged absolute inset-0 flex items-center justify-center text-5xl md:text-7xl font-bold opacity-0 scale-90">
+                Proofound
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
-      <footer className="border-t border-brand-sage/10 bg-white/50 backdrop-blur-xl px-4 md:px-12 py-20 relative z-10">
+      <footer className="site-footer border-t border-brand-sage/10 bg-white/50 backdrop-blur-xl px-4 md:px-12 py-20 relative z-10">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
             <div>
