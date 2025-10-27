@@ -1,236 +1,222 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { useFormState, useFormStatus } from 'react-dom';
-import { signUp, type SignUpState } from '@/actions/auth';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { User, Building2 } from 'lucide-react';
-import SocialSignInButtons from '@/components/auth/social-sign-in-buttons';
+import { Card } from '@/components/ui/card';
+import { User, Building2, ArrowLeft } from 'lucide-react';
+import { SignupForm } from '@/components/auth/SignupForm';
 
-const initialState: SignUpState = {
-  error: null,
-  success: false,
-};
+type SignupType = 'choose' | 'individual' | 'organization';
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
+export default function SignupPage() {
+  const router = useRouter();
+  const [signupType, setSignupType] = useState<SignupType>('choose');
 
-  return (
-    <Button
-      type="submit"
-      className="w-full bg-proofound-forest hover:bg-proofound-forest/90 text-white"
-      disabled={pending}
-    >
-      {pending ? 'Creating account…' : 'Sign up'}
-    </Button>
-  );
-}
-
-export default function SignUpPage() {
-  const [step, setStep] = useState<'persona' | 'credentials'>('persona');
-  const [persona, setPersona] = useState<'individual' | 'org_member' | null>(null);
-  const [state, formAction] = useFormState(signUp, initialState);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
-  useEffect(() => {
-    if (state.success) {
-      setPassword('');
-    }
-  }, [state.success]);
-
-  // Show persona selection first
-  if (step === 'persona') {
+  if (signupType === 'individual' || signupType === 'organization') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-proofound-parchment dark:bg-background px-4 py-12">
-        <div className="w-full max-w-4xl">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-['Crimson_Pro'] font-semibold text-proofound-forest dark:text-primary mb-2">
-              Welcome to Proofound
-            </h1>
-            <p className="text-lg text-proofound-charcoal/70 dark:text-muted-foreground">
-              Choose how you want to use Proofound
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card
-              className="border-2 border-proofound-stone hover:border-proofound-forest dark:border-border dark:hover:border-primary transition-colors cursor-pointer group rounded-2xl"
-              onClick={() => {
-                setPersona('individual');
-                setStep('credentials');
-              }}
-            >
-              <CardHeader className="text-center space-y-4 p-8">
-                <div className="mx-auto w-16 h-16 rounded-full bg-proofound-forest/10 flex items-center justify-center group-hover:bg-proofound-forest/20 transition-colors">
-                  <User className="w-8 h-8 text-proofound-forest dark:text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="mb-2 font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
-                    Individual
-                  </CardTitle>
-                  <CardDescription className="text-base text-proofound-charcoal/70 dark:text-muted-foreground">
-                    Build your personal profile, showcase your skills, and connect with
-                    opportunities
-                  </CardDescription>
-                </div>
-                <Button
-                  className="w-full bg-proofound-forest hover:bg-proofound-forest/90 text-white"
-                  size="lg"
-                >
-                  Continue as Individual
-                </Button>
-              </CardHeader>
-            </Card>
-
-            <Card
-              className="border-2 border-proofound-stone hover:border-proofound-forest dark:border-border dark:hover:border-primary transition-colors cursor-pointer group rounded-2xl"
-              onClick={() => {
-                setPersona('org_member');
-                setStep('credentials');
-              }}
-            >
-              <CardHeader className="text-center space-y-4 p-8">
-                <div className="mx-auto w-16 h-16 rounded-full bg-proofound-forest/10 flex items-center justify-center group-hover:bg-proofound-forest/20 transition-colors">
-                  <Building2 className="w-8 h-8 text-proofound-forest dark:text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="mb-2 font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
-                    Organization
-                  </CardTitle>
-                  <CardDescription className="text-base text-proofound-charcoal/70 dark:text-muted-foreground">
-                    Create an organization, manage your team, and build credibility together
-                  </CardDescription>
-                </div>
-                <Button
-                  className="w-full bg-proofound-forest hover:bg-proofound-forest/90 text-white"
-                  size="lg"
-                >
-                  Continue as Organization
-                </Button>
-              </CardHeader>
-            </Card>
-          </div>
-        </div>
-      </div>
+      <SignupForm
+        accountType={signupType}
+        onBack={() => setSignupType('choose')}
+        onComplete={() => router.push('/app/i/home')}
+      />
     );
   }
 
-  // Show credentials form after persona selection
+  // Account type selection screen
   return (
-    <div className="min-h-screen flex items-center justify-center bg-proofound-parchment dark:bg-background px-4">
-      <div className="w-full max-w-md bg-white dark:bg-card p-8 rounded-2xl shadow-lg border border-proofound-stone dark:border-border">
-        <div className="mb-6">
-          <button
-            onClick={() => setStep('persona')}
-            className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground hover:text-proofound-forest dark:hover:text-primary transition-colors flex items-center gap-2 mb-4"
-          >
-            ← Back
-          </button>
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 rounded-full bg-proofound-forest dark:bg-primary flex items-center justify-center">
-              <span className="text-white text-sm font-medium">2</span>
-            </div>
-            <h1 className="text-2xl font-['Crimson_Pro'] font-semibold text-proofound-forest dark:text-primary">
-              Create your account
-            </h1>
-          </div>
-          <p className="text-proofound-charcoal/70 dark:text-muted-foreground">
-            Join Proofound as an {persona === 'individual' ? 'Individual' : 'Organization'}
-          </p>
-        </div>
-
-        <SocialSignInButtons className="mb-6" />
-
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center" aria-hidden="true">
-            <span className="w-full border-t border-proofound-stone dark:border-border" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="px-2 bg-white dark:bg-card text-proofound-charcoal/70 dark:text-muted-foreground">
-              Or continue with email
-            </span>
-          </div>
-        </div>
-
-        {state.error && !state.success && (
-          <div
-            id="signup-error"
-            role="alert"
-            className="mb-6 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
-          >
-            {state.error}
-          </div>
-        )}
-
-        {state.success && (
-          <div
-            role="status"
-            aria-live="polite"
-            className="mb-6 rounded-xl border border-proofound-forest/30 bg-proofound-forest/10 px-4 py-3 text-sm text-proofound-forest dark:text-primary"
-          >
-            Check {email || 'your email'} for a verification link to finish setting up your account.
-          </div>
-        )}
-
-        <form action={formAction} className="space-y-6">
-          <input type="hidden" name="persona" value={persona || ''} />
-
-          <div>
-            <Label htmlFor="email" className="text-proofound-charcoal dark:text-foreground">
-              Email
-            </Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              required
-              autoComplete="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              aria-describedby={state.error && !state.success ? 'signup-error' : undefined}
-              className="border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="password" className="text-proofound-charcoal dark:text-foreground">
-              Password
-            </Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              required
-              autoComplete="new-password"
-              placeholder="At least 8 characters"
-              minLength={8}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              className="border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
-            />
-          </div>
-
-          <SubmitButton />
-        </form>
-
-        <div className="mt-8 pt-6 border-t border-proofound-stone dark:border-border text-center">
-          <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
-            Already have an account?{' '}
-            <Link
-              href="/login"
-              className="text-proofound-forest dark:text-primary hover:text-proofound-forest/80 dark:hover:text-primary/80 font-medium"
+    <div className="min-h-screen bg-background flex items-center justify-center p-6 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-20 dark:opacity-10">
+        <svg className="w-full h-full">
+          <defs>
+            <pattern
+              id="signup-pattern"
+              x="0"
+              y="0"
+              width="60"
+              height="60"
+              patternUnits="userSpaceOnUse"
             >
-              Log in
-            </Link>
-          </p>
-        </div>
+              <circle cx="30" cy="30" r="2" fill="currentColor" className="text-sage" />
+              <path
+                d="M 30 30 L 45 45 M 30 30 L 15 15"
+                stroke="currentColor"
+                strokeWidth="0.5"
+                className="text-sage"
+                opacity="0.3"
+              />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#signup-pattern)" />
+        </svg>
       </div>
+
+      {/* Floating Shapes */}
+      <motion.div
+        className="absolute top-20 left-20 w-32 h-32 rounded-full bg-gradient-to-br from-sage/10 to-teal/10 blur-3xl"
+        animate={{
+          x: [0, 30, 0],
+          y: [0, -20, 0],
+          scale: [1, 1.2, 1],
+        }}
+        transition={{
+          duration: 8,
+          repeat: Infinity,
+          ease: 'easeInOut',
+        }}
+      />
+      <motion.div
+        className="absolute bottom-20 right-20 w-40 h-40 rounded-full bg-gradient-to-br from-proofound-terracotta/10 to-ochre/10 blur-3xl"
+        animate={{
+          x: [0, -20, 0],
+          y: [0, 30, 0],
+          scale: [1, 1.1, 1],
+        }}
+        transition={{
+          duration: 10,
+          repeat: Infinity,
+          ease: 'easeInOut',
+        }}
+      />
+
+      {/* Back to Home */}
+      <motion.button
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        onClick={() => router.push('/')}
+        className="absolute top-6 left-6 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        <span className="text-sm">Back</span>
+      </motion.button>
+
+      {/* Account Type Selection */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-4xl relative z-10"
+      >
+        <Card className="p-8 md:p-12 backdrop-blur-sm bg-card/95">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="mb-4"
+            >
+              <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-proofound-forest to-sage flex items-center justify-center">
+                <span className="text-2xl font-display text-white">P</span>
+              </div>
+            </motion.div>
+            <h1 className="text-3xl font-display font-semibold text-foreground mb-3">
+              Join Proofound
+            </h1>
+            <p className="text-muted-foreground max-w-md mx-auto">
+              Choose your account type to get started
+            </p>
+          </div>
+
+          {/* Account Type Cards */}
+          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            {/* Individual Card */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <button
+                onClick={() => setSignupType('individual')}
+                className="w-full h-full text-left group"
+              >
+                <Card className="p-8 h-full hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/50 group-hover:scale-[1.02]">
+                  <div className="flex flex-col items-start gap-4">
+                    <div className="p-4 rounded-xl bg-gradient-to-br from-sage/20 to-teal/20 group-hover:from-sage/30 group-hover:to-teal/30 transition-colors">
+                      <User className="w-8 h-8 text-sage" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-display font-semibold text-foreground mb-2">
+                        Individual
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        For professionals looking to showcase expertise, get matched with
+                        opportunities, and build verified credentials.
+                      </p>
+                    </div>
+                    <div className="mt-auto">
+                      <span className="text-sm text-primary font-medium group-hover:underline">
+                        Continue as Individual →
+                      </span>
+                    </div>
+                  </div>
+                </Card>
+              </button>
+            </motion.div>
+
+            {/* Organization Card */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <button
+                onClick={() => setSignupType('organization')}
+                className="w-full h-full text-left group"
+              >
+                <Card className="p-8 h-full hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/50 group-hover:scale-[1.02]">
+                  <div className="flex flex-col items-start gap-4">
+                    <div className="p-4 rounded-xl bg-gradient-to-br from-proofound-terracotta/20 to-ochre/20 group-hover:from-proofound-terracotta/30 group-hover:to-ochre/30 transition-colors">
+                      <Building2 className="w-8 h-8 text-proofound-terracotta" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-display font-semibold text-foreground mb-2">
+                        Organization
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        For organizations seeking verified experts, posting assignments, and
+                        building trusted teams.
+                      </p>
+                    </div>
+                    <div className="mt-auto">
+                      <span className="text-sm text-primary font-medium group-hover:underline">
+                        Continue as Organization →
+                      </span>
+                    </div>
+                  </div>
+                </Card>
+              </button>
+            </motion.div>
+          </div>
+
+          {/* Sign In Link */}
+          <div className="mt-10 text-center">
+            <p className="text-sm text-muted-foreground">
+              Already have an account?{' '}
+              <button
+                onClick={() => router.push('/login')}
+                className="text-primary hover:underline font-medium"
+              >
+                Sign in
+              </button>
+            </p>
+          </div>
+        </Card>
+
+        {/* Footer */}
+        <p className="mt-6 text-center text-xs text-muted-foreground">
+          By creating an account, you agree to our{' '}
+          <a href="/terms" className="underline hover:text-foreground">
+            Terms of Service
+          </a>{' '}
+          and{' '}
+          <a href="/privacy" className="underline hover:text-foreground">
+            Privacy Policy
+          </a>
+        </p>
+      </motion.div>
     </div>
   );
 }
