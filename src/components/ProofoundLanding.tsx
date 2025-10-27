@@ -2,7 +2,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { motion, useScroll, useTransform, useInView, useReducedMotion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { NetworkBackground } from '@/components/NetworkBackground';
@@ -293,40 +292,22 @@ function MinimalHeader({
           exit={{ opacity: 0, y: -20 }}
           className="absolute top-full left-0 right-0 mt-4 mx-6 md:mx-12 bg-white/95 dark:bg-[#2a2a2a]/95 backdrop-blur-xl rounded-3xl border border-[#1C4D3A]/10 dark:border-[#D4C4A8]/10 p-8 shadow-2xl"
         >
-          <nav className="space-y-4 text-center">
-            {['The Problem', 'How It Works', 'Principles', 'For Whom'].map((item, idx) => (
-              <motion.a
-                key={item}
-                href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.05 }}
-                className="block text-lg text-[#2D3330] dark:text-[#D4C4A8] hover:text-[#1C4D3A] dark:hover:text-white transition-colors"
-                onClick={() => setMenuOpen(false)}
-              >
-                {item}
-              </motion.a>
-            ))}
-
-            {/* Divider */}
-            <div className="border-t border-[#1C4D3A]/10 dark:border-[#D4C4A8]/10 my-4" />
-
-            {/* Login Button */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <Link href="/login">
-                <Button
-                  className="w-full rounded-full text-white"
-                  style={{ backgroundColor: '#1C4D3A' }}
+          <nav className="space-y-4">
+            {['The Problem', 'How It Works', 'Principles', 'For Whom', 'Roadmap'].map(
+              (item, idx) => (
+                <motion.a
+                  key={item}
+                  href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                  className="block text-lg text-[#2D3330] dark:text-[#D4C4A8] hover:text-[#1C4D3A] dark:hover:text-white transition-colors"
                   onClick={() => setMenuOpen(false)}
                 >
-                  Login
-                </Button>
-              </Link>
-            </motion.div>
+                  {item}
+                </motion.a>
+              )
+            )}
           </nav>
         </motion.div>
       )}
@@ -359,7 +340,7 @@ function StickyMiniCTA({ onGetStarted }: { onGetStarted?: () => void }) {
         onClick={onGetStarted}
         className="rounded-full px-6 py-6 bg-[#1C4D3A] hover:bg-[#2D5D4A] text-white shadow-2xl"
       >
-        Get Started
+        Join the Waitlist
         <ArrowRight className="w-4 h-4 ml-2" />
       </Button>
     </motion.div>
@@ -1208,7 +1189,6 @@ function ProductsSubscriptionsSection({
       priceMonthly: 19,
       priceAnnual: 15,
       freeTrial: '14 days',
-      slug: 'development-hub',
     },
     {
       icon: Bot,
@@ -1217,7 +1197,6 @@ function ProductsSubscriptionsSection({
       priceMonthly: 39,
       priceAnnual: 31,
       freeTrial: '7 days',
-      slug: 'ai-cofounder',
     },
     {
       icon: Heart,
@@ -1226,7 +1205,6 @@ function ProductsSubscriptionsSection({
       priceMonthly: 12,
       priceAnnual: 10,
       freeTrial: '30 days',
-      slug: 'zen-hub',
     },
     {
       icon: Crown,
@@ -1237,7 +1215,6 @@ function ProductsSubscriptionsSection({
       freeTrial: '30 days',
       highlight: true,
       savings: 'Save €11/month',
-      slug: 'bundle',
     },
   ];
 
@@ -1246,32 +1223,28 @@ function ProductsSubscriptionsSection({
       icon: Network,
       title: 'Platform Subscription',
       desc: 'Access to organizational dashboards and verification tools.',
-      slug: 'platform',
     },
     {
       icon: Target,
       title: 'Assignment Completion Fees',
       desc: 'Pay-per-mission or project delivery model.',
-      slug: 'assignment-fees',
     },
     {
       icon: Heart,
       title: 'Zen Hub Enterprise',
       desc: 'Tailored well-being and collaboration environment.',
-      slug: 'zen-enterprise',
     },
     {
       icon: TrendingUp,
       title: 'Employee Development Hubs',
       desc: 'Empower internal growth with curated learning ecosystems.',
-      slug: 'employee-dev',
     },
   ];
 
   const products = viewMode === 'individual' ? individualProducts : organizationProducts;
 
   return (
-    <section id="subscriptions" ref={ref} className="px-6 md:px-12 py-16 md:py-20 relative">
+    <section ref={ref} className="px-6 md:px-12 py-16 md:py-20 relative">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -1410,29 +1383,25 @@ function ProductsSubscriptionsSection({
                   <p className="text-sm text-[#2D3330]/70 dark:text-[#D4C4A8]/70 mb-4">
                     {product.freeTrial} free trial
                   </p>
-                  <Link href="/signup">
-                    <Button
-                      size="sm"
-                      className="w-full rounded-full bg-[#1C4D3A] hover:bg-[#2D5D4A] text-white"
-                    >
-                      Start Free Trial
-                    </Button>
-                  </Link>
+                  <Button
+                    size="sm"
+                    className="w-full rounded-full bg-[#1C4D3A] hover:bg-[#2D5D4A] text-white"
+                  >
+                    Start Free Trial
+                  </Button>
                 </div>
               ) : (
                 <div className="mt-auto pt-4 border-t border-[#1C4D3A]/10 dark:border-[#D4C4A8]/10">
                   <p className="text-sm text-[#2D3330]/70 dark:text-[#D4C4A8]/70 text-center mb-3">
                     Custom pricing based on your needs
                   </p>
-                  <Link href="/signup">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full rounded-full border-[#1C4D3A] dark:border-[#D4C4A8] text-[#1C4D3A] dark:text-[#D4C4A8] hover:bg-[#1C4D3A] hover:text-white dark:hover:bg-[#D4C4A8] dark:hover:text-[#1a1a1a]"
-                    >
-                      Get Started
-                    </Button>
-                  </Link>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full rounded-full border-[#1C4D3A] dark:border-[#D4C4A8] text-[#1C4D3A] dark:text-[#D4C4A8] hover:bg-[#1C4D3A] hover:text-white dark:hover:bg-[#D4C4A8] dark:hover:text-[#1a1a1a]"
+                  >
+                    Contact for inquiries
+                  </Button>
                 </div>
               )}
             </motion.div>
@@ -1456,16 +1425,11 @@ function FinalCTASection({
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<'individual' | 'organization' | ''>('');
 
-  const router = useRouter();
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Redirect to signup page
-    if (onGetStarted) {
-      onGetStarted();
-    } else {
-      router.push('/signup');
-    }
+    // Handle waitlist submission
+    console.log('Waitlist submission:', { email, role });
+    onGetStarted?.();
   };
 
   return (
@@ -1584,22 +1548,14 @@ function FinalQuoteSection({ shouldReduceMotion }: { shouldReduceMotion: boolean
     offset: ['start end', 'end start'],
   });
 
-  // Fade out the surrounding text first
-  const opacity1 = useTransform(scrollYProgress, [0, 0.2, 0.4], [1, 1, 0]);
-  const opacity2 = useTransform(scrollYProgress, [0, 0.2, 0.4], [1, 1, 0]);
-  const opacity3 = useTransform(scrollYProgress, [0, 0.2, 0.4], [1, 1, 0]);
+  const opacity1 = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [1, 1, 0, 0]);
+  const opacity2 = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [1, 1, 0, 0]);
+  const opacity3 = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [1, 1, 0, 0]);
+  const opacity4 = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [1, 1, 0, 0]);
 
-  // Merge progress: bring words together to physically touch/overlap
-  const mergeProgress = useTransform(scrollYProgress, [0.3, 0.55], [0, 1]);
-  // Move them much closer together so they actually merge
-  const proofX = useTransform(mergeProgress, [0, 1], [0, 150]);
-  const foundX = useTransform(mergeProgress, [0, 1], [0, -150]);
-
-  // Fade out "proof" and "found" completely before "Proofound" appears
-  const wordsOpacity = useTransform(scrollYProgress, [0, 0.4, 0.6], [1, 1, 0]);
-
-  // Fade in "Proofound" only after the words have faded out
-  const proofoundOpacity = useTransform(scrollYProgress, [0.6, 0.8], [0, 1]);
+  const mergeProgress = useTransform(scrollYProgress, [0.6, 1], [0, 1]);
+  const proofX = useTransform(mergeProgress, [0, 1], [0, 30]);
+  const foundX = useTransform(mergeProgress, [0, 1], [0, -30]);
 
   return (
     <section
@@ -1616,7 +1572,7 @@ function FinalQuoteSection({ shouldReduceMotion }: { shouldReduceMotion: boolean
             <div className="flex items-center justify-center gap-4 flex-wrap">
               <motion.span
                 style={{
-                  opacity: shouldReduceMotion ? 1 : wordsOpacity,
+                  opacity: shouldReduceMotion ? 1 : 1,
                   x: shouldReduceMotion ? 0 : proofX,
                 }}
                 className="font-bold"
@@ -1631,7 +1587,7 @@ function FinalQuoteSection({ shouldReduceMotion }: { shouldReduceMotion: boolean
               </motion.span>
               <motion.span
                 style={{
-                  opacity: shouldReduceMotion ? 1 : wordsOpacity,
+                  opacity: shouldReduceMotion ? 1 : 1,
                   x: shouldReduceMotion ? 0 : foundX,
                 }}
                 className="font-bold"
@@ -1643,11 +1599,7 @@ function FinalQuoteSection({ shouldReduceMotion }: { shouldReduceMotion: boolean
 
           {/* Merged "Proofound" appears as others fade */}
           <motion.div
-            style={{
-              opacity: shouldReduceMotion ? 0 : proofoundOpacity,
-              textShadow: '0 0 40px rgba(28, 77, 58, 0.3), 0 0 80px rgba(28, 77, 58, 0.2)',
-              filter: 'brightness(1.15) contrast(1.1)',
-            }}
+            style={{ opacity: shouldReduceMotion ? 0 : mergeProgress }}
             className="absolute inset-0 flex items-center justify-center text-5xl md:text-7xl lg:text-9xl font-['Crimson_Pro'] text-[#1C4D3A] dark:text-[#D4C4A8] font-bold"
           >
             Proofound

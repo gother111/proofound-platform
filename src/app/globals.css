@@ -1,68 +1,105 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Crimson+Pro:wght@400;500;600&display=swap');
 
-/* Import Design Tokens */
-@import '../styles/tokens.css';
-@import '../styles/animations.css';
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+@custom-variant dark (&:is(.dark *));
+
 @layer base {
   :root {
-    /* Figma Design System - Light Mode (HSL values for shadcn compatibility) */
-    --background: 48 29% 96%; /* #F7F6F1 Parchment */
-    --foreground: 150 7% 18%; /* #2D3330 Charcoal */
-    --card: 0 0% 100%; /* #FFFFFF White */
-    --card-foreground: 150 7% 18%; /* #2D3330 Charcoal */
-    --popover: 0 0% 100%; /* #FFFFFF White */
-    --popover-foreground: 150 7% 18%; /* #2D3330 Charcoal */
-    --primary: 158 47% 21%; /* #1C4D3A Forest Green */
-    --primary-foreground: 48 29% 96%; /* #F7F6F1 Parchment */
-    --secondary: 48 14% 91%; /* #E8E6DD Stone */
-    --secondary-foreground: 150 7% 18%; /* #2D3330 Charcoal */
-    --muted: 48 14% 91%; /* #E8E6DD Stone */
-    --muted-foreground: 150 7% 43%; /* #6B6760 Muted text */
-    --accent: 16 50% 53%; /* #C76B4A Terracotta */
-    --accent-foreground: 48 29% 96%; /* #F7F6F1 Parchment */
-    --destructive: 0 84% 60%; /* Error red */
-    --destructive-foreground: 0 0% 100%; /* White */
-    --border: 48 14% 91%; /* #E8E6DD Stone */
-    --input: 48 14% 91%; /* #E8E6DD Stone */
-    --ring: 158 47% 21%; /* #1C4D3A Forest Green */
-    --radius: 1.25rem; /* 20px */
+    /* Proofound Japandi Design System - Light Mode */
+    --font-size: 16px;
 
-    /* Figma Japandi Extended Palette - Proofound Colors */
-    --sage: 122 146 120; /* #7A9278 Success/Nature */
-    --terracotta: 199 107 74; /* #C76B4A Corrected Terracotta */
-    --teal: 92 139 137; /* #5C8B89 Interactive */
-    --ochre: 212 165 116; /* #D4A574 Highlights */
-    --clay: 201 165 123; /* #C9A57B Secondary */
-    --sand: 224 213 199; /* #E0D5C7 Subtle BG */
-    --bamboo: 107 127 95; /* #6B7F5F Supporting green */
+    /* Proofound Brand Tokens */
+    --proofound-forest: #1c4d3a;
+    --proofound-parchment: #f7f6f1;
+    --proofound-terracotta: #c76b4a;
+    --proofound-charcoal: #2d3330;
+    --proofound-stone: #e8e6dd;
+
+    /* Japandi Natural Palette */
+    --background: #f5f3ee;
+    --foreground: #2c2a27;
+    --card: #fdfcfa;
+    --card-foreground: #2c2a27;
+    --popover: #fdfcfa;
+    --popover-foreground: #2c2a27;
+    --primary: #4a5943;
+    --primary-foreground: #f5f3ee;
+    --secondary: #d4c5b0;
+    --secondary-foreground: #2c2a27;
+    --muted: #e8e4dc;
+    --muted-foreground: #6b6760;
+    --accent: #b8a592;
+    --accent-foreground: #2c2a27;
+    --destructive: #a85c4f;
+    --destructive-foreground: #f5f3ee;
+    --border: rgba(75, 70, 62, 0.12);
+    --input: transparent;
+    --input-background: #efebe3;
+    --switch-background: #c9bfb0;
+    --ring: #4a5943;
+
+    /* Nature-inspired custom colors */
+    --stone: #ada399;
+    --sage: #7a9278;
+    --clay: #c9a57b;
+    --sand: #e0d5c7;
+    --bamboo: #6b7f5f;
+    --paper: #fdfcf8;
+    --terracotta: #c67b5c;
+    --ochre: #d4a574;
+    --teal: #5c8b89;
+
+    /* Border Radius */
+    --radius: 1.25rem;
   }
 
   .dark {
-    /* Figma Design System - Dark Mode (HSL values) */
-    --background: 227 27% 11%; /* #1A1D2E Deep Navy Night */
-    --foreground: 38 28% 85%; /* #E8DCC4 Cream Canvas */
-    --card: 228 19% 18%; /* #252834 Dark cards */
-    --card-foreground: 38 28% 85%; /* #E8DCC4 Cream */
-    --popover: 228 19% 18%; /* #252834 Dark cards */
-    --popover-foreground: 38 28% 85%; /* #E8DCC4 Cream */
-    --primary: 38 30% 82%; /* #D4C4A8 Warm Beige Stone */
-    --primary-foreground: 158 47% 21%; /* #1C4D3A Forest (for contrast) */
-    --secondary: 227 23% 21%; /* #2C3244 Muted dark */
-    --secondary-foreground: 38 28% 85%; /* #E8DCC4 Cream */
-    --muted: 227 23% 21%; /* #2C3244 Muted dark */
-    --muted-foreground: 227 15% 65%; /* Muted text */
-    --accent: 38 30% 82%; /* #D4C4A8 Warm Beige */
-    --accent-foreground: 150 7% 18%; /* #2D3330 Charcoal */
-    --destructive: 0 60% 44%; /* Error red (dark) */
-    --destructive-foreground: 38 28% 85%; /* #E8DCC4 Cream */
-    --border: 227 23% 21%; /* #2C3244 Border */
-    --input: 227 23% 21%; /* #2C3244 Input */
-    --ring: 38 30% 82%; /* #D4C4A8 Warm Beige */
+    /* Proofound Japandi Dark Mode - Geometric art gallery at night */
+    --background: #1a1d2e;
+    --foreground: #e8dcc4;
+
+    --card: #252834;
+    --card-foreground: #e8dcc4;
+
+    --popover: #2c3244;
+    --popover-foreground: #e8dcc4;
+
+    /* Primary - Warm Beige Stone (shifted from light mode forest green) */
+    --primary: #d4c4a8;
+    --primary-foreground: #1a1d2e;
+
+    /* Secondary - Deep Terracotta */
+    --secondary: #c86b4a;
+    --secondary-foreground: #e8dcc4;
+
+    --muted: #2c3244;
+    --muted-foreground: #8a8174;
+
+    --accent: #d4c4a8;
+    --accent-foreground: #1a1d2e;
+
+    --destructive: #d4826f;
+    --destructive-foreground: #1a1d2e;
+
+    --border: rgba(212, 196, 168, 0.1);
+    --input: transparent;
+    --input-background: #2c3244;
+    --switch-background: #2c3244;
+    --ring: rgba(212, 120, 79, 0.4);
+
+    /* Nature-inspired dark colors */
+    --stone: #8a8174;
+    --sage: #5a8f6f;
+    --clay: #c86b4a;
+    --sand: #c9b89a;
+    --bamboo: #5a8f6f;
+    --paper: #252834;
+    --terracotta: #c86b4a;
+    --ochre: #d49860;
+    --teal: #6faaa0;
   }
 }
 
@@ -70,29 +107,75 @@
   * {
     @apply border-border;
   }
+
   body {
-    @apply bg-background text-foreground font-sans;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    @apply bg-background text-foreground antialiased;
+    font-family:
+      'Inter',
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      'Roboto',
+      sans-serif;
   }
+
+  /* Display text uses Crimson Pro */
   h1,
   h2,
-  h3 {
-    @apply font-display;
+  h3,
+  h4,
+  h5,
+  h6,
+  .font-display,
+  [class*='display'],
+  .crimson-pro {
+    font-family: 'Crimson Pro', 'Georgia', serif;
+  }
+
+  /* UI text uses Inter */
+  button,
+  input,
+  textarea,
+  select,
+  label,
+  .font-ui,
+  .inter {
+    font-family:
+      'Inter',
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      'Roboto',
+      sans-serif;
+  }
+
+  /* Typography improvements */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-semibold tracking-tight;
+  }
+
+  /* Focus visible styles */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
 }
 
-/* Section Spacing Utility */
+/* Custom utility classes */
 @layer utilities {
-  .section-pad {
-    @apply min-h-screen py-20 lg:py-32;
+  .text-balance {
+    text-wrap: balance;
   }
 
-  /* Hide scrollbar utility */
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
