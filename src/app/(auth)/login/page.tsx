@@ -1,130 +1,24 @@
-'use client';
+import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
+import { SignIn } from '@/components/auth/SignIn';
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useFormState, useFormStatus } from 'react-dom';
-import { signIn, type SignInState } from '@/actions/auth';
-import SocialSignInButtons from '@/components/auth/social-sign-in-buttons';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-
-const initialState: SignInState = {
-  error: null,
+export const metadata = {
+  title: 'Sign In | Proofound',
+  description: 'Sign in to your Proofound account',
 };
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
+export default async function LoginPage() {
+  // Check if user is already logged in
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  return (
-    <Button
-      type="submit"
-      className="w-full bg-proofound-forest hover:bg-proofound-forest/90 text-white"
-      disabled={pending}
-    >
-      {pending ? 'Logging in...' : 'Log in'}
-    </Button>
-  );
-}
+  // If already logged in, redirect to dashboard
+  if (user) {
+    redirect('/app/i/home');
+  }
 
-export default function LoginPage() {
-  const [state, formAction] = useFormState(signIn, initialState);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-proofound-parchment dark:bg-background px-4">
-      <div className="w-full max-w-md bg-white dark:bg-card p-8 rounded-2xl shadow-lg border border-proofound-stone dark:border-border">
-        <h1 className="text-3xl font-['Crimson_Pro'] font-semibold text-proofound-forest dark:text-primary mb-2">
-          Welcome back
-        </h1>
-        <p className="text-proofound-charcoal/70 dark:text-muted-foreground mb-6">
-          Log in to your Proofound account
-        </p>
-
-        <SocialSignInButtons className="mb-6" />
-
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center" aria-hidden="true">
-            <span className="w-full border-t border-proofound-stone dark:border-border" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="px-2 bg-white dark:bg-card text-proofound-charcoal/70 dark:text-muted-foreground">
-              Or continue with email
-            </span>
-          </div>
-        </div>
-
-        {state.error && (
-          <div
-            id="login-error"
-            role="alert"
-            className="mb-6 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
-          >
-            {state.error}
-          </div>
-        )}
-
-        <form action={formAction} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-proofound-charcoal dark:text-foreground">
-              Email
-            </Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              required
-              autoComplete="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              aria-describedby={state.error ? 'login-error' : undefined}
-              className="border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password" className="text-proofound-charcoal dark:text-foreground">
-              Password
-            </Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              required
-              autoComplete="current-password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              className="border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
-            />
-          </div>
-
-          <SubmitButton />
-        </form>
-
-        <div className="mt-6 text-center">
-          <Link
-            href="/reset-password"
-            className="text-sm text-proofound-forest dark:text-primary hover:text-proofound-forest/80 dark:hover:text-primary/80"
-          >
-            Forgot password?
-          </Link>
-        </div>
-
-        <div className="mt-8 pt-6 border-t border-proofound-stone dark:border-border text-center">
-          <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
-            Don&apos;t have an account?{' '}
-            <Link
-              href="/signup"
-              className="text-proofound-forest dark:text-primary hover:text-proofound-forest/80 dark:hover:text-primary/80 font-medium"
-            >
-              Sign up
-            </Link>
-          </p>
-        </div>
-      </div>
-    </div>
-  );
+  // Render SignIn component with MVP design
+  return <SignIn />;
 }
