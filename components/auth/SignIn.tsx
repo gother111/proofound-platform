@@ -21,8 +21,6 @@ import {
   Eye,
   EyeOff,
   ArrowLeft,
-  Building2,
-  User
 } from 'lucide-react';
 
 interface SignInProps {
@@ -34,7 +32,6 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [accountType, setAccountType] = useState<'individual' | 'organization'>('individual');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -61,7 +58,22 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
 
       if (authData.user) {
         await trackLogin('email');
-        router.push('/home');
+        
+        // Query user profile to get account_type for routing
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('account_type, is_admin')
+          .eq('id', authData.user.id)
+          .single();
+
+        // Route based on account type
+        if (profile?.is_admin) {
+          router.push('/admin');
+        } else if (profile?.account_type === 'organization') {
+          router.push('/organization');
+        } else {
+          router.push('/home');
+        }
         router.refresh();
       }
     } catch (err) {
@@ -71,14 +83,14 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
     }
   };
 
-  const handleOAuthLogin = async (provider: 'google' | 'github') => {
+  const handleOAuthLogin = async () => {
     setIsLoading(true);
     setError(null);
 
     try {
       const supabase = createClient();
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
-        provider,
+        provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
         },
@@ -86,8 +98,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
 
       if (oauthError) throw oauthError;
       
-      // Track login (use 'google' for analytics as github isn't in trackLogin types yet)
-      await trackLogin(provider === 'google' ? 'google' : 'linkedin');
+      await trackLogin('google');
     } catch (err) {
       setError(getErrorMessage(err));
       setIsLoading(false);
@@ -163,47 +174,19 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.2 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
               className="mb-4"
             >
-              <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-proofound-forest to-sage flex items-center justify-center">
+              <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-[#7A9278] to-[#5C8B89] flex items-center justify-center">
                 <span className="text-2xl font-display text-white">P</span>
               </div>
             </motion.div>
             <h1 className="text-2xl font-display font-semibold text-foreground mb-2">
-              Welcome back
+              Welcome Back
             </h1>
             <p className="text-sm text-muted-foreground">
-              Sign in to your Proofound account
+              Sign in to continue to Proofound
             </p>
-          </div>
-
-          {/* Account Type Selector */}
-          <div className="flex gap-2 p-1 bg-muted/30 rounded-lg mb-6">
-            <button
-              type="button"
-              onClick={() => setAccountType('individual')}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium transition-all ${
-                accountType === 'individual'
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <User className="w-4 h-4" />
-              Individual
-            </button>
-            <button
-              type="button"
-              onClick={() => setAccountType('organization')}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium transition-all ${
-                accountType === 'organization'
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <Building2 className="w-4 h-4" />
-              Organization
-            </button>
           </div>
 
           {/* Error Message */}
@@ -218,38 +201,40 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
           )}
 
           {/* Sign In Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-muted-foreground" />
-                Email address
-              </Label>
-              <Input
-                {...register('email')}
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                autoComplete="email"
-                disabled={isLoading}
-              />
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {/* Email */}
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <div className="relative mt-2">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  {...register('email')}
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                  disabled={isLoading}
+                  className="pl-10"
+                />
+              </div>
               {errors.email && (
-                <p className="text-sm text-destructive">{errors.email.message}</p>
+                <p className="mt-2 text-sm text-destructive">{errors.email.message}</p>
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password" className="flex items-center gap-2">
-                <Lock className="w-4 h-4 text-muted-foreground" />
-                Password
-              </Label>
-              <div className="relative">
+            {/* Password */}
+            <div>
+              <Label htmlFor="password">Password</Label>
+              <div className="relative mt-2">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   {...register('password')}
                   id="password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
+                  placeholder="Enter your password"
                   autoComplete="current-password"
                   disabled={isLoading}
+                  className="pl-10 pr-10"
                 />
                 <button
                   type="button"
@@ -265,52 +250,59 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
                 </button>
               </div>
               {errors.password && (
-                <p className="text-sm text-destructive">{errors.password.message}</p>
+                <p className="mt-2 text-sm text-destructive">{errors.password.message}</p>
               )}
             </div>
 
+            {/* Remember Me & Forgot Password */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Checkbox
                   id="remember"
                   checked={rememberMe}
-                  onCheckedChange={(checked: boolean) => setRememberMe(checked)}
+                  onCheckedChange={(checked) => setRememberMe(checked as boolean)}
                 />
-                <Label htmlFor="remember" className="text-sm font-normal cursor-pointer">
+                <Label htmlFor="remember" className="text-sm cursor-pointer">
                   Remember me
                 </Label>
               </div>
               <button
                 type="button"
-                className="text-sm text-primary hover:underline"
                 onClick={() => router.push('/forgot-password')}
+                className="text-sm text-[#7A9278] hover:text-[#7A9278]/80 transition-colors"
               >
                 Forgot password?
               </button>
             </div>
 
-            <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
-              {isLoading ? 'Signing in...' : 'Sign in'}
+            {/* Sign In Button */}
+            <Button
+              type="submit"
+              className="w-full rounded-full bg-[#7A9278] hover:bg-[#7A9278]/90 text-white py-6"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
 
           {/* Divider */}
           <div className="relative my-6">
             <Separator />
-            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
-              Or continue with
+            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-3 text-xs text-muted-foreground">
+              OR
             </span>
           </div>
 
           {/* Social Sign In */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-3">
             <Button
               type="button"
               variant="outline"
-              onClick={() => handleOAuthLogin('google')}
+              className="w-full rounded-full"
+              onClick={handleOAuthLogin}
               disabled={isLoading}
             >
-              <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
                 <path
                   fill="currentColor"
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -328,19 +320,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              Google
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => handleOAuthLogin('github')}
-              disabled={isLoading}
-            >
-              <svg className="mr-2 h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-              </svg>
-              GitHub
+              Continue with Google
             </Button>
           </div>
 
@@ -351,24 +331,24 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
               <button
                 type="button"
                 onClick={onCreateAccount || (() => router.push('/signup'))}
-                className="text-primary hover:underline font-medium"
+                className="text-[#7A9278] hover:text-[#7A9278]/80 transition-colors"
               >
-                Create account
+                Create one
               </button>
             </p>
           </div>
         </Card>
 
         {/* Footer Text */}
-        <p className="mt-6 text-center text-xs text-muted-foreground">
+        <p className="text-center text-xs text-muted-foreground mt-6">
           By signing in, you agree to our{' '}
-          <a href="/terms" className="underline hover:text-foreground">
+          <button className="underline hover:text-foreground transition-colors">
             Terms of Service
-          </a>{' '}
-          and{' '}
-          <a href="/privacy" className="underline hover:text-foreground">
+          </button>
+          {' '}and{' '}
+          <button className="underline hover:text-foreground transition-colors">
             Privacy Policy
-          </a>
+          </button>
         </p>
       </motion.div>
     </div>

@@ -141,7 +141,7 @@ export function OrganizationSignup({ onClose, onComplete }: OrganizationSignupPr
       >
         <Card className="p-8 relative overflow-hidden">
           {/* Background gradient */}
-          <div className="absolute inset-0 bg-gradient-to-br from-proofound-terracotta/5 to-ochre/5 -z-10" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#C67B5C]/5 to-[#D4A574]/5 -z-10" />
 
           {/* Back button */}
           {(step === 'auth' || step === 'verification') && (
@@ -172,31 +172,43 @@ export function OrganizationSignup({ onClose, onComplete }: OrganizationSignupPr
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: "spring", duration: 0.6 }}
-            className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-proofound-terracotta to-ochre flex items-center justify-center"
+            className="w-16 h-16 mx-auto mb-6 rounded-full flex items-center justify-center"
+            style={{ backgroundColor: '#E8E6DD' }}
           >
             {step === 'success' ? (
-              <CheckCircle2 className="w-8 h-8 text-white" />
+              <CheckCircle2 className="w-8 h-8" style={{ color: '#C67B5C' }} />
             ) : (
-              <Building2 className="w-8 h-8 text-white" />
+              <Building2 className="w-8 h-8" style={{ color: '#6B6760' }} />
             )}
           </motion.div>
 
           {/* Header */}
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-display font-semibold text-foreground mb-2">
+            <h2 className="text-2xl mb-2" style={{ color: '#2D3330' }}>
               {getStepTitle()}
             </h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm" style={{ color: '#6B6760' }}>
               {getStepDescription()}
             </p>
           </div>
 
-          {/* Progress Indicator */}
+          {/* Step indicator */}
           {step !== 'success' && (
-            <div className="flex gap-2 mb-8">
-              <div className={`h-1 flex-1 rounded-full transition-colors ${step === 'details' || step === 'auth' || step === 'verification' ? 'bg-primary' : 'bg-muted'}`} />
-              <div className={`h-1 flex-1 rounded-full transition-colors ${step === 'auth' || step === 'verification' ? 'bg-primary' : 'bg-muted'}`} />
-              <div className={`h-1 flex-1 rounded-full transition-colors ${step === 'verification' ? 'bg-primary' : 'bg-muted'}`} />
+            <div className="flex gap-2 mb-6">
+              {['details', 'auth', 'verification'].map((s, i) => (
+                <div
+                  key={s}
+                  className="h-1 flex-1 rounded-full transition-colors"
+                  style={{ 
+                    backgroundColor: 
+                      s === step || 
+                      (step === 'auth' && s === 'details') ||
+                      (step === 'verification' && (s === 'details' || s === 'auth'))
+                        ? '#C67B5C' 
+                        : '#E8E6DD' 
+                  }}
+                />
+              ))}
             </div>
           )}
 
@@ -220,57 +232,77 @@ export function OrganizationSignup({ onClose, onComplete }: OrganizationSignupPr
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 onSubmit={handleDetailsSubmit}
-                className="space-y-6"
+                className="space-y-4"
               >
                 <div className="space-y-2">
-                  <Label htmlFor="companyName">
-                    Company name
+                  <Label htmlFor="companyName" className="text-sm" style={{ color: '#6B6760' }}>
+                    Organization name
                   </Label>
                   <Input
                     id="companyName"
+                    type="text"
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
-                    placeholder="Acme Corp"
-                    autoFocus
+                    placeholder="Acme Corporation"
                     required
+                    autoFocus
                   />
+                  <p className="text-xs" style={{ color: '#6B6760' }}>
+                    The public-facing name of your organization
+                  </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="legalName">
+                  <Label htmlFor="legalName" className="text-sm" style={{ color: '#6B6760' }}>
                     Legal name
                   </Label>
                   <Input
                     id="legalName"
+                    type="text"
                     value={legalName}
                     onChange={(e) => setLegalName(e.target.value)}
                     placeholder="Acme Corporation Ltd."
                     required
                   />
+                  <p className="text-xs" style={{ color: '#6B6760' }}>
+                    Official registered legal name
+                  </p>
                 </div>
 
-                <div className="space-y-3">
-                  <Label>Organization type</Label>
+                <div className="space-y-2">
+                  <Label className="text-sm" style={{ color: '#6B6760' }}>
+                    Organization type
+                  </Label>
                   <RadioGroup
                     value={organizationType}
-                    onValueChange={(value: string) => setOrganizationType(value as 'profit' | 'non-profit')}
+                    onValueChange={(value) => setOrganizationType(value as 'profit' | 'non-profit')}
                   >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="non-profit" id="non-profit" />
-                      <Label htmlFor="non-profit" className="font-normal cursor-pointer">
-                        Non-profit / Social Good
+                    <div className="flex items-center space-x-2 p-3 rounded-lg border" style={{ borderColor: organizationType === 'profit' ? '#C67B5C' : '#E8E6DD' }}>
+                      <RadioGroupItem value="profit" id="profit" />
+                      <Label htmlFor="profit" className="flex-1 cursor-pointer">
+                        <div>
+                          <div className="text-sm" style={{ color: '#2D3330' }}>For-profit</div>
+                          <div className="text-xs" style={{ color: '#6B6760' }}>Commercial organization</div>
+                        </div>
                       </Label>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="profit" id="profit" />
-                      <Label htmlFor="profit" className="font-normal cursor-pointer">
-                        For-profit
+                    <div className="flex items-center space-x-2 p-3 rounded-lg border" style={{ borderColor: organizationType === 'non-profit' ? '#C67B5C' : '#E8E6DD' }}>
+                      <RadioGroupItem value="non-profit" id="non-profit" />
+                      <Label htmlFor="non-profit" className="flex-1 cursor-pointer">
+                        <div>
+                          <div className="text-sm" style={{ color: '#2D3330' }}>Non-profit</div>
+                          <div className="text-xs" style={{ color: '#6B6760' }}>NGO, charity, or social enterprise</div>
+                        </div>
                       </Label>
                     </div>
                   </RadioGroup>
                 </div>
 
-                <Button type="submit" className="w-full" size="lg">
+                <Button
+                  type="submit"
+                  className="w-full"
+                  style={{ backgroundColor: '#C67B5C', color: '#F7F6F1' }}
+                >
                   Continue
                 </Button>
               </motion.form>
@@ -283,55 +315,79 @@ export function OrganizationSignup({ onClose, onComplete }: OrganizationSignupPr
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 onSubmit={handleAuthSubmit}
-                className="space-y-6"
+                className="space-y-4"
               >
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-muted-foreground" />
-                    Admin email
+                  <Label htmlFor="email" className="text-sm" style={{ color: '#6B6760' }}>
+                    Corporate email
                   </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="admin@company.com"
-                    autoFocus
-                    required
-                  />
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#6B6760' }} />
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="admin@acme.com"
+                      className="pl-10"
+                      required
+                      autoFocus
+                    />
+                  </div>
+                  <p className="text-xs" style={{ color: '#6B6760' }}>
+                    Use your organization's domain email
+                  </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="flex items-center gap-2">
-                    <Lock className="w-4 h-4 text-muted-foreground" />
+                  <Label htmlFor="password" className="text-sm" style={{ color: '#6B6760' }}>
                     Password
                   </Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="At least 8 characters"
-                    required
-                    minLength={8}
-                  />
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#6B6760' }} />
+                    <Input
+                      id="password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter your password"
+                      className="pl-10"
+                      required
+                      minLength={8}
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">
+                  <Label htmlFor="confirmPassword" className="text-sm" style={{ color: '#6B6760' }}>
                     Confirm password
                   </Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Re-enter your password"
-                    required
-                  />
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#6B6760' }} />
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Confirm your password"
+                      className="pl-10"
+                      required
+                      minLength={8}
+                    />
+                  </div>
+                  {confirmPassword && password !== confirmPassword && (
+                    <p className="text-xs text-destructive">
+                      Passwords do not match
+                    </p>
+                  )}
                 </div>
 
-                <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+                <Button
+                  type="submit"
+                  className="w-full"
+                  style={{ backgroundColor: '#C67B5C', color: '#F7F6F1' }}
+                  disabled={isLoading || !email || !password || !confirmPassword || password !== confirmPassword}
+                >
                   {isLoading ? 'Creating organization...' : 'Create organization'}
                 </Button>
               </motion.form>
@@ -375,18 +431,13 @@ export function OrganizationSignup({ onClose, onComplete }: OrganizationSignupPr
                 key="success"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="text-center py-8"
+                className="text-center space-y-4"
               >
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", delay: 0.2 }}
-                  className="w-20 h-20 mx-auto mb-6 rounded-full bg-proofound-terracotta/20 flex items-center justify-center"
-                >
-                  <CheckCircle2 className="w-12 h-12 text-proofound-terracotta" />
-                </motion.div>
-                <p className="text-muted-foreground">
-                  Redirecting to your dashboard...
+                <div className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ backgroundColor: '#FFF3E0' }}>
+                  <CheckCircle2 className="w-10 h-10" style={{ color: '#C67B5C' }} />
+                </div>
+                <p className="text-sm" style={{ color: '#6B6760' }}>
+                  Redirecting to your organization dashboard...
                 </p>
               </motion.div>
             )}

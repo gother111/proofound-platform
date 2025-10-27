@@ -132,7 +132,7 @@ export function IndividualSignup({ onClose, onComplete }: IndividualSignupProps)
       >
         <Card className="p-8 relative overflow-hidden">
           {/* Background gradient */}
-          <div className="absolute inset-0 bg-gradient-to-br from-sage/5 to-teal/5 -z-10" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#7A9278]/5 to-[#5C8B89]/5 -z-10" />
 
           {/* Back button */}
           {step === 'password' && (
@@ -163,33 +163,25 @@ export function IndividualSignup({ onClose, onComplete }: IndividualSignupProps)
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: "spring", duration: 0.6 }}
-            className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-sage to-teal flex items-center justify-center"
+            className="w-16 h-16 mx-auto mb-6 rounded-full flex items-center justify-center"
+            style={{ backgroundColor: '#E8E6DD' }}
           >
             {step === 'success' ? (
-              <CheckCircle2 className="w-8 h-8 text-white" />
+              <CheckCircle2 className="w-8 h-8" style={{ color: '#4A5943' }} />
             ) : (
-              <User className="w-8 h-8 text-white" />
+              <User className="w-8 h-8" style={{ color: '#6B6760' }} />
             )}
           </motion.div>
 
           {/* Header */}
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-display font-semibold text-foreground mb-2">
+            <h2 className="text-2xl mb-2" style={{ color: '#2D3330' }}>
               {getStepTitle()}
             </h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm" style={{ color: '#6B6760' }}>
               {getStepDescription()}
             </p>
           </div>
-
-          {/* Progress Indicator */}
-          {step !== 'success' && (
-            <div className="flex gap-2 mb-8">
-              <div className={`h-1 flex-1 rounded-full transition-colors ${step === 'email' || step === 'password' || step === 'verification' ? 'bg-primary' : 'bg-muted'}`} />
-              <div className={`h-1 flex-1 rounded-full transition-colors ${step === 'password' || step === 'verification' ? 'bg-primary' : 'bg-muted'}`} />
-              <div className={`h-1 flex-1 rounded-full transition-colors ${step === 'verification' ? 'bg-primary' : 'bg-muted'}`} />
-            </div>
-          )}
 
           {/* Error Message */}
           {error && (
@@ -211,27 +203,38 @@ export function IndividualSignup({ onClose, onComplete }: IndividualSignupProps)
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 onSubmit={handleEmailSubmit}
-                className="space-y-6"
+                className="space-y-4"
               >
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-muted-foreground" />
+                  <Label htmlFor="email" className="text-sm" style={{ color: '#6B6760' }}>
                     Email address
                   </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    autoFocus
-                    required
-                  />
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#6B6760' }} />
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      className="pl-10"
+                      autoFocus
+                      required
+                    />
+                  </div>
                 </div>
 
-                <Button type="submit" className="w-full" size="lg">
+                <Button
+                  type="submit"
+                  className="w-full"
+                  style={{ backgroundColor: '#4A5943', color: '#F7F6F1' }}
+                >
                   Continue
                 </Button>
+
+                <p className="text-xs text-center" style={{ color: '#6B6760' }}>
+                  By continuing, you agree to our Terms of Service and Privacy Policy
+                </p>
               </motion.form>
             )}
 
@@ -242,40 +245,61 @@ export function IndividualSignup({ onClose, onComplete }: IndividualSignupProps)
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 onSubmit={handlePasswordSubmit}
-                className="space-y-6"
+                className="space-y-4"
               >
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="flex items-center gap-2">
-                    <Lock className="w-4 h-4 text-muted-foreground" />
+                  <Label htmlFor="password" className="text-sm" style={{ color: '#6B6760' }}>
                     Password
                   </Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="At least 8 characters"
-                    autoFocus
-                    required
-                    minLength={8}
-                  />
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#6B6760' }} />
+                    <Input
+                      id="password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter your password"
+                      className="pl-10"
+                      autoFocus
+                      required
+                      minLength={8}
+                    />
+                  </div>
+                  <p className="text-xs" style={{ color: '#6B6760' }}>
+                    Must be at least 8 characters
+                  </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">
+                  <Label htmlFor="confirmPassword" className="text-sm" style={{ color: '#6B6760' }}>
                     Confirm password
                   </Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Re-enter your password"
-                    required
-                  />
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#6B6760' }} />
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Confirm your password"
+                      className="pl-10"
+                      required
+                      minLength={8}
+                    />
+                  </div>
+                  {confirmPassword && password !== confirmPassword && (
+                    <p className="text-xs text-destructive">
+                      Passwords do not match
+                    </p>
+                  )}
                 </div>
 
-                <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+                <Button
+                  type="submit"
+                  className="w-full"
+                  style={{ backgroundColor: '#4A5943', color: '#F7F6F1' }}
+                  disabled={isLoading || !password || !confirmPassword || password !== confirmPassword}
+                >
                   {isLoading ? 'Creating account...' : 'Create account'}
                 </Button>
               </motion.form>
@@ -319,18 +343,13 @@ export function IndividualSignup({ onClose, onComplete }: IndividualSignupProps)
                 key="success"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="text-center py-8"
+                className="text-center space-y-4"
               >
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", delay: 0.2 }}
-                  className="w-20 h-20 mx-auto mb-6 rounded-full bg-sage/20 flex items-center justify-center"
-                >
-                  <CheckCircle2 className="w-12 h-12 text-sage" />
-                </motion.div>
-                <p className="text-muted-foreground">
-                  Redirecting to your dashboard...
+                <div className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ backgroundColor: '#E8F5E9' }}>
+                  <CheckCircle2 className="w-10 h-10" style={{ color: '#4A5943' }} />
+                </div>
+                <p className="text-sm" style={{ color: '#6B6760' }}>
+                  Redirecting to your profile...
                 </p>
               </motion.div>
             )}

@@ -22,23 +22,36 @@ export async function GET(request: Request) {
     if (user) {
       const { data: existingProfile } = await supabase
         .from("profiles")
-        .select("id")
+        .select("id, account_type, is_admin")
         .eq("id", user.id)
         .single();
 
       if (!existingProfile) {
-        // Create profile for OAuth users
+        // Create profile for OAuth users (default to individual)
         await supabase.from("profiles").insert({
           id: user.id,
           full_name: user.user_metadata?.full_name || user.user_metadata?.name,
           email: user.email,
           avatar_url: user.user_metadata?.avatar_url,
+          account_type: 'individual', // Default for OAuth users
         });
+        
+        // Redirect to home for new users
+        return NextResponse.redirect(new URL("/home", requestUrl.origin));
+      }
+
+      // Route based on account type for existing users
+      if (existingProfile.is_admin) {
+        return NextResponse.redirect(new URL("/admin", requestUrl.origin));
+      } else if (existingProfile.account_type === 'organization') {
+        return NextResponse.redirect(new URL("/organization", requestUrl.origin));
+      } else {
+        return NextResponse.redirect(new URL("/home", requestUrl.origin));
       }
     }
   }
 
-  // Redirect to dashboard
+  // Default redirect
   return NextResponse.redirect(new URL("/home", requestUrl.origin));
 }
 
