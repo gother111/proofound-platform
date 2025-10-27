@@ -1548,14 +1548,21 @@ function FinalQuoteSection({ shouldReduceMotion }: { shouldReduceMotion: boolean
     offset: ['start end', 'end start'],
   });
 
-  const opacity1 = useTransform(scrollYProgress, [0, 0.3, 0.5, 0.8], [1, 1, 0, 0]);
-  const opacity2 = useTransform(scrollYProgress, [0, 0.3, 0.5, 0.8], [1, 1, 0, 0]);
-  const opacity3 = useTransform(scrollYProgress, [0, 0.3, 0.5, 0.8], [1, 1, 0, 0]);
-  const opacity4 = useTransform(scrollYProgress, [0, 0.3, 0.5, 0.8], [1, 1, 0, 0]);
+  // Fade out the intro line
+  const opacity1 = useTransform(scrollYProgress, [0, 0.3, 0.4, 0.6], [1, 1, 1, 0]);
+  // Fade out the middle words
+  const opacity2 = useTransform(scrollYProgress, [0, 0.3, 0.4, 0.6], [1, 1, 0, 0]);
+  const opacity3 = useTransform(scrollYProgress, [0, 0.3, 0.4, 0.6], [1, 1, 0, 0]);
 
-  const mergeProgress = useTransform(scrollYProgress, [0.4, 0.8], [0, 1]);
-  const proofX = useTransform(mergeProgress, [0, 1], [0, 30]);
-  const foundX = useTransform(mergeProgress, [0, 1], [0, -30]);
+  // Merge animation for Proofound appearing
+  const mergeProgress = useTransform(scrollYProgress, [0.5, 0.8], [0, 1]);
+
+  // Movement for proof and found as they merge together
+  const proofX = useTransform(scrollYProgress, [0.4, 0.7], [0, 40]);
+  const foundX = useTransform(scrollYProgress, [0.4, 0.7], [0, -40]);
+
+  // Opacity for proof and found - they fade out as they merge
+  const proofFoundOpacity = useTransform(scrollYProgress, [0.4, 0.7], [1, 0]);
 
   return (
     <section
@@ -1572,7 +1579,7 @@ function FinalQuoteSection({ shouldReduceMotion }: { shouldReduceMotion: boolean
             <div className="flex items-center justify-center gap-4 flex-wrap">
               <motion.span
                 style={{
-                  opacity: shouldReduceMotion ? 1 : 1,
+                  opacity: shouldReduceMotion ? 1 : proofFoundOpacity,
                   x: shouldReduceMotion ? 0 : proofX,
                 }}
                 className="font-bold"
@@ -1587,7 +1594,7 @@ function FinalQuoteSection({ shouldReduceMotion }: { shouldReduceMotion: boolean
               </motion.span>
               <motion.span
                 style={{
-                  opacity: shouldReduceMotion ? 1 : 1,
+                  opacity: shouldReduceMotion ? 1 : proofFoundOpacity,
                   x: shouldReduceMotion ? 0 : foundX,
                 }}
                 className="font-bold"
