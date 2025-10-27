@@ -332,7 +332,7 @@ function HeroSection({
   shouldReduceMotion: boolean | null;
 }) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: false, amount: 0.3 });
+  const isInView = useInView(ref, { once: true, amount: 0.3 });
 
   return (
     <section
@@ -379,7 +379,7 @@ function HeroSection({
 // Section 2: The Problem - Pains we solve
 function ProblemSection({ shouldReduceMotion }: { shouldReduceMotion: boolean | null }) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: false, amount: 0.3 });
+  const isInView = useInView(ref, { once: true, amount: 0.3 });
 
   const problems = [
     { icon: Heart, text: 'Mental health toll of endless job searches and networking' },
@@ -438,7 +438,7 @@ function ProblemSection({ shouldReduceMotion }: { shouldReduceMotion: boolean | 
 // Section 3: Our Answer - How Proofound works
 function OurAnswerSection({ shouldReduceMotion }: { shouldReduceMotion: boolean | null }) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: false, amount: 0.2 });
+  const isInView = useInView(ref, { once: true, amount: 0.2 });
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const features = [
@@ -561,7 +561,7 @@ function OurAnswerSection({ shouldReduceMotion }: { shouldReduceMotion: boolean 
 // Section 4: What makes it trustworthy - Guiding principles
 function TrustworthySection({ shouldReduceMotion }: { shouldReduceMotion: boolean | null }) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: false, amount: 0.3 });
+  const isInView = useInView(ref, { once: true, amount: 0.3 });
 
   const principles = [
     {
@@ -649,7 +649,7 @@ function TrustworthySection({ shouldReduceMotion }: { shouldReduceMotion: boolea
 // Section 5: Show, don't tell - Teasers of modules
 function ModuleTeasersSection({ shouldReduceMotion }: { shouldReduceMotion: boolean | null }) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: false, amount: 0.2 });
+  const isInView = useInView(ref, { once: true, amount: 0.2 });
 
   const modules = [
     {
@@ -803,7 +803,7 @@ function PersonasSection({
   onOrganizationSignup?: () => void;
 }) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: false, amount: 0.3 });
+  const isInView = useInView(ref, { once: true, amount: 0.3 });
   const [activePersona, setActivePersona] = useState<'individual' | 'organization'>('individual');
 
   const personas = {
@@ -912,7 +912,7 @@ function PersonasSection({
 // Section 7: Why now - Timing & context
 function WhyNowSection({ shouldReduceMotion }: { shouldReduceMotion: boolean | null }) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: false, amount: 0.3 });
+  const isInView = useInView(ref, { once: true, amount: 0.3 });
 
   const reasons = [
     {
@@ -988,7 +988,7 @@ function WhyNowSection({ shouldReduceMotion }: { shouldReduceMotion: boolean | n
 // Section 8: Proof & credibility
 function ProofSection({ shouldReduceMotion }: { shouldReduceMotion: boolean | null }) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: false, amount: 0.3 });
+  const isInView = useInView(ref, { once: true, amount: 0.3 });
 
   return (
     <section ref={ref} className="flex items-center px-6 md:px-12 py-16 md:py-20 relative">
@@ -1064,7 +1064,7 @@ function ProofSection({ shouldReduceMotion }: { shouldReduceMotion: boolean | nu
 // Section 9: Steward Ownership - Business Model of the Future
 function StewardOwnershipSection({ shouldReduceMotion }: { shouldReduceMotion: boolean | null }) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: false, amount: 0.3 });
+  const isInView = useInView(ref, { once: true, amount: 0.3 });
 
   const principles = [
     {
@@ -1137,7 +1137,7 @@ function ProductsSubscriptionsSection({
   shouldReduceMotion: boolean | null;
 }) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: false, amount: 0.3 });
+  const isInView = useInView(ref, { once: true, amount: 0.3 });
   const [viewMode, setViewMode] = useState<'individual' | 'organization'>('individual');
 
   // Track billing cycle for each product individually
@@ -1397,7 +1397,7 @@ function FinalCTASection({
   shouldReduceMotion: boolean | null;
 }) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: false, amount: 0.4 });
+  const isInView = useInView(ref, { once: true, amount: 0.4 });
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<'individual' | 'organization' | ''>('');
 
@@ -1601,7 +1601,7 @@ function FinalQuoteSection({ shouldReduceMotion }: { shouldReduceMotion: boolean
 // Footer
 function FooterSection() {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: false, amount: 0.3 });
+  const isInView = useInView(ref, { once: true, amount: 0.3 });
 
   const footerLinks = {
     platform: [
