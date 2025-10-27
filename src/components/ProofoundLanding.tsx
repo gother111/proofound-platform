@@ -126,43 +126,9 @@ export function ProofoundLanding({
       y: -100,
     });
 
-    // Problem cards stagger animation
-    gsap.fromTo(
-      '.gsap-problem-card',
-      { opacity: 0, y: 60 },
-      {
-        scrollTrigger: {
-          trigger: '.gsap-problem-section',
-          start: 'top 70%',
-          end: 'top 20%',
-          scrub: 1,
-        },
-        opacity: 1,
-        y: 0,
-        stagger: 0.2,
-      }
-    );
-
-    // Principles cards with rotation
-    gsap.fromTo(
-      '.gsap-principle-card',
-      { opacity: 0, rotateY: -30, scale: 0.9 },
-      {
-        scrollTrigger: {
-          trigger: '.gsap-trustworthy-section',
-          start: 'top 70%',
-          end: 'top 30%',
-          scrub: 1,
-        },
-        opacity: 1,
-        rotateY: 0,
-        scale: 1,
-        stagger: 0.15,
-      }
-    );
-
-    // Note: Module and roadmap GSAP animations removed as these sections
-    // now use Motion animations instead for better compatibility
+    // Note: Problem cards and principle cards animations removed to prevent
+    // conflicts with Framer Motion animations. These sections now use
+    // Motion animations exclusively for better compatibility and smoother scrolling.
 
     // Final CTA scale effect
     gsap.fromTo(
