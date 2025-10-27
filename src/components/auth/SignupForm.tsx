@@ -314,7 +314,7 @@ export function SignupForm({ accountType, onBack, onComplete }: SignupFormProps)
           </div>
 
           {/* Social Sign In - Using existing configured component */}
-          <SocialSignInButtons className="mb-0" />
+          <SocialSignInButtons />
 
           {/* Sign In Link */}
           <div className="mt-6 text-center">
