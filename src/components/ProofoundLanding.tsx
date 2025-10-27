@@ -1558,11 +1558,11 @@ function FinalQuoteSection({ shouldReduceMotion }: { shouldReduceMotion: boolean
   const mergeProgress = useTransform(scrollYProgress, [0.5, 0.8], [0, 1]);
 
   // Movement for proof and found as they merge together
-  const proofX = useTransform(scrollYProgress, [0.4, 0.7], [0, 40]);
-  const foundX = useTransform(scrollYProgress, [0.4, 0.7], [0, -40]);
+  const proofX = useTransform(scrollYProgress, [0.4, 0.6], [0, 40]);
+  const foundX = useTransform(scrollYProgress, [0.4, 0.6], [0, -40]);
 
-  // Opacity for proof and found - they fade out as they merge
-  const proofFoundOpacity = useTransform(scrollYProgress, [0.4, 0.7], [1, 0]);
+  // Opacity for proof and found - they fade out completely as they merge
+  const proofFoundOpacity = useTransform(scrollYProgress, [0.4, 0.6], [1, 0]);
 
   return (
     <section
