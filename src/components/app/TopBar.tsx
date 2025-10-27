@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState } from 'react';
 import { Search } from 'lucide-react';
@@ -26,16 +26,13 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
 
   return (
     <>
-      <header
-        className="sticky top-0 z-50 h-14 px-4 border-b flex items-center justify-between gap-4"
-        style={{ backgroundColor: '#FDFCFA', borderColor: 'rgba(232, 230, 221, 0.6)' }}
-      >
+      <header className="sticky top-0 z-50 h-14 px-4 border-b border-proofound-stone dark:border-border bg-white dark:bg-card flex items-center justify-between gap-4">
         {/* Left: Logo + Title */}
         <div className="flex items-center gap-3">
-          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#7A9278] to-[#5C8B89] flex items-center justify-center">
+          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-proofound-forest to-brand-teal flex items-center justify-center">
             <span className="text-white text-xs font-semibold">P</span>
           </div>
-          <h1 className="text-lg font-semibold" style={{ color: '#2D3330' }}>
+          <h1 className="text-lg font-['Crimson_Pro'] font-semibold text-proofound-charcoal dark:text-foreground">
             Dashboard
           </h1>
         </div>
@@ -44,13 +41,22 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
         <div className="flex-1 max-w-xs">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input type="search" placeholder="Search..." className="pl-9 h-9 w-full" />
+            <Input
+              type="search"
+              placeholder="Search..."
+              className="pl-9 h-9 w-full border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
+            />
           </div>
         </div>
 
         {/* Right: Customize + Avatar */}
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" onClick={() => setCustomizeOpen(true)}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCustomizeOpen(true)}
+            className="border-proofound-stone dark:border-border hover:bg-proofound-forest/5"
+          >
             Customize
           </Button>
           <DropdownMenu>
@@ -58,14 +64,19 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
               <button
                 type="button"
                 aria-label="Open profile menu"
-                className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#7A9278]"
+                className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-proofound-forest dark:focus-visible:ring-primary"
               >
                 <Avatar className="w-8 h-8">
-                  <AvatarFallback className="text-xs font-medium">{userInitials}</AvatarFallback>
+                  <AvatarFallback className="text-xs font-medium bg-proofound-forest text-white">
+                    {userInitials}
+                  </AvatarFallback>
                 </Avatar>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuContent
+              align="end"
+              className="w-48 border-proofound-stone dark:border-border"
+            >
               <DropdownMenuLabel className="flex flex-col">
                 <span className="text-sm font-medium text-foreground">{userName}</span>
                 <span className="text-xs text-muted-foreground">Signed in</span>

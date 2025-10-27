@@ -25,7 +25,7 @@ export default function SocialSignInButtons({ className }: SocialSignInButtonsPr
         <GoogleIcon className="h-4 w-4" aria-hidden="true" />
       </OAuthProviderForm>
       {state.error ? (
-        <p className="text-sm text-error" role="alert">
+        <p className="text-sm text-destructive" role="alert">
           {state.error}
         </p>
       ) : null}
@@ -63,7 +63,7 @@ function OAuthSubmitButton({ children }: OAuthSubmitButtonProps) {
     <Button
       type="submit"
       variant="outline"
-      className="w-full flex items-center gap-2"
+      className="w-full flex items-center gap-2 border-proofound-stone dark:border-border hover:bg-proofound-stone/10 dark:hover:bg-muted"
       disabled={pending}
     >
       {pending ? <span className="flex-1 text-center">Redirecting...</span> : children}
