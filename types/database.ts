@@ -667,9 +667,11 @@ export type Database = {
           full_name: string | null
           id: string
           industry: string[] | null
+          is_admin: boolean | null
           languages: string[] | null
           last_active_at: string | null
           mission: string | null
+          organization_id: string | null
           phone: string | null
           professional_summary: string | null
           profile_completion_percentage: number | null
@@ -696,9 +698,11 @@ export type Database = {
           full_name?: string | null
           id: string
           industry?: string[] | null
+          is_admin?: boolean | null
           languages?: string[] | null
           last_active_at?: string | null
           mission?: string | null
+          organization_id?: string | null
           phone?: string | null
           professional_summary?: string | null
           profile_completion_percentage?: number | null
@@ -725,9 +729,11 @@ export type Database = {
           full_name?: string | null
           id?: string
           industry?: string[] | null
+          is_admin?: boolean | null
           languages?: string[] | null
           last_active_at?: string | null
           mission?: string | null
+          organization_id?: string | null
           phone?: string | null
           professional_summary?: string | null
           profile_completion_percentage?: number | null
@@ -932,6 +938,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      subscription_waitlist: {
+        Row: {
+          account_type: string
+          company: string | null
+          created_at: string | null
+          email: string
+          full_name: string
+          id: string
+          product_interest: string
+          updated_at: string | null
+        }
+        Insert: {
+          account_type: string
+          company?: string | null
+          created_at?: string | null
+          email: string
+          full_name: string
+          id?: string
+          product_interest: string
+          updated_at?: string | null
+        }
+        Update: {
+          account_type?: string
+          company?: string | null
+          created_at?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          product_interest?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       verification_requests: {
         Row: {

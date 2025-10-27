@@ -19,7 +19,7 @@ export async function POST(request: Request) {
         expertise:expertise_atlas(*)
       `)
       .eq("id", user.id)
-      .single();
+      .single() as { data: any | null; error: any };
 
     if (profileError || !profile) {
       return NextResponse.json(
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
     }
 
     // Calculate matches
-    const matchResults = [];
+    const matchResults: any[] = [];
     const now = new Date().toISOString();
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(); // 30 days
 

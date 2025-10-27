@@ -18,9 +18,7 @@ export default async function AdminPage() {
   }
 
   // Check if user is admin
-  // Cast profile to include is_admin field
-  const profileWithAdmin = profile as typeof profile & { is_admin?: boolean };
-  if (!profileWithAdmin.is_admin) {
+  if (!profile.is_admin) {
     redirect("/home"); // Redirect non-admin users
   }
 

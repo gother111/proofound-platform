@@ -32,7 +32,7 @@ export default async function DashboardHomePage() {
     .eq('profile_id', profile.id)
     .eq('status', 'suggested')
     .order('overall_score', { ascending: false })
-    .limit(10);
+    .limit(10) as { data: any[] | null };
 
   // Fetch assignments (if organization)
   let assignments: any[] = [];
@@ -58,10 +58,10 @@ export default async function DashboardHomePage() {
     .eq('profile_id', profile.id)
     .eq('verification_status', 'verified')
     .order('updated_at', { ascending: false })
-    .limit(1);
+    .limit(1) as { data: Array<{ id: string; claim_text: string | null; verification_status: string }> | null };
 
   if (recentProofs && recentProofs.length > 0 && recentProofs[0]) {
-    const recentProof = recentProofs[0] as { id: string; claim_text: string | null; verification_status: string };
+    const recentProof = recentProofs[0];
     notifications.push({
       id: `proof-${recentProof.id}`,
       text: `Verification approved — ${recentProof.claim_text?.substring(0, 50)}`,
@@ -90,10 +90,10 @@ export default async function DashboardHomePage() {
       .select('id, assignment_id')
       .in('assignment_id', assignments.map(a => a.id))
       .eq('status', 'suggested')
-      .limit(1);
+      .limit(1) as { data: Array<{ id: string; assignment_id: string }> | null };
 
     if (assignmentMatches && assignmentMatches.length > 0 && assignmentMatches[0]) {
-      const assignmentMatch = assignmentMatches[0] as { id: string; assignment_id: string };
+      const assignmentMatch = assignmentMatches[0];
       notifications.push({
         id: `assignment-match-${assignmentMatch.id}`,
         text: 'New applications for your assignments',

@@ -35,17 +35,16 @@ export default async function MatchDetailPage({
     `)
     .eq("id", id)
     .eq("profile_id", user.id)
-    .single();
+    .single() as { data: any | null; error: any };
 
   if (error || !match) {
     notFound();
   }
 
-  // Cast match to any to access nested properties
-  const matchData = match as any;
-  const assignment = matchData.assignment as any;
-  const scoreColor = getMatchScoreColor(matchData.overall_score);
-  const scoreBadge = getMatchScoreBadge(matchData.overall_score);
+  // Access nested properties
+  const assignment = match.assignment;
+  const scoreColor = getMatchScoreColor(match.overall_score);
+  const scoreBadge = getMatchScoreBadge(match.overall_score);
 
   return (
     <div className="space-y-8">
@@ -53,7 +52,7 @@ export default async function MatchDetailPage({
       <div>
         <div className="flex items-center gap-2 mb-2">
           <span className={`text-4xl font-bold ${scoreColor}`}>
-            {Math.round(matchData.overall_score)}%
+            {Math.round(match.overall_score)}%
           </span>
           <span className="text-lg text-gray-600 dark:text-gray-400">
             {scoreBadge}
@@ -70,12 +69,12 @@ export default async function MatchDetailPage({
       </div>
 
       {/* Match Actions */}
-      {matchData.status === "suggested" || matchData.status === "viewed" ? (
+      {match.status === "suggested" || match.status === "viewed" ? (
         <div className="flex gap-4">
           <Button size="lg">Accept Match</Button>
           <Button variant="outline" size="lg">Decline</Button>
         </div>
-      ) : matchData.status === "accepted" ? (
+      ) : match.status === "accepted" ? (
         <div className="rounded-lg border border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20 p-4">
           <p className="text-sm font-semibold text-green-800 dark:text-green-200">
             ✓ Match accepted - You can now message the organization
@@ -92,28 +91,28 @@ export default async function MatchDetailPage({
           {[
             {
               label: "Mission & Values Alignment",
-              score: matchData.mission_values_score,
-              weight: matchData.mission_values_weight,
+              score: match.mission_values_score,
+              weight: match.mission_values_weight,
             },
             {
               label: "Core Expertise Match",
-              score: matchData.core_expertise_score,
-              weight: matchData.core_expertise_weight,
+              score: match.core_expertise_score,
+              weight: match.core_expertise_weight,
             },
             {
               label: "Tools & Technology",
-              score: matchData.tools_score,
-              weight: matchData.tools_weight,
+              score: match.tools_score,
+              weight: match.tools_weight,
             },
             {
               label: "Logistics (Location, Availability)",
-              score: matchData.logistics_score,
-              weight: matchData.logistics_weight,
+              score: match.logistics_score,
+              weight: match.logistics_weight,
             },
             {
               label: "Recency & Activity",
-              score: matchData.recency_score,
-              weight: matchData.recency_weight,
+              score: match.recency_score,
+              weight: match.recency_weight,
             },
           ].map((item, index) => (
             <div key={index}>
@@ -148,13 +147,13 @@ export default async function MatchDetailPage({
       </div>
 
       {/* Strengths */}
-      {matchData.strengths && Array.isArray(matchData.strengths) && matchData.strengths.length > 0 && (
+      {match.strengths && Array.isArray(match.strengths) && match.strengths.length > 0 && (
         <div className="rounded-lg border border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20 p-6">
           <h2 className="text-lg font-semibold text-green-900 dark:text-green-100 mb-4">
             ✓ Your Strengths
           </h2>
           <ul className="space-y-2">
-            {matchData.strengths.map((strength: any, index: number) => (
+            {match.strengths.map((strength: any, index: number) => (
               <li key={index} className="flex items-start gap-2 text-sm text-green-800 dark:text-green-200">
                 <svg className="h-5 w-5 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                   <path
@@ -173,13 +172,13 @@ export default async function MatchDetailPage({
       )}
 
       {/* Gaps */}
-      {matchData.gaps && Array.isArray(matchData.gaps) && matchData.gaps.length > 0 && (
+      {match.gaps && Array.isArray(match.gaps) && match.gaps.length > 0 && (
         <div className="rounded-lg border border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-900/20 p-6">
           <h2 className="text-lg font-semibold text-yellow-900 dark:text-yellow-100 mb-4">
             ⚠️ Areas to Improve
           </h2>
           <ul className="space-y-2">
-            {matchData.gaps.map((gap: any, index: number) => (
+            {match.gaps.map((gap: any, index: number) => (
               <li key={index} className="flex items-start gap-2 text-sm text-yellow-800 dark:text-yellow-200">
                 <svg className="h-5 w-5 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                   <path
@@ -198,13 +197,13 @@ export default async function MatchDetailPage({
       )}
 
       {/* Improvement Suggestions */}
-      {matchData.improvement_suggestions && Array.isArray(matchData.improvement_suggestions) && matchData.improvement_suggestions.length > 0 && (
+      {match.improvement_suggestions && Array.isArray(match.improvement_suggestions) && match.improvement_suggestions.length > 0 && (
         <div className="rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/20 p-6">
           <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-4">
             💡 How to Improve Your Score
           </h2>
           <ul className="space-y-3">
-            {matchData.improvement_suggestions.map((suggestion: any, index: number) => (
+            {match.improvement_suggestions.map((suggestion: any, index: number) => (
               <li key={index} className="flex items-start gap-2 text-sm text-blue-800 dark:text-blue-200">
                 <svg className="h-5 w-5 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
