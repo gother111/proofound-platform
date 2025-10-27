@@ -21,9 +21,11 @@ export default function SocialSignInButtons({ className }: SocialSignInButtonsPr
 
   return (
     <div className={cn('space-y-3', className)}>
-      <OAuthProviderForm provider="google" label="Continue with Google" action={formAction}>
-        <GoogleIcon className="h-4 w-4" aria-hidden="true" />
-      </OAuthProviderForm>
+      <div className="grid grid-cols-1 gap-3">
+        <OAuthProviderForm provider="google" label="Google" action={formAction}>
+          <GoogleIcon className="h-5 w-5" aria-hidden="true" />
+        </OAuthProviderForm>
+      </div>
       {state.error ? (
         <p className="text-sm text-destructive" role="alert">
           {state.error}
@@ -45,8 +47,8 @@ function OAuthProviderForm({ provider, label, action, children }: OAuthProviderF
     <form action={action} className="w-full">
       <input type="hidden" name="provider" value={provider} />
       <OAuthSubmitButton>
-        {children}
-        <span className="flex-1 text-center">{label}</span>
+        <span className="mr-2">{children}</span>
+        {label}
       </OAuthSubmitButton>
     </form>
   );

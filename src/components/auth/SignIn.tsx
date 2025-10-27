@@ -266,8 +266,8 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
             </span>
           </div>
 
-          {/* Social Sign In - Using existing configured component */}
-          <SocialSignInButtons className="mb-0" />
+          {/* Social Sign In */}
+          <SocialSignInButtons />
 
           {/* Create Account Link */}
           <div className="mt-6 text-center">
