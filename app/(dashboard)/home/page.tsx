@@ -60,18 +60,19 @@ export default async function DashboardHomePage() {
     .order('updated_at', { ascending: false })
     .limit(1);
 
-  if (recentProofs && recentProofs.length > 0) {
+  if (recentProofs && recentProofs.length > 0 && recentProofs[0]) {
+    const recentProof = recentProofs[0] as { id: string; claim_text: string | null; verification_status: string };
     notifications.push({
-      id: `proof-${recentProofs[0].id}`,
-      text: `Verification approved — ${recentProofs[0].claim_text?.substring(0, 50)}`,
+      id: `proof-${recentProof.id}`,
+      text: `Verification approved — ${recentProof.claim_text?.substring(0, 50)}`,
       action: 'View',
       route: '/profile/proofs'
     });
   }
 
   // Check for new matches
-  if (matches && matches.length > 0) {
-    const latestMatch = matches[0];
+  if (matches && matches.length > 0 && matches[0]) {
+    const latestMatch = matches[0] as any;
     if (latestMatch.assignment) {
       notifications.push({
         id: `match-${latestMatch.id}`,
@@ -91,9 +92,10 @@ export default async function DashboardHomePage() {
       .eq('status', 'suggested')
       .limit(1);
 
-    if (assignmentMatches && assignmentMatches.length > 0) {
+    if (assignmentMatches && assignmentMatches.length > 0 && assignmentMatches[0]) {
+      const assignmentMatch = assignmentMatches[0] as { id: string; assignment_id: string };
       notifications.push({
-        id: `assignment-match-${assignmentMatches[0].id}`,
+        id: `assignment-match-${assignmentMatch.id}`,
         text: 'New applications for your assignments',
         action: 'Review',
         route: '/matches'

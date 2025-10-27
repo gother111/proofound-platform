@@ -27,17 +27,35 @@ export async function GET(request: Request) {
         .single();
 
       if (!existingProfile) {
-        // Create profile for OAuth users (default to individual)
-        await supabase.from("profiles").insert({
-          id: user.id,
-          full_name: user.user_metadata?.full_name || user.user_metadata?.name,
-          email: user.email,
-          avatar_url: user.user_metadata?.avatar_url,
-          account_type: 'individual', // Default for OAuth users
-        });
-        
-        // Redirect to home for new users
-        return NextResponse.redirect(new URL("/home", requestUrl.origin));
+        // Get account type from user metadata (set during signup)
+        const accountType = user.user_metadata?.account_type || 'individual';
+
+        // Create profile based on account type
+        if (accountType === 'organization') {
+          // Create organization profile
+          await supabase.from("profiles").insert({
+            id: user.id,
+            full_name: user.user_metadata?.company_name || user.user_metadata?.full_name || user.user_metadata?.name,
+            email: user.email,
+            avatar_url: user.user_metadata?.avatar_url,
+            account_type: 'organization',
+          });
+
+          // Redirect organizations to organization dashboard
+          return NextResponse.redirect(new URL("/organization", requestUrl.origin));
+        } else {
+          // Create individual profile
+          await supabase.from("profiles").insert({
+            id: user.id,
+            full_name: user.user_metadata?.full_name || user.user_metadata?.name,
+            email: user.email,
+            avatar_url: user.user_metadata?.avatar_url,
+            account_type: 'individual',
+          });
+
+          // Redirect individuals to home
+          return NextResponse.redirect(new URL("/home", requestUrl.origin));
+        }
       }
 
       // Route based on account type for existing users

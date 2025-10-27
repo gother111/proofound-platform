@@ -17,6 +17,9 @@ export default async function MatchesPage() {
     redirect("/login");
   }
 
+  // Cast profile to include organization_id field
+  const profileWithOrg = profile as typeof profile & { organization_id?: string };
+
   // Fetch matches for the current user
   const { data: matches, error: matchesError } = await supabase
     .from('matches')
@@ -47,7 +50,7 @@ export default async function MatchesPage() {
         )
       )
     `)
-    .or(`profile_id.eq.${profile.id},assignment_id.in.(select id from assignments where organization_id.eq.${profile.organization_id || 'null'})`)
+    .or(`profile_id.eq.${profile.id},assignment_id.in.(select id from assignments where organization_id.eq.${profileWithOrg.organization_id || 'null'})`)
     .order('overall_score', { ascending: false });
 
   if (matchesError) {
@@ -56,11 +59,11 @@ export default async function MatchesPage() {
 
   // Fetch assignments for organizations
   let assignments: any[] = [];
-  if (profile.account_type === 'organization' && profile.organization_id) {
+  if (profile.account_type === 'organization' && profileWithOrg.organization_id) {
     const { data: orgAssignments, error: assignmentsError } = await supabase
       .from('assignments')
       .select('*')
-      .eq('organization_id', profile.organization_id)
+      .eq('organization_id', profileWithOrg.organization_id)
       .order('created_at', { ascending: false });
 
     if (assignmentsError) {

@@ -9,14 +9,14 @@ export const metadata: Metadata = {
 };
 
 interface VerifyPageProps {
-  params: {
+  params: Promise<{
     token: string;
-  };
+  }>;
 }
 
 export default async function VerifyPage({ params }: VerifyPageProps) {
+  const { token } = await params;
   const supabase = await createServerSupabaseClient();
-  const { token } = params;
 
   // Fetch verification request by token
   const { data: verificationRequest, error: requestError } = await supabase

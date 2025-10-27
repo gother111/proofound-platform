@@ -17,6 +17,9 @@ export default async function ConversationsPage() {
     redirect("/login");
   }
 
+  // Cast profile to include organization_id field
+  const profileWithOrg = profile as typeof profile & { organization_id?: string };
+
   // Fetch accepted matches (conversations)
   const { data: conversations, error: conversationsError } = await supabase
     .from('matches')
@@ -39,7 +42,7 @@ export default async function ConversationsPage() {
         )
       )
     `)
-    .or(`profile_id.eq.${profile.id},assignment_id.in.(select id from assignments where organization_id.eq.${profile.organization_id || 'null'})`)
+    .or(`profile_id.eq.${profile.id},assignment_id.in.(select id from assignments where organization_id.eq.${profileWithOrg.organization_id || 'null'})`)
     .eq('status', 'accepted') // Only show accepted matches
     .order('updated_at', { ascending: false });
 
@@ -48,7 +51,7 @@ export default async function ConversationsPage() {
   }
 
   // Fetch all messages for these conversations
-  const conversationIds = conversations?.map(c => c.id) || [];
+  const conversationIds = (conversations as any[])?.map((c: any) => c.id) || [];
   
   const { data: messages, error: messagesError } = await supabase
     .from('messages')
