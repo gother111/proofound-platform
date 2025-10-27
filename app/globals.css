@@ -2,50 +2,102 @@
 @tailwind components;
 @tailwind utilities;
 
+@custom-variant dark (&:is(.dark *));
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
+    /* Proofound Japandi Design System - Light Mode */
+    --font-size: 16px;
+    
+    /* Proofound Brand Tokens */
+    --proofound-forest: #1C4D3A;
+    --proofound-parchment: #F7F6F1;
+    --proofound-terracotta: #C76B4A;
+    --proofound-charcoal: #2D3330;
+    --proofound-stone: #E8E6DD;
+    
+    /* Japandi Natural Palette */
+    --background: #F5F3EE;
+    --foreground: #2C2A27;
+    --card: #FDFCFA;
+    --card-foreground: #2C2A27;
+    --popover: #FDFCFA;
+    --popover-foreground: #2C2A27;
+    --primary: #4A5943;
+    --primary-foreground: #F5F3EE;
+    --secondary: #D4C5B0;
+    --secondary-foreground: #2C2A27;
+    --muted: #E8E4DC;
+    --muted-foreground: #6B6760;
+    --accent: #B8A592;
+    --accent-foreground: #2C2A27;
+    --destructive: #A85C4F;
+    --destructive-foreground: #F5F3EE;
+    --border: rgba(75, 70, 62, 0.12);
+    --input: transparent;
+    --input-background: #EFEBE3;
+    --switch-background: #C9BFB0;
+    --ring: #4A5943;
+    
+    /* Nature-inspired custom colors */
+    --stone: #ADA399;
+    --sage: #7A9278;
+    --clay: #C9A57B;
+    --sand: #E0D5C7;
+    --bamboo: #6B7F5F;
+    --paper: #FDFCF8;
+    --terracotta: #C67B5C;
+    --ochre: #D4A574;
+    --teal: #5C8B89;
+    
+    /* Border Radius */
+    --radius: 1.25rem;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    /* Proofound Japandi Dark Mode - Geometric art gallery at night */
+    --background: #1A1D2E;
+    --foreground: #E8DCC4;
+    
+    --card: #252834;
+    --card-foreground: #E8DCC4;
+    
+    --popover: #2C3244;
+    --popover-foreground: #E8DCC4;
+    
+    /* Primary - Warm Beige Stone (shifted from light mode forest green) */
+    --primary: #D4C4A8;
+    --primary-foreground: #1A1D2E;
+    
+    /* Secondary - Deep Terracotta */
+    --secondary: #C86B4A;
+    --secondary-foreground: #E8DCC4;
+    
+    --muted: #2C3244;
+    --muted-foreground: #8A8174;
+    
+    --accent: #D4C4A8;
+    --accent-foreground: #1A1D2E;
+    
+    --destructive: #D4826F;
+    --destructive-foreground: #1A1D2E;
+    
+    --border: rgba(212, 196, 168, 0.10);
+    --input: transparent;
+    --input-background: #2C3244;
+    --switch-background: #2C3244;
+    --ring: rgba(212, 120, 79, 0.40);
+    
+    /* Nature-inspired dark colors */
+    --stone: #8A8174;
+    --sage: #5A8F6F;
+    --clay: #C86B4A;
+    --sand: #C9B89A;
+    --bamboo: #5A8F6F;
+    --paper: #252834;
+    --terracotta: #C86B4A;
+    --ochre: #D49860;
+    --teal: #6FAAA0;
   }
 }
 
@@ -53,8 +105,50 @@
   * {
     @apply border-border;
   }
+  
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  }
+  
+  /* Display text uses Crimson Pro */
+  h1, h2, h3, h4, h5, h6,
+  .font-display,
+  [class*="display"],
+  .crimson-pro {
+    font-family: 'Crimson Pro', 'Georgia', serif;
+  }
+  
+  /* UI text uses Inter */
+  button, input, textarea, select, label,
+  .font-ui,
+  .inter {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  }
+  
+  /* Typography improvements */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+  
+  /* Focus visible styles */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
 }
 
+/* Custom utility classes */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}

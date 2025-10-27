@@ -1,97 +1,79 @@
-// Matches page - View match suggestions with explainability
 import { Metadata } from "next";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { MatchCard } from "@/components/matching/match-card";
-import { GenerateMatchesButton } from "@/components/matching/generate-matches-button";
+import { redirect } from "next/navigation";
+import { createServerSupabaseClient, getCurrentProfile } from "@/lib/supabase/server";
+import { MatchingSpace } from "@/components/MatchingSpace";
 
 export const metadata: Metadata = {
-  title: "Matches | Proofound",
-  description: "Your match suggestions",
+  title: "Matching | Proofound",
+  description: "Find your perfect opportunities and candidates",
 };
 
 export default async function MatchesPage() {
   const supabase = await createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const profile = await getCurrentProfile();
+
+  // Require authentication
+  if (!profile) {
+    redirect("/login");
+  }
 
   // Fetch matches for the current user
-  const { data: matches } = await supabase
-    .from("matches")
+  const { data: matches, error: matchesError } = await supabase
+    .from('matches')
     .select(`
       *,
-      assignment:assignments(*)
+      profile:profiles!matches_profile_id_fkey(
+        id,
+        full_name,
+        tagline,
+        bio,
+        location,
+        avatar_url,
+        profile_completion_percentage,
+        matching_preferences
+      ),
+      assignment:assignments(
+        id,
+        title,
+        description,
+        required_expertise,
+        location_type,
+        compensation_type,
+        duration,
+        status,
+        organization:organizations(
+          id,
+          name
+        )
+      )
     `)
-    .eq("profile_id", user?.id)
-    .order("overall_score", { ascending: false });
+    .or(`profile_id.eq.${profile.id},assignment_id.in.(select id from assignments where organization_id.eq.${profile.organization_id || 'null'})`)
+    .order('overall_score', { ascending: false });
 
-  // Get profile readiness
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("profile_ready_for_match, profile_completion_percentage")
-    .eq("id", user?.id)
-    .single();
+  if (matchesError) {
+    console.error("Error fetching matches:", matchesError);
+  }
+
+  // Fetch assignments for organizations
+  let assignments: any[] = [];
+  if (profile.account_type === 'organization' && profile.organization_id) {
+    const { data: orgAssignments, error: assignmentsError } = await supabase
+      .from('assignments')
+      .select('*')
+      .eq('organization_id', profile.organization_id)
+      .order('created_at', { ascending: false });
+
+    if (assignmentsError) {
+      console.error("Error fetching assignments:", assignmentsError);
+    }
+    assignments = orgAssignments || [];
+  }
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Your Matches
-          </h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Opportunities matched to your skills and mission
-          </p>
-        </div>
-        {profile?.profile_ready_for_match && (
-          <GenerateMatchesButton />
-        )}
-      </div>
-
-      {!profile?.profile_ready_for_match && (
-        <div className="rounded-lg border border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-900/20 p-6">
-          <h3 className="text-lg font-semibold text-yellow-900 dark:text-yellow-100">
-            Complete your profile to start matching
-          </h3>
-          <p className="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
-            Your profile is {profile?.profile_completion_percentage || 0}% complete. 
-            You need at least 80% completion and one verified proof to receive matches.
-          </p>
-        </div>
-      )}
-
-      {!matches || matches.length === 0 ? (
-        <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-12 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
-            <svg
-              className="h-6 w-6 text-blue-600 dark:text-blue-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-          </div>
-          <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-white">
-            No matches yet
-          </h3>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
-            {profile?.profile_ready_for_match
-              ? "Click 'Find Matches' above to discover opportunities"
-              : "Complete your profile to start receiving match suggestions"}
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {matches.map((match) => (
-            <MatchCard key={match.id} match={match} />
-          ))}
-        </div>
-      )}
-    </div>
+    <MatchingSpace 
+      profile={profile}
+      matches={matches || []}
+      assignments={assignments}
+    />
   );
 }
-

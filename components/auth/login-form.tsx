@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginInput } from "@/lib/validations";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { getErrorMessage } from "@/lib/utils";
 import { trackLogin } from "@/lib/analytics";
 
@@ -74,16 +75,16 @@ export function LoginForm() {
   return (
     <div className="space-y-6">
       {error && (
-        <div className="rounded-lg bg-red-50 dark:bg-red-900/20 p-4">
-          <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+        <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-4">
+          <p className="text-sm text-destructive font-medium">{error}</p>
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <div>
           <label
             htmlFor="email"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            className="block text-sm font-semibold text-foreground mb-2"
           >
             Email address
           </label>
@@ -92,18 +93,18 @@ export function LoginForm() {
             type="email"
             id="email"
             autoComplete="email"
-            className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="block w-full h-11 rounded-lg border-2 border-input bg-background px-4 py-2 text-foreground placeholder:text-muted-foreground shadow-sm transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             placeholder="you@example.com"
           />
           {errors.email && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email.message}</p>
+            <p className="mt-2 text-sm text-destructive font-medium">{errors.email.message}</p>
           )}
         </div>
 
         <div>
           <label
             htmlFor="password"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            className="block text-sm font-semibold text-foreground mb-2"
           >
             Password
           </label>
@@ -112,27 +113,27 @@ export function LoginForm() {
             type="password"
             id="password"
             autoComplete="current-password"
-            className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="block w-full h-11 rounded-lg border-2 border-input bg-background px-4 py-2 text-foreground placeholder:text-muted-foreground shadow-sm transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             placeholder="••••••••"
           />
           {errors.password && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+            <p className="mt-2 text-sm text-destructive font-medium">
               {errors.password.message}
             </p>
           )}
         </div>
 
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
           {isLoading ? "Signing in..." : "Sign in"}
         </Button>
       </form>
 
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-300 dark:border-gray-600" />
+          <div className="w-full border-t border-border" />
         </div>
-        <div className="relative flex justify-center text-sm">
-          <span className="bg-white dark:bg-gray-800 px-2 text-gray-500 dark:text-gray-400">
+        <div className="relative flex justify-center text-xs font-medium">
+          <span className="bg-card px-3 text-muted-foreground">
             Or continue with
           </span>
         </div>

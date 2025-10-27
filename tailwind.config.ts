@@ -18,6 +18,10 @@ const config = {
       },
     },
     extend: {
+      fontFamily: {
+        display: ["'Crimson Pro'", "Georgia", "serif"],
+        body: ["Inter", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -52,11 +56,47 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Proofound Japandi Colors - Extended Figma Palette
+        proofound: {
+          forest: "#1C4D3A",
+          parchment: "#F7F6F1",
+          terracotta: "#C76B4A",
+          charcoal: "#2D3330",
+          stone: "#E8E6DD",
+        },
+        sage: "#7A9278",
+        teal: "#5C8B89",
+        ochre: "#D4A574",
+        clay: "#C9A57B",
+        sand: "#E0D5C7",
+        bamboo: "#6B7F5F",
+        paper: "#FDFCF8",
+        rust: "#B5695C",
+        olive: "#8B9556",
+        cream: "#F4EAD5",
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      boxShadow: {
+        sm: "var(--shadow-sm)",
+        DEFAULT: "var(--shadow)",
+        md: "var(--shadow-md)",
+        lg: "var(--shadow-lg)",
+      },
+      fontSize: {
+        'xs': ['0.75rem', { lineHeight: '1rem' }],
+        'sm': ['0.875rem', { lineHeight: '1.25rem' }],
+        'base': ['1rem', { lineHeight: '1.5rem' }],
+        'lg': ['1.125rem', { lineHeight: '1.75rem' }],
+        'xl': ['1.25rem', { lineHeight: '1.75rem' }],
+        '2xl': ['1.5rem', { lineHeight: '2rem' }],
+        '3xl': ['1.875rem', { lineHeight: '2.25rem' }],
+        '4xl': ['2.25rem', { lineHeight: '2.5rem' }],
+        '5xl': ['3rem', { lineHeight: '1' }],
+        '6xl': ['3.75rem', { lineHeight: '1' }],
       },
       keyframes: {
         "accordion-down": {
@@ -67,10 +107,20 @@ const config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "fade-in": {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
+        },
+        "slide-in-from-top": {
+          from: { transform: "translateY(-10px)", opacity: "0" },
+          to: { transform: "translateY(0)", opacity: "1" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "fade-in": "fade-in 0.3s ease-in",
+        "slide-in": "slide-in-from-top 0.3s ease-out",
       },
     },
   },

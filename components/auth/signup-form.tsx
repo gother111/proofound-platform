@@ -95,8 +95,8 @@ export function SignupForm() {
   return (
     <div className="space-y-6">
       {error && (
-        <div className="rounded-lg bg-red-50 dark:bg-red-900/20 p-4">
-          <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+        <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-4">
+          <p className="text-sm text-destructive font-medium">{error}</p>
         </div>
       )}
 
@@ -104,7 +104,7 @@ export function SignupForm() {
         <div>
           <label
             htmlFor="fullName"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            className="block text-sm font-semibold text-foreground mb-2"
           >
             Full name
           </label>
@@ -113,11 +113,11 @@ export function SignupForm() {
             type="text"
             id="fullName"
             autoComplete="name"
-            className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="block w-full h-11 rounded-lg border-2 border-input bg-background px-4 py-2 text-foreground placeholder:text-muted-foreground shadow-sm transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             placeholder="John Doe"
           />
           {errors.fullName && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+            <p className="mt-2 text-sm text-destructive font-medium">
               {errors.fullName.message}
             </p>
           )}
@@ -126,7 +126,7 @@ export function SignupForm() {
         <div>
           <label
             htmlFor="email"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            className="block text-sm font-semibold text-foreground mb-2"
           >
             Email address
           </label>
@@ -135,18 +135,18 @@ export function SignupForm() {
             type="email"
             id="email"
             autoComplete="email"
-            className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="block w-full h-11 rounded-lg border-2 border-input bg-background px-4 py-2 text-foreground placeholder:text-muted-foreground shadow-sm transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             placeholder="you@example.com"
           />
           {errors.email && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email.message}</p>
+            <p className="mt-2 text-sm text-destructive font-medium">{errors.email.message}</p>
           )}
         </div>
 
         <div>
           <label
             htmlFor="password"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            className="block text-sm font-semibold text-foreground mb-2"
           >
             Password
           </label>
@@ -155,15 +155,15 @@ export function SignupForm() {
             type="password"
             id="password"
             autoComplete="new-password"
-            className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="block w-full h-11 rounded-lg border-2 border-input bg-background px-4 py-2 text-foreground placeholder:text-muted-foreground shadow-sm transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             placeholder="••••••••"
           />
           {errors.password && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+            <p className="mt-2 text-sm text-destructive font-medium">
               {errors.password.message}
             </p>
           )}
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          <p className="mt-2 text-xs text-muted-foreground">
             Must be at least 8 characters with uppercase, lowercase, and number
           </p>
         </div>
@@ -171,7 +171,7 @@ export function SignupForm() {
         <div>
           <label
             htmlFor="confirmPassword"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            className="block text-sm font-semibold text-foreground mb-2"
           >
             Confirm password
           </label>
@@ -180,48 +180,48 @@ export function SignupForm() {
             type="password"
             id="confirmPassword"
             autoComplete="new-password"
-            className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="block w-full h-11 rounded-lg border-2 border-input bg-background px-4 py-2 text-foreground placeholder:text-muted-foreground shadow-sm transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             placeholder="••••••••"
           />
           {errors.confirmPassword && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+            <p className="mt-2 text-sm text-destructive font-medium">
               {errors.confirmPassword.message}
             </p>
           )}
         </div>
 
-        <div className="flex items-start">
+        <div className="flex items-start pt-2">
           <div className="flex items-center h-5">
             <input
               {...register("ageConfirmation")}
               id="ageConfirmation"
               type="checkbox"
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="h-4 w-4 rounded border-2 border-input text-primary focus:ring-2 focus:ring-primary/20"
             />
           </div>
           <div className="ml-3 text-sm">
-            <label htmlFor="ageConfirmation" className="text-gray-700 dark:text-gray-300">
+            <label htmlFor="ageConfirmation" className="text-foreground">
               I confirm that I am at least 18 years old
             </label>
             {errors.ageConfirmation && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              <p className="mt-1 text-sm text-destructive font-medium">
                 {errors.ageConfirmation.message}
               </p>
             )}
           </div>
         </div>
 
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
           {isLoading ? "Creating account..." : "Create account"}
         </Button>
       </form>
 
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-300 dark:border-gray-600" />
+          <div className="w-full border-t border-border" />
         </div>
-        <div className="relative flex justify-center text-sm">
-          <span className="bg-white dark:bg-gray-800 px-2 text-gray-500 dark:text-gray-400">
+        <div className="relative flex justify-center text-xs font-medium">
+          <span className="bg-card px-3 text-muted-foreground">
             Or sign up with
           </span>
         </div>
@@ -268,8 +268,10 @@ export function SignupForm() {
         </Button>
       </div>
 
-      <p className="text-center text-xs text-gray-500 dark:text-gray-400">
-        By signing up, you agree to our Terms of Service and Privacy Policy
+      <p className="text-center text-xs text-muted-foreground">
+        By signing up, you agree to our{" "}
+        <span className="text-primary font-medium">Terms of Service</span> and{" "}
+        <span className="text-primary font-medium">Privacy Policy</span>
       </p>
     </div>
   );

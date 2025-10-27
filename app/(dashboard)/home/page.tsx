@@ -1,6 +1,7 @@
-// Dashboard home page
 import { Metadata } from "next";
-import { getCurrentProfile } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import { createServerSupabaseClient, getCurrentProfile } from "@/lib/supabase/server";
+import { Dashboard } from "@/components/Dashboard";
 
 export const metadata: Metadata = {
   title: "Dashboard | Proofound",
@@ -8,79 +9,104 @@ export const metadata: Metadata = {
 };
 
 export default async function DashboardHomePage() {
+  const supabase = await createServerSupabaseClient();
   const profile = await getCurrentProfile();
 
+  // Require authentication
+  if (!profile) {
+    redirect("/login");
+  }
+
+  // Fetch matches for the user
+  const { data: matches } = await supabase
+    .from('matches')
+    .select(`
+      *,
+      assignment:assignments(
+        id,
+        title,
+        description,
+        organization:organizations(name)
+      )
+    `)
+    .eq('profile_id', profile.id)
+    .eq('status', 'suggested')
+    .order('overall_score', { ascending: false })
+    .limit(10);
+
+  // Fetch assignments (if organization)
+  let assignments: any[] = [];
+  if (profile.account_type === 'organization') {
+    const { data: orgAssignments } = await supabase
+      .from('assignments')
+      .select('*')
+      .eq('organization_id', profile.id)
+      .order('created_at', { ascending: false })
+      .limit(10);
+    
+    assignments = orgAssignments || [];
+  }
+
+  // Fetch recent notifications/updates
+  // For now, we'll create mock notifications based on real data
+  const notifications: any[] = [];
+
+  // Check for recent verifications
+  const { data: recentProofs } = await supabase
+    .from('proofs')
+    .select('id, claim_text, verification_status')
+    .eq('profile_id', profile.id)
+    .eq('verification_status', 'verified')
+    .order('updated_at', { ascending: false })
+    .limit(1);
+
+  if (recentProofs && recentProofs.length > 0) {
+    notifications.push({
+      id: `proof-${recentProofs[0].id}`,
+      text: `Verification approved — ${recentProofs[0].claim_text?.substring(0, 50)}`,
+      action: 'View',
+      route: '/profile/proofs'
+    });
+  }
+
+  // Check for new matches
+  if (matches && matches.length > 0) {
+    const latestMatch = matches[0];
+    if (latestMatch.assignment) {
+      notifications.push({
+        id: `match-${latestMatch.id}`,
+        text: `New match: ${latestMatch.assignment.title}`,
+        action: 'Review',
+        route: `/matches/${latestMatch.id}`
+      });
+    }
+  }
+
+  // For organizations, check for new assignment applications (matches)
+  if (profile.account_type === 'organization' && assignments.length > 0) {
+    const { data: assignmentMatches } = await supabase
+      .from('matches')
+      .select('id, assignment_id')
+      .in('assignment_id', assignments.map(a => a.id))
+      .eq('status', 'suggested')
+      .limit(1);
+
+    if (assignmentMatches && assignmentMatches.length > 0) {
+      notifications.push({
+        id: `assignment-match-${assignmentMatches[0].id}`,
+        text: 'New applications for your assignments',
+        action: 'Review',
+        route: '/matches'
+      });
+    }
+  }
+
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Welcome back{profile?.full_name ? `, ${profile.full_name}` : ""}!
-        </h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-400">
-          Here's what's happening with your matches today
-        </p>
-      </div>
-
-      {/* Profile Completion Card */}
-      {profile && profile.profile_completion_percentage !== null && profile.profile_completion_percentage < 100 && (
-        <div className="rounded-lg border border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-900/20 p-6">
-          <h3 className="text-lg font-semibold text-yellow-900 dark:text-yellow-100">
-            Complete your profile
-          </h3>
-          <p className="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
-            Your profile is {profile.profile_completion_percentage}% complete.
-            Complete it to start receiving matches!
-          </p>
-          <div className="mt-4">
-            <div className="h-2 w-full rounded-full bg-yellow-200 dark:bg-yellow-800">
-              <div
-                className="h-2 rounded-full bg-yellow-600 dark:bg-yellow-400"
-                style={{ width: `${profile.profile_completion_percentage}%` }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Dashboard content */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Matches
-          </h3>
-          <p className="mt-2 text-3xl font-bold text-blue-600 dark:text-blue-400">
-            0
-          </p>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            New matches this week
-          </p>
-        </div>
-
-        <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Verifications
-          </h3>
-          <p className="mt-2 text-3xl font-bold text-green-600 dark:text-green-400">
-            0
-          </p>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            Verified proofs
-          </p>
-        </div>
-
-        <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Messages
-          </h3>
-          <p className="mt-2 text-3xl font-bold text-purple-600 dark:text-purple-400">
-            0
-          </p>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            Unread messages
-          </p>
-        </div>
-      </div>
-    </div>
+    <Dashboard 
+      profile={profile}
+      matches={matches || []}
+      assignments={assignments}
+      notifications={notifications}
+    />
   );
 }
-
