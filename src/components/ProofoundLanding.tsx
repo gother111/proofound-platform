@@ -1548,12 +1548,12 @@ function FinalQuoteSection({ shouldReduceMotion }: { shouldReduceMotion: boolean
     offset: ['start end', 'end start'],
   });
 
-  const opacity1 = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [1, 1, 0, 0]);
-  const opacity2 = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [1, 1, 0, 0]);
-  const opacity3 = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [1, 1, 0, 0]);
-  const opacity4 = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [1, 1, 0, 0]);
+  const opacity1 = useTransform(scrollYProgress, [0, 0.3, 0.5, 0.8], [1, 1, 0, 0]);
+  const opacity2 = useTransform(scrollYProgress, [0, 0.3, 0.5, 0.8], [1, 1, 0, 0]);
+  const opacity3 = useTransform(scrollYProgress, [0, 0.3, 0.5, 0.8], [1, 1, 0, 0]);
+  const opacity4 = useTransform(scrollYProgress, [0, 0.3, 0.5, 0.8], [1, 1, 0, 0]);
 
-  const mergeProgress = useTransform(scrollYProgress, [0.6, 1], [0, 1]);
+  const mergeProgress = useTransform(scrollYProgress, [0.4, 0.8], [0, 1]);
   const proofX = useTransform(mergeProgress, [0, 1], [0, 30]);
   const foundX = useTransform(mergeProgress, [0, 1], [0, -30]);
 
@@ -1599,7 +1599,12 @@ function FinalQuoteSection({ shouldReduceMotion }: { shouldReduceMotion: boolean
 
           {/* Merged "Proofound" appears as others fade */}
           <motion.div
-            style={{ opacity: shouldReduceMotion ? 0 : mergeProgress }}
+            style={{
+              opacity: shouldReduceMotion ? 0 : mergeProgress,
+              textShadow:
+                '0 0 60px rgba(28, 77, 58, 0.6), 0 0 90px rgba(28, 77, 58, 0.4), 0 4px 20px rgba(28, 77, 58, 0.8)',
+              filter: 'brightness(1.3) contrast(1.2)',
+            }}
             className="absolute inset-0 flex items-center justify-center text-5xl md:text-7xl lg:text-9xl font-['Crimson_Pro'] text-[#1C4D3A] dark:text-[#D4C4A8] font-bold"
           >
             Proofound
