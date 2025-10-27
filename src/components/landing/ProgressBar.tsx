@@ -1,29 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useRef } from 'react';
+import { motion, useScroll } from 'framer-motion';
 
 export function ProgressBar() {
-  const [progress, setProgress] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollPercent =
-        (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
-      setProgress(scrollPercent);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ['start start', 'end end'],
+  });
 
   return (
-    <div className="fixed top-0 left-0 right-0 h-1 z-50 bg-transparent">
-      <div
-        className="h-full transition-all duration-100 ease-out"
-        style={{
-          width: `${progress}%`,
-          background: 'linear-gradient(to right, #1C4D3A, #5C8B89, #C76B4A)',
-        }}
+    <div ref={containerRef} className="fixed top-0 left-0 right-0 h-1 z-50 bg-transparent">
+      <motion.div
+        className="h-full bg-gradient-to-r from-[#1C4D3A] via-[#5C8B89] to-[#C76B4A]"
+        style={{ scaleX: scrollYProgress, transformOrigin: '0%' }}
       />
     </div>
   );

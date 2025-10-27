@@ -1,6 +1,6 @@
 /**
  * GSAP Animation Utilities for Landing Page
- * Implements all scroll animations from the reference implementation
+ * Apple-like scroll animations with smooth scrubbing
  */
 
 import { useEffect } from 'react';
@@ -21,15 +21,21 @@ if (typeof window !== 'undefined') {
   });
 }
 
+// Check for reduced motion preference
+const shouldReduceMotion = () => {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+};
+
 export function useGSAPAnimations() {
   useEffect(() => {
-    if (!gsap || !ScrollTrigger) return;
+    if (!gsap || !ScrollTrigger || shouldReduceMotion()) return;
 
     // Small delay to ensure DOM is fully loaded
     const timer = setTimeout(() => {
       ScrollTrigger.refresh();
 
-      // Hero Section Animation - scale and fade on scroll
+      // Hero Section Animation - Apple-like parallax with scale, opacity, and y-transform
       gsap.to('.gsap-hero-content', {
         scrollTrigger: {
           trigger: '.gsap-hero-section',
@@ -40,6 +46,7 @@ export function useGSAPAnimations() {
         scale: 0.8,
         opacity: 0.3,
         y: -100,
+        ease: 'none',
       });
 
       // Problem Cards Stagger Animation
