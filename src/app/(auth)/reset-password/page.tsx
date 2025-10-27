@@ -36,22 +36,28 @@ export default function ResetPasswordPage() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-secondary-100 px-4">
-        <Card className="max-w-md w-full">
+      <div className="min-h-screen flex items-center justify-center bg-proofound-parchment dark:bg-background px-4">
+        <Card className="max-w-md w-full border-proofound-stone dark:border-border rounded-2xl">
           <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 rounded-full bg-primary-50 flex items-center justify-center mb-4">
-              <Mail className="w-6 h-6 text-primary-500" />
+            <div className="mx-auto w-12 h-12 rounded-full bg-proofound-forest/10 flex items-center justify-center mb-4">
+              <Mail className="w-6 h-6 text-proofound-forest dark:text-primary" />
             </div>
-            <CardTitle>Check your email</CardTitle>
-            <CardDescription>
+            <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
+              Check your email
+            </CardTitle>
+            <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
               We&apos;ve sent a password reset link to <strong>{email}</strong>
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-neutral-dark-600 text-center">
+            <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground text-center">
               Click the link in the email to reset your password. The link will expire in 1 hour.
             </p>
-            <Button asChild variant="outline" className="w-full">
+            <Button
+              asChild
+              variant="outline"
+              className="w-full border-proofound-stone dark:border-border"
+            >
               <Link href="/login">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to login
@@ -64,18 +70,22 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-secondary-100 px-4">
-      <Card className="max-w-md w-full">
+    <div className="min-h-screen flex items-center justify-center bg-proofound-parchment dark:bg-background px-4">
+      <Card className="max-w-md w-full border-proofound-stone dark:border-border rounded-2xl">
         <CardHeader>
-          <CardTitle>Reset your password</CardTitle>
-          <CardDescription>
+          <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
+            Reset your password
+          </CardTitle>
+          <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
             Enter your email address and we&apos;ll send you a reset link
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-proofound-charcoal dark:text-foreground">
+                Email
+              </Label>
               <Input
                 id="email"
                 name="email"
@@ -85,23 +95,28 @@ export default function ResetPasswordPage() {
                 placeholder="you@example.com"
                 required
                 disabled={isLoading}
+                className="border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
               />
             </div>
 
             {error && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-xl text-destructive text-sm">
                 {error}
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="w-full bg-proofound-forest hover:bg-proofound-forest/90 text-white"
+              disabled={isLoading}
+            >
               {isLoading ? 'Sending...' : 'Send reset link'}
             </Button>
 
             <div className="text-center">
               <Link
                 href="/login"
-                className="text-sm text-neutral-dark-600 hover:text-primary-500 transition-colors"
+                className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground hover:text-proofound-forest dark:hover:text-primary transition-colors"
               >
                 ← Back to login
               </Link>

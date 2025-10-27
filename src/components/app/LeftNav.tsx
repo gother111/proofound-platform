@@ -34,10 +34,9 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
 
   return (
     <nav
-      className={`h-screen border-r transition-all duration-300 flex flex-col ${
+      className={`h-screen border-r border-proofound-stone dark:border-border bg-white dark:bg-card transition-all duration-300 flex flex-col ${
         isExpanded ? 'w-52' : 'w-14'
       }`}
-      style={{ backgroundColor: '#FDFCFA', borderColor: 'rgba(232, 230, 221, 0.6)' }}
     >
       <div className="flex-1 overflow-y-auto py-4">
         {navItems.map((item) => {
@@ -49,9 +48,10 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
               key={item.href}
               href={item.href}
               className={`flex items-center gap-3 px-3 py-2 mx-2 rounded-lg transition-colors ${
-                isActive ? 'text-white' : 'hover:bg-[#E8E6DD]'
+                isActive
+                  ? 'bg-proofound-forest text-white'
+                  : 'text-proofound-charcoal dark:text-foreground hover:bg-proofound-stone dark:hover:bg-muted'
               }`}
-              style={isActive ? { backgroundColor: '#7A9278' } : {}}
               title={!isExpanded ? item.label : undefined}
             >
               <Icon className="w-4 h-4 flex-shrink-0" />
@@ -62,12 +62,12 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
       </div>
 
       {/* Toggle button */}
-      <div className="p-2 border-t" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+      <div className="p-2 border-t border-proofound-stone dark:border-border">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full justify-center"
+          className="w-full justify-center hover:bg-proofound-stone dark:hover:bg-muted"
           aria-label={isExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
         >
           {isExpanded ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}

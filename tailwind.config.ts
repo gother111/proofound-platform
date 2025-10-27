@@ -20,11 +20,26 @@ const config: Config = {
     'bg-brand-terracotta',
     'bg-brand-teal',
     'bg-brand-ochre',
+    // Figma colors
+    'bg-proofound-forest',
+    'bg-proofound-terracotta',
+    'bg-proofound-parchment',
+    'text-proofound-charcoal',
+    'border-proofound-stone',
+    "font-['Crimson_Pro']",
   ],
   theme: {
     extend: {
       colors: {
-        // New token-based colors
+        // Figma Design System Colors - Direct hex values
+        proofound: {
+          forest: '#1C4D3A', // Primary brand
+          terracotta: '#C76B4A', // Accent
+          parchment: '#F7F6F1', // Background
+          charcoal: '#2D3330', // Text
+          stone: '#E8E6DD', // Borders
+        },
+        // New token-based colors (legacy bridge)
         bg: { base: 'var(--bg-base)' },
         fg: { base: 'var(--fg-base)' },
         brand: {

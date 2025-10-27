@@ -10,55 +10,59 @@
 
 @layer base {
   :root {
-    --background: 50 29% 96%;
-    --foreground: 158 47% 21%;
-    --card: 0 0% 100%;
-    --card-foreground: 158 47% 21%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 158 47% 21%;
-    --primary: 158 47% 21%;
-    --primary-foreground: 50 29% 96%;
-    --secondary: 48 18% 89%;
-    --secondary-foreground: 158 47% 21%;
-    --muted: 48 18% 89%;
-    --muted-foreground: 150 7% 43%;
-    --accent: 16 50% 53%;
-    --accent-foreground: 50 29% 96%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 150 7% 82%;
-    --input: 150 7% 82%;
-    --ring: 158 47% 21%;
-    --radius: 1rem;
+    /* Figma Design System - Light Mode (HSL values for shadcn compatibility) */
+    --background: 48 29% 96%; /* #F7F6F1 Parchment */
+    --foreground: 150 7% 18%; /* #2D3330 Charcoal */
+    --card: 0 0% 100%; /* #FFFFFF White */
+    --card-foreground: 150 7% 18%; /* #2D3330 Charcoal */
+    --popover: 0 0% 100%; /* #FFFFFF White */
+    --popover-foreground: 150 7% 18%; /* #2D3330 Charcoal */
+    --primary: 158 47% 21%; /* #1C4D3A Forest Green */
+    --primary-foreground: 48 29% 96%; /* #F7F6F1 Parchment */
+    --secondary: 48 14% 91%; /* #E8E6DD Stone */
+    --secondary-foreground: 150 7% 18%; /* #2D3330 Charcoal */
+    --muted: 48 14% 91%; /* #E8E6DD Stone */
+    --muted-foreground: 150 7% 43%; /* #6B6760 Muted text */
+    --accent: 16 50% 53%; /* #C76B4A Terracotta */
+    --accent-foreground: 48 29% 96%; /* #F7F6F1 Parchment */
+    --destructive: 0 84% 60%; /* Error red */
+    --destructive-foreground: 0 0% 100%; /* White */
+    --border: 48 14% 91%; /* #E8E6DD Stone */
+    --input: 48 14% 91%; /* #E8E6DD Stone */
+    --ring: 158 47% 21%; /* #1C4D3A Forest Green */
+    --radius: 1.25rem; /* 20px */
 
-    /* Japandi Natural Palette - Proofound Profile Colors */
-    --sage: 122 146 120; /* #7A9278 */
-    --terracotta: 198 123 92; /* #C67B5C */
-    --teal: 92 139 137; /* #5C8B89 */
-    --ochre: 212 165 116; /* #D4A574 */
-    --cream: 244 234 213; /* #F4EAD5 */
+    /* Figma Japandi Extended Palette - Proofound Colors */
+    --sage: 122 146 120; /* #7A9278 Success/Nature */
+    --terracotta: 199 107 74; /* #C76B4A Corrected Terracotta */
+    --teal: 92 139 137; /* #5C8B89 Interactive */
+    --ochre: 212 165 116; /* #D4A574 Highlights */
+    --clay: 201 165 123; /* #C9A57B Secondary */
+    --sand: 224 213 199; /* #E0D5C7 Subtle BG */
+    --bamboo: 107 127 95; /* #6B7F5F Supporting green */
   }
 
   .dark {
-    --background: 150 7% 6%;
-    --foreground: 50 29% 96%;
-    --card: 150 7% 9%;
-    --card-foreground: 50 29% 96%;
-    --popover: 150 7% 9%;
-    --popover-foreground: 50 29% 96%;
-    --primary: 158 47% 76%;
-    --primary-foreground: 158 47% 9%;
-    --secondary: 150 7% 13%;
-    --secondary-foreground: 50 29% 96%;
-    --muted: 150 7% 13%;
-    --muted-foreground: 150 7% 63%;
-    --accent: 16 50% 62%;
-    --accent-foreground: 158 47% 6%;
-    --destructive: 0 60% 44%;
-    --destructive-foreground: 50 29% 96%;
-    --border: 150 7% 20%;
-    --input: 150 7% 20%;
-    --ring: 158 47% 76%;
+    /* Figma Design System - Dark Mode (HSL values) */
+    --background: 227 27% 11%; /* #1A1D2E Deep Navy Night */
+    --foreground: 38 28% 85%; /* #E8DCC4 Cream Canvas */
+    --card: 228 19% 18%; /* #252834 Dark cards */
+    --card-foreground: 38 28% 85%; /* #E8DCC4 Cream */
+    --popover: 228 19% 18%; /* #252834 Dark cards */
+    --popover-foreground: 38 28% 85%; /* #E8DCC4 Cream */
+    --primary: 38 30% 82%; /* #D4C4A8 Warm Beige Stone */
+    --primary-foreground: 158 47% 21%; /* #1C4D3A Forest (for contrast) */
+    --secondary: 227 23% 21%; /* #2C3244 Muted dark */
+    --secondary-foreground: 38 28% 85%; /* #E8DCC4 Cream */
+    --muted: 227 23% 21%; /* #2C3244 Muted dark */
+    --muted-foreground: 227 15% 65%; /* Muted text */
+    --accent: 38 30% 82%; /* #D4C4A8 Warm Beige */
+    --accent-foreground: 150 7% 18%; /* #2D3330 Charcoal */
+    --destructive: 0 60% 44%; /* Error red (dark) */
+    --destructive-foreground: 38 28% 85%; /* #E8DCC4 Cream */
+    --border: 227 23% 21%; /* #2C3244 Border */
+    --input: 227 23% 21%; /* #2C3244 Input */
+    --ring: 38 30% 82%; /* #D4C4A8 Warm Beige */
   }
 }
 

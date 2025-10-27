@@ -42,7 +42,7 @@ export function NetworkBackground() {
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [nodeColors, setNodeColors] = useState<NodeColors>({
     person: '#7A9278',
-    organization: '#C67B5C',
+    organization: '#C76B4A',
     government: '#5C8B89',
   });
   const nodesRef = useRef<Node[]>([]);

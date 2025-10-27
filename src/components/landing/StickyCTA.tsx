@@ -28,7 +28,11 @@ export function StickyCTA() {
         visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-24 pointer-events-none'
       }`}
     >
-      <Button size="lg" onClick={scrollToSignup} className="shadow-xl text-lg px-8">
+      <Button
+        size="lg"
+        onClick={scrollToSignup}
+        className="shadow-xl text-lg px-8 bg-proofound-forest hover:bg-proofound-forest/90 text-white rounded-full"
+      >
         Join the Waitlist
         <ArrowRight className="w-5 h-5 ml-2" />
       </Button>

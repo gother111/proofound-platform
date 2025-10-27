@@ -27,59 +27,71 @@ export default async function OrganizationProfilePage({
   const canEdit = membership.role === 'owner' || membership.role === 'admin';
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8">
+    <div className="max-w-3xl mx-auto space-y-8 min-h-screen bg-proofound-parchment dark:bg-background p-6">
       <div>
-        <h1 className="text-4xl font-display font-semibold text-primary-500 mb-2">
+        <h1 className="text-4xl font-['Crimson_Pro'] font-semibold text-proofound-forest dark:text-primary mb-2">
           Organization Profile
         </h1>
-        <p className="text-neutral-dark-600">
+        <p className="text-proofound-charcoal/70 dark:text-muted-foreground">
           {canEdit ? 'Update your organization information' : 'View organization information'}
         </p>
       </div>
 
-      <Card>
+      <Card className="border-proofound-stone dark:border-border rounded-2xl">
         <CardHeader>
-          <CardTitle>Basic Information</CardTitle>
+          <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
+            Basic Information
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <form action={updateOrganization.bind(null, org.id) as any} className="space-y-6">
             <div>
-              <Label htmlFor="displayName">Organization Name</Label>
+              <Label htmlFor="displayName" className="text-proofound-charcoal dark:text-foreground">
+                Organization Name
+              </Label>
               <Input
                 id="displayName"
                 name="displayName"
                 defaultValue={org.displayName}
                 placeholder="Organization Name"
                 disabled={!canEdit}
+                className="border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
               />
             </div>
 
             <div>
-              <Label htmlFor="legalName">Legal Name (Optional)</Label>
+              <Label htmlFor="legalName" className="text-proofound-charcoal dark:text-foreground">
+                Legal Name (Optional)
+              </Label>
               <Input
                 id="legalName"
                 name="legalName"
                 defaultValue={org.legalName || ''}
                 placeholder="Legal company name"
                 disabled={!canEdit}
+                className="border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
               />
             </div>
 
             <div>
-              <Label htmlFor="mission">Mission Statement</Label>
+              <Label htmlFor="mission" className="text-proofound-charcoal dark:text-foreground">
+                Mission Statement
+              </Label>
               <textarea
                 id="mission"
                 name="mission"
                 defaultValue={org.mission || ''}
                 placeholder="Describe your organization's mission and goals"
-                className="flex min-h-[120px] w-full rounded-lg border border-neutral-light-300 bg-white px-4 py-2 text-base transition-colors placeholder:text-neutral-dark-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 focus-visible:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex min-h-[120px] w-full rounded-lg border border-proofound-stone dark:border-border bg-white dark:bg-background px-4 py-2 text-base transition-colors placeholder:text-proofound-charcoal/40 dark:placeholder:text-muted-foreground/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:border-proofound-forest disabled:cursor-not-allowed disabled:opacity-50 text-proofound-charcoal dark:text-foreground"
                 maxLength={2000}
                 disabled={!canEdit}
               />
             </div>
 
             <div>
-              <Label htmlFor="website">Website</Label>
+              <Label htmlFor="website" className="text-proofound-charcoal dark:text-foreground">
+                Website
+              </Label>
               <Input
                 id="website"
                 name="website"
@@ -87,29 +99,43 @@ export default async function OrganizationProfilePage({
                 defaultValue={org.website || ''}
                 placeholder="https://your-organization.com"
                 disabled={!canEdit}
+                className="border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
               />
             </div>
 
-            {canEdit && <Button type="submit">Save Changes</Button>}
+            {canEdit && (
+              <Button
+                type="submit"
+                className="bg-proofound-forest hover:bg-proofound-forest/90 text-white"
+              >
+                Save Changes
+              </Button>
+            )}
           </form>
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="border-proofound-stone dark:border-border rounded-2xl">
         <CardHeader>
-          <CardTitle>Organization Details</CardTitle>
+          <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
+            Organization Details
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <p className="text-sm font-medium text-neutral-dark-700">URL Slug</p>
-            <p className="text-neutral-dark-600">{org.slug}</p>
-            <p className="text-xs text-neutral-dark-500 mt-1">
+            <p className="text-sm font-medium text-proofound-charcoal dark:text-foreground">
+              URL Slug
+            </p>
+            <p className="text-proofound-charcoal/70 dark:text-muted-foreground">{org.slug}</p>
+            <p className="text-xs text-proofound-charcoal/70 dark:text-muted-foreground mt-1">
               Your organization URL: /app/o/{org.slug}
             </p>
           </div>
           <div>
-            <p className="text-sm font-medium text-neutral-dark-700">Type</p>
-            <p className="text-neutral-dark-600 capitalize">{org.type}</p>
+            <p className="text-sm font-medium text-proofound-charcoal dark:text-foreground">Type</p>
+            <p className="text-proofound-charcoal/70 dark:text-muted-foreground capitalize">
+              {org.type}
+            </p>
           </div>
         </CardContent>
       </Card>

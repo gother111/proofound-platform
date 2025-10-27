@@ -1,33 +1,48 @@
 /**
- * Design Tokens - Wireframe Spec
- * Source: tokens/wireframe-spec.json
- * Theme: Multidimensional Network - Warm Natural Palette
+ * Design Tokens - Figma Design System
+ * Source: Proofound MVP Figma
+ * Theme: Japandi Fusion - Evidence-Based Transparency
  */
 
 :root {
-  /* Color Tokens - Primary */
-  --bg-base: #f5f3ee;
-  --fg-base: #2c2a27;
+  /* Figma Brand Colors - Primary */
+  --proofound-forest: #1c4d3a; /* Primary brand - Forest Green */
+  --proofound-terracotta: #c76b4a; /* Accent - Terracotta */
+  --proofound-parchment: #f7f6f1; /* Background - Warm Parchment */
+  --proofound-charcoal: #2d3330; /* Text primary - Charcoal */
+  --proofound-stone: #e8e6dd; /* Borders & dividers - Stone */
 
-  /* Color Tokens - Brand (Node Types) */
-  --brand-sage: #7a9278; /* Person nodes */
-  --brand-terracotta: #c67b5c; /* Organization nodes */
-  --brand-teal: #5c8b89; /* Government nodes */
-  --brand-ochre: #d4a574; /* Accent */
+  /* Color Tokens - Primary (Legacy bridge) */
+  --bg-base: #f7f6f1; /* Figma Parchment */
+  --fg-base: #2d3330; /* Figma Charcoal */
+
+  /* Figma Extended Japandi Palette */
+  --brand-sage: #7a9278; /* Success states, nature elements */
+  --brand-terracotta: #c76b4a; /* Figma Terracotta (corrected) */
+  --brand-teal: #5c8b89; /* Interactive elements, links */
+  --brand-ochre: #d4a574; /* Highlights, warnings */
+
+  /* Extended palette */
+  --clay: #c9a57b; /* Secondary accents */
+  --sand: #e0d5c7; /* Subtle backgrounds */
+  --bamboo: #6b7f5f; /* Supporting green tones */
 
   /* Color Tokens - Semantic */
-  --card: #fdfcfa;
-  --muted: #e8e4dc;
-  --accent: #b8a592;
-  --border-subtle: rgba(75, 70, 62, 0.12);
+  --card: #ffffff; /* White cards on parchment background */
+  --muted: #e8e6dd; /* Stone for muted elements */
+  --accent: #c76b4a; /* Terracotta accent */
+  --border-subtle: rgba(232, 230, 221, 0.6); /* Stone with transparency */
 
-  /* Border Radius */
-  --radius-lg: 1.25rem;
+  /* Border Radius - Figma Spec */
+  --radius-lg: 1.25rem; /* 20px - Base radius for cards */
+  --radius-xl: 1.5rem; /* 24px - Large cards */
+  --radius-2xl: 2rem; /* 32px - Hero sections */
 
   /* Typography - Base */
   --font-size-base: 16px;
   --font-weight-normal: 400;
   --font-weight-medium: 500;
+  --font-weight-semibold: 600;
 
   /* Typography - Scale (mapped to Tailwind) */
   --font-size-h1: 1.5rem; /* 2xl */
@@ -37,24 +52,35 @@
 }
 
 /**
- * Dark Mode Scaffold
- * Conservative defaults for future dark theme extension
- * Uncomment and refine when implementing dark mode
+ * Dark Mode - Figma Design System
+ * Based on Proofound MVP Figma dark theme specifications
  */
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* Color Tokens - Dark Mode */
-    /* --bg-base: #121212;
-    --fg-base: #ECECEC;
-    --card: #1A1A1A;
-    --muted: #2A2A2A;
-    --accent: #B8A592;
-    --border-subtle: rgba(255, 255, 255, 0.12);
-    
-    Brand colors remain the same in dark mode for consistency
-    --brand-sage: #7A9278;
-    --brand-terracotta: #C67B5C;
-    --brand-teal: #5C8B89;
-    --brand-ochre: #D4A574; */
-  }
+.dark {
+  /* Figma Dark Mode Colors */
+  --proofound-forest: #1c4d3a; /* Primary brand - stays consistent */
+  --proofound-terracotta: #c76b4a; /* Accent - stays consistent */
+  --proofound-parchment: #1a1d2e; /* Background - Deep Navy Night */
+  --proofound-charcoal: #e8dcc4; /* Text primary - Cream Canvas */
+  --proofound-stone: rgba(212, 196, 168, 0.1); /* Borders - Warm Beige transparent */
+
+  /* Color Tokens - Dark Mode */
+  --bg-base: #1a1d2e; /* Deep Navy Night */
+  --fg-base: #e8dcc4; /* Cream Canvas */
+
+  /* Figma Dark Mode Extended */
+  --card: #252834; /* Dark cards */
+  --muted: #2c3244; /* Muted dark */
+  --accent: #d4c4a8; /* Warm Beige Stone */
+  --border-subtle: rgba(212, 196, 168, 0.1); /* Transparent borders */
+
+  /* Brand colors remain vibrant in dark mode */
+  --brand-sage: #7a9278;
+  --brand-terracotta: #c76b4a;
+  --brand-teal: #5c8b89;
+  --brand-ochre: #d4a574;
+
+  /* Extended palette adjustments */
+  --clay: #c9a57b;
+  --sand: #3a3f52; /* Darker sand */
+  --bamboo: #6b7f5f;
 }

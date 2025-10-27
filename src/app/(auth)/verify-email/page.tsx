@@ -46,14 +46,18 @@ function VerifyEmailContent() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-secondary-100 px-4">
-        <Card className="max-w-md w-full">
+      <div className="min-h-screen flex items-center justify-center bg-proofound-parchment dark:bg-background px-4">
+        <Card className="max-w-md w-full border-proofound-stone dark:border-border rounded-2xl">
           <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 rounded-full bg-primary-50 flex items-center justify-center mb-4">
-              <Loader2 className="w-6 h-6 text-primary-500 animate-spin" />
+            <div className="mx-auto w-12 h-12 rounded-full bg-proofound-forest/10 flex items-center justify-center mb-4">
+              <Loader2 className="w-6 h-6 text-proofound-forest dark:text-primary animate-spin" />
             </div>
-            <CardTitle>Verifying your email</CardTitle>
-            <CardDescription>Please wait while we verify your email address...</CardDescription>
+            <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
+              Verifying your email
+            </CardTitle>
+            <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
+              Please wait while we verify your email address...
+            </CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -62,27 +66,36 @@ function VerifyEmailContent() {
 
   if (status === 'error') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-secondary-100 px-4">
-        <Card className="max-w-md w-full">
+      <div className="min-h-screen flex items-center justify-center bg-proofound-parchment dark:bg-background px-4">
+        <Card className="max-w-md w-full border-proofound-stone dark:border-border rounded-2xl">
           <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mb-4">
-              <XCircle className="w-6 h-6 text-red-500" />
+            <div className="mx-auto w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
+              <XCircle className="w-6 h-6 text-destructive" />
             </div>
-            <CardTitle>Verification failed</CardTitle>
-            <CardDescription>
+            <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
+              Verification failed
+            </CardTitle>
+            <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
               {error || 'We couldn&apos;t verify your email address'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-neutral-dark-600 text-center">
+            <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground text-center">
               The verification link may have expired or is invalid. Please try signing up again or
               contact support.
             </p>
             <div className="flex gap-4">
-              <Button asChild variant="outline" className="flex-1">
+              <Button
+                asChild
+                variant="outline"
+                className="flex-1 border-proofound-stone dark:border-border"
+              >
                 <Link href="/signup">Sign up again</Link>
               </Button>
-              <Button asChild className="flex-1">
+              <Button
+                asChild
+                className="flex-1 bg-proofound-forest hover:bg-proofound-forest/90 text-white"
+              >
                 <Link href="/login">Go to login</Link>
               </Button>
             </div>
@@ -93,18 +106,27 @@ function VerifyEmailContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-secondary-100 px-4">
-      <Card className="max-w-md w-full">
+    <div className="min-h-screen flex items-center justify-center bg-proofound-parchment dark:bg-background px-4">
+      <Card className="max-w-md w-full border-proofound-stone dark:border-border rounded-2xl">
         <CardHeader className="text-center">
-          <div className="mx-auto w-12 h-12 rounded-full bg-green-50 flex items-center justify-center mb-4">
-            <CheckCircle className="w-6 h-6 text-green-500" />
+          <div className="mx-auto w-12 h-12 rounded-full bg-proofound-forest/10 flex items-center justify-center mb-4">
+            <CheckCircle className="w-6 h-6 text-proofound-forest dark:text-primary" />
           </div>
-          <CardTitle>Email verified!</CardTitle>
-          <CardDescription>Your email has been successfully verified</CardDescription>
+          <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
+            Email verified!
+          </CardTitle>
+          <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
+            Your email has been successfully verified
+          </CardDescription>
         </CardHeader>
         <CardContent className="text-center">
-          <p className="text-sm text-neutral-dark-600 mb-4">Redirecting to login in 3 seconds...</p>
-          <Button asChild className="w-full">
+          <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-4">
+            Redirecting to login in 3 seconds...
+          </p>
+          <Button
+            asChild
+            className="w-full bg-proofound-forest hover:bg-proofound-forest/90 text-white"
+          >
             <Link href="/login">Go to login now</Link>
           </Button>
         </CardContent>
@@ -117,13 +139,15 @@ export default function VerifyEmailPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-secondary-100 px-4">
-          <Card className="max-w-md w-full">
+        <div className="min-h-screen flex items-center justify-center bg-proofound-parchment dark:bg-background px-4">
+          <Card className="max-w-md w-full border-proofound-stone dark:border-border rounded-2xl">
             <CardHeader className="text-center">
-              <div className="mx-auto w-12 h-12 rounded-full bg-primary-50 flex items-center justify-center mb-4">
-                <Loader2 className="w-6 h-6 text-primary-500 animate-spin" />
+              <div className="mx-auto w-12 h-12 rounded-full bg-proofound-forest/10 flex items-center justify-center mb-4">
+                <Loader2 className="w-6 h-6 text-proofound-forest dark:text-primary animate-spin" />
               </div>
-              <CardTitle>Loading...</CardTitle>
+              <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
+                Loading...
+              </CardTitle>
             </CardHeader>
           </Card>
         </div>

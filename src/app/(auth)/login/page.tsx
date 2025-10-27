@@ -17,7 +17,11 @@ function SubmitButton() {
   const { pending } = useFormStatus();
 
   return (
-    <Button type="submit" className="w-full" disabled={pending}>
+    <Button
+      type="submit"
+      className="w-full bg-proofound-forest hover:bg-proofound-forest/90 text-white"
+      disabled={pending}
+    >
       {pending ? 'Logging in...' : 'Log in'}
     </Button>
   );
@@ -29,19 +33,25 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-secondary-100 px-4">
-      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg">
-        <h1 className="text-3xl font-display font-semibold text-primary-500 mb-2">Welcome back</h1>
-        <p className="text-neutral-dark-600 mb-6">Log in to your Proofound account</p>
+    <div className="min-h-screen flex items-center justify-center bg-proofound-parchment dark:bg-background px-4">
+      <div className="w-full max-w-md bg-white dark:bg-card p-8 rounded-2xl shadow-lg border border-proofound-stone dark:border-border">
+        <h1 className="text-3xl font-['Crimson_Pro'] font-semibold text-proofound-forest dark:text-primary mb-2">
+          Welcome back
+        </h1>
+        <p className="text-proofound-charcoal/70 dark:text-muted-foreground mb-6">
+          Log in to your Proofound account
+        </p>
 
         <SocialSignInButtons className="mb-6" />
 
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center" aria-hidden="true">
-            <span className="w-full border-t border-neutral-light-300" />
+            <span className="w-full border-t border-proofound-stone dark:border-border" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="px-2 bg-white text-neutral-dark-500">Or continue with email</span>
+            <span className="px-2 bg-white dark:bg-card text-proofound-charcoal/70 dark:text-muted-foreground">
+              Or continue with email
+            </span>
           </div>
         </div>
 
@@ -49,7 +59,7 @@ export default function LoginPage() {
           <div
             id="login-error"
             role="alert"
-            className="mb-6 rounded-xl border border-error/30 bg-error/10 px-4 py-3 text-sm text-error"
+            className="mb-6 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
           >
             {state.error}
           </div>
@@ -57,7 +67,9 @@ export default function LoginPage() {
 
         <form action={formAction} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email" className="text-proofound-charcoal dark:text-foreground">
+              Email
+            </Label>
             <Input
               id="email"
               name="email"
@@ -68,11 +80,14 @@ export default function LoginPage() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               aria-describedby={state.error ? 'login-error' : undefined}
+              className="border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password" className="text-proofound-charcoal dark:text-foreground">
+              Password
+            </Label>
             <Input
               id="password"
               name="password"
@@ -82,6 +97,7 @@ export default function LoginPage() {
               placeholder="••••••••"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
+              className="border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
             />
           </div>
 
@@ -89,15 +105,21 @@ export default function LoginPage() {
         </form>
 
         <div className="mt-6 text-center">
-          <Link href="/reset-password" className="text-sm text-primary-600 hover:text-primary-700">
+          <Link
+            href="/reset-password"
+            className="text-sm text-proofound-forest dark:text-primary hover:text-proofound-forest/80 dark:hover:text-primary/80"
+          >
             Forgot password?
           </Link>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-neutral-light-300 text-center">
-          <p className="text-sm text-neutral-dark-600">
+        <div className="mt-8 pt-6 border-t border-proofound-stone dark:border-border text-center">
+          <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
             Don&apos;t have an account?{' '}
-            <Link href="/signup" className="text-primary-600 hover:text-primary-700 font-medium">
+            <Link
+              href="/signup"
+              className="text-proofound-forest dark:text-primary hover:text-proofound-forest/80 dark:hover:text-primary/80 font-medium"
+            >
               Sign up
             </Link>
           </p>

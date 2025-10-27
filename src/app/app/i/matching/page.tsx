@@ -47,8 +47,8 @@ export default function MatchingPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <p>Loading...</p>
+      <div className="flex items-center justify-center min-h-[60vh] bg-proofound-parchment dark:bg-background">
+        <p className="text-proofound-charcoal/70 dark:text-muted-foreground">Loading...</p>
       </div>
     );
   }
