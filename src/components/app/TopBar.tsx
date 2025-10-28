@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Separator } from '@/components/ui/separator';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,25 +26,50 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-50 h-14 px-4 border-b border-proofound-stone dark:border-border bg-white dark:bg-card flex items-center justify-between gap-4">
-        {/* Left: Logo + Title */}
-        <div className="flex items-center gap-3">
-          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-proofound-forest to-brand-teal flex items-center justify-center">
-            <span className="text-white text-xs font-semibold">P</span>
+      <header
+        className="sticky top-0 z-50 h-14 px-4 border-b flex items-center justify-between gap-4"
+        style={{
+          backgroundColor: '#FDFCFA',
+          borderColor: 'rgba(232, 230, 221, 0.6)',
+        }}
+      >
+        {/* Left: Logo + Proofound + Separator + Title */}
+        <div className="flex items-center gap-4">
+          {/* Logo */}
+          <div className="flex items-center gap-2">
+            <div
+              className="w-7 h-7 rounded-lg flex items-center justify-center"
+              style={{ background: 'linear-gradient(to bottom right, #1C4D3A, #5C8B89)' }}
+            >
+              <span className="text-white text-xs font-semibold">P</span>
+            </div>
+            <span className="font-semibold text-sm" style={{ color: '#2D3330' }}>
+              Proofound
+            </span>
           </div>
-          <h1 className="text-lg font-['Crimson_Pro'] font-semibold text-proofound-charcoal dark:text-foreground">
+
+          <Separator orientation="vertical" className="h-6" />
+
+          <h2 className="text-base" style={{ color: '#2D3330' }}>
             Dashboard
-          </h1>
+          </h2>
         </div>
 
         {/* Center: Search */}
         <div className="flex-1 max-w-xs">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              type="search"
+          <div
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full border w-full"
+            style={{
+              backgroundColor: 'white',
+              borderColor: 'rgba(232, 230, 221, 0.6)',
+            }}
+          >
+            <Search className="w-3.5 h-3.5" style={{ color: '#6B6760' }} />
+            <input
+              type="text"
               placeholder="Search..."
-              className="pl-9 h-9 w-full border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
+              className="flex-1 bg-transparent border-none outline-none text-sm"
+              style={{ color: '#2D3330' }}
             />
           </div>
         </div>
@@ -55,7 +80,8 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
             variant="outline"
             size="sm"
             onClick={() => setCustomizeOpen(true)}
-            className="border-proofound-stone dark:border-border hover:bg-proofound-forest/5"
+            className="text-xs h-8 focus-visible:ring-2 focus-visible:ring-[#1C4D3A] focus-visible:ring-offset-2"
+            style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}
           >
             Customize
           </Button>
@@ -64,10 +90,13 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
               <button
                 type="button"
                 aria-label="Open profile menu"
-                className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-proofound-forest dark:focus-visible:ring-primary"
+                className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1C4D3A] focus-visible:ring-offset-2"
               >
-                <Avatar className="w-8 h-8">
-                  <AvatarFallback className="text-xs font-medium bg-proofound-forest text-white">
+                <Avatar className="w-7 h-7">
+                  <AvatarFallback
+                    className="text-xs font-medium"
+                    style={{ backgroundColor: '#1C4D3A', color: '#F7F6F1' }}
+                  >
                     {userInitials}
                   </AvatarFallback>
                 </Avatar>
@@ -75,10 +104,11 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="w-48 border-proofound-stone dark:border-border"
+              className="w-48"
+              style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}
             >
               <DropdownMenuLabel className="flex flex-col">
-                <span className="text-sm font-medium text-foreground">{userName}</span>
+                <span className="text-sm font-medium">{userName}</span>
                 <span className="text-xs text-muted-foreground">Signed in</span>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />

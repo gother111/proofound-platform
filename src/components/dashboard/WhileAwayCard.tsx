@@ -26,23 +26,28 @@ export function WhileAwayCard() {
   if (updates.length === 0 || dismissed) return null;
 
   return (
-    <Card className="p-4 border border-brand-sage/40 dark:border-brand-sage/20 bg-brand-sage/8 dark:bg-brand-sage/5 rounded-2xl">
-      <div className="flex items-center justify-between mb-2">
-        <h5 className="text-sm font-['Crimson_Pro'] font-medium text-proofound-charcoal dark:text-foreground">
+    <Card
+      className="p-4 border"
+      style={{
+        borderColor: 'rgba(124, 146, 120, 0.4)',
+        backgroundColor: 'rgba(122, 146, 120, 0.08)',
+      }}
+    >
+      <div className="flex items-start justify-between mb-3">
+        <h4 className="text-sm" style={{ color: '#2D3330' }}>
           {title}
-        </h5>
+        </h4>
         <button
           onClick={() => setDismissed(true)}
-          className="p-1 hover:bg-white/50 dark:hover:bg-card/50 rounded transition-colors"
+          className="p-0.5 hover:bg-white/50 rounded"
           aria-label="Dismiss"
         >
-          <X className="w-4 h-4 text-proofound-charcoal/70 dark:text-muted-foreground" />
+          <X className="w-3.5 h-3.5" style={{ color: '#2D3330' }} />
         </button>
       </div>
-      {/* Update items would go here when API returns data */}
       <div className="space-y-2">
         {updates.map((update, idx) => (
-          <div key={idx} className="text-sm text-proofound-charcoal dark:text-foreground">
+          <div key={idx} className="text-xs" style={{ color: '#2D3330' }}>
             {update.text}
           </div>
         ))}

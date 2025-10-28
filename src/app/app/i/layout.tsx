@@ -14,7 +14,7 @@ export default async function IndividualLayout({ children }: { children: React.R
     .slice(0, 2);
 
   return (
-    <div className="flex h-screen" style={{ backgroundColor: '#F5F3EE' }}>
+    <div className="flex h-screen" style={{ backgroundColor: '#F7F6F1' }}>
       <LeftNav basePath="/app/i" />
       <div className="flex-1 flex flex-col">
         <TopBar userName={userName} userInitials={userInitials} />
