@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useFormState, useFormStatus } from 'react-dom';
 import { motion } from 'framer-motion';
-import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,76 +13,47 @@ import { Checkbox } from '@/components/ui/checkbox';
 import SocialSignInButtons from '@/components/auth/social-sign-in-buttons';
 import { NetworkBackground } from '@/components/NetworkBackground';
 import { Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { signIn, type SignInState } from '@/actions/auth';
 
 interface SignInProps {
   onBack?: () => void;
   onCreateAccount?: () => void;
 }
 
+const INITIAL_STATE: SignInState = { error: null };
+
+function SignInSubmitButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button
+      type="submit"
+      size="lg"
+      disabled={pending}
+      className="w-full rounded-xl bg-proofound-forest py-[14px] text-[15px] font-semibold tracking-[0.01em] text-white shadow-sm transition-all hover:-translate-y-[1px] hover:bg-[#2D5D4A] hover:shadow-md disabled:bg-[#E8E6DD] disabled:text-[#2D3330]/40"
+    >
+      {pending ? 'Signing in…' : 'Sign in'}
+    </Button>
+  );
+}
+
 export function SignIn({ onBack, onCreateAccount }: SignInProps) {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [clientError, setClientError] = useState<string | null>(null);
+  const [formState, formAction] = useFormState(signIn, INITIAL_STATE);
 
-  // Handle the Supabase email + password sign-in flow
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
+  const error = clientError ?? formState?.error ?? null;
 
-    try {
-      const supabase = createClient();
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    setClientError(null);
 
-      if (authError) throw authError;
-
-      if (authData.user) {
-        // Query the user's profile to determine where to redirect
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('persona')
-          .eq('id', authData.user.id)
-          .maybeSingle();
-
-        // Redirect based on persona
-        if (profile?.persona === 'individual') {
-          router.push('/app/i/home');
-        } else if (profile?.persona === 'org_member') {
-          // Get the user's first organization
-          const { data: orgMemberships } = await supabase
-            .from('organization_members')
-            .select('org:organizations(slug)')
-            .eq('user_id', authData.user.id)
-            .eq('status', 'active')
-            .limit(1);
-
-          type OrgMembership = { org: { slug: string } | { slug: string }[] | null };
-          const membership = orgMemberships?.[0] as OrgMembership | undefined;
-          const orgData = Array.isArray(membership?.org) ? membership.org[0] : membership?.org;
-
-          if (orgData?.slug) {
-            router.push(`/app/o/${orgData.slug}/home`);
-          } else {
-            // Organization member but no organization found
-            router.push('/onboarding');
-          }
-        } else {
-          // No persona set or unknown persona - send to onboarding
-          router.push('/onboarding');
-        }
-        router.refresh();
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setIsLoading(false);
+    if (!email || !password) {
+      event.preventDefault();
+      setClientError('Please enter your email and password.');
     }
   };
 
@@ -148,7 +119,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
           )}
 
           {/* Email + password form in Figma typography */}
-          <form onSubmit={onSubmit} className="space-y-6">
+          <form action={formAction} onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <Label
                 htmlFor="email"
@@ -164,10 +135,11 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
                 />
                 <Input
                   id="email"
+                  name="email"
                   type="email"
                   placeholder="you@example.com"
                   autoComplete="email"
-                  disabled={isLoading}
+                  disabled={false}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -191,10 +163,11 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
                 />
                 <Input
                   id="password"
+                  name="password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Enter your password"
                   autoComplete="current-password"
-                  disabled={isLoading}
+                  disabled={false}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -233,14 +206,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
               </button>
             </div>
 
-            <Button
-              type="submit"
-              size="lg"
-              disabled={isLoading}
-              className="w-full rounded-xl bg-proofound-forest py-[14px] text-[15px] font-semibold tracking-[0.01em] text-white shadow-sm transition-all hover:-translate-y-[1px] hover:bg-[#2D5D4A] hover:shadow-md disabled:bg-[#E8E6DD] disabled:text-[#2D3330]/40"
-            >
-              {isLoading ? 'Signing in…' : 'Sign in'}
-            </Button>
+            <SignInSubmitButton />
           </form>
 
           {/* Divider with soft typography */}

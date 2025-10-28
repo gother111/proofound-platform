@@ -16,13 +16,7 @@ export default function SignupPage() {
   const [signupType, setSignupType] = useState<SignupType>('choose');
 
   if (signupType === 'individual' || signupType === 'organization') {
-    return (
-      <SignupForm
-        accountType={signupType}
-        onBack={() => setSignupType('choose')}
-        onComplete={() => router.push('/app/i/home')}
-      />
-    );
+    return <SignupForm accountType={signupType} onBack={() => setSignupType('choose')} />;
   }
 
   // Account type selection screen

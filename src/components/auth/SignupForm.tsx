@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useFormState, useFormStatus } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,67 +12,66 @@ import { Separator } from '@/components/ui/separator';
 import SocialSignInButtons from '@/components/auth/social-sign-in-buttons';
 import { NetworkBackground } from '@/components/NetworkBackground';
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, Building2, User, CheckCircle2 } from 'lucide-react';
+import { signUp, type SignUpState } from '@/actions/auth';
 
 interface SignupFormProps {
   accountType: 'individual' | 'organization';
   onBack?: () => void;
-  onComplete?: () => void;
 }
 
-export function SignupForm({ accountType, onBack, onComplete }: SignupFormProps) {
+const INITIAL_STATE: SignUpState = { error: null, success: false };
+
+function SignupSubmitButton({ children }: { children: React.ReactNode }) {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button
+      type="submit"
+      className="w-full rounded-xl bg-proofound-forest py-[14px] text-[15px] font-semibold tracking-[0.01em] text-white shadow-sm transition-all hover:-translate-y-[1px] hover:bg-[#2D5D4A] hover:shadow-md disabled:bg-[#E8E6DD] disabled:text-[#2D3330]/40"
+      size="lg"
+      disabled={pending}
+    >
+      {pending ? 'Creating account…' : children}
+    </Button>
+  );
+}
+
+export function SignupForm({ accountType, onBack }: SignupFormProps) {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [clientError, setClientError] = useState<string | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
+  const personaValue = useMemo(
+    () => (accountType === 'organization' ? 'org_member' : 'individual'),
+    [accountType]
+  );
 
-    // Validation
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      setIsLoading(false);
+  const [formState, formAction] = useFormState(signUp, INITIAL_STATE);
+  const state = formState ?? INITIAL_STATE;
+  const errorMessage = clientError ?? state.error;
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    setClientError(null);
+
+    const trimmedPassword = password.trim();
+    const trimmedConfirmPassword = confirmPassword.trim();
+
+    if (trimmedPassword !== trimmedConfirmPassword) {
+      event.preventDefault();
+      setClientError('Passwords do not match');
       return;
     }
 
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters');
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      const supabase = createClient();
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-          data: {
-            account_type: accountType,
-          },
-        },
-      });
-
-      if (signUpError) throw signUpError;
-
-      if (data.user) {
-        setSuccess(true);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setIsLoading(false);
+    if (trimmedPassword.length < 8) {
+      event.preventDefault();
+      setClientError('Password must be at least 8 characters');
     }
   };
 
-  if (success) {
+  if (state.success) {
     return (
       <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#F7F6F1] px-6 py-16 text-[#2D3330]">
         <div className="pointer-events-none absolute inset-0 opacity-60">
@@ -203,7 +202,8 @@ export function SignupForm({ accountType, onBack, onComplete }: SignupFormProps)
           )}
 
           {/* Signup Form */}
-          <form onSubmit={onSubmit} className="space-y-6">
+          <form action={formAction} onSubmit={handleSubmit} className="space-y-6">
+            <input type="hidden" name="persona" value={personaValue} />
             <div className="space-y-2">
               <Label
                 htmlFor="email"
@@ -224,7 +224,7 @@ export function SignupForm({ accountType, onBack, onComplete }: SignupFormProps)
                   type="email"
                   placeholder="you@example.com"
                   autoComplete="email"
-                  disabled={isLoading}
+                  disabled={false}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -253,7 +253,7 @@ export function SignupForm({ accountType, onBack, onComplete }: SignupFormProps)
                   type={showPassword ? 'text' : 'password'}
                   placeholder="At least 8 characters"
                   autoComplete="new-password"
-                  disabled={isLoading}
+                  disabled={false}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -290,7 +290,7 @@ export function SignupForm({ accountType, onBack, onComplete }: SignupFormProps)
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Re-enter your password"
                 autoComplete="new-password"
-                disabled={isLoading}
+                disabled={false}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
@@ -303,18 +303,9 @@ export function SignupForm({ accountType, onBack, onComplete }: SignupFormProps)
               />
             </div>
 
-            <Button
-              type="submit"
-              className={`w-full rounded-xl py-[14px] text-[15px] font-semibold tracking-[0.01em] text-white shadow-sm transition-all hover:-translate-y-[1px] hover:shadow-md disabled:bg-[#E8E6DD] disabled:text-[#2D3330]/40 ${
-                accountType === 'organization'
-                  ? 'bg-proofound-terracotta hover:bg-[#B5673F]'
-                  : 'bg-proofound-forest hover:bg-[#2D5D4A]'
-              }`}
-              size="lg"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Creating account…' : 'Create account'}
-            </Button>
+            <SignupSubmitButton>
+              {accountType === 'organization' ? 'Create organization account' : 'Create account'}
+            </SignupSubmitButton>
           </form>
 
           {/* Divider */}
