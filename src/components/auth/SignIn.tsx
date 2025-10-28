@@ -12,7 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import SocialSignInButtons from '@/components/auth/social-sign-in-buttons';
 import { NetworkBackground } from '@/components/NetworkBackground';
-import { Mail, Lock, Eye, EyeOff, ArrowLeft, Building2, User } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 
 interface SignInProps {
   onBack?: () => void;
@@ -23,7 +23,6 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [accountType, setAccountType] = useState<'individual' | 'organization'>('individual');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState('');
@@ -103,38 +102,6 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
             <p className="mt-3 text-[15px] leading-[22px] text-[#2D333099]">
               Sign in to continue to Proofound
             </p>
-          </div>
-
-          {/* Account type toggle mirrors the Figma pill control */}
-          <div className="mb-8 flex gap-2 rounded-full bg-[#E8E6DD]/60 p-1">
-            <button
-              type="button"
-              onClick={() => setAccountType('individual')}
-              className={`flex-1 rounded-full px-5 py-2.5 text-sm font-medium transition-all duration-300 ${
-                accountType === 'individual'
-                  ? 'bg-proofound-forest text-white shadow-[0_12px_24px_-12px_rgba(28,77,58,0.45)]'
-                  : 'text-[#2D333099] hover:text-[#2D3330]'
-              }`}
-            >
-              <span className="flex items-center justify-center gap-2">
-                <User className="h-4 w-4" />
-                Individual
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setAccountType('organization')}
-              className={`flex-1 rounded-full px-5 py-2.5 text-sm font-medium transition-all duration-300 ${
-                accountType === 'organization'
-                  ? 'bg-proofound-forest text-white shadow-[0_12px_24px_-12px_rgba(28,77,58,0.45)]'
-                  : 'text-[#2D333099] hover:text-[#2D3330]'
-              }`}
-            >
-              <span className="flex items-center justify-center gap-2">
-                <Building2 className="h-4 w-4" />
-                Organization
-              </span>
-            </button>
           </div>
 
           {/* Friendly error surface aligned with brand colors */}
