@@ -14,7 +14,6 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface LeftNavProps {
   basePath?: string;
@@ -44,7 +43,7 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
         borderColor: 'rgba(232, 230, 221, 0.6)',
       }}
     >
-      <ScrollArea className="flex-1 py-3">
+      <div className="flex-1 py-3 overflow-y-auto">
         <nav className="space-y-0.5 px-2">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -98,7 +97,7 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
             );
           })}
         </nav>
-      </ScrollArea>
+      </div>
 
       <div className="p-2 border-t" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
         <Button
