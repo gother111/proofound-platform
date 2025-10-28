@@ -191,13 +191,15 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
           </div>
 
           {/* Error Message */}
-          {error && (
+          {errorMessage && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               className="mb-6 rounded-2xl border border-[#B5542D]/25 bg-[#B5542D]/10 px-4 py-3"
             >
-              <p className="text-sm font-medium text-[#8A3F21]">{error}</p>
+              <p className="text-sm font-medium text-[#8A3F21]" role="alert" aria-live="polite">
+                {errorMessage}
+              </p>
             </motion.div>
           )}
 

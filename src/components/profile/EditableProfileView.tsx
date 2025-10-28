@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -42,6 +42,7 @@ import { ValuesCard } from './ValuesCard';
 import { CausesCard } from './CausesCard';
 import { SkillsCard } from './SkillsCard';
 import { Value, Skill } from '@/types/profile';
+import { EmptyProfileStateView } from './EmptyProfileStateView';
 
 export function EditableProfileView() {
   const {
@@ -76,6 +77,46 @@ export function EditableProfileView() {
   const [isEducationFormOpen, setIsEducationFormOpen] = useState(false);
   const [isVolunteerFormOpen, setIsVolunteerFormOpen] = useState(false);
 
+  const isEmptyProfile = useMemo(() => {
+    if (!profile) {
+      return true;
+    }
+
+    const {
+      basicInfo,
+      mission,
+      values,
+      causes,
+      skills,
+      impactStories,
+      experiences,
+      education,
+      volunteering,
+    } = profile;
+
+    const hasAvatar = Boolean(basicInfo.avatar);
+    const hasTagline = Boolean(basicInfo.tagline?.trim());
+    const hasMission = Boolean(mission?.trim());
+    const hasValues = values.length > 0;
+    const hasCauses = causes.length > 0;
+    const hasSkills = skills.length > 0;
+    const hasAnyEntries =
+      impactStories.length > 0 ||
+      experiences.length > 0 ||
+      education.length > 0 ||
+      volunteering.length > 0;
+
+    return (
+      !hasAvatar &&
+      !hasTagline &&
+      !hasMission &&
+      !hasValues &&
+      !hasCauses &&
+      !hasSkills &&
+      !hasAnyEntries
+    );
+  }, [profile]);
+
   if (isLoading || !profile) {
     return (
       <div className="min-h-screen bg-proofound-parchment dark:bg-background flex items-center justify-center">
@@ -85,6 +126,27 @@ export function EditableProfileView() {
   }
 
   const showCompletionBanner = profileCompletion < 80;
+
+  if (isEmptyProfile) {
+    return (
+      <EmptyProfileStateView
+        basicInfo={profile.basicInfo}
+        profileCompletion={profileCompletion}
+        isPending={isPending}
+        pending={pending}
+        onEditProfile={() => setIsEditProfileOpen(true)}
+        onOpenMission={() => setIsMissionEditorOpen(true)}
+        onOpenValues={() => setIsValuesEditorOpen(true)}
+        onOpenCauses={() => setIsCausesEditorOpen(true)}
+        onOpenSkills={() => setIsSkillsEditorOpen(true)}
+        onAddImpactStory={() => setIsImpactStoryFormOpen(true)}
+        onAddExperience={() => setIsExperienceFormOpen(true)}
+        onAddEducation={() => setIsEducationFormOpen(true)}
+        onAddVolunteering={() => setIsVolunteerFormOpen(true)}
+        onUpdateBasicInfo={updateBasicInfo}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-proofound-parchment dark:bg-background">

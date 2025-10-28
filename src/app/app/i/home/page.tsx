@@ -2,8 +2,10 @@ import { requireAuth } from '@/lib/auth';
 import { WhileAwayCard } from '@/components/dashboard/WhileAwayCard';
 import { GoalsCard } from '@/components/dashboard/GoalsCard';
 import { TasksCard } from '@/components/dashboard/TasksCard';
+import { ProjectsCard } from '@/components/dashboard/ProjectsCard';
 import { MatchingResultsCard } from '@/components/dashboard/MatchingResultsCard';
 import { ImpactSnapshotCard } from '@/components/dashboard/ImpactSnapshotCard';
+import { ExploreCard } from '@/components/dashboard/ExploreCard';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,15 +22,17 @@ export default async function IndividualHomePage() {
             <WhileAwayCard />
           </div>
 
-          {/* Row 1 */}
+          {/* Row 1: Goals | Tasks | Projects */}
           <GoalsCard />
           <TasksCard />
+          <ProjectsCard />
 
-          {/* Row 2 - Matching spans 2 cols */}
+          {/* Row 2: Matching (2 cols) | Impact (1 col) */}
           <MatchingResultsCard className="lg:col-span-2" />
-
-          {/* Individual-specific card */}
           <ImpactSnapshotCard />
+
+          {/* Row 3: Explore (full 3 cols) */}
+          <ExploreCard />
         </div>
       </div>
     </div>
