@@ -63,9 +63,12 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
             .eq('status', 'active')
             .limit(1);
 
-          const firstOrg = orgMemberships?.[0]?.org as { slug: string } | null;
-          if (firstOrg?.slug) {
-            router.push(`/app/o/${firstOrg.slug}/home`);
+          type OrgMembership = { org: { slug: string } | { slug: string }[] | null };
+          const membership = orgMemberships?.[0] as OrgMembership | undefined;
+          const orgData = Array.isArray(membership?.org) ? membership.org[0] : membership?.org;
+
+          if (orgData?.slug) {
+            router.push(`/app/o/${orgData.slug}/home`);
           } else {
             // Organization member but no organization found
             router.push('/onboarding');
