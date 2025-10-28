@@ -247,7 +247,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
           {/* Divider with soft typography */}
           <div className="relative my-7">
             <Separator className="bg-[#E8E6DD]" />
-            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-4 text-xs font-medium uppercase tracking-[0.16em] text-[#2D333099]">
+            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-4 text-center text-xs font-medium uppercase tracking-[0.16em] text-[#2D333099]">
               Or continue with
             </span>
           </div>
