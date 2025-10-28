@@ -61,8 +61,8 @@ export default async function OnboardingPage() {
       redirect('/app/i/home');
     }
 
-    // Truly new user - redirect to signup
-    redirect('/signup');
+    // Truly new user - show persona choice
+    return <OnboardingClient initialPersona={null} />;
   }
 
   // Profile is complete, redirect to their home page

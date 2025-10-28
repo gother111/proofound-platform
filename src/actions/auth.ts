@@ -13,6 +13,7 @@ import { resolveUserHomePath } from '@/lib/auth';
 const signUpSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
+  persona: z.enum(['individual', 'org_member']),
 });
 
 const signInSchema = z.object({
@@ -65,7 +66,7 @@ function resolveRequestSiteUrl(headersList: Headers): string {
 }
 
 export async function signUp(
-  _prevState: SignUpState | undefined,
+  prevState: SignUpState | undefined,
   formData: FormData
 ): Promise<SignUpState> {
   try {
@@ -83,25 +84,20 @@ export async function signUp(
 
     const rawEmail = (formData.get('email') as string | null) ?? '';
     const email = rawEmail.trim().toLowerCase();
-    const persona = (formData.get('persona') as string | null) ?? 'unknown';
 
-    // Validate persona
-    if (persona !== 'individual' && persona !== 'org_member') {
-      return {
-        error: 'Please select Individual or Organization.',
-        success: false,
-      };
-    }
+    const personaChoice = (formData.get('persona') as string | null)?.trim();
+    const normalizedPersona = personaChoice === 'organization' ? 'org_member' : personaChoice;
 
     const data = {
       email,
       password: (formData.get('password') as string | null) ?? '',
+      persona: normalizedPersona,
     };
 
     const result = signUpSchema.safeParse(data);
     if (!result.success) {
       return {
-        error: 'Enter a valid email address and password with at least 8 characters.',
+        error: 'Enter a valid email, password (8+ characters), and account type.',
         success: false,
       };
     }
@@ -122,7 +118,7 @@ export async function signUp(
       options: {
         emailRedirectTo: `${siteUrl}/auth/callback`,
         data: {
-          persona: persona, // Store persona in user metadata
+          persona: result.data.persona,
         },
       },
     });
@@ -150,6 +146,27 @@ export async function signUp(
           'An account with this email already exists. We just sent a fresh verification link to your inbox.',
         success: false,
       };
+    }
+
+    // Verify profile was created by trigger, create manually if needed
+    if (signUpResult.user) {
+      const { data: profileCheck } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', signUpResult.user.id)
+        .maybeSingle();
+
+      if (!profileCheck) {
+        // Trigger didn't fire - create profile manually as fallback
+        console.warn('Profile trigger did not fire, creating profile manually');
+        await supabase.from('profiles').insert({
+          id: signUpResult.user.id,
+          persona: result.data.persona,
+          display_name: result.data.email,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+      }
     }
 
     revalidatePath('/', 'layout');

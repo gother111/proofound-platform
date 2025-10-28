@@ -12,8 +12,12 @@ AS $$
 DECLARE
   user_persona TEXT;
 BEGIN
-  -- Read persona from user metadata, default to 'unknown'
-  user_persona := COALESCE(NEW.raw_user_meta_data->>'persona', 'unknown');
+  -- Read persona from user metadata with enhanced fallback handling
+  -- NULLIF removes empty strings, TRIM removes whitespace
+  user_persona := COALESCE(
+    NULLIF(TRIM(NEW.raw_user_meta_data->>'persona'), ''),
+    'unknown'
+  );
   
   -- Validate persona value
   IF user_persona NOT IN ('individual', 'org_member', 'unknown') THEN
