@@ -38,7 +38,7 @@ export async function updateOrganization(orgId: string, formData: FormData) {
   }
 
   try {
-    const supabase = await createClient();
+    const supabase = await createClient({ allowCookieWrite: true });
     const updateResult = await supabase
       .from('organizations')
       .update({
@@ -99,7 +99,7 @@ export async function inviteMember(orgId: string, formData: FormData) {
   }
 
   try {
-    const supabase = await createClient();
+    const supabase = await createClient({ allowCookieWrite: true });
     const token = nanoid(32);
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
@@ -159,7 +159,7 @@ export async function acceptInvitation(token: string) {
   const user = await requireAuth();
 
   try {
-    const supabase = await createClient();
+    const supabase = await createClient({ allowCookieWrite: true });
     const invitationQuery = await supabase
       .from('org_invitations')
       .select('id, org_id, email, role, token, expires_at')

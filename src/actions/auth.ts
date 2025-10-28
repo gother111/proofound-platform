@@ -110,7 +110,7 @@ export async function signUp(
       };
     }
 
-    const supabase = await createClient();
+    const supabase = await createClient({ allowCookieWrite: true });
 
     const { data: signUpResult, error } = await supabase.auth.signUp({
       email: result.data.email,
@@ -211,7 +211,7 @@ export async function signIn(
       return { error: 'Enter a valid email address and password.' };
     }
 
-    const supabase = await createClient();
+    const supabase = await createClient({ allowCookieWrite: true });
 
     const { error } = await supabase.auth.signInWithPassword(result.data);
 
@@ -313,7 +313,7 @@ function mapUnexpectedAuthError(error: unknown, action: 'sign up' | 'log in') {
 }
 
 export async function signOut() {
-  const supabase = await createClient();
+  const supabase = await createClient({ allowCookieWrite: true });
   await supabase.auth.signOut();
   revalidatePath('/', 'layout');
   redirect('/');
@@ -343,7 +343,7 @@ export async function requestPasswordReset(formData: FormData) {
     return { error: 'Unable to send reset email. Please try again later.' };
   }
 
-  const supabase = await createClient();
+  const supabase = await createClient({ allowCookieWrite: true });
 
   const callbackUrl = new URL('/auth/callback', siteUrl);
   callbackUrl.searchParams.set('next', '/reset-password/confirm');
@@ -366,7 +366,7 @@ export async function confirmPasswordReset(formData: FormData) {
     return { error: 'Password must be at least 8 characters' };
   }
 
-  const supabase = await createClient();
+  const supabase = await createClient({ allowCookieWrite: true });
 
   const { error } = await supabase.auth.updateUser({
     password,
@@ -394,7 +394,7 @@ export async function verifyEmail(formData: FormData) {
     return { error: 'No verification token provided' };
   }
 
-  const supabase = await createClient();
+  const supabase = await createClient({ allowCookieWrite: true });
 
   const { error } = await supabase.auth.verifyOtp({
     token_hash: token,

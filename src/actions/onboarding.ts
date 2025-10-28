@@ -45,7 +45,7 @@ export async function choosePersona(formData: FormData) {
     return { error: 'Invalid persona choice' };
   }
 
-  const supabase = await createClient();
+  const supabase = await createClient({ allowCookieWrite: true });
   const { error } = await supabase
     .from('profiles')
     .update({ persona: result.data.persona, updated_at: new Date().toISOString() })
@@ -79,7 +79,7 @@ export async function completeIndividualOnboarding(formData: FormData) {
   }
 
   try {
-    const supabase = await createClient();
+    const supabase = await createClient({ allowCookieWrite: true });
 
     const profileUpdate = await supabase
       .from('profiles')
@@ -150,7 +150,7 @@ export async function completeOrganizationOnboarding(formData: FormData) {
   }
 
   try {
-    const supabase = await createClient();
+    const supabase = await createClient({ allowCookieWrite: true });
 
     // Check if user already has an organization (ignore RLS errors)
     const { data: existingMemberships } = await supabase

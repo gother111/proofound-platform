@@ -2,6 +2,15 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
+type CreateClientOptions = {
+  /**
+   * When `true`, allow Supabase helpers to mutate response cookies.
+   * Keep this disabled (default) inside React Server Components to avoid
+   * Next.js runtime errors: "Cookies can only be modified in a Server Action or Route Handler".
+   */
+  allowCookieWrite?: boolean;
+};
+
 const mockSupabaseClient = {
   auth: {
     getSession: async () => ({ data: { session: null }, error: null }),
@@ -31,7 +40,8 @@ const mockSupabaseClient = {
   schema: () => ({}),
 } as unknown as SupabaseClient;
 
-export async function createClient(): Promise<SupabaseClient> {
+export async function createClient(options: CreateClientOptions = {}): Promise<SupabaseClient> {
+  const { allowCookieWrite = false } = options;
   const supabaseUrl =
     process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || process.env.SUPABASE_URL?.trim() || '';
   const supabaseAnonKey =
@@ -48,12 +58,30 @@ export async function createClient(): Promise<SupabaseClient> {
 
   const cookieStore = await cookies();
 
+  const warnCookieWrite = (action: 'set' | 'remove', name: string) => {
+    if (allowCookieWrite) {
+      return;
+    }
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn(
+        `[supabase] Ignoring cookie ${action} for "${name}" because allowCookieWrite=false. ` +
+          'Enable via createClient({ allowCookieWrite: true }) inside a Server Action or Route Handler.'
+      );
+    }
+  };
+
   return createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       get(name: string) {
         return cookieStore.get(name)?.value;
       },
       set(name: string, value: string, options?: CookieOptions) {
+        if (!allowCookieWrite) {
+          warnCookieWrite('set', name);
+          return;
+        }
+
         cookieStore.set({
           name,
           value,
@@ -61,6 +89,11 @@ export async function createClient(): Promise<SupabaseClient> {
         });
       },
       remove(name: string, options?: CookieOptions) {
+        if (!allowCookieWrite) {
+          warnCookieWrite('remove', name);
+          return;
+        }
+
         cookieStore.set({
           name,
           value: '',
