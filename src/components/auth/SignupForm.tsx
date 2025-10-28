@@ -90,7 +90,11 @@ export function SignupForm({ accountType, onBack, onComplete }: SignupFormProps)
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: 'spring' }}
-              className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-proofound-forest shadow-[0_8px_18px_rgba(28,77,58,0.28)]"
+              className={`mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full ${
+                accountType === 'organization'
+                  ? 'bg-proofound-terracotta shadow-[0_8px_18px_rgba(199,107,74,0.32)]'
+                  : 'bg-proofound-forest shadow-[0_8px_18px_rgba(28,77,58,0.28)]'
+              }`}
             >
               <CheckCircle2 className="h-8 w-8 text-white" />
             </motion.div>
@@ -99,7 +103,15 @@ export function SignupForm({ accountType, onBack, onComplete }: SignupFormProps)
             </h2>
             <p className="mt-3 text-sm leading-6 text-[#2D333099]">
               We&apos;ve sent a verification link to{' '}
-              <span className="font-medium text-proofound-forest">{email}</span>
+              <span
+                className={`font-medium ${
+                  accountType === 'organization'
+                    ? 'text-proofound-terracotta'
+                    : 'text-proofound-forest'
+                }`}
+              >
+                {email}
+              </span>
             </p>
             <p className="mt-4 text-sm leading-6 text-[#2D333099]">
               Click the link in the email to verify your account and complete your registration.
@@ -107,7 +119,11 @@ export function SignupForm({ accountType, onBack, onComplete }: SignupFormProps)
             <Button
               onClick={() => router.push('/login')}
               variant="outline"
-              className="mt-6 border-[#E8E6DD] text-proofound-forest hover:border-proofound-forest hover:bg-proofound-forest/5"
+              className={`mt-6 border-[#E8E6DD] ${
+                accountType === 'organization'
+                  ? 'text-proofound-terracotta hover:border-proofound-terracotta hover:bg-proofound-terracotta/5'
+                  : 'text-proofound-forest hover:border-proofound-forest hover:bg-proofound-forest/5'
+              }`}
             >
               Return to login
             </Button>
@@ -153,7 +169,13 @@ export function SignupForm({ accountType, onBack, onComplete }: SignupFormProps)
               transition={{ delay: 0.2 }}
               className="mb-4"
             >
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-proofound-forest shadow-[0_8px_18px_rgba(28,77,58,0.28)]">
+              <div
+                className={`mx-auto flex h-16 w-16 items-center justify-center rounded-2xl ${
+                  accountType === 'organization'
+                    ? 'bg-proofound-terracotta shadow-[0_8px_18px_rgba(199,107,74,0.32)]'
+                    : 'bg-proofound-forest shadow-[0_8px_18px_rgba(28,77,58,0.28)]'
+                }`}
+              >
                 {accountType === 'individual' ? (
                   <User className="h-8 w-8 text-white" />
                 ) : (
@@ -187,12 +209,14 @@ export function SignupForm({ accountType, onBack, onComplete }: SignupFormProps)
                 htmlFor="email"
                 className="flex items-center gap-2 text-[13px] font-medium uppercase tracking-[0.08em] text-[#2D3330]"
               >
-                <Mail className="h-4 w-4 text-proofound-forest" />
+                <Mail
+                  className={`h-4 w-4 ${accountType === 'organization' ? 'text-proofound-terracotta' : 'text-proofound-forest'}`}
+                />
                 Email address
               </Label>
               <div className="relative">
                 <Mail
-                  className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-proofound-forest"
+                  className={`absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 ${accountType === 'organization' ? 'text-proofound-terracotta' : 'text-proofound-forest'}`}
                   aria-hidden="true"
                 />
                 <Input
@@ -204,7 +228,11 @@ export function SignupForm({ accountType, onBack, onComplete }: SignupFormProps)
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="h-11 rounded-xl border border-[#E8E6DD] bg-white pl-12 pr-4 text-[15px] text-[#2D3330] placeholder:text-[#2D3330]/40 transition-all focus-visible:border-2 focus-visible:border-proofound-forest focus-visible:px-[43px] focus-visible:ring-[3px] focus-visible:ring-proofound-forest/10"
+                  className={`h-11 rounded-xl border border-[#E8E6DD] bg-white pl-12 pr-4 text-[15px] text-[#2D3330] placeholder:text-[#2D3330]/40 transition-all focus-visible:border-2 focus-visible:px-[43px] focus-visible:ring-[3px] ${
+                    accountType === 'organization'
+                      ? 'focus-visible:border-proofound-terracotta focus-visible:ring-proofound-terracotta/10'
+                      : 'focus-visible:border-proofound-forest focus-visible:ring-proofound-forest/10'
+                  }`}
                 />
               </div>
             </div>
@@ -214,7 +242,9 @@ export function SignupForm({ accountType, onBack, onComplete }: SignupFormProps)
                 htmlFor="password"
                 className="flex items-center gap-2 text-[13px] font-medium uppercase tracking-[0.08em] text-[#2D3330]"
               >
-                <Lock className="h-4 w-4 text-proofound-forest" />
+                <Lock
+                  className={`h-4 w-4 ${accountType === 'organization' ? 'text-proofound-terracotta' : 'text-proofound-forest'}`}
+                />
                 Password
               </Label>
               <div className="relative">
@@ -228,7 +258,11 @@ export function SignupForm({ accountType, onBack, onComplete }: SignupFormProps)
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={8}
-                  className="h-11 rounded-xl border border-[#E8E6DD] bg-white pl-12 pr-12 text-[15px] text-[#2D3330] placeholder:text-[#2D3330]/40 transition-all focus-visible:border-2 focus-visible:border-proofound-forest focus-visible:px-[43px] focus-visible:ring-[3px] focus-visible:ring-proofound-forest/10"
+                  className={`h-11 rounded-xl border border-[#E8E6DD] bg-white pl-12 pr-12 text-[15px] text-[#2D3330] placeholder:text-[#2D3330]/40 transition-all focus-visible:border-2 focus-visible:px-[43px] focus-visible:ring-[3px] ${
+                    accountType === 'organization'
+                      ? 'focus-visible:border-proofound-terracotta focus-visible:ring-proofound-terracotta/10'
+                      : 'focus-visible:border-proofound-forest focus-visible:ring-proofound-forest/10'
+                  }`}
                 />
                 <button
                   type="button"
@@ -246,7 +280,9 @@ export function SignupForm({ accountType, onBack, onComplete }: SignupFormProps)
                 htmlFor="confirm-password"
                 className="flex items-center gap-2 text-[13px] font-medium uppercase tracking-[0.08em] text-[#2D3330]"
               >
-                <Lock className="h-4 w-4 text-proofound-forest" />
+                <Lock
+                  className={`h-4 w-4 ${accountType === 'organization' ? 'text-proofound-terracotta' : 'text-proofound-forest'}`}
+                />
                 Confirm password
               </Label>
               <Input
@@ -259,13 +295,21 @@ export function SignupForm({ accountType, onBack, onComplete }: SignupFormProps)
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 minLength={8}
-                className="h-11 rounded-xl border border-[#E8E6DD] bg-white px-4 text-[15px] text-[#2D3330] placeholder:text-[#2D3330]/40 transition-all focus-visible:border-2 focus-visible:border-proofound-forest focus-visible:px-[15px] focus-visible:ring-[3px] focus-visible:ring-proofound-forest/10"
+                className={`h-11 rounded-xl border border-[#E8E6DD] bg-white px-4 text-[15px] text-[#2D3330] placeholder:text-[#2D3330]/40 transition-all focus-visible:border-2 focus-visible:px-[15px] focus-visible:ring-[3px] ${
+                  accountType === 'organization'
+                    ? 'focus-visible:border-proofound-terracotta focus-visible:ring-proofound-terracotta/10'
+                    : 'focus-visible:border-proofound-forest focus-visible:ring-proofound-forest/10'
+                }`}
               />
             </div>
 
             <Button
               type="submit"
-              className="w-full rounded-xl bg-proofound-forest py-[14px] text-[15px] font-semibold tracking-[0.01em] text-white shadow-sm transition-all hover:-translate-y-[1px] hover:bg-[#2D5D4A] hover:shadow-md disabled:bg-[#E8E6DD] disabled:text-[#2D3330]/40"
+              className={`w-full rounded-xl py-[14px] text-[15px] font-semibold tracking-[0.01em] text-white shadow-sm transition-all hover:-translate-y-[1px] hover:shadow-md disabled:bg-[#E8E6DD] disabled:text-[#2D3330]/40 ${
+                accountType === 'organization'
+                  ? 'bg-proofound-terracotta hover:bg-[#B5673F]'
+                  : 'bg-proofound-forest hover:bg-[#2D5D4A]'
+              }`}
               size="lg"
               disabled={isLoading}
             >
@@ -276,7 +320,7 @@ export function SignupForm({ accountType, onBack, onComplete }: SignupFormProps)
           {/* Divider */}
           <div className="relative my-6">
             <Separator className="bg-[#E8E6DD]" />
-            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-4 text-xs font-medium uppercase tracking-[0.16em] text-[#2D333099]">
+            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-4 text-center text-xs font-medium uppercase tracking-[0.16em] text-[#2D333099]">
               Or continue with
             </span>
           </div>
@@ -291,7 +335,11 @@ export function SignupForm({ accountType, onBack, onComplete }: SignupFormProps)
               <button
                 type="button"
                 onClick={() => router.push('/login')}
-                className="font-medium text-proofound-forest hover:text-[#2D5D4A] hover:underline"
+                className={`font-medium hover:underline ${
+                  accountType === 'organization'
+                    ? 'text-proofound-terracotta hover:text-[#B5673F]'
+                    : 'text-proofound-forest hover:text-[#2D5D4A]'
+                }`}
               >
                 Sign in
               </button>
@@ -304,14 +352,22 @@ export function SignupForm({ accountType, onBack, onComplete }: SignupFormProps)
           By creating an account, you agree to our{' '}
           <a
             href="/terms"
-            className="font-medium text-proofound-forest underline underline-offset-2 hover:text-[#2D5D4A]"
+            className={`font-medium underline underline-offset-2 ${
+              accountType === 'organization'
+                ? 'text-proofound-terracotta hover:text-[#B5673F]'
+                : 'text-proofound-forest hover:text-[#2D5D4A]'
+            }`}
           >
             Terms of Service
           </a>{' '}
           and{' '}
           <a
             href="/privacy"
-            className="font-medium text-proofound-forest underline underline-offset-2 hover:text-[#2D5D4A]"
+            className={`font-medium underline underline-offset-2 ${
+              accountType === 'organization'
+                ? 'text-proofound-terracotta hover:text-[#B5673F]'
+                : 'text-proofound-forest hover:text-[#2D5D4A]'
+            }`}
           >
             Privacy Policy
           </a>
