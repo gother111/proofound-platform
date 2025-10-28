@@ -9,7 +9,7 @@ export const metadata = {
 
 export default async function LoginPage() {
   // Check if user is already logged in
-  const supabase = await createClient();
+  const supabase = await createClient({ allowCookieWrite: true });
   const {
     data: { user },
   } = await supabase.auth.getUser();

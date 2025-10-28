@@ -7,7 +7,7 @@ export async function GET() {
     return NextResponse.json({ ok: false }, { status: 404 });
   }
 
-  const supabase = await createClient();
+  const supabase = await createClient({ allowCookieWrite: true });
   const path = await resolveUserHomePath(supabase);
 
   return NextResponse.json({ path });
