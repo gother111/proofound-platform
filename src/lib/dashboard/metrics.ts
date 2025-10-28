@@ -1,5 +1,7 @@
 'use server';
 
+import { eq } from 'drizzle-orm';
+
 import { calculateProfileCompletion } from '@/lib/profileStorage';
 import { getProfileData } from '@/actions/profile';
 import { requireAuth } from '@/lib/auth';
@@ -35,14 +37,14 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
         verificationStatus: capabilities.verificationStatus,
       })
       .from(capabilities)
-      .where((table, { eq }) => eq(table.profileId, user.id)),
+      .where(eq(capabilities.profileId, user.id)),
     db
       .select({
         score: matches.score,
         vector: matches.vector,
       })
       .from(matches)
-      .where((table, { eq }) => eq(table.profileId, user.id)),
+      .where(eq(matches.profileId, user.id)),
     profileDataPromise,
   ]);
 
