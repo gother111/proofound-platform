@@ -44,7 +44,36 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
       if (authError) throw authError;
 
       if (authData.user) {
-        router.push('/app/i/home');
+        // Query the user's profile to determine where to redirect
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('persona')
+          .eq('id', authData.user.id)
+          .maybeSingle();
+
+        // Redirect based on persona
+        if (profile?.persona === 'individual') {
+          router.push('/app/i/home');
+        } else if (profile?.persona === 'org_member') {
+          // Get the user's first organization
+          const { data: orgMemberships } = await supabase
+            .from('organization_members')
+            .select('org:organizations(slug)')
+            .eq('user_id', authData.user.id)
+            .eq('status', 'active')
+            .limit(1);
+
+          const firstOrg = orgMemberships?.[0]?.org as { slug: string } | null;
+          if (firstOrg?.slug) {
+            router.push(`/app/o/${firstOrg.slug}/home`);
+          } else {
+            // Organization member but no organization found
+            router.push('/onboarding');
+          }
+        } else {
+          // No persona set or unknown persona - send to onboarding
+          router.push('/onboarding');
+        }
         router.refresh();
       }
     } catch (err) {
