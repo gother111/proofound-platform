@@ -1,21 +1,36 @@
+'use client';
+
 import { Target, Plus } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useState } from 'react';
 
 export function GoalsCard() {
+  const [isHovered, setIsHovered] = useState(false);
+
   return (
-    <Card className="p-4 border border-proofound-stone dark:border-border bg-white dark:bg-card rounded-2xl">
-      <h5 className="text-sm font-['Crimson_Pro'] font-medium mb-3 text-proofound-charcoal dark:text-foreground">
-        Goals
-      </h5>
+    <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+      <div className="flex items-center justify-between mb-3">
+        <h5 className="text-sm" style={{ color: '#2D3330' }}>
+          Goals
+        </h5>
+      </div>
       <div className="text-center py-6">
-        <Target className="w-10 h-10 mx-auto mb-2 text-proofound-stone dark:text-muted-foreground" />
-        <p className="text-xs mb-3 text-proofound-charcoal/70 dark:text-muted-foreground">
-          Set one meaningful goal for the week.
+        <Target className="w-10 h-10 mx-auto mb-2" style={{ color: '#E8E6DD' }} />
+        <p className="text-xs mb-3" style={{ color: '#6B6760' }}>
+          Show your proofs. Add one verified reference and link one artifact. You&apos;ll unlock
+          stronger matches immediately.
         </p>
         <Button
           size="sm"
-          className="h-7 text-xs bg-proofound-forest hover:bg-proofound-forest/90 text-white rounded-full"
+          className="h-7 text-xs"
+          style={{
+            backgroundColor: isHovered ? '#2D5F4A' : '#1C4D3A',
+            color: '#F7F6F1',
+            transition: 'background-color 200ms',
+          }}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
         >
           <Plus className="w-3 h-3 mr-1" />
           Create Goal

@@ -4,9 +4,11 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FolderKanban } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 export function ProjectsCard() {
   const router = useRouter();
+  const [isHovered, setIsHovered] = useState(false);
 
   // TODO: Replace with actual data fetching from database
   // For now, always show empty state
@@ -29,7 +31,13 @@ export function ProjectsCard() {
           <Button
             size="sm"
             className="h-7 text-xs"
-            style={{ backgroundColor: '#1C4D3A', color: '#F7F6F1' }}
+            style={{
+              backgroundColor: isHovered ? '#2D5F4A' : '#1C4D3A',
+              color: '#F7F6F1',
+              transition: 'background-color 200ms',
+            }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
             onClick={() => router.push('/app/i/opportunities')}
           >
             Explore

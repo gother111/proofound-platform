@@ -11,6 +11,7 @@ type ExploreTab = 'people' | 'projects' | 'partners';
 export function ExploreCard() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<ExploreTab>('people');
+  const [isHovered, setIsHovered] = useState(false);
 
   // TODO: Replace with actual data fetching from database
   // For now, always show empty state
@@ -33,7 +34,13 @@ export function ExploreCard() {
           <Button
             size="sm"
             className="h-7 text-xs"
-            style={{ backgroundColor: '#1C4D3A', color: '#F7F6F1' }}
+            style={{
+              backgroundColor: isHovered ? '#2D5F4A' : '#1C4D3A',
+              color: '#F7F6F1',
+              transition: 'background-color 200ms',
+            }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
             onClick={() => router.push('/app/i/opportunities')}
           >
             Start exploring
