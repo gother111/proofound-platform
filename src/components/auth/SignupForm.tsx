@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import SocialSignInButtons from '@/components/auth/social-sign-in-buttons';
+import { NetworkBackground } from '@/components/NetworkBackground';
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, Building2, User, CheckCircle2 } from 'lucide-react';
 
 interface SignupFormProps {
@@ -73,49 +74,42 @@ export function SignupForm({ accountType, onBack, onComplete }: SignupFormProps)
 
   if (success) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6 relative overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-20 dark:opacity-10">
-          <svg className="w-full h-full">
-            <defs>
-              <pattern
-                id="success-pattern"
-                x="0"
-                y="0"
-                width="60"
-                height="60"
-                patternUnits="userSpaceOnUse"
-              >
-                <circle cx="30" cy="30" r="2" fill="currentColor" className="text-sage" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#success-pattern)" />
-          </svg>
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#F7F6F1] px-6 py-16 text-[#2D3330]">
+        <div className="pointer-events-none absolute inset-0 opacity-60">
+          <NetworkBackground />
         </div>
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(28,77,58,0.08),transparent_55%),radial-gradient(circle_at_85%_80%,rgba(199,107,74,0.07),transparent_65%)]" />
 
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-md relative z-10"
+          className="relative z-10 w-full max-w-md px-4"
         >
-          <Card className="p-8 text-center">
+          <Card className="mx-auto rounded-[24px] border border-[#E8E6DD] bg-white/95 p-10 text-center shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: 'spring' }}
-              className="w-16 h-16 mx-auto mb-6 rounded-full bg-gradient-to-br from-sage to-teal flex items-center justify-center"
+              className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-proofound-forest shadow-[0_8px_18px_rgba(28,77,58,0.28)]"
             >
-              <CheckCircle2 className="w-8 h-8 text-white" />
+              <CheckCircle2 className="h-8 w-8 text-white" />
             </motion.div>
-            <h2 className="text-2xl font-display font-semibold mb-2">Check your email</h2>
-            <p className="text-muted-foreground mb-6">
-              We&apos;ve sent a verification link to <strong>{email}</strong>
+            <h2 className="font-display text-2xl font-semibold tracking-tight text-[#2D3330]">
+              Check your email
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-[#2D333099]">
+              We&apos;ve sent a verification link to{' '}
+              <span className="font-medium text-proofound-forest">{email}</span>
             </p>
-            <p className="text-sm text-muted-foreground">
+            <p className="mt-4 text-sm leading-6 text-[#2D333099]">
               Click the link in the email to verify your account and complete your registration.
             </p>
-            <Button onClick={() => router.push('/login')} variant="outline" className="mt-6">
-              Return to Login
+            <Button
+              onClick={() => router.push('/login')}
+              variant="outline"
+              className="mt-6 border-[#E8E6DD] text-proofound-forest hover:border-proofound-forest hover:bg-proofound-forest/5"
+            >
+              Return to login
             </Button>
           </Card>
         </motion.div>
@@ -124,60 +118,11 @@ export function SignupForm({ accountType, onBack, onComplete }: SignupFormProps)
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-6 relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-20 dark:opacity-10">
-        <svg className="w-full h-full">
-          <defs>
-            <pattern
-              id="signup-form-pattern"
-              x="0"
-              y="0"
-              width="60"
-              height="60"
-              patternUnits="userSpaceOnUse"
-            >
-              <circle cx="30" cy="30" r="2" fill="currentColor" className="text-sage" />
-              <path
-                d="M 30 30 L 45 45 M 30 30 L 15 15"
-                stroke="currentColor"
-                strokeWidth="0.5"
-                className="text-sage"
-                opacity="0.3"
-              />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#signup-form-pattern)" />
-        </svg>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#F7F6F1] px-6 py-16 text-[#2D3330]">
+      <div className="pointer-events-none absolute inset-0 opacity-60">
+        <NetworkBackground />
       </div>
-
-      {/* Floating Shapes */}
-      <motion.div
-        className="absolute top-20 left-20 w-32 h-32 rounded-full bg-gradient-to-br from-sage/10 to-teal/10 blur-3xl"
-        animate={{
-          x: [0, 30, 0],
-          y: [0, -20, 0],
-          scale: [1, 1.2, 1],
-        }}
-        transition={{
-          duration: 8,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
-      />
-      <motion.div
-        className="absolute bottom-20 right-20 w-40 h-40 rounded-full bg-gradient-to-br from-proofound-terracotta/10 to-ochre/10 blur-3xl"
-        animate={{
-          x: [0, -20, 0],
-          y: [0, 30, 0],
-          scale: [1, 1.1, 1],
-        }}
-        transition={{
-          duration: 10,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
-      />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(28,77,58,0.08),transparent_55%),radial-gradient(circle_at_85%_80%,rgba(199,107,74,0.07),transparent_65%)]" />
 
       {/* Back Button */}
       {onBack && (
@@ -185,7 +130,7 @@ export function SignupForm({ accountType, onBack, onComplete }: SignupFormProps)
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           onClick={onBack}
-          className="absolute top-6 left-6 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+          className="absolute left-6 top-6 flex items-center gap-2 text-[#2D333099] transition-colors hover:text-[#2D3330]"
         >
           <ArrowLeft className="w-4 h-4" />
           <span className="text-sm">Back</span>
@@ -197,9 +142,9 @@ export function SignupForm({ accountType, onBack, onComplete }: SignupFormProps)
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md relative z-10"
+        className="relative z-10 w-full max-w-md px-4"
       >
-        <Card className="p-8 backdrop-blur-sm bg-card/95">
+        <Card className="mx-auto rounded-[24px] border border-[#E8E6DD] bg-white/95 p-10 shadow-[0_4px_24px_rgba(29,51,48,0.08)] backdrop-blur">
           {/* Logo/Title */}
           <div className="text-center mb-8">
             <motion.div
@@ -208,19 +153,19 @@ export function SignupForm({ accountType, onBack, onComplete }: SignupFormProps)
               transition={{ delay: 0.2 }}
               className="mb-4"
             >
-              <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-proofound-forest to-sage flex items-center justify-center">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-proofound-forest shadow-[0_8px_18px_rgba(28,77,58,0.28)]">
                 {accountType === 'individual' ? (
-                  <User className="w-8 h-8 text-white" />
+                  <User className="h-8 w-8 text-white" />
                 ) : (
-                  <Building2 className="w-8 h-8 text-white" />
+                  <Building2 className="h-8 w-8 text-white" />
                 )}
               </div>
             </motion.div>
-            <h1 className="text-2xl font-display font-semibold text-foreground mb-2">
+            <h1 className="font-display text-[28px] font-semibold leading-9 tracking-[-0.01em] text-[#2D3330]">
               Create your {accountType} account
             </h1>
-            <p className="text-sm text-muted-foreground">
-              Join Proofound and start building credibility
+            <p className="mt-3 text-sm leading-6 text-[#2D333099]">
+              Join Proofound and start building credibility.
             </p>
           </div>
 
@@ -229,34 +174,47 @@ export function SignupForm({ accountType, onBack, onComplete }: SignupFormProps)
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-6 rounded-lg bg-destructive/10 border border-destructive/20 p-4"
+              className="mb-6 rounded-2xl border border-[#B5542D]/25 bg-[#B5542D]/10 px-4 py-3"
             >
-              <p className="text-sm text-destructive font-medium">{error}</p>
+              <p className="text-sm font-medium text-[#8A3F21]">{error}</p>
             </motion.div>
           )}
 
           {/* Signup Form */}
-          <form onSubmit={onSubmit} className="space-y-5">
+          <form onSubmit={onSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email" className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-muted-foreground" />
+              <Label
+                htmlFor="email"
+                className="flex items-center gap-2 text-[13px] font-medium uppercase tracking-[0.08em] text-[#2D3330]"
+              >
+                <Mail className="h-4 w-4 text-proofound-forest" />
                 Email address
               </Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                autoComplete="email"
-                disabled={isLoading}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+              <div className="relative">
+                <Mail
+                  className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-proofound-forest"
+                  aria-hidden="true"
+                />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                  disabled={isLoading}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="h-11 rounded-xl border border-[#E8E6DD] bg-white pl-12 pr-4 text-[15px] text-[#2D3330] placeholder:text-[#2D3330]/40 transition-all focus-visible:border-2 focus-visible:border-proofound-forest focus-visible:px-[43px] focus-visible:ring-[3px] focus-visible:ring-proofound-forest/10"
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="flex items-center gap-2">
-                <Lock className="w-4 h-4 text-muted-foreground" />
+              <Label
+                htmlFor="password"
+                className="flex items-center gap-2 text-[13px] font-medium uppercase tracking-[0.08em] text-[#2D3330]"
+              >
+                <Lock className="h-4 w-4 text-proofound-forest" />
                 Password
               </Label>
               <div className="relative">
@@ -270,11 +228,12 @@ export function SignupForm({ accountType, onBack, onComplete }: SignupFormProps)
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={8}
+                  className="h-11 rounded-xl border border-[#E8E6DD] bg-white pl-12 pr-12 text-[15px] text-[#2D3330] placeholder:text-[#2D3330]/40 transition-all focus-visible:border-2 focus-visible:border-proofound-forest focus-visible:px-[43px] focus-visible:ring-[3px] focus-visible:ring-proofound-forest/10"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#2D333099] transition-colors hover:text-[#2D3330]"
                   tabIndex={-1}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -283,8 +242,11 @@ export function SignupForm({ accountType, onBack, onComplete }: SignupFormProps)
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirm-password" className="flex items-center gap-2">
-                <Lock className="w-4 h-4 text-muted-foreground" />
+              <Label
+                htmlFor="confirm-password"
+                className="flex items-center gap-2 text-[13px] font-medium uppercase tracking-[0.08em] text-[#2D3330]"
+              >
+                <Lock className="h-4 w-4 text-proofound-forest" />
                 Confirm password
               </Label>
               <Input
@@ -297,18 +259,24 @@ export function SignupForm({ accountType, onBack, onComplete }: SignupFormProps)
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 minLength={8}
+                className="h-11 rounded-xl border border-[#E8E6DD] bg-white px-4 text-[15px] text-[#2D3330] placeholder:text-[#2D3330]/40 transition-all focus-visible:border-2 focus-visible:border-proofound-forest focus-visible:px-[15px] focus-visible:ring-[3px] focus-visible:ring-proofound-forest/10"
               />
             </div>
 
-            <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
-              {isLoading ? 'Creating account...' : 'Create account'}
+            <Button
+              type="submit"
+              className="w-full rounded-xl bg-proofound-forest py-[14px] text-[15px] font-semibold tracking-[0.01em] text-white shadow-sm transition-all hover:-translate-y-[1px] hover:bg-[#2D5D4A] hover:shadow-md disabled:bg-[#E8E6DD] disabled:text-[#2D3330]/40"
+              size="lg"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Creating account…' : 'Create account'}
             </Button>
           </form>
 
           {/* Divider */}
           <div className="relative my-6">
-            <Separator />
-            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
+            <Separator className="bg-[#E8E6DD]" />
+            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-4 text-xs font-medium uppercase tracking-[0.16em] text-[#2D333099]">
               Or continue with
             </span>
           </div>
@@ -318,12 +286,12 @@ export function SignupForm({ accountType, onBack, onComplete }: SignupFormProps)
 
           {/* Sign In Link */}
           <div className="mt-6 text-center">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-[#2D333099]">
               Already have an account?{' '}
               <button
                 type="button"
                 onClick={() => router.push('/login')}
-                className="text-primary hover:underline font-medium"
+                className="font-medium text-proofound-forest hover:text-[#2D5D4A] hover:underline"
               >
                 Sign in
               </button>
@@ -332,13 +300,19 @@ export function SignupForm({ accountType, onBack, onComplete }: SignupFormProps)
         </Card>
 
         {/* Footer Text */}
-        <p className="mt-6 text-center text-xs text-muted-foreground">
+        <p className="mt-6 text-center text-xs text-[#2D333099]">
           By creating an account, you agree to our{' '}
-          <a href="/terms" className="underline hover:text-foreground">
+          <a
+            href="/terms"
+            className="font-medium text-proofound-forest underline underline-offset-2 hover:text-[#2D5D4A]"
+          >
             Terms of Service
           </a>{' '}
           and{' '}
-          <a href="/privacy" className="underline hover:text-foreground">
+          <a
+            href="/privacy"
+            className="font-medium text-proofound-forest underline underline-offset-2 hover:text-[#2D5D4A]"
+          >
             Privacy Policy
           </a>
         </p>
