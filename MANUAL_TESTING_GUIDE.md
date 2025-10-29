@@ -1,396 +1,304 @@
 # 🧪 Manual Testing Guide
 
-This guide provides step-by-step instructions for testing all major user flows in the Proofound platform.
+This living guide walks you through every Proofound flow so you can confirm the redesigned experience still works end to end.
 
-## Prerequisites
+## Prerequisites & Environment
 
-- Local development server running (`npm run dev`)
-- Supabase connection configured
-- Email service configured for verification emails
+- 🪄 DO THIS MANUALLY: In your terminal run `npm install` (first time) and `npm run dev` (every session). The development server must stay on during testing.
+- Supabase project configured with the latest migrations and policies from `src/db/*`.
+- Resend (or another email provider) set up so verification and reset links arrive.
+- Browser with private/incognito mode for clean sessions (Chrome preferred).
 
-## Test User Credentials
+## Test Accounts & Naming
 
-Create test users with pattern: `test-individual-1@example.com`, `test-org-1@example.com`, etc.
-Password: Use a strong test password (min 8 characters)
-
----
-
-## 1️⃣ Individual User Flow
-
-### A. Signup & Email Verification
-
-1. Navigate to `/signup`
-2. Select "Individual" persona
-3. Enter email and password
-4. Click "Sign up"
-5. **Expected**: Success message, email sent
-6. Check email inbox for verification link
-7. Click verification link
-8. **Expected**: Redirect to onboarding
-
-### B. Individual Onboarding
-
-1. **Expected**: On `/onboarding` page
-2. Fill out profile form:
-   - Display Name: "Test Individual"
-   - Username: "test-individual-1"
-   - Headline: "Test headline"
-   - Bio: "Test bio"
-   - Location: "Test City"
-3. Click "Complete Setup"
-4. **Expected**: Redirect to `/app/i/home`
-
-### C. Dashboard View
-
-1. **Expected**: On individual dashboard
-2. Verify cards display:
-   - Goals Card
-   - Tasks Card
-   - Matching Results Card
-   - Impact Snapshot Card
-3. Navigate using left sidebar:
-   - Home
-   - Profile
-   - Expertise
-   - Zen Hub
-   - Matching
-   - Settings
-
-### D. Profile Editing
-
-1. Navigate to `/app/i/profile`
-2. **Expected**: Editable profile view loads
-3. Test editing basic info:
-   - Click edit button
-   - Change display name
-   - Update tagline
-   - Change location
-   - Click save
-   - **Expected**: Changes persist after page refresh
-4. Test mission statement:
-   - Add/edit mission
-   - Click save
-   - **Expected**: Persists after refresh
-5. Test values:
-   - Add new values
-   - Remove values
-   - Click save
-   - **Expected**: Changes persist
-6. Test causes:
-   - Add causes
-   - Remove causes
-   - Click save
-   - **Expected**: Changes persist
-7. Test skills:
-   - Add skills
-   - Remove skills
-   - Click save
-   - **Expected**: Changes persist
-
-### E. Matching Profile Setup
-
-1. Navigate to `/app/i/matching`
-2. **Expected**: Matching profile setup form
-3. Fill out form:
-   - Location: Country, City
-   - Work mode: Remote/Onsite/Hybrid
-   - Availability: Date range
-   - Compensation: Min/Max, Currency
-   - Skills: Add required skills with levels
-   - Values: Select values
-   - Causes: Select causes
-4. Click "Save Preferences"
-5. **Expected**: Redirect to matches view or setup complete message
-6. Navigate away and back
-7. **Expected**: Form shows saved data
+- Use repeatable emails like `test-individual-1@example.com`, `test-org-owner@example.com`, `test-org-invitee@example.com`.
+- Passwords must be at least 8 characters; store them in your secure notes so you can reuse accounts.
+- Keep a persona cheat-sheet while testing:
+  - `individual` → lands in `/app/i/*` routes.
+  - `org_member` → lands in `/app/o/<slug>/*` routes.
 
 ---
 
-## 2️⃣ Organization User Flow
+## 1️⃣ Individual Journey (Primary Persona)
 
-### A. Signup & Email Verification
+### A. Multi-Step Signup & Email Verification
 
-1. Navigate to `/signup`
-2. Select "Organization" persona
-3. Enter email and password
-4. Click "Sign up"
-5. **Expected**: Success message, email sent
-6. Verify email (same as individual flow)
+1. Visit `/signup` and choose the **Individual** card.
+2. Complete the email + password form (three-step flow, matching the sage theme).
+3. Submit and verify you see the “Check your email” success state.
+4. 🪄 DO THIS MANUALLY: Open the inbox for the test email, click the Supabase verification link. If email routing is disabled locally, confirm the user in Supabase Auth and trigger verification manually.
+5. Expected ✅: After clicking the link, the browser redirects to `/onboarding`.
+
+### B. Individual Onboarding Flow
+
+1. Confirm the persona selector shows **Individual** pre-selected.
+2. Complete the profile form:
+   - Display name, handle, headline, location, values, causes.
+3. Submit the form.
+4. Expected ✅: Automatic redirect to `/app/i/home` with a welcome toast (if enabled).
+
+### C. Dashboard & Navigation
+
+1. Check `LeftNav` items match Figma order: Dashboard, Profile, Matching, Expertise, Zen Hub, Settings.
+2. Collapse the nav to verify tooltips, then expand again.
+3. Confirm TopBar renders the square logo, separator, search, customize button, avatar.
+4. Ensure the dashboard grid shows these empty-state cards: Goals, Tasks, Projects, Matching Results (2 columns), Impact Snapshot, Explore (full width).
+5. Open **Customize** → toggle a widget → close → refresh. Expected ✅: Hidden cards stay hidden.
+
+### D. Profile Management (`/app/i/profile`)
+
+1. Edit “About” fields (display name, tagline, location) and save.
+2. Add content to each tab:
+   - Impact story
+   - Journey (work experience or education)
+   - Service (volunteering)
+3. Refresh to confirm data persists and empty states disappear when at least one record exists.
+4. Check values & causes chips: add, remove, re-add.
+5. Expected ✅: No console errors; toasts or inline validation appear for invalid inputs.
+
+### E. Matching Setup & Results (`/app/i/matching`)
+
+1. With a fresh account, confirm the **IndividualMatchingEmpty** screen shows and `Start matching` opens the setup wizard.
+2. Complete every step: location, work mode, availability, compensation, languages, values/causes, skills with levels.
+3. Submit and expect a success confirmation plus redirect back to `/app/i/matching`.
+4. Reload the page: saved data should pre-fill.
+5. Trigger “Mark interested” on a match; confirm the toast and see the request appear in the network tab.
+6. Hide a match and ensure it disappears from the list.
+
+### F. Expertise Atlas (`/app/i/expertise`)
+
+1. Ensure the page loads with parchment background and gradient header.
+2. Toggle persona between **Individual** and **Organization**; verify copy swaps accordingly.
+3. Check the “Capability signals” cards and progress bars render.
+4. Click “Export proof map” to confirm the button triggers a request (or placeholder toast if not yet wired).
+
+### G. Zen Hub (`/app/i/zen`)
+
+1. Confirm the theme toggle flips between light and dark without affecting the rest of the site.
+2. Change the risk pill and ensure the guidance copy updates.
+3. Switch device view (Desktop/Mobile) and confirm the button states.
+4. Select several quick practices and verify the detailed card updates instantly.
+
+### H. Settings, Session Persistence & Sign-Out (`/app/i/settings`)
+
+1. Check account email, language selector, notification placeholders.
+2. Change language (e.g., Svenska) and ensure UI strings update where translations exist.
+3. Close the tab, reopen `/app/i/home` and confirm you remain logged in.
+4. Use the avatar menu → Sign out. Expected ✅: Redirect to `/login`.
+
+---
+
+## 2️⃣ Organization Journey (Owner Persona)
+
+### A. Multi-Step Signup & Verification
+
+1. Repeat the signup flow choosing the **Organization** card.
+2. Confirm terracotta theme styling and role-specific copy.
+3. After verification, expect redirect to `/onboarding` with the organization path selected.
 
 ### B. Organization Onboarding
 
-1. **Expected**: On `/onboarding` page
-2. Fill out organization form:
-   - Organization Name: "Test Organization"
-   - Slug: "test-org-1"
-   - Type: Select from dropdown
-   - Legal Name: "Test Organization Inc."
-   - Mission: "Test mission statement"
-   - Website: "https://example.com"
-3. Click "Create Organization"
-4. **Expected**: Redirect to `/app/o/test-org-1/home`
+1. Fill in the form: organization name, slug, type, legal name, mission, website.
+2. Submit and capture any validation errors (e.g., duplicate slug).
+3. Expected ✅: Redirect to `/app/o/<slug>/home` and membership role set to **Owner**.
 
-### C. Organization Dashboard
+### C. Organization Dashboard & Navigation
 
-1. **Expected**: On organization dashboard
-2. Verify organization-specific cards display
-3. Test navigation using left sidebar
-4. Check team roles card shows you as Owner
+1. Verify the dashboard mirrors the individual layout except the third row card is **Team** instead of Impact.
+2. Check nav order: Dashboard, Profile, Projects, Matching, Members, Opportunities, Settings.
+3. Toggle Customize → hide a widget → refresh. Preferences should stick per organization.
 
-### D. Organization Profile
+### D. Org Profile editing (`/app/o/<slug>/profile`)
 
-1. Navigate to `/app/o/test-org-1/profile`
-2. Edit organization details:
-   - Update display name
-   - Update mission
-   - Update website
-   - Click save
-   - **Expected**: Changes persist
+1. Update mission, website, and highlight fields.
+2. Upload/change logo if file storage is configured.
+3. Expected ✅: Data persists; non-owners see fields as read-only.
 
-### E. Assignment Creation
+### E. Team Management & Invitations (`/app/o/<slug>/members`)
 
-1. Navigate to `/app/o/test-org-1/matching`
-2. Click "Create Assignment"
-3. Fill out assignment form:
-   - Role: "Software Engineer"
-   - Description: "Test description"
-   - Required skills: Add skills
-   - Location: Set location
-   - Compensation: Set range
-   - Start date: Set availability
-4. Click "Create Assignment"
-5. **Expected**: Assignment saves, shows in list
-6. **Database Check**: Query `assignments` table to verify
+1. As owner/admin, invite a new member with role **Member**.
+2. 🪄 DO THIS MANUALLY: In Supabase → `org_invitations`, copy the invite token.
+3. Open a fresh browser profile, log in as the invitee, and visit `/app/o/<slug>/invitations/<token>`.
+4. Accept the invitation; expected redirect to `/app/o/<slug>/home` with role badge displayed.
+5. Back as the owner, remove the member using the inline action and confirm they disappear.
+
+### F. Assignment Builder & Matching (`/app/o/<slug>/matching`)
+
+1. With zero assignments, confirm the **OrganizationMatchingEmpty** screen.
+2. Start the builder, complete each step (role, scope, requirements, compensation, values, timeline).
+3. Submit and expect a success toast plus new card in the assignments list.
+4. Open an assignment and ensure candidate matches load.
+5. Toggle “Create new assignment” to re-open the builder.
+
+### G. Organization Settings (`/app/o/<slug>/settings`)
+
+1. Confirm audit logs, billing placeholders, and feature flag toggles (if surfaced) load without error.
+2. Validate permissions: viewers should be blocked from settings.
 
 ---
 
-## 3️⃣ Authentication Flows
+## 3️⃣ Shared Authentication & Account Maintenance
 
-### A. Login
+### A. Email/Password Login
 
-1. Log out from current session
-2. Navigate to `/login`
-3. Enter test user email and password
-4. Click "Sign in"
-5. **Expected**: Redirect to appropriate home based on persona
-   - Individual: `/app/i/home`
-   - Org member: `/app/o/{slug}/home`
+1. Log out, go to `/login`, and sign in with each persona account.
+2. Expected ✅: Individuals route to `/app/i/home`, org members to `/app/o/<slug>/home`, admins to `/admin` (if flagged).
 
-### B. Social Login (Google)
+### B. Google OAuth
 
-1. On `/login` page
-2. Click "Continue with Google"
-3. Complete Google OAuth flow
-4. **Expected**: Redirect to onboarding (new user) or home (existing user)
+1. From `/login`, click **Continue with Google**.
+2. Complete the OAuth consent.
+3. Expected ✅: New Google users land in onboarding; returning users go straight to their saved home.
 
-### C. Password Reset
+### C. Password Reset Flow
 
-1. Navigate to `/reset-password`
-2. Enter email address
-3. Click "Send reset link"
-4. **Expected**: Success message
-5. Check email for reset link
-6. Click link
-7. Enter new password
-8. **Expected**: Redirect to login
+1. Use `/reset-password` to request a link.
+2. 🪄 DO THIS MANUALLY: Fetch the reset email and open the link.
+3. Set a new password; confirm redirect to `/login` and that you can sign in with the new credential.
 
-### D. Session Persistence
+### D. Session Hardening
 
-1. Log in as test user
-2. Close browser tab
-3. Reopen and navigate to `/app/i/home` (or org home)
-4. **Expected**: Still logged in, no redirect to login
+1. Log in, clear cookies manually, reload to confirm redirect to `/login`.
+2. Repeat on a different browser to ensure Supabase session revocation works as expected.
 
 ---
 
-## 4️⃣ Settings Pages
+## 4️⃣ UI & Visual QA (Figma Alignment)
 
-### A. Individual Settings
+- [ ] TopBar: square logo, separator, search, customize button, avatar with forest palette.
+- [ ] LeftNav: matches icon order, hover background `rgba(232, 230, 221, 0.5)`, active background `#1C4D3A`.
+- [ ] Dashboard cards: border `rgba(232, 230, 221, 0.6)`, buttons sized `h-7 text-xs`, hover color `#2D5F4A`.
+- [ ] Parchment background `#F7F6F1` across `/app/i/*` and `/app/o/*` layouts.
+- [ ] Dark mode: toggle via Zen Hub and confirm other pages still look correct when `class="dark"` is on `<html>`.
+- [ ] Animations: framer-motion transitions feel smooth (no jump cuts).
 
-1. Navigate to `/app/i/settings`
-2. Verify displays:
-   - Email address
-   - Language selector
-   - Notification preferences (if implemented)
-3. Test language change:
-   - Select different language
-   - **Expected**: UI updates (if i18n implemented)
+### Loading & Empty States
 
-### B. Organization Settings
+- [ ] Skeletons or “Loading…” placeholders show during fetches on matching and assignments.
+- [ ] Empty states include contextual CTAs (“Start exploring”, “Create assignment”).
+- [ ] Error toasts appear if API calls fail (simulate network offline in DevTools).
 
-1. Navigate to `/app/o/{slug}/settings`
-2. Verify displays:
-   - Organization details
-   - Audit log (if implemented)
-   - Member management (if implemented)
-3. Only owners/admins should see certain sections
-4. **Expected**: Proper permission enforcement
+### Responsive Checks
+
+- [ ] 375px mobile: LeftNav collapses behind the menu button, cards stack vertically.
+- [ ] 768px tablet: Two-column grids shrink gracefully, typography remains legible.
+- [ ] 1440px desktop: Cards align to the 3-column grid, no unexpected whitespace.
 
 ---
 
-## 5️⃣ Database Verification
+## 5️⃣ Performance & Observability
 
-After completing each flow, verify data in database using Supabase dashboard or SQL queries:
+- [ ] Home pages load < 1s on warm reload; note any slow cards.
+- [ ] Profile and matching pages load < 2s; watch for slow SQL in Supabase logs.
+- [ ] Network tab: verify no 4xx/5xx responses, check for unnecessary repeated calls.
+- [ ] Console: ensure zero warnings/errors in happy paths.
+- [ ] Monitor `matches` and `assignments` API latency (goal < 500ms).
 
-### After Individual Onboarding:
+---
+
+## 6️⃣ Database Verification Queries
+
+Run these in the Supabase SQL editor (replace placeholders as needed):
+
+### Individual Profile Completion
 
 ```sql
-SELECT p.*, ip.*
+SELECT p.id,
+       p.handle,
+       p.persona,
+       ip.headline,
+       ip.values,
+       ip.causes
 FROM profiles p
-LEFT JOIN individual_profiles ip ON p.id = ip.user_id
+LEFT JOIN individual_profiles ip ON ip.user_id = p.id
 WHERE p.handle = 'test-individual-1';
 ```
 
-**Expected**: Both records exist, handle and display_name set, persona='individual'
+Expected ✅: Persona = `individual`, values/causes populated after onboarding.
 
-### After Organization Onboarding:
-
-```sql
-SELECT o.*, om.*
-FROM organizations o
-LEFT JOIN organization_members om ON o.id = om.org_id
-WHERE o.slug = 'test-org-1';
-```
-
-**Expected**: Organization exists, membership exists with role='owner'
-
-### After Matching Profile Setup:
+### Matching Preferences & Skills
 
 ```sql
-SELECT mp.*, array_agg(s.skill_id) as skills
+SELECT mp.profile_id,
+       mp.city,
+       mp.work_mode,
+       mp.comp_min,
+       json_agg(json_build_object('skill', s.skill_id, 'level', s.level)) AS skills
 FROM matching_profiles mp
-LEFT JOIN skills s ON mp.profile_id = s.profile_id
-WHERE mp.profile_id = '<user_id>'
+LEFT JOIN skills s ON s.profile_id = mp.profile_id
+WHERE mp.profile_id = '<profile_id>'
 GROUP BY mp.profile_id;
 ```
 
-**Expected**: Matching profile exists with all fields populated
+Expected ✅: Preferences saved; skill list matches wizard input.
 
-### After Assignment Creation:
+### Organization Creation & Membership
 
 ```sql
-SELECT a.*
-FROM assignments a
-WHERE a.org_id = '<org_id>'
-ORDER BY a.created_at DESC
-LIMIT 5;
+SELECT o.id,
+       o.slug,
+       o.display_name,
+       om.user_id,
+       om.role
+FROM organizations o
+LEFT JOIN organization_members om ON om.org_id = o.id
+WHERE o.slug = 'test-org-1';
 ```
 
-**Expected**: Assignment exists with all fields populated
+Expected ✅: At least one membership with role `owner`.
+
+### Assignments and Match Cache
+
+```sql
+SELECT a.id,
+       a.role,
+       a.status,
+       a.must_have_skills,
+       COUNT(m.id) AS match_count
+FROM assignments a
+LEFT JOIN matches m ON m.assignment_id = a.id
+WHERE a.org_id = '<org_id>'
+GROUP BY a.id;
+```
+
+Expected ✅: New assignment shows `status = 'draft'` or `active`, and match_count reflects generated matches.
+
+### Invitation Lifecycle
+
+```sql
+SELECT token,
+       email,
+       role,
+       expires_at,
+       accepted_at
+FROM org_invitations
+WHERE email = 'test-org-invitee@example.com'
+ORDER BY created_at DESC
+LIMIT 1;
+```
+
+Expected ✅: `accepted_at` (or membership row) is populated after accepting.
 
 ---
 
-## 6️⃣ Error Scenarios
+## 7️⃣ Error & Edge-Case Scenarios
 
-Test error handling:
-
-### A. Duplicate Data
-
-1. Try to create user with existing email
-2. **Expected**: Clear error message
-3. Try to use existing username/handle
-4. **Expected**: Clear error message
-5. Try to create org with existing slug
-6. **Expected**: Clear error message
-
-### B. Invalid Data
-
-1. Submit forms with invalid data:
-   - Too short password
-   - Invalid email format
-   - Invalid handle format (special chars)
-   - Missing required fields
-2. **Expected**: Clear validation errors
-
-### C. Permission Errors
-
-1. Try to access another org's pages
-2. **Expected**: Permission denied or redirect
-3. Try to edit another user's profile
-4. **Expected**: Permission denied
+- Duplicate email/handle/slug should show inline validation instantly.
+- Submit onboarding with missing required fields → expect helpful errors.
+- Attempt to access `/app/o/other-org/home` as a non-member → expect redirect or 403 page.
+- Trigger rate limiting by rapid login attempts (observe graceful error rather than crash).
+- Disable network mid-submit to confirm retry or error toast behavior.
 
 ---
 
-## 7️⃣ UI/UX Verification
+## 8️⃣ Reporting Issues
 
-### A. Visual Consistency
+Whenever you spot a bug:
 
-- [ ] All pages use Figma color palette (Proofound Forest, Terracotta, etc.)
-- [ ] Headings use Crimson Pro font
-- [ ] Body text uses Inter font
-- [ ] Cards have consistent rounded-2xl corners
-- [ ] Buttons have consistent styling
-- [ ] Dark mode works across all pages
+1. Capture the exact reproduction steps.
+2. Grab console errors (copy the stack) and failed network payloads.
+3. Run the relevant SQL query above to record database state before/after.
+4. Take screenshots or short Looms (especially for visual mismatches).
+5. File an issue with expected vs actual behavior plus environment details.
 
-### B. Loading States
-
-- [ ] Skeleton loaders show while fetching data
-- [ ] Buttons show loading spinners when submitting
-- [ ] No flash of unstyled content
-
-### C. Empty States
-
-- [ ] Dashboard cards show helpful messages when no data
-- [ ] Empty lists have "Get Started" buttons
-- [ ] Clear CTAs guide users to next action
-
-### D. Responsive Design
-
-- [ ] Test on mobile (375px width)
-- [ ] Test on tablet (768px width)
-- [ ] Test on desktop (1440px width)
-- [ ] Left nav collapses on mobile
-- [ ] Cards stack properly on small screens
-
----
-
-## 8️⃣ Performance Checks
-
-### A. Page Load Times
-
-- [ ] Home pages load in < 1 second
-- [ ] Profile pages load in < 2 seconds
-- [ ] No unnecessary re-renders
-- [ ] Images lazy load
-
-### B. Database Queries
-
-- [ ] Check browser DevTools Network tab
-- [ ] Verify no N+1 queries
-- [ ] API responses < 500ms
-
----
-
-## ✅ Success Criteria
-
-All flows pass when:
-
-1. Users can complete signup and onboarding
-2. Data persists correctly in database
-3. All CRUD operations work
-4. RLS policies enforce proper permissions
-5. UI is consistent with Figma design
-6. No console errors during normal usage
-7. Loading and error states display correctly
-8. Responsive design works on all screen sizes
-
----
-
-## 🐛 Reporting Issues
-
-If you find issues during testing:
-
-1. **Note the exact steps to reproduce**
-2. **Check browser console for errors**
-3. **Check network tab for failed requests**
-4. **Query database to verify data state**
-5. **Screenshot the issue**
-6. **Document expected vs actual behavior**
-
-Common issues to watch for:
-
-- RLS policy errors (403 or permission denied)
-- Missing data in database after form submission
-- Broken redirects after form completion
-- Styling inconsistencies
-- Missing loading or error states
+✅ When every checklist above passes (or issues are logged with owners), the release candidate is ready for manual sign-off!
