@@ -161,7 +161,7 @@ export function EmptyOrganizationProfileView({
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Add a tagline</p>
                       <p className="text-xs text-muted-foreground/60">
-                        A brief statement that captures your organization's purpose
+                        A brief statement that captures your organization&apos;s purpose
                       </p>
                     </div>
                   </div>
