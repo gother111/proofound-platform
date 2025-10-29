@@ -310,7 +310,7 @@ export function EmptyOrganizationProfileView({
                   <h3>Mission</h3>
                 </div>
                 <p className="text-sm text-muted-foreground/60 italic">
-                  What is your organization's purpose? What problem are you solving?
+                  What is your organization&apos;s purpose? What problem are you solving?
                 </p>
               </button>
 
@@ -321,7 +321,7 @@ export function EmptyOrganizationProfileView({
                   <h3>Vision</h3>
                 </div>
                 <p className="text-sm text-muted-foreground/60 italic">
-                  What future are you working toward? What's your long-term aspiration?
+                  What future are you working toward? What&apos;s your long-term aspiration?
                 </p>
               </button>
             </div>
@@ -606,8 +606,8 @@ export function EmptyOrganizationProfileView({
 
                 <div className="pt-4 text-xs text-muted-foreground">
                   <p>
-                    💡 Example: "Achieve carbon neutrality by 2030" or "Reach 50% gender parity in
-                    leadership by 2026"
+                    💡 Example: &quot;Achieve carbon neutrality by 2030&quot; or &quot;Reach 50% gender parity in
+                    leadership by 2026&quot;
                   </p>
                 </div>
               </div>
@@ -624,10 +624,10 @@ export function EmptyOrganizationProfileView({
         >
           <Card className="p-6 bg-gradient-to-r from-[#7A9278]/5 via-[#5C8B89]/5 to-[#C67B5C]/5 border-[#7A9278]/20">
             <div className="text-center space-y-3">
-              <p className="text-sm text-muted-foreground">
-                ✨ Transparency builds trust. A complete profile helps stakeholders understand your
-                organization's values, structure, and commitments.
-              </p>
+                <p className="text-sm text-muted-foreground">
+                  ✨ Transparency builds trust. A complete profile helps stakeholders understand your
+                  organization&apos;s values, structure, and commitments.
+                </p>
               <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground/60">
                 <span className="flex items-center gap-1">
                   <Shield className="w-3 h-3" />

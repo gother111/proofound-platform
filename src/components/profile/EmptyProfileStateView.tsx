@@ -302,7 +302,7 @@ export function EmptyProfileStateView({
               </div>
               <div className="space-y-3">
                 <p className="text-sm text-muted-foreground/60 leading-relaxed italic">
-                  The issues and movements you're passionate about.
+                  The issues and movements you&apos;re passionate about.
                 </p>
                 <Button
                   variant="ghost"
