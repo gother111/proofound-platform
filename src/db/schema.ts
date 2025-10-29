@@ -13,6 +13,7 @@ import {
   check,
   unique,
   customType,
+  foreignKey,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
@@ -65,85 +66,6 @@ export const individualProfiles = pgTable('individual_profiles', {
   joinedDate: timestamp('joined_date').defaultNow(),
   values: jsonb('values'), // Array of {icon: string, label: string, verified: boolean}
   causes: text('causes').array(),
-});
-
-// Impact Stories - verified projects with real outcomes
-export const impactStories = pgTable('impact_stories', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id')
-    .references(() => profiles.id, { onDelete: 'cascade' })
-    .notNull(),
-  projectId: uuid('project_id').references(() => sql`projects(id)`, {
-    onDelete: 'set null',
-  }),
-  title: text('title').notNull(),
-  orgDescription: text('org_description').notNull(), // e.g., "Mid-size nonprofit, Climate sector, Bay Area"
-  impact: text('impact').notNull(), // What changed
-  businessValue: text('business_value').notNull(), // Broader impact
-  outcomes: text('outcomes').notNull(), // Measurable results
-  timeline: text('timeline').notNull(),
-  verified: boolean('verified').default(false),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
-
-// Experiences - work experience focused on growth and learning
-export const experiences = pgTable('experiences', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id')
-    .references(() => profiles.id, { onDelete: 'cascade' })
-    .notNull(),
-  projectId: uuid('project_id').references(() => sql`projects(id)`, {
-    onDelete: 'set null',
-  }),
-  title: text('title').notNull(), // "Leading systemic change" not "Director"
-  orgDescription: text('org_description').notNull(), // Size, industry, location
-  duration: text('duration').notNull(),
-  learning: text('learning').notNull(), // What they learned
-  growth: text('growth').notNull(), // How they grew
-  verified: boolean('verified').default(false),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
-
-// Education - focused on skills and meaningful projects
-export const education = pgTable('education', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id')
-    .references(() => profiles.id, { onDelete: 'cascade' })
-    .notNull(),
-  projectId: uuid('project_id').references(() => sql`projects(id)`, {
-    onDelete: 'set null',
-  }),
-  institution: text('institution').notNull(),
-  degree: text('degree').notNull(),
-  duration: text('duration').notNull(),
-  skills: text('skills').notNull(), // Skills gained
-  projects: text('projects').notNull(), // Meaningful projects
-  verified: boolean('verified').default(false),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
-
-// Volunteering - service work with personal connection
-export const volunteering = pgTable('volunteering', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id')
-    .references(() => profiles.id, { onDelete: 'cascade' })
-    .notNull(),
-  projectId: uuid('project_id').references(() => sql`projects(id)`, {
-    onDelete: 'set null',
-  }),
-  title: text('title').notNull(),
-  orgDescription: text('org_description').notNull(),
-  duration: text('duration').notNull(),
-  cause: text('cause').notNull(), // e.g., "Climate Justice - Amplifying youth voices"
-  impact: text('impact').notNull(), // What changed
-  skillsDeployed: text('skills_deployed').notNull(), // Skills used
-  personalWhy: text('personal_why').notNull(), // Personal connection to cause
-  verified: boolean('verified').default(false),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
 // Organizations
@@ -711,6 +633,77 @@ export const projects = pgTable('projects', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+// Impact Stories - verified projects with real outcomes
+export const impactStories = pgTable('impact_stories', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  projectId: uuid('project_id').references(() => projects.id, { onDelete: 'set null' }),
+  title: text('title').notNull(),
+  orgDescription: text('org_description').notNull(), // e.g., "Mid-size nonprofit, Climate sector, Bay Area"
+  impact: text('impact').notNull(), // What changed
+  businessValue: text('business_value').notNull(), // Broader impact
+  outcomes: text('outcomes').notNull(), // Measurable results
+  timeline: text('timeline').notNull(),
+  verified: boolean('verified').default(false),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Experiences - work experience focused on growth and learning
+export const experiences = pgTable('experiences', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  projectId: uuid('project_id').references(() => projects.id, { onDelete: 'set null' }),
+  title: text('title').notNull(), // "Leading systemic change" not "Director"
+  orgDescription: text('org_description').notNull(), // Size, industry, location
+  duration: text('duration').notNull(),
+  learning: text('learning').notNull(), // What they learned
+  growth: text('growth').notNull(), // How they grew
+  verified: boolean('verified').default(false),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Education - focused on skills and meaningful projects
+export const education = pgTable('education', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  projectId: uuid('project_id').references(() => projects.id, { onDelete: 'set null' }),
+  institution: text('institution').notNull(),
+  degree: text('degree').notNull(),
+  duration: text('duration').notNull(),
+  skills: text('skills').notNull(), // Skills gained
+  projects: text('projects').notNull(), // Meaningful projects
+  verified: boolean('verified').default(false),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Volunteering - service work with personal connection
+export const volunteering = pgTable('volunteering', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  projectId: uuid('project_id').references(() => projects.id, { onDelete: 'set null' }),
+  title: text('title').notNull(),
+  orgDescription: text('org_description').notNull(),
+  duration: text('duration').notNull(),
+  cause: text('cause').notNull(), // e.g., "Climate Justice - Amplifying youth voices"
+  impact: text('impact').notNull(), // What changed
+  skillsDeployed: text('skills_deployed').notNull(), // Skills used
+  personalWhy: text('personal_why').notNull(), // Personal connection to cause
+  verified: boolean('verified').default(false),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
 // Project-skills linkage
 export const projectSkills = pgTable(
   'project_skills',
@@ -821,24 +814,32 @@ export const currencyExchangeRates = pgTable('currency_exchange_rates', {
 // ============================================================================
 
 // Assignment outcomes
-export const assignmentOutcomes = pgTable('assignment_outcomes', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  assignmentId: uuid('assignment_id')
-    .references(() => assignments.id, { onDelete: 'cascade' })
-    .notNull(),
-  outcomeType: text('outcome_type', {
-    enum: ['continuous', 'milestone'],
-  }).notNull(),
-  title: text('title').notNull(),
-  description: text('description'),
-  metrics: jsonb('metrics').default(sql`'[]'::jsonb`), // [{name, target, unit, current}]
-  successCriteria: text('success_criteria'),
-  dependsOn: uuid('depends_on').references(() => sql`assignment_outcomes(id)`, {
-    onDelete: 'set null',
-  }),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+export const assignmentOutcomes = pgTable(
+  'assignment_outcomes',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    assignmentId: uuid('assignment_id')
+      .references(() => assignments.id, { onDelete: 'cascade' })
+      .notNull(),
+    outcomeType: text('outcome_type', {
+      enum: ['continuous', 'milestone'],
+    }).notNull(),
+    title: text('title').notNull(),
+    description: text('description'),
+    metrics: jsonb('metrics').default(sql`'[]'::jsonb`), // [{name, target, unit, current}]
+    successCriteria: text('success_criteria'),
+    dependsOn: uuid('depends_on'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    dependsOnFk: foreignKey({
+      columns: [table.dependsOn],
+      foreignColumns: [table.id],
+      name: 'assignment_outcomes_depends_on_fkey',
+    }).onDelete('set null'),
+  })
+);
 
 // Assignment expertise matrix
 export const assignmentExpertiseMatrix = pgTable('assignment_expertise_matrix', {

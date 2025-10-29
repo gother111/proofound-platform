@@ -73,9 +73,7 @@ function mapOrganization(
     organizationSize: row.organizationSize ?? null,
     impactArea: row.impactArea ?? null,
     legalForm: row.legalForm ?? null,
-    foundedDate: row.foundedDate
-      ? new Date(row.foundedDate as unknown as string | number)
-      : null,
+    foundedDate: (row.foundedDate as OrganizationRow['foundedDate']) ?? null,
     website: row.website ?? null,
     values: (row.values as OrganizationRow['values']) ?? null,
     workCulture: (row.workCulture as OrganizationRow['workCulture']) ?? null,
