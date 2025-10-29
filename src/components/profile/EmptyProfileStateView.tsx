@@ -118,56 +118,101 @@ export function EmptyProfileStateView({
           transition={{ duration: 0.6 }}
           className="mb-12"
         >
-          <Card className="relative overflow-hidden border-2 border-dashed border-muted-foreground/20 hover:border-[#7A9278]/40 transition-all duration-300">
-            <CoverUpload
-              coverImage={basicInfo.coverImage}
-              onUpload={(image) => onUpdateBasicInfo({ coverImage: image })}
-            />
-
-            <div className="px-8 pb-8">
-              <div className="-mt-16 mb-6 flex items-end gap-6">
-                <div className="relative">
-                  <AvatarUpload
-                    avatar={basicInfo.avatar}
-                    onUpload={(image) => onUpdateBasicInfo({ avatar: image })}
-                  />
-                  <div className="absolute -bottom-1 -right-1 bg-background rounded-full p-1.5 shadow-md border-2 border-card">
-                    <Plus className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                </div>
-
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-3">
-                    <h1 className="text-3xl text-muted-foreground/80">{displayName}</h1>
-                    <Button variant="ghost" size="sm" className="h-8" onClick={onEditProfile}>
-                      <Edit3 className="w-3 h-3" />
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground/70">
-                    <button
-                      type="button"
-                      onClick={onEditProfile}
-                      className="flex items-center gap-1 hover:text-[#7A9278] transition-colors"
+          <Card className="relative overflow-hidden border-2 border-dashed border-muted-foreground/20 hover:border-[#7A9278]/40 transition-all duration-300 group cursor-pointer">
+            {/* Cover Area with Network Visualization - Empty State */}
+            <div className="h-48 bg-gradient-to-br from-[#7A9278]/10 via-[#C67B5C]/5 to-[#5C8B89]/10 relative">
+              <div className="absolute inset-0 opacity-20">
+                {/* Subtle network pattern */}
+                <svg className="w-full h-full">
+                  <defs>
+                    <pattern
+                      id="network-pattern-empty"
+                      x="0"
+                      y="0"
+                      width="40"
+                      height="40"
+                      patternUnits="userSpaceOnUse"
                     >
-                      <MapPin className="w-3 h-3" />
-                      <span>{basicInfo.location || 'Add location'}</span>
-                    </button>
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      Joined {basicInfo.joinedDate}
-                    </span>
+                      <circle cx="20" cy="20" r="1" fill="currentColor" className="text-[#7A9278]" />
+                      <line
+                        x1="20"
+                        y1="20"
+                        x2="40"
+                        y2="20"
+                        stroke="currentColor"
+                        strokeWidth="0.5"
+                        className="text-[#7A9278]"
+                        opacity="0.3"
+                      />
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#network-pattern-empty)" />
+                </svg>
+              </div>
+
+              {/* Upload Cover CTA */}
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="bg-background/90 backdrop-blur-sm rounded-full px-6 py-3 flex items-center gap-2">
+                  <Upload className="w-4 h-4 text-[#7A9278]" />
+                  <span className="text-sm">Add cover image</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Profile Info */}
+            <div className="px-8 pb-8">
+              {/* Avatar - overlapping cover */}
+              <div className="-mt-16 mb-6">
+                <div className="flex items-end gap-6">
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    className="relative cursor-pointer group/avatar"
+                  >
+                    <AvatarUpload
+                      avatar={basicInfo.avatar}
+                      onUpload={(image) => onUpdateBasicInfo({ avatar: image })}
+                    />
+                    <div className="absolute -bottom-1 -right-1 bg-background rounded-full p-1.5 shadow-md border-2 border-card">
+                      <Plus className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                  </motion.div>
+
+                  <div className="mb-2 flex-1">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="flex items-center gap-2">
+                        <h1 className="text-3xl text-muted-foreground/60">{displayName}</h1>
+                        <Button variant="ghost" size="sm" className="h-8" onClick={onEditProfile}>
+                          <Edit3 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground/60">
+                      <button
+                        type="button"
+                        onClick={onEditProfile}
+                        className="flex items-center gap-1 hover:text-[#7A9278] transition-colors"
+                      >
+                        <MapPin className="w-3 h-3" />
+                        <span>{basicInfo.location || 'Add location'}</span>
+                      </button>
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        Joined {basicInfo.joinedDate}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
 
+              {/* Tagline - Empty State */}
               <div className="mb-6">
                 <button
                   type="button"
                   onClick={onEditProfile}
-                  className="w-full text-left p-4 rounded-xl border-2 border-dashed border-muted-foreground/20 hover:border-[#7A9278]/40 transition-colors"
+                  className="w-full text-left p-4 rounded-xl border-2 border-dashed border-muted-foreground/20 hover:border-[#7A9278]/40 transition-colors group/tagline"
                 >
                   <div className="flex items-start gap-3">
-                    <Edit3 className="w-4 h-4 text-muted-foreground/60 mt-1" />
+                    <Edit3 className="w-4 h-4 text-muted-foreground/60 mt-1 group-hover/tagline:text-[#7A9278]" />
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Add a tagline</p>
                       <p className="text-xs text-muted-foreground/60">
@@ -189,33 +234,31 @@ export function EmptyProfileStateView({
             transition={{ duration: 0.6, delay: 0.2 }}
             className="space-y-6"
           >
-            <Card
-              className="p-6 border-2 border-dashed border-muted-foreground/20 hover:border-[#7A9278]/40 transition-colors cursor-pointer"
-              onClick={onOpenMission}
-            >
+            {/* Mission - Empty State */}
+            <Card className="p-6 border-2 border-dashed border-muted-foreground/20 hover:border-[#7A9278]/40 transition-colors group cursor-pointer">
               <div className="flex items-center gap-2 mb-4">
                 <Target className="w-5 h-5 text-[#7A9278]" />
                 <h3>Mission</h3>
               </div>
-              <p className="text-sm text-muted-foreground/60 leading-relaxed italic mb-3">
-                What drives your work? Share the change you want to create in the world.
-              </p>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start text-xs"
-                onClick={onOpenMission}
-                disabled={pending.mission || isPending}
-              >
-                <Plus className="w-3 h-3 mr-2" />
-                Add your mission
-              </Button>
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground/60 leading-relaxed italic">
+                  What drives your work? Share the change you want to create in the world.
+                </p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start text-xs group-hover:bg-[#7A9278]/10"
+                  onClick={onOpenMission}
+                  disabled={pending.mission || isPending}
+                >
+                  <Plus className="w-3 h-3 mr-2" />
+                  Add your mission
+                </Button>
+              </div>
             </Card>
 
-            <Card
-              className="p-6 border-2 border-dashed border-muted-foreground/20 hover:border-[#C67B5C]/40 transition-colors cursor-pointer"
-              onClick={onOpenValues}
-            >
+            {/* Core Values - Empty State */}
+            <Card className="p-6 border-2 border-dashed border-muted-foreground/20 hover:border-[#C67B5C]/40 transition-colors group cursor-pointer">
               <div className="flex items-center gap-2 mb-4">
                 <Heart className="w-5 h-5 text-[#C67B5C]" />
                 <h3>Core Values</h3>
@@ -224,22 +267,24 @@ export function EmptyProfileStateView({
                 <p className="text-sm text-muted-foreground/60 leading-relaxed italic">
                   The principles that guide your decisions and actions.
                 </p>
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {[1, 2, 3].map((index) => (
-                    <Badge
-                      key={index}
-                      variant="outline"
-                      className="text-xs text-muted-foreground/40 border-dashed"
-                    >
-                      <CircleDashed className="w-3 h-3 mr-1" />
-                      Value {index}
-                    </Badge>
-                  ))}
+                <div className="flex flex-wrap gap-2 mb-3">
+                  <Badge variant="outline" className="text-xs text-muted-foreground/40 border-dashed">
+                    <CircleDashed className="w-3 h-3 mr-1" />
+                    Value 1
+                  </Badge>
+                  <Badge variant="outline" className="text-xs text-muted-foreground/40 border-dashed">
+                    <CircleDashed className="w-3 h-3 mr-1" />
+                    Value 2
+                  </Badge>
+                  <Badge variant="outline" className="text-xs text-muted-foreground/40 border-dashed">
+                    <CircleDashed className="w-3 h-3 mr-1" />
+                    Value 3
+                  </Badge>
                 </div>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="w-full justify-start text-xs"
+                  className="w-full justify-start text-xs group-hover:bg-[#C67B5C]/10"
                   onClick={onOpenValues}
                   disabled={pending.values || isPending}
                 >
@@ -249,116 +294,81 @@ export function EmptyProfileStateView({
               </div>
             </Card>
 
-            <Card
-              className="p-6 border-2 border-dashed border-muted-foreground/20 hover:border-[#5C8B89]/40 transition-colors cursor-pointer"
-              onClick={onOpenCauses}
-            >
+            {/* Causes - Empty State */}
+            <Card className="p-6 border-2 border-dashed border-muted-foreground/20 hover:border-[#5C8B89]/40 transition-colors group cursor-pointer">
               <div className="flex items-center gap-2 mb-4">
                 <Sparkles className="w-5 h-5 text-[#5C8B89]" />
                 <h3>Causes I Support</h3>
               </div>
-              <p className="text-sm text-muted-foreground/60 leading-relaxed italic mb-3">
-                The issues and movements you&apos;re passionate about.
-              </p>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start text-xs"
-                onClick={onOpenCauses}
-                disabled={pending.causes || isPending}
-              >
-                <Plus className="w-3 h-3 mr-2" />
-                Add causes
-              </Button>
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground/60 leading-relaxed italic">
+<<<<<<< Current (Your changes)
+<<<<<<< Current (Your changes)
+<<<<<<< Current (Your changes)
+<<<<<<< Current (Your changes)
+<<<<<<< Current (Your changes)
+<<<<<<< Current (Your changes)
+<<<<<<< Current (Your changes)
+<<<<<<< Current (Your changes)
+                  The issues and movements you're passionate about.
+=======
+                  The issues and movements you&apos;re passionate about.
+>>>>>>> Incoming (Background Agent changes)
+=======
+                  The issues and movements you&apos;re passionate about.
+>>>>>>> Incoming (Background Agent changes)
+=======
+                  The issues and movements you&apos;re passionate about.
+>>>>>>> Incoming (Background Agent changes)
+=======
+                  The issues and movements you&apos;re passionate about.
+>>>>>>> Incoming (Background Agent changes)
+=======
+                  The issues and movements you&apos;re passionate about.
+>>>>>>> Incoming (Background Agent changes)
+=======
+                  The issues and movements you&apos;re passionate about.
+>>>>>>> Incoming (Background Agent changes)
+=======
+                  The issues and movements you&apos;re passionate about.
+>>>>>>> Incoming (Background Agent changes)
+=======
+                  The issues and movements you&apos;re passionate about.
+>>>>>>> Incoming (Background Agent changes)
+                </p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start text-xs group-hover:bg-[#5C8B89]/10"
+                  onClick={onOpenCauses}
+                  disabled={pending.causes || isPending}
+                >
+                  <Plus className="w-3 h-3 mr-2" />
+                  Add causes
+                </Button>
+              </div>
             </Card>
 
-            <Card
-              className="p-6 border-2 border-dashed border-muted-foreground/20 hover:border-[#D4A574]/40 transition-colors cursor-pointer"
-              onClick={onOpenSkills}
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <Lightbulb className="w-5 h-5 text-[#D4A574]" />
-                <h3>Skills & Expertise</h3>
-              </div>
-              <p className="text-sm text-muted-foreground/60 leading-relaxed italic mb-3">
-                Highlight the capabilities you want to be known for.
-              </p>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start text-xs"
-                onClick={onOpenSkills}
-                disabled={pending.skills || isPending}
-              >
-                <Plus className="w-3 h-3 mr-2" />
-                Add skills
-              </Button>
-            </Card>
           </motion.div>
 
-          {/* Right column contains impact, journey, and service tabs */}
+          {/* Right column contains journey and volunteering tabs */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
             className="lg:col-span-2 space-y-8"
           >
-            <Tabs defaultValue="impact" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 rounded-full bg-muted/30">
-                <TabsTrigger value="impact" className="rounded-full">
-                  Impact
-                </TabsTrigger>
+            <Tabs defaultValue="journey" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 rounded-full bg-muted/30">
                 <TabsTrigger value="journey" className="rounded-full">
                   Journey
                 </TabsTrigger>
-                <TabsTrigger value="service" className="rounded-full">
-                  Service
+                <TabsTrigger value="volunteering" className="rounded-full">
+                  Volunteering
                 </TabsTrigger>
               </TabsList>
 
-              {/* Impact Tab - Impact Stories */}
-              <TabsContent value="impact" className="space-y-6 mt-6">
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-sm text-muted-foreground">
-                    Projects and initiatives with verified impact
-                  </p>
-                </div>
-
-                <Card
-                  className="p-12 border-2 border-dashed border-muted-foreground/20 hover:border-[#7A9278]/40 transition-all duration-300 cursor-pointer"
-                  onClick={onAddImpactStory}
-                >
-                  <div className="text-center space-y-6">
-                    <div className="flex justify-center">
-                      <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[#7A9278]/10 to-[#5C8B89]/10 flex items-center justify-center">
-                        <Sparkles className="w-16 h-16 text-[#7A9278]/70" />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="text-lg">Share Your Impact Stories</h3>
-                      <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                        Highlight the meaningful work you have done. Focus on the change created,
-                        lives touched, and value delivered—not just tasks completed.
-                      </p>
-                    </div>
-                    <Button
-                      className="rounded-full bg-[#7A9278] hover:bg-[#7A9278]/90"
-                      onClick={onAddImpactStory}
-                      disabled={pending.impactStory || isPending}
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Your First Impact Story
-                    </Button>
-                    <div className="pt-4 text-xs text-muted-foreground">
-                      <p>
-                        💡 Tip: Include context about the organization, your role, and measurable
-                        outcomes.
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              </TabsContent>
-
+              {/* Journey Tab - Experiences and Education */}
               <TabsContent value="journey" className="space-y-6 mt-6">
                 <div className="flex items-center justify-between mb-4">
                   <p className="text-sm text-muted-foreground">
@@ -476,8 +486,8 @@ export function EmptyProfileStateView({
                 </div>
               </TabsContent>
 
-              {/* Service Tab - Volunteering */}
-              <TabsContent value="service" className="space-y-6 mt-6">
+              {/* Volunteering Tab */}
+              <TabsContent value="volunteering" className="space-y-4 mt-6">
                 <div className="flex items-center justify-between mb-4">
                   <p className="text-sm text-muted-foreground">
                     Volunteering projects and experiences
