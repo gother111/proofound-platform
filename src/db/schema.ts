@@ -453,6 +453,320 @@ export const growthPlans = pgTable('growth_plans', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+// ============================================================================
+// VERIFICATION SYSTEM TABLES
+// ============================================================================
+
+// Verification requests - workflow for proof verification
+export const verificationRequests = pgTable('verification_requests', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  claimType: text('claim_type', {
+    enum: ['experience', 'education', 'volunteering', 'impact_story', 'capability'],
+  }).notNull(),
+  claimId: uuid('claim_id').notNull(), // ID of the claim being verified
+  profileId: uuid('profile_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  verifierEmail: text('verifier_email').notNull(),
+  verifierName: text('verifier_name'),
+  verifierOrg: text('verifier_org'),
+  status: text('status', {
+    enum: ['pending', 'accepted', 'declined', 'cannot_verify', 'expired', 'appealed'],
+  })
+    .default('pending')
+    .notNull(),
+  token: text('token').unique().notNull(),
+  sentAt: timestamp('sent_at').defaultNow().notNull(),
+  expiresAt: timestamp('expires_at').notNull(),
+  lastNudgedAt: timestamp('last_nudged_at'),
+  respondedAt: timestamp('responded_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Verification responses - referee's response to verification request
+export const verificationResponses = pgTable('verification_responses', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  requestId: uuid('request_id')
+    .references(() => verificationRequests.id, { onDelete: 'cascade' })
+    .notNull(),
+  responseType: text('response_type', {
+    enum: ['accept', 'decline', 'cannot_verify'],
+  }).notNull(),
+  reason: text('reason'), // Required for decline/cannot_verify
+  verifierSeniority: integer('verifier_seniority'), // Derived from Expertise Atlas, not visible to user
+  notes: text('notes'), // Private notes for appeal process
+  ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
+  respondedAt: timestamp('responded_at').defaultNow().notNull(),
+});
+
+// Verification appeals - when user contests a declined verification
+export const verificationAppeals = pgTable('verification_appeals', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  requestId: uuid('request_id')
+    .references(() => verificationRequests.id, { onDelete: 'cascade' })
+    .notNull(),
+  profileId: uuid('profile_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  context: text('context').notNull(), // User's explanation (≤500 words)
+  status: text('status', {
+    enum: ['pending', 'reviewing', 'approved', 'rejected'],
+  })
+    .default('pending')
+    .notNull(),
+  reviewerId: uuid('reviewer_id').references(() => profiles.id), // Admin who reviews
+  reviewNotes: text('review_notes'),
+  reviewedAt: timestamp('reviewed_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Organization verification - domain and entity checks
+export const orgVerification = pgTable('org_verification', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  orgId: uuid('org_id')
+    .references(() => organizations.id, { onDelete: 'cascade' })
+    .notNull(),
+  verificationType: text('verification_type', {
+    enum: ['domain_email', 'website', 'registry', 'manual'],
+  }).notNull(),
+  domain: text('domain'),
+  registryNumber: text('registry_number'),
+  status: text('status', {
+    enum: ['pending', 'verified', 'failed', 'expired'],
+  })
+    .default('pending')
+    .notNull(),
+  verifiedBy: uuid('verified_by').references(() => profiles.id),
+  verifiedAt: timestamp('verified_at'),
+  expiresAt: timestamp('expires_at'),
+  metadata: jsonb('metadata').default(sql`'{}'::jsonb`),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// ============================================================================
+// MESSAGING SYSTEM TABLES
+// ============================================================================
+
+// Conversations - chat threads between matched users
+export const conversations = pgTable('conversations', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  matchId: uuid('match_id')
+    .references(() => matches.id, { onDelete: 'cascade' })
+    .notNull()
+    .unique(),
+  assignmentId: uuid('assignment_id')
+    .references(() => assignments.id, { onDelete: 'cascade' })
+    .notNull(),
+  participantOneId: uuid('participant_one_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  participantTwoId: uuid('participant_two_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  stage: integer('stage').default(1).notNull(), // 1 = masked basics, 2 = full reveal
+  status: text('status', {
+    enum: ['active', 'archived', 'closed'],
+  })
+    .default('active')
+    .notNull(),
+  lastMessageAt: timestamp('last_message_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Messages - individual messages in conversations
+export const messages = pgTable('messages', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  conversationId: uuid('conversation_id')
+    .references(() => conversations.id, { onDelete: 'cascade' })
+    .notNull(),
+  senderId: uuid('sender_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  content: text('content').notNull(),
+  attachments: jsonb('attachments').default(sql`'[]'::jsonb`), // [{type: 'link' | 'pdf', url: string, name: string, size?: number}]
+  isSystemMessage: boolean('is_system_message').default(false).notNull(),
+  readAt: timestamp('read_at'),
+  flaggedForModeration: boolean('flagged_for_moderation').default(false).notNull(),
+  sentAt: timestamp('sent_at').defaultNow().notNull(),
+});
+
+// Blocked users - prevent unwanted communication
+export const blockedUsers = pgTable(
+  'blocked_users',
+  {
+    blockerId: uuid('blocker_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    blockedId: uuid('blocked_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    reason: text('reason'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.blockerId, table.blockedId] }),
+  })
+);
+
+// ============================================================================
+// MODERATION & SAFETY SYSTEM TABLES
+// ============================================================================
+
+// Content reports - user-reported content for moderation
+export const contentReports = pgTable('content_reports', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  reporterId: uuid('reporter_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  contentType: text('content_type', {
+    enum: [
+      'profile',
+      'message',
+      'assignment',
+      'impact_story',
+      'experience',
+      'education',
+      'volunteering',
+    ],
+  }).notNull(),
+  contentId: uuid('content_id').notNull(),
+  contentOwnerId: uuid('content_owner_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  reason: text('reason').notNull(), // ≤50 words per PRD
+  category: text('category', {
+    enum: ['spam', 'harassment', 'misinformation', 'inappropriate', 'political', 'other'],
+  }).notNull(),
+  status: text('status', {
+    enum: ['pending', 'reviewing', 'actioned', 'dismissed'],
+  })
+    .default('pending')
+    .notNull(),
+  aiFlag: boolean('ai_flag').default(false).notNull(), // True if AI-flagged
+  aiConfidence: numeric('ai_confidence'), // 0-1 score
+  reviewedBy: uuid('reviewed_by').references(() => profiles.id),
+  reviewedAt: timestamp('reviewed_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Moderation actions - actions taken on reported content
+export const moderationActions = pgTable('moderation_actions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  reportId: uuid('report_id')
+    .references(() => contentReports.id, { onDelete: 'cascade' })
+    .notNull(),
+  moderatorId: uuid('moderator_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  actionType: text('action_type', {
+    enum: ['warning', 'content_removed', 'account_suspended', 'dismissed'],
+  }).notNull(),
+  reason: text('reason').notNull(),
+  isAppealable: boolean('is_appealable').default(true).notNull(),
+  appealDeadline: timestamp('appeal_deadline'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// User violations - track violation history per user
+export const userViolations = pgTable('user_violations', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  reportId: uuid('report_id')
+    .references(() => contentReports.id, { onDelete: 'set null' })
+    .notNull(),
+  violationType: text('violation_type', {
+    enum: ['spam', 'harassment', 'misinformation', 'inappropriate', 'political', 'other'],
+  }).notNull(),
+  severity: text('severity', {
+    enum: ['low', 'medium', 'high', 'critical'],
+  }).notNull(),
+  actionTaken: text('action_taken', {
+    enum: ['warning', 'content_removed', 'timed_suspension', 'permanent_ban'],
+  }).notNull(),
+  suspensionExpiresAt: timestamp('suspension_expires_at'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// ============================================================================
+// ANALYTICS & SUPPORTING TABLES
+// ============================================================================
+
+// Analytics events - track key user actions for metrics
+export const analyticsEvents = pgTable('analytics_events', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  eventType: text('event_type').notNull(), // signed_up, match_accepted, etc.
+  userId: uuid('user_id').references(() => profiles.id, { onDelete: 'cascade' }),
+  orgId: uuid('org_id').references(() => organizations.id, { onDelete: 'cascade' }),
+  entityType: text('entity_type'), // match, assignment, profile, etc.
+  entityId: uuid('entity_id'),
+  properties: jsonb('properties').default(sql`'{}'::jsonb`), // Additional event data
+  sessionId: text('session_id'),
+  ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Editorial matches - curated matches for cold-start
+export const editorialMatches = pgTable('editorial_matches', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  assignmentId: uuid('assignment_id')
+    .references(() => assignments.id, { onDelete: 'cascade' })
+    .notNull(),
+  profileId: uuid('profile_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  curatorId: uuid('curator_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  reason: text('reason').notNull(),
+  notes: text('notes'),
+  priority: integer('priority').default(0).notNull(),
+  isActive: boolean('is_active').default(true).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Match suggestions - improvement tips for users
+export const matchSuggestions = pgTable('match_suggestions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  matchId: uuid('match_id')
+    .references(() => matches.id, { onDelete: 'cascade' })
+    .notNull(),
+  profileId: uuid('profile_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  suggestionType: text('suggestion_type', {
+    enum: ['add_proof', 'add_skill', 'update_value', 'complete_profile'],
+  }).notNull(),
+  description: text('description').notNull(),
+  estimatedImpact: numeric('estimated_impact').notNull(), // 0-100 (percentage points)
+  actionUrl: text('action_url'),
+  isDismissed: boolean('is_dismissed').default(false).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Active ties - cluster snapshot for algorithms (private)
+export const activeTies = pgTable('active_ties', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  tieType: text('tie_type', {
+    enum: ['match', 'verification', 'endorsement', 'conversation'],
+  }).notNull(),
+  relatedUserId: uuid('related_user_id').references(() => profiles.id, { onDelete: 'cascade' }),
+  relatedOrgId: uuid('related_org_id').references(() => organizations.id, {
+    onDelete: 'cascade',
+  }),
+  strength: numeric('strength').notNull(), // 0-1 score
+  lastInteractionAt: timestamp('last_interaction_at').defaultNow().notNull(),
+  isLegacy: boolean('is_legacy').default(false).notNull(), // True if >60 days old
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 // Type exports
 export type Profile = typeof profiles.$inferSelect;
 export type InsertProfile = typeof profiles.$inferInsert;
@@ -493,3 +807,39 @@ export type SkillEndorsement = typeof skillEndorsements.$inferSelect;
 export type InsertSkillEndorsement = typeof skillEndorsements.$inferInsert;
 export type GrowthPlan = typeof growthPlans.$inferSelect;
 export type InsertGrowthPlan = typeof growthPlans.$inferInsert;
+
+// Verification system types
+export type VerificationRequest = typeof verificationRequests.$inferSelect;
+export type InsertVerificationRequest = typeof verificationRequests.$inferInsert;
+export type VerificationResponse = typeof verificationResponses.$inferSelect;
+export type InsertVerificationResponse = typeof verificationResponses.$inferInsert;
+export type VerificationAppeal = typeof verificationAppeals.$inferSelect;
+export type InsertVerificationAppeal = typeof verificationAppeals.$inferInsert;
+export type OrgVerification = typeof orgVerification.$inferSelect;
+export type InsertOrgVerification = typeof orgVerification.$inferInsert;
+
+// Messaging system types
+export type Conversation = typeof conversations.$inferSelect;
+export type InsertConversation = typeof conversations.$inferInsert;
+export type Message = typeof messages.$inferSelect;
+export type InsertMessage = typeof messages.$inferInsert;
+export type BlockedUser = typeof blockedUsers.$inferSelect;
+export type InsertBlockedUser = typeof blockedUsers.$inferInsert;
+
+// Moderation system types
+export type ContentReport = typeof contentReports.$inferSelect;
+export type InsertContentReport = typeof contentReports.$inferInsert;
+export type ModerationAction = typeof moderationActions.$inferSelect;
+export type InsertModerationAction = typeof moderationActions.$inferInsert;
+export type UserViolation = typeof userViolations.$inferSelect;
+export type InsertUserViolation = typeof userViolations.$inferInsert;
+
+// Analytics & supporting types
+export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
+export type InsertAnalyticsEvent = typeof analyticsEvents.$inferInsert;
+export type EditorialMatch = typeof editorialMatches.$inferSelect;
+export type InsertEditorialMatch = typeof editorialMatches.$inferInsert;
+export type MatchSuggestion = typeof matchSuggestions.$inferSelect;
+export type InsertMatchSuggestion = typeof matchSuggestions.$inferInsert;
+export type ActiveTie = typeof activeTies.$inferSelect;
+export type InsertActiveTie = typeof activeTies.$inferInsert;
