@@ -18,14 +18,16 @@ import { sql } from 'drizzle-orm';
 
 // Custom types for PostgreSQL-specific data types
 const bit = customType<{ data: string; notNull?: boolean; default?: boolean }>({
-  dataType(config?: { dimensions?: number }) {
-    return config?.dimensions ? `bit(${config.dimensions})` : 'bit';
+  dataType(config) {
+    const dimensions = (config as { dimensions?: number } | undefined)?.dimensions;
+    return dimensions ? `bit(${dimensions})` : 'bit';
   },
 });
 
 const vector = customType<{ data: number[]; notNull?: boolean; default?: boolean }>({
-  dataType(config?: { dimensions?: number }) {
-    return config?.dimensions ? `vector(${config.dimensions})` : 'vector';
+  dataType(config) {
+    const dimensions = (config as { dimensions?: number } | undefined)?.dimensions;
+    return dimensions ? `vector(${dimensions})` : 'vector';
   },
 });
 
