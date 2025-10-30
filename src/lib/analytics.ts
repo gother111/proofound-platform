@@ -57,7 +57,8 @@ export type AnalyticsEventType =
   | 'data_export_requested'
   | 'audit_log_viewed'
   | 'account_deletion_requested'
-  | 'account_deletion_cancelled';
+  | 'account_deletion_cancelled'
+  | 'account_deletion_reminder_sent';
 
 // =============================================================================
 // CORE TRACKING FUNCTION

@@ -6,6 +6,7 @@ import { requireAuth } from '@/lib/auth';
 import { log } from '@/lib/log';
 import { db } from '@/db';
 import { createClient } from '@/lib/supabase/server';
+import { sendDeletionScheduledEmail } from '@/lib/email';
 
 export const dynamic = 'force-dynamic';
 
@@ -127,17 +128,24 @@ export async function DELETE(request: NextRequest) {
       reason: parsed.reason || 'Not provided',
     });
 
-    // TODO: Send confirmation email with cancellation link
-    // This will be implemented in Phase 4 (integration-emails)
-    // Email should include:
-    // - Confirmation of deletion request
-    // - Scheduled deletion date
-    // - Cancellation link: /api/user/account/cancel-deletion
-    // - What will be deleted
-    // - Grace period details
+    // Send confirmation email with cancellation link
+    // Note: Email failures are logged but don't block the deletion request
+    try {
+      await sendDeletionScheduledEmail(authUser.email, user.id, scheduledDeletionDate);
+      log.info('privacy.account_deletion.email_sent', {
+        userId: user.id,
+        email: authUser.email,
+      });
+    } catch (emailError) {
+      // Log email failure but don't block the deletion request
+      log.error('privacy.account_deletion.email_failed', {
+        userId: user.id,
+        error: emailError instanceof Error ? emailError.message : 'Unknown error',
+      });
+    }
 
     // Generate cancellation URL
-    const cancellationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/settings?tab=privacy&action=cancel-deletion`;
+    const cancellationUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/settings?tab=privacy`;
 
     return NextResponse.json({
       status: 'deletion_scheduled',
