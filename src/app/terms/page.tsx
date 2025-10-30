@@ -153,7 +153,7 @@ export default function TermsOfServicePage() {
                 Limitation of Liability
               </h3>
               <p className="mt-4 leading-7 text-[#2D3330CC]">
-                Proofound is provided "as is" without warranties of any kind. We are not liable
+                Proofound is provided &quot;as is&quot; without warranties of any kind. We are not liable
                 for any indirect, incidental, special, or consequential damages arising from your
                 use of the platform.
               </p>
@@ -163,7 +163,7 @@ export default function TermsOfServicePage() {
               </h3>
               <p className="mt-4 leading-7 text-[#2D3330CC]">
                 We may update these Terms from time to time. We will notify you of any material
-                changes by posting the new Terms on this page and updating the "Last updated"
+                changes by posting the new Terms on this page and updating the &quot;Last updated&quot;
                 date.
               </p>
 

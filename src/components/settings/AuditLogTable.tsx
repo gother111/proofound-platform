@@ -68,7 +68,7 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [userId]);
+  }, []);
 
   useEffect(() => {
     fetchAuditLog(0);

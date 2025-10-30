@@ -83,7 +83,7 @@ export default function PrivacyPolicyPage() {
               </p>
 
               <h3 className="mt-8 font-display text-xl font-semibold text-[#2D3330]">
-                What We're Building
+                What We&apos;re Building
               </h3>
               <p className="mt-4 leading-7 text-[#2D3330CC]">
                 Proofound is a platform that helps professionals showcase their expertise through
