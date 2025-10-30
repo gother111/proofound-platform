@@ -33,7 +33,7 @@ const resetPasswordSchema = z.object({
   email: z.string().email(),
 });
 
-const oauthProviderSchema = z.enum(['google']);
+const oauthProviderSchema = z.enum(['google', 'linkedin_oidc']);
 
 export type SignUpState = {
   error: string | null;

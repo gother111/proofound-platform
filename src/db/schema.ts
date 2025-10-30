@@ -389,6 +389,9 @@ export const skills = pgTable(
     recencyMultiplier: numeric('recency_multiplier').default('1.0'),
     impactScore: numeric('impact_score').default('0'),
     lastUsedAt: timestamp('last_used_at'),
+    relevance: text('relevance', {
+      enum: ['obsolete', 'current', 'emerging'],
+    }), // Skill currency: obsolete/current/emerging
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
@@ -515,6 +518,7 @@ export const skillsCategories = pgTable('skills_categories', {
   nameI18n: jsonb('name_i18n').notNull(), // {en: string, ...}
   descriptionI18n: jsonb('description_i18n'),
   icon: text('icon'),
+  displayOrder: integer('display_order').notNull(),
   version: integer('version').default(1).notNull(),
   status: text('status', {
     enum: ['active', 'deprecated', 'merged'],
@@ -522,6 +526,7 @@ export const skillsCategories = pgTable('skills_categories', {
     .default('active')
     .notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
 // Skills subcategories (L2)
@@ -533,8 +538,10 @@ export const skillsSubcategories = pgTable('skills_subcategories', {
   slug: text('slug').unique().notNull(),
   nameI18n: jsonb('name_i18n').notNull(),
   descriptionI18n: jsonb('description_i18n'),
+  displayOrder: integer('display_order').notNull(),
   version: integer('version').default(1).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
 // Skills L3 categories
@@ -546,8 +553,10 @@ export const skillsL3 = pgTable('skills_l3', {
   slug: text('slug').unique().notNull(),
   nameI18n: jsonb('name_i18n').notNull(),
   descriptionI18n: jsonb('description_i18n'),
+  displayOrder: integer('display_order').notNull(),
   version: integer('version').default(1).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
 // Skills taxonomy (L4) - granular skills
