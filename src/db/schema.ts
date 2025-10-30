@@ -42,6 +42,11 @@ export const profiles = pgTable('profiles', {
   persona: text('persona', {
     enum: ['individual', 'org_member', 'unknown'],
   }).default('unknown'),
+  // GDPR Account Deletion Support (Article 17: Right to Erasure)
+  deletionRequestedAt: timestamp('deletion_requested_at'),
+  deletionScheduledFor: timestamp('deletion_scheduled_for'),
+  deletionReason: text('deletion_reason'),
+  deleted: boolean('deleted').default(false),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -1292,6 +1297,7 @@ export const userViolations = pgTable('user_violations', {
 // ============================================================================
 
 // Analytics events - track key user actions for metrics
+// GDPR-compliant: stores hashed IPs instead of raw PII (Article 4(1))
 export const analyticsEvents = pgTable('analytics_events', {
   id: uuid('id').defaultRandom().primaryKey(),
   eventType: text('event_type').notNull(), // signed_up, match_accepted, etc.
@@ -1301,8 +1307,8 @@ export const analyticsEvents = pgTable('analytics_events', {
   entityId: uuid('entity_id'),
   properties: jsonb('properties').default(sql`'{}'::jsonb`), // Additional event data
   sessionId: text('session_id'),
-  ipAddress: text('ip_address'),
-  userAgent: text('user_agent'),
+  ipHash: text('ip_hash'), // SHA-256 hash of IP (not raw IP - GDPR compliant)
+  userAgentHash: text('user_agent_hash'), // SHA-256 hash of User Agent
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
@@ -1361,6 +1367,35 @@ export const activeTies = pgTable('active_ties', {
   lastInteractionAt: timestamp('last_interaction_at').defaultNow().notNull(),
   isLegacy: boolean('is_legacy').default(false).notNull(), // True if >60 days old
   createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// ============================================================================
+// GDPR COMPLIANCE TABLES
+// ============================================================================
+
+// User consents - track GDPR consent for audit trail
+// Reference: CROSS_DOCUMENT_PRIVACY_AUDIT.md Section 5.3
+export const userConsents = pgTable('user_consents', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  profileId: uuid('profile_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  consentType: text('consent_type', {
+    enum: [
+      'gdpr_terms_of_service',
+      'gdpr_privacy_policy',
+      'marketing_emails',
+      'analytics_tracking',
+      'ml_matching',
+    ],
+  }).notNull(),
+  consented: boolean('consented').notNull(),
+  consentedAt: timestamp('consented_at').defaultNow().notNull(),
+  ipHash: text('ip_hash'), // Hashed IP for audit trail
+  userAgentHash: text('user_agent_hash'), // Hashed user agent
+  version: text('version'), // Policy version (e.g., "v1.0.2025-01-30")
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
 // Type exports
@@ -1439,6 +1474,10 @@ export type MatchSuggestion = typeof matchSuggestions.$inferSelect;
 export type InsertMatchSuggestion = typeof matchSuggestions.$inferInsert;
 export type ActiveTie = typeof activeTies.$inferSelect;
 export type InsertActiveTie = typeof activeTies.$inferInsert;
+
+// GDPR compliance types
+export type UserConsent = typeof userConsents.$inferSelect;
+export type InsertUserConsent = typeof userConsents.$inferInsert;
 
 // Skills taxonomy system types
 export type SkillsCategory = typeof skillsCategories.$inferSelect;
