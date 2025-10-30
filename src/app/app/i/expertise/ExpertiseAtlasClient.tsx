@@ -14,12 +14,14 @@ interface ExpertiseAtlasClientProps {
   initialSkills: any[];
   domains: any[];
   hasSkills: boolean;
+  widgetData: any | null;
 }
 
 export function ExpertiseAtlasClient({ 
   initialSkills, 
   domains, 
-  hasSkills 
+  hasSkills,
+  widgetData
 }: ExpertiseAtlasClientProps) {
   const [selectedL1, setSelectedL1] = useState<number | null>(null);
   const [selectedL2, setSelectedL2] = useState<any | null>(null);
