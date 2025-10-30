@@ -181,8 +181,8 @@ export async function signUp(
       // Store GDPR consent records (audit trail)
       // Use service role since user session doesn't exist yet (email confirmation required)
       try {
-        const { createClient: createServiceClient } = await import('@/lib/supabase/admin');
-        const serviceSupabase = createServiceClient();
+        const { createAdminClient } = await import('@/lib/supabase/admin');
+        const serviceSupabase = createAdminClient();
         
         // Hash PII for audit trail
         const { anonymizeIP, anonymizeUserAgent } = await import('@/lib/utils/privacy');
