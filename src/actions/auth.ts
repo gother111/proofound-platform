@@ -14,6 +14,10 @@ const signUpSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
   persona: z.enum(['individual', 'org_member']),
+  gdprConsent: z.boolean().refine((val) => val === true, {
+    message: 'You must agree to the Privacy Policy and Terms of Service',
+  }),
+  marketingOptIn: z.boolean().optional(),
 });
 
 const signInSchema = z.object({
@@ -88,10 +92,16 @@ export async function signUp(
     const personaChoice = (formData.get('persona') as string | null)?.trim();
     const normalizedPersona = personaChoice === 'organization' ? 'org_member' : personaChoice;
 
+    // Parse consent fields from form
+    const gdprConsentRaw = formData.get('gdprConsent') as string | null;
+    const marketingOptInRaw = formData.get('marketingOptIn') as string | null;
+
     const data = {
       email,
       password: (formData.get('password') as string | null) ?? '',
       persona: normalizedPersona,
+      gdprConsent: gdprConsentRaw === 'true',
+      marketingOptIn: marketingOptInRaw === 'true',
     };
 
     const result = signUpSchema.safeParse(data);
@@ -166,6 +176,75 @@ export async function signUp(
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         });
+      }
+
+      // Store GDPR consent records (audit trail)
+      // Use service role since user session doesn't exist yet (email confirmation required)
+      try {
+        const { createAdminClient } = await import('@/lib/supabase/admin');
+        const serviceSupabase = createAdminClient();
+        
+        // Hash PII for audit trail
+        const { anonymizeIP, anonymizeUserAgent } = await import('@/lib/utils/privacy');
+        const ipHash = anonymizeIP(ip);
+        const userAgentHash = anonymizeUserAgent(headersList.get('user-agent') || 'unknown');
+        
+        // Current policy version
+        const policyVersion = 'v1.0.2025-10-30';
+        
+        // Prepare consent records
+        const consentRecords = [
+          {
+            profile_id: signUpResult.user.id,
+            consent_type: 'gdpr_privacy_policy',
+            consented: true,
+            consented_at: new Date().toISOString(),
+            ip_hash: ipHash,
+            user_agent_hash: userAgentHash,
+            version: policyVersion,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+          {
+            profile_id: signUpResult.user.id,
+            consent_type: 'gdpr_terms_of_service',
+            consented: true,
+            consented_at: new Date().toISOString(),
+            ip_hash: ipHash,
+            user_agent_hash: userAgentHash,
+            version: policyVersion,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+          {
+            profile_id: signUpResult.user.id,
+            consent_type: 'marketing_emails',
+            consented: result.data.marketingOptIn ?? false,
+            consented_at: new Date().toISOString(),
+            ip_hash: ipHash,
+            user_agent_hash: userAgentHash,
+            version: policyVersion,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+        ];
+        
+        // Store consent records directly using service role
+        const { error: consentError } = await serviceSupabase
+          .from('user_consents')
+          .insert(consentRecords);
+          
+        if (consentError) {
+          console.error('Failed to store consent records:', consentError);
+          // This is a critical GDPR compliance issue - we should not continue silently
+          throw new Error(`GDPR compliance error: Failed to store consent records - ${consentError.message}`);
+        }
+        
+        console.log('GDPR consent records stored successfully for user:', signUpResult.user.id);
+      } catch (consentError) {
+        // This is a critical GDPR compliance failure - log and re-throw
+        console.error('CRITICAL: GDPR consent storage failed:', consentError);
+        throw new Error(`GDPR compliance error: Unable to store required consent records. Signup cannot proceed.`);
       }
     }
 

@@ -4,6 +4,9 @@ import { VerifyEmailIndividual } from '../../emails/VerifyEmailIndividual';
 import { VerifyEmailOrganization } from '../../emails/VerifyEmailOrganization';
 import { ResetPassword } from '../../emails/ResetPassword';
 import { OrgInvite } from '../../emails/OrgInvite';
+import { DeletionScheduled } from '../../emails/DeletionScheduled';
+import { DeletionReminder } from '../../emails/DeletionReminder';
+import { DeletionComplete } from '../../emails/DeletionComplete';
 
 // Allow build to succeed without RESEND_API_KEY
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder_key');
@@ -74,5 +77,63 @@ export async function sendOrgInviteEmail(
   } catch (error) {
     console.error('Failed to send org invite email:', error);
     throw new Error('Failed to send org invite email');
+  }
+}
+
+export async function sendDeletionScheduledEmail(
+  email: string,
+  userId: string,
+  scheduledDate: Date
+): Promise<void> {
+  const cancellationUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/settings?tab=privacy`;
+
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to: email,
+      subject: 'Account Deletion Scheduled - Proofound',
+      react: DeletionScheduled({ scheduledDate, cancellationUrl }),
+    });
+  } catch (error) {
+    console.error('Failed to send deletion scheduled email:', error);
+    throw new Error('Failed to send deletion scheduled email');
+  }
+}
+
+export async function sendDeletionReminderEmail(
+  email: string,
+  userId: string,
+  scheduledDate: Date,
+  daysRemaining: number
+): Promise<void> {
+  const cancellationUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/settings?tab=privacy`;
+
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to: email,
+      subject: `${daysRemaining} Days Until Your Proofound Account is Deleted`,
+      react: DeletionReminder({ scheduledDate, daysRemaining, cancellationUrl }),
+    });
+  } catch (error) {
+    console.error('Failed to send deletion reminder email:', error);
+    throw new Error('Failed to send deletion reminder email');
+  }
+}
+
+export async function sendDeletionCompleteEmail(
+  email: string,
+  userId: string
+): Promise<void> {
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to: email,
+      subject: 'Your Proofound Account Has Been Deleted',
+      react: DeletionComplete({ userId }),
+    });
+  } catch (error) {
+    console.error('Failed to send deletion complete email:', error);
+    throw new Error('Failed to send deletion complete email');
   }
 }
