@@ -16,6 +16,11 @@
     "test": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "test:privacy": "vitest run --config vitest.supabase.config.ts tests/privacy/rls-policies.test.ts",
+    "test:privacy:all": "vitest run --config vitest.supabase.config.ts tests/privacy",
+    "test:privacy:watch": "vitest watch --config vitest.supabase.config.ts tests/privacy",
+    "test:privacy:coverage": "vitest run --coverage --config vitest.supabase.config.ts tests/privacy",
+    "test:privacy:extended": "vitest run --config vitest.supabase.config.ts tests/privacy/rls-policies-extended.test.ts",
     "prepare": "husky install"
   },
   "dependencies": {
