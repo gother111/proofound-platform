@@ -1,0 +1,13 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/send-deletion-reminders",
+      "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/cron/process-deletions",
+      "schedule": "0 2 * * *"
+    }
+  ]
+}
+
