@@ -11,7 +11,6 @@
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/supabase';
 
 // Environment variables for test Supabase instance
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '';
@@ -39,7 +38,7 @@ export interface TestUser {
  * - Creating users programmatically
  * - Verifying data that RLS would normally block
  */
-export function createServiceRoleClient(): SupabaseClient<Database> {
+export function createServiceRoleClient(): SupabaseClient {
   if (!SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error(
       'SUPABASE_SERVICE_ROLE_KEY is required for service role operations. ' +
@@ -47,7 +46,7 @@ export function createServiceRoleClient(): SupabaseClient<Database> {
     );
   }
 
-  return createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  return createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
@@ -63,8 +62,8 @@ export function createServiceRoleClient(): SupabaseClient<Database> {
  * - Verifying public access is properly restricted
  * - Testing RLS policies that should block anonymous access
  */
-export function createAnonClient(): SupabaseClient<Database> {
-  return createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
+export function createAnonClient(): SupabaseClient {
+  return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
@@ -92,8 +91,8 @@ export function createAnonClient(): SupabaseClient<Database> {
 export async function createAuthenticatedClient(
   email: string,
   password: string
-): Promise<SupabaseClient<Database>> {
-  const client = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
+): Promise<SupabaseClient> {
+  const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
@@ -195,7 +194,7 @@ export async function deleteTestUser(userId: string): Promise<void> {
  * 
  * @param client - Supabase client to sign out
  */
-export async function signOutClient(client: SupabaseClient<Database>): Promise<void> {
+export async function signOutClient(client: SupabaseClient): Promise<void> {
   const { error } = await client.auth.signOut();
   
   if (error) {
@@ -212,7 +211,7 @@ export async function signOutClient(client: SupabaseClient<Database>): Promise<v
  * @param client - Supabase client
  * @returns User ID or null
  */
-export async function getCurrentUserId(client: SupabaseClient<Database>): Promise<string | null> {
+export async function getCurrentUserId(client: SupabaseClient): Promise<string | null> {
   const { data: { user } } = await client.auth.getUser();
   return user?.id || null;
 }
