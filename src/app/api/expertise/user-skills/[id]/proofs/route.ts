@@ -18,13 +18,13 @@ const CreateProofSchema = z.object({
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await requireAuth();
     const supabase = await createClient();
     const body = await request.json();
-    const skillId = params.id;
+    const { id: skillId } = await params;
     
     // Validate input
     const validated = CreateProofSchema.parse(body);
@@ -70,12 +70,12 @@ export async function POST(
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await requireAuth();
     const supabase = await createClient();
-    const skillId = params.id;
+    const { id: skillId } = await params;
     
     // Verify skill belongs to user
     const { data: skill, error: skillError } = await supabase
