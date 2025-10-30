@@ -95,7 +95,11 @@ export function SkillWheel({ data, onSectorClick }: SkillWheelProps) {
             fill="#8b5cf6"
             fillOpacity={0.5}
             strokeWidth={2}
-            onClick={(data) => onSectorClick(data.fullDomain)}
+            onClick={(data: any) => {
+              if (data && data.fullDomain) {
+                onSectorClick(data.fullDomain);
+              }
+            }}
             style={{ cursor: 'pointer' }}
           />
           <Tooltip content={<CustomTooltip />} />
