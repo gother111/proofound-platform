@@ -302,39 +302,7 @@ export function EmptyProfileStateView({
               </div>
               <div className="space-y-3">
                 <p className="text-sm text-muted-foreground/60 leading-relaxed italic">
-<<<<<<< Current (Your changes)
-<<<<<<< Current (Your changes)
-<<<<<<< Current (Your changes)
-<<<<<<< Current (Your changes)
-<<<<<<< Current (Your changes)
-<<<<<<< Current (Your changes)
-<<<<<<< Current (Your changes)
-<<<<<<< Current (Your changes)
-                  The issues and movements you're passionate about.
-=======
                   The issues and movements you&apos;re passionate about.
->>>>>>> Incoming (Background Agent changes)
-=======
-                  The issues and movements you&apos;re passionate about.
->>>>>>> Incoming (Background Agent changes)
-=======
-                  The issues and movements you&apos;re passionate about.
->>>>>>> Incoming (Background Agent changes)
-=======
-                  The issues and movements you&apos;re passionate about.
->>>>>>> Incoming (Background Agent changes)
-=======
-                  The issues and movements you&apos;re passionate about.
->>>>>>> Incoming (Background Agent changes)
-=======
-                  The issues and movements you&apos;re passionate about.
->>>>>>> Incoming (Background Agent changes)
-=======
-                  The issues and movements you&apos;re passionate about.
->>>>>>> Incoming (Background Agent changes)
-=======
-                  The issues and movements you&apos;re passionate about.
->>>>>>> Incoming (Background Agent changes)
                 </p>
                 <Button
                   variant="ghost"
