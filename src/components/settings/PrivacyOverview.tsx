@@ -103,7 +103,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
                 Your Privacy Controls
               </h2>
               <p className="text-proofound-charcoal/70 dark:text-muted-foreground mb-4">
-                Proofound is built with privacy at its core. Here's what data we collect and how you control it.
+                Proofound is built with privacy at its core. Here&apos;s what data we collect and how you control it.
               </p>
               <div className="flex flex-wrap gap-3">
                 <Button

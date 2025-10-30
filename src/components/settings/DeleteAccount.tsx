@@ -193,9 +193,9 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
                 </p>
                 <ul className="space-y-1 text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
                   <li>• You can cancel this request anytime within the next {accountStatus.daysRemaining} days</li>
-                  <li>• You'll receive a reminder email 7 days before deletion</li>
+                  <li>• You&apos;ll receive a reminder email 7 days before deletion</li>
                   <li>• After {formatDate(accountStatus.deletionScheduledFor)}, your account will be permanently anonymized</li>
-                  <li>• All your PII will be removed/replaced with "Deleted User"</li>
+                  <li>• All your PII will be removed/replaced with &quot;Deleted User&quot;</li>
                   <li>• Some data may be retained for 90 days for legal compliance</li>
                 </ul>
               </div>
@@ -286,7 +286,7 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
               </p>
               <ul className="space-y-1 text-sm text-amber-800 dark:text-amber-200">
                 <li>• You have 30 days to cancel this request</li>
-                <li>• You'll receive reminder emails before deletion</li>
+                <li>• You&apos;ll receive reminder emails before deletion</li>
                 <li>• After 30 days, deletion is permanent and cannot be undone</li>
               </ul>
             </div>
@@ -344,7 +344,7 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirm">Type "DELETE" to confirm</Label>
+              <Label htmlFor="confirm">Type &quot;DELETE&quot; to confirm</Label>
               <Input
                 id="confirm"
                 type="text"

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, Download } from 'lucide-react';
@@ -34,11 +34,7 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
   const [offset, setOffset] = useState(0);
   const limit = 50;
 
-  useEffect(() => {
-    fetchAuditLog(0);
-  }, [userId]);
-
-  const fetchAuditLog = async (newOffset: number, append = false) => {
+  const fetchAuditLog = useCallback(async (newOffset: number, append = false) => {
     try {
       if (append) {
         setLoadingMore(true);
@@ -53,10 +49,13 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
 
       const auditData: AuditLogResponse = await response.json();
       
-      if (append && data) {
-        setData({
-          ...auditData,
-          events: [...data.events, ...auditData.events],
+      if (append) {
+        setData(prevData => {
+          if (!prevData) return auditData;
+          return {
+            ...auditData,
+            events: [...prevData.events, ...auditData.events],
+          };
         });
       } else {
         setData(auditData);
@@ -69,7 +68,11 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
       setLoading(false);
       setLoadingMore(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    fetchAuditLog(0);
+  }, [fetchAuditLog]);
 
   const handleLoadMore = () => {
     const newOffset = offset + limit;
