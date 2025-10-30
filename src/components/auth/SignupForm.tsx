@@ -43,6 +43,8 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [gdprConsent, setGdprConsent] = useState(false);
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
 
   const personaValue = useMemo(
     () => (accountType === 'organization' ? 'org_member' : 'individual'),
@@ -55,6 +57,13 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     setClientError(null);
+
+    // Validate GDPR consent (required)
+    if (!gdprConsent) {
+      event.preventDefault();
+      setClientError('You must agree to the Privacy Policy and Terms of Service to create an account');
+      return;
+    }
 
     const trimmedPassword = password.trim();
     const trimmedConfirmPassword = confirmPassword.trim();
@@ -206,6 +215,8 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
           {/* Signup Form */}
           <form action={formAction} onSubmit={handleSubmit} className="space-y-6">
             <input type="hidden" name="persona" value={personaValue} />
+            <input type="hidden" name="gdprConsent" value={gdprConsent.toString()} />
+            <input type="hidden" name="marketingOptIn" value={marketingOptIn.toString()} />
             <div className="space-y-2">
               <Label
                 htmlFor="email"
@@ -303,6 +314,70 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                     : 'focus-visible:border-proofound-forest focus-visible:ring-proofound-forest/10'
                 }`}
               />
+            </div>
+
+            {/* GDPR Consent Checkboxes */}
+            <div className="space-y-4 pt-2">
+              {/* Required: Privacy Policy & Terms of Service */}
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={gdprConsent}
+                  onChange={(e) => setGdprConsent(e.target.checked)}
+                  required
+                  className={`mt-0.5 h-4 w-4 cursor-pointer rounded border-[#E8E6DD] transition-colors ${
+                    accountType === 'organization'
+                      ? 'text-proofound-terracotta focus:ring-proofound-terracotta/20'
+                      : 'text-proofound-forest focus:ring-proofound-forest/20'
+                  }`}
+                />
+                <span className="text-sm leading-5 text-[#2D3330]">
+                  I agree to the{' '}
+                  <a
+                    href="/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`font-medium underline underline-offset-2 transition-colors ${
+                      accountType === 'organization'
+                        ? 'text-proofound-terracotta hover:text-[#B5673F]'
+                        : 'text-proofound-forest hover:text-[#2D5D4A]'
+                    }`}
+                  >
+                    Privacy Policy
+                  </a>{' '}
+                  and{' '}
+                  <a
+                    href="/terms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`font-medium underline underline-offset-2 transition-colors ${
+                      accountType === 'organization'
+                        ? 'text-proofound-terracotta hover:text-[#B5673F]'
+                        : 'text-proofound-forest hover:text-[#2D5D4A]'
+                    }`}
+                  >
+                    Terms of Service
+                  </a>
+                  <span className="ml-1 text-[#B5542D]">*</span>
+                </span>
+              </label>
+
+              {/* Optional: Marketing emails */}
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={marketingOptIn}
+                  onChange={(e) => setMarketingOptIn(e.target.checked)}
+                  className={`mt-0.5 h-4 w-4 cursor-pointer rounded border-[#E8E6DD] transition-colors ${
+                    accountType === 'organization'
+                      ? 'text-proofound-terracotta focus:ring-proofound-terracotta/20'
+                      : 'text-proofound-forest focus:ring-proofound-forest/20'
+                  }`}
+                />
+                <span className="text-sm leading-5 text-[#2D333099]">
+                  Send me updates about new features and matching opportunities
+                </span>
+              </label>
             </div>
 
             <SignupSubmitButton>
