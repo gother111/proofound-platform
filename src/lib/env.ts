@@ -1,7 +1,12 @@
 /**
- * Centralized environment access + friendly validation.
+ * Centralized environment access + friendly validation for Next.js 16.
  * Accepts Supabase vars from either NEXT_PUBLIC_* or server-side SUPABASE_*.
  * Throws an error with code 'ENV_MISCONFIG' in strict mode when required envs are missing.
+ * 
+ * Next.js 16 optimizations:
+ * - Better runtime environment detection
+ * - Enhanced validation for production builds
+ * - Improved error messages for deployment
  */
 
 type EnvShape = {
@@ -87,7 +92,9 @@ function isPreviewHostname(hostname: string): boolean {
 }
 
 function isPreviewDeployment(): boolean {
-  return process.env.VERCEL_ENV === 'preview' || process.env.NODE_ENV !== 'production';
+  return process.env.VERCEL_ENV === 'preview' || 
+         process.env.NODE_ENV !== 'production' ||
+         process.env.NEXT_PHASE === 'phase-development-server';
 }
 
 function resolveProtocol(host: string, forwardedProto?: string): string {

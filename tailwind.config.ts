@@ -1,12 +1,13 @@
 import type { Config } from 'tailwindcss';
+import animatePlugin from 'tailwindcss-animate';
 import brandTokens from './src/design/brand-tokens.json';
 
-const config: Config = {
-  darkMode: ['class'],
+const config = {
+  darkMode: 'class',
   content: [
-    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/styles/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   safelist: [
     'section-pad',
@@ -151,7 +152,7 @@ const config: Config = {
       },
     },
   },
-  plugins: [require('tailwindcss-animate')],
-};
+  plugins: [animatePlugin],
+} satisfies Config;
 
 export default config;
