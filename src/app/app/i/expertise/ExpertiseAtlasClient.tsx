@@ -49,6 +49,48 @@ export function ExpertiseAtlasClient({
   const [isSideSheetOpen, setIsSideSheetOpen] = useState(false);
   const [sideSheetFilter, setSideSheetFilter] = useState<string>('');
 
+  // Filter skills for side sheet (must be before early return)
+  const filteredSkills = useMemo(() => {
+    let filtered = [...initialSkills];
+
+    // Apply L1 domain filter
+    if (filters.l1Domains.length > 0) {
+      filtered = filtered.filter(skill => 
+        filters.l1Domains.includes(skill.taxonomy?.cat_id)
+      );
+    }
+
+    // Apply status filter (credibility)
+    if (filters.status !== 'all') {
+      // TODO: Filter by actual proof/verification status once implemented
+      // For now, all skills are "claimOnly"
+      if (filters.status === 'verified') {
+        filtered = [];
+      } else if (filters.status === 'proofOnly') {
+        filtered = [];
+      }
+    }
+
+    // Apply recency filter
+    if (filters.recency !== 'all') {
+      const now = new Date();
+      filtered = filtered.filter(skill => {
+        if (!skill.lastUsedAt) return filters.recency === 'rusty';
+        
+        const monthsAgo = Math.floor(
+          (now.getTime() - new Date(skill.lastUsedAt).getTime()) / (1000 * 60 * 60 * 24 * 30)
+        );
+
+        if (filters.recency === 'active') return monthsAgo <= 6;
+        if (filters.recency === 'recent') return monthsAgo > 6 && monthsAgo <= 24;
+        if (filters.recency === 'rusty') return monthsAgo > 24;
+        return true;
+      });
+    }
+
+    return filtered;
+  }, [initialSkills, filters]);
+
   // Handle skill added - refresh page
   const handleSkillAdded = () => {
     // Trigger page refresh to show new skill
@@ -161,48 +203,6 @@ export function ExpertiseAtlasClient({
     const skill = initialSkills.find(s => s.id === skillId);
     if (skill) handleSkillEdit(skill);
   };
-
-  // Filter skills for side sheet
-  const filteredSkills = useMemo(() => {
-    let filtered = [...initialSkills];
-
-    // Apply L1 domain filter
-    if (filters.l1Domains.length > 0) {
-      filtered = filtered.filter(skill => 
-        filters.l1Domains.includes(skill.taxonomy?.cat_id)
-      );
-    }
-
-    // Apply status filter (credibility)
-    if (filters.status !== 'all') {
-      // TODO: Filter by actual proof/verification status once implemented
-      // For now, all skills are "claimOnly"
-      if (filters.status === 'verified') {
-        filtered = [];
-      } else if (filters.status === 'proofOnly') {
-        filtered = [];
-      }
-    }
-
-    // Apply recency filter
-    if (filters.recency !== 'all') {
-      const now = new Date();
-      filtered = filtered.filter(skill => {
-        if (!skill.lastUsedAt) return filters.recency === 'rusty';
-        
-        const monthsAgo = Math.floor(
-          (now.getTime() - new Date(skill.lastUsedAt).getTime()) / (1000 * 60 * 60 * 24 * 30)
-        );
-
-        if (filters.recency === 'active') return monthsAgo <= 6;
-        if (filters.recency === 'recent') return monthsAgo > 6 && monthsAgo <= 24;
-        if (filters.recency === 'rusty') return monthsAgo > 24;
-        return true;
-      });
-    }
-
-    return filtered;
-  }, [initialSkills, filters]);
 
   const selectedDomain = domains.find((d) => d.catId === selectedL1);
 
