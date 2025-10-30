@@ -47,8 +47,8 @@ function formatRecency(lastUsedAt?: string): string {
 
   if (monthsAgo === 0) return 'This month';
   if (monthsAgo === 1) return '1 month ago';
-  if (monthsAgo < 12) return `${monthsAgo} months ago';
-  
+  if (monthsAgo < 12) return `${monthsAgo} months ago`;
+
   const yearsAgo = Math.floor(monthsAgo / 12);
   return yearsAgo === 1 ? '1 year ago' : `${yearsAgo} years ago`;
 }
