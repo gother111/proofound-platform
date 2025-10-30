@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { X, Search, ChevronRight, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -125,21 +125,7 @@ export function AddSkillDrawer({
     }
   }, [open]);
 
-  // Fetch L2 categories when L1 is selected
-  useEffect(() => {
-    if (selectedL1 && step === 2) {
-      fetchL2Categories();
-    }
-  }, [selectedL1, step]);
-
-  // Fetch L3 subcategories when L2 is selected
-  useEffect(() => {
-    if (selectedL2 && step === 3) {
-      fetchL3Subcategories();
-    }
-  }, [selectedL2, step]);
-
-  const fetchL2Categories = async () => {
+  const fetchL2Categories = useCallback(async () => {
     if (!selectedL1) return;
     
     setL2Loading(true);
@@ -165,9 +151,9 @@ export function AddSkillDrawer({
     } finally {
       setL2Loading(false);
     }
-  };
+  }, [selectedL1]);
 
-  const fetchL3Subcategories = async () => {
+  const fetchL3Subcategories = useCallback(async () => {
     if (!selectedL2) return;
     
     setL3Loading(true);
@@ -183,7 +169,21 @@ export function AddSkillDrawer({
     } finally {
       setL3Loading(false);
     }
-  };
+  }, [selectedL2]);
+
+  // Fetch L2 categories when L1 is selected
+  useEffect(() => {
+    if (selectedL1 && step === 2) {
+      fetchL2Categories();
+    }
+  }, [selectedL1, step, fetchL2Categories]);
+
+  // Fetch L3 subcategories when L2 is selected
+  useEffect(() => {
+    if (selectedL2 && step === 3) {
+      fetchL3Subcategories();
+    }
+  }, [selectedL2, step, fetchL3Subcategories]);
 
   const handleL1Select = (domain: L1Domain) => {
     setSelectedL1(domain);

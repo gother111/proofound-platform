@@ -97,9 +97,9 @@ export function DashboardFilters({ filters, onFilterChange }: DashboardFiltersPr
       <div className="grid gap-4 md:grid-cols-3">
         {/* L1 Domains */}
         <div className="space-y-2">
-          <label className="text-xs font-medium text-muted-foreground">
+          <div className="text-xs font-medium text-muted-foreground">
             L1 Domains
-          </label>
+          </div>
           <div className="flex flex-wrap gap-1.5">
             {L1_OPTIONS.map(option => (
               <button
@@ -122,9 +122,9 @@ export function DashboardFilters({ filters, onFilterChange }: DashboardFiltersPr
 
         {/* Status */}
         <div className="space-y-2">
-          <label className="text-xs font-medium text-muted-foreground">
+          <div className="text-xs font-medium text-muted-foreground">
             Status
-          </label>
+          </div>
           <div className="flex flex-wrap gap-1.5">
             {STATUS_OPTIONS.map(option => (
               <button
@@ -146,9 +146,9 @@ export function DashboardFilters({ filters, onFilterChange }: DashboardFiltersPr
 
         {/* Recency */}
         <div className="space-y-2">
-          <label className="text-xs font-medium text-muted-foreground">
+          <div className="text-xs font-medium text-muted-foreground">
             Recency
-          </label>
+          </div>
           <div className="flex flex-wrap gap-1.5">
             {RECENCY_OPTIONS.map(option => (
               <button

@@ -1,12 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { EmptyState } from './components/EmptyState';
 import { L1Grid } from './components/L1Grid';
 import { L2Modal } from './components/L2Modal';
 import { L4Card } from './components/L4Card';
 import { AddSkillDrawer } from './components/AddSkillDrawer';
 import { EditSkillWindow } from './components/EditSkillWindow';
+import { DashboardFilters, FilterState } from './components/DashboardFilters';
+import { SkillsSideSheet } from './components/SkillsSideSheet';
+import { CredibilityPie } from './widgets/CredibilityPie';
+import { CoverageHeatmap } from './widgets/CoverageHeatmap';
+import { RelevanceBars } from './widgets/RelevanceBars';
+import { RecencyScatter } from './widgets/RecencyScatter';
+import { SkillWheel } from './widgets/SkillWheel';
+import { VerificationSourcesPie } from './widgets/VerificationSourcesPie';
+import { NextBestActions } from './widgets/NextBestActions';
 import { Button } from '@/components/ui/button';
 import { Plus, BookOpen } from 'lucide-react';
 
@@ -30,6 +39,15 @@ export function ExpertiseAtlasClient({
   const [isAddSkillDrawerOpen, setIsAddSkillDrawerOpen] = useState(false);
   const [isEditSkillWindowOpen, setIsEditSkillWindowOpen] = useState(false);
   const [skillToEdit, setSkillToEdit] = useState<any | null>(null);
+  
+  // Dashboard state
+  const [filters, setFilters] = useState<FilterState>({
+    l1Domains: [],
+    status: 'all',
+    recency: 'all',
+  });
+  const [isSideSheetOpen, setIsSideSheetOpen] = useState(false);
+  const [sideSheetFilter, setSideSheetFilter] = useState<string>('');
 
   // Handle skill added - refresh page
   const handleSkillAdded = () => {
@@ -106,6 +124,86 @@ export function ExpertiseAtlasClient({
     window.location.reload();
   };
 
+  // Widget click handlers
+  const handleCredibilityClick = (status: 'verified' | 'proofOnly' | 'claimOnly') => {
+    setSideSheetFilter(`${status} Skills`);
+    setFilters({ ...filters, status });
+    setIsSideSheetOpen(true);
+  };
+
+  const handleRelevanceClick = (relevance: 'obsolete' | 'current' | 'emerging') => {
+    setSideSheetFilter(`${relevance.charAt(0).toUpperCase() + relevance.slice(1)} Skills`);
+    setIsSideSheetOpen(true);
+  };
+
+  const handleCoverageClick = (l1: number, l2: number) => {
+    setSideSheetFilter(`Skills in L1-${l1} / L2-${l2}`);
+    setFilters({ ...filters, l1Domains: [l1] });
+    setIsSideSheetOpen(true);
+  };
+
+  const handleWheelClick = (domain: string) => {
+    setSideSheetFilter(`Skills in ${domain}`);
+    setIsSideSheetOpen(true);
+  };
+
+  const handleVerificationClick = (source: 'self' | 'peer' | 'manager' | 'external') => {
+    setSideSheetFilter(`${source.charAt(0).toUpperCase() + source.slice(1)} Verified Skills`);
+    setIsSideSheetOpen(true);
+  };
+
+  const handleScatterClick = (skillId: string) => {
+    const skill = initialSkills.find(s => s.id === skillId);
+    if (skill) handleSkillEdit(skill);
+  };
+
+  const handleActionClick = (skillId: string) => {
+    const skill = initialSkills.find(s => s.id === skillId);
+    if (skill) handleSkillEdit(skill);
+  };
+
+  // Filter skills for side sheet
+  const filteredSkills = useMemo(() => {
+    let filtered = [...initialSkills];
+
+    // Apply L1 domain filter
+    if (filters.l1Domains.length > 0) {
+      filtered = filtered.filter(skill => 
+        filters.l1Domains.includes(skill.taxonomy?.cat_id)
+      );
+    }
+
+    // Apply status filter (credibility)
+    if (filters.status !== 'all') {
+      // TODO: Filter by actual proof/verification status once implemented
+      // For now, all skills are "claimOnly"
+      if (filters.status === 'verified') {
+        filtered = [];
+      } else if (filters.status === 'proofOnly') {
+        filtered = [];
+      }
+    }
+
+    // Apply recency filter
+    if (filters.recency !== 'all') {
+      const now = new Date();
+      filtered = filtered.filter(skill => {
+        if (!skill.lastUsedAt) return filters.recency === 'rusty';
+        
+        const monthsAgo = Math.floor(
+          (now.getTime() - new Date(skill.lastUsedAt).getTime()) / (1000 * 60 * 60 * 24 * 30)
+        );
+
+        if (filters.recency === 'active') return monthsAgo <= 6;
+        if (filters.recency === 'recent') return monthsAgo > 6 && monthsAgo <= 24;
+        if (filters.recency === 'rusty') return monthsAgo > 24;
+        return true;
+      });
+    }
+
+    return filtered;
+  }, [initialSkills, filters]);
+
   const selectedDomain = domains.find((d) => d.catId === selectedL1);
 
   return (
@@ -139,7 +237,73 @@ export function ExpertiseAtlasClient({
           </div>
         </div>
 
+        {/* Dashboard Section */}
+        {widgetData && (
+          <div className="mb-8 space-y-6">
+            <h2 className="text-2xl font-semibold text-[#2D3330]">Dashboard</h2>
+            
+            {/* Filters */}
+            <DashboardFilters filters={filters} onFilterChange={setFilters} />
+
+            {/* Widgets Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Row 1 */}
+              <div className="bg-white rounded-lg p-6 shadow-sm border">
+                <CredibilityPie 
+                  data={widgetData.credibility} 
+                  onSegmentClick={handleCredibilityClick}
+                />
+              </div>
+              <div className="bg-white rounded-lg p-6 shadow-sm border">
+                <RelevanceBars 
+                  data={widgetData.relevance} 
+                  onBarClick={handleRelevanceClick}
+                />
+              </div>
+
+              {/* Row 2 */}
+              <div className="bg-white rounded-lg p-6 shadow-sm border">
+                <SkillWheel 
+                  data={widgetData.skillWheel} 
+                  onSectorClick={handleWheelClick}
+                />
+              </div>
+              <div className="bg-white rounded-lg p-6 shadow-sm border">
+                <VerificationSourcesPie 
+                  data={widgetData.verificationSources} 
+                  onSegmentClick={handleVerificationClick}
+                />
+              </div>
+
+              {/* Row 3 - Full Width */}
+              <div className="lg:col-span-2 bg-white rounded-lg p-6 shadow-sm border">
+                <RecencyScatter 
+                  data={widgetData.scatter} 
+                  onSkillClick={handleScatterClick}
+                />
+              </div>
+
+              {/* Row 4 - Full Width */}
+              <div className="lg:col-span-2 bg-white rounded-lg p-6 shadow-sm border">
+                <CoverageHeatmap 
+                  data={widgetData.coverage} 
+                  onCellClick={handleCoverageClick}
+                />
+              </div>
+
+              {/* Row 5 - Full Width */}
+              <div className="lg:col-span-2 bg-white rounded-lg p-6 shadow-sm border">
+                <NextBestActions 
+                  actions={widgetData.nextBestActions} 
+                  onActionClick={handleActionClick}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* L1 Grid */}
+        <h2 className="text-2xl font-semibold text-[#2D3330] mb-4">Skill Domains</h2>
         <L1Grid domains={domains} onDomainClick={handleDomainClick} />
 
         {/* L2 Modal */}
@@ -185,6 +349,18 @@ export function ExpertiseAtlasClient({
           skill={skillToEdit}
           onSkillUpdated={handleSkillAdded}
           onSkillDeleted={handleSkillDeleted}
+        />
+
+        {/* Skills Side Sheet */}
+        <SkillsSideSheet
+          open={isSideSheetOpen}
+          onOpenChange={setIsSideSheetOpen}
+          skills={filteredSkills}
+          filterDescription={sideSheetFilter || 'All Skills'}
+          onSkillClick={(skillId: string) => {
+            const skill = initialSkills.find(s => s.id === skillId);
+            if (skill) handleSkillEdit(skill);
+          }}
         />
       </div>
     </div>
