@@ -31,7 +31,7 @@ export const DeletionReminder = ({
   return (
     <Html>
       <Head />
-      <Preview>{daysRemaining} days until your Proofound account is deleted</Preview>
+      <Preview>{daysRemaining.toString()} days until your Proofound account is deleted</Preview>
       <Body style={main}>
         <Container style={container}>
           <Section style={urgentBox}>
