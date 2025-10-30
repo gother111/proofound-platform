@@ -2284,6 +2284,52 @@ npm run db:studio    # Open Drizzle Studio
 
 ## 7. LAUNCH CHECKLIST
 
+### Week 0: Privacy & Security Foundation (CRITICAL - Do First)
+
+**Status**: ✅ RLS policies deployed (2025-10-30)
+
+Before any feature work begins, establish privacy and security foundation:
+
+#### Task 1: Deploy RLS Policies (COMPLETED ✅)
+**Status**: 124 RLS policies deployed across 20 existing tables (100% coverage)
+- ✅ All 20 existing tables have RLS enabled
+- ✅ Profiles, matching_profiles, assignments protected
+- ⚠️ Note: 8 additional tables from original plan not yet created in schema (verification_requests, messages, conversations, analytics_events, etc.)
+
+**Migration**: `001_enable_rls_policies.sql` successfully deployed
+
+**Verification**:
+```sql
+-- Verify RLS is enabled
+SELECT schemaname, tablename, rowsecurity
+FROM pg_tables
+WHERE schemaname = 'public' AND rowsecurity = true;
+-- Should return 20 rows
+```
+
+#### Task 2: IP Anonymization for Analytics (1 day)
+- [ ] Update `analyticsEvents` schema: `ipAddress` → `ipHash`
+- [ ] Create `hashPII()` utility function in `/src/lib/utils/privacy.ts`
+- [ ] Update all analytics tracking calls to hash IPs before storage
+- [ ] Add `PII_HASH_SALT` to environment variables (generate with `openssl rand -hex 32`)
+- [ ] Test: Verify no raw IPs stored in database
+
+**Code Reference**: See `CRITICAL_GAPS_IMPLEMENTATION_GUIDE.md` Section 2
+
+#### Task 3: GDPR Consent Flow (1 day)
+- [ ] Add consent checkboxes to signup form (I-01)
+- [ ] Create `user_consents` table for audit trail
+- [ ] Store consent timestamp in database
+- [ ] Update signup API to record consent
+
+**Success Criteria**:
+- ✅ All existing tables have RLS enabled (20/20)
+- [ ] No raw IP addresses in `analytics_events` table (test with sample event)
+- [ ] GDPR consent checkbox visible on signup form
+- [ ] `PII_HASH_SALT` configured in all environments
+
+---
+
 ### Week 7: Pre-Launch (5 days before)
 
 **Day 1-2: Final Testing**
@@ -2298,17 +2344,41 @@ npm run db:studio    # Open Drizzle Studio
 - [ ] Set up support email (support@proofound.io)
 - [ ] Create FAQ document
 
-**Day 4: Monitoring Setup**
+**Day 4: Privacy & Security Testing**
+- [ ] **Privacy Audit**: Verify no raw PII exposed in API responses
+  - Test API endpoints don't return unmasked emails, IPs, or sensitive data
+  - Verify firewall scrubbing works for match results
+- [ ] **RLS Policy Testing**: Attempt unauthorized data access
+  - Create 2 test accounts (User A, User B)
+  - Test: User A cannot query User B's profile data
+  - Test: User A cannot read User B's messages
+  - Test: Verifier email hidden from public queries
+- [ ] **GDPR Compliance Check**: Test data export/deletion
+  - Test: User can download their data in JSON format
+  - Test: Account deletion anonymizes data after 30-day grace period
+  - Verify consent records stored in `user_consents` table
+- [ ] **RLS Policy Review**: Verify all 124 policies correct
+  - Check Supabase Dashboard → Authentication → Policies
+  - Verify each table has 2-4 policies listed
+  - Test with "RLS Playground" using different user IDs
+- [ ] **Penetration Testing**: Verify staged messaging prevents identity leaks
+  - Test: Stage 1 conversations show masked identities
+  - Test: Identity reveal requires mutual opt-in
+  - Test: No PII leakage in conversation metadata
+
+**Day 5: Monitoring Setup**
 - [ ] Vercel Analytics configured
 - [ ] Database dashboard (Supabase)
 - [ ] Error monitoring (consider Sentry)
 - [ ] Uptime monitoring (UptimeRobot)
+- [ ] Privacy metrics dashboard (audit log access, consent rates)
 
-**Day 5: Documentation**
+**Day 6: Documentation**
 - [ ] User guide
 - [ ] Admin guide
 - [ ] API documentation (if public)
 - [ ] Troubleshooting guide
+- [ ] Privacy policy & Terms of Service finalized
 
 ### Week 8: Launch Week
 

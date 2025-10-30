@@ -354,12 +354,26 @@ Examples:
 | `name` | text | Yes | 2-100 chars, Unicode letters | "Please enter your full name (2+ characters)." |
 | `password` | password | Yes | 12-128 chars, 1 upper, 1 lower, 1 number | "Password must be at least 12 characters with 1 uppercase, 1 lowercase, and 1 number." |
 | `agree_tos` | checkbox | Yes | Must be checked | "You must accept the Terms of Service to continue." |
+| `gdpr_consent` | checkbox | Yes | Must be checked | "You must agree to the Privacy Policy to continue." |
+| `marketing_opt_in` | checkbox | No | Optional | N/A |
 
 **Real-time Validation**:
 - **Email**: Check availability via `POST /api/auth/check-email` (debounced 500ms)
   - ✅ Green checkmark if available
   - ⚠️ "This email is already registered. [Sign in instead?](#)"
 - **Password**: Show strength meter (weak/fair/good/strong)
+
+**GDPR Consent Checkboxes** (NEW):
+- **GDPR Consent** (required):
+  - Label: "I agree to the [Privacy Policy](#) and understand how my data will be processed."
+  - Must be checked to proceed
+  - Links to Privacy Policy open in modal overlay
+  - Consent timestamp and version recorded in `user_consents` table
+- **Marketing Opt-In** (optional):
+  - Label: "Send me updates about new features, matching opportunities, and Proofound news."
+  - Default: Unchecked
+  - Can be changed later in Settings → Privacy & Data
+  - Respects CAN-SPAM Act (US) and GDPR (EU)
 
 **API Contract**:
 ```typescript
@@ -369,7 +383,10 @@ interface SignupRequest {
   name: string;
   password: string;
   agree_tos: boolean;
+  gdpr_consent: boolean; // ✅ NEW: Required for GDPR compliance
+  marketing_opt_in: boolean; // ✅ NEW: Optional (default: false)
   consent_version: string; // e.g., "1.0.2024"
+  consent_timestamp: string; // ✅ NEW: ISO 8601 timestamp (audit trail)
 }
 
 interface SignupResponse {
@@ -1719,9 +1736,624 @@ Response: {
 
 ## I-20 ACCOUNT & PRIVACY
 
-**OKRs**: Data export SLA <48h, Opt-out rate <5%
-**Key Features**: Availability toggle, Notification preferences, GDPR export/delete
-**API**: `PATCH /api/account/settings`, `POST /api/account/export`
+### Overview
+
+**Purpose**: Manage account settings, privacy controls, and data rights (GDPR compliance)
+**Entry**: Top navigation → Settings, or "Manage privacy" links throughout app
+**Success Metrics**:
+- **OKR**: Data export SLA <48h (GDPR compliance)
+- **OKR**: Marketing opt-out rate <5%
+- **OKR**: Privacy dashboard engagement ≥20% of users view within first month
+
+---
+
+### Screens
+
+#### Screen I-20-A: Settings Navigation
+
+**URL**: `/settings`
+
+**Tabs**:
+1. **Profile** - Basic info (name, email, avatar)
+2. **Account** - Password, email verification, 2FA
+3. **Notifications** - Email, push, in-app preferences
+4. **Privacy & Data** (NEW) - GDPR rights, consent management, audit log
+
+**Default Tab**: Profile
+
+---
+
+#### Screen I-20-B: Privacy & Data Tab (NEW)
+
+**URL**: `/settings/privacy`
+
+**Layout**:
+```
+┌─────────────────────────────────────────────────────┐
+│ Settings                                            │
+│ [Profile] [Account] [Notifications] [Privacy & Data] │
+├─────────────────────────────────────────────────────┤
+│                                                     │
+│ Privacy & Data                                      │
+│                                                     │
+│ ╔════════════════════════════════════════════════╗ │
+│ ║ 1. PROFILE PRIVACY                             ║ │
+│ ║                                                ║ │
+│ ║ Profile visibility:                            ║ │
+│ ║ [Dropdown: Public / Verified Only / Private]   ║ │
+│ ║                                                ║ │
+│ ║ [ ] Show compensation range to potential       ║ │
+│ ║     employers (toggle)                         ║ │
+│ ║ [✓] Show location                              ║ │
+│ ║ [ ] Show skills to public                      ║ │
+│ ╚════════════════════════════════════════════════╝ │
+│                                                     │
+│ ╔════════════════════════════════════════════════╗ │
+│ ║ 2. DATA MANAGEMENT                             ║ │
+│ ║                                                ║ │
+│ ║ Your Data Rights (GDPR):                       ║ │
+│ ║                                                ║ │
+│ ║ [Download My Data]  → Export JSON              ║ │
+│ ║ [Delete My Account] → Permanent deletion       ║ │
+│ ║                                                ║ │
+│ ║ Learn more: [Privacy Policy]                   ║ │
+│ ╚════════════════════════════════════════════════╝ │
+│                                                     │
+│ ╔════════════════════════════════════════════════╗ │
+│ ║ 3. COMMUNICATION PREFERENCES                   ║ │
+│ ║                                                ║ │
+│ ║ [✓] Email notifications (matches, messages)    ║ │
+│ ║ [✓] Match notifications (new opportunities)    ║ │
+│ ║ [ ] Marketing emails (updates, features)       ║ │
+│ ║                                                ║ │
+│ ║ Note: You can always opt back in later.       ║ │
+│ ╚════════════════════════════════════════════════╝ │
+│                                                     │
+│ ╔════════════════════════════════════════════════╗ │
+│ ║ 4. DATA WE COLLECT                             ║ │
+│ ║                                                ║ │
+│ ║ [View Audit Log]  → Recent activity            ║ │
+│ ║                                                ║ │
+│ ║ We collect: Profile data, skills, messages,    ║ │
+│ ║ analytics (hashed IPs only).                   ║ │
+│ ║                                                ║ │
+│ ║ [Learn more about your privacy →]             ║ │
+│ ╚════════════════════════════════════════════════╝ │
+│                                                     │
+│ [Save Changes]                                      │
+└─────────────────────────────────────────────────────┘
+```
+
+**Fields**:
+
+| Field | Type | Default | Validation |
+|-------|------|---------|-----------|
+| `profile_visibility` | dropdown | "Public" | One of: Public, Verified Only, Private |
+| `show_compensation` | boolean | false | N/A |
+| `show_location` | boolean | true | N/A |
+| `show_skills` | boolean | true | N/A |
+| `email_notifications` | boolean | true | N/A |
+| `match_notifications` | boolean | true | N/A |
+| `marketing_emails` | boolean | false | Can't re-enable if initially declined GDPR consent |
+
+**Profile Visibility Definitions**:
+- **Public**: Anyone can view your profile (search engines, unauthenticated users)
+- **Verified Only**: Only users with verified skills can see your profile
+- **Private**: Only matched organizations can see your profile
+
+**API Contracts**:
+
+```typescript
+// Update privacy settings
+PATCH /api/user/privacy
+interface PrivacySettingsRequest {
+  profile_visibility: 'public' | 'verified_only' | 'private';
+  show_compensation: boolean;
+  show_location: boolean;
+  show_skills: boolean;
+  email_notifications: boolean;
+  match_notifications: boolean;
+  marketing_emails: boolean;
+}
+
+interface PrivacySettingsResponse {
+  success: true;
+  data: {
+    updated_at: string; // ISO 8601
+    applied: boolean;
+  }
+}
+
+// Download user data (GDPR Right to Access - Article 15)
+GET /api/user/export
+interface ExportResponse {
+  success: true;
+  data: {
+    export_id: string;
+    status: 'processing' | 'ready' | 'failed';
+    download_url?: string; // Available when status === 'ready'
+    expires_at: string; // Link expires in 48 hours
+  }
+}
+
+// Delete account (GDPR Right to Erasure - Article 17)
+DELETE /api/user/account
+interface DeleteAccountRequest {
+  password: string; // Re-authentication required
+  confirmation_text: string; // Must match "DELETE MY ACCOUNT"
+}
+
+interface DeleteAccountResponse {
+  success: true;
+  data: {
+    deletion_scheduled_at: string; // 30-day grace period
+    permanent_deletion_at: string; // After grace period
+  }
+}
+```
+
+---
+
+#### Screen I-20-C: Delete Account Confirmation Modal
+
+**Triggered by**: Click "Delete My Account" button
+
+**Layout**:
+```
+┌─────────────────────────────────────────┐
+│ ⚠️  Delete Your Account?                │
+│                                         │
+│ This will permanently delete:           │
+│ • Your profile and skills               │
+│ • All messages and matches              │
+│ • Verifications and proofs              │
+│ • Analytics data                        │
+│                                         │
+│ 30-day grace period:                    │
+│ You can cancel deletion within 30 days  │
+│ by logging in.                          │
+│                                         │
+│ Type "DELETE MY ACCOUNT" to confirm:    │
+│ [__________________________]            │
+│                                         │
+│ Re-enter your password:                 │
+│ [__________________________]            │
+│                                         │
+│ [Cancel]  [Delete Permanently]          │
+└─────────────────────────────────────────┘
+```
+
+**Validation**:
+- Confirmation text must exactly match "DELETE MY ACCOUNT" (case-sensitive)
+- Password must be correct
+- If either fails: "Confirmation failed. Check your password and confirmation text."
+
+**After Deletion**:
+- Redirect to `/goodbye` page
+- Email sent: "Account deletion scheduled. Cancel by logging in within 30 days."
+
+---
+
+#### Screen I-20-D: Audit Log Modal
+
+**Triggered by**: Click "View Audit Log" button
+
+**URL**: `/settings/privacy/audit-log` (modal overlay)
+
+**Layout**:
+```
+┌──────────────────────────────────────────────────────┐
+│ Your Activity Log                            [Close]  │
+├──────────────────────────────────────────────────────┤
+│                                                      │
+│ Recent account activity (last 30 days):              │
+│                                                      │
+│ ┌──────────────────────────────────────────────────┐ │
+│ │ Date/Time         Action        IP (hashed)      │ │
+│ ├──────────────────────────────────────────────────┤ │
+│ │ Oct 30, 14:32    Login          ab3f5c...        │ │
+│ │ Oct 29, 09:15    Profile edit   ab3f5c...        │ │
+│ │ Oct 28, 16:48    Message sent   ab3f5c...        │ │
+│ │ Oct 27, 11:23    Match accepted ab3f5c...        │ │
+│ │ Oct 26, 08:57    Login          a2b9f1...        │ │
+│ │ ...                                              │ │
+│ └──────────────────────────────────────────────────┘ │
+│                                                      │
+│ Showing 50 most recent. [Download full log (CSV)]   │
+│                                                      │
+│ Note: IP addresses are hashed for privacy.          │
+└──────────────────────────────────────────────────────┘
+```
+
+**API Contract**:
+```typescript
+GET /api/user/audit-log?limit=50&offset=0
+interface AuditLogResponse {
+  success: true;
+  data: {
+    events: Array<{
+      id: string;
+      timestamp: string; // ISO 8601
+      action: string; // e.g., "login", "profile_edit", "message_sent"
+      ip_hash: string; // SHA-256 hash (first 8 chars shown in UI)
+      user_agent_hash: string;
+      location?: string; // City, Country (from IP geolocation)
+      device?: string; // "Chrome on Mac", "Safari on iPhone"
+    }>;
+    pagination: {
+      total: number;
+      limit: number;
+      offset: number;
+      has_more: boolean;
+    }
+  }
+}
+```
+
+**OKR**: Audit log views ≥5% of active users monthly
+
+---
+
+#### Screen I-20-E: Data Export Ready
+
+**Triggered by**: Export completes (async)
+
+**Notification**: Email + in-app banner
+
+**Layout** (in-app banner):
+```
+┌─────────────────────────────────────────────┐
+│ ✅ Your data export is ready!               │
+│                                             │
+│ [Download JSON] (expires in 48 hours)       │
+│                                             │
+│ Contains: Profile, skills, messages,        │
+│ matches, analytics                          │
+└─────────────────────────────────────────────┘
+```
+
+**Export Format** (JSON):
+```json
+{
+  "export_version": "1.0",
+  "exported_at": "2025-10-30T14:32:00Z",
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "name": "Jane Smith",
+    "created_at": "2025-01-15T10:00:00Z"
+  },
+  "profile": { /* ... */ },
+  "skills": [ /* ... */ ],
+  "experiences": [ /* ... */ ],
+  "messages": [ /* ... */ ],
+  "matches": [ /* ... */ ],
+  "analytics_summary": {
+    "total_logins": 47,
+    "profile_views": 342,
+    "messages_sent": 23
+  }
+}
+```
+
+---
+
+### Success Criteria
+
+- [ ] User can change profile visibility (3 options)
+- [ ] User can toggle compensation/location/skills visibility
+- [ ] User can download their data (JSON export)
+- [ ] User can delete their account (with 30-day grace period)
+- [ ] User can view audit log (last 50 actions)
+- [ ] User can update communication preferences
+- [ ] Marketing opt-out respected (no re-enabling if GDPR consent declined)
+- [ ] All API endpoints return correct data
+- [ ] GDPR compliance: Export SLA <48h, deletion after 30 days
+
+---
+
+---
+
+## I-41 PRIVACY DASHBOARD (NEW FLOW)
+
+### Overview
+
+**Purpose**: Educate users about data collection and provide transparent access to privacy controls
+**Entry**: Settings → Privacy & Data → "Learn more about your privacy", or footer "Privacy Center" link
+**Success Metrics**:
+- **OKR**: Privacy dashboard engagement ≥20% of users view within first month
+- **OKR**: Audit log views ≥5% of active users monthly
+- **OKR**: Data export request rate ≥2% (healthy transparency indicator)
+
+---
+
+### Screens
+
+#### Screen I-41-A: Privacy Overview
+
+**URL**: `/privacy-dashboard`
+
+**Layout**:
+```
+┌─────────────────────────────────────────────────────┐
+│ [← Back to Settings]                                │
+│                                                     │
+│ Your Privacy Controls                               │
+│ Proofound is built with privacy at its core.       │
+│ Here's what data we collect and how you control    │
+│ it.                                                 │
+│                                                     │
+│ ╔════════════════════════════════════════════════╗ │
+│ ║ 📊 DATA WE COLLECT                             ║ │
+│ ║                                                ║ │
+│ ║ • Profile data (name, email, skills)           ║ │
+│ ║ • Work history & education                     ║ │
+│ ║ • Messages & matches                           ║ │
+│ ║ • Analytics (hashed IPs only, no tracking)    ║ │
+│ ║                                                ║ │
+│ ║ [Learn more →]                                 ║ │
+│ ╚════════════════════════════════════════════════╝ │
+│                                                     │
+│ ╔════════════════════════════════════════════════╗ │
+│ ║ 🔒 YOUR RIGHTS                                 ║ │
+│ ║                                                ║ │
+│ ║ Under GDPR and CCPA, you have the right to:   ║ │
+│ ║                                                ║ │
+│ ║ ✓ Access your data                            ║ │
+│ ║ ✓ Export your data (JSON format)              ║ │
+│ ║ ✓ Delete your account                         ║ │
+│ ║ ✓ Object to marketing                         ║ │
+│ ║                                                ║ │
+│ ║ [Manage your rights →]                         ║ │
+│ ╚════════════════════════════════════════════════╝ │
+│                                                     │
+│ ╔════════════════════════════════════════════════╗ │
+│ ║ 📜 RECENT ACTIVITY                             ║ │
+│ ║                                                ║ │
+│ ║ Oct 30, 14:32  Login                          ║ │
+│ ║ Oct 29, 09:15  Profile edit                   ║ │
+│ ║ Oct 28, 16:48  Message sent                   ║ │
+│ ║                                                ║ │
+│ ║ [View full audit log →]                        ║ │
+│ ╚════════════════════════════════════════════════╝ │
+│                                                     │
+│ [Download My Data]  [Manage Privacy Settings]      │
+└─────────────────────────────────────────────────────┘
+```
+
+**Copy**:
+- **Heading**: "Your Privacy Controls"
+- **Subheading**: "Proofound is built with privacy at its core. Here's what data we collect and how you control it."
+- **CTA Primary**: "Download My Data"
+- **CTA Secondary**: "Manage Privacy Settings" → redirects to `/settings/privacy`
+
+---
+
+#### Screen I-41-B: Data Breakdown (Detail View)
+
+**URL**: `/privacy-dashboard/data`
+
+**Triggered by**: Click "Learn more" in "Data We Collect" card
+
+**Layout**:
+```
+┌─────────────────────────────────────────────────────┐
+│ [← Back]                                            │
+│                                                     │
+│ What Data We Collect                                │
+│                                                     │
+│ We collect only what's necessary to match you      │
+│ with purpose-driven organizations.                 │
+│                                                     │
+│ ▼ 1. Profile Data (Tier 1 PII)                     │
+│                                                     │
+│   • Name, email, location (city/country)           │
+│   • Avatar, bio, links                             │
+│   • Phone number (optional, for interviews)        │
+│                                                     │
+│   🔒 Protected by RLS policies. Only you and       │
+│   matched organizations can see this.              │
+│                                                     │
+│ ▼ 2. Skills & Experience (Tier 2 Sensitive)        │
+│                                                     │
+│   • Skills you add (5-20 skills)                   │
+│   • Work experience, education, volunteering       │
+│   • Compensation preferences (optional)            │
+│                                                     │
+│   🔒 Visibility controlled by you (Public /        │
+│   Verified Only / Private). See Settings.          │
+│                                                     │
+│ ▼ 3. Matching Preferences (Tier 2 Sensitive)       │
+│                                                     │
+│   • Sectors, causes, locations you're interested   │
+│   • in                                             │
+│   • Assignment types (contract, full-time, etc.)   │
+│                                                     │
+│   🔒 Never shared publicly. Used only for          │
+│   matching algorithm.                              │
+│                                                     │
+│ ▼ 4. Messages (Tier 2 Sensitive)                   │
+│                                                     │
+│   • Conversations with organizations               │
+│   • Stage 1: Masked identities (both sides)        │
+│   • Stage 2: Revealed identities (opt-in)          │
+│                                                     │
+│   🔒 End-to-end privacy. Only conversation         │
+│   participants can read messages.                  │
+│                                                     │
+│ ▼ 5. Analytics (Tier 3 Pseudonymized)              │
+│                                                     │
+│   • Logins, page views, interactions               │
+│   • IP addresses (hashed before storage)           │
+│   • User agent (browser/device, hashed)            │
+│                                                     │
+│   🔒 GDPR compliant. Raw IPs never stored.         │
+│   Used only for product improvement.               │
+│                                                     │
+│ ▼ 6. What We DON'T Collect                         │
+│                                                     │
+│   ✗ Browsing history outside Proofound             │
+│   ✗ Third-party tracking cookies                   │
+│   ✗ Social media data (beyond OAuth login)         │
+│   ✗ Financial data (except optional banking        │
+│     info for payouts)                              │
+│                                                     │
+│ [Download My Data]                                  │
+└─────────────────────────────────────────────────────┘
+```
+
+**API Contract**: No API needed (static content)
+
+---
+
+#### Screen I-41-C: Your Rights (Detail View)
+
+**URL**: `/privacy-dashboard/rights`
+
+**Triggered by**: Click "Manage your rights" in "Your Rights" card
+
+**Layout**:
+```
+┌─────────────────────────────────────────────────────┐
+│ [← Back]                                            │
+│                                                     │
+│ Your Data Rights                                    │
+│                                                     │
+│ Under GDPR (EU) and CCPA (California), you have    │
+│ the following rights:                               │
+│                                                     │
+│ ╔════════════════════════════════════════════════╗ │
+│ ║ ✅ Right to Access (GDPR Article 15)           ║ │
+│ ║                                                ║ │
+│ ║ You can view all your data at any time.       ║ │
+│ ║                                                ║ │
+│ ║ [View My Profile]  [View Messages]             ║ │
+│ ╚════════════════════════════════════════════════╝ │
+│                                                     │
+│ ╔════════════════════════════════════════════════╗ │
+│ ║ 📥 Right to Data Portability (Article 20)      ║ │
+│ ║                                                ║ │
+│ ║ Download your data in JSON format (machine-    ║ │
+│ ║ readable). Takes up to 48 hours to process.   ║ │
+│ ║                                                ║ │
+│ ║ [Download My Data]                             ║ │
+│ ╚════════════════════════════════════════════════╝ │
+│                                                     │
+│ ╔════════════════════════════════════════════════╗ │
+│ ║ 🗑️  Right to Erasure (Article 17)              ║ │
+│ ║                                                ║ │
+│ ║ Permanently delete your account and all data.  ║ │
+│ ║ 30-day grace period to cancel.                 ║ │
+│ ║                                                ║ │
+│ ║ [Delete My Account]                            ║ │
+│ ╚════════════════════════════════════════════════╝ │
+│                                                     │
+│ ╔════════════════════════════════════════════════╗ │
+│ ║ 🚫 Right to Object (Article 21)                ║ │
+│ ║                                                ║ │
+│ ║ Opt out of marketing emails and non-essential  ║ │
+│ ║ communications.                                ║ │
+│ ║                                                ║ │
+│ ║ [Manage Communication Preferences]             ║ │
+│ ╚════════════════════════════════════════════════╝ │
+│                                                     │
+│ ╔════════════════════════════════════════════════╗ │
+│ ║ 🔧 Right to Rectification (Article 16)         ║ │
+│ ║                                                ║ │
+│ ║ Correct or update your personal information.   ║ │
+│ ║                                                ║ │
+│ ║ [Edit My Profile]                              ║ │
+│ ╚════════════════════════════════════════════════╝ │
+│                                                     │
+│ Have questions? Contact us: privacy@proofound.io   │
+└─────────────────────────────────────────────────────┘
+```
+
+**Copy**:
+- **Heading**: "Your Data Rights"
+- **Subheading**: "Under GDPR (EU) and CCPA (California), you have the following rights:"
+- **Footer**: "Have questions? Contact us: privacy@proofound.io"
+
+---
+
+#### Screen I-41-D: Audit Log (Full View)
+
+**URL**: `/privacy-dashboard/audit-log`
+
+**Same as Screen I-20-D** (Audit Log Modal), but as a standalone page
+
+**Additional Features**:
+- Pagination: 50 items per page
+- Filters: Filter by action type (login, profile_edit, message_sent, etc.)
+- Date range picker: View logs from specific time period
+- Export: Download full audit log as CSV
+
+**API Contract**:
+```typescript
+GET /api/user/audit-log?limit=50&offset=0&action=login&start_date=2025-10-01&end_date=2025-10-30
+interface AuditLogRequest {
+  limit?: number; // Default: 50, Max: 100
+  offset?: number; // For pagination
+  action?: string; // Filter by action type
+  start_date?: string; // ISO 8601
+  end_date?: string; // ISO 8601
+}
+
+interface AuditLogResponse {
+  success: true;
+  data: {
+    events: Array<{
+      id: string;
+      timestamp: string;
+      action: string;
+      ip_hash: string;
+      user_agent_hash: string;
+      location?: string;
+      device?: string;
+    }>;
+    pagination: {
+      total: number;
+      limit: number;
+      offset: number;
+      has_more: boolean;
+    }
+  }
+}
+```
+
+---
+
+### Success Criteria
+
+- [ ] Privacy dashboard accessible from Settings
+- [ ] All 3 overview cards visible on main page
+- [ ] Data breakdown page shows all 6 data tiers
+- [ ] Rights page shows all 5 GDPR rights with CTAs
+- [ ] Audit log page shows last 50 actions with pagination
+- [ ] "Download My Data" button works (triggers export)
+- [ ] All links redirect to correct pages (Settings, Profile, Messages)
+- [ ] Footer "Privacy Center" link visible sitewide
+- [ ] **OKR**: ≥20% of users view privacy dashboard within first month
+- [ ] **OKR**: ≥5% of users view audit log monthly
+
+---
+
+### Data Flow
+
+**Privacy Dashboard → Data Export**:
+1. User clicks "Download My Data" → Triggers `POST /api/user/export`
+2. Backend queues export job (async)
+3. User sees "Export in progress..." banner
+4. When complete (≤48h): Email sent + in-app notification
+5. User clicks download link → `GET /api/user/export/:id/download`
+6. JSON file downloads (expires in 48 hours)
+
+**Privacy Dashboard → Account Deletion**:
+1. User clicks "Delete My Account" → Shows confirmation modal (Screen I-20-C)
+2. User types "DELETE MY ACCOUNT" + password → `DELETE /api/user/account`
+3. Backend schedules deletion for 30 days later
+4. User receives email: "Account deletion scheduled. Cancel by logging in."
+5. After 30 days: Permanent deletion (automated job)
 
 ---
 

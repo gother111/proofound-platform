@@ -273,7 +273,223 @@ src/
 
 ---
 
-### 2.2 Database Schema ✅ **COMPLETE FOR MVP**
+### 2.2 Privacy & Security Audit
+
+**Audit Date**: 2025-10-30
+
+**Audit Scope**: Row-Level Security (RLS) policies, PII protection, GDPR compliance
+
+---
+
+#### ✅ **RLS Policy Implementation** (100% for existing tables)
+
+**Status**: **COMPLETED** - 124 RLS policies deployed across 20 existing tables
+
+**Deployment Date**: 2025-10-30
+
+**Coverage**:
+- ✅ **20/20 existing tables protected** (100% coverage)
+- ✅ **124 total RLS policies deployed**
+- ✅ **Average 6.2 policies per table**
+
+**Tables with RLS Enabled** (20):
+```
+✅ profiles                      (7 policies)
+✅ individual_profiles           (6 policies)
+✅ matching_profiles             (7 policies)
+✅ organizations                 (8 policies)
+✅ organization_members          (7 policies)
+✅ organization_profiles         (6 policies)
+✅ skills                        (5 policies)
+✅ experiences                   (6 policies)
+✅ education                     (6 policies)
+✅ volunteering                  (6 policies)
+✅ impact_stories                (6 policies)
+✅ capabilities                  (6 policies)
+✅ evidence                      (6 policies)
+✅ assignments                   (8 policies)
+✅ matches                       (7 policies)
+✅ match_interest                (6 policies)
+✅ skill_endorsements            (6 policies)
+✅ growth_plans                  (6 policies)
+✅ notifications                 (5 policies)
+✅ notification_preferences      (4 policies)
+```
+
+**Migration File**: `/migrations/001_enable_rls_policies.sql` (deployed)
+
+**Verification**:
+```sql
+-- Verify RLS enabled (Run in Supabase SQL Editor)
+SELECT schemaname, tablename, rowsecurity
+FROM pg_tables
+WHERE schemaname = 'public' AND rowsecurity = true;
+-- Expected: 20 rows
+```
+
+---
+
+#### ⚠️ **Tables Pending RLS** (8 tables not yet created in schema)
+
+The following 8 tables from the original architecture plan are not yet created in the database schema. When these tables are added, RLS policies must be deployed immediately:
+
+```
+⚠️ verification_requests        (Not in schema yet)
+⚠️ verification_responses        (Not in schema yet)
+⚠️ verification_appeals          (Not in schema yet)
+⚠️ conversations                 (Not in schema yet)
+⚠️ messages                      (Not in schema yet)
+⚠️ blocked_users                 (Not in schema yet)
+⚠️ analytics_events              (Not in schema yet)
+⚠️ content_reports               (Not in schema yet)
+```
+
+**Action Required**: When creating these tables, immediately enable RLS and deploy policies from `DATA_SECURITY_PRIVACY_ARCHITECTURE.md` Section 6.2.
+
+---
+
+#### ❌ **CRITICAL GAP: Analytics Privacy Violation**
+
+**Issue**: Analytics tracking collects raw IP addresses (PII under GDPR Article 4(1))
+
+**Current Implementation**:
+```typescript
+// ❌ VIOLATES GDPR
+export const analyticsEvents = pgTable('analytics_events', {
+  ipAddress: text('ip_address'), // 🔴 RAW IP = PII under GDPR
+  userAgent: text('user_agent'),
+});
+```
+
+**Required Fix**: Hash IPs before storage using SHA-256
+```typescript
+// ✅ GDPR COMPLIANT
+export const analyticsEvents = pgTable('analytics_events', {
+  ipHash: text('ip_hash'), // ✅ SHA-256 hash of IP
+  userAgentHash: text('user_agent_hash'), // ✅ Hashed
+});
+```
+
+**Action Required**:
+1. Update schema to use `ipHash` and `userAgentHash`
+2. Create `hashPII()` utility function
+3. Add `PII_HASH_SALT` environment variable
+4. Update all analytics tracking calls
+
+**Reference**: See `CRITICAL_GAPS_IMPLEMENTATION_GUIDE.md` Section 2 for implementation steps.
+
+---
+
+#### ❌ **CRITICAL GAP: Verifier Email Exposure**
+
+**Issue**: Verification system exposes verifier emails without proper access controls
+
+**Risk**: Stage 0 messaging (pre-identity reveal) could leak identity if verifier email is visible
+
+**Action Required**:
+1. Add RLS policy: Only requester sees verifier email
+2. Implement firewall scrubbing for public verification endpoints
+3. Add privacy testing: Verify verifier email hidden from public queries
+
+**Reference**: See `DATA_SECURITY_PRIVACY_ARCHITECTURE.md` Section 4.3.
+
+---
+
+#### ❌ **Gap: PII Field Classification**
+
+**Status**: Not implemented
+
+**Required Action**:
+- Tag all PII fields in schema with tier (Tier 1, 2, 3, 4)
+- Document which fields are GDPR-sensitive
+- Implement data retention policies per tier
+
+**Reference**: See `DATA_SECURITY_PRIVACY_ARCHITECTURE.md` Section 2.
+
+---
+
+#### ❌ **Gap: Privacy Testing**
+
+**Status**: Not started
+
+**Required Action**:
+- Create RLS policy test suite (`/tests/rls-policies.test.ts`)
+- Test: User A cannot read User B's profile
+- Test: User A cannot read User B's messages
+- Test: Verifier email hidden from public queries
+- Test: Analytics events filtered to authenticated user only
+
+**Reference**: See `CRITICAL_GAPS_IMPLEMENTATION_GUIDE.md` Section 1.5.
+
+---
+
+#### ✅ **GDPR Compliance Status**
+
+**Data Subject Rights**:
+- ⚠️ Right to Access (Article 15): Not implemented (data export endpoint needed)
+- ⚠️ Right to Erasure (Article 17): Not implemented (account deletion endpoint needed)
+- ❌ Right to Data Portability (Article 20): Not implemented
+- ⚠️ Right to Object (Article 21): Partial (marketing opt-out exists, but no consent UI)
+
+**Consent Management**:
+- ❌ No consent checkboxes on signup form
+- ❌ No consent audit trail (`user_consents` table not created)
+- ⚠️ Privacy Policy exists but not linked prominently
+
+**Action Required**: See `USER_FLOWS_TECHNICAL_SPECIFICATIONS.md` I-41 (Privacy Dashboard) for implementation plan.
+
+---
+
+#### 🔒 **Security Posture**
+
+**Strengths**:
+- ✅ RLS policies deployed (20/20 existing tables)
+- ✅ Supabase Auth (industry-standard authentication)
+- ✅ HTTPS enforced (Vercel)
+- ✅ Environment variables secured
+
+**Weaknesses**:
+- ❌ Raw IP collection in analytics (GDPR violation)
+- ❌ No Content Security Policy (CSP) configured
+- ❌ No rate limiting implemented
+- ⚠️ Input sanitization not consistently applied
+
+**Recommended Actions**:
+1. Deploy IP anonymization immediately (1 day)
+2. Add CSP headers (30 minutes)
+3. Implement rate limiting (3 hours)
+4. Create security testing checklist
+
+**Reference**: See `CRITICAL_GAPS_IMPLEMENTATION_GUIDE.md` Section 7 (Security Hardening).
+
+---
+
+#### 📋 **Privacy Audit Summary**
+
+| Category | Status | Priority |
+|----------|--------|----------|
+| RLS Policies (existing tables) | ✅ 100% (20/20) | HIGH |
+| RLS Policies (pending tables) | ⚠️ 0% (0/8) | HIGH |
+| Analytics IP Anonymization | ❌ 0% | CRITICAL |
+| GDPR Consent Flow | ❌ 0% | HIGH |
+| Privacy Dashboard | ❌ 0% | MEDIUM |
+| PII Field Classification | ❌ 0% | MEDIUM |
+| Privacy Testing | ❌ 0% | HIGH |
+| Data Export Endpoint | ❌ 0% | HIGH |
+| Account Deletion Endpoint | ❌ 0% | HIGH |
+
+**Overall Privacy Grade**: 🟡 **B-** (RLS deployed, but critical GDPR gaps remain)
+
+**Next Steps**:
+1. ✅ Deploy RLS policies → **COMPLETED** (2025-10-30)
+2. 🔴 Fix analytics IP collection → **URGENT** (1 day)
+3. 🔴 Add GDPR consent to signup → **HIGH PRIORITY** (1 day)
+4. 🟡 Implement Privacy Dashboard → **WEEK 7** (3 days)
+5. 🟡 Create privacy testing suite → **WEEK 7** (2 days)
+
+---
+
+### 2.3 Database Schema ✅ **COMPLETE FOR MVP**
 
 **Files**:
 - `/src/db/schema.ts` - Drizzle schema (846 lines)
@@ -359,7 +575,7 @@ rate_limits                 ✅ Rate limiting
 
 ---
 
-### 2.3 API Routes Audit
+### 2.4 API Routes Audit
 
 **Existing API Routes**:
 
@@ -408,7 +624,7 @@ rate_limits                 ✅ Rate limiting
 
 ---
 
-### 2.4 Server Actions Audit
+### 2.5 Server Actions Audit
 
 **Existing Actions** (`/src/actions/`):
 
@@ -431,7 +647,7 @@ rate_limits                 ✅ Rate limiting
 
 ---
 
-### 2.5 Matching Algorithm Implementation Audit
+### 2.6 Matching Algorithm Implementation Audit
 
 **Location**: `/src/lib/core/matching/`
 
@@ -533,7 +749,7 @@ Overall:               ~60% ████████████░░░░░�
 
 ---
 
-### 2.6 Email Infrastructure Audit
+### 2.7 Email Infrastructure Audit
 
 **Location**: `/src/lib/email.ts` (79 lines)
 
@@ -590,7 +806,7 @@ NEXT_PUBLIC_SITE_URL=✅     # Set: https://proofound.io
 
 ---
 
-### 2.7 File Storage Audit
+### 2.8 File Storage Audit
 
 **Status**: ❌ **NOT CONFIGURED**
 
@@ -646,7 +862,7 @@ export async function deleteFile(path: string)
 
 ---
 
-### 2.8 Analytics & Instrumentation Audit
+### 2.9 Analytics & Instrumentation Audit
 
 **Status**: ❌ **5% Complete**
 
@@ -715,7 +931,7 @@ await trackEvent('match_accepted', { matchId, score }, user.id);
 
 ---
 
-### 2.9 Security Audit
+### 2.10 Security Audit
 
 **Status**: ✅ **80% Complete** (Good foundation, some gaps)
 
@@ -808,7 +1024,7 @@ npm install dompurify @types/dompurify
 
 ---
 
-### 2.10 Performance Audit
+### 2.11 Performance Audit
 
 **Status**: ✅ **85% Complete** (Well-optimized, room for improvement)
 

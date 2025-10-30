@@ -23,18 +23,598 @@ This guide provides detailed, copy-paste-ready instructions for implementing the
 
 ## TABLE OF CONTENTS
 
-1. [File Storage Implementation](#1-file-storage-implementation)
-2. [Analytics Tracking System](#2-analytics-tracking-system)
-3. [Skills Taxonomy Expansion](#3-skills-taxonomy-expansion)
-4. [Rate Limiting Implementation](#4-rate-limiting-implementation)
-5. [Security Hardening](#5-security-hardening)
-6. [Testing Checklists](#6-testing-checklists)
+1. [ROW-LEVEL SECURITY (RLS) IMPLEMENTATION](#1-row-level-security-rls-implementation)
+2. [Analytics IP Anonymization](#2-analytics-ip-anonymization)
+3. [File Storage Implementation](#3-file-storage-implementation)
+4. [Analytics Tracking System](#4-analytics-tracking-system)
+5. [Skills Taxonomy Expansion](#5-skills-taxonomy-expansion)
+6. [Rate Limiting Implementation](#6-rate-limiting-implementation)
+7. [Security Hardening](#7-security-hardening)
+8. [Testing Checklists](#8-testing-checklists)
 
 ---
 
-## 1. FILE STORAGE IMPLEMENTATION
+## 1. ROW-LEVEL SECURITY (RLS) IMPLEMENTATION
 
 ### 1.1 Overview
+
+**Goal**: Protect all user data with Row-Level Security policies to prevent unauthorized access
+
+**Status**: ✅ **COMPLETED** - 124 RLS policies deployed across 20 existing tables (2025-10-30)
+
+**Tech Stack**: Supabase RLS (PostgreSQL Row-Level Security)
+
+**Time Estimate**: 2-3 days (initial deployment complete, 8 additional tables pending schema migration)
+
+---
+
+### 1.2 Why This Is Critical
+
+**Without RLS, users can query other users' private data directly via Supabase client.**
+
+Even with authentication, without RLS policies, any authenticated user could run:
+```typescript
+// ❌ WITHOUT RLS: This would return ALL users' profiles
+const { data } = await supabase.from('profiles').select('*');
+
+// ❌ WITHOUT RLS: User A could read User B's private messages
+const { data } = await supabase
+  .from('messages')
+  .select('*')
+  .eq('sender_id', 'user-b-id');
+```
+
+**With RLS enabled and policies deployed**, these queries are automatically filtered:
+```typescript
+// ✅ WITH RLS: Returns only the authenticated user's own profile
+const { data } = await supabase.from('profiles').select('*');
+// Result: Only rows where auth.uid() = id
+
+// ✅ WITH RLS: User A cannot access User B's messages
+const { data } = await supabase
+  .from('messages')
+  .select('*')
+  .eq('sender_id', 'user-b-id');
+// Result: Empty array (RLS blocks unauthorized access)
+```
+
+---
+
+### 1.3 Step 1: Verify RLS Deployment Status
+
+**Current Status** (as of 2025-10-30):
+
+Run this SQL in Supabase SQL Editor to verify:
+
+```sql
+-- Check which tables have RLS enabled
+SELECT schemaname, tablename, rowsecurity
+FROM pg_tables
+WHERE schemaname = 'public'
+ORDER BY tablename;
+
+-- Count total policies deployed
+SELECT COUNT(*) as total_policies
+FROM pg_policies
+WHERE schemaname = 'public';
+
+-- List policies by table
+SELECT tablename, COUNT(*) as policy_count
+FROM pg_policies
+WHERE schemaname = 'public'
+GROUP BY tablename
+ORDER BY policy_count DESC;
+```
+
+**Expected Results**:
+- ✅ 20 tables with `rowsecurity = true`
+- ✅ 124 total policies
+- ✅ Average 6.2 policies per table
+
+**Tables Protected** (20/20):
+- profiles, individual_profiles, matching_profiles
+- organizations, organization_members, organization_profiles
+- skills, experiences, education, volunteering
+- impact_stories, capabilities, evidence
+- assignments, matches, match_interest
+- skill_endorsements, growth_plans
+- notifications, notification_preferences
+
+**Tables Pending** (8 tables not yet created in schema):
+- verification_requests, verification_responses, verification_appeals
+- conversations, messages, blocked_users
+- analytics_events
+- content_reports, moderation_actions, user_violations
+
+---
+
+### 1.4 Step 2: Deploy RLS Policies for New Tables (When Created)
+
+When the 8 pending tables are added to the schema, deploy these policies:
+
+#### Verification Requests - CRITICAL PRIVACY
+
+```sql
+-- Enable RLS first
+ALTER TABLE verification_requests ENABLE ROW LEVEL SECURITY;
+
+-- Only requester sees verifier email (TIER 1 PII)
+CREATE POLICY "only_requester_sees_verifier_email"
+  ON verification_requests FOR SELECT
+  USING (auth.uid() = profile_id);
+
+-- Verifier can access via token (no auth required)
+CREATE POLICY "verifier_access_via_token"
+  ON verification_requests FOR SELECT
+  USING (token = current_setting('request.jwt.claims')::json->>'verification_token');
+
+-- Only requester can create verification requests
+CREATE POLICY "users_can_create_own_verification_requests"
+  ON verification_requests FOR INSERT
+  WITH CHECK (profile_id = auth.uid());
+```
+
+#### Messages - Staged Privacy Protection
+
+```sql
+ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+
+-- Users can only read messages in their own conversations
+CREATE POLICY "users_read_messages_in_own_conversations"
+  ON messages FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM conversations
+      WHERE conversations.id = messages.conversation_id
+        AND (
+          conversations.participant_one_id = auth.uid()
+          OR conversations.participant_two_id = auth.uid()
+        )
+    )
+  );
+
+-- Users can only send messages to their own conversations
+CREATE POLICY "users_send_messages_to_own_conversations"
+  ON messages FOR INSERT
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM conversations
+      WHERE conversations.id = messages.conversation_id
+        AND (
+          conversations.participant_one_id = auth.uid()
+          OR conversations.participant_two_id = auth.uid()
+        )
+    )
+  );
+```
+
+#### Conversations - Participant-only Access
+
+```sql
+ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
+
+-- Users can only see conversations they're part of
+CREATE POLICY "users_read_own_conversations"
+  ON conversations FOR SELECT
+  USING (
+    participant_one_id = auth.uid()
+    OR participant_two_id = auth.uid()
+  );
+
+-- Users can update conversation stage (for identity reveal)
+CREATE POLICY "users_can_update_conversation_stage"
+  ON conversations FOR UPDATE
+  USING (
+    participant_one_id = auth.uid()
+    OR participant_two_id = auth.uid()
+  );
+```
+
+#### Analytics Events - Users See Own Data Only
+
+```sql
+ALTER TABLE analytics_events ENABLE ROW LEVEL SECURITY;
+
+-- Users can only read their own analytics
+CREATE POLICY "users_read_own_analytics"
+  ON analytics_events FOR SELECT
+  USING (user_id = auth.uid());
+
+-- System can insert analytics (server-side only)
+CREATE POLICY "service_role_can_insert_analytics"
+  ON analytics_events FOR INSERT
+  WITH CHECK (auth.jwt() ->> 'role' = 'service_role');
+```
+
+---
+
+### 1.5 Step 3: Test RLS Policies
+
+Create this test file to verify RLS policies work correctly:
+
+**File**: `/tests/rls-policies.test.ts`
+
+```typescript
+import { createClient } from '@supabase/supabase-js';
+import { describe, test, expect, beforeAll } from 'vitest';
+
+describe('RLS Policy Tests', () => {
+  let userAClient: any;
+  let userBClient: any;
+  let USER_A_ID: string;
+  let USER_B_ID: string;
+
+  beforeAll(async () => {
+    // Create two test users
+    userAClient = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!);
+    userBClient = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!);
+
+    // Sign in as User A
+    const { data: userA } = await userAClient.auth.signInWithPassword({
+      email: 'usera@test.com',
+      password: 'password123'
+    });
+    USER_A_ID = userA.user.id;
+
+    // Sign in as User B
+    const { data: userB } = await userBClient.auth.signInWithPassword({
+      email: 'userb@test.com',
+      password: 'password123'
+    });
+    USER_B_ID = userB.user.id;
+  });
+
+  test('User A cannot read User B profile', async () => {
+    // Attempt to read User B's profile as User A
+    const { data, error } = await userAClient
+      .from('profiles')
+      .select('*')
+      .eq('id', USER_B_ID)
+      .single();
+
+    // RLS should block this
+    expect(data).toBeNull();
+    expect(error).toBeDefined();
+  });
+
+  test('User can read their own profile', async () => {
+    const { data, error } = await userAClient
+      .from('profiles')
+      .select('*')
+      .eq('id', USER_A_ID)
+      .single();
+
+    expect(error).toBeNull();
+    expect(data).toBeDefined();
+    expect(data.id).toBe(USER_A_ID);
+  });
+
+  test('User A cannot read User B messages', async () => {
+    // Attempt to read User B's messages
+    const { data } = await userAClient
+      .from('messages')
+      .select('*')
+      .eq('sender_id', USER_B_ID);
+
+    // RLS should return empty array
+    expect(data).toEqual([]);
+  });
+
+  test('Analytics events only show own data', async () => {
+    const { data } = await userAClient
+      .from('analytics_events')
+      .select('*');
+
+    // Should only return User A's events
+    expect(data?.every(event => event.user_id === USER_A_ID)).toBe(true);
+  });
+});
+```
+
+**Run Tests**:
+```bash
+npm run test tests/rls-policies.test.ts
+```
+
+---
+
+### 1.6 Step 4: Verify with Supabase Dashboard
+
+1. Go to **Supabase Dashboard** → **Authentication** → **Policies**
+2. Verify all tables show **"RLS Enabled"** badge
+3. Check each table has 2-4 policies listed
+4. Test with **"RLS Playground"**:
+   - Select a table (e.g., `profiles`)
+   - Choose a test user
+   - Run query: `SELECT * FROM profiles`
+   - Verify: Only shows that user's own profile
+
+---
+
+### 1.7 Testing Checklist
+
+- [ ] All 20 existing tables have RLS enabled
+- [ ] User A cannot query User B's profile data
+- [ ] User A cannot read User B's messages
+- [ ] Verifier email hidden from public queries (when table exists)
+- [ ] Analytics events filtered to authenticated user only
+- [ ] Service role can insert analytics (server-side)
+- [ ] RLS Playground tests pass for all tables
+
+---
+
+## 2. ANALYTICS IP ANONYMIZATION
+
+### 2.1 Overview
+
+**Goal**: Hash IP addresses before storage to comply with GDPR Article 4(1)
+
+**Current Issue**: `analyticsEvents` table stores raw IP addresses (PII under GDPR)
+
+**Time Estimate**: 1 day
+
+---
+
+### 2.2 Why This Is Critical
+
+**GDPR Article 4(1)** defines IP addresses as personal data. Storing raw IPs without explicit consent and retention policy is a **GDPR violation**.
+
+**Current Schema** (❌ VIOLATES GDPR):
+```typescript
+export const analyticsEvents = pgTable('analytics_events', {
+  ipAddress: text('ip_address'), // 🔴 RAW IP = PII under GDPR
+  userAgent: text('user_agent'),
+  sessionId: text('session_id'),
+});
+```
+
+**Required Fix** (✅ GDPR COMPLIANT):
+```typescript
+export const analyticsEvents = pgTable('analytics_events', {
+  ipHash: text('ip_hash'), // ✅ SHA-256 hash of IP
+  userAgentHash: text('user_agent_hash'), // ✅ Hashed
+  // Raw IPs never stored
+});
+```
+
+---
+
+### 2.3 Step 1: Update Schema
+
+**File**: `/src/db/schema.ts`
+
+```typescript
+export const analyticsEvents = pgTable('analytics_events', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  eventType: text('event_type').notNull(),
+  userId: uuid('user_id').references(() => profiles.id, { onDelete: 'cascade' }),
+  orgId: uuid('org_id').references(() => organizations.id, { onDelete: 'cascade' }),
+  properties: jsonb('properties').default(sql`'{}'::jsonb`),
+  sessionId: text('session_id'),
+  ipHash: text('ip_hash'), // ✅ CHANGED: Store hash, not raw IP
+  userAgentHash: text('user_agent_hash'), // ✅ CHANGED: Hash user agent too
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+```
+
+**Generate Migration**:
+```bash
+npm run db:generate -- --name anonymize_analytics_pii
+```
+
+**Apply Migration**:
+```bash
+npm run db:push
+```
+
+---
+
+### 2.4 Step 2: Create Hashing Utility
+
+**File**: `/src/lib/utils/privacy.ts` (create new file)
+
+```typescript
+import crypto from 'crypto';
+
+/**
+ * Hash PII for analytics storage (one-way, irreversible)
+ * Complies with GDPR Article 4(5) - pseudonymization
+ */
+export function hashPII(value: string, salt?: string): string {
+  if (!value) return '';
+
+  const hashSalt = salt || process.env.PII_HASH_SALT;
+  
+  if (!hashSalt) {
+    throw new Error('PII_HASH_SALT environment variable not set');
+  }
+
+  return crypto
+    .createHash('sha256')
+    .update(value + hashSalt)
+    .digest('hex');
+}
+
+/**
+ * Anonymize IP address for analytics
+ * @param ip - Raw IP address (IPv4 or IPv6)
+ * @returns SHA-256 hash of IP (irreversible)
+ */
+export function anonymizeIP(ip: string): string {
+  return hashPII(ip);
+}
+
+/**
+ * Anonymize User Agent string
+ */
+export function anonymizeUserAgent(ua: string): string {
+  return hashPII(ua);
+}
+```
+
+---
+
+### 2.5 Step 3: Update Analytics Tracking
+
+**File**: `/src/lib/analytics.ts` (update existing or create)
+
+```typescript
+import { anonymizeIP, anonymizeUserAgent } from '@/lib/utils/privacy';
+import { createClient } from '@/lib/supabase/server';
+
+/**
+ * Track analytics event with privacy-preserving hashing
+ */
+export async function trackEvent(
+  eventType: string,
+  properties: Record<string, any> = {},
+  userId?: string,
+  request?: Request
+) {
+  try {
+    const supabase = await createClient();
+
+    // Get user if not provided
+    if (!userId) {
+      const { data: { user } } = await supabase.auth.getUser();
+      userId = user?.id;
+    }
+
+    // Extract IP and User Agent from request (if available)
+    let ipHash: string | null = null;
+    let userAgentHash: string | null = null;
+
+    if (request) {
+      const ip = request.headers.get('x-forwarded-for') ||
+                 request.headers.get('x-real-ip') ||
+                 'unknown';
+      const userAgent = request.headers.get('user-agent') || 'unknown';
+
+      // Hash before storage (GDPR compliant)
+      ipHash = anonymizeIP(ip);
+      userAgentHash = anonymizeUserAgent(userAgent);
+    }
+
+    // Insert event with hashed PII
+    await supabase.from('analytics_events').insert({
+      event_type: eventType,
+      user_id: userId,
+      properties,
+      ip_hash: ipHash, // ✅ Hashed, not raw
+      user_agent_hash: userAgentHash, // ✅ Hashed, not raw
+      created_at: new Date().toISOString(),
+    });
+
+    // Log to console in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📊 [Analytics] ${eventType}`, { userId, properties });
+    }
+  } catch (error) {
+    // Don't throw - analytics failures shouldn't break app
+    console.error('Failed to track event:', error);
+  }
+}
+```
+
+---
+
+### 2.6 Step 4: Add Environment Variable
+
+**File**: `.env.local` (add)
+
+```bash
+# Generate with: openssl rand -hex 32
+PII_HASH_SALT=<your-64-character-hex-salt>
+```
+
+**Generate Salt**:
+```bash
+openssl rand -hex 32
+```
+
+**Example Output**:
+```
+a3c8f9e2b7d4c1a8f6e9d2b5c8a3f6e9d2b5c8a3f6e9d2b5c8a3f6e9d2b5c8a3
+```
+
+**⚠️ SECURITY NOTE**: 
+- NEVER commit `PII_HASH_SALT` to git
+- Store in Vercel environment variables for production
+- Use different salts for staging vs production
+
+**Add to Vercel**:
+```bash
+vercel env add PII_HASH_SALT
+# Paste the generated salt when prompted
+```
+
+---
+
+### 2.7 Step 5: Update All Tracking Calls
+
+Find all places where analytics are tracked and update them:
+
+**Example - Auth Action**:
+
+**File**: `/src/actions/auth.ts`
+
+```typescript
+import { trackEvent } from '@/lib/analytics';
+
+export async function signUpWithEmail(email: string, password: string, request: Request) {
+  // ... existing signup logic ...
+
+  // Track signup event with request for IP hashing
+  await trackEvent('signed_up', { method: 'email' }, user.id, request);
+}
+```
+
+**Example - API Route**:
+
+**File**: `/src/app/api/matches/accept/route.ts`
+
+```typescript
+export async function POST(request: NextRequest) {
+  // ... existing logic ...
+
+  // Track match acceptance with request
+  await trackEvent('match_accepted', { 
+    matchId, 
+    score 
+  }, user.id, request);
+}
+```
+
+---
+
+### 2.8 Testing Checklist
+
+- [ ] Schema updated with `ip_hash` and `user_agent_hash`
+- [ ] Migration applied successfully
+- [ ] `hashPII()` utility function created
+- [ ] `PII_HASH_SALT` added to all environments
+- [ ] `trackEvent()` function updated to use hashing
+- [ ] All tracking calls updated to pass `request` parameter
+- [ ] Test: Insert analytics event → verify IP is hashed (64-char hex)
+- [ ] Test: Query `analytics_events` → confirm no raw IPs stored
+- [ ] Verify salt is NOT in git (check `.gitignore`)
+
+**Test Query**:
+```sql
+-- Verify no raw IPs in database
+SELECT ip_hash, LENGTH(ip_hash) as hash_length
+FROM analytics_events
+LIMIT 10;
+
+-- Expected: hash_length = 64 (SHA-256 produces 64-char hex)
+-- Expected: ip_hash looks like: "a3c8f9e2b7d4c1a8f6e9d2b5c8a3f6e9..."
+```
+
+---
+
+## 3. FILE STORAGE IMPLEMENTATION
+
+### 3.1 Overview
 
 **Goal**: Enable users to upload proof evidence (PDFs, images) up to 5MB
 
@@ -44,7 +624,7 @@ This guide provides detailed, copy-paste-ready instructions for implementing the
 
 ---
 
-### 1.2 Step 1: Configure Supabase Storage (30 minutes)
+### 3.2 Step 1: Configure Supabase Storage (30 minutes)
 
 #### Via Supabase Dashboard
 
@@ -87,7 +667,7 @@ WHERE id IN ('avatars', 'logos');
 
 ---
 
-### 1.3 Step 2: Configure RLS Policies (15 minutes)
+### 3.3 Step 2: Configure RLS Policies (15 minutes)
 
 ```sql
 -- Run in Supabase SQL Editor
@@ -208,7 +788,7 @@ CREATE POLICY "Users can delete own logo"
 
 ---
 
-### 1.4 Step 3: Create Storage Utility Library (1 hour)
+### 3.4 Step 3: Create Storage Utility Library (1 hour)
 
 **File**: `/src/lib/storage.ts`
 
@@ -451,7 +1031,7 @@ function getContentType(fileName: string): string {
 
 ---
 
-### 1.5 Step 4: Create Upload API Endpoint (30 minutes)
+### 3.5 Step 4: Create Upload API Endpoint (30 minutes)
 
 **File**: `/src/app/api/storage/upload/route.ts`
 
@@ -515,7 +1095,7 @@ export async function POST(request: NextRequest) {
 
 ---
 
-### 1.6 Step 5: Create Upload Component (1 hour)
+### 3.6 Step 5: Create Upload Component (1 hour)
 
 **File**: `/src/components/storage/FileUpload.tsx`
 
@@ -693,7 +1273,7 @@ export function FileUpload({
 
 ---
 
-### 1.7 Step 6: Usage Example (15 minutes)
+### 3.7 Step 6: Usage Example (15 minutes)
 
 **Add to Profile Page**:
 
@@ -753,7 +1333,7 @@ export default function ProfilePage() {
 
 ---
 
-### 1.8 Testing Checklist
+### 3.8 Testing Checklist
 
 - [ ] Upload avatar (≤2MB)
 - [ ] Upload PDF proof (≤5MB)
@@ -766,9 +1346,9 @@ export default function ProfilePage() {
 
 ---
 
-## 2. ANALYTICS TRACKING SYSTEM
+## 4. ANALYTICS TRACKING SYSTEM
 
-### 2.1 Overview
+### 4.1 Overview
 
 **Goal**: Track all key events for North Star metrics
 
@@ -776,7 +1356,7 @@ export default function ProfilePage() {
 
 ---
 
-### 2.2 Step 1: Create Analytics Utility (30 minutes)
+### 4.2 Step 1: Create Analytics Utility (30 minutes)
 
 **File**: `/src/lib/analytics.ts`
 
@@ -898,7 +1478,7 @@ export async function trackProfileReadyForMatch(userId: string) {
 
 ---
 
-### 2.3 Step 2: Add Tracking to Key Flows (2 hours)
+### 4.3 Step 2: Add Tracking to Key Flows (2 hours)
 
 #### Auth (Sign Up)
 
@@ -989,7 +1569,7 @@ await trackEvent('assignment_published', { assignmentId: assignment.id }, user.i
 
 ---
 
-### 2.4 Step 3: Create Metrics Dashboard (2 hours)
+### 4.4 Step 3: Create Metrics Dashboard (2 hours)
 
 **File**: `/src/app/admin/metrics/page.tsx`
 
@@ -1144,7 +1724,7 @@ function MetricCard({
 
 ---
 
-### 2.5 Step 4: Create SQL Functions for Metrics (1 hour)
+### 4.5 Step 4: Create SQL Functions for Metrics (1 hour)
 
 ```sql
 -- Run in Supabase SQL Editor
@@ -1245,7 +1825,7 @@ $$;
 
 ---
 
-### 2.6 Testing Checklist
+### 4.6 Testing Checklist
 
 - [ ] Sign up → verify `signed_up` event tracked
 - [ ] Complete profile → verify `profile_ready_for_match` tracked
@@ -1256,9 +1836,9 @@ $$;
 
 ---
 
-## 3. SKILLS TAXONOMY EXPANSION
+## 5. SKILLS TAXONOMY EXPANSION
 
-### 3.1 Goal
+### 5.1 Goal
 
 Expand from 114 skills to 500+ core skills.
 
@@ -1266,7 +1846,7 @@ Expand from 114 skills to 500+ core skills.
 
 ---
 
-### 3.2 Additional Skills (386 more)
+### 5.2 Additional Skills (386 more)
 
 **File**: `/src/lib/taxonomy/data.ts` (append to `SKILLS_TAXONOMY`)
 
@@ -1466,9 +2046,9 @@ Expand from 114 skills to 500+ core skills.
 
 ---
 
-## 4. RATE LIMITING IMPLEMENTATION
+## 6. RATE LIMITING IMPLEMENTATION
 
-### 4.1 Overview
+### 6.1 Overview
 
 **Goal**: Prevent abuse with rate limiting per IP and per user
 
@@ -1478,7 +2058,7 @@ Expand from 114 skills to 500+ core skills.
 
 ---
 
-### 4.2 Step 1: Install Dependencies (5 minutes)
+### 6.2 Step 1: Install Dependencies (5 minutes)
 
 ```bash
 npm install @upstash/ratelimit @upstash/redis
@@ -1492,7 +2072,7 @@ Or use built-in Supabase:
 
 ---
 
-### 4.3 Step 2: Create Rate Limit Utility (1 hour)
+### 6.3 Step 2: Create Rate Limit Utility (1 hour)
 
 **File**: `/src/lib/rate-limit.ts`
 
@@ -1620,7 +2200,7 @@ export function getClientIp(request: Request): string {
 
 ---
 
-### 4.4 Step 3: Add Middleware (1 hour)
+### 6.4 Step 3: Add Middleware (1 hour)
 
 **File**: `/src/middleware.ts` (update)
 
@@ -1725,7 +2305,7 @@ export const config = {
 
 ---
 
-### 4.5 Testing Checklist
+### 6.5 Testing Checklist
 
 - [ ] Make 61 requests to API → verify 429 error
 - [ ] Wait 1 minute → verify requests work again
@@ -1735,9 +2315,9 @@ export const config = {
 
 ---
 
-## 5. SECURITY HARDENING
+## 7. SECURITY HARDENING
 
-### 5.1 Content Security Policy (30 minutes)
+### 7.1 Content Security Policy (30 minutes)
 
 **File**: `/next.config.js` (update)
 
@@ -1797,7 +2377,7 @@ module.exports = nextConfig;
 
 ---
 
-### 5.2 Input Sanitization (1 hour)
+### 7.2 Input Sanitization (1 hour)
 
 Install DOMPurify:
 
@@ -1834,13 +2414,13 @@ const cleanMessage = sanitizeText(body.message);
 
 ---
 
-### 5.3 CSRF Protection (Already Handled)
+### 7.3 CSRF Protection (Already Handled)
 
 Supabase Auth includes CSRF protection by default. No additional work needed.
 
 ---
 
-### 5.4 Testing Checklist
+### 7.4 Testing Checklist
 
 - [ ] Try to inject `<script>alert('XSS')</script>` in bio → verify stripped
 - [ ] Check CSP headers in browser DevTools
@@ -1849,9 +2429,9 @@ Supabase Auth includes CSRF protection by default. No additional work needed.
 
 ---
 
-## 6. TESTING CHECKLISTS
+## 8. TESTING CHECKLISTS
 
-### 6.1 File Storage
+### 8.1 File Storage
 
 - [ ] Upload avatar (≤2MB) → Success
 - [ ] Upload oversized file (>5MB) → Error
@@ -1861,7 +2441,7 @@ Supabase Auth includes CSRF protection by default. No additional work needed.
 - [ ] Get signed URL for proof
 - [ ] Delete file → Success
 
-### 6.2 Analytics
+### 8.2 Analytics
 
 - [ ] Sign up → Check `analytics_events` table
 - [ ] Accept match → Check event tracked
@@ -1869,21 +2449,21 @@ Supabase Auth includes CSRF protection by default. No additional work needed.
 - [ ] View metrics dashboard → Data displayed
 - [ ] SQL functions return correct values
 
-### 6.3 Skills Taxonomy
+### 8.3 Skills Taxonomy
 
 - [ ] Search for "React" → Found
 - [ ] Search for "Python" → Found
 - [ ] Count skills → ≥500
 - [ ] UI autocomplete works
 
-### 6.4 Rate Limiting
+### 8.4 Rate Limiting
 
 - [ ] 61 API requests → 429 error
 - [ ] Wait 1 minute → Success
 - [ ] Check `X-RateLimit-*` headers
 - [ ] Auth endpoint: 11 attempts in 5 min → 429
 
-### 6.5 Security
+### 8.5 Security
 
 - [ ] Inject XSS → Stripped
 - [ ] Check CSP headers
