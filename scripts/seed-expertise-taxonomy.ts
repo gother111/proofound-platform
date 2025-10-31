@@ -101,19 +101,24 @@ function parseTaxonomyMarkdown(filePath: string): Map<string, L2Category[]> {
 
 /**
  * Seed L2 categories
+ * Returns a map of L2 codes to their global subcat_id values
  */
-async function seedL2Categories(l1ToL2Map: Map<string, L2Category[]>): Promise<void> {
+async function seedL2Categories(l1ToL2Map: Map<string, L2Category[]>): Promise<Map<string, number>> {
   console.log('\n📦 Seeding L2 categories...');
   
   let totalInserted = 0;
+  let globalSubcatId = 1; // Global counter for unique primary keys
+  const l2ToSubcatIdMap = new Map<string, number>(); // Track L2 code → subcat_id mapping
   
   for (const [l1Code, l2Categories] of l1ToL2Map.entries()) {
     const catId = L1_MAPPING[l1Code];
     
-    for (let i = 0; i < l2Categories.length; i++) {
-      const l2 = l2Categories[i];
-      const subcatId = i + 1;
+    for (const l2 of l2Categories) {
+      const subcatId = globalSubcatId++;
       const slug = l2.code.toLowerCase();
+      
+      // Store mapping for later use
+      l2ToSubcatIdMap.set(l2.code, subcatId);
       
       const { error } = await supabase
         .from('skills_subcategories')
@@ -135,32 +140,42 @@ async function seedL2Categories(l1ToL2Map: Map<string, L2Category[]>): Promise<v
   }
   
   console.log(`✅ Inserted ${totalInserted} L2 categories`);
+  return l2ToSubcatIdMap;
 }
 
 /**
  * Seed L3 subcategories
+ * Returns a map of "L2_CODE:L3_NAME" to their global l3_id values
  */
-async function seedL3Subcategories(l1ToL2Map: Map<string, L2Category[]>): Promise<void> {
+async function seedL3Subcategories(
+  l1ToL2Map: Map<string, L2Category[]>,
+  l2ToSubcatIdMap: Map<string, number>
+): Promise<Map<string, number>> {
   console.log('\n📦 Seeding L3 subcategories...');
   
   let totalInserted = 0;
+  let globalL3Id = 1; // Global counter for unique primary keys
+  const l3ToIdMap = new Map<string, number>(); // Track "L2_CODE:L3_NAME" → l3_id mapping
   
   for (const [l1Code, l2Categories] of l1ToL2Map.entries()) {
-    const catId = L1_MAPPING[l1Code];
-    
-    for (let i = 0; i < l2Categories.length; i++) {
-      const l2 = l2Categories[i];
-      const subcatId = i + 1;
+    for (const l2 of l2Categories) {
+      const subcatId = l2ToSubcatIdMap.get(l2.code);
       
-      for (let j = 0; j < l2.l3Items.length; j++) {
-        const l3Name = l2.l3Items[j];
-        const l3Id = j + 1;
+      if (!subcatId) {
+        console.error(`❌ Missing subcat_id for L2: ${l2.code}`);
+        continue;
+      }
+      
+      for (const l3Name of l2.l3Items) {
+        const l3Id = globalL3Id++;
         const slug = l3Name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        
+        // Store mapping for later use
+        l3ToIdMap.set(`${l2.code}:${l3Name}`, l3Id);
         
         const { error } = await supabase
           .from('skills_l3')
           .insert({
-            cat_id: catId,
             subcat_id: subcatId,
             l3_id: l3Id,
             slug: `${l2.code.toLowerCase()}-${slug}`,
@@ -179,28 +194,41 @@ async function seedL3Subcategories(l1ToL2Map: Map<string, L2Category[]>): Promis
   }
   
   console.log(`✅ Inserted ${totalInserted} L3 subcategories`);
+  return l3ToIdMap;
 }
 
 /**
- * Build L2/L3 lookup maps for L4 seeding
+ * Build L2/L3 lookup maps for L4 seeding using actual global IDs
  */
-function buildLookupMaps(l1ToL2Map: Map<string, L2Category[]>) {
+function buildLookupMaps(
+  l1ToL2Map: Map<string, L2Category[]>,
+  l2ToSubcatIdMap: Map<string, number>,
+  l3ToIdMap: Map<string, number>
+) {
   const l2Lookup = new Map<string, { catId: number; subcatId: number; l2Code: string }>();
   const l3Lookup = new Map<string, { catId: number; subcatId: number; l3Id: number }>();
   
   for (const [l1Code, l2Categories] of l1ToL2Map.entries()) {
     const catId = L1_MAPPING[l1Code];
     
-    for (let i = 0; i < l2Categories.length; i++) {
-      const l2 = l2Categories[i];
-      const subcatId = i + 1;
+    for (const l2 of l2Categories) {
+      const subcatId = l2ToSubcatIdMap.get(l2.code);
+      
+      if (!subcatId) {
+        console.error(`❌ Missing subcat_id for L2: ${l2.code}`);
+        continue;
+      }
       
       // Build L2 lookup key: "L1_CODE:L2_NAME"
       l2Lookup.set(`${l1Code}:${l2.name}`, { catId, subcatId, l2Code: l2.code });
       
-      for (let j = 0; j < l2.l3Items.length; j++) {
-        const l3Name = l2.l3Items[j];
-        const l3Id = j + 1;
+      for (const l3Name of l2.l3Items) {
+        const l3Id = l3ToIdMap.get(`${l2.code}:${l3Name}`);
+        
+        if (!l3Id) {
+          console.error(`❌ Missing l3_id for L3: ${l2.code}:${l3Name}`);
+          continue;
+        }
         
         // Build L3 lookup key: "L1_CODE:L2_CODE:L3_NAME"
         l3Lookup.set(`${l1Code}:${l2.code}:${l3Name}`, { catId, subcatId, l3Id });
@@ -216,7 +244,9 @@ function buildLookupMaps(l1ToL2Map: Map<string, L2Category[]>) {
  */
 async function seedL4Skills(
   jsonPath: string,
-  l1ToL2Map: Map<string, L2Category[]>
+  l1ToL2Map: Map<string, L2Category[]>,
+  l2ToSubcatIdMap: Map<string, number>,
+  l3ToIdMap: Map<string, number>
 ): Promise<void> {
   console.log('\n📦 Seeding L4 skills...');
   
@@ -225,7 +255,7 @@ async function seedL4Skills(
   
   console.log(`Found ${skills.length} skills to insert`);
   
-  const { l2Lookup, l3Lookup } = buildLookupMaps(l1ToL2Map);
+  const { l2Lookup, l3Lookup } = buildLookupMaps(l1ToL2Map, l2ToSubcatIdMap, l3ToIdMap);
   
   let inserted = 0;
   let skipped = 0;
@@ -323,11 +353,11 @@ async function main() {
     const l1ToL2Map = parseTaxonomyMarkdown(taxonomyPath);
     console.log(`✅ Parsed ${l1ToL2Map.size} L1 domains`);
     
-    // Seed L2 categories
-    await seedL2Categories(l1ToL2Map);
+    // Seed L2 categories and get global ID mappings
+    const l2ToSubcatIdMap = await seedL2Categories(l1ToL2Map);
     
-    // Seed L3 subcategories
-    await seedL3Subcategories(l1ToL2Map);
+    // Seed L3 subcategories and get global ID mappings
+    const l3ToIdMap = await seedL3Subcategories(l1ToL2Map, l2ToSubcatIdMap);
     
     // Seed L4 skills
     const l4JsonPath = path.join(process.cwd(), 'data/expertise-atlas-20k-l4-final.json');
@@ -337,7 +367,7 @@ async function main() {
       throw new Error(`L4 skills file not found: ${l4JsonPath}`);
     }
     
-    await seedL4Skills(l4JsonPath, l1ToL2Map);
+    await seedL4Skills(l4JsonPath, l1ToL2Map, l2ToSubcatIdMap, l3ToIdMap);
     
     console.log('\n🎉 Taxonomy seeding completed successfully!');
     
