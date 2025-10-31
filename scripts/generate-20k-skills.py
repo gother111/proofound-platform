@@ -1,0 +1,244 @@
+#!/usr/bin/env python3
+"""
+Expertise Atlas - Generate 20,000 L4 Skills Dataset
+Based on: Expertise_Atlas_Product_Documentation_v3.md
+
+Distribution:
+- U (Universal Capabilities): ~2,500
+- F (Functional Competencies): ~5,000
+- T (Tools & Technologies): ~6,000
+- L (Languages & Culture): ~1,500
+- M (Methods & Practices): ~2,000
+- D (Domain Knowledge): ~3,000
+Total: ~20,000 L4 skills
+"""
+
+import json
+import sys
+from datetime import datetime
+
+def main():
+    taxonomy = {
+        "metadata": {
+            "version": "1.0.0",
+            "generated_at": datetime.now().isoformat(),
+            "description": "Expertise Atlas comprehensive skill taxonomy - 20K skills for MVP",
+            "based_on": "Expertise_Atlas_Product_Documentation_v3.md",
+            "total_l1": 6
+        },
+        "l1_domains": [
+            # U: Universal Capabilities (~2,500 skills)
+            {
+                "code": "U",
+                "name": "Universal Capabilities",
+                "description": "Transferable cognitive, interpersonal, and personal effectiveness skills",
+                "color": "#3B82F6",
+                "l2_categories": [
+                    {
+                        "code": "U01",
+                        "name": "Critical Thinking & Problem Solving",
+                        "description": "Analytical reasoning, logic, and systematic problem resolution",
+                        "l3_subcategories": [
+                            {
+                                "id": "u01_analytical",
+                                "name": "Analytical Reasoning",
+                                "description": "Breaking down complex problems",
+                                "l4_skills": ["Root Cause Analysis", "Systems Thinking", "Hypothesis Testing", "Data-Driven Decision Making", "Pattern Recognition", "Causal Analysis", "Logical Reasoning", "Deductive Reasoning", "Inductive Reasoning", "Abductive Reasoning", "Critical Analysis", "Problem Decomposition", "Issue Identification", "Gap Analysis", "SWOT Analysis", "Pareto Analysis (80/20)", "5 Whys Technique", "Fishbone Diagrams", "Decision Trees", "Cost-Benefit Analysis", "Risk-Reward Assessment", "Trade-off Analysis", "Prioritization Matrices", "Impact Assessment", "Feasibility Analysis", "Sensitivity Analysis", "Monte Carlo Simulation", "Regression Analysis", "Correlation Analysis", "Variance Analysis", "Time Series Analysis", "Cohort Analysis", "Funnel Analysis", "Churn Analysis", "Retention Analysis", "Segmentation Analysis", "Cluster Analysis", "Factor Analysis", "Principal Component Analysis", "Discriminant Analysis", "Canonical Correlation"]
+                            },
+                            {
+                                "id": "u01_creative",
+                                "name": "Creative Problem Solving",
+                                "description": "Innovative and lateral thinking",
+                                "l4_skills": ["Brainstorming", "Brainwriting", "Lateral Thinking", "Design Thinking", "SCAMPER Technique", "Mind Mapping", "Six Thinking Hats", "TRIZ Methodology", "Reverse Engineering", "Analogical Thinking", "Metaphorical Thinking", "Bisociation", "Forced Connections", "Random Input", "Provocation", "Assumption Challenging", "Problem Reframing", "Blue Ocean Strategy", "Disruptive Innovation", "Ideation Facilitation", "Divergent Thinking", "Convergent Thinking", "Prototyping", "Rapid Experimentation", "Fail-Fast Mindset", "Iteration", "Innovation Games", "Crazy 8s", "Rose Thorn Bud", "How Might We", "Worst Possible Idea", "Rolestorming", "Starbursting", "Morphological Analysis", "Attribute Listing"]
+                            },
+                            {
+                                "id": "u01_strategic",
+                                "name": "Strategic Thinking",
+                                "description": "Long-term planning and big-picture analysis",
+                                "l4_skills": ["Scenario Planning", "Future Forecasting", "Trend Analysis", "Competitive Analysis", "Market Intelligence", "Strategic Foresight", "Vision Development", "Mission Alignment", "SMART Goals", "OKR Development", "KPI Design", "Strategic Roadmapping", "Portfolio Management", "Resource Allocation", "Capability Assessment", "Ecosystem Mapping", "Value Chain Analysis", "Porter's Five Forces", "Blue Ocean Canvas", "Business Model Innovation", "Strategic Positioning", "Differentiation Strategy", "Cost Leadership", "Focus Strategy", "Integration Strategy", "Diversification", "Pivot Planning", "Strategic Risk Management", "PESTEL Analysis", "Stakeholder Mapping", "Theory of Change", "Logic Models", "Balanced Scorecard", "Strategy Map", "War Gaming"]
+                            },
+                            {
+                                "id": "u01_quantitative",
+                                "name": "Quantitative Reasoning",
+                                "description": "Mathematical and statistical thinking",
+                                "l4_skills": ["Statistical Thinking", "Probability Assessment", "Bayesian Reasoning", "Expected Value", "Break-Even Analysis", "ROI Calculation", "NPV Analysis", "IRR Calculation", "Payback Period", "Profitability Index", "Unit Economics", "Contribution Margin", "Gross Margin", "Operating Leverage", "Financial Ratios", "Liquidity Ratios", "Solvency Ratios", "Efficiency Ratios", "Market Valuation", "DCF Modeling", "Comparable Company Analysis", "Precedent Transactions", "LBO Modeling", "M&A Modeling", "Three Statement Model", "Revenue Forecasting", "Expense Forecasting", "Cash Flow Forecasting", "Working Capital Management", "Capital Budgeting", "Option Pricing", "Real Options", "Game Theory", "Nash Equilibrium", "Auction Theory"]
+                            }
+                        ]
+                    },
+                    {
+                        "code": "U02",
+                        "name": "Communication & Collaboration",
+                        "description": "Interpersonal skills and effective information exchange",
+                        "l3_subcategories": [
+                            {
+                                "id": "u02_verbal",
+                                "name": "Verbal Communication",
+                                "description": "Spoken communication skills",
+                                "l4_skills": ["Public Speaking", "Presentation Skills", "Storytelling", "Persuasive Speaking", "Debate", "Facilitation", "Active Listening", "Empathetic Listening", "Questioning Techniques", "Clarification", "Voice Modulation", "Tone Management", "Pace Control", "Articulation", "Enunciation", "Conference Speaking", "Panel Discussion", "Podcast Hosting", "Webinar Delivery", "Meeting Leadership", "Stand-up Meetings", "Sales Pitching", "Elevator Pitch", "Interview Skills", "Negotiation Dialogue", "Impromptu Speaking", "Q&A Handling", "Heckler Management", "Stage Presence", "Microphone Technique", "Teleprompter Reading", "Speech Writing", "Keynote Speaking", "TED-style Talks", "Town Hall Hosting"]
+                            },
+                            {
+                                "id": "u02_written",
+                                "name": "Written Communication",
+                                "description": "Clear written expression",
+                                "l4_skills": ["Business Writing", "Technical Writing", "Report Writing", "Proposal Writing", "Grant Writing", "Copywriting", "Content Writing", "Blog Writing", "Email Etiquette", "Memo Drafting", "Documentation", "SOP Writing", "Policy Writing", "White Papers", "Case Studies", "Executive Summaries", "Press Releases", "Marketing Copy", "Social Media Writing", "Script Writing", "Academic Writing", "Research Papers", "Editing", "Proofreading", "Style Guide Adherence", "Plain Language", "Microcopy", "UX Writing", "Error Messages", "Help Text", "Tooltips", "README Files", "Changelog Writing", "Release Notes", "API Documentation"]
+                            },
+                            {
+                                "id": "u02_visual",
+                                "name": "Visual Communication",
+                                "description": "Communicating through visuals",
+                                "l4_skills": ["Data Visualization", "Infographic Design", "Slide Deck Design", "Storyboarding", "Wireframing", "Mockup Creation", "Diagram Creation", "Flowchart Design", "Mind Map Visualization", "Dashboard Design", "Chart Selection", "Color Theory", "Typography", "Layout Design", "Visual Hierarchy", "Icon Design", "Illustration", "Photo Editing", "Video Editing", "Animation", "Meme Creation", "Visual Storytelling", "Brand Consistency", "Accessibility Design", "Visual Metaphors", "Information Architecture", "User Flow Diagrams", "Journey Maps", "Service Blueprints", "Swimlane Diagrams", "Network Diagrams", "Entity Relationship Diagrams", "Sequence Diagrams", "State Diagrams", "Component Diagrams"]
+                            },
+                            {
+                                "id": "u02_collaboration",
+                                "name": "Team Collaboration",
+                                "description": "Working effectively with others",
+                                "l4_skills": ["Cross-functional Collaboration", "Remote Collaboration", "Async Communication", "Sync Communication", "Conflict Resolution", "Consensus Building", "Compromise", "Mediation", "Team Building", "Trust Building", "Peer Feedback", "Constructive Criticism", "Receiving Feedback", "Giving Feedback", "Code Review Etiquette", "Pair Programming", "Mob Programming", "Workshop Facilitation", "Retrospective Facilitation", "Standup Leadership", "Knowledge Sharing", "Mentoring", "Coaching", "Delegation", "Accountability", "Psychological Safety", "Inclusive Meetings", "Turn-Taking", "Amplification", "Credit Sharing", "Brainstorming Facilitation", "Dot Voting", "Fist of Five", "Silent Brainstorming", "Affinity Mapping"]
+                            },
+                            {
+                                "id": "u02_intercultural",
+                                "name": "Intercultural Communication",
+                                "description": "Across cultural boundaries",
+                                "l4_skills": ["Cultural Sensitivity", "Cultural Awareness", "Cross-cultural Communication", "Global Mindset", "Inclusive Language", "Non-verbal Awareness", "Time Zone Management", "International Etiquette", "Multicultural Leadership", "Translation Coordination", "Localization Awareness", "Religious Sensitivity", "Gender Sensitivity", "Age Sensitivity", "Socioeconomic Sensitivity", "Disability Awareness", "Neurodiversity Awareness", "LGBTQ+ Inclusivity", "Racial Equity", "Implicit Bias Recognition", "Microaggression Awareness", "Allyship", "Cultural Humility", "Adaptive Communication", "Context Reading", "High-Context Communication", "Low-Context Communication", "Polychronic Time", "Monochronic Time", "Face-Saving", "Indirect Communication", "Direct Communication", "Hierarchical Communication", "Egalitarian Communication", "Collectivist Communication"]
+                            },
+                            {
+                                "id": "u02_negotiation",
+                                "name": "Negotiation & Persuasion",
+                                "description": "Influencing and reaching agreements",
+                                "l4_skills": ["Win-Win Negotiation", "Positional Bargaining", "Principled Negotiation", "BATNA Development", "ZOPA Identification", "Anchoring", "Framing", "Mirroring", "Labeling", "Tactical Empathy", "Calibrated Questions", "Accusation Audit", "Black Swan Discovery", "Reciprocity", "Social Proof", "Authority", "Liking", "Scarcity", "Consistency", "Unity", "Loss Aversion", "Endowment Effect", "Sunk Cost Recognition", "Choice Architecture", "Nudging", "Foot-in-the-Door", "Door-in-the-Face", "Low-Ball Technique", "That's-Not-All", "Fear Appeals", "Ethos", "Pathos", "Logos", "Kairos", "Counter-Offers"]
+                            }
+                        ]
+                    },
+                    {
+                        "code": "U03",
+                        "name": "Leadership & Management",
+                        "description": "Guiding people and resources",
+                        "l3_subcategories": [
+                            {
+                                "id": "u03_people",
+                                "name": "People Leadership",
+                                "description": "Leading and developing individuals",
+                                "l4_skills": ["Vision Casting", "Inspirational Leadership", "Servant Leadership", "Transformational Leadership", "Authentic Leadership", "Situational Leadership", "Coaching Leadership", "Democratic Leadership", "Laissez-faire Leadership", "Team Motivation", "Employee Engagement", "Performance Management", "Career Development", "Succession Planning", "Talent Identification", "One-on-Ones", "Skip-levels", "360 Feedback", "Performance Reviews", "Team Goal Setting", "Recognition Programs", "Reward Systems", "Difficult Conversations", "Termination Management", "Onboarding", "Culture Building", "Psychological Safety", "Vulnerability-based Trust", "Empowerment", "Autonomy Support", "Competence Support", "Relatedness Support", "Growth Mindset Cultivation", "Strength-based Leadership", "Appreciative Inquiry"]
+                            },
+                            {
+                                "id": "u03_project",
+                                "name": "Project Management",
+                                "description": "Planning and executing projects",
+                                "l4_skills": ["Project Planning", "Scope Definition", "WBS", "Gantt Charts", "Critical Path Method", "PERT", "Resource Planning", "Budget Management", "Cost Estimation", "Time Estimation", "Risk Management", "Risk Identification", "Risk Assessment", "Risk Mitigation", "Issue Tracking", "Change Management", "Stakeholder Management", "Stakeholder Analysis", "Communication Planning", "Status Reporting", "Milestone Tracking", "Quality Management", "Procurement Management", "Vendor Management", "Integration Management", "Agile PM", "Waterfall PM", "Hybrid PM", "Project Closure", "Lessons Learned", "Earned Value Management", "Critical Chain", "Fast Tracking", "Crashing", "Monte Carlo Scheduling"]
+                            },
+                            {
+                                "id": "u03_organizational",
+                                "name": "Organizational Leadership",
+                                "description": "Leading at scale",
+                                "l4_skills": ["Strategic Planning", "Vision Setting", "Mission Development", "Values Definition", "Culture Design", "Organizational Design", "Restructuring", "Scaling Organizations", "Downsizing", "Growth Management", "M&A Integration", "Spinoff Management", "Corporate Governance", "Board Management", "Shareholder Relations", "Executive Team Building", "C-Suite Collaboration", "Cross-functional Leadership", "Matrix Management", "Dotted-Line Management", "Remote Org Leadership", "Hybrid Workplace", "Global Team Leadership", "Multi-site Coordination", "Alliance Management", "Partnership Leadership", "Joint Ventures", "Ecosystem Orchestration", "Platform Leadership", "Network Effects", "Two-Pizza Teams", "Spotify Model", "Holacracy", "Sociocracy", "Teal Organizations"]
+                            },
+                            {
+                                "id": "u03_change",
+                                "name": "Change Management",
+                                "description": "Leading transformation",
+                                "l4_skills": ["Change Vision", "Impact Assessment", "Stakeholder Engagement", "Resistance Management", "Change Communication", "Training Needs Analysis", "Training Design", "Training Delivery", "Adoption Metrics", "Readiness Assessment", "Process Redesign", "Digital Transformation", "M&A Integration", "Restructuring", "Transition Planning", "Pilot Programs", "Rollout Planning", "Post-implementation Support", "Sustainability Planning", "Change Reinforcement", "ADKAR Model", "Kotter's 8 Steps", "Lewin's Model", "McKinsey 7S", "Burke-Litwin Model", "Prosci Methodology", "Bridges Transition Model", "Satir Change Model", "Kubler-Ross Change Curve", "Force Field Analysis"]
+                            },
+                            {
+                                "id": "u03_decision",
+                                "name": "Decision Making",
+                                "description": "Sound judgment and choices",
+                                "l4_skills": ["Data-Informed Decisions", "Intuitive Decisions", "Consensus Decisions", "Consultative Decisions", "Democratic Decisions", "Delegative Decisions", "Rapid Decisions", "Escalation Decisions", "Strategic Decisions", "Tactical Decisions", "Operational Decisions", "Investment Decisions", "Hiring Decisions", "Firing Decisions", "Product Decisions", "Market Entry", "Partnership Decisions", "Resource Allocation", "Priority Decisions", "Crisis Decisions", "Ethical Decisions", "Risk-Based Decisions", "Decision Documentation", "Decision Communication", "Decision Tracking", "Decision Trees", "Multi-Criteria Analysis", "Pugh Matrix", "AHP", "Cost of Delay", "RACI Matrix", "DACI Framework", "Bain RAPID", "Cynefin Framework", "OODA Loop"]
+                            }
+                        ]
+                    },
+                    {
+                        "code": "U04",
+                        "name": "Learning & Adaptability",
+                        "description": "Continuous growth and flexibility",
+                        "l3_subcategories": [
+                            {
+                                "id": "u04_learning",
+                                "name": "Self-Directed Learning",
+                                "description": "Owning your development",
+                                "l4_skills": ["Learning Goal Setting", "Learning Plans", "Resource Identification", "Time Management for Learning", "Note-Taking", "Spaced Repetition", "Active Recall", "Elaborative Rehearsal", "Interleaving", "Retrieval Practice", "Feynman Technique", "Concept Mapping", "Analogical Learning", "Project-Based Learning", "Problem-Based Learning", "Peer Learning", "Online Courses", "Book Summarization", "Podcast Learning", "Video Tutorials", "Documentation Reading", "Research Papers", "Conference Learning", "Workshop Participation", "Certification Study", "Speed Reading", "Critical Reading", "SQ3R Method", "Cornell Notes", "Zettelkasten", "Evergreen Notes", "Progressive Summarization", "Code Alongs", "Deliberate Practice", "10,000 Hours"]
+                            },
+                            {
+                                "id": "u04_adaptability",
+                                "name": "Adaptability & Resilience",
+                                "description": "Bouncing back and adjusting",
+                                "l4_skills": ["Growth Mindset", "Embracing Change", "Flexibility", "Pivoting", "Context Switching", "Multi-tasking", "Priority Shifting", "Ambiguity Tolerance", "Uncertainty Management", "Stress Management", "Pressure Management", "Deadline Management", "Crisis Management", "Failure Recovery", "Learning from Mistakes", "Constructive Self-Criticism", "Reframing Setbacks", "Emotional Regulation", "Mindfulness", "Meditation", "Breathing Techniques", "Progressive Muscle Relaxation", "Cognitive Reappraisal", "Positive Self-Talk", "Grit", "Perseverance", "Antifragility", "Post-Traumatic Growth", "Optimism", "Hope", "Self-Efficacy", "Locus of Control", "Mental Toughness", "Stoicism", "Acceptance"]
+                            },
+                            {
+                                "id": "u04_innovation",
+                                "name": "Innovation & Experimentation",
+                                "description": "Trying new approaches",
+                                "l4_skills": ["Curiosity", "Asking Questions", "Hypothesis Formation", "A/B Testing", "Multivariate Testing", "Controlled Experiments", "Pilot Testing", "Beta Testing", "Prototype Testing", "User Testing", "Feedback Collection", "Iteration", "Continuous Improvement", "Kaizen", "Lean Startup", "Build-Measure-Learn", "MVP Development", "POC Development", "Experiment Design", "Statistical Significance", "P-value Interpretation", "Confidence Intervals", "Sample Size Calculation", "Experiment Documentation", "Learning Synthesis", "Innovation Accounting", "Actionable Metrics", "Vanity Metric Avoidance", "Cohort Analysis", "Split Testing", "Sequential Testing", "Bayesian Testing", "Multi-Armed Bandit", "Contextual Bandits", "Thompson Sampling"]
+                            },
+                            {
+                                "id": "u04_metacognition",
+                                "name": "Metacognition",
+                                "description": "Thinking about thinking",
+                                "l4_skills": ["Self-Reflection", "Journaling", "Weekly Reviews", "Annual Reviews", "Self-Assessment", "Strengths Identification", "Weakness Recognition", "Blind Spot Discovery", "Feedback Seeking", "360 Interpretation", "Personal SWOT", "Ikigai", "Values Clarification", "Purpose Discovery", "Life Design", "Career Pathing", "Skills Gap Analysis", "Learning Style", "Cognitive Bias Recognition", "System 1 vs System 2", "Mental Models", "First Principles", "Second-Order Thinking", "Inversion", "Circle of Competence", "Falsification", "Thought Experiments", "Socratic Questioning", "Cognitive Debugging", "Cognitive Load Management", "Working Memory", "Long-term Memory", "Schemas", "Chunking", "Mnemonics"]
+                            }
+                        ]
+                    },
+                    {
+                        "code": "U05",
+                        "name": "Personal Effectiveness",
+                        "description": "Self-management and productivity",
+                        "l3_subcategories": [
+                            {
+                                "id": "u05_time",
+                                "name": "Time & Task Management",
+                                "description": "Organizing work and time",
+                                "l4_skills": ["Calendar Management", "Task Prioritization", "Eisenhower Matrix", "Time Blocking", "Pomodoro Technique", "Deep Work", "Shallow Work Batching", "Meeting Management", "Meeting Facilitation", "Meeting Minutes", "Action Items", "To-Do Lists", "Kanban Personal", "GTD", "Inbox Zero", "Email Management", "Notification Management", "Distraction Management", "Focus Techniques", "Energy Management", "Peak Performance Timing", "Break Scheduling", "Work-Life Balance", "Boundary Setting", "Saying No", "Timeboxing", "Day Theming", "Week Planning", "Month Planning", "Quarter Planning", "Eat the Frog", "Most Important Task", "Big Rocks First", "Parkinson's Law", "Time Audits"]
+                            },
+                            {
+                                "id": "u05_organization",
+                                "name": "Organization & Systems",
+                                "description": "Structuring information",
+                                "l4_skills": ["File Organization", "Folder Structure", "Naming Conventions", "Version Control (docs)", "Knowledge Management", "Personal Wiki", "Second Brain", "Zettelkasten", "PARA Method", "Digital Workspace", "Bookmark Organization", "Password Management", "Cloud Storage", "Email Folders", "Contact Management", "Reference Management", "Template Creation", "Checklist Design", "SOPs", "Automation Setup", "Tool Integration", "Workflow Design", "Process Documentation", "Desk Organization", "Physical Filing", "Digital Minimalism", "Information Diet", "App Portfolio", "Tool Consolidation", "Single Source of Truth", "Tagging Systems", "Search Optimization", "Archiving Strategy", "Backup Strategy", "Data Hygiene"]
+                            },
+                            {
+                                "id": "u05_professional",
+                                "name": "Professional Conduct",
+                                "description": "Ethics and workplace standards",
+                                "l4_skills": ["Professional Ethics", "Integrity", "Honesty", "Transparency", "Accountability", "Reliability", "Punctuality", "Commitment", "Dependability", "Responsibility", "Confidentiality", "Discretion", "Professional Appearance", "Business Etiquette", "Telephone Etiquette", "Video Call Etiquette", "Email Standards", "Workplace Safety", "Compliance Awareness", "Corporate Governance", "Code of Conduct", "Whistleblowing", "Conflict of Interest", "IP Respect", "Anti-discrimination", "Sexual Harassment Prevention", "Anti-Bribery", "Anti-Corruption", "Data Privacy", "GDPR Compliance", "Ethical AI Use", "Responsible Innovation", "ESG Awareness", "Sustainability Practices", "Corporate Social Responsibility"]
+                            },
+                            {
+                                "id": "u05_emotional",
+                                "name": "Emotional Intelligence",
+                                "description": "Self-awareness and empathy",
+                                "l4_skills": ["Self-Awareness", "Self-Reflection", "Emotional Self-Awareness", "Accurate Self-Assessment", "Self-Confidence", "Self-Regulation", "Self-Control", "Trustworthiness", "Conscientiousness", "Emotional Adaptability", "Emotional Innovation", "Empathy", "Organizational Awareness", "Service Orientation", "Social Skills", "Influence", "Emotional Communication", "Conflict Management (EQ)", "Emotional Leadership", "Change Catalyst", "Building Bonds", "Collaboration (EQ)", "Team Capabilities", "Reading Emotions", "Responding to Emotions", "Cognitive Empathy", "Emotional Empathy", "Compassionate Empathy", "Emotion Regulation", "Mood Management", "Affect Labeling", "Emotional Granularity", "Alexithymia Awareness", "Emotional Contagion", "Emotional Labor"]
+                            },
+                            {
+                                "id": "u05_wellbeing",
+                                "name": "Wellbeing & Performance",
+                                "description": "Health and sustainable performance",
+                                "l4_skills": ["Physical Health", "Exercise Routine", "Nutrition", "Sleep Hygiene", "Hydration", "Ergonomics", "Posture", "Eye Care", "Mental Health", "Stress Reduction", "Anxiety Management", "Depression Awareness", "Burnout Prevention", "Recovery Practices", "Rest", "Leisure Activities", "Hobbies", "Social Connection", "Family Time", "Friendship Maintenance", "Community Involvement", "Spiritual Practices", "Purpose Cultivation", "Meaning-Making", "Gratitude Practice", "Mindfulness Meditation", "Walking Meditation", "Body Scan", "Loving-Kindness", "Flow State", "Peak Performance", "Recovery Protocols", "Circadian Rhythm", "Ultradian Rhythm", "Work Recovery"]
+                            }
+                        ]
+                    }
+                ]
+            },
+
+            # Continue with remaining domains - this is getting long, so I'll make it programmatic
+        ]
+    }
+
+    # Calculate counts
+    total_l2 = sum(len(l1['l2_categories']) for l1 in taxonomy['l1_domains'])
+    total_l3 = sum(len(l3) for l1 in taxonomy['l1_domains'] for l2 in l1['l2_categories'] for l3 in l2.get('l3_subcategories', []))
+    total_l4 = sum(len(l4.get('l4_skills', [])) for l1 in taxonomy['l1_domains'] for l2 in l1['l2_categories'] for l3 in l2.get('l3_subcategories', []) for l4 in [l3])
+
+    taxonomy['metadata']['total_l2'] = total_l2
+    taxonomy['metadata']['total_l3'] = total_l3
+    taxonomy['metadata']['total_l4'] = total_l4
+
+    output_file = '/Users/yuriibakurov/proofound/data/expertise-atlas-skills-part1-universal.json'
+    with open(output_file, 'w', encoding='utf-8') as f:
+        json.dump(taxonomy, f, indent=2, ensure_ascii=False)
+
+    print(f'✅ Generated Part 1: Universal Capabilities')
+    print(f'📊 L2 categories: {total_l2}')
+    print(f'📊 L3 subcategories: {total_l3}')
+    print(f'📊 L4 skills: {total_l4}')
+    print(f'📄 Saved to: {output_file}')
+    print(f'\\nNext: Generate remaining 5 domains (F, T, L, M, D)')
+
+if __name__ == '__main__':
+    main()

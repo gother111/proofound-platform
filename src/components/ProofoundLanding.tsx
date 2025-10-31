@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion, useScroll, useTransform, useInView, useReducedMotion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { NetworkBackground } from '@/components/NetworkBackground';
+import { Logo } from '@/components/brand/Logo';
 import {
   Menu,
   X,
@@ -229,9 +230,7 @@ function MinimalHeader({
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <motion.div className="flex items-center gap-2" whileHover={{ scale: 1.02 }}>
-          <div className="w-7 h-7 rounded-md bg-[#1C4D3A] flex items-center justify-center text-white font-bold text-sm">
-            P
-          </div>
+          <Logo size="sm" />
           <span className="text-xl font-['Crimson_Pro'] text-[#1C4D3A] dark:text-[#D4C4A8]">
             Proofound
           </span>
@@ -1662,9 +1661,7 @@ function FooterSection() {
             transition={{ delay: 0.1 }}
           >
             <div className="flex items-center gap-2 mb-6">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#1C4D3A] to-[#5C8B89] flex items-center justify-center">
-                <span className="text-white text-sm font-semibold">P</span>
-              </div>
+              <Logo size="md" />
               <span className="text-xl font-['Crimson_Pro'] text-[#1C4D3A] dark:text-[#D4C4A8]">
                 Proofound
               </span>
