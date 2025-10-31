@@ -107,7 +107,7 @@ export default async function ExpertiseAtlasPage() {
     // Calculate stats per L1 domain
     const domainsWithStats = (l1Domains || []).map((domain) => {
       const domainSkills = enrichedSkills.filter(
-        (skill: any) => skill.taxonomy?.cat_id === domain.catId
+        (skill: any) => skill.taxonomy?.cat_id === domain.cat_id
       );
       
       const skillCount = domainSkills.length;
@@ -137,7 +137,14 @@ export default async function ExpertiseAtlasPage() {
       const total = active + recent + rusty || 1;
       
       return {
-        ...domain,
+        catId: domain.cat_id,
+        slug: domain.slug,
+        nameI18n: domain.name_i18n,
+        descriptionI18n: domain.description_i18n,
+        icon: domain.icon,
+        displayOrder: domain.display_order,
+        version: domain.version,
+        status: domain.status,
         skillCount,
         avgLevel,
         recencyMix: {

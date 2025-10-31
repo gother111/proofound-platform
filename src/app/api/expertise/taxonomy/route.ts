@@ -2,6 +2,65 @@ import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
 /**
+ * Helper function to map snake_case DB fields to camelCase
+ */
+function mapTaxonomyFields(item: any, type: 'l1' | 'l2' | 'l3' | 'l4') {
+  const base = {
+    slug: item.slug,
+    nameI18n: item.name_i18n,
+    descriptionI18n: item.description_i18n,
+  };
+
+  switch (type) {
+    case 'l1':
+      return {
+        ...base,
+        catId: item.cat_id,
+        icon: item.icon,
+        displayOrder: item.display_order,
+        version: item.version,
+        status: item.status,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at,
+      };
+    case 'l2':
+      return {
+        ...base,
+        subcatId: item.subcat_id,
+        catId: item.cat_id,
+        displayOrder: item.display_order,
+        version: item.version,
+        status: item.status,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at,
+      };
+    case 'l3':
+      return {
+        ...base,
+        l3Id: item.l3_id,
+        subcatId: item.subcat_id,
+        displayOrder: item.display_order,
+        version: item.version,
+        status: item.status,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at,
+      };
+    case 'l4':
+      return {
+        code: item.code,
+        nameI18n: item.name_i18n,
+        descriptionI18n: item.description_i18n,
+        catId: item.cat_id,
+        subcatId: item.subcat_id,
+        l3Id: item.l3_id,
+        tags: item.tags,
+        version: item.version,
+        status: item.status,
+      };
+  }
+}
+
+/**
  * GET /api/expertise/taxonomy
  * 
  * Returns the complete skills taxonomy hierarchy.
@@ -35,7 +94,7 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'Failed to fetch categories' }, { status: 500 });
       }
       
-      return NextResponse.json({ l1_domains: categories });
+      return NextResponse.json({ l1_domains: categories?.map(c => mapTaxonomyFields(c, 'l1')) || [] });
     }
     
     // If L1 specified, return L2 categories
@@ -56,7 +115,7 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'Failed to fetch subcategories' }, { status: 500 });
       }
       
-      return NextResponse.json({ l2_categories: subcategories });
+      return NextResponse.json({ l2_categories: subcategories?.map(s => mapTaxonomyFields(s, 'l2')) || [] });
     }
     
     // If L2 specified, return L3 subcategories
@@ -84,7 +143,7 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'Failed to fetch L3 items' }, { status: 500 });
       }
       
-      return NextResponse.json({ l3_subcategories: l3Items });
+      return NextResponse.json({ l3_subcategories: l3Items?.map(l => mapTaxonomyFields(l, 'l3')) || [] });
     }
     
     // If L3 specified or search query, return L4 skills
@@ -115,7 +174,7 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'Failed to fetch skills' }, { status: 500 });
       }
       
-      return NextResponse.json({ l4_skills: skills });
+      return NextResponse.json({ l4_skills: skills?.map(s => mapTaxonomyFields(s, 'l4')) || [] });
     }
     
     return NextResponse.json({ error: 'Invalid query parameters' }, { status: 400 });
