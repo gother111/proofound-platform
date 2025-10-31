@@ -53,6 +53,7 @@ interface L2Category {
 interface L3Subcategory {
   l3Id: number;
   subcatId: number;
+  catId: number;
   slug: string;
   nameI18n: { en: string };
   descriptionI18n?: { en: string };
@@ -71,26 +72,21 @@ interface AddSkillDrawerProps {
   onSkillAdded: () => void;
 }
 
-export function AddSkillDrawer({
-  open,
-  onOpenChange,
-  domains,
-  onSkillAdded,
-}: AddSkillDrawerProps) {
+export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: AddSkillDrawerProps) {
   const [step, setStep] = useState(1);
   const [selectedL1, setSelectedL1] = useState<L1Domain | null>(null);
   const [selectedL2, setSelectedL2] = useState<L2Category | null>(null);
   const [selectedL3, setSelectedL3] = useState<L3Subcategory | null>(null);
   const [selectedL4, setSelectedL4] = useState<L4Skill | null>(null);
-  
+
   // Step 2 data
   const [l2Categories, setL2Categories] = useState<L2Category[]>([]);
   const [l2Loading, setL2Loading] = useState(false);
-  
+
   // Step 3 data
   const [l3Subcategories, setL3Subcategories] = useState<L3Subcategory[]>([]);
   const [l3Loading, setL3Loading] = useState(false);
-  
+
   // Step 4: L4 skill details
   const [l4Name, setL4Name] = useState('');
   const [level, setLevel] = useState(2);
@@ -99,7 +95,7 @@ export function AddSkillDrawer({
   const [proofUrl, setProofUrl] = useState('');
   const [proofNotes, setProofNotes] = useState('');
   const [saving, setSaving] = useState(false);
-  
+
   // L4 Skills autocomplete
   const [l4Skills, setL4Skills] = useState<L4Skill[]>([]);
   const [l4Search, setL4Search] = useState('');
@@ -132,7 +128,7 @@ export function AddSkillDrawer({
 
   const fetchL2Categories = useCallback(async () => {
     if (!selectedL1) return;
-    
+
     setL2Loading(true);
     try {
       // Map cat_id to L1 code (U/F/T/L/M/D)
@@ -145,7 +141,7 @@ export function AddSkillDrawer({
         6: 'D', // Domain
       };
       const l1Code = l1CodeMap[selectedL1.catId];
-      
+
       const response = await fetch(`/api/expertise/taxonomy?l1=${l1Code}`);
       if (response.ok) {
         const data = await response.json();
@@ -160,7 +156,7 @@ export function AddSkillDrawer({
 
   const fetchL3Subcategories = useCallback(async () => {
     if (!selectedL2) return;
-    
+
     setL3Loading(true);
     try {
       // Use L2 slug as the API parameter
@@ -178,11 +174,13 @@ export function AddSkillDrawer({
 
   const fetchL4Skills = useCallback(async () => {
     if (!selectedL3) return;
-    
+
     setL4Loading(true);
     try {
       // Fetch L4 skills for the selected L3
-      const response = await fetch(`/api/expertise/taxonomy?l3_id=${selectedL3.l3Id}`);
+      const response = await fetch(
+        `/api/expertise/taxonomy?l3_id=${selectedL3.catId}.${selectedL3.subcatId}.${selectedL3.l3Id}`
+      );
       if (response.ok) {
         const data = await response.json();
         setL4Skills(data.l4_skills || []);
@@ -265,9 +263,9 @@ export function AddSkillDrawer({
       if (response.ok) {
         // TODO: If proof URL is provided, attach it as a separate step
         // For now, we'll handle proofs in the Edit Skill window
-        
+
         onSkillAdded();
-        
+
         if (saveAndAddAnother) {
           // Reset to step 1 but keep drawer open
           setStep(1);
@@ -329,17 +327,15 @@ export function AddSkillDrawer({
                     s === step
                       ? 'bg-[#4A5943] text-white'
                       : s < step
-                      ? 'bg-[#7A9278] text-white'
-                      : 'bg-[#E5E3DA] text-[#6B6760]'
+                        ? 'bg-[#7A9278] text-white'
+                        : 'bg-[#E5E3DA] text-[#6B6760]'
                   }`}
                 >
                   {s < step ? <Check className="h-4 w-4" /> : s}
                 </div>
                 {s < 4 && (
                   <div
-                    className={`h-0.5 w-16 mx-2 ${
-                      s < step ? 'bg-[#7A9278]' : 'bg-[#E5E3DA]'
-                    }`}
+                    className={`h-0.5 w-16 mx-2 ${s < step ? 'bg-[#7A9278]' : 'bg-[#E5E3DA]'}`}
                   />
                 )}
               </div>
@@ -357,9 +353,7 @@ export function AddSkillDrawer({
         {step === 1 && (
           <div className="space-y-4">
             <div>
-              <h3 className="text-lg font-medium text-[#2D3330] mb-2">
-                Step 1: Choose Domain
-              </h3>
+              <h3 className="text-lg font-medium text-[#2D3330] mb-2">Step 1: Choose Domain</h3>
               <p className="text-sm text-[#6B6760] mb-4">
                 Select the top-level domain that best fits your skill.
               </p>
@@ -407,9 +401,7 @@ export function AddSkillDrawer({
               >
                 ← Back to Domains
               </Button>
-              <h3 className="text-lg font-medium text-[#2D3330] mb-2">
-                Step 2: Choose Category
-              </h3>
+              <h3 className="text-lg font-medium text-[#2D3330] mb-2">Step 2: Choose Category</h3>
               <p className="text-sm text-[#6B6760] mb-4">
                 Select a category within <strong>{selectedL1?.nameI18n?.en || 'Unknown'}</strong>.
               </p>
@@ -464,7 +456,8 @@ export function AddSkillDrawer({
                 Step 3: Choose Subcategory
               </h3>
               <p className="text-sm text-[#6B6760] mb-4">
-                Select a subcategory within <strong>{selectedL2?.nameI18n?.en || 'Unknown'}</strong>.
+                Select a subcategory within <strong>{selectedL2?.nameI18n?.en || 'Unknown'}</strong>
+                .
               </p>
             </div>
 
@@ -513,12 +506,8 @@ export function AddSkillDrawer({
               >
                 ← Back to Subcategories
               </Button>
-              <h3 className="text-lg font-medium text-[#2D3330] mb-2">
-                Step 4: Skill Details
-              </h3>
-              <p className="text-sm text-[#6B6760] mb-4">
-                Fill in the details for your skill.
-              </p>
+              <h3 className="text-lg font-medium text-[#2D3330] mb-2">Step 4: Skill Details</h3>
+              <p className="text-sm text-[#6B6760] mb-4">Fill in the details for your skill.</p>
             </div>
 
             {/* Skill Name with Autocomplete */}
@@ -541,52 +530,56 @@ export function AddSkillDrawer({
                   className="pl-10"
                 />
               </div>
-              
+
               {/* Autocomplete Dropdown */}
               {showL4Dropdown && l4Search && (
                 <div className="absolute z-50 w-full mt-1 bg-white border border-[#E5E3DA] rounded-lg shadow-lg max-h-[300px] overflow-y-auto">
                   {l4Loading ? (
                     <div className="p-4 text-center text-[#6B6760]">Loading skills...</div>
-                  ) : (() => {
-                    const filtered = l4Skills.filter((skill) =>
-                      skill.nameI18n?.en?.toLowerCase().includes(l4Search.toLowerCase())
-                    ).slice(0, 50);
-                    
-                    return filtered.length > 0 ? (
-                      <>
-                        {filtered.map((skill) => (
-                          <button
-                            key={skill.code}
-                            type="button"
-                            className="w-full text-left p-3 hover:bg-[#F7F6F1] cursor-pointer border-b border-[#E5E3DA] last:border-b-0"
-                            onClick={() => {
-                              setSelectedL4(skill);
-                              setL4Name(skill.nameI18n?.en || '');
-                              setL4Search(skill.nameI18n?.en || '');
-                              setShowL4Dropdown(false);
-                            }}
-                          >
-                            <div className="font-medium text-[#2D3330]">
-                              {skill.nameI18n?.en}
-                            </div>
-                            {skill.descriptionI18n?.en && (
-                              <div className="text-xs text-[#6B6760] mt-1">
-                                {skill.descriptionI18n?.en}
-                              </div>
-                            )}
-                          </button>
-                        ))}
-                      </>
-                    ) : (
-                      <div className="p-4 text-center text-[#6B6760]">
-                        <p className="mb-2">No matching skills found</p>
-                        <p className="text-sm">You can continue with &ldquo;{l4Search}&rdquo; as a custom skill</p>
-                      </div>
-                    );
-                  })()}
+                  ) : (
+                    (() => {
+                      const filtered = l4Skills
+                        .filter((skill) =>
+                          skill.nameI18n?.en?.toLowerCase().includes(l4Search.toLowerCase())
+                        )
+                        .slice(0, 50);
+
+                      return filtered.length > 0 ? (
+                        <>
+                          {filtered.map((skill) => (
+                            <button
+                              key={skill.code}
+                              type="button"
+                              className="w-full text-left p-3 hover:bg-[#F7F6F1] cursor-pointer border-b border-[#E5E3DA] last:border-b-0"
+                              onClick={() => {
+                                setSelectedL4(skill);
+                                setL4Name(skill.nameI18n?.en || '');
+                                setL4Search(skill.nameI18n?.en || '');
+                                setShowL4Dropdown(false);
+                              }}
+                            >
+                              <div className="font-medium text-[#2D3330]">{skill.nameI18n?.en}</div>
+                              {skill.descriptionI18n?.en && (
+                                <div className="text-xs text-[#6B6760] mt-1">
+                                  {skill.descriptionI18n?.en}
+                                </div>
+                              )}
+                            </button>
+                          ))}
+                        </>
+                      ) : (
+                        <div className="p-4 text-center text-[#6B6760]">
+                          <p className="mb-2">No matching skills found</p>
+                          <p className="text-sm">
+                            You can continue with &ldquo;{l4Search}&rdquo; as a custom skill
+                          </p>
+                        </div>
+                      );
+                    })()
+                  )}
                 </div>
               )}
-              
+
               {/* Selected Skill Indicator */}
               {selectedL4 && (
                 <div className="mt-2 flex items-center gap-2">
@@ -596,7 +589,7 @@ export function AddSkillDrawer({
                   <span className="text-sm text-[#6B6760]">{selectedL4.nameI18n?.en}</span>
                 </div>
               )}
-              
+
               {/* Custom Skill Indicator */}
               {l4Search && !selectedL4 && (
                 <div className="mt-2">
@@ -609,9 +602,7 @@ export function AddSkillDrawer({
 
             {/* Proficiency Level */}
             <div>
-              <Label className="text-[#2D3330] mb-3 block">
-                Proficiency Level *
-              </Label>
+              <Label className="text-[#2D3330] mb-3 block">Proficiency Level *</Label>
               <RadioGroup
                 value={level.toString()}
                 onValueChange={(val: string) => setLevel(parseInt(val))}
@@ -643,9 +634,7 @@ export function AddSkillDrawer({
                 onChange={(e) => setLastUsedDate(e.target.value)}
                 className="mt-1"
               />
-              <p className="text-xs text-[#6B6760] mt-1">
-                When did you last use this skill?
-              </p>
+              <p className="text-xs text-[#6B6760] mt-1">When did you last use this skill?</p>
             </div>
 
             {/* Relevance */}
@@ -658,34 +647,37 @@ export function AddSkillDrawer({
                 <div className="flex items-center space-x-3 mb-2">
                   <RadioGroupItem value="current" id="relevance-current" />
                   <Label htmlFor="relevance-current" className="cursor-pointer">
-                    <Badge variant="outline" className="bg-[#EEF1EA] text-[#4A5943] border-[#7A9278]">
+                    <Badge
+                      variant="outline"
+                      className="bg-[#EEF1EA] text-[#4A5943] border-[#7A9278]"
+                    >
                       Current
                     </Badge>
-                    <span className="ml-2 text-sm text-[#6B6760]">
-                      Widely used today
-                    </span>
+                    <span className="ml-2 text-sm text-[#6B6760]">Widely used today</span>
                   </Label>
                 </div>
                 <div className="flex items-center space-x-3 mb-2">
                   <RadioGroupItem value="emerging" id="relevance-emerging" />
                   <Label htmlFor="relevance-emerging" className="cursor-pointer">
-                    <Badge variant="outline" className="bg-[#E8F3F8] text-[#3E5C73] border-[#6B9AB8]">
+                    <Badge
+                      variant="outline"
+                      className="bg-[#E8F3F8] text-[#3E5C73] border-[#6B9AB8]"
+                    >
                       Emerging
                     </Badge>
-                    <span className="ml-2 text-sm text-[#6B6760]">
-                      Growing in demand
-                    </span>
+                    <span className="ml-2 text-sm text-[#6B6760]">Growing in demand</span>
                   </Label>
                 </div>
                 <div className="flex items-center space-x-3">
                   <RadioGroupItem value="obsolete" id="relevance-obsolete" />
                   <Label htmlFor="relevance-obsolete" className="cursor-pointer">
-                    <Badge variant="outline" className="bg-[#FFF0F0] text-[#8B4A36] border-[#C76B4A]">
+                    <Badge
+                      variant="outline"
+                      className="bg-[#FFF0F0] text-[#8B4A36] border-[#C76B4A]"
+                    >
                       Obsolete
                     </Badge>
-                    <span className="ml-2 text-sm text-[#6B6760]">
-                      Declining use
-                    </span>
+                    <span className="ml-2 text-sm text-[#6B6760]">Declining use</span>
                   </Label>
                 </div>
               </RadioGroup>
@@ -693,9 +685,7 @@ export function AddSkillDrawer({
 
             {/* Optional Proof */}
             <div className="border-t border-[#E5E3DA] pt-6">
-              <h4 className="font-medium text-[#2D3330] mb-3">
-                Add Proof (Optional)
-              </h4>
+              <h4 className="font-medium text-[#2D3330] mb-3">Add Proof (Optional)</h4>
               <div className="space-y-3">
                 <div>
                   <Label htmlFor="proof-url" className="text-[#2D3330]">
@@ -718,7 +708,9 @@ export function AddSkillDrawer({
                     id="proof-notes"
                     placeholder="Describe this proof..."
                     value={proofNotes}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setProofNotes(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                      setProofNotes(e.target.value)
+                    }
                     rows={3}
                     className="mt-1"
                   />
@@ -750,4 +742,3 @@ export function AddSkillDrawer({
     </Sheet>
   );
 }
-
