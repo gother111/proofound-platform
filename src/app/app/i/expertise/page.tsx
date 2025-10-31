@@ -11,130 +11,168 @@ export const dynamic = 'force-dynamic';
  * Starts with empty state if no skills exist
  */
 export default async function ExpertiseAtlasPage() {
-  const user = await requireAuth();
-  const supabase = await createClient();
-  
-  // Fetch user's skills with taxonomy details
-  const { data: userSkills, error } = await supabase
-    .from('skills')
-    .select(`
-      *,
-      taxonomy:skill_code (
-        code,
-        slug,
-        name_i18n,
-        cat_id,
-        subcat_id,
-        l3_id,
-        tags
-      )
-    `)
-    .eq('profile_id', user.id);
-  
-  if (error) {
-    console.error('Error fetching user skills:', error);
-  }
-
-  // Fetch proof counts (aggregation)
-  const { data: proofs } = await supabase
-    .from('skill_proofs')
-    .select('skill_id')
-    .eq('profile_id', user.id);
-
-  const proofCountMap: Record<string, number> = {};
-  proofs?.forEach(({ skill_id }) => {
-    proofCountMap[skill_id] = (proofCountMap[skill_id] || 0) + 1;
-  });
-
-  // Fetch verification counts (only accepted)
-  const { data: verifications } = await supabase
-    .from('skill_verification_requests')
-    .select('skill_id, verifier_source, status')
-    .eq('requester_profile_id', user.id)
-    .eq('status', 'accepted');
-
-  const verificationCountMap: Record<string, number> = {};
-  const verificationSourcesMap: Record<string, Array<{ source: string }>> = {};
-
-  verifications?.forEach(({ skill_id, verifier_source }) => {
-    verificationCountMap[skill_id] = (verificationCountMap[skill_id] || 0) + 1;
-    if (!verificationSourcesMap[skill_id]) {
-      verificationSourcesMap[skill_id] = [];
-    }
-    verificationSourcesMap[skill_id].push({ source: verifier_source });
-  });
-
-  // Enrich skills with counts
-  const enrichedSkills = (userSkills || []).map(skill => ({
-    ...skill,
-    proof_count: proofCountMap[skill.id] || 0,
-    verification_count: verificationCountMap[skill.id] || 0,
-    verification_sources: verificationSourcesMap[skill.id] || [],
-  }));
-
-  // Fetch L1 domains
-  const { data: l1Domains } = await supabase
-    .from('skills_categories')
-    .select('*')
-    .order('display_order');
-  
-  // Calculate stats per L1 domain
-  const domainsWithStats = (l1Domains || []).map((domain) => {
-    const domainSkills = enrichedSkills.filter(
-      (skill: any) => skill.taxonomy?.cat_id === domain.catId
-    );
+  try {
+    const user = await requireAuth();
+    const supabase = await createClient();
     
-    const skillCount = domainSkills.length;
-    const avgLevel = skillCount > 0
-      ? domainSkills.reduce((sum: number, s: any) => sum + (s.level || 0), 0) / skillCount
-      : 0;
+    // Fetch user's skills - fetch taxonomy separately to avoid foreign key relationship issues
+    const { data: userSkills, error: skillsError } = await supabase
+      .from('skills')
+      .select('*')
+      .eq('profile_id', user.id);
     
-    // Calculate recency mix
-    const now = new Date();
-    let active = 0, recent = 0, rusty = 0;
-    
-    domainSkills.forEach((skill: any) => {
-      if (!skill.lastUsedAt) {
-        rusty++;
-        return;
-      }
+    // Fetch taxonomy data separately if skills exist
+    let taxonomyMap: Record<string, any> = {};
+    if (userSkills && userSkills.length > 0) {
+      const skillCodes = userSkills
+        .map(s => s.skill_code)
+        .filter((code): code is string => Boolean(code));
       
-      const monthsAgo = Math.floor(
-        (now.getTime() - new Date(skill.lastUsedAt).getTime()) / (1000 * 60 * 60 * 24 * 30)
+      if (skillCodes.length > 0) {
+        const { data: taxonomyData } = await supabase
+          .from('skills_taxonomy')
+          .select('code, slug, name_i18n, cat_id, subcat_id, l3_id, tags')
+          .in('code', skillCodes);
+        
+        if (taxonomyData) {
+          taxonomyData.forEach(tax => {
+            taxonomyMap[tax.code] = tax;
+          });
+        }
+      }
+    }
+    
+    if (skillsError) {
+      console.error('Error fetching user skills:', skillsError);
+      // Continue with empty array if skills query fails
+    }
+
+    // Fetch proof counts (aggregation) - handle errors gracefully
+    const { data: proofs, error: proofsError } = await supabase
+      .from('skill_proofs')
+      .select('skill_id')
+      .eq('profile_id', user.id);
+
+    if (proofsError) {
+      console.error('Error fetching skill proofs:', proofsError);
+    }
+
+    const proofCountMap: Record<string, number> = {};
+    proofs?.forEach(({ skill_id }) => {
+      proofCountMap[skill_id] = (proofCountMap[skill_id] || 0) + 1;
+    });
+
+    // Fetch verification counts (only accepted) - handle errors gracefully
+    const { data: verifications, error: verificationsError } = await supabase
+      .from('skill_verification_requests')
+      .select('skill_id, verifier_source, status')
+      .eq('requester_profile_id', user.id)
+      .eq('status', 'accepted');
+
+    if (verificationsError) {
+      console.error('Error fetching skill verifications:', verificationsError);
+    }
+
+    const verificationCountMap: Record<string, number> = {};
+    const verificationSourcesMap: Record<string, Array<{ source: string }>> = {};
+
+    verifications?.forEach(({ skill_id, verifier_source }) => {
+      verificationCountMap[skill_id] = (verificationCountMap[skill_id] || 0) + 1;
+      if (!verificationSourcesMap[skill_id]) {
+        verificationSourcesMap[skill_id] = [];
+      }
+      verificationSourcesMap[skill_id].push({ source: verifier_source });
+    });
+
+    // Enrich skills with counts and taxonomy
+    const enrichedSkills = (userSkills || []).map(skill => ({
+      ...skill,
+      taxonomy: skill.skill_code ? taxonomyMap[skill.skill_code] : null,
+      proof_count: proofCountMap[skill.id] || 0,
+      verification_count: verificationCountMap[skill.id] || 0,
+      verification_sources: verificationSourcesMap[skill.id] || [],
+    }));
+
+    // Fetch L1 domains - handle errors gracefully
+    const { data: l1Domains, error: domainsError } = await supabase
+      .from('skills_categories')
+      .select('*')
+      .order('display_order');
+
+    if (domainsError) {
+      console.error('Error fetching L1 domains:', domainsError);
+      // Continue with empty array if domains query fails
+    }
+  
+    // Calculate stats per L1 domain
+    const domainsWithStats = (l1Domains || []).map((domain) => {
+      const domainSkills = enrichedSkills.filter(
+        (skill: any) => skill.taxonomy?.cat_id === domain.catId
       );
       
-      if (monthsAgo <= 6) active++;
-      else if (monthsAgo <= 24) recent++;
-      else rusty++;
+      const skillCount = domainSkills.length;
+      const avgLevel = skillCount > 0
+        ? domainSkills.reduce((sum: number, s: any) => sum + (s.level || 0), 0) / skillCount
+        : 0;
+      
+      // Calculate recency mix
+      const now = new Date();
+      let active = 0, recent = 0, rusty = 0;
+      
+      domainSkills.forEach((skill: any) => {
+        if (!skill.lastUsedAt) {
+          rusty++;
+          return;
+        }
+        
+        const monthsAgo = Math.floor(
+          (now.getTime() - new Date(skill.lastUsedAt).getTime()) / (1000 * 60 * 60 * 24 * 30)
+        );
+        
+        if (monthsAgo <= 6) active++;
+        else if (monthsAgo <= 24) recent++;
+        else rusty++;
+      });
+      
+      const total = active + recent + rusty || 1;
+      
+      return {
+        ...domain,
+        skillCount,
+        avgLevel,
+        recencyMix: {
+          active: Math.round((active / total) * 100),
+          recent: Math.round((recent / total) * 100),
+          rusty: Math.round((rusty / total) * 100),
+        },
+      };
     });
-    
-    const total = active + recent + rusty || 1;
-    
-    return {
-      ...domain,
-      skillCount,
-      avgLevel,
-      recencyMix: {
-        active: Math.round((active / total) * 100),
-        recent: Math.round((recent / total) * 100),
-        rusty: Math.round((rusty / total) * 100),
-      },
-    };
-  });
 
-  const hasSkills = enrichedSkills.length > 0;
+    const hasSkills = enrichedSkills.length > 0;
 
-  // Calculate widget data (only if user has skills)
-  const widgetData = hasSkills ? calculateWidgetData(enrichedSkills) : null;
+    // Calculate widget data (only if user has skills)
+    const widgetData = hasSkills ? calculateWidgetData(enrichedSkills) : null;
 
-  return (
-    <ExpertiseAtlasClient
-      initialSkills={enrichedSkills}
-      domains={domainsWithStats}
-      hasSkills={hasSkills}
-      widgetData={widgetData}
-    />
-  );
+    return (
+      <ExpertiseAtlasClient
+        initialSkills={enrichedSkills}
+        domains={domainsWithStats}
+        hasSkills={hasSkills}
+        widgetData={widgetData}
+      />
+    );
+  } catch (error) {
+    console.error('Error in ExpertiseAtlasPage:', error);
+    // Return error state to client
+    return (
+      <ExpertiseAtlasClient
+        initialSkills={[]}
+        domains={[]}
+        hasSkills={false}
+        widgetData={null}
+      />
+    );
+  }
 }
 
 /**
