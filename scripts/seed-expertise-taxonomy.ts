@@ -158,6 +158,8 @@ async function seedL3Subcategories(
   const l3ToIdMap = new Map<string, number>(); // Track "L2_CODE:L3_NAME" → l3_id mapping
   
   for (const [l1Code, l2Categories] of l1ToL2Map.entries()) {
+    const catId = L1_MAPPING[l1Code]; // Get cat_id from L1 code
+    
     for (const l2 of l2Categories) {
       const subcatId = l2ToSubcatIdMap.get(l2.code);
       
@@ -176,6 +178,7 @@ async function seedL3Subcategories(
         const { error } = await supabase
           .from('skills_l3')
           .insert({
+            cat_id: catId,
             subcat_id: subcatId,
             l3_id: l3Id,
             slug: `${l2.code.toLowerCase()}-${slug}`,

@@ -601,58 +601,82 @@ export const skillsCategories = pgTable('skills_categories', {
 });
 
 // Skills subcategories (L2)
-export const skillsSubcategories = pgTable('skills_subcategories', {
-  subcatId: integer('subcat_id').primaryKey(),
-  catId: integer('cat_id')
-    .references(() => skillsCategories.catId)
-    .notNull(),
-  slug: text('slug').unique().notNull(),
-  nameI18n: jsonb('name_i18n').notNull(),
-  descriptionI18n: jsonb('description_i18n'),
-  displayOrder: integer('display_order').notNull(),
-  version: integer('version').default(1).notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+export const skillsSubcategories = pgTable(
+  'skills_subcategories',
+  {
+    subcatId: integer('subcat_id').notNull(),
+    catId: integer('cat_id')
+      .references(() => skillsCategories.catId)
+      .notNull(),
+    slug: text('slug').unique().notNull(),
+    nameI18n: jsonb('name_i18n').notNull(),
+    descriptionI18n: jsonb('description_i18n'),
+    displayOrder: integer('display_order').notNull(),
+    version: integer('version').default(1).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.catId, table.subcatId] }),
+  })
+);
 
 // Skills L3 categories
-export const skillsL3 = pgTable('skills_l3', {
-  l3Id: integer('l3_id').primaryKey(),
-  subcatId: integer('subcat_id')
-    .references(() => skillsSubcategories.subcatId)
-    .notNull(),
-  slug: text('slug').unique().notNull(),
-  nameI18n: jsonb('name_i18n').notNull(),
-  descriptionI18n: jsonb('description_i18n'),
-  displayOrder: integer('display_order').notNull(),
-  version: integer('version').default(1).notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+export const skillsL3 = pgTable(
+  'skills_l3',
+  {
+    l3Id: integer('l3_id').notNull(),
+    subcatId: integer('subcat_id').notNull(),
+    catId: integer('cat_id').notNull(),
+    slug: text('slug').unique().notNull(),
+    nameI18n: jsonb('name_i18n').notNull(),
+    descriptionI18n: jsonb('description_i18n'),
+    displayOrder: integer('display_order').notNull(),
+    version: integer('version').default(1).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.catId, table.subcatId, table.l3Id] }),
+    fkSubcat: foreignKey({
+      columns: [table.catId, table.subcatId],
+      foreignColumns: [skillsSubcategories.catId, skillsSubcategories.subcatId],
+    }),
+  })
+);
 
 // Skills taxonomy (L4) - granular skills
-export const skillsTaxonomy = pgTable('skills_taxonomy', {
-  code: text('code').primaryKey(), // "01.03.01.142"
-  catId: integer('cat_id').notNull(),
-  subcatId: integer('subcat_id').notNull(),
-  l3Id: integer('l3_id').notNull(),
-  skillId: integer('skill_id').notNull(),
-  slug: text('slug').unique().notNull(),
-  nameI18n: jsonb('name_i18n').notNull(),
-  aliasesI18n: jsonb('aliases_i18n').default(sql`'[]'::jsonb`),
-  descriptionI18n: jsonb('description_i18n'),
-  tags: text('tags').array(),
-  embedding: vector('embedding', { dimensions: 768 }),
-  status: text('status', {
-    enum: ['active', 'deprecated', 'merged'],
+export const skillsTaxonomy = pgTable(
+  'skills_taxonomy',
+  {
+    code: text('code').primaryKey(), // "01.03.01.142"
+    catId: integer('cat_id').notNull(),
+    subcatId: integer('subcat_id').notNull(),
+    l3Id: integer('l3_id').notNull(),
+    skillId: integer('skill_id').notNull(),
+    slug: text('slug').unique().notNull(),
+    nameI18n: jsonb('name_i18n').notNull(),
+    aliasesI18n: jsonb('aliases_i18n').default(sql`'[]'::jsonb`),
+    descriptionI18n: jsonb('description_i18n'),
+    tags: text('tags').array(),
+    embedding: vector('embedding', { dimensions: 768 }),
+    status: text('status', {
+      enum: ['active', 'deprecated', 'merged'],
+    })
+      .default('active')
+      .notNull(),
+    mergedInto: text('merged_into'),
+    version: integer('version').default(1).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    fkL3: foreignKey({
+      columns: [table.catId, table.subcatId, table.l3Id],
+      foreignColumns: [skillsL3.catId, skillsL3.subcatId, skillsL3.l3Id],
+    }),
   })
-    .default('active')
-    .notNull(),
-  mergedInto: text('merged_into'),
-  version: integer('version').default(1).notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+);
 
 // Skill adjacency graph
 export const skillAdjacency = pgTable('skill_adjacency', {

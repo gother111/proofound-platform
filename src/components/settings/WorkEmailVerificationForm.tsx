@@ -212,8 +212,8 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
 
       <Button
         type="submit"
-        disabled={submitting || !!emailError}
-        className="w-full bg-proofound-teal hover:bg-proofound-teal/90"
+        disabled={submitting}
+        className="w-full bg-proofound-teal hover:bg-proofound-teal/90 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {submitting ? (
           <>
@@ -227,6 +227,11 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
           </>
         )}
       </Button>
+      {emailError && (
+        <p className="text-sm text-red-600 dark:text-red-400 mt-2">
+          {emailError}
+        </p>
+      )}
 
       <div className="pt-4 border-t">
         <p className="text-xs text-muted-foreground">
