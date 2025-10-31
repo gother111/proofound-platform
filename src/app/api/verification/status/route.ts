@@ -28,14 +28,34 @@ export async function GET(request: NextRequest) {
       .eq('user_id', user.id)
       .maybeSingle();
 
-    // Only return error if there's an actual database error (not just missing row)
-    if (profileError && profileError.code !== 'PGRST116') {
-      // PGRST116 is "not found" error, which is expected if profile doesn't exist
-      console.error('Error fetching profile:', profileError);
-      return NextResponse.json(
-        { error: 'Failed to fetch verification status' },
-        { status: 500 }
-      );
+    // Handle errors - maybeSingle() typically returns null data and no error if not found
+    // But if there's an error, log it and only fail on real database errors
+    if (profileError) {
+      // Log the full error for debugging
+      console.error('Error fetching individual profile:', {
+        code: profileError.code,
+        message: profileError.message,
+        details: profileError.details,
+        hint: profileError.hint,
+      });
+      
+      // PGRST116 = "not found" (PostgREST error code), which is expected when profile doesn't exist
+      // Most Supabase clients return null without error for maybeSingle(), but some may return this code
+      // Only treat as error if it's a real database error (not "not found")
+      const isNotFoundError = profileError.code === 'PGRST116' || 
+                               profileError.message?.toLowerCase().includes('not found') ||
+                               profileError.message?.toLowerCase().includes('no rows');
+      
+      if (!isNotFoundError) {
+        return NextResponse.json(
+          { 
+            error: 'Failed to fetch verification status',
+            details: profileError.message || 'Database error'
+          },
+          { status: 500 }
+        );
+      }
+      // If it's a "not found" error, continue to return default unverified status below
     }
 
     if (!profile) {

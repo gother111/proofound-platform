@@ -35,13 +35,19 @@ export function VerificationStatus() {
       const response = await fetch('/api/verification/status');
       
       if (!response.ok) {
-        throw new Error('Failed to fetch verification status');
+        // Try to get error details from response
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || `Failed to fetch verification status (${response.status})`;
+        const errorDetails = errorData.details ? `: ${errorData.details}` : '';
+        throw new Error(`${errorMessage}${errorDetails}`);
       }
       
       const data = await response.json();
       setStatus(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load verification status');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load verification status';
+      console.error('Error fetching verification status:', err);
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -63,10 +69,26 @@ export function VerificationStatus() {
 
   if (error) {
     return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
+      <div className="space-y-4">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            {error}
+            <br />
+            <span className="text-xs mt-2 block">
+              Check your browser console (F12) for more details.
+            </span>
+          </AlertDescription>
+        </Alert>
+        <Button
+          onClick={fetchStatus}
+          variant="outline"
+          className="w-full"
+        >
+          <Loader2 className="w-4 h-4 mr-2" />
+          Retry
+        </Button>
+      </div>
     );
   }
 
