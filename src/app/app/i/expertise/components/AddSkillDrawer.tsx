@@ -555,9 +555,10 @@ export function AddSkillDrawer({
                     return filtered.length > 0 ? (
                       <>
                         {filtered.map((skill) => (
-                          <div
+                          <button
                             key={skill.code}
-                            className="p-3 hover:bg-[#F7F6F1] cursor-pointer border-b border-[#E5E3DA] last:border-b-0"
+                            type="button"
+                            className="w-full text-left p-3 hover:bg-[#F7F6F1] cursor-pointer border-b border-[#E5E3DA] last:border-b-0"
                             onClick={() => {
                               setSelectedL4(skill);
                               setL4Name(skill.nameI18n?.en || '');
@@ -573,7 +574,7 @@ export function AddSkillDrawer({
                                 {skill.descriptionI18n?.en}
                               </div>
                             )}
-                          </div>
+                          </button>
                         ))}
                       </>
                     ) : (
