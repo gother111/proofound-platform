@@ -101,7 +101,7 @@ function VerifyWorkEmailContent() {
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <CheckCircle2 className="w-4 h-4 text-green-600" />
-                  <span>Organizations can see you're verified</span>
+                  <span>Organizations can see you&apos;re verified</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <CheckCircle2 className="w-4 h-4 text-green-600" />

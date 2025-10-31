@@ -258,7 +258,7 @@ export function VerificationsClient({ requests: initialRequests, userEmail }: Ve
           {request.message && (
             <div className="mb-3 p-3 rounded border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
               <p className="text-sm" style={{ color: '#2D3330' }}>
-                "{request.message}"
+                &ldquo;{request.message}&rdquo;
               </p>
             </div>
           )}
@@ -270,7 +270,7 @@ export function VerificationsClient({ requests: initialRequests, userEmail }: Ve
                 Your response:
               </p>
               <p className="text-sm" style={{ color: '#2D3330' }}>
-                "{request.response_message}"
+                &ldquo;{request.response_message}&rdquo;
               </p>
             </div>
           )}

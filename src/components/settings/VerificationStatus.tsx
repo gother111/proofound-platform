@@ -204,7 +204,7 @@ export function VerificationStatus() {
               <div className="flex-1">
                 <h3 className="font-semibold mb-1">Government ID Verification</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Quick and secure verification using your passport, driver's license, or national ID. Powered by Veriff.
+                  Quick and secure verification using your passport, driver&apos;s license, or national ID. Powered by Veriff.
                 </p>
                 <Button
                   onClick={() => setShowVeriffFlow(true)}

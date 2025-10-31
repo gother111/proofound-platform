@@ -129,7 +129,7 @@ export function RespondDialog({
               Their Message
             </h4>
             <p className="text-sm" style={{ color: '#2D3330' }}>
-              "{request.message}"
+              &ldquo;{request.message}&rdquo;
             </p>
           </div>
         )}

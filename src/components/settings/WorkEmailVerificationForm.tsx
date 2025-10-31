@@ -190,7 +190,7 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
             <SelectValue placeholder={loadingOrgs ? "Loading..." : "Select your organization"} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">None - I'll link later</SelectItem>
+            <SelectItem value="">None - I&apos;ll link later</SelectItem>
             {organizations.map((org) => (
               <SelectItem key={org.id} value={org.id}>
                 {org.displayName}
@@ -232,7 +232,7 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
         <p className="text-xs text-muted-foreground">
           <strong>How it works:</strong>
           <br />
-          1. We'll send a verification link to your work email
+          1. We&apos;ll send a verification link to your work email
           <br />
           2. Click the link to verify you own this email
           <br />

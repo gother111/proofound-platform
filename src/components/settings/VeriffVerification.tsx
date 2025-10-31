@@ -185,9 +185,9 @@ export function VeriffVerification({ onSuccess }: VeriffVerificationProps) {
         <div className="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-xl">
           <ShieldCheck className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
           <div className="flex-1 text-sm text-blue-900 dark:text-blue-100">
-            <p className="font-medium mb-2">What you'll need:</p>
+            <p className="font-medium mb-2">What you&apos;ll need:</p>
             <ul className="list-disc list-inside space-y-1 text-sm">
-              <li>A valid government-issued ID (passport, driver's license, or national ID)</li>
+              <li>A valid government-issued ID (passport, driver&apos;s license, or national ID)</li>
               <li>A device with a camera (phone or computer)</li>
               <li>Good lighting for clear photos</li>
               <li>About 5 minutes</li>
@@ -234,7 +234,7 @@ export function VeriffVerification({ onSuccess }: VeriffVerificationProps) {
         <p className="text-xs text-muted-foreground">
           <strong>Your privacy matters:</strong>
           <br />
-          Verification is powered by Veriff, a trusted identity verification provider. Your ID photos are encrypted and used only for verification. We don't store your ID images.
+          Verification is powered by Veriff, a trusted identity verification provider. Your ID photos are encrypted and used only for verification. We don&apos;t store your ID images.
         </p>
       </div>
     </div>
