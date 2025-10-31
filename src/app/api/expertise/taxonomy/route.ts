@@ -63,10 +63,10 @@ function mapTaxonomyFields(item: any, type: 'l1' | 'l2' | 'l3' | 'l4') {
 
 /**
  * GET /api/expertise/taxonomy
- * 
+ *
  * Returns the complete skills taxonomy hierarchy.
  * Optionally filter by L1, L2, or L3.
- * 
+ *
  * Query params:
  * - l1: L1 domain code (U/F/T/L/M/D)
  * - l2: L2 category code (e.g., "U-COMM")
@@ -77,48 +77,52 @@ export async function GET(request: Request) {
   try {
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
-    
+
     const l1 = searchParams.get('l1');
     const l2 = searchParams.get('l2');
     const l3Id = searchParams.get('l3_id');
     const search = searchParams.get('search');
-    
+
     // If no filters, return full L1 list
     if (!l1 && !l2 && !l3Id && !search) {
       const { data: categories, error } = await supabase
         .from('skills_categories')
         .select('*')
         .order('display_order');
-      
+
       if (error) {
         console.error('Error fetching L1 categories:', error);
         return NextResponse.json({ error: 'Failed to fetch categories' }, { status: 500 });
       }
-      
-      return NextResponse.json({ l1_domains: categories?.map(c => mapTaxonomyFields(c, 'l1')) || [] });
+
+      return NextResponse.json({
+        l1_domains: categories?.map((c) => mapTaxonomyFields(c, 'l1')) || [],
+      });
     }
-    
+
     // If L1 specified, return L2 categories
     if (l1 && !l2 && !l3Id) {
       const catId = l1CodeToCatId(l1);
       if (!catId) {
         return NextResponse.json({ error: 'Invalid L1 code' }, { status: 400 });
       }
-      
+
       const { data: subcategories, error } = await supabase
         .from('skills_subcategories')
         .select('*')
         .eq('cat_id', catId)
         .order('display_order');
-      
+
       if (error) {
         console.error('Error fetching L2 subcategories:', error);
         return NextResponse.json({ error: 'Failed to fetch subcategories' }, { status: 500 });
       }
-      
-      return NextResponse.json({ l2_categories: subcategories?.map(s => mapTaxonomyFields(s, 'l2')) || [] });
+
+      return NextResponse.json({
+        l2_categories: subcategories?.map((s) => mapTaxonomyFields(s, 'l2')) || [],
+      });
     }
-    
+
     // If L2 specified, return L3 subcategories
     if (l2 && !l3Id) {
       // Parse L2 code to get cat_id and subcat_id
@@ -128,58 +132,61 @@ export async function GET(request: Request) {
         .select('cat_id, subcat_id')
         .eq('slug', l2.toLowerCase())
         .single();
-      
+
       if (l2Error || !l2Data) {
         return NextResponse.json({ error: 'Invalid L2 code' }, { status: 400 });
       }
-      
+
       const { data: l3Items, error } = await supabase
         .from('skills_l3')
         .select('*')
         .eq('subcat_id', l2Data.subcat_id)
         .order('display_order');
-      
+
       if (error) {
         console.error('Error fetching L3 items:', error);
         return NextResponse.json({ error: 'Failed to fetch L3 items' }, { status: 500 });
       }
-      
-      return NextResponse.json({ l3_subcategories: l3Items?.map(l => mapTaxonomyFields(l, 'l3')) || [] });
+
+      return NextResponse.json({
+        l3_subcategories: l3Items?.map((l) => mapTaxonomyFields(l, 'l3')) || [],
+      });
     }
-    
+
     // If L3 specified or search query, return L4 skills
     if (l3Id || search) {
-      let query = supabase
-        .from('skills_taxonomy')
-        .select('*')
-        .eq('status', 'active');
-      
+      let query = supabase.from('skills_taxonomy').select('*').eq('status', 'active');
+
       if (l3Id) {
         const [catId, subcatId, l3IdNum] = l3Id.split('.').map(Number);
-        query = query
-          .eq('cat_id', catId)
-          .eq('subcat_id', subcatId)
-          .eq('l3_id', l3IdNum);
+        query = query.eq('cat_id', catId).eq('subcat_id', subcatId).eq('l3_id', l3IdNum);
       }
-      
+
       if (search) {
-        // Search in name, aliases, and tags
-        query = query.or(`name_i18n->>'en'.ilike.%${search}%,tags.cs.{${search.toLowerCase()}}`);
+        // Search in name, aliases, description, and tags
+        const searchPattern = `%${search}%`;
+        const searchLower = search.toLowerCase();
+
+        query = query.or(
+          `name_i18n->>'en'.ilike.${searchPattern},` +
+            `description_i18n->>'en'.ilike.${searchPattern},` +
+            `aliases_i18n::text.ilike.${searchPattern},` +
+            `tags.cs.{${searchLower}}`
+        );
       }
-      
+
       // Execute the filtered query (not a new one!)
       const { data: skills, error } = await query.limit(100);
-      
+
       if (error) {
         console.error('Error fetching L4 skills:', error);
         return NextResponse.json({ error: 'Failed to fetch skills' }, { status: 500 });
       }
-      
-      return NextResponse.json({ l4_skills: skills?.map(s => mapTaxonomyFields(s, 'l4')) || [] });
+
+      return NextResponse.json({ l4_skills: skills?.map((s) => mapTaxonomyFields(s, 'l4')) || [] });
     }
-    
+
     return NextResponse.json({ error: 'Invalid query parameters' }, { status: 400 });
-    
   } catch (error) {
     console.error('Taxonomy API error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -191,13 +198,12 @@ export async function GET(request: Request) {
  */
 function l1CodeToCatId(code: string): number | null {
   const mapping: Record<string, number> = {
-    'U': 1,
-    'F': 2,
-    'T': 3,
-    'L': 4,
-    'M': 5,
-    'D': 6,
+    U: 1,
+    F: 2,
+    T: 3,
+    L: 4,
+    M: 5,
+    D: 6,
   };
   return mapping[code.toUpperCase()] || null;
 }
-
