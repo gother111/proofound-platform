@@ -23,20 +23,34 @@ export function VeriffVerification({ onSuccess }: VeriffVerificationProps) {
   const [checking, setChecking] = useState(false);
 
   useEffect(() => {
+    // Check if SDK is already loaded
+    if (window.Veriff) {
+      setVeriffLoaded(true);
+      return;
+    }
+
     // Load Veriff SDK
     const script = document.createElement('script');
     script.src = 'https://cdn.veriff.me/sdk/js/1.3/veriff.min.js';
     script.async = true;
     script.onload = () => {
-      setVeriffLoaded(true);
+      // Verify SDK is actually available
+      if (window.Veriff) {
+        setVeriffLoaded(true);
+      } else {
+        setError('Veriff SDK loaded but not available. Please refresh the page.');
+      }
     };
     script.onerror = () => {
-      setError('Failed to load Veriff SDK. Please try again or use work email verification.');
+      setError('Failed to load Veriff SDK. Please check your internet connection and try again.');
     };
     document.body.appendChild(script);
 
     return () => {
-      document.body.removeChild(script);
+      // Only remove if we added it
+      if (script.parentNode) {
+        document.body.removeChild(script);
+      }
     };
   }, []);
 

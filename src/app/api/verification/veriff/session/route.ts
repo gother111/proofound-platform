@@ -72,9 +72,32 @@ export async function POST(request: NextRequest) {
 
     if (!veriffResponse.ok) {
       const errorData = await veriffResponse.json().catch(() => ({}));
-      console.error('Veriff API error:', errorData);
+      console.error('Veriff API error:', {
+        status: veriffResponse.status,
+        statusText: veriffResponse.statusText,
+        error: errorData,
+      });
+      
+      // Provide more specific error messages
+      if (veriffResponse.status === 401) {
+        return NextResponse.json(
+          { error: 'Invalid Veriff API credentials. Please check your configuration.' },
+          { status: 500 }
+        );
+      }
+      
+      if (veriffResponse.status === 400) {
+        return NextResponse.json(
+          { error: errorData.message || 'Invalid request to Veriff API' },
+          { status: 500 }
+        );
+      }
+      
       return NextResponse.json(
-        { error: 'Failed to create verification session' },
+        { 
+          error: 'Failed to create verification session',
+          details: errorData.message || 'Unknown error'
+        },
         { status: 500 }
       );
     }
