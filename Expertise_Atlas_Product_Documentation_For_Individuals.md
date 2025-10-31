@@ -26,6 +26,16 @@ Each L2 can contain **any number of L3 subcategories** (curated; concise names +
 ### 2.4 Granular skills (L4) — unlimited per L3
 Each L3 can contain **any number of L4 leaf skills**. **Users author L4** (free text in MVP) under a chosen L3; curators can later consolidate synonyms.
 
+**Important:** L4 skills are **distinct, specific competencies**—not proficiency levels or context variations. For example, under the L3 "Verbal communication", proper L4 skills include:
+- Public speaking to large audiences
+- One-on-one conversation
+- Storytelling and narrative
+- Explaining technical concepts verbally
+- Telephone communication
+- Pitch delivery
+
+**Not:** "Verbal communication - Intermediate" or "Verbal communication for Teams" (proficiency and context are captured separately via the `level` attribute and usage metadata).
+
 ### 2.5 L4 data attributes (per skill)
 - Identity: `l1_code`, `l2_code`, `l3_id`/`l3_label`, `l4_label` (user text), optional `l4_slug`
 - Proficiency: `level` (1–5 observable rubric)

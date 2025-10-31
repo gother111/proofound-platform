@@ -112,7 +112,7 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
         },
         body: JSON.stringify({
           workEmail: workEmail.trim().toLowerCase(),
-          orgId: selectedOrgId || null,
+          orgId: selectedOrgId && selectedOrgId !== 'none' ? selectedOrgId : null,
         }),
       });
       
@@ -190,7 +190,7 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
             <SelectValue placeholder={loadingOrgs ? "Loading..." : "Select your organization"} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">None - I&apos;ll link later</SelectItem>
+            <SelectItem value="none">None - I&apos;ll link later</SelectItem>
             {organizations.map((org) => (
               <SelectItem key={org.id} value={org.id}>
                 {org.displayName}
