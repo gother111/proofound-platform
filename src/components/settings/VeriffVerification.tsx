@@ -69,7 +69,9 @@ export function VeriffVerification({ onSuccess }: VeriffVerificationProps) {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to create verification session');
+        const errorMessage = data.error || 'Failed to create verification session';
+        const errorDetails = data.details ? ` ${data.details}` : '';
+        throw new Error(`${errorMessage}${errorDetails}`);
       }
 
       return data;

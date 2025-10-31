@@ -20,14 +20,30 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if Veriff credentials are configured
-    const apiKey = process.env.VERIFF_API_KEY;
-    const apiSecret = process.env.VERIFF_API_SECRET;
+    const apiKey = process.env.VERIFF_API_KEY?.trim();
+    const apiSecret = process.env.VERIFF_API_SECRET?.trim();
     const baseUrl = process.env.VERIFF_BASE_URL || 'https://stationapi.veriff.com';
 
-    if (!apiKey || !apiSecret) {
-      console.error('Veriff API credentials not configured');
+    // Check for missing or placeholder values
+    const isPlaceholder = (value: string | undefined) => {
+      if (!value) return true;
+      const lower = value.toLowerCase();
+      return lower.includes('your_') || 
+             lower.includes('placeholder') || 
+             lower.includes('here') ||
+             value.length < 10; // Too short to be real
+    };
+
+    if (!apiKey || !apiSecret || isPlaceholder(apiKey) || isPlaceholder(apiSecret)) {
+      console.error('Veriff API credentials not configured:', {
+        apiKey: apiKey ? `${apiKey.substring(0, 8)}...` : 'missing',
+        apiSecret: apiSecret ? '***' : 'missing',
+      });
       return NextResponse.json(
-        { error: 'Verification service not configured. Please contact support.' },
+        { 
+          error: 'Verification service not configured',
+          details: 'Please add your Veriff API credentials to .env.local and restart the server. See VERIFF_SETUP_GUIDE.md for instructions.'
+        },
         { status: 500 }
       );
     }

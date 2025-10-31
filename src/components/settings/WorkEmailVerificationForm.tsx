@@ -26,7 +26,7 @@ interface Organization {
 
 export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFormProps) {
   const [workEmail, setWorkEmail] = useState('');
-  const [selectedOrgId, setSelectedOrgId] = useState<string>('');
+  const [selectedOrgId, setSelectedOrgId] = useState<string>('none');
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loadingOrgs, setLoadingOrgs] = useState(true);
   const [submitting, setSubmitting] = useState(false);
