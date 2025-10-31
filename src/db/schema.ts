@@ -394,7 +394,9 @@ export const skills = pgTable(
       .references(() => profiles.id, { onDelete: 'cascade' })
       .notNull(),
     skillId: text('skill_id').notNull(), // Key from taxonomy (legacy)
-    skillCode: text('skill_code'), // New L4 skill code (references skills_taxonomy)
+    skillCode: text('skill_code').references(() => skillsTaxonomy.code, {
+      onDelete: 'set null',
+    }), // New L4 skill code (references skills_taxonomy)
     level: integer('level').notNull(), // 0-5
     competencyLabel: text('competency_label', {
       enum: ['C1', 'C2', 'C3', 'C4', 'C5'],

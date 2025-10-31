@@ -38,14 +38,16 @@ export async function POST(request: NextRequest) {
     }
 
     const { workEmail, orgId } = validation.data;
+    const normalizedEmail = workEmail.toLowerCase();
 
-    // Check if email is already verified by another user
+    // Quick check for better UX (database constraint is the real protection)
+    // This check prevents unnecessary token generation if email is already verified
     const { data: existingProfile } = await supabase
       .from('individual_profiles')
       .select('user_id, work_email_verified')
-      .eq('work_email', workEmail.toLowerCase())
+      .eq('work_email', normalizedEmail)
       .eq('work_email_verified', true)
-      .single();
+      .maybeSingle();
 
     if (existingProfile && existingProfile.user_id !== user.id) {
       return NextResponse.json(
@@ -59,16 +61,18 @@ export async function POST(request: NextRequest) {
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     // Update or create individual profile with work email and token
+    // Note: We set work_email_verified = false here, so it won't trigger the unique constraint
+    // The constraint only applies when work_email_verified = true
     const { error: updateError } = await supabase
       .from('individual_profiles')
       .upsert(
         {
           user_id: user.id,
-          work_email: workEmail.toLowerCase(),
+          work_email: normalizedEmail,
           work_email_token: token,
           work_email_token_expires: expiresAt.toISOString(),
           work_email_org_id: orgId || null,
-          work_email_verified: false,
+          work_email_verified: false, // Not verified yet, so unique constraint doesn't apply
         },
         {
           onConflict: 'user_id',
@@ -77,6 +81,15 @@ export async function POST(request: NextRequest) {
 
     if (updateError) {
       console.error('Error updating profile with work email:', updateError);
+      
+      // Check if this is a unique constraint violation (shouldn't happen here since verified=false, but handle it anyway)
+      if (updateError.code === '23505' || updateError.message?.includes('unique')) {
+        return NextResponse.json(
+          { error: 'This work email is already verified by another account' },
+          { status: 400 }
+        );
+      }
+      
       return NextResponse.json(
         { error: 'Failed to save work email' },
         { status: 500 }

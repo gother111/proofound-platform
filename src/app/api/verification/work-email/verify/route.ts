@@ -45,7 +45,25 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Check if this work email is already verified by another user
+    // This prevents race conditions where multiple users try to verify the same email
+    const { data: existingVerifiedProfile } = await supabase
+      .from('individual_profiles')
+      .select('user_id')
+      .eq('work_email', profile.work_email)
+      .eq('work_email_verified', true)
+      .neq('user_id', profile.user_id)
+      .maybeSingle();
+
+    if (existingVerifiedProfile) {
+      return NextResponse.json(
+        { error: 'This work email is already verified by another account' },
+        { status: 400 }
+      );
+    }
+
     // Update profile: mark work email as verified and set overall verified status
+    // The unique constraint will catch any race conditions that slip through
     const { error: updateError } = await supabase
       .from('individual_profiles')
       .update({
@@ -61,6 +79,16 @@ export async function GET(request: NextRequest) {
 
     if (updateError) {
       console.error('Error updating profile after work email verification:', updateError);
+      
+      // Handle unique constraint violation (PostgreSQL error code 23505)
+      // This catches race conditions where two users verify the same email simultaneously
+      if (updateError.code === '23505' || updateError.message?.includes('unique')) {
+        return NextResponse.json(
+          { error: 'This work email is already verified by another account' },
+          { status: 400 }
+        );
+      }
+      
       return NextResponse.json(
         { error: 'Failed to verify work email' },
         { status: 500 }
