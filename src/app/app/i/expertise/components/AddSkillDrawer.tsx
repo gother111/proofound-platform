@@ -269,12 +269,12 @@ export function AddSkillDrawer({
 
   // Filter L2 categories by search
   const filteredL2 = l2Categories.filter((cat) =>
-    cat.nameI18n.en.toLowerCase().includes(l2Search.toLowerCase())
+    cat.nameI18n?.en?.toLowerCase().includes(l2Search.toLowerCase())
   );
 
   // Filter L3 subcategories by search
   const filteredL3 = l3Subcategories.filter((sub) =>
-    sub.nameI18n.en.toLowerCase().includes(l3Search.toLowerCase())
+    sub.nameI18n?.en?.toLowerCase().includes(l3Search.toLowerCase())
   );
 
   return (
@@ -348,11 +348,11 @@ export function AddSkillDrawer({
                       <div className="text-3xl">{colors.icon}</div>
                       <div className="flex-1">
                         <h4 className={`font-semibold ${colors.text}`}>
-                          {domain.nameI18n.en}
+                          {domain.nameI18n?.en || 'Unknown'}
                         </h4>
                         {domain.descriptionI18n?.en && (
                           <p className="text-sm text-[#6B6760] mt-1">
-                            {domain.descriptionI18n.en}
+                            {domain.descriptionI18n?.en}
                           </p>
                         )}
                       </div>
@@ -381,7 +381,7 @@ export function AddSkillDrawer({
                 Step 2: Choose Category
               </h3>
               <p className="text-sm text-[#6B6760] mb-4">
-                Select a category within <strong>{selectedL1?.nameI18n.en}</strong>.
+                Select a category within <strong>{selectedL1?.nameI18n?.en || 'Unknown'}</strong>.
               </p>
             </div>
 
@@ -413,11 +413,11 @@ export function AddSkillDrawer({
                     <div className="flex items-center justify-between">
                       <div>
                         <h4 className="font-medium text-[#2D3330]">
-                          {category.nameI18n.en}
+                          {category.nameI18n?.en || 'Unknown'}
                         </h4>
                         {category.descriptionI18n?.en && (
                           <p className="text-sm text-[#6B6760] mt-1">
-                            {category.descriptionI18n.en}
+                            {category.descriptionI18n?.en}
                           </p>
                         )}
                       </div>
@@ -446,7 +446,7 @@ export function AddSkillDrawer({
                 Step 3: Choose Subcategory
               </h3>
               <p className="text-sm text-[#6B6760] mb-4">
-                Select a subcategory within <strong>{selectedL2?.nameI18n.en}</strong>.
+                Select a subcategory within <strong>{selectedL2?.nameI18n?.en || 'Unknown'}</strong>.
               </p>
             </div>
 
@@ -478,11 +478,11 @@ export function AddSkillDrawer({
                     <div className="flex items-center justify-between">
                       <div>
                         <h4 className="font-medium text-[#2D3330]">
-                          {subcategory.nameI18n.en}
+                          {subcategory.nameI18n?.en || 'Unknown'}
                         </h4>
                         {subcategory.descriptionI18n?.en && (
                           <p className="text-sm text-[#6B6760] mt-1">
-                            {subcategory.descriptionI18n.en}
+                            {subcategory.descriptionI18n?.en}
                           </p>
                         )}
                       </div>

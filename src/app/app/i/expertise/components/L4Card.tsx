@@ -22,11 +22,12 @@ interface L4Skill {
   monthsExperience: number;
   evidenceStrength: number;
   impactScore: number;
-  taxonomy: {
+  custom_skill_name?: string; // For custom user-created skills
+  taxonomy?: {
     code: string;
-    nameI18n: { en: string };
+    nameI18n?: { en?: string };
     tags: string[];
-  };
+  } | null;
 }
 
 interface L4CardProps {
@@ -62,7 +63,7 @@ export function L4Card({ skill, onEdit }: L4CardProps) {
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <h4 className="text-lg font-semibold text-[#2D3330] mb-1">
-            {skill.taxonomy.nameI18n.en}
+            {skill.taxonomy?.nameI18n?.en || skill.custom_skill_name || 'Unknown Skill'}
           </h4>
           <p className="text-xs text-[#6B6760] font-mono">{skill.skillCode}</p>
         </div>
@@ -153,7 +154,7 @@ export function L4Card({ skill, onEdit }: L4CardProps) {
       </div>
 
       {/* Tags */}
-      {skill.taxonomy.tags && skill.taxonomy.tags.length > 0 && (
+      {skill.taxonomy?.tags && skill.taxonomy.tags.length > 0 && (
         <div className="flex flex-wrap gap-2 pt-3 border-t border-[#D8D2C8]">
           {skill.taxonomy.tags.slice(0, 5).map((tag) => (
             <Badge 

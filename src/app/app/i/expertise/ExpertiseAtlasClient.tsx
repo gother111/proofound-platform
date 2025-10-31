@@ -51,7 +51,8 @@ export function ExpertiseAtlasClient({
 
   // Filter skills for side sheet (must be before early return)
   const filteredSkills = useMemo(() => {
-    let filtered = [...initialSkills];
+    // First filter out skills without taxonomy (custom skills with null skill_code)
+    let filtered = initialSkills.filter(skill => skill.taxonomy !== null && skill.taxonomy !== undefined);
 
     // Apply L1 domain filter
     if (filters.l1Domains.length > 0) {
@@ -326,7 +327,7 @@ export function ExpertiseAtlasClient({
         {selectedL3 && l4Skills.length > 0 && (
           <div className="mt-8">
             <h2 className="text-xl font-semibold text-[#2D3330] mb-4">
-              Skills in {selectedL3.nameI18n.en}
+              Skills in {selectedL3?.nameI18n?.en || 'Unknown'}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {l4Skills.map((skill: any) => (

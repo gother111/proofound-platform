@@ -19,15 +19,18 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch individual profile with verification status
+    // Use maybeSingle() to handle case where profile doesn't exist yet
     const { data: profile, error: profileError } = await supabase
       .from('individual_profiles')
       .select(
         'verified, verification_method, verification_status, verified_at, work_email, work_email_verified'
       )
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
-    if (profileError) {
+    // Only return error if there's an actual database error (not just missing row)
+    if (profileError && profileError.code !== 'PGRST116') {
+      // PGRST116 is "not found" error, which is expected if profile doesn't exist
       console.error('Error fetching profile:', profileError);
       return NextResponse.json(
         { error: 'Failed to fetch verification status' },

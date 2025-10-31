@@ -67,7 +67,7 @@ export function L1Grid({ domains, onDomainClick }: L1GridProps) {
                   {domain.icon}
                 </div>
                 <div>
-                  <h3 className="font-semibold text-[#2D3330]">{domain.nameI18n.en}</h3>
+                  <h3 className="font-semibold text-[#2D3330]">{domain.nameI18n?.en || 'Unknown'}</h3>
                   <p className="text-xs text-[#6B6760]">{domain.skillCount} skills</p>
                 </div>
               </div>

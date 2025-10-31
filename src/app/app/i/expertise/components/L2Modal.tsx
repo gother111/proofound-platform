@@ -59,7 +59,7 @@ export function L2Modal({
             <span>{l1Name}</span>
             <ChevronRight className="h-4 w-4" />
             <span className="font-semibold text-[#2D3330]">
-              {l2Category?.nameI18n.en || 'Loading...'}
+              {l2Category?.nameI18n?.en || 'Loading...'}
             </span>
           </div>
           <DialogTitle className="text-2xl text-[#2D3330] mt-2">
@@ -95,7 +95,7 @@ export function L2Modal({
                         <ChevronRight className="h-5 w-5 text-[#6B6760]" />
                       )}
                       <div>
-                        <h4 className="font-medium text-[#2D3330]">{l3.nameI18n.en}</h4>
+                        <h4 className="font-medium text-[#2D3330]">{l3.nameI18n?.en || 'Unknown'}</h4>
                         <p className="text-xs text-[#6B6760] mt-1">
                           {l3.l4Count} {l3.l4Count === 1 ? 'skill' : 'skills'}
                         </p>
@@ -113,7 +113,7 @@ export function L2Modal({
                   {isExpanded && (
                     <div className="px-6 py-4 bg-[#F7F6F1] border-t border-[#D8D2C8]">
                       <p className="text-sm text-[#4A5943] italic">
-                        Loading L4 skills for {l3.nameI18n.en}...
+                        Loading L4 skills for {l3.nameI18n?.en || 'Unknown'}...
                       </p>
                       {/* L4 skills will be rendered here in next step */}
                     </div>
