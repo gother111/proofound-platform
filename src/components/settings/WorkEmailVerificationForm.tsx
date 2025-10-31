@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -211,23 +210,23 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
       )}
 
       <div className="pt-2">
-        <Button
+        <button
           type="submit"
           disabled={submitting}
-          className="w-full bg-proofound-teal hover:bg-proofound-teal/90 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-proofound-teal px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-proofound-teal/90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {submitting ? (
             <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin" />
               Sending verification email...
             </>
           ) : (
             <>
-              <Mail className="w-4 h-4 mr-2" />
+              <Mail className="w-4 h-4" />
               Send Verification Email
             </>
           )}
-        </Button>
+        </button>
       </div>
 
       <div className="pt-4 border-t">

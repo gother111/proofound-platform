@@ -85,12 +85,10 @@ export function AddSkillDrawer({
   
   // Step 2 data
   const [l2Categories, setL2Categories] = useState<L2Category[]>([]);
-  const [l2Search, setL2Search] = useState('');
   const [l2Loading, setL2Loading] = useState(false);
   
   // Step 3 data
   const [l3Subcategories, setL3Subcategories] = useState<L3Subcategory[]>([]);
-  const [l3Search, setL3Search] = useState('');
   const [l3Loading, setL3Loading] = useState(false);
   
   // Step 4: L4 skill details
@@ -101,6 +99,12 @@ export function AddSkillDrawer({
   const [proofUrl, setProofUrl] = useState('');
   const [proofNotes, setProofNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  
+  // L4 Skills autocomplete
+  const [l4Skills, setL4Skills] = useState<L4Skill[]>([]);
+  const [l4Search, setL4Search] = useState('');
+  const [l4Loading, setL4Loading] = useState(false);
+  const [showL4Dropdown, setShowL4Dropdown] = useState(false);
 
   // Reset drawer state when closed
   useEffect(() => {
@@ -119,8 +123,9 @@ export function AddSkillDrawer({
         setRelevance('current');
         setProofUrl('');
         setProofNotes('');
-        setL2Search('');
-        setL3Search('');
+        setL4Skills([]);
+        setL4Search('');
+        setShowL4Dropdown(false);
       }, 300);
     }
   }, [open]);
@@ -171,6 +176,24 @@ export function AddSkillDrawer({
     }
   }, [selectedL2]);
 
+  const fetchL4Skills = useCallback(async () => {
+    if (!selectedL3) return;
+    
+    setL4Loading(true);
+    try {
+      // Fetch L4 skills for the selected L3
+      const response = await fetch(`/api/expertise/taxonomy?l3_id=${selectedL3.l3Id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setL4Skills(data.l4_skills || []);
+      }
+    } catch (error) {
+      console.error('Error fetching L4 skills:', error);
+    } finally {
+      setL4Loading(false);
+    }
+  }, [selectedL3]);
+
   // Fetch L2 categories when L1 is selected
   useEffect(() => {
     if (selectedL1 && step === 2) {
@@ -184,6 +207,13 @@ export function AddSkillDrawer({
       fetchL3Subcategories();
     }
   }, [selectedL2, step, fetchL3Subcategories]);
+
+  // Fetch L4 skills when L3 is selected
+  useEffect(() => {
+    if (selectedL3 && step === 4) {
+      fetchL4Skills();
+    }
+  }, [selectedL3, step, fetchL4Skills]);
 
   const handleL1Select = (domain: L1Domain) => {
     setSelectedL1(domain);
@@ -201,23 +231,30 @@ export function AddSkillDrawer({
   };
 
   const handleSave = async (saveAndAddAnother: boolean = false) => {
-    if (!selectedL1 || !selectedL2 || !selectedL3 || !l4Name) {
+    if (!selectedL1 || !selectedL2 || !selectedL3 || !l4Search) {
       return;
     }
 
     setSaving(true);
     try {
-      // Create payload for custom user skill
-      const payload = {
-        cat_id: selectedL1.catId,
-        subcat_id: selectedL2.subcatId,
-        l3_id: selectedL3.l3Id,
-        custom_skill_name: l4Name,
+      // Create payload - different based on whether skill is from taxonomy or custom
+      const payload: any = {
         level,
         months_experience: 0,
         last_used_at: lastUsedDate || new Date().toISOString(),
         relevance,
       };
+
+      if (selectedL4) {
+        // Skill from taxonomy - use skill_code
+        payload.skill_code = selectedL4.code;
+      } else {
+        // Custom skill - provide L1/L2/L3 context and custom name
+        payload.cat_id = selectedL1.catId;
+        payload.subcat_id = selectedL2.subcatId;
+        payload.l3_id = selectedL3.l3Id;
+        payload.custom_skill_name = l4Search;
+      }
 
       const response = await fetch('/api/expertise/user-skills', {
         method: 'POST',
@@ -239,6 +276,9 @@ export function AddSkillDrawer({
           setSelectedL3(null);
           setSelectedL4(null);
           setL4Name('');
+          setL4Search('');
+          setL4Skills([]);
+          setShowL4Dropdown(false);
           setLevel(2);
           setLastUsedDate('');
           setRelevance('current');
@@ -266,16 +306,6 @@ export function AddSkillDrawer({
       setStep(step - 1);
     }
   };
-
-  // Filter L2 categories by search
-  const filteredL2 = l2Categories.filter((cat) =>
-    cat.nameI18n?.en?.toLowerCase().includes(l2Search.toLowerCase())
-  );
-
-  // Filter L3 subcategories by search
-  const filteredL3 = l3Subcategories.filter((sub) =>
-    sub.nameI18n?.en?.toLowerCase().includes(l3Search.toLowerCase())
-  );
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -385,26 +415,14 @@ export function AddSkillDrawer({
               </p>
             </div>
 
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6B6760]" />
-              <Input
-                type="text"
-                placeholder="Search categories..."
-                value={l2Search}
-                onChange={(e) => setL2Search(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-
             {/* L2 List */}
             {l2Loading ? (
               <div className="text-center py-8 text-[#6B6760]">Loading categories...</div>
-            ) : filteredL2.length === 0 ? (
+            ) : l2Categories.length === 0 ? (
               <div className="text-center py-8 text-[#6B6760]">No categories found.</div>
             ) : (
               <div className="space-y-2 max-h-[500px] overflow-y-auto">
-                {filteredL2.map((category) => (
+                {l2Categories.map((category) => (
                   <Card
                     key={category.subcatId}
                     className="p-4 hover:bg-[#F7F6F1] transition-colors cursor-pointer border border-[#E5E3DA]"
@@ -450,26 +468,14 @@ export function AddSkillDrawer({
               </p>
             </div>
 
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6B6760]" />
-              <Input
-                type="text"
-                placeholder="Search subcategories..."
-                value={l3Search}
-                onChange={(e) => setL3Search(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-
             {/* L3 List */}
             {l3Loading ? (
               <div className="text-center py-8 text-[#6B6760]">Loading subcategories...</div>
-            ) : filteredL3.length === 0 ? (
+            ) : l3Subcategories.length === 0 ? (
               <div className="text-center py-8 text-[#6B6760]">No subcategories found.</div>
             ) : (
               <div className="space-y-2 max-h-[500px] overflow-y-auto">
-                {filteredL3.map((subcategory) => (
+                {l3Subcategories.map((subcategory) => (
                   <Card
                     key={subcategory.l3Id}
                     className="p-4 hover:bg-[#F7F6F1] transition-colors cursor-pointer border border-[#E5E3DA]"
@@ -515,19 +521,89 @@ export function AddSkillDrawer({
               </p>
             </div>
 
-            {/* Skill Name */}
-            <div>
+            {/* Skill Name with Autocomplete */}
+            <div className="relative">
               <Label htmlFor="skill-name" className="text-[#2D3330]">
                 Skill Name *
               </Label>
-              <Input
-                id="skill-name"
-                type="text"
-                placeholder="e.g., React.js, Project Management, Spanish"
-                value={l4Name}
-                onChange={(e) => setL4Name(e.target.value)}
-                className="mt-1"
-              />
+              <div className="relative mt-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6B6760]" />
+                <Input
+                  id="skill-name"
+                  type="text"
+                  placeholder="Search for a skill or enter custom name..."
+                  value={l4Search}
+                  onChange={(e) => {
+                    setL4Search(e.target.value);
+                    setShowL4Dropdown(true);
+                  }}
+                  onFocus={() => setShowL4Dropdown(true)}
+                  className="pl-10"
+                />
+              </div>
+              
+              {/* Autocomplete Dropdown */}
+              {showL4Dropdown && l4Search && (
+                <div className="absolute z-50 w-full mt-1 bg-white border border-[#E5E3DA] rounded-lg shadow-lg max-h-[300px] overflow-y-auto">
+                  {l4Loading ? (
+                    <div className="p-4 text-center text-[#6B6760]">Loading skills...</div>
+                  ) : (() => {
+                    const filtered = l4Skills.filter((skill) =>
+                      skill.nameI18n?.en?.toLowerCase().includes(l4Search.toLowerCase())
+                    ).slice(0, 50);
+                    
+                    return filtered.length > 0 ? (
+                      <>
+                        {filtered.map((skill) => (
+                          <div
+                            key={skill.code}
+                            className="p-3 hover:bg-[#F7F6F1] cursor-pointer border-b border-[#E5E3DA] last:border-b-0"
+                            onClick={() => {
+                              setSelectedL4(skill);
+                              setL4Name(skill.nameI18n?.en || '');
+                              setL4Search(skill.nameI18n?.en || '');
+                              setShowL4Dropdown(false);
+                            }}
+                          >
+                            <div className="font-medium text-[#2D3330]">
+                              {skill.nameI18n?.en}
+                            </div>
+                            {skill.descriptionI18n?.en && (
+                              <div className="text-xs text-[#6B6760] mt-1">
+                                {skill.descriptionI18n?.en}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </>
+                    ) : (
+                      <div className="p-4 text-center text-[#6B6760]">
+                        <p className="mb-2">No matching skills found</p>
+                        <p className="text-sm">You can continue with &ldquo;{l4Search}&rdquo; as a custom skill</p>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+              
+              {/* Selected Skill Indicator */}
+              {selectedL4 && (
+                <div className="mt-2 flex items-center gap-2">
+                  <Badge variant="secondary" className="bg-[#7A9278] text-white">
+                    From Atlas
+                  </Badge>
+                  <span className="text-sm text-[#6B6760]">{selectedL4.nameI18n?.en}</span>
+                </div>
+              )}
+              
+              {/* Custom Skill Indicator */}
+              {l4Search && !selectedL4 && (
+                <div className="mt-2">
+                  <Badge variant="outline" className="border-[#D4A574] text-[#8B6F47]">
+                    Custom Skill
+                  </Badge>
+                </div>
+              )}
             </div>
 
             {/* Proficiency Level */}
