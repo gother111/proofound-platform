@@ -210,28 +210,25 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
         </Alert>
       )}
 
-      <Button
-        type="submit"
-        disabled={submitting}
-        className="w-full bg-proofound-teal hover:bg-proofound-teal/90 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {submitting ? (
-          <>
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            Sending verification email...
-          </>
-        ) : (
-          <>
-            <Mail className="w-4 h-4 mr-2" />
-            Send Verification Email
-          </>
-        )}
-      </Button>
-      {emailError && (
-        <p className="text-sm text-red-600 dark:text-red-400 mt-2">
-          {emailError}
-        </p>
-      )}
+      <div className="pt-2">
+        <Button
+          type="submit"
+          disabled={submitting}
+          className="w-full bg-proofound-teal hover:bg-proofound-teal/90 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {submitting ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Sending verification email...
+            </>
+          ) : (
+            <>
+              <Mail className="w-4 h-4 mr-2" />
+              Send Verification Email
+            </>
+          )}
+        </Button>
+      </div>
 
       <div className="pt-4 border-t">
         <p className="text-xs text-muted-foreground">

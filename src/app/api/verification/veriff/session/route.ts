@@ -27,11 +27,15 @@ export async function POST(request: NextRequest) {
     // Check for missing or placeholder values
     const isPlaceholder = (value: string | undefined) => {
       if (!value) return true;
-      const lower = value.toLowerCase();
+      const trimmed = value.trim();
+      if (trimmed.length < 10) return true; // Too short to be real
+      const lower = trimmed.toLowerCase();
       return lower.includes('your_') || 
              lower.includes('placeholder') || 
-             lower.includes('here') ||
-             value.length < 10; // Too short to be real
+             lower.includes('_here') ||
+             lower === 'none' ||
+             lower === 'null' ||
+             lower === 'undefined';
     };
 
     if (!apiKey || !apiSecret || isPlaceholder(apiKey) || isPlaceholder(apiSecret)) {
