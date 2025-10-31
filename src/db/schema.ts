@@ -71,6 +71,22 @@ export const individualProfiles = pgTable('individual_profiles', {
   joinedDate: timestamp('joined_date').defaultNow(),
   values: jsonb('values'), // Array of {icon: string, label: string, verified: boolean}
   causes: text('causes').array(),
+  // Identity verification fields
+  verificationMethod: text('verification_method', {
+    enum: ['veriff', 'work_email'],
+  }),
+  verificationStatus: text('verification_status', {
+    enum: ['unverified', 'pending', 'verified', 'failed'],
+  }).default('unverified'),
+  veriffSessionId: text('veriff_session_id'),
+  verifiedAt: timestamp('verified_at'),
+  workEmail: text('work_email'),
+  workEmailVerified: boolean('work_email_verified').default(false),
+  workEmailOrgId: uuid('work_email_org_id').references(() => organizations.id, {
+    onDelete: 'set null',
+  }),
+  workEmailToken: text('work_email_token'),
+  workEmailTokenExpires: timestamp('work_email_token_expires'),
 });
 
 // Organizations
@@ -404,6 +420,59 @@ export const skills = pgTable(
     impactCheck: check('impact_check', sql`${table.impactScore} BETWEEN 0 AND 1`),
   })
 );
+
+// Skill Proofs - evidence/proofs attached to skills
+export const skillProofs = pgTable('skill_proofs', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  skillId: uuid('skill_id')
+    .references(() => skills.id, { onDelete: 'cascade' })
+    .notNull(),
+  profileId: uuid('profile_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  proofType: text('proof_type', {
+    enum: ['project', 'certification', 'media', 'reference', 'link'],
+  })
+    .notNull()
+    .default('link'),
+  title: text('title').notNull(),
+  description: text('description'),
+  url: text('url'),
+  filePath: text('file_path'),
+  issuedDate: date('issued_date'),
+  verified: boolean('verified').default(false).notNull(),
+  metadata: jsonb('metadata').default(sql`'{}'::jsonb`),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Skill Verification Requests - peer/manager/external verification requests
+export const skillVerificationRequests = pgTable('skill_verification_requests', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  skillId: uuid('skill_id')
+    .references(() => skills.id, { onDelete: 'cascade' })
+    .notNull(),
+  requesterProfileId: uuid('requester_profile_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  verifierEmail: text('verifier_email').notNull(),
+  verifierProfileId: uuid('verifier_profile_id').references(() => profiles.id, {
+    onDelete: 'set null',
+  }),
+  verifierSource: text('verifier_source', {
+    enum: ['peer', 'manager', 'external'],
+  }).notNull(),
+  message: text('message'),
+  status: text('status', {
+    enum: ['pending', 'accepted', 'declined', 'expired'],
+  })
+    .notNull()
+    .default('pending'),
+  respondedAt: timestamp('responded_at'),
+  responseMessage: text('response_message'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  expiresAt: timestamp('expires_at').default(sql`NOW() + INTERVAL '30 days'`),
+});
 
 // Assignments - job/project postings from organizations
 export const assignments = pgTable('assignments', {

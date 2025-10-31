@@ -8,6 +8,7 @@ import {
   User,
   Users,
   MapPin,
+  ShieldCheck,
   Sparkles,
   Settings,
   ChevronLeft,
@@ -29,6 +30,7 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
     { href: `${basePath}/profile`, icon: User, label: 'Profile' },
     { href: `${basePath}/matching`, icon: Users, label: 'Matching' },
     { href: `${basePath}/expertise`, icon: MapPin, label: 'Expertise' },
+    { href: `${basePath}/verifications`, icon: ShieldCheck, label: 'Verifications' },
     { href: `${basePath}/zen`, icon: Sparkles, label: 'Zen Hub' },
     { href: `${basePath}/settings`, icon: Settings, label: 'Settings' },
   ];

@@ -62,13 +62,19 @@ export function ExpertiseAtlasClient({
 
     // Apply status filter (credibility)
     if (filters.status !== 'all') {
-      // TODO: Filter by actual proof/verification status once implemented
-      // For now, all skills are "claimOnly"
-      if (filters.status === 'verified') {
-        filtered = [];
-      } else if (filters.status === 'proofOnly') {
-        filtered = [];
-      }
+      filtered = filtered.filter(skill => {
+        const hasProof = (skill.proof_count || 0) > 0;
+        const hasVerification = (skill.verification_count || 0) > 0;
+        
+        if (filters.status === 'verified') {
+          return hasProof && hasVerification;
+        } else if (filters.status === 'proofOnly') {
+          return hasProof && !hasVerification;
+        } else if (filters.status === 'claimOnly') {
+          return !hasProof && !hasVerification;
+        }
+        return true;
+      });
     }
 
     // Apply recency filter

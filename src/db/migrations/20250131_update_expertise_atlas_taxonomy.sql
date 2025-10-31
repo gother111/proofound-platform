@@ -83,3 +83,4 @@ COMMENT ON FUNCTION l1_code_to_cat_id IS 'Maps L1 letter codes (U/F/T/L/M/D) to 
 
 COMMENT ON COLUMN skills.relevance IS 'Skill currency: obsolete (outdated), current (in-use), emerging (cutting-edge)';
 
+

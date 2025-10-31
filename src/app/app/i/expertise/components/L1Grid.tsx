@@ -146,3 +146,4 @@ export function L1Grid({ domains, onDomainClick }: L1GridProps) {
   );
 }
 
+

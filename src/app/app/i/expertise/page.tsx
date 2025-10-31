@@ -35,6 +35,43 @@ export default async function ExpertiseAtlasPage() {
     console.error('Error fetching user skills:', error);
   }
 
+  // Fetch proof counts (aggregation)
+  const { data: proofs } = await supabase
+    .from('skill_proofs')
+    .select('skill_id')
+    .eq('profile_id', user.id);
+
+  const proofCountMap: Record<string, number> = {};
+  proofs?.forEach(({ skill_id }) => {
+    proofCountMap[skill_id] = (proofCountMap[skill_id] || 0) + 1;
+  });
+
+  // Fetch verification counts (only accepted)
+  const { data: verifications } = await supabase
+    .from('skill_verification_requests')
+    .select('skill_id, verifier_source, status')
+    .eq('requester_profile_id', user.id)
+    .eq('status', 'accepted');
+
+  const verificationCountMap: Record<string, number> = {};
+  const verificationSourcesMap: Record<string, Array<{ source: string }>> = {};
+
+  verifications?.forEach(({ skill_id, verifier_source }) => {
+    verificationCountMap[skill_id] = (verificationCountMap[skill_id] || 0) + 1;
+    if (!verificationSourcesMap[skill_id]) {
+      verificationSourcesMap[skill_id] = [];
+    }
+    verificationSourcesMap[skill_id].push({ source: verifier_source });
+  });
+
+  // Enrich skills with counts
+  const enrichedSkills = (userSkills || []).map(skill => ({
+    ...skill,
+    proof_count: proofCountMap[skill.id] || 0,
+    verification_count: verificationCountMap[skill.id] || 0,
+    verification_sources: verificationSourcesMap[skill.id] || [],
+  }));
+
   // Fetch L1 domains
   const { data: l1Domains } = await supabase
     .from('skills_categories')
@@ -43,7 +80,7 @@ export default async function ExpertiseAtlasPage() {
   
   // Calculate stats per L1 domain
   const domainsWithStats = (l1Domains || []).map((domain) => {
-    const domainSkills = (userSkills || []).filter(
+    const domainSkills = enrichedSkills.filter(
       (skill: any) => skill.taxonomy?.cat_id === domain.catId
     );
     
@@ -85,14 +122,14 @@ export default async function ExpertiseAtlasPage() {
     };
   });
 
-  const hasSkills = (userSkills || []).length > 0;
+  const hasSkills = enrichedSkills.length > 0;
 
   // Calculate widget data (only if user has skills)
-  const widgetData = hasSkills ? calculateWidgetData(userSkills || []) : null;
+  const widgetData = hasSkills ? calculateWidgetData(enrichedSkills) : null;
 
   return (
     <ExpertiseAtlasClient
-      initialSkills={userSkills || []}
+      initialSkills={enrichedSkills}
       domains={domainsWithStats}
       hasSkills={hasSkills}
       widgetData={widgetData}
@@ -114,8 +151,8 @@ function calculateWidgetData(skills: any[]) {
   };
   
   skills.forEach((skill) => {
-    const hasProof = false; // TODO: Check if skill has proofs once proof system is implemented
-    const hasVerification = false; // TODO: Check verification status once implemented
+    const hasProof = (skill.proof_count || 0) > 0;
+    const hasVerification = (skill.verification_count || 0) > 0;
     
     if (hasProof && hasVerification) {
       credibilityStats.verified++;
@@ -196,8 +233,8 @@ function calculateWidgetData(skills: any[]) {
     
     // Weight calculation
     let weight = 1.0;
-    const hasProof = false; // TODO: Check proof system
-    const hasVerification = false; // TODO: Check verification system
+    const hasProof = (skill.proof_count || 0) > 0;
+    const hasVerification = (skill.verification_count || 0) > 0;
     if (hasProof) weight = 1.2;
     if (hasVerification) weight = 1.5;
     
@@ -213,8 +250,11 @@ function calculateWidgetData(skills: any[]) {
   };
   
   skills.forEach((skill) => {
-    // TODO: Get actual verification source once implemented
-    verificationSources.self++; // Default to self for now
+    if (skill.verification_sources && skill.verification_sources.length > 0) {
+      skill.verification_sources.forEach((v: any) => {
+        verificationSources[v.source as keyof typeof verificationSources]++;
+      });
+    }
   });
   
   // 7. Next-Best-Actions List
@@ -228,8 +268,8 @@ function calculateWidgetData(skills: any[]) {
   
   skills.forEach((skill) => {
     const skillName = skill.taxonomy?.name_i18n?.en || skill.custom_skill_name || 'Unknown';
-    const hasProof = false; // TODO
-    const hasVerification = false; // TODO
+    const hasProof = (skill.proof_count || 0) > 0;
+    const hasVerification = (skill.verification_count || 0) > 0;
     
     // Low credibility (no proof)
     if (!hasProof) {

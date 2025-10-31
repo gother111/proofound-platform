@@ -150,3 +150,4 @@ The taxonomy is now ready for:
 
 **Estimated Time Saved:** By having 20K pre-curated skills, users won't need to manually type skill names, and the system can auto-suggest skills during CV/LinkedIn import.
 
+

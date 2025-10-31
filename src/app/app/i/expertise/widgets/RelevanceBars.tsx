@@ -118,3 +118,4 @@ export function RelevanceBars({ data, onBarClick }: RelevanceBarsProps) {
   );
 }
 
+

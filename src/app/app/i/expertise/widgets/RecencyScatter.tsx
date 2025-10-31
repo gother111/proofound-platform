@@ -125,3 +125,4 @@ export function RecencyScatter({ data, onSkillClick }: RecencyScatterProps) {
   );
 }
 
+

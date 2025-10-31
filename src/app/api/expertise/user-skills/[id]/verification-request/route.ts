@@ -4,8 +4,8 @@ import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
 
 const CreateVerificationRequestSchema = z.object({
-  verifier_type: z.enum(['peer', 'manager', 'external']),
-  verifier_email: z.string().email('Valid email is required'),
+  verifierSource: z.enum(['peer', 'manager', 'external']),
+  verifierEmail: z.string().email('Valid email is required'),
   message: z.string().optional(),
 });
 
@@ -41,18 +41,31 @@ export async function POST(
       );
     }
     
-    // TODO: Send verification request email and store in database
-    // This will be implemented in a future phase when we have the verification schema
+    // Create verification request
+    const { data: verificationRequest, error: createError } = await supabase
+      .from('skill_verification_requests')
+      .insert({
+        skill_id: skillId,
+        requester_profile_id: user.id,
+        verifier_email: validated.verifierEmail,
+        verifier_source: validated.verifierSource,
+        message: validated.message || null,
+      })
+      .select()
+      .single();
+    
+    if (createError) {
+      console.error('Error creating verification request:', createError);
+      return NextResponse.json(
+        { error: 'Failed to create verification request' },
+        { status: 500 }
+      );
+    }
+    
+    // TODO: Send email notification to verifier (optional for MVP)
     
     return NextResponse.json({
-      message: 'Verification request functionality coming soon',
-      request: {
-        skill_id: skillId,
-        verifier_type: validated.verifier_type,
-        verifier_email: validated.verifier_email,
-        message: validated.message,
-        status: 'pending',
-      },
+      request: verificationRequest,
     }, { status: 201 });
     
   } catch (error) {
@@ -95,12 +108,29 @@ export async function GET(
       );
     }
     
-    // TODO: Fetch verification requests from database
-    // For now, return default status
+    // Fetch verification requests for this skill
+    const { data: requests, error: requestsError } = await supabase
+      .from('skill_verification_requests')
+      .select('*')
+      .eq('skill_id', skillId)
+      .eq('requester_profile_id', user.id)
+      .order('created_at', { ascending: false });
+    
+    if (requestsError) {
+      console.error('Error fetching verification requests:', requestsError);
+      return NextResponse.json(
+        { error: 'Failed to fetch verification requests' },
+        { status: 500 }
+      );
+    }
+    
+    // Determine overall verification status
+    const hasAccepted = requests?.some(r => r.status === 'accepted');
+    const verification_status = hasAccepted ? 'verified' : 'pending';
     
     return NextResponse.json({
-      verification_status: 'none',
-      requests: [],
+      verification_status,
+      requests: requests || [],
     });
     
   } catch (error) {

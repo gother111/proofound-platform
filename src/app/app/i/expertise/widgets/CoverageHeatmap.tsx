@@ -135,3 +135,4 @@ export function CoverageHeatmap({ data, onCellClick }: CoverageHeatmapProps) {
   );
 }
 
+

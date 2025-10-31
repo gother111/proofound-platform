@@ -28,11 +28,12 @@ const LEVEL_LABELS = [
 
 interface Proof {
   id: string;
-  type: 'project' | 'certification' | 'media' | 'reference';
+  proof_type: 'project' | 'certification' | 'media' | 'reference' | 'link';
+  title: string;
+  description?: string;
   url?: string;
-  title?: string;
-  date?: string;
-  notes?: string;
+  issued_date?: string;
+  created_at?: string;
 }
 
 interface EditSkillWindowProps {
@@ -59,28 +60,71 @@ export function EditSkillWindow({
   
   // Proofs management
   const [proofs, setProofs] = useState<Proof[]>([]);
+  const [loadingProofs, setLoadingProofs] = useState(false);
   const [showAddProof, setShowAddProof] = useState(false);
+  const [addingProof, setAddingProof] = useState(false);
   const [newProof, setNewProof] = useState({
-    type: 'project' as 'project' | 'certification' | 'media' | 'reference',
-    url: '',
+    proofType: 'project' as 'project' | 'certification' | 'media' | 'reference' | 'link',
     title: '',
-    date: '',
-    notes: '',
+    description: '',
+    url: '',
+    issuedDate: '',
   });
 
-  // Load skill data when opened
+  // Verification management
+  const [verificationRequests, setVerificationRequests] = useState<any[]>([]);
+  const [loadingVerifications, setLoadingVerifications] = useState(false);
+  const [showRequestVerification, setShowRequestVerification] = useState(false);
+  const [requestingVerification, setRequestingVerification] = useState(false);
+  const [newVerificationRequest, setNewVerificationRequest] = useState({
+    verifierEmail: '',
+    verifierSource: 'peer' as 'peer' | 'manager' | 'external',
+    message: '',
+  });
+
+  // Load skill data and proofs when opened
   useEffect(() => {
-    if (skill && open) {
-      setLevel(skill.level || 2);
-      setLastUsedDate(
-        skill.last_used_at
-          ? new Date(skill.last_used_at).toISOString().split('T')[0]
-          : ''
-      );
-      setRelevance(skill.relevance || 'current');
-      // TODO: Load actual proofs from API
-      setProofs([]);
-    }
+    const loadData = async () => {
+      if (skill && open) {
+        setLevel(skill.level || 2);
+        setLastUsedDate(
+          skill.last_used_at
+            ? new Date(skill.last_used_at).toISOString().split('T')[0]
+            : ''
+        );
+        setRelevance(skill.relevance || 'current');
+        
+        // Load proofs from API
+        setLoadingProofs(true);
+        try {
+          const response = await fetch(`/api/expertise/user-skills/${skill.id}/proofs`);
+          if (response.ok) {
+            const data = await response.json();
+            setProofs(data.proofs || []);
+          }
+        } catch (error) {
+          console.error('Error loading proofs:', error);
+        } finally {
+          setLoadingProofs(false);
+        }
+
+        // Load verification requests from API
+        setLoadingVerifications(true);
+        try {
+          const verifyResponse = await fetch(`/api/expertise/user-skills/${skill.id}/verification-request`);
+          if (verifyResponse.ok) {
+            const verifyData = await verifyResponse.json();
+            setVerificationRequests(verifyData.requests || []);
+          }
+        } catch (error) {
+          console.error('Error loading verification requests:', error);
+        } finally {
+          setLoadingVerifications(false);
+        }
+      }
+    };
+    
+    loadData();
   }, [skill, open]);
 
   const handleSave = async () => {
@@ -142,31 +186,93 @@ export function EditSkillWindow({
     }
   };
 
-  const handleAddProof = () => {
-    // TODO: Implement proof addition API
-    const proof: Proof = {
-      id: `proof-${Date.now()}`,
-      ...newProof,
-    };
-    setProofs([...proofs, proof]);
-    setNewProof({
-      type: 'project',
-      url: '',
-      title: '',
-      date: '',
-      notes: '',
-    });
-    setShowAddProof(false);
+  const handleAddProof = async () => {
+    if (!skill || !newProof.title) return;
+    
+    setAddingProof(true);
+    try {
+      const response = await fetch(`/api/expertise/user-skills/${skill.id}/proofs`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newProof),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setProofs([...proofs, data.proof]);
+        setNewProof({
+          proofType: 'project',
+          title: '',
+          description: '',
+          url: '',
+          issuedDate: '',
+        });
+        setShowAddProof(false);
+      } else {
+        const error = await response.json();
+        console.error('Error adding proof:', error);
+        alert(error.error || 'Failed to add proof. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error adding proof:', error);
+      alert('Failed to add proof. Please try again.');
+    } finally {
+      setAddingProof(false);
+    }
   };
 
-  const handleDeleteProof = (proofId: string) => {
-    // TODO: Implement proof deletion API
-    setProofs(proofs.filter((p) => p.id !== proofId));
+  const handleDeleteProof = async (proofId: string) => {
+    if (!skill) return;
+    
+    try {
+      const response = await fetch(`/api/expertise/user-skills/${skill.id}/proofs/${proofId}`, {
+        method: 'DELETE',
+      });
+      
+      if (response.ok) {
+        setProofs(proofs.filter((p) => p.id !== proofId));
+      } else {
+        const error = await response.json();
+        console.error('Error deleting proof:', error);
+        alert(error.error || 'Failed to delete proof. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error deleting proof:', error);
+      alert('Failed to delete proof. Please try again.');
+    }
   };
 
-  const handleRequestVerification = () => {
-    // TODO: Implement verification request flow
-    alert('Verification request feature coming soon!');
+  const handleRequestVerification = async () => {
+    if (!skill || !newVerificationRequest.verifierEmail) return;
+    
+    setRequestingVerification(true);
+    try {
+      const response = await fetch(`/api/expertise/user-skills/${skill.id}/verification-request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newVerificationRequest),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setVerificationRequests([data.request, ...verificationRequests]);
+        setNewVerificationRequest({
+          verifierEmail: '',
+          verifierSource: 'peer',
+          message: '',
+        });
+        setShowRequestVerification(false);
+      } else {
+        const error = await response.json();
+        console.error('Error requesting verification:', error);
+        alert(error.error || 'Failed to request verification. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error requesting verification:', error);
+      alert('Failed to request verification. Please try again.');
+    } finally {
+      setRequestingVerification(false);
+    }
   };
 
   if (!skill) return null;
@@ -324,11 +430,11 @@ export function EditSkillWindow({
                       </Label>
                       <select
                         id="proof-type"
-                        value={newProof.type}
+                        value={newProof.proofType}
                         onChange={(e) =>
                           setNewProof({
                             ...newProof,
-                            type: e.target.value as any,
+                            proofType: e.target.value as any,
                           })
                         }
                         className="mt-1 w-full px-3 py-2 border border-[#E5E3DA] rounded-md"
@@ -337,6 +443,7 @@ export function EditSkillWindow({
                         <option value="certification">Certification</option>
                         <option value="media">Media</option>
                         <option value="reference">Reference</option>
+                        <option value="link">Link</option>
                       </select>
                     </div>
                     <div>
@@ -371,28 +478,28 @@ export function EditSkillWindow({
                     </div>
                     <div>
                       <Label htmlFor="proof-date" className="text-[#2D3330]">
-                        Date
+                        Issued Date (Optional)
                       </Label>
                       <Input
                         id="proof-date"
                         type="date"
-                        value={newProof.date}
+                        value={newProof.issuedDate}
                         onChange={(e) =>
-                          setNewProof({ ...newProof, date: e.target.value })
+                          setNewProof({ ...newProof, issuedDate: e.target.value })
                         }
                         className="mt-1"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="proof-notes" className="text-[#2D3330]">
-                        Notes
+                      <Label htmlFor="proof-description" className="text-[#2D3330]">
+                        Description (Optional)
                       </Label>
                       <Textarea
-                        id="proof-notes"
+                        id="proof-description"
                         placeholder="Describe this proof..."
-                        value={newProof.notes}
-                        onChange={(e) =>
-                          setNewProof({ ...newProof, notes: e.target.value })
+                        value={newProof.description}
+                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                          setNewProof({ ...newProof, description: e.target.value })
                         }
                         rows={3}
                         className="mt-1"
@@ -401,10 +508,10 @@ export function EditSkillWindow({
                     <div className="flex gap-2">
                       <Button
                         onClick={handleAddProof}
-                        disabled={!newProof.title}
+                        disabled={!newProof.title || addingProof}
                         className="bg-[#4A5943] text-white hover:bg-[#3C4936]"
                       >
-                        Add Proof
+                        {addingProof ? 'Adding...' : 'Add Proof'}
                       </Button>
                       <Button
                         variant="outline"
@@ -418,7 +525,11 @@ export function EditSkillWindow({
               )}
 
               {/* Proofs List */}
-              {proofs.length === 0 ? (
+              {loadingProofs ? (
+                <div className="text-center py-6 border border-dashed border-[#E5E3DA] rounded-lg">
+                  <p className="text-sm text-[#6B6760]">Loading proofs...</p>
+                </div>
+              ) : proofs.length === 0 ? (
                 <div className="text-center py-6 border border-dashed border-[#E5E3DA] rounded-lg">
                   <FileText className="h-8 w-8 text-[#6B6760] mx-auto mb-2" />
                   <p className="text-sm text-[#6B6760]">
@@ -432,8 +543,8 @@ export function EditSkillWindow({
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <Badge variant="outline" className="text-xs">
-                              {proof.type}
+                            <Badge variant="outline" className="text-xs capitalize">
+                              {proof.proof_type}
                             </Badge>
                             <h4 className="font-medium text-[#2D3330]">{proof.title}</h4>
                           </div>
@@ -447,12 +558,12 @@ export function EditSkillWindow({
                               {proof.url}
                             </a>
                           )}
-                          {proof.notes && (
-                            <p className="text-sm text-[#6B6760] mt-1">{proof.notes}</p>
+                          {proof.description && (
+                            <p className="text-sm text-[#6B6760] mt-1">{proof.description}</p>
                           )}
-                          {proof.date && (
+                          {proof.issued_date && (
                             <p className="text-xs text-[#6B6760] mt-1">
-                              Date: {new Date(proof.date).toLocaleDateString()}
+                              Issued: {new Date(proof.issued_date).toLocaleDateString()}
                             </p>
                           )}
                         </div>
@@ -485,7 +596,7 @@ export function EditSkillWindow({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={handleRequestVerification}
+                  onClick={() => setShowRequestVerification(!showRequestVerification)}
                   className="border-[#4A5943] text-[#4A5943] hover:bg-[#EEF1EA]"
                 >
                   <CheckCircle2 className="h-4 w-4 mr-1" />
@@ -493,19 +604,140 @@ export function EditSkillWindow({
                 </Button>
               </div>
 
-              <Card className="p-4 border-[#E5E3DA]">
-                <div className="flex items-center gap-3">
-                  <AlertTriangle className="h-5 w-5 text-[#C76B4A]" />
-                  <div>
-                    <p className="text-sm font-medium text-[#2D3330]">
-                      Not Verified
-                    </p>
-                    <p className="text-xs text-[#6B6760]">
-                      Request verification to increase credibility
-                    </p>
+              {/* Request Verification Form */}
+              {showRequestVerification && (
+                <Card className="p-4 mb-4 border-[#E5E3DA]">
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor="verifier-email" className="text-[#2D3330]">
+                        Verifier Email
+                      </Label>
+                      <Input
+                        id="verifier-email"
+                        type="email"
+                        placeholder="colleague@example.com"
+                        value={newVerificationRequest.verifierEmail}
+                        onChange={(e) =>
+                          setNewVerificationRequest({
+                            ...newVerificationRequest,
+                            verifierEmail: e.target.value,
+                          })
+                        }
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="verifier-source" className="text-[#2D3330]">
+                        Relationship
+                      </Label>
+                      <select
+                        id="verifier-source"
+                        value={newVerificationRequest.verifierSource}
+                        onChange={(e) =>
+                          setNewVerificationRequest({
+                            ...newVerificationRequest,
+                            verifierSource: e.target.value as any,
+                          })
+                        }
+                        className="mt-1 w-full px-3 py-2 border border-[#E5E3DA] rounded-md"
+                      >
+                        <option value="peer">Peer / Colleague</option>
+                        <option value="manager">Manager / Supervisor</option>
+                        <option value="external">External / Client</option>
+                      </select>
+                    </div>
+                    <div>
+                      <Label htmlFor="verification-message" className="text-[#2D3330]">
+                        Message (Optional)
+                      </Label>
+                      <Textarea
+                        id="verification-message"
+                        placeholder="Add context for the verifier..."
+                        value={newVerificationRequest.message}
+                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                          setNewVerificationRequest({
+                            ...newVerificationRequest,
+                            message: e.target.value,
+                          })
+                        }
+                        rows={3}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={handleRequestVerification}
+                        disabled={!newVerificationRequest.verifierEmail || requestingVerification}
+                        className="bg-[#4A5943] text-white hover:bg-[#3C4936]"
+                      >
+                        {requestingVerification ? 'Sending...' : 'Send Request'}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowRequestVerification(false)}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
                   </div>
+                </Card>
+              )}
+
+              {/* Verification Requests List */}
+              {loadingVerifications ? (
+                <div className="text-center py-6 border border-dashed border-[#E5E3DA] rounded-lg">
+                  <p className="text-sm text-[#6B6760]">Loading verification requests...</p>
                 </div>
-              </Card>
+              ) : verificationRequests.length === 0 ? (
+                <div className="text-center py-6 border border-dashed border-[#E5E3DA] rounded-lg">
+                  <CheckCircle2 className="h-8 w-8 text-[#6B6760] mx-auto mb-2" />
+                  <p className="text-sm text-[#6B6760]">
+                    No verification requests yet. Request verification to boost credibility.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {verificationRequests.map((request) => (
+                    <Card key={request.id} className="p-3 border-[#E5E3DA]">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge
+                              variant={
+                                request.status === 'accepted'
+                                  ? 'default'
+                                  : request.status === 'declined'
+                                  ? 'destructive'
+                                  : 'outline'
+                              }
+                              className="text-xs capitalize"
+                            >
+                              {request.status}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs capitalize">
+                              {request.verifier_source}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-[#2D3330] font-medium">
+                            {request.verifier_email}
+                          </p>
+                          {request.message && (
+                            <p className="text-sm text-[#6B6760] mt-1">{request.message}</p>
+                          )}
+                          <p className="text-xs text-[#6B6760] mt-1">
+                            Requested: {new Date(request.created_at).toLocaleDateString()}
+                          </p>
+                          {request.responded_at && (
+                            <p className="text-xs text-[#6B6760]">
+                              Responded: {new Date(request.responded_at).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
 
             <Separator />

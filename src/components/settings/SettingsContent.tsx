@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PrivacyOverview } from './PrivacyOverview';
+import { VerificationStatus } from './VerificationStatus';
 
 interface SettingsContentProps {
   userId: string;
@@ -53,6 +54,20 @@ export function SettingsContent({ userId }: SettingsContentProps) {
                   </p>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-proofound-stone dark:border-border rounded-2xl">
+            <CardHeader>
+              <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
+                Identity Verification
+              </CardTitle>
+              <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
+                Verify your identity to unlock the verified badge
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <VerificationStatus />
             </CardContent>
           </Card>
 

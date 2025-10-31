@@ -217,3 +217,4 @@ After seeding the taxonomy:
 - **L4 Skills**: `data/expertise-atlas-20k-l4-final.json`
 - **Documentation**: `Expertise_Atlas_Product_Documentation_For_Individuals.md`
 
+

@@ -7,6 +7,7 @@ import { OrgInvite } from '../../emails/OrgInvite';
 import { DeletionScheduled } from '../../emails/DeletionScheduled';
 import { DeletionReminder } from '../../emails/DeletionReminder';
 import { DeletionComplete } from '../../emails/DeletionComplete';
+import WorkEmailVerification from '../../emails/WorkEmailVerification';
 
 // Allow build to succeed without RESEND_API_KEY
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder_key');
@@ -135,5 +136,25 @@ export async function sendDeletionCompleteEmail(
   } catch (error) {
     console.error('Failed to send deletion complete email:', error);
     throw new Error('Failed to send deletion complete email');
+  }
+}
+
+export async function sendWorkEmailVerification(
+  email: string,
+  token: string,
+  userName: string
+): Promise<void> {
+  const verifyUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/verify-work-email?token=${token}`;
+
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to: email,
+      subject: 'Verify your work email - Proofound',
+      react: WorkEmailVerification({ verifyUrl, userName }),
+    });
+  } catch (error) {
+    console.error('Failed to send work email verification:', error);
+    throw new Error('Failed to send work email verification');
   }
 }
