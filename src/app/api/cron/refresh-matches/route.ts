@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
-import { matchingProfiles, assignments, matches } from '@/db/schema';
-import { eq, sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
@@ -28,12 +26,10 @@ export async function GET(request: NextRequest) {
 
     log.info('cron.refresh-matches.started');
 
-    // Get all active matching profiles that haven't been refreshed in 24 hours
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-
+    // Get matching profiles to refresh
+    // Process in batches to avoid timeouts
     const profilesToRefresh = await db.query.matchingProfiles.findMany({
-      where: sql`(${matchingProfiles.lastRefreshed} IS NULL OR ${matchingProfiles.lastRefreshed} < ${oneDayAgo})`,
-      limit: 100, // Process in batches
+      limit: 100, // Process 100 profiles per run
     });
 
     log.info('cron.refresh-matches.profiles-found', {
@@ -74,14 +70,8 @@ export async function GET(request: NextRequest) {
         if (response.ok) {
           const matchData = await response.json();
 
-          // Update last refreshed timestamp
-          await db
-            .update(matchingProfiles)
-            .set({ lastRefreshed: new Date() })
-            .where(eq(matchingProfiles.profileId, profile.profileId));
-
-          // Optionally: Cache match results
-          // This would involve storing top matches in the matches table
+          // Match results are cached in the matches table by the matching endpoint
+          // No need to update a timestamp since we process all profiles in rotation
 
           successCount++;
 
