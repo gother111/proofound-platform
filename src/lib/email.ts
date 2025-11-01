@@ -8,6 +8,8 @@ import { DeletionScheduled } from '../../emails/DeletionScheduled';
 import { DeletionReminder } from '../../emails/DeletionReminder';
 import { DeletionComplete } from '../../emails/DeletionComplete';
 import WorkEmailVerification from '../../emails/WorkEmailVerification';
+import SkillVerificationRequest from '../../emails/SkillVerificationRequest';
+import NewMatchNotification from '../../emails/NewMatchNotification';
 
 // Allow build to succeed without RESEND_API_KEY
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder_key');
@@ -122,10 +124,7 @@ export async function sendDeletionReminderEmail(
   }
 }
 
-export async function sendDeletionCompleteEmail(
-  email: string,
-  userId: string
-): Promise<void> {
+export async function sendDeletionCompleteEmail(email: string, userId: string): Promise<void> {
   try {
     await resend.emails.send({
       from: fromEmail,
@@ -156,5 +155,71 @@ export async function sendWorkEmailVerification(
   } catch (error) {
     console.error('Failed to send work email verification:', error);
     throw new Error('Failed to send work email verification');
+  }
+}
+
+export async function sendSkillVerificationRequest(
+  verifierEmail: string,
+  requesterName: string,
+  requesterHandle: string,
+  skillName: string,
+  token: string,
+  message?: string
+): Promise<void> {
+  const verifyUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/verify-skill?token=${token}&action=approve`;
+  const declineUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/verify-skill?token=${token}&action=decline`;
+
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to: verifierEmail,
+      subject: `${requesterName} requested your skill verification - Proofound`,
+      react: SkillVerificationRequest({
+        requesterName,
+        requesterHandle,
+        skillName,
+        verifyUrl,
+        declineUrl,
+        message,
+      }),
+    });
+  } catch (error) {
+    console.error('Failed to send skill verification request:', error);
+    throw new Error('Failed to send skill verification request');
+  }
+}
+
+export async function sendMatchNotification(
+  recipientEmail: string,
+  recipientName: string,
+  matchData: {
+    matchType: 'individual' | 'organization';
+    matchScore: number;
+    roleTitle?: string;
+    organizationName?: string;
+    topSkillMatches?: string[];
+    matchId: string;
+  }
+): Promise<void> {
+  const viewMatchUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/app/i/matches/${matchData.matchId}`;
+
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to: recipientEmail,
+      subject: 'You have a new match! - Proofound',
+      react: NewMatchNotification({
+        recipientName,
+        matchType: matchData.matchType,
+        matchScore: matchData.matchScore,
+        roleTitle: matchData.roleTitle,
+        organizationName: matchData.organizationName,
+        topSkillMatches: matchData.topSkillMatches,
+        viewMatchUrl,
+      }),
+    });
+  } catch (error) {
+    console.error('Failed to send match notification:', error);
+    throw new Error('Failed to send match notification');
   }
 }

@@ -24,6 +24,16 @@ function createMockDb(): DbType {
 }
 
 if (!connectionString) {
+  // In production, DATABASE_URL is required - fail hard to prevent data loss
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') {
+    throw new Error(
+      'DATABASE_URL is required in production. ' +
+        'Please set this environment variable in your deployment settings. ' +
+        'See PRODUCTION_ENV_CHECK.md for instructions.'
+    );
+  }
+
+  // In development, warn about mock database usage
   console.error('');
   console.error('═════════════════════════════════════════════════════════════════════');
   console.error('❌ CRITICAL: DATABASE_URL is missing!');
