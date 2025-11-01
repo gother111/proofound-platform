@@ -1,6 +1,6 @@
 /**
  * Conversations API
- * 
+ *
  * List user's conversations with last message and unread count
  */
 
@@ -37,10 +37,7 @@ export async function GET(request: NextRequest) {
       })
       .from(conversations)
       .where(
-        or(
-          eq(conversations.participantOneId, user.id),
-          eq(conversations.participantTwoId, user.id)
-        )
+        or(eq(conversations.participantOneId, user.id), eq(conversations.participantTwoId, user.id))
       )
       .orderBy(desc(conversations.lastMessageAt));
 
@@ -49,16 +46,14 @@ export async function GET(request: NextRequest) {
       userConversations.map(async (conv) => {
         // Determine the other party
         const otherPartyId =
-          conv.participantOneId === user.id
-            ? conv.participantTwoId
-            : conv.participantOneId;
+          conv.participantOneId === user.id ? conv.participantTwoId : conv.participantOneId;
 
         // Fetch other party profile
         const otherPartyProfile = await db
           .select({
             id: profiles.id,
-            fullName: profiles.fullName,
-            profileType: profiles.profileType,
+            displayName: profiles.displayName,
+            persona: profiles.persona,
             avatarUrl: profiles.avatarUrl,
           })
           .from(profiles)
@@ -102,14 +97,11 @@ export async function GET(request: NextRequest) {
           const profile = otherPartyProfile[0];
           if (conv.stage === 2) {
             // Stage 2: Identity revealed
-            displayName = profile.fullName || 'Anonymous';
+            displayName = profile.displayName || 'Anonymous';
             displayAvatar = profile.avatarUrl;
           } else {
             // Stage 1: Masked
-            displayName =
-              profile.profileType === 'individual'
-                ? 'Candidate'
-                : 'Organization';
+            displayName = profile.persona === 'individual' ? 'Candidate' : 'Organization';
             displayAvatar = null; // Use generic avatar
           }
         }
@@ -123,7 +115,7 @@ export async function GET(request: NextRequest) {
             id: otherPartyId,
             displayName,
             displayAvatar,
-            profileType: otherPartyProfile[0]?.profileType || 'individual',
+            persona: otherPartyProfile[0]?.persona || 'individual',
           },
           stage: conv.stage,
           status: conv.status,
@@ -141,9 +133,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Get conversations error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch conversations' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch conversations' }, { status: 500 });
   }
 }
