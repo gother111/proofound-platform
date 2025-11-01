@@ -461,7 +461,6 @@ export function AddSkillDrawer({
                   value={searchQuery}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   className="pl-10"
-                  autoFocus
                 />
               </div>
               <p className="text-xs text-[#6B6760] mt-1">

@@ -113,15 +113,17 @@ function extractPotentialSkills(words: string[], fullText: string): string[] {
 
 /**
  * Find matching skills in taxonomy
+ * Note: nameI18n, aliasesI18n, descriptionI18n are JSONB fields
+ * For MVP, we'll search using SQL CAST to text for simplicity
  */
 async function findMatchingSkills(searchTerms: string[]) {
   if (searchTerms.length === 0) return [];
 
-  // Build OR conditions for ILIKE search
+  // Build OR conditions for ILIKE search using SQL cast
   const conditions = searchTerms.flatMap(term => [
-    ilike(skillsTaxonomy.preferredLabel, `%${term}%`),
-    ilike(skillsTaxonomy.altLabels, `%${term}%`),
-    ilike(skillsTaxonomy.description, `%${term}%`),
+    sql`${skillsTaxonomy.nameI18n}::text ILIKE ${`%${term}%`}`,
+    sql`${skillsTaxonomy.aliasesI18n}::text ILIKE ${`%${term}%`}`,
+    sql`${skillsTaxonomy.descriptionI18n}::text ILIKE ${`%${term}%`}`,
   ]);
 
   const matches = await db.query.skillsTaxonomy.findMany({
@@ -143,47 +145,41 @@ function rankSuggestions(
   const scored = matches.map(skill => {
     let score = 0;
 
-    // Exact match in preferred label (highest weight)
-    if (originalText.toLowerCase().includes(skill.preferredLabel.toLowerCase())) {
+    // Extract English names from JSONB fields
+    const name = skill.nameI18n?.en || '';
+    const aliases = skill.aliasesI18n || [];
+    const description = skill.descriptionI18n?.en || '';
+
+    // Exact match in name (highest weight)
+    if (name && originalText.toLowerCase().includes(name.toLowerCase())) {
       score += 10;
     }
 
-    // Match in alt labels
-    if (skill.altLabels) {
-      const altLabels = Array.isArray(skill.altLabels) ? skill.altLabels : [skill.altLabels];
-      const altMatch = altLabels.some((alt: string) =>
+    // Match in aliases
+    if (aliases && Array.isArray(aliases)) {
+      const aliasMatch = aliases.some((alt: string) =>
         originalText.toLowerCase().includes(alt.toLowerCase())
       );
-      if (altMatch) score += 7;
+      if (aliasMatch) score += 7;
     }
 
     // Match in description
-    if (skill.description && originalText.toLowerCase().includes(skill.description.toLowerCase())) {
+    if (description && originalText.toLowerCase().includes(description.toLowerCase())) {
       score += 3;
     }
 
-    // Boost L4 skills (most specific)
-    if (skill.level === 4) score += 2;
-
     // Context-specific boosts
-    if (context === 'jd' && skill.preferredLabel.toLowerCase().includes('management')) {
+    if (context === 'jd' && name.toLowerCase().includes('management')) {
       score += 1;
     }
 
     return {
-      id: skill.id,
-      conceptUri: skill.conceptUri,
-      preferredLabel: skill.preferredLabel,
-      altLabels: skill.altLabels,
-      description: skill.description,
-      level: skill.level,
-      l1Code: skill.l1Code,
-      l1Label: skill.l1Label,
-      l2Code: skill.l2Code,
-      l2Label: skill.l2Label,
-      l3Code: skill.l3Code,
-      l3Label: skill.l3Label,
-      l4Code: skill.l4Code,
+      code: skill.code,
+      name: name,
+      aliases: aliases,
+      description: description,
+      slug: skill.slug,
+      tags: skill.tags,
       score,
       confidence: Math.min(score / 10, 1), // Normalize to 0-1
     };

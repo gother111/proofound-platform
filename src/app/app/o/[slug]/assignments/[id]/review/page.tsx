@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Check, Edit, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -38,11 +38,7 @@ export default function AssignmentReviewPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isPublishing, setIsPublishing] = useState(false);
 
-  useEffect(() => {
-    loadAssignment();
-  }, [params.id]);
-
-  const loadAssignment = async () => {
+  const loadAssignment = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch(`/api/assignments/${params.id}`);
@@ -55,7 +51,11 @@ export default function AssignmentReviewPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [params.id]);
+
+  useEffect(() => {
+    loadAssignment();
+  }, [loadAssignment]);
 
   const handlePublish = async () => {
     if (!confirm('Are you ready to publish this assignment and start matching?')) return;

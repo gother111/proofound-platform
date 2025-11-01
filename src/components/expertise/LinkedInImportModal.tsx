@@ -201,7 +201,7 @@ export function LinkedInImportModal({
                 <div className="text-sm text-blue-900">
                   <p className="font-medium mb-1">LinkedIn API Limitation</p>
                   <p>
-                    LinkedIn's current API has limited access to skills data. We recommend using our
+                    LinkedIn&apos;s current API has limited access to skills data. We recommend using our
                     quick search feature to manually add your skills, which is fast and provides
                     better matching to our taxonomy.
                   </p>

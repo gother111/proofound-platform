@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -43,11 +43,7 @@ export default function ProjectDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  useEffect(() => {
-    loadProject();
-  }, [params.id]);
-
-  const loadProject = async () => {
+  const loadProject = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch(`/api/projects/${params.id}`);
@@ -62,7 +58,11 @@ export default function ProjectDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [params.id, router]);
+
+  useEffect(() => {
+    loadProject();
+  }, [loadProject]);
 
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to archive this project?')) return;

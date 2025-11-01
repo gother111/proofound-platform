@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -14,20 +14,7 @@ function VerifyWorkEmailContent() {
   const [message, setMessage] = useState('');
   const [workEmail, setWorkEmail] = useState('');
 
-  useEffect(() => {
-    const token = searchParams.get('token');
-
-    if (!token) {
-      setStatus('error');
-      setMessage('Verification token is missing. Please check your email for the correct link.');
-      return;
-    }
-
-    // Call the verification API
-    verifyToken(token);
-  }, [searchParams]);
-
-  const verifyToken = async (token: string) => {
+  const verifyToken = useCallback(async (token: string) => {
     try {
       const response = await fetch(`/api/verification/work-email/verify?token=${token}`);
       const data = await response.json();
@@ -36,7 +23,7 @@ function VerifyWorkEmailContent() {
         setStatus('success');
         setMessage(data.message || 'Work email verified successfully!');
         setWorkEmail(data.workEmail || '');
-        
+
         // Redirect to profile after 3 seconds
         setTimeout(() => {
           router.push('/app/i/profile');
@@ -49,7 +36,20 @@ function VerifyWorkEmailContent() {
       setStatus('error');
       setMessage('An error occurred while verifying your email. Please try again.');
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    const token = searchParams.get('token');
+
+    if (!token) {
+      setStatus('error');
+      setMessage('Verification token is missing. Please check your email for the correct link.');
+      return;
+    }
+
+    // Call the verification API
+    verifyToken(token);
+  }, [searchParams, verifyToken]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-proofound-parchment dark:bg-background p-4">

@@ -80,9 +80,9 @@ export async function POST(request: NextRequest) {
     await db.insert(analyticsEvents).values({
       userId: user.id,
       eventType: 'evidence_pack_exported',
-      metadata: {
-        organizationId,
+      properties: {
         ...metadata,
+        organizationId, // Override empty organizationId from metadata
       },
     });
 

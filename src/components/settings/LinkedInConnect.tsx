@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Linkedin, Check, Loader2 } from 'lucide-react';
@@ -15,24 +15,7 @@ export function LinkedInConnect({ onConnectionChange }: LinkedInConnectProps) {
   const [connected, setConnected] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
 
-  useEffect(() => {
-    checkConnection();
-    
-    // Listen for URL changes (after OAuth callback)
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('success') === 'linkedin_connected') {
-      setConnected(true);
-      toast.success('LinkedIn connected successfully!');
-      // Clean up URL
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-    if (urlParams.get('error') && urlParams.toString().includes('linkedin')) {
-      toast.error(`Failed to connect LinkedIn: ${urlParams.get('error')}`);
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-  }, []);
-
-  const checkConnection = async () => {
+  const checkConnection = useCallback(async () => {
     try {
       const response = await fetch('/api/expertise/linkedin-status');
       if (response.ok) {
@@ -45,7 +28,24 @@ export function LinkedInConnect({ onConnectionChange }: LinkedInConnectProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [onConnectionChange]);
+
+  useEffect(() => {
+    checkConnection();
+
+    // Listen for URL changes (after OAuth callback)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success') === 'linkedin_connected') {
+      setConnected(true);
+      toast.success('LinkedIn connected successfully!');
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+    if (urlParams.get('error') && urlParams.toString().includes('linkedin')) {
+      toast.error(`Failed to connect LinkedIn: ${urlParams.get('error')}`);
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [checkConnection]);
 
   const handleConnect = () => {
     // Redirect to LinkedIn OAuth initiation endpoint

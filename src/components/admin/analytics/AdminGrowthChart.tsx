@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -23,11 +23,7 @@ export function AdminGrowthChart() {
   const [period, setPeriod] = useState<'7d' | '30d' | '90d'>('30d');
   const [metric, setMetric] = useState<'users' | 'organizations'>('users');
 
-  useEffect(() => {
-    loadGrowthData();
-  }, [period]);
-
-  const loadGrowthData = async () => {
+  const loadGrowthData = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch(`/api/admin/analytics/growth?period=${period}&groupBy=day`);
@@ -45,7 +41,11 @@ export function AdminGrowthChart() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [period]);
+
+  useEffect(() => {
+    loadGrowthData();
+  }, [loadGrowthData]);
 
   if (loading) {
     return (

@@ -1560,7 +1560,7 @@ export const userIntegrations = pgTable('user_integrations', {
   userId: uuid('user_id')
     .references(() => profiles.id, { onDelete: 'cascade' })
     .notNull(),
-  provider: text('provider', { enum: ['zoom', 'google'] }).notNull(),
+  provider: text('provider', { enum: ['zoom', 'google', 'linkedin'] }).notNull(),
   accessToken: text('access_token').notNull(),
   refreshToken: text('refresh_token'),
   tokenExpiry: timestamp('token_expiry').notNull(),

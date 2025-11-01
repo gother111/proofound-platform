@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -42,11 +42,7 @@ export function FairnessNoteDashboard() {
   const [loading, setLoading] = useState(false);
   const [dateRange, setDateRange] = useState<'30d' | '90d' | '180d'>('90d');
 
-  useEffect(() => {
-    loadFairnessNote();
-  }, [dateRange]);
-
-  const loadFairnessNote = async () => {
+  const loadFairnessNote = useCallback(async () => {
     setLoading(true);
     try {
       const endDate = new Date();
@@ -81,7 +77,11 @@ export function FairnessNoteDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [dateRange]);
+
+  useEffect(() => {
+    loadFairnessNote();
+  }, [loadFairnessNote]);
 
   const getStatusBadge = (status: 'passing' | 'warning' | 'failing') => {
     switch (status) {

@@ -59,14 +59,14 @@ export async function POST(request: NextRequest) {
           skillCode: sql<string>`DISTINCT ${skills.skillCode}`,
           requiredLevel: sql<number>`MAX(${skills.level})`,
           frequency: sql<number>`COUNT(*)`,
-          roleName: assignments.title,
+          roleName: assignments.role,
         })
         .from(assignments)
         .innerJoin(skills, eq(assignments.orgId, skills.profileId)) // Simplified join for MVP
         .where(
-          sql`LOWER(${assignments.title}) LIKE ${'%' + targetRole.toLowerCase() + '%'}`
+          sql`LOWER(${assignments.role}) LIKE ${'%' + targetRole.toLowerCase() + '%'}`
         )
-        .groupBy(skills.skillCode, assignments.title);
+        .groupBy(skills.skillCode, assignments.role);
     } else {
       // If no target role specified, find most common skills in active assignments
       targetSkills = await db
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
         })
         .from(assignments)
         .innerJoin(skills, eq(assignments.orgId, skills.profileId))
-        .where(eq(assignments.status, 'published'))
+        .where(eq(assignments.status, 'active'))
         .groupBy(skills.skillCode)
         .having(sql`COUNT(*) >= 3`) // Only skills appearing in 3+ roles
         .limit(50);
@@ -112,11 +112,6 @@ export async function POST(request: NextRequest) {
         // Get skill details from taxonomy
         const skillDetails = await db.query.skillsTaxonomy.findFirst({
           where: eq(skillsTaxonomy.code, targetSkill.skillCode),
-          with: {
-            category: true,
-            subcategory: true,
-            l3: true,
-          },
         });
 
         if (skillDetails) {
@@ -127,20 +122,17 @@ export async function POST(request: NextRequest) {
           const levelScore = (targetLevel / 5) * 50;
           const importance = Math.round(frequencyScore + levelScore);
 
+          // Extract English name from JSONB
+          const skillName = typeof skillDetails.nameI18n === 'object' && skillDetails.nameI18n !== null
+            ? (skillDetails.nameI18n as any).en || targetSkill.skillCode
+            : targetSkill.skillCode;
+
           gaps.push({
             skillCode: targetSkill.skillCode,
-            skillName: typeof skillDetails.nameI18n === 'object' && skillDetails.nameI18n !== null
-              ? (skillDetails.nameI18n as any).en || targetSkill.skillCode
-              : targetSkill.skillCode,
-            l1: typeof skillDetails.category?.nameI18n === 'object' && skillDetails.category?.nameI18n !== null
-              ? (skillDetails.category.nameI18n as any).en || 'Category'
-              : 'Category',
-            l2: typeof skillDetails.subcategory?.nameI18n === 'object' && skillDetails.subcategory?.nameI18n !== null
-              ? (skillDetails.subcategory.nameI18n as any).en || 'Subcategory'
-              : 'Subcategory',
-            l3: typeof skillDetails.l3?.nameI18n === 'object' && skillDetails.l3?.nameI18n !== null
-              ? (skillDetails.l3.nameI18n as any).en || 'L3'
-              : 'L3',
+            skillName,
+            l1: 'Category', // TODO: Get from category lookup
+            l2: 'Subcategory', // TODO: Get from subcategory lookup
+            l3: 'L3', // TODO: Get from l3 lookup
             importance,
             currentLevel,
             targetLevel,
