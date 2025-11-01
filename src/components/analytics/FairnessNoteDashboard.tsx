@@ -274,7 +274,7 @@ export function FairnessNoteDashboard() {
                   <ul className="space-y-2">
                     {fairnessNote.recommendations.map((rec, idx) => (
                       <li key={idx} className="text-sm flex items-start gap-2">
-                        <span className="text-muted-foreground">"</span>
+                        <span className="text-muted-foreground">•</span>
                         <span>{rec}</span>
                       </li>
                     ))}

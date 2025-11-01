@@ -202,8 +202,8 @@ export function CVJDAutoSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
 
                       <p className="text-xs text-muted-foreground mb-1">
                         {skill.l1Label}
-                        {skill.l2Label && ` � ${skill.l2Label}`}
-                        {skill.l3Label && ` � ${skill.l3Label}`}
+                        {skill.l2Label && ` → ${skill.l2Label}`}
+                        {skill.l3Label && ` → ${skill.l3Label}`}
                       </p>
 
                       {skill.description && (

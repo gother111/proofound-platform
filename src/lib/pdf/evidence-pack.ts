@@ -195,7 +195,7 @@ export function generateEvidencePackHTML(data: EvidencePackData): string {
     }
 
     .artifacts-list li:before {
-      content: "=Î";
+      content: "ðŸ“Ž";
       position: absolute;
       left: 0;
     }

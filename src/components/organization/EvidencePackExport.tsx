@@ -163,7 +163,7 @@ export function EvidencePackExport({ organizationId, organizationName }: Evidenc
         </div>
 
         <div className="p-3 bg-blue-50 border border-blue-200 rounded text-sm">
-          <p className="font-medium mb-1">What's Included:</p>
+          <p className="font-medium mb-1">What&apos;s Included:</p>
           <ul className="space-y-1 text-muted-foreground">
             <li> Impact metrics and outcomes</li>
             <li> Beneficiary counts and timeframes</li>
@@ -183,7 +183,7 @@ export function EvidencePackExport({ organizationId, organizationName }: Evidenc
         </Button>
 
         <p className="text-xs text-muted-foreground text-center">
-          Opens as HTML. Use browser's "Print to PDF" to save as PDF.
+          Opens as HTML. Use browser&apos;s &quot;Print to PDF&quot; to save as PDF.
         </p>
       </CardContent>
     </Card>
