@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
           .from('content_reports')
           .update({
             status: 'resolved',
-            reviewed_by: admin.id,
+            reviewed_by: admin.userId,
             reviewed_at: new Date().toISOString(),
             admin_note: note || null,
             action_taken: 'no_action',
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
           .from('content_reports')
           .update({
             status: 'dismissed',
-            reviewed_by: admin.id,
+            reviewed_by: admin.userId,
             reviewed_at: new Date().toISOString(),
             admin_note: note || null,
             action_taken: 'dismissed',
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
           .from('content_reports')
           .update({
             status: 'resolved',
-            reviewed_by: admin.id,
+            reviewed_by: admin.userId,
             reviewed_at: new Date().toISOString(),
             admin_note: note || null,
             action_taken: 'content_deleted',
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
         const warningResult = await issueWarning(
           supabase,
           report.content_id,
-          admin.id,
+          admin.userId,
           note || 'Content violation'
         );
 
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
           .from('content_reports')
           .update({
             status: 'resolved',
-            reviewed_by: admin.id,
+            reviewed_by: admin.userId,
             reviewed_at: new Date().toISOString(),
             admin_note: note || null,
             action_taken: 'user_warned',
@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
         const suspensionResult = await suspendUser(
           supabase,
           report.content_id,
-          admin.id,
+          admin.userId,
           duration || 7,
           note || 'Content policy violation'
         );
@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
           .from('content_reports')
           .update({
             status: 'resolved',
-            reviewed_by: admin.id,
+            reviewed_by: admin.userId,
             reviewed_at: new Date().toISOString(),
             admin_note: note || null,
             action_taken: 'user_suspended',
@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
 
     // Create admin audit log
     await supabase.from('admin_audit_log').insert({
-      admin_id: admin.id,
+      admin_id: admin.userId,
       action: 'moderation_action',
       target_type: 'content_report',
       target_id: reportId,
@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
     });
 
     log.info('moderation.action.taken', {
-      adminId: admin.id,
+      adminId: admin.userId,
       reportId,
       action,
       contentType: report.content_type,
