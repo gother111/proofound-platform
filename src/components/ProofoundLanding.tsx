@@ -154,7 +154,7 @@ export function ProofoundLanding({
   }, [shouldReduceMotion]);
 
   return (
-    <div ref={containerRef} className="relative bg-[#F7F6F1] dark:bg-[#1a1a1a] overflow-hidden">
+    <div ref={containerRef} className="relative bg-[#F7F6F1] dark:bg-[#1A1D2E] overflow-hidden">
       {/* Network Background */}
       <NetworkBackground />
 
@@ -255,7 +255,7 @@ function MinimalHeader({
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
-          className="absolute top-full left-0 right-0 mt-4 mx-6 md:mx-12 bg-white/95 dark:bg-[#2a2a2a]/95 backdrop-blur-xl rounded-3xl border border-[#1C4D3A]/10 dark:border-[#D4C4A8]/10 p-8 shadow-2xl"
+          className="absolute top-full left-0 right-0 mt-4 mx-6 md:mx-12 bg-white/95 dark:bg-[#252834]/95 backdrop-blur-xl rounded-3xl border border-[#1C4D3A]/10 dark:border-[#D4C4A8]/10 p-8 shadow-2xl"
         >
           <nav className="flex flex-col items-center space-y-4">
             {['The Problem', 'How It Works', 'Principles', 'For Whom'].map((item, idx) => (

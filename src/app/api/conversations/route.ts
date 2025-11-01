@@ -1,6 +1,6 @@
 /**
  * Conversations API
- *
+ * 
  * List user's conversations with last message and unread count
  */
 
@@ -37,7 +37,10 @@ export async function GET(request: NextRequest) {
       })
       .from(conversations)
       .where(
-        or(eq(conversations.participantOneId, user.id), eq(conversations.participantTwoId, user.id))
+        or(
+          eq(conversations.participantOneId, user.id),
+          eq(conversations.participantTwoId, user.id)
+        )
       )
       .orderBy(desc(conversations.lastMessageAt));
 
@@ -46,7 +49,9 @@ export async function GET(request: NextRequest) {
       userConversations.map(async (conv) => {
         // Determine the other party
         const otherPartyId =
-          conv.participantOneId === user.id ? conv.participantTwoId : conv.participantOneId;
+          conv.participantOneId === user.id
+            ? conv.participantTwoId
+            : conv.participantOneId;
 
         // Fetch other party profile
         const otherPartyProfile = await db
@@ -101,7 +106,10 @@ export async function GET(request: NextRequest) {
             displayAvatar = profile.avatarUrl;
           } else {
             // Stage 1: Masked
-            displayName = profile.persona === 'individual' ? 'Candidate' : 'Organization';
+            displayName =
+              profile.persona === 'individual'
+                ? 'Candidate'
+                : 'Organization';
             displayAvatar = null; // Use generic avatar
           }
         }
@@ -133,6 +141,9 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Get conversations error:', error);
-    return NextResponse.json({ error: 'Failed to fetch conversations' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to fetch conversations' },
+      { status: 500 }
+    );
   }
 }
