@@ -1,6 +1,6 @@
 /**
  * Individual Project API Route
- * 
+ *
  * GET - Get project by ID
  * PATCH - Update project
  * DELETE - Soft delete project
@@ -9,13 +9,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -24,7 +25,7 @@ export async function GET(
     const { data: project, error } = await supabase
       .from('projects')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', user.id)
       .single();
 
@@ -46,13 +47,14 @@ export async function GET(
   }
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -62,7 +64,7 @@ export async function PATCH(
     const { data: existing } = await supabase
       .from('projects')
       .select('id')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', user.id)
       .single();
 
@@ -87,7 +89,7 @@ export async function PATCH(
         role,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', params.id)
+      .eq('id', id)
       .select()
       .single();
 
@@ -105,11 +107,15 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -122,7 +128,7 @@ export async function DELETE(
         status: 'archived',
         updated_at: new Date().toISOString(),
       })
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', user.id);
 
     if (error) {
@@ -136,4 +142,3 @@ export async function DELETE(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-
