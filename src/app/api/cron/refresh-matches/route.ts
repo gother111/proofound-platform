@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { matchingProfiles, assignments, matches } from '@/db/schema';
-import { eq, and, gte, lt, sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
@@ -32,12 +32,7 @@ export async function GET(request: NextRequest) {
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
     const profilesToRefresh = await db.query.matchingProfiles.findMany({
-      where: and(
-        eq(matchingProfiles.active, true),
-        // Only refresh if last refresh was more than 24 hours ago
-        // or if never refreshed
-        sql`(${matchingProfiles.lastRefreshed} IS NULL OR ${matchingProfiles.lastRefreshed} < ${oneDayAgo})`
-      ),
+      where: sql`(${matchingProfiles.lastRefreshed} IS NULL OR ${matchingProfiles.lastRefreshed} < ${oneDayAgo})`,
       limit: 100, // Process in batches
     });
 
