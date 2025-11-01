@@ -13,6 +13,12 @@ export interface Message {
   edited_at: string | null;
 }
 
+interface PresenceState {
+  user_id: string;
+  typing?: boolean;
+  online_at?: string;
+}
+
 interface UseRealtimeMessagesOptions {
   conversationId: string;
   userId: string;
@@ -93,7 +99,7 @@ export function useRealtimeMessages({
         }
       )
       .on('presence', { event: 'sync' }, () => {
-        const state = realtimeChannel.presenceState();
+        const state = realtimeChannel.presenceState<PresenceState>();
         const presentUsers = Object.keys(state);
 
         // Check if other user is typing
