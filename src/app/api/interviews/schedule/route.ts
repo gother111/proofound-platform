@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 4. Generate video link based on platform
-    let videoLink = '';
+    let meetingData: { meetingId: string; url: string } | null = null;
     try {
       if (platform === 'zoom') {
         const meeting = await createZoomMeeting({
@@ -103,13 +103,23 @@ export async function POST(req: NextRequest) {
           duration,
           timezone,
         });
-        videoLink = meeting.joinUrl;
-      } else if (platform === 'google-meet') {
-        videoLink = await createGoogleMeet({
+        meetingData = {
+          meetingId: meeting.id,
+          url: meeting.joinUrl,
+        };
+      } else if (platform === 'google') {
+        const meetUrl = await createGoogleMeet({
           summary: `Proofound Interview - Match ${matchId}`,
           startTime: proposedStart,
           duration,
         });
+        // For Google Meet, extract event ID from URL or generate a unique identifier
+        const eventId = meetUrl.match(/[?&]eid=([^&]+)/)?.[1] || 
+                       `google-${Date.now()}`;
+        meetingData = {
+          meetingId: eventId,
+          url: meetUrl,
+        };
       }
     } catch (videoError) {
       console.error('Video link generation failed:', videoError);
@@ -122,7 +132,9 @@ export async function POST(req: NextRequest) {
       scheduledAt: proposedStart,
       duration,
       platform,
-      videoLink: videoLink || null,
+      meetingId: meetingData?.meetingId || 'pending',
+      meetingUrl: meetingData?.url || 'pending',
+      timezone: 'UTC',
       status: 'scheduled',
     }).returning();
 
@@ -136,7 +148,8 @@ export async function POST(req: NextRequest) {
         scheduledAt: interview.scheduledAt,
         duration: interview.duration,
         platform: interview.platform,
-        videoLink: interview.videoLink,
+        meetingUrl: interview.meetingUrl,
+        meetingId: interview.meetingId,
       },
     });
   } catch (error) {

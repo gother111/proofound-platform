@@ -1,7 +1,9 @@
 /**
  * LinkedIn OAuth Callback Handler
  * 
- * Handles OAuth redirect from LinkedIn after user authorization
+ * GET /api/auth/linkedin/callback
+ * Handles OAuth callback from LinkedIn, exchanges code for token,
+ * and stores integration in database
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -9,71 +11,74 @@ import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { userIntegrations } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
+import {
+  exchangeLinkedInCode,
+  fetchLinkedInProfile,
+  constructLinkedInProfileUrl,
+} from '@/lib/linkedin';
 
 export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  const code = searchParams.get('code');
-  const error = searchParams.get('error');
-  const errorDescription = searchParams.get('error_description');
-  const state = searchParams.get('state'); // Use for CSRF protection
-
-  // Handle authorization denial
-  if (error) {
-    console.error('LinkedIn OAuth error:', error, errorDescription);
-    return NextResponse.redirect(
-      new URL(
-        `/settings/integrations?error=${encodeURIComponent(errorDescription || error)}`,
-        request.url
-      )
-    );
-  }
-
-  if (!code) {
-    return NextResponse.redirect(
-      new URL('/settings/integrations?error=missing_code', request.url)
-    );
-  }
-
   try {
-    // Get authenticated user
+    const searchParams = request.nextUrl.searchParams;
+    const code = searchParams.get('code');
+    const state = searchParams.get('state');
+    const error = searchParams.get('error');
+
+    // Check for OAuth errors
+    if (error) {
+      console.error('LinkedIn OAuth error:', error);
+      return NextResponse.redirect(
+        new URL(
+          `/settings?error=${encodeURIComponent('LinkedIn connection cancelled or failed')}`,
+          request.url
+        )
+      );
+    }
+
+    if (!code || !state) {
+      return NextResponse.redirect(
+        new URL('/settings?error=invalid_oauth_response', request.url)
+      );
+    }
+
+    // Verify state parameter for CSRF protection
+    const storedState = request.cookies.get('linkedin_oauth_state')?.value;
+    const storedUserId = request.cookies.get('linkedin_oauth_user')?.value;
+
+    if (!storedState || storedState !== state) {
+      console.error('State mismatch in LinkedIn OAuth');
+      return NextResponse.redirect(
+        new URL('/settings?error=invalid_state', request.url)
+      );
+    }
+
+    // Verify user is still authenticated
     const supabase = await createClient();
     const {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser();
 
-    if (authError || !user) {
-      throw new Error('User not authenticated');
+    if (authError || !user || user.id !== storedUserId) {
+      return NextResponse.redirect(
+        new URL('/signin?error=unauthorized', request.url)
+      );
     }
 
-    // Exchange code for access token
-    const tokenUrl = 'https://www.linkedin.com/oauth/v2/accessToken';
-    const tokenResponse = await fetch(tokenUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        grant_type: 'authorization_code',
-        code,
-        client_id: process.env.LINKEDIN_CLIENT_ID!,
-        client_secret: process.env.LINKEDIN_CLIENT_SECRET!,
-        redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/linkedin/callback`,
-      }).toString(),
-    });
+    // Exchange authorization code for access token
+    const tokenData = await exchangeLinkedInCode(
+      code,
+      `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/linkedin/callback`
+    );
 
-    if (!tokenResponse.ok) {
-      const errorData = await tokenResponse.json();
-      throw new Error(`LinkedIn token exchange failed: ${JSON.stringify(errorData)}`);
-    }
+    // Fetch LinkedIn profile data
+    const profileData = await fetchLinkedInProfile(tokenData.access_token);
 
-    const tokenData = await tokenResponse.json();
+    // Calculate token expiry time
+    const tokenExpiry = new Date();
+    tokenExpiry.setSeconds(tokenExpiry.getSeconds() + tokenData.expires_in);
 
-    // Calculate token expiry (LinkedIn tokens typically last 60 days)
-    const expiresIn = tokenData.expires_in || 5184000; // seconds (60 days default)
-    const tokenExpiry = new Date(Date.now() + expiresIn * 1000);
-
-    // Store or update integration
+    // Check if integration already exists
     const existingIntegration = await db
       .select()
       .from(userIntegrations)
@@ -85,15 +90,18 @@ export async function GET(request: NextRequest) {
       )
       .limit(1);
 
+    // Store or update integration
     if (existingIntegration.length > 0) {
       // Update existing integration
       await db
         .update(userIntegrations)
         .set({
           accessToken: tokenData.access_token,
-          refreshToken: tokenData.refresh_token, // May be null for LinkedIn
+          refreshToken: tokenData.refresh_token,
           tokenExpiry,
           scope: tokenData.scope?.split(' ') || [],
+          providerAccountId: profileData.id,
+          profileData: profileData as any,
           updatedAt: new Date(),
         })
         .where(eq(userIntegrations.id, existingIntegration[0].id));
@@ -102,27 +110,40 @@ export async function GET(request: NextRequest) {
       await db.insert(userIntegrations).values({
         userId: user.id,
         provider: 'linkedin',
+        providerAccountId: profileData.id,
         accessToken: tokenData.access_token,
-        refreshToken: tokenData.refresh_token, // May be null
+        refreshToken: tokenData.refresh_token,
         tokenExpiry,
         scope: tokenData.scope?.split(' ') || [],
+        profileData: profileData as any,
       });
     }
 
-    // Redirect back to settings with success message
-    return NextResponse.redirect(
-      new URL('/settings/integrations?success=linkedin_connected', request.url)
+    // Clear OAuth cookies
+    const response = NextResponse.redirect(
+      new URL('/settings?success=linkedin_connected', request.url)
     );
+
+    response.cookies.delete('linkedin_oauth_state');
+    response.cookies.delete('linkedin_oauth_user');
+
+    return response;
   } catch (error) {
     console.error('LinkedIn OAuth callback error:', error);
-    return NextResponse.redirect(
+    
+    // Clear OAuth cookies on error
+    const response = NextResponse.redirect(
       new URL(
-        `/settings/integrations?error=${encodeURIComponent(
-          error instanceof Error ? error.message : 'Unknown error'
+        `/settings?error=${encodeURIComponent(
+          error instanceof Error ? error.message : 'LinkedIn connection failed'
         )}`,
         request.url
       )
     );
+
+    response.cookies.delete('linkedin_oauth_state');
+    response.cookies.delete('linkedin_oauth_user');
+
+    return response;
   }
 }
-

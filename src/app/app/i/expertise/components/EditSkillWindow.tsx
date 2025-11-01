@@ -321,7 +321,7 @@ export function EditSkillWindow({
               </Label>
               <RadioGroup
                 value={level.toString()}
-                onValueChange={(val) => setLevel(parseInt(val))}
+                onValueChange={(val: string) => setLevel(parseInt(val))}
               >
                 {LEVEL_LABELS.map((lvl) => (
                   <div

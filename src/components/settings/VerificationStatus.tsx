@@ -4,13 +4,14 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle2, ShieldCheck, Mail, Loader2, AlertCircle, XCircle } from 'lucide-react';
+import { CheckCircle2, ShieldCheck, Mail, Loader2, AlertCircle, XCircle, Linkedin } from 'lucide-react';
 import { WorkEmailVerificationForm } from './WorkEmailVerificationForm';
 import { VeriffVerification } from './VeriffVerification';
+import { LinkedInVerification } from './LinkedInVerification';
 
 interface VerificationStatusData {
   verified: boolean;
-  verificationMethod: 'veriff' | 'work_email' | null;
+  verificationMethod: 'veriff' | 'work_email' | 'linkedin' | null;
   verificationStatus: 'unverified' | 'pending' | 'verified' | 'failed';
   verifiedAt: string | null;
   workEmail: string | null;
@@ -23,6 +24,7 @@ export function VerificationStatus() {
   const [error, setError] = useState<string | null>(null);
   const [showWorkEmailForm, setShowWorkEmailForm] = useState(false);
   const [showVeriffFlow, setShowVeriffFlow] = useState(false);
+  const [showLinkedInFlow, setShowLinkedInFlow] = useState(false);
 
   useEffect(() => {
     fetchStatus();
@@ -56,6 +58,7 @@ export function VerificationStatus() {
   const handleVerificationSuccess = () => {
     setShowWorkEmailForm(false);
     setShowVeriffFlow(false);
+    setShowLinkedInFlow(false);
     fetchStatus(); // Refresh status
   };
 
@@ -107,7 +110,7 @@ export function VerificationStatus() {
               Identity Verified
             </p>
             <p className="text-sm text-green-700 dark:text-green-300">
-              Verified via {status.verificationMethod === 'veriff' ? 'Government ID' : 'Work Email'}
+              Verified via {status.verificationMethod === 'veriff' ? 'Government ID' : status.verificationMethod === 'work_email' ? 'Work Email' : 'LinkedIn'}
               {status.verifiedAt && ` on ${new Date(status.verifiedAt).toLocaleDateString()}`}
             </p>
             {status.workEmail && (
@@ -154,14 +157,14 @@ export function VerificationStatus() {
             Verification failed. Please try again or contact support if the issue persists.
           </AlertDescription>
         </Alert>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <Button
             variant="outline"
             onClick={() => setShowVeriffFlow(true)}
             className="flex items-center gap-2"
           >
             <ShieldCheck className="w-4 h-4" />
-            Retry with Government ID
+            Retry with ID
           </Button>
           <Button
             variant="outline"
@@ -169,7 +172,15 @@ export function VerificationStatus() {
             className="flex items-center gap-2"
           >
             <Mail className="w-4 h-4" />
-            Retry with Work Email
+            Retry with Email
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setShowLinkedInFlow(true)}
+            className="flex items-center gap-2"
+          >
+            <Linkedin className="w-4 h-4" />
+            Retry with LinkedIn
           </Button>
         </div>
       </div>
@@ -203,6 +214,21 @@ export function VerificationStatus() {
           ← Back to options
         </Button>
         <WorkEmailVerificationForm onSuccess={handleVerificationSuccess} />
+      </div>
+    );
+  }
+
+  if (showLinkedInFlow) {
+    return (
+      <div className="space-y-4">
+        <Button
+          variant="ghost"
+          onClick={() => setShowLinkedInFlow(false)}
+          className="mb-2"
+        >
+          ← Back to options
+        </Button>
+        <LinkedInVerification onSuccess={handleVerificationSuccess} />
       </div>
     );
   }
@@ -257,6 +283,30 @@ export function VerificationStatus() {
                   className="border-proofound-teal text-proofound-teal hover:bg-proofound-teal/10"
                 >
                   Verify with Work Email
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* LinkedIn Option */}
+        <Card className="border-2 hover:border-[#0A66C2]/30 transition-colors cursor-pointer">
+          <CardContent className="p-6">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-[#0A66C2]/10 flex items-center justify-center flex-shrink-0">
+                <Linkedin className="w-6 h-6 text-[#0A66C2]" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold mb-1">LinkedIn Verification</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Fast automated check if your LinkedIn profile has an identity verification badge. Quick admin review (typically &lt;1 hour).
+                </p>
+                <Button
+                  onClick={() => setShowLinkedInFlow(true)}
+                  variant="outline"
+                  className="border-[#0A66C2] text-[#0A66C2] hover:bg-[#0A66C2]/10"
+                >
+                  Verify with LinkedIn
                 </Button>
               </div>
             </div>
