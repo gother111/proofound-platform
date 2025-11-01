@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
     );
 
     log.info('moderation.queue.fetched', {
-      adminId: user.id,
+      adminId: user.userId,
       reportCount: enrichedReports.length,
       status,
       priority,
