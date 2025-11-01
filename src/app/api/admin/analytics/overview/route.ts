@@ -87,7 +87,7 @@ export async function GET() {
     const activeAssignmentsResult = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(assignments)
-      .where(eq(assignments.status, 'published'));
+      .where(eq(assignments.status, 'active'));
     const activeAssignments = activeAssignmentsResult[0]?.count || 0;
 
     // User activity (last 7 days)

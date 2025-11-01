@@ -238,6 +238,16 @@ export function ExpertiseAtlasClient({
               <BookOpen className="h-4 w-4 mr-2" />
               Learn More
             </Button>
+            {linkedInConnected && (
+              <Button
+                onClick={() => setIsLinkedInImportModalOpen(true)}
+                variant="outline"
+                className="border-[#0A66C2] text-[#0A66C2] hover:bg-blue-50"
+              >
+                <Linkedin className="h-4 w-4 mr-2" />
+                Import from LinkedIn
+              </Button>
+            )}
             <Button
               onClick={() => setIsAddSkillDrawerOpen(true)}
               className="bg-[#4A5943] text-white hover:bg-[#3C4936]"
@@ -360,6 +370,13 @@ export function ExpertiseAtlasClient({
           skill={skillToEdit}
           onSkillUpdated={handleSkillAdded}
           onSkillDeleted={handleSkillDeleted}
+        />
+
+        {/* LinkedIn Import Modal */}
+        <LinkedInImportModal
+          open={isLinkedInImportModalOpen}
+          onOpenChange={setIsLinkedInImportModalOpen}
+          onSkillsImported={handleSkillAdded}
         />
 
         {/* Skills Side Sheet */}
