@@ -60,14 +60,28 @@ export function MessageThread({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  // Handle paste blocking
+  // Handle paste blocking (PRD I-20)
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
     toast({
       title: 'Paste disabled',
-      description: 'For security, pasting is not allowed in messages.',
+      description: 'For security and privacy, pasting is not allowed in messages (PRD I-20).',
       variant: 'destructive',
     });
+  };
+
+  // Handle drag-drop blocking (PRD I-20)
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    toast({
+      title: 'Drop disabled',
+      description: 'For security and privacy, drag-and-drop is not allowed (PRD I-20).',
+      variant: 'destructive',
+    });
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
   };
 
   // Handle send
@@ -265,8 +279,10 @@ export function MessageThread({
               value={messageText}
               onChange={(e) => setMessageText(e.target.value)}
               onPaste={handlePaste}
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
               onKeyDown={handleKeyDown}
-              placeholder="Type your message... (paste is disabled)"
+              placeholder="Type your message... (paste and drag-drop disabled)"
               className="flex-1 min-h-[80px] resize-none"
               maxLength={MAX_MESSAGE_LENGTH + 50} // Allow typing slightly over to show warning
               disabled={isSending}
@@ -286,7 +302,7 @@ export function MessageThread({
 
           <div className="flex items-center justify-between text-xs">
             <span className="text-[#6B6760]">
-              Text-only • No files or links • Press Enter to send
+              🔒 Text-only messaging for privacy and security • Paste/drop disabled • Press Enter to send
             </span>
             <span className={characterCountColor()}>
               {messageText.length}/{MAX_MESSAGE_LENGTH}

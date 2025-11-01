@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { X, Search, ChevronRight, Check, ChevronDown } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { X, Search, ChevronRight, Check, ChevronDown, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -63,6 +63,24 @@ interface L4Skill {
   code: string;
   nameI18n: { en: string };
   descriptionI18n?: { en: string };
+  l1?: {
+    catId: number;
+    slug: string;
+    nameI18n: { en: string };
+  };
+  l2?: {
+    subcatId: number;
+    catId: number;
+    slug: string;
+    nameI18n: { en: string };
+  };
+  l3?: {
+    l3Id: number;
+    subcatId: number;
+    catId: number;
+    slug: string;
+    nameI18n: { en: string };
+  };
 }
 
 interface AddSkillDrawerProps {
@@ -78,6 +96,8 @@ export function AddSkillDrawer({
   domains,
   onSkillAdded,
 }: AddSkillDrawerProps) {
+  // Mode: 'search' (default) or 'browse' (L1→L2→L3→L4)
+  const [mode, setMode] = useState<'search' | 'browse'>('search');
   const [step, setStep] = useState(1);
   const [selectedL1, setSelectedL1] = useState<L1Domain | null>(null);
   const [selectedL2, setSelectedL2] = useState<L2Category | null>(null);
@@ -101,16 +121,55 @@ export function AddSkillDrawer({
   const [proofNotes, setProofNotes] = useState('');
   const [saving, setSaving] = useState(false);
   
-  // L4 Skills autocomplete
+  // L4 Skills autocomplete (for both modes)
   const [l4Skills, setL4Skills] = useState<L4Skill[]>([]);
   const [l4Search, setL4Search] = useState('');
   const [l4Loading, setL4Loading] = useState(false);
   const [showL4Dropdown, setShowL4Dropdown] = useState(false);
+  
+  // Search mode: global skill search
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<L4Skill[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Debounced global search
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchQuery(value);
+    
+    // Clear existing timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    // Don't search if query is too short
+    if (value.trim().length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    
+    // Debounce search (300ms)
+    searchTimeoutRef.current = setTimeout(async () => {
+      setSearchLoading(true);
+      try {
+        const response = await fetch(`/api/expertise/taxonomy?search=${encodeURIComponent(value)}`);
+        if (response.ok) {
+          const data = await response.json();
+          setSearchResults(data.l4_skills || []);
+        }
+      } catch (error) {
+        console.error('Error searching skills:', error);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 300);
+  }, []);
+  
   // Reset drawer state when closed
   useEffect(() => {
     if (!open) {
       setTimeout(() => {
+        setMode('search');
         setStep(1);
         setSelectedL1(null);
         setSelectedL2(null);
@@ -127,6 +186,8 @@ export function AddSkillDrawer({
         setL4Skills([]);
         setL4Search('');
         setShowL4Dropdown(false);
+        setSearchQuery('');
+        setSearchResults([]);
       }, 300);
     }
   }, [open]);
@@ -232,6 +293,41 @@ export function AddSkillDrawer({
     setSelectedL3(subcategory);
     setStep(4);
   };
+  
+  // Handle selecting a skill from search results
+  const handleSearchResultSelect = (skill: L4Skill) => {
+    setSelectedL4(skill);
+    setL4Search(skill.nameI18n?.en || '');
+    
+    // Auto-populate L1/L2/L3 from the skill's parent context
+    if (skill.l1) {
+      const l1Domain = domains.find(d => d.catId === skill.l1?.catId);
+      if (l1Domain) {
+        setSelectedL1(l1Domain);
+      }
+    }
+    if (skill.l2) {
+      setSelectedL2({
+        subcatId: skill.l2.subcatId,
+        catId: skill.l2.catId,
+        slug: skill.l2.slug,
+        nameI18n: skill.l2.nameI18n,
+      });
+    }
+    if (skill.l3) {
+      setSelectedL3({
+        l3Id: skill.l3.l3Id,
+        subcatId: skill.l3.subcatId,
+        catId: skill.l3.catId,
+        slug: skill.l3.slug,
+        nameI18n: skill.l3.nameI18n,
+      });
+    }
+    
+    // Go directly to details step (step 4)
+    setMode('browse'); // Switch to browse mode for step navigation
+    setStep(4);
+  };
 
   const handleSave = async (saveAndAddAnother: boolean = false) => {
     if (!selectedL1 || !selectedL2 || !selectedL3 || !l4Search) {
@@ -318,11 +414,133 @@ export function AddSkillDrawer({
             Add Skill to Atlas
           </SheetTitle>
           <SheetDescription className="text-[#6B6760]">
-            Follow the 4 steps to add a new skill to your expertise atlas.
+            {mode === 'search' 
+              ? 'Search for a skill by name or browse the taxonomy'
+              : 'Follow the 4 steps to add a new skill to your expertise atlas'}
           </SheetDescription>
         </SheetHeader>
 
-        {/* Progress Indicator */}
+        {/* Mode Toggle */}
+        <div className="mt-4 flex gap-2">
+          <Button
+            variant={mode === 'search' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setMode('search')}
+            className="flex-1"
+          >
+            <Search className="h-4 w-4 mr-2" />
+            Quick Search
+          </Button>
+          <Button
+            variant={mode === 'browse' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => {
+              setMode('browse');
+              setStep(1);
+            }}
+            className="flex-1"
+          >
+            <List className="h-4 w-4 mr-2" />
+            Browse Categories
+          </Button>
+        </div>
+
+        {/* Search Mode UI */}
+        {mode === 'search' && (
+          <div className="mt-6 space-y-4">
+            <div>
+              <Label htmlFor="skill-search" className="text-[#2D3330] mb-2 block">
+                Search for a skill
+              </Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6B6760]" />
+                <Input
+                  id="skill-search"
+                  type="text"
+                  placeholder="Type a skill name (e.g., Python, Project Management, React)..."
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  className="pl-10"
+                  autoFocus
+                />
+              </div>
+              <p className="text-xs text-[#6B6760] mt-1">
+                Start typing to see suggestions from our skills taxonomy
+              </p>
+            </div>
+
+            {/* Search Results */}
+            {searchLoading && (
+              <div className="text-center py-8 text-[#6B6760]">
+                Searching skills...
+              </div>
+            )}
+            
+            {!searchLoading && searchQuery.length >= 2 && searchResults.length === 0 && (
+              <div className="text-center py-8 text-[#6B6760]">
+                <p className="mb-2">No skills found matching &ldquo;{searchQuery}&rdquo;</p>
+                <p className="text-sm">Try a different search term or browse categories above</p>
+              </div>
+            )}
+            
+            {!searchLoading && searchResults.length > 0 && (
+              <div className="space-y-2 max-h-[500px] overflow-y-auto">
+                <p className="text-sm font-medium text-[#2D3330] mb-3">
+                  Found {searchResults.length} skill{searchResults.length > 1 ? 's' : ''}
+                </p>
+                {searchResults.map((skill) => {
+                  const domainColor = skill.l1 ? DOMAIN_COLORS[skill.l1.catId] || DOMAIN_COLORS[1] : DOMAIN_COLORS[1];
+                  return (
+                    <Card
+                      key={skill.code}
+                      className="p-4 hover:bg-[#F7F6F1] transition-colors cursor-pointer border border-[#E5E3DA]"
+                      onClick={() => handleSearchResultSelect(skill)}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1">
+                          <h4 className="font-medium text-[#2D3330] mb-1">
+                            {skill.nameI18n?.en || 'Unknown'}
+                          </h4>
+                          {skill.descriptionI18n?.en && (
+                            <p className="text-sm text-[#6B6760] mb-2 line-clamp-2">
+                              {skill.descriptionI18n?.en}
+                            </p>
+                          )}
+                          {/* Breadcrumb */}
+                          {(skill.l1 || skill.l2 || skill.l3) && (
+                            <div className="flex items-center gap-1 text-xs text-[#6B6760]">
+                              {skill.l1 && (
+                                <>
+                                  <span className={domainColor.text}>{skill.l1.nameI18n?.en}</span>
+                                </>
+                              )}
+                              {skill.l2 && (
+                                <>
+                                  <ChevronRight className="h-3 w-3" />
+                                  <span>{skill.l2.nameI18n?.en}</span>
+                                </>
+                              )}
+                              {skill.l3 && (
+                                <>
+                                  <ChevronRight className="h-3 w-3" />
+                                  <span>{skill.l3.nameI18n?.en}</span>
+                                </>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-[#6B6760] flex-shrink-0" />
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Progress Indicator (only in browse mode) */}
+        {mode === 'browse' && (
         <div className="mt-6 mb-8">
           <div className="flex items-center justify-between mb-2">
             {[1, 2, 3, 4].map((s) => (
@@ -355,7 +573,11 @@ export function AddSkillDrawer({
             <span>Details</span>
           </div>
         </div>
+        )}
 
+        {/* Browse Mode: 4-Step Flow */}
+        {mode === 'browse' && (
+        <>
         {/* Step 1: Pick L1 Domain */}
         {step === 1 && (
           <div className="space-y-4">
@@ -748,6 +970,8 @@ export function AddSkillDrawer({
               </Button>
             </div>
           </div>
+        )}
+        </>
         )}
       </SheetContent>
     </Sheet>

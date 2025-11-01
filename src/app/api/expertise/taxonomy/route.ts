@@ -151,7 +151,12 @@ export async function GET(request: Request) {
     if (l3Id || search) {
       let query = supabase
         .from('skills_taxonomy')
-        .select('*')
+        .select(`
+          *,
+          l1:skills_categories!skills_taxonomy_cat_id_fkey(cat_id, slug, name_i18n),
+          l2:skills_subcategories!skills_taxonomy_cat_id_subcat_id_fkey(subcat_id, cat_id, slug, name_i18n),
+          l3:skills_l3!skills_taxonomy_cat_id_subcat_id_l3_id_fkey(l3_id, subcat_id, cat_id, slug, name_i18n)
+        `)
         .eq('status', 'active');
       
       if (l3Id) {
@@ -183,7 +188,33 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'Failed to fetch skills' }, { status: 500 });
       }
       
-      return NextResponse.json({ l4_skills: skills?.map(s => mapTaxonomyFields(s, 'l4')) || [] });
+      // Map skills with parent context
+      const mappedSkills = skills?.map(s => {
+        const baseSkill = mapTaxonomyFields(s, 'l4');
+        return {
+          ...baseSkill,
+          l1: s.l1 ? {
+            catId: s.l1.cat_id,
+            slug: s.l1.slug,
+            nameI18n: s.l1.name_i18n,
+          } : null,
+          l2: s.l2 ? {
+            subcatId: s.l2.subcat_id,
+            catId: s.l2.cat_id,
+            slug: s.l2.slug,
+            nameI18n: s.l2.name_i18n,
+          } : null,
+          l3: s.l3 ? {
+            l3Id: s.l3.l3_id,
+            subcatId: s.l3.subcat_id,
+            catId: s.l3.cat_id,
+            slug: s.l3.slug,
+            nameI18n: s.l3.name_i18n,
+          } : null,
+        };
+      }) || [];
+      
+      return NextResponse.json({ l4_skills: mappedSkills });
     }
     
     return NextResponse.json({ error: 'Invalid query parameters' }, { status: 400 });

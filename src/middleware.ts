@@ -16,6 +16,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/verify-email') ||
     pathname.startsWith('/onboarding') ||
     pathname === '/' ||
+    pathname === '/403' ||
     pathname.match(/\.(ico|png|jpg|jpeg|gif|svg|css|js)$/)
   ) {
     return NextResponse.next();
@@ -33,6 +34,26 @@ export async function middleware(request: NextRequest) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirectTo', pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  // Admin route protection
+  if (pathname.startsWith('/admin')) {
+    // Check platform admin role
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('platform_role')
+      .eq('id', user.id)
+      .single();
+
+    const isPlatformAdmin = profile?.platform_role === 'platform_admin' || profile?.platform_role === 'super_admin';
+
+    if (!isPlatformAdmin) {
+      console.log(`Blocking non-admin user from accessing admin route: ${pathname}`);
+      return NextResponse.redirect(new URL('/403', request.url));
+    }
+
+    // Allow admin access
+    return NextResponse.next();
   }
 
   // Get user's persona

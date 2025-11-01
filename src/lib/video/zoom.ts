@@ -1,207 +1,174 @@
 /**
- * Zoom API Integration
+ * Zoom Meeting Integration
+ * PRD I-21: Interview scheduling with automatic video link generation
  * 
- * Functions for creating, updating, and canceling Zoom meetings
+ * Requires:
+ * - ZOOM_CLIENT_ID
+ * - ZOOM_CLIENT_SECRET
+ * - ZOOM_ACCOUNT_ID (for Server-to-Server OAuth)
  */
 
-import { db } from '@/db';
-import { userIntegrations } from '@/db/schema';
-import { eq, and, lt } from 'drizzle-orm';
-
-export interface CreateZoomMeetingParams {
-  userId: string;
+interface ZoomMeetingParams {
   topic: string;
   startTime: Date;
   duration: number; // minutes
-  timezone: string;
-  attendees: Array<{ email: string; name: string }>;
-}
-
-export interface ZoomMeetingResult {
-  meetingId: string;
-  meetingUrl: string;
-  joinUrl: string;
+  timezone?: string;
   password?: string;
 }
 
-/**
- * Refresh Zoom access token if expired
- */
-async function refreshZoomToken(integration: any): Promise<string> {
-  const tokenUrl = 'https://zoom.us/oauth/token';
-  const params = new URLSearchParams({
-    grant_type: 'refresh_token',
-    refresh_token: integration.refreshToken,
-  });
+interface ZoomMeetingResponse {
+  id: string;
+  joinUrl: string;
+  startUrl: string;
+  password?: string;
+  meetingId: string;
+}
 
-  const credentials = Buffer.from(
-    `${process.env.ZOOM_CLIENT_ID}:${process.env.ZOOM_CLIENT_SECRET}`
-  ).toString('base64');
+/**
+ * Get Zoom OAuth token using Server-to-Server OAuth
+ */
+async function getZoomToken(): Promise<string> {
+  const clientId = process.env.ZOOM_CLIENT_ID;
+  const clientSecret = process.env.ZOOM_CLIENT_SECRET;
+  const accountId = process.env.ZOOM_ACCOUNT_ID;
+
+  if (!clientId || !clientSecret || !accountId) {
+    throw new Error('Zoom credentials not configured. Please set ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET, and ZOOM_ACCOUNT_ID');
+  }
+
+  const tokenUrl = `https://zoom.us/oauth/token?grant_type=account_credentials&account_id=${accountId}`;
+  const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
 
   const response = await fetch(tokenUrl, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: `Basic ${credentials}`,
+      'Authorization': `Basic ${credentials}`,
+      'Content-Type': 'application/json',
     },
-    body: params.toString(),
   });
 
   if (!response.ok) {
-    throw new Error('Failed to refresh Zoom token');
+    const error = await response.text();
+    throw new Error(`Zoom OAuth failed: ${error}`);
   }
 
   const data = await response.json();
-
-  // Update stored token
-  const expiresIn = data.expires_in || 3600;
-  const tokenExpiry = new Date(Date.now() + expiresIn * 1000);
-
-  await db
-    .update(userIntegrations)
-    .set({
-      accessToken: data.access_token,
-      refreshToken: data.refresh_token || integration.refreshToken,
-      tokenExpiry,
-      updatedAt: new Date(),
-    })
-    .where(eq(userIntegrations.id, integration.id));
-
   return data.access_token;
-}
-
-/**
- * Get valid Zoom access token (refresh if needed)
- */
-async function getZoomToken(userId: string): Promise<string> {
-  const integration = await db
-    .select()
-    .from(userIntegrations)
-    .where(
-      and(
-        eq(userIntegrations.userId, userId),
-        eq(userIntegrations.provider, 'zoom')
-      )
-    )
-    .limit(1);
-
-  if (!integration.length) {
-    throw new Error('Zoom integration not found. Please connect your Zoom account.');
-  }
-
-  const integrationData = integration[0];
-
-  // Check if token is expired or about to expire (within 5 minutes)
-  const now = new Date();
-  const expiryThreshold = new Date(now.getTime() + 5 * 60 * 1000);
-
-  if (integrationData.tokenExpiry < expiryThreshold) {
-    return await refreshZoomToken(integrationData);
-  }
-
-  return integrationData.accessToken;
 }
 
 /**
  * Create a Zoom meeting
  */
 export async function createZoomMeeting(
-  params: CreateZoomMeetingParams
-): Promise<ZoomMeetingResult> {
-  const accessToken = await getZoomToken(params.userId);
+  params: ZoomMeetingParams
+): Promise<ZoomMeetingResponse> {
+  try {
+    const token = await getZoomToken();
 
-  // Format start time in ISO 8601 format
-  const startTime = params.startTime.toISOString();
+    // Format start time for Zoom API (ISO 8601)
+    const startTime = params.startTime.toISOString();
 
-  const response = await fetch('https://api.zoom.us/v2/users/me/meetings', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify({
+    const meetingData = {
       topic: params.topic,
       type: 2, // Scheduled meeting
       start_time: startTime,
       duration: params.duration,
-      timezone: params.timezone,
+      timezone: params.timezone || 'UTC',
       settings: {
         host_video: true,
         participant_video: true,
         join_before_host: false,
-        mute_upon_entry: false,
-        waiting_room: true,
+        mute_upon_entry: true,
+        waiting_room: false,
         auto_recording: 'none',
-        // Add attendees as alternative hosts if needed
       },
-    }),
-  });
+    };
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(`Zoom API error: ${JSON.stringify(errorData)}`);
+    // Use 'me' as userId for the authenticated user's account
+    const response = await fetch('https://api.zoom.us/v2/users/me/meetings', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(meetingData),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(`Zoom API error: ${JSON.stringify(error)}`);
+    }
+
+    const meeting = await response.json();
+
+    return {
+      id: meeting.id.toString(),
+      joinUrl: meeting.join_url,
+      startUrl: meeting.start_url,
+      password: meeting.password,
+      meetingId: meeting.id.toString(),
+    };
+  } catch (error) {
+    console.error('Zoom meeting creation failed:', error);
+    throw error;
   }
+}
 
-  const data = await response.json();
+/**
+ * Delete a Zoom meeting
+ */
+export async function deleteZoomMeeting(meetingId: string): Promise<void> {
+  try {
+    const token = await getZoomToken();
 
-  return {
-    meetingId: data.id.toString(),
-    meetingUrl: data.join_url,
-    joinUrl: data.join_url,
-    password: data.password,
-  };
+    const response = await fetch(`https://api.zoom.us/v2/meetings/${meetingId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok && response.status !== 404) {
+      const error = await response.json();
+      throw new Error(`Zoom API error: ${JSON.stringify(error)}`);
+    }
+  } catch (error) {
+    console.error('Zoom meeting deletion failed:', error);
+    throw error;
+  }
 }
 
 /**
  * Update a Zoom meeting
  */
 export async function updateZoomMeeting(
-  userId: string,
   meetingId: string,
-  updates: Partial<CreateZoomMeetingParams>
+  params: Partial<ZoomMeetingParams>
 ): Promise<void> {
-  const accessToken = await getZoomToken(userId);
+  try {
+    const token = await getZoomToken();
 
-  const body: any = {};
+    const updateData: any = {};
+    if (params.topic) updateData.topic = params.topic;
+    if (params.startTime) updateData.start_time = params.startTime.toISOString();
+    if (params.duration) updateData.duration = params.duration;
+    if (params.timezone) updateData.timezone = params.timezone;
 
-  if (updates.topic) body.topic = updates.topic;
-  if (updates.startTime) body.start_time = updates.startTime.toISOString();
-  if (updates.duration) body.duration = updates.duration;
-  if (updates.timezone) body.timezone = updates.timezone;
+    const response = await fetch(`https://api.zoom.us/v2/meetings/${meetingId}`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updateData),
+    });
 
-  const response = await fetch(`https://api.zoom.us/v2/meetings/${meetingId}`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(`Zoom API error: ${JSON.stringify(errorData)}`);
-  }
-}
-
-/**
- * Cancel a Zoom meeting
- */
-export async function cancelZoomMeeting(
-  userId: string,
-  meetingId: string
-): Promise<void> {
-  const accessToken = await getZoomToken(userId);
-
-  const response = await fetch(`https://api.zoom.us/v2/meetings/${meetingId}`, {
-    method: 'DELETE',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-
-  if (!response.ok && response.status !== 204) {
-    const errorData = await response.json();
-    throw new Error(`Zoom API error: ${JSON.stringify(errorData)}`);
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(`Zoom API error: ${JSON.stringify(error)}`);
+    }
+  } catch (error) {
+    console.error('Zoom meeting update failed:', error);
+    throw error;
   }
 }

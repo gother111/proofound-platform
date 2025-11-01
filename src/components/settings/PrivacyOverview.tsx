@@ -7,6 +7,7 @@ import { Shield, Download, Eye, Trash2, FileText, Database, Activity, MessagesSq
 import { DataBreakdown } from './DataBreakdown';
 import { AuditLogTable } from './AuditLogTable';
 import { DeleteAccount } from './DeleteAccount';
+import { DataImportButton } from './DataImportButton';
 
 interface PrivacyOverviewProps {
   userId: string;
@@ -114,6 +115,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
                   <Download className="h-4 w-4 mr-2" />
                   {isExporting ? 'Exporting...' : 'Download My Data'}
                 </Button>
+                <DataImportButton />
                 <Button
                   variant="outline"
                   onClick={() => setShowAuditLog(true)}

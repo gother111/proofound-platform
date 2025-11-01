@@ -42,6 +42,10 @@ export const profiles = pgTable('profiles', {
   persona: text('persona', {
     enum: ['individual', 'org_member', 'unknown'],
   }).default('unknown'),
+  // Platform admin role (tiered authorization)
+  platformRole: text('platform_role', {
+    enum: ['platform_admin', 'super_admin'],
+  }),
   // GDPR Account Deletion Support (Article 17: Right to Erasure)
   deletionRequestedAt: timestamp('deletion_requested_at'),
   deletionScheduledFor: timestamp('deletion_scheduled_for'),
@@ -1586,6 +1590,60 @@ export const interviews = pgTable('interviews', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+// ============================================================================
+// ADMIN SYSTEM TABLES
+// ============================================================================
+
+// Admin invitations - for inviting new platform admins
+export const adminInvitations = pgTable('admin_invitations', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  email: text('email').notNull(),
+  role: text('role', {
+    enum: ['platform_admin', 'super_admin'],
+  }).notNull(),
+  token: text('token').unique().notNull(),
+  invitedBy: uuid('invited_by')
+    .references(() => profiles.id)
+    .notNull(),
+  invitedAt: timestamp('invited_at').defaultNow().notNull(),
+  acceptedAt: timestamp('accepted_at'),
+  acceptedBy: uuid('accepted_by').references(() => profiles.id),
+  expiresAt: timestamp('expires_at').notNull(),
+  status: text('status', {
+    enum: ['pending', 'accepted', 'expired', 'revoked'],
+  }).default('pending').notNull(),
+});
+
+// Admin audit log - tracks all admin actions
+export const adminAuditLog = pgTable('admin_audit_log', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  adminId: uuid('admin_id')
+    .references(() => profiles.id)
+    .notNull(),
+  action: text('action').notNull(),
+  targetType: text('target_type'), // 'user', 'organization', 'assignment', etc.
+  targetId: uuid('target_id'),
+  changes: jsonb('changes'), // Before/after values
+  reason: text('reason'), // Optional reason for action
+  ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Admin system metrics cache - pre-aggregated analytics
+export const adminMetricsCache = pgTable('admin_metrics_cache', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  metricType: text('metric_type').notNull(), // 'daily_signups', 'active_users', etc.
+  period: text('period').notNull(), // 'day', 'week', 'month'
+  periodStart: timestamp('period_start').notNull(),
+  periodEnd: timestamp('period_end').notNull(),
+  value: jsonb('value').notNull(), // Metric-specific data
+  calculatedAt: timestamp('calculated_at').defaultNow().notNull(),
+}, (table) => ({
+  metricPeriodUnique: unique().on(table.metricType, table.periodStart),
+}));
+
 // Type exports
 export type Profile = typeof profiles.$inferSelect;
 export type InsertProfile = typeof profiles.$inferInsert;
@@ -1721,3 +1779,11 @@ export type InsertInterview = typeof interviews.$inferInsert;
 
 export type AssignmentFieldVisibilityDefaults = typeof assignmentFieldVisibilityDefaults.$inferSelect;
 export type InsertAssignmentFieldVisibilityDefaults = typeof assignmentFieldVisibilityDefaults.$inferInsert;
+
+// Admin system types
+export type AdminInvitation = typeof adminInvitations.$inferSelect;
+export type InsertAdminInvitation = typeof adminInvitations.$inferInsert;
+export type AdminAuditLog = typeof adminAuditLog.$inferSelect;
+export type InsertAdminAuditLog = typeof adminAuditLog.$inferInsert;
+export type AdminMetricsCache = typeof adminMetricsCache.$inferSelect;
+export type InsertAdminMetricsCache = typeof adminMetricsCache.$inferInsert;
