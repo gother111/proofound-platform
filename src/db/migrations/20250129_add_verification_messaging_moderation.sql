@@ -145,6 +145,8 @@ CREATE TABLE IF NOT EXISTS user_violations (
 -- ANALYTICS & SUPPORTING TABLES
 -- ============================================================================
 
+-- Analytics events table - GDPR-compliant with hashed IPs
+-- Reference: CROSS_DOCUMENT_PRIVACY_AUDIT.md Section 1.4
 CREATE TABLE IF NOT EXISTS analytics_events (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     event_type TEXT NOT NULL,
@@ -154,8 +156,8 @@ CREATE TABLE IF NOT EXISTS analytics_events (
     entity_id UUID,
     properties JSONB DEFAULT '{}'::jsonb,
     session_id TEXT,
-    ip_address TEXT,
-    user_agent TEXT,
+    ip_hash TEXT, -- SHA-256 hash of IP (GDPR Article 4(5) compliant)
+    user_agent_hash TEXT, -- SHA-256 hash of User Agent
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 

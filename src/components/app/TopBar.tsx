@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { signOut } from '@/actions/auth';
 import { CustomizeModal } from '@/components/dashboard/CustomizeModal';
+import { Logo } from '@/components/brand/Logo';
 
 interface TopBarProps {
   userName?: string;
@@ -37,12 +38,7 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
         <div className="flex items-center gap-4">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <div
-              className="w-7 h-7 rounded-lg flex items-center justify-center"
-              style={{ background: 'linear-gradient(to bottom right, #1C4D3A, #5C8B89)' }}
-            >
-              <span className="text-white text-xs font-semibold">P</span>
-            </div>
+            <Logo size="sm" />
             <span className="font-semibold text-sm" style={{ color: '#2D3330' }}>
               Proofound
             </span>

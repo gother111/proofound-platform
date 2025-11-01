@@ -1,270 +1,387 @@
-'use client';
+import { requireAuth } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/server';
+import { ExpertiseAtlasClient } from './ExpertiseAtlasClient';
 
-import { useState } from 'react';
-import {
-  capabilitySignals,
-  growthTimeline,
-  personaCopy,
-  whyItMatters,
-  type PersonaMode,
-} from '@/data/expertise';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import {
-  ArrowRight,
-  BadgeCheck,
-  Compass,
-  Globe2,
-  Layers,
-  LineChart,
-  Sparkles,
-  Target,
-  Users,
-} from 'lucide-react';
+export const dynamic = 'force-dynamic';
 
-const personaOptions: { id: PersonaMode; label: string }[] = [
-  { id: 'individual', label: 'Individual view' },
-  { id: 'organization', label: 'Organization view' },
-];
+/**
+ * Expertise Atlas Page - Main entry point
+ * 
+ * Shows user's skills organized in L1→L2→L3→L4 hierarchy
+ * Starts with empty state if no skills exist
+ */
+export default async function ExpertiseAtlasPage() {
+  try {
+    const user = await requireAuth();
+    const supabase = await createClient();
+    
+    // Fetch user's skills - fetch taxonomy separately to avoid foreign key relationship issues
+    const { data: userSkills, error: skillsError } = await supabase
+      .from('skills')
+      .select('*')
+      .eq('profile_id', user.id);
+    
+    // Fetch taxonomy data separately if skills exist
+    let taxonomyMap: Record<string, any> = {};
+    if (userSkills && userSkills.length > 0) {
+      const skillCodes = userSkills
+        .map(s => s.skill_code)
+        .filter((code): code is string => Boolean(code));
+      
+      if (skillCodes.length > 0) {
+        const { data: taxonomyData } = await supabase
+          .from('skills_taxonomy')
+          .select('code, slug, name_i18n, cat_id, subcat_id, l3_id, tags')
+          .in('code', skillCodes);
+        
+        if (taxonomyData) {
+          taxonomyData.forEach(tax => {
+            taxonomyMap[tax.code] = tax;
+          });
+        }
+      }
+    }
+    
+    if (skillsError) {
+      console.error('Error fetching user skills:', skillsError);
+      // Continue with empty array if skills query fails
+    }
 
-export default function ExpertiseAtlasPage() {
-  const [persona, setPersona] = useState<PersonaMode>('individual');
+    // Fetch proof counts (aggregation) - handle errors gracefully
+    const { data: proofs, error: proofsError } = await supabase
+      .from('skill_proofs')
+      .select('skill_id')
+      .eq('profile_id', user.id);
 
-  return (
-    <div className="min-h-screen bg-[#F7F6F1]">
-      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-10 lg:px-10">
-        <Header persona={persona} onPersonaChange={setPersona} />
-        <WhyItMatters />
-        <div className="grid gap-6 lg:grid-cols-[2fr,1.2fr]">
-          <CapabilitySignals persona={persona} />
-          <ProofDensity />
-        </div>
-        <GrowthTimeline />
-      </div>
-    </div>
-  );
+    if (proofsError) {
+      console.error('Error fetching skill proofs:', proofsError);
+    }
+
+    const proofCountMap: Record<string, number> = {};
+    proofs?.forEach(({ skill_id }) => {
+      proofCountMap[skill_id] = (proofCountMap[skill_id] || 0) + 1;
+    });
+
+    // Fetch verification counts (only accepted) - handle errors gracefully
+    const { data: verifications, error: verificationsError } = await supabase
+      .from('skill_verification_requests')
+      .select('skill_id, verifier_source, status')
+      .eq('requester_profile_id', user.id)
+      .eq('status', 'accepted');
+
+    if (verificationsError) {
+      console.error('Error fetching skill verifications:', verificationsError);
+    }
+
+    const verificationCountMap: Record<string, number> = {};
+    const verificationSourcesMap: Record<string, Array<{ source: string }>> = {};
+
+    verifications?.forEach(({ skill_id, verifier_source }) => {
+      verificationCountMap[skill_id] = (verificationCountMap[skill_id] || 0) + 1;
+      if (!verificationSourcesMap[skill_id]) {
+        verificationSourcesMap[skill_id] = [];
+      }
+      verificationSourcesMap[skill_id].push({ source: verifier_source });
+    });
+
+    // Enrich skills with counts and taxonomy
+    const enrichedSkills = (userSkills || []).map(skill => ({
+      ...skill,
+      taxonomy: skill.skill_code ? taxonomyMap[skill.skill_code] : null,
+      proof_count: proofCountMap[skill.id] || 0,
+      verification_count: verificationCountMap[skill.id] || 0,
+      verification_sources: verificationSourcesMap[skill.id] || [],
+    }));
+
+    // Fetch L1 domains - handle errors gracefully
+    const { data: l1Domains, error: domainsError } = await supabase
+      .from('skills_categories')
+      .select('*')
+      .order('display_order');
+
+    if (domainsError) {
+      console.error('Error fetching L1 domains:', domainsError);
+      // Continue with empty array if domains query fails
+    }
+  
+    // Calculate stats per L1 domain
+    const domainsWithStats = (l1Domains || []).map((domain) => {
+      const domainSkills = enrichedSkills.filter(
+        (skill: any) => skill.taxonomy?.cat_id === domain.cat_id
+      );
+      
+      const skillCount = domainSkills.length;
+      const avgLevel = skillCount > 0
+        ? domainSkills.reduce((sum: number, s: any) => sum + (s.level || 0), 0) / skillCount
+        : 0;
+      
+      // Calculate recency mix
+      const now = new Date();
+      let active = 0, recent = 0, rusty = 0;
+      
+      domainSkills.forEach((skill: any) => {
+        if (!skill.lastUsedAt) {
+          rusty++;
+          return;
+        }
+        
+        const monthsAgo = Math.floor(
+          (now.getTime() - new Date(skill.lastUsedAt).getTime()) / (1000 * 60 * 60 * 24 * 30)
+        );
+        
+        if (monthsAgo <= 6) active++;
+        else if (monthsAgo <= 24) recent++;
+        else rusty++;
+      });
+      
+      const total = active + recent + rusty || 1;
+      
+      return {
+        catId: domain.cat_id,
+        slug: domain.slug,
+        nameI18n: domain.name_i18n,
+        descriptionI18n: domain.description_i18n,
+        icon: domain.icon,
+        displayOrder: domain.display_order,
+        version: domain.version,
+        status: domain.status,
+        skillCount,
+        avgLevel,
+        recencyMix: {
+          active: Math.round((active / total) * 100),
+          recent: Math.round((recent / total) * 100),
+          rusty: Math.round((rusty / total) * 100),
+        },
+      };
+    });
+
+    const hasSkills = enrichedSkills.length > 0;
+
+    // Calculate widget data (only if user has skills)
+    const widgetData = hasSkills ? calculateWidgetData(enrichedSkills) : null;
+
+    return (
+      <ExpertiseAtlasClient
+        initialSkills={enrichedSkills}
+        domains={domainsWithStats}
+        hasSkills={hasSkills}
+        widgetData={widgetData}
+      />
+    );
+  } catch (error) {
+    console.error('Error in ExpertiseAtlasPage:', error);
+    // Return error state to client
+    return (
+      <ExpertiseAtlasClient
+        initialSkills={[]}
+        domains={[]}
+        hasSkills={false}
+        widgetData={null}
+      />
+    );
+  }
 }
 
-function Header({
-  persona,
-  onPersonaChange,
-}: {
-  persona: PersonaMode;
-  onPersonaChange: (value: PersonaMode) => void;
-}) {
-  const copy = personaCopy[persona];
-
-  return (
-    <Card className="relative overflow-hidden border border-[#D8D2C8] bg-white/90 p-6 shadow-sm backdrop-blur">
-      <div className="absolute inset-0 bg-gradient-to-br from-[#1C4D3A]/10 via-[#F7F6F1]/40 to-[#C76B4A]/10" />
-      <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-        <div className="max-w-2xl space-y-3">
-          <Badge variant="outline" className="border-[#4A5943] text-[#4A5943]">
-            Expertise Atlas · Beta
-          </Badge>
-          <h1 className="text-3xl font-semibold text-[#2D3330]">{copy.headline}</h1>
-          <p className="text-sm text-[#6B6760]">{copy.description}</p>
-          <div className="flex flex-wrap gap-3 text-xs text-[#4A5943]">
-            <span className="flex items-center gap-2 rounded-full bg-[#EEF1EA] px-3 py-1">
-              <Users className="h-3.5 w-3.5" />
-              Proof teams invited to co-curate
-            </span>
-            <span className="flex items-center gap-2 rounded-full bg-[#EEF1EA] px-3 py-1">
-              <BadgeCheck className="h-3.5 w-3.5" />
-              Level 4+ proof sources highlighted
-            </span>
-          </div>
-        </div>
-        <div className="flex w-full max-w-xs flex-col gap-3 rounded-2xl border border-[#D8D2C8] bg-white/80 p-4 text-sm text-[#2D3330] shadow-sm">
-          <p className="text-xs uppercase tracking-wide text-[#7A9278]">Persona</p>
-          <div className="grid grid-cols-2 gap-2">
-            {personaOptions.map((option) => (
-              <Button
-                key={option.id}
-                size="sm"
-                variant={option.id === persona ? 'default' : 'outline'}
-                className={
-                  option.id === persona
-                    ? 'bg-[#4A5943] text-white shadow-sm'
-                    : 'border-[#4A5943] text-[#4A5943] hover:bg-[#EEF1EA]'
-                }
-                onClick={() => onPersonaChange(option.id)}
-              >
-                {option.label}
-              </Button>
-            ))}
-          </div>
-          <div className="rounded-xl bg-[#EEF1EA] p-3 text-xs text-[#4A5943]">
-            <p>Next sync window:</p>
-            <p className="font-medium">Auto-refreshes nightly via Supabase pipelines</p>
-          </div>
-        </div>
-      </div>
-    </Card>
-  );
+/**
+ * Calculate all dashboard widget data from user skills
+ */
+function calculateWidgetData(skills: any[]) {
+  const now = new Date();
+  
+  // 1. Credibility Status Pie Data
+  const credibilityStats = {
+    verified: 0,
+    proofOnly: 0,
+    claimOnly: 0,
+  };
+  
+  skills.forEach((skill) => {
+    const hasProof = (skill.proof_count || 0) > 0;
+    const hasVerification = (skill.verification_count || 0) > 0;
+    
+    if (hasProof && hasVerification) {
+      credibilityStats.verified++;
+    } else if (hasProof) {
+      credibilityStats.proofOnly++;
+    } else {
+      credibilityStats.claimOnly++;
+    }
+  });
+  
+  // 2. Coverage Heatmap Data (L1 × L2)
+  const coverageData: Record<string, { count: number; avgLevel: number; l1: number; l2: number }> = {};
+  
+  skills.forEach((skill) => {
+    if (!skill.taxonomy?.cat_id || !skill.taxonomy?.subcat_id) return;
+    
+    const key = `${skill.taxonomy.cat_id}-${skill.taxonomy.subcat_id}`;
+    if (!coverageData[key]) {
+      coverageData[key] = {
+        count: 0,
+        avgLevel: 0,
+        l1: skill.taxonomy.cat_id,
+        l2: skill.taxonomy.subcat_id,
+      };
+    }
+    coverageData[key].count++;
+    coverageData[key].avgLevel += skill.level || 0;
+  });
+  
+  // Calculate averages
+  Object.keys(coverageData).forEach((key) => {
+    coverageData[key].avgLevel = coverageData[key].avgLevel / coverageData[key].count;
+  });
+  
+  // 3. Relevance Bars Data
+  const relevanceData = {
+    obsolete: 0,
+    current: 0,
+    emerging: 0,
+  };
+  
+  skills.forEach((skill) => {
+    const relevance = skill.relevance || 'current';
+    relevanceData[relevance as keyof typeof relevanceData]++;
+  });
+  
+  // 4. Recency × Competence Scatter Data
+  const scatterData = skills.map((skill) => {
+    const monthsSinceLastUsed = skill.lastUsedAt
+      ? Math.floor((now.getTime() - new Date(skill.lastUsedAt).getTime()) / (1000 * 60 * 60 * 24 * 30))
+      : 999; // Very old if never used
+    
+    return {
+      id: skill.id,
+      name: skill.taxonomy?.name_i18n?.en || skill.custom_skill_name || 'Unknown',
+      level: skill.level || 1,
+      monthsSinceLastUsed,
+      relevance: skill.relevance,
+    };
+  });
+  
+  // 5. Skill Wheel Data (Weighted counts per L1)
+  const skillWheelData: Record<number, { domain: string; count: number; weightedCount: number }> = {};
+  
+  skills.forEach((skill) => {
+    const catId = skill.taxonomy?.cat_id;
+    if (!catId) return;
+    
+    if (!skillWheelData[catId]) {
+      skillWheelData[catId] = {
+        domain: getDomainName(catId),
+        count: 0,
+        weightedCount: 0,
+      };
+    }
+    
+    skillWheelData[catId].count++;
+    
+    // Weight calculation
+    let weight = 1.0;
+    const hasProof = (skill.proof_count || 0) > 0;
+    const hasVerification = (skill.verification_count || 0) > 0;
+    if (hasProof) weight = 1.2;
+    if (hasVerification) weight = 1.5;
+    
+    skillWheelData[catId].weightedCount += weight;
+  });
+  
+  // 6. Verification Sources Donut Data
+  const verificationSources = {
+    self: 0,
+    peer: 0,
+    manager: 0,
+    external: 0,
+  };
+  
+  skills.forEach((skill) => {
+    if (skill.verification_sources && skill.verification_sources.length > 0) {
+      skill.verification_sources.forEach((v: any) => {
+        verificationSources[v.source as keyof typeof verificationSources]++;
+      });
+    }
+  });
+  
+  // 7. Next-Best-Actions List
+  const nextBestActions: Array<{
+    skillId: string;
+    skillName: string;
+    action: string;
+    reason: string;
+    priority: number;
+  }> = [];
+  
+  skills.forEach((skill) => {
+    const skillName = skill.taxonomy?.name_i18n?.en || skill.custom_skill_name || 'Unknown';
+    const hasProof = (skill.proof_count || 0) > 0;
+    const hasVerification = (skill.verification_count || 0) > 0;
+    
+    // Low credibility (no proof)
+    if (!hasProof) {
+      nextBestActions.push({
+        skillId: skill.id,
+        skillName,
+        action: 'Add proof',
+        reason: 'Low Credibility',
+        priority: 2,
+      });
+    }
+    
+    // No verification
+    if (hasProof && !hasVerification) {
+      nextBestActions.push({
+        skillId: skill.id,
+        skillName,
+        action: 'Request verification',
+        reason: 'Unverified',
+        priority: 3,
+      });
+    }
+    
+    // Stale skill (>18 months)
+    if (skill.lastUsedAt) {
+      const monthsAgo = Math.floor(
+        (now.getTime() - new Date(skill.lastUsedAt).getTime()) / (1000 * 60 * 60 * 24 * 30)
+      );
+      
+      if (monthsAgo > 18) {
+        nextBestActions.push({
+          skillId: skill.id,
+          skillName,
+          action: `Refresh (last used ${monthsAgo} months ago)`,
+          reason: 'Stale',
+          priority: 1,
+        });
+      }
+    }
+  });
+  
+  // Sort by priority and limit to top 10
+  nextBestActions.sort((a, b) => a.priority - b.priority);
+  const topActions = nextBestActions.slice(0, 10);
+  
+  return {
+    credibility: credibilityStats,
+    coverage: Object.values(coverageData),
+    relevance: relevanceData,
+    scatter: scatterData,
+    skillWheel: Object.values(skillWheelData),
+    verificationSources,
+    nextBestActions: topActions,
+  };
 }
 
-function WhyItMatters() {
-  return (
-    <section className="grid gap-4 md:grid-cols-3">
-      {whyItMatters.map((item) => (
-        <Card
-          key={item.title}
-          className="border border-[#D8D2C8] bg-white/90 p-4 text-sm text-[#2D3330] shadow-sm transition-transform hover:-translate-y-0.5"
-        >
-          <div className="flex items-center gap-3 text-lg">
-            <span>{item.emoji}</span>
-            <span className="font-semibold">{item.title}</span>
-          </div>
-          <p className="mt-3 text-sm text-[#6B6760]">{item.description}</p>
-        </Card>
-      ))}
-    </section>
-  );
-}
-
-function CapabilitySignals({ persona }: { persona: PersonaMode }) {
-  return (
-    <section className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold text-[#2D3330]">Capability signals</h2>
-          <p className="text-sm text-[#6B6760]">
-            Ranked by proof density, peer corroboration, and recency. Toggle persona view to see
-            different calibrations.
-          </p>
-        </div>
-        <Button variant="outline" className="border-[#4A5943] text-[#4A5943] hover:bg-[#EEF1EA]">
-          Export proof map
-        </Button>
-      </div>
-      <div className="space-y-4">
-        {capabilitySignals.map((signal) => (
-          <Card
-            key={signal.id}
-            className="border border-[#D8D2C8] bg-white/90 p-5 shadow-sm transition-transform hover:-translate-y-0.5"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-[#7A9278]">
-                  <Compass className="h-3.5 w-3.5" />
-                  {persona === 'individual' ? 'Personal scope' : 'Org network scope'}
-                </div>
-                <h3 className="text-lg font-semibold text-[#2D3330]">{signal.title}</h3>
-                <p className="text-sm text-[#6B6760]">{signal.summary}</p>
-                <p className="text-xs text-[#4A5943]">{signal.proof}</p>
-              </div>
-              <div className="flex w-32 flex-col items-end gap-3">
-                <Badge variant="outline" className="border-[#4A5943] text-[#4A5943]">
-                  Confidence {signal.confidence}/4
-                </Badge>
-                <Progress value={signal.confidence} max={4} indicatorClassName="bg-[#4A5943]" />
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function ProofDensity() {
-  const stats = [
-    {
-      label: 'Proof vault entries',
-      value: '328',
-      detail: '+28 this quarter · 93% linked to verified sources',
-      icon: Layers,
-    },
-    {
-      label: 'Peer attestations',
-      value: '57',
-      detail: '12 new cross-coop endorsements · 0 outstanding disputes',
-      icon: Users,
-    },
-    {
-      label: 'External signal',
-      value: 'Trust score 87',
-      detail: 'Updated weekly · Weighted by verified impact outcomes',
-      icon: Globe2,
-    },
-  ];
-
-  return (
-    <section className="space-y-4">
-      <h2 className="text-xl font-semibold text-[#2D3330]">Proof density snapshot</h2>
-      <Card className="space-y-4 border border-[#D8D2C8] bg-white/90 p-5 shadow-sm">
-        <div className="rounded-2xl bg-[#EEF1EA] p-4 text-sm text-[#4A5943]">
-          <div className="flex items-center gap-2">
-            <LineChart className="h-4 w-4" />
-            <span>Trajectory: trending upward for three consecutive quarters</span>
-          </div>
-          <p className="mt-2 text-xs text-[#2D3330]">
-            Confidence auto-adjusts based on Supabase verifications, archived artifacts, and manual
-            curator notes.
-          </p>
-        </div>
-        <div className="space-y-3">
-          {stats.map((stat) => (
-            <div
-              key={stat.label}
-              className="flex items-start gap-3 rounded-xl border border-[#D8D2C8] bg-white/90 p-3"
-            >
-              <stat.icon className="mt-1 h-5 w-5 text-[#4A5943]" />
-              <div className="space-y-1 text-sm text-[#2D3330]">
-                <p className="font-semibold">{stat.value}</p>
-                <p className="text-xs uppercase tracking-wide text-[#7A9278]">{stat.label}</p>
-                <p className="text-xs text-[#6B6760]">{stat.detail}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-        <Button className="w-full bg-[#4A5943] text-white hover:bg-[#3C4936]">
-          Send briefing to leadership
-          <ArrowRight className="ml-2 h-4 w-4" />
-        </Button>
-      </Card>
-    </section>
-  );
-}
-
-function GrowthTimeline() {
-  return (
-    <section className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold text-[#2D3330]">Growth & proof timeline</h2>
-          <p className="text-sm text-[#6B6760]">
-            Composite view across projects, mentorship, and community impact.
-          </p>
-        </div>
-        <Button variant="ghost" className="text-[#4A5943]">
-          View full log
-        </Button>
-      </div>
-      <div className="space-y-4">
-        {growthTimeline.map((moment) => (
-          <Card
-            key={moment.id}
-            className="flex flex-col gap-2 border border-[#D8D2C8] bg-white/90 p-4 text-sm text-[#2D3330] shadow-sm lg:flex-row lg:items-center lg:justify-between"
-          >
-            <div className="flex items-center gap-3">
-              <Sparkles className="h-4 w-4 text-[#4A5943]" />
-              <div>
-                <p className="text-xs uppercase tracking-wide text-[#7A9278]">{moment.period}</p>
-                <p className="font-semibold">{moment.focus}</p>
-              </div>
-            </div>
-            <div className="max-w-xl text-sm text-[#6B6760]">{moment.highlight}</div>
-            <div className="flex items-center gap-2 rounded-full bg-[#EEF1EA] px-3 py-1 text-xs text-[#4A5943]">
-              <Target className="h-3.5 w-3.5" />
-              {moment.sentiment}
-            </div>
-          </Card>
-        ))}
-      </div>
-    </section>
-  );
+/**
+ * Helper to get domain name from cat_id
+ */
+function getDomainName(catId: number): string {
+  const domainNames: Record<number, string> = {
+    1: 'Universal Capabilities',
+    2: 'Functional Competencies',
+    3: 'Tools & Technologies',
+    4: 'Languages & Culture',
+    5: 'Methods & Practices',
+    6: 'Domain Knowledge',
+  };
+  return domainNames[catId] || 'Unknown';
 }

@@ -12,8 +12,25 @@ import {
   date,
   check,
   unique,
+  customType,
+  foreignKey,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+
+// Custom types for PostgreSQL-specific data types
+const bit = customType<{ data: string; notNull?: boolean; default?: boolean }>({
+  dataType(config) {
+    const dimensions = (config as { dimensions?: number } | undefined)?.dimensions;
+    return dimensions ? `bit(${dimensions})` : 'bit';
+  },
+});
+
+const vector = customType<{ data: number[]; notNull?: boolean; default?: boolean }>({
+  dataType(config) {
+    const dimensions = (config as { dimensions?: number } | undefined)?.dimensions;
+    return dimensions ? `vector(${dimensions})` : 'vector';
+  },
+});
 
 // Profiles table - extends Supabase auth.users
 export const profiles = pgTable('profiles', {
@@ -25,6 +42,11 @@ export const profiles = pgTable('profiles', {
   persona: text('persona', {
     enum: ['individual', 'org_member', 'unknown'],
   }).default('unknown'),
+  // GDPR Account Deletion Support (Article 17: Right to Erasure)
+  deletionRequestedAt: timestamp('deletion_requested_at'),
+  deletionScheduledFor: timestamp('deletion_scheduled_for'),
+  deletionReason: text('deletion_reason'),
+  deleted: boolean('deleted').default(false),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -44,78 +66,28 @@ export const individualProfiles = pgTable('individual_profiles', {
   // New Proofound profile fields
   tagline: text('tagline'),
   mission: text('mission'),
+  vision: text('vision'),
   coverImageUrl: text('cover_image_url'),
   verified: boolean('verified').default(false),
   joinedDate: timestamp('joined_date').defaultNow(),
   values: jsonb('values'), // Array of {icon: string, label: string, verified: boolean}
   causes: text('causes').array(),
-});
-
-// Impact Stories - verified projects with real outcomes
-export const impactStories = pgTable('impact_stories', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id')
-    .references(() => profiles.id, { onDelete: 'cascade' })
-    .notNull(),
-  title: text('title').notNull(),
-  orgDescription: text('org_description').notNull(), // e.g., "Mid-size nonprofit, Climate sector, Bay Area"
-  impact: text('impact').notNull(), // What changed
-  businessValue: text('business_value').notNull(), // Broader impact
-  outcomes: text('outcomes').notNull(), // Measurable results
-  timeline: text('timeline').notNull(),
-  verified: boolean('verified').default(false),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
-
-// Experiences - work experience focused on growth and learning
-export const experiences = pgTable('experiences', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id')
-    .references(() => profiles.id, { onDelete: 'cascade' })
-    .notNull(),
-  title: text('title').notNull(), // "Leading systemic change" not "Director"
-  orgDescription: text('org_description').notNull(), // Size, industry, location
-  duration: text('duration').notNull(),
-  learning: text('learning').notNull(), // What they learned
-  growth: text('growth').notNull(), // How they grew
-  verified: boolean('verified').default(false),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
-
-// Education - focused on skills and meaningful projects
-export const education = pgTable('education', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id')
-    .references(() => profiles.id, { onDelete: 'cascade' })
-    .notNull(),
-  institution: text('institution').notNull(),
-  degree: text('degree').notNull(),
-  duration: text('duration').notNull(),
-  skills: text('skills').notNull(), // Skills gained
-  projects: text('projects').notNull(), // Meaningful projects
-  verified: boolean('verified').default(false),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
-
-// Volunteering - service work with personal connection
-export const volunteering = pgTable('volunteering', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id')
-    .references(() => profiles.id, { onDelete: 'cascade' })
-    .notNull(),
-  title: text('title').notNull(),
-  orgDescription: text('org_description').notNull(),
-  duration: text('duration').notNull(),
-  cause: text('cause').notNull(), // e.g., "Climate Justice - Amplifying youth voices"
-  impact: text('impact').notNull(), // What changed
-  skillsDeployed: text('skills_deployed').notNull(), // Skills used
-  personalWhy: text('personal_why').notNull(), // Personal connection to cause
-  verified: boolean('verified').default(false),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  // Identity verification fields
+  verificationMethod: text('verification_method', {
+    enum: ['veriff', 'work_email'],
+  }),
+  verificationStatus: text('verification_status', {
+    enum: ['unverified', 'pending', 'verified', 'failed'],
+  }).default('unverified'),
+  veriffSessionId: text('veriff_session_id'),
+  verifiedAt: timestamp('verified_at'),
+  workEmail: text('work_email'),
+  workEmailVerified: boolean('work_email_verified').default(false),
+  workEmailOrgId: uuid('work_email_org_id').references(() => organizations.id, {
+    onDelete: 'set null',
+  }),
+  workEmailToken: text('work_email_token'),
+  workEmailTokenExpires: timestamp('work_email_token_expires'),
 });
 
 // Organizations
@@ -128,8 +100,38 @@ export const organizations = pgTable('organizations', {
     enum: ['company', 'ngo', 'government', 'network', 'other'],
   }),
   logoUrl: text('logo_url'),
+  coverImageUrl: text('cover_image_url'),
+  tagline: text('tagline'),
   mission: text('mission'),
+  vision: text('vision'),
   website: text('website'),
+  // Business details
+  industry: text('industry'),
+  organizationSize: text('organization_size', {
+    enum: ['1-10', '11-50', '51-200', '201-500', '501-1000', '1001-5000', '5001+'],
+  }),
+  impactArea: text('impact_area'),
+  legalForm: text('legal_form', {
+    enum: [
+      'sole_proprietorship',
+      'partnership',
+      'llc',
+      'corporation',
+      'nonprofit',
+      'cooperative',
+      'benefit_corporation',
+      'other',
+    ],
+  }),
+  foundedDate: date('founded_date'),
+  registrationCountry: text('registration_country'),
+  registrationRegion: text('registration_region'),
+  organizationNumber: text('organization_number'),
+  locations: text('locations').array(),
+  // Culture and values
+  values: jsonb('values'), // Array of {icon: string, label: string, description: string}
+  causes: text('causes').array(),
+  workCulture: jsonb('work_culture'), // {collaboration, decision_making, learning, wellbeing, inclusion}
   createdBy: uuid('created_by').references(() => profiles.id),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -172,6 +174,148 @@ export const orgInvitations = pgTable('org_invitations', {
   expiresAt: timestamp('expires_at').notNull(),
   invitedBy: uuid('invited_by').references(() => profiles.id),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Organization ownership structure
+export const organizationOwnership = pgTable('organization_ownership', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  orgId: uuid('org_id')
+    .references(() => organizations.id, { onDelete: 'cascade' })
+    .notNull(),
+  entityType: text('entity_type', {
+    enum: ['individual', 'organization', 'collective', 'government'],
+  }).notNull(),
+  entityName: text('entity_name').notNull(),
+  ownershipPercentage: numeric('ownership_percentage', { precision: 5, scale: 2 }),
+  controlType: text('control_type', {
+    enum: ['voting_rights', 'board_seat', 'veto_power', 'management', 'other'],
+  }).notNull(),
+  description: text('description'),
+  isPublic: boolean('is_public').default(true),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Organization certifications and licenses
+export const organizationCertifications = pgTable('organization_certifications', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  orgId: uuid('org_id')
+    .references(() => organizations.id, { onDelete: 'cascade' })
+    .notNull(),
+  certificationType: text('certification_type', {
+    enum: ['license', 'certification', 'accreditation', 'award'],
+  }).notNull(),
+  name: text('name').notNull(),
+  issuer: text('issuer').notNull(),
+  issuedDate: date('issued_date'),
+  expiryDate: date('expiry_date'),
+  credentialId: text('credential_id'),
+  credentialUrl: text('credential_url'),
+  isVerified: boolean('is_verified').default(false),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Organization projects
+export const organizationProjects = pgTable('organization_projects', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  orgId: uuid('org_id')
+    .references(() => organizations.id, { onDelete: 'cascade' })
+    .notNull(),
+  title: text('title').notNull(),
+  description: text('description').notNull(),
+  impactCreated: text('impact_created').notNull(),
+  businessValue: text('business_value').notNull(),
+  outcomes: text('outcomes').notNull(),
+  startDate: date('start_date').notNull(),
+  endDate: date('end_date'),
+  status: text('status', {
+    enum: ['planning', 'active', 'completed', 'on_hold', 'cancelled'],
+  })
+    .default('active')
+    .notNull(),
+  isVerified: boolean('is_verified').default(false),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Organization partnerships
+export const organizationPartnerships = pgTable('organization_partnerships', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  orgId: uuid('org_id')
+    .references(() => organizations.id, { onDelete: 'cascade' })
+    .notNull(),
+  partnerName: text('partner_name').notNull(),
+  partnerType: text('partner_type', {
+    enum: ['company', 'ngo', 'government', 'academic', 'network', 'other'],
+  }),
+  partnershipScope: text('partnership_scope').notNull(),
+  impactCreated: text('impact_created').notNull(),
+  startDate: date('start_date').notNull(),
+  endDate: date('end_date'),
+  status: text('status', {
+    enum: ['active', 'completed', 'suspended'],
+  })
+    .default('active')
+    .notNull(),
+  isVerified: boolean('is_verified').default(false),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Organization structure
+export const organizationStructure = pgTable('organization_structure', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  orgId: uuid('org_id')
+    .references(() => organizations.id, { onDelete: 'cascade' })
+    .notNull(),
+  entityType: text('entity_type', {
+    enum: ['executive_team', 'department', 'team', 'working_group'],
+  }).notNull(),
+  name: text('name').notNull(),
+  description: text('description'),
+  teamSize: integer('team_size'),
+  focusArea: text('focus_area'),
+  parentId: uuid('parent_id'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Organization statute
+export const organizationStatute = pgTable('organization_statute', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  orgId: uuid('org_id')
+    .references(() => organizations.id, { onDelete: 'cascade' })
+    .notNull(),
+  sectionTitle: text('section_title').notNull(),
+  sectionContent: text('section_content').notNull(),
+  sectionOrder: integer('section_order').default(0).notNull(),
+  isPublic: boolean('is_public').default(true),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Organization goals
+export const organizationGoals = pgTable('organization_goals', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  orgId: uuid('org_id')
+    .references(() => organizations.id, { onDelete: 'cascade' })
+    .notNull(),
+  goalType: text('goal_type', {
+    enum: ['sustainability', 'diversity', 'innovation', 'growth', 'impact', 'other'],
+  }).notNull(),
+  title: text('title').notNull(),
+  description: text('description').notNull(),
+  targetDate: date('target_date'),
+  currentProgress: numeric('current_progress', { precision: 5, scale: 2 }),
+  metrics: text('metrics'),
+  status: text('status', {
+    enum: ['not_started', 'in_progress', 'achieved', 'abandoned'],
+  })
+    .default('in_progress')
+    .notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
 // Audit logs
@@ -231,6 +375,14 @@ export const matchingProfiles = pgTable('matching_profiles', {
   compMax: integer('comp_max'),
   currency: text('currency').default('USD'),
   weights: jsonb('weights'), // User's preferred weights
+  // Work authorization & sponsorship
+  needsSponsorship: boolean('needs_sponsorship').default(false),
+  wishesSponsorship: boolean('wishes_sponsorship').default(false),
+  workAuthorization: jsonb('work_authorization'), // {type: string, countries: string[], expires_at: string, restrictions: string}
+  relocationWilling: boolean('relocation_willing').default(false),
+  relocationCountries: text('relocation_countries').array(),
+  // Availability bitmap (7 days × 48 half-hour slots = 336 bits)
+  availabilityBitmap: bit('availability_bitmap', { dimensions: 336 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -243,9 +395,23 @@ export const skills = pgTable(
     profileId: uuid('profile_id')
       .references(() => profiles.id, { onDelete: 'cascade' })
       .notNull(),
-    skillId: text('skill_id').notNull(), // Key from taxonomy
+    skillId: text('skill_id').notNull(), // Key from taxonomy (legacy)
+    skillCode: text('skill_code').references(() => skillsTaxonomy.code, {
+      onDelete: 'set null',
+    }), // New L4 skill code (references skills_taxonomy)
     level: integer('level').notNull(), // 0-5
+    competencyLabel: text('competency_label', {
+      enum: ['C1', 'C2', 'C3', 'C4', 'C5'],
+    }), // Mapped from level
     monthsExperience: integer('months_experience').notNull().default(0),
+    // New computed fields for matching
+    evidenceStrength: numeric('evidence_strength').default('0'),
+    recencyMultiplier: numeric('recency_multiplier').default('1.0'),
+    impactScore: numeric('impact_score').default('0'),
+    lastUsedAt: timestamp('last_used_at'),
+    relevance: text('relevance', {
+      enum: ['obsolete', 'current', 'emerging'],
+    }), // Skill currency: obsolete/current/emerging
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
@@ -253,8 +419,64 @@ export const skills = pgTable(
     profileSkillUnique: unique().on(table.profileId, table.skillId),
     levelCheck: check('level_check', sql`${table.level} BETWEEN 0 AND 5`),
     monthsCheck: check('months_check', sql`${table.monthsExperience} >= 0`),
+    evidenceCheck: check('evidence_check', sql`${table.evidenceStrength} BETWEEN 0 AND 1`),
+    recencyCheck: check('recency_check', sql`${table.recencyMultiplier} > 0 AND ${table.recencyMultiplier} <= 1`),
+    impactCheck: check('impact_check', sql`${table.impactScore} BETWEEN 0 AND 1`),
   })
 );
+
+// Skill Proofs - evidence/proofs attached to skills
+export const skillProofs = pgTable('skill_proofs', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  skillId: uuid('skill_id')
+    .references(() => skills.id, { onDelete: 'cascade' })
+    .notNull(),
+  profileId: uuid('profile_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  proofType: text('proof_type', {
+    enum: ['project', 'certification', 'media', 'reference', 'link'],
+  })
+    .notNull()
+    .default('link'),
+  title: text('title').notNull(),
+  description: text('description'),
+  url: text('url'),
+  filePath: text('file_path'),
+  issuedDate: date('issued_date'),
+  verified: boolean('verified').default(false).notNull(),
+  metadata: jsonb('metadata').default(sql`'{}'::jsonb`),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Skill Verification Requests - peer/manager/external verification requests
+export const skillVerificationRequests = pgTable('skill_verification_requests', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  skillId: uuid('skill_id')
+    .references(() => skills.id, { onDelete: 'cascade' })
+    .notNull(),
+  requesterProfileId: uuid('requester_profile_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  verifierEmail: text('verifier_email').notNull(),
+  verifierProfileId: uuid('verifier_profile_id').references(() => profiles.id, {
+    onDelete: 'set null',
+  }),
+  verifierSource: text('verifier_source', {
+    enum: ['peer', 'manager', 'external'],
+  }).notNull(),
+  message: text('message'),
+  status: text('status', {
+    enum: ['pending', 'accepted', 'declined', 'expired'],
+  })
+    .notNull()
+    .default('pending'),
+  respondedAt: timestamp('responded_at'),
+  responseMessage: text('response_message'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  expiresAt: timestamp('expires_at').default(sql`NOW() + INTERVAL '30 days'`),
+});
 
 // Assignments - job/project postings from organizations
 export const assignments = pgTable('assignments', {
@@ -269,6 +491,14 @@ export const assignments = pgTable('assignments', {
   })
     .default('draft')
     .notNull(),
+  // Assignment creation workflow fields
+  creationStatus: text('creation_status', {
+    enum: ['draft', 'pipeline_in_progress', 'pending_review', 'ready_to_publish', 'published'],
+  })
+    .default('draft')
+    .notNull(),
+  businessValue: text('business_value'),
+  expectedImpact: text('expected_impact'),
   valuesRequired: text('values_required')
     .array()
     .default(sql`'{}'::text[]`),
@@ -293,6 +523,13 @@ export const assignments = pgTable('assignments', {
     .array()
     .default(sql`'{}'::text[]`),
   weights: jsonb('weights'), // Assignment-specific weights
+  // Sponsorship & relocation fields
+  canSponsorVisa: boolean('can_sponsor_visa').default(false),
+  sponsorshipCountries: text('sponsorship_countries').array(),
+  offersRelocationSupport: boolean('offers_relocation_support').default(false),
+  relocationPackage: jsonb('relocation_package'),
+  // Required availability bitmap
+  requiredAvailabilityBitmap: bit('required_availability_bitmap', { dimensions: 336 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -342,6 +579,476 @@ export const matchInterest = pgTable(
     ),
   })
 );
+
+// ============================================================================
+// SKILLS TAXONOMY SYSTEM
+// ============================================================================
+
+// Skills categories (L1) - top-level domains
+export const skillsCategories = pgTable('skills_categories', {
+  catId: integer('cat_id').primaryKey(),
+  slug: text('slug').unique().notNull(),
+  nameI18n: jsonb('name_i18n').notNull(), // {en: string, ...}
+  descriptionI18n: jsonb('description_i18n'),
+  icon: text('icon'),
+  displayOrder: integer('display_order').notNull(),
+  version: integer('version').default(1).notNull(),
+  status: text('status', {
+    enum: ['active', 'deprecated', 'merged'],
+  })
+    .default('active')
+    .notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Skills subcategories (L2)
+export const skillsSubcategories = pgTable(
+  'skills_subcategories',
+  {
+    subcatId: integer('subcat_id').notNull(),
+    catId: integer('cat_id')
+      .references(() => skillsCategories.catId)
+      .notNull(),
+    slug: text('slug').unique().notNull(),
+    nameI18n: jsonb('name_i18n').notNull(),
+    descriptionI18n: jsonb('description_i18n'),
+    displayOrder: integer('display_order').notNull(),
+    version: integer('version').default(1).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.catId, table.subcatId] }),
+  })
+);
+
+// Skills L3 categories
+export const skillsL3 = pgTable(
+  'skills_l3',
+  {
+    l3Id: integer('l3_id').notNull(),
+    subcatId: integer('subcat_id').notNull(),
+    catId: integer('cat_id').notNull(),
+    slug: text('slug').unique().notNull(),
+    nameI18n: jsonb('name_i18n').notNull(),
+    descriptionI18n: jsonb('description_i18n'),
+    displayOrder: integer('display_order').notNull(),
+    version: integer('version').default(1).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.catId, table.subcatId, table.l3Id] }),
+    fkSubcat: foreignKey({
+      columns: [table.catId, table.subcatId],
+      foreignColumns: [skillsSubcategories.catId, skillsSubcategories.subcatId],
+    }),
+  })
+);
+
+// Skills taxonomy (L4) - granular skills
+export const skillsTaxonomy = pgTable(
+  'skills_taxonomy',
+  {
+    code: text('code').primaryKey(), // "01.03.01.142"
+    catId: integer('cat_id').notNull(),
+    subcatId: integer('subcat_id').notNull(),
+    l3Id: integer('l3_id').notNull(),
+    skillId: integer('skill_id').notNull(),
+    slug: text('slug').unique().notNull(),
+    nameI18n: jsonb('name_i18n').notNull(),
+    aliasesI18n: jsonb('aliases_i18n').default(sql`'[]'::jsonb`),
+    descriptionI18n: jsonb('description_i18n'),
+    tags: text('tags').array(),
+    embedding: vector('embedding', { dimensions: 768 }),
+    status: text('status', {
+      enum: ['active', 'deprecated', 'merged'],
+    })
+      .default('active')
+      .notNull(),
+    mergedInto: text('merged_into'),
+    version: integer('version').default(1).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    fkL3: foreignKey({
+      columns: [table.catId, table.subcatId, table.l3Id],
+      foreignColumns: [skillsL3.catId, skillsL3.subcatId, skillsL3.l3Id],
+    }),
+  })
+);
+
+// Skill adjacency graph
+export const skillAdjacency = pgTable('skill_adjacency', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  fromCode: text('from_code').notNull(),
+  toCode: text('to_code').notNull(),
+  relationshipType: text('relationship_type', {
+    enum: ['sibling', 'parent_child', 'synonym', 'prerequisite', 'related'],
+  }).notNull(),
+  distance: integer('distance').notNull(),
+  strength: numeric('strength').default('1.0'),
+  source: text('source', {
+    enum: ['auto', 'curated', 'learned'],
+  })
+    .default('auto')
+    .notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// ============================================================================
+// PROJECTS & SKILL LINKAGE
+// ============================================================================
+
+// Projects - track ongoing/concluded work for recency calculation
+export const projects = pgTable('projects', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  title: text('title').notNull(),
+  description: text('description'),
+  projectType: text('project_type', {
+    enum: ['work', 'volunteer', 'education', 'side_project', 'hobby'],
+  }).notNull(),
+  status: text('status', {
+    enum: ['ongoing', 'concluded', 'paused', 'archived'],
+  })
+    .default('ongoing')
+    .notNull(),
+  startDate: date('start_date').notNull(),
+  endDate: date('end_date'),
+  organizationName: text('organization_name'),
+  organizationId: uuid('organization_id').references(() => organizations.id, {
+    onDelete: 'set null',
+  }),
+  roleTitle: text('role_title'),
+  outcomes: jsonb('outcomes')
+    .default(sql`'{}'::jsonb`)
+    .notNull(), // {metrics: [{name, value, unit}], qualitative: string, impact_score: 0-1}
+  impactSummary: text('impact_summary'),
+  verified: boolean('verified').default(false).notNull(),
+  verificationSource: text('verification_source'),
+  verifiedAt: timestamp('verified_at'),
+  verifiedBy: uuid('verified_by').references(() => profiles.id),
+  artifacts: jsonb('artifacts').default(sql`'[]'::jsonb`), // [{type, url/path, title/name}]
+  visibility: text('visibility', {
+    enum: ['public', 'network', 'private'],
+  })
+    .default('public')
+    .notNull(),
+  tags: text('tags').array(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Impact Stories - verified projects with real outcomes
+export const impactStories = pgTable('impact_stories', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  projectId: uuid('project_id').references(() => projects.id, { onDelete: 'set null' }),
+  title: text('title').notNull(),
+  orgDescription: text('org_description').notNull(), // e.g., "Mid-size nonprofit, Climate sector, Bay Area"
+  impact: text('impact').notNull(), // What changed
+  businessValue: text('business_value').notNull(), // Broader impact
+  outcomes: text('outcomes').notNull(), // Measurable results
+  timeline: text('timeline').notNull(),
+  verified: boolean('verified').default(false),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Experiences - work experience focused on growth and learning
+export const experiences = pgTable('experiences', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  projectId: uuid('project_id').references(() => projects.id, { onDelete: 'set null' }),
+  title: text('title').notNull(), // "Leading systemic change" not "Director"
+  orgDescription: text('org_description').notNull(), // Size, industry, location
+  duration: text('duration').notNull(),
+  learning: text('learning').notNull(), // What they learned
+  growth: text('growth').notNull(), // How they grew
+  verified: boolean('verified').default(false),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Education - focused on skills and meaningful projects
+export const education = pgTable('education', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  projectId: uuid('project_id').references(() => projects.id, { onDelete: 'set null' }),
+  institution: text('institution').notNull(),
+  degree: text('degree').notNull(),
+  duration: text('duration').notNull(),
+  skills: text('skills').notNull(), // Skills gained
+  projects: text('projects').notNull(), // Meaningful projects
+  verified: boolean('verified').default(false),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Volunteering - service work with personal connection
+export const volunteering = pgTable('volunteering', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  projectId: uuid('project_id').references(() => projects.id, { onDelete: 'set null' }),
+  title: text('title').notNull(),
+  orgDescription: text('org_description').notNull(),
+  duration: text('duration').notNull(),
+  cause: text('cause').notNull(), // e.g., "Climate Justice - Amplifying youth voices"
+  impact: text('impact').notNull(), // What changed
+  skillsDeployed: text('skills_deployed').notNull(), // Skills used
+  personalWhy: text('personal_why').notNull(), // Personal connection to cause
+  verified: boolean('verified').default(false),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Project-skills linkage
+export const projectSkills = pgTable(
+  'project_skills',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    projectId: uuid('project_id')
+      .references(() => projects.id, { onDelete: 'cascade' })
+      .notNull(),
+    skillCode: text('skill_code').notNull(), // References skills_taxonomy(code)
+    proficiencyLevel: integer('proficiency_level').notNull(),
+    usageFrequency: text('usage_frequency', {
+      enum: ['daily', 'weekly', 'monthly', 'occasionally'],
+    }),
+    hoursUsed: integer('hours_used'),
+    evidenceRefs: text('evidence_refs').array(),
+    achievements: text('achievements'),
+    outcomeContribution: numeric('outcome_contribution'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    projectSkillUnique: unique().on(table.projectId, table.skillCode),
+    proficiencyCheck: check(
+      'proficiency_check',
+      sql`${table.proficiencyLevel} BETWEEN 1 AND 5`
+    ),
+    contributionCheck: check(
+      'contribution_check',
+      sql`${table.outcomeContribution} BETWEEN 0 AND 1`
+    ),
+  })
+);
+
+// ============================================================================
+// BENEFITS & COMPENSATION
+// ============================================================================
+
+// Benefits taxonomy
+export const benefitsTaxonomy = pgTable('benefits_taxonomy', {
+  code: text('code').primaryKey(),
+  nameI18n: jsonb('name_i18n').notNull(),
+  category: text('category', {
+    enum: [
+      'insurance',
+      'equity',
+      'transport',
+      'wellness',
+      'learning',
+      'time_off',
+      'financial',
+      'family',
+    ],
+  }).notNull(),
+  descriptionI18n: jsonb('description_i18n'),
+  isStandard: boolean('is_standard').default(false).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Profile benefits preferences
+export const profileBenefitsPrefs = pgTable(
+  'profile_benefits_prefs',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    profileId: uuid('profile_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    benefitCode: text('benefit_code').notNull(), // References benefits_taxonomy(code)
+    importance: text('importance', {
+      enum: ['required', 'preferred', 'nice_to_have', 'not_important'],
+    })
+      .default('nice_to_have')
+      .notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    profileBenefitUnique: unique().on(table.profileId, table.benefitCode),
+  })
+);
+
+// Assignment benefits offered
+export const assignmentBenefitsOffered = pgTable(
+  'assignment_benefits_offered',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    assignmentId: uuid('assignment_id')
+      .references(() => assignments.id, { onDelete: 'cascade' })
+      .notNull(),
+    benefitCode: text('benefit_code').notNull(), // References benefits_taxonomy(code)
+    details: text('details'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    assignmentBenefitUnique: unique().on(table.assignmentId, table.benefitCode),
+  })
+);
+
+// Currency exchange rates
+export const currencyExchangeRates = pgTable('currency_exchange_rates', {
+  currency: text('currency').primaryKey(),
+  toUsd: numeric('to_usd').notNull(),
+  source: text('source'),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// ============================================================================
+// ASSIGNMENT WORKFLOW SYSTEM
+// ============================================================================
+
+// Assignment outcomes
+export const assignmentOutcomes = pgTable(
+  'assignment_outcomes',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    assignmentId: uuid('assignment_id')
+      .references(() => assignments.id, { onDelete: 'cascade' })
+      .notNull(),
+    outcomeType: text('outcome_type', {
+      enum: ['continuous', 'milestone'],
+    }).notNull(),
+    title: text('title').notNull(),
+    description: text('description'),
+    metrics: jsonb('metrics').default(sql`'[]'::jsonb`), // [{name, target, unit, current}]
+    successCriteria: text('success_criteria'),
+    dependsOn: uuid('depends_on'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    dependsOnFk: foreignKey({
+      columns: [table.dependsOn],
+      foreignColumns: [table.id],
+      name: 'assignment_outcomes_depends_on_fkey',
+    }).onDelete('set null'),
+  })
+);
+
+// Assignment expertise matrix
+export const assignmentExpertiseMatrix = pgTable('assignment_expertise_matrix', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  assignmentId: uuid('assignment_id')
+    .references(() => assignments.id, { onDelete: 'cascade' })
+    .notNull(),
+  skillCode: text('skill_code').notNull(), // References skills_taxonomy(code)
+  requiredLevel: integer('required_level').notNull(),
+  stakeholderRole: text('stakeholder_role').notNull(),
+  linkedOutcomeId: uuid('linked_outcome_id').references(() => assignmentOutcomes.id, {
+    onDelete: 'set null',
+  }),
+  outcomeRationale: text('outcome_rationale'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Assignment creation pipeline
+export const assignmentCreationPipeline = pgTable(
+  'assignment_creation_pipeline',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    assignmentId: uuid('assignment_id')
+      .references(() => assignments.id, { onDelete: 'cascade' })
+      .notNull(),
+    stepOrder: integer('step_order').notNull(),
+    stepName: text('step_name').notNull(),
+    stakeholderRole: text('stakeholder_role').notNull(),
+    status: text('status', {
+      enum: ['pending', 'in_progress', 'completed', 'skipped', 'rejected'],
+    })
+      .default('pending')
+      .notNull(),
+    stepData: jsonb('step_data').default(sql`'{}'::jsonb`),
+    completedAt: timestamp('completed_at'),
+    completedBy: uuid('completed_by').references(() => profiles.id),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    assignmentStepUnique: unique().on(table.assignmentId, table.stepOrder),
+    stepOrderCheck: check('step_order_check', sql`${table.stepOrder} > 0`),
+  })
+);
+
+// Assignment field visibility
+export const assignmentFieldVisibility = pgTable(
+  'assignment_field_visibility',
+  {
+    assignmentId: uuid('assignment_id')
+      .references(() => assignments.id, { onDelete: 'cascade' })
+      .notNull(),
+    fieldName: text('field_name').notNull(),
+    visibilityLevel: text('visibility_level', {
+      enum: [
+        'public',
+        'post_match',
+        'post_conversation_start',
+        'hidden_used_for_matching',
+        'internal_only',
+      ],
+    }).notNull(),
+    revealStage: integer('reveal_stage'),
+    redactionType: text('redaction_type', {
+      enum: ['hide', 'mask', 'generic_label'],
+    }),
+    genericLabel: text('generic_label'),
+    conditionalRules: jsonb('conditional_rules'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.assignmentId, table.fieldName] }),
+    revealStageCheck: check('reveal_stage_check', sql`${table.revealStage} IN (1, 2)`),
+  })
+);
+
+// Assignment field visibility defaults
+export const assignmentFieldVisibilityDefaults = pgTable('assignment_field_visibility_defaults', {
+  fieldName: text('field_name').primaryKey(),
+  fieldCategory: text('field_category').notNull(),
+  defaultVisibility: text('default_visibility', {
+    enum: [
+      'public',
+      'post_match',
+      'post_conversation_start',
+      'hidden_used_for_matching',
+      'internal_only',
+    ],
+  }).notNull(),
+  defaultRedactionType: text('default_redaction_type', {
+    enum: ['hide', 'mask', 'generic_label'],
+  }),
+  defaultGenericLabel: text('default_generic_label'),
+  description: text('description'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
 
 // ============================================================================
 // EXPERTISE SYSTEM TABLES
@@ -696,6 +1403,7 @@ export const userViolations = pgTable('user_violations', {
 // ============================================================================
 
 // Analytics events - track key user actions for metrics
+// GDPR-compliant: stores hashed IPs instead of raw PII (Article 4(1))
 export const analyticsEvents = pgTable('analytics_events', {
   id: uuid('id').defaultRandom().primaryKey(),
   eventType: text('event_type').notNull(), // signed_up, match_accepted, etc.
@@ -705,8 +1413,8 @@ export const analyticsEvents = pgTable('analytics_events', {
   entityId: uuid('entity_id'),
   properties: jsonb('properties').default(sql`'{}'::jsonb`), // Additional event data
   sessionId: text('session_id'),
-  ipAddress: text('ip_address'),
-  userAgent: text('user_agent'),
+  ipHash: text('ip_hash'), // SHA-256 hash of IP (not raw IP - GDPR compliant)
+  userAgentHash: text('user_agent_hash'), // SHA-256 hash of User Agent
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
@@ -765,6 +1473,117 @@ export const activeTies = pgTable('active_ties', {
   lastInteractionAt: timestamp('last_interaction_at').defaultNow().notNull(),
   isLegacy: boolean('is_legacy').default(false).notNull(), // True if >60 days old
   createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// ============================================================================
+// GDPR COMPLIANCE TABLES
+// ============================================================================
+
+// User consents - track GDPR consent for audit trail
+// Reference: CROSS_DOCUMENT_PRIVACY_AUDIT.md Section 5.3
+export const userConsents = pgTable('user_consents', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  profileId: uuid('profile_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  consentType: text('consent_type', {
+    enum: [
+      'gdpr_terms_of_service',
+      'gdpr_privacy_policy',
+      'marketing_emails',
+      'analytics_tracking',
+      'ml_matching',
+    ],
+  }).notNull(),
+  consented: boolean('consented').notNull(),
+  consentedAt: timestamp('consented_at').defaultNow().notNull(),
+  ipHash: text('ip_hash'), // Hashed IP for audit trail
+  userAgentHash: text('user_agent_hash'), // Hashed user agent
+  version: text('version'), // Policy version (e.g., "v1.0.2025-01-30")
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// ====================================
+// Zen Hub - Well-being Tracking (Privacy-First)
+// ====================================
+
+// Well-being check-ins - Private, never used in ranking
+export const wellbeingCheckins = pgTable('wellbeing_checkins', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  stressLevel: integer('stress_level').notNull(), // 1-5 Likert scale
+  controlLevel: integer('control_level').notNull(), // 1-5 Likert scale
+  milestoneTriggerId: text('milestone_trigger_id'), // 'rejection', 'interview', 'offer', null
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Well-being reflections - Linked to milestones
+export const wellbeingReflections = pgTable('wellbeing_reflections', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  reflectionText: text('reflection_text').notNull(),
+  milestoneType: text('milestone_type'), // 'rejection', 'interview', 'offer'
+  linkedCheckinId: uuid('linked_checkin_id').references(() => wellbeingCheckins.id, {
+    onDelete: 'set null',
+  }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Well-being opt-ins - User consent for Zen Hub features
+export const wellbeingOptIns = pgTable('wellbeing_opt_ins', {
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .primaryKey(),
+  optedIn: boolean('opted_in').default(false).notNull(),
+  privacyBannerAcknowledged: boolean('privacy_banner_acknowledged').default(false),
+  optedInAt: timestamp('opted_in_at'),
+  optedOutAt: timestamp('opted_out_at'),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// ====================================
+// Video Conferencing Integration
+// ====================================
+
+// User integrations for OAuth-connected services
+export const userIntegrations = pgTable('user_integrations', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  provider: text('provider', { enum: ['zoom', 'google'] }).notNull(),
+  accessToken: text('access_token').notNull(),
+  refreshToken: text('refresh_token'),
+  tokenExpiry: timestamp('token_expiry').notNull(),
+  scope: text('scope').array(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  userProviderUnique: unique().on(table.userId, table.provider),
+}));
+
+// Scheduled interviews with video links
+export const interviews = pgTable('interviews', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  matchId: uuid('match_id')
+    .references(() => matches.id, { onDelete: 'cascade' })
+    .notNull(),
+  scheduledAt: timestamp('scheduled_at').notNull(),
+  duration: integer('duration').default(30).notNull(), // minutes
+  platform: text('platform', { enum: ['zoom', 'google'] }).notNull(),
+  meetingId: text('meeting_id').notNull(), // External meeting/event ID
+  meetingUrl: text('meeting_url').notNull(),
+  timezone: text('timezone').default('UTC'),
+  status: text('status', {
+    enum: ['scheduled', 'completed', 'cancelled', 'no_show'],
+  }).default('scheduled').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
 // Type exports
@@ -843,3 +1662,62 @@ export type MatchSuggestion = typeof matchSuggestions.$inferSelect;
 export type InsertMatchSuggestion = typeof matchSuggestions.$inferInsert;
 export type ActiveTie = typeof activeTies.$inferSelect;
 export type InsertActiveTie = typeof activeTies.$inferInsert;
+
+// GDPR compliance types
+export type UserConsent = typeof userConsents.$inferSelect;
+export type InsertUserConsent = typeof userConsents.$inferInsert;
+
+// Skills taxonomy system types
+export type SkillsCategory = typeof skillsCategories.$inferSelect;
+export type InsertSkillsCategory = typeof skillsCategories.$inferInsert;
+export type SkillsSubcategory = typeof skillsSubcategories.$inferSelect;
+export type InsertSkillsSubcategory = typeof skillsSubcategories.$inferInsert;
+export type SkillsL3 = typeof skillsL3.$inferSelect;
+export type InsertSkillsL3 = typeof skillsL3.$inferInsert;
+export type SkillsTaxonomy = typeof skillsTaxonomy.$inferSelect;
+export type InsertSkillsTaxonomy = typeof skillsTaxonomy.$inferInsert;
+export type SkillAdjacency = typeof skillAdjacency.$inferSelect;
+export type InsertSkillAdjacency = typeof skillAdjacency.$inferInsert;
+
+// Projects & skill linkage types
+export type Project = typeof projects.$inferSelect;
+export type InsertProject = typeof projects.$inferInsert;
+export type ProjectSkill = typeof projectSkills.$inferSelect;
+export type InsertProjectSkill = typeof projectSkills.$inferInsert;
+
+// Benefits & compensation types
+export type BenefitsTaxonomy = typeof benefitsTaxonomy.$inferSelect;
+export type InsertBenefitsTaxonomy = typeof benefitsTaxonomy.$inferInsert;
+export type ProfileBenefitsPrefs = typeof profileBenefitsPrefs.$inferSelect;
+export type InsertProfileBenefitsPrefs = typeof profileBenefitsPrefs.$inferInsert;
+export type AssignmentBenefitsOffered = typeof assignmentBenefitsOffered.$inferSelect;
+export type InsertAssignmentBenefitsOffered = typeof assignmentBenefitsOffered.$inferInsert;
+export type CurrencyExchangeRates = typeof currencyExchangeRates.$inferSelect;
+export type InsertCurrencyExchangeRates = typeof currencyExchangeRates.$inferInsert;
+
+// Assignment workflow types
+export type AssignmentOutcome = typeof assignmentOutcomes.$inferSelect;
+export type InsertAssignmentOutcome = typeof assignmentOutcomes.$inferInsert;
+export type AssignmentExpertiseMatrix = typeof assignmentExpertiseMatrix.$inferSelect;
+export type InsertAssignmentExpertiseMatrix = typeof assignmentExpertiseMatrix.$inferInsert;
+export type AssignmentCreationPipeline = typeof assignmentCreationPipeline.$inferSelect;
+export type InsertAssignmentCreationPipeline = typeof assignmentCreationPipeline.$inferInsert;
+export type AssignmentFieldVisibility = typeof assignmentFieldVisibility.$inferSelect;
+export type InsertAssignmentFieldVisibility = typeof assignmentFieldVisibility.$inferInsert;
+
+// Zen Hub well-being types
+export type WellbeingCheckin = typeof wellbeingCheckins.$inferSelect;
+export type InsertWellbeingCheckin = typeof wellbeingCheckins.$inferInsert;
+export type WellbeingReflection = typeof wellbeingReflections.$inferSelect;
+export type InsertWellbeingReflection = typeof wellbeingReflections.$inferInsert;
+export type WellbeingOptIn = typeof wellbeingOptIns.$inferSelect;
+export type InsertWellbeingOptIn = typeof wellbeingOptIns.$inferInsert;
+
+// Video integration types
+export type UserIntegration = typeof userIntegrations.$inferSelect;
+export type InsertUserIntegration = typeof userIntegrations.$inferInsert;
+export type Interview = typeof interviews.$inferSelect;
+export type InsertInterview = typeof interviews.$inferInsert;
+
+export type AssignmentFieldVisibilityDefaults = typeof assignmentFieldVisibilityDefaults.$inferSelect;
+export type InsertAssignmentFieldVisibilityDefaults = typeof assignmentFieldVisibilityDefaults.$inferInsert;
