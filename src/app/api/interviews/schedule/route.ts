@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Check user is either candidate or from the org
-    if (match.candidateId !== user.id) {
+    if (match.profileId !== user.id) {
       // TODO: Also check if user is org member for this assignment
       return NextResponse.json({
         error: 'Unauthorized - not a match participant'
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Enforce PRD constraints (30-min max, 7-day window)
-    const matchAgreementDate = match.agreedAt || match.createdAt;
+    const matchAgreementDate = match.createdAt; // Use createdAt as proxy for agreement date
     const proposedStart = new Date(startTime);
 
     const validation = validateInterviewSchedule(

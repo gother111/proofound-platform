@@ -78,7 +78,7 @@ export const individualProfiles = pgTable('individual_profiles', {
   causes: text('causes').array(),
   // Identity verification fields
   verificationMethod: text('verification_method', {
-    enum: ['veriff', 'work_email'],
+    enum: ['veriff', 'work_email', 'linkedin'],
   }),
   verificationStatus: text('verification_status', {
     enum: ['unverified', 'pending', 'verified', 'failed'],
@@ -92,6 +92,16 @@ export const individualProfiles = pgTable('individual_profiles', {
   }),
   workEmailToken: text('work_email_token'),
   workEmailTokenExpires: timestamp('work_email_token_expires'),
+  // LinkedIn verification fields
+  linkedinProfileUrl: text('linkedin_profile_url'),
+  linkedinVerificationData: jsonb('linkedin_verification_data'),
+  // Stores: {
+  //   hasVerificationBadge: boolean,
+  //   automatedCheck: { confidence: number, signals: {...}, checkedAt: timestamp },
+  //   thirdPartyData: {...} (optional),
+  //   adminReviewed: boolean,
+  //   adminNotes: string
+  // }
 });
 
 // Organizations

@@ -228,7 +228,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      assignmentTitle: assignment.title,
+      assignmentTitle: assignment.role,
       currentMatchScore: currentScore,
       potentialMatchScore: potentialScore,
       potentialImprovement: totalPotentialImprovement,

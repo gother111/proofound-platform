@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { userIntegrations, skillsTaxonomy } from '@/db/schema';
-import { eq, and, ilike, or, sql } from 'drizzle-orm';
+import { eq, and, or, sql } from 'drizzle-orm';
 
 interface LinkedInSkill {
   name: string;
@@ -120,6 +120,7 @@ async function matchSkillToTaxonomy(linkedInSkillName: string): Promise<SkillSug
   }
 
   // Try partial match (LIKE)
+  const searchPattern = `%${searchTerm}%`;
   const partialMatches = await db
     .select()
     .from(skillsTaxonomy)
@@ -127,8 +128,8 @@ async function matchSkillToTaxonomy(linkedInSkillName: string): Promise<SkillSug
       and(
         eq(skillsTaxonomy.status, 'active'),
         or(
-          ilike(sql`${skillsTaxonomy.nameI18n}->>'en'`, `%${searchTerm}%`),
-          ilike(sql`${skillsTaxonomy.aliasesI18n}::text`, `%${searchTerm}%`)
+          sql`${skillsTaxonomy.nameI18n}->>'en' ILIKE ${searchPattern}`,
+          sql`${skillsTaxonomy.aliasesI18n}::text ILIKE ${searchPattern}`
         )
       )
     )
