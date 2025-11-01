@@ -1,6 +1,9 @@
 import { requireAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ExpertiseAtlasClient } from './ExpertiseAtlasClient';
+import { db } from '@/db';
+import { userIntegrations } from '@/db/schema';
+import { eq, and } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
@@ -160,12 +163,29 @@ export default async function ExpertiseAtlasPage() {
     // Calculate widget data (only if user has skills)
     const widgetData = hasSkills ? calculateWidgetData(enrichedSkills) : null;
 
+    // Check LinkedIn connection status
+    const linkedInIntegration = await db
+      .select()
+      .from(userIntegrations)
+      .where(
+        and(
+          eq(userIntegrations.userId, user.id),
+          eq(userIntegrations.provider, 'linkedin')
+        )
+      )
+      .limit(1);
+    
+    const isLinkedInConnected = linkedInIntegration.length > 0 && 
+      linkedInIntegration[0].accessToken !== null &&
+      (!linkedInIntegration[0].tokenExpiry || new Date() < linkedInIntegration[0].tokenExpiry);
+
     return (
       <ExpertiseAtlasClient
         initialSkills={enrichedSkills}
         domains={domainsWithStats}
         hasSkills={hasSkills}
         widgetData={widgetData}
+        linkedInConnected={isLinkedInConnected}
       />
     );
   } catch (error) {
@@ -177,6 +197,7 @@ export default async function ExpertiseAtlasPage() {
         domains={[]}
         hasSkills={false}
         widgetData={null}
+        linkedInConnected={false}
       />
     );
   }

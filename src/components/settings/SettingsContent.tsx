@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PrivacyOverview } from './PrivacyOverview';
 import { VerificationStatus } from './VerificationStatus';
+import { LinkedInConnect } from './LinkedInConnect';
 
 interface SettingsContentProps {
   userId: string;
@@ -27,6 +28,7 @@ export function SettingsContent({ userId }: SettingsContentProps) {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="bg-white dark:bg-slate-800 border border-proofound-stone dark:border-border">
           <TabsTrigger value="account">Account</TabsTrigger>
+          <TabsTrigger value="integrations">Integrations</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="privacy">Privacy & Data</TabsTrigger>
         </TabsList>
@@ -104,6 +106,39 @@ export function SettingsContent({ userId }: SettingsContentProps) {
                 <option value="en">English</option>
                 <option value="sv">Svenska (Swedish)</option>
               </select>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Integrations Tab */}
+        <TabsContent value="integrations" className="space-y-6">
+          <Card className="border-proofound-stone dark:border-border rounded-2xl">
+            <CardHeader>
+              <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
+                Connected Accounts
+              </CardTitle>
+              <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
+                Connect external accounts to import data and enhance your profile
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <LinkedInConnect />
+            </CardContent>
+          </Card>
+
+          <Card className="border-proofound-stone dark:border-border rounded-2xl">
+            <CardHeader>
+              <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
+                Video Conferencing
+              </CardTitle>
+              <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
+                Connect your calendar for automated interview scheduling
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-proofound-charcoal/70 dark:text-muted-foreground">
+                Google Meet and Zoom integrations are automatically available for scheduling interviews.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>

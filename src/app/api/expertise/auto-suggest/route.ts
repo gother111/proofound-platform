@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
-import { expertiseTaxonomy } from '@/db/schema';
+import { skillsTaxonomy } from '@/db/schema';
 import { ilike, or, sql } from 'drizzle-orm';
 
 /**
@@ -119,12 +119,12 @@ async function findMatchingSkills(searchTerms: string[]) {
 
   // Build OR conditions for ILIKE search
   const conditions = searchTerms.flatMap(term => [
-    ilike(expertiseTaxonomy.preferredLabel, `%${term}%`),
-    ilike(expertiseTaxonomy.altLabels, `%${term}%`),
-    ilike(expertiseTaxonomy.description, `%${term}%`),
+    ilike(skillsTaxonomy.preferredLabel, `%${term}%`),
+    ilike(skillsTaxonomy.altLabels, `%${term}%`),
+    ilike(skillsTaxonomy.description, `%${term}%`),
   ]);
 
-  const matches = await db.query.expertiseTaxonomy.findMany({
+  const matches = await db.query.skillsTaxonomy.findMany({
     where: or(...conditions),
     limit: 200, // Limit to prevent huge result sets
   });

@@ -16,21 +16,24 @@ import { RecencyScatter } from './widgets/RecencyScatter';
 import { SkillWheel } from './widgets/SkillWheel';
 import { VerificationSourcesPie } from './widgets/VerificationSourcesPie';
 import { NextBestActions } from './widgets/NextBestActions';
+import { LinkedInImportModal } from '@/components/expertise/LinkedInImportModal';
 import { Button } from '@/components/ui/button';
-import { Plus, BookOpen } from 'lucide-react';
+import { Plus, BookOpen, Linkedin } from 'lucide-react';
 
 interface ExpertiseAtlasClientProps {
   initialSkills: any[];
   domains: any[];
   hasSkills: boolean;
   widgetData: any | null;
+  linkedInConnected: boolean;
 }
 
 export function ExpertiseAtlasClient({ 
   initialSkills, 
   domains, 
   hasSkills,
-  widgetData
+  widgetData,
+  linkedInConnected
 }: ExpertiseAtlasClientProps) {
   const [selectedL1, setSelectedL1] = useState<number | null>(null);
   const [selectedL2, setSelectedL2] = useState<any | null>(null);
@@ -38,6 +41,7 @@ export function ExpertiseAtlasClient({
   const [isL2ModalOpen, setIsL2ModalOpen] = useState(false);
   const [isAddSkillDrawerOpen, setIsAddSkillDrawerOpen] = useState(false);
   const [isEditSkillWindowOpen, setIsEditSkillWindowOpen] = useState(false);
+  const [isLinkedInImportModalOpen, setIsLinkedInImportModalOpen] = useState(false);
   const [skillToEdit, setSkillToEdit] = useState<any | null>(null);
   
   // Dashboard state
