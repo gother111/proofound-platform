@@ -43,34 +43,27 @@ export function RealtimeMessageThread({
   const { isConnected, startTyping, stopTyping, markAsRead, markAllAsRead } = useRealtimeMessages({
     conversationId,
     userId: currentUserId,
-    onNewMessage: useCallback(
-      (message: RealtimeMessage) => {
-        // Convert to ThreadMessage format
-        const threadMessage: ThreadMessage = {
-          id: message.id,
-          senderId: message.sender_id,
-          content: message.content,
-          sentAt: new Date(message.sent_at),
-          readAt: message.read_at ? new Date(message.read_at) : undefined,
-        };
+    onNewMessage: useCallback((message: RealtimeMessage) => {
+      // Convert to ThreadMessage format
+      const threadMessage: ThreadMessage = {
+        id: message.id,
+        senderId: message.sender_id,
+        content: message.content,
+        sentAt: new Date(message.sent_at),
+        readAt: message.read_at ? new Date(message.read_at) : undefined,
+      };
 
-        setMessages((prev) => {
-          // Check if message already exists (avoid duplicates)
-          if (prev.some((m) => m.id === threadMessage.id)) {
-            return prev;
-          }
-          return [...prev, threadMessage];
-        });
-
-        // Auto-mark as read if conversation is visible
-        if (document.visibilityState === 'visible') {
-          setTimeout(() => {
-            markAsRead(message.id);
-          }, 1000);
+      setMessages((prev) => {
+        // Check if message already exists (avoid duplicates)
+        if (prev.some((m) => m.id === threadMessage.id)) {
+          return prev;
         }
-      },
-      [markAsRead]
-    ),
+        return [...prev, threadMessage];
+      });
+
+      // Note: markAsRead will be called after this callback is set up
+      // We'll handle auto-marking as read in a separate effect
+    }, []),
     onMessageRead: useCallback((messageId: string) => {
       setMessages((prev) =>
         prev.map((m) => (m.id === messageId ? { ...m, readAt: new Date() } : m))
@@ -90,6 +83,19 @@ export function RealtimeMessageThread({
   useEffect(() => {
     setMessages(initialMessages);
   }, [initialMessages]);
+
+  // Auto-mark new messages as read when visible
+  useEffect(() => {
+    if (document.visibilityState === 'visible' && messages.length > 0) {
+      const unreadMessages = messages.filter((m) => !m.readAt && m.senderId !== currentUserId);
+      if (unreadMessages.length > 0) {
+        const latestUnread = unreadMessages[unreadMessages.length - 1];
+        setTimeout(() => {
+          markAsRead(latestUnread.id);
+        }, 1000);
+      }
+    }
+  }, [messages, currentUserId, markAsRead]);
 
   // Mark all messages as read when component mounts and is visible
   useEffect(() => {
