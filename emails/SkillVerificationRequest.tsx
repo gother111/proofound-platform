@@ -45,7 +45,7 @@ export default function SkillVerificationRequest({
             </Text>
 
             <Section style={skillBox}>
-              <Text style={skillName}>{skillName}</Text>
+              <Text style={skillNameStyle}>{skillName}</Text>
             </Section>
 
             {message && (
@@ -214,7 +214,7 @@ const skillBox = {
   textAlign: 'center' as const,
 };
 
-const skillName = {
+const skillNameStyle = {
   fontSize: '20px',
   fontWeight: '600',
   color: '#1c4d3a',
