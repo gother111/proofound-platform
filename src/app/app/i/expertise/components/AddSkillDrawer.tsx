@@ -90,12 +90,7 @@ interface AddSkillDrawerProps {
   onSkillAdded: () => void;
 }
 
-export function AddSkillDrawer({
-  open,
-  onOpenChange,
-  domains,
-  onSkillAdded,
-}: AddSkillDrawerProps) {
+export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: AddSkillDrawerProps) {
   // Mode: 'search' (default) or 'browse' (L1→L2→L3→L4)
   const [mode, setMode] = useState<'search' | 'browse'>('search');
   const [step, setStep] = useState(1);
@@ -103,15 +98,19 @@ export function AddSkillDrawer({
   const [selectedL2, setSelectedL2] = useState<L2Category | null>(null);
   const [selectedL3, setSelectedL3] = useState<L3Subcategory | null>(null);
   const [selectedL4, setSelectedL4] = useState<L4Skill | null>(null);
-  
+
+  // L1 domains with fallback loading
+  const [loadedDomains, setLoadedDomains] = useState<L1Domain[]>(domains);
+  const [domainsLoading, setDomainsLoading] = useState(false);
+
   // Step 2 data
   const [l2Categories, setL2Categories] = useState<L2Category[]>([]);
   const [l2Loading, setL2Loading] = useState(false);
-  
+
   // Step 3 data
   const [l3Subcategories, setL3Subcategories] = useState<L3Subcategory[]>([]);
   const [l3Loading, setL3Loading] = useState(false);
-  
+
   // Step 4: L4 skill details
   const [l4Name, setL4Name] = useState('');
   const [level, setLevel] = useState(2);
@@ -120,13 +119,13 @@ export function AddSkillDrawer({
   const [proofUrl, setProofUrl] = useState('');
   const [proofNotes, setProofNotes] = useState('');
   const [saving, setSaving] = useState(false);
-  
+
   // L4 Skills autocomplete (for both modes)
   const [l4Skills, setL4Skills] = useState<L4Skill[]>([]);
   const [l4Search, setL4Search] = useState('');
   const [l4Loading, setL4Loading] = useState(false);
   const [showL4Dropdown, setShowL4Dropdown] = useState(false);
-  
+
   // Search mode: global skill search
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<L4Skill[]>([]);
@@ -136,18 +135,18 @@ export function AddSkillDrawer({
   // Debounced global search
   const handleSearchChange = useCallback((value: string) => {
     setSearchQuery(value);
-    
+
     // Clear existing timeout
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
-    
+
     // Don't search if query is too short
     if (value.trim().length < 2) {
       setSearchResults([]);
       return;
     }
-    
+
     // Debounce search (300ms)
     searchTimeoutRef.current = setTimeout(async () => {
       setSearchLoading(true);
@@ -164,7 +163,7 @@ export function AddSkillDrawer({
       }
     }, 300);
   }, []);
-  
+
   // Reset drawer state when closed
   useEffect(() => {
     if (!open) {
@@ -192,9 +191,39 @@ export function AddSkillDrawer({
     }
   }, [open]);
 
+  // Fetch L1 domains if not provided or empty
+  useEffect(() => {
+    if (open && mode === 'browse' && (!loadedDomains || loadedDomains.length === 0)) {
+      const fetchDomains = async () => {
+        setDomainsLoading(true);
+        try {
+          const response = await fetch('/api/expertise/taxonomy');
+          if (response.ok) {
+            const data = await response.json();
+            if (data.l1_domains) {
+              setLoadedDomains(data.l1_domains);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching L1 domains:', error);
+        } finally {
+          setDomainsLoading(false);
+        }
+      };
+      fetchDomains();
+    }
+  }, [open, mode, loadedDomains]);
+
+  // Update loadedDomains when domains prop changes
+  useEffect(() => {
+    if (domains && domains.length > 0) {
+      setLoadedDomains(domains);
+    }
+  }, [domains]);
+
   const fetchL2Categories = useCallback(async () => {
     if (!selectedL1) return;
-    
+
     setL2Loading(true);
     try {
       // Map cat_id to L1 code (U/F/T/L/M/D)
@@ -207,7 +236,7 @@ export function AddSkillDrawer({
         6: 'D', // Domain
       };
       const l1Code = l1CodeMap[selectedL1.catId];
-      
+
       const response = await fetch(`/api/expertise/taxonomy?l1=${l1Code}`);
       if (response.ok) {
         const data = await response.json();
@@ -222,7 +251,7 @@ export function AddSkillDrawer({
 
   const fetchL3Subcategories = useCallback(async () => {
     if (!selectedL2) return;
-    
+
     setL3Loading(true);
     try {
       // Use L2 slug as the API parameter
@@ -240,7 +269,7 @@ export function AddSkillDrawer({
 
   const fetchL4Skills = useCallback(async () => {
     if (!selectedL3) return;
-    
+
     setL4Loading(true);
     try {
       // Fetch L4 skills for the selected L3
@@ -293,15 +322,15 @@ export function AddSkillDrawer({
     setSelectedL3(subcategory);
     setStep(4);
   };
-  
+
   // Handle selecting a skill from search results
   const handleSearchResultSelect = (skill: L4Skill) => {
     setSelectedL4(skill);
     setL4Search(skill.nameI18n?.en || '');
-    
+
     // Auto-populate L1/L2/L3 from the skill's parent context
     if (skill.l1) {
-      const l1Domain = domains.find(d => d.catId === skill.l1?.catId);
+      const l1Domain = domains.find((d) => d.catId === skill.l1?.catId);
       if (l1Domain) {
         setSelectedL1(l1Domain);
       }
@@ -323,7 +352,7 @@ export function AddSkillDrawer({
         nameI18n: skill.l3.nameI18n,
       });
     }
-    
+
     // Go directly to details step (step 4)
     setMode('browse'); // Switch to browse mode for step navigation
     setStep(4);
@@ -364,9 +393,9 @@ export function AddSkillDrawer({
       if (response.ok) {
         // TODO: If proof URL is provided, attach it as a separate step
         // For now, we'll handle proofs in the Edit Skill window
-        
+
         onSkillAdded();
-        
+
         if (saveAndAddAnother) {
           // Reset to step 1 but keep drawer open
           setStep(1);
@@ -414,7 +443,7 @@ export function AddSkillDrawer({
             Add Skill to Atlas
           </SheetTitle>
           <SheetDescription className="text-[#6B6760]">
-            {mode === 'search' 
+            {mode === 'search'
               ? 'Search for a skill by name or browse the taxonomy'
               : 'Follow the 4 steps to add a new skill to your expertise atlas'}
           </SheetDescription>
@@ -470,25 +499,25 @@ export function AddSkillDrawer({
 
             {/* Search Results */}
             {searchLoading && (
-              <div className="text-center py-8 text-[#6B6760]">
-                Searching skills...
-              </div>
+              <div className="text-center py-8 text-[#6B6760]">Searching skills...</div>
             )}
-            
+
             {!searchLoading && searchQuery.length >= 2 && searchResults.length === 0 && (
               <div className="text-center py-8 text-[#6B6760]">
                 <p className="mb-2">No skills found matching &ldquo;{searchQuery}&rdquo;</p>
                 <p className="text-sm">Try a different search term or browse categories above</p>
               </div>
             )}
-            
+
             {!searchLoading && searchResults.length > 0 && (
               <div className="space-y-2 max-h-[500px] overflow-y-auto">
                 <p className="text-sm font-medium text-[#2D3330] mb-3">
                   Found {searchResults.length} skill{searchResults.length > 1 ? 's' : ''}
                 </p>
                 {searchResults.map((skill) => {
-                  const domainColor = skill.l1 ? DOMAIN_COLORS[skill.l1.catId] || DOMAIN_COLORS[1] : DOMAIN_COLORS[1];
+                  const domainColor = skill.l1
+                    ? DOMAIN_COLORS[skill.l1.catId] || DOMAIN_COLORS[1]
+                    : DOMAIN_COLORS[1];
                   return (
                     <Card
                       key={skill.code}
@@ -540,440 +569,446 @@ export function AddSkillDrawer({
 
         {/* Progress Indicator (only in browse mode) */}
         {mode === 'browse' && (
-        <div className="mt-6 mb-8">
-          <div className="flex items-center justify-between mb-2">
-            {[1, 2, 3, 4].map((s) => (
-              <div key={s} className="flex items-center">
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
-                    s === step
-                      ? 'bg-[#4A5943] text-white'
-                      : s < step
-                      ? 'bg-[#7A9278] text-white'
-                      : 'bg-[#E5E3DA] text-[#6B6760]'
-                  }`}
-                >
-                  {s < step ? <Check className="h-4 w-4" /> : s}
-                </div>
-                {s < 4 && (
+          <div className="mt-6 mb-8">
+            <div className="flex items-center justify-between mb-2">
+              {[1, 2, 3, 4].map((s) => (
+                <div key={s} className="flex items-center">
                   <div
-                    className={`h-0.5 w-16 mx-2 ${
-                      s < step ? 'bg-[#7A9278]' : 'bg-[#E5E3DA]'
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
+                      s === step
+                        ? 'bg-[#4A5943] text-white'
+                        : s < step
+                          ? 'bg-[#7A9278] text-white'
+                          : 'bg-[#E5E3DA] text-[#6B6760]'
                     }`}
-                  />
-                )}
-              </div>
-            ))}
+                  >
+                    {s < step ? <Check className="h-4 w-4" /> : s}
+                  </div>
+                  {s < 4 && (
+                    <div
+                      className={`h-0.5 w-16 mx-2 ${s < step ? 'bg-[#7A9278]' : 'bg-[#E5E3DA]'}`}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-between text-xs text-[#6B6760] mt-2">
+              <span>Domain</span>
+              <span>Category</span>
+              <span>Subcategory</span>
+              <span>Details</span>
+            </div>
           </div>
-          <div className="flex justify-between text-xs text-[#6B6760] mt-2">
-            <span>Domain</span>
-            <span>Category</span>
-            <span>Subcategory</span>
-            <span>Details</span>
-          </div>
-        </div>
         )}
 
         {/* Browse Mode: 4-Step Flow */}
         {mode === 'browse' && (
-        <>
-        {/* Step 1: Pick L1 Domain */}
-        {step === 1 && (
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-lg font-medium text-[#2D3330] mb-2">
-                Step 1: Choose Domain
-              </h3>
-              <p className="text-sm text-[#6B6760] mb-4">
-                Select the top-level domain that best fits your skill.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3">
-              {domains.map((domain) => {
-                const colors = DOMAIN_COLORS[domain.catId] || DOMAIN_COLORS[1];
-                return (
-                  <Card
-                    key={domain.catId}
-                    className={`${colors.bg} ${colors.border} border-2 hover:shadow-md transition-all cursor-pointer p-4`}
-                    onClick={() => handleL1Select(domain)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="text-3xl">{colors.icon}</div>
-                      <div className="flex-1">
-                        <h4 className={`font-semibold ${colors.text}`}>
-                          {domain.nameI18n?.en || 'Unknown'}
-                        </h4>
-                        {domain.descriptionI18n?.en && (
-                          <p className="text-sm text-[#6B6760] mt-1">
-                            {domain.descriptionI18n?.en}
-                          </p>
-                        )}
-                      </div>
-                      <ChevronRight className={`h-5 w-5 ${colors.text}`} />
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Step 2: Pick L2 Category */}
-        {step === 2 && (
-          <div className="space-y-4">
-            <div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleBack}
-                className="mb-2 text-[#4A5943]"
-              >
-                ← Back to Domains
-              </Button>
-              <h3 className="text-lg font-medium text-[#2D3330] mb-2">
-                Step 2: Choose Category
-              </h3>
-              <p className="text-sm text-[#6B6760] mb-4">
-                Select a category within <strong>{selectedL1?.nameI18n?.en || 'Unknown'}</strong>.
-              </p>
-            </div>
-
-            {/* L2 List */}
-            {l2Loading ? (
-              <div className="text-center py-8 text-[#6B6760]">Loading categories...</div>
-            ) : l2Categories.length === 0 ? (
-              <div className="text-center py-8 text-[#6B6760]">No categories found.</div>
-            ) : (
-              <div className="space-y-2 max-h-[500px] overflow-y-auto">
-                {l2Categories.map((category) => (
-                  <Card
-                    key={category.subcatId}
-                    className="p-4 hover:bg-[#F7F6F1] transition-colors cursor-pointer border border-[#E5E3DA]"
-                    onClick={() => handleL2Select(category)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-medium text-[#2D3330]">
-                          {category.nameI18n?.en || 'Unknown'}
-                        </h4>
-                        {category.descriptionI18n?.en && (
-                          <p className="text-sm text-[#6B6760] mt-1">
-                            {category.descriptionI18n?.en}
-                          </p>
-                        )}
-                      </div>
-                      <ChevronRight className="h-5 w-5 text-[#6B6760]" />
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Step 3: Pick L3 Subcategory */}
-        {step === 3 && (
-          <div className="space-y-4">
-            <div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleBack}
-                className="mb-2 text-[#4A5943]"
-              >
-                ← Back to Categories
-              </Button>
-              <h3 className="text-lg font-medium text-[#2D3330] mb-2">
-                Step 3: Choose Subcategory
-              </h3>
-              <p className="text-sm text-[#6B6760] mb-4">
-                Select a subcategory within <strong>{selectedL2?.nameI18n?.en || 'Unknown'}</strong>.
-              </p>
-            </div>
-
-            {/* L3 List */}
-            {l3Loading ? (
-              <div className="text-center py-8 text-[#6B6760]">Loading subcategories...</div>
-            ) : l3Subcategories.length === 0 ? (
-              <div className="text-center py-8 text-[#6B6760]">No subcategories found.</div>
-            ) : (
-              <div className="space-y-2 max-h-[500px] overflow-y-auto">
-                {l3Subcategories.map((subcategory) => (
-                  <Card
-                    key={subcategory.l3Id}
-                    className="p-4 hover:bg-[#F7F6F1] transition-colors cursor-pointer border border-[#E5E3DA]"
-                    onClick={() => handleL3Select(subcategory)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-medium text-[#2D3330]">
-                          {subcategory.nameI18n?.en || 'Unknown'}
-                        </h4>
-                        {subcategory.descriptionI18n?.en && (
-                          <p className="text-sm text-[#6B6760] mt-1">
-                            {subcategory.descriptionI18n?.en}
-                          </p>
-                        )}
-                      </div>
-                      <ChevronRight className="h-5 w-5 text-[#6B6760]" />
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Step 4: Enter L4 Skill Details */}
-        {step === 4 && (
-          <div className="space-y-6">
-            <div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleBack}
-                className="mb-2 text-[#4A5943]"
-              >
-                ← Back to Subcategories
-              </Button>
-              <h3 className="text-lg font-medium text-[#2D3330] mb-2">
-                Step 4: Skill Details
-              </h3>
-              <p className="text-sm text-[#6B6760] mb-4">
-                Fill in the details for your skill.
-              </p>
-            </div>
-
-            {/* Skill Name with Autocomplete */}
-            <div className="relative">
-              <Label htmlFor="skill-name" className="text-[#2D3330]">
-                Skill Name *
-              </Label>
-              <div className="relative mt-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6B6760]" />
-                <Input
-                  id="skill-name"
-                  type="text"
-                  placeholder="Search for a skill or enter custom name..."
-                  value={l4Search}
-                  onChange={(e) => {
-                    setL4Search(e.target.value);
-                    setShowL4Dropdown(true);
-                  }}
-                  onFocus={() => setShowL4Dropdown(true)}
-                  className="pl-10"
-                />
-              </div>
-              
-              {/* Autocomplete Dropdown */}
-              {showL4Dropdown && l4Search && (
-                <div className="absolute z-50 w-full mt-1 bg-white border border-[#E5E3DA] rounded-lg shadow-lg max-h-[300px] overflow-y-auto">
-                  {l4Loading ? (
-                    <div className="p-4 text-center text-[#6B6760]">Loading skills...</div>
-                  ) : (() => {
-                    const filtered = l4Skills.filter((skill) =>
-                      skill.nameI18n?.en?.toLowerCase().includes(l4Search.toLowerCase())
-                    ).slice(0, 50);
-                    
-                    return filtered.length > 0 ? (
-                      <>
-                        {filtered.map((skill) => (
-                          <button
-                            key={skill.code}
-                            type="button"
-                            className="w-full text-left p-3 hover:bg-[#F7F6F1] cursor-pointer border-b border-[#E5E3DA] last:border-b-0"
-                            onClick={() => {
-                              setSelectedL4(skill);
-                              setL4Name(skill.nameI18n?.en || '');
-                              setL4Search(skill.nameI18n?.en || '');
-                              setShowL4Dropdown(false);
-                            }}
-                          >
-                            <div className="font-medium text-[#2D3330]">
-                              {skill.nameI18n?.en}
-                            </div>
-                            {skill.descriptionI18n?.en && (
-                              <div className="text-xs text-[#6B6760] mt-1">
-                                {skill.descriptionI18n?.en}
-                              </div>
-                            )}
-                          </button>
-                        ))}
-                      </>
-                    ) : (
-                      <div className="p-4 text-center text-[#6B6760]">
-                        <p className="mb-2">No matching skills found</p>
-                        <p className="text-sm">You can continue with &ldquo;{l4Search}&rdquo; as a custom skill</p>
-                      </div>
-                    );
-                  })()}
-                </div>
-              )}
-              
-              {/* Selected Skill Indicator */}
-              {selectedL4 && (
-                <div className="mt-2 flex items-center gap-2">
-                  <Badge variant="secondary" className="bg-[#7A9278] text-white">
-                    From Atlas
-                  </Badge>
-                  <span className="text-sm text-[#6B6760]">{selectedL4.nameI18n?.en}</span>
-                </div>
-              )}
-              
-              {/* Custom Skill Indicator */}
-              {l4Search && !selectedL4 && (
-                <div className="mt-2">
-                  <Badge variant="outline" className="border-[#D4A574] text-[#8B6F47]">
-                    Custom Skill
-                  </Badge>
-                </div>
-              )}
-            </div>
-
-            {/* Proficiency Level */}
-            <div>
-              <Label className="text-[#2D3330] mb-3 block">
-                Proficiency Level *
-              </Label>
-              <RadioGroup
-                value={level.toString()}
-                onValueChange={(val: string) => setLevel(parseInt(val))}
-              >
-                {LEVEL_LABELS.map((lvl) => (
-                  <div
-                    key={lvl.value}
-                    className="flex items-center space-x-3 mb-2 p-3 rounded-lg border border-[#E5E3DA] hover:bg-[#F7F6F1] transition-colors"
-                  >
-                    <RadioGroupItem value={lvl.value.toString()} id={`level-${lvl.value}`} />
-                    <Label htmlFor={`level-${lvl.value}`} className="flex-1 cursor-pointer">
-                      <div className="font-medium text-[#2D3330]">{lvl.label}</div>
-                      <div className="text-sm text-[#6B6760]">{lvl.description}</div>
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            </div>
-
-            {/* Last Used */}
-            <div>
-              <Label htmlFor="last-used" className="text-[#2D3330]">
-                Last Used (Optional)
-              </Label>
-              <Input
-                id="last-used"
-                type="date"
-                value={lastUsedDate}
-                onChange={(e) => setLastUsedDate(e.target.value)}
-                className="mt-1"
-              />
-              <p className="text-xs text-[#6B6760] mt-1">
-                When did you last use this skill?
-              </p>
-            </div>
-
-            {/* Relevance */}
-            <div>
-              <Label className="text-[#2D3330] mb-3 block">Relevance</Label>
-              <RadioGroup
-                value={relevance}
-                onValueChange={(val: 'current' | 'emerging' | 'obsolete') => setRelevance(val)}
-              >
-                <div className="flex items-center space-x-3 mb-2">
-                  <RadioGroupItem value="current" id="relevance-current" />
-                  <Label htmlFor="relevance-current" className="cursor-pointer">
-                    <Badge variant="outline" className="bg-[#EEF1EA] text-[#4A5943] border-[#7A9278]">
-                      Current
-                    </Badge>
-                    <span className="ml-2 text-sm text-[#6B6760]">
-                      Widely used today
-                    </span>
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-3 mb-2">
-                  <RadioGroupItem value="emerging" id="relevance-emerging" />
-                  <Label htmlFor="relevance-emerging" className="cursor-pointer">
-                    <Badge variant="outline" className="bg-[#E8F3F8] text-[#3E5C73] border-[#6B9AB8]">
-                      Emerging
-                    </Badge>
-                    <span className="ml-2 text-sm text-[#6B6760]">
-                      Growing in demand
-                    </span>
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <RadioGroupItem value="obsolete" id="relevance-obsolete" />
-                  <Label htmlFor="relevance-obsolete" className="cursor-pointer">
-                    <Badge variant="outline" className="bg-[#FFF0F0] text-[#8B4A36] border-[#C76B4A]">
-                      Obsolete
-                    </Badge>
-                    <span className="ml-2 text-sm text-[#6B6760]">
-                      Declining use
-                    </span>
-                  </Label>
-                </div>
-              </RadioGroup>
-            </div>
-
-            {/* Optional Proof */}
-            <div className="border-t border-[#E5E3DA] pt-6">
-              <h4 className="font-medium text-[#2D3330] mb-3">
-                Add Proof (Optional)
-              </h4>
-              <div className="space-y-3">
+          <>
+            {/* Step 1: Pick L1 Domain */}
+            {step === 1 && (
+              <div className="space-y-4">
                 <div>
-                  <Label htmlFor="proof-url" className="text-[#2D3330]">
-                    Proof URL
+                  <h3 className="text-lg font-medium text-[#2D3330] mb-2">Step 1: Choose Domain</h3>
+                  <p className="text-sm text-[#6B6760] mb-4">
+                    Select the top-level domain that best fits your skill.
+                  </p>
+                </div>
+
+                {domainsLoading ? (
+                  <div className="text-center py-8 text-[#6B6760]">Loading domains...</div>
+                ) : loadedDomains.length === 0 ? (
+                  <div className="text-center py-8 text-[#6B6760]">
+                    No domains available. Please try again later.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-3">
+                    {loadedDomains.map((domain) => {
+                      const colors = DOMAIN_COLORS[domain.catId] || DOMAIN_COLORS[1];
+                      return (
+                        <Card
+                          key={domain.catId}
+                          className={`${colors.bg} ${colors.border} border-2 hover:shadow-md transition-all cursor-pointer p-4`}
+                          onClick={() => handleL1Select(domain)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="text-3xl">{colors.icon}</div>
+                            <div className="flex-1">
+                              <h4 className={`font-semibold ${colors.text}`}>
+                                {domain.nameI18n?.en || 'Unknown'}
+                              </h4>
+                              {domain.descriptionI18n?.en && (
+                                <p className="text-sm text-[#6B6760] mt-1">
+                                  {domain.descriptionI18n?.en}
+                                </p>
+                              )}
+                            </div>
+                            <ChevronRight className={`h-5 w-5 ${colors.text}`} />
+                          </div>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Step 2: Pick L2 Category */}
+            {step === 2 && (
+              <div className="space-y-4">
+                <div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleBack}
+                    className="mb-2 text-[#4A5943]"
+                  >
+                    ← Back to Domains
+                  </Button>
+                  <h3 className="text-lg font-medium text-[#2D3330] mb-2">
+                    Step 2: Choose Category
+                  </h3>
+                  <p className="text-sm text-[#6B6760] mb-4">
+                    Select a category within{' '}
+                    <strong>{selectedL1?.nameI18n?.en || 'Unknown'}</strong>.
+                  </p>
+                </div>
+
+                {/* L2 List */}
+                {l2Loading ? (
+                  <div className="text-center py-8 text-[#6B6760]">Loading categories...</div>
+                ) : l2Categories.length === 0 ? (
+                  <div className="text-center py-8 text-[#6B6760]">No categories found.</div>
+                ) : (
+                  <div className="space-y-2 max-h-[500px] overflow-y-auto">
+                    {l2Categories.map((category) => (
+                      <Card
+                        key={category.subcatId}
+                        className="p-4 hover:bg-[#F7F6F1] transition-colors cursor-pointer border border-[#E5E3DA]"
+                        onClick={() => handleL2Select(category)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="font-medium text-[#2D3330]">
+                              {category.nameI18n?.en || 'Unknown'}
+                            </h4>
+                            {category.descriptionI18n?.en && (
+                              <p className="text-sm text-[#6B6760] mt-1">
+                                {category.descriptionI18n?.en}
+                              </p>
+                            )}
+                          </div>
+                          <ChevronRight className="h-5 w-5 text-[#6B6760]" />
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Step 3: Pick L3 Subcategory */}
+            {step === 3 && (
+              <div className="space-y-4">
+                <div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleBack}
+                    className="mb-2 text-[#4A5943]"
+                  >
+                    ← Back to Categories
+                  </Button>
+                  <h3 className="text-lg font-medium text-[#2D3330] mb-2">
+                    Step 3: Choose Subcategory
+                  </h3>
+                  <p className="text-sm text-[#6B6760] mb-4">
+                    Select a subcategory within{' '}
+                    <strong>{selectedL2?.nameI18n?.en || 'Unknown'}</strong>.
+                  </p>
+                </div>
+
+                {/* L3 List */}
+                {l3Loading ? (
+                  <div className="text-center py-8 text-[#6B6760]">Loading subcategories...</div>
+                ) : l3Subcategories.length === 0 ? (
+                  <div className="text-center py-8 text-[#6B6760]">No subcategories found.</div>
+                ) : (
+                  <div className="space-y-2 max-h-[500px] overflow-y-auto">
+                    {l3Subcategories.map((subcategory) => (
+                      <Card
+                        key={subcategory.l3Id}
+                        className="p-4 hover:bg-[#F7F6F1] transition-colors cursor-pointer border border-[#E5E3DA]"
+                        onClick={() => handleL3Select(subcategory)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="font-medium text-[#2D3330]">
+                              {subcategory.nameI18n?.en || 'Unknown'}
+                            </h4>
+                            {subcategory.descriptionI18n?.en && (
+                              <p className="text-sm text-[#6B6760] mt-1">
+                                {subcategory.descriptionI18n?.en}
+                              </p>
+                            )}
+                          </div>
+                          <ChevronRight className="h-5 w-5 text-[#6B6760]" />
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Step 4: Enter L4 Skill Details */}
+            {step === 4 && (
+              <div className="space-y-6">
+                <div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleBack}
+                    className="mb-2 text-[#4A5943]"
+                  >
+                    ← Back to Subcategories
+                  </Button>
+                  <h3 className="text-lg font-medium text-[#2D3330] mb-2">Step 4: Skill Details</h3>
+                  <p className="text-sm text-[#6B6760] mb-4">Fill in the details for your skill.</p>
+                </div>
+
+                {/* Skill Name with Autocomplete */}
+                <div className="relative">
+                  <Label htmlFor="skill-name" className="text-[#2D3330]">
+                    Skill Name *
+                  </Label>
+                  <div className="relative mt-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6B6760]" />
+                    <Input
+                      id="skill-name"
+                      type="text"
+                      placeholder="Search for a skill or enter custom name..."
+                      value={l4Search}
+                      onChange={(e) => {
+                        setL4Search(e.target.value);
+                        setShowL4Dropdown(true);
+                      }}
+                      onFocus={() => setShowL4Dropdown(true)}
+                      className="pl-10"
+                    />
+                  </div>
+
+                  {/* Autocomplete Dropdown */}
+                  {showL4Dropdown && l4Search && (
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-[#E5E3DA] rounded-lg shadow-lg max-h-[300px] overflow-y-auto">
+                      {l4Loading ? (
+                        <div className="p-4 text-center text-[#6B6760]">Loading skills...</div>
+                      ) : (
+                        (() => {
+                          const filtered = l4Skills
+                            .filter((skill) =>
+                              skill.nameI18n?.en?.toLowerCase().includes(l4Search.toLowerCase())
+                            )
+                            .slice(0, 50);
+
+                          return filtered.length > 0 ? (
+                            <>
+                              {filtered.map((skill) => (
+                                <button
+                                  key={skill.code}
+                                  type="button"
+                                  className="w-full text-left p-3 hover:bg-[#F7F6F1] cursor-pointer border-b border-[#E5E3DA] last:border-b-0"
+                                  onClick={() => {
+                                    setSelectedL4(skill);
+                                    setL4Name(skill.nameI18n?.en || '');
+                                    setL4Search(skill.nameI18n?.en || '');
+                                    setShowL4Dropdown(false);
+                                  }}
+                                >
+                                  <div className="font-medium text-[#2D3330]">
+                                    {skill.nameI18n?.en}
+                                  </div>
+                                  {skill.descriptionI18n?.en && (
+                                    <div className="text-xs text-[#6B6760] mt-1">
+                                      {skill.descriptionI18n?.en}
+                                    </div>
+                                  )}
+                                </button>
+                              ))}
+                            </>
+                          ) : (
+                            <div className="p-4 text-center text-[#6B6760]">
+                              <p className="mb-2">No matching skills found</p>
+                              <p className="text-sm">
+                                You can continue with &ldquo;{l4Search}&rdquo; as a custom skill
+                              </p>
+                            </div>
+                          );
+                        })()
+                      )}
+                    </div>
+                  )}
+
+                  {/* Selected Skill Indicator */}
+                  {selectedL4 && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <Badge variant="secondary" className="bg-[#7A9278] text-white">
+                        From Atlas
+                      </Badge>
+                      <span className="text-sm text-[#6B6760]">{selectedL4.nameI18n?.en}</span>
+                    </div>
+                  )}
+
+                  {/* Custom Skill Indicator */}
+                  {l4Search && !selectedL4 && (
+                    <div className="mt-2">
+                      <Badge variant="outline" className="border-[#D4A574] text-[#8B6F47]">
+                        Custom Skill
+                      </Badge>
+                    </div>
+                  )}
+                </div>
+
+                {/* Proficiency Level */}
+                <div>
+                  <Label className="text-[#2D3330] mb-3 block">Proficiency Level *</Label>
+                  <RadioGroup
+                    value={level.toString()}
+                    onValueChange={(val: string) => setLevel(parseInt(val))}
+                  >
+                    {LEVEL_LABELS.map((lvl) => (
+                      <div
+                        key={lvl.value}
+                        className="flex items-center space-x-3 mb-2 p-3 rounded-lg border border-[#E5E3DA] hover:bg-[#F7F6F1] transition-colors"
+                      >
+                        <RadioGroupItem value={lvl.value.toString()} id={`level-${lvl.value}`} />
+                        <Label htmlFor={`level-${lvl.value}`} className="flex-1 cursor-pointer">
+                          <div className="font-medium text-[#2D3330]">{lvl.label}</div>
+                          <div className="text-sm text-[#6B6760]">{lvl.description}</div>
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </div>
+
+                {/* Last Used */}
+                <div>
+                  <Label htmlFor="last-used" className="text-[#2D3330]">
+                    Last Used (Optional)
                   </Label>
                   <Input
-                    id="proof-url"
-                    type="url"
-                    placeholder="https://..."
-                    value={proofUrl}
-                    onChange={(e) => setProofUrl(e.target.value)}
+                    id="last-used"
+                    type="date"
+                    value={lastUsedDate}
+                    onChange={(e) => setLastUsedDate(e.target.value)}
                     className="mt-1"
                   />
+                  <p className="text-xs text-[#6B6760] mt-1">When did you last use this skill?</p>
                 </div>
+
+                {/* Relevance */}
                 <div>
-                  <Label htmlFor="proof-notes" className="text-[#2D3330]">
-                    Notes
-                  </Label>
-                  <Textarea
-                    id="proof-notes"
-                    placeholder="Describe this proof..."
-                    value={proofNotes}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setProofNotes(e.target.value)}
-                    rows={3}
-                    className="mt-1"
-                  />
+                  <Label className="text-[#2D3330] mb-3 block">Relevance</Label>
+                  <RadioGroup
+                    value={relevance}
+                    onValueChange={(val: 'current' | 'emerging' | 'obsolete') => setRelevance(val)}
+                  >
+                    <div className="flex items-center space-x-3 mb-2">
+                      <RadioGroupItem value="current" id="relevance-current" />
+                      <Label htmlFor="relevance-current" className="cursor-pointer">
+                        <Badge
+                          variant="outline"
+                          className="bg-[#EEF1EA] text-[#4A5943] border-[#7A9278]"
+                        >
+                          Current
+                        </Badge>
+                        <span className="ml-2 text-sm text-[#6B6760]">Widely used today</span>
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-3 mb-2">
+                      <RadioGroupItem value="emerging" id="relevance-emerging" />
+                      <Label htmlFor="relevance-emerging" className="cursor-pointer">
+                        <Badge
+                          variant="outline"
+                          className="bg-[#E8F3F8] text-[#3E5C73] border-[#6B9AB8]"
+                        >
+                          Emerging
+                        </Badge>
+                        <span className="ml-2 text-sm text-[#6B6760]">Growing in demand</span>
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <RadioGroupItem value="obsolete" id="relevance-obsolete" />
+                      <Label htmlFor="relevance-obsolete" className="cursor-pointer">
+                        <Badge
+                          variant="outline"
+                          className="bg-[#FFF0F0] text-[#8B4A36] border-[#C76B4A]"
+                        >
+                          Obsolete
+                        </Badge>
+                        <span className="ml-2 text-sm text-[#6B6760]">Declining use</span>
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                {/* Optional Proof */}
+                <div className="border-t border-[#E5E3DA] pt-6">
+                  <h4 className="font-medium text-[#2D3330] mb-3">Add Proof (Optional)</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor="proof-url" className="text-[#2D3330]">
+                        Proof URL
+                      </Label>
+                      <Input
+                        id="proof-url"
+                        type="url"
+                        placeholder="https://..."
+                        value={proofUrl}
+                        onChange={(e) => setProofUrl(e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="proof-notes" className="text-[#2D3330]">
+                        Notes
+                      </Label>
+                      <Textarea
+                        id="proof-notes"
+                        placeholder="Describe this proof..."
+                        value={proofNotes}
+                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                          setProofNotes(e.target.value)
+                        }
+                        rows={3}
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4 border-t border-[#E5E3DA]">
+                  <Button
+                    variant="outline"
+                    onClick={() => handleSave(true)}
+                    disabled={!l4Name || saving}
+                    className="flex-1 border-[#4A5943] text-[#4A5943] hover:bg-[#EEF1EA]"
+                  >
+                    Save & Add Another
+                  </Button>
+                  <Button
+                    onClick={() => handleSave(false)}
+                    disabled={!l4Name || saving}
+                    className="flex-1 bg-[#4A5943] text-white hover:bg-[#3C4936]"
+                  >
+                    {saving ? 'Saving...' : 'Save'}
+                  </Button>
                 </div>
               </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-3 pt-4 border-t border-[#E5E3DA]">
-              <Button
-                variant="outline"
-                onClick={() => handleSave(true)}
-                disabled={!l4Name || saving}
-                className="flex-1 border-[#4A5943] text-[#4A5943] hover:bg-[#EEF1EA]"
-              >
-                Save & Add Another
-              </Button>
-              <Button
-                onClick={() => handleSave(false)}
-                disabled={!l4Name || saving}
-                className="flex-1 bg-[#4A5943] text-white hover:bg-[#3C4936]"
-              >
-                {saving ? 'Saving...' : 'Save'}
-              </Button>
-            </div>
-          </div>
-        )}
-        </>
+            )}
+          </>
         )}
       </SheetContent>
     </Sheet>
   );
 }
-
