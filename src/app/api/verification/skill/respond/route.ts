@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
         .update({
           verified: true,
           verified_at: new Date().toISOString(),
-          verified_by: anonymous ? null : verifierEmail,
+          verified_by: anonymous ? null : verifierName || null,
         })
         .eq('profile_id', verificationRequest.requester_id)
         .eq('skill_id', verificationRequest.skill_id);
