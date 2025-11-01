@@ -1,8 +1,8 @@
 /**
  * LinkedIn Verification Initiation
- * 
+ *
  * POST /api/verification/linkedin/initiate
- * 
+ *
  * This is where the magic happens:
  * 1. Gets LinkedIn profile URL from user's integration
  * 2. Runs automated Playwright scraper to check for verification badge
@@ -17,10 +17,7 @@ import { userIntegrations, individualProfiles } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { constructLinkedInProfileUrl, fetchLinkedInProfile } from '@/lib/linkedin';
 import { checkLinkedInVerification } from '@/lib/linkedin-scraper';
-import {
-  enrichLinkedInProfile,
-  combineVerificationData,
-} from '@/lib/linkedin-enrichment';
+import { enrichLinkedInProfile, combineVerificationData } from '@/lib/linkedin-enrichment';
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,12 +36,7 @@ export async function POST(request: NextRequest) {
     const integration = await db
       .select()
       .from(userIntegrations)
-      .where(
-        and(
-          eq(userIntegrations.userId, user.id),
-          eq(userIntegrations.provider, 'linkedin')
-        )
-      )
+      .where(and(eq(userIntegrations.userId, user.id), eq(userIntegrations.provider, 'linkedin')))
       .limit(1);
 
     if (integration.length === 0) {
@@ -65,22 +57,9 @@ export async function POST(request: NextRequest) {
     }
 
     // 4. Get LinkedIn profile data and construct URL
-    let profileUrl: string;
-    
-    if (linkedInIntegration.profileData && (linkedInIntegration.profileData as any).vanityName) {
-      // Use stored profile data if available
-      profileUrl = constructLinkedInProfileUrl(linkedInIntegration.profileData as any);
-    } else {
-      // Fetch fresh profile data
-      const profileData = await fetchLinkedInProfile(linkedInIntegration.accessToken!);
-      profileUrl = constructLinkedInProfileUrl(profileData);
-      
-      // Update stored profile data
-      await db
-        .update(userIntegrations)
-        .set({ profileData: profileData as any })
-        .where(eq(userIntegrations.id, linkedInIntegration.id));
-    }
+    // Fetch fresh profile data from LinkedIn API
+    const profileData = await fetchLinkedInProfile(linkedInIntegration.accessToken!);
+    const profileUrl = constructLinkedInProfileUrl(profileData);
 
     console.log('Starting LinkedIn verification check for:', profileUrl);
 
@@ -158,10 +137,7 @@ export async function POST(request: NextRequest) {
 
     if (updateError) {
       console.error('Error updating profile:', updateError);
-      return NextResponse.json(
-        { error: 'Failed to store verification data' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to store verification data' }, { status: 500 });
     }
 
     console.log('LinkedIn verification initiated successfully');
@@ -181,8 +157,8 @@ export async function POST(request: NextRequest) {
         combinedData.finalConfidence >= 80
           ? 'High confidence - pending quick admin review (typically < 1 hour).'
           : combinedData.finalConfidence >= 50
-          ? 'Medium confidence - pending manual admin review (1-2 business days).'
-          : 'Low confidence - please try another verification method.'
+            ? 'Medium confidence - pending manual admin review (1-2 business days).'
+            : 'Low confidence - please try another verification method.'
       }`,
     });
   } catch (error) {
@@ -196,4 +172,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

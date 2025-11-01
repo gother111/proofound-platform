@@ -178,11 +178,11 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
                 <p className="text-sm text-[#6B6760] mb-3">{verification.userEmail}</p>
               )}
               <a
-              href={verification.linkedinUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-[#0A66C2] hover:underline transition-all duration-200 hover:gap-3"
-            >
+                href={verification.linkedinUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm text-[#0A66C2] hover:underline transition-all duration-200 hover:gap-3"
+              >
                 <Linkedin className="w-4 h-4" />
                 View LinkedIn Profile
                 <ExternalLink className="w-3 h-3" />
@@ -196,7 +196,10 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
             <div className="flex items-center gap-3">
               {getConfidenceBadge(verification.confidence)}
               {verification.hasVerificationBadge && (
-                <Badge variant="outline" className="border-green-500 text-green-700 bg-green-50 px-3 py-2">
+                <Badge
+                  variant="outline"
+                  className="border-green-500 text-green-700 bg-green-50 px-3 py-2"
+                >
                   <Award className="w-4 h-4 mr-1" />
                   LinkedIn Verified Badge Detected
                 </Badge>
@@ -206,8 +209,8 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
               {verification.confidence >= 80
                 ? 'High confidence - Profile shows strong trust signals. Consider quick approval.'
                 : verification.confidence >= 50
-                ? 'Medium confidence - Profile shows some trust signals. Manual review recommended.'
-                : 'Low confidence - Profile has weak trust signals. Consider alternative verification method.'}
+                  ? 'Medium confidence - Profile shows some trust signals. Manual review recommended.'
+                  : 'Low confidence - Profile has weak trust signals. Consider alternative verification method.'}
             </p>
           </div>
 
@@ -248,11 +251,12 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
                       ? `${verification.signals.connectionCount.toLocaleString()} connections`
                       : 'Not available'}
                   </p>
-                  {verification.signals.connectionCount && verification.signals.connectionCount >= 500 && (
-                    <Badge variant="outline" className="mt-1 text-xs">
-                      500+ Network
-                    </Badge>
-                  )}
+                  {verification.signals.connectionCount &&
+                    verification.signals.connectionCount >= 500 && (
+                      <Badge variant="outline" className="mt-1 text-xs">
+                        500+ Network
+                      </Badge>
+                    )}
                 </div>
               </div>
 
@@ -264,7 +268,9 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
                 <div className="flex-1">
                   <p className="font-medium text-sm text-[#2D3330] mb-2">Profile Completeness</p>
                   <Progress value={verification.signals.profileCompleteness} className="h-2 mb-1" />
-                  <p className="text-xs text-[#6B6760]">{verification.signals.profileCompleteness}% complete</p>
+                  <p className="text-xs text-[#6B6760]">
+                    {verification.signals.profileCompleteness}% complete
+                  </p>
                 </div>
               </div>
 
@@ -287,7 +293,8 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
                 <div>
                   <p className="font-medium text-sm text-[#2D3330]">Work Experience</p>
                   <p className="text-xs text-[#6B6760]">
-                    {verification.signals.experienceCount} position{verification.signals.experienceCount !== 1 ? 's' : ''} listed
+                    {verification.signals.experienceCount} position
+                    {verification.signals.experienceCount !== 1 ? 's' : ''} listed
                   </p>
                 </div>
               </div>
@@ -325,8 +332,8 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
                   {verification.recommendation === 'approve'
                     ? 'System recommends APPROVAL - Strong trust signals detected'
                     : verification.recommendation === 'reject'
-                    ? 'System recommends REJECTION - Weak trust signals detected'
-                    : 'System recommends MANUAL REVIEW - Mixed signals detected'}
+                      ? 'System recommends REJECTION - Weak trust signals detected'
+                      : 'System recommends MANUAL REVIEW - Mixed signals detected'}
                 </p>
               </div>
             </div>
@@ -334,10 +341,11 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
 
           {/* Admin Notes */}
           <div className="space-y-2">
-            <label className="font-semibold text-[#2D3330]">
+            <label htmlFor="admin-notes" className="font-semibold text-[#2D3330]">
               Admin Notes <span className="text-[#9B9891] font-normal">(Optional)</span>
             </label>
             <Textarea
+              id="admin-notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Add any notes about your decision..."
@@ -350,7 +358,12 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" onClick={onClose} disabled={processing} className="transition-all duration-200 hover:scale-105">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            disabled={processing}
+            className="transition-all duration-200 hover:scale-105"
+          >
             Cancel
           </Button>
           <Button

@@ -1,6 +1,6 @@
 /**
  * LinkedIn OAuth Callback Handler
- * 
+ *
  * GET /api/auth/linkedin/callback
  * Handles OAuth callback from LinkedIn, exchanges code for token,
  * and stores integration in database
@@ -36,9 +36,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (!code || !state) {
-      return NextResponse.redirect(
-        new URL('/settings?error=invalid_oauth_response', request.url)
-      );
+      return NextResponse.redirect(new URL('/settings?error=invalid_oauth_response', request.url));
     }
 
     // Verify state parameter for CSRF protection
@@ -47,9 +45,7 @@ export async function GET(request: NextRequest) {
 
     if (!storedState || storedState !== state) {
       console.error('State mismatch in LinkedIn OAuth');
-      return NextResponse.redirect(
-        new URL('/settings?error=invalid_state', request.url)
-      );
+      return NextResponse.redirect(new URL('/settings?error=invalid_state', request.url));
     }
 
     // Verify user is still authenticated
@@ -60,9 +56,7 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (authError || !user || user.id !== storedUserId) {
-      return NextResponse.redirect(
-        new URL('/signin?error=unauthorized', request.url)
-      );
+      return NextResponse.redirect(new URL('/signin?error=unauthorized', request.url));
     }
 
     // Exchange authorization code for access token
@@ -82,12 +76,7 @@ export async function GET(request: NextRequest) {
     const existingIntegration = await db
       .select()
       .from(userIntegrations)
-      .where(
-        and(
-          eq(userIntegrations.userId, user.id),
-          eq(userIntegrations.provider, 'linkedin')
-        )
-      )
+      .where(and(eq(userIntegrations.userId, user.id), eq(userIntegrations.provider, 'linkedin')))
       .limit(1);
 
     // Store or update integration
@@ -100,8 +89,6 @@ export async function GET(request: NextRequest) {
           refreshToken: tokenData.refresh_token,
           tokenExpiry,
           scope: tokenData.scope?.split(' ') || [],
-          providerAccountId: profileData.id,
-          profileData: profileData as any,
           updatedAt: new Date(),
         })
         .where(eq(userIntegrations.id, existingIntegration[0].id));
@@ -110,12 +97,10 @@ export async function GET(request: NextRequest) {
       await db.insert(userIntegrations).values({
         userId: user.id,
         provider: 'linkedin',
-        providerAccountId: profileData.id,
         accessToken: tokenData.access_token,
         refreshToken: tokenData.refresh_token,
         tokenExpiry,
         scope: tokenData.scope?.split(' ') || [],
-        profileData: profileData as any,
       });
     }
 
@@ -130,7 +115,7 @@ export async function GET(request: NextRequest) {
     return response;
   } catch (error) {
     console.error('LinkedIn OAuth callback error:', error);
-    
+
     // Clear OAuth cookies on error
     const response = NextResponse.redirect(
       new URL(

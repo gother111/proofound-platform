@@ -1,9 +1,9 @@
 /**
  * LinkedIn Third-Party Enrichment Library
- * 
+ *
  * Optional integration with third-party services like Proxycurl
  * for additional LinkedIn profile data.
- * 
+ *
  * Proxycurl offers a free tier: https://nubela.co/proxycurl/
  */
 
@@ -39,12 +39,10 @@ export interface EnrichmentResult {
 
 /**
  * Enrich LinkedIn profile data using Proxycurl API
- * 
+ *
  * Requires PROXYCURL_API_KEY environment variable
  */
-export async function enrichWithProxycurl(
-  linkedinUrl: string
-): Promise<EnrichmentResult> {
+export async function enrichWithProxycurl(linkedinUrl: string): Promise<EnrichmentResult> {
   const apiKey = process.env.PROXYCURL_API_KEY;
 
   if (!apiKey) {
@@ -75,7 +73,7 @@ export async function enrichWithProxycurl(
     return {
       success: true,
       hasVerificationBadge: data.has_verified_badge || false,
-      connectionCount: data.connections,
+      connectionCount: data.connections || undefined,
       experienceCount: data.experiences?.length || 0,
       profileData: data,
       source: 'proxycurl',
@@ -99,12 +97,10 @@ export function isProxycurlAvailable(): boolean {
 
 /**
  * Enrich profile with multiple sources (can add more services here)
- * 
+ *
  * Tries services in order and returns first successful enrichment
  */
-export async function enrichLinkedInProfile(
-  linkedinUrl: string
-): Promise<EnrichmentResult | null> {
+export async function enrichLinkedInProfile(linkedinUrl: string): Promise<EnrichmentResult | null> {
   // Try Proxycurl first
   if (isProxycurlAvailable()) {
     const result = await enrichWithProxycurl(linkedinUrl);
@@ -120,7 +116,7 @@ export async function enrichLinkedInProfile(
 
 /**
  * Combine automated check with enrichment data
- * 
+ *
  * Takes results from both scraper and enrichment API,
  * combines them with weighted confidence
  */
@@ -167,4 +163,3 @@ export function combineVerificationData(
     sources,
   };
 }
-

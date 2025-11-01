@@ -14,7 +14,7 @@
  */
 
 import { db } from '@/db';
-import { analyticsEvents, users } from '@/db/schema';
+import { analyticsEvents, profiles } from '@/db/schema';
 import { eq, and, gte, lte, sql, inArray } from 'drizzle-orm';
 
 export interface DemographicCohort {
@@ -248,17 +248,12 @@ function erf(x: number): number {
 /**
  * Generate fairness note report
  */
-export async function generateFairnessNote(
-  startDate: Date,
-  endDate: Date
-): Promise<FairnessNote> {
+export async function generateFairnessNote(startDate: Date, endDate: Date): Promise<FairnessNote> {
   const metrics = await calculateFairnessMetrics(startDate, endDate);
   const gaps = identifyFairnessGaps(metrics);
 
   // Determine overall status
-  const significantNegativeGaps = gaps.filter(
-    (g) => g.isSignificant && g.gap < -5
-  );
+  const significantNegativeGaps = gaps.filter((g) => g.isSignificant && g.gap < -5);
 
   let status: 'passing' | 'warning' | 'failing';
   if (significantNegativeGaps.length === 0) {
@@ -310,17 +305,13 @@ function generateRecommendations(gaps: FairnessGap[]): string[] {
 
   if (significantGaps.length === 0) {
     recommendations.push('Continue monitoring fairness metrics in future releases.');
-    recommendations.push('Encourage more users to opt-in to demographic tracking for better insights.');
+    recommendations.push(
+      'Encourage more users to opt-in to demographic tracking for better insights.'
+    );
   } else {
-    recommendations.push(
-      'Investigate matching algorithm for potential bias in affected cohorts.'
-    );
-    recommendations.push(
-      'Review skill taxonomy coverage for underrepresented specializations.'
-    );
-    recommendations.push(
-      'Conduct qualitative interviews with affected cohort members.'
-    );
+    recommendations.push('Investigate matching algorithm for potential bias in affected cohorts.');
+    recommendations.push('Review skill taxonomy coverage for underrepresented specializations.');
+    recommendations.push('Conduct qualitative interviews with affected cohort members.');
     recommendations.push('Consider implementing additional blinding/calibration techniques.');
   }
 
@@ -347,10 +338,10 @@ async function getCohorts(): Promise<DemographicCohort[]> {
 async function getCohortUserIds(cohortId: string): Promise<string[]> {
   // Placeholder: In production, this would query based on opt-in demographics
   if (cohortId === 'all') {
-    const allUsers = await db.query.users.findMany({
+    const allProfiles = await db.query.profiles.findMany({
       columns: { id: true },
     });
-    return allUsers.map((u) => u.id);
+    return allProfiles.map((u) => u.id);
   }
 
   return [];

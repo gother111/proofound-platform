@@ -1,8 +1,8 @@
 /**
  * Admin LinkedIn Verification Queue
- * 
+ *
  * GET /api/admin/verification/linkedin/queue
- * 
+ *
  * Returns all pending LinkedIn verifications sorted by confidence score
  * High-confidence cases appear first for quick approvals
  */
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
         linkedinUrl: individualProfiles.linkedinProfileUrl,
         verificationData: individualProfiles.linkedinVerificationData,
         verificationStatus: individualProfiles.verificationStatus,
-        createdAt: individualProfiles.updatedAt,
+        createdAt: profiles.updatedAt,
       })
       .from(individualProfiles)
       .innerJoin(profiles, eq(profiles.id, individualProfiles.userId))
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
           isNotNull(individualProfiles.linkedinProfileUrl)
         )
       )
-      .orderBy(desc(individualProfiles.updatedAt));
+      .orderBy(desc(profiles.updatedAt));
 
     // 3. Sort by confidence score (high confidence first)
     const sortedVerifications = pendingVerifications
@@ -111,4 +111,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

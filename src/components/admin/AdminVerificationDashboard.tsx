@@ -20,7 +20,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { AdminReviewModal } from './AdminReviewModal';
+import { AdminReviewModal } from '@/components/admin/AdminReviewModal';
 
 interface VerificationSignals {
   hasVerificationBadge: boolean;
@@ -119,7 +119,7 @@ export function AdminVerificationDashboard() {
       }
 
       toast.success(`Verification approved for ${verification.userName}`);
-      
+
       // Remove from queue optimistically
       if (queue) {
         setQueue({
@@ -133,7 +133,10 @@ export function AdminVerificationDashboard() {
             ...stats,
             total: stats.total - 1,
             high: verification.confidence >= 80 ? stats.high - 1 : stats.high,
-            medium: verification.confidence >= 50 && verification.confidence < 80 ? stats.medium - 1 : stats.medium,
+            medium:
+              verification.confidence >= 50 && verification.confidence < 80
+                ? stats.medium - 1
+                : stats.medium,
             low: verification.confidence < 50 ? stats.low - 1 : stats.low,
           });
         }
@@ -170,7 +173,7 @@ export function AdminVerificationDashboard() {
       }
 
       toast.success(`Verification rejected for ${verification.userName}`);
-      
+
       // Remove from queue optimistically
       if (queue) {
         setQueue({
@@ -184,7 +187,10 @@ export function AdminVerificationDashboard() {
             ...stats,
             total: stats.total - 1,
             high: verification.confidence >= 80 ? stats.high - 1 : stats.high,
-            medium: verification.confidence >= 50 && verification.confidence < 80 ? stats.medium - 1 : stats.medium,
+            medium:
+              verification.confidence >= 50 && verification.confidence < 80
+                ? stats.medium - 1
+                : stats.medium,
             low: verification.confidence < 50 ? stats.low - 1 : stats.low,
           });
         }
@@ -212,7 +218,10 @@ export function AdminVerificationDashboard() {
           ...stats,
           total: stats.total - 1,
           high: verification.confidence >= 80 ? stats.high - 1 : stats.high,
-          medium: verification.confidence >= 50 && verification.confidence < 80 ? stats.medium - 1 : stats.medium,
+          medium:
+            verification.confidence >= 50 && verification.confidence < 80
+              ? stats.medium - 1
+              : stats.medium,
           low: verification.confidence < 50 ? stats.low - 1 : stats.low,
         });
       }
@@ -223,22 +232,14 @@ export function AdminVerificationDashboard() {
   const getConfidenceBadge = (confidence: number) => {
     if (confidence >= 80) {
       return (
-        <Badge className="bg-green-500 hover:bg-green-600 text-white">
-          {confidence}% High
-        </Badge>
+        <Badge className="bg-green-500 hover:bg-green-600 text-white">{confidence}% High</Badge>
       );
     } else if (confidence >= 50) {
       return (
-        <Badge className="bg-amber-500 hover:bg-amber-600 text-white">
-          {confidence}% Medium
-        </Badge>
+        <Badge className="bg-amber-500 hover:bg-amber-600 text-white">{confidence}% Medium</Badge>
       );
     } else {
-      return (
-        <Badge className="bg-gray-500 hover:bg-gray-600 text-white">
-          {confidence}% Low
-        </Badge>
-      );
+      return <Badge className="bg-gray-500 hover:bg-gray-600 text-white">{confidence}% Low</Badge>;
     }
   };
 
@@ -259,7 +260,10 @@ export function AdminVerificationDashboard() {
     const isProcessing = processingUserId === verification.userId;
 
     return (
-      <Card key={verification.userId} className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
+      <Card
+        key={verification.userId}
+        className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
+      >
         <CardContent className="p-6">
           {/* Header with avatar and user info */}
           <div className="flex items-start gap-4 mb-4">
@@ -461,25 +465,43 @@ export function AdminVerificationDashboard() {
         <TabsList className="w-full justify-start mb-6 bg-white border border-[#E8E6DD] transition-all duration-300">
           <TabsTrigger value="all" className="gap-2 transition-all duration-200">
             All
-            {stats && <Badge variant="secondary" className="transition-all duration-200">{stats.total}</Badge>}
+            {stats && (
+              <Badge variant="secondary" className="transition-all duration-200">
+                {stats.total}
+              </Badge>
+            )}
           </TabsTrigger>
           <TabsTrigger value="high" className="gap-2 transition-all duration-200">
             High Confidence
-            {stats && <Badge variant="secondary" className="transition-all duration-200">{stats.high}</Badge>}
+            {stats && (
+              <Badge variant="secondary" className="transition-all duration-200">
+                {stats.high}
+              </Badge>
+            )}
           </TabsTrigger>
           <TabsTrigger value="medium" className="gap-2 transition-all duration-200">
             Medium Confidence
-            {stats && <Badge variant="secondary" className="transition-all duration-200">{stats.medium}</Badge>}
+            {stats && (
+              <Badge variant="secondary" className="transition-all duration-200">
+                {stats.medium}
+              </Badge>
+            )}
           </TabsTrigger>
           <TabsTrigger value="low" className="gap-2 transition-all duration-200">
             Low Confidence
-            {stats && <Badge variant="secondary" className="transition-all duration-200">{stats.low}</Badge>}
+            {stats && (
+              <Badge variant="secondary" className="transition-all duration-200">
+                {stats.low}
+              </Badge>
+            )}
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="all">{queue && renderTabContent(queue.all)}</TabsContent>
         <TabsContent value="high">{queue && renderTabContent(queue.highConfidence)}</TabsContent>
-        <TabsContent value="medium">{queue && renderTabContent(queue.mediumConfidence)}</TabsContent>
+        <TabsContent value="medium">
+          {queue && renderTabContent(queue.mediumConfidence)}
+        </TabsContent>
         <TabsContent value="low">{queue && renderTabContent(queue.lowConfidence)}</TabsContent>
       </Tabs>
 
