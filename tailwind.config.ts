@@ -10,43 +10,43 @@ const config: Config = {
   ],
   safelist: [
     'section-pad',
-    'bg-bg-base',
-    'text-fg-base',
-    'border-border-subtle',
-    'bg-card',
-    'text-muted',
-    'bg-accent',
-    'bg-brand-sage',
-    'bg-brand-terracotta',
-    'bg-brand-teal',
-    'bg-brand-ochre',
-    // Figma colors
+    // Figma brand colors
     'bg-proofound-forest',
     'bg-proofound-terracotta',
     'bg-proofound-parchment',
     'text-proofound-charcoal',
     'border-proofound-stone',
+    // Extended palette
+    'bg-[#7A9278]',
+    'bg-[#5C8B89]',
+    'bg-[#D4A574]',
+    'bg-[#C9A57B]',
+    // Typography
     "font-['Crimson_Pro']",
+    // Common utilities
+    'bg-card',
+    'text-muted',
+    'bg-accent',
   ],
   theme: {
     extend: {
       colors: {
-        // Figma Design System Colors - Direct hex values
+        // Figma Design System Colors - Primary Brand
         proofound: {
-          forest: '#1C4D3A', // Primary brand
-          terracotta: '#C76B4A', // Accent
-          parchment: '#F7F6F1', // Background
-          charcoal: '#2D3330', // Text
-          stone: '#E8E6DD', // Borders
+          forest: '#1C4D3A',      // Primary brand
+          terracotta: '#C76B4A',  // Accent
+          parchment: '#F7F6F1',   // Background
+          charcoal: '#2D3330',    // Text
+          stone: '#E8E6DD',       // Borders
         },
-        // New token-based colors (legacy bridge)
-        bg: { base: 'var(--bg-base)' },
-        fg: { base: 'var(--fg-base)' },
-        brand: {
-          sage: 'var(--brand-sage)',
-          terracotta: 'var(--brand-terracotta)',
-          teal: 'var(--brand-teal)',
-          ochre: 'var(--brand-ochre)',
+        // Extended Japandi Palette
+        extended: {
+          sage: '#7A9278',
+          teal: '#5C8B89',
+          ochre: '#D4A574',
+          clay: '#C9A57B',
+          sand: '#E0D5C7',
+          bamboo: '#6B7F5F',
         },
         // shadcn/ui semantic tokens
         border: 'hsl(var(--border))',
@@ -96,15 +96,14 @@ const config: Config = {
         warning: brandTokens.colors.semantic.warning,
         error: brandTokens.colors.semantic.error,
         info: brandTokens.colors.semantic.info,
-        // Japandi nature-inspired colors (legacy, bridged to new tokens)
-        sage: 'var(--brand-sage)',
-        terracotta: 'var(--brand-terracotta)',
-        teal: 'var(--brand-teal)',
-        clay: 'hsl(var(--clay))',
-        sand: 'hsl(var(--sand))',
-        bamboo: 'hsl(var(--bamboo))',
-        ochre: 'var(--brand-ochre)',
-        olive: 'hsl(var(--olive))',
+        // Nature-inspired colors (direct from design system)
+        sage: '#7A9278',
+        teal: '#5C8B89',
+        clay: '#C9A57B',
+        sand: '#E0D5C7',
+        bamboo: '#6B7F5F',
+        ochre: '#D4A574',
+        olive: '#8B9556',
       },
       fontFamily: {
         display: brandTokens.typography.fontFamilies.display.split(','),
@@ -120,9 +119,11 @@ const config: Config = {
       letterSpacing: brandTokens.typography.letterSpacing,
       borderRadius: {
         ...brandTokens.borderRadius,
-        lg: 'var(--radius-lg)',
-        md: 'calc(var(--radius-lg) - 2px)',
-        sm: 'calc(var(--radius-lg) - 4px)',
+        lg: '0.75rem',  // 12px - cards, buttons
+        md: '0.5rem',   // 8px - inputs
+        sm: '0.25rem',  // 4px - small elements
+        xl: '1rem',     // 16px - icon containers
+        '2xl': '1.5rem', // 24px - large cards
       },
       boxShadow: brandTokens.shadows,
       keyframes: {

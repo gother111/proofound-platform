@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
+import { Logo } from '@/components/brand/Logo';
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -18,9 +19,7 @@ export function Header() {
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <motion.div whileHover={{ scale: 1.02 }}>
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-7 h-7">
-              <CheckCircle className="w-7 h-7 text-[#1C4D3A] dark:text-[#D4C4A8]" strokeWidth={2} />
-            </div>
+            <Logo size="sm" />
             <span className="text-xl font-['Crimson_Pro'] text-[#1C4D3A] dark:text-[#D4C4A8]">
               Proofound
             </span>
