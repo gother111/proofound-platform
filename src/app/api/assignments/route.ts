@@ -130,13 +130,40 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ assignment: newAssignment }, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Invalid input', details: error.errors }, { status: 400 });
+      log.error('assignment.validation.failed', {
+        errors: error.errors,
+      });
+      return NextResponse.json({ 
+        error: 'Invalid input', 
+        details: error.errors,
+        message: 'Some required fields are missing or invalid. Please review your assignment details.'
+      }, { status: 400 });
+    }
+
+    // Database connection errors
+    if (error instanceof Error && (
+      error.message.includes('connect') || 
+      error.message.includes('ECONNREFUSED') ||
+      error.message.includes('timeout')
+    )) {
+      log.error('assignment.db.connection.failed', {
+        error: error.message,
+        stack: error.stack,
+      });
+      return NextResponse.json({ 
+        error: 'Database connection failed',
+        message: 'Unable to save assignment. Please check your connection and try again.'
+      }, { status: 503 });
     }
 
     log.error('assignment.create.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
     });
 
-    return NextResponse.json({ error: 'Failed to create assignment' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Failed to create assignment',
+      message: error instanceof Error ? error.message : 'An unexpected error occurred.'
+    }, { status: 500 });
   }
 }

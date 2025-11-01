@@ -323,16 +323,43 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json(result);
   } catch (error) {
     if (error instanceof z.ZodError) {
+      log.error('expertise.profile.validation.failed', {
+        errors: error.flatten(),
+      });
       return NextResponse.json(
-        { error: 'Invalid expertise payload', details: error.flatten() },
+        { 
+          error: 'Invalid expertise payload', 
+          details: error.flatten(),
+          message: 'Some expertise data is invalid. Please check your skills and capabilities.'
+        },
         { status: 400 }
       );
     }
 
+    // Database connection errors
+    if (error instanceof Error && (
+      error.message.includes('connect') || 
+      error.message.includes('ECONNREFUSED') ||
+      error.message.includes('timeout')
+    )) {
+      log.error('expertise.profile.db.connection.failed', {
+        error: error.message,
+        stack: error.stack,
+      });
+      return NextResponse.json({ 
+        error: 'Database connection failed',
+        message: 'Unable to save expertise profile. Please try again later.'
+      }, { status: 503 });
+    }
+
     log.error('expertise.profile.put.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
     });
 
-    return NextResponse.json({ error: 'Failed to update expertise profile' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Failed to update expertise profile',
+      message: error instanceof Error ? error.message : 'An unexpected error occurred.'
+    }, { status: 500 });
   }
 }

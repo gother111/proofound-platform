@@ -239,8 +239,16 @@ export function AssignmentBuilderV2({ onComplete, onCancel }: AssignmentBuilderV
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to create assignment');
+        const error = await response.json().catch(() => ({}));
+        const errorMessage = error.message || error.error || 'Failed to create assignment';
+        
+        console.error('Assignment creation failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: error,
+        });
+        
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
@@ -255,7 +263,8 @@ export function AssignmentBuilderV2({ onComplete, onCancel }: AssignmentBuilderV
       }
     } catch (error) {
       console.error('Assignment creation error:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to create assignment');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create assignment. Please try again.';
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

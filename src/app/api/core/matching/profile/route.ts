@@ -232,13 +232,40 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Invalid input', details: error.errors }, { status: 400 });
+      log.error('match.profile.validation.failed', {
+        errors: error.errors,
+      });
+      return NextResponse.json({ 
+        error: 'Invalid input', 
+        details: error.errors,
+        message: 'Invalid matching parameters. Please check your matching profile settings.'
+      }, { status: 400 });
+    }
+
+    // Database connection errors
+    if (error instanceof Error && (
+      error.message.includes('connect') || 
+      error.message.includes('ECONNREFUSED') ||
+      error.message.includes('timeout')
+    )) {
+      log.error('match.profile.db.connection.failed', {
+        error: error.message,
+        stack: error.stack,
+      });
+      return NextResponse.json({ 
+        error: 'Database connection failed',
+        message: 'Unable to connect to database. Please try again later.'
+      }, { status: 503 });
     }
 
     log.error('match.profile.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
     });
 
-    return NextResponse.json({ error: 'Failed to compute matches' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Failed to compute matches',
+      message: error instanceof Error ? error.message : 'An unexpected error occurred while computing matches.'
+    }, { status: 500 });
   }
 }

@@ -24,7 +24,26 @@ function createMockDb(): DbType {
 }
 
 if (!connectionString) {
-  console.warn('[db] DATABASE_URL missing; using in-memory mock database.');
+  console.error('');
+  console.error('═════════════════════════════════════════════════════════════════════');
+  console.error('❌ CRITICAL: DATABASE_URL is missing!');
+  console.error('═════════════════════════════════════════════════════════════════════');
+  console.error('');
+  console.error('Your application is using an IN-MEMORY MOCK DATABASE.');
+  console.error('This means:');
+  console.error('  ❌ Data will NOT be saved');
+  console.error('  ❌ All operations will appear to work but data is lost on restart');
+  console.error('  ❌ Users will see "Failed to save" errors in production');
+  console.error('');
+  console.error('🔧 How to fix:');
+  console.error('  1. Set DATABASE_URL in your environment variables');
+  console.error('  2. Format: postgresql://user:password@host:port/database');
+  console.error('  3. For Vercel: Go to Settings → Environment Variables');
+  console.error('  4. For local dev: Add to .env.local file');
+  console.error('');
+  console.error('📚 See PRODUCTION_ENV_CHECK.md for detailed instructions');
+  console.error('═════════════════════════════════════════════════════════════════════');
+  console.error('');
 }
 
 const queryClient = connectionString
