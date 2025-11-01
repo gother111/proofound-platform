@@ -66,6 +66,7 @@ export const individualProfiles = pgTable('individual_profiles', {
   // New Proofound profile fields
   tagline: text('tagline'),
   mission: text('mission'),
+  vision: text('vision'),
   coverImageUrl: text('cover_image_url'),
   verified: boolean('verified').default(false),
   joinedDate: timestamp('joined_date').defaultNow(),
@@ -129,6 +130,7 @@ export const organizations = pgTable('organizations', {
   locations: text('locations').array(),
   // Culture and values
   values: jsonb('values'), // Array of {icon: string, label: string, description: string}
+  causes: text('causes').array(),
   workCulture: jsonb('work_culture'), // {collaboration, decision_making, learning, wellbeing, inclusion}
   createdBy: uuid('created_by').references(() => profiles.id),
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -1502,6 +1504,88 @@ export const userConsents = pgTable('user_consents', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+// ====================================
+// Zen Hub - Well-being Tracking (Privacy-First)
+// ====================================
+
+// Well-being check-ins - Private, never used in ranking
+export const wellbeingCheckins = pgTable('wellbeing_checkins', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  stressLevel: integer('stress_level').notNull(), // 1-5 Likert scale
+  controlLevel: integer('control_level').notNull(), // 1-5 Likert scale
+  milestoneTriggerId: text('milestone_trigger_id'), // 'rejection', 'interview', 'offer', null
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Well-being reflections - Linked to milestones
+export const wellbeingReflections = pgTable('wellbeing_reflections', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  reflectionText: text('reflection_text').notNull(),
+  milestoneType: text('milestone_type'), // 'rejection', 'interview', 'offer'
+  linkedCheckinId: uuid('linked_checkin_id').references(() => wellbeingCheckins.id, {
+    onDelete: 'set null',
+  }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Well-being opt-ins - User consent for Zen Hub features
+export const wellbeingOptIns = pgTable('wellbeing_opt_ins', {
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .primaryKey(),
+  optedIn: boolean('opted_in').default(false).notNull(),
+  privacyBannerAcknowledged: boolean('privacy_banner_acknowledged').default(false),
+  optedInAt: timestamp('opted_in_at'),
+  optedOutAt: timestamp('opted_out_at'),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// ====================================
+// Video Conferencing Integration
+// ====================================
+
+// User integrations for OAuth-connected services
+export const userIntegrations = pgTable('user_integrations', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  provider: text('provider', { enum: ['zoom', 'google'] }).notNull(),
+  accessToken: text('access_token').notNull(),
+  refreshToken: text('refresh_token'),
+  tokenExpiry: timestamp('token_expiry').notNull(),
+  scope: text('scope').array(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  userProviderUnique: unique().on(table.userId, table.provider),
+}));
+
+// Scheduled interviews with video links
+export const interviews = pgTable('interviews', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  matchId: uuid('match_id')
+    .references(() => matches.id, { onDelete: 'cascade' })
+    .notNull(),
+  scheduledAt: timestamp('scheduled_at').notNull(),
+  duration: integer('duration').default(30).notNull(), // minutes
+  platform: text('platform', { enum: ['zoom', 'google'] }).notNull(),
+  meetingId: text('meeting_id').notNull(), // External meeting/event ID
+  meetingUrl: text('meeting_url').notNull(),
+  timezone: text('timezone').default('UTC'),
+  status: text('status', {
+    enum: ['scheduled', 'completed', 'cancelled', 'no_show'],
+  }).default('scheduled').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
 // Type exports
 export type Profile = typeof profiles.$inferSelect;
 export type InsertProfile = typeof profiles.$inferInsert;
@@ -1620,5 +1704,20 @@ export type AssignmentCreationPipeline = typeof assignmentCreationPipeline.$infe
 export type InsertAssignmentCreationPipeline = typeof assignmentCreationPipeline.$inferInsert;
 export type AssignmentFieldVisibility = typeof assignmentFieldVisibility.$inferSelect;
 export type InsertAssignmentFieldVisibility = typeof assignmentFieldVisibility.$inferInsert;
+
+// Zen Hub well-being types
+export type WellbeingCheckin = typeof wellbeingCheckins.$inferSelect;
+export type InsertWellbeingCheckin = typeof wellbeingCheckins.$inferInsert;
+export type WellbeingReflection = typeof wellbeingReflections.$inferSelect;
+export type InsertWellbeingReflection = typeof wellbeingReflections.$inferInsert;
+export type WellbeingOptIn = typeof wellbeingOptIns.$inferSelect;
+export type InsertWellbeingOptIn = typeof wellbeingOptIns.$inferInsert;
+
+// Video integration types
+export type UserIntegration = typeof userIntegrations.$inferSelect;
+export type InsertUserIntegration = typeof userIntegrations.$inferInsert;
+export type Interview = typeof interviews.$inferSelect;
+export type InsertInterview = typeof interviews.$inferInsert;
+
 export type AssignmentFieldVisibilityDefaults = typeof assignmentFieldVisibilityDefaults.$inferSelect;
 export type InsertAssignmentFieldVisibilityDefaults = typeof assignmentFieldVisibilityDefaults.$inferInsert;
