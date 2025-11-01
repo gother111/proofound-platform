@@ -204,7 +204,7 @@ export function LinkedInVerification({ onSuccess }: LinkedInVerificationProps) {
             <div className="pt-4 border-t">
               <p className="text-sm text-muted-foreground">
                 <strong>Next Steps:</strong> Your verification request is now pending admin review.
-                You'll receive a notification once the review is complete.
+                You&apos;ll receive a notification once the review is complete.
               </p>
             </div>
           </div>
@@ -224,7 +224,7 @@ export function LinkedInVerification({ onSuccess }: LinkedInVerificationProps) {
           <div className="flex-1">
             <h3 className="font-semibold text-lg mb-2">LinkedIn Identity Verification</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              We'll automatically check if your LinkedIn profile has an identity verification badge and
+              We&apos;ll automatically check if your LinkedIn profile has an identity verification badge and
               analyze other trust signals. Fast and free!
             </p>
 
