@@ -259,7 +259,7 @@ export function AdminVerificationDashboard() {
     const isProcessing = processingUserId === verification.userId;
 
     return (
-      <Card key={verification.userId} className="overflow-hidden hover:shadow-md transition-shadow">
+      <Card key={verification.userId} className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
         <CardContent className="p-6">
           {/* Header with avatar and user info */}
           <div className="flex items-start gap-4 mb-4">
@@ -322,7 +322,7 @@ export function AdminVerificationDashboard() {
             href={verification.linkedinUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 text-sm text-[#0A66C2] hover:underline mb-4"
+            className="flex items-center gap-2 text-sm text-[#0A66C2] hover:underline mb-4 transition-all duration-200 hover:gap-3"
           >
             <Linkedin className="w-4 h-4" />
             View LinkedIn Profile
@@ -334,7 +334,7 @@ export function AdminVerificationDashboard() {
             <Button
               variant="outline"
               size="sm"
-              className="flex-1"
+              className="flex-1 transition-all duration-200 hover:scale-105"
               onClick={() => setSelectedVerification(verification)}
               disabled={isProcessing}
             >
@@ -344,7 +344,7 @@ export function AdminVerificationDashboard() {
             {verification.confidence >= 80 && (
               <Button
                 size="sm"
-                className="bg-green-600 hover:bg-green-700 text-white"
+                className="bg-green-600 hover:bg-green-700 text-white transition-all duration-200 hover:scale-105"
                 onClick={() => handleQuickApprove(verification)}
                 disabled={isProcessing}
               >
@@ -361,7 +361,7 @@ export function AdminVerificationDashboard() {
             <Button
               size="sm"
               variant="outline"
-              className="border-red-300 text-red-600 hover:bg-red-50"
+              className="border-red-300 text-red-600 hover:bg-red-50 transition-all duration-200 hover:scale-105"
               onClick={() => handleQuickReject(verification)}
               disabled={isProcessing}
             >
@@ -430,7 +430,7 @@ export function AdminVerificationDashboard() {
     <div>
       {/* Stats Overview */}
       {stats && stats.total > 0 && (
-        <Card className="mb-6">
+        <Card className="mb-6 transition-all duration-300">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -458,22 +458,22 @@ export function AdminVerificationDashboard() {
 
       {/* Tabs */}
       <Tabs value={selectedTab} onValueChange={(v) => setSelectedTab(v as any)} className="w-full">
-        <TabsList className="w-full justify-start mb-6 bg-white border border-[#E8E6DD]">
-          <TabsTrigger value="all" className="gap-2">
+        <TabsList className="w-full justify-start mb-6 bg-white border border-[#E8E6DD] transition-all duration-300">
+          <TabsTrigger value="all" className="gap-2 transition-all duration-200">
             All
-            {stats && <Badge variant="secondary">{stats.total}</Badge>}
+            {stats && <Badge variant="secondary" className="transition-all duration-200">{stats.total}</Badge>}
           </TabsTrigger>
-          <TabsTrigger value="high" className="gap-2">
+          <TabsTrigger value="high" className="gap-2 transition-all duration-200">
             High Confidence
-            {stats && <Badge variant="secondary">{stats.high}</Badge>}
+            {stats && <Badge variant="secondary" className="transition-all duration-200">{stats.high}</Badge>}
           </TabsTrigger>
-          <TabsTrigger value="medium" className="gap-2">
+          <TabsTrigger value="medium" className="gap-2 transition-all duration-200">
             Medium Confidence
-            {stats && <Badge variant="secondary">{stats.medium}</Badge>}
+            {stats && <Badge variant="secondary" className="transition-all duration-200">{stats.medium}</Badge>}
           </TabsTrigger>
-          <TabsTrigger value="low" className="gap-2">
+          <TabsTrigger value="low" className="gap-2 transition-all duration-200">
             Low Confidence
-            {stats && <Badge variant="secondary">{stats.low}</Badge>}
+            {stats && <Badge variant="secondary" className="transition-all duration-200">{stats.low}</Badge>}
           </TabsTrigger>
         </TabsList>
 
@@ -494,4 +494,3 @@ export function AdminVerificationDashboard() {
     </div>
   );
 }
-
