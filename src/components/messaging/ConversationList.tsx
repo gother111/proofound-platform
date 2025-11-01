@@ -1,6 +1,6 @@
 /**
  * Conversation List Component
- * 
+ *
  * Displays list of message conversations with search and filtering
  */
 
@@ -33,23 +33,24 @@ interface ConversationListProps {
   isLoading?: boolean;
 }
 
-export function ConversationList({ 
-  conversations, 
-  selectedId, 
+export function ConversationList({
+  conversations,
+  selectedId,
   onSelect,
-  isLoading = false 
+  isLoading = false,
 }: ConversationListProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Filter conversations by search query
   const filteredConversations = useMemo(() => {
     if (!searchQuery.trim()) return conversations;
-    
+
     const query = searchQuery.toLowerCase();
-    return conversations.filter(conv => 
-      conv.otherPartyName.toLowerCase().includes(query) ||
-      conv.assignmentTitle?.toLowerCase().includes(query) ||
-      conv.lastMessage.toLowerCase().includes(query)
+    return conversations.filter(
+      (conv) =>
+        conv.otherPartyName.toLowerCase().includes(query) ||
+        conv.assignmentTitle?.toLowerCase().includes(query) ||
+        conv.lastMessage.toLowerCase().includes(query)
     );
   }, [conversations, searchQuery]);
 
@@ -77,7 +78,7 @@ export function ConversationList({
     if (name === 'Candidate') return 'C';
     return name
       .split(' ')
-      .map(n => n[0])
+      .map((n) => n[0])
       .join('')
       .toUpperCase()
       .substring(0, 2);
@@ -129,16 +130,14 @@ export function ConversationList({
           <div className="p-8 text-center space-y-2">
             <User className="h-12 w-12 mx-auto text-[#6B6760] opacity-50" />
             <p className="text-sm text-[#6B6760]">No conversations yet</p>
-            <p className="text-xs text-[#6B6760]">
-              Start matching to begin conversations
-            </p>
+            <p className="text-xs text-[#6B6760]">Start matching to begin conversations</p>
           </div>
         )}
 
         {filteredConversations.length === 0 && searchQuery && (
           <div className="p-8 text-center">
             <p className="text-sm text-[#6B6760]">
-              No conversations match "{searchQuery}"
+              No conversations match &apos;{searchQuery}&apos;
             </p>
           </div>
         )}
@@ -156,7 +155,10 @@ export function ConversationList({
               {/* Avatar */}
               <Avatar className="h-10 w-10 flex-shrink-0">
                 {conversation.stage === 'revealed' && conversation.otherPartyAvatar ? (
-                  <AvatarImage src={conversation.otherPartyAvatar} alt={conversation.otherPartyName} />
+                  <AvatarImage
+                    src={conversation.otherPartyAvatar}
+                    alt={conversation.otherPartyName}
+                  />
                 ) : null}
                 <AvatarFallback className="bg-[#4A5943] text-white">
                   {getInitials(getDisplayName(conversation))}
@@ -178,8 +180,8 @@ export function ConversationList({
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {conversation.unreadCount > 0 && (
-                      <Badge 
-                        variant="destructive" 
+                      <Badge
+                        variant="destructive"
                         className="h-5 min-w-[20px] flex items-center justify-center px-1.5"
                       >
                         {conversation.unreadCount}
@@ -197,10 +199,7 @@ export function ConversationList({
                 </p>
 
                 {conversation.stage === 'masked' && (
-                  <Badge 
-                    variant="outline" 
-                    className="mt-2 text-xs border-[#7A9278] text-[#4A5943]"
-                  >
+                  <Badge variant="outline" className="mt-2 text-xs border-[#7A9278] text-[#4A5943]">
                     Identity revealed after introduction
                   </Badge>
                 )}
@@ -212,4 +211,3 @@ export function ConversationList({
     </div>
   );
 }
-
