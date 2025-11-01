@@ -149,14 +149,32 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
       });
 
       if (!response.ok) {
-        throw new Error('Failed to save matching profile');
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.message || errorData.error || 'Failed to save matching profile';
+        
+        // Log to console for debugging
+        console.error('Matching profile save failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData,
+        });
+        
+        toast.error(errorMessage);
+        throw new Error(errorMessage);
       }
 
       toast.success('Matching profile activated!');
       onComplete();
       router.refresh();
     } catch (error) {
-      toast.error('Failed to save matching profile');
+      console.error('Error saving matching profile:', error);
+      
+      // Only show error toast if we haven't already shown one
+      if (error instanceof Error && !error.message.includes('Failed to save')) {
+        toast.error(error.message || 'Failed to save matching profile');
+      } else if (!(error instanceof Error)) {
+        toast.error('Failed to save matching profile. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }

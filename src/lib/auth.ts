@@ -16,8 +16,22 @@ type OrganizationRow = Pick<
   | 'legalName'
   | 'type'
   | 'logoUrl'
+  | 'coverImageUrl'
+  | 'tagline'
   | 'mission'
+  | 'vision'
+  | 'industry'
+  | 'organizationSize'
+  | 'impactArea'
+  | 'legalForm'
+  | 'foundedDate'
   | 'website'
+  | 'values'
+  | 'workCulture'
+  | 'registrationCountry'
+  | 'registrationRegion'
+  | 'organizationNumber'
+  | 'locations'
   | 'createdBy'
   | 'createdAt'
   | 'updatedAt'
@@ -51,8 +65,22 @@ function mapOrganization(
     legalName: row.legalName ?? null,
     type: (row.type as OrganizationRow['type']) ?? null,
     logoUrl: row.logoUrl ?? null,
+    coverImageUrl: row.coverImageUrl ?? null,
+    tagline: row.tagline ?? null,
     mission: row.mission ?? null,
+    vision: row.vision ?? null,
+    industry: row.industry ?? null,
+    organizationSize: row.organizationSize ?? null,
+    impactArea: row.impactArea ?? null,
+    legalForm: row.legalForm ?? null,
+    foundedDate: (row.foundedDate as OrganizationRow['foundedDate']) ?? null,
     website: row.website ?? null,
+    values: (row.values as OrganizationRow['values']) ?? null,
+    workCulture: (row.workCulture as OrganizationRow['workCulture']) ?? null,
+    registrationCountry: row.registrationCountry ?? null,
+    registrationRegion: row.registrationRegion ?? null,
+    organizationNumber: row.organizationNumber ?? null,
+    locations: (row.locations as OrganizationRow['locations']) ?? null,
     createdBy: row.createdBy ?? null,
     createdAt: row.createdAt ? new Date(row.createdAt as unknown as string | number) : new Date(0),
     updatedAt: row.updatedAt ? new Date(row.updatedAt as unknown as string | number) : new Date(),
@@ -134,8 +162,22 @@ export async function getUserOrganizations(userId: string) {
           legalName:legal_name,
           type,
           logoUrl:logo_url,
+          coverImageUrl:cover_image_url,
+          tagline,
           mission,
+          vision,
+          industry,
+          organizationSize:organization_size,
+          impactArea:impact_area,
+          legalForm:legal_form,
+          foundedDate:founded_date,
           website,
+          values,
+          workCulture:work_culture,
+          registrationCountry:registration_country,
+          registrationRegion:registration_region,
+          organizationNumber:organization_number,
+          locations,
           createdBy:created_by,
           createdAt:created_at,
           updatedAt:updated_at
@@ -194,8 +236,22 @@ export async function getActiveOrg(slug: string, userId: string) {
         legalName:legal_name,
         type,
         logoUrl:logo_url,
+        coverImageUrl:cover_image_url,
+        tagline,
         mission,
+        vision,
+        industry,
+        organizationSize:organization_size,
+        impactArea:impact_area,
+        legalForm:legal_form,
+        foundedDate:founded_date,
         website,
+        values,
+        workCulture:work_culture,
+        registrationCountry:registration_country,
+        registrationRegion:registration_region,
+        organizationNumber:organization_number,
+        locations,
         createdBy:created_by,
         createdAt:created_at,
         updatedAt:updated_at,
@@ -236,8 +292,35 @@ export async function getActiveOrg(slug: string, userId: string) {
       legalName: (data as Record<string, unknown>).legalName as string | null | undefined,
       type: data.type as OrganizationRow['type'],
       logoUrl: (data as Record<string, unknown>).logoUrl as string | null | undefined,
+      coverImageUrl: (data as Record<string, unknown>).coverImageUrl as string | null | undefined,
+      tagline: (data as Record<string, unknown>).tagline as string | null | undefined,
       mission: (data as Record<string, unknown>).mission as string | null | undefined,
+      vision: (data as Record<string, unknown>).vision as string | null | undefined,
+      industry: (data as Record<string, unknown>).industry as string | null | undefined,
+      organizationSize: (data as Record<string, unknown>).organizationSize as
+        | OrganizationRow['organizationSize']
+        | undefined,
+      impactArea: (data as Record<string, unknown>).impactArea as string | null | undefined,
+      legalForm: (data as Record<string, unknown>).legalForm as
+        | OrganizationRow['legalForm']
+        | undefined,
+      foundedDate: (data as Record<string, unknown>).foundedDate as string | null | undefined,
       website: (data as Record<string, unknown>).website as string | null | undefined,
+      values: (data as Record<string, unknown>).values as OrganizationRow['values'],
+      workCulture: (data as Record<string, unknown>).workCulture as OrganizationRow['workCulture'],
+      registrationCountry: (data as Record<string, unknown>).registrationCountry as
+        | string
+        | null
+        | undefined,
+      registrationRegion: (data as Record<string, unknown>).registrationRegion as
+        | string
+        | null
+        | undefined,
+      organizationNumber: (data as Record<string, unknown>).organizationNumber as
+        | string
+        | null
+        | undefined,
+      locations: (data as Record<string, unknown>).locations as OrganizationRow['locations'],
       createdBy: (data as Record<string, unknown>).createdBy as string | null | undefined,
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,

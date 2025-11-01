@@ -4,6 +4,12 @@ import { VerifyEmailIndividual } from '../../emails/VerifyEmailIndividual';
 import { VerifyEmailOrganization } from '../../emails/VerifyEmailOrganization';
 import { ResetPassword } from '../../emails/ResetPassword';
 import { OrgInvite } from '../../emails/OrgInvite';
+import { DeletionScheduled } from '../../emails/DeletionScheduled';
+import { DeletionReminder } from '../../emails/DeletionReminder';
+import { DeletionComplete } from '../../emails/DeletionComplete';
+import WorkEmailVerification from '../../emails/WorkEmailVerification';
+import SkillVerificationRequest from '../../emails/SkillVerificationRequest';
+import NewMatchNotification from '../../emails/NewMatchNotification';
 
 // Allow build to succeed without RESEND_API_KEY
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder_key');
@@ -74,5 +80,146 @@ export async function sendOrgInviteEmail(
   } catch (error) {
     console.error('Failed to send org invite email:', error);
     throw new Error('Failed to send org invite email');
+  }
+}
+
+export async function sendDeletionScheduledEmail(
+  email: string,
+  userId: string,
+  scheduledDate: Date
+): Promise<void> {
+  const cancellationUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/settings?tab=privacy`;
+
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to: email,
+      subject: 'Account Deletion Scheduled - Proofound',
+      react: DeletionScheduled({ scheduledDate, cancellationUrl }),
+    });
+  } catch (error) {
+    console.error('Failed to send deletion scheduled email:', error);
+    throw new Error('Failed to send deletion scheduled email');
+  }
+}
+
+export async function sendDeletionReminderEmail(
+  email: string,
+  userId: string,
+  scheduledDate: Date,
+  daysRemaining: number
+): Promise<void> {
+  const cancellationUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/settings?tab=privacy`;
+
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to: email,
+      subject: `${daysRemaining} Days Until Your Proofound Account is Deleted`,
+      react: DeletionReminder({ scheduledDate, daysRemaining, cancellationUrl }),
+    });
+  } catch (error) {
+    console.error('Failed to send deletion reminder email:', error);
+    throw new Error('Failed to send deletion reminder email');
+  }
+}
+
+export async function sendDeletionCompleteEmail(email: string, userId: string): Promise<void> {
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to: email,
+      subject: 'Your Proofound Account Has Been Deleted',
+      react: DeletionComplete({ userId }),
+    });
+  } catch (error) {
+    console.error('Failed to send deletion complete email:', error);
+    throw new Error('Failed to send deletion complete email');
+  }
+}
+
+export async function sendWorkEmailVerification(
+  email: string,
+  token: string,
+  userName: string
+): Promise<void> {
+  const verifyUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/verify-work-email?token=${token}`;
+
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to: email,
+      subject: 'Verify your work email - Proofound',
+      react: WorkEmailVerification({ verifyUrl, userName }),
+    });
+  } catch (error) {
+    console.error('Failed to send work email verification:', error);
+    throw new Error('Failed to send work email verification');
+  }
+}
+
+export async function sendSkillVerificationRequest(
+  verifierEmail: string,
+  requesterName: string,
+  requesterHandle: string,
+  skillName: string,
+  token: string,
+  message?: string
+): Promise<void> {
+  const verifyUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/verify-skill?token=${token}&action=approve`;
+  const declineUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/verify-skill?token=${token}&action=decline`;
+
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to: verifierEmail,
+      subject: `${requesterName} requested your skill verification - Proofound`,
+      react: SkillVerificationRequest({
+        requesterName,
+        requesterHandle,
+        skillName,
+        verifyUrl,
+        declineUrl,
+        message,
+      }),
+    });
+  } catch (error) {
+    console.error('Failed to send skill verification request:', error);
+    throw new Error('Failed to send skill verification request');
+  }
+}
+
+export async function sendMatchNotification(
+  recipientEmail: string,
+  recipientName: string,
+  matchData: {
+    matchType: 'individual' | 'organization';
+    matchScore: number;
+    roleTitle?: string;
+    organizationName?: string;
+    topSkillMatches?: string[];
+    matchId: string;
+  }
+): Promise<void> {
+  const viewMatchUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/app/i/matches/${matchData.matchId}`;
+
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to: recipientEmail,
+      subject: 'You have a new match! - Proofound',
+      react: NewMatchNotification({
+        recipientName,
+        matchType: matchData.matchType,
+        matchScore: matchData.matchScore,
+        roleTitle: matchData.roleTitle,
+        organizationName: matchData.organizationName,
+        topSkillMatches: matchData.topSkillMatches,
+        viewMatchUrl,
+      }),
+    });
+  } catch (error) {
+    console.error('Failed to send match notification:', error);
+    throw new Error('Failed to send match notification');
   }
 }

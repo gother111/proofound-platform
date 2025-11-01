@@ -72,11 +72,31 @@ export async function GET() {
       },
     });
   } catch (error) {
+    // Database connection errors
+    if (error instanceof Error && (
+      error.message.includes('connect') || 
+      error.message.includes('ECONNREFUSED') ||
+      error.message.includes('timeout')
+    )) {
+      log.error('matching-profile.db.connection.failed', {
+        error: error.message,
+        stack: error.stack,
+      });
+      return NextResponse.json({ 
+        error: 'Database connection failed',
+        message: 'Unable to connect to database. Please try again later.'
+      }, { status: 503 });
+    }
+
     log.error('matching-profile.get.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
     });
 
-    return NextResponse.json({ error: 'Failed to fetch matching profile' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Failed to fetch matching profile',
+      message: error instanceof Error ? error.message : 'An unexpected error occurred.'
+    }, { status: 500 });
   }
 }
 
@@ -156,13 +176,40 @@ export async function PUT(request: NextRequest) {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Invalid input', details: error.errors }, { status: 400 });
+      log.error('matching-profile.validation.failed', {
+        errors: error.errors,
+      });
+      return NextResponse.json({ 
+        error: 'Invalid input', 
+        details: error.errors,
+        message: 'Please check your input and try again. Some fields may be missing or invalid.'
+      }, { status: 400 });
+    }
+
+    // Database connection errors
+    if (error instanceof Error && (
+      error.message.includes('connect') || 
+      error.message.includes('ECONNREFUSED') ||
+      error.message.includes('timeout')
+    )) {
+      log.error('matching-profile.db.connection.failed', {
+        error: error.message,
+        stack: error.stack,
+      });
+      return NextResponse.json({ 
+        error: 'Database connection failed',
+        message: 'Unable to connect to database. Please try again later or contact support if the issue persists.'
+      }, { status: 503 });
     }
 
     log.error('matching-profile.upsert.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
     });
 
-    return NextResponse.json({ error: 'Failed to update matching profile' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Failed to update matching profile',
+      message: error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.'
+    }, { status: 500 });
   }
 }

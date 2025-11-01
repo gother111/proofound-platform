@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { updateOrganization } from '@/actions/org';
+import { EmptyOrganizationProfileView } from '@/components/profile/EmptyOrganizationProfileView';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,6 +26,44 @@ export default async function OrganizationProfilePage({
 
   // Check if user can edit
   const canEdit = membership.role === 'owner' || membership.role === 'admin';
+
+  // Check if organization profile is empty (has minimal data beyond required fields)
+  const hasBasicInfo = Boolean(org.tagline || org.mission || org.vision || org.website);
+  const hasBusinessDetails = Boolean(
+    org.industry || org.organizationSize || org.impactArea || org.legalForm
+  );
+  const hasExtendedInfo = Boolean(org.values || org.workCulture || org.legalName);
+
+  const isEmptyProfile = !hasBasicInfo && !hasBusinessDetails && !hasExtendedInfo;
+
+  // Calculate profile completion percentage
+  const completionFields = [
+    org.logoUrl,
+    org.tagline,
+    org.mission,
+    org.vision,
+    org.industry,
+    org.organizationSize,
+    org.impactArea,
+    org.legalForm,
+    org.foundedDate,
+    org.legalName,
+    org.website,
+    org.values,
+    org.workCulture,
+  ];
+  const completedFields = completionFields.filter((field) => Boolean(field)).length;
+  const profileCompletion = Math.round((completedFields / completionFields.length) * 100);
+
+  // Show empty state if profile has minimal data
+  if (isEmptyProfile) {
+    return (
+      <EmptyOrganizationProfileView
+        organizationName={org.displayName}
+        profileCompletion={Math.max(profileCompletion, 5)} // Minimum 5% for creating the org
+      />
+    );
+  }
 
   return (
     <div className="max-w-3xl mx-auto space-y-8 min-h-screen bg-proofound-parchment dark:bg-background p-6">

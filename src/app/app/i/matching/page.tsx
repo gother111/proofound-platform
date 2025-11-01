@@ -21,8 +21,14 @@ export default function MatchingPage() {
       try {
         // Fetch matching profile
         const profileRes = await fetch('/api/matching-profile');
+        
+        if (!profileRes.ok) {
+          const errorData = await profileRes.json().catch(() => ({}));
+          console.error('Failed to load matching profile:', errorData);
+          throw new Error(errorData.message || 'Failed to load matching profile');
+        }
+        
         const profileData = await profileRes.json();
-
         setMatchingProfile(profileData.profile);
 
         // If profile exists, fetch matches
@@ -32,11 +38,20 @@ export default function MatchingPage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({}),
           });
+          
+          if (!matchesRes.ok) {
+            const errorData = await matchesRes.json().catch(() => ({}));
+            console.error('Failed to load matches:', errorData);
+            throw new Error(errorData.message || 'Failed to load matches');
+          }
+          
           const matchesData = await matchesRes.json();
           setMatches(matchesData.items || []);
         }
       } catch (error) {
-        toast.error('Failed to load matching data');
+        console.error('Error loading matching data:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Failed to load matching data';
+        toast.error(errorMessage);
       } finally {
         setIsLoading(false);
       }
