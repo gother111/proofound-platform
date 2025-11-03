@@ -27,6 +27,8 @@ import {
 import { PrivacyBanner } from '@/components/zen/PrivacyBanner';
 import { CheckInDialog } from '@/components/zen/CheckInDialog';
 import { ReflectionDialog } from '@/components/zen/ReflectionDialog';
+import { WellBeingDeltaWidget } from '@/components/wellbeing/WellBeingDeltaWidget';
+import { WellBeingTrendChart } from '@/components/wellbeing/WellBeingTrendChart';
 import { toast } from 'sonner';
 
 const riskStates = [
@@ -88,6 +90,11 @@ export default function ZenHubPage() {
   const [showCheckInDialog, setShowCheckInDialog] = useState(false);
   const [showReflectionDialog, setShowReflectionDialog] = useState(false);
 
+  // Well-being delta and trend data
+  const [deltaData, setDeltaData] = useState<any>(null);
+  const [trendData, setTrendData] = useState<any[]>([]);
+  const [isLoadingDelta, setIsLoadingDelta] = useState(true);
+
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDark);
     return () => document.documentElement.classList.remove('dark');
@@ -138,10 +145,44 @@ export default function ZenHubPage() {
     }
   };
 
-  const refreshData = () => {
-    // Placeholder for refreshing check-ins data
-    // Will be implemented when we add the history component
+  const refreshData = async () => {
+    // Refresh delta and trend data
+    await fetchDeltaAndTrend();
   };
+
+  // Fetch delta and trend data
+  const fetchDeltaAndTrend = async () => {
+    if (!optInStatus?.optedIn) return;
+
+    try {
+      setIsLoadingDelta(true);
+      const [deltaResponse, trendResponse] = await Promise.all([
+        fetch('/api/wellbeing/delta?period=14'),
+        fetch('/api/wellbeing/trend?weeks=4'),
+      ]);
+
+      if (deltaResponse.ok) {
+        const delta = await deltaResponse.json();
+        setDeltaData(delta);
+      }
+
+      if (trendResponse.ok) {
+        const trend = await trendResponse.json();
+        setTrendData(trend);
+      }
+    } catch (error) {
+      console.error('Failed to fetch well-being data:', error);
+    } finally {
+      setIsLoadingDelta(false);
+    }
+  };
+
+  // Fetch delta/trend when opted in
+  useEffect(() => {
+    if (optInStatus?.optedIn) {
+      fetchDeltaAndTrend();
+    }
+  }, [optInStatus]);
 
   const filteredPractices = useMemo(() => {
     const predicate = filterMap[activeFilter] ?? (() => true);
@@ -281,6 +322,23 @@ export default function ZenHubPage() {
 
           <aside className="space-y-6">
             <PracticeDetailCard practice={selectedPractice} risk={risk} />
+
+            {/* Well-Being Delta Widget */}
+            {!isLoadingOptIn && optInStatus?.optedIn && !isLoadingDelta && deltaData && (
+              <WellBeingDeltaWidget
+                stressDelta={deltaData.stressDelta}
+                controlDelta={deltaData.controlDelta}
+                period={deltaData.period}
+                checkinsCount={deltaData.checkinsCount}
+                hasBaseline={deltaData.hasBaseline}
+              />
+            )}
+
+            {/* Well-Being Trend Chart */}
+            {!isLoadingOptIn && optInStatus?.optedIn && !isLoadingDelta && trendData.length > 0 && (
+              <WellBeingTrendChart trend={trendData} />
+            )}
+
             <SupportChannels />
           </aside>
         </div>
