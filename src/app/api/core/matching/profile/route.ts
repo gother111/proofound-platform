@@ -6,6 +6,7 @@ import { assignments, matchingProfiles, skills } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { scrubDisallowedFields } from '@/lib/core/matching/firewall';
+import { getOrSet, CACHE_KEYS, CACHE_TTL } from '@/lib/cache';
 import {
   scoreValues,
   scoreCauses,
@@ -61,10 +62,17 @@ export async function POST(request: NextRequest) {
     const validatedData = MatchRequestSchema.parse(body);
     const { mode, k = 20 } = validatedData;
 
-    // Fetch user's matching profile
-    const profile = await db.query.matchingProfiles.findFirst({
-      where: eq(matchingProfiles.profileId, user.id),
-    });
+    // Fetch user's matching profile (with caching)
+    const cacheKeyProfile = `${CACHE_KEYS.PROFILE}matching:${user.id}`;
+    const profile = await getOrSet(
+      cacheKeyProfile,
+      async () => {
+        return await db.query.matchingProfiles.findFirst({
+          where: eq(matchingProfiles.profileId, user.id),
+        });
+      },
+      CACHE_TTL.PROFILE
+    );
 
     if (!profile) {
       return NextResponse.json(
@@ -73,10 +81,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch user's skills
-    const userSkills = await db.query.skills.findMany({
-      where: eq(skills.profileId, user.id),
-    });
+    // Fetch user's skills (with caching)
+    const cacheKeySkills = `${CACHE_KEYS.USER_SKILLS}${user.id}`;
+    const userSkills = await getOrSet(
+      cacheKeySkills,
+      async () => {
+        return await db.query.skills.findMany({
+          where: eq(skills.profileId, user.id),
+        });
+      },
+      CACHE_TTL.USER_SKILLS
+    );
 
     const skillsMap: Record<string, Skill> = {};
     for (const skill of userSkills) {
@@ -235,27 +250,34 @@ export async function POST(request: NextRequest) {
       log.error('match.profile.validation.failed', {
         errors: error.errors,
       });
-      return NextResponse.json({ 
-        error: 'Invalid input', 
-        details: error.errors,
-        message: 'Invalid matching parameters. Please check your matching profile settings.'
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Invalid input',
+          details: error.errors,
+          message: 'Invalid matching parameters. Please check your matching profile settings.',
+        },
+        { status: 400 }
+      );
     }
 
     // Database connection errors
-    if (error instanceof Error && (
-      error.message.includes('connect') || 
-      error.message.includes('ECONNREFUSED') ||
-      error.message.includes('timeout')
-    )) {
+    if (
+      error instanceof Error &&
+      (error.message.includes('connect') ||
+        error.message.includes('ECONNREFUSED') ||
+        error.message.includes('timeout'))
+    ) {
       log.error('match.profile.db.connection.failed', {
         error: error.message,
         stack: error.stack,
       });
-      return NextResponse.json({ 
-        error: 'Database connection failed',
-        message: 'Unable to connect to database. Please try again later.'
-      }, { status: 503 });
+      return NextResponse.json(
+        {
+          error: 'Database connection failed',
+          message: 'Unable to connect to database. Please try again later.',
+        },
+        { status: 503 }
+      );
     }
 
     log.error('match.profile.failed', {
@@ -263,9 +285,15 @@ export async function POST(request: NextRequest) {
       stack: error instanceof Error ? error.stack : undefined,
     });
 
-    return NextResponse.json({ 
-      error: 'Failed to compute matches',
-      message: error instanceof Error ? error.message : 'An unexpected error occurred while computing matches.'
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Failed to compute matches',
+        message:
+          error instanceof Error
+            ? error.message
+            : 'An unexpected error occurred while computing matches.',
+      },
+      { status: 500 }
+    );
   }
 }

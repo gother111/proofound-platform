@@ -58,9 +58,13 @@ async function getUserOrgId(userId: string): Promise<string | null> {
 /**
  * GET /api/assignments
  *
- * Returns all assignments for the current user's organization.
+ * Returns assignments for the current user's organization with pagination.
+ * Query params:
+ * - limit: Number of items to return (default: 20, max: 100)
+ * - offset: Number of items to skip (default: 0)
+ * - status: Filter by status (draft, active, paused, closed)
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const user = await requireAuth();
 
@@ -68,16 +72,40 @@ export async function GET() {
     const orgId = await getUserOrgId(user.id);
 
     if (!orgId) {
-      return NextResponse.json({ items: [] });
+      return NextResponse.json({ items: [], hasMore: false });
     }
 
-    // Fetch assignments for this organization
-    const orgAssignments = await db.query.assignments.findMany({
-      where: eq(assignments.orgId, orgId),
-      orderBy: (assignments, { desc }) => [desc(assignments.createdAt)],
-    });
+    // Get pagination parameters
+    const searchParams = request.nextUrl.searchParams;
+    const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
+    const offset = parseInt(searchParams.get('offset') || '0', 10);
+    const statusFilter = searchParams.get('status');
 
-    return NextResponse.json({ items: orgAssignments });
+    // Build query
+    let query = db.select().from(assignments).where(eq(assignments.orgId, orgId)).$dynamic();
+
+    // Add status filter if provided
+    if (statusFilter && ['draft', 'active', 'paused', 'closed'].includes(statusFilter)) {
+      query = query.where(
+        and(eq(assignments.orgId, orgId), eq(assignments.status, statusFilter as any))
+      );
+    }
+
+    // Fetch assignments with pagination (fetch one extra to check if there are more)
+    const orgAssignments = await query
+      .orderBy((t: any) => t.createdAt)
+      .limit(limit + 1)
+      .offset(offset);
+
+    // Check if there are more results
+    const hasMore = orgAssignments.length > limit;
+    const assignmentsToReturn = hasMore ? orgAssignments.slice(0, limit) : orgAssignments;
+
+    return NextResponse.json({
+      items: assignmentsToReturn,
+      hasMore,
+      nextOffset: hasMore ? offset + limit : null,
+    });
   } catch (error) {
     log.error('assignments.list.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',

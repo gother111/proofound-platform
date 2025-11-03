@@ -1,6 +1,6 @@
 /**
  * Conversations API
- * 
+ *
  * List user's conversations with last message and unread count
  */
 
@@ -22,7 +22,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Fetch user's conversations
+    // Get pagination parameters
+    const searchParams = request.nextUrl.searchParams;
+    const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
+    const offset = parseInt(searchParams.get('offset') || '0', 10);
+
+    // Fetch user's conversations with pagination
     const userConversations = await db
       .select({
         id: conversations.id,
@@ -37,21 +42,22 @@ export async function GET(request: NextRequest) {
       })
       .from(conversations)
       .where(
-        or(
-          eq(conversations.participantOneId, user.id),
-          eq(conversations.participantTwoId, user.id)
-        )
+        or(eq(conversations.participantOneId, user.id), eq(conversations.participantTwoId, user.id))
       )
-      .orderBy(desc(conversations.lastMessageAt));
+      .orderBy(desc(conversations.lastMessageAt))
+      .limit(limit + 1) // Fetch one extra to check if there are more
+      .offset(offset);
+
+    // Check if there are more results
+    const hasMore = userConversations.length > limit;
+    const conversationsToReturn = hasMore ? userConversations.slice(0, limit) : userConversations;
 
     // Enrich conversations with additional data
     const enrichedConversations = await Promise.all(
-      userConversations.map(async (conv) => {
+      conversationsToReturn.map(async (conv) => {
         // Determine the other party
         const otherPartyId =
-          conv.participantOneId === user.id
-            ? conv.participantTwoId
-            : conv.participantOneId;
+          conv.participantOneId === user.id ? conv.participantTwoId : conv.participantOneId;
 
         // Fetch other party profile
         const otherPartyProfile = await db
@@ -106,10 +112,7 @@ export async function GET(request: NextRequest) {
             displayAvatar = profile.avatarUrl;
           } else {
             // Stage 1: Masked
-            displayName =
-              profile.persona === 'individual'
-                ? 'Candidate'
-                : 'Organization';
+            displayName = profile.persona === 'individual' ? 'Candidate' : 'Organization';
             displayAvatar = null; // Use generic avatar
           }
         }
@@ -137,13 +140,11 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       conversations: enrichedConversations,
-      total: enrichedConversations.length,
+      hasMore,
+      nextOffset: hasMore ? offset + limit : null,
     });
   } catch (error) {
     console.error('Get conversations error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch conversations' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch conversations' }, { status: 500 });
   }
 }
