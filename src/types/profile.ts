@@ -68,6 +68,7 @@ export interface Volunteering {
 export interface ProfileData {
   basicInfo: BasicInfo;
   mission: string | null;
+  vision: string | null;
   values: Value[];
   causes: string[];
   skills: Skill[];

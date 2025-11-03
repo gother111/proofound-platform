@@ -128,6 +128,7 @@ export async function getProfileData(): Promise<ProfileData> {
       coverImage: profile?.coverImageUrl ?? null,
     },
     mission: profile?.mission ?? null,
+    vision: profile?.vision ?? null,
     values: (profile?.values as Value[]) ?? [],
     causes: profile?.causes ?? [],
     skills: (profile?.skills ?? []).map((skill) =>
@@ -177,10 +178,7 @@ export async function updateMission(mission: string | null) {
 
 export async function updateVision(vision: string | null) {
   const user = await requireAuth();
-  await db
-    .update(individualProfiles)
-    .set({ vision })
-    .where(eq(individualProfiles.userId, user.id));
+  await db.update(individualProfiles).set({ vision }).where(eq(individualProfiles.userId, user.id));
   revalidatePath('/app/i/profile');
 }
 

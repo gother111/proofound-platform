@@ -16,6 +16,7 @@ export function getEmptyProfile(): ProfileData {
       coverImage: null,
     },
     mission: null,
+    vision: null,
     values: [],
     causes: [],
     skills: [],
