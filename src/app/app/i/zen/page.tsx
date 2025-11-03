@@ -24,6 +24,10 @@ import {
   Users,
   Zap,
 } from 'lucide-react';
+import { PrivacyBanner } from '@/components/zen/PrivacyBanner';
+import { CheckInDialog } from '@/components/zen/CheckInDialog';
+import { ReflectionDialog } from '@/components/zen/ReflectionDialog';
+import { toast } from 'sonner';
 
 const riskStates = [
   {
@@ -75,10 +79,69 @@ export default function ZenHubPage() {
   const [activeFilter, setActiveFilter] = useState<FilterMode>('short');
   const [selectedPracticeId, setSelectedPracticeId] = useState<string>(zenPractices[0]?.id ?? '');
 
+  // Backend integration state
+  const [optInStatus, setOptInStatus] = useState<{
+    optedIn: boolean;
+    privacyBannerAcknowledged: boolean;
+  } | null>(null);
+  const [isLoadingOptIn, setIsLoadingOptIn] = useState(true);
+  const [showCheckInDialog, setShowCheckInDialog] = useState(false);
+  const [showReflectionDialog, setShowReflectionDialog] = useState(false);
+
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDark);
     return () => document.documentElement.classList.remove('dark');
   }, [isDark]);
+
+  // Fetch opt-in status on mount
+  useEffect(() => {
+    const fetchOptInStatus = async () => {
+      try {
+        const response = await fetch('/api/wellbeing/opt-in');
+        if (response.ok) {
+          const data = await response.json();
+          setOptInStatus(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch opt-in status:', error);
+      } finally {
+        setIsLoadingOptIn(false);
+      }
+    };
+
+    fetchOptInStatus();
+  }, []);
+
+  const handleOptIn = async () => {
+    try {
+      const response = await fetch('/api/wellbeing/opt-in', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          optedIn: true,
+          privacyBannerAcknowledged: true,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setOptInStatus(data);
+        toast.success('Welcome to Zen Hub', {
+          description: 'Your well-being center is now active.',
+        });
+      }
+    } catch (error) {
+      console.error('Failed to opt in:', error);
+      toast.error('Failed to enable Zen Hub', {
+        description: 'Please try again.',
+      });
+    }
+  };
+
+  const refreshData = () => {
+    // Placeholder for refreshing check-ins data
+    // Will be implemented when we add the history component
+  };
 
   const filteredPractices = useMemo(() => {
     const predicate = filterMap[activeFilter] ?? (() => true);
@@ -112,14 +175,43 @@ export default function ZenHubPage() {
                 <Badge variant="outline" className="border-[#7A9278] text-[#4A5943]">
                   Zen Hub · Quiet tools to steady the mind
                 </Badge>
-                <h1 className="mt-4 text-3xl font-semibold text-[#2D3330] dark:text-[#E8E6DD]">
-                  Your proof-backed nervous system kit
-                </h1>
-                <p className="mt-2 max-w-2xl text-sm text-[#6B6760] dark:text-[#D8D2C8]">
-                  Practices sized to the moment, grounded in research, and ready when the internet
-                  gets loud.
-                </p>
+                <div className="mt-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                  <div>
+                    <h1 className="text-3xl font-semibold text-[#2D3330] dark:text-[#E8E6DD]">
+                      Your proof-backed nervous system kit
+                    </h1>
+                    <p className="mt-2 max-w-2xl text-sm text-[#6B6760] dark:text-[#D8D2C8]">
+                      Practices sized to the moment, grounded in research, and ready when the
+                      internet gets loud.
+                    </p>
+                  </div>
+                  {!isLoadingOptIn && optInStatus?.optedIn && (
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => setShowCheckInDialog(true)}
+                        size="sm"
+                        className="bg-[#7A9278] hover:bg-[#7A9278]/90 text-white"
+                      >
+                        <Heart className="w-4 h-4 mr-2" />
+                        Log Check-In
+                      </Button>
+                      <Button
+                        onClick={() => setShowReflectionDialog(true)}
+                        size="sm"
+                        variant="outline"
+                        className="border-[#7A9278] text-[#7A9278] hover:bg-[#7A9278]/10"
+                      >
+                        Write Reflection
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
+
+              {/* Privacy Banner - Show if not opted in or banner not acknowledged */}
+              {!isLoadingOptIn && optInStatus && !optInStatus.privacyBannerAcknowledged && (
+                <PrivacyBanner onOptIn={handleOptIn} />
+              )}
 
               <div className="rounded-2xl border border-[#D8D2C8] bg-white/80 p-4 shadow-sm backdrop-blur lg:p-6 dark:border-[#3C332C] dark:bg-[#2F2823]/80">
                 <ToolkitFilters
@@ -193,6 +285,19 @@ export default function ZenHubPage() {
           </aside>
         </div>
       </div>
+
+      {/* Backend Integration Dialogs */}
+      <CheckInDialog
+        open={showCheckInDialog}
+        onOpenChange={setShowCheckInDialog}
+        onSuccess={refreshData}
+      />
+
+      <ReflectionDialog
+        open={showReflectionDialog}
+        onOpenChange={setShowReflectionDialog}
+        onSuccess={refreshData}
+      />
     </div>
   );
 }
