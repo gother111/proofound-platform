@@ -1,5 +1,18 @@
 # Resend Email Service Setup Guide
 
+> **✅ STATUS: RESEND CONFIGURED**
+>
+> RESEND_API_KEY is configured in:
+>
+> - ✅ Vercel environment variables (production)
+> - ✅ .env.local (local development)
+>
+> Test your setup: `node scripts/test-email.mjs your-email@example.com`
+>
+> This guide is for reference. Skip to [Test Your Setup](#test-your-setup-quick-verification) to verify email functionality.
+
+---
+
 This guide walks you through setting up Resend, the transactional email service used by Proofound for sending emails to users.
 
 ## Why Resend?
@@ -148,6 +161,58 @@ Add to your `.env.local` file:
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxxx
 EMAIL_FROM="Proofound <no-reply@yourdomain.com>"
 ```
+
+---
+
+## Test Your Setup (Quick Verification)
+
+Since your RESEND_API_KEY is already configured, verify it's working:
+
+### Option 1: Use Test Script (Recommended)
+
+Run the included test script to send a test email:
+
+```bash
+# From your project root
+node scripts/test-email.mjs your-email@example.com
+```
+
+**What it does:**
+
+- Loads your RESEND_API_KEY from .env.local
+- Sends a beautifully formatted test email
+- Verifies your configuration is working
+- Provides troubleshooting tips if it fails
+
+**Expected output:**
+
+```
+✅ SUCCESS! Email sent successfully
+
+📧 Email Details:
+   Email ID: abc123...
+   From: Proofound <no-reply@proofound.io>
+   To: your-email@example.com
+   Status: Sent
+
+🔍 Next Steps:
+   1. Check your inbox
+   2. Check spam folder if not in inbox
+   3. Verify Resend dashboard: https://resend.com/logs
+```
+
+### Option 2: Check Resend Dashboard
+
+1. Login to [Resend Dashboard](https://resend.com/logs)
+2. Check if any emails have been sent
+3. Verify delivery status
+
+### Option 3: Test in Application
+
+1. Start your development server: `npm run dev`
+2. Sign up for a new account
+3. Check if verification email arrives
+4. Check Resend dashboard for logs
 
 ---
 

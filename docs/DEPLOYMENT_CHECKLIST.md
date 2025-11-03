@@ -18,10 +18,15 @@ Verify all required environment variables are set:
 
 #### Email Features
 
-- [ ] `RESEND_API_KEY` - Resend API key (see [RESEND_SETUP.md](./RESEND_SETUP.md))
-- [ ] `EMAIL_FROM` - Sender email address
-- [ ] Resend domain verified
-- [ ] DNS records configured (SPF, DKIM, DMARC)
+- [x] `RESEND_API_KEY` - Resend API key configured ✅
+- [x] `EMAIL_FROM` - Sender email address configured ✅
+- [x] API key added to Vercel and .env.local ✅
+- [ ] Resend domain verified (optional - can use Resend's domain for now)
+- [ ] DNS records configured (optional - SPF, DKIM, DMARC)
+
+**Test email setup**: `node scripts/test-email.mjs your-email@example.com`
+
+See [RESEND_SETUP.md](./RESEND_SETUP.md) for testing and domain verification.
 
 #### Cron Jobs
 
