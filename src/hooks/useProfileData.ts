@@ -32,6 +32,7 @@ import { toast } from 'sonner';
 interface PendingState {
   updatingBasicInfo: boolean;
   mission: boolean;
+  vision: boolean;
   values: boolean;
   causes: boolean;
   skills: boolean;
@@ -44,6 +45,7 @@ interface PendingState {
 const initialPending: PendingState = {
   updatingBasicInfo: false,
   mission: false,
+  vision: false,
   values: false,
   causes: false,
   skills: false,
