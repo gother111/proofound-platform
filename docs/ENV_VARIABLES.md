@@ -2,6 +2,13 @@
 
 Complete guide to all environment variables used in Proofound, including which features require which variables and how to configure them.
 
+> **📍 PRODUCTION DOMAIN**
+>
+> Current production domain: **`https://proofound.io`**
+>
+> Update `NEXT_PUBLIC_SITE_URL` in Vercel environment variables to match your actual domain.
+> Examples in this guide use `proofound.com` for illustration purposes.
+
 ## Quick Reference
 
 ```env
