@@ -217,12 +217,12 @@ export async function calculateTTV(
     const userFirstValue = new Map<string, number>();
 
     valueEvents
-      .filter((e) => e.activationDate)
+      .filter((e) => e.activationDate && e.userId)
       .forEach((e) => {
-        if (!userFirstValue.has(e.userId)) {
+        if (!userFirstValue.has(e.userId!)) {
           const diff = e.valueDate.getTime() - e.activationDate!.getTime();
           const days = diff / (1000 * 60 * 60 * 24);
-          userFirstValue.set(e.userId, days);
+          userFirstValue.set(e.userId!, days);
         }
       });
 
