@@ -1253,6 +1253,91 @@ async function seedCrossUserRelationships() {
   console.log(`   ✅ Created ${stats.endorsements} endorsements`);
 }
 
+async function cleanupDemoData() {
+  console.log('\n🧹 Cleaning up existing demo data...');
+  
+  const demoUserIds = Object.values(DEMO_USERS);
+  
+  try {
+    // Delete skills (will cascade delete skill_proofs, verifications, etc.)
+    const { error: skillsError } = await supabase
+      .from('skills')
+      .delete()
+      .in('profile_id', demoUserIds);
+    
+    if (skillsError && skillsError.code !== 'PGRST116') { // Ignore "not found" errors
+      console.error('   ⚠️  Error deleting skills:', skillsError.message);
+    } else {
+      console.log('   ✓ Deleted existing skills');
+    }
+    
+    // Delete projects
+    const { error: projectsError } = await supabase
+      .from('projects')
+      .delete()
+      .in('user_id', demoUserIds);
+    
+    if (projectsError && projectsError.code !== 'PGRST116') {
+      console.error('   ⚠️  Error deleting projects:', projectsError.message);
+    } else {
+      console.log('   ✓ Deleted existing projects');
+    }
+    
+    // Delete impact stories
+    const { error: storiesError } = await supabase
+      .from('impact_stories')
+      .delete()
+      .in('user_id', demoUserIds);
+    
+    if (storiesError && storiesError.code !== 'PGRST116') {
+      console.error('   ⚠️  Error deleting impact stories:', storiesError.message);
+    } else {
+      console.log('   ✓ Deleted existing impact stories');
+    }
+    
+    // Delete experiences
+    const { error: expError } = await supabase
+      .from('experiences')
+      .delete()
+      .in('user_id', demoUserIds);
+    
+    if (expError && expError.code !== 'PGRST116') {
+      console.error('   ⚠️  Error deleting experiences:', expError.message);
+    } else {
+      console.log('   ✓ Deleted existing experiences');
+    }
+    
+    // Delete education
+    const { error: eduError } = await supabase
+      .from('education')
+      .delete()
+      .in('user_id', demoUserIds);
+    
+    if (eduError && eduError.code !== 'PGRST116') {
+      console.error('   ⚠️  Error deleting education:', eduError.message);
+    } else {
+      console.log('   ✓ Deleted existing education');
+    }
+    
+    // Delete volunteering
+    const { error: volError } = await supabase
+      .from('volunteering')
+      .delete()
+      .in('user_id', demoUserIds);
+    
+    if (volError && volError.code !== 'PGRST116') {
+      console.error('   ⚠️  Error deleting volunteering:', volError.message);
+    } else {
+      console.log('   ✓ Deleted existing volunteering');
+    }
+    
+    console.log('   ✅ Cleanup complete\n');
+  } catch (error) {
+    console.error('   ⚠️  Cleanup error:', error.message);
+    console.log('   Continuing with seeding...\n');
+  }
+}
+
 async function main() {
   console.log('═'.repeat(80));
   console.log('🌱 PROOFOUND DEMO USER SEEDING SCRIPT');
@@ -1283,6 +1368,7 @@ async function main() {
   console.log('\n🚀 Starting seed process...\n');
   
   try {
+    await cleanupDemoData();
     await seedProfiles();
     await seedSkills();
     const projectIds = await seedProjects();

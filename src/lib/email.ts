@@ -10,6 +10,11 @@ import { DeletionComplete } from '../../emails/DeletionComplete';
 import WorkEmailVerification from '../../emails/WorkEmailVerification';
 import SkillVerificationRequest from '../../emails/SkillVerificationRequest';
 import NewMatchNotification from '../../emails/NewMatchNotification';
+import ContractSigned from '../../emails/ContractSigned';
+import InterviewScheduled from '../../emails/InterviewScheduled';
+import IdentityRevealed from '../../emails/IdentityRevealed';
+import VerificationApproved from '../../emails/VerificationApproved';
+import VerificationRejected from '../../emails/VerificationRejected';
 
 // Allow build to succeed without RESEND_API_KEY
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder_key');
@@ -221,5 +226,178 @@ export async function sendMatchNotification(
   } catch (error) {
     console.error('Failed to send match notification:', error);
     throw new Error('Failed to send match notification');
+  }
+}
+
+export async function sendContractSignedEmail(
+  recipientEmail: string,
+  recipientName: string,
+  role: 'candidate' | 'organization',
+  contractData: {
+    roleTitle?: string;
+    organizationName?: string;
+    candidateName?: string;
+    contractType: string;
+    startDate?: string;
+    compensationAmount?: number;
+    compensationCurrency?: string;
+    compensationPeriod?: string;
+    contractId: string;
+  }
+): Promise<void> {
+  const viewContractUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/app/contracts/${contractData.contractId}`;
+
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to: recipientEmail,
+      subject: 'Contract Successfully Signed - Proofound',
+      react: ContractSigned({
+        recipientName,
+        role,
+        roleTitle: contractData.roleTitle,
+        organizationName: contractData.organizationName,
+        candidateName: contractData.candidateName,
+        contractType: contractData.contractType,
+        startDate: contractData.startDate,
+        compensationAmount: contractData.compensationAmount,
+        compensationCurrency: contractData.compensationCurrency,
+        compensationPeriod: contractData.compensationPeriod,
+        viewContractUrl,
+      }),
+    });
+  } catch (error) {
+    console.error('Failed to send contract signed email:', error);
+    throw new Error('Failed to send contract signed email');
+  }
+}
+
+export async function sendInterviewScheduledEmail(
+  recipientEmail: string,
+  recipientName: string,
+  role: 'candidate' | 'organization',
+  interviewData: {
+    roleTitle?: string;
+    organizationName?: string;
+    candidateName?: string;
+    scheduledAt: string;
+    duration: number;
+    platform: 'zoom' | 'google-meet';
+    meetingUrl: string;
+    timezone?: string;
+    interviewId: string;
+  }
+): Promise<void> {
+  const viewInterviewUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/app/i/interviews/${interviewData.interviewId}`;
+
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to: recipientEmail,
+      subject: 'Interview Confirmed - Proofound',
+      react: InterviewScheduled({
+        recipientName,
+        role,
+        roleTitle: interviewData.roleTitle,
+        organizationName: interviewData.organizationName,
+        candidateName: interviewData.candidateName,
+        scheduledAt: interviewData.scheduledAt,
+        duration: interviewData.duration,
+        platform: interviewData.platform,
+        meetingUrl: interviewData.meetingUrl,
+        timezone: interviewData.timezone,
+        viewInterviewUrl,
+      }),
+    });
+  } catch (error) {
+    console.error('Failed to send interview scheduled email:', error);
+    throw new Error('Failed to send interview scheduled email');
+  }
+}
+
+export async function sendIdentityRevealedEmail(
+  recipientEmail: string,
+  recipientName: string,
+  role: 'candidate' | 'organization',
+  identityData: {
+    revealedName: string;
+    roleTitle?: string;
+    organizationName?: string;
+    conversationId: string;
+    profileId: string;
+  }
+): Promise<void> {
+  const viewConversationUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/app/i/messages/${identityData.conversationId}`;
+  const viewProfileUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/app/profile/${identityData.profileId}`;
+
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to: recipientEmail,
+      subject: 'Identities Revealed - Proofound',
+      react: IdentityRevealed({
+        recipientName,
+        role,
+        revealedName: identityData.revealedName,
+        roleTitle: identityData.roleTitle,
+        organizationName: identityData.organizationName,
+        viewConversationUrl,
+        viewProfileUrl,
+      }),
+    });
+  } catch (error) {
+    console.error('Failed to send identity revealed email:', error);
+    throw new Error('Failed to send identity revealed email');
+  }
+}
+
+export async function sendVerificationApprovedEmail(
+  recipientEmail: string,
+  recipientName: string,
+  verificationType: 'linkedin' | 'work-email' | 'veriff',
+  profileId: string
+): Promise<void> {
+  const viewProfileUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/app/profile/${profileId}`;
+
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to: recipientEmail,
+      subject: 'Verification Approved - Proofound',
+      react: VerificationApproved({
+        recipientName,
+        verificationType,
+        viewProfileUrl,
+      }),
+    });
+  } catch (error) {
+    console.error('Failed to send verification approved email:', error);
+    throw new Error('Failed to send verification approved email');
+  }
+}
+
+export async function sendVerificationRejectedEmail(
+  recipientEmail: string,
+  recipientName: string,
+  verificationType: 'linkedin' | 'work-email' | 'veriff',
+  rejectionReason?: string
+): Promise<void> {
+  const retryUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/app/i/settings?tab=verification`;
+
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to: recipientEmail,
+      subject: 'Verification Not Approved - Proofound',
+      react: VerificationRejected({
+        recipientName,
+        verificationType,
+        rejectionReason,
+        retryUrl,
+      }),
+    });
+  } catch (error) {
+    console.error('Failed to send verification rejected email:', error);
+    throw new Error('Failed to send verification rejected email');
   }
 }

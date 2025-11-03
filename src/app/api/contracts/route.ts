@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
-import { contracts, assignments, organizationMembers } from '@/db/schema';
+import { contracts, assignments, organizationMembers, profiles } from '@/db/schema';
 import { eq, and, or } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { emitContractSigned } from '@/lib/analytics/events';
+import { sendContractSignedEmail } from '@/lib/email';
 
 export const dynamic = 'force-dynamic';
 
@@ -252,6 +254,42 @@ export async function POST(request: NextRequest) {
           error: error instanceof Error ? error.message : 'Unknown error',
           contractId: contract.id,
         });
+      }
+
+      // Send email notifications to both parties
+      try {
+        // Get candidate profile and email from Supabase auth
+        const candidateProfile = await db.query.profiles.findFirst({
+          where: eq(profiles.id, userId),
+        });
+
+        // Get candidate email from Supabase auth
+        const supabase = await createClient();
+        const { data: authData } = await supabase.auth.admin.getUserById(userId);
+
+        // TODO: Get organization member profile
+        // For now, just send to candidate
+        if (candidateProfile && authData?.user?.email) {
+          await sendContractSignedEmail(
+            authData.user.email,
+            candidateProfile.displayName || 'Candidate',
+            'candidate',
+            {
+              contractType: contract.contractType || 'employment',
+              startDate: contract.startDate || undefined,
+              compensationAmount: contract.compensationAmount || undefined,
+              compensationCurrency: contract.compensationCurrency || 'USD',
+              compensationPeriod: contract.compensationPeriod || undefined,
+              contractId: contract.id,
+            }
+          );
+        }
+      } catch (emailError) {
+        log.error('contract-signed-email.failed', {
+          error: emailError instanceof Error ? emailError.message : 'Unknown error',
+          contractId: contract.id,
+        });
+        // Don't fail the request if email fails
       }
     }
 

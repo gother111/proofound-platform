@@ -1,13 +1,14 @@
 /**
  * Admin LinkedIn Verification Review
- * 
+ *
  * POST /api/admin/verification/linkedin/[userId]/review
- * 
+ *
  * Allows admin to approve or reject a LinkedIn verification request
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { sendVerificationApprovedEmail, sendVerificationRejectedEmail } from '@/lib/email';
 
 interface ReviewRequest {
   decision: 'approved' | 'rejected';
@@ -20,7 +21,7 @@ export async function POST(
 ) {
   try {
     const { userId } = await params;
-    
+
     // 1. Check if user is admin
     const supabase = await createClient();
     const {
@@ -40,10 +41,7 @@ export async function POST(
       .single();
 
     if (!profile || profile.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Forbidden: Admin access required' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
     // 2. Parse request body
@@ -65,10 +63,7 @@ export async function POST(
       .single();
 
     if (fetchError || !currentProfile) {
-      return NextResponse.json(
-        { error: 'Verification request not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Verification request not found' }, { status: 404 });
     }
 
     // 4. Update verification data with admin review
@@ -104,14 +99,39 @@ export async function POST(
 
     if (updateError) {
       console.error('Error updating verification:', updateError);
-      return NextResponse.json(
-        { error: 'Failed to update verification status' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to update verification status' }, { status: 500 });
     }
 
-    // 6. TODO: Send notification email to user
-    // You can add email sending logic here later
+    // 6. Send notification email to user
+    try {
+      // Get user profile for email
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('email, full_name')
+        .eq('id', userId)
+        .single();
+
+      if (userProfile && userProfile.email) {
+        if (decision === 'approved') {
+          await sendVerificationApprovedEmail(
+            userProfile.email,
+            userProfile.full_name || 'User',
+            'linkedin',
+            userId
+          );
+        } else {
+          await sendVerificationRejectedEmail(
+            userProfile.email,
+            userProfile.full_name || 'User',
+            'linkedin',
+            notes
+          );
+        }
+      }
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError);
+      // Don't fail the request if email fails
+    }
 
     console.log(`LinkedIn verification ${decision} for user ${userId} by admin ${user.id}`);
 
@@ -131,4 +151,3 @@ export async function POST(
     );
   }
 }
-

@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createZoomMeeting } from '@/lib/video/zoom';
 import { createGoogleMeet } from '@/lib/video/google-meet';
 import { db } from '@/db';
-import { matches, interviews } from '@/db/schema';
+import { matches, interviews, profiles } from '@/db/schema';
 import { eq, and, or } from 'drizzle-orm';
 import {
   validateInterviewSchedule,
@@ -11,6 +11,7 @@ import {
   INTERVIEW_CONSTRAINTS,
 } from '@/lib/interview-constraints';
 import { emitInterviewScheduled } from '@/lib/analytics/events';
+import { sendInterviewScheduledEmail } from '@/lib/email';
 
 /**
  * Interview Scheduling API
@@ -165,7 +166,37 @@ export async function POST(req: NextRequest) {
       // Don't fail the request if event emission fails
     }
 
-    // TODO: Send calendar invites via email
+    // Send email notifications to both parties
+    try {
+      // Get candidate profile info
+      const candidateProfile = await db.query.profiles.findFirst({
+        where: eq(profiles.id, match.profileId),
+      });
+
+      // Get candidate email from Supabase auth
+      const { data: authData } = await supabase.auth.admin.getUserById(match.profileId);
+
+      // TODO: Get organization member profile (need assignment/org data)
+      // For now, just send to candidate
+      if (candidateProfile && authData?.user?.email) {
+        await sendInterviewScheduledEmail(
+          authData.user.email,
+          candidateProfile.displayName || 'Candidate',
+          'candidate',
+          {
+            scheduledAt: proposedStart.toISOString(),
+            duration,
+            platform: platform as 'zoom' | 'google-meet',
+            meetingUrl: meetingData?.url || 'pending',
+            timezone: timezone || 'UTC',
+            interviewId: interview.id,
+          }
+        );
+      }
+    } catch (emailError) {
+      console.error('Failed to send interview scheduled email:', emailError);
+      // Don't fail the request if email fails
+    }
 
     return NextResponse.json({
       success: true,
