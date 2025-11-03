@@ -30,6 +30,7 @@ import { AvatarUpload } from './AvatarUpload';
 import { CoverUpload } from './CoverUpload';
 import { EditProfileModal } from './EditProfileModal';
 import { MissionEditor } from './MissionEditor';
+import { VisionEditor } from './VisionEditor';
 import { ValuesEditor } from './ValuesEditor';
 import { CausesEditor } from './CausesEditor';
 import { SkillsEditor } from './SkillsEditor';
@@ -38,6 +39,7 @@ import { ExperienceForm } from './forms/ExperienceForm';
 import { EducationForm } from './forms/EducationForm';
 import { VolunteerForm } from './forms/VolunteerForm';
 import { MissionCard } from './MissionCard';
+import { VisionCard } from './VisionCard';
 import { ValuesCard } from './ValuesCard';
 import { CausesCard } from './CausesCard';
 import { SkillsCard } from './SkillsCard';
@@ -53,6 +55,7 @@ export function EditableProfileView() {
     profileCompletion,
     updateBasicInfo,
     updateMission,
+    updateVision,
     replaceValues,
     replaceCauses,
     replaceSkills,
@@ -69,6 +72,7 @@ export function EditableProfileView() {
   // Modal/form states
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isMissionEditorOpen, setIsMissionEditorOpen] = useState(false);
+  const [isVisionEditorOpen, setIsVisionEditorOpen] = useState(false);
   const [isValuesEditorOpen, setIsValuesEditorOpen] = useState(false);
   const [isCausesEditorOpen, setIsCausesEditorOpen] = useState(false);
   const [isSkillsEditorOpen, setIsSkillsEditorOpen] = useState(false);
@@ -301,6 +305,38 @@ export function EditableProfileView() {
                     <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
                       <Plus className="w-3 h-3 mr-2" />
                       Add your mission
+                    </Button>
+                  </Card>
+                )}
+              </div>
+
+              {/* Vision Card - Click to edit */}
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => setIsVisionEditorOpen(true)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    setIsVisionEditorOpen(true);
+                  }
+                }}
+                className="cursor-pointer"
+              >
+                {profile.vision ? (
+                  <VisionCard vision={profile.vision} />
+                ) : (
+                  <Card className="p-6 border-2 border-dashed border-muted-foreground/20 hover:border-[#7A9278]/40 transition-colors">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Eye className="w-5 h-5 text-[#7A9278]" />
+                      <h3>Vision</h3>
+                    </div>
+                    <p className="text-sm text-muted-foreground/60 leading-relaxed italic mb-3">
+                      Where do you see yourself in the future? Describe your long-term aspirations.
+                    </p>
+                    <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
+                      <Plus className="w-3 h-3 mr-2" />
+                      Add your vision
                     </Button>
                   </Card>
                 )}
@@ -958,6 +994,12 @@ export function EditableProfileView() {
         onOpenChange={setIsMissionEditorOpen}
         mission={profile.mission}
         onSave={updateMission}
+      />
+      <VisionEditor
+        open={isVisionEditorOpen}
+        onOpenChange={setIsVisionEditorOpen}
+        vision={profile.vision}
+        onSave={updateVision}
       />
       <ValuesEditor
         open={isValuesEditorOpen}

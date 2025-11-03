@@ -175,6 +175,15 @@ export async function updateMission(mission: string | null) {
   revalidatePath('/app/i/profile');
 }
 
+export async function updateVision(vision: string | null) {
+  const user = await requireAuth();
+  await db
+    .update(individualProfiles)
+    .set({ vision })
+    .where(eq(individualProfiles.userId, user.id));
+  revalidatePath('/app/i/profile');
+}
+
 export async function replaceValues(values: Value[]) {
   const user = await requireAuth();
   await db.update(individualProfiles).set({ values }).where(eq(individualProfiles.userId, user.id));

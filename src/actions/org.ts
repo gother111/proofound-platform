@@ -11,6 +11,8 @@ const updateOrgSchema = z.object({
   displayName: z.string().min(1).max(100).optional(),
   legalName: z.string().max(200).optional().nullable(),
   mission: z.string().max(2000).optional().nullable(),
+  vision: z.string().max(2000).optional().nullable(),
+  causes: z.array(z.string()).optional().nullable(),
   website: z.string().url().optional().nullable(),
   logoUrl: z.string().url().optional().nullable(),
 });
@@ -24,10 +26,22 @@ export async function updateOrganization(orgId: string, formData: FormData) {
   const user = await requireAuth();
   await assertOrgRole(orgId, user.id, ['owner', 'admin']);
 
+  // Parse causes from comma-separated string
+  const causesRaw = formData.get('causes') as string | null;
+  const causes = causesRaw
+    ? causesRaw
+        .split(',')
+        .map((c) => c.trim())
+        .filter((c) => c.length > 0)
+        .slice(0, 5) // PRD requirement: max 5 causes
+    : null;
+
   const data = {
     displayName: formData.get('displayName') as string | undefined,
     legalName: formData.get('legalName') as string | undefined | null,
     mission: formData.get('mission') as string | undefined | null,
+    vision: formData.get('vision') as string | undefined | null,
+    causes,
     website: formData.get('website') as string | undefined | null,
     logoUrl: formData.get('logoUrl') as string | undefined | null,
   };
@@ -45,6 +59,8 @@ export async function updateOrganization(orgId: string, formData: FormData) {
         display_name: result.data.displayName ?? null,
         legal_name: result.data.legalName ?? null,
         mission: result.data.mission ?? null,
+        vision: result.data.vision ?? null,
+        causes: result.data.causes ?? null,
         website: result.data.website ?? null,
         logo_url: result.data.logoUrl ?? null,
         updated_at: new Date().toISOString(),

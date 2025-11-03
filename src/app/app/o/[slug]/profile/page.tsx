@@ -128,6 +128,41 @@ export default async function OrganizationProfilePage({
             </div>
 
             <div>
+              <Label htmlFor="vision" className="text-proofound-charcoal dark:text-foreground">
+                Vision Statement
+              </Label>
+              <textarea
+                id="vision"
+                name="vision"
+                defaultValue={org.vision || ''}
+                placeholder="Describe your organization's long-term vision and aspirations"
+                className="flex min-h-[120px] w-full rounded-lg border border-proofound-stone dark:border-border bg-white dark:bg-background px-4 py-2 text-base transition-colors placeholder:text-proofound-charcoal/40 dark:placeholder:text-muted-foreground/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:border-proofound-forest disabled:cursor-not-allowed disabled:opacity-50 text-proofound-charcoal dark:text-foreground"
+                maxLength={2000}
+                disabled={!canEdit}
+              />
+              <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground/60 mt-1">
+                Max 300 characters recommended (PRD requirement)
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="causes" className="text-proofound-charcoal dark:text-foreground">
+                Causes (comma-separated)
+              </Label>
+              <Input
+                id="causes"
+                name="causes"
+                defaultValue={org.causes?.join(', ') || ''}
+                placeholder="e.g., Climate Justice, Economic Equity, Education Access"
+                disabled={!canEdit}
+                className="border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
+              />
+              <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground/60 mt-1">
+                Up to 5 causes recommended (PRD requirement). Separate with commas.
+              </p>
+            </div>
+
+            <div>
               <Label htmlFor="website" className="text-proofound-charcoal dark:text-foreground">
                 Website
               </Label>

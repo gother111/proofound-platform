@@ -13,6 +13,7 @@ import {
   getProfileData,
   updateBasicInfo as updateBasicInfoAction,
   updateMission as updateMissionAction,
+  updateVision as updateVisionAction,
   replaceValues,
   replaceCauses,
   replaceSkills,
@@ -127,6 +128,19 @@ export function useProfileData() {
       startTransition(() => {
         runWithPending('mission', () => updateMissionAction(mission)).catch(() => {
           toast.error('Failed to update mission.');
+        });
+      });
+    },
+    [profile, runWithPending]
+  );
+
+  const updateVision = useCallback(
+    (vision: string) => {
+      if (!profile) return;
+      setProfile((prev) => (prev ? { ...prev, vision } : prev));
+      startTransition(() => {
+        runWithPending('vision', () => updateVisionAction(vision)).catch(() => {
+          toast.error('Failed to update vision.');
         });
       });
     },
@@ -366,6 +380,7 @@ export function useProfileData() {
     profileCompletion,
     updateBasicInfo,
     updateMission,
+    updateVision,
     replaceValues: onReplaceValues,
     replaceCauses: onReplaceCauses,
     replaceSkills: onReplaceSkills,
