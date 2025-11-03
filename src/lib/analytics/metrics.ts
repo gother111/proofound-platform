@@ -135,12 +135,12 @@ export async function calculateTTFQI(
     const userFirstIntros = new Map<string, number>();
 
     introEvents
-      .filter((e) => e.activationDate && e.qualificationMet)
+      .filter((e) => e.activationDate && e.qualificationMet && e.userId)
       .forEach((e) => {
-        if (!userFirstIntros.has(e.userId)) {
+        if (!userFirstIntros.has(e.userId!)) {
           const diff = e.introDate.getTime() - e.activationDate!.getTime();
           const hours = diff / (1000 * 60 * 60);
-          userFirstIntros.set(e.userId, hours);
+          userFirstIntros.set(e.userId!, hours);
         }
       });
 
