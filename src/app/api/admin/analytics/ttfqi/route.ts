@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { requirePlatformAdmin } from '@/lib/auth/admin';
 import { calculateTTFQI } from '@/lib/analytics/metrics';
 import { log } from '@/lib/log';
 
@@ -16,10 +16,7 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireAuth();
-
-    // TODO: Add admin role check
-    // For now, allow authenticated users
+    const user = await requirePlatformAdmin();
 
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get('startDate')
@@ -41,7 +38,7 @@ export async function GET(request: NextRequest) {
     }
 
     log.info('ttfqi.calculated', {
-      userId: user.id,
+      userId: user.userId,
       median: result.median,
       sampleSize: result.sampleSize,
       cohort,

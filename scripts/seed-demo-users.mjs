@@ -350,14 +350,14 @@ async function seedSkills() {
     {
       userId: DEMO_USERS.alex,
       skills: [
-        { id: 'community-organizing', code: null, level: 5, months: 108, evidence: 0.95, recency: 1.0, relevance: 'current' },
-        { id: 'campaign-strategy', code: null, level: 4, months: 96, evidence: 0.9, recency: 1.0, relevance: 'current' },
-        { id: 'public-speaking', code: null, level: 5, months: 108, evidence: 0.9, recency: 1.0, relevance: 'current' },
-        { id: 'fundraising', code: null, level: 4, months: 84, evidence: 0.85, recency: 0.95, relevance: 'current' },
-        { id: 'coalition-building', code: null, level: 4, months: 96, evidence: 0.9, recency: 0.95, relevance: 'current' },
-        { id: 'event-management', code: null, level: 4, months: 108, evidence: 0.85, recency: 0.9, relevance: 'current' },
-        { id: 'advocacy', code: null, level: 5, months: 108, evidence: 0.95, recency: 1.0, relevance: 'current' },
-        { id: 'digital-organizing', code: null, level: 3, months: 36, evidence: 0.75, recency: 0.95, relevance: 'emerging' },
+        { id: 'community-organizing', code: '02.048.379.06818', level: 5, months: 108, evidence: 0.95, recency: 1.0, relevance: 'current' }, // Community engagement analysis
+        { id: 'campaign-strategy', code: '03.073.579.13429', level: 4, months: 96, evidence: 0.9, recency: 1.0, relevance: 'current' }, // Segmentation & campaigns
+        { id: 'public-speaking', code: '06.156.1253.01377', level: 5, months: 108, evidence: 0.9, recency: 1.0, relevance: 'current' }, // Public speaking to large groups
+        { id: 'fundraising', code: '02.048.379.06818', level: 4, months: 84, evidence: 0.85, recency: 0.95, relevance: 'current' }, // Community engagement (fallback)
+        { id: 'coalition-building', code: '02.042.334.07711', level: 4, months: 96, evidence: 0.9, recency: 0.95, relevance: 'current' }, // Strategic partnerships
+        { id: 'event-management', code: '02.036.283.05211', level: 4, months: 108, evidence: 0.85, recency: 0.9, relevance: 'current' }, // Event planning & runsheet
+        { id: 'advocacy', code: '05.137.1100.11131', level: 5, months: 108, evidence: 0.95, recency: 1.0, relevance: 'current' }, // Applied Community & advocacy
+        { id: 'digital-organizing', code: '03.073.579.13429', level: 3, months: 36, evidence: 0.75, recency: 0.95, relevance: 'emerging' }, // Segmentation & campaigns (fallback)
       ],
     },
   ];
@@ -419,9 +419,9 @@ async function seedProjects() {
       visibility: 'public',
       tags: ['UX Design', 'Climate Tech', 'Mobile App'],
       skills: [
-        { code: 'ui-ux-design', level: 5, frequency: 'daily', hours: 800 },
-        { code: 'user-research', level: 4, frequency: 'weekly', hours: 200 },
-        { code: 'figma', level: 5, frequency: 'daily', hours: 600 },
+        { code: '02.052.412.04194', level: 5, frequency: 'daily', hours: 800 }, // User-centered design & layout
+        { code: '02.052.412.04194', level: 4, frequency: 'weekly', hours: 200 }, // User-centered design & layout
+        { code: '03.090.720.13593', level: 5, frequency: 'daily', hours: 600 }, // Enterprise figma/sketch mastery
       ],
     },
     {
@@ -447,8 +447,8 @@ async function seedProjects() {
       visibility: 'public',
       tags: ['Product Design', 'B2B', 'Sustainability'],
       skills: [
-        { code: 'product-strategy', level: 4, frequency: 'daily', hours: 200 },
-        { code: 'ui-ux-design', level: 5, frequency: 'daily', hours: 400 },
+        { code: '05.119.958.09618', level: 4, frequency: 'daily', hours: 200 }, // Product ownership
+        { code: '02.052.412.04194', level: 5, frequency: 'daily', hours: 400 }, // User-centered design & layout
       ],
     },
     // James's projects
@@ -478,9 +478,9 @@ async function seedProjects() {
       visibility: 'public',
       tags: ['Backend', 'Payments', 'Distributed Systems'],
       skills: [
-        { code: 'nodejs', level: 5, frequency: 'daily', hours: 1200 },
-        { code: 'postgresql', level: 4, frequency: 'daily', hours: 600 },
-        { code: 'system-architecture', level: 4, frequency: 'weekly', hours: 400 },
+        { code: '03.082.653.13650', level: 5, frequency: 'daily', hours: 1200 }, // JavaScript programming
+        { code: '06.149.1193.00920', level: 4, frequency: 'daily', hours: 600 }, // Data structures & algorithms
+        { code: '02.055.434.05635', level: 4, frequency: 'weekly', hours: 400 }, // Applied System architecture
       ],
     },
     {
@@ -507,8 +507,8 @@ async function seedProjects() {
       visibility: 'public',
       tags: ['API', 'Fintech', 'International'],
       skills: [
-        { code: 'typescript', level: 5, frequency: 'daily', hours: 600 },
-        { code: 'api-design', level: 4, frequency: 'daily', hours: 400 },
+        { code: '03.082.653.13651', level: 5, frequency: 'daily', hours: 600 }, // Python programming (fallback for TypeScript)
+        { code: '06.177.1423.02027', level: 4, frequency: 'daily', hours: 400 }, // API documentation
       ],
     },
     // Amara's projects
@@ -538,9 +538,9 @@ async function seedProjects() {
       visibility: 'public',
       tags: ['Education', 'STEM', 'Gender Equality'],
       skills: [
-        { code: 'program-management', level: 5, frequency: 'daily', hours: 1500 },
-        { code: 'community-engagement', level: 5, frequency: 'daily', hours: 800 },
-        { code: 'fundraising', level: 4, frequency: 'monthly', hours: 200 },
+        { code: '02.046.368.04621', level: 5, frequency: 'daily', hours: 1500 }, // Program evaluation analysis
+        { code: '02.048.379.06818', level: 5, frequency: 'daily', hours: 800 }, // Community engagement analysis
+        { code: '02.048.379.06818', level: 4, frequency: 'monthly', hours: 200 }, // Community engagement (fallback)
       ],
     },
     {
@@ -567,8 +567,8 @@ async function seedProjects() {
       visibility: 'public',
       tags: ['Community Development', 'Education', 'Sustainability'],
       skills: [
-        { code: 'strategic-planning', level: 4, frequency: 'weekly', hours: 300 },
-        { code: 'stakeholder-management', level: 4, frequency: 'daily', hours: 400 },
+        { code: '06.163.1312.00493', level: 4, frequency: 'weekly', hours: 300 }, // Strategic planning
+        { code: '06.163.1305.00552', level: 4, frequency: 'daily', hours: 400 }, // Stakeholder management
       ],
     },
     // Yuki's projects
@@ -598,9 +598,9 @@ async function seedProjects() {
       visibility: 'public',
       tags: ['Machine Learning', 'Healthcare', 'Computer Vision'],
       skills: [
-        { code: 'machine-learning', level: 5, frequency: 'daily', hours: 1400 },
-        { code: 'python', level: 5, frequency: 'daily', hours: 1200 },
-        { code: 'tensorflow', level: 4, frequency: 'daily', hours: 800 },
+        { code: '02.056.447.04497', level: 5, frequency: 'daily', hours: 1400 }, // Forecasting & ML basics
+        { code: '03.082.653.13651', level: 5, frequency: 'daily', hours: 1200 }, // Python programming
+        { code: '03.082.653.13651', level: 4, frequency: 'daily', hours: 800 }, // Python programming (fallback for TensorFlow)
       ],
     },
     {
@@ -627,8 +627,8 @@ async function seedProjects() {
       visibility: 'public',
       tags: ['Predictive Analytics', 'Healthcare', 'Data Science'],
       skills: [
-        { code: 'data-analysis', level: 5, frequency: 'daily', hours: 500 },
-        { code: 'statistical-modeling', level: 4, frequency: 'daily', hours: 400 },
+        { code: '06.149.1193.00920', level: 5, frequency: 'daily', hours: 500 }, // Data structures & algorithms
+        { code: '02.054.428.07129', level: 4, frequency: 'daily', hours: 400 }, // Enterprise statistical analysis
       ],
     },
     // Alex's projects
@@ -658,9 +658,9 @@ async function seedProjects() {
       visibility: 'public',
       tags: ['Community Organizing', 'Advocacy', 'Education'],
       skills: [
-        { code: 'community-organizing', level: 5, frequency: 'daily', hours: 1600 },
-        { code: 'campaign-strategy', level: 4, frequency: 'daily', hours: 800 },
-        { code: 'public-speaking', level: 5, frequency: 'weekly', hours: 200 },
+        { code: '02.048.379.06818', level: 5, frequency: 'daily', hours: 1600 }, // Community engagement analysis
+        { code: '03.073.579.13429', level: 4, frequency: 'daily', hours: 800 }, // Segmentation & campaigns
+        { code: '06.156.1253.01377', level: 5, frequency: 'weekly', hours: 200 }, // Public speaking to large groups
       ],
     },
     {
@@ -687,8 +687,8 @@ async function seedProjects() {
       visibility: 'public',
       tags: ['Digital Tools', 'Organizing', 'Open Source'],
       skills: [
-        { code: 'digital-organizing', level: 3, frequency: 'daily', hours: 400 },
-        { code: 'coalition-building', level: 4, frequency: 'weekly', hours: 200 },
+        { code: '03.073.579.13429', level: 3, frequency: 'daily', hours: 400 }, // Segmentation & campaigns (fallback for digital organizing)
+        { code: '02.042.334.07711', level: 4, frequency: 'weekly', hours: 200 }, // Strategic partnerships
       ],
     },
   ];

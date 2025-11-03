@@ -1,6 +1,6 @@
 /**
  * Messages Page - Individual
- * 
+ *
  * Two-column layout: conversation list + message thread
  * Connects to /api/conversations and /api/messages
  */
@@ -11,19 +11,22 @@ import { useState, useEffect } from 'react';
 import { ConversationList, type Conversation } from '@/components/messaging/ConversationList';
 import { MessageThread, type Message } from '@/components/messaging/MessageThread';
 import { MessageSquare } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function MessagesPage() {
+  const { userId: currentUserId, isLoading: isAuthLoading } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversationId, setSelectedConversationId] = useState<string | undefined>();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoadingConversations, setIsLoadingConversations] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
-  const [currentUserId] = useState('current-user-id'); // TODO: Get from auth context
 
-  // Load conversations on mount
+  // Load conversations on mount (after auth is ready)
   useEffect(() => {
-    loadConversations();
-  }, []);
+    if (!isAuthLoading && currentUserId) {
+      loadConversations();
+    }
+  }, [isAuthLoading, currentUserId]);
 
   // Load messages when conversation is selected
   useEffect(() => {
@@ -87,6 +90,15 @@ export default function MessagesPage() {
 
   const selectedConversation = conversations.find((c) => c.id === selectedConversationId);
 
+  // Show loading state if auth is not ready
+  if (isAuthLoading || !currentUserId) {
+    return (
+      <div className="h-[calc(100vh-4rem)] flex items-center justify-center">
+        <p className="text-[#6B6760]">Loading...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="h-[calc(100vh-4rem)] flex">
       {/* Left: Conversation List */}
@@ -115,9 +127,7 @@ export default function MessagesPage() {
           <div className="text-center space-y-4">
             <MessageSquare className="h-16 w-16 mx-auto text-[#6B6760] opacity-50" />
             <div className="space-y-2">
-              <p className="text-lg font-medium text-[#2D3330]">
-                Select a conversation
-              </p>
+              <p className="text-lg font-medium text-[#2D3330]">Select a conversation</p>
               <p className="text-sm text-[#6B6760]">
                 Choose a conversation from the list to start messaging
               </p>
@@ -128,4 +138,3 @@ export default function MessagesPage() {
     </div>
   );
 }
-
