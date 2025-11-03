@@ -16,6 +16,7 @@ import { CompensationInput, type CompensationRange } from './CompensationInput';
 import { DateWindowInput, type DateWindow } from './DateWindowInput';
 import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
+import { FormErrorBoundary } from '@/components/ErrorBoundary';
 
 interface AssignmentBuilderProps {
   onComplete: (assignmentId: string) => void;
@@ -200,336 +201,339 @@ export function AssignmentBuilder({ onComplete, onCancel }: AssignmentBuilderPro
   );
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6">
-      {/* Header */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-semibold mb-2" style={{ color: '#2D3330' }}>
-          Create New Assignment
-        </h2>
-        <Progress value={progress} className="h-2" />
-        <p className="text-sm mt-2" style={{ color: '#6B6760' }}>
-          {Math.round(progress)}% complete
-        </p>
-      </div>
+    <FormErrorBoundary>
+      <div className="max-w-3xl mx-auto px-4 py-6">
+        {/* Header */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-semibold mb-2" style={{ color: '#2D3330' }}>
+            Create New Assignment
+          </h2>
+          <Progress value={progress} className="h-2" />
+          <p className="text-sm mt-2" style={{ color: '#6B6760' }}>
+            {Math.round(progress)}% complete
+          </p>
+        </div>
 
-      {/* Wizard tabs */}
-      <Tabs value={currentTab} onValueChange={setCurrentTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7 text-xs">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="requirements">Required</TabsTrigger>
-          <TabsTrigger value="values">Values</TabsTrigger>
-          <TabsTrigger value="logistics">Logistics</TabsTrigger>
-          <TabsTrigger value="compensation">Comp</TabsTrigger>
-          <TabsTrigger value="nice">Nice-to-Have</TabsTrigger>
-          <TabsTrigger value="publish">Publish</TabsTrigger>
-        </TabsList>
+        {/* Wizard tabs */}
+        <Tabs value={currentTab} onValueChange={setCurrentTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-7 text-xs">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="requirements">Required</TabsTrigger>
+            <TabsTrigger value="values">Values</TabsTrigger>
+            <TabsTrigger value="logistics">Logistics</TabsTrigger>
+            <TabsTrigger value="compensation">Comp</TabsTrigger>
+            <TabsTrigger value="nice">Nice-to-Have</TabsTrigger>
+            <TabsTrigger value="publish">Publish</TabsTrigger>
+          </TabsList>
 
-        {/* Step 1: Overview */}
-        <TabsContent value="overview" className="space-y-4">
-          <div>
-            <Label htmlFor="role">Role Title *</Label>
-            <Input
-              id="role"
-              type="text"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              placeholder="e.g., Lead Developer, Community Manager, etc."
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="description">Brief Description</Label>
-            <textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="What will this person do? What impact will they have?"
-              className="w-full px-3 py-2 border rounded-md min-h-[100px]"
-              style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}
-            />
-          </div>
-
-          <Button onClick={() => setCurrentTab('requirements')}>Next: Requirements</Button>
-        </TabsContent>
-
-        {/* Step 2: Requirements (Hard Filters) */}
-        <TabsContent value="requirements" className="space-y-4">
-          <div>
-            <h3 className="text-lg font-medium mb-2">Must-Have Skills *</h3>
-            <p className="text-sm mb-4" style={{ color: '#6B6760' }}>
-              These are hard requirements. Candidates without these skills won&apos;t appear in
-              results.
-            </p>
-
-            <div className="space-y-3 mb-4">
-              {mustHaveSkills.map((skill, index) => (
-                <SkillLevelRow
-                  key={skill.skillId}
-                  skill={skill}
-                  onChange={(updated) => {
-                    const newSkills = [...mustHaveSkills];
-                    newSkills[index] = updated;
-                    setMustHaveSkills(newSkills);
-                  }}
-                  onRemove={() => setMustHaveSkills(mustHaveSkills.filter((_, i) => i !== index))}
-                />
-              ))}
-            </div>
-
-            {availableMustHaveSkills.length > 0 && (
-              <TypeaheadChips
-                options={availableMustHaveSkills}
-                value={[]}
-                onChange={(selected) => {
-                  if (selected.length > 0) {
-                    handleAddMustHaveSkill(selected[0]);
-                  }
-                }}
-                placeholder="Search and add required skills..."
-              />
-            )}
-          </div>
-
-          <div>
-            <h3 className="text-lg font-medium mb-2">Required Verifications</h3>
-            <div className="space-y-2">
-              {VERIFICATION_OPTIONS.map((option) => (
-                <div key={option.id} className="flex items-center gap-2">
-                  <Checkbox
-                    id={option.id}
-                    checked={verificationGates.includes(option.id)}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setVerificationGates([...verificationGates, option.id]);
-                      } else {
-                        setVerificationGates(verificationGates.filter((v) => v !== option.id));
-                      }
-                    }}
-                  />
-                  <Label htmlFor={option.id} className="cursor-pointer">
-                    {option.label}
-                  </Label>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setCurrentTab('overview')}>
-              Back
-            </Button>
-            <Button onClick={() => setCurrentTab('values')}>Next: Values & Causes</Button>
-          </div>
-        </TabsContent>
-
-        {/* Step 3: Values & Causes */}
-        <TabsContent value="values" className="space-y-4">
-          <div>
-            <Label>Values We&apos;re Looking For</Label>
-            <p className="text-sm mb-3" style={{ color: '#6B6760' }}>
-              Select values that align with your organization&apos;s mission.
-            </p>
-            <TypeaheadChips
-              options={valuesOptions}
-              value={valuesTags}
-              onChange={setValuesTags}
-              placeholder="Search values..."
-            />
-          </div>
-
-          <div>
-            <Label>Causes & Impact Areas</Label>
-            <TypeaheadChips
-              options={causesOptions}
-              value={causeTags}
-              onChange={setCauseTags}
-              placeholder="Search causes..."
-            />
-          </div>
-
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setCurrentTab('requirements')}>
-              Back
-            </Button>
-            <Button onClick={() => setCurrentTab('logistics')}>Next: Logistics</Button>
-          </div>
-        </TabsContent>
-
-        {/* Step 4: Logistics */}
-        <TabsContent value="logistics" className="space-y-4">
-          <LocationInput value={location} onChange={setLocation} />
-
-          <DateWindowInput
-            value={startWindow}
-            onChange={setStartWindow}
-            label="Start Date Window"
-            earliestLabel="Can start as early as"
-            latestLabel="Must start by"
-          />
-
-          <div>
-            <Label>Hours per Week</Label>
-            <div className="grid grid-cols-2 gap-3">
+          {/* Step 1: Overview */}
+          <TabsContent value="overview" className="space-y-4">
+            <div>
+              <Label htmlFor="role">Role Title *</Label>
               <Input
-                type="number"
-                min="1"
-                value={hoursMin}
-                onChange={(e) => setHoursMin(parseInt(e.target.value, 10) || 1)}
-                placeholder="Min"
-              />
-              <Input
-                type="number"
-                min="1"
-                value={hoursMax}
-                onChange={(e) => setHoursMax(parseInt(e.target.value, 10) || 40)}
-                placeholder="Max"
+                id="role"
+                type="text"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                placeholder="e.g., Lead Developer, Community Manager, etc."
               />
             </div>
-          </div>
 
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setCurrentTab('values')}>
-              Back
-            </Button>
-            <Button onClick={() => setCurrentTab('compensation')}>Next: Compensation</Button>
-          </div>
-        </TabsContent>
-
-        {/* Step 5: Compensation */}
-        <TabsContent value="compensation" className="space-y-4">
-          <CompensationInput
-            value={compensation}
-            onChange={setCompensation}
-            label="Compensation Range"
-          />
-
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setCurrentTab('logistics')}>
-              Back
-            </Button>
-            <Button onClick={() => setCurrentTab('nice')}>Next: Nice-to-Haves</Button>
-          </div>
-        </TabsContent>
-
-        {/* Step 6: Nice-to-Haves */}
-        <TabsContent value="nice" className="space-y-4">
-          <div>
-            <h3 className="text-lg font-medium mb-2">Nice-to-Have Skills</h3>
-            <p className="text-sm mb-4" style={{ color: '#6B6760' }}>
-              These aren&apos;t required but will boost match scores.
-            </p>
-
-            <div className="space-y-3 mb-4">
-              {niceToHaveSkills.map((skill, index) => (
-                <SkillLevelRow
-                  key={skill.skillId}
-                  skill={skill}
-                  onChange={(updated) => {
-                    const newSkills = [...niceToHaveSkills];
-                    newSkills[index] = updated;
-                    setNiceToHaveSkills(newSkills);
-                  }}
-                  onRemove={() =>
-                    setNiceToHaveSkills(niceToHaveSkills.filter((_, i) => i !== index))
-                  }
-                />
-              ))}
+            <div>
+              <Label htmlFor="description">Brief Description</Label>
+              <textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="What will this person do? What impact will they have?"
+                className="w-full px-3 py-2 border rounded-md min-h-[100px]"
+                style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}
+              />
             </div>
 
-            {availableNiceToHaveSkills.length > 0 && (
-              <TypeaheadChips
-                options={availableNiceToHaveSkills}
-                value={[]}
-                onChange={(selected) => {
-                  if (selected.length > 0) {
-                    handleAddNiceToHaveSkill(selected[0]);
-                  }
-                }}
-                placeholder="Search and add nice-to-have skills..."
-              />
-            )}
-          </div>
+            <Button onClick={() => setCurrentTab('requirements')}>Next: Requirements</Button>
+          </TabsContent>
 
-          <div>
-            <h3 className="text-lg font-medium mb-2">Minimum Language Requirement</h3>
-            {minLanguage ? (
-              <CEFRLanguageRow
-                language={minLanguage}
-                onChange={setMinLanguage}
-                onRemove={() => setMinLanguage(null)}
-              />
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setMinLanguage({ code: 'en', level: 'B2' })}
-              >
-                <Plus className="w-4 h-4 mr-1" />
-                Add Language Requirement
-              </Button>
-            )}
-          </div>
-
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setCurrentTab('compensation')}>
-              Back
-            </Button>
-            <Button onClick={() => setCurrentTab('publish')}>Review & Publish</Button>
-          </div>
-        </TabsContent>
-
-        {/* Step 7: Publish */}
-        <TabsContent value="publish" className="space-y-4">
-          <div>
-            <h3 className="text-lg font-medium mb-4">Review Your Assignment</h3>
-
-            <div className="space-y-3 text-sm">
-              <div>
-                <strong>Role:</strong> {role || 'Not set'}
-              </div>
-              <div>
-                <strong>Must-Have Skills:</strong> {mustHaveSkills.length} skill(s)
-              </div>
-              <div>
-                <strong>Nice-to-Have Skills:</strong> {niceToHaveSkills.length} skill(s)
-              </div>
-              <div>
-                <strong>Values:</strong> {valuesTags.join(', ') || 'None'}
-              </div>
-              <div>
-                <strong>Causes:</strong> {causeTags.join(', ') || 'None'}
-              </div>
-              <div>
-                <strong>Work Mode:</strong> {location.workMode || 'Not set'}
-              </div>
-              <div>
-                <strong>Verifications Required:</strong> {verificationGates.length} verification(s)
-              </div>
-            </div>
-
-            <div className="mt-6 p-4 rounded-md" style={{ backgroundColor: '#F7F6F1' }}>
-              <p className="text-sm" style={{ color: '#2D3330' }}>
-                <strong>Blind-First Matching:</strong> Candidates will remain completely anonymous
-                until you both express interest. You&apos;ll see their skills, values, and
-                qualifications—but not their names, photos, or background.
+          {/* Step 2: Requirements (Hard Filters) */}
+          <TabsContent value="requirements" className="space-y-4">
+            <div>
+              <h3 className="text-lg font-medium mb-2">Must-Have Skills *</h3>
+              <p className="text-sm mb-4" style={{ color: '#6B6760' }}>
+                These are hard requirements. Candidates without these skills won&apos;t appear in
+                results.
               </p>
-            </div>
-          </div>
 
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={onCancel}>
-              Save as Draft
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              style={{ backgroundColor: '#1C4D3A' }}
-            >
-              {isSubmitting ? 'Publishing...' : 'Publish Assignment'}
-            </Button>
-          </div>
-        </TabsContent>
-      </Tabs>
-    </div>
+              <div className="space-y-3 mb-4">
+                {mustHaveSkills.map((skill, index) => (
+                  <SkillLevelRow
+                    key={skill.skillId}
+                    skill={skill}
+                    onChange={(updated) => {
+                      const newSkills = [...mustHaveSkills];
+                      newSkills[index] = updated;
+                      setMustHaveSkills(newSkills);
+                    }}
+                    onRemove={() => setMustHaveSkills(mustHaveSkills.filter((_, i) => i !== index))}
+                  />
+                ))}
+              </div>
+
+              {availableMustHaveSkills.length > 0 && (
+                <TypeaheadChips
+                  options={availableMustHaveSkills}
+                  value={[]}
+                  onChange={(selected) => {
+                    if (selected.length > 0) {
+                      handleAddMustHaveSkill(selected[0]);
+                    }
+                  }}
+                  placeholder="Search and add required skills..."
+                />
+              )}
+            </div>
+
+            <div>
+              <h3 className="text-lg font-medium mb-2">Required Verifications</h3>
+              <div className="space-y-2">
+                {VERIFICATION_OPTIONS.map((option) => (
+                  <div key={option.id} className="flex items-center gap-2">
+                    <Checkbox
+                      id={option.id}
+                      checked={verificationGates.includes(option.id)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setVerificationGates([...verificationGates, option.id]);
+                        } else {
+                          setVerificationGates(verificationGates.filter((v) => v !== option.id));
+                        }
+                      }}
+                    />
+                    <Label htmlFor={option.id} className="cursor-pointer">
+                      {option.label}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setCurrentTab('overview')}>
+                Back
+              </Button>
+              <Button onClick={() => setCurrentTab('values')}>Next: Values & Causes</Button>
+            </div>
+          </TabsContent>
+
+          {/* Step 3: Values & Causes */}
+          <TabsContent value="values" className="space-y-4">
+            <div>
+              <Label>Values We&apos;re Looking For</Label>
+              <p className="text-sm mb-3" style={{ color: '#6B6760' }}>
+                Select values that align with your organization&apos;s mission.
+              </p>
+              <TypeaheadChips
+                options={valuesOptions}
+                value={valuesTags}
+                onChange={setValuesTags}
+                placeholder="Search values..."
+              />
+            </div>
+
+            <div>
+              <Label>Causes & Impact Areas</Label>
+              <TypeaheadChips
+                options={causesOptions}
+                value={causeTags}
+                onChange={setCauseTags}
+                placeholder="Search causes..."
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setCurrentTab('requirements')}>
+                Back
+              </Button>
+              <Button onClick={() => setCurrentTab('logistics')}>Next: Logistics</Button>
+            </div>
+          </TabsContent>
+
+          {/* Step 4: Logistics */}
+          <TabsContent value="logistics" className="space-y-4">
+            <LocationInput value={location} onChange={setLocation} />
+
+            <DateWindowInput
+              value={startWindow}
+              onChange={setStartWindow}
+              label="Start Date Window"
+              earliestLabel="Can start as early as"
+              latestLabel="Must start by"
+            />
+
+            <div>
+              <Label>Hours per Week</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <Input
+                  type="number"
+                  min="1"
+                  value={hoursMin}
+                  onChange={(e) => setHoursMin(parseInt(e.target.value, 10) || 1)}
+                  placeholder="Min"
+                />
+                <Input
+                  type="number"
+                  min="1"
+                  value={hoursMax}
+                  onChange={(e) => setHoursMax(parseInt(e.target.value, 10) || 40)}
+                  placeholder="Max"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setCurrentTab('values')}>
+                Back
+              </Button>
+              <Button onClick={() => setCurrentTab('compensation')}>Next: Compensation</Button>
+            </div>
+          </TabsContent>
+
+          {/* Step 5: Compensation */}
+          <TabsContent value="compensation" className="space-y-4">
+            <CompensationInput
+              value={compensation}
+              onChange={setCompensation}
+              label="Compensation Range"
+            />
+
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setCurrentTab('logistics')}>
+                Back
+              </Button>
+              <Button onClick={() => setCurrentTab('nice')}>Next: Nice-to-Haves</Button>
+            </div>
+          </TabsContent>
+
+          {/* Step 6: Nice-to-Haves */}
+          <TabsContent value="nice" className="space-y-4">
+            <div>
+              <h3 className="text-lg font-medium mb-2">Nice-to-Have Skills</h3>
+              <p className="text-sm mb-4" style={{ color: '#6B6760' }}>
+                These aren&apos;t required but will boost match scores.
+              </p>
+
+              <div className="space-y-3 mb-4">
+                {niceToHaveSkills.map((skill, index) => (
+                  <SkillLevelRow
+                    key={skill.skillId}
+                    skill={skill}
+                    onChange={(updated) => {
+                      const newSkills = [...niceToHaveSkills];
+                      newSkills[index] = updated;
+                      setNiceToHaveSkills(newSkills);
+                    }}
+                    onRemove={() =>
+                      setNiceToHaveSkills(niceToHaveSkills.filter((_, i) => i !== index))
+                    }
+                  />
+                ))}
+              </div>
+
+              {availableNiceToHaveSkills.length > 0 && (
+                <TypeaheadChips
+                  options={availableNiceToHaveSkills}
+                  value={[]}
+                  onChange={(selected) => {
+                    if (selected.length > 0) {
+                      handleAddNiceToHaveSkill(selected[0]);
+                    }
+                  }}
+                  placeholder="Search and add nice-to-have skills..."
+                />
+              )}
+            </div>
+
+            <div>
+              <h3 className="text-lg font-medium mb-2">Minimum Language Requirement</h3>
+              {minLanguage ? (
+                <CEFRLanguageRow
+                  language={minLanguage}
+                  onChange={setMinLanguage}
+                  onRemove={() => setMinLanguage(null)}
+                />
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setMinLanguage({ code: 'en', level: 'B2' })}
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Add Language Requirement
+                </Button>
+              )}
+            </div>
+
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setCurrentTab('compensation')}>
+                Back
+              </Button>
+              <Button onClick={() => setCurrentTab('publish')}>Review & Publish</Button>
+            </div>
+          </TabsContent>
+
+          {/* Step 7: Publish */}
+          <TabsContent value="publish" className="space-y-4">
+            <div>
+              <h3 className="text-lg font-medium mb-4">Review Your Assignment</h3>
+
+              <div className="space-y-3 text-sm">
+                <div>
+                  <strong>Role:</strong> {role || 'Not set'}
+                </div>
+                <div>
+                  <strong>Must-Have Skills:</strong> {mustHaveSkills.length} skill(s)
+                </div>
+                <div>
+                  <strong>Nice-to-Have Skills:</strong> {niceToHaveSkills.length} skill(s)
+                </div>
+                <div>
+                  <strong>Values:</strong> {valuesTags.join(', ') || 'None'}
+                </div>
+                <div>
+                  <strong>Causes:</strong> {causeTags.join(', ') || 'None'}
+                </div>
+                <div>
+                  <strong>Work Mode:</strong> {location.workMode || 'Not set'}
+                </div>
+                <div>
+                  <strong>Verifications Required:</strong> {verificationGates.length}{' '}
+                  verification(s)
+                </div>
+              </div>
+
+              <div className="mt-6 p-4 rounded-md" style={{ backgroundColor: '#F7F6F1' }}>
+                <p className="text-sm" style={{ color: '#2D3330' }}>
+                  <strong>Blind-First Matching:</strong> Candidates will remain completely anonymous
+                  until you both express interest. You&apos;ll see their skills, values, and
+                  qualifications—but not their names, photos, or background.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={onCancel}>
+                Save as Draft
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                style={{ backgroundColor: '#1C4D3A' }}
+              >
+                {isSubmitting ? 'Publishing...' : 'Publish Assignment'}
+              </Button>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </FormErrorBoundary>
   );
 }

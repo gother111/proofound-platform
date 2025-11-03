@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { BasicInfo } from '@/types/profile';
+import { FormErrorBoundary } from '@/components/ErrorBoundary';
 
 interface EditProfileModalProps {
   open: boolean;
@@ -77,64 +78,66 @@ export function EditProfileModal({ open, onOpenChange, basicInfo, onSave }: Edit
           <DialogDescription>Update your basic information</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          {/* Name */}
-          <div className="space-y-2">
-            <Label htmlFor="name">
-              Name <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Your full name"
-              className={errors.name ? 'border-red-500' : ''}
-            />
-            {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
-          </div>
-
-          {/* Tagline */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="tagline">Tagline</Label>
-              <span
-                className={`text-xs ${
-                  taglineCharsLeft < 0
-                    ? 'text-red-500'
-                    : taglineCharsLeft < 20
-                      ? 'text-yellow-600'
-                      : 'text-muted-foreground'
-                }`}
-              >
-                {taglineCharsLeft} characters left
-              </span>
+        <FormErrorBoundary>
+          <div className="space-y-4 py-4">
+            {/* Name */}
+            <div className="space-y-2">
+              <Label htmlFor="name">
+                Name <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Your full name"
+                className={errors.name ? 'border-red-500' : ''}
+              />
+              {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
             </div>
-            <textarea
-              id="tagline"
-              value={tagline}
-              onChange={(e) => setTagline(e.target.value)}
-              placeholder="A brief statement that captures who you are and what you care about"
-              className={`flex min-h-[80px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${
-                errors.tagline ? 'border-red-500' : ''
-              }`}
-              maxLength={200}
-            />
-            {errors.tagline && <p className="text-xs text-red-500">{errors.tagline}</p>}
-          </div>
 
-          {/* Location */}
-          <div className="space-y-2">
-            <Label htmlFor="location">Location</Label>
-            <Input
-              id="location"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="City, Country"
-              className={errors.location ? 'border-red-500' : ''}
-            />
-            {errors.location && <p className="text-xs text-red-500">{errors.location}</p>}
+            {/* Tagline */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="tagline">Tagline</Label>
+                <span
+                  className={`text-xs ${
+                    taglineCharsLeft < 0
+                      ? 'text-red-500'
+                      : taglineCharsLeft < 20
+                        ? 'text-yellow-600'
+                        : 'text-muted-foreground'
+                  }`}
+                >
+                  {taglineCharsLeft} characters left
+                </span>
+              </div>
+              <textarea
+                id="tagline"
+                value={tagline}
+                onChange={(e) => setTagline(e.target.value)}
+                placeholder="A brief statement that captures who you are and what you care about"
+                className={`flex min-h-[80px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${
+                  errors.tagline ? 'border-red-500' : ''
+                }`}
+                maxLength={200}
+              />
+              {errors.tagline && <p className="text-xs text-red-500">{errors.tagline}</p>}
+            </div>
+
+            {/* Location */}
+            <div className="space-y-2">
+              <Label htmlFor="location">Location</Label>
+              <Input
+                id="location"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="City, Country"
+                className={errors.location ? 'border-red-500' : ''}
+              />
+              {errors.location && <p className="text-xs text-red-500">{errors.location}</p>}
+            </div>
           </div>
-        </div>
+        </FormErrorBoundary>
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

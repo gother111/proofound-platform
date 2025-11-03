@@ -4,6 +4,7 @@ import { Analytics } from '@vercel/analytics/react';
 import { Toaster } from 'sonner';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export const metadata: Metadata = {
   title: 'Proofound - Focus on what matters',
@@ -20,11 +21,13 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="font-sans antialiased">
-        <NextIntlClientProvider messages={messages}>
-          {children}
-          <Toaster position="top-right" />
-          <Analytics />
-        </NextIntlClientProvider>
+        <ErrorBoundary>
+          <NextIntlClientProvider messages={messages}>
+            {children}
+            <Toaster position="top-right" />
+            <Analytics />
+          </NextIntlClientProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );
