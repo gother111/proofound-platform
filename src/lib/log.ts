@@ -5,22 +5,151 @@
  *   log.info('match.compute', { assignmentId, poolSize, userId })
  *   log.error('match.failed', { error: err.message })
  *
+ * With context:
+ *   log.withContext({ requestId, userId }).info('event.name', { data })
+ *
  * Never log PII (names, emails, photos, exact locations).
  */
 
+import { AsyncLocalStorage } from 'async_hooks';
+
+// Global context storage for request-scoped data
+export const logContext = new AsyncLocalStorage<LogContext>();
+
+export interface LogContext {
+  requestId?: string;
+  userId?: string;
+  userEmail?: string; // Only for debugging, never in production logs
+  path?: string;
+  method?: string;
+  userAgent?: string;
+}
+
+interface LogEntry {
+  level: 'info' | 'warn' | 'error' | 'debug';
+  event: string;
+  timestamp: string;
+  requestId?: string;
+  userId?: string;
+  path?: string;
+  method?: string;
+  [key: string]: unknown;
+}
+
+/**
+ * Check if we should log at this level
+ */
+function shouldLog(level: 'info' | 'warn' | 'error' | 'debug'): boolean {
+  const logLevel =
+    process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'debug');
+
+  const levels = { debug: 0, info: 1, warn: 2, error: 3 };
+  const currentLevel = levels[logLevel as keyof typeof levels] || levels.info;
+  const messageLevel = levels[level];
+
+  return messageLevel >= currentLevel;
+}
+
+/**
+ * Format and output log entry
+ */
+function writeLog(
+  level: 'info' | 'warn' | 'error' | 'debug',
+  event: string,
+  meta?: Record<string, unknown>
+) {
+  if (!shouldLog(level)) {
+    return;
+  }
+
+  // Get context from async local storage
+  const context = logContext.getStore();
+
+  // Build log entry with context
+  const entry: LogEntry = {
+    level,
+    event,
+    timestamp: new Date().toISOString(),
+    ...(context?.requestId && { requestId: context.requestId }),
+    ...(context?.userId && { userId: context.userId }),
+    ...(context?.path && { path: context.path }),
+    ...(context?.method && { method: context.method }),
+    ...meta,
+  };
+
+  // Remove any PII that might have been accidentally included
+  if (entry.email) delete entry.email;
+  if (entry.userEmail && process.env.NODE_ENV === 'production') delete entry.userEmail;
+  if (entry.name) delete entry.name;
+  if (entry.displayName) delete entry.displayName;
+
+  // Output based on level
+  const output = JSON.stringify(entry);
+
+  switch (level) {
+    case 'debug':
+      console.debug(output);
+      break;
+    case 'info':
+      console.log(output);
+      break;
+    case 'warn':
+      console.warn(output);
+      break;
+    case 'error':
+      console.error(output);
+      break;
+  }
+}
+
+/**
+ * Logger with context support
+ */
 export const log = {
-  info: (event: string, meta?: Record<string, unknown>) =>
-    console.log(
-      JSON.stringify({ level: 'info', event, timestamp: new Date().toISOString(), ...meta })
-    ),
+  /**
+   * Log info level message
+   */
+  info: (event: string, meta?: Record<string, unknown>) => {
+    writeLog('info', event, meta);
+  },
 
-  warn: (event: string, meta?: Record<string, unknown>) =>
-    console.warn(
-      JSON.stringify({ level: 'warn', event, timestamp: new Date().toISOString(), ...meta })
-    ),
+  /**
+   * Log warning level message
+   */
+  warn: (event: string, meta?: Record<string, unknown>) => {
+    writeLog('warn', event, meta);
+  },
 
-  error: (event: string, meta?: Record<string, unknown>) =>
-    console.error(
-      JSON.stringify({ level: 'error', event, timestamp: new Date().toISOString(), ...meta })
-    ),
+  /**
+   * Log error level message
+   */
+  error: (event: string, meta?: Record<string, unknown>) => {
+    writeLog('error', event, meta);
+  },
+
+  /**
+   * Log debug level message (only in development)
+   */
+  debug: (event: string, meta?: Record<string, unknown>) => {
+    writeLog('debug', event, meta);
+  },
+
+  /**
+   * Create logger with additional context
+   */
+  withContext: (context: Partial<LogContext>) => {
+    const existingContext = logContext.getStore() || {};
+    const mergedContext = { ...existingContext, ...context };
+
+    return {
+      info: (event: string, meta?: Record<string, unknown>) =>
+        logContext.run(mergedContext, () => writeLog('info', event, meta)),
+      warn: (event: string, meta?: Record<string, unknown>) =>
+        logContext.run(mergedContext, () => writeLog('warn', event, meta)),
+      error: (event: string, meta?: Record<string, unknown>) =>
+        logContext.run(mergedContext, () => writeLog('error', event, meta)),
+      debug: (event: string, meta?: Record<string, unknown>) =>
+        logContext.run(mergedContext, () => writeLog('debug', event, meta)),
+    };
+  },
 };
