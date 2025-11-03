@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { getOrSet, CACHE_KEYS, CACHE_TTL } from '@/lib/cache';
 
 /**
  * Helper function to map snake_case DB fields to camelCase
@@ -83,44 +84,58 @@ export async function GET(request: Request) {
     const l3Id = searchParams.get('l3_id');
     const search = searchParams.get('search');
 
-    // If no filters, return full L1 list
+    // If no filters, return full L1 list (cached)
     if (!l1 && !l2 && !l3Id && !search) {
-      const { data: categories, error } = await supabase
-        .from('skills_categories')
-        .select('*')
-        .order('display_order');
+      const cacheKey = `${CACHE_KEYS.TAXONOMY}l1`;
 
-      if (error) {
-        console.error('Error fetching L1 categories:', error);
-        return NextResponse.json({ error: 'Failed to fetch categories' }, { status: 500 });
-      }
+      const l1Domains = await getOrSet(
+        cacheKey,
+        async () => {
+          const { data: categories, error } = await supabase
+            .from('skills_categories')
+            .select('*')
+            .order('display_order');
 
-      return NextResponse.json({
-        l1_domains: categories?.map((c) => mapTaxonomyFields(c, 'l1')) || [],
-      });
+          if (error) {
+            throw new Error('Failed to fetch categories');
+          }
+
+          return categories?.map((c) => mapTaxonomyFields(c, 'l1')) || [];
+        },
+        CACHE_TTL.TAXONOMY
+      );
+
+      return NextResponse.json({ l1_domains: l1Domains });
     }
 
-    // If L1 specified, return L2 categories
+    // If L1 specified, return L2 categories (cached)
     if (l1 && !l2 && !l3Id) {
       const catId = l1CodeToCatId(l1);
       if (!catId) {
         return NextResponse.json({ error: 'Invalid L1 code' }, { status: 400 });
       }
 
-      const { data: subcategories, error } = await supabase
-        .from('skills_subcategories')
-        .select('*')
-        .eq('cat_id', catId)
-        .order('display_order');
+      const cacheKey = `${CACHE_KEYS.TAXONOMY}l2:${l1}`;
 
-      if (error) {
-        console.error('Error fetching L2 subcategories:', error);
-        return NextResponse.json({ error: 'Failed to fetch subcategories' }, { status: 500 });
-      }
+      const l2Categories = await getOrSet(
+        cacheKey,
+        async () => {
+          const { data: subcategories, error } = await supabase
+            .from('skills_subcategories')
+            .select('*')
+            .eq('cat_id', catId)
+            .order('display_order');
 
-      return NextResponse.json({
-        l2_categories: subcategories?.map((s) => mapTaxonomyFields(s, 'l2')) || [],
-      });
+          if (error) {
+            throw new Error('Failed to fetch subcategories');
+          }
+
+          return subcategories?.map((s) => mapTaxonomyFields(s, 'l2')) || [];
+        },
+        CACHE_TTL.TAXONOMY
+      );
+
+      return NextResponse.json({ l2_categories: l2Categories });
     }
 
     // If L2 specified, return L3 subcategories
