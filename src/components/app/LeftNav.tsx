@@ -26,13 +26,23 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
   const pathname = usePathname();
 
   const navItems = [
-    { href: `${basePath}/home`, icon: Home, label: 'Dashboard' },
-    { href: `${basePath}/profile`, icon: User, label: 'Profile' },
-    { href: `${basePath}/matching`, icon: Users, label: 'Matching' },
-    { href: `${basePath}/expertise`, icon: MapPin, label: 'Expertise' },
-    { href: `${basePath}/verifications`, icon: ShieldCheck, label: 'Verifications' },
-    { href: `${basePath}/zen`, icon: Sparkles, label: 'Zen Hub' },
-    { href: `${basePath}/settings`, icon: Settings, label: 'Settings' },
+    { href: `${basePath}/home`, icon: Home, label: 'Dashboard', dataTour: 'dashboard-link' },
+    { href: `${basePath}/profile`, icon: User, label: 'Profile', dataTour: 'profile-link' },
+    {
+      href: `${basePath}/matching`,
+      icon: Users,
+      label: 'Matching',
+      dataTour: 'opportunities-link',
+    },
+    { href: `${basePath}/expertise`, icon: MapPin, label: 'Expertise', dataTour: 'skills-link' },
+    {
+      href: `${basePath}/verifications`,
+      icon: ShieldCheck,
+      label: 'Verifications',
+      dataTour: 'verifications-link',
+    },
+    { href: `${basePath}/zen`, icon: Sparkles, label: 'Zen Hub', dataTour: 'zen-link' },
+    { href: `${basePath}/settings`, icon: Settings, label: 'Settings', dataTour: 'settings-link' },
   ];
 
   return (
@@ -60,6 +70,7 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
               >
                 <Link
                   href={item.href}
+                  data-tour={item.dataTour}
                   className={`group flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-all duration-200 min-h-12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1C4D3A] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FDFCFA] ${
                     isActive
                       ? 'bg-[#1C4D3A] text-[#F7F6F1]'

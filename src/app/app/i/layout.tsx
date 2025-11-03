@@ -1,6 +1,7 @@
 import { requirePersona } from '@/lib/auth';
 import { LeftNav } from '@/components/app/LeftNav';
 import { TopBar } from '@/components/app/TopBar';
+import { TourProvider } from '@/components/tour/TourProvider';
 
 export default async function IndividualLayout({ children }: { children: React.ReactNode }) {
   const user = await requirePersona('individual');
@@ -20,6 +21,7 @@ export default async function IndividualLayout({ children }: { children: React.R
         <TopBar userName={userName} userInitials={userInitials} />
         <main className="flex-1 overflow-auto">{children}</main>
       </div>
+      <TourProvider />
     </div>
   );
 }

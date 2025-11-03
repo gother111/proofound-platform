@@ -46,6 +46,8 @@ export const profiles = pgTable('profiles', {
   platformRole: text('platform_role', {
     enum: ['platform_admin', 'super_admin'],
   }),
+  // User preferences and onboarding
+  tourCompleted: boolean('tour_completed').default(false),
   // GDPR Account Deletion Support (Article 17: Right to Erasure)
   deletionRequestedAt: timestamp('deletion_requested_at'),
   deletionScheduledFor: timestamp('deletion_scheduled_for'),

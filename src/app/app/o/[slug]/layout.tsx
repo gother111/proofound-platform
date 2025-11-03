@@ -2,6 +2,7 @@ import { requirePersona, getActiveOrg } from '@/lib/auth';
 import { notFound } from 'next/navigation';
 import { LeftNav } from '@/components/app/LeftNav';
 import { TopBar } from '@/components/app/TopBar';
+import { TourProvider } from '@/components/tour/TourProvider';
 
 export default async function OrganizationLayout({
   children,
@@ -35,6 +36,7 @@ export default async function OrganizationLayout({
         <TopBar userName={orgName} userInitials={orgInitials} />
         <main className="flex-1 overflow-auto">{children}</main>
       </div>
+      <TourProvider />
     </div>
   );
 }
