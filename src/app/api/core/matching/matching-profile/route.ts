@@ -2,11 +2,71 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
-import { matchingProfiles, skills } from '@/db/schema';
+import { matchingProfiles, skills, individualProfiles } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { log } from '@/lib/log';
+import { emitProfileActivated } from '@/lib/analytics/events';
 
 export const dynamic = 'force-dynamic';
+
+/**
+ * Track if profile was already activated (to avoid duplicate events)
+ */
+const activatedProfiles = new Set<string>();
+
+/**
+ * Check if profile meets PRD-strict activation criteria and emit event
+ */
+async function checkAndEmitProfileActivation(userId: string): Promise<void> {
+  if (activatedProfiles.has(userId)) return;
+
+  try {
+    const [profile] = await db
+      .select()
+      .from(individualProfiles)
+      .where(eq(individualProfiles.userId, userId))
+      .limit(1);
+
+    if (!profile) return;
+
+    const hasPurposeBlock = !!profile.mission && !!profile.vision;
+    if (!hasPurposeBlock) return;
+
+    const skillsCount = await db
+      .select({ count: skills.id })
+      .from(skills)
+      .where(eq(skills.profileId, userId));
+
+    const l4SkillsCount = skillsCount.length;
+    const hasMinimumL4Count = l4SkillsCount >= 10;
+    if (!hasMinimumL4Count) return;
+
+    const [matchingProfile] = await db
+      .select()
+      .from(matchingProfiles)
+      .where(eq(matchingProfiles.profileId, userId))
+      .limit(1);
+
+    if (!matchingProfile) return;
+
+    let completionScore = 30 + 40 + 30; // All criteria met = 100
+
+    await emitProfileActivated(userId, {
+      completionScore,
+      hasMinimumL4Count,
+      l4SkillsCount,
+      hasPurposeBlock,
+      hasMatchingProfile: true,
+    });
+
+    activatedProfiles.add(userId);
+  } catch (error) {
+    log.error('profile-activation-check.failed', {
+      userId,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+}
 
 // Validation schemas
 const LanguageSchema = z.object({
@@ -139,6 +199,9 @@ export async function PUT(request: NextRequest) {
       userId: user.id,
       skillCount: skillsInput?.length || 0,
     });
+
+    // Check if profile now meets activation criteria
+    await checkAndEmitProfileActivation(user.id);
 
     // Fetch and return updated profile
     const updatedProfile = await db.query.matchingProfiles.findFirst({

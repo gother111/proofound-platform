@@ -1,6 +1,6 @@
 /**
  * Analytics Event Emission
- * 
+ *
  * Helper functions for emitting analytics events
  * Ensures PII scrubbing and schema validation
  */
@@ -19,20 +19,109 @@ export interface AnalyticsEvent {
 }
 
 /**
+ * PII fields to scrub from event properties
+ */
+const PII_FIELDS = [
+  'email',
+  'name',
+  'firstName',
+  'lastName',
+  'phone',
+  'phoneNumber',
+  'address',
+  'ssn',
+  'dateOfBirth',
+  'creditCard',
+  'password',
+  'token',
+  'accessToken',
+  'refreshToken',
+];
+
+/**
+ * Scrub PII from properties object
+ */
+function scrubPII(properties: Record<string, any>): Record<string, any> {
+  const scrubbed = { ...properties };
+
+  for (const field of PII_FIELDS) {
+    if (scrubbed[field]) {
+      delete scrubbed[field];
+    }
+  }
+
+  // Recursively scrub nested objects
+  for (const key in scrubbed) {
+    if (
+      typeof scrubbed[key] === 'object' &&
+      scrubbed[key] !== null &&
+      !Array.isArray(scrubbed[key])
+    ) {
+      scrubbed[key] = scrubPII(scrubbed[key]);
+    }
+  }
+
+  return scrubbed;
+}
+
+/**
  * Emit an analytics event
- * 
+ *
  * @param event - Event data
  * @returns Event ID
  */
 export async function emitEvent(event: AnalyticsEvent): Promise<string> {
-  // TODO: Implement event emission
-  // 1. Validate event schema
-  // 2. Scrub PII from properties
-  // 3. Hash IP/User Agent if present
-  // 4. Insert into analytics_events table
-  // 5. Return event ID
-  
-  return 'placeholder-event-id';
+  try {
+    // 1. Validate event schema
+    if (!event.eventType || typeof event.eventType !== 'string') {
+      throw new Error('eventType is required and must be a string');
+    }
+
+    if (event.userId && typeof event.userId !== 'string') {
+      throw new Error('userId must be a string');
+    }
+
+    if (event.orgId && typeof event.orgId !== 'string') {
+      throw new Error('orgId must be a string');
+    }
+
+    // 2. Scrub PII from properties
+    const scrubbedProperties = event.properties ? scrubPII(event.properties) : {};
+
+    // 3. Insert into analytics_events table
+    const [inserted] = await db
+      .insert(analyticsEvents)
+      .values({
+        eventType: event.eventType,
+        userId: event.userId || null,
+        orgId: event.orgId || null,
+        entityType: event.entityType || null,
+        entityId: event.entityId || null,
+        properties: scrubbedProperties as any,
+        sessionId: event.sessionId || null,
+        // IP/UA hashing is handled by trackEvent() from analytics.ts
+        // These fields are optional and can be set by caller if needed
+        createdAt: new Date(),
+      })
+      .returning({ id: analyticsEvents.id });
+
+    // 4. Return event ID
+    if (!inserted?.id) {
+      throw new Error('Failed to insert event - no ID returned');
+    }
+
+    return inserted.id;
+  } catch (error) {
+    console.error('Event emission failed:', error);
+    console.error('Event details:', {
+      eventType: event.eventType,
+      userId: event.userId,
+      orgId: event.orgId,
+      entityType: event.entityType,
+      entityId: event.entityId,
+    });
+    throw error;
+  }
 }
 
 /**
@@ -67,12 +156,7 @@ export async function emitShortlistGenerated(
 /**
  * Emit match viewed event
  */
-export async function emitMatchViewed(
-  userId: string,
-  matchId: string,
-  score: number,
-  pac: number
-) {
+export async function emitMatchViewed(userId: string, matchId: string, score: number, pac: number) {
   return emitEvent({
     eventType: 'match_viewed',
     userId,
@@ -89,14 +173,19 @@ export async function emitMatchActioned(
   userId: string,
   matchId: string,
   action: 'introduce' | 'pass' | 'snooze',
-  reason?: string
+  properties?: {
+    reason?: string;
+    score?: number;
+    pac?: number;
+    qualificationMet?: boolean;
+  }
 ) {
   return emitEvent({
     eventType: 'match_actioned',
     userId,
     entityType: 'match',
     entityId: matchId,
-    properties: { action, reason },
+    properties: { action, ...properties },
   });
 }
 
@@ -131,9 +220,9 @@ export async function emitInterviewScheduled(
     userId,
     entityType: 'match',
     entityId: matchId,
-    properties: { 
-      scheduledAt: scheduledAt.toISOString(), 
-      platform 
+    properties: {
+      scheduledAt: scheduledAt.toISOString(),
+      platform,
     },
   });
 }
@@ -154,4 +243,3 @@ export async function emitContractSigned(
     properties: properties || {},
   });
 }
-

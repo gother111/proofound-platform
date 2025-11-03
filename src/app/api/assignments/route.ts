@@ -5,6 +5,7 @@ import { db } from '@/db';
 import { assignments, organizationMembers } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { log } from '@/lib/log';
+import { emitAssignmentPublished } from '@/lib/analytics/events';
 
 export const dynamic = 'force-dynamic';
 
@@ -127,33 +128,63 @@ export async function POST(request: NextRequest) {
       role: newAssignment.role,
     });
 
+    // Check if assignment was created with 'active' status and meets activation criteria
+    if (newAssignment.status === 'active') {
+      const hasCompleteDetails = !!newAssignment.role && !!newAssignment.description;
+      const mustHaveSkills = (newAssignment.mustHaveSkills as any[]) || [];
+      const hasMinimumSkills = mustHaveSkills.length >= 5;
+      const hasLocationAndComp =
+        (newAssignment.locationMode || newAssignment.country) &&
+        (newAssignment.compMin !== null || newAssignment.compMax !== null);
+
+      if (hasCompleteDetails && hasMinimumSkills && hasLocationAndComp) {
+        const publishTimeMinutes = 0; // Created and published simultaneously
+        await emitAssignmentPublished(orgId, newAssignment.id, {
+          hasCompleteDetails,
+          hasMinimumSkills,
+          mustHaveSkillsCount: mustHaveSkills.length,
+          hasLocationAndComp,
+          publishTimeMinutes,
+          publishedWithinTimeTarget: true, // Immediate publish
+        });
+      }
+    }
+
     return NextResponse.json({ assignment: newAssignment }, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
       log.error('assignment.validation.failed', {
         errors: error.errors,
       });
-      return NextResponse.json({ 
-        error: 'Invalid input', 
-        details: error.errors,
-        message: 'Some required fields are missing or invalid. Please review your assignment details.'
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Invalid input',
+          details: error.errors,
+          message:
+            'Some required fields are missing or invalid. Please review your assignment details.',
+        },
+        { status: 400 }
+      );
     }
 
     // Database connection errors
-    if (error instanceof Error && (
-      error.message.includes('connect') || 
-      error.message.includes('ECONNREFUSED') ||
-      error.message.includes('timeout')
-    )) {
+    if (
+      error instanceof Error &&
+      (error.message.includes('connect') ||
+        error.message.includes('ECONNREFUSED') ||
+        error.message.includes('timeout'))
+    ) {
       log.error('assignment.db.connection.failed', {
         error: error.message,
         stack: error.stack,
       });
-      return NextResponse.json({ 
-        error: 'Database connection failed',
-        message: 'Unable to save assignment. Please check your connection and try again.'
-      }, { status: 503 });
+      return NextResponse.json(
+        {
+          error: 'Database connection failed',
+          message: 'Unable to save assignment. Please check your connection and try again.',
+        },
+        { status: 503 }
+      );
     }
 
     log.error('assignment.create.failed', {
@@ -161,9 +192,12 @@ export async function POST(request: NextRequest) {
       stack: error instanceof Error ? error.stack : undefined,
     });
 
-    return NextResponse.json({ 
-      error: 'Failed to create assignment',
-      message: error instanceof Error ? error.message : 'An unexpected error occurred.'
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Failed to create assignment',
+        message: error instanceof Error ? error.message : 'An unexpected error occurred.',
+      },
+      { status: 500 }
+    );
   }
 }

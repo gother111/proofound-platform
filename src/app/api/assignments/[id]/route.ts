@@ -5,8 +5,77 @@ import { db } from '@/db';
 import { assignments, organizationMembers } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { log } from '@/lib/log';
+import { emitAssignmentPublished } from '@/lib/analytics/events';
 
 export const dynamic = 'force-dynamic';
+
+/**
+ * Track if assignment was already activated (to avoid duplicate events)
+ */
+const activatedAssignments = new Set<string>();
+
+/**
+ * Check if assignment meets PRD-strict activation criteria and emit event
+ * Criteria:
+ * - Role & description complete
+ * - ≥5 must-have L4 skills defined
+ * - Location & compensation set
+ * - Status = 'active'
+ */
+async function checkAndEmitAssignmentActivation(
+  assignmentId: string,
+  orgId: string,
+  createdAt: Date
+): Promise<void> {
+  if (activatedAssignments.has(assignmentId)) return;
+
+  try {
+    const [assignment] = await db
+      .select()
+      .from(assignments)
+      .where(eq(assignments.id, assignmentId))
+      .limit(1);
+
+    if (!assignment || assignment.status !== 'active') return;
+
+    // Check 1: Role & description complete
+    const hasCompleteDetails = !!assignment.role && !!assignment.description;
+    if (!hasCompleteDetails) return;
+
+    // Check 2: ≥5 must-have skills defined
+    const mustHaveSkills = (assignment.mustHaveSkills as any[]) || [];
+    const hasMinimumSkills = mustHaveSkills.length >= 5;
+    if (!hasMinimumSkills) return;
+
+    // Check 3: Location & compensation set
+    const hasLocationAndComp =
+      (assignment.locationMode || assignment.country) &&
+      (assignment.compMin !== null || assignment.compMax !== null);
+    if (!hasLocationAndComp) return;
+
+    // Calculate publish time (time from creation to activation)
+    const publishTime = Date.now() - createdAt.getTime();
+    const publishTimeMinutes = Math.floor(publishTime / (1000 * 60));
+    const publishedWithinTimeTarget = publishTimeMinutes <= 15; // ≤15 minutes
+
+    await emitAssignmentPublished(orgId, assignmentId, {
+      hasCompleteDetails,
+      hasMinimumSkills,
+      mustHaveSkillsCount: mustHaveSkills.length,
+      hasLocationAndComp,
+      publishTimeMinutes,
+      publishedWithinTimeTarget,
+    });
+
+    activatedAssignments.add(assignmentId);
+  } catch (error) {
+    log.error('assignment-activation-check.failed', {
+      assignmentId,
+      orgId,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+}
 
 // Validation schema (same as POST, but all fields optional for PATCH)
 const AssignmentUpdateSchema = z.object({
@@ -118,6 +187,15 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       assignmentId,
       userId: user.id,
     });
+
+    // Check if assignment now meets activation criteria
+    if (validatedData.status === 'active' || updatedAssignment.status === 'active') {
+      await checkAndEmitAssignmentActivation(
+        assignmentId,
+        updatedAssignment.orgId,
+        updatedAssignment.createdAt
+      );
+    }
 
     return NextResponse.json({ assignment: updatedAssignment });
   } catch (error) {

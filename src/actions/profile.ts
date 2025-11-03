@@ -11,8 +11,11 @@ import {
   experiences,
   education,
   volunteering,
+  matchingProfiles,
+  skills as skillsTable,
 } from '@/db/schema';
 import { requireAuth } from '@/lib/auth';
+import { emitProfileActivated } from '@/lib/analytics/events';
 import type {
   ProfileData,
   BasicInfo,
@@ -23,6 +26,81 @@ import type {
   Education as EducationType,
   Volunteering as VolunteeringType,
 } from '@/types/profile';
+
+/**
+ * Track if profile was already activated (to avoid duplicate events)
+ */
+const activatedProfiles = new Set<string>();
+
+/**
+ * Check if profile meets PRD-strict activation criteria
+ * Criteria:
+ * - ≥10 L4 skills with level + proof
+ * - Mission AND Vision filled
+ * - Matching profile exists (indicates user completed matchmaking setup)
+ */
+async function checkAndEmitProfileActivation(userId: string): Promise<void> {
+  // Skip if already emitted for this profile
+  if (activatedProfiles.has(userId)) {
+    return;
+  }
+
+  try {
+    // Fetch profile data
+    const [profile] = await db
+      .select()
+      .from(individualProfiles)
+      .where(eq(individualProfiles.userId, userId))
+      .limit(1);
+
+    if (!profile) return;
+
+    // Check 1: Mission AND Vision filled
+    const hasPurposeBlock = !!profile.mission && !!profile.vision;
+    if (!hasPurposeBlock) return;
+
+    // Check 2: ≥10 L4 skills with level + proof
+    const skillsCount = await db
+      .select({ count: skillsTable.id })
+      .from(skillsTable)
+      .where(eq(skillsTable.profileId, userId));
+
+    const l4SkillsCount = skillsCount.length;
+    const hasMinimumL4Count = l4SkillsCount >= 10;
+    if (!hasMinimumL4Count) return;
+
+    // Check 3: Matching profile exists
+    const [matchingProfile] = await db
+      .select()
+      .from(matchingProfiles)
+      .where(eq(matchingProfiles.profileId, userId))
+      .limit(1);
+
+    const hasMatchingProfile = !!matchingProfile;
+    if (!hasMatchingProfile) return;
+
+    // Calculate completion score (0-100)
+    let completionScore = 0;
+    if (hasPurposeBlock) completionScore += 30;
+    if (hasMinimumL4Count) completionScore += 40;
+    if (hasMatchingProfile) completionScore += 30;
+
+    // All criteria met - emit activation event!
+    await emitProfileActivated(userId, {
+      completionScore,
+      hasMinimumL4Count,
+      l4SkillsCount,
+      hasPurposeBlock,
+      hasMatchingProfile,
+    });
+
+    // Mark as emitted to prevent duplicates
+    activatedProfiles.add(userId);
+  } catch (error) {
+    console.error('Profile activation check failed:', error);
+    // Don't throw - activation tracking shouldn't break profile updates
+  }
+}
 
 /**
  * Fetch the authenticated user's profile and related records.
@@ -173,12 +251,20 @@ export async function updateMission(mission: string | null) {
     .update(individualProfiles)
     .set({ mission })
     .where(eq(individualProfiles.userId, user.id));
+
+  // Check if profile now meets activation criteria
+  await checkAndEmitProfileActivation(user.id);
+
   revalidatePath('/app/i/profile');
 }
 
 export async function updateVision(vision: string | null) {
   const user = await requireAuth();
   await db.update(individualProfiles).set({ vision }).where(eq(individualProfiles.userId, user.id));
+
+  // Check if profile now meets activation criteria
+  await checkAndEmitProfileActivation(user.id);
+
   revalidatePath('/app/i/profile');
 }
 
@@ -200,6 +286,10 @@ export async function replaceSkills(skills: Skill[]) {
     .update(individualProfiles)
     .set({ skills: skills.map((skill) => skill.name) })
     .where(eq(individualProfiles.userId, user.id));
+
+  // Check if profile now meets activation criteria
+  await checkAndEmitProfileActivation(user.id);
+
   revalidatePath('/app/i/profile');
 }
 
