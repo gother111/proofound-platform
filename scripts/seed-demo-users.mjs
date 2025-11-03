@@ -292,58 +292,58 @@ async function seedSkills() {
     {
       userId: DEMO_USERS.sofia,
       skills: [
-        { id: 'ui-ux-design', code: null, level: 5, months: 96, evidence: 0.9, recency: 1.0, relevance: 'current' },
-        { id: 'user-research', code: null, level: 4, months: 84, evidence: 0.85, recency: 0.95, relevance: 'current' },
-        { id: 'figma', code: null, level: 5, months: 60, evidence: 0.9, recency: 1.0, relevance: 'current' },
-        { id: 'product-strategy', code: null, level: 4, months: 72, evidence: 0.8, recency: 0.9, relevance: 'current' },
-        { id: 'design-systems', code: null, level: 4, months: 48, evidence: 0.85, recency: 0.95, relevance: 'current' },
-        { id: 'prototyping', code: null, level: 5, months: 90, evidence: 0.9, recency: 1.0, relevance: 'current' },
-        { id: 'data-visualization', code: null, level: 3, months: 36, evidence: 0.7, recency: 0.85, relevance: 'emerging' },
-        { id: 'sustainability-design', code: null, level: 4, months: 48, evidence: 0.85, recency: 0.95, relevance: 'emerging' },
+        { id: 'ui-ux-design', code: '02.052.412.04194', level: 5, months: 96, evidence: 0.9, recency: 1.0, relevance: 'current' }, // User-centered design & layout
+        { id: 'user-research', code: '02.052.412.04194', level: 4, months: 84, evidence: 0.85, recency: 0.95, relevance: 'current' }, // User-centered design & layout
+        { id: 'figma', code: '03.090.720.13593', level: 5, months: 60, evidence: 0.9, recency: 1.0, relevance: 'current' }, // Enterprise figma/sketch mastery
+        { id: 'product-strategy', code: '05.119.958.09618', level: 4, months: 72, evidence: 0.8, recency: 0.9, relevance: 'current' }, // Product ownership
+        { id: 'design-systems', code: '06.167.1340.00228', level: 4, months: 48, evidence: 0.85, recency: 0.95, relevance: 'current' }, // Design systems creation
+        { id: 'prototyping', code: '06.167.1340.00234', level: 5, months: 90, evidence: 0.9, recency: 1.0, relevance: 'current' }, // Prototyping
+        { id: 'data-visualization', code: '06.172.1384.03396', level: 3, months: 36, evidence: 0.7, recency: 0.85, relevance: 'emerging' }, // Applied Data & visualization
+        { id: 'sustainability-design', code: '06.169.1358.00106', level: 4, months: 48, evidence: 0.85, recency: 0.95, relevance: 'emerging' }, // Sustainability & water assessment
       ],
     },
     // James - Full-Stack Developer
     {
       userId: DEMO_USERS.james,
       skills: [
-        { id: 'typescript', code: null, level: 5, months: 84, evidence: 0.95, recency: 1.0, relevance: 'current' },
-        { id: 'react', code: null, level: 5, months: 96, evidence: 0.95, recency: 1.0, relevance: 'current' },
-        { id: 'nodejs', code: null, level: 5, months: 108, evidence: 0.9, recency: 1.0, relevance: 'current' },
-        { id: 'postgresql', code: null, level: 4, months: 72, evidence: 0.85, recency: 0.95, relevance: 'current' },
-        { id: 'system-architecture', code: null, level: 4, months: 84, evidence: 0.9, recency: 0.95, relevance: 'current' },
-        { id: 'payment-systems', code: null, level: 5, months: 60, evidence: 0.95, recency: 1.0, relevance: 'current' },
-        { id: 'api-design', code: null, level: 4, months: 96, evidence: 0.85, recency: 0.9, relevance: 'current' },
-        { id: 'cloud-infrastructure', code: null, level: 4, months: 72, evidence: 0.8, recency: 0.9, relevance: 'current' },
-        { id: 'web3', code: null, level: 3, months: 18, evidence: 0.65, recency: 1.0, relevance: 'emerging' },
+        { id: 'typescript', code: '03.082.653.13651', level: 5, months: 84, evidence: 0.95, recency: 1.0, relevance: 'current' }, // Python programming (fallback for programming)
+        { id: 'react', code: '03.082.653.13650', level: 5, months: 96, evidence: 0.95, recency: 1.0, relevance: 'current' }, // JavaScript programming
+        { id: 'nodejs', code: '03.082.653.13650', level: 5, months: 108, evidence: 0.9, recency: 1.0, relevance: 'current' }, // JavaScript programming
+        { id: 'postgresql', code: '06.149.1193.00920', level: 4, months: 72, evidence: 0.85, recency: 0.95, relevance: 'current' }, // Data structures & algorithms
+        { id: 'system-architecture', code: '02.055.434.05635', level: 4, months: 84, evidence: 0.9, recency: 0.95, relevance: 'current' }, // Applied System architecture
+        { id: 'payment-systems', code: '03.076.603.13866', level: 5, months: 60, evidence: 0.95, recency: 1.0, relevance: 'current' }, // Checkout & payments customization
+        { id: 'api-design', code: '06.177.1423.02027', level: 4, months: 96, evidence: 0.85, recency: 0.9, relevance: 'current' }, // API documentation
+        { id: 'cloud-infrastructure', code: '02.059.472.03968', level: 4, months: 72, evidence: 0.8, recency: 0.9, relevance: 'current' }, // Applied Multi-cloud & networking
+        { id: 'web3', code: '03.082.653.13651', level: 3, months: 18, evidence: 0.65, recency: 1.0, relevance: 'emerging' }, // Python programming (fallback)
       ],
     },
     // Amara - Social Impact Strategist
     {
       userId: DEMO_USERS.amara,
       skills: [
-        { id: 'program-management', code: null, level: 5, months: 84, evidence: 0.9, recency: 1.0, relevance: 'current' },
-        { id: 'community-engagement', code: null, level: 5, months: 84, evidence: 0.95, recency: 1.0, relevance: 'current' },
-        { id: 'impact-measurement', code: null, level: 4, months: 60, evidence: 0.85, recency: 0.95, relevance: 'current' },
-        { id: 'strategic-planning', code: null, level: 4, months: 72, evidence: 0.8, recency: 0.9, relevance: 'current' },
-        { id: 'stakeholder-management', code: null, level: 4, months: 84, evidence: 0.85, recency: 0.95, relevance: 'current' },
-        { id: 'fundraising', code: null, level: 4, months: 60, evidence: 0.8, recency: 0.9, relevance: 'current' },
-        { id: 'monitoring-evaluation', code: null, level: 4, months: 72, evidence: 0.85, recency: 0.95, relevance: 'current' },
-        { id: 'partnership-development', code: null, level: 3, months: 48, evidence: 0.75, recency: 0.85, relevance: 'current' },
+        { id: 'program-management', code: '02.046.368.04621', level: 5, months: 84, evidence: 0.9, recency: 1.0, relevance: 'current' }, // Program evaluation analysis
+        { id: 'community-engagement', code: '02.048.379.06818', level: 5, months: 84, evidence: 0.95, recency: 1.0, relevance: 'current' }, // Community engagement analysis
+        { id: 'impact-measurement', code: '01.008.064.17357', level: 4, months: 60, evidence: 0.85, recency: 0.95, relevance: 'current' }, // Social & environmental impact assessment
+        { id: 'strategic-planning', code: '06.163.1312.00493', level: 4, months: 72, evidence: 0.8, recency: 0.9, relevance: 'current' }, // Strategic planning
+        { id: 'stakeholder-management', code: '06.163.1305.00552', level: 4, months: 84, evidence: 0.85, recency: 0.95, relevance: 'current' }, // Stakeholder management
+        { id: 'fundraising', code: '02.048.379.06818', level: 4, months: 60, evidence: 0.8, recency: 0.9, relevance: 'current' }, // Community engagement (fallback)
+        { id: 'monitoring-evaluation', code: '02.049.385.04782', level: 4, months: 72, evidence: 0.85, recency: 0.95, relevance: 'current' }, // Environmental monitoring evaluation
+        { id: 'partnership-development', code: '02.042.334.07711', level: 3, months: 48, evidence: 0.75, recency: 0.85, relevance: 'current' }, // Strategic partnerships
       ],
     },
     // Yuki - Data Scientist/AI Engineer
     {
       userId: DEMO_USERS.yuki,
       skills: [
-        { id: 'python', code: null, level: 5, months: 96, evidence: 0.95, recency: 1.0, relevance: 'current' },
-        { id: 'machine-learning', code: null, level: 5, months: 84, evidence: 0.95, recency: 1.0, relevance: 'current' },
-        { id: 'data-analysis', code: null, level: 5, months: 108, evidence: 0.9, recency: 1.0, relevance: 'current' },
-        { id: 'tensorflow', code: null, level: 4, months: 60, evidence: 0.85, recency: 0.95, relevance: 'current' },
-        { id: 'pytorch', code: null, level: 4, months: 48, evidence: 0.85, recency: 1.0, relevance: 'current' },
-        { id: 'statistical-modeling', code: null, level: 4, months: 72, evidence: 0.8, recency: 0.9, relevance: 'current' },
-        { id: 'healthcare-analytics', code: null, level: 4, months: 60, evidence: 0.9, recency: 0.95, relevance: 'current' },
-        { id: 'deep-learning', code: null, level: 4, months: 54, evidence: 0.85, recency: 1.0, relevance: 'current' },
-        { id: 'nlp', code: null, level: 3, months: 36, evidence: 0.75, recency: 0.9, relevance: 'emerging' },
+        { id: 'python', code: '03.082.653.13651', level: 5, months: 96, evidence: 0.95, recency: 1.0, relevance: 'current' }, // Python programming
+        { id: 'machine-learning', code: '02.056.447.04497', level: 5, months: 84, evidence: 0.95, recency: 1.0, relevance: 'current' }, // Forecasting & ML basics
+        { id: 'data-analysis', code: '06.149.1193.00920', level: 5, months: 108, evidence: 0.9, recency: 1.0, relevance: 'current' }, // Data structures & algorithms
+        { id: 'tensorflow', code: '03.082.653.13651', level: 4, months: 60, evidence: 0.85, recency: 0.95, relevance: 'current' }, // Python programming (fallback)
+        { id: 'pytorch', code: '03.082.653.13651', level: 4, months: 48, evidence: 0.85, recency: 1.0, relevance: 'current' }, // Python programming (fallback)
+        { id: 'statistical-modeling', code: '02.054.428.07129', level: 4, months: 72, evidence: 0.8, recency: 0.9, relevance: 'current' }, // Enterprise statistical analysis
+        { id: 'healthcare-analytics', code: '06.149.1193.00920', level: 4, months: 60, evidence: 0.9, recency: 0.95, relevance: 'current' }, // Data structures & algorithms (fallback)
+        { id: 'deep-learning', code: '02.056.447.04497', level: 4, months: 54, evidence: 0.85, recency: 1.0, relevance: 'current' }, // ML basics (fallback)
+        { id: 'nlp', code: '03.082.653.13651', level: 3, months: 36, evidence: 0.75, recency: 0.9, relevance: 'emerging' }, // Python programming (fallback)
       ],
     },
     // Alex - Community Organizer

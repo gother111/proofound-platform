@@ -8,8 +8,9 @@ import { eq, and, or } from 'drizzle-orm';
 import {
   validateInterviewSchedule,
   canReschedule,
-  INTERVIEW_CONSTRAINTS
+  INTERVIEW_CONSTRAINTS,
 } from '@/lib/interview-constraints';
+import { emitInterviewScheduled } from '@/lib/analytics/events';
 
 /**
  * Interview Scheduling API
@@ -21,7 +22,10 @@ import {
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -42,39 +46,44 @@ export async function POST(req: NextRequest) {
     });
 
     if (!match) {
-      return NextResponse.json({
-        error: 'Match not found'
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          error: 'Match not found',
+        },
+        { status: 404 }
+      );
     }
 
     // Check user is either candidate or from the org
     if (match.profileId !== user.id) {
       // TODO: Also check if user is org member for this assignment
-      return NextResponse.json({
-        error: 'Unauthorized - not a match participant'
-      }, { status: 403 });
+      return NextResponse.json(
+        {
+          error: 'Unauthorized - not a match participant',
+        },
+        { status: 403 }
+      );
     }
 
     // 2. Enforce PRD constraints (30-min max, 7-day window)
     const matchAgreementDate = match.createdAt; // Use createdAt as proxy for agreement date
     const proposedStart = new Date(startTime);
 
-    const validation = validateInterviewSchedule(
-      matchAgreementDate,
-      proposedStart,
-      duration
-    );
+    const validation = validateInterviewSchedule(matchAgreementDate, proposedStart, duration);
 
     if (!validation.valid) {
-      return NextResponse.json({
-        error: 'Interview scheduling constraints violated',
-        details: validation.errors,
-        constraints: {
-          maxDuration: INTERVIEW_CONSTRAINTS.MAX_DURATION_MINUTES,
-          maxDaysFromMatch: INTERVIEW_CONSTRAINTS.MAX_DAYS_FROM_MATCH,
-          matchAgreedAt: matchAgreementDate.toISOString(),
+      return NextResponse.json(
+        {
+          error: 'Interview scheduling constraints violated',
+          details: validation.errors,
+          constraints: {
+            maxDuration: INTERVIEW_CONSTRAINTS.MAX_DURATION_MINUTES,
+            maxDaysFromMatch: INTERVIEW_CONSTRAINTS.MAX_DAYS_FROM_MATCH,
+            matchAgreedAt: matchAgreementDate.toISOString(),
+          },
         },
-      }, { status: 400 });
+        { status: 400 }
+      );
     }
 
     // 3. Check reschedule limit if applicable
@@ -85,11 +94,14 @@ export async function POST(req: NextRequest) {
 
       const rescheduleValidation = canReschedule(existingInterviews.length - 1);
       if (!rescheduleValidation.valid) {
-        return NextResponse.json({
-          error: 'Reschedule limit exceeded',
-          details: rescheduleValidation.errors,
-          maxReschedules: INTERVIEW_CONSTRAINTS.ALLOWED_RESCHEDULES,
-        }, { status: 400 });
+        return NextResponse.json(
+          {
+            error: 'Reschedule limit exceeded',
+            details: rescheduleValidation.errors,
+            maxReschedules: INTERVIEW_CONSTRAINTS.ALLOWED_RESCHEDULES,
+          },
+          { status: 400 }
+        );
       }
     }
 
@@ -114,8 +126,7 @@ export async function POST(req: NextRequest) {
           duration,
         });
         // For Google Meet, extract event ID from URL or generate a unique identifier
-        const eventId = meetUrl.match(/[?&]eid=([^&]+)/)?.[1] || 
-                       `google-${Date.now()}`;
+        const eventId = meetUrl.match(/[?&]eid=([^&]+)/)?.[1] || `google-${Date.now()}`;
         meetingData = {
           meetingId: eventId,
           url: meetUrl,
@@ -127,19 +138,34 @@ export async function POST(req: NextRequest) {
     }
 
     // 5. Create interview record
-    const [interview] = await db.insert(interviews).values({
-      matchId,
-      scheduledAt: proposedStart,
-      duration,
-      platform,
-      meetingId: meetingData?.meetingId || 'pending',
-      meetingUrl: meetingData?.url || 'pending',
-      timezone: 'UTC',
-      status: 'scheduled',
-    }).returning();
+    const [interview] = await db
+      .insert(interviews)
+      .values({
+        matchId,
+        scheduledAt: proposedStart,
+        duration,
+        platform,
+        meetingId: meetingData?.meetingId || 'pending',
+        meetingUrl: meetingData?.url || 'pending',
+        timezone: 'UTC',
+        status: 'scheduled',
+      })
+      .returning();
+
+    // Emit interview_scheduled event for TTV metric tracking
+    try {
+      await emitInterviewScheduled(
+        user.id,
+        matchId,
+        proposedStart,
+        platform as 'zoom' | 'google-meet'
+      );
+    } catch (eventError) {
+      console.error('Failed to emit interview_scheduled event:', eventError);
+      // Don't fail the request if event emission fails
+    }
 
     // TODO: Send calendar invites via email
-    // TODO: Emit interview_scheduled event
 
     return NextResponse.json({
       success: true,
@@ -166,14 +192,17 @@ export async function POST(req: NextRequest) {
 
 /**
  * GET /api/interviews/schedule
- * 
+ *
  * Retrieves scheduled interviews for user
  */
 export async function GET(req: NextRequest) {
   try {
     const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -181,15 +210,11 @@ export async function GET(req: NextRequest) {
     // TODO: Implement get interviews
     // Query interviews table for user
 
-    return NextResponse.json({ 
-      interviews: [] 
+    return NextResponse.json({
+      interviews: [],
     });
   } catch (error) {
     console.error('Get interviews error:', error);
-    return NextResponse.json(
-      { error: 'Failed to retrieve interviews' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to retrieve interviews' }, { status: 500 });
   }
 }
-

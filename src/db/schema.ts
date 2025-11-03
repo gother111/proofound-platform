@@ -434,7 +434,10 @@ export const skills = pgTable(
     levelCheck: check('level_check', sql`${table.level} BETWEEN 0 AND 5`),
     monthsCheck: check('months_check', sql`${table.monthsExperience} >= 0`),
     evidenceCheck: check('evidence_check', sql`${table.evidenceStrength} BETWEEN 0 AND 1`),
-    recencyCheck: check('recency_check', sql`${table.recencyMultiplier} > 0 AND ${table.recencyMultiplier} <= 1`),
+    recencyCheck: check(
+      'recency_check',
+      sql`${table.recencyMultiplier} > 0 AND ${table.recencyMultiplier} <= 1`
+    ),
     impactCheck: check('impact_check', sql`${table.impactScore} BETWEEN 0 AND 1`),
   })
 );
@@ -851,10 +854,7 @@ export const projectSkills = pgTable(
   },
   (table) => ({
     projectSkillUnique: unique().on(table.projectId, table.skillCode),
-    proficiencyCheck: check(
-      'proficiency_check',
-      sql`${table.proficiencyLevel} BETWEEN 1 AND 5`
-    ),
+    proficiencyCheck: check('proficiency_check', sql`${table.proficiencyLevel} BETWEEN 1 AND 5`),
     contributionCheck: check(
       'contribution_check',
       sql`${table.outcomeContribution} BETWEEN 0 AND 1`
@@ -1561,25 +1561,93 @@ export const wellbeingOptIns = pgTable('wellbeing_opt_ins', {
 });
 
 // ====================================
+// Contracts & Metrics Infrastructure
+// ====================================
+
+// Contracts - Track signed employment/engagement agreements for TTSC metric
+export const contracts = pgTable('contracts', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  assignmentId: uuid('assignment_id')
+    .references(() => assignments.id, { onDelete: 'cascade' })
+    .notNull(),
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  orgId: uuid('org_id')
+    .references(() => organizations.id, { onDelete: 'cascade' })
+    .notNull(),
+  // Attestation flags (mutual confirmation model)
+  userAttestation: boolean('user_attestation').default(false),
+  orgAttestation: boolean('org_attestation').default(false),
+  // Contract details
+  contractType: text('contract_type', {
+    enum: ['full-time', 'part-time', 'contract', 'internship', 'volunteer'],
+  }),
+  signedAt: timestamp('signed_at').defaultNow().notNull(),
+  startDate: date('start_date'),
+  endDate: date('end_date'),
+  // Compensation details (optional)
+  compensationAmount: integer('compensation_amount'),
+  compensationCurrency: text('compensation_currency').default('USD'),
+  compensationPeriod: text('compensation_period', {
+    enum: ['hourly', 'weekly', 'monthly', 'yearly', 'one-time'],
+  }),
+  // Additional metadata
+  metadata: jsonb('metadata').default(sql`'{}'::jsonb`),
+  notes: text('notes'),
+  // Audit fields
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Metric snapshots - Cache calculated metrics for performance
+export const metricSnapshots = pgTable('metric_snapshots', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  // Metric identification
+  metricType: text('metric_type', {
+    enum: ['ttsc', 'ttfqi', 'ttv', 'pac', 'sus', 'wellbeing_delta'],
+  }).notNull(),
+  cohort: text('cohort'), // e.g., 'student', 'senior-engineer', 'us-remote'
+  // Metric values
+  value: numeric('value').notNull(), // Primary metric value (e.g., median days)
+  median: numeric('median'),
+  p25: numeric('p25'), // 25th percentile
+  p75: numeric('p75'), // 75th percentile
+  mean: numeric('mean'),
+  sampleSize: integer('sample_size'),
+  // Time period
+  periodStart: timestamp('period_start').notNull(),
+  periodEnd: timestamp('period_end').notNull(),
+  // Additional metadata
+  metadata: jsonb('metadata').default(sql`'{}'::jsonb`),
+  // Audit fields
+  calculatedAt: timestamp('calculated_at').defaultNow().notNull(),
+});
+
+// ====================================
 // Video Conferencing Integration
 // ====================================
 
 // User integrations for OAuth-connected services
-export const userIntegrations = pgTable('user_integrations', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id')
-    .references(() => profiles.id, { onDelete: 'cascade' })
-    .notNull(),
-  provider: text('provider', { enum: ['zoom', 'google', 'linkedin'] }).notNull(),
-  accessToken: text('access_token').notNull(),
-  refreshToken: text('refresh_token'),
-  tokenExpiry: timestamp('token_expiry').notNull(),
-  scope: text('scope').array(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-}, (table) => ({
-  userProviderUnique: unique().on(table.userId, table.provider),
-}));
+export const userIntegrations = pgTable(
+  'user_integrations',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    provider: text('provider', { enum: ['zoom', 'google', 'linkedin'] }).notNull(),
+    accessToken: text('access_token').notNull(),
+    refreshToken: text('refresh_token'),
+    tokenExpiry: timestamp('token_expiry').notNull(),
+    scope: text('scope').array(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    userProviderUnique: unique().on(table.userId, table.provider),
+  })
+);
 
 // Scheduled interviews with video links
 export const interviews = pgTable('interviews', {
@@ -1595,7 +1663,9 @@ export const interviews = pgTable('interviews', {
   timezone: text('timezone').default('UTC'),
   status: text('status', {
     enum: ['scheduled', 'completed', 'cancelled', 'no_show'],
-  }).default('scheduled').notNull(),
+  })
+    .default('scheduled')
+    .notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -1621,7 +1691,9 @@ export const adminInvitations = pgTable('admin_invitations', {
   expiresAt: timestamp('expires_at').notNull(),
   status: text('status', {
     enum: ['pending', 'accepted', 'expired', 'revoked'],
-  }).default('pending').notNull(),
+  })
+    .default('pending')
+    .notNull(),
 });
 
 // Admin audit log - tracks all admin actions
@@ -1642,17 +1714,21 @@ export const adminAuditLog = pgTable('admin_audit_log', {
 });
 
 // Admin system metrics cache - pre-aggregated analytics
-export const adminMetricsCache = pgTable('admin_metrics_cache', {
-  id: bigserial('id', { mode: 'number' }).primaryKey(),
-  metricType: text('metric_type').notNull(), // 'daily_signups', 'active_users', etc.
-  period: text('period').notNull(), // 'day', 'week', 'month'
-  periodStart: timestamp('period_start').notNull(),
-  periodEnd: timestamp('period_end').notNull(),
-  value: jsonb('value').notNull(), // Metric-specific data
-  calculatedAt: timestamp('calculated_at').defaultNow().notNull(),
-}, (table) => ({
-  metricPeriodUnique: unique().on(table.metricType, table.periodStart),
-}));
+export const adminMetricsCache = pgTable(
+  'admin_metrics_cache',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    metricType: text('metric_type').notNull(), // 'daily_signups', 'active_users', etc.
+    period: text('period').notNull(), // 'day', 'week', 'month'
+    periodStart: timestamp('period_start').notNull(),
+    periodEnd: timestamp('period_end').notNull(),
+    value: jsonb('value').notNull(), // Metric-specific data
+    calculatedAt: timestamp('calculated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    metricPeriodUnique: unique().on(table.metricType, table.periodStart),
+  })
+);
 
 // Type exports
 export type Profile = typeof profiles.$inferSelect;
@@ -1781,14 +1857,22 @@ export type InsertWellbeingReflection = typeof wellbeingReflections.$inferInsert
 export type WellbeingOptIn = typeof wellbeingOptIns.$inferSelect;
 export type InsertWellbeingOptIn = typeof wellbeingOptIns.$inferInsert;
 
+// Contracts & metrics types
+export type Contract = typeof contracts.$inferSelect;
+export type InsertContract = typeof contracts.$inferInsert;
+export type MetricSnapshot = typeof metricSnapshots.$inferSelect;
+export type InsertMetricSnapshot = typeof metricSnapshots.$inferInsert;
+
 // Video integration types
 export type UserIntegration = typeof userIntegrations.$inferSelect;
 export type InsertUserIntegration = typeof userIntegrations.$inferInsert;
 export type Interview = typeof interviews.$inferSelect;
 export type InsertInterview = typeof interviews.$inferInsert;
 
-export type AssignmentFieldVisibilityDefaults = typeof assignmentFieldVisibilityDefaults.$inferSelect;
-export type InsertAssignmentFieldVisibilityDefaults = typeof assignmentFieldVisibilityDefaults.$inferInsert;
+export type AssignmentFieldVisibilityDefaults =
+  typeof assignmentFieldVisibilityDefaults.$inferSelect;
+export type InsertAssignmentFieldVisibilityDefaults =
+  typeof assignmentFieldVisibilityDefaults.$inferInsert;
 
 // Admin system types
 export type AdminInvitation = typeof adminInvitations.$inferSelect;

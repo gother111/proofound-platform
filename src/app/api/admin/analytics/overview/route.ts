@@ -4,6 +4,7 @@ import { db } from '@/db';
 import { profiles, organizations, matches, assignments, analyticsEvents } from '@/db/schema';
 import { sql, gte, and, eq } from 'drizzle-orm';
 import { logAnalyticsAccess } from '@/lib/audit/admin-logger';
+import { calculateTTSC } from '@/lib/analytics/metrics';
 
 /**
  * GET /api/admin/analytics/overview
@@ -31,12 +32,7 @@ export async function GET() {
     const usersThisMonthResult = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(profiles)
-      .where(
-        and(
-          eq(profiles.deleted, false),
-          gte(profiles.createdAt, last30Days)
-        )
-      );
+      .where(and(eq(profiles.deleted, false), gte(profiles.createdAt, last30Days)));
     const usersThisMonth = usersThisMonthResult[0]?.count || 0;
 
     // Total organizations
@@ -52,9 +48,7 @@ export async function GET() {
     const activeOrgs = activeOrgsResult[0]?.count || 0;
 
     // Total matches
-    const totalMatchesResult = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(matches);
+    const totalMatchesResult = await db.select({ count: sql<number>`count(*)::int` }).from(matches);
     const totalMatches = totalMatchesResult[0]?.count || 0;
 
     // Matches this month
@@ -97,6 +91,9 @@ export async function GET() {
       .where(gte(analyticsEvents.createdAt, last7Days));
     const activeUsersLast7Days = activeUsersResult[0]?.count || 0;
 
+    // Calculate TTSC metric
+    const ttsc = await calculateTTSC();
+
     // Log admin access
     await logAnalyticsAccess(adminUser.userId, 'overview');
 
@@ -122,6 +119,19 @@ export async function GET() {
         },
         assignments: {
           active: activeAssignments,
+        },
+        metrics: {
+          ttsc: ttsc
+            ? {
+                median: ttsc.median,
+                mean: ttsc.mean,
+                p25: ttsc.p25,
+                p75: ttsc.p75,
+                sampleSize: ttsc.sampleSize,
+                meetsTarget: ttsc.median <= 30,
+                unit: 'days',
+              }
+            : null,
         },
         period: {
           last30Days: last30Days.toISOString(),

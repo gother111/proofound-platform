@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
-import { matchInterest, assignments } from '@/db/schema';
+import { matchInterest, assignments, matches } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { log } from '@/lib/log';
+import { emitMatchActioned } from '@/lib/analytics/events';
 
 export const dynamic = 'force-dynamic';
 
@@ -89,6 +90,54 @@ export async function POST(request: NextRequest) {
       targetProfileId: targetProfileId || null,
       mutualInterest,
     });
+
+    // If mutual interest detected, emit match_actioned event for "introduce"
+    if (mutualInterest) {
+      try {
+        // Find the match to get score and PAC
+        const profileId = targetProfileId || user.id;
+        const [match] = await db
+          .select()
+          .from(matches)
+          .where(and(eq(matches.assignmentId, assignmentId), eq(matches.profileId, profileId)))
+          .limit(1);
+
+        if (match) {
+          // Extract PAC from match vector
+          const vector = match.vector as any;
+          const pac = vector?.subscores?.pac || 0;
+          const score = parseFloat(match.score.toString());
+
+          // Check if this is a Qualified Introduction
+          // PRD criteria: score ≥0.70, all hard constraints satisfied
+          const qualificationMet = score >= 0.7;
+
+          // Emit event for both parties
+          await emitMatchActioned(user.id, match.id, 'introduce', {
+            score,
+            pac,
+            qualificationMet,
+          });
+
+          // Also emit for the other party if it's a mutual introduction
+          const otherUserId = targetProfileId ? targetProfileId : assignment.orgId;
+          if (otherUserId && otherUserId !== user.id) {
+            await emitMatchActioned(otherUserId, match.id, 'introduce', {
+              score,
+              pac,
+              qualificationMet,
+            });
+          }
+        }
+      } catch (error) {
+        // Don't fail the request if event emission fails
+        log.error('match-introduction-event.failed', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          assignmentId,
+          targetProfileId,
+        });
+      }
+    }
 
     return NextResponse.json({ revealed: mutualInterest });
   } catch (error) {
