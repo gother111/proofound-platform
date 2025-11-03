@@ -23,6 +23,7 @@ import {
   Lightbulb,
   TrendingUp,
   X,
+  Eye,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useProfileData } from '@/hooks/useProfileData';
