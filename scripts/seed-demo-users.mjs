@@ -366,21 +366,27 @@ async function seedSkills() {
     for (const skill of userSkills.skills) {
       const { error } = await supabase
         .from('skills')
-        .insert({
-          profile_id: userSkills.userId,
-          skill_id: skill.id,
-          skill_code: skill.code,
-          level: skill.level,
-          months_experience: skill.months,
-          evidence_strength: skill.evidence.toString(),
-          recency_multiplier: skill.recency.toString(),
-          impact_score: ((skill.level / 5) * 0.8).toFixed(2),
-          last_used_at: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-        });
+        .upsert(
+          {
+            profile_id: userSkills.userId,
+            skill_id: skill.id,
+            skill_code: skill.code,
+            level: skill.level,
+            months_experience: skill.months,
+            evidence_strength: skill.evidence.toString(),
+            recency_multiplier: skill.recency.toString(),
+            impact_score: ((skill.level / 5) * 0.8).toFixed(2),
+            last_used_at: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+            relevance: skill.relevance,
+          },
+          {
+            onConflict: 'profile_id,skill_id',
+          }
+        );
       
-      if (error && error.code !== '23505') { // Ignore duplicate key errors
-        console.error(`   ⚠️  Error creating skill ${skill.id}:`, error.message);
-      } else if (!error) {
+      if (error) {
+        console.error(`   ⚠️  Error upserting skill ${skill.id}:`, error.message);
+      } else {
         stats.skills++;
       }
     }
