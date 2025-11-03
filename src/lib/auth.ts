@@ -27,6 +27,7 @@ type OrganizationRow = Pick<
   | 'foundedDate'
   | 'website'
   | 'values'
+  | 'causes'
   | 'workCulture'
   | 'registrationCountry'
   | 'registrationRegion'
@@ -76,6 +77,7 @@ function mapOrganization(
     foundedDate: (row.foundedDate as OrganizationRow['foundedDate']) ?? null,
     website: row.website ?? null,
     values: (row.values as OrganizationRow['values']) ?? null,
+    causes: (row.causes as OrganizationRow['causes']) ?? null,
     workCulture: (row.workCulture as OrganizationRow['workCulture']) ?? null,
     registrationCountry: row.registrationCountry ?? null,
     registrationRegion: row.registrationRegion ?? null,
