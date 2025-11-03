@@ -13,6 +13,7 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  Video,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -35,6 +36,12 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
       dataTour: 'opportunities-link',
     },
     { href: `${basePath}/expertise`, icon: MapPin, label: 'Expertise', dataTour: 'skills-link' },
+    {
+      href: `${basePath}/interviews`,
+      icon: Video,
+      label: 'Interviews',
+      dataTour: 'interviews-link',
+    },
     {
       href: `${basePath}/verifications`,
       icon: ShieldCheck,
