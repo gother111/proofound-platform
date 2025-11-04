@@ -19,21 +19,17 @@ const ProjectSchema = z.object({
   isVerified: z.boolean().optional(),
 });
 
-interface Params {
-  params: {
-    orgId: string;
-    projectId: string;
-  };
-}
-
 /**
  * PUT /api/organizations/[orgId]/projects/[projectId]
  * Update a project
  */
-export async function PUT(request: NextRequest, { params }: Params) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ orgId: string; projectId: string }> }
+) {
   try {
     await requireAuth();
-    const { orgId, projectId } = params;
+    const { orgId, projectId } = await params;
     const body = await request.json();
     const validated = ProjectSchema.parse(body);
 
@@ -64,10 +60,13 @@ export async function PUT(request: NextRequest, { params }: Params) {
  * DELETE /api/organizations/[orgId]/projects/[projectId]
  * Delete a project
  */
-export async function DELETE(request: NextRequest, { params }: Params) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ orgId: string; projectId: string }> }
+) {
   try {
     await requireAuth();
-    const { orgId, projectId } = params;
+    const { orgId, projectId } = await params;
 
     const [deleted] = await db
       .delete(organizationProjects)

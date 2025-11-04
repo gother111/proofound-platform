@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
-import { assignmentInvitations, assignmentSubmissions, assignmentVersionHistory } from '@/db/schema';
+import {
+  assignmentInvitations,
+  assignmentSubmissions,
+  assignmentVersionHistory,
+} from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
@@ -11,19 +15,16 @@ const SubmissionSchema = z.object({
   sectionData: z.any(),
 });
 
-interface Params {
-  params: {
-    token: string;
-  };
-}
-
 /**
  * GET /api/assignments/[token]
  * Fetch assignment invitation details (public endpoint)
  */
-export async function GET(request: NextRequest, { params }: Params) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ token: string }> }
+) {
   try {
-    const { token } = params;
+    const { token } = await params;
 
     const [invitation] = await db
       .select()
@@ -67,9 +68,12 @@ export async function GET(request: NextRequest, { params }: Params) {
  * POST /api/assignments/[token]
  * Submit assignment data (public endpoint)
  */
-export async function POST(request: NextRequest, { params }: Params) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ token: string }> }
+) {
   try {
-    const { token } = params;
+    const { token } = await params;
     const body = await request.json();
     const validated = SubmissionSchema.parse(body);
 
@@ -90,8 +94,12 @@ export async function POST(request: NextRequest, { params }: Params) {
     }
 
     // Check if section is assigned
-    if (!invitation.assignedSections.includes(validated.sectionName)) {
-      return NextResponse.json({ error: 'Section not assigned to this invitation' }, { status: 403 });
+    const assignedSections = invitation.assignedSections as string[] | null;
+    if (!assignedSections || !assignedSections.includes(validated.sectionName)) {
+      return NextResponse.json(
+        { error: 'Section not assigned to this invitation' },
+        { status: 403 }
+      );
     }
 
     // Create or update submission

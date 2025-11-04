@@ -12,12 +12,16 @@ const OutcomeSchema = z.object({
   outcomeType: z.enum(['continuous', 'milestone']),
   title: z.string().min(1),
   description: z.string().optional(),
-  metrics: z.array(z.object({
-    name: z.string(),
-    target: z.string(),
-    unit: z.string().optional(),
-    current: z.string().optional(),
-  })).optional(),
+  metrics: z
+    .array(
+      z.object({
+        name: z.string(),
+        target: z.string(),
+        unit: z.string().optional(),
+        current: z.string().optional(),
+      })
+    )
+    .optional(),
   successCriteria: z.string().optional(),
   dependsOn: z.string().uuid().optional(),
 });
@@ -50,13 +54,10 @@ async function verifyAssignmentOwnership(userId: string, assignmentId: string): 
  *
  * Save outcomes for an assignment to the assignmentOutcomes table
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await requireAuth();
-    const assignmentId = params.id;
+    const { id: assignmentId } = await params;
 
     // Verify ownership
     const hasAccess = await verifyAssignmentOwnership(user.id, assignmentId);
@@ -109,10 +110,7 @@ export async function POST(
       error: error instanceof Error ? error.message : 'Unknown error',
     });
 
-    return NextResponse.json(
-      { error: 'Failed to save outcomes' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to save outcomes' }, { status: 500 });
   }
 }
 
@@ -121,13 +119,10 @@ export async function POST(
  *
  * Retrieve outcomes for an assignment
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await requireAuth();
-    const assignmentId = params.id;
+    const { id: assignmentId } = await params;
 
     // Verify ownership
     const hasAccess = await verifyAssignmentOwnership(user.id, assignmentId);
@@ -148,9 +143,6 @@ export async function GET(
       error: error instanceof Error ? error.message : 'Unknown error',
     });
 
-    return NextResponse.json(
-      { error: 'Failed to retrieve outcomes' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to retrieve outcomes' }, { status: 500 });
   }
 }

@@ -8,10 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { provider: string } }
-) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ provider: string }> }) {
   try {
     const supabase = await createClient();
     const {
@@ -23,13 +20,10 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { provider } = params;
+    const { provider } = await params;
 
     if (!['zoom', 'google'].includes(provider)) {
-      return NextResponse.json(
-        { error: 'Invalid provider' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid provider' }, { status: 400 });
     }
 
     // In production, generate OAuth URLs:
@@ -37,7 +31,7 @@ export async function GET(
     // Google: https://accounts.google.com/o/oauth2/v2/auth
 
     const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/integrations/video/${provider}/callback`;
-    
+
     let authUrl: string;
 
     if (provider === 'zoom') {
@@ -49,10 +43,6 @@ export async function GET(
     return NextResponse.json({ authUrl });
   } catch (error) {
     console.error('OAuth initiation error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

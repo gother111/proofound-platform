@@ -13,11 +13,11 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { assignmentId: string } }
+  { params }: { params: Promise<{ assignmentId: string }> }
 ) {
   try {
     const user = await requireAuth();
-    const { assignmentId } = params;
+    const { assignmentId } = await params;
 
     // Verify user has permission to view this assignment
     const [assignment] = await db
@@ -169,11 +169,11 @@ async function calculateFairnessMetrics(assignmentId: string) {
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { assignmentId: string } }
+  { params }: { params: Promise<{ assignmentId: string }> }
 ) {
   try {
     const user = await requireAuth();
-    const { assignmentId } = params;
+    const { assignmentId } = await params;
 
     // Delete existing metrics
     await db.delete(fairnessMetrics).where(eq(fairnessMetrics.assignmentId, assignmentId));
@@ -200,4 +200,3 @@ export async function POST(
     return NextResponse.json({ error: 'Failed to regenerate fairness metrics' }, { status: 500 });
   }
 }
-

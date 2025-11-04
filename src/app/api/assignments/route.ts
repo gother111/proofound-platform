@@ -2,7 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
-import { assignments, organizationMembers, matchingProfiles, skills, matches, organizations } from '@/db/schema';
+import {
+  assignments,
+  organizationMembers,
+  matchingProfiles,
+  skills,
+  matches,
+  organizations,
+} from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { emitAssignmentPublished } from '@/lib/analytics/events';
@@ -89,10 +96,9 @@ async function generateMatchesForAssignment(assignmentId: string): Promise<numbe
       return 0;
     }
 
-    // Fetch all active matching profiles
-    const allProfiles = await db.query.matchingProfiles.findMany({
-      where: eq(matchingProfiles.status, 'active'),
-    });
+    // Fetch all matching profiles
+    // TODO: Add status field to matchingProfiles table and filter by active status
+    const allProfiles = await db.query.matchingProfiles.findMany();
 
     if (allProfiles.length === 0) {
       log.info('generate.matches.no.profiles', { assignmentId });

@@ -16,17 +16,13 @@ const OwnershipSchema = z.object({
   isPublic: z.boolean(),
 });
 
-interface Params {
-  params: {
-    orgId: string;
-    ownershipId: string;
-  };
-}
-
-export async function PUT(request: NextRequest, { params }: Params) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ orgId: string; ownershipId: string }> }
+) {
   try {
     await requireAuth();
-    const { orgId, ownershipId } = params;
+    const { orgId, ownershipId } = await params;
     const body = await request.json();
     const validated = OwnershipSchema.parse(body);
 
@@ -36,25 +32,31 @@ export async function PUT(request: NextRequest, { params }: Params) {
       .where(and(eq(organizationOwnership.id, ownershipId), eq(organizationOwnership.orgId, orgId)))
       .returning();
 
-    if (!ownership) return NextResponse.json({ error: 'Ownership record not found' }, { status: 404 });
+    if (!ownership)
+      return NextResponse.json({ error: 'Ownership record not found' }, { status: 404 });
     return NextResponse.json(ownership);
   } catch (error) {
-    if (error instanceof z.ZodError) return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
+    if (error instanceof z.ZodError)
+      return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
     return NextResponse.json({ error: 'Failed to update' }, { status: 500 });
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: Params) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ orgId: string; ownershipId: string }> }
+) {
   try {
     await requireAuth();
-    const { orgId, ownershipId } = params;
+    const { orgId, ownershipId } = await params;
 
     const [deleted] = await db
       .delete(organizationOwnership)
       .where(and(eq(organizationOwnership.id, ownershipId), eq(organizationOwnership.orgId, orgId)))
       .returning();
 
-    if (!deleted) return NextResponse.json({ error: 'Ownership record not found' }, { status: 404 });
+    if (!deleted)
+      return NextResponse.json({ error: 'Ownership record not found' }, { status: 404 });
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to delete' }, { status: 500 });

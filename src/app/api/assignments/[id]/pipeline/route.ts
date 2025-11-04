@@ -42,13 +42,10 @@ async function verifyAssignmentOwnership(userId: string, assignmentId: string): 
  *
  * Update pipeline step status
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await requireAuth();
-    const assignmentId = params.id;
+    const { id: assignmentId } = await params;
 
     // Verify ownership
     const hasAccess = await verifyAssignmentOwnership(user.id, assignmentId);
@@ -118,10 +115,7 @@ export async function POST(
       error: error instanceof Error ? error.message : 'Unknown error',
     });
 
-    return NextResponse.json(
-      { error: 'Failed to update pipeline' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to update pipeline' }, { status: 500 });
   }
 }
 
@@ -130,13 +124,10 @@ export async function POST(
  *
  * Get pipeline status for an assignment
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await requireAuth();
-    const assignmentId = params.id;
+    const { id: assignmentId } = await params;
 
     // Verify ownership
     const hasAccess = await verifyAssignmentOwnership(user.id, assignmentId);
@@ -158,9 +149,6 @@ export async function GET(
       error: error instanceof Error ? error.message : 'Unknown error',
     });
 
-    return NextResponse.json(
-      { error: 'Failed to get pipeline status' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to get pipeline status' }, { status: 500 });
   }
 }

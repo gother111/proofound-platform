@@ -16,16 +16,13 @@ const OwnershipSchema = z.object({
   isPublic: z.boolean().default(true),
 });
 
-interface Params {
-  params: {
-    orgId: string;
-  };
-}
-
-export async function GET(request: NextRequest, { params }: Params) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ orgId: string }> }
+) {
   try {
     await requireAuth();
-    const { orgId } = params;
+    const { orgId } = await params;
 
     const ownership = await db
       .select()
@@ -40,10 +37,13 @@ export async function GET(request: NextRequest, { params }: Params) {
   }
 }
 
-export async function POST(request: NextRequest, { params }: Params) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ orgId: string }> }
+) {
   try {
     await requireAuth();
-    const { orgId } = params;
+    const { orgId } = await params;
     const body = await request.json();
     const validated = OwnershipSchema.parse(body);
 

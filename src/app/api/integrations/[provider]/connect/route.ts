@@ -13,11 +13,11 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { provider: string } }
+  { params }: { params: Promise<{ provider: string }> }
 ) {
   try {
     const user = await requireAuth();
-    const { provider } = params;
+    const { provider } = await params;
 
     // Generate state for CSRF protection
     const state = randomBytes(32).toString('hex');
@@ -70,4 +70,3 @@ export async function GET(
     return NextResponse.json({ error: 'Failed to initiate OAuth' }, { status: 500 });
   }
 }
-

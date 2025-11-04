@@ -6,20 +6,17 @@ import { eq } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
-interface Params {
-  params: {
-    orgId: string;
-  };
-}
-
 /**
  * GET /api/organizations/[orgId]/assignments
  * List all assignment invitations for an organization
  */
-export async function GET(request: NextRequest, { params }: Params) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ orgId: string }> }
+) {
   try {
     await requireAuth();
-    const { orgId } = params;
+    const { orgId } = await params;
 
     const assignments = await db
       .select()

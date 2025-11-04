@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,29 +16,32 @@ function VerifyWorkEmailContent() {
   const [message, setMessage] = useState('');
   const [workEmail, setWorkEmail] = useState('');
 
-  const verifyToken = useCallback(async (token: string) => {
-    try {
-      const response = await fetch(`/api/verification/work-email/verify?token=${token}`);
-      const data = await response.json();
+  const verifyToken = useCallback(
+    async (token: string) => {
+      try {
+        const response = await fetch(`/api/verification/work-email/verify?token=${token}`);
+        const data = await response.json();
 
-      if (response.ok) {
-        setStatus('success');
-        setMessage(data.message || 'Work email verified successfully!');
-        setWorkEmail(data.workEmail || '');
+        if (response.ok) {
+          setStatus('success');
+          setMessage(data.message || 'Work email verified successfully!');
+          setWorkEmail(data.workEmail || '');
 
-        // Redirect to profile after 3 seconds
-        setTimeout(() => {
-          router.push('/app/i/profile');
-        }, 3000);
-      } else {
+          // Redirect to profile after 3 seconds
+          setTimeout(() => {
+            router.push('/app/i/profile');
+          }, 3000);
+        } else {
+          setStatus('error');
+          setMessage(data.error || 'Failed to verify work email');
+        }
+      } catch (error) {
         setStatus('error');
-        setMessage(data.error || 'Failed to verify work email');
+        setMessage('An error occurred while verifying your email. Please try again.');
       }
-    } catch (error) {
-      setStatus('error');
-      setMessage('An error occurred while verifying your email. Please try again.');
-    }
-  }, [router]);
+    },
+    [router]
+  );
 
   useEffect(() => {
     const token = searchParams.get('token');
@@ -59,12 +64,8 @@ function VerifyWorkEmailContent() {
             {status === 'loading' && (
               <Loader2 className="w-16 h-16 text-proofound-forest animate-spin" />
             )}
-            {status === 'success' && (
-              <CheckCircle2 className="w-16 h-16 text-green-600" />
-            )}
-            {status === 'error' && (
-              <XCircle className="w-16 h-16 text-red-600" />
-            )}
+            {status === 'success' && <CheckCircle2 className="w-16 h-16 text-green-600" />}
+            {status === 'error' && <XCircle className="w-16 h-16 text-red-600" />}
           </div>
           <CardTitle className="text-center font-['Crimson_Pro'] text-2xl">
             {status === 'loading' && 'Verifying Your Email...'}
@@ -130,9 +131,7 @@ function VerifyWorkEmailContent() {
               </Alert>
 
               <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  Common issues:
-                </p>
+                <p className="text-sm text-muted-foreground">Common issues:</p>
                 <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
                   <li>The verification link has expired (links expire after 24 hours)</li>
                   <li>The link has already been used</li>
@@ -176,4 +175,3 @@ export default function VerifyWorkEmailPage() {
     </Suspense>
   );
 }
-

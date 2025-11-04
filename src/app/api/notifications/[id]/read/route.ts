@@ -12,13 +12,10 @@ export const dynamic = 'force-dynamic';
  *
  * Mark a notification as read
  */
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await requireAuth();
-    const notificationId = params.id;
+    const { id: notificationId } = await params;
 
     // Verify notification belongs to user
     const notification = await db.query.notifications.findFirst({
@@ -26,10 +23,7 @@ export async function PATCH(
     });
 
     if (!notification) {
-      return NextResponse.json(
-        { error: 'Notification not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Notification not found' }, { status: 404 });
     }
 
     // Update notification
@@ -52,9 +46,6 @@ export async function PATCH(
       error: error instanceof Error ? error.message : 'Unknown error',
     });
 
-    return NextResponse.json(
-      { error: 'Failed to mark notification as read' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to mark notification as read' }, { status: 500 });
   }
 }

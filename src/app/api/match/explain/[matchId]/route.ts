@@ -12,7 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { matchId: string } }
+  { params }: { params: Promise<{ matchId: string }> }
 ) {
   try {
     const supabase = await createClient();
@@ -25,7 +25,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { matchId } = params;
+    const { matchId } = await params;
 
     if (!matchId) {
       return NextResponse.json({ error: 'Match ID required' }, { status: 400 });
@@ -133,14 +133,12 @@ export async function GET(
     // Jaccard similarity for values
     const sharedValues = userValues.filter((v) => assignmentValues.includes(v));
     const totalUniqueValues = new Set([...userValues, ...assignmentValues]).size;
-    const valuesOverlap =
-      totalUniqueValues > 0 ? sharedValues.length / totalUniqueValues : 0;
+    const valuesOverlap = totalUniqueValues > 0 ? sharedValues.length / totalUniqueValues : 0;
 
     // Jaccard similarity for causes
     const sharedCauses = userCauses.filter((c) => assignmentCauses.includes(c));
     const totalUniqueCauses = new Set([...userCauses, ...assignmentCauses]).size;
-    const causesOverlap =
-      totalUniqueCauses > 0 ? sharedCauses.length / totalUniqueCauses : 0;
+    const causesOverlap = totalUniqueCauses > 0 ? sharedCauses.length / totalUniqueCauses : 0;
 
     const pac = {
       valuesOverlap,
@@ -217,4 +215,3 @@ export async function GET(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

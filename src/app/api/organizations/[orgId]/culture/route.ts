@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 
 /**
  * GET /api/organizations/[orgId]/culture
- * 
+ *
  * Fetch organization culture information
  */
 export async function GET(
@@ -55,7 +55,7 @@ export async function GET(
 
 /**
  * PUT /api/organizations/[orgId]/culture
- * 
+ *
  * Update organization culture information
  */
 export async function PUT(
@@ -121,9 +121,13 @@ export async function PUT(
 
 /**
  * GET /api/organizations/[orgId]/culture/preview
- * 
+ *
  * Preview how culture appears to candidates (public view)
+ *
+ * NOTE: This should be moved to a separate /preview route
+ * GET_PREVIEW is not a valid Next.js route export
  */
+/*
 export async function GET_PREVIEW(
   request: NextRequest,
   { params }: { params: Promise<{ orgId: string }> }
@@ -175,3 +179,4 @@ export async function GET_PREVIEW(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+*/

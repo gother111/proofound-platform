@@ -2,7 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
-import { assignmentExpertiseMatrix, assignments, organizationMembers, assignmentOutcomes } from '@/db/schema';
+import {
+  assignmentExpertiseMatrix,
+  assignments,
+  organizationMembers,
+  assignmentOutcomes,
+} from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { log } from '@/lib/log';
 
@@ -44,13 +49,10 @@ async function verifyAssignmentOwnership(userId: string, assignmentId: string): 
  *
  * Save expertise matrix (skills linked to outcomes) for an assignment
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await requireAuth();
-    const assignmentId = params.id;
+    const { id: assignmentId } = await params;
 
     // Verify ownership
     const hasAccess = await verifyAssignmentOwnership(user.id, assignmentId);
@@ -104,10 +106,7 @@ export async function POST(
       error: error instanceof Error ? error.message : 'Unknown error',
     });
 
-    return NextResponse.json(
-      { error: 'Failed to save expertise matrix' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to save expertise matrix' }, { status: 500 });
   }
 }
 
@@ -116,13 +115,10 @@ export async function POST(
  *
  * Retrieve expertise matrix for an assignment
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await requireAuth();
-    const assignmentId = params.id;
+    const { id: assignmentId } = await params;
 
     // Verify ownership
     const hasAccess = await verifyAssignmentOwnership(user.id, assignmentId);
@@ -143,9 +139,6 @@ export async function GET(
       error: error instanceof Error ? error.message : 'Unknown error',
     });
 
-    return NextResponse.json(
-      { error: 'Failed to retrieve expertise matrix' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to retrieve expertise matrix' }, { status: 500 });
   }
 }

@@ -12,7 +12,7 @@ import { eq, and } from 'drizzle-orm';
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { provider: string } }
+  { params }: { params: Promise<{ provider: string }> }
 ) {
   try {
     const supabase = await createClient();
@@ -25,7 +25,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { provider } = params;
+    const { provider } = await params;
     const integrationType = provider === 'google' ? 'google_meet' : provider;
 
     // Delete integration
@@ -48,10 +48,6 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Disconnect integration error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

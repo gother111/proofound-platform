@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { fetchCompleteRedactedProfile, validateProfileLinkToken, isViewerMatchedWithProfile } from '@/lib/privacy/profile-fetcher';
+import {
+  fetchCompleteRedactedProfile,
+  validateProfileLinkToken,
+  isViewerMatchedWithProfile,
+} from '@/lib/privacy/profile-fetcher';
 
 export const dynamic = 'force-dynamic';
-
-interface Params {
-  params: {
-    handle: string;
-  };
-}
 
 /**
  * GET /api/profiles/[handle]
@@ -18,9 +16,12 @@ interface Params {
  * Query parameters:
  * - token: Profile link token for link_only access
  */
-export async function GET(request: NextRequest, { params }: Params) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ handle: string }> }
+) {
   try {
-    const { handle } = params;
+    const { handle } = await params;
     const supabase = await createClient();
 
     // Get viewer's ID if authenticated
@@ -68,13 +69,14 @@ export async function GET(request: NextRequest, { params }: Params) {
     const response = {
       ...redactedProfile,
       _meta: {
-        viewerContext: viewerId === profileId
-          ? 'self'
-          : isMatched
-          ? 'matched'
-          : hasValidToken
-          ? 'link_holder'
-          : 'public',
+        viewerContext:
+          viewerId === profileId
+            ? 'self'
+            : isMatched
+              ? 'matched'
+              : hasValidToken
+                ? 'link_holder'
+                : 'public',
         isOwner: viewerId === profileId,
       },
     };
