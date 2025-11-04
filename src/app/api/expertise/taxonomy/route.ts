@@ -188,17 +188,17 @@ export async function GET(request: Request) {
       }
 
       if (search) {
-        // Search in name, aliases, description, and tags
+        // Search in name, aliases, and description
         const searchLower = search.toLowerCase();
         const searchPattern = `%${searchLower}%`; // Use % for ILIKE pattern matching
 
-        // Build OR conditions for text search across JSONB fields and tags
-        // This searches in: name, description, aliases, and tags
+        // Build OR conditions for text search across JSONB fields
+        // Note: Supabase PostgREST uses ->> for text extraction from JSONB
+        // Syntax: column->>jsonKey.operator.pattern
         query = query.or(
           `name_i18n->>en.ilike.${searchPattern},` +
             `description_i18n->>en.ilike.${searchPattern},` +
-            `aliases_i18n->>en.ilike.${searchPattern},` +
-            `tags.cs.{${searchLower}}` // cs = contains (array contains)
+            `aliases_i18n->>en.ilike.${searchPattern}`
         );
       }
 
@@ -207,8 +207,12 @@ export async function GET(request: Request) {
 
       if (error) {
         console.error('Error fetching L4 skills:', error);
+        console.error('Search query:', search);
+        console.error('Error details:', JSON.stringify(error, null, 2));
         return NextResponse.json({ error: 'Failed to fetch skills' }, { status: 500 });
       }
+
+      console.log(`✅ Skills search for "${search}" returned ${skills?.length || 0} results`);
 
       // Map skills with parent context
       const mappedSkills =
