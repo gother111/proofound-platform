@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label';
 import { requestPasswordReset } from '@/actions/auth';
 import { Mail, ArrowLeft } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 export default function ResetPasswordPage() {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
