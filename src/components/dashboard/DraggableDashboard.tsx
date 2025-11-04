@@ -165,7 +165,10 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i} className="animate-pulse bg-white rounded-lg h-64 border border-gray-200"></div>
+          <div
+            key={i}
+            className="animate-pulse bg-white rounded-lg h-64 border border-gray-200"
+          ></div>
         ))}
       </div>
     );
@@ -250,11 +253,7 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
         >
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {visibleWidgets.map((widget) => (
-              <SortableWidget
-                key={widget.widgetId}
-                id={widget.widgetId}
-                editMode={editMode}
-              >
+              <SortableWidget key={widget.widgetId} id={widget.widgetId} editMode={editMode}>
                 {getWidgetComponent(widget.widgetId)}
               </SortableWidget>
             ))}
@@ -275,10 +274,29 @@ function SortableWidget({
   children: React.ReactNode;
   editMode: boolean;
 }) {
+  // If dnd-kit is not available, render without drag functionality
   if (!useSortable || !CSS) {
     return <div>{children}</div>;
   }
 
+  // Create a separate component to call hooks unconditionally
+  return (
+    <SortableItem id={id} editMode={editMode}>
+      {children}
+    </SortableItem>
+  );
+}
+
+// Separate component that always calls hooks
+function SortableItem({
+  id,
+  children,
+  editMode,
+}: {
+  id: string;
+  children: React.ReactNode;
+  editMode: boolean;
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
   });

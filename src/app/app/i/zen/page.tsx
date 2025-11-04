@@ -17,6 +17,7 @@ import {
   Clock,
   Compass,
   Heart,
+  Info,
   MapPin,
   Moon,
   Sparkles,

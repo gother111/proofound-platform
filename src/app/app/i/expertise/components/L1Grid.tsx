@@ -2,7 +2,7 @@
 
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 
 interface L1Domain {
@@ -77,7 +77,9 @@ export function L1Grid({ domains, onDomainClick, l2CategoriesPerL1, onL2Click }:
                   {domain.icon}
                 </div>
                 <div>
-                  <h3 className="font-semibold text-[#2D3330]">{domain.nameI18n?.en || 'Unknown'}</h3>
+                  <h3 className="font-semibold text-[#2D3330]">
+                    {domain.nameI18n?.en || 'Unknown'}
+                  </h3>
                   <p className="text-xs text-[#6B6760]">{domain.skillCount} skills</p>
                 </div>
               </div>
@@ -142,52 +144,51 @@ export function L1Grid({ domains, onDomainClick, l2CategoriesPerL1, onL2Click }:
             </div>
 
             {/* Expanded L2 Categories */}
-            {isExpanded && (() => {
-              const l2Categories = l2CategoriesPerL1[domain.catId] || [];
-              
-              return (
-                <div className="mt-4 pt-4 border-t border-[#D8D2C8]">
-                  {l2Categories.length === 0 ? (
-                    <p className="text-xs text-[#6B6760] italic">
-                      No L2 categories with skills in this domain.
-                    </p>
-                  ) : (
-                    <div className="space-y-2">
-                      {l2Categories.map((l2) => (
-                        <button
-                          key={l2.subcatId}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onL2Click(l2);
-                          }}
-                          className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-[#F7F6F1] transition-colors rounded-md border border-[#E5E3DA]"
-                        >
-                          <div className="flex-1">
-                            <p className="font-medium text-[#2D3330] text-sm">
-                              {l2.nameI18n?.en || 'Unknown'}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge
-                              variant="outline"
-                              className={`text-xs ${colors.border} ${colors.text}`}
-                            >
-                              {l2.l4Count} {l2.l4Count === 1 ? 'skill' : 'skills'}
-                            </Badge>
-                            <ChevronRight className="h-4 w-4 text-[#6B6760]" />
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
+            {isExpanded &&
+              (() => {
+                const l2Categories = l2CategoriesPerL1[domain.catId] || [];
+
+                return (
+                  <div className="mt-4 pt-4 border-t border-[#D8D2C8]">
+                    {l2Categories.length === 0 ? (
+                      <p className="text-xs text-[#6B6760] italic">
+                        No L2 categories with skills in this domain.
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        {l2Categories.map((l2) => (
+                          <button
+                            key={l2.subcatId}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onL2Click(l2);
+                            }}
+                            className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-[#F7F6F1] transition-colors rounded-md border border-[#E5E3DA]"
+                          >
+                            <div className="flex-1">
+                              <p className="font-medium text-[#2D3330] text-sm">
+                                {l2.nameI18n?.en || 'Unknown'}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge
+                                variant="outline"
+                                className={`text-xs ${colors.border} ${colors.text}`}
+                              >
+                                {l2.l4Count} {l2.l4Count === 1 ? 'skill' : 'skills'}
+                              </Badge>
+                              <ChevronRight className="h-4 w-4 text-[#6B6760]" />
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
           </Card>
         );
       })}
     </div>
   );
 }
-
-

@@ -11,6 +11,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -26,12 +27,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { 
-  Layout, 
-  Plus, 
-  GripVertical, 
-  X, 
-  Save, 
+import {
+  Layout,
+  Plus,
+  GripVertical,
+  X,
+  Save,
   RotateCcw,
   TrendingUp,
   Target,
@@ -135,7 +136,7 @@ const PERSONA_PRESETS = {
     'Well-Being Focused': ['wellbeing', 'schedule', 'matching', 'goals'],
   },
   org_member: {
-    'Recruiter': ['candidates', 'assignments', 'org-goals'],
+    Recruiter: ['candidates', 'assignments', 'org-goals'],
     'Hiring Manager': ['assignments', 'candidates', 'org-goals'],
   },
 };
@@ -227,9 +228,7 @@ export function CustomizableDashboard({ userId, persona }: CustomizableDashboard
 
   const handleRemoveWidget = (widgetId: string) => {
     setWidgets((prev) =>
-      prev
-        .filter((w) => w.id !== widgetId)
-        .map((w, index) => ({ ...w, order: index }))
+      prev.filter((w) => w.id !== widgetId).map((w, index) => ({ ...w, order: index }))
     );
     setHasUnsavedChanges(true);
     toast.info('Widget removed');
@@ -263,7 +262,8 @@ export function CustomizableDashboard({ userId, persona }: CustomizableDashboard
   };
 
   const handleApplyPreset = (presetName: string) => {
-    const preset = PERSONA_PRESETS[persona][presetName as keyof typeof PERSONA_PRESETS[typeof persona]];
+    const preset =
+      PERSONA_PRESETS[persona][presetName as keyof (typeof PERSONA_PRESETS)[typeof persona]];
     if (!preset) return;
 
     const presetWidgets = preset
@@ -290,9 +290,7 @@ export function CustomizableDashboard({ userId, persona }: CustomizableDashboard
   };
 
   const enabledWidgets = widgets.filter((w) => w.enabled);
-  const availableToAdd = availableWidgets.filter(
-    (aw) => !widgets.some((w) => w.id === aw.id)
-  );
+  const availableToAdd = availableWidgets.filter((aw) => !widgets.some((w) => w.id === aw.id));
 
   if (isLoading) {
     return (
@@ -318,11 +316,7 @@ export function CustomizableDashboard({ userId, persona }: CustomizableDashboard
               </CardDescription>
             </div>
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleResetToDefault}
-              >
+              <Button variant="outline" size="sm" onClick={handleResetToDefault}>
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Reset
               </Button>
@@ -369,9 +363,7 @@ export function CustomizableDashboard({ userId, persona }: CustomizableDashboard
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Add Widget</DialogTitle>
-                  <DialogDescription>
-                    Choose a widget to add to your dashboard
-                  </DialogDescription>
+                  <DialogDescription>Choose a widget to add to your dashboard</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-2">
                   {availableToAdd.map((widget) => {
@@ -434,9 +426,7 @@ export function CustomizableDashboard({ userId, persona }: CustomizableDashboard
                     <div className="flex items-center gap-2">
                       <GripVertical className="w-4 h-4 text-[#6B6760] cursor-grab active:cursor-grabbing" />
                       <Icon className="w-5 h-5 text-[#1C4D3A]" />
-                      <CardTitle className="text-lg font-['Crimson_Pro']">
-                        {widget.title}
-                      </CardTitle>
+                      <CardTitle className="text-lg font-['Crimson_Pro']">{widget.title}</CardTitle>
                     </div>
                     <Button
                       variant="ghost"
@@ -480,4 +470,3 @@ export function CustomizableDashboard({ userId, persona }: CustomizableDashboard
     </div>
   );
 }
-
