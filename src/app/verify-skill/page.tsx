@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-
-export const dynamic = 'force-dynamic';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+
+export const dynamic = 'force-dynamic';
 
 function VerifySkillContent() {
   const searchParams = useSearchParams();

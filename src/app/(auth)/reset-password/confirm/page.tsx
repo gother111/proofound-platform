@@ -1,7 +1,5 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
-
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -12,6 +10,8 @@ import { Label } from '@/components/ui/label';
 import { confirmPasswordReset } from '@/actions/auth';
 import { Eye, EyeOff, CheckCircle, Loader2, AlertTriangle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+
+export const dynamic = 'force-dynamic';
 
 function ConfirmResetPasswordForm() {
   const router = useRouter();

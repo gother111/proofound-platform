@@ -1,13 +1,13 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
-
 import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, XCircle, Loader2, Mail } from 'lucide-react';
+
+export const dynamic = 'force-dynamic';
 
 function VerifyWorkEmailContent() {
   const searchParams = useSearchParams();

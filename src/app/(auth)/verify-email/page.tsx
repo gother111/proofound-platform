@@ -1,7 +1,5 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
-
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -9,6 +7,8 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/button';
 import { verifyEmail } from '@/actions/auth';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
+
+export const dynamic = 'force-dynamic';
 
 function VerifyEmailContent() {
   const router = useRouter();
