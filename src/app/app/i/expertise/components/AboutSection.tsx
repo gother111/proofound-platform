@@ -1,7 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, Map, FileCheck, CheckCircle2, TrendingUp, Shield, BookOpen } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronUp,
+  Map,
+  FileCheck,
+  CheckCircle2,
+  TrendingUp,
+  Shield,
+  BookOpen,
+} from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -11,8 +20,11 @@ export function AboutSection() {
   return (
     <Card className="border border-[#D8D2C8] bg-white/90 mb-6">
       <button
+        type="button"
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-[#F7F6F1] transition-colors"
+        aria-expanded={isExpanded}
+        aria-controls="about-section-content"
       >
         <div className="flex items-center gap-3">
           <div className="rounded-full bg-[#EEF1EA] p-2">
@@ -33,18 +45,22 @@ export function AboutSection() {
       </button>
 
       {isExpanded && (
-        <div className="px-6 pb-6 space-y-6 border-t border-[#D8D2C8] pt-6">
+        <div
+          id="about-section-content"
+          className="px-6 pb-6 space-y-6 border-t border-[#D8D2C8] pt-6"
+        >
           {/* Introduction */}
           <div>
             <p className="text-[#2D3330] mb-3">
-              The <strong>Expertise Atlas</strong> is your comprehensive skills management system that goes beyond 
-              traditional skills lists. It helps you map, evidence, and maintain your capabilities using a structured, 
-              extensible taxonomy and proof-based credibility system.
+              The <strong>Expertise Atlas</strong> is your comprehensive skills management system
+              that goes beyond traditional skills lists. It helps you map, evidence, and maintain
+              your capabilities using a structured, extensible taxonomy and proof-based credibility
+              system.
             </p>
             <p className="text-[#2D3330]">
-              Unlike simple skill tags, the Atlas organizes your expertise across 6 universal domains and over 20,000 
-              curated skills, allowing you to track proficiency levels, attach evidence, request verification, and 
-              monitor skill freshness over time.
+              Unlike simple skill tags, the Atlas organizes your expertise across 6 universal
+              domains and over 18,000 curated skills, allowing you to track proficiency levels,
+              attach evidence, request verification, and monitor skill freshness over time.
             </p>
           </div>
 
@@ -75,7 +91,7 @@ export function AboutSection() {
                 <div>
                   <p className="font-medium text-[#2D3330] text-sm mb-1">2. Add Skills</p>
                   <p className="text-xs text-[#6B6760]">
-                    Select from 20K+ curated skills or create custom ones with proficiency levels
+                    Select from 18K+ curated skills or create custom ones with proficiency levels
                   </p>
                 </div>
               </div>
@@ -146,8 +162,8 @@ export function AboutSection() {
               <strong>ESCO (European Skills)</strong>,{' '}
               <strong>O*NET (Occupational Information Network)</strong>,{' '}
               <strong>OECD transferable skills</strong>, and proficiency models like{' '}
-              <strong>Dreyfus</strong> and <strong>Bloom's Taxonomy</strong>. 
-              Evidence design follows Kirkpatrick-style validation approaches.
+              <strong>Dreyfus</strong> and <strong>Bloom's Taxonomy</strong>. Evidence design
+              follows Kirkpatrick-style validation approaches.
             </p>
           </div>
 
@@ -169,4 +185,3 @@ export function AboutSection() {
     </Card>
   );
 }
-

@@ -39,7 +39,7 @@ export function StakeholderAssignmentForm({ token }: StakeholderAssignmentFormPr
   const fetchAssignment = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/assignments/${token}`);
+      const response = await fetch(`/api/assignments/invite/${token}`);
 
       if (!response.ok) {
         const data = await response.json();
@@ -57,7 +57,7 @@ export function StakeholderAssignmentForm({ token }: StakeholderAssignmentFormPr
 
   const handleSectionSubmit = async (sectionName: string, sectionData: any) => {
     try {
-      const response = await fetch(`/api/assignments/${token}`, {
+      const response = await fetch(`/api/assignments/invite/${token}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sectionName, sectionData }),
@@ -128,9 +128,7 @@ export function StakeholderAssignmentForm({ token }: StakeholderAssignmentFormPr
           )}
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Clock className="w-4 h-4" />
-            <span>
-              Expires: {new Date(invitation.expiresAt).toLocaleDateString()}
-            </span>
+            <span>Expires: {new Date(invitation.expiresAt).toLocaleDateString()}</span>
           </div>
         </CardContent>
       </Card>

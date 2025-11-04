@@ -475,43 +475,6 @@ function HeaderBar({
           {riskStates.find((state) => state.id === risk)?.description}
         </p>
       </Card>
-
-      <div className="flex flex-col gap-4 lg:w-80">
-        <Card className="border border-[#D8D2C8] bg-white/80 p-3 backdrop-blur dark:border-[#3C332C] dark:bg-[#2F2823]/70">
-          <p className="text-xs uppercase tracking-wide text-[#7A9278]">View</p>
-          <div className="mt-2 flex gap-2">
-            {(['desktop', 'mobile'] as DeviceView[]).map((option) => (
-              <Button
-                key={option}
-                size="sm"
-                variant={deviceView === option ? 'default' : 'outline'}
-                className={
-                  deviceView === option
-                    ? 'bg-[#4A5943] text-white'
-                    : 'border-[#4A5943] text-[#4A5943] hover:bg-[#EEF1EA]'
-                }
-                onClick={() => onDeviceViewChange(option)}
-              >
-                {option === 'desktop' ? 'Desktop' : 'Mobile'}
-              </Button>
-            ))}
-          </div>
-        </Card>
-        <Card className="border border-[#D8D2C8] bg-white/80 p-3 backdrop-blur dark:border-[#3C332C] dark:bg-[#2F2823]/70">
-          <p className="text-xs uppercase tracking-wide text-[#7A9278]">Theme</p>
-          <div className="mt-2 flex items-center gap-3">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={onThemeToggle}
-              className="flex items-center gap-2 border-[#4A5943] text-[#4A5943] hover:bg-[#EEF1EA]"
-            >
-              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-              <span>{isDark ? 'Light' : 'Dark'} mode</span>
-            </Button>
-          </div>
-        </Card>
-      </div>
     </div>
   );
 }

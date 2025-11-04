@@ -27,8 +27,8 @@ export function EmptyState({ onAddSkill, onImportCV }: EmptyStateProps) {
 
         {/* Description */}
         <p className="text-[#6B6760] mb-8 max-w-lg mx-auto">
-          Start building your skills map by adding your first capability. Import from your CV/resume,
-          choose from over 20,000 curated skills, or create your own.
+          Start building your skills map by adding your first capability. Import from your
+          CV/resume, choose from over 18,000 curated skills, or create your own.
         </p>
 
         {/* CTA Buttons */}
@@ -37,7 +37,7 @@ export function EmptyState({ onAddSkill, onImportCV }: EmptyStateProps) {
             <Button
               size="lg"
               onClick={onImportCV}
-              className="bg-[#4A5943] text-white hover:bg-[#3C4936]"
+              className="flex items-center justify-center bg-[#4A5943] text-white hover:bg-[#3C4936]"
             >
               <FileText className="mr-2 h-5 w-5" />
               Import from CV/Resume
@@ -46,11 +46,12 @@ export function EmptyState({ onAddSkill, onImportCV }: EmptyStateProps) {
           <Button
             size="lg"
             onClick={onAddSkill}
-            variant={onImportCV ? "outline" : "default"}
-            className={onImportCV
-              ? "border-[#4A5943] text-[#4A5943] hover:bg-[#EEF1EA]"
-              : "bg-[#4A5943] text-white hover:bg-[#3C4936]"
-            }
+            variant={onImportCV ? 'outline' : 'default'}
+            className={`flex items-center justify-center ${
+              onImportCV
+                ? 'border-[#4A5943] text-[#4A5943] hover:bg-[#EEF1EA]'
+                : 'bg-[#4A5943] text-white hover:bg-[#3C4936]'
+            }`}
           >
             <Plus className="mr-2 h-5 w-5" />
             Add manually
@@ -58,7 +59,7 @@ export function EmptyState({ onAddSkill, onImportCV }: EmptyStateProps) {
           <Button
             size="lg"
             variant="outline"
-            className="border-[#4A5943] text-[#4A5943] hover:bg-[#EEF1EA]"
+            className="flex items-center justify-center border-[#4A5943] text-[#4A5943] hover:bg-[#EEF1EA]"
           >
             <BookOpen className="mr-2 h-5 w-5" />
             Learn how it works
@@ -69,19 +70,34 @@ export function EmptyState({ onAddSkill, onImportCV }: EmptyStateProps) {
         <div className="mt-8 flex flex-wrap gap-3 justify-center text-xs text-[#4A5943]">
           <span className="flex items-center gap-2 rounded-full bg-[#EEF1EA] px-4 py-2">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
-            20,000+ curated skills
+            18,000+ curated skills
           </span>
           <span className="flex items-center gap-2 rounded-full bg-[#EEF1EA] px-4 py-2">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+              />
             </svg>
             Attach proofs & verifications
           </span>
           <span className="flex items-center gap-2 rounded-full bg-[#EEF1EA] px-4 py-2">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 10V3L4 14h7v7l9-11h-7z"
+              />
             </svg>
             Track recency & growth
           </span>
@@ -90,5 +106,3 @@ export function EmptyState({ onAddSkill, onImportCV }: EmptyStateProps) {
     </div>
   );
 }
-
-

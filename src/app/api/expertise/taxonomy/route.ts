@@ -190,19 +190,16 @@ export async function GET(request: Request) {
       if (search) {
         // Search in name, aliases, description, and tags
         const searchLower = search.toLowerCase();
-        const searchPattern = `*${searchLower}*`; // PostgREST uses * as wildcard in .or() strings
+        const searchPattern = `%${searchLower}%`; // Use % for ILIKE pattern matching
 
-        // Build OR conditions for text search across JSONB fields
-        // Note: Use ->> for text extraction from JSONB, and * for wildcards in .or() syntax
+        // Build OR conditions for text search across JSONB fields and tags
+        // This searches in: name, description, aliases, and tags
         query = query.or(
           `name_i18n->>en.ilike.${searchPattern},` +
             `description_i18n->>en.ilike.${searchPattern},` +
-            `aliases_i18n->>en.ilike.${searchPattern}`
+            `aliases_i18n->>en.ilike.${searchPattern},` +
+            `tags.cs.{${searchLower}}` // cs = contains (array contains)
         );
-
-        // Separately filter by tags array using contains
-        // This will be AND'd with the OR conditions above
-        query = query.contains('tags', [searchLower]);
       }
 
       // Execute the filtered query (not a new one!)

@@ -28,29 +28,69 @@ export async function GET(req: NextRequest) {
       orderBy: (dashboardLayouts, { asc }) => [asc(dashboardLayouts.widgetOrder)],
     });
 
+    // If user has no custom layout, return default widgets
     if (!layouts || layouts.length === 0) {
-      return NextResponse.json({ widgets: [] });
+      const defaultWidgets = [
+        {
+          widgetId: 'matching-results',
+          visible: true,
+          position: 0,
+          title: 'Quality Matches',
+          description: 'Your best-fit opportunities',
+        },
+        {
+          widgetId: 'next-best-actions',
+          visible: true,
+          position: 1,
+          title: 'Next Best Actions',
+          description: 'Recommended actions to improve your profile',
+        },
+        {
+          widgetId: 'gap-map',
+          visible: true,
+          position: 2,
+          title: 'Skills Gap Map',
+          description: 'Identify missing skills for your goals',
+        },
+        {
+          widgetId: 'goals',
+          visible: true,
+          position: 3,
+          title: 'Goals',
+          description: 'Track your career objectives',
+        },
+        {
+          widgetId: 'impact-snapshot',
+          visible: true,
+          position: 4,
+          title: 'Impact Snapshot',
+          description: 'Your recent contributions',
+        },
+        {
+          widgetId: 'while-away',
+          visible: true,
+          position: 5,
+          title: 'While You Were Away',
+          description: 'Recent updates and activity',
+        },
+      ];
+
+      return NextResponse.json({ widgets: defaultWidgets });
     }
 
     // Reconstruct widgets array from database records
     const widgets = layouts.map((layout) => ({
-      id: layout.widgetId,
-      type: layout.widgetId,
+      widgetId: layout.widgetId,
+      visible: true,
+      position: layout.widgetOrder || 0,
       title: layout.widgetConfig?.title || layout.widgetId,
       description: layout.widgetConfig?.description || '',
-      icon: null, // Icons will be added by the component
-      size: layout.widgetSize || 'medium',
-      enabled: true,
-      order: layout.widgetOrder || 0,
     }));
 
     return NextResponse.json({ widgets });
   } catch (error) {
     console.error('Fetch dashboard layout error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -70,10 +110,7 @@ export async function POST(req: NextRequest) {
     const { widgets } = body;
 
     if (!Array.isArray(widgets)) {
-      return NextResponse.json(
-        { error: 'Widgets must be an array' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Widgets must be an array' }, { status: 400 });
     }
 
     // Delete existing layout
@@ -110,9 +147,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Save dashboard layout error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -42,6 +43,29 @@ interface TopBarProps {
 
 export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
   const [customizeOpen, setCustomizeOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Map routes to page titles
+  const getPageTitle = () => {
+    if (!pathname) return 'Dashboard';
+
+    if (pathname.includes('/home')) return 'Dashboard';
+    if (pathname.includes('/matching')) return 'Matching';
+    if (pathname.includes('/expertise')) return 'Expertise';
+    if (pathname.includes('/profile')) return 'Profile';
+    if (pathname.includes('/zen')) return 'Zen Hub';
+    if (pathname.includes('/settings')) return 'Settings';
+    if (pathname.includes('/verifications')) return 'Verifications';
+    if (pathname.includes('/projects')) return 'Projects';
+    if (pathname.includes('/experiences')) return 'Experiences';
+    if (pathname.includes('/education')) return 'Education';
+    if (pathname.includes('/volunteering')) return 'Volunteering';
+    if (pathname.includes('/impact')) return 'Impact';
+    if (pathname.includes('/partnerships')) return 'Partnerships';
+    if (pathname.includes('/assignments')) return 'Assignments';
+
+    return 'Dashboard';
+  };
 
   return (
     <>
@@ -68,7 +92,7 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
 
           {/* Current page indicator - hide on very small screens */}
           <h1 className="text-base font-normal hidden sm:block" style={{ color: '#2D3330' }}>
-            Dashboard
+            {getPageTitle()}
           </h1>
         </div>
 

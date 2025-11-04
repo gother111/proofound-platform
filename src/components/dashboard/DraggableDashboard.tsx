@@ -177,6 +177,22 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
   // Filter to only show visible widgets
   const visibleWidgets = layout.filter((w) => w.visible);
 
+  // Show empty state if no widgets
+  if (visibleWidgets.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 px-4 bg-white rounded-lg border border-gray-200">
+        <p className="text-lg font-medium text-[#2D3330] mb-2">No dashboard widgets configured</p>
+        <p className="text-sm text-[#6B6760] text-center mb-4">
+          Customize your dashboard to see the information that matters most to you
+        </p>
+        <Button onClick={() => setEditMode(true)} className="bg-[#1C4D3A] hover:bg-[#1C4D3A]/90">
+          <Settings2 className="w-4 h-4 mr-2" />
+          Configure Dashboard
+        </Button>
+      </div>
+    );
+  }
+
   // If dnd-kit is not installed, render static layout
   if (!DndContext || !SortableContext) {
     return (

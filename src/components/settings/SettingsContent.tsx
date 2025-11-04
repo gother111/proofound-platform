@@ -1,16 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { PrivacyOverview } from './PrivacyOverview';
 import { VerificationStatus } from './VerificationStatus';
 import { LinkedInConnect } from './LinkedInConnect';
+import { EmailManager } from './EmailManager';
+import { PasswordChangeForm } from './PasswordChangeForm';
 import { resetTour } from '@/actions/tour';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { RotateCcw } from 'lucide-react';
+import { RotateCcw, Loader2 } from 'lucide-react';
 import { CustomizableDashboard } from '../dashboard/CustomizableDashboard';
 
 interface SettingsContentProps {
@@ -20,23 +22,53 @@ interface SettingsContentProps {
 export function SettingsContent({ userId }: SettingsContentProps) {
   const [activeTab, setActiveTab] = useState('account');
   const [isResettingTour, setIsResettingTour] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [isLoadingEmail, setIsLoadingEmail] = useState(true);
   const router = useRouter();
+
+  // Fetch user email on mount
+  useEffect(() => {
+    async function fetchUserEmail() {
+      try {
+        const response = await fetch('/api/user/email');
+        if (response.ok) {
+          const data = await response.json();
+          setUserEmail(data.email);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user email:', error);
+      } finally {
+        setIsLoadingEmail(false);
+      }
+    }
+    fetchUserEmail();
+  }, []);
 
   const handleRestartTour = async () => {
     setIsResettingTour(true);
     try {
       const result = await resetTour();
       if (result.success) {
-        toast.success('Tour reset! Refresh the page to see it again.');
-        // Refresh the page to trigger the tour
-        router.refresh();
+        toast.success('Tour reset successfully!', {
+          description: 'Redirecting to dashboard to start the tour...',
+        });
+        // Wait a moment then redirect to home to trigger tour
+        setTimeout(() => {
+          router.push('/app/i/home');
+          router.refresh();
+        }, 1000);
       } else {
-        toast.error('Failed to reset tour. Please try again.');
+        const errorMessage = result.error || 'Failed to reset tour. Please try again.';
+        console.error('Tour reset error:', errorMessage);
+        toast.error(errorMessage);
+        setIsResettingTour(false);
       }
     } catch (error) {
       console.error('Failed to reset tour:', error);
-      toast.error('Failed to reset tour. Please try again.');
-    } finally {
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      toast.error('Failed to reset tour', {
+        description: errorMessage,
+      });
       setIsResettingTour(false);
     }
   };
@@ -73,17 +105,22 @@ export function SettingsContent({ userId }: SettingsContentProps) {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-medium text-proofound-charcoal dark:text-foreground">
-                    Email
-                  </p>
-                  <p className="text-proofound-charcoal/70 dark:text-muted-foreground">{userId}</p>
-                  <p className="text-xs text-proofound-charcoal/70 dark:text-muted-foreground mt-1">
-                    Contact support to change your email address
-                  </p>
+              {isLoadingEmail ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="w-6 h-6 animate-spin text-proofound-forest" />
                 </div>
-              </div>
+              ) : (
+                <EmailManager
+                  currentEmail={userEmail || userId}
+                  onEmailUpdated={() => {
+                    // Refresh email after update
+                    fetch('/api/user/email')
+                      .then((res) => res.json())
+                      .then((data) => setUserEmail(data.email))
+                      .catch(console.error);
+                  }}
+                />
+              )}
             </CardContent>
           </Card>
 
@@ -104,16 +141,14 @@ export function SettingsContent({ userId }: SettingsContentProps) {
           <Card className="border-proofound-stone dark:border-border rounded-2xl">
             <CardHeader>
               <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
-                Security
+                Password
               </CardTitle>
               <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-                Two-factor authentication and security settings
+                Update your password to keep your account secure
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-proofound-charcoal/70 dark:text-muted-foreground">
-                Two-factor authentication coming soon
-              </p>
+              <PasswordChangeForm />
             </CardContent>
           </Card>
 
@@ -200,7 +235,8 @@ export function SettingsContent({ userId }: SettingsContentProps) {
             </CardHeader>
             <CardContent>
               <p className="text-proofound-charcoal/70 dark:text-muted-foreground">
-                Google Meet and Zoom integrations are automatically available for scheduling interviews.
+                Google Meet and Zoom integrations are automatically available for scheduling
+                interviews.
               </p>
             </CardContent>
           </Card>
@@ -233,4 +269,3 @@ export function SettingsContent({ userId }: SettingsContentProps) {
     </div>
   );
 }
-

@@ -29,9 +29,15 @@ export default function MatchingPage() {
 
   useEffect(() => {
     const fetchData = async () => {
+      // Create abort controller for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
       try {
         // Fetch matching profile
-        const profileRes = await fetch('/api/matching-profile');
+        const profileRes = await fetch('/api/matching-profile', {
+          signal: controller.signal,
+        });
 
         if (!profileRes.ok) {
           const errorData = await profileRes.json().catch(() => ({}));
@@ -48,6 +54,7 @@ export default function MatchingPage() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({}),
+            signal: controller.signal,
           });
 
           if (!matchesRes.ok) {
@@ -85,11 +92,23 @@ export default function MatchingPage() {
           }
         }
       } catch (error) {
-        console.error('Error loading matching data:', error);
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to load matching data';
-        toast.error(errorMessage);
+        if (error instanceof Error && error.name === 'AbortError') {
+          console.error('Matching data request timed out');
+          toast.error('Request timed out', {
+            description: 'Please check your connection and try again.',
+          });
+          // Set empty state on timeout
+          setMatchingProfile(null);
+          setMatches([]);
+          setFilteredMatches([]);
+        } else {
+          console.error('Error loading matching data:', error);
+          const errorMessage =
+            error instanceof Error ? error.message : 'Failed to load matching data';
+          toast.error(errorMessage);
+        }
       } finally {
+        clearTimeout(timeoutId);
         setIsLoading(false);
       }
     };

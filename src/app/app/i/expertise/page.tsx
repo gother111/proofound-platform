@@ -4,6 +4,9 @@ import { ExpertiseAtlasClient } from './ExpertiseAtlasClient';
 import { db } from '@/db';
 import { userIntegrations } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
+import { createLogger } from '@/lib/logger';
+
+const logger = createLogger('ExpertisePage');
 
 export const dynamic = 'force-dynamic';
 
@@ -18,7 +21,7 @@ export default async function ExpertiseAtlasPage() {
     const user = await requireAuth();
     const supabase = await createClient();
 
-    console.log('🔍 [Expertise Page] User ID:', user.id);
+    logger.debug('Fetching expertise data for user', { userId: user.id });
 
     // Fetch user's skills - fetch taxonomy separately to avoid foreign key relationship issues
     const { data: userSkills, error: skillsError } = await supabase
@@ -26,10 +29,10 @@ export default async function ExpertiseAtlasPage() {
       .select('*')
       .eq('profile_id', user.id);
 
-    console.log('🔍 [Expertise Page] Skills query result:', {
+    logger.debug('Skills query completed', {
       count: userSkills?.length || 0,
-      error: skillsError?.message,
-      sampleSkill: userSkills?.[0],
+      hasError: !!skillsError,
+      errorMessage: skillsError?.message,
     });
 
     // Fetch taxonomy data separately if skills exist
@@ -39,7 +42,7 @@ export default async function ExpertiseAtlasPage() {
         .map((s) => s.skill_code)
         .filter((code): code is string => Boolean(code));
 
-      console.log('🔍 [Expertise Page] Skill codes to fetch:', skillCodes);
+      logger.debug('Fetching taxonomy for skill codes', { skillCodesCount: skillCodes.length });
 
       if (skillCodes.length > 0) {
         const { data: taxonomyData } = await supabase
@@ -47,7 +50,7 @@ export default async function ExpertiseAtlasPage() {
           .select('code, slug, name_i18n, cat_id, subcat_id, l3_id, tags')
           .in('code', skillCodes);
 
-        console.log('🔍 [Expertise Page] Taxonomy data fetched:', taxonomyData?.length || 0);
+        logger.debug('Taxonomy data fetched', { taxonomyCount: taxonomyData?.length || 0 });
 
         if (taxonomyData) {
           taxonomyData.forEach((tax) => {
@@ -58,7 +61,7 @@ export default async function ExpertiseAtlasPage() {
     }
 
     if (skillsError) {
-      console.error('Error fetching user skills:', skillsError);
+      logger.error('Failed to fetch user skills', skillsError);
       // Continue with empty array if skills query fails
     }
 
@@ -69,7 +72,7 @@ export default async function ExpertiseAtlasPage() {
       .eq('profile_id', user.id);
 
     if (proofsError) {
-      console.error('Error fetching skill proofs:', proofsError);
+      logger.error('Failed to fetch skill proofs', proofsError);
     }
 
     const proofCountMap: Record<string, number> = {};
@@ -85,7 +88,7 @@ export default async function ExpertiseAtlasPage() {
       .eq('status', 'accepted');
 
     if (verificationsError) {
-      console.error('Error fetching skill verifications:', verificationsError);
+      logger.error('Failed to fetch skill verifications', verificationsError);
     }
 
     const verificationCountMap: Record<string, number> = {};
@@ -109,13 +112,13 @@ export default async function ExpertiseAtlasPage() {
     }));
 
     // Fetch L1 domains - handle errors gracefully
-    const { data: l1Domains, error: domainsError} = await supabase
+    const { data: l1Domains, error: domainsError } = await supabase
       .from('skills_categories')
       .select('*')
       .order('display_order');
 
     if (domainsError) {
-      console.error('Error fetching L1 domains:', domainsError);
+      logger.error('Failed to fetch L1 domains', domainsError);
       // Continue with empty array if domains query fails
     }
 
@@ -125,7 +128,7 @@ export default async function ExpertiseAtlasPage() {
       .select('subcat_id, cat_id, name_i18n');
 
     if (l2Error) {
-      console.error('Error fetching L2 categories:', l2Error);
+      logger.error('Failed to fetch L2 categories', l2Error);
     }
 
     // Create L2 name lookup map
@@ -193,8 +196,8 @@ export default async function ExpertiseAtlasPage() {
 
     const hasSkills = enrichedSkills.length > 0;
 
-    console.log('🔍 [Expertise Page] Final state:', {
-      enrichedSkillsCount: enrichedSkills.length,
+    logger.info('Expertise page data loaded successfully', {
+      skillsCount: enrichedSkills.length,
       hasSkills,
       domainsCount: domainsWithStats.length,
       skillsWithTaxonomy: enrichedSkills.filter((s: any) => s.taxonomy !== null).length,
@@ -225,7 +228,7 @@ export default async function ExpertiseAtlasPage() {
       />
     );
   } catch (error) {
-    console.error('Error in ExpertiseAtlasPage:', error);
+    logger.error('Critical error loading expertise page', error);
     // Return error state to client
     return (
       <ExpertiseAtlasClient
@@ -266,8 +269,10 @@ function calculateWidgetData(skills: any[], l2NameMap: Record<number, any>) {
   });
 
   // 2. Coverage Heatmap Data (L1 × L2)
-  const coverageData: Record<string, { count: number; avgLevel: number; l1: number; l2: number; l2Name?: string }> =
-    {};
+  const coverageData: Record<
+    string,
+    { count: number; avgLevel: number; l1: number; l2: number; l2Name?: string }
+  > = {};
 
   skills.forEach((skill) => {
     if (!skill.taxonomy?.cat_id || !skill.taxonomy?.subcat_id) return;

@@ -4,7 +4,15 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle2, ShieldCheck, Mail, Loader2, AlertCircle, XCircle, Linkedin } from 'lucide-react';
+import {
+  CheckCircle2,
+  ShieldCheck,
+  Mail,
+  Loader2,
+  AlertCircle,
+  XCircle,
+  Linkedin,
+} from 'lucide-react';
 import { WorkEmailVerificationForm } from './WorkEmailVerificationForm';
 import { VeriffVerification } from './VeriffVerification';
 import { LinkedInVerification } from './LinkedInVerification';
@@ -34,22 +42,49 @@ export function VerificationStatus() {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch('/api/verification/status');
-      
+
+      // Add timeout to prevent infinite loading
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+      const response = await fetch('/api/verification/status', {
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
         // Try to get error details from response
         const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.error || `Failed to fetch verification status (${response.status})`;
+        const errorMessage =
+          errorData.error || `Failed to fetch verification status (${response.status})`;
         const errorDetails = errorData.details ? `: ${errorData.details}` : '';
         throw new Error(`${errorMessage}${errorDetails}`);
       }
-      
+
       const data = await response.json();
+      console.log('✅ Verification status loaded:', data);
       setStatus(data);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load verification status';
-      console.error('Error fetching verification status:', err);
-      setError(errorMessage);
+      if (err instanceof Error && err.name === 'AbortError') {
+        const timeoutMessage = 'Request timed out. Please check your connection and try again.';
+        console.error('Verification status request timed out');
+        setError(timeoutMessage);
+        // Set default unverified status on timeout
+        setStatus({
+          verified: false,
+          verificationMethod: null,
+          verificationStatus: 'unverified',
+          verifiedAt: null,
+          workEmail: null,
+          workEmailVerified: false,
+        });
+      } else {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to load verification status';
+        console.error('Error fetching verification status:', err);
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -83,11 +118,7 @@ export function VerificationStatus() {
             </span>
           </AlertDescription>
         </Alert>
-        <Button
-          onClick={fetchStatus}
-          variant="outline"
-          className="w-full"
-        >
+        <Button onClick={fetchStatus} variant="outline" className="w-full">
           <Loader2 className="w-4 h-4 mr-2" />
           Retry
         </Button>
@@ -106,11 +137,14 @@ export function VerificationStatus() {
         <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-xl">
           <CheckCircle2 className="w-6 h-6 text-green-600 dark:text-green-400 flex-shrink-0" />
           <div className="flex-1">
-            <p className="font-medium text-green-900 dark:text-green-100">
-              Identity Verified
-            </p>
+            <p className="font-medium text-green-900 dark:text-green-100">Identity Verified</p>
             <p className="text-sm text-green-700 dark:text-green-300">
-              Verified via {status.verificationMethod === 'veriff' ? 'Government ID' : status.verificationMethod === 'work_email' ? 'Work Email' : 'LinkedIn'}
+              Verified via{' '}
+              {status.verificationMethod === 'veriff'
+                ? 'Government ID'
+                : status.verificationMethod === 'work_email'
+                  ? 'Work Email'
+                  : 'LinkedIn'}
               {status.verifiedAt && ` on ${new Date(status.verifiedAt).toLocaleDateString()}`}
             </p>
             {status.workEmail && (
@@ -120,7 +154,7 @@ export function VerificationStatus() {
             )}
           </div>
         </div>
-        
+
         <p className="text-sm text-muted-foreground">
           Your verified badge is now visible on your profile to organizations.
         </p>
@@ -137,11 +171,7 @@ export function VerificationStatus() {
             Verification in progress... This may take a few moments.
           </AlertDescription>
         </Alert>
-        <Button
-          variant="outline"
-          onClick={fetchStatus}
-          className="w-full"
-        >
+        <Button variant="outline" onClick={fetchStatus} className="w-full">
           Refresh Status
         </Button>
       </div>
@@ -191,11 +221,7 @@ export function VerificationStatus() {
   if (showVeriffFlow) {
     return (
       <div className="space-y-4">
-        <Button
-          variant="ghost"
-          onClick={() => setShowVeriffFlow(false)}
-          className="mb-2"
-        >
+        <Button variant="ghost" onClick={() => setShowVeriffFlow(false)} className="mb-2">
           ← Back to options
         </Button>
         <VeriffVerification onSuccess={handleVerificationSuccess} />
@@ -206,11 +232,7 @@ export function VerificationStatus() {
   if (showWorkEmailForm) {
     return (
       <div className="space-y-4">
-        <Button
-          variant="ghost"
-          onClick={() => setShowWorkEmailForm(false)}
-          className="mb-2"
-        >
+        <Button variant="ghost" onClick={() => setShowWorkEmailForm(false)} className="mb-2">
           ← Back to options
         </Button>
         <WorkEmailVerificationForm onSuccess={handleVerificationSuccess} />
@@ -221,11 +243,7 @@ export function VerificationStatus() {
   if (showLinkedInFlow) {
     return (
       <div className="space-y-4">
-        <Button
-          variant="ghost"
-          onClick={() => setShowLinkedInFlow(false)}
-          className="mb-2"
-        >
+        <Button variant="ghost" onClick={() => setShowLinkedInFlow(false)} className="mb-2">
           ← Back to options
         </Button>
         <LinkedInVerification onSuccess={handleVerificationSuccess} />
@@ -237,7 +255,8 @@ export function VerificationStatus() {
     <div className="space-y-6">
       <div className="space-y-2">
         <p className="text-sm text-muted-foreground">
-          Verify your identity to unlock the verified badge on your profile. Choose one of the following methods:
+          Verify your identity to unlock the verified badge on your profile. Choose one of the
+          following methods:
         </p>
       </div>
 
@@ -252,7 +271,8 @@ export function VerificationStatus() {
               <div className="flex-1">
                 <h3 className="font-semibold mb-1">Government ID Verification</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Quick and secure verification using your passport, driver&apos;s license, or national ID. Powered by Veriff.
+                  Quick and secure verification using your passport, driver&apos;s license, or
+                  national ID. Powered by Veriff.
                 </p>
                 <Button
                   onClick={() => setShowVeriffFlow(true)}
@@ -275,7 +295,8 @@ export function VerificationStatus() {
               <div className="flex-1">
                 <h3 className="font-semibold mb-1">Work Email Verification</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Verify using your company email address. This will also link your profile to your organization.
+                  Verify using your company email address. This will also link your profile to your
+                  organization.
                 </p>
                 <Button
                   onClick={() => setShowWorkEmailForm(true)}
@@ -299,7 +320,8 @@ export function VerificationStatus() {
               <div className="flex-1">
                 <h3 className="font-semibold mb-1">LinkedIn Verification</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Fast automated check if your LinkedIn profile has an identity verification badge. Quick admin review (typically &lt;1 hour).
+                  Fast automated check if your LinkedIn profile has an identity verification badge.
+                  Quick admin review (typically &lt;1 hour).
                 </p>
                 <Button
                   onClick={() => setShowLinkedInFlow(true)}
@@ -317,10 +339,10 @@ export function VerificationStatus() {
       <Alert>
         <ShieldCheck className="h-4 w-4" />
         <AlertDescription>
-          <strong>Why verify?</strong> Verified profiles get a badge that helps organizations trust your identity and improves match quality.
+          <strong>Why verify?</strong> Verified profiles get a badge that helps organizations trust
+          your identity and improves match quality.
         </AlertDescription>
       </Alert>
     </div>
   );
 }
-
