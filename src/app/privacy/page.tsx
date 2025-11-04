@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   description: 'Privacy Policy for Proofound',
 };
 
+export const dynamic = 'force-dynamic';
+
 export default function PrivacyPolicyPage() {
   const currentDate = new Date().toLocaleDateString('en-US', {
     year: 'numeric',
@@ -50,9 +52,7 @@ export default function PrivacyPolicyPage() {
             <h1 className="font-display text-[40px] font-semibold leading-[48px] tracking-[-0.02em] text-[#2D3330]">
               Privacy Policy
             </h1>
-            <p className="mt-4 text-sm text-[#2D333099]">
-              Last updated: {currentDate}
-            </p>
+            <p className="mt-4 text-sm text-[#2D333099]">Last updated: {currentDate}</p>
           </div>
 
           {/* Placeholder Notice */}
@@ -78,8 +78,8 @@ export default function PrivacyPolicyPage() {
               </h2>
               <p className="mt-4 leading-7 text-[#2D3330CC]">
                 At Proofound, we are committed to protecting your personal information and your
-                right to privacy. This Privacy Policy explains how we collect, use, and protect
-                your data when you use our platform.
+                right to privacy. This Privacy Policy explains how we collect, use, and protect your
+                data when you use our platform.
               </p>
 
               <h3 className="mt-8 font-display text-xl font-semibold text-[#2D3330]">
@@ -132,9 +132,7 @@ export default function PrivacyPolicyPage() {
                 <li>Opt out of marketing communications</li>
               </ul>
 
-              <h3 className="mt-8 font-display text-xl font-semibold text-[#2D3330]">
-                Contact Us
-              </h3>
+              <h3 className="mt-8 font-display text-xl font-semibold text-[#2D3330]">Contact Us</h3>
               <p className="mt-4 leading-7 text-[#2D3330CC]">
                 If you have questions about this Privacy Policy or how we handle your data, please
                 contact us at:
@@ -147,10 +145,10 @@ export default function PrivacyPolicyPage() {
 
               <div className="mt-12 rounded-xl border border-[#E8E6DD] bg-[#F7F6F1] p-6">
                 <p className="text-sm leading-6 text-[#2D333099]">
-                  <strong>Note:</strong> This is a simplified placeholder. A complete Privacy
-                  Policy must include detailed information about data collection, processing,
-                  storage, third-party services, cookies, international transfers, and specific
-                  legal compliance details. Please consult with legal counsel before launch.
+                  <strong>Note:</strong> This is a simplified placeholder. A complete Privacy Policy
+                  must include detailed information about data collection, processing, storage,
+                  third-party services, cookies, international transfers, and specific legal
+                  compliance details. Please consult with legal counsel before launch.
                 </p>
               </div>
             </div>
@@ -165,10 +163,7 @@ export default function PrivacyPolicyPage() {
             >
               <Link href="/terms">View Terms of Service</Link>
             </Button>
-            <Button
-              asChild
-              className="bg-proofound-forest text-white hover:bg-[#2D5D4A]"
-            >
+            <Button asChild className="bg-proofound-forest text-white hover:bg-[#2D5D4A]">
               <Link href="/signup">Create Account</Link>
             </Button>
           </div>
@@ -186,4 +181,3 @@ export default function PrivacyPolicyPage() {
     </div>
   );
 }
-
