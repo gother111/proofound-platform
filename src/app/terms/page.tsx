@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   description: 'Terms of Service for Proofound',
 };
 
+export const dynamic = 'force-dynamic';
+
 export default function TermsOfServicePage() {
   const currentDate = new Date().toLocaleDateString('en-US', {
     year: 'numeric',
@@ -50,9 +52,7 @@ export default function TermsOfServicePage() {
             <h1 className="font-display text-[40px] font-semibold leading-[48px] tracking-[-0.02em] text-[#2D3330]">
               Terms of Service
             </h1>
-            <p className="mt-4 text-sm text-[#2D333099]">
-              Last updated: {currentDate}
-            </p>
+            <p className="mt-4 text-sm text-[#2D333099]">Last updated: {currentDate}</p>
           </div>
 
           {/* Placeholder Notice */}
@@ -77,19 +77,18 @@ export default function TermsOfServicePage() {
                 Agreement to Terms
               </h2>
               <p className="mt-4 leading-7 text-[#2D3330CC]">
-                By accessing or using Proofound, you agree to be bound by these Terms of Service.
-                If you disagree with any part of these terms, you may not access or use our
-                platform.
+                By accessing or using Proofound, you agree to be bound by these Terms of Service. If
+                you disagree with any part of these terms, you may not access or use our platform.
               </p>
 
               <h3 className="mt-8 font-display text-xl font-semibold text-[#2D3330]">
                 Our Platform
               </h3>
               <p className="mt-4 leading-7 text-[#2D3330CC]">
-                Proofound is a professional networking platform that enables individuals to
-                showcase verified skills and expertise, and connects them with organizations
-                seeking qualified professionals. We provide the technology and infrastructure to
-                facilitate these connections.
+                Proofound is a professional networking platform that enables individuals to showcase
+                verified skills and expertise, and connects them with organizations seeking
+                qualified professionals. We provide the technology and infrastructure to facilitate
+                these connections.
               </p>
 
               <h3 className="mt-8 font-display text-xl font-semibold text-[#2D3330]">
@@ -108,9 +107,7 @@ export default function TermsOfServicePage() {
               <h3 className="mt-8 font-display text-xl font-semibold text-[#2D3330]">
                 Acceptable Use
               </h3>
-              <p className="mt-4 leading-7 text-[#2D3330CC]">
-                You agree not to:
-              </p>
+              <p className="mt-4 leading-7 text-[#2D3330CC]">You agree not to:</p>
               <ul className="mt-4 space-y-2 text-[#2D3330CC]">
                 <li>Provide false or misleading information</li>
                 <li>Impersonate others or misrepresent affiliations</li>
@@ -124,10 +121,10 @@ export default function TermsOfServicePage() {
                 Intellectual Property
               </h3>
               <p className="mt-4 leading-7 text-[#2D3330CC]">
-                The Proofound platform, including all content, features, and functionality, is
-                owned by Proofound and is protected by copyright, trademark, and other
-                intellectual property laws. You retain ownership of content you post, but grant us
-                a license to use it as necessary to provide our services.
+                The Proofound platform, including all content, features, and functionality, is owned
+                by Proofound and is protected by copyright, trademark, and other intellectual
+                property laws. You retain ownership of content you post, but grant us a license to
+                use it as necessary to provide our services.
               </p>
 
               <h3 className="mt-8 font-display text-xl font-semibold text-[#2D3330]">
@@ -135,27 +132,27 @@ export default function TermsOfServicePage() {
               </h3>
               <p className="mt-4 leading-7 text-[#2D3330CC]">
                 Our skill verification system relies on third-party verifiers. While we strive to
-                maintain the integrity of the verification process, we cannot guarantee the
-                accuracy of all verifications. Organizations should conduct their own due
-                diligence when evaluating candidates.
+                maintain the integrity of the verification process, we cannot guarantee the accuracy
+                of all verifications. Organizations should conduct their own due diligence when
+                evaluating candidates.
               </p>
 
               <h3 className="mt-8 font-display text-xl font-semibold text-[#2D3330]">
                 Termination
               </h3>
               <p className="mt-4 leading-7 text-[#2D3330CC]">
-                We reserve the right to suspend or terminate your account at any time for
-                violations of these Terms or for any other reason at our discretion. You may also
-                terminate your account at any time through your account settings.
+                We reserve the right to suspend or terminate your account at any time for violations
+                of these Terms or for any other reason at our discretion. You may also terminate
+                your account at any time through your account settings.
               </p>
 
               <h3 className="mt-8 font-display text-xl font-semibold text-[#2D3330]">
                 Limitation of Liability
               </h3>
               <p className="mt-4 leading-7 text-[#2D3330CC]">
-                Proofound is provided &quot;as is&quot; without warranties of any kind. We are not liable
-                for any indirect, incidental, special, or consequential damages arising from your
-                use of the platform.
+                Proofound is provided &quot;as is&quot; without warranties of any kind. We are not
+                liable for any indirect, incidental, special, or consequential damages arising from
+                your use of the platform.
               </p>
 
               <h3 className="mt-8 font-display text-xl font-semibold text-[#2D3330]">
@@ -163,13 +160,11 @@ export default function TermsOfServicePage() {
               </h3>
               <p className="mt-4 leading-7 text-[#2D3330CC]">
                 We may update these Terms from time to time. We will notify you of any material
-                changes by posting the new Terms on this page and updating the &quot;Last updated&quot;
-                date.
+                changes by posting the new Terms on this page and updating the &quot;Last
+                updated&quot; date.
               </p>
 
-              <h3 className="mt-8 font-display text-xl font-semibold text-[#2D3330]">
-                Contact Us
-              </h3>
+              <h3 className="mt-8 font-display text-xl font-semibold text-[#2D3330]">Contact Us</h3>
               <p className="mt-4 leading-7 text-[#2D3330CC]">
                 If you have questions about these Terms of Service, please contact us at:
               </p>
@@ -181,11 +176,10 @@ export default function TermsOfServicePage() {
 
               <div className="mt-12 rounded-xl border border-[#E8E6DD] bg-[#F7F6F1] p-6">
                 <p className="text-sm leading-6 text-[#2D333099]">
-                  <strong>Note:</strong> This is a simplified placeholder. Complete Terms of
-                  Service must include detailed sections on dispute resolution, governing law,
+                  <strong>Note:</strong> This is a simplified placeholder. Complete Terms of Service
+                  must include detailed sections on dispute resolution, governing law,
                   indemnification, disclaimers, and other legal protections specific to your
-                  jurisdiction and business model. Please consult with legal counsel before
-                  launch.
+                  jurisdiction and business model. Please consult with legal counsel before launch.
                 </p>
               </div>
             </div>
@@ -200,10 +194,7 @@ export default function TermsOfServicePage() {
             >
               <Link href="/privacy">View Privacy Policy</Link>
             </Button>
-            <Button
-              asChild
-              className="bg-proofound-terracotta text-white hover:bg-[#B5673F]"
-            >
+            <Button asChild className="bg-proofound-terracotta text-white hover:bg-[#B5673F]">
               <Link href="/signup">Create Account</Link>
             </Button>
           </div>
@@ -221,4 +212,3 @@ export default function TermsOfServicePage() {
     </div>
   );
 }
-
