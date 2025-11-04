@@ -11,12 +11,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { AlertTriangle, CheckCircle2, Info, Scale } from 'lucide-react';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface FairnessMetric {
   cohort: string;
@@ -42,9 +37,7 @@ export function FairnessNoteCard({
   generatedAt,
 }: FairnessNoteCardProps) {
   // Identify cohorts with significant gaps (> 10% difference)
-  const significantGaps = metrics.filter(
-    (m) => Math.abs(m.representationGap) > 10
-  );
+  const significantGaps = metrics.filter((m) => Math.abs(m.representationGap) > 10);
 
   const hasWarnings = significantGaps.some((m) => m.representationGap < -10);
   const hasPositiveGaps = significantGaps.some((m) => m.representationGap > 10);
@@ -84,9 +77,9 @@ export function FairnessNoteCard({
               </TooltipTrigger>
               <TooltipContent className="max-w-sm">
                 <p className="text-xs">
-                  Fairness metrics analyze demographic representation in your
-                  hiring pipeline. Significant gaps (>10%) are flagged for review.
-                  Based on anonymized opt-in data only.
+                  Fairness metrics analyze demographic representation in your hiring pipeline.
+                  Significant gaps (&gt;10%) are flagged for review. Based on anonymized opt-in data
+                  only.
                 </p>
               </TooltipContent>
             </Tooltip>
@@ -119,8 +112,8 @@ export function FairnessNoteCard({
                   Representation Gaps Detected
                 </p>
                 <p className="text-xs text-red-800 dark:text-red-200">
-                  {significantGaps.filter((m) => m.representationGap < -10).length} cohort(s)
-                  are underrepresented compared to their application rate. Review your selection
+                  {significantGaps.filter((m) => m.representationGap < -10).length} cohort(s) are
+                  underrepresented compared to their application rate. Review your selection
                   criteria for potential bias.
                 </p>
               </div>
@@ -130,9 +123,7 @@ export function FairnessNoteCard({
 
         {/* Metrics Table */}
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-[#2D3330]">
-            Cohort Representation
-          </h4>
+          <h4 className="text-sm font-medium text-[#2D3330]">Cohort Representation</h4>
 
           {metrics.map((metric) => {
             const isUnderrepresented = metric.representationGap < -10;
@@ -140,15 +131,10 @@ export function FairnessNoteCard({
             const isBalanced = Math.abs(metric.representationGap) <= 10;
 
             return (
-              <div
-                key={metric.cohort}
-                className="p-3 rounded-lg border border-[#E8E6DD] space-y-2"
-              >
+              <div key={metric.cohort} className="p-3 rounded-lg border border-[#E8E6DD] space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-[#2D3330]">
-                      {metric.cohort}
-                    </span>
+                    <span className="text-sm font-medium text-[#2D3330]">{metric.cohort}</span>
                     {isBalanced && (
                       <Badge
                         variant="secondary"
@@ -168,9 +154,7 @@ export function FairnessNoteCard({
                       </Badge>
                     )}
                   </div>
-                  <span className="text-xs text-[#6B6760]">
-                    n={metric.sampleSize}
-                  </span>
+                  <span className="text-xs text-[#6B6760]">n={metric.sampleSize}</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 text-xs">
@@ -182,9 +166,7 @@ export function FairnessNoteCard({
                   </div>
                   <div>
                     <p className="text-[#6B6760] mb-1">Selection Rate</p>
-                    <p className="font-medium text-[#2D3330]">
-                      {metric.selectionRate.toFixed(1)}%
-                    </p>
+                    <p className="font-medium text-[#2D3330]">{metric.selectionRate.toFixed(1)}%</p>
                   </div>
                 </div>
 
@@ -224,13 +206,12 @@ export function FairnessNoteCard({
         {/* Footer Note */}
         <div className="text-xs text-[#6B6760] pt-3 border-t border-[#E8E6DD]">
           <p>
-            <strong>Note:</strong> Metrics based on anonymized opt-in demographic
-            data. Small sample sizes (n&lt;30) may show statistical noise. Use as
-            one input among many in your decision-making process.
+            <strong>Note:</strong> Metrics based on anonymized opt-in demographic data. Small sample
+            sizes (n{'<'}30) may show statistical noise. Use as one input among many in your
+            decision-making process.
           </p>
         </div>
       </CardContent>
     </Card>
   );
 }
-

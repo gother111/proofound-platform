@@ -1,6 +1,6 @@
 /**
  * Assignment Builder Page - Organization
- * 
+ *
  * 5-step workflow to create comprehensive assignments
  * Steps: Business Value → Outcomes → Weights → Practicals → Skills
  */
@@ -19,11 +19,6 @@ import {
   Step4Practicals,
   Step5ExpertiseMapping,
 } from '@/components/matching/assignment-steps';
-import {
-  emitAssignmentCreationStarted,
-  emitAssignmentStepStarted,
-  emitAssignmentStepCompleted,
-} from '@/lib/analytics/events';
 
 interface AssignmentFormData {
   // Step 1
@@ -31,20 +26,20 @@ interface AssignmentFormData {
   businessValue: string;
   expectedImpact?: string;
   stakeholders: string[];
-  
+
   // Step 2
   outcomes: Array<{
     metric: string;
     target: string;
     timeframe: string;
   }>;
-  
+
   // Step 3
   missionWeight: number;
   expertiseWeight: number;
   workModeRequired: 'hard' | 'soft';
   workModePreference: 'onsite' | 'hybrid' | 'remote';
-  
+
   // Step 4
   compensationMin?: number;
   compensationMax?: number;
@@ -53,7 +48,7 @@ interface AssignmentFormData {
   startDate?: string;
   duration?: string;
   availability?: string;
-  
+
   // Step 5
   requiredSkills: Array<{
     skillCode: string;
@@ -128,8 +123,32 @@ export default function AssignmentBuilderPage() {
             trackPipelineStep(1, 'in_progress');
             // Emit assignment creation started event
             if (newOrgId) {
-              await emitAssignmentCreationStarted(newOrgId, newAssignmentId);
-              await emitAssignmentStepStarted(newOrgId, newAssignmentId, 1, 'Business Value');
+              await fetch('/api/analytics/track', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  eventType: 'assignment_creation_started',
+                  orgId: newOrgId,
+                  entityType: 'assignment',
+                  entityId: newAssignmentId,
+                  properties: { timestamp: new Date().toISOString() },
+                }),
+              });
+              await fetch('/api/analytics/track', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  eventType: 'assignment_step_started',
+                  orgId: newOrgId,
+                  entityType: 'assignment',
+                  entityId: newAssignmentId,
+                  properties: {
+                    stepNumber: 1,
+                    stepName: 'Business Value',
+                    timestamp: new Date().toISOString(),
+                  },
+                }),
+              });
             }
           }
           setLastSaved(new Date());
@@ -204,9 +223,10 @@ export default function AssignmentBuilderPage() {
           requiredLevel: skill.level,
           stakeholderRole: 'creator',
           linkedOutcomeId,
-          outcomeRationale: skill.linkedToBV || skill.linkedToTO
-            ? `Linked to ${skill.linkedToBV ? 'Business Value' : ''} ${skill.linkedToTO ? 'Target Outcomes' : ''}`.trim()
-            : undefined,
+          outcomeRationale:
+            skill.linkedToBV || skill.linkedToTO
+              ? `Linked to ${skill.linkedToBV ? 'Business Value' : ''} ${skill.linkedToTO ? 'Target Outcomes' : ''}`.trim()
+              : undefined,
         };
       });
 
@@ -263,13 +283,22 @@ export default function AssignmentBuilderPage() {
 
       // Emit step completed analytics
       if (assignmentId && orgId) {
-        await emitAssignmentStepCompleted(
-          orgId,
-          assignmentId,
-          currentStep,
-          stepNames[currentStep - 1],
-          timeSpentSeconds
-        );
+        await fetch('/api/analytics/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            eventType: 'assignment_step_completed',
+            orgId,
+            entityType: 'assignment',
+            entityId: assignmentId,
+            properties: {
+              stepNumber: currentStep,
+              stepName: stepNames[currentStep - 1],
+              timeSpentSeconds,
+              timestamp: new Date().toISOString(),
+            },
+          }),
+        });
       }
 
       // Mark current step as completed
@@ -290,7 +319,21 @@ export default function AssignmentBuilderPage() {
 
       // Emit step started analytics
       if (assignmentId && orgId) {
-        await emitAssignmentStepStarted(orgId, assignmentId, nextStep, stepNames[nextStep - 1]);
+        await fetch('/api/analytics/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            eventType: 'assignment_step_started',
+            orgId,
+            entityType: 'assignment',
+            entityId: assignmentId,
+            properties: {
+              stepNumber: nextStep,
+              stepName: stepNames[nextStep - 1],
+              timestamp: new Date().toISOString(),
+            },
+          }),
+        });
       }
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -384,11 +427,14 @@ export default function AssignmentBuilderPage() {
               successCriteria: `Achieve ${outcome.target} within ${outcome.timeframe}`,
             }));
 
-            const outcomesResponse = await fetch(`/api/assignments/${currentAssignmentId}/outcomes`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ outcomes: transformedOutcomes }),
-            });
+            const outcomesResponse = await fetch(
+              `/api/assignments/${currentAssignmentId}/outcomes`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ outcomes: transformedOutcomes }),
+              }
+            );
 
             if (!outcomesResponse.ok) {
               console.error('Failed to save outcomes');
@@ -427,8 +473,8 @@ export default function AssignmentBuilderPage() {
                     currentStep === step.id
                       ? 'bg-[#4A5943] text-white'
                       : currentStep > step.id
-                      ? 'bg-[#7A9278] text-white'
-                      : 'bg-gray-200 text-gray-600'
+                        ? 'bg-[#7A9278] text-white'
+                        : 'bg-gray-200 text-gray-600'
                   }`}
                 >
                   {step.id}
@@ -451,9 +497,7 @@ export default function AssignmentBuilderPage() {
 
         {/* Step Content */}
         <Card className="p-8">
-          {currentStep === 1 && (
-            <Step1BusinessValue form={form} onNext={handleNext} />
-          )}
+          {currentStep === 1 && <Step1BusinessValue form={form} onNext={handleNext} />}
           {currentStep === 2 && (
             <Step2TargetOutcomes form={form} onNext={handleNext} onBack={handleBack} />
           )}
@@ -488,4 +532,3 @@ export default function AssignmentBuilderPage() {
     </div>
   );
 }
-

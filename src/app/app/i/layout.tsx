@@ -3,6 +3,17 @@ import { LeftNav } from '@/components/app/LeftNav';
 import { TopBar } from '@/components/app/TopBar';
 import { TourProvider } from '@/components/tour/TourProvider';
 
+/**
+ * Individual User Layout
+ *
+ * Design: Two-column layout with sidebar navigation and top bar
+ * Accessibility:
+ * - Semantic HTML structure with proper landmark regions
+ * - Main content has ID for skip-to-content link
+ * - Proper heading hierarchy within child pages
+ * Responsive: Sidebar collapses on mobile, bottom tab bar alternative
+ */
+
 export default async function IndividualLayout({ children }: { children: React.ReactNode }) {
   const user = await requirePersona('individual');
 
@@ -17,9 +28,18 @@ export default async function IndividualLayout({ children }: { children: React.R
   return (
     <div className="flex h-screen" style={{ backgroundColor: '#F7F6F1' }}>
       <LeftNav basePath="/app/i" />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         <TopBar userName={userName} userInitials={userInitials} />
-        <main className="flex-1 overflow-auto">{children}</main>
+        {/* Main content region with ID for skip-to-content link */}
+        {/* Add bottom padding on mobile to account for bottom navigation (80px) */}
+        <main
+          id="main-content"
+          className="flex-1 overflow-auto pb-20 md:pb-0"
+          role="main"
+          aria-label="Main content"
+        >
+          {children}
+        </main>
       </div>
       <TourProvider />
     </div>

@@ -32,13 +32,13 @@ export default function MatchingPage() {
       try {
         // Fetch matching profile
         const profileRes = await fetch('/api/matching-profile');
-        
+
         if (!profileRes.ok) {
           const errorData = await profileRes.json().catch(() => ({}));
           console.error('Failed to load matching profile:', errorData);
           throw new Error(errorData.message || 'Failed to load matching profile');
         }
-        
+
         const profileData = await profileRes.json();
         setMatchingProfile(profileData.profile);
 
@@ -49,13 +49,13 @@ export default function MatchingPage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({}),
           });
-          
+
           if (!matchesRes.ok) {
             const errorData = await matchesRes.json().catch(() => ({}));
             console.error('Failed to load matches:', errorData);
             throw new Error(errorData.message || 'Failed to load matches');
           }
-          
+
           const matchesData = await matchesRes.json();
           const matchItems = matchesData.items || [];
           setMatches(matchItems);
@@ -64,15 +64,20 @@ export default function MatchingPage() {
           // Track first match shown for TTFQI metric
           if (matchItems.length > 0) {
             try {
-              const { emitFirstMatchShown } = await import('@/lib/analytics/events');
-              await emitFirstMatchShown(
-                matchItems[0].userId || matchItems[0].user_id,
-                matchItems[0].id,
-                {
-                  totalMatches: matchItems.length,
-                  topScore: matchItems[0].score || matchItems[0].totalScore,
-                }
-              );
+              await fetch('/api/analytics/track', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  eventType: 'first_match_shown',
+                  userId: matchItems[0].userId || matchItems[0].user_id,
+                  entityType: 'match',
+                  entityId: matchItems[0].id,
+                  properties: {
+                    totalMatches: matchItems.length,
+                    topScore: matchItems[0].score || matchItems[0].totalScore,
+                  },
+                }),
+              });
             } catch (analyticsError) {
               // Log but don't fail the page load
               console.error('Failed to track first match shown:', analyticsError);
@@ -81,7 +86,8 @@ export default function MatchingPage() {
         }
       } catch (error) {
         console.error('Error loading matching data:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Failed to load matching data';
+        const errorMessage =
+          error instanceof Error ? error.message : 'Failed to load matching data';
         toast.error(errorMessage);
       } finally {
         setIsLoading(false);
@@ -172,7 +178,8 @@ export default function MatchingPage() {
           </div>
         </div>
         <p className="text-sm" style={{ color: '#6B6760' }}>
-          {filteredMatches.length} opportunit{filteredMatches.length === 1 ? 'y' : 'ies'} aligned with your skills and values
+          {filteredMatches.length} opportunit{filteredMatches.length === 1 ? 'y' : 'ies'} aligned
+          with your skills and values
         </p>
       </div>
 
@@ -182,7 +189,7 @@ export default function MatchingPage() {
             No matches yet
           </p>
           <p className="text-sm" style={{ color: '#6B6760' }}>
-            {matches.length === 0 
+            {matches.length === 0
               ? 'Check back soon for new opportunities'
               : 'No matches found with current filters. Try adjusting your filters.'}
           </p>

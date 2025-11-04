@@ -48,18 +48,51 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
 
   const error = clientError ?? formState?.error ?? null;
 
+  // Email validation helper
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     setClientError(null);
 
-    if (!email || !password) {
+    // Validation with specific, helpful error messages
+    if (!email && !password) {
       event.preventDefault();
-      setClientError('Please enter your email and password.');
+      setClientError('Please enter your email address and password to continue.');
+      return;
+    }
+
+    if (!email) {
+      event.preventDefault();
+      setClientError('Please enter your email address.');
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      event.preventDefault();
+      setClientError('Please enter a valid email address (e.g., you@example.com).');
+      return;
+    }
+
+    if (!password) {
+      event.preventDefault();
+      setClientError('Please enter your password.');
+      return;
+    }
+
+    if (password.length < 8) {
+      event.preventDefault();
+      setClientError('Your password must be at least 8 characters long.');
+      return;
     }
   };
 
   // Layout container with Figma background tokens and animated accents
+  // Responsive: Adapts padding and card size for mobile/tablet/desktop
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#F7F6F1] px-6 py-16 text-[#2D3330]">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#F7F6F1] px-4 sm:px-6 py-8 sm:py-16 text-[#2D3330]">
       {/* Network background from design system */}
       <div className="pointer-events-none absolute inset-0 opacity-60">
         <NetworkBackground />
@@ -68,27 +101,28 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
       {/* Warm glow overlay to match Figma lighting */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,rgba(28,77,58,0.08),transparent_55%),radial-gradient(circle_at_85%_80%,rgba(199,107,74,0.07),transparent_60%)]" />
 
-      {/* Optional back button for nested flows */}
+      {/* Optional back button for nested flows - responsive positioning */}
       {onBack && (
         <motion.button
           initial={{ opacity: 0, x: -24 }}
           animate={{ opacity: 1, x: 0 }}
           onClick={onBack}
-          className="absolute left-6 top-6 flex items-center gap-2 text-neutral-dark-500 transition-colors hover:text-proofound-charcoal"
+          className="absolute left-4 sm:left-6 top-4 sm:top-6 flex items-center gap-2 text-neutral-dark-500 transition-colors hover:text-proofound-charcoal z-20"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           <span className="text-sm font-medium">Back</span>
         </motion.button>
       )}
 
       {/* Elevating the card to mirror the Figma panel */}
+      {/* Responsive: Full width on mobile with margin, constrained on larger screens */}
       <motion.div
         initial={{ opacity: 0, y: 28 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.55, ease: 'easeOut' }}
-        className="relative z-10 w-full max-w-[480px] px-4"
+        className="relative z-10 w-full max-w-[480px] px-2 sm:px-4"
       >
-        <Card className="mx-auto overflow-hidden rounded-[24px] border border-[#E8E6DD] bg-white/95 p-12 shadow-[0_4px_24px_rgba(29,51,48,0.08)] backdrop-blur">
+        <Card className="mx-auto overflow-hidden rounded-[24px] border border-[#E8E6DD] bg-white/95 p-6 sm:p-10 md:p-12 shadow-[0_4px_24px_rgba(29,51,48,0.08)] backdrop-blur">
           {/* Brand mark and welcoming copy */}
           <div className="mb-10 text-center">
             <motion.div
@@ -107,26 +141,42 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
             </p>
           </div>
 
-          {/* Friendly error surface aligned with brand colors */}
+          {/* Friendly error surface aligned with brand colors with proper ARIA */}
           {error && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               className="mb-6 rounded-2xl border border-[#B5542D]/25 bg-[#B5542D]/10 px-4 py-3"
+              role="alert"
+              aria-live="assertive"
             >
-              <p className="text-sm font-medium text-[#8A3F21]">{error}</p>
+              <p id="signin-error" className="text-sm font-medium text-[#8A3F21]">
+                {error}
+              </p>
             </motion.div>
           )}
 
-          {/* Email + password form in Figma typography */}
-          <form action={formAction} onSubmit={handleSubmit} className="space-y-6">
+          {/* Email + password form with proper ARIA attributes */}
+          <form
+            action={formAction}
+            onSubmit={handleSubmit}
+            className="space-y-6"
+            aria-label="Sign in form"
+            noValidate
+          >
             <div className="space-y-2">
               <Label
                 htmlFor="email"
                 className="flex items-center gap-2 text-[13px] font-medium uppercase tracking-[0.08em] text-[#2D3330]"
               >
-                <Mail className="h-4 w-4 text-proofound-forest" />
+                <Mail className="h-4 w-4 text-proofound-forest" aria-hidden="true" />
                 Email address
+                <span
+                  className="text-[#B5542D] text-base lowercase normal-case"
+                  aria-label="required"
+                >
+                  *
+                </span>
               </Label>
               <div className="relative">
                 <Mail
@@ -143,6 +193,9 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  aria-required="true"
+                  aria-invalid={error && !password ? 'true' : 'false'}
+                  aria-describedby={error ? 'signin-error' : undefined}
                   className="h-11 rounded-xl border border-[#E8E6DD] bg-white pl-12 pr-4 text-[15px] text-[#2D3330] placeholder:text-[#2D3330]/40 transition-all focus-visible:border-2 focus-visible:border-proofound-forest focus-visible:px-[43px] focus-visible:ring-[3px] focus-visible:ring-proofound-forest/10"
                 />
               </div>
@@ -153,8 +206,14 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
                 htmlFor="password"
                 className="flex items-center gap-2 text-[13px] font-medium uppercase tracking-[0.08em] text-[#2D3330]"
               >
-                <Lock className="h-4 w-4 text-proofound-forest" />
+                <Lock className="h-4 w-4 text-proofound-forest" aria-hidden="true" />
                 Password
+                <span
+                  className="text-[#B5542D] text-base lowercase normal-case"
+                  aria-label="required"
+                >
+                  *
+                </span>
               </Label>
               <div className="relative">
                 <Lock
@@ -171,16 +230,22 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  aria-required="true"
+                  aria-invalid={error ? 'true' : 'false'}
+                  aria-describedby={error ? 'signin-error' : undefined}
                   className="h-11 rounded-xl border border-[#E8E6DD] bg-white pl-12 pr-12 text-[15px] text-[#2D3330] placeholder:text-[#2D3330]/40 transition-all focus-visible:border-2 focus-visible:border-proofound-forest focus-visible:px-[43px] focus-visible:ring-[3px] focus-visible:ring-proofound-forest/10"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#2D333099] transition-colors hover:text-[#2D3330]"
-                  tabIndex={-1}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#2D333099] transition-colors hover:text-[#2D3330] focus:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest rounded"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" aria-hidden="true" />
+                  ) : (
+                    <Eye className="h-4 w-4" aria-hidden="true" />
+                  )}
                 </button>
               </div>
             </div>

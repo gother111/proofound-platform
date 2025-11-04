@@ -33,11 +33,11 @@ const config: Config = {
       colors: {
         // Figma Design System Colors - Primary Brand
         proofound: {
-          forest: '#1C4D3A',      // Primary brand
-          terracotta: '#C76B4A',  // Accent
-          parchment: '#F7F6F1',   // Background
-          charcoal: '#2D3330',    // Text
-          stone: '#E8E6DD',       // Borders
+          forest: '#1C4D3A', // Primary brand
+          terracotta: '#C76B4A', // Accent
+          parchment: '#F7F6F1', // Background
+          charcoal: '#2D3330', // Text
+          stone: '#E8E6DD', // Borders
         },
         // Extended Japandi Palette
         extended: {
@@ -119,10 +119,10 @@ const config: Config = {
       letterSpacing: brandTokens.typography.letterSpacing,
       borderRadius: {
         ...brandTokens.borderRadius,
-        lg: '0.75rem',  // 12px - cards, buttons
-        md: '0.5rem',   // 8px - inputs
-        sm: '0.25rem',  // 4px - small elements
-        xl: '1rem',     // 16px - icon containers
+        lg: '0.75rem', // 12px - cards, buttons
+        md: '0.5rem', // 8px - inputs
+        sm: '0.25rem', // 4px - small elements
+        xl: '1rem', // 16px - icon containers
         '2xl': '1.5rem', // 24px - large cards
       },
       boxShadow: brandTokens.shadows,
@@ -143,12 +143,18 @@ const config: Config = {
           '0%, 100%': { transform: 'translateY(0px)' },
           '50%': { transform: 'translateY(-20px)' },
         },
+        // Shimmer effect for skeleton loaders
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         breathe: 'breathe 4s ease-in-out infinite',
         float: 'float 6s ease-in-out infinite',
+        shimmer: 'shimmer 2s infinite linear',
       },
     },
   },
