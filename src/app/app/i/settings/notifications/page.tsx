@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 
+export const dynamic = 'force-dynamic';
+
 interface NotificationPreferences {
   inAppMatchSuggested: boolean;
   inAppIntroAccepted: boolean;
@@ -147,9 +149,7 @@ export default function NotificationPreferencesPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-[#2D3330]">Notification Settings</h1>
-            <p className="text-[#6B6760] mt-1">
-              Manage how you receive notifications
-            </p>
+            <p className="text-[#6B6760] mt-1">Manage how you receive notifications</p>
           </div>
           {hasChanges && (
             <Button onClick={handleSave} disabled={isSaving}>
@@ -162,8 +162,8 @@ export default function NotificationPreferencesPage() {
         {/* Info Card */}
         <Card className="p-6 bg-blue-50 border-blue-200">
           <p className="text-sm text-[#2D3330]">
-            Choose how you want to be notified for each type of activity. You can enable or
-            disable in-app and email notifications independently.
+            Choose how you want to be notified for each type of activity. You can enable or disable
+            in-app and email notifications independently.
           </p>
         </Card>
 

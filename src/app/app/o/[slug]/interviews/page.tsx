@@ -11,6 +11,8 @@ import { useState, useEffect } from 'react';
 import { Calendar, Clock, Video, ExternalLink, User } from 'lucide-react';
 import { ScheduleInterviewButton } from '@/components/interviews/ScheduleInterviewButton';
 
+export const dynamic = 'force-dynamic';
+
 interface Interview {
   id: string;
   matchId: string;

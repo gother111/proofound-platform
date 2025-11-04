@@ -1,6 +1,6 @@
 /**
  * Projects Page - Individual
- * 
+ *
  * Manage work, volunteer, education, and side projects
  * Link skills to projects for Expertise Atlas
  */
@@ -8,15 +8,38 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Briefcase, Heart, GraduationCap, Code, Filter, LayoutGrid, List as ListIcon } from 'lucide-react';
+import {
+  Plus,
+  Briefcase,
+  Heart,
+  GraduationCap,
+  Code,
+  Filter,
+  LayoutGrid,
+  List as ListIcon,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { ProjectForm } from '@/components/profile/forms/ProjectForm';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+
+export const dynamic = 'force-dynamic';
 
 interface Project {
   id: string;
@@ -138,7 +161,10 @@ export default function ProjectsPage() {
             <DialogHeader>
               <DialogTitle>Create New Project</DialogTitle>
             </DialogHeader>
-            <ProjectForm onSuccess={handleProjectCreated} onCancel={() => setIsCreateDialogOpen(false)} />
+            <ProjectForm
+              onSuccess={handleProjectCreated}
+              onCancel={() => setIsCreateDialogOpen(false)}
+            />
           </DialogContent>
         </Dialog>
       </div>
@@ -209,31 +235,35 @@ export default function ProjectsPage() {
         <Card className="p-12 text-center space-y-4">
           <Briefcase className="h-16 w-16 mx-auto text-[#6B6760] opacity-50" />
           <div className="space-y-2">
-            <p className="text-lg font-medium text-[#2D3330]">
-              No projects yet
-            </p>
+            <p className="text-lg font-medium text-[#2D3330]">No projects yet</p>
             <p className="text-sm text-[#6B6760] max-w-md mx-auto">
-              Add your first project to start building your Expertise Atlas. Link skills to your work and track your impact.
+              Add your first project to start building your Expertise Atlas. Link skills to your
+              work and track your impact.
             </p>
           </div>
-          <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-[#4A5943] hover:bg-[#3A4733]">
+          <Button
+            onClick={() => setIsCreateDialogOpen(true)}
+            className="bg-[#4A5943] hover:bg-[#3A4733]"
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add Your First Project
           </Button>
         </Card>
       ) : (
-        <div className={cn(
-          viewMode === 'grid'
-            ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
-            : 'space-y-4'
-        )}>
+        <div
+          className={cn(
+            viewMode === 'grid'
+              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+              : 'space-y-4'
+          )}
+        >
           {sortedProjects.map((project) => {
             const Icon = PROJECT_TYPE_ICONS[project.type];
             return (
               <Card
                 key={project.id}
                 className="p-6 hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={() => window.location.href = `/app/i/projects/${project.id}`}
+                onClick={() => (window.location.href = `/app/i/projects/${project.id}`)}
               >
                 <div className="space-y-4">
                   {/* Header */}
@@ -243,17 +273,16 @@ export default function ProjectsPage() {
                         <Icon className="h-5 w-5 text-[#4A5943]" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-[#2D3330] truncate">
-                          {project.title}
-                        </h3>
+                        <h3 className="font-semibold text-[#2D3330] truncate">{project.title}</h3>
                         {project.organization && (
-                          <p className="text-sm text-[#6B6760] truncate">
-                            {project.organization}
-                          </p>
+                          <p className="text-sm text-[#6B6760] truncate">{project.organization}</p>
                         )}
                       </div>
                     </div>
-                    <Badge variant="outline" className={cn('text-xs', STATUS_COLORS[project.status])}>
+                    <Badge
+                      variant="outline"
+                      className={cn('text-xs', STATUS_COLORS[project.status])}
+                    >
                       {project.status}
                     </Badge>
                   </div>
@@ -266,9 +295,7 @@ export default function ProjectsPage() {
 
                   {/* Description */}
                   {project.description && (
-                    <p className="text-sm text-[#6B6760] line-clamp-2">
-                      {project.description}
-                    </p>
+                    <p className="text-sm text-[#6B6760] line-clamp-2">{project.description}</p>
                   )}
 
                   {/* Skills and Outcomes */}
@@ -281,7 +308,9 @@ export default function ProjectsPage() {
                     )}
                     {project.outcomes && project.outcomes.length > 0 && (
                       <div className="flex items-center gap-1">
-                        <span className="font-medium text-[#4A5943]">{project.outcomes.length}</span>
+                        <span className="font-medium text-[#4A5943]">
+                          {project.outcomes.length}
+                        </span>
                         <span>outcomes</span>
                       </div>
                     )}

@@ -13,6 +13,8 @@ import { MessageThread, type Message } from '@/components/messaging/MessageThrea
 import { MessageSquare } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
+export const dynamic = 'force-dynamic';
+
 export default function MessagesPage() {
   const { userId: currentUserId, isLoading: isAuthLoading } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);

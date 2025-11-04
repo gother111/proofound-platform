@@ -28,6 +28,8 @@ import {
 import { PrivacyBanner } from '@/components/zen/PrivacyBanner';
 import { CheckInDialog } from '@/components/zen/CheckInDialog';
 import { ReflectionDialog } from '@/components/zen/ReflectionDialog';
+
+export const dynamic = 'force-dynamic';
 import { WellBeingDeltaWidget } from '@/components/wellbeing/WellBeingDeltaWidget';
 import { WellBeingTrendChart } from '@/components/wellbeing/WellBeingTrendChart';
 import { WellBeingDeltaChart } from '@/components/wellbeing/WellBeingDeltaChart';

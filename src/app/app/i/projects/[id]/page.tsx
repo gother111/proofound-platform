@@ -1,6 +1,6 @@
 /**
  * Project Detail Page
- * 
+ *
  * View and edit project details
  * TODO: Add tabs for Skills, Outcomes, Artifacts, Verification
  */
@@ -16,6 +16,8 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ProjectForm } from '@/components/profile/forms/ProjectForm';
 import { format } from 'date-fns';
+
+export const dynamic = 'force-dynamic';
 
 interface Project {
   id: string;
@@ -109,21 +111,13 @@ export default function ProjectDetailPage() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <Button
-          variant="ghost"
-          onClick={() => router.push('/app/i/projects')}
-          className="gap-2"
-        >
+        <Button variant="ghost" onClick={() => router.push('/app/i/projects')} className="gap-2">
           <ArrowLeft className="h-4 w-4" />
           Back to Projects
         </Button>
 
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setIsEditDialogOpen(true)}
-            className="gap-2"
-          >
+          <Button variant="outline" onClick={() => setIsEditDialogOpen(true)} className="gap-2">
             <Edit className="h-4 w-4" />
             Edit
           </Button>
@@ -148,9 +142,7 @@ export default function ProjectDetailPage() {
               {project.organization && (
                 <p className="text-lg text-[#6B6760] mt-1">{project.organization}</p>
               )}
-              {project.role && (
-                <p className="text-sm text-[#6B6760] mt-1">{project.role}</p>
-              )}
+              {project.role && <p className="text-sm text-[#6B6760] mt-1">{project.role}</p>}
             </div>
             <Badge variant="outline" className={STATUS_COLORS[project.status]}>
               {project.status}
@@ -176,7 +168,8 @@ export default function ProjectDetailPage() {
           {/* TODO: Add tabs for Skills, Outcomes, Artifacts, Verification */}
           <div className="pt-6 border-t">
             <p className="text-sm text-[#6B6760]">
-              Skills, outcomes, and artifacts features coming soon. For now, you can edit the basic project details.
+              Skills, outcomes, and artifacts features coming soon. For now, you can edit the basic
+              project details.
             </p>
           </div>
         </div>
@@ -209,4 +202,3 @@ export default function ProjectDetailPage() {
     </div>
   );
 }
-

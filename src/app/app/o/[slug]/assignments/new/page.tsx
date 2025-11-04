@@ -20,6 +20,8 @@ import {
   Step5ExpertiseMapping,
 } from '@/components/matching/assignment-steps';
 
+export const dynamic = 'force-dynamic';
+
 interface AssignmentFormData {
   // Step 1
   role: string;

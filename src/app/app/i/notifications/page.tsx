@@ -16,6 +16,8 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
+export const dynamic = 'force-dynamic';
+
 interface Notification {
   id: string;
   type: string;
@@ -110,10 +112,7 @@ export default function NotificationsPage() {
             <h1 className="text-3xl font-bold text-[#2D3330]">Notifications</h1>
             <p className="text-[#6B6760] mt-1">Stay updated with your activity</p>
           </div>
-          <Button
-            variant="outline"
-            onClick={() => router.push('/app/i/settings/notifications')}
-          >
+          <Button variant="outline" onClick={() => router.push('/app/i/settings/notifications')}>
             <Settings className="h-4 w-4 mr-2" />
             Settings
           </Button>

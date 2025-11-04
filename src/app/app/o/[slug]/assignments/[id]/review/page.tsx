@@ -1,6 +1,6 @@
 /**
  * Assignment Review Page
- * 
+ *
  * Review all assignment details before publishing
  * Shows business value, outcomes, weights, practicals, and skills
  */
@@ -13,6 +13,8 @@ import { Check, Edit, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+
+export const dynamic = 'force-dynamic';
 
 interface Assignment {
   id: string;
@@ -277,4 +279,3 @@ export default function AssignmentReviewPage() {
     </div>
   );
 }
-
