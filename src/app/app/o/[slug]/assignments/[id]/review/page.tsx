@@ -28,8 +28,17 @@ interface Assignment {
   location: string;
   requiredSkills: any[];
   niceToHaveSkills: any[];
+  verificationGates?: string[];
   status: string;
 }
+
+const VERIFICATION_GATE_LABELS: Record<string, string> = {
+  identity: 'Identity Verification',
+  work_email: 'Work Email Verification',
+  linkedin: 'LinkedIn Profile Verification',
+  background_check: 'Background Check',
+  education: 'Education Verification',
+};
 
 export default function AssignmentReviewPage() {
   const params = useParams();
@@ -207,20 +216,36 @@ export default function AssignmentReviewPage() {
             </div>
             <h2 className="text-xl font-semibold text-[#2D3330]">Practical Details</h2>
           </div>
-          <div className="ml-10 grid grid-cols-2 gap-4">
-            {assignment.compensationMin && assignment.compensationMax && (
-              <div>
-                <p className="text-sm text-[#6B6760]">Compensation Range</p>
-                <p className="font-medium text-[#2D3330]">
-                  {assignment.currency} {assignment.compensationMin.toLocaleString()} -{' '}
-                  {assignment.compensationMax.toLocaleString()}
-                </p>
-              </div>
-            )}
-            {assignment.location && (
-              <div>
-                <p className="text-sm text-[#6B6760]">Location</p>
-                <p className="font-medium text-[#2D3330]">{assignment.location}</p>
+          <div className="ml-10 space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              {assignment.compensationMin && assignment.compensationMax && (
+                <div>
+                  <p className="text-sm text-[#6B6760]">Compensation Range</p>
+                  <p className="font-medium text-[#2D3330]">
+                    {assignment.currency} {assignment.compensationMin.toLocaleString()} -{' '}
+                    {assignment.compensationMax.toLocaleString()}
+                  </p>
+                </div>
+              )}
+              {assignment.location && (
+                <div>
+                  <p className="text-sm text-[#6B6760]">Location</p>
+                  <p className="font-medium text-[#2D3330]">{assignment.location}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Verification Gates */}
+            {assignment.verificationGates && assignment.verificationGates.length > 0 && (
+              <div className="pt-4 border-t">
+                <p className="text-sm text-[#6B6760] mb-2">Verification Requirements</p>
+                <div className="flex flex-wrap gap-2">
+                  {assignment.verificationGates.map((gate) => (
+                    <Badge key={gate} variant="secondary" className="bg-[#E8E6DD] text-[#2D3330]">
+                      {VERIFICATION_GATE_LABELS[gate] || gate}
+                    </Badge>
+                  ))}
+                </div>
               </div>
             )}
           </div>

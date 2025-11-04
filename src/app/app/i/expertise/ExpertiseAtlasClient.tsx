@@ -17,8 +17,12 @@ import { SkillWheel } from './widgets/SkillWheel';
 import { VerificationSourcesPie } from './widgets/VerificationSourcesPie';
 import { NextBestActions } from './widgets/NextBestActions';
 import { LinkedInImportModal } from '@/components/expertise/LinkedInImportModal';
+import { GapMap } from '@/components/expertise/GapMap';
+import { CVJDAutoSuggest } from '@/components/expertise/CVJDAutoSuggest';
 import { Button } from '@/components/ui/button';
-import { Plus, BookOpen, Linkedin } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, BookOpen, Linkedin, TrendingUp, FileText, Grid3x3 } from 'lucide-react';
+import { AboutSection } from './components/AboutSection';
 
 interface ExpertiseAtlasClientProps {
   initialSkills: any[];
@@ -28,13 +32,14 @@ interface ExpertiseAtlasClientProps {
   linkedInConnected: boolean;
 }
 
-export function ExpertiseAtlasClient({ 
-  initialSkills, 
-  domains, 
+export function ExpertiseAtlasClient({
+  initialSkills,
+  domains,
   hasSkills,
   widgetData,
   linkedInConnected
 }: ExpertiseAtlasClientProps) {
+  const [activeTab, setActiveTab] = useState<string>('atlas');
   const [selectedL1, setSelectedL1] = useState<number | null>(null);
   const [selectedL2, setSelectedL2] = useState<any | null>(null);
   const [selectedL3, setSelectedL3] = useState<any | null>(null);
@@ -43,7 +48,8 @@ export function ExpertiseAtlasClient({
   const [isEditSkillWindowOpen, setIsEditSkillWindowOpen] = useState(false);
   const [isLinkedInImportModalOpen, setIsLinkedInImportModalOpen] = useState(false);
   const [skillToEdit, setSkillToEdit] = useState<any | null>(null);
-  
+  const [expandedL4, setExpandedL4] = useState<string | null>(null);
+
   // Dashboard state
   const [filters, setFilters] = useState<FilterState>({
     l1Domains: [],
@@ -108,20 +114,21 @@ export function ExpertiseAtlasClient({
     window.location.reload();
   };
 
-  // If no skills, show empty state
-  if (!hasSkills) {
-    return (
-      <div className="min-h-screen bg-[#F7F6F1]">
-        <EmptyState onAddSkill={() => setIsAddSkillDrawerOpen(true)} />
-        <AddSkillDrawer
-          open={isAddSkillDrawerOpen}
-          onOpenChange={setIsAddSkillDrawerOpen}
-          domains={domains}
-          onSkillAdded={handleSkillAdded}
-        />
-      </div>
-    );
-  }
+  // Render empty state in a tab if no skills
+  const emptyStateContent = (
+    <>
+      <EmptyState
+        onAddSkill={() => setIsAddSkillDrawerOpen(true)}
+        onImportCV={() => setActiveTab('import-cv')}
+      />
+      <AddSkillDrawer
+        open={isAddSkillDrawerOpen}
+        onOpenChange={setIsAddSkillDrawerOpen}
+        domains={domains}
+        onSkillAdded={handleSkillAdded}
+      />
+    </>
+  );
 
   // Filter L3 subcategories based on selected L2
   const l3Subcategories = selectedL2
@@ -157,14 +164,54 @@ export function ExpertiseAtlasClient({
       )
     : [];
 
+  // Calculate L2 categories per L1 domain (only those with user skills)
+  const l2CategoriesPerL1 = useMemo(() => {
+    const result: Record<number, any[]> = {};
+    
+    initialSkills.forEach((skill: any) => {
+      if (!skill.taxonomy?.cat_id || !skill.taxonomy?.subcat_id) return;
+      
+      const catId = skill.taxonomy.cat_id;
+      const subcatId = skill.taxonomy.subcat_id;
+      
+      if (!result[catId]) {
+        result[catId] = [];
+      }
+      
+      // Check if this L2 category already exists in the array
+      const existing = result[catId].find((l2: any) => l2.subcatId === subcatId);
+      if (!existing) {
+        result[catId].push({
+          catId: skill.taxonomy.cat_id,
+          subcatId: skill.taxonomy.subcat_id,
+          slug: skill.taxonomy.slug || `l2-${subcatId}`,
+          nameI18n: skill.taxonomy.name_i18n || { en: 'Unknown' },
+          l4Count: 1,
+        });
+      } else {
+        existing.l4Count++;
+      }
+    });
+    
+    return result;
+  }, [initialSkills]);
+
   const handleDomainClick = (catId: number) => {
     setSelectedL1(catId);
-    setIsL2ModalOpen(true); // Open the modal to show L2 categories
-    // In a real implementation, we'd fetch L2 categories here
+    // Don't automatically open modal - let expansion show L2 categories inline
+  };
+
+  const handleL2Click = (l2: any) => {
+    setSelectedL2(l2);
+    setIsL2ModalOpen(true);
   };
 
   const handleL3Click = (l3: any) => {
     setSelectedL3(l3);
+  };
+
+  const handleL4Toggle = (skillId: string) => {
+    setExpandedL4(expandedL4 === skillId ? null : skillId);
   };
 
   const handleSkillEdit = (skill: any) => {
@@ -217,6 +264,11 @@ export function ExpertiseAtlasClient({
 
   const selectedDomain = domains.find((d) => d.catId === selectedL1);
 
+  const handleSkillsImportedFromCV = () => {
+    // Refresh page after CV import
+    window.location.reload();
+  };
+
   return (
     <div className="min-h-screen bg-[#F7F6F1]">
       <div className="mx-auto max-w-7xl px-6 py-8">
@@ -258,9 +310,35 @@ export function ExpertiseAtlasClient({
           </div>
         </div>
 
-        {/* Dashboard Section */}
-        {widgetData && (
-          <div className="mb-8 space-y-6">
+        {/* About Section */}
+        <AboutSection />
+
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsTrigger value="atlas" className="flex items-center gap-2">
+              <Grid3x3 className="h-4 w-4" />
+              Skills Atlas
+            </TabsTrigger>
+            <TabsTrigger value="gap-analysis" className="flex items-center gap-2" data-tour="gap-analysis-tab">
+              <TrendingUp className="h-4 w-4" />
+              Gap Analysis
+            </TabsTrigger>
+            <TabsTrigger value="import-cv" className="flex items-center gap-2" data-tour="import-cv-tab">
+              <FileText className="h-4 w-4" />
+              Import from CV
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Skills Atlas Tab */}
+          <TabsContent value="atlas" className="space-y-6">
+            {!hasSkills ? (
+              emptyStateContent
+            ) : (
+              <>
+                {/* Dashboard Section */}
+                {widgetData && (
+                  <div className="mb-8 space-y-6">
             <h2 className="text-2xl font-semibold text-[#2D3330]">Dashboard</h2>
             
             {/* Filters */}
@@ -323,9 +401,16 @@ export function ExpertiseAtlasClient({
           </div>
         )}
 
-        {/* L1 Grid */}
-        <h2 className="text-2xl font-semibold text-[#2D3330] mb-4">Skill Domains</h2>
-        <L1Grid domains={domains} onDomainClick={handleDomainClick} />
+            {/* L1 Grid */}
+            <div>
+              <h2 className="text-2xl font-semibold text-[#2D3330] mb-4">Skill Domains</h2>
+              <L1Grid 
+                domains={domains} 
+                onDomainClick={handleDomainClick}
+                l2CategoriesPerL1={l2CategoriesPerL1}
+                onL2Click={handleL2Click}
+              />
+            </div>
 
         {/* L2 Modal */}
         <L2Modal
@@ -334,26 +419,60 @@ export function ExpertiseAtlasClient({
           l1Name={selectedDomain?.nameI18n?.en || ''}
           l2Category={selectedL2}
           l3Subcategories={l3Subcategories}
+          l4Skills={l4Skills}
+          expandedL4={expandedL4}
           onL3Click={handleL3Click}
+          onL4Toggle={handleL4Toggle}
+          onL4Edit={handleSkillEdit}
         />
 
-        {/* L4 Skills Grid (when L3 is selected) */}
-        {selectedL3 && l4Skills.length > 0 && (
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold text-[#2D3330] mb-4">
-              Skills in {selectedL3?.nameI18n?.en || 'Unknown'}
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {l4Skills.map((skill: any) => (
-                <L4Card
-                  key={skill.id}
-                  skill={skill}
-                  onEdit={() => handleSkillEdit(skill)}
-                />
-              ))}
+                {/* L4 Skills Grid (when L3 is selected) */}
+                {selectedL3 && l4Skills.length > 0 && (
+                  <div className="mt-8">
+                    <h2 className="text-xl font-semibold text-[#2D3330] mb-4">
+                      Skills in {selectedL3?.nameI18n?.en || 'Unknown'}
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {l4Skills.map((skill: any) => (
+                        <L4Card
+                          key={skill.id}
+                          skill={skill}
+                          onEdit={() => handleSkillEdit(skill)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </TabsContent>
+
+          {/* Gap Analysis Tab */}
+          <TabsContent value="gap-analysis">
+            <div className="space-y-6">
+              <div className="bg-white rounded-lg p-6 shadow-sm border">
+                <h2 className="text-2xl font-semibold text-[#2D3330] mb-4">Identify Your Skill Gaps</h2>
+                <p className="text-[#6B6760] mb-6">
+                  Analyze your current skills against target role requirements and get personalized recommendations for growth.
+                </p>
+                <GapMap />
+              </div>
             </div>
-          </div>
-        )}
+          </TabsContent>
+
+          {/* Import from CV Tab */}
+          <TabsContent value="import-cv">
+            <div className="space-y-6">
+              <div className="bg-white rounded-lg p-6 shadow-sm border">
+                <h2 className="text-2xl font-semibold text-[#2D3330] mb-4">Import Skills from CV/Resume</h2>
+                <p className="text-[#6B6760] mb-6">
+                  Paste your CV, resume, or job description to automatically extract and suggest relevant skills.
+                </p>
+                <CVJDAutoSuggest onSkillsAdded={handleSkillsImportedFromCV} />
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
 
         {/* Add Skill Drawer */}
         <AddSkillDrawer

@@ -14,6 +14,7 @@ import {
   unique,
   customType,
   foreignKey,
+  index,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
@@ -94,6 +95,9 @@ export const individualProfiles = pgTable('individual_profiles', {
   }),
   workEmailToken: text('work_email_token'),
   workEmailTokenExpires: timestamp('work_email_token_expires'),
+  // Field-level visibility controls (PRD: Fine-grained privacy)
+  fieldVisibility: jsonb('field_visibility'), // { fieldName: 'public' | 'network' | 'private' | 'hidden' }
+  redactMode: boolean('redact_mode').default(false), // Quick-hide sensitive info
   // LinkedIn verification fields
   linkedinProfileUrl: text('linkedin_profile_url'),
   linkedinVerificationData: jsonb('linkedin_verification_data'),
@@ -105,6 +109,25 @@ export const individualProfiles = pgTable('individual_profiles', {
   //   adminNotes: string
   // }
 });
+
+// Dashboard layouts - user customizable dashboard tiles (F2 requirement)
+export const dashboardLayouts = pgTable('dashboard_layouts', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  widgetId: text('widget_id').notNull(), // e.g., 'goals', 'tasks', 'matching-results', 'gap-map', 'next-best-actions'
+  position: integer('position').notNull(), // display order (0-indexed)
+  visible: boolean('visible').default(true).notNull(),
+  size: text('size', {
+    enum: ['small', 'default', 'large'],
+  }).default('default'),
+  settings: jsonb('settings').default(sql`'{}'::jsonb`), // widget-specific settings
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  uniqueUserWidget: unique().on(table.userId, table.widgetId),
+}));
 
 // Organizations
 export const organizations = pgTable('organizations', {
@@ -148,6 +171,8 @@ export const organizations = pgTable('organizations', {
   values: jsonb('values'), // Array of {icon: string, label: string, description: string}
   causes: text('causes').array(),
   workCulture: jsonb('work_culture'), // {collaboration, decision_making, learning, wellbeing, inclusion}
+  // Impact tracking
+  impactEntries: jsonb('impact_entries').default(sql`'[]'::jsonb`), // Array of impact entries
   createdBy: uuid('created_by').references(() => profiles.id),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -330,6 +355,28 @@ export const organizationGoals = pgTable('organization_goals', {
   })
     .default('in_progress')
     .notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Organization field visibility - granular privacy controls
+export const organizationFieldVisibility = pgTable('organization_field_visibility', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  orgId: uuid('org_id')
+    .references(() => organizations.id, { onDelete: 'cascade' })
+    .notNull()
+    .unique(),
+  // Visibility levels: public / post_match / post_conversation_start / internal_only
+  displayName: text('display_name').default('public').notNull(),
+  mission: text('mission').default('public').notNull(),
+  vision: text('vision').default('public').notNull(),
+  causes: text('causes').default('public').notNull(),
+  workCulture: text('work_culture').default('post_match').notNull(),
+  structure: text('structure').default('post_match').notNull(),
+  projects: text('projects').default('post_match').notNull(),
+  partnerships: text('partnerships').default('post_match').notNull(),
+  goals: text('goals').default('post_match').notNull(),
+  impact: text('impact').default('post_match').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -567,10 +614,15 @@ export const matches = pgTable(
     score: numeric('score').notNull(),
     vector: jsonb('vector').notNull(), // Subscores + details
     weights: jsonb('weights').notNull(),
+    snoozedUntil: timestamp('snoozed_until'), // When match should reappear (null = not snoozed)
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
   (table) => ({
     assignmentProfileUnique: unique().on(table.assignmentId, table.profileId),
+    // Performance indexes
+    profileIdIdx: index('matches_profile_id_idx').on(table.profileId),
+    assignmentIdIdx: index('matches_assignment_id_idx').on(table.assignmentId),
+    scoreIdx: index('matches_score_idx').on(table.score),
   })
 );
 
@@ -596,6 +648,10 @@ export const matchInterest = pgTable(
       table.assignmentId,
       table.targetProfileId
     ),
+    // Performance indexes for mutual interest lookups
+    actorProfileIdIdx: index('match_interest_actor_profile_id_idx').on(table.actorProfileId),
+    assignmentIdIdx: index('match_interest_assignment_id_idx').on(table.assignmentId),
+    targetProfileIdIdx: index('match_interest_target_profile_id_idx').on(table.targetProfileId),
   })
 );
 
@@ -1420,19 +1476,29 @@ export const userViolations = pgTable('user_violations', {
 
 // Analytics events - track key user actions for metrics
 // GDPR-compliant: stores hashed IPs instead of raw PII (Article 4(1))
-export const analyticsEvents = pgTable('analytics_events', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  eventType: text('event_type').notNull(), // signed_up, match_accepted, etc.
-  userId: uuid('user_id').references(() => profiles.id, { onDelete: 'cascade' }),
-  orgId: uuid('org_id').references(() => organizations.id, { onDelete: 'cascade' }),
-  entityType: text('entity_type'), // match, assignment, profile, etc.
-  entityId: uuid('entity_id'),
-  properties: jsonb('properties').default(sql`'{}'::jsonb`), // Additional event data
-  sessionId: text('session_id'),
-  ipHash: text('ip_hash'), // SHA-256 hash of IP (not raw IP - GDPR compliant)
-  userAgentHash: text('user_agent_hash'), // SHA-256 hash of User Agent
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-});
+export const analyticsEvents = pgTable(
+  'analytics_events',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    eventType: text('event_type').notNull(), // signed_up, match_accepted, etc.
+    userId: uuid('user_id').references(() => profiles.id, { onDelete: 'cascade' }),
+    orgId: uuid('org_id').references(() => organizations.id, { onDelete: 'cascade' }),
+    entityType: text('entity_type'), // match, assignment, profile, etc.
+    entityId: uuid('entity_id'),
+    properties: jsonb('properties').default(sql`'{}'::jsonb`), // Additional event data
+    sessionId: text('session_id'),
+    ipHash: text('ip_hash'), // SHA-256 hash of IP (not raw IP - GDPR compliant)
+    userAgentHash: text('user_agent_hash'), // SHA-256 hash of User Agent
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    // Performance indexes for analytics queries
+    userIdIdx: index('analytics_events_user_id_idx').on(table.userId),
+    eventTypeIdx: index('analytics_events_event_type_idx').on(table.eventType),
+    createdAtIdx: index('analytics_events_created_at_idx').on(table.createdAt),
+    entityIdIdx: index('analytics_events_entity_id_idx').on(table.entityId),
+  })
+);
 
 // Editorial matches - curated matches for cold-start
 export const editorialMatches = pgTable('editorial_matches', {
@@ -1550,6 +1616,35 @@ export const wellbeingReflections = pgTable('wellbeing_reflections', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+// Self-assessments - PHQ-2 (depression) and GAD-2 (anxiety) screenings
+export const selfAssessments = pgTable('self_assessments', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  assessmentType: text('assessment_type', { enum: ['phq2', 'gad2'] }).notNull(),
+  score: integer('score').notNull(), // 0-6 for both PHQ-2 and GAD-2
+  severity: text('severity').notNull(), // 'Minimal', 'Mild', 'Moderate to Severe'
+  responses: jsonb('responses').notNull(), // Store individual question responses
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Work schedules - Track weekly work hours for burnout monitoring
+export const workSchedules = pgTable('work_schedules', {
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .primaryKey(),
+  monday: numeric('monday').default('0').notNull(),
+  tuesday: numeric('tuesday').default('0').notNull(),
+  wednesday: numeric('wednesday').default('0').notNull(),
+  thursday: numeric('thursday').default('0').notNull(),
+  friday: numeric('friday').default('0').notNull(),
+  saturday: numeric('saturday').default('0').notNull(),
+  sunday: numeric('sunday').default('0').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
 // Well-being opt-ins - User consent for Zen Hub features
 export const wellbeingOptIns = pgTable('wellbeing_opt_ins', {
   userId: uuid('user_id')
@@ -1563,44 +1658,120 @@ export const wellbeingOptIns = pgTable('wellbeing_opt_ins', {
 });
 
 // ====================================
-// Contracts & Metrics Infrastructure
+// Notifications System
 // ====================================
 
-// Contracts - Track signed employment/engagement agreements for TTSC metric
-export const contracts = pgTable('contracts', {
+// Notifications - In-app notification system for user engagement
+export const notifications = pgTable('notifications', {
   id: uuid('id').defaultRandom().primaryKey(),
-  assignmentId: uuid('assignment_id')
-    .references(() => assignments.id, { onDelete: 'cascade' })
-    .notNull(),
   userId: uuid('user_id')
     .references(() => profiles.id, { onDelete: 'cascade' })
     .notNull(),
-  orgId: uuid('org_id')
-    .references(() => organizations.id, { onDelete: 'cascade' })
-    .notNull(),
-  // Attestation flags (mutual confirmation model)
-  userAttestation: boolean('user_attestation').default(false),
-  orgAttestation: boolean('org_attestation').default(false),
-  // Contract details
-  contractType: text('contract_type', {
-    enum: ['full-time', 'part-time', 'contract', 'internship', 'volunteer'],
-  }),
-  signedAt: timestamp('signed_at').defaultNow().notNull(),
-  startDate: date('start_date'),
-  endDate: date('end_date'),
-  // Compensation details (optional)
-  compensationAmount: integer('compensation_amount'),
-  compensationCurrency: text('compensation_currency').default('USD'),
-  compensationPeriod: text('compensation_period', {
-    enum: ['hourly', 'weekly', 'monthly', 'yearly', 'one-time'],
-  }),
-  // Additional metadata
+  // Notification type and content
+  type: text('type', {
+    enum: [
+      'match_suggested',
+      'intro_accepted',
+      'message_received',
+      'verification_requested',
+      'verification_completed',
+      'assignment_published',
+      'interview_scheduled',
+      'contract_signed',
+    ],
+  }).notNull(),
+  title: text('title').notNull(),
+  message: text('message').notNull(),
+  // Links and metadata
+  actionUrl: text('action_url'), // URL to navigate to when clicked
+  entityType: text('entity_type'), // e.g., 'match', 'message', 'assignment'
+  entityId: uuid('entity_id'), // ID of related entity
   metadata: jsonb('metadata').default(sql`'{}'::jsonb`),
-  notes: text('notes'),
+  // Status
+  read: boolean('read').default(false).notNull(),
+  readAt: timestamp('read_at'),
+  // Audit fields
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Notification preferences - User preferences for which notifications to receive
+export const notificationPreferences = pgTable('notification_preferences', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull()
+    .unique(),
+  // In-app notification preferences (by type)
+  inAppMatchSuggested: boolean('in_app_match_suggested').default(true).notNull(),
+  inAppIntroAccepted: boolean('in_app_intro_accepted').default(true).notNull(),
+  inAppMessageReceived: boolean('in_app_message_received').default(true).notNull(),
+  inAppVerificationRequested: boolean('in_app_verification_requested').default(true).notNull(),
+  inAppVerificationCompleted: boolean('in_app_verification_completed').default(true).notNull(),
+  inAppAssignmentPublished: boolean('in_app_assignment_published').default(true).notNull(),
+  inAppInterviewScheduled: boolean('in_app_interview_scheduled').default(true).notNull(),
+  inAppContractSigned: boolean('in_app_contract_signed').default(true).notNull(),
+  // Email notification preferences (by type)
+  emailMatchSuggested: boolean('email_match_suggested').default(true).notNull(),
+  emailIntroAccepted: boolean('email_intro_accepted').default(true).notNull(),
+  emailMessageReceived: boolean('email_message_received').default(false).notNull(),
+  emailVerificationRequested: boolean('email_verification_requested').default(true).notNull(),
+  emailVerificationCompleted: boolean('email_verification_completed').default(true).notNull(),
+  emailAssignmentPublished: boolean('email_assignment_published').default(true).notNull(),
+  emailInterviewScheduled: boolean('email_interview_scheduled').default(true).notNull(),
+  emailContractSigned: boolean('email_contract_signed').default(true).notNull(),
   // Audit fields
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
+
+// ====================================
+// Contracts & Metrics Infrastructure
+// ====================================
+
+// Contracts - Track signed employment/engagement agreements for TTSC metric
+export const contracts = pgTable(
+  'contracts',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    assignmentId: uuid('assignment_id')
+      .references(() => assignments.id, { onDelete: 'cascade' })
+      .notNull(),
+    userId: uuid('user_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    orgId: uuid('org_id')
+      .references(() => organizations.id, { onDelete: 'cascade' })
+      .notNull(),
+    // Attestation flags (mutual confirmation model)
+    userAttestation: boolean('user_attestation').default(false),
+    orgAttestation: boolean('org_attestation').default(false),
+    // Contract details
+    contractType: text('contract_type', {
+      enum: ['full-time', 'part-time', 'contract', 'internship', 'volunteer'],
+    }),
+    signedAt: timestamp('signed_at').defaultNow().notNull(),
+    startDate: date('start_date'),
+    endDate: date('end_date'),
+    // Compensation details (optional)
+    compensationAmount: integer('compensation_amount'),
+    compensationCurrency: text('compensation_currency').default('USD'),
+    compensationPeriod: text('compensation_period', {
+      enum: ['hourly', 'weekly', 'monthly', 'yearly', 'one-time'],
+    }),
+    // Additional metadata
+    metadata: jsonb('metadata').default(sql`'{}'::jsonb`),
+    notes: text('notes'),
+    // Audit fields
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    // Performance indexes for metrics queries
+    userIdIdx: index('contracts_user_id_idx').on(table.userId),
+    assignmentIdIdx: index('contracts_assignment_id_idx').on(table.assignmentId),
+    signedAtIdx: index('contracts_signed_at_idx').on(table.signedAt),
+  })
+);
 
 // Metric snapshots - Cache calculated metrics for performance
 export const metricSnapshots = pgTable('metric_snapshots', {
@@ -1668,6 +1839,11 @@ export const interviews = pgTable('interviews', {
   })
     .default('scheduled')
     .notNull(),
+  // Decision tracking (post-interview)
+  decision: text('decision', { enum: ['accept', 'decline'] }),
+  decidedBy: uuid('decided_by').references(() => profiles.id),
+  decidedAt: timestamp('decided_at'),
+  feedback: text('feedback'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -1883,3 +2059,113 @@ export type AdminAuditLog = typeof adminAuditLog.$inferSelect;
 export type InsertAdminAuditLog = typeof adminAuditLog.$inferInsert;
 export type AdminMetricsCache = typeof adminMetricsCache.$inferSelect;
 export type InsertAdminMetricsCache = typeof adminMetricsCache.$inferInsert;
+
+// Analytics events types
+export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
+export type InsertAnalyticsEvent = typeof analyticsEvents.$inferInsert;
+
+// Notification types
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = typeof notifications.$inferInsert;
+export type NotificationPreference = typeof notificationPreferences.$inferSelect;
+export type InsertNotificationPreference = typeof notificationPreferences.$inferInsert;
+
+// Stakeholder Assignment System (Feature 4)
+export const assignmentInvitations = pgTable('assignment_invitations', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  orgId: uuid('org_id').references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
+  token: text('token').notNull().unique(),
+  stakeholderEmail: text('stakeholder_email').notNull(),
+  stakeholderName: text('stakeholder_name'),
+  assignedSections: jsonb('assigned_sections').notNull(), // Array of section names
+  message: text('message'),
+  status: text('status', { enum: ['pending', 'in_progress', 'completed', 'expired'] }).default('pending').notNull(),
+  expiresAt: timestamp('expires_at').notNull(),
+  completedAt: timestamp('completed_at'),
+  createdBy: uuid('created_by').references(() => profiles.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const assignmentSubmissions = pgTable('assignment_submissions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  invitationId: uuid('invitation_id').references(() => assignmentInvitations.id, { onDelete: 'cascade' }).notNull(),
+  sectionName: text('section_name').notNull(), // e.g., 'projects', 'partnerships', 'impact'
+  sectionData: jsonb('section_data').notNull(), // The submitted data
+  submittedAt: timestamp('submitted_at').defaultNow().notNull(),
+  reviewStatus: text('review_status', { enum: ['pending', 'approved', 'rejected', 'needs_changes'] }).default('pending').notNull(),
+  reviewedBy: uuid('reviewed_by').references(() => profiles.id),
+  reviewedAt: timestamp('reviewed_at'),
+  reviewNotes: text('review_notes'),
+});
+
+export const assignmentVersionHistory = pgTable('assignment_version_history', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  submissionId: uuid('submission_id').references(() => assignmentSubmissions.id, { onDelete: 'cascade' }).notNull(),
+  version: integer('version').notNull(),
+  sectionData: jsonb('section_data').notNull(),
+  changedBy: text('changed_by').notNull(), // 'stakeholder' or user email
+  changedAt: timestamp('changed_at').defaultNow().notNull(),
+});
+
+// Type exports for assignments
+export type AssignmentInvitation = typeof assignmentInvitations.$inferSelect;
+export type InsertAssignmentInvitation = typeof assignmentInvitations.$inferInsert;
+export type AssignmentSubmission = typeof assignmentSubmissions.$inferSelect;
+export type InsertAssignmentSubmission = typeof assignmentSubmissions.$inferInsert;
+export type AssignmentVersionHistory = typeof assignmentVersionHistory.$inferSelect;
+export type InsertAssignmentVersionHistory = typeof assignmentVersionHistory.$inferInsert;
+
+// ============================================================================
+// PRIVACY & VISIBILITY
+// ============================================================================
+// Note: Field-level visibility is now stored as JSONB in individualProfiles.fieldVisibility
+
+// ============================================================================
+// FAIRNESS ANALYTICS
+// ============================================================================
+
+// Demographic opt-in for fairness analytics
+export const demographicOptIns = pgTable('demographic_opt_ins', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  profileId: uuid('profile_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull()
+    .unique(),
+  optedIn: boolean('opted_in').default(false).notNull(),
+  // Demographic data (all optional, anonymized)
+  gender: text('gender'),
+  ethnicity: text('ethnicity'),
+  ageRange: text('age_range'),
+  disability: text('disability'),
+  veteranStatus: text('veteran_status'),
+  // Privacy fields
+  dataUsageConsent: boolean('data_usage_consent').default(true).notNull(),
+  consentedAt: timestamp('consented_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Fairness metrics per assignment
+export const fairnessMetrics = pgTable('fairness_metrics', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  assignmentId: uuid('assignment_id')
+    .references(() => assignments.id, { onDelete: 'cascade' })
+    .notNull(),
+  // Aggregated metrics (no individual data)
+  cohorts: jsonb('cohorts').notNull(), // Array of cohort metrics
+  totalApplicants: integer('total_applicants').notNull(),
+  totalOptedIn: integer('total_opted_in').notNull(), // How many provided data
+  totalSelected: integer('total_selected').notNull(),
+  // Metadata
+  generatedAt: timestamp('generated_at').defaultNow().notNull(),
+  minSampleSize: integer('min_sample_size').default(30).notNull(), // Minimum for statistical validity
+  hasSignificantGaps: boolean('has_significant_gaps').default(false).notNull(),
+});
+
+// Type exports for privacy & fairness
+// ProfileFieldVisibility types removed - now using JSONB in individualProfiles
+export type DemographicOptIn = typeof demographicOptIns.$inferSelect;
+export type InsertDemographicOptIn = typeof demographicOptIns.$inferInsert;
+export type FairnessMetric = typeof fairnessMetrics.$inferSelect;
+export type InsertFairnessMetric = typeof fairnessMetrics.$inferInsert;

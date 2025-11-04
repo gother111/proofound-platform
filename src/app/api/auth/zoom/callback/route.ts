@@ -1,124 +1,91 @@
-/**
- * Zoom OAuth Callback Handler
- * 
- * Handles OAuth redirect from Zoom after user authorization
- */
-
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { requireAuth } from '@/lib/auth';
+import { exchangeZoomCode } from '@/lib/video/zoom';
 import { db } from '@/db';
 import { userIntegrations } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 
+export const dynamic = 'force-dynamic';
+
+/**
+ * GET /api/auth/zoom/callback
+ *
+ * Handles Zoom OAuth callback
+ * Called by Zoom after user authorizes the app
+ */
 export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  const code = searchParams.get('code');
-  const error = searchParams.get('error');
-  const state = searchParams.get('state'); // Use for CSRF protection
-
-  // Handle authorization denial
-  if (error) {
-    console.error('Zoom OAuth error:', error);
-    return NextResponse.redirect(
-      new URL(`/settings/integrations?error=${encodeURIComponent(error)}`, request.url)
-    );
-  }
-
-  if (!code) {
-    return NextResponse.redirect(
-      new URL('/settings/integrations?error=missing_code', request.url)
-    );
-  }
-
   try {
-    // Get authenticated user
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const user = await requireAuth();
+    const { searchParams } = new URL(request.url);
 
-    if (authError || !user) {
-      throw new Error('User not authenticated');
+    const code = searchParams.get('code');
+    const state = searchParams.get('state');
+    const error = searchParams.get('error');
+
+    // Check for errors from Zoom
+    if (error) {
+      console.error('Zoom OAuth error:', error);
+      return NextResponse.redirect(
+        new URL(
+          `/app/i/settings/integrations?error=zoom_auth_failed&message=${encodeURIComponent(error)}`,
+          request.url
+        )
+      );
     }
 
-    // Exchange code for access token
-    const tokenUrl = 'https://zoom.us/oauth/token';
-    const params = new URLSearchParams({
-      grant_type: 'authorization_code',
-      code,
-      redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/zoom/callback`,
-    });
-
-    const credentials = Buffer.from(
-      `${process.env.ZOOM_CLIENT_ID}:${process.env.ZOOM_CLIENT_SECRET}`
-    ).toString('base64');
-
-    const tokenResponse = await fetch(tokenUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        Authorization: `Basic ${credentials}`,
-      },
-      body: params.toString(),
-    });
-
-    if (!tokenResponse.ok) {
-      const errorData = await tokenResponse.json();
-      throw new Error(`Zoom token exchange failed: ${JSON.stringify(errorData)}`);
+    // Verify code exists
+    if (!code) {
+      return NextResponse.redirect(
+        new URL(
+          '/app/i/settings/integrations?error=zoom_auth_failed&message=No authorization code received',
+          request.url
+        )
+      );
     }
 
-    const tokenData = await tokenResponse.json();
+    // Exchange code for tokens
+    const tokens = await exchangeZoomCode(code);
 
-    // Calculate token expiry (Zoom tokens typically last 1 hour)
-    const expiresIn = tokenData.expires_in || 3600; // seconds
-    const tokenExpiry = new Date(Date.now() + expiresIn * 1000);
-
-    // Store or update integration
-    const existingIntegration = await db
+    // Check if integration already exists
+    const [existing] = await db
       .select()
       .from(userIntegrations)
-      .where(
-        and(
-          eq(userIntegrations.userId, user.id),
-          eq(userIntegrations.provider, 'zoom')
-        )
-      )
+      .where(and(eq(userIntegrations.userId, user.id), eq(userIntegrations.provider, 'zoom')))
       .limit(1);
 
-    if (existingIntegration.length > 0) {
+    if (existing) {
       // Update existing integration
       await db
         .update(userIntegrations)
         .set({
-          accessToken: tokenData.access_token,
-          refreshToken: tokenData.refresh_token,
-          tokenExpiry,
-          scope: tokenData.scope?.split(' ') || [],
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+          tokenExpiry: new Date(Date.now() + tokens.expiresIn * 1000),
+          status: 'connected',
           updatedAt: new Date(),
         })
-        .where(eq(userIntegrations.id, existingIntegration[0].id));
+        .where(eq(userIntegrations.id, existing.id));
     } else {
       // Create new integration
       await db.insert(userIntegrations).values({
         userId: user.id,
         provider: 'zoom',
-        accessToken: tokenData.access_token,
-        refreshToken: tokenData.refresh_token,
-        tokenExpiry,
-        scope: tokenData.scope?.split(' ') || [],
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        tokenExpiry: new Date(Date.now() + tokens.expiresIn * 1000),
+        status: 'connected',
       });
     }
 
-    // Redirect back to settings with success message
+    // Redirect to settings page with success message
     return NextResponse.redirect(
-      new URL('/settings/integrations?success=zoom_connected', request.url)
+      new URL('/app/i/settings/integrations?success=zoom_connected', request.url)
     );
   } catch (error) {
-    console.error('Zoom OAuth callback error:', error);
+    console.error('Error handling Zoom OAuth callback:', error);
     return NextResponse.redirect(
       new URL(
-        `/settings/integrations?error=${encodeURIComponent(
+        `/app/i/settings/integrations?error=zoom_auth_failed&message=${encodeURIComponent(
           error instanceof Error ? error.message : 'Unknown error'
         )}`,
         request.url
@@ -126,4 +93,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

@@ -109,7 +109,7 @@ export default async function ExpertiseAtlasPage() {
     }));
 
     // Fetch L1 domains - handle errors gracefully
-    const { data: l1Domains, error: domainsError } = await supabase
+    const { data: l1Domains, error: domainsError} = await supabase
       .from('skills_categories')
       .select('*')
       .order('display_order');
@@ -118,6 +118,24 @@ export default async function ExpertiseAtlasPage() {
       console.error('Error fetching L1 domains:', domainsError);
       // Continue with empty array if domains query fails
     }
+
+    // Fetch L2 categories for heatmap names
+    const { data: l2Categories, error: l2Error } = await supabase
+      .from('skills_subcategories')
+      .select('subcat_id, cat_id, name_i18n');
+
+    if (l2Error) {
+      console.error('Error fetching L2 categories:', l2Error);
+    }
+
+    // Create L2 name lookup map
+    const l2NameMap: Record<number, any> = {};
+    l2Categories?.forEach((cat) => {
+      l2NameMap[cat.subcat_id] = {
+        nameI18n: cat.name_i18n,
+        catId: cat.cat_id,
+      };
+    });
 
     // Calculate stats per L1 domain
     const domainsWithStats = (l1Domains || []).map((domain) => {
@@ -183,7 +201,7 @@ export default async function ExpertiseAtlasPage() {
     });
 
     // Calculate widget data (only if user has skills)
-    const widgetData = hasSkills ? calculateWidgetData(enrichedSkills) : null;
+    const widgetData = hasSkills ? calculateWidgetData(enrichedSkills, l2NameMap) : null;
 
     // Check LinkedIn connection status
     const linkedInIntegration = await db
@@ -224,7 +242,7 @@ export default async function ExpertiseAtlasPage() {
 /**
  * Calculate all dashboard widget data from user skills
  */
-function calculateWidgetData(skills: any[]) {
+function calculateWidgetData(skills: any[], l2NameMap: Record<number, any>) {
   const now = new Date();
 
   // 1. Credibility Status Pie Data
@@ -248,7 +266,7 @@ function calculateWidgetData(skills: any[]) {
   });
 
   // 2. Coverage Heatmap Data (L1 × L2)
-  const coverageData: Record<string, { count: number; avgLevel: number; l1: number; l2: number }> =
+  const coverageData: Record<string, { count: number; avgLevel: number; l1: number; l2: number; l2Name?: string }> =
     {};
 
   skills.forEach((skill) => {
@@ -256,11 +274,13 @@ function calculateWidgetData(skills: any[]) {
 
     const key = `${skill.taxonomy.cat_id}-${skill.taxonomy.subcat_id}`;
     if (!coverageData[key]) {
+      const l2Info = l2NameMap[skill.taxonomy.subcat_id];
       coverageData[key] = {
         count: 0,
         avgLevel: 0,
         l1: skill.taxonomy.cat_id,
         l2: skill.taxonomy.subcat_id,
+        l2Name: l2Info?.nameI18n?.en || `L2-${skill.taxonomy.subcat_id}`,
       };
     }
     coverageData[key].count++;

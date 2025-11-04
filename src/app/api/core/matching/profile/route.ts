@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
-import { assignments, matchingProfiles, skills } from '@/db/schema';
+import { assignments, matchingProfiles, skills, matches } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { scrubDisallowedFields } from '@/lib/core/matching/firewall';
 import { getOrSet, CACHE_KEYS, CACHE_TTL } from '@/lib/cache';
+import { emitFirstMatchShown } from '@/lib/analytics/events';
 import {
   scoreValues,
   scoreCauses,
@@ -228,6 +229,26 @@ export async function POST(request: NextRequest) {
     const topK = results.slice(0, k);
 
     const duration = Date.now() - startTime;
+
+    // Emit first match shown event for TTFQI tracking (only if there are matches)
+    if (topK.length > 0) {
+      try {
+        // Check if this is the user's first match ever
+        const hasSeenMatchesBefore = await db.query.matches.findFirst({
+          where: eq(matches.profileId, user.id),
+        });
+
+        if (!hasSeenMatchesBefore) {
+          await emitFirstMatchShown(user.id, topK[0].assignmentId, {
+            score: topK[0].score,
+            mode,
+          });
+        }
+      } catch (analyticsError) {
+        console.error('Failed to emit first match shown event:', analyticsError);
+        // Don't fail the request if analytics fails
+      }
+    }
 
     log.info('match.profile.computed', {
       userId: user.id,

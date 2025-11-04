@@ -1,12 +1,6 @@
 import { requireAuth } from '@/lib/auth';
 import Link from 'next/link';
-import { WhileAwayCard } from '@/components/dashboard/WhileAwayCard';
-import { GoalsCard } from '@/components/dashboard/GoalsCard';
-import { TasksCard } from '@/components/dashboard/TasksCard';
-import { ProjectsCard } from '@/components/dashboard/ProjectsCard';
-import { MatchingResultsCard } from '@/components/dashboard/MatchingResultsCard';
-import { ImpactSnapshotCard } from '@/components/dashboard/ImpactSnapshotCard';
-import { ExploreCard } from '@/components/dashboard/ExploreCard';
+import { DashboardClient } from './DashboardClient';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { getDashboardMetrics } from '@/lib/dashboard/metrics';
@@ -164,24 +158,8 @@ export default async function IndividualHomePage() {
             )}
           </section>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* While Away - hidden by default */}
-            <div className="lg:col-span-3">
-              <WhileAwayCard />
-            </div>
-
-            {/* Row 1: Goals | Tasks | Projects */}
-            <GoalsCard />
-            <TasksCard />
-            <ProjectsCard />
-
-            {/* Row 2: Matching (2 cols) | Impact (1 col) */}
-            <MatchingResultsCard className="lg:col-span-2" />
-            <ImpactSnapshotCard />
-
-            {/* Row 3: Explore (full 3 cols) */}
-            <ExploreCard />
-          </div>
+          {/* Customizable Dashboard */}
+          <DashboardClient />
         </div>
       </div>
     </div>

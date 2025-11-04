@@ -4,6 +4,7 @@ import { sendSkillVerificationRequest } from '@/lib/email';
 import crypto from 'crypto';
 import { z } from 'zod';
 import { log } from '@/lib/log';
+import { notifyVerificationRequested } from '@/lib/notifications';
 
 const SkillVerificationRequestSchema = z.object({
   skillId: z.string().min(1),
@@ -143,6 +144,28 @@ export async function POST(request: NextRequest) {
       skillId,
       verifierEmail,
     });
+
+    // Send in-app notification if verifier has a Proofound account
+    try {
+      const { data: verifierProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', verifierEmail.toLowerCase())
+        .maybeSingle();
+
+      if (verifierProfile) {
+        const requesterName = profile.display_name || profile.handle || 'Someone';
+        await notifyVerificationRequested(
+          verifierProfile.id,
+          verificationRequest.id,
+          requesterName,
+          skillName
+        );
+      }
+    } catch (notifError) {
+      console.error('Failed to send verification notification:', notifError);
+      // Don't fail the request if notification fails
+    }
 
     return NextResponse.json({
       success: true,

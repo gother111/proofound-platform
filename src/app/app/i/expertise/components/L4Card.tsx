@@ -173,6 +173,7 @@ export function L4Card({ skill, onEdit }: L4CardProps) {
         <Button 
           size="sm" 
           variant="outline"
+          onClick={onEdit}
           className="flex-1 text-[#4A5943] border-[#4A5943] hover:bg-[#EEF1EA]"
         >
           <FileText className="h-4 w-4 mr-2" />
@@ -181,6 +182,7 @@ export function L4Card({ skill, onEdit }: L4CardProps) {
         <Button 
           size="sm" 
           variant="outline"
+          onClick={onEdit}
           className="flex-1 text-[#4A5943] border-[#4A5943] hover:bg-[#EEF1EA]"
         >
           <CheckCircle2 className="h-4 w-4 mr-2" />

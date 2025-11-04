@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
-import { contracts, organizationMembers } from '@/db/schema';
+import { contracts, organizationMembers, profiles, organizations, assignments } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { log } from '@/lib/log';
+import { sendContractSignedEmail } from '@/lib/email/notifications';
+import { createClient } from '@/lib/supabase/server';
+import { emitContractSigned } from '@/lib/analytics/events';
 
 export const dynamic = 'force-dynamic';
 
@@ -173,6 +176,67 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       isCandidate,
       isOrgMember: !!isOrgMember,
     });
+
+    // Send email notification if contract is now fully signed
+    if (updatedContract.userAttestation && updatedContract.orgAttestation) {
+      // Check if this update just completed the signing
+      const wasJustSigned =
+        existingContract.userAttestation !== updatedContract.userAttestation ||
+        existingContract.orgAttestation !== updatedContract.orgAttestation;
+
+      if (wasJustSigned) {
+        try {
+          const supabase = await createClient();
+
+          // Get candidate profile
+          const candidateProfile = await db.query.profiles.findFirst({
+            where: eq(profiles.id, updatedContract.userId),
+          });
+
+          // Get candidate email from Supabase auth
+          const { data: authData } = await supabase.auth.admin.getUserById(
+            updatedContract.userId
+          );
+
+          // Get organization name
+          const org = await db.query.organizations.findFirst({
+            where: eq(organizations.id, updatedContract.orgId),
+          });
+
+          // Get assignment details
+          const assignment = await db.query.assignments.findFirst({
+            where: eq(assignments.id, updatedContract.assignmentId),
+          });
+
+          // Emit contract signed analytics event for TTSC tracking
+          try {
+            await emitContractSigned(updatedContract.userId, updatedContract.assignmentId, {
+              contractType: updatedContract.contractType,
+              contractId: updatedContract.id,
+            });
+          } catch (analyticsError) {
+            console.error('Failed to emit contract signed event:', analyticsError);
+            // Don't fail the request if analytics fails
+          }
+
+          // Send email to candidate
+          if (candidateProfile && authData?.user?.email && org) {
+            await sendContractSignedEmail({
+              to: authData.user.email,
+              candidateName: candidateProfile.displayName || 'Candidate',
+              organizationName: org.displayName,
+              contractType: updatedContract.contractType || 'employment',
+              assignmentTitle: assignment?.role,
+              nextSteps:
+                'You will receive further details from the organization shortly about your start date and onboarding process.',
+            });
+          }
+        } catch (emailError) {
+          console.error('Failed to send contract signed email:', emailError);
+          // Don't fail the request if email fails
+        }
+      }
+    }
 
     return NextResponse.json({ contract: updatedContract });
   } catch (error) {

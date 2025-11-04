@@ -29,6 +29,10 @@ import { CheckInDialog } from '@/components/zen/CheckInDialog';
 import { ReflectionDialog } from '@/components/zen/ReflectionDialog';
 import { WellBeingDeltaWidget } from '@/components/wellbeing/WellBeingDeltaWidget';
 import { WellBeingTrendChart } from '@/components/wellbeing/WellBeingTrendChart';
+import { WellBeingDeltaChart } from '@/components/wellbeing/WellBeingDeltaChart';
+import { CheckInHistory } from '@/components/wellbeing/CheckInHistory';
+import { SelfAssessmentDialog } from '@/components/wellbeing/SelfAssessmentDialog';
+import { WorkScheduleEditor } from '@/components/wellbeing/WorkScheduleEditor';
 import { toast } from 'sonner';
 
 const riskStates = [
@@ -89,6 +93,8 @@ export default function ZenHubPage() {
   const [isLoadingOptIn, setIsLoadingOptIn] = useState(true);
   const [showCheckInDialog, setShowCheckInDialog] = useState(false);
   const [showReflectionDialog, setShowReflectionDialog] = useState(false);
+  const [showPhq2Dialog, setShowPhq2Dialog] = useState(false);
+  const [showGad2Dialog, setShowGad2Dialog] = useState(false);
 
   // Well-being delta and trend data
   const [deltaData, setDeltaData] = useState<any>(null);
@@ -247,6 +253,37 @@ export default function ZenHubPage() {
                     </div>
                   )}
                 </div>
+
+                {/* Self-Assessment Quick Access */}
+                {!isLoadingOptIn && optInStatus?.optedIn && (
+                  <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 rounded-lg">
+                    <h3 className="text-sm font-semibold text-[#2D3330] dark:text-foreground mb-2 flex items-center gap-2">
+                      <Info className="w-4 h-4" />
+                      Mental Health Screenings
+                    </h3>
+                    <p className="text-xs text-[#6B6760] dark:text-muted-foreground mb-3">
+                      Validated 2-minute questionnaires to assess your mental well-being
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => setShowPhq2Dialog(true)}
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 border-blue-300 text-blue-700 hover:bg-blue-100 dark:border-blue-700 dark:text-blue-300"
+                      >
+                        Depression (PHQ-2)
+                      </Button>
+                      <Button
+                        onClick={() => setShowGad2Dialog(true)}
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 border-blue-300 text-blue-700 hover:bg-blue-100 dark:border-blue-700 dark:text-blue-300"
+                      >
+                        Anxiety (GAD-2)
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Privacy Banner - Show if not opted in or banner not acknowledged */}
@@ -339,6 +376,16 @@ export default function ZenHubPage() {
               <WellBeingTrendChart trend={trendData} />
             )}
 
+            {/* Check-In History */}
+            {!isLoadingOptIn && optInStatus?.optedIn && (
+              <CheckInHistory userId={session?.user?.id || ''} />
+            )}
+
+            {/* Work Schedule Editor */}
+            {!isLoadingOptIn && optInStatus?.optedIn && (
+              <WorkScheduleEditor userId={session?.user?.id || ''} />
+            )}
+
             <SupportChannels />
           </aside>
         </div>
@@ -355,6 +402,26 @@ export default function ZenHubPage() {
         open={showReflectionDialog}
         onOpenChange={setShowReflectionDialog}
         onSuccess={refreshData}
+      />
+
+      <SelfAssessmentDialog
+        open={showPhq2Dialog}
+        onOpenChange={setShowPhq2Dialog}
+        type="phq2"
+        onComplete={(score, severity) => {
+          toast.success(`PHQ-2 Assessment completed. Score: ${score}/6 (${severity})`);
+          refreshData();
+        }}
+      />
+
+      <SelfAssessmentDialog
+        open={showGad2Dialog}
+        onOpenChange={setShowGad2Dialog}
+        type="gad2"
+        onComplete={(score, severity) => {
+          toast.success(`GAD-2 Assessment completed. Score: ${score}/6 (${severity})`);
+          refreshData();
+        }}
       />
     </div>
   );

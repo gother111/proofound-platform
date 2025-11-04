@@ -5,6 +5,7 @@ import { db } from '@/db';
 import { matchingProfiles, skills } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { log } from '@/lib/log';
+import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -106,6 +107,25 @@ export async function GET() {
  * Creates or updates the current user's matching profile.
  */
 export async function PUT(request: NextRequest) {
+  // Apply rate limiting (30 req/min for matching endpoints)
+  const { allowed, result } = await checkRateLimit(request, RATE_LIMITS.matching);
+  if (!allowed) {
+    return NextResponse.json(
+      {
+        error: 'Too many requests',
+        message: 'Rate limit exceeded. Please try again later.',
+        retryAfter: Math.ceil((result.reset - Date.now()) / 1000),
+      },
+      {
+        status: 429,
+        headers: {
+          ...getRateLimitHeaders(result),
+          'Retry-After': Math.ceil((result.reset - Date.now()) / 1000).toString(),
+        },
+      }
+    );
+  }
+
   try {
     const user = await requireAuth();
     const body = await request.json();
@@ -158,6 +178,21 @@ export async function PUT(request: NextRequest) {
       userId: user.id,
       skillCount: skillsInput?.length || 0,
     });
+
+    // Track profile activation for metrics (when profile becomes matchable)
+    // This marks the profile as ready to receive matches
+    try {
+      const { emitProfileActivated } = await import('@/lib/analytics/events');
+      await emitProfileActivated(user.id, {
+        skillCount: skillsInput?.length || 0,
+        hasAvailability: !!(profileData.availabilityEarliest && profileData.availabilityLatest),
+        hasCompensation: !!(profileData.compMin && profileData.compMax),
+        workMode: profileData.workMode,
+      });
+    } catch (analyticsError) {
+      // Log but don't fail the request
+      console.error('Failed to track profile activation:', analyticsError);
+    }
 
     // Fetch and return updated profile
     const updatedProfile = await db.query.matchingProfiles.findFirst({

@@ -207,6 +207,70 @@ export async function emitAssignmentPublished(
 }
 
 /**
+ * Emit assignment step started event
+ */
+export async function emitAssignmentStepStarted(
+  orgId: string,
+  assignmentId: string,
+  stepNumber: number,
+  stepName: string
+) {
+  return emitEvent({
+    eventType: 'assignment_step_started',
+    orgId,
+    entityType: 'assignment',
+    entityId: assignmentId,
+    properties: {
+      stepNumber,
+      stepName,
+      timestamp: new Date().toISOString(),
+    },
+  });
+}
+
+/**
+ * Emit assignment step completed event
+ */
+export async function emitAssignmentStepCompleted(
+  orgId: string,
+  assignmentId: string,
+  stepNumber: number,
+  stepName: string,
+  timeSpentSeconds?: number
+) {
+  return emitEvent({
+    eventType: 'assignment_step_completed',
+    orgId,
+    entityType: 'assignment',
+    entityId: assignmentId,
+    properties: {
+      stepNumber,
+      stepName,
+      timeSpentSeconds,
+      timestamp: new Date().toISOString(),
+    },
+  });
+}
+
+/**
+ * Emit assignment creation started event
+ */
+export async function emitAssignmentCreationStarted(
+  orgId: string,
+  assignmentId: string
+) {
+  return emitEvent({
+    eventType: 'assignment_creation_started',
+    orgId,
+    entityType: 'assignment',
+    entityId: assignmentId,
+    properties: {
+      timestamp: new Date().toISOString(),
+    },
+  });
+}
+
+/**
  * Emit interview scheduled event
  */
 export async function emitInterviewScheduled(
@@ -240,6 +304,129 @@ export async function emitContractSigned(
     userId,
     entityType: 'assignment',
     entityId: assignmentId,
+    properties: properties || {},
+  });
+}
+
+/**
+ * PRD METRICS TRACKING
+ * Functions below implement PRD-specified metrics instrumentation
+ */
+
+/**
+ * Emit user signup event (start of TTFQI and TTV timers)
+ */
+export async function emitUserSignup(userId: string, properties?: Record<string, any>) {
+  return emitEvent({
+    eventType: 'user_signup',
+    userId,
+    entityType: 'profile',
+    entityId: userId,
+    properties: properties || {},
+  });
+}
+
+/**
+ * Emit onboarding complete event
+ */
+export async function emitOnboardingComplete(userId: string, properties?: Record<string, any>) {
+  return emitEvent({
+    eventType: 'user_onboarding_complete',
+    userId,
+    entityType: 'profile',
+    entityId: userId,
+    properties: properties || {},
+  });
+}
+
+/**
+ * Emit first match generated event (internal, when algorithm creates match)
+ */
+export async function emitFirstMatchGenerated(
+  userId: string,
+  matchId: string,
+  properties?: Record<string, any>
+) {
+  return emitEvent({
+    eventType: 'first_match_generated',
+    userId,
+    entityType: 'match',
+    entityId: matchId,
+    properties: properties || {},
+  });
+}
+
+/**
+ * Emit first match shown event (TTFQI completion)
+ * This marks the end of Time to First Qualified Introduction
+ */
+export async function emitFirstMatchShown(
+  userId: string,
+  matchId: string,
+  properties?: Record<string, any>
+) {
+  return emitEvent({
+    eventType: 'first_match_shown',
+    userId,
+    entityType: 'match',
+    entityId: matchId,
+    properties: properties || {},
+  });
+}
+
+/**
+ * Emit first offer received event (TTV completion)
+ * This marks the end of Time to Value
+ */
+export async function emitFirstOfferReceived(
+  userId: string,
+  contractId: string,
+  properties?: Record<string, any>
+) {
+  return emitEvent({
+    eventType: 'first_offer_received',
+    userId,
+    entityType: 'contract',
+    entityId: contractId,
+    properties: properties || {},
+  });
+}
+
+/**
+ * Emit conversation started event
+ */
+export async function emitConversationStarted(
+  userId: string,
+  conversationId: string,
+  properties?: Record<string, any>
+) {
+  return emitEvent({
+    eventType: 'conversation_started',
+    userId,
+    entityType: 'conversation',
+    entityId: conversationId,
+    properties: properties || {},
+  });
+}
+
+/**
+ * Emit well-being check-in event
+ */
+export async function emitWellbeingCheckin(userId: string, properties?: Record<string, any>) {
+  return emitEvent({
+    eventType: 'wellbeing_checkin',
+    userId,
+    properties: properties || {},
+  });
+}
+
+/**
+ * Emit well-being reflection event
+ */
+export async function emitWellbeingReflection(userId: string, properties?: Record<string, any>) {
+  return emitEvent({
+    eventType: 'wellbeing_reflection',
+    userId,
     properties: properties || {},
   });
 }

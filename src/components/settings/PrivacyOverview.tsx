@@ -3,11 +3,13 @@
 import { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Shield, Download, Eye, Trash2, FileText, Database, Activity, MessagesSquare, Target } from 'lucide-react';
+import { Shield, Download, Upload, Eye, Trash2, FileText, Database, Activity, MessagesSquare, Target, Settings } from 'lucide-react';
 import { DataBreakdown } from './DataBreakdown';
 import { AuditLogTable } from './AuditLogTable';
 import { DeleteAccount } from './DeleteAccount';
 import { DataImportButton } from './DataImportButton';
+import { EnhancedDataImportDialog } from './EnhancedDataImportDialog';
+import { VisibilitySettingsModal } from '../privacy/VisibilitySettingsModal';
 
 interface PrivacyOverviewProps {
   userId: string;
@@ -17,6 +19,8 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
   const [showDataBreakdown, setShowDataBreakdown] = useState(false);
   const [showAuditLog, setShowAuditLog] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
+  const [showVisibilitySettings, setShowVisibilitySettings] = useState(false);
+  const [showImportDialog, setShowImportDialog] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
   const handleExportData = async () => {
@@ -108,14 +112,27 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
               </p>
               <div className="flex flex-wrap gap-3">
                 <Button
+                  onClick={() => setShowVisibilitySettings(true)}
+                  className="bg-proofound-forest hover:bg-proofound-forest/90"
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Privacy Settings
+                </Button>
+                <Button
+                  variant="outline"
                   onClick={handleExportData}
                   disabled={isExporting}
-                  className="bg-proofound-forest hover:bg-proofound-forest/90"
                 >
                   <Download className="h-4 w-4 mr-2" />
                   {isExporting ? 'Exporting...' : 'Download My Data'}
                 </Button>
-                <DataImportButton />
+                <Button
+                  variant="outline"
+                  onClick={() => setShowImportDialog(true)}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Import Data
+                </Button>
                 <Button
                   variant="outline"
                   onClick={() => setShowAuditLog(true)}
@@ -375,6 +392,18 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
           </p>
         </CardContent>
       </Card>
+
+      {/* Visibility Settings Modal */}
+      <VisibilitySettingsModal
+        open={showVisibilitySettings}
+        onOpenChange={setShowVisibilitySettings}
+      />
+
+      {/* Enhanced Data Import Dialog */}
+      <EnhancedDataImportDialog
+        open={showImportDialog}
+        onOpenChange={setShowImportDialog}
+      />
     </div>
   );
 }

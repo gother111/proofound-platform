@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { requireAuth } from '@/lib/auth';
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
+import { notifyVerificationCompleted } from '@/lib/notifications';
 
 const RespondSchema = z.object({
   action: z.enum(['accept', 'decline']),
@@ -90,7 +91,28 @@ export async function POST(
         { status: 500 }
       );
     }
-    
+
+    // Notify the requester that verification was completed
+    try {
+      const { data: requesterProfile } = await supabase
+        .from('profiles')
+        .select('display_name, handle')
+        .eq('id', verificationRequest.requester_id)
+        .single();
+
+      const verifierName = requesterProfile?.display_name || requesterProfile?.handle || 'Someone';
+
+      await notifyVerificationCompleted(
+        verificationRequest.requester_id,
+        requestId,
+        verifierName,
+        validated.action === 'accept'
+      );
+    } catch (notifError) {
+      console.error('Failed to send verification completed notification:', notifError);
+      // Don't fail the request if notification fails
+    }
+
     return NextResponse.json({
       request: updated,
       message: `Verification request ${validated.action === 'accept' ? 'accepted' : 'declined'} successfully`,

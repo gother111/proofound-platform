@@ -19,6 +19,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
 import { DataErrorBoundary } from '@/components/ErrorBoundary';
+import { TypingIndicator } from './TypingIndicator';
+import { ReadReceipt } from './ReadReceipt';
 
 export interface Message {
   id: string;
@@ -214,13 +216,10 @@ export function MessageThread({
                       {format(new Date(message.sentAt), 'HH:mm')}
                     </span>
                     {isOwnMessage && (
-                      <>
-                        {message.readAt ? (
-                          <CheckCheck className="h-3 w-3 text-blue-600" />
-                        ) : (
-                          <Check className="h-3 w-3 text-[#6B6760]" />
-                        )}
-                      </>
+                      <ReadReceipt
+                        status={message.readAt ? 'read' : 'delivered'}
+                        timestamp={message.readAt}
+                      />
                     )}
                   </div>
                 </div>
@@ -263,6 +262,9 @@ export function MessageThread({
               </div>
             </div>
           )}
+
+          {/* Typing Indicator */}
+          {isTyping && <TypingIndicator isTyping={true} displayName={displayName} />}
 
           <div ref={messagesEndRef} />
         </div>

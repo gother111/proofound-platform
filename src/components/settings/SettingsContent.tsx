@@ -3,9 +3,15 @@
 import { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import { PrivacyOverview } from './PrivacyOverview';
 import { VerificationStatus } from './VerificationStatus';
 import { LinkedInConnect } from './LinkedInConnect';
+import { resetTour } from '@/actions/tour';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { RotateCcw } from 'lucide-react';
+import { CustomizableDashboard } from '../dashboard/CustomizableDashboard';
 
 interface SettingsContentProps {
   userId: string;
@@ -13,6 +19,27 @@ interface SettingsContentProps {
 
 export function SettingsContent({ userId }: SettingsContentProps) {
   const [activeTab, setActiveTab] = useState('account');
+  const [isResettingTour, setIsResettingTour] = useState(false);
+  const router = useRouter();
+
+  const handleRestartTour = async () => {
+    setIsResettingTour(true);
+    try {
+      const result = await resetTour();
+      if (result.success) {
+        toast.success('Tour reset! Refresh the page to see it again.');
+        // Refresh the page to trigger the tour
+        router.refresh();
+      } else {
+        toast.error('Failed to reset tour. Please try again.');
+      }
+    } catch (error) {
+      console.error('Failed to reset tour:', error);
+      toast.error('Failed to reset tour. Please try again.');
+    } finally {
+      setIsResettingTour(false);
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto min-h-screen bg-proofound-parchment dark:bg-background p-6">
@@ -28,6 +55,7 @@ export function SettingsContent({ userId }: SettingsContentProps) {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="bg-white dark:bg-slate-800 border border-proofound-stone dark:border-border">
           <TabsTrigger value="account">Account</TabsTrigger>
+          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="integrations">Integrations</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="privacy">Privacy & Data</TabsTrigger>
@@ -108,6 +136,41 @@ export function SettingsContent({ userId }: SettingsContentProps) {
               </select>
             </CardContent>
           </Card>
+
+          <Card className="border-proofound-stone dark:border-border rounded-2xl">
+            <CardHeader>
+              <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
+                Help & Support
+              </CardTitle>
+              <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
+                Get help and learn about platform features
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <p className="text-sm font-medium text-proofound-charcoal dark:text-foreground mb-2">
+                  Platform Tour
+                </p>
+                <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground mb-3">
+                  Want a refresher? Restart the guided tour to learn about key features again.
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={handleRestartTour}
+                  disabled={isResettingTour}
+                  className="border-proofound-forest text-proofound-forest hover:bg-proofound-forest/5"
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  {isResettingTour ? 'Restarting...' : 'Restart Tour'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Dashboard Tab */}
+        <TabsContent value="dashboard" className="space-y-6">
+          <CustomizableDashboard userId={userId} persona="individual" />
         </TabsContent>
 
         {/* Integrations Tab */}

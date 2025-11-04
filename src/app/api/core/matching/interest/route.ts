@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
-import { matchInterest, assignments, matches } from '@/db/schema';
+import { matchInterest, assignments, matches, profiles } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { emitMatchActioned } from '@/lib/analytics/events';
+import { notifyIntroAccepted } from '@/lib/notifications';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,45 +45,49 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Assignment not found' }, { status: 404 });
     }
 
-    // Record interest
-    const interestData = {
-      actorProfileId: user.id,
-      assignmentId,
-      targetProfileId: targetProfileId || null,
-    };
+    // Record interest and check mutual interest in a transaction
+    const mutualInterest = await db.transaction(async (tx) => {
+      const interestData = {
+        actorProfileId: user.id,
+        assignmentId,
+        targetProfileId: targetProfileId || null,
+      };
 
-    // Insert interest (ignore if already exists due to unique constraint)
-    try {
-      await db.insert(matchInterest).values(interestData);
-    } catch (error) {
-      // Likely duplicate - that's ok, continue to check mutual interest
-    }
+      // Insert interest (ignore if already exists due to unique constraint)
+      try {
+        await tx.insert(matchInterest).values(interestData);
+      } catch (error) {
+        // Likely duplicate - that's ok, continue to check mutual interest
+      }
 
-    // Check for mutual interest
-    let mutualInterest = false;
+      // Check for mutual interest
+      let isMutual = false;
 
-    if (targetProfileId) {
-      // Org → Candidate: check if candidate expressed interest in this assignment
-      const reciprocal = await db.query.matchInterest.findFirst({
-        where: and(
-          eq(matchInterest.actorProfileId, targetProfileId),
-          eq(matchInterest.assignmentId, assignmentId),
-          eq(matchInterest.targetProfileId, user.id)
-        ),
-      });
+      if (targetProfileId) {
+        // Org → Candidate: check if candidate expressed interest in this assignment
+        const reciprocal = await tx.query.matchInterest.findFirst({
+          where: and(
+            eq(matchInterest.actorProfileId, targetProfileId),
+            eq(matchInterest.assignmentId, assignmentId),
+            eq(matchInterest.targetProfileId, user.id)
+          ),
+        });
 
-      mutualInterest = !!reciprocal;
-    } else {
-      // Individual → Assignment: check if org expressed interest in this individual
-      const reciprocal = await db.query.matchInterest.findFirst({
-        where: and(
-          eq(matchInterest.assignmentId, assignmentId),
-          eq(matchInterest.targetProfileId, user.id)
-        ),
-      });
+        isMutual = !!reciprocal;
+      } else {
+        // Individual → Assignment: check if org expressed interest in this individual
+        const reciprocal = await tx.query.matchInterest.findFirst({
+          where: and(
+            eq(matchInterest.assignmentId, assignmentId),
+            eq(matchInterest.targetProfileId, user.id)
+          ),
+        });
 
-      mutualInterest = !!reciprocal;
-    }
+        isMutual = !!reciprocal;
+      }
+
+      return isMutual;
+    });
 
     log.info('match.interest.recorded', {
       userId: user.id,
@@ -126,6 +131,35 @@ export async function POST(request: NextRequest) {
               score,
               pac,
               qualificationMet,
+            });
+          }
+
+          // Send notifications to both parties about mutual interest
+          try {
+            // Get profile names for notification
+            const actorProfile = await db.query.profiles.findFirst({
+              where: eq(profiles.id, user.id),
+            });
+
+            const otherProfile = targetProfileId
+              ? await db.query.profiles.findFirst({
+                  where: eq(profiles.id, targetProfileId),
+                })
+              : null;
+
+            const actorName = actorProfile?.displayName || actorProfile?.handle || 'Someone';
+            const otherName = otherProfile?.displayName || otherProfile?.handle || 'Someone';
+
+            // Notify the current user
+            await notifyIntroAccepted(user.id, match.id, otherName);
+
+            // Notify the other party
+            if (otherUserId && otherUserId !== user.id) {
+              await notifyIntroAccepted(otherUserId, match.id, actorName);
+            }
+          } catch (notifError) {
+            log.error('mutual-interest-notification.failed', {
+              error: notifError instanceof Error ? notifError.message : 'Unknown error',
             });
           }
         }

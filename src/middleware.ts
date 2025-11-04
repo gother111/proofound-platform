@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getPersona } from '@/lib/auth';
 import { nanoid } from 'nanoid';
 import { logContext, log } from '@/lib/log';
+import { csrfProtection } from '@/lib/csrf';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -18,10 +19,21 @@ export async function middleware(request: NextRequest) {
     userAgent: request.headers.get('user-agent') || undefined,
   };
 
-  // Skip middleware for public routes, API routes, and static files
+  // CSRF protection for API routes (mutating methods only)
+  if (pathname.startsWith('/api')) {
+    const csrfError = csrfProtection(request);
+    if (csrfError) {
+      csrfError.headers.set('x-request-id', requestId);
+      return csrfError;
+    }
+    const response = NextResponse.next();
+    response.headers.set('x-request-id', requestId);
+    return response;
+  }
+
+  // Skip middleware for public routes and static files
   if (
     pathname.startsWith('/_next') ||
-    pathname.startsWith('/api') ||
     pathname.startsWith('/auth') ||
     pathname.startsWith('/login') ||
     pathname.startsWith('/signup') ||

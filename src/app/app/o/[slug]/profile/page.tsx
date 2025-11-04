@@ -1,4 +1,4 @@
-import { requireAuth, getActiveOrg, assertOrgRole } from '@/lib/auth';
+import { requireAuth, getActiveOrg } from '@/lib/auth';
 import { notFound } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -6,6 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { updateOrganization } from '@/actions/org';
 import { EmptyOrganizationProfileView } from '@/components/profile/EmptyOrganizationProfileView';
+import { StructureManagerClient } from '@/components/organization/StructureManagerClient';
+import { CultureEditor } from '@/components/organization/CultureEditor';
+import { OrganizationCausesEditor } from '@/components/organization/OrganizationCausesEditor';
+import { ImpactDashboard } from '@/components/organization/ImpactDashboard';
+import { PartnershipsManager } from '@/components/organization/PartnershipsManager';
+import { GoalsManager } from '@/components/organization/GoalsManager';
+import { OrganizationVisibilitySettings } from '@/components/organization/OrganizationVisibilitySettings';
 
 export const dynamic = 'force-dynamic';
 
@@ -146,23 +153,6 @@ export default async function OrganizationProfilePage({
             </div>
 
             <div>
-              <Label htmlFor="causes" className="text-proofound-charcoal dark:text-foreground">
-                Causes (comma-separated)
-              </Label>
-              <Input
-                id="causes"
-                name="causes"
-                defaultValue={org.causes?.join(', ') || ''}
-                placeholder="e.g., Climate Justice, Economic Equity, Education Access"
-                disabled={!canEdit}
-                className="border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
-              />
-              <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground/60 mt-1">
-                Up to 5 causes recommended (PRD requirement). Separate with commas.
-              </p>
-            </div>
-
-            <div>
               <Label htmlFor="website" className="text-proofound-charcoal dark:text-foreground">
                 Website
               </Label>
@@ -213,6 +203,64 @@ export default async function OrganizationProfilePage({
           </div>
         </CardContent>
       </Card>
+
+      {/* Organizational Structure Section */}
+      <div className="space-y-4">
+        <StructureManagerClient orgId={org.id} />
+      </div>
+
+      {/* Work Culture Section */}
+      <div className="space-y-4">
+        <CultureEditor
+          orgId={org.id}
+          initialCulture={org.workCulture as any}
+          canEdit={canEdit}
+        />
+      </div>
+
+      {/* Causes Section */}
+      <div className="space-y-4">
+        <OrganizationCausesEditor
+          orgId={org.id}
+          initialCauses={org.causes || []}
+          canEdit={canEdit}
+        />
+      </div>
+
+      {/* Impact Section */}
+      <div className="space-y-4">
+        <ImpactDashboard
+          orgId={org.id}
+          orgName={org.displayName}
+          canEdit={canEdit}
+        />
+      </div>
+
+      {/* Partnerships Section */}
+      <div className="space-y-4">
+        <PartnershipsManager
+          orgId={org.id}
+          canEdit={canEdit}
+        />
+      </div>
+
+      {/* Goals Section */}
+      <div className="space-y-4">
+        <GoalsManager
+          orgId={org.id}
+          canEdit={canEdit}
+        />
+      </div>
+
+      {/* Visibility Settings Section */}
+      {canEdit && (
+        <div className="space-y-4">
+          <OrganizationVisibilitySettings
+            orgId={org.id}
+            canEdit={canEdit}
+          />
+        </div>
+      )}
     </div>
   );
 }

@@ -1,15 +1,16 @@
 /**
  * Messages API
- * 
+ *
  * Send text-only messages within conversations
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
-import { messages, conversations } from '@/db/schema';
+import { messages, conversations, profiles } from '@/db/schema';
 import { eq, and, or } from 'drizzle-orm';
 import { z } from 'zod';
+import { notifyMessageReceived } from '@/lib/notifications';
 
 const SendMessageSchema = z.object({
   conversationId: z.string().uuid(),
@@ -81,13 +82,31 @@ export async function POST(request: NextRequest) {
 
     // Update conversation's lastMessageAt and preview
     const preview = content.length > 100 ? content.substring(0, 100) + '...' : content;
-    
+
     await db
       .update(conversations)
       .set({
         lastMessageAt: new Date(),
       })
       .where(eq(conversations.id, conversationId));
+
+    // Send notification to the recipient
+    try {
+      const recipientId =
+        conv.participantOneId === user.id ? conv.participantTwoId : conv.participantOneId;
+
+      // Get sender's profile for notification
+      const senderProfile = await db.query.profiles.findFirst({
+        where: eq(profiles.id, user.id),
+      });
+
+      const senderName = senderProfile?.displayName || senderProfile?.handle || 'Someone';
+
+      await notifyMessageReceived(recipientId, conversationId, senderName, content);
+    } catch (notifError) {
+      console.error('Failed to send message notification:', notifError);
+      // Don't fail the request if notification fails
+    }
 
     // TODO: Emit analytics event for message sent
     // TODO: Send real-time notification via Supabase Realtime

@@ -1,0 +1,47 @@
+# Artillery Load Test: Metrics API
+#
+# Tests the metrics calculation endpoint under load
+# Run with: artillery run tests/load/artillery-metrics.yml
+
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 60
+      arrivalRate: 10
+      name: "Warm up"
+
+    - duration: 180
+      arrivalRate: 30
+      name: "Sustained load"
+
+    - duration: 60
+      arrivalRate: 60
+      name: "Peak load"
+
+  ensure:
+    maxErrorRate: 1
+    p95: 200    # Metrics API should be fast when cached
+    p99: 500
+
+scenarios:
+  - name: "Fetch all metrics"
+    flow:
+      - get:
+          url: "/api/metrics?metric=all"
+          expect:
+            - statusCode: [200, 403]  # 403 if not org member (expected)
+            - contentType: json
+
+      - think: 2
+
+      - get:
+          url: "/api/metrics?metric=ttsc"
+          expect:
+            - statusCode: [200, 403]
+
+  - name: "Fetch specific metrics with date range"
+    flow:
+      - get:
+          url: "/api/metrics?metric=pac&startDate=2024-01-01&endDate=2024-03-31"
+          expect:
+            - statusCode: [200, 403]

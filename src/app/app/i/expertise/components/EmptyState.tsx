@@ -2,13 +2,14 @@
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Sparkles, Plus, BookOpen } from 'lucide-react';
+import { Sparkles, Plus, BookOpen, FileText } from 'lucide-react';
 
 interface EmptyStateProps {
   onAddSkill: () => void;
+  onImportCV?: () => void;
 }
 
-export function EmptyState({ onAddSkill }: EmptyStateProps) {
+export function EmptyState({ onAddSkill, onImportCV }: EmptyStateProps) {
   return (
     <div className="min-h-[600px] flex items-center justify-center px-6 py-12">
       <Card className="max-w-2xl w-full border border-[#D8D2C8] bg-white/90 p-12 text-center shadow-sm">
@@ -26,19 +27,33 @@ export function EmptyState({ onAddSkill }: EmptyStateProps) {
 
         {/* Description */}
         <p className="text-[#6B6760] mb-8 max-w-lg mx-auto">
-          Start building your skills map by adding your first capability. Choose from over 20,000 
-          curated skills across 6 major domains, or create your own.
+          Start building your skills map by adding your first capability. Import from your CV/resume,
+          choose from over 20,000 curated skills, or create your own.
         </p>
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          {onImportCV && (
+            <Button
+              size="lg"
+              onClick={onImportCV}
+              className="bg-[#4A5943] text-white hover:bg-[#3C4936]"
+            >
+              <FileText className="mr-2 h-5 w-5" />
+              Import from CV/Resume
+            </Button>
+          )}
           <Button
             size="lg"
             onClick={onAddSkill}
-            className="bg-[#4A5943] text-white hover:bg-[#3C4936]"
+            variant={onImportCV ? "outline" : "default"}
+            className={onImportCV
+              ? "border-[#4A5943] text-[#4A5943] hover:bg-[#EEF1EA]"
+              : "bg-[#4A5943] text-white hover:bg-[#3C4936]"
+            }
           >
             <Plus className="mr-2 h-5 w-5" />
-            Add your first skill
+            Add manually
           </Button>
           <Button
             size="lg"

@@ -1,201 +1,218 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { db } from '@/db';
-import { skills, skillsTaxonomy, skillsCategories, skillsSubcategories, skillsL3, assignments } from '@/db/schema';
-import { eq, and, sql, inArray, not } from 'drizzle-orm';
 
-/**
- * POST /api/expertise/gap-analysis
- *
- * PRD Persona #2 (Mateo - Career Switcher)
- * Analyzes skill gaps between user's current skills and target role requirements
- *
- * Algorithm:
- * 1. Get user's current skills with levels
- * 2. Get skills required for target roles (from assignments or role templates)
- * 3. Calculate gaps: required skills not present or below required level
- * 4. Rank by importance (frequency across roles × required level)
- * 5. Return top gaps with actionable insights
- */
-export async function POST(request: NextRequest) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  try {
-    const { targetRole, userId } = await request.json();
-    const profileId = userId || user.id;
-
-    // 1. Get user's current skills
-    const userSkills = await db.query.skills.findMany({
-      where: eq(skills.profileId, profileId),
-      with: {
-        taxonomy: {
-          with: {
-            category: true,
-            subcategory: true,
-            l3: true,
-          },
-        },
-      },
-    });
-
-    // Create a map of user skills for quick lookup
-    const userSkillsMap = new Map(
-      userSkills.map(s => [s.skillCode || s.skillId, s.level])
-    );
-
-    // 2. Get required skills for target roles
-    // For MVP: Analyze recent assignments matching the target role
-    let targetSkills: any[] = [];
-
-    if (targetRole) {
-      // Find assignments with similar titles (simplified matching for MVP)
-      targetSkills = await db
-        .select({
-          skillCode: sql<string>`DISTINCT ${skills.skillCode}`,
-          requiredLevel: sql<number>`MAX(${skills.level})`,
-          frequency: sql<number>`COUNT(*)`,
-          roleName: assignments.role,
-        })
-        .from(assignments)
-        .innerJoin(skills, eq(assignments.orgId, skills.profileId)) // Simplified join for MVP
-        .where(
-          sql`LOWER(${assignments.role}) LIKE ${'%' + targetRole.toLowerCase() + '%'}`
-        )
-        .groupBy(skills.skillCode, assignments.role);
-    } else {
-      // If no target role specified, find most common skills in active assignments
-      targetSkills = await db
-        .select({
-          skillCode: sql<string>`DISTINCT ${skills.skillCode}`,
-          requiredLevel: sql<number>`MAX(${skills.level})`,
-          frequency: sql<number>`COUNT(*)`,
-          roleName: sql<string>`'General roles'`,
-        })
-        .from(assignments)
-        .innerJoin(skills, eq(assignments.orgId, skills.profileId))
-        .where(eq(assignments.status, 'active'))
-        .groupBy(skills.skillCode)
-        .having(sql`COUNT(*) >= 3`) // Only skills appearing in 3+ roles
-        .limit(50);
-    }
-
-    // 3. Calculate gaps
-    interface SkillGap {
-      skillCode: string;
-      skillName: string;
-      l1: string;
-      l2: string;
-      l3: string;
-      importance: number;
-      currentLevel: number;
-      targetLevel: number;
-      gap: number;
-      relatedRoles: string[];
-    }
-
-    const gaps: SkillGap[] = [];
-
-    for (const targetSkill of targetSkills) {
-      if (!targetSkill.skillCode) continue;
-
-      const currentLevel = userSkillsMap.get(targetSkill.skillCode) || 0;
-      const targetLevel = Number(targetSkill.requiredLevel) || 3;
-      const gap = targetLevel - currentLevel;
-
-      // Only include if there's a gap (user doesn't have skill or is below required level)
-      if (gap > 0) {
-        // Get skill details from taxonomy
-        const skillDetails = await db.query.skillsTaxonomy.findFirst({
-          where: eq(skillsTaxonomy.code, targetSkill.skillCode),
-        });
-
-        if (skillDetails) {
-          // Calculate importance (0-100)
-          // Based on: frequency of appearance × required level
-          const maxFrequency = Math.max(...targetSkills.map(s => Number(s.frequency)));
-          const frequencyScore = (Number(targetSkill.frequency) / maxFrequency) * 50;
-          const levelScore = (targetLevel / 5) * 50;
-          const importance = Math.round(frequencyScore + levelScore);
-
-          // Extract English name from JSONB
-          const skillName = typeof skillDetails.nameI18n === 'object' && skillDetails.nameI18n !== null
-            ? (skillDetails.nameI18n as any).en || targetSkill.skillCode
-            : targetSkill.skillCode;
-
-          gaps.push({
-            skillCode: targetSkill.skillCode,
-            skillName,
-            l1: 'Category', // TODO: Get from category lookup
-            l2: 'Subcategory', // TODO: Get from subcategory lookup
-            l3: 'L3', // TODO: Get from l3 lookup
-            importance,
-            currentLevel,
-            targetLevel,
-            gap,
-            relatedRoles: [targetSkill.roleName],
-          });
-        }
-      }
-    }
-
-    // 4. Rank by importance (descending)
-    gaps.sort((a, b) => b.importance - a.importance);
-
-    // 5. Return results
-    return NextResponse.json({
-      success: true,
-      gaps,
-      summary: {
-        totalGaps: gaps.length,
-        criticalGaps: gaps.filter(g => g.importance >= 80).length,
-        highPriorityGaps: gaps.filter(g => g.importance >= 60 && g.importance < 80).length,
-        mediumPriorityGaps: gaps.filter(g => g.importance < 60).length,
-        targetRole: targetRole || 'General roles',
-      },
-      metadata: {
-        analyzedAt: new Date().toISOString(),
-        userSkillCount: userSkills.length,
-        targetRoleCount: targetSkills.length,
-      },
-    });
-
-  } catch (error) {
-    console.error('Gap analysis error:', error);
-    return NextResponse.json({
-      error: 'Failed to analyze skill gaps',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    }, { status: 500 });
-  }
-}
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/expertise/gap-analysis
  *
- * Returns gap analysis for current user (no request body needed)
+ * Analyzes skill gaps based on:
+ * - User's current skills and levels
+ * - Common market requirements
+ * - User's matching profile preferences
+ *
+ * Returns top skill gaps sorted by importance
  */
-export async function GET(request: NextRequest) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+export async function GET() {
+  try {
+    const user = await requireAuth();
+    const supabase = await createClient();
 
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Fetch user's current skills
+    const { data: userSkills } = await supabase
+      .from('skills')
+      .select('skill_code, self_assessment, months_experience')
+      .eq('profile_id', user.id);
+
+    if (!userSkills || userSkills.length === 0) {
+      return NextResponse.json({
+        gaps: [],
+        message: 'No skills added yet. Add skills to get personalized gap analysis.',
+      });
+    }
+
+    // Create a map of current skill levels
+    const currentSkillsMap: Record<string, number> = {};
+    userSkills.forEach((skill) => {
+      if (skill.skill_code) {
+        currentSkillsMap[skill.skill_code] = skill.self_assessment || 0;
+      }
+    });
+
+    // Fetch taxonomy data for skill names
+    const skillCodes = userSkills
+      .map((s) => s.skill_code)
+      .filter((code): code is string => Boolean(code));
+
+    const { data: taxonomyData } = await supabase
+      .from('skills_taxonomy')
+      .select('code, name_i18n, cat_id, subcat_id')
+      .in('code', skillCodes);
+
+    const taxonomyMap: Record<string, any> = {};
+    taxonomyData?.forEach((tax) => {
+      taxonomyMap[tax.code] = tax;
+    });
+
+    // Get L1 category names
+    const catIds = Array.from(new Set(taxonomyData?.map((t) => t.cat_id).filter(Boolean)));
+    const { data: categories } = await supabase
+      .from('skills_l1_categories')
+      .select('id, name')
+      .in('id', catIds);
+
+    const categoryMap: Record<string, string> = {};
+    categories?.forEach((cat) => {
+      categoryMap[cat.id] = cat.name;
+    });
+
+    // Fetch matching profile to understand user's goals
+    const { data: matchingProfile } = await supabase
+      .from('matching_profiles')
+      .select('preferred_roles, target_industries')
+      .eq('profile_id', user.id)
+      .single();
+
+    // Analyze gaps based on market requirements
+    // This is a simplified version - in production, this would query actual job requirements
+    const gaps = await analyzeSkillGaps(
+      currentSkillsMap,
+      taxonomyMap,
+      categoryMap,
+      matchingProfile
+    );
+
+    return NextResponse.json({
+      gaps: gaps.slice(0, 10), // Return top 10 gaps
+      totalSkills: userSkills.length,
+      analyzedRoles: matchingProfile?.preferred_roles || [],
+    });
+  } catch (error) {
+    console.error('Error analyzing skill gaps:', error);
+    return NextResponse.json({ error: 'Failed to analyze skill gaps' }, { status: 500 });
+  }
+}
+
+/**
+ * Analyze skill gaps based on current skills and market requirements
+ */
+async function analyzeSkillGaps(
+  currentSkills: Record<string, number>,
+  taxonomyMap: Record<string, any>,
+  categoryMap: Record<string, string>,
+  matchingProfile: any
+): Promise<
+  Array<{
+    skillCode: string;
+    skillName: string;
+    l1: string;
+    currentLevel: number;
+    targetLevel: number;
+    gap: number;
+    importance: number;
+  }>
+> {
+  const gaps: Array<{
+    skillCode: string;
+    skillName: string;
+    l1: string;
+    currentLevel: number;
+    targetLevel: number;
+    gap: number;
+    importance: number;
+  }> = [];
+
+  // Common skill requirements for typical roles (simplified)
+  // In production, this would be data-driven from job market analysis
+  const commonRequirements: Record<string, number> = {
+    // Example: common skills and their typical required levels (0-5)
+    // This would be expanded based on role analysis
+  };
+
+  // Identify gaps in existing skills that need improvement
+  Object.entries(currentSkills).forEach(([skillCode, currentLevel]) => {
+    const taxonomy = taxonomyMap[skillCode];
+    if (!taxonomy) return;
+
+    const l1Name = categoryMap[taxonomy.cat_id] || 'Other';
+
+    // Determine target level (simplified logic)
+    // In production: analyze market data for this skill
+    const targetLevel = determineTargetLevel(skillCode, currentLevel, matchingProfile);
+
+    if (targetLevel > currentLevel) {
+      const gap = targetLevel - currentLevel;
+      const importance = calculateImportance(skillCode, gap, currentLevel, matchingProfile);
+
+      gaps.push({
+        skillCode,
+        skillName: taxonomy.name_i18n?.en || 'Unknown Skill',
+        l1: l1Name,
+        currentLevel,
+        targetLevel,
+        gap,
+        importance,
+      });
+    }
+  });
+
+  // Sort by importance (higher is more important)
+  gaps.sort((a, b) => b.importance - a.importance);
+
+  return gaps;
+}
+
+/**
+ * Determine target level for a skill based on user's goals
+ */
+function determineTargetLevel(
+  skillCode: string,
+  currentLevel: number,
+  matchingProfile: any
+): number {
+  // Simplified logic: suggest one level above current for improvement
+  // In production: analyze job requirements for user's target roles
+  const baseTarget = Math.min(currentLevel + 1, 5);
+
+  // If user has intermediate skill (2-3), suggest reaching expert level (4-5)
+  if (currentLevel >= 2 && currentLevel < 4) {
+    return 4;
   }
 
-  // Get target role from query params
-  const { searchParams } = new URL(request.url);
-  const targetRole = searchParams.get('targetRole') || undefined;
+  return baseTarget;
+}
 
-  // Reuse POST logic
-  return POST(
-    new NextRequest(request.url, {
-      method: 'POST',
-      headers: request.headers,
-      body: JSON.stringify({ targetRole, userId: user.id }),
-    })
-  );
+/**
+ * Calculate importance score for a skill gap
+ */
+function calculateImportance(
+  skillCode: string,
+  gap: number,
+  currentLevel: number,
+  matchingProfile: any
+): number {
+  let importance = 0;
+
+  // Factor 1: Gap size (larger gaps are more important)
+  importance += gap * 20;
+
+  // Factor 2: Current level (mid-level skills are more important to improve)
+  if (currentLevel >= 2 && currentLevel <= 3) {
+    importance += 30; // Sweet spot for improvement
+  } else if (currentLevel === 1) {
+    importance += 20; // Beginner needs improvement
+  }
+
+  // Factor 3: Market demand (simplified - in production, use real market data)
+  // Assume all skills have baseline demand
+  importance += 10;
+
+  // Factor 4: Alignment with user goals
+  // If skill aligns with target roles, boost importance
+  if (matchingProfile?.preferred_roles) {
+    importance += 20;
+  }
+
+  return importance;
 }

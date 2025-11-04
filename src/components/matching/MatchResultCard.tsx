@@ -1,13 +1,18 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { MapPin, Clock, DollarSign, Shield, Eye, EyeOff } from 'lucide-react';
+import { MapPin, Clock, DollarSign, Shield, Eye, EyeOff, BellOff } from 'lucide-react';
+import { PACScoreExplainer } from './PACScoreExplainer';
+import { MatchExplainerModal } from './MatchExplainerModal';
+import { SnoozeDialog } from './SnoozeDialog';
 
 interface MatchResultCardProps {
   result: {
+    id?: string; // Match ID for fetching detailed explanation
     score: number;
     subscores: Record<string, number>;
     contributions: Record<string, number>;
@@ -60,6 +65,9 @@ export function MatchResultCard({
 }: MatchResultCardProps) {
   const isOrgView = !!result.profileId; // Org viewing candidates
   const data = isOrgView ? result.profile : result.assignment;
+  const [matchExplanation, setMatchExplanation] = useState<any>(null);
+  const [isLoadingExplanation, setIsLoadingExplanation] = useState(false);
+  const [isSnoozeDialogOpen, setIsSnoozeDialogOpen] = useState(false);
 
   // Top 3 skills
   const topSkills = skills.slice(0, 3);
@@ -71,6 +79,24 @@ export function MatchResultCard({
   const contributions = Object.entries(result.contributions)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3);
+
+  // Fetch detailed match explanation when requested
+  const fetchMatchExplanation = async () => {
+    if (!result.id || matchExplanation) return; // Already loaded
+
+    setIsLoadingExplanation(true);
+    try {
+      const response = await fetch(`/api/match/explain/${result.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setMatchExplanation(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch match explanation:', error);
+    } finally {
+      setIsLoadingExplanation(false);
+    }
+  };
 
   return (
     <Card className="p-4" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
@@ -98,6 +124,50 @@ export function MatchResultCard({
               <Eye className="w-3 h-3" style={{ color: '#1C4D3A' }} />
             )}
           </div>
+
+          {/* Match Explainer - Full detailed breakdown */}
+          {result.id && (
+            <div className="mt-2">
+              {matchExplanation ? (
+                <MatchExplainerModal
+                  matchId={matchExplanation.matchId}
+                  compositeScore={matchExplanation.compositeScore}
+                  rank={matchExplanation.rank}
+                  totalCandidates={matchExplanation.totalCandidates}
+                  rankBand={matchExplanation.rankBand}
+                  subscores={matchExplanation.subscores}
+                  skillsMatch={matchExplanation.skillsMatch}
+                  pac={matchExplanation.pac}
+                  constraints={matchExplanation.constraints}
+                />
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs gap-1.5 text-[#1C4D3A] hover:bg-[#1C4D3A]/5"
+                  onClick={fetchMatchExplanation}
+                  disabled={isLoadingExplanation}
+                >
+                  {isLoadingExplanation ? 'Loading...' : 'Why this match?'}
+                </Button>
+              )}
+            </div>
+          )}
+          
+          {/* Fallback PAC Explainer if no match ID */}
+          {!result.id && result.subscores && (result.subscores.pac || result.subscores.values || result.subscores.causes) && (
+            <div className="mt-2">
+              <PACScoreExplainer
+                pacScore={result.subscores.pac || result.score}
+                valuesOverlap={result.subscores.values || 0}
+                causesOverlap={result.subscores.causes || 0}
+                sharedValues={data?.valuesTags || []}
+                sharedCauses={data?.causeTags || []}
+                totalValues={(data?.valuesTags?.length || 0)}
+                totalCauses={(data?.causeTags?.length || 0)}
+              />
+            </div>
+          )}
         </div>
       </div>
 
@@ -204,17 +274,28 @@ export function MatchResultCard({
 
       {/* Actions */}
       {variant === 'blind' && (
-        <div className="flex gap-2">
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              onClick={onInterested}
+              style={{ backgroundColor: '#1C4D3A' }}
+              className="flex-1"
+            >
+              Interested
+            </Button>
+            <Button size="sm" variant="outline" onClick={onHide}>
+              Hide
+            </Button>
+          </div>
           <Button
             size="sm"
-            onClick={onInterested}
-            style={{ backgroundColor: '#1C4D3A' }}
-            className="flex-1"
+            variant="ghost"
+            onClick={() => setIsSnoozeDialogOpen(true)}
+            className="w-full text-xs text-[#6B6760] hover:bg-[#F7F6F1]"
           >
-            Interested
-          </Button>
-          <Button size="sm" variant="outline" onClick={onHide}>
-            Hide
+            <BellOff className="w-3.5 h-3.5 mr-1.5" />
+            Snooze
           </Button>
         </div>
       )}
@@ -239,6 +320,20 @@ export function MatchResultCard({
             </p>
           ))}
         </div>
+      )}
+
+      {/* Snooze Dialog */}
+      {result.id && (
+        <SnoozeDialog
+          open={isSnoozeDialogOpen}
+          onOpenChange={setIsSnoozeDialogOpen}
+          matchId={result.id}
+          assignmentTitle={result.assignment?.role || 'This opportunity'}
+          onSnoozed={() => {
+            // Refresh matches list or remove from current view
+            if (onHide) onHide();
+          }}
+        />
       )}
     </Card>
   );

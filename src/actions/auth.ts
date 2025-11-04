@@ -246,6 +246,18 @@ export async function signUp(
         console.error('CRITICAL: GDPR consent storage failed:', consentError);
         throw new Error(`GDPR compliance error: Unable to store required consent records. Signup cannot proceed.`);
       }
+
+      // Track user signup event for TTFQI and TTV metrics
+      try {
+        const { emitUserSignup } = await import('@/lib/analytics/events');
+        await emitUserSignup(signUpResult.user.id, {
+          persona: result.data.persona,
+          marketingOptIn: result.data.marketingOptIn,
+        });
+      } catch (analyticsError) {
+        // Log but don't fail signup
+        console.error('Failed to track signup event:', analyticsError);
+      }
     }
 
     revalidatePath('/', 'layout');

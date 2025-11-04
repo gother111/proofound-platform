@@ -20,9 +20,19 @@ interface L1Domain {
   };
 }
 
+interface L2Category {
+  catId: number;
+  subcatId: number;
+  slug: string;
+  nameI18n: { en: string };
+  l4Count: number;
+}
+
 interface L1GridProps {
   domains: L1Domain[];
   onDomainClick: (catId: number) => void;
+  l2CategoriesPerL1: Record<number, L2Category[]>;
+  onL2Click: (l2: L2Category) => void;
 }
 
 const DOMAIN_COLORS: Record<number, { bg: string; border: string; text: string }> = {
@@ -34,7 +44,7 @@ const DOMAIN_COLORS: Record<number, { bg: string; border: string; text: string }
   6: { bg: 'bg-[#F0F8F0]', border: 'border-[#6B9B6B]', text: 'text-[#3E5C3E]' }, // D - Domain
 };
 
-export function L1Grid({ domains, onDomainClick }: L1GridProps) {
+export function L1Grid({ domains, onDomainClick, l2CategoriesPerL1, onL2Click }: L1GridProps) {
   const [expandedDomain, setExpandedDomain] = useState<number | null>(null);
 
   const handleDomainClick = (catId: number) => {
@@ -131,14 +141,48 @@ export function L1Grid({ domains, onDomainClick }: L1GridProps) {
               </div>
             </div>
 
-            {/* Expanded state hint */}
-            {isExpanded && (
-              <div className="mt-4 pt-4 border-t border-[#D8D2C8]">
-                <p className="text-xs text-[#4A5943] italic">
-                  Loading L2 categories...
-                </p>
-              </div>
-            )}
+            {/* Expanded L2 Categories */}
+            {isExpanded && (() => {
+              const l2Categories = l2CategoriesPerL1[domain.catId] || [];
+              
+              return (
+                <div className="mt-4 pt-4 border-t border-[#D8D2C8]">
+                  {l2Categories.length === 0 ? (
+                    <p className="text-xs text-[#6B6760] italic">
+                      No L2 categories with skills in this domain.
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {l2Categories.map((l2) => (
+                        <button
+                          key={l2.subcatId}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onL2Click(l2);
+                          }}
+                          className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-[#F7F6F1] transition-colors rounded-md border border-[#E5E3DA]"
+                        >
+                          <div className="flex-1">
+                            <p className="font-medium text-[#2D3330] text-sm">
+                              {l2.nameI18n?.en || 'Unknown'}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge
+                              variant="outline"
+                              className={`text-xs ${colors.border} ${colors.text}`}
+                            >
+                              {l2.l4Count} {l2.l4Count === 1 ? 'skill' : 'skills'}
+                            </Badge>
+                            <ChevronRight className="h-4 w-4 text-[#6B6760]" />
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </Card>
         );
       })}

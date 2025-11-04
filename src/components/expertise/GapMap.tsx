@@ -52,11 +52,7 @@ export function GapMap({ targetRole, userId }: GapMapProps) {
     async function fetchGaps() {
       try {
         setLoading(true);
-        const response = await fetch('/api/expertise/gap-analysis', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ targetRole, userId }),
-        });
+        const response = await fetch('/api/expertise/gap-analysis');
 
         if (!response.ok) {
           throw new Error('Failed to fetch gap analysis');

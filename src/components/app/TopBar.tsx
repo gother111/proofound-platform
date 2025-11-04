@@ -16,6 +16,7 @@ import {
 import { signOut } from '@/actions/auth';
 import { CustomizeModal } from '@/components/dashboard/CustomizeModal';
 import { Logo } from '@/components/brand/Logo';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 interface TopBarProps {
   userName?: string;
@@ -70,8 +71,9 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
           </div>
         </div>
 
-        {/* Right: Customize + Avatar */}
+        {/* Right: Notification Bell + Customize + Avatar */}
         <div className="flex items-center gap-3">
+          <NotificationBell />
           <Button
             variant="outline"
             size="sm"

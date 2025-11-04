@@ -1,0 +1,191 @@
+/**
+ * Gap Map Widget for Dashboard
+ *
+ * Condensed version of Gap Map showing top 3 skill gaps
+ * Links to full Gap Analysis in Expertise Atlas
+ */
+
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { TrendingUp, ArrowRight, Target } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+
+interface SkillGap {
+  skillCode: string;
+  skillName: string;
+  l1: string;
+  currentLevel: number;
+  targetLevel: number;
+  gap: number;
+  importance: number;
+}
+
+export function GapMapWidget() {
+  const [topGaps, setTopGaps] = useState<SkillGap[]>([]);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    async function fetchTopGaps() {
+      try {
+        const response = await fetch('/api/expertise/gap-analysis');
+        if (response.ok) {
+          const data = await response.json();
+          // Get top 3 gaps sorted by importance
+          const top3 = (data.gaps || [])
+            .sort((a: SkillGap, b: SkillGap) => b.importance - a.importance)
+            .slice(0, 3);
+          setTopGaps(top3);
+        }
+      } catch (error) {
+        console.error('Failed to fetch skill gaps:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchTopGaps();
+  }, []);
+
+  const handleViewAll = () => {
+    router.push('/app/i/expertise?tab=gap-analysis');
+  };
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Target className="h-5 w-5 text-[#4A5943]" />
+            Skill Gaps
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-2 bg-gray-200 rounded w-full"></div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (topGaps.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Target className="h-5 w-5 text-[#4A5943]" />
+            Skill Gaps
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <TrendingUp className="h-12 w-12 mx-auto text-[#A8B69D] mb-3" />
+            <p className="text-sm text-[#6B6760] mb-4">
+              No skill gaps identified yet. Add more skills to get personalized recommendations.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push('/app/i/expertise')}
+              className="border-[#4A5943] text-[#4A5943]"
+            >
+              Add Skills
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Target className="h-5 w-5 text-[#4A5943]" />
+          Top Skill Gaps
+        </CardTitle>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleViewAll}
+          className="text-[#4A5943] hover:bg-[#EEF1EA]"
+        >
+          View All
+          <ArrowRight className="h-4 w-4 ml-1" />
+        </Button>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {topGaps.map((gap, index) => (
+            <div key={gap.skillCode} className="space-y-2">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-sm font-medium text-[#2D3330]">
+                      {gap.skillName}
+                    </span>
+                    <Badge
+                      variant="outline"
+                      className="text-xs"
+                      style={{
+                        borderColor: index === 0 ? '#E17055' : index === 1 ? '#FDCB6E' : '#74B9FF',
+                        color: index === 0 ? '#E17055' : index === 1 ? '#FDCB6E' : '#74B9FF',
+                      }}
+                    >
+                      Priority {index + 1}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-[#6B6760]">{gap.l1}</p>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-xs text-[#6B6760]">
+                  <span>Current: L{gap.currentLevel}</span>
+                  <span>Target: L{gap.targetLevel}</span>
+                </div>
+                <Progress
+                  value={(gap.currentLevel / gap.targetLevel) * 100}
+                  className="h-2"
+                  style={{
+                    backgroundColor: '#E8E6DD',
+                  }}
+                />
+                <p className="text-xs text-[#6B6760]">
+                  Gap: {gap.gap} level{gap.gap > 1 ? 's' : ''}
+                </p>
+              </div>
+
+              {index < topGaps.length - 1 && (
+                <div className="border-b border-[#E8E6DD] pt-2"></div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4 pt-4 border-t border-[#E8E6DD]">
+          <Button
+            onClick={handleViewAll}
+            variant="outline"
+            size="sm"
+            className="w-full border-[#4A5943] text-[#4A5943] hover:bg-[#EEF1EA]"
+          >
+            <TrendingUp className="h-4 w-4 mr-2" />
+            Analyze All Gaps
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

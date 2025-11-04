@@ -7,10 +7,11 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useRouter, useParams } from 'next/navigation';
 import { Card } from '@/components/ui/card';
+import { toast } from 'sonner';
 import {
   Step1BusinessValue,
   Step2TargetOutcomes,
@@ -18,6 +19,11 @@ import {
   Step4Practicals,
   Step5ExpertiseMapping,
 } from '@/components/matching/assignment-steps';
+import {
+  emitAssignmentCreationStarted,
+  emitAssignmentStepStarted,
+  emitAssignmentStepCompleted,
+} from '@/lib/analytics/events';
 
 interface AssignmentFormData {
   // Step 1
@@ -74,6 +80,10 @@ export default function AssignmentBuilderPage() {
   const params = useParams();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
+  const [assignmentId, setAssignmentId] = useState<string | null>(null);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [orgId, setOrgId] = useState<string | null>(null);
+  const [stepStartTime, setStepStartTime] = useState<Date>(new Date());
 
   const form = useForm<AssignmentFormData>({
     defaultValues: {
@@ -97,7 +107,7 @@ export default function AssignmentBuilderPage() {
     const interval = setInterval(async () => {
       const data = form.getValues();
       try {
-        await fetch('/api/assignments', {
+        const response = await fetch('/api/assignments', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -106,6 +116,24 @@ export default function AssignmentBuilderPage() {
             status: 'draft',
           }),
         });
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.assignment?.id && !assignmentId) {
+            const newAssignmentId = result.assignment.id;
+            const newOrgId = result.assignment.orgId;
+            setAssignmentId(newAssignmentId);
+            setOrgId(newOrgId);
+            // Initialize step 1 as in_progress
+            trackPipelineStep(1, 'in_progress');
+            // Emit assignment creation started event
+            if (newOrgId) {
+              await emitAssignmentCreationStarted(newOrgId, newAssignmentId);
+              await emitAssignmentStepStarted(newOrgId, newAssignmentId, 1, 'Business Value');
+            }
+          }
+          setLastSaved(new Date());
+        }
       } catch (error) {
         console.error('Failed to auto-save:', error);
       }
@@ -114,9 +142,157 @@ export default function AssignmentBuilderPage() {
     return () => clearInterval(interval);
   });
 
-  const handleNext = () => {
+  const saveOutcomes = async () => {
+    if (!assignmentId) return;
+
+    const outcomes = form.getValues('outcomes');
+    if (outcomes.length === 0) return;
+
+    try {
+      // Transform outcomes to match the database schema
+      const transformedOutcomes = outcomes.map((outcome: any) => ({
+        outcomeType: 'continuous' as const, // Default to continuous
+        title: outcome.metric,
+        description: `Target: ${outcome.target} in ${outcome.timeframe}`,
+        metrics: [
+          {
+            name: outcome.metric,
+            target: outcome.target,
+            unit: '',
+            current: '',
+          },
+        ],
+        successCriteria: `Achieve ${outcome.target} within ${outcome.timeframe}`,
+      }));
+
+      await fetch(`/api/assignments/${assignmentId}/outcomes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ outcomes: transformedOutcomes }),
+      });
+    } catch (error) {
+      console.error('Failed to save outcomes:', error);
+    }
+  };
+
+  const saveExpertiseMatrix = async () => {
+    if (!assignmentId) return;
+
+    const mustHaveSkills = form.getValues('mustHaveSkills') || [];
+    if (mustHaveSkills.length === 0) return;
+
+    try {
+      // Get outcomes to potentially link skills to them
+      const outcomesResponse = await fetch(`/api/assignments/${assignmentId}/outcomes`);
+      let outcomes: any[] = [];
+      if (outcomesResponse.ok) {
+        const outcomesData = await outcomesResponse.json();
+        outcomes = outcomesData.outcomes || [];
+      }
+
+      // Transform skills to expertise matrix format
+      const expertiseMatrix = mustHaveSkills.map((skill: any) => {
+        // Try to find a linked outcome if the skill is marked as linked
+        let linkedOutcomeId = undefined;
+        if (skill.linkedToTO && outcomes.length > 0) {
+          // Link to first outcome for now (could be improved with more specific logic)
+          linkedOutcomeId = outcomes[0].id;
+        }
+
+        return {
+          skillCode: skill.id,
+          requiredLevel: skill.level,
+          stakeholderRole: 'creator',
+          linkedOutcomeId,
+          outcomeRationale: skill.linkedToBV || skill.linkedToTO
+            ? `Linked to ${skill.linkedToBV ? 'Business Value' : ''} ${skill.linkedToTO ? 'Target Outcomes' : ''}`.trim()
+            : undefined,
+        };
+      });
+
+      await fetch(`/api/assignments/${assignmentId}/expertise-matrix`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ expertiseMatrix }),
+      });
+    } catch (error) {
+      console.error('Failed to save expertise matrix:', error);
+    }
+  };
+
+  const trackPipelineStep = async (stepOrder: number, status: 'in_progress' | 'completed') => {
+    if (!assignmentId) return;
+
+    const stepNames = [
+      'Business Value',
+      'Target Outcomes',
+      'Weight Matrix',
+      'Practicals',
+      'Expertise Mapping',
+    ];
+
+    try {
+      await fetch(`/api/assignments/${assignmentId}/pipeline`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          stepOrder,
+          stepName: stepNames[stepOrder - 1],
+          stakeholderRole: 'creator',
+          status,
+          stepData: {},
+        }),
+      });
+    } catch (error) {
+      console.error('Failed to track pipeline step:', error);
+    }
+  };
+
+  const handleNext = async () => {
     if (currentStep < 5) {
-      setCurrentStep(currentStep + 1);
+      const stepNames = [
+        'Business Value',
+        'Target Outcomes',
+        'Weight Matrix',
+        'Practicals',
+        'Expertise Mapping',
+      ];
+
+      // Calculate time spent on current step
+      const timeSpentSeconds = Math.floor((new Date().getTime() - stepStartTime.getTime()) / 1000);
+
+      // Emit step completed analytics
+      if (assignmentId && orgId) {
+        await emitAssignmentStepCompleted(
+          orgId,
+          assignmentId,
+          currentStep,
+          stepNames[currentStep - 1],
+          timeSpentSeconds
+        );
+      }
+
+      // Mark current step as completed
+      await trackPipelineStep(currentStep, 'completed');
+
+      // Save outcomes after Step 2
+      if (currentStep === 2) {
+        await saveOutcomes();
+      }
+
+      // Move to next step
+      const nextStep = currentStep + 1;
+      setCurrentStep(nextStep);
+      setStepStartTime(new Date());
+
+      // Mark next step as in_progress
+      await trackPipelineStep(nextStep, 'in_progress');
+
+      // Emit step started analytics
+      if (assignmentId && orgId) {
+        await emitAssignmentStepStarted(orgId, assignmentId, nextStep, stepNames[nextStep - 1]);
+      }
+
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
@@ -130,8 +306,35 @@ export default function AssignmentBuilderPage() {
 
   const handleSubmit = async () => {
     setIsSaving(true);
+
     try {
       const data = form.getValues();
+
+      // Validate required fields
+      if (!data.role || data.role.length < 3) {
+        toast.error('Role title is required and must be at least 3 characters');
+        setIsSaving(false);
+        return;
+      }
+
+      if (!data.businessValue) {
+        toast.error('Business value is required');
+        setIsSaving(false);
+        return;
+      }
+
+      if (!data.outcomes || data.outcomes.length === 0) {
+        toast.error('At least one target outcome is required');
+        setIsSaving(false);
+        return;
+      }
+
+      if (!data.mustHaveSkills || data.mustHaveSkills.length === 0) {
+        toast.error('At least one must-have skill is required');
+        setIsSaving(false);
+        return;
+      }
+
       const response = await fetch('/api/assignments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -142,15 +345,70 @@ export default function AssignmentBuilderPage() {
         }),
       });
 
-      if (response.ok) {
-        const result = await response.json();
-        router.push(`/app/o/${params.slug}/assignments/${result.assignment.id}/review`);
-      } else {
-        alert('Failed to save assignment');
+      if (!response.ok) {
+        const errorData = await response.json();
+        toast.error(errorData.message || 'Failed to save assignment');
+        setIsSaving(false);
+        return;
       }
+
+      const result = await response.json();
+      const savedAssignmentId = result.assignment.id;
+
+      // Save outcomes and expertise matrix
+      if (savedAssignmentId) {
+        // Use the saved assignment ID if we don't have one yet
+        if (!assignmentId) {
+          setAssignmentId(savedAssignmentId);
+        }
+
+        // Save outcomes and expertise matrix with the correct assignment ID
+        const currentAssignmentId = assignmentId || savedAssignmentId;
+
+        try {
+          // Save outcomes
+          const outcomes = form.getValues('outcomes');
+          if (outcomes.length > 0) {
+            const transformedOutcomes = outcomes.map((outcome: any) => ({
+              outcomeType: 'continuous' as const,
+              title: outcome.metric,
+              description: `Target: ${outcome.target} in ${outcome.timeframe}`,
+              metrics: [
+                {
+                  name: outcome.metric,
+                  target: outcome.target,
+                  unit: '',
+                  current: '',
+                },
+              ],
+              successCriteria: `Achieve ${outcome.target} within ${outcome.timeframe}`,
+            }));
+
+            const outcomesResponse = await fetch(`/api/assignments/${currentAssignmentId}/outcomes`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ outcomes: transformedOutcomes }),
+            });
+
+            if (!outcomesResponse.ok) {
+              console.error('Failed to save outcomes');
+              toast.error('Warning: Outcomes may not have been saved');
+            }
+          }
+
+          // Save expertise matrix
+          await saveExpertiseMatrix();
+        } catch (error) {
+          console.error('Failed to save related data:', error);
+          toast.error('Warning: Some data may not have been saved');
+        }
+      }
+
+      toast.success('Assignment saved successfully!');
+      router.push(`/app/o/${params.slug}/assignments/${savedAssignmentId}/review`);
     } catch (error) {
       console.error('Failed to save assignment:', error);
-      alert('Failed to save assignment');
+      toast.error(error instanceof Error ? error.message : 'An unexpected error occurred');
     } finally {
       setIsSaving(false);
     }
@@ -217,7 +475,14 @@ export default function AssignmentBuilderPage() {
 
         {/* Help Text */}
         <div className="text-center text-sm text-[#6B6760]">
-          <p>Your progress is automatically saved every 30 seconds</p>
+          <p>
+            Your progress is automatically saved every 30 seconds
+            {lastSaved && (
+              <span className="ml-2 text-green-600">
+                • Last saved {lastSaved.toLocaleTimeString()}
+              </span>
+            )}
+          </p>
         </div>
       </div>
     </div>

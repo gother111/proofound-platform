@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { wellbeingCheckins, auditLogs } from '@/db/schema';
 import { eq, desc, gte } from 'drizzle-orm';
+import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 
 /**
  * POST /api/wellbeing/checkin
@@ -12,6 +13,25 @@ import { eq, desc, gte } from 'drizzle-orm';
  * Non-diagnostic, never used in ranking
  */
 export async function POST(request: NextRequest) {
+  // Apply rate limiting (5 req/min for wellbeing check-ins)
+  const { allowed, result } = await checkRateLimit(request, RATE_LIMITS.wellbeing);
+  if (!allowed) {
+    return NextResponse.json(
+      {
+        error: 'Too many requests',
+        message: 'Rate limit exceeded. Please try again later.',
+        retryAfter: Math.ceil((result.reset - Date.now()) / 1000),
+      },
+      {
+        status: 429,
+        headers: {
+          ...getRateLimitHeaders(result),
+          'Retry-After': Math.ceil((result.reset - Date.now()) / 1000).toString(),
+        },
+      }
+    );
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -66,6 +86,19 @@ export async function POST(request: NextRequest) {
         controlLevel,
       },
     });
+
+    // Track well-being check-in for metrics
+    try {
+      const { emitWellbeingCheckin } = await import('@/lib/analytics/events');
+      await emitWellbeingCheckin(user.id, {
+        stressLevel,
+        controlLevel,
+        milestoneTriggered: !!milestoneTriggerId,
+      });
+    } catch (analyticsError) {
+      // Log but don't fail the check-in
+      console.error('Failed to track well-being check-in:', analyticsError);
+    }
 
     return NextResponse.json({
       success: true,

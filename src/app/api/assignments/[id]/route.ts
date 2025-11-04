@@ -2,10 +2,29 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
-import { assignments, organizationMembers } from '@/db/schema';
+import { assignments, organizationMembers, matchingProfiles, skills, matches, organizations } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { emitAssignmentPublished } from '@/lib/analytics/events';
+import { notifyAssignmentPublished } from '@/lib/notifications';
+import {
+  scoreValues,
+  scoreCauses,
+  scoreSkills,
+  scoreExperience,
+  scoreVerifications,
+  scoreAvailability,
+  scoreLocation,
+  scoreCompensation,
+  scoreLanguage,
+  composeWeighted,
+  compareMatches,
+  type Skill,
+  type DateWindow,
+  type Range,
+  type LocationMode,
+} from '@/lib/core/matching/scorers';
+import { getPreset } from '@/lib/core/matching/presets';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,6 +32,192 @@ export const dynamic = 'force-dynamic';
  * Track if assignment was already activated (to avoid duplicate events)
  */
 const activatedAssignments = new Set<string>();
+
+/**
+ * Generate matches for an assignment
+ * Finds all matching profiles and stores top matches in database
+ */
+async function generateMatchesForAssignment(assignmentId: string): Promise<number> {
+  try {
+    const assignment = await db.query.assignments.findFirst({
+      where: eq(assignments.id, assignmentId),
+    });
+
+    if (!assignment) {
+      log.error('generate.matches.assignment.not.found', { assignmentId });
+      return 0;
+    }
+
+    // Delete existing matches for this assignment (in case of re-activation)
+    await db.delete(matches).where(eq(matches.assignmentId, assignmentId));
+
+    // Fetch all active matching profiles
+    const allProfiles = await db.query.matchingProfiles.findMany({
+      where: eq(matchingProfiles.status, 'active'),
+    });
+
+    if (allProfiles.length === 0) {
+      log.info('generate.matches.no.profiles', { assignmentId });
+      return 0;
+    }
+
+    // Use default weights for assignment matching
+    const weights = (assignment.weights as Record<string, number>) || getPreset('balanced');
+
+    const matchResults: Array<{
+      profileId: string;
+      score: number;
+      vector: Record<string, any>;
+    }> = [];
+
+    // Score each profile against the assignment
+    for (const profile of allProfiles) {
+      // Fetch profile's skills
+      const userSkills = await db.query.skills.findMany({
+        where: eq(skills.profileId, profile.profileId),
+      });
+
+      const skillsMap: Record<string, Skill> = {};
+      for (const skill of userSkills) {
+        skillsMap[skill.skillId] = {
+          id: skill.skillId,
+          level: skill.level,
+          months: skill.monthsExperience,
+        };
+      }
+
+      // Apply hard filters
+      const mustHaveSkills = (assignment.mustHaveSkills as Skill[]) || [];
+      const niceToHaveSkills = (assignment.niceToHaveSkills as Skill[]) || [];
+
+      const skillScore = scoreSkills(mustHaveSkills, niceToHaveSkills, skillsMap);
+
+      if (skillScore.hardFail) {
+        continue; // Skip profiles that don't meet must-haves
+      }
+
+      // Compute subscores
+      const subscores: Record<string, number> = {
+        values: scoreValues(profile.valuesTags || [], assignment.valuesRequired || []),
+        causes: scoreCauses(profile.causeTags || [], assignment.causeTags || []),
+        skills: skillScore.score,
+        experience: scoreExperience(
+          Object.values(skillsMap).reduce((sum, s) => sum + (s.months || 0), 0) /
+            Math.max(Object.keys(skillsMap).length, 1)
+        ),
+        verifications: scoreVerifications(
+          assignment.verificationGates || [],
+          (profile.verified as Record<string, boolean>) || {}
+        ),
+      };
+
+      // Availability
+      if (assignment.startEarliest && assignment.startLatest && profile.availabilityEarliest) {
+        subscores.availability = scoreAvailability(
+          {
+            earliest: new Date(assignment.startEarliest),
+            latest: new Date(assignment.startLatest),
+          } as DateWindow,
+          new Date(profile.availabilityEarliest),
+          {
+            min: assignment.hoursMin || 0,
+            max: assignment.hoursMax || 40,
+          } as Range,
+          {
+            min: profile.hoursMin || 0,
+            max: profile.hoursMax || 40,
+          } as Range
+        );
+      } else {
+        subscores.availability = 1.0;
+      }
+
+      // Location
+      if (assignment.locationMode && profile.workMode) {
+        subscores.location = scoreLocation(
+          assignment.locationMode as LocationMode,
+          profile.workMode as LocationMode,
+          assignment.country || undefined,
+          profile.country || undefined
+        );
+      } else {
+        subscores.location = 1.0;
+      }
+
+      // Compensation
+      if (assignment.compMin && assignment.compMax && profile.compMin && profile.compMax) {
+        subscores.compensation = scoreCompensation(
+          { min: assignment.compMin, max: assignment.compMax } as Range,
+          { min: profile.compMin, max: profile.compMax } as Range
+        );
+      } else {
+        subscores.compensation = 1.0;
+      }
+
+      // Language
+      if (assignment.minLanguage && profile.languages) {
+        const minLang = assignment.minLanguage as { code: string; level: string };
+        const candidateLangs = profile.languages as Array<{ code: string; level: string }>;
+        const matchingLang = candidateLangs.find((l) => l.code === minLang.code);
+
+        subscores.language = matchingLang ? scoreLanguage(minLang.level, matchingLang.level) : 0;
+      } else {
+        subscores.language = 1.0;
+      }
+
+      // Compose weighted score
+      const composed = composeWeighted(subscores, weights);
+
+      matchResults.push({
+        profileId: profile.profileId,
+        score: composed.total,
+        vector: {
+          subscores,
+          contributions: composed.contributions,
+          gaps: skillScore.gaps,
+          missing: skillScore.missing,
+        },
+      });
+    }
+
+    // Sort by score (descending)
+    matchResults.sort((a, b) =>
+      compareMatches(
+        { score: a.score, assignmentId, profileId: a.profileId },
+        { score: b.score, assignmentId, profileId: b.profileId }
+      )
+    );
+
+    // Store top 100 matches in database
+    const topMatches = matchResults.slice(0, 100);
+
+    if (topMatches.length > 0) {
+      const matchInserts = topMatches.map((match) => ({
+        assignmentId,
+        profileId: match.profileId,
+        score: match.score.toString(),
+        vector: match.vector,
+        weights,
+      }));
+
+      await db.insert(matches).values(matchInserts);
+
+      log.info('generate.matches.success', {
+        assignmentId,
+        totalCandidates: allProfiles.length,
+        matchesGenerated: topMatches.length,
+      });
+    }
+
+    return topMatches.length;
+  } catch (error) {
+    log.error('generate.matches.failed', {
+      assignmentId,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    return 0;
+  }
+}
 
 /**
  * Check if assignment meets PRD-strict activation criteria and emit event
@@ -68,6 +273,47 @@ async function checkAndEmitAssignmentActivation(
     });
 
     activatedAssignments.add(assignmentId);
+
+    // Generate matches for this assignment
+    const matchesGenerated = await generateMatchesForAssignment(assignmentId);
+
+    // Get organization name for notifications
+    const org = await db.query.organizations.findFirst({
+      where: eq(organizations.id, orgId),
+    });
+    const orgName = org?.displayName || 'An organization';
+
+    // Send notifications to top 10 matching candidates
+    if (matchesGenerated > 0) {
+      const topMatches = await db.query.matches.findMany({
+        where: eq(matches.assignmentId, assignmentId),
+        orderBy: (t: any, { desc }) => [desc(t.score)],
+        limit: 10,
+      });
+
+      for (const match of topMatches) {
+        try {
+          await notifyAssignmentPublished(
+            match.profileId,
+            assignmentId,
+            assignment.role,
+            orgName
+          );
+        } catch (notifyError) {
+          log.error('assignment.notification.failed', {
+            profileId: match.profileId,
+            assignmentId,
+            error: notifyError instanceof Error ? notifyError.message : 'Unknown error',
+          });
+          // Continue with other notifications even if one fails
+        }
+      }
+
+      log.info('assignment.notifications.sent', {
+        assignmentId,
+        notificationsSent: topMatches.length,
+      });
+    }
   } catch (error) {
     log.error('assignment-activation-check.failed', {
       assignmentId,

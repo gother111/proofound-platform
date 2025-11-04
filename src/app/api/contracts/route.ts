@@ -8,6 +8,7 @@ import { eq, and, or } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { emitContractSigned } from '@/lib/analytics/events';
 import { sendContractSignedEmail } from '@/lib/email';
+import { notifyContractSigned } from '@/lib/notifications';
 
 export const dynamic = 'force-dynamic';
 
@@ -163,71 +164,77 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if contract already exists
-    const existingContract = await db.query.contracts.findFirst({
-      where: and(eq(contracts.assignmentId, assignmentId), eq(contracts.userId, userId)),
+    // Check if contract already exists and create/update in a transaction
+    const result = await db.transaction(async (tx) => {
+      const existingContract = await tx.query.contracts.findFirst({
+        where: and(eq(contracts.assignmentId, assignmentId), eq(contracts.userId, userId)),
+      });
+
+      let contract;
+      let wasAlreadySigned = false;
+
+      if (existingContract) {
+        // Update attestation flags
+        const updateData: any = {
+          updatedAt: new Date(),
+        };
+
+        if (isCandidate) {
+          updateData.userAttestation = true;
+        }
+
+        if (isOrgMember) {
+          updateData.orgAttestation = true;
+        }
+
+        // Also update other contract details if provided
+        if (contractDetails.contractType) updateData.contractType = contractDetails.contractType;
+        if (contractDetails.signedAt) updateData.signedAt = new Date(contractDetails.signedAt);
+        if (contractDetails.startDate) updateData.startDate = contractDetails.startDate;
+        if (contractDetails.endDate) updateData.endDate = contractDetails.endDate;
+        if (contractDetails.compensationAmount)
+          updateData.compensationAmount = contractDetails.compensationAmount;
+        if (contractDetails.compensationCurrency)
+          updateData.compensationCurrency = contractDetails.compensationCurrency;
+        if (contractDetails.compensationPeriod)
+          updateData.compensationPeriod = contractDetails.compensationPeriod;
+        if (contractDetails.notes) updateData.notes = contractDetails.notes;
+        if (contractDetails.metadata) updateData.metadata = contractDetails.metadata;
+
+        [contract] = await tx
+          .update(contracts)
+          .set(updateData)
+          .where(eq(contracts.id, existingContract.id))
+          .returning();
+
+        wasAlreadySigned =
+          existingContract.userAttestation === true && existingContract.orgAttestation === true;
+      } else {
+        // Create new contract
+        const newContractData = {
+          assignmentId,
+          userId,
+          orgId: assignment.orgId,
+          userAttestation: isCandidate ? true : false,
+          orgAttestation: isOrgMember ? true : false,
+          contractType: contractDetails.contractType || null,
+          signedAt: contractDetails.signedAt ? new Date(contractDetails.signedAt) : new Date(),
+          startDate: contractDetails.startDate || null,
+          endDate: contractDetails.endDate || null,
+          compensationAmount: contractDetails.compensationAmount || null,
+          compensationCurrency: contractDetails.compensationCurrency || 'USD',
+          compensationPeriod: contractDetails.compensationPeriod || null,
+          notes: contractDetails.notes || null,
+          metadata: contractDetails.metadata || {},
+        };
+
+        [contract] = await tx.insert(contracts).values(newContractData).returning();
+      }
+
+      return { contract, wasAlreadySigned };
     });
 
-    let contract;
-    let wasAlreadySigned = false;
-
-    if (existingContract) {
-      // Update attestation flags
-      const updateData: any = {
-        updatedAt: new Date(),
-      };
-
-      if (isCandidate) {
-        updateData.userAttestation = true;
-      }
-
-      if (isOrgMember) {
-        updateData.orgAttestation = true;
-      }
-
-      // Also update other contract details if provided
-      if (contractDetails.contractType) updateData.contractType = contractDetails.contractType;
-      if (contractDetails.signedAt) updateData.signedAt = new Date(contractDetails.signedAt);
-      if (contractDetails.startDate) updateData.startDate = contractDetails.startDate;
-      if (contractDetails.endDate) updateData.endDate = contractDetails.endDate;
-      if (contractDetails.compensationAmount)
-        updateData.compensationAmount = contractDetails.compensationAmount;
-      if (contractDetails.compensationCurrency)
-        updateData.compensationCurrency = contractDetails.compensationCurrency;
-      if (contractDetails.compensationPeriod)
-        updateData.compensationPeriod = contractDetails.compensationPeriod;
-      if (contractDetails.notes) updateData.notes = contractDetails.notes;
-      if (contractDetails.metadata) updateData.metadata = contractDetails.metadata;
-
-      [contract] = await db
-        .update(contracts)
-        .set(updateData)
-        .where(eq(contracts.id, existingContract.id))
-        .returning();
-
-      wasAlreadySigned =
-        existingContract.userAttestation === true && existingContract.orgAttestation === true;
-    } else {
-      // Create new contract
-      const newContractData = {
-        assignmentId,
-        userId,
-        orgId: assignment.orgId,
-        userAttestation: isCandidate ? true : false,
-        orgAttestation: isOrgMember ? true : false,
-        contractType: contractDetails.contractType || null,
-        signedAt: contractDetails.signedAt ? new Date(contractDetails.signedAt) : new Date(),
-        startDate: contractDetails.startDate || null,
-        endDate: contractDetails.endDate || null,
-        compensationAmount: contractDetails.compensationAmount || null,
-        compensationCurrency: contractDetails.compensationCurrency || 'USD',
-        compensationPeriod: contractDetails.compensationPeriod || null,
-        notes: contractDetails.notes || null,
-        metadata: contractDetails.metadata || {},
-      };
-
-      [contract] = await db.insert(contracts).values(newContractData).returning();
-    }
+    const { contract, wasAlreadySigned } = result;
 
     // Check if both parties have now attested (mutual attestation)
     const mutualAttestation = contract.userAttestation === true && contract.orgAttestation === true;
@@ -256,6 +263,63 @@ export async function POST(request: NextRequest) {
         });
       }
 
+      // Send in-app notifications to both parties
+      try {
+        // Get candidate profile
+        const candidateProfile = await db.query.profiles.findFirst({
+          where: eq(profiles.id, userId),
+        });
+
+        // Get organization name from organizations table
+        const organization = await db.query.organizations.findFirst({
+          where: eq(organizations.id, assignment.orgId),
+        });
+        const orgName = organization?.displayName || 'An organization';
+
+        // Notify the candidate
+        await notifyContractSigned(
+          userId,
+          contract.id,
+          orgName,
+          contract.contractType || 'employment'
+        );
+
+        // Notify organization members (owners and admins)
+        const orgMembers = await db.query.organizationMembers.findMany({
+          where: and(
+            eq(organizationMembers.orgId, assignment.orgId),
+            eq(organizationMembers.status, 'active')
+          ),
+        });
+
+        const candidateName = candidateProfile?.displayName || candidateProfile?.handle || 'A candidate';
+
+        for (const member of orgMembers) {
+          if (member.role === 'owner' || member.role === 'admin') {
+            try {
+              await notifyContractSigned(
+                member.userId,
+                contract.id,
+                candidateName,
+                contract.contractType || 'employment'
+              );
+            } catch (memberNotifError) {
+              log.error('org-member-notification.failed', {
+                memberId: member.userId,
+                error: memberNotifError instanceof Error ? memberNotifError.message : 'Unknown error',
+              });
+              // Continue notifying other members
+            }
+          }
+        }
+      } catch (notifError) {
+        log.error('contract-signed-notification.failed', {
+          error: notifError instanceof Error ? notifError.message : 'Unknown error',
+          contractId: contract.id,
+        });
+        // Don't fail the request if notification fails
+      }
+
       // Send email notifications to both parties
       try {
         // Get candidate profile and email from Supabase auth
@@ -267,8 +331,7 @@ export async function POST(request: NextRequest) {
         const supabase = await createClient();
         const { data: authData } = await supabase.auth.admin.getUserById(userId);
 
-        // TODO: Get organization member profile
-        // For now, just send to candidate
+        // Send email to candidate
         if (candidateProfile && authData?.user?.email) {
           await sendContractSignedEmail(
             authData.user.email,
@@ -283,6 +346,47 @@ export async function POST(request: NextRequest) {
               contractId: contract.id,
             }
           );
+        }
+
+        // Send email to organization members (owners and admins)
+        const orgMembers = await db.query.organizationMembers.findMany({
+          where: and(
+            eq(organizationMembers.orgId, assignment.orgId),
+            eq(organizationMembers.status, 'active')
+          ),
+        });
+
+        for (const member of orgMembers) {
+          if (member.role === 'owner' || member.role === 'admin') {
+            try {
+              const { data: memberAuthData } = await supabase.auth.admin.getUserById(member.userId);
+              const memberProfile = await db.query.profiles.findFirst({
+                where: eq(profiles.id, member.userId),
+              });
+
+              if (memberAuthData?.user?.email && memberProfile) {
+                await sendContractSignedEmail(
+                  memberAuthData.user.email,
+                  memberProfile.displayName || 'Organization Member',
+                  'organization',
+                  {
+                    contractType: contract.contractType || 'employment',
+                    startDate: contract.startDate || undefined,
+                    compensationAmount: contract.compensationAmount || undefined,
+                    compensationCurrency: contract.compensationCurrency || 'USD',
+                    compensationPeriod: contract.compensationPeriod || undefined,
+                    contractId: contract.id,
+                  }
+                );
+              }
+            } catch (memberEmailError) {
+              log.error('org-member-email.failed', {
+                memberId: member.userId,
+                error: memberEmailError instanceof Error ? memberEmailError.message : 'Unknown error',
+              });
+              // Continue emailing other members
+            }
+          }
         }
       } catch (emailError) {
         log.error('contract-signed-email.failed', {

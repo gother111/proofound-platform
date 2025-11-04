@@ -8,6 +8,7 @@ interface CoverageHeatmapProps {
     avgLevel: number;
     l1: number;
     l2: number;
+    l2Name?: string;
   }>;
   onCellClick: (l1: number, l2: number) => void;
 }
@@ -51,7 +52,7 @@ export function CoverageHeatmap({ data, onCellClick }: CoverageHeatmapProps) {
   }
 
   // Group data by L1
-  const groupedData: Record<number, Array<{ l2: number; count: number; avgLevel: number }>> = {};
+  const groupedData: Record<number, Array<{ l2: number; count: number; avgLevel: number; l2Name?: string }>> = {};
   
   data.forEach(item => {
     if (!groupedData[item.l1]) {
@@ -61,6 +62,7 @@ export function CoverageHeatmap({ data, onCellClick }: CoverageHeatmapProps) {
       l2: item.l2,
       count: item.count,
       avgLevel: item.avgLevel,
+      l2Name: item.l2Name,
     });
   });
 
@@ -104,17 +106,17 @@ export function CoverageHeatmap({ data, onCellClick }: CoverageHeatmapProps) {
                       onClick={() => onCellClick(Number(l1Id), item.l2)}
                       className={`
                         flex flex-col items-center justify-center
-                        min-w-[60px] h-16 p-2 rounded-lg border
+                        min-w-[100px] h-20 p-2 rounded-lg border
                         hover:ring-2 hover:ring-primary/50 transition-all
                         ${getLevelColor(item.avgLevel)}
                         ${getTextColor(item.avgLevel)}
                       `}
-                      title={`L2-${item.l2}: ${item.count} skills, avg level ${item.avgLevel.toFixed(1)}`}
+                      title={`${item.l2Name || `L2-${item.l2}`}: ${item.count} skills, avg level ${item.avgLevel.toFixed(1)}`}
                     >
-                      <span className="text-xs font-mono">L2-{item.l2}</span>
+                      <span className="text-xs text-center line-clamp-2 mb-1">{item.l2Name || `L2-${item.l2}`}</span>
                       <span className="text-lg font-bold">{item.count}</span>
                       <span className="text-xs opacity-75">
-                        {item.avgLevel.toFixed(1)}
+                        Lvl {item.avgLevel.toFixed(1)}
                       </span>
                     </button>
                   ))

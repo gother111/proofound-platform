@@ -1,14 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
-import { matches, interviews, auditLogs } from '@/db/schema';
+import { matches, interviews, auditLogs, assignments, organizationMembers } from '@/db/schema';
 import { eq, and, isNull, lt, sql } from 'drizzle-orm';
-
-/**
- * Decision Window Constants (PRD I-22)
- * Both sides must respond within 48 hours after interview
- */
-const DECISION_WINDOW_HOURS = 48;
+import { validateDecisionWindow, DECISION_CONSTRAINTS, getDecisionDeadline } from '@/lib/sla';
+import { log } from '@/lib/log';
 
 /**
  * POST /api/match/decision
@@ -68,39 +64,119 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if within 48-hour decision window (PRD constraint)
+    // Check if within 48-hour decision window (PRD I-22)
     // Use scheduledAt as a proxy for when the interview was held
-    const hoursSinceInterview = (Date.now() - interview.scheduledAt.getTime()) / (1000 * 60 * 60);
+    const decisionValidation = validateDecisionWindow(interview.scheduledAt);
 
-    if (hoursSinceInterview > DECISION_WINDOW_HOURS) {
+    if (!decisionValidation.valid) {
       return NextResponse.json(
         {
           error: 'Decision window expired',
-          message: `Decisions must be made within ${DECISION_WINDOW_HOURS} hours of the interview (PRD requirement)`,
+          message: decisionValidation.errors.join(', '),
           interviewScheduledAt: interview.scheduledAt.toISOString(),
-          hoursPassed: Math.round(hoursSinceInterview),
-          deadline: new Date(
-            interview.scheduledAt.getTime() + DECISION_WINDOW_HOURS * 60 * 60 * 1000
-          ).toISOString(),
+          deadline: getDecisionDeadline(interview.scheduledAt).toISOString(),
         },
         { status: 400 }
       );
     }
 
-    // TODO: Verify user is authorized to make this decision
-    // (either the candidate or an org member)
+    // Get the match to check authorization
+    const match = await db.query.matches.findFirst({
+      where: eq(matches.id, interview.matchId),
+    });
 
-    // TODO: Record decision - schema needs to be updated to support decision tracking
-    // The interviews table currently doesn't have decision, decidedAt, or decidedBy fields
-    // This functionality needs proper schema migration before it can be implemented
+    if (!match) {
+      return NextResponse.json(
+        {
+          error: 'Match not found',
+        },
+        { status: 404 }
+      );
+    }
 
-    // NOTE: Temporarily returning success to unblock build
-    // This endpoint needs to be properly implemented with schema changes
+    // Verify user is authorized to make this decision
+    const isCandidate = match.profileId === user.id;
+
+    // Check if user is org member for this assignment
+    let isOrgMember = false;
+    if (!isCandidate) {
+      const assignment = await db.query.assignments.findFirst({
+        where: eq(assignments.id, match.assignmentId),
+      });
+
+      if (assignment) {
+        const orgMembership = await db.query.organizationMembers.findFirst({
+          where: and(
+            eq(organizationMembers.userId, user.id),
+            eq(organizationMembers.orgId, assignment.orgId),
+            eq(organizationMembers.status, 'active')
+          ),
+        });
+        isOrgMember = !!orgMembership;
+      }
+    }
+
+    if (!isCandidate && !isOrgMember) {
+      return NextResponse.json(
+        {
+          error: 'Unauthorized',
+          message: 'Only the candidate or organization members can make this decision',
+        },
+        { status: 403 }
+      );
+    }
+
+    // Record decision
+    const [updatedInterview] = await db
+      .update(interviews)
+      .set({
+        decision,
+        decidedBy: user.id,
+        decidedAt: new Date(),
+        feedback: feedback || null,
+        updatedAt: new Date(),
+      })
+      .where(eq(interviews.id, interviewId))
+      .returning();
+
+    // Log the decision
+    log.info('interview.decision.recorded', {
+      interviewId,
+      matchId: interview.matchId,
+      decision,
+      decidedBy: user.id,
+      isCandidate,
+      isOrgMember,
+    });
+
+    // Create audit log entry
+    try {
+      await db.insert(auditLogs).values({
+        userId: user.id,
+        action: 'interview_decision',
+        resourceType: 'interview',
+        resourceId: interviewId,
+        changes: {
+          decision,
+          feedback: feedback || null,
+        },
+      });
+    } catch (auditError) {
+      log.error('audit.log.failed', {
+        error: auditError instanceof Error ? auditError.message : 'Unknown error',
+      });
+      // Don't fail the request if audit logging fails
+    }
+
     return NextResponse.json({
       success: true,
-      message: 'Decision recording not yet implemented - schema migration required',
-      decision,
-      interviewId,
+      interview: {
+        id: updatedInterview.id,
+        decision: updatedInterview.decision,
+        decidedBy: updatedInterview.decidedBy,
+        decidedAt: updatedInterview.decidedAt,
+      },
+      message: `Decision "${decision}" recorded successfully`,
     });
   } catch (error) {
     console.error('Decision recording error:', error);
@@ -117,35 +193,16 @@ export async function POST(request: NextRequest) {
 /**
  * GET /api/match/decision
  *
- * Cron job to auto-expire interviews past 48-hour decision window
- * Protected by CRON_SECRET environment variable
+ * DEPRECATED: Use /api/cron/sla-enforcement instead
+ * This endpoint has been superseded by the centralized SLA enforcement cron
  */
 export async function GET(request: NextRequest) {
-  // Verify cron secret
-  const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  try {
-    // TODO: Auto-expire functionality not yet implemented
-    // The interviews table doesn't have decision, heldAt, decidedAt, or decidedBy fields
-    // This cron job needs proper schema migration before it can be implemented
-
-    return NextResponse.json({
-      success: true,
-      message: 'Auto-expire not yet implemented - schema migration required',
-      expired: 0,
-      interviewIds: [],
-    });
-  } catch (error) {
-    console.error('Auto-expire error:', error);
-    return NextResponse.json(
-      {
-        error: 'Auto-expire failed',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
+  return NextResponse.json(
+    {
+      error: 'Deprecated',
+      message: 'Use /api/cron/sla-enforcement instead',
+      redirectTo: '/api/cron/sla-enforcement',
+    },
+    { status: 410 }
+  );
 }

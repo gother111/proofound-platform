@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Slider } from '@/components/ui/slider';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -41,9 +42,17 @@ const DURATION_OPTIONS = [
   { value: 'permanent', label: 'Permanent' },
 ];
 
+const VERIFICATION_GATES = [
+  { id: 'identity', label: 'Identity Verification', description: 'Government ID verification (Veriff)' },
+  { id: 'work_email', label: 'Work Email Verification', description: 'Verify corporate email domain' },
+  { id: 'linkedin', label: 'LinkedIn Profile Verification', description: 'Verify professional profile' },
+  { id: 'background_check', label: 'Background Check', description: 'Criminal background screening' },
+  { id: 'education', label: 'Education Verification', description: 'Verify degree/certifications' },
+];
+
 export function Step4Practicals({ form, onNext, onBack }: Step4Props) {
   const { register, watch, setValue, formState: { errors } } = form;
-  
+
   const compMin = watch('compMin') || 0;
   const compMax = watch('compMax') || 0;
   const currency = watch('currency') || 'USD';
@@ -51,8 +60,18 @@ export function Step4Practicals({ form, onNext, onBack }: Step4Props) {
   const hoursMax = watch('hoursMax') || 40;
   const duration = watch('duration') || '12mo';
   const locationMode = watch('locationMode') || watch('workModePreference') || 'hybrid';
-  
+  const verificationGates = watch('verificationGates') || [];
+
   const isValid = compMin > 0 && compMax > compMin;
+
+  const toggleVerificationGate = (gateId: string) => {
+    const current = verificationGates || [];
+    if (current.includes(gateId)) {
+      setValue('verificationGates', current.filter((id: string) => id !== gateId));
+    } else {
+      setValue('verificationGates', [...current, gateId]);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -225,6 +244,46 @@ export function Step4Practicals({ form, onNext, onBack }: Step4Props) {
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+      {/* Verification Gates */}
+      <div className="space-y-4 pt-4 border-t">
+        <div>
+          <Label>Verification Requirements</Label>
+          <p className="text-sm text-muted-foreground">
+            Select verification gates that candidates must complete before matching
+          </p>
+        </div>
+        <div className="space-y-3">
+          {VERIFICATION_GATES.map((gate) => (
+            <div
+              key={gate.id}
+              className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+            >
+              <Checkbox
+                id={gate.id}
+                checked={verificationGates.includes(gate.id)}
+                onCheckedChange={() => toggleVerificationGate(gate.id)}
+              />
+              <div className="flex-1">
+                <Label
+                  htmlFor={gate.id}
+                  className="font-medium cursor-pointer"
+                >
+                  {gate.label}
+                </Label>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {gate.description}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+        {verificationGates.length > 0 && (
+          <p className="text-sm text-primary font-medium">
+            {verificationGates.length} verification gate{verificationGates.length > 1 ? 's' : ''} selected
+          </p>
+        )}
       </div>
 
       {/* Navigation */}

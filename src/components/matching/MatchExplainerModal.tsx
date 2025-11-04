@@ -1,0 +1,511 @@
+/**
+ * Match Explainer Modal (Flow I-18)
+ *
+ * PRD Requirement: Show "Why you match" with full transparency
+ * - Composite score breakdown
+ * - PAC (Purpose-Alignment Contribution) percentage
+ * - Skills overlap with levels
+ * - Values & Causes alignment
+ * - Rank transparency (Top X or band)
+ *
+ * Implements PRD Part 5 Feature F4: Matching Hub transparency
+ */
+
+'use client';
+
+import { useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import {
+  Info,
+  Heart,
+  Target,
+  CheckCircle2,
+  TrendingUp,
+  Award,
+  AlertCircle,
+  Zap,
+} from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+interface MatchExplainerProps {
+  // Overall match data
+  matchId: string;
+  compositeScore: number; // 0-1
+  rank?: number; // User's rank in this match pool
+  totalCandidates?: number; // Total candidates in pool
+  rankBand?: string; // e.g., "Top 5", "Top 10"
+
+  // Subscore breakdown
+  subscores: {
+    skills?: number; // 0-1
+    pac?: number; // 0-1 (Purpose-Alignment Contribution)
+    constraints?: number; // 0-1 (location, salary, hours match)
+    recency?: number; // 0-1 (skill freshness)
+    evidence?: number; // 0-1 (verification strength)
+  };
+
+  // Skills overlap
+  skillsMatch?: {
+    required: Array<{
+      skillName: string;
+      requiredLevel: number;
+      yourLevel: number;
+      met: boolean;
+    }>;
+    nice: Array<{
+      skillName: string;
+      desiredLevel?: number;
+      yourLevel: number;
+      met: boolean;
+    }>;
+  };
+
+  // PAC breakdown
+  pac?: {
+    valuesOverlap: number; // 0-1
+    causesOverlap: number; // 0-1
+    sharedValues: string[];
+    sharedCauses: string[];
+    totalValues: number;
+    totalCauses: number;
+  };
+
+  // Constraints match
+  constraints?: {
+    location: { match: boolean; details?: string };
+    salary: { match: boolean; details?: string };
+    hours: { match: boolean; details?: string };
+    workMode: { match: boolean; details?: string };
+  };
+
+  // Custom trigger button (optional)
+  trigger?: React.ReactNode;
+}
+
+export function MatchExplainerModal({
+  matchId,
+  compositeScore,
+  rank,
+  totalCandidates,
+  rankBand,
+  subscores,
+  skillsMatch,
+  pac,
+  constraints,
+  trigger,
+}: MatchExplainerProps) {
+  const [open, setOpen] = useState(false);
+
+  // Calculate percentages
+  const overallPercent = Math.round(compositeScore * 100);
+  const skillsPercent = Math.round((subscores.skills ?? 0) * 100);
+  const pacPercent = Math.round((subscores.pac ?? 0) * 100);
+  const constraintsPercent = Math.round((subscores.constraints ?? 0) * 100);
+  const recencyPercent = Math.round((subscores.recency ?? 0) * 100);
+  const evidencePercent = Math.round((subscores.evidence ?? 0) * 100);
+
+  // Determine rank display
+  const getRankDisplay = () => {
+    if (rankBand) return rankBand;
+    if (rank && totalCandidates) {
+      if (rank <= 5) return 'Top 5';
+      if (rank <= 10) return 'Top 10';
+      if (rank <= 20) return 'Top 20';
+      return `#${rank} of ${totalCandidates}`;
+    }
+    return 'Competitive';
+  };
+
+  const getRankColor = () => {
+    if (!rank) return '#6B6760';
+    if (rank <= 5) return '#1C4D3A'; // Forest green
+    if (rank <= 10) return '#C76B4A'; // Terracotta
+    return '#6B6760'; // Charcoal
+  };
+
+  // Default trigger
+  const defaultTrigger = (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="text-xs gap-1.5 text-[#1C4D3A] hover:bg-[#1C4D3A]/5"
+    >
+      <Info className="w-4 h-4" />
+      Why this match?
+    </Button>
+  );
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>{trigger || defaultTrigger}</DialogTrigger>
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-xl">
+            <Zap className="w-6 h-6 text-[#1C4D3A]" />
+            Why This Match?
+          </DialogTitle>
+          <p className="text-sm text-[#6B6760] mt-1">
+            Complete transparency into how we calculated this match
+          </p>
+        </DialogHeader>
+
+        <div className="space-y-6 py-4">
+          {/* Overall Score & Rank */}
+          <div className="bg-gradient-to-br from-[#E8F5E1] to-[#F7F6F1] rounded-xl p-6 border border-[#E8E6DD]">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <p className="text-sm text-[#6B6760] mb-1">Overall Match Score</p>
+                <p className="text-4xl font-bold text-[#1C4D3A]">{overallPercent}%</p>
+              </div>
+              {(rank || rankBand) && (
+                <div className="text-right">
+                  <p className="text-sm text-[#6B6760] mb-1">Your Ranking</p>
+                  <div className="flex items-center gap-2">
+                    <Award className="w-5 h-5" style={{ color: getRankColor() }} />
+                    <p
+                      className="text-xl font-semibold"
+                      style={{ color: getRankColor() }}
+                    >
+                      {getRankDisplay()}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <Progress value={overallPercent} className="h-3" />
+
+            <p className="text-xs text-[#6B6760] mt-3">
+              This score combines your skills, purpose alignment, constraints match, and credential
+              strength.
+            </p>
+          </div>
+
+          {/* Tabbed Breakdown */}
+          <Tabs defaultValue="overview" className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="skills">Skills</TabsTrigger>
+              <TabsTrigger value="purpose">Purpose</TabsTrigger>
+              <TabsTrigger value="constraints">Constraints</TabsTrigger>
+            </TabsList>
+
+            {/* Overview Tab */}
+            <TabsContent value="overview" className="space-y-4 pt-4">
+              <h4 className="text-sm font-semibold text-[#2D3330] mb-3">
+                Score Breakdown by Category
+              </h4>
+
+              {/* Skills */}
+              {subscores.skills !== undefined && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-[#1C4D3A]" />
+                      <span className="text-sm font-medium text-[#2D3330]">Skills Match</span>
+                    </div>
+                    <span className="text-sm font-semibold text-[#1C4D3A]">
+                      {skillsPercent}%
+                    </span>
+                  </div>
+                  <Progress value={skillsPercent} className="h-2" />
+                </div>
+              )}
+
+              {/* PAC */}
+              {subscores.pac !== undefined && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Heart className="w-4 h-4 text-[#C76B4A]" />
+                      <span className="text-sm font-medium text-[#2D3330]">
+                        Purpose Alignment (PAC)
+                      </span>
+                    </div>
+                    <span className="text-sm font-semibold text-[#C76B4A]">{pacPercent}%</span>
+                  </div>
+                  <Progress value={pacPercent} className="h-2" />
+                </div>
+              )}
+
+              {/* Constraints */}
+              {subscores.constraints !== undefined && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-[#1C4D3A]" />
+                      <span className="text-sm font-medium text-[#2D3330]">
+                        Practical Constraints
+                      </span>
+                    </div>
+                    <span className="text-sm font-semibold text-[#1C4D3A]">
+                      {constraintsPercent}%
+                    </span>
+                  </div>
+                  <Progress value={constraintsPercent} className="h-2" />
+                </div>
+              )}
+
+              {/* Recency */}
+              {subscores.recency !== undefined && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-[#6B6760]" />
+                      <span className="text-sm font-medium text-[#2D3330]">Skill Recency</span>
+                    </div>
+                    <span className="text-sm font-semibold text-[#6B6760]">
+                      {recencyPercent}%
+                    </span>
+                  </div>
+                  <Progress value={recencyPercent} className="h-2" />
+                </div>
+              )}
+
+              {/* Evidence */}
+              {subscores.evidence !== undefined && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Award className="w-4 h-4 text-[#6B6760]" />
+                      <span className="text-sm font-medium text-[#2D3330]">
+                        Evidence Strength
+                      </span>
+                    </div>
+                    <span className="text-sm font-semibold text-[#6B6760]">
+                      {evidencePercent}%
+                    </span>
+                  </div>
+                  <Progress value={evidencePercent} className="h-2" />
+                </div>
+              )}
+
+              <div className="bg-[#F7F6F1] rounded-lg p-4 border border-[#E8E6DD] mt-4">
+                <p className="text-xs leading-relaxed text-[#2D3330]">
+                  <strong className="font-semibold">How it works:</strong> Your composite score
+                  is a weighted combination of these factors. Higher scores in key areas (Skills +
+                  Purpose) boost your overall match.
+                </p>
+              </div>
+            </TabsContent>
+
+            {/* Skills Tab */}
+            <TabsContent value="skills" className="space-y-4 pt-4">
+              {skillsMatch ? (
+                <>
+                  {/* Required Skills */}
+                  {skillsMatch.required.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-[#2D3330] mb-3">
+                        Required Skills
+                      </h4>
+                      <div className="space-y-2">
+                        {skillsMatch.required.map((skill, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-center justify-between p-3 rounded-lg border border-[#E8E6DD] bg-white"
+                          >
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-[#2D3330]">
+                                {skill.skillName}
+                              </p>
+                              <p className="text-xs text-[#6B6760] mt-0.5">
+                                Required: Level {skill.requiredLevel} • You have: Level{' '}
+                                {skill.yourLevel}
+                              </p>
+                            </div>
+                            {skill.met ? (
+                              <CheckCircle2 className="w-5 h-5 text-[#1C4D3A] flex-shrink-0" />
+                            ) : (
+                              <AlertCircle className="w-5 h-5 text-[#C76B4A] flex-shrink-0" />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Nice-to-Have Skills */}
+                  {skillsMatch.nice.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-[#2D3330] mb-3">
+                        Nice-to-Have Skills
+                      </h4>
+                      <div className="space-y-2">
+                        {skillsMatch.nice.map((skill, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-center justify-between p-3 rounded-lg border border-[#E8E6DD] bg-white"
+                          >
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-[#2D3330]">
+                                {skill.skillName}
+                              </p>
+                              <p className="text-xs text-[#6B6760] mt-0.5">
+                                Your level: {skill.yourLevel}
+                              </p>
+                            </div>
+                            {skill.met && (
+                              <CheckCircle2 className="w-5 h-5 text-[#1C4D3A] flex-shrink-0" />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="text-sm text-[#6B6760]">No skills data available</p>
+              )}
+            </TabsContent>
+
+            {/* Purpose Tab */}
+            <TabsContent value="purpose" className="space-y-4 pt-4">
+              {pac ? (
+                <>
+                  {/* Values Alignment */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Heart className="w-5 h-5 text-[#C76B4A]" />
+                      <h4 className="font-semibold text-sm text-[#2D3330]">Values Alignment</h4>
+                    </div>
+
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs text-[#6B6760]">Overlap</span>
+                      <span className="text-sm font-semibold text-[#C76B4A]">
+                        {Math.round(pac.valuesOverlap * 100)}%
+                      </span>
+                    </div>
+                    <Progress value={pac.valuesOverlap * 100} className="h-2 mb-3" />
+
+                    {pac.sharedValues.length > 0 ? (
+                      <div>
+                        <p className="text-xs text-[#6B6760] mb-2">Shared values:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {pac.sharedValues.map((value, idx) => (
+                            <Badge
+                              key={idx}
+                              variant="secondary"
+                              className="bg-[#C76B4A]/10 text-[#C76B4A] border-[#C76B4A]/20"
+                            >
+                              <CheckCircle2 className="w-3 h-3 mr-1" />
+                              {value}
+                            </Badge>
+                          ))}
+                        </div>
+                        <p className="text-xs text-[#6B6760] mt-2">
+                          {pac.sharedValues.length} of {pac.totalValues} values in common
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-[#6B6760]">No values in common</p>
+                    )}
+                  </div>
+
+                  {/* Causes Alignment */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Target className="w-5 h-5 text-[#1C4D3A]" />
+                      <h4 className="font-semibold text-sm text-[#2D3330]">Causes Alignment</h4>
+                    </div>
+
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs text-[#6B6760]">Overlap</span>
+                      <span className="text-sm font-semibold text-[#1C4D3A]">
+                        {Math.round(pac.causesOverlap * 100)}%
+                      </span>
+                    </div>
+                    <Progress value={pac.causesOverlap * 100} className="h-2 mb-3" />
+
+                    {pac.sharedCauses.length > 0 ? (
+                      <div>
+                        <p className="text-xs text-[#6B6760] mb-2">Shared causes:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {pac.sharedCauses.map((cause, idx) => (
+                            <Badge
+                              key={idx}
+                              variant="secondary"
+                              className="bg-[#1C4D3A]/10 text-[#1C4D3A] border-[#1C4D3A]/20"
+                            >
+                              <CheckCircle2 className="w-3 h-3 mr-1" />
+                              {cause}
+                            </Badge>
+                          ))}
+                        </div>
+                        <p className="text-xs text-[#6B6760] mt-2">
+                          {pac.sharedCauses.length} of {pac.totalCauses} causes in common
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-[#6B6760]">No causes in common</p>
+                    )}
+                  </div>
+
+                  <div className="bg-[#F7F6F1] rounded-lg p-4 border border-[#E8E6DD]">
+                    <p className="text-xs leading-relaxed text-[#2D3330]">
+                      <strong className="font-semibold">PAC (Purpose-Alignment Contribution)</strong>{' '}
+                      uses Jaccard similarity to measure value and cause overlap. Higher PAC means
+                      this role aligns with what matters to you.
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-[#6B6760]">No purpose alignment data available</p>
+              )}
+            </TabsContent>
+
+            {/* Constraints Tab */}
+            <TabsContent value="constraints" className="space-y-3 pt-4">
+              {constraints ? (
+                <>
+                  {Object.entries(constraints).map(([key, value]) => (
+                    <div
+                      key={key}
+                      className="flex items-start justify-between p-3 rounded-lg border border-[#E8E6DD] bg-white"
+                    >
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-[#2D3330] capitalize mb-0.5">
+                          {key.replace(/([A-Z])/g, ' $1').trim()}
+                        </p>
+                        {value.details && (
+                          <p className="text-xs text-[#6B6760]">{value.details}</p>
+                        )}
+                      </div>
+                      {value.match ? (
+                        <CheckCircle2 className="w-5 h-5 text-[#1C4D3A] flex-shrink-0 ml-2" />
+                      ) : (
+                        <AlertCircle className="w-5 h-5 text-[#C76B4A] flex-shrink-0 ml-2" />
+                      )}
+                    </div>
+                  ))}
+                </>
+              ) : (
+                <p className="text-sm text-[#6B6760]">No constraints data available</p>
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-between items-center pt-4 border-t border-[#E8E6DD]">
+          <p className="text-xs text-[#6B6760]">
+            Match calculated on {new Date().toLocaleDateString()}
+          </p>
+          <Button onClick={() => setOpen(false)} className="bg-[#1C4D3A] text-white">
+            Got it
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { IndividualMatchingEmpty } from '@/components/matching/IndividualMatchingEmpty';
 import { MatchingProfileSetup } from '@/components/matching/MatchingProfileSetup';
 import { MatchResultCard } from '@/components/matching/MatchResultCard';
+import { EnhancedMatchFilters } from '@/components/matching/EnhancedMatchFilters';
 import { toast } from 'sonner';
 
 export const dynamic = 'force-dynamic';
@@ -14,7 +15,17 @@ export default function MatchingPage() {
   const [matchingProfile, setMatchingProfile] = useState<unknown | null>(null);
   const [showSetup, setShowSetup] = useState(false);
   const [matches, setMatches] = useState<unknown[]>([]);
+  const [filteredMatches, setFilteredMatches] = useState<unknown[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeFilters, setActiveFilters] = useState<{
+    causes: string[];
+    skillDomains: string[];
+    locationMode?: string;
+    workMode?: string;
+  }>({
+    causes: [],
+    skillDomains: [],
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -46,7 +57,27 @@ export default function MatchingPage() {
           }
           
           const matchesData = await matchesRes.json();
-          setMatches(matchesData.items || []);
+          const matchItems = matchesData.items || [];
+          setMatches(matchItems);
+          setFilteredMatches(matchItems);
+
+          // Track first match shown for TTFQI metric
+          if (matchItems.length > 0) {
+            try {
+              const { emitFirstMatchShown } = await import('@/lib/analytics/events');
+              await emitFirstMatchShown(
+                matchItems[0].userId || matchItems[0].user_id,
+                matchItems[0].id,
+                {
+                  totalMatches: matchItems.length,
+                  topScore: matchItems[0].score || matchItems[0].totalScore,
+                }
+              );
+            } catch (analyticsError) {
+              // Log but don't fail the page load
+              console.error('Failed to track first match shown:', analyticsError);
+            }
+          }
         }
       } catch (error) {
         console.error('Error loading matching data:', error);
@@ -59,6 +90,35 @@ export default function MatchingPage() {
 
     fetchData();
   }, []);
+
+  // Apply filters when they change
+  useEffect(() => {
+    let filtered = [...matches];
+
+    // Filter by causes
+    if (activeFilters.causes.length > 0) {
+      filtered = filtered.filter((match: any) => {
+        const assignmentCauses = match.assignment?.causeTags || [];
+        return activeFilters.causes.some((cause) => assignmentCauses.includes(cause));
+      });
+    }
+
+    // Filter by location mode
+    if (activeFilters.locationMode) {
+      filtered = filtered.filter((match: any) => {
+        return match.assignment?.locationMode === activeFilters.locationMode;
+      });
+    }
+
+    // Filter by work mode
+    if (activeFilters.workMode) {
+      filtered = filtered.filter((match: any) => {
+        return match.assignment?.workMode === activeFilters.workMode;
+      });
+    }
+
+    setFilteredMatches(filtered);
+  }, [activeFilters, matches]);
 
   if (isLoading) {
     return (
@@ -95,33 +155,41 @@ export default function MatchingPage() {
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
           <h1 className="text-2xl font-semibold">Matching</h1>
-          <button
-            onClick={() => {
-              setShowSetup(true);
-            }}
-            className="text-sm underline"
-            style={{ color: '#1C4D3A' }}
-          >
-            Edit Profile
-          </button>
+          <div className="flex items-center gap-2">
+            <EnhancedMatchFilters
+              activeFilters={activeFilters}
+              onFiltersChange={setActiveFilters}
+            />
+            <button
+              onClick={() => {
+                setShowSetup(true);
+              }}
+              className="text-sm underline"
+              style={{ color: '#1C4D3A' }}
+            >
+              Edit Profile
+            </button>
+          </div>
         </div>
         <p className="text-sm" style={{ color: '#6B6760' }}>
-          Opportunities aligned with your skills and values
+          {filteredMatches.length} opportunit{filteredMatches.length === 1 ? 'y' : 'ies'} aligned with your skills and values
         </p>
       </div>
 
-      {matches.length === 0 ? (
+      {filteredMatches.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-lg mb-2" style={{ color: '#2D3330' }}>
             No matches yet
           </p>
           <p className="text-sm" style={{ color: '#6B6760' }}>
-            Check back soon or adjust your filters
+            {matches.length === 0 
+              ? 'Check back soon for new opportunities'
+              : 'No matches found with current filters. Try adjusting your filters.'}
           </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {matches.map((match: any, index: number) => (
+          {filteredMatches.map((match: any, index: number) => (
             <MatchResultCard
               key={index}
               result={match}
@@ -158,7 +226,8 @@ export default function MatchingPage() {
                 }
               }}
               onHide={() => {
-                setMatches(matches.filter((_: unknown, i: number) => i !== index));
+                const updatedMatches = matches.filter((m: any) => m.id !== match.id);
+                setMatches(updatedMatches);
                 toast.success('Hidden from results');
               }}
             />

@@ -27,15 +27,15 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
   const pathname = usePathname();
 
   const navItems = [
-    { href: `${basePath}/home`, icon: Home, label: 'Dashboard', dataTour: 'dashboard-link' },
+    { href: `${basePath}/home`, icon: Home, label: 'Dashboard', dataTour: 'home-link' },
     { href: `${basePath}/profile`, icon: User, label: 'Profile', dataTour: 'profile-link' },
     {
       href: `${basePath}/matching`,
       icon: Users,
       label: 'Matching',
-      dataTour: 'opportunities-link',
+      dataTour: 'matching-link',
     },
-    { href: `${basePath}/expertise`, icon: MapPin, label: 'Expertise', dataTour: 'skills-link' },
+    { href: `${basePath}/expertise`, icon: MapPin, label: 'Expertise', dataTour: 'expertise-link' },
     {
       href: `${basePath}/interviews`,
       icon: Video,
@@ -54,6 +54,7 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
 
   return (
     <aside
+      data-tour="left-nav"
       className={`border-r transition-all duration-300 ease-in-out flex-shrink-0 flex flex-col ${
         isExpanded ? 'w-52' : 'w-14'
       }`}
