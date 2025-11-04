@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
-import { matches, assignments, organizationProfiles } from '@/db/schema';
+import { matches, assignments, organizations } from '@/db/schema';
 import { eq, and, isNotNull, gt } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
@@ -21,11 +21,11 @@ export async function GET() {
       .select({
         match: matches,
         assignment: assignments,
-        organization: organizationProfiles,
+        organization: organizations,
       })
       .from(matches)
       .innerJoin(assignments, eq(matches.assignmentId, assignments.id))
-      .innerJoin(organizationProfiles, eq(assignments.organizationId, organizationProfiles.id))
+      .innerJoin(organizations, eq(assignments.organizationId, organizations.id))
       .where(
         and(
           eq(matches.profileId, user.id),
@@ -48,7 +48,7 @@ export async function GET() {
       },
       organization: {
         id: row.organization.id,
-        name: row.organization.name,
+        name: row.organization.displayName,
         logoUrl: row.organization.logoUrl,
       },
     }));
@@ -62,4 +62,3 @@ export async function GET() {
     return NextResponse.json({ error: 'Failed to fetch snoozed matches' }, { status: 500 });
   }
 }
-

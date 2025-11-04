@@ -111,23 +111,27 @@ export const individualProfiles = pgTable('individual_profiles', {
 });
 
 // Dashboard layouts - user customizable dashboard tiles (F2 requirement)
-export const dashboardLayouts = pgTable('dashboard_layouts', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id')
-    .references(() => profiles.id, { onDelete: 'cascade' })
-    .notNull(),
-  widgetId: text('widget_id').notNull(), // e.g., 'goals', 'tasks', 'matching-results', 'gap-map', 'next-best-actions'
-  position: integer('position').notNull(), // display order (0-indexed)
-  visible: boolean('visible').default(true).notNull(),
-  size: text('size', {
-    enum: ['small', 'default', 'large'],
-  }).default('default'),
-  settings: jsonb('settings').default(sql`'{}'::jsonb`), // widget-specific settings
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-}, (table) => ({
-  uniqueUserWidget: unique().on(table.userId, table.widgetId),
-}));
+export const dashboardLayouts = pgTable(
+  'dashboard_layouts',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    widgetId: text('widget_id').notNull(), // e.g., 'goals', 'tasks', 'matching-results', 'gap-map', 'next-best-actions'
+    position: integer('position').notNull(), // display order (0-indexed)
+    visible: boolean('visible').default(true).notNull(),
+    size: text('size', {
+      enum: ['small', 'default', 'large'],
+    }).default('default'),
+    settings: jsonb('settings').default(sql`'{}'::jsonb`), // widget-specific settings
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    uniqueUserWidget: unique().on(table.userId, table.widgetId),
+  })
+);
 
 // Organizations
 export const organizations = pgTable('organizations', {
@@ -377,6 +381,31 @@ export const organizationFieldVisibility = pgTable('organization_field_visibilit
   partnerships: text('partnerships').default('post_match').notNull(),
   goals: text('goals').default('post_match').notNull(),
   impact: text('impact').default('post_match').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Profile field visibility - granular privacy controls for individual profiles
+export const profileFieldVisibility = pgTable('profile_field_visibility', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  profileId: uuid('profile_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull()
+    .unique(),
+  // Visibility levels: public / network_only / match_only / private
+  displayName: text('display_name').default('public').notNull(),
+  avatar: text('avatar').default('public').notNull(),
+  headline: text('headline').default('public').notNull(),
+  location: text('location').default('network_only').notNull(),
+  mission: text('mission').default('public').notNull(),
+  vision: text('vision').default('public').notNull(),
+  values: text('values').default('public').notNull(),
+  causes: text('causes').default('public').notNull(),
+  experiences: text('experiences').default('network_only').notNull(),
+  education: text('education').default('public').notNull(),
+  volunteering: text('volunteering').default('public').notNull(),
+  skills: text('skills').default('public').notNull(),
+  impactStories: text('impact_stories').default('match_only').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -2073,13 +2102,17 @@ export type InsertNotificationPreference = typeof notificationPreferences.$infer
 // Stakeholder Assignment System (Feature 4)
 export const assignmentInvitations = pgTable('assignment_invitations', {
   id: uuid('id').defaultRandom().primaryKey(),
-  orgId: uuid('org_id').references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
+  orgId: uuid('org_id')
+    .references(() => organizations.id, { onDelete: 'cascade' })
+    .notNull(),
   token: text('token').notNull().unique(),
   stakeholderEmail: text('stakeholder_email').notNull(),
   stakeholderName: text('stakeholder_name'),
   assignedSections: jsonb('assigned_sections').notNull(), // Array of section names
   message: text('message'),
-  status: text('status', { enum: ['pending', 'in_progress', 'completed', 'expired'] }).default('pending').notNull(),
+  status: text('status', { enum: ['pending', 'in_progress', 'completed', 'expired'] })
+    .default('pending')
+    .notNull(),
   expiresAt: timestamp('expires_at').notNull(),
   completedAt: timestamp('completed_at'),
   createdBy: uuid('created_by').references(() => profiles.id),
@@ -2089,11 +2122,17 @@ export const assignmentInvitations = pgTable('assignment_invitations', {
 
 export const assignmentSubmissions = pgTable('assignment_submissions', {
   id: uuid('id').defaultRandom().primaryKey(),
-  invitationId: uuid('invitation_id').references(() => assignmentInvitations.id, { onDelete: 'cascade' }).notNull(),
+  invitationId: uuid('invitation_id')
+    .references(() => assignmentInvitations.id, { onDelete: 'cascade' })
+    .notNull(),
   sectionName: text('section_name').notNull(), // e.g., 'projects', 'partnerships', 'impact'
   sectionData: jsonb('section_data').notNull(), // The submitted data
   submittedAt: timestamp('submitted_at').defaultNow().notNull(),
-  reviewStatus: text('review_status', { enum: ['pending', 'approved', 'rejected', 'needs_changes'] }).default('pending').notNull(),
+  reviewStatus: text('review_status', {
+    enum: ['pending', 'approved', 'rejected', 'needs_changes'],
+  })
+    .default('pending')
+    .notNull(),
   reviewedBy: uuid('reviewed_by').references(() => profiles.id),
   reviewedAt: timestamp('reviewed_at'),
   reviewNotes: text('review_notes'),
@@ -2101,7 +2140,9 @@ export const assignmentSubmissions = pgTable('assignment_submissions', {
 
 export const assignmentVersionHistory = pgTable('assignment_version_history', {
   id: uuid('id').defaultRandom().primaryKey(),
-  submissionId: uuid('submission_id').references(() => assignmentSubmissions.id, { onDelete: 'cascade' }).notNull(),
+  submissionId: uuid('submission_id')
+    .references(() => assignmentSubmissions.id, { onDelete: 'cascade' })
+    .notNull(),
   version: integer('version').notNull(),
   sectionData: jsonb('section_data').notNull(),
   changedBy: text('changed_by').notNull(), // 'stakeholder' or user email

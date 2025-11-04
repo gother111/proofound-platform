@@ -187,23 +187,12 @@ export async function GET(request: Request) {
         query = query.eq('cat_id', catId).eq('subcat_id', subcatId).eq('l3_id', l3IdNum);
       }
 
-      if (search) {
-        // Search in name, aliases, and description
-        const searchLower = search.toLowerCase();
-        const searchPattern = `%${searchLower}%`; // Use % for ILIKE pattern matching
+      // If searching, fetch more results for client-side filtering
+      // This is a workaround for JSONB query limitations
+      const fetchLimit = search ? 1000 : 100;
 
-        // Build OR conditions for text search across JSONB fields
-        // Note: Supabase PostgREST uses ->> for text extraction from JSONB
-        // Syntax: column->>jsonKey.operator.pattern
-        query = query.or(
-          `name_i18n->>en.ilike.${searchPattern},` +
-            `description_i18n->>en.ilike.${searchPattern},` +
-            `aliases_i18n->>en.ilike.${searchPattern}`
-        );
-      }
-
-      // Execute the filtered query (not a new one!)
-      const { data: skills, error } = await query.limit(100);
+      // Execute the filtered query
+      const { data: skills, error } = await query.limit(fetchLimit);
 
       if (error) {
         console.error('Error fetching L4 skills:', error);
@@ -212,11 +201,39 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'Failed to fetch skills' }, { status: 500 });
       }
 
-      console.log(`✅ Skills search for "${search}" returned ${skills?.length || 0} results`);
+      // If search query provided, filter results on the server
+      let filteredSkills = skills;
+      if (search && skills) {
+        const searchLower = search.toLowerCase();
+        filteredSkills = skills.filter((skill: any) => {
+          // Search in English name
+          const name = skill.name_i18n?.en?.toLowerCase() || '';
+          // Search in slug
+          const slug = skill.slug?.toLowerCase() || '';
+          // Search in description
+          const description = skill.description_i18n?.en?.toLowerCase() || '';
+          // Search in aliases
+          const aliases = skill.aliases_i18n?.en || [];
+          const aliasMatch = Array.isArray(aliases)
+            ? aliases.some((alias: string) => alias?.toLowerCase().includes(searchLower))
+            : false;
 
-      // Map skills with parent context
+          return (
+            name.includes(searchLower) ||
+            slug.includes(searchLower) ||
+            description.includes(searchLower) ||
+            aliasMatch
+          );
+        });
+      }
+
+      console.log(
+        `✅ Skills search for "${search}" returned ${filteredSkills?.length || 0} results (filtered from ${skills?.length || 0})`
+      );
+
+      // Map filtered skills with parent context
       const mappedSkills =
-        skills?.map((s) => {
+        filteredSkills?.map((s) => {
           const baseSkill = mapTaxonomyFields(s, 'l4');
           return {
             ...baseSkill,
