@@ -47,6 +47,41 @@ Sentry.init({
       return null;
     }
 
+    // Detect security-related events
+    const errorMessage = hint?.originalException?.toString() || event.message || '';
+    const isSecurityEvent = 
+      errorMessage.includes('Security Event:') ||
+      errorMessage.includes('RLS') ||
+      errorMessage.includes('policy') ||
+      errorMessage.includes('Unauthorized') ||
+      errorMessage.includes('brute force') ||
+      errorMessage.includes('SQL injection') ||
+      event.tags?.security_event;
+
+    if (isSecurityEvent) {
+      // Tag as security incident
+      event.tags = {
+        ...event.tags,
+        security_incident: true,
+      };
+
+      // Determine severity from message
+      if (errorMessage.includes('CRITICAL') || errorMessage.includes('SQL injection')) {
+        event.level = 'fatal';
+        event.tags.security_severity = 'critical';
+      } else if (errorMessage.includes('HIGH') || errorMessage.includes('Unauthorized') || errorMessage.includes('RLS')) {
+        event.level = 'error';
+        event.tags.security_severity = 'high';
+      } else {
+        event.level = 'warning';
+        event.tags.security_severity = 'medium';
+      }
+
+      // Add security fingerprint for grouping
+      event.fingerprint = event.fingerprint || [];
+      event.fingerprint.push('security-incident');
+    }
+
     return event;
   },
 

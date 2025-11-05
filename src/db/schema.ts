@@ -2355,3 +2355,77 @@ export const purposeEditLog = pgTable('purpose_edit_log', {
 // Type exports for audit
 export type PurposeEditLog = typeof purposeEditLog.$inferSelect;
 export type InsertPurposeEditLog = typeof purposeEditLog.$inferInsert;
+
+// ====================================
+// Staged Messaging System (Privacy-First)
+// ====================================
+// Reference: DATA_SECURITY_PRIVACY_ARCHITECTURE.md Section 10
+
+// Conversations table - Staged identity reveal messaging
+export const conversations = pgTable('conversations', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  matchId: uuid('match_id').references(() => matches.id, { onDelete: 'cascade' }),
+  
+  // Participants
+  participantOneId: uuid('participant_one_id')
+    .references(() => profiles.id)
+    .notNull(),
+  participantTwoId: uuid('participant_two_id')
+    .references(() => profiles.id)
+    .notNull(),
+  
+  // Staged reveal control
+  stage: text('stage', { enum: ['masked', 'revealed'] }).default('masked'),
+  revealedAt: timestamp('revealed_at'),
+  
+  // Masked identifiers (Stage 1)
+  maskedHandleOne: text('masked_handle_one'), // "Contributor #123"
+  maskedHandleTwo: text('masked_handle_two'), // "Organization Representative"
+  
+  // Reveal requests
+  participantOneWantsReveal: boolean('participant_one_wants_reveal').default(false),
+  participantTwoWantsReveal: boolean('participant_two_wants_reveal').default(false),
+  participantOneRevealRequestedAt: timestamp('participant_one_reveal_requested_at'),
+  participantTwoRevealRequestedAt: timestamp('participant_two_reveal_requested_at'),
+  
+  // Metadata
+  lastMessageAt: timestamp('last_message_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Messages table - Text-only messaging with PII detection
+export const messages = pgTable('messages', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  conversationId: uuid('conversation_id')
+    .references(() => conversations.id, { onDelete: 'cascade' })
+    .notNull(),
+  senderId: uuid('sender_id')
+    .references(() => profiles.id)
+    .notNull(),
+  
+  // Message content (2000 char limit per PRD)
+  content: text('content').notNull(),
+  
+  // PII detection flags
+  containsEmail: boolean('contains_email').default(false),
+  containsPhone: boolean('contains_phone').default(false),
+  containsUrl: boolean('contains_url').default(false),
+  piiWarningShown: boolean('pii_warning_shown').default(false),
+  
+  // Metadata
+  sentAt: timestamp('sent_at').defaultNow().notNull(),
+  readAt: timestamp('read_at'),
+  editedAt: timestamp('edited_at'),
+  
+  // Message status
+  status: text('status', {
+    enum: ['sent', 'delivered', 'read', 'deleted'],
+  }).default('sent'),
+});
+
+// Type exports for messaging
+export type Conversation = typeof conversations.$inferSelect;
+export type InsertConversation = typeof conversations.$inferInsert;
+export type Message = typeof messages.$inferSelect;
+export type InsertMessage = typeof messages.$inferInsert;

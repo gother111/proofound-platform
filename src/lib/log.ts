@@ -26,7 +26,7 @@ export interface LogContext {
 }
 
 interface LogEntry {
-  level: 'info' | 'warn' | 'error' | 'debug';
+  level: 'info' | 'warn' | 'error' | 'debug' | 'security_warning' | 'security_critical';
   event: string;
   timestamp: string;
   requestId?: string;
@@ -39,11 +39,11 @@ interface LogEntry {
 /**
  * Check if we should log at this level
  */
-function shouldLog(level: 'info' | 'warn' | 'error' | 'debug'): boolean {
+function shouldLog(level: 'info' | 'warn' | 'error' | 'debug' | 'security_warning' | 'security_critical'): boolean {
   const logLevel =
     process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'debug');
 
-  const levels = { debug: 0, info: 1, warn: 2, error: 3 };
+  const levels = { debug: 0, info: 1, warn: 2, error: 3, security_warning: 3, security_critical: 4 };
   const currentLevel = levels[logLevel as keyof typeof levels] || levels.info;
   const messageLevel = levels[level];
 
@@ -54,7 +54,7 @@ function shouldLog(level: 'info' | 'warn' | 'error' | 'debug'): boolean {
  * Format and output log entry
  */
 function writeLog(
-  level: 'info' | 'warn' | 'error' | 'debug',
+  level: 'info' | 'warn' | 'error' | 'debug' | 'security_warning' | 'security_critical',
   event: string,
   meta?: Record<string, unknown>
 ) {
@@ -99,6 +99,12 @@ function writeLog(
     case 'error':
       console.error(output);
       break;
+    case 'security_warning':
+      console.warn('[SECURITY]', output);
+      break;
+    case 'security_critical':
+      console.error('[SECURITY CRITICAL]', output);
+      break;
   }
 }
 
@@ -135,6 +141,20 @@ export const log = {
   },
 
   /**
+   * Log security warning (HIGH severity security event)
+   */
+  securityWarning: (event: string, meta?: Record<string, unknown>) => {
+    writeLog('security_warning', event, meta);
+  },
+
+  /**
+   * Log security critical (CRITICAL severity security event)
+   */
+  securityCritical: (event: string, meta?: Record<string, unknown>) => {
+    writeLog('security_critical', event, meta);
+  },
+
+  /**
    * Create logger with additional context
    */
   withContext: (context: Partial<LogContext>) => {
@@ -150,6 +170,10 @@ export const log = {
         logContext.run(mergedContext, () => writeLog('error', event, meta)),
       debug: (event: string, meta?: Record<string, unknown>) =>
         logContext.run(mergedContext, () => writeLog('debug', event, meta)),
+      securityWarning: (event: string, meta?: Record<string, unknown>) =>
+        logContext.run(mergedContext, () => writeLog('security_warning', event, meta)),
+      securityCritical: (event: string, meta?: Record<string, unknown>) =>
+        logContext.run(mergedContext, () => writeLog('security_critical', event, meta)),
     };
   },
 };
