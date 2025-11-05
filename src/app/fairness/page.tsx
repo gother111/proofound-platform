@@ -5,9 +5,7 @@
  * Implements PRD Gap 3: Public-facing fairness reporting
  */
 
-import { db } from '@/lib/db';
-import { fairnessReports } from '@/lib/db/schema';
-import { desc } from 'drizzle-orm';
+import { createClient } from '@/lib/supabase/server';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import ReactMarkdown from 'react-markdown';
@@ -18,15 +16,15 @@ export const metadata = {
 };
 
 export default async function FairnessPage() {
-  // Fetch latest published fairness report
-  const latestReports = await db
-    .select()
-    .from(fairnessReports)
-    .where()
-    .orderBy(desc(fairnessReports.createdAt))
+  // Fetch latest published fairness reports
+  const supabase = await createClient();
+  const { data: latestReports } = await supabase
+    .from('fairness_reports')
+    .select('*')
+    .order('created_at', { ascending: false })
     .limit(3);
 
-  const latestReport = latestReports[0];
+  const latestReport = latestReports?.[0];
 
   return (
     <div className="container max-w-5xl py-12">
@@ -82,19 +80,19 @@ export default async function FairnessPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>Latest Fairness Note</CardTitle>
-              <Badge>{latestReport.releaseVersion}</Badge>
+              <Badge>{latestReport.release_version}</Badge>
             </div>
           </CardHeader>
           <CardContent>
             <div className="prose prose-sm max-w-none">
-              <ReactMarkdown>{latestReport.reportMarkdown}</ReactMarkdown>
+              <ReactMarkdown>{latestReport.report_markdown}</ReactMarkdown>
             </div>
           </CardContent>
         </Card>
       )}
 
       {/* Historical Reports */}
-      {latestReports.length > 1 && (
+      {latestReports && latestReports.length > 1 && (
         <Card>
           <CardHeader>
             <CardTitle>Historical Reports</CardTitle>
@@ -107,9 +105,9 @@ export default async function FairnessPage() {
                   className="flex items-center justify-between p-3 border rounded-lg"
                 >
                   <div>
-                    <div className="font-medium">{report.releaseVersion}</div>
+                    <div className="font-medium">{report.release_version}</div>
                     <div className="text-sm text-muted-foreground">
-                      {new Date(report.createdAt).toLocaleDateString()}
+                      {new Date(report.created_at).toLocaleDateString()}
                     </div>
                   </div>
                   <Badge variant="outline">View</Badge>

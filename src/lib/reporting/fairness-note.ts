@@ -4,8 +4,7 @@
  */
 
 import { calculateFairnessGaps, type FairnessAnalysis } from '@/lib/analytics/fairness-gaps';
-import { db } from '@/lib/db';
-import { fairnessReports } from '@/lib/db/schema';
+import { createClient } from '@/lib/supabase/server';
 
 /**
  * Generate a comprehensive fairness note for a release
@@ -68,11 +67,12 @@ ${analysis.recommendations.map((r) => `- ${r}`).join('\n')}
 `;
 
   // Store report in database
-  await db.insert(fairnessReports).values({
-    releaseVersion,
-    reportMarkdown: report,
-    metricsJson: analysis,
-    createdAt: new Date(),
+  const supabase = await createClient();
+  await supabase.from('fairness_reports').insert({
+    release_version: releaseVersion,
+    report_markdown: report,
+    metrics_json: analysis,
+    created_at: new Date().toISOString(),
   });
 
   return report;
