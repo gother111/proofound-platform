@@ -1,10 +1,7 @@
-'use client';
-
 import Link from 'next/link';
 import { ArrowLeft, Cookie } from 'lucide-react';
 import { CookiePreferences } from '@/components/cookies/CookiePreferences';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense } from 'react';
+import { CookieSettingsClient } from '@/components/cookies/CookieSettingsClient';
 
 /**
  * Cookie Settings Page
@@ -19,15 +16,12 @@ import { Suspense } from 'react';
 // Force dynamic rendering since we use searchParams
 export const dynamic = 'force-dynamic';
 
-function CookieSettingsContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const returnTo = searchParams.get('returnTo') || '/';
-
-  // After saving preferences, redirect to the original page
-  const handleSave = () => {
-    router.push(returnTo);
-  };
+export default function CookieSettingsPage({
+  searchParams,
+}: {
+  searchParams: { returnTo?: string };
+}) {
+  const returnTo = searchParams.returnTo || '/';
 
   return (
     <div className="min-h-screen bg-[#F7F6F1]">
@@ -74,8 +68,8 @@ function CookieSettingsContent() {
           </p>
         </div>
 
-        {/* Cookie Preferences Component with onSave callback */}
-        <CookiePreferences onSave={handleSave} />
+        {/* Cookie Preferences Component with client-side routing */}
+        <CookieSettingsClient returnTo={returnTo} />
 
         {/* Additional Information */}
         <div className="mt-12 pt-8 border-t space-y-4">
@@ -122,19 +116,5 @@ function CookieSettingsContent() {
         </div>
       </footer>
     </div>
-  );
-}
-
-export default function CookieSettingsPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen bg-[#F7F6F1] flex items-center justify-center">
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      }
-    >
-      <CookieSettingsContent />
-    </Suspense>
   );
 }
