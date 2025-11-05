@@ -11,7 +11,7 @@ import {
   getAllMetrics,
 } from '@/lib/analytics/metrics';
 import { log } from '@/lib/log';
-import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
+import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit/index';
 
 export const dynamic = 'force-dynamic';
 

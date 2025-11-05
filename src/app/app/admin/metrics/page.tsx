@@ -7,6 +7,9 @@ import { FairnessTable, type FairnessComparison } from '@/components/admin/Fairn
 import { DateRangeFilter, type DateRange } from '@/components/admin/DateRangeFilter';
 import { Skeleton } from '@/components/ui/skeleton';
 
+// Force dynamic rendering - don't pre-render during build
+export const dynamic = 'force-dynamic';
+
 interface TTSCResult {
   value: number;
   median: number;

@@ -5,7 +5,7 @@ import { db } from '@/db';
 import { matchingProfiles, skills } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { log } from '@/lib/log';
-import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
+import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit/index';
 
 export const dynamic = 'force-dynamic';
 

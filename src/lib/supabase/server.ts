@@ -104,3 +104,6 @@ export async function createClient(options: CreateClientOptions = {}): Promise<S
     },
   });
 }
+
+// Export as createServerClient for backwards compatibility
+export const createServerClient = createClient;

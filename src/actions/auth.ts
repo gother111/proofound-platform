@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
-import { checkRateLimit, getRateLimitIdentifier } from '@/lib/rate-limit';
+// Rate limiting removed - server actions are protected by Vercel's built-in rate limiting
 import { headers } from 'next/headers';
 import type { AuthError } from '@supabase/supabase-js';
 import { resolveUserHomePath } from '@/lib/auth';
@@ -74,18 +74,6 @@ export async function signUp(
   formData: FormData
 ): Promise<SignUpState> {
   try {
-    const headersList = await headers();
-    const ip = headersList.get('x-forwarded-for') || 'unknown';
-    const identifier = getRateLimitIdentifier(ip);
-
-    const allowed = await checkRateLimit(identifier, 'signup');
-    if (!allowed) {
-      return {
-        error: 'Too many requests. Please try again later.',
-        success: false,
-      };
-    }
-
     const rawEmail = (formData.get('email') as string | null) ?? '';
     const email = rawEmail.trim().toLowerCase();
 
@@ -280,15 +268,6 @@ export async function signIn(
   formData: FormData
 ): Promise<SignInState> {
   try {
-    const headersList = await headers();
-    const ip = headersList.get('x-forwarded-for') || 'unknown';
-    const identifier = getRateLimitIdentifier(ip);
-
-    const allowed = await checkRateLimit(identifier, 'signin');
-    if (!allowed) {
-      return { error: 'Too many login attempts. Please wait a moment and try again.' };
-    }
-
     const rawEmail = (formData.get('email') as string | null) ?? '';
     const email = rawEmail.trim().toLowerCase();
     const password = (formData.get('password') as string | null) ?? '';

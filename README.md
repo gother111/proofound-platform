@@ -424,13 +424,29 @@ Design tokens from Figma Style Guidelines:
 
 MIT License - see LICENSE file for details
 
-## Support
+## Getting Support
 
-For questions or issues:
+### For Platform Users
 
-- Open a GitHub issue
-- Check existing documentation
-- Review Supabase/Resend docs
+- **Email:** hello@proofound.io (Response within 24 hours, Monday-Friday)
+- **In-App Chat:** Available Monday-Friday, 9 AM - 6 PM UTC
+- **Help Center:** [proofound.io/help](https://proofound.io/help) (coming soon)
+- **User Support Guide:** See [`SUPPORT.md`](SUPPORT.md) for FAQs and troubleshooting
+
+### For Development Issues
+
+- **Open a GitHub Issue:** Report bugs or request features
+- **Review Documentation:**
+  - [`PRODUCTION_CHECKLIST.md`](PRODUCTION_CHECKLIST.md) - Deployment checklist
+  - [`LAUNCH_RUNBOOK.md`](LAUNCH_RUNBOOK.md) - Operational procedures
+  - [`API_DOCUMENTATION.md`](API_DOCUMENTATION.md) - Admin and metrics APIs
+  - [`EMAIL_SUPPORT_SETUP.md`](EMAIL_SUPPORT_SETUP.md) - Email support configuration
+- **Third-Party Docs:** Supabase, Resend, Vercel documentation
+
+### Team Contacts
+
+- **Pavlo Samoshko** (CEO, Product) - pavlo@proofound.io
+- **Yurii Bakurov** (Technical Lead) - yurii@proofound.io
 
 ---
 

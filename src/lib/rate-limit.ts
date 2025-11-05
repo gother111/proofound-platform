@@ -350,3 +350,39 @@ export function checkMessageRateLimit(userId: string): {
 
   return { allowed: true };
 }
+
+/**
+ * Generic rate limit checker (for backwards compatibility)
+ * Delegates to specific rate limit functions
+ */
+export async function checkRateLimit(
+  identifier: string,
+  limit: number,
+  windowMs: number
+): Promise<{ allowed: boolean; reason?: string }> {
+  // For verification requests, use checkVerificationRateLimit
+  const result = await checkVerificationRateLimit(identifier);
+  return {
+    allowed: result.allowed,
+    reason: result.reason,
+  };
+}
+
+/**
+ * Get rate limit identifier from request
+ * Uses user ID if available, otherwise IP address
+ */
+export function getRateLimitIdentifier(userId?: string, ipAddress?: string): string {
+  return userId || ipAddress || 'anonymous';
+}
+
+/**
+ * Get rate limit headers for HTTP responses
+ */
+export function getRateLimitHeaders(limit: number, remaining: number, resetAt?: Date) {
+  return {
+    'X-RateLimit-Limit': limit.toString(),
+    'X-RateLimit-Remaining': remaining.toString(),
+    'X-RateLimit-Reset': resetAt ? Math.floor(resetAt.getTime() / 1000).toString() : '',
+  };
+}

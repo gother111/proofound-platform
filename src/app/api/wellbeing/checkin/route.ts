@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { wellbeingCheckins, auditLogs } from '@/db/schema';
 import { eq, desc, gte } from 'drizzle-orm';
-import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
+import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit/index';
 
 /**
  * POST /api/wellbeing/checkin
