@@ -143,6 +143,10 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
     if (pathname.includes('/home')) return 'Dashboard';
     if (pathname.includes('/matching')) return 'Matching';
     if (pathname.includes('/expertise')) return 'Expertise';
+    if (pathname.includes('/interviews')) return 'Interviews';
+    if (pathname.includes('/messages')) return 'Messages';
+    if (pathname.includes('/notifications')) return 'Notifications';
+    if (pathname.includes('/opportunities')) return 'Opportunities';
     if (pathname.includes('/profile')) return 'Profile';
     if (pathname.includes('/zen')) return 'Zen Hub';
     if (pathname.includes('/settings')) return 'Settings';
