@@ -1,36 +1,42 @@
 /**
- * Conversation Messages API
+ * Messages API - Send and fetch messages in a conversation
  *
- * GET - Fetch messages for a specific conversation
- * POST - Send a new message in a conversation
+ * GET - Fetch paginated messages
+ * POST - Send new message with PII detection
+ *
+ * Reference: DATA_SECURITY_PRIVACY_ARCHITECTURE.md Section 10
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { db } from '@/db';
-import { messages, conversations, profiles } from '@/db/schema';
-import { eq, and, desc } from 'drizzle-orm';
-import { z } from 'zod';
+import { db, conversations, messages, profiles } from '@/db';
+import { eq, and, desc, or, inArray } from 'drizzle-orm';
+import { detectPII, shouldBlockMessage } from '@/lib/privacy/pii-detection';
+import { log } from '@/lib/log';
 
-const SendMessageSchema = z.object({
-  content: z.string().min(1).max(2000, 'Message cannot exceed 2000 characters'),
-});
-
-type RouteContext = {
+interface RouteParams {
   params: Promise<{
     conversationId: string;
   }>;
-};
+}
 
 /**
  * GET /api/conversations/[conversationId]/messages
- * Fetch messages for a specific conversation
+ *
+ * Fetch paginated messages for a conversation
+ *
+ * Query params:
+ * - limit: Number of messages (default: 50, max: 100)
+ * - before: Message ID to fetch messages before (pagination)
  */
-export async function GET(
-  request: NextRequest,
-  context: RouteContext
-) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
+    const { conversationId } = await params;
+    const { searchParams } = new URL(request.url);
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
+    const beforeId = searchParams.get('before');
+
+    // Authenticate user
     const supabase = await createClient();
     const {
       data: { user },
@@ -41,120 +47,109 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { conversationId } = await context.params;
+    // Verify user is a participant
+    const conversation = await db.query.conversations.findFirst({
+      where: eq(conversations.id, conversationId),
+    });
 
-    // Verify conversation exists and user is a participant
-    const conversation = await db
-      .select()
-      .from(conversations)
-      .where(eq(conversations.id, conversationId))
-      .limit(1);
-
-    if (!conversation.length) {
-      return NextResponse.json(
-        { error: 'Conversation not found' },
-        { status: 404 }
-      );
+    if (!conversation) {
+      return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
     }
 
-    const conv = conversation[0];
-
-    // Check if user is a participant
     const isParticipant =
-      conv.participantOneId === user.id || conv.participantTwoId === user.id;
+      conversation.participantOneId === user.id || conversation.participantTwoId === user.id;
 
     if (!isParticipant) {
-      return NextResponse.json(
-        { error: 'You are not a participant in this conversation' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
-    // Get pagination parameters
-    const searchParams = request.nextUrl.searchParams;
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
-    const offset = parseInt(searchParams.get('offset') || '0', 10);
-
-    // Fetch messages
-    const conversationMessages = await db
+    // Fetch messages with RLS protection
+    let query = db
       .select()
       .from(messages)
       .where(eq(messages.conversationId, conversationId))
       .orderBy(desc(messages.sentAt))
-      .limit(limit)
-      .offset(offset);
+      .limit(limit);
 
-    // Get profiles for message senders if identities are revealed (stage 2)
-    const enrichedMessages = await Promise.all(
-      conversationMessages.map(async (message) => {
-        let senderName = 'Unknown';
-        
-        // If conversation is in stage 2, fetch actual names
-        if (conv.stage === 2) {
-          const senderProfile = await db
-            .select({ displayName: profiles.displayName })
-            .from(profiles)
-            .where(eq(profiles.id, message.senderId))
-            .limit(1);
-          
-          senderName = senderProfile[0]?.displayName || 'Anonymous';
-        } else {
-          // Stage 1: Use masked identities
-          const isParticipantOne = message.senderId === conv.participantOneId;
-          senderName = isParticipantOne ? 'Party One' : 'Party Two';
-        }
+    // TODO: Add pagination with beforeId if needed
 
-        return {
-          ...message,
-          senderName,
-          isOwnMessage: message.senderId === user.id,
-        };
+    const messageList = await query;
+
+    // Fetch sender profiles
+    const senderIds = [...new Set(messageList.map((m) => m.senderId))];
+    const senderProfiles = await db
+      .select({
+        id: profiles.id,
+        handle: profiles.handle,
+        displayName: profiles.displayName,
+        avatarUrl: profiles.avatarUrl,
       })
-    );
+      .from(profiles)
+      .where(inArray(profiles.id, senderIds));
 
-    // Mark unread messages as read (messages sent by the other party)
-    const unreadMessageIds = conversationMessages
-      .filter((m) => m.senderId !== user.id && !m.readAt)
-      .map((m) => m.id);
+    const senderMap = new Map(senderProfiles.map((p) => [p.id, p]));
 
-    if (unreadMessageIds.length > 0) {
-      const otherPartyId =
-        conv.participantOneId === user.id ? conv.participantTwoId : conv.participantOneId;
-      
-      await db
-        .update(messages)
-        .set({ readAt: new Date() })
-        .where(
-          and(
-            eq(messages.conversationId, conversationId),
-            eq(messages.senderId, otherPartyId)
-          )
-        );
-    }
+    // Format messages with sender info
+    const formattedMessages = messageList.map((msg) => {
+      const sender = senderMap.get(msg.senderId);
+      let senderInfo;
+
+      if (conversation.stage === 'revealed') {
+        // Stage 2: Show full sender profile
+        senderInfo = sender;
+      } else {
+        // Stage 1: Show masked handle
+        const isSenderParticipantOne = msg.senderId === conversation.participantOneId;
+        senderInfo = {
+          id: msg.senderId,
+          handle: null,
+          displayName: isSenderParticipantOne
+            ? conversation.maskedHandleOne
+            : conversation.maskedHandleTwo,
+          avatarUrl: null,
+        };
+      }
+
+      return {
+        id: msg.id,
+        conversationId: msg.conversationId,
+        content: msg.content,
+        sentAt: msg.sentAt,
+        readAt: msg.readAt,
+        status: msg.status,
+        containsEmail: msg.containsEmail,
+        containsPhone: msg.containsPhone,
+        containsUrl: msg.containsUrl,
+        sender: senderInfo,
+        isOwnMessage: msg.senderId === user.id,
+      };
+    });
 
     return NextResponse.json({
-      messages: enrichedMessages,
-      conversationStage: conv.stage,
-      hasMore: conversationMessages.length === limit,
+      messages: formattedMessages.reverse(), // Oldest first for display
+      hasMore: messageList.length === limit,
+      conversationStage: conversation.stage,
     });
   } catch (error) {
-    console.error('Get messages error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch messages' },
-      { status: 500 }
-    );
+    console.error('Error fetching messages:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
 /**
  * POST /api/conversations/[conversationId]/messages
- * Send a new message in a conversation
+ *
+ * Send a new message with PII detection
+ *
+ * Body:
+ * - content: Message text (max 2000 chars)
+ * - piiWarningShown: Boolean - user confirmed PII warning
  */
-export async function POST(
-  request: NextRequest,
-  context: RouteContext
-) {
+export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
+    const { conversationId } = await params;
+
+    // Authenticate user
     const supabase = await createClient();
     const {
       data: { user },
@@ -165,103 +160,112 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { conversationId } = await context.params;
-
-    // Parse and validate request body
     const body = await request.json();
-    const validation = SendMessageSchema.safeParse(body);
+    const { content, piiWarningShown = false } = body;
 
-    if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Invalid input', details: validation.error.errors },
-        { status: 400 }
-      );
+    // Validate content
+    if (!content || typeof content !== 'string') {
+      return NextResponse.json({ error: 'Message content is required' }, { status: 400 });
     }
 
-    const { content } = validation.data;
+    const trimmedContent = content.trim();
 
-    // Verify conversation exists and user is a participant
-    const conversation = await db
-      .select()
-      .from(conversations)
-      .where(eq(conversations.id, conversationId))
-      .limit(1);
-
-    if (!conversation.length) {
-      return NextResponse.json(
-        { error: 'Conversation not found' },
-        { status: 404 }
-      );
+    if (trimmedContent.length === 0) {
+      return NextResponse.json({ error: 'Message cannot be empty' }, { status: 400 });
     }
 
-    const conv = conversation[0];
+    if (trimmedContent.length > 2000) {
+      return NextResponse.json({ error: 'Message exceeds 2000 character limit' }, { status: 400 });
+    }
 
-    // Check if user is a participant
+    // Verify user is a participant
+    const conversation = await db.query.conversations.findFirst({
+      where: eq(conversations.id, conversationId),
+    });
+
+    if (!conversation) {
+      return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
+    }
+
     const isParticipant =
-      conv.participantOneId === user.id || conv.participantTwoId === user.id;
+      conversation.participantOneId === user.id || conversation.participantTwoId === user.id;
 
     if (!isParticipant) {
-      return NextResponse.json(
-        { error: 'You are not a participant in this conversation' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
-    // Check if conversation is active
-    if (conv.status !== 'active') {
+    // Detect PII in message content
+    const piiDetection = detectPII(trimmedContent);
+
+    // Check if message should be blocked (Stage 1 only)
+    const blockCheck = shouldBlockMessage(
+      trimmedContent,
+      conversation.stage || 'masked',
+      piiWarningShown
+    );
+
+    if (blockCheck.shouldBlock && !piiWarningShown) {
+      // Return warning to user
       return NextResponse.json(
-        { error: 'This conversation is no longer active' },
+        {
+          error: 'PII_DETECTED',
+          message: blockCheck.reason,
+          detection: blockCheck.detection,
+          requiresConfirmation: true,
+        },
         { status: 400 }
       );
     }
 
     // Insert message
-    const newMessage = await db
+    const [newMessage] = await db
       .insert(messages)
       .values({
         conversationId,
         senderId: user.id,
-        content,
+        content: trimmedContent,
+        containsEmail: piiDetection.containsEmail,
+        containsPhone: piiDetection.containsPhone,
+        containsUrl: piiDetection.containsUrl,
+        piiWarningShown: piiWarningShown && piiDetection.hasPII,
+        status: 'sent',
       })
       .returning();
 
-    // Update conversation's lastMessageAt
-    await db
-      .update(conversations)
-      .set({
-        lastMessageAt: new Date(),
-      })
-      .where(eq(conversations.id, conversationId));
+    // Log message sent event (without content for privacy)
+    log.info('message.sent', {
+      messageId: newMessage.id,
+      conversationId,
+      userId: user.id,
+      hasPII: piiDetection.hasPII,
+      piiWarningShown,
+      stage: conversation.stage,
+    });
 
-    // Get sender info for response
-    let senderName = 'You';
-    if (conv.stage === 2) {
-      const senderProfile = await db
-        .select({ displayName: profiles.displayName })
-        .from(profiles)
-        .where(eq(profiles.id, user.id))
-        .limit(1);
-      
-      senderName = senderProfile[0]?.displayName || 'You';
-    }
-
+    // Return created message
     return NextResponse.json(
       {
         message: {
-          ...newMessage[0],
-          senderName,
+          id: newMessage.id,
+          conversationId: newMessage.conversationId,
+          content: newMessage.content,
+          sentAt: newMessage.sentAt,
+          readAt: newMessage.readAt,
+          status: newMessage.status,
+          containsEmail: newMessage.containsEmail,
+          containsPhone: newMessage.containsPhone,
+          containsUrl: newMessage.containsUrl,
           isOwnMessage: true,
         },
-        success: true,
       },
       { status: 201 }
     );
   } catch (error) {
-    console.error('Send message error:', error);
-    return NextResponse.json(
-      { error: 'Failed to send message' },
-      { status: 500 }
-    );
+    console.error('Error sending message:', error);
+    log.error('message.send_failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      conversationId: (await params).conversationId,
+    });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

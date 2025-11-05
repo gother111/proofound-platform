@@ -4,7 +4,8 @@ import { signInWithOAuth, type OAuthState } from '@/actions/auth';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { ReactNode } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 
 type Provider = 'google' | 'linkedin_oidc';
 
@@ -17,7 +18,7 @@ const initialState: OAuthState = {
 };
 
 export default function SocialSignInButtons({ className }: SocialSignInButtonsProps) {
-  const [state, formAction] = useFormState(signInWithOAuth, initialState);
+  const [state, formAction, _isPending] = useActionState(signInWithOAuth, initialState);
 
   return (
     <div className={cn('space-y-3', className)}>

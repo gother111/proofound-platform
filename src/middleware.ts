@@ -40,6 +40,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/reset-password') ||
     pathname.startsWith('/verify-email') ||
     pathname.startsWith('/onboarding') ||
+    pathname.startsWith('/cookies') ||
     pathname === '/' ||
     pathname === '/403' ||
     pathname.match(/\.(ico|png|jpg|jpeg|gif|svg|css|js)$/)

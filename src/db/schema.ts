@@ -1265,31 +1265,8 @@ export const growthPlans = pgTable('growth_plans', {
 // VERIFICATION SYSTEM TABLES
 // ============================================================================
 
-// Verification requests - workflow for proof verification
-export const verificationRequests = pgTable('verification_requests', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  claimType: text('claim_type', {
-    enum: ['experience', 'education', 'volunteering', 'impact_story', 'capability'],
-  }).notNull(),
-  claimId: uuid('claim_id').notNull(), // ID of the claim being verified
-  profileId: uuid('profile_id')
-    .references(() => profiles.id, { onDelete: 'cascade' })
-    .notNull(),
-  verifierEmail: text('verifier_email').notNull(),
-  verifierName: text('verifier_name'),
-  verifierOrg: text('verifier_org'),
-  status: text('status', {
-    enum: ['pending', 'accepted', 'declined', 'cannot_verify', 'expired', 'appealed'],
-  })
-    .default('pending')
-    .notNull(),
-  token: text('token').unique().notNull(),
-  sentAt: timestamp('sent_at').defaultNow().notNull(),
-  expiresAt: timestamp('expires_at').notNull(),
-  lastNudgedAt: timestamp('last_nudged_at'),
-  respondedAt: timestamp('responded_at'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-});
+// Verification requests table definition moved to "Verification Privacy System" section (around line 2398)
+// The comprehensive version includes privacy protection, one-time tokens, and visibility controls.
 
 // Verification responses - referee's response to verification request
 export const verificationResponses = pgTable('verification_responses', {
@@ -1355,49 +1332,12 @@ export const orgVerification = pgTable('org_verification', {
 // ============================================================================
 // MESSAGING SYSTEM TABLES
 // ============================================================================
+// Note: The conversations table definition is now located further down in this file
+// (See "Staged Messaging System" section around line 2360)
+// This keeps the more comprehensive privacy-focused version with masked handles.
 
-// Conversations - chat threads between matched users
-export const conversations = pgTable('conversations', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  matchId: uuid('match_id')
-    .references(() => matches.id, { onDelete: 'cascade' })
-    .notNull()
-    .unique(),
-  assignmentId: uuid('assignment_id')
-    .references(() => assignments.id, { onDelete: 'cascade' })
-    .notNull(),
-  participantOneId: uuid('participant_one_id')
-    .references(() => profiles.id, { onDelete: 'cascade' })
-    .notNull(),
-  participantTwoId: uuid('participant_two_id')
-    .references(() => profiles.id, { onDelete: 'cascade' })
-    .notNull(),
-  stage: integer('stage').default(1).notNull(), // 1 = masked basics, 2 = full reveal
-  status: text('status', {
-    enum: ['active', 'archived', 'closed'],
-  })
-    .default('active')
-    .notNull(),
-  lastMessageAt: timestamp('last_message_at'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-});
-
-// Messages - individual messages in conversations
-export const messages = pgTable('messages', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  conversationId: uuid('conversation_id')
-    .references(() => conversations.id, { onDelete: 'cascade' })
-    .notNull(),
-  senderId: uuid('sender_id')
-    .references(() => profiles.id, { onDelete: 'cascade' })
-    .notNull(),
-  content: text('content').notNull(),
-  attachments: jsonb('attachments').default(sql`'[]'::jsonb`), // [{type: 'link' | 'pdf', url: string, name: string, size?: number}]
-  isSystemMessage: boolean('is_system_message').default(false).notNull(),
-  readAt: timestamp('read_at'),
-  flaggedForModeration: boolean('flagged_for_moderation').default(false).notNull(),
-  sentAt: timestamp('sent_at').defaultNow().notNull(),
-});
+// Messages table definition moved to "Staged Messaging System" section (around line 2371)
+// The comprehensive version includes PII detection and privacy features.
 
 // Blocked users - prevent unwanted communication
 export const blockedUsers = pgTable(
@@ -2352,3 +2292,130 @@ export const purposeEditLog = pgTable('purpose_edit_log', {
 export type PurposeEditLog = typeof purposeEditLog.$inferSelect;
 export type InsertPurposeEditLog = typeof purposeEditLog.$inferInsert;
 
+// ====================================
+// Staged Messaging System (Privacy-First)
+// ====================================
+// Reference: DATA_SECURITY_PRIVACY_ARCHITECTURE.md Section 10
+
+// Conversations table - Staged identity reveal messaging
+export const conversations = pgTable('conversations', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  matchId: uuid('match_id').references(() => matches.id, { onDelete: 'cascade' }),
+
+  // Participants
+  participantOneId: uuid('participant_one_id')
+    .references(() => profiles.id)
+    .notNull(),
+  participantTwoId: uuid('participant_two_id')
+    .references(() => profiles.id)
+    .notNull(),
+
+  // Staged reveal control
+  stage: text('stage', { enum: ['masked', 'revealed'] }).default('masked'),
+  revealedAt: timestamp('revealed_at'),
+
+  // Masked identifiers (Stage 1)
+  maskedHandleOne: text('masked_handle_one'), // "Contributor #123"
+  maskedHandleTwo: text('masked_handle_two'), // "Organization Representative"
+
+  // Reveal requests
+  participantOneWantsReveal: boolean('participant_one_wants_reveal').default(false),
+  participantTwoWantsReveal: boolean('participant_two_wants_reveal').default(false),
+  participantOneRevealRequestedAt: timestamp('participant_one_reveal_requested_at'),
+  participantTwoRevealRequestedAt: timestamp('participant_two_reveal_requested_at'),
+
+  // Metadata
+  lastMessageAt: timestamp('last_message_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Messages table - Text-only messaging with PII detection
+export const messages = pgTable('messages', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  conversationId: uuid('conversation_id')
+    .references(() => conversations.id, { onDelete: 'cascade' })
+    .notNull(),
+  senderId: uuid('sender_id')
+    .references(() => profiles.id)
+    .notNull(),
+
+  // Message content (2000 char limit per PRD)
+  content: text('content').notNull(),
+
+  // PII detection flags
+  containsEmail: boolean('contains_email').default(false),
+  containsPhone: boolean('contains_phone').default(false),
+  containsUrl: boolean('contains_url').default(false),
+  piiWarningShown: boolean('pii_warning_shown').default(false),
+
+  // Metadata
+  sentAt: timestamp('sent_at').defaultNow().notNull(),
+  readAt: timestamp('read_at'),
+  editedAt: timestamp('edited_at'),
+
+  // Message status
+  status: text('status', {
+    enum: ['sent', 'delivered', 'read', 'deleted'],
+  }).default('sent'),
+});
+
+// Type exports for messaging
+export type Conversation = typeof conversations.$inferSelect;
+export type InsertConversation = typeof conversations.$inferInsert;
+export type Message = typeof messages.$inferSelect;
+export type InsertMessage = typeof messages.$inferInsert;
+
+// ====================================
+// Verification Privacy System
+// ====================================
+// Reference: DATA_SECURITY_PRIVACY_ARCHITECTURE.md Section 11
+
+// Verification requests table - Privacy-protected verification with rate limiting
+export const verificationRequests = pgTable('verification_requests', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  profileId: uuid('profile_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+
+  // Verifier info (Tier 1 PII - protected)
+  verifierEmail: text('verifier_email').notNull(),
+  verifierName: text('verifier_name').notNull(),
+  verifierRelationship: text('verifier_relationship'), // e.g., "Manager at Acme Corp"
+
+  // Verification details
+  claimType: text('claim_type', {
+    enum: ['experience', 'skill', 'education', 'achievement', 'project'],
+  }).notNull(),
+  claimData: text('claim_data').notNull(), // JSON string
+
+  // Privacy protection
+  token: text('token').unique().notNull(),
+  expiresAt: timestamp('expires_at').notNull(), // 14 days from creation
+  oneTimeUse: boolean('one_time_use').default(true),
+  usedAt: timestamp('used_at'),
+
+  // Response
+  status: text('status', {
+    enum: ['pending', 'verified', 'declined', 'expired', 'cancelled'],
+  }).default('pending'),
+  responseNote: text('response_note'),
+  respondedAt: timestamp('responded_at'),
+
+  // Visibility control
+  visibility: text('visibility', {
+    enum: ['public', 'private'],
+  }).default('private'),
+  showVerifierName: boolean('show_verifier_name').default(false),
+
+  // Metadata
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+
+  // Badge reference
+  badgeId: uuid('badge_id'),
+});
+
+// Type exports for verification
+export type VerificationRequest = typeof verificationRequests.$inferSelect;
+export type InsertVerificationRequest = typeof verificationRequests.$inferInsert;

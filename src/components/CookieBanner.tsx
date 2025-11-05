@@ -2,10 +2,10 @@
 
 /**
  * Cookie Consent Banner Component
- * 
+ *
  * GDPR-compliant cookie consent banner shown to users on first visit.
  * Stores consent in localStorage and tracks in database.
- * 
+ *
  * Reference: DATA_SECURITY_PRIVACY_ARCHITECTURE.md
  */
 
@@ -25,7 +25,8 @@ export function CookieBanner() {
   useEffect(() => {
     // Check if user already consented
     const storedConsent = localStorage.getItem(CONSENT_KEY);
-    if (!storedConsent || storedConsent !== CONSENT_VERSION) {
+    // Accept both "v1.0.2025-11-06" (Accept All) and "v1.0.2025-11-06-declined" (Essential Only)
+    if (!storedConsent || !storedConsent.startsWith(CONSENT_VERSION)) {
       // Show banner after short delay for better UX
       const timer = setTimeout(() => setShow(true), 1000);
       return () => clearTimeout(timer);
@@ -87,8 +88,8 @@ export function CookieBanner() {
               <div>
                 <h3 className="font-semibold text-lg mb-1">🍪 We Value Your Privacy</h3>
                 <p className="text-sm text-muted-foreground">
-                  We use essential cookies to make Proofound work, and optional analytics cookies
-                  to understand how you use our platform and improve your experience. We never sell
+                  We use essential cookies to make Proofound work, and optional analytics cookies to
+                  understand how you use our platform and improve your experience. We never sell
                   your data.
                 </p>
               </div>
@@ -108,12 +109,7 @@ export function CookieBanner() {
                 <Button onClick={handleAccept} disabled={saving} size="sm">
                   Accept All
                 </Button>
-                <Button
-                  onClick={handleDecline}
-                  variant="outline"
-                  size="sm"
-                  disabled={saving}
-                >
+                <Button onClick={handleDecline} variant="outline" size="sm" disabled={saving}>
                   Essential Only
                 </Button>
                 <Link
@@ -127,6 +123,12 @@ export function CookieBanner() {
                   className="text-xs text-muted-foreground hover:text-foreground underline"
                 >
                   Cookie Policy
+                </Link>
+                <Link
+                  href="/cookies/settings"
+                  className="text-xs text-muted-foreground hover:text-foreground underline"
+                >
+                  Cookie Settings
                 </Link>
               </div>
             </div>
@@ -145,4 +147,3 @@ export function CookieBanner() {
     </div>
   );
 }
-

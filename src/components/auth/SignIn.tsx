@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useActionState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useFormStatus } from 'react-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,7 +44,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [clientError, setClientError] = useState<string | null>(null);
-  const [formState, formAction] = useFormState(signIn, INITIAL_STATE);
+  const [formState, formAction, _isPending] = useActionState(signIn, INITIAL_STATE);
 
   const error = clientError ?? formState?.error ?? null;
 
