@@ -174,6 +174,7 @@ function rankSuggestions(
     }
 
     return {
+      id: skill.code, // Use code as unique identifier
       code: skill.code,
       name: name,
       aliases: aliases,

@@ -9,16 +9,13 @@ import { FileText, Briefcase, Sparkles, Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Suggestion {
-  id: string;
-  conceptUri: string;
-  preferredLabel: string;
-  altLabels: string[] | null;
+  id: string;           // skill code
+  code: string;         // skill code
+  name: string;         // skill name from nameI18n.en
+  aliases: string[];    // alternative names
   description: string | null;
-  level: number;
-  l1Label: string;
-  l2Label: string | null;
-  l3Label: string | null;
-  l4Code: string | null;
+  slug: string;
+  tags: string[] | null;
   score: number;
   confidence: number;
 }
@@ -79,20 +76,69 @@ export function CVJDAutoSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
     setSelectedSkills(newSelected);
   };
 
-  const handleAddSelected = () => {
+  const handleAddSelected = async () => {
     const skillsToAdd = suggestions.filter(s => selectedSkills.has(s.id));
     if (skillsToAdd.length === 0) {
       toast.error('No skills selected');
       return;
     }
 
-    onSkillsAdded?.(skillsToAdd);
-    toast.success(`Added ${skillsToAdd.length} skills to your profile`);
+    setLoading(true);
+    try {
+      let successCount = 0;
+      let failureCount = 0;
 
-    // Clear selections
-    setSelectedSkills(new Set());
-    setSuggestions([]);
-    setText('');
+      for (const skill of skillsToAdd) {
+        try {
+          const response = await fetch('/api/expertise/user-skills', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              skill_code: skill.code,
+              level: 2, // Default to Competent level
+              months_experience: 0,
+              last_used_at: new Date().toISOString(),
+              relevance: 'current',
+            }),
+          });
+
+          if (response.ok) {
+            successCount++;
+          } else {
+            const error = await response.json();
+            if (error.error === 'Skill already exists in your profile') {
+              // Count as success, just skip
+              successCount++;
+            } else {
+              failureCount++;
+              console.error(`Failed to import skill ${skill.name}:`, error);
+            }
+          }
+        } catch (error) {
+          failureCount++;
+          console.error(`Failed to import skill ${skill.name}:`, error);
+        }
+      }
+
+      if (successCount > 0) {
+        toast.success(`Successfully added ${successCount} skill${successCount !== 1 ? 's' : ''}!`);
+        // Clear selections
+        setSelectedSkills(new Set());
+        setSuggestions([]);
+        setText('');
+        // Notify parent to refresh
+        onSkillsAdded?.(skillsToAdd);
+      }
+
+      if (failureCount > 0) {
+        toast.error(`Failed to add ${failureCount} skill${failureCount !== 1 ? 's' : ''}`);
+      }
+    } catch (error) {
+      console.error('Import error:', error);
+      toast.error('Failed to import skills');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getConfidenceColor = (confidence: number) => {
@@ -161,9 +207,9 @@ export function CVJDAutoSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
             <div className="flex items-center justify-between">
               <CardTitle>Suggested Skills ({suggestions.length})</CardTitle>
               {selectedSkills.size > 0 && (
-                <Button onClick={handleAddSelected} size="sm">
+                <Button onClick={handleAddSelected} size="sm" disabled={loading}>
                   <Plus className="h-4 w-4 mr-1" />
-                  Add {selectedSkills.size} Selected
+                  {loading ? 'Adding...' : `Add ${selectedSkills.size} Selected`}
                 </Button>
               )}
             </div>
@@ -191,20 +237,17 @@ export function CVJDAutoSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-medium text-sm">{skill.preferredLabel}</h4>
-                        <Badge variant="outline" className="text-xs">
-                          L{skill.level}
-                        </Badge>
+                        <h4 className="font-medium text-sm">{skill.name}</h4>
                         <Badge className={`text-xs ${getConfidenceColor(skill.confidence)}`}>
                           {Math.round(skill.confidence * 100)}%
                         </Badge>
                       </div>
 
-                      <p className="text-xs text-muted-foreground mb-1">
-                        {skill.l1Label}
-                        {skill.l2Label && ` → ${skill.l2Label}`}
-                        {skill.l3Label && ` → ${skill.l3Label}`}
-                      </p>
+                      {skill.aliases && skill.aliases.length > 0 && (
+                        <p className="text-xs text-muted-foreground mb-1">
+                          Also known as: {skill.aliases.slice(0, 3).join(', ')}
+                        </p>
+                      )}
 
                       {skill.description && (
                         <p className="text-xs text-muted-foreground line-clamp-2">
