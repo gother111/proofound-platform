@@ -1,0 +1,36 @@
+/**
+ * Policy Consent Check API
+ * 
+ * Check if user needs to re-consent to updated policies
+ * 
+ * GET /api/user/consent/check
+ * Returns: { needsConsent, tosUpToDate, privacyUpToDate, missingConsents[] }
+ */
+
+import { NextResponse } from 'next/server';
+import { createServerClient } from '@/lib/supabase/server';
+import { checkPolicyConsent } from '@/lib/privacy/policy-versions';
+
+export async function GET() {
+  try {
+    // Authenticate user
+    const supabase = await createServerClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Check consent status
+    const consentStatus = await checkPolicyConsent(user.id);
+
+    return NextResponse.json(consentStatus);
+  } catch (error) {
+    console.error('Error checking policy consent:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+

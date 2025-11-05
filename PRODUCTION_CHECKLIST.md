@@ -49,13 +49,18 @@ Before deploying, ensure all required environment variables are set in Vercel:
   - What: Email sender address
   - Example: `"Proofound <no-reply@proofound.com>"`
 
-### Optional Variables (Monitoring)
+### Optional Variables (Monitoring & Support)
 
 - [ ] **`RATE_LIMIT_WINDOW_SECONDS`** (default: 60)
   - What: Rate limiting window in seconds
 
 - [ ] **`RATE_LIMIT_MAX`** (default: 30)
   - What: Maximum requests per window
+
+- [ ] **`NEXT_PUBLIC_CRISP_WEBSITE_ID`** (optional - for in-app chat support)
+  - What: Crisp chat widget website ID
+  - Where: [crisp.chat](https://crisp.chat) dashboard
+  - Note: If not set, chat widget won't load (see `EMAIL_SUPPORT_SETUP.md`)
 
 ## 🗄️ Supabase Configuration
 
@@ -233,6 +238,11 @@ Before deploying, ensure all required environment variables are set in Vercel:
   - Active connections
   - Query performance
   - Storage usage
+- [ ] **Follow daily monitoring routine** (See `LAUNCH_RUNBOOK.md` Section 5.3)
+  - Review Vercel Analytics (error rate, TTI)
+  - Check new user signups and completion rate
+  - Review support emails (hello@proofound.io)
+  - Check in-app chat messages (Crisp)
 
 ### Weekly Checks
 
@@ -240,6 +250,10 @@ Before deploying, ensure all required environment variables are set in Vercel:
 - [ ] Check database usage and performance
 - [ ] Verify backups are running (Supabase)
 - [ ] Test critical user flows
+- [ ] **Weekly metrics review** (See `LAUNCH_RUNBOOK.md` Section 5.4)
+  - TTFQI, retention, SUS score
+  - Bug count by severity
+  - Support email themes
 
 ## 🆘 Getting Help
 
@@ -250,6 +264,15 @@ If you encounter issues after deployment:
 3. **Check browser console** - Shows client-side errors
 4. **Review `PRODUCTION_ENV_CHECK.md`** - Detailed environment setup
 5. **Check Supabase logs** - Database connection issues
+6. **Review `LAUNCH_RUNBOOK.md`** - Comprehensive incident response procedures
+
+### Additional Launch Resources
+
+- **`MVP_LAUNCH_DECISIONS.md`** - Critical decisions for launch readiness
+- **`LAUNCH_RUNBOOK.md`** - Complete operational playbook
+- **`API_DOCUMENTATION.md`** - Metrics and admin endpoint documentation
+- **`EMAIL_SUPPORT_SETUP.md`** - Email support configuration and templates
+- **`SUPPORT.md`** - User-facing support documentation
 
 ## ✅ Deployment Complete
 
@@ -266,6 +289,47 @@ Once all items are checked:
 
 ---
 
-**Last Updated**: November 1, 2025
-**Version**: 1.0
+**Last Updated**: November 5, 2025
+**Version**: 1.1
+
+## 📋 MVP Launch Pre-Flight Checklist
+
+Before launching Private Beta (Nov 15, 2025), complete these additional checks:
+
+### Pre-Launch Documentation
+- [ ] Review `MVP_LAUNCH_DECISIONS.md` - All 5 decisions finalized
+- [ ] Review `LAUNCH_RUNBOOK.md` - Team is familiar with procedures
+- [ ] Confirm on-call schedule (Yurii: Technical, Pavlo: Product)
+- [ ] Test incident response workflow (Section 4 of runbook)
+
+### Support Setup
+- [ ] Email support configured (hello@proofound.io)
+- [ ] Auto-responder active (see `EMAIL_SUPPORT_SETUP.md`)
+- [ ] Email templates ready (password reset, bug acknowledgment, etc.)
+- [ ] Support tracker spreadsheet created
+- [ ] In-app chat widget tested (if `NEXT_PUBLIC_CRISP_WEBSITE_ID` set)
+
+### Monitoring & Metrics
+- [ ] Vercel Analytics Real User Monitoring enabled
+- [ ] Admin metrics dashboard accessible (`/app/admin/metrics`)
+- [ ] Test metrics API endpoint (`/api/metrics?metric=all`)
+- [ ] Daily monitoring checklist printed/bookmarked
+- [ ] Weekly metrics review meeting scheduled (Mondays 10 AM UTC)
+
+### Backups & Recovery
+- [ ] Database backup tested (restore from backup once)
+- [ ] Rollback procedure documented and tested
+- [ ] Recovery time objectives confirmed (RTO: 8 hours, RPO: 24 hours)
+
+### Team Readiness
+- [ ] Pavlo and Yurii have access to all systems (Vercel, Supabase, email)
+- [ ] Emergency contact numbers shared
+- [ ] Go/no-go decision made (Nov 15, 9 AM UTC)
+
+**Launch Status:** [ ] Ready for Private Beta
+
+---
+
+**Last Updated**: November 5, 2025
+**Version**: 1.1
 

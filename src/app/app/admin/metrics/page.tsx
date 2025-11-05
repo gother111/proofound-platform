@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import useSWR from 'swr';
 import { MetricCard } from '@/components/admin/MetricCard';
 import { MetricsTrendChart } from '@/components/admin/MetricsTrendChart';
 import { FairnessTable, type FairnessComparison } from '@/components/admin/FairnessTable';
@@ -64,34 +63,44 @@ interface MetricsResponse {
   };
 }
 
-const fetcher = async (url: string) => {
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error('Failed to fetch metrics');
-  }
-  return res.json();
-};
-
 export default function AdminMetricsPage() {
   const [dateRange, setDateRange] = useState<DateRange>({
     startDate: new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
     endDate: new Date(),
   });
 
-  const params = new URLSearchParams({
-    metric: 'all',
-    startDate: dateRange.startDate.toISOString(),
-    endDate: dateRange.endDate.toISOString(),
-  });
+  const [data, setData] = useState<MetricsResponse | undefined>();
+  const [error, setError] = useState<Error | undefined>();
+  const [isLoading, setIsLoading] = useState(true);
 
-  const { data, error, isLoading } = useSWR<MetricsResponse>(
-    `/api/metrics?${params}`,
-    fetcher,
-    {
-      refreshInterval: 60000, // Refresh every 60 seconds
-      revalidateOnFocus: true,
-    }
-  );
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      try {
+        setIsLoading(true);
+        const params = new URLSearchParams({
+          metric: 'all',
+          startDate: dateRange.startDate.toISOString(),
+          endDate: dateRange.endDate.toISOString(),
+        });
+        const res = await fetch(`/api/metrics?${params}`);
+        if (!res.ok) {
+          throw new Error('Failed to fetch metrics');
+        }
+        const result = await res.json();
+        setData(result);
+        setError(undefined);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to fetch metrics'));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchMetrics();
+    const interval = setInterval(fetchMetrics, 60000); // Refresh every 60 seconds
+
+    return () => clearInterval(interval);
+  }, [dateRange]);
 
   // For demo purposes, mock fairness data
   // In production, this would come from /api/analytics/fairness

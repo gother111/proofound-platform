@@ -221,7 +221,7 @@ export function DeleteAccountSection() {
                   <AlertDescription className="text-xs">
                     <strong>Reminder:</strong> You can cancel deletion within 30 days by logging in.
                     We'll send you reminder emails before permanent deletion.
-                  </Alert Description>
+                  </AlertDescription>
                 </Alert>
               </div>
             </AlertDialogDescription>

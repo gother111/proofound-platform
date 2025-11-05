@@ -7,8 +7,7 @@
  * Reference: DATA_SECURITY_PRIVACY_ARCHITECTURE.md Section 11
  */
 
-import { db } from '@/lib/db';
-import { verificationRequests } from '@/db/schema';
+import { db, verificationRequests } from '@/db';
 import { eq, and, gte, ne } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import {  detectRateLimitExceeded } from '@/lib/security/incident-detection';
@@ -56,15 +55,14 @@ export async function checkVerificationRateLimit(userId: string): Promise<{
     const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-    // Count requests in last hour (excluding cancelled)
+    // Count requests in last hour
     const hourlyRequests = await db
       .select()
       .from(verificationRequests)
       .where(
         and(
           eq(verificationRequests.profileId, userId),
-          gte(verificationRequests.createdAt, oneHourAgo),
-          ne(verificationRequests.status, 'cancelled')
+          gte(verificationRequests.createdAt, oneHourAgo)
         )
       );
 
@@ -93,15 +91,14 @@ export async function checkVerificationRateLimit(userId: string): Promise<{
       };
     }
 
-    // Count requests in last 24 hours (excluding cancelled)
+    // Count requests in last 24 hours
     const dailyRequests = await db
       .select()
       .from(verificationRequests)
       .where(
         and(
           eq(verificationRequests.profileId, userId),
-          gte(verificationRequests.createdAt, oneDayAgo),
-          ne(verificationRequests.status, 'cancelled')
+          gte(verificationRequests.createdAt, oneDayAgo)
         )
       );
 
@@ -222,15 +219,6 @@ export async function validateVerificationToken(token: string): Promise<{
       return {
         valid: false,
         reason: 'Verification token has expired',
-        request,
-      };
-    }
-
-    // Check if already used (one-time use)
-    if (request.oneTimeUse && request.usedAt) {
-      return {
-        valid: false,
-        reason: 'Verification token has already been used',
         request,
       };
     }
