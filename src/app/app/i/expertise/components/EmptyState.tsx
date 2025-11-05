@@ -39,8 +39,10 @@ export function EmptyState({ onAddSkill, onImportCV }: EmptyStateProps) {
               onClick={onImportCV}
               className="flex items-center justify-center bg-[#4A5943] text-white hover:bg-[#3C4936]"
             >
-              <FileText className="mr-2 h-5 w-5" />
-              Import from CV/Resume
+              <span className="flex items-center">
+                <FileText className="mr-2 h-5 w-5" />
+                Import from CV/Resume
+              </span>
             </Button>
           )}
           <Button
@@ -53,16 +55,20 @@ export function EmptyState({ onAddSkill, onImportCV }: EmptyStateProps) {
                 : 'bg-[#4A5943] text-white hover:bg-[#3C4936]'
             }`}
           >
-            <Plus className="mr-2 h-5 w-5" />
-            Add manually
+            <span className="flex items-center">
+              <Plus className="mr-2 h-5 w-5" />
+              Add manually
+            </span>
           </Button>
           <Button
             size="lg"
             variant="outline"
             className="flex items-center justify-center border-[#4A5943] text-[#4A5943] hover:bg-[#EEF1EA]"
           >
-            <BookOpen className="mr-2 h-5 w-5" />
-            Learn how it works
+            <span className="flex items-center">
+              <BookOpen className="mr-2 h-5 w-5" />
+              Learn how it works
+            </span>
           </Button>
         </div>
 
