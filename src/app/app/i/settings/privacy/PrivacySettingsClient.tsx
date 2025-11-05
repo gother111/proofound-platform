@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react';
 import { IndividualFieldVisibilityControls } from '@/components/profile/IndividualFieldVisibilityControls';
 import { PrivacyOverview } from '@/components/settings/PrivacyOverview';
+import { DataBreakdown } from '@/components/privacy/DataBreakdown';
+import { AuditLogTable } from '@/components/privacy/AuditLogTable';
+import { DeleteAccountSection } from '@/components/privacy/DeleteAccountSection';
 import { toast } from 'sonner';
 
 export function PrivacySettingsClient() {
@@ -72,12 +75,21 @@ export function PrivacySettingsClient() {
           {/* Privacy Overview */}
           <PrivacyOverview />
 
+          {/* Data Breakdown */}
+          <DataBreakdown />
+
           {/* Field Visibility Controls */}
           <IndividualFieldVisibilityControls
             userId="current"
             initialVisibility={initialVisibility || {}}
             onSave={handleSave}
           />
+
+          {/* Audit Log */}
+          <AuditLogTable />
+
+          {/* Delete Account */}
+          <DeleteAccountSection />
         </div>
       </div>
     </div>

@@ -1,123 +1,364 @@
-const WINDOW_SECONDS = parseInt(process.env.RATE_LIMIT_WINDOW_SECONDS || '60', 10);
-const MAX_REQUESTS = parseInt(process.env.RATE_LIMIT_MAX || '30', 10);
+/**
+ * Rate Limiting Utilities
+ * 
+ * Provides rate limiting for various API endpoints to prevent abuse.
+ * Verification requests: 5/hour, 20/day per user
+ * 
+ * Reference: DATA_SECURITY_PRIVACY_ARCHITECTURE.md Section 11
+ */
 
-type RateLimitEntry = {
-  attempts: number;
-  resetAt: number;
-};
+import { db } from '@/lib/db';
+import { verificationRequests } from '@/db/schema';
+import { eq, and, gte, ne } from 'drizzle-orm';
+import { log } from '@/lib/log';
+import {  detectRateLimitExceeded } from '@/lib/security/incident-detection';
 
-type RateLimitStore = Map<string, RateLimitEntry>;
+/**
+ * Rate limit configuration
+ */
+export const RATE_LIMITS = {
+  verification: {
+    hourly: 5,
+    daily: 20,
+  },
+  dataExport: {
+    hourly: 3,
+    daily: 10,
+  },
+  messages: {
+    perMinute: 10,
+    perHour: 100,
+  },
+} as const;
 
-declare global {
-  // eslint-disable-next-line no-var
-  var __PROFOUND_RATE_LIMIT_STORE__: RateLimitStore | undefined;
-}
+/**
+ * Check if user has exceeded verification rate limit
+ * 
+ * Limits:
+ * - 5 requests per hour
+ * - 20 requests per 24 hours
+ * 
+ * @param userId - User ID to check
+ * @returns Object with allowed status and remaining counts
+ */
+export async function checkVerificationRateLimit(userId: string): Promise<{
+  allowed: boolean;
+  reason?: string;
+  hourlyCount: number;
+  hourlyLimit: number;
+  hourlyRemaining: number;
+  dailyCount: number;
+  dailyLimit: number;
+  dailyRemaining: number;
+}> {
+  try {
+    const now = new Date();
+    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-type RateLimitDbModule = typeof import('@/db');
+    // Count requests in last hour (excluding cancelled)
+    const hourlyRequests = await db
+      .select()
+      .from(verificationRequests)
+      .where(
+        and(
+          eq(verificationRequests.profileId, userId),
+          gte(verificationRequests.createdAt, oneHourAgo),
+          ne(verificationRequests.status, 'cancelled')
+        )
+      );
 
-let dbModulePromise: Promise<RateLimitDbModule | null> | null = null;
+    const hourlyCount = hourlyRequests.length;
+    const hourlyLimit = RATE_LIMITS.verification.hourly;
+    const hourlyRemaining = Math.max(0, hourlyLimit - hourlyCount);
 
-async function loadDbModule(): Promise<RateLimitDbModule | null> {
-  if (!dbModulePromise) {
-    dbModulePromise = import('@/db').catch((error) => {
-      if (process.env.NODE_ENV !== 'test') {
-        console.warn('Rate limiter persistent storage unavailable:', error);
-      }
-      return null;
+    // Check hourly limit
+    if (hourlyCount >= hourlyLimit) {
+      detectRateLimitExceeded(
+        userId,
+        '/api/verification',
+        hourlyCount,
+        hourlyLimit
+      );
+
+      return {
+        allowed: false,
+        reason: `Rate limit exceeded: ${hourlyLimit} verification requests per hour. Try again later.`,
+        hourlyCount,
+        hourlyLimit,
+        hourlyRemaining: 0,
+        dailyCount: hourlyCount,
+        dailyLimit: RATE_LIMITS.verification.daily,
+        dailyRemaining: 0,
+      };
+    }
+
+    // Count requests in last 24 hours (excluding cancelled)
+    const dailyRequests = await db
+      .select()
+      .from(verificationRequests)
+      .where(
+        and(
+          eq(verificationRequests.profileId, userId),
+          gte(verificationRequests.createdAt, oneDayAgo),
+          ne(verificationRequests.status, 'cancelled')
+        )
+      );
+
+    const dailyCount = dailyRequests.length;
+    const dailyLimit = RATE_LIMITS.verification.daily;
+    const dailyRemaining = Math.max(0, dailyLimit - dailyCount);
+
+    // Check daily limit
+    if (dailyCount >= dailyLimit) {
+      detectRateLimitExceeded(
+        userId,
+        '/api/verification',
+        dailyCount,
+        dailyLimit
+      );
+
+      return {
+        allowed: false,
+        reason: `Rate limit exceeded: ${dailyLimit} verification requests per 24 hours. Try again tomorrow.`,
+        hourlyCount,
+        hourlyLimit,
+        hourlyRemaining,
+        dailyCount,
+        dailyLimit,
+        dailyRemaining: 0,
+      };
+    }
+
+    // Within limits
+    return {
+      allowed: true,
+      hourlyCount,
+      hourlyLimit,
+      hourlyRemaining,
+      dailyCount,
+      dailyLimit,
+      dailyRemaining,
+    };
+  } catch (error) {
+    log.error('rate_limit.check_failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      userId,
     });
-  }
 
-  return dbModulePromise;
+    // Fail closed - deny if error checking limits
+    return {
+      allowed: false,
+      reason: 'Unable to verify rate limit. Please try again later.',
+      hourlyCount: 0,
+      hourlyLimit: RATE_LIMITS.verification.hourly,
+      hourlyRemaining: 0,
+      dailyCount: 0,
+      dailyLimit: RATE_LIMITS.verification.daily,
+      dailyRemaining: 0,
+    };
+  }
 }
 
-function getMemoryStore(): RateLimitStore {
-  if (!globalThis.__PROFOUND_RATE_LIMIT_STORE__) {
-    globalThis.__PROFOUND_RATE_LIMIT_STORE__ = new Map();
-  }
+/**
+ * Generate unique verification token
+ * 
+ * Format: base64url(random 32 bytes) for URL safety
+ * 
+ * @returns URL-safe token string
+ */
+export function generateVerificationToken(): string {
+  // Generate 32 random bytes
+  const buffer = new Uint8Array(32);
+  crypto.getRandomValues(buffer);
 
-  return globalThis.__PROFOUND_RATE_LIMIT_STORE__;
+  // Convert to base64url (URL-safe)
+  const base64 = Buffer.from(buffer).toString('base64');
+  const base64url = base64
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+
+  return base64url;
 }
 
-function checkInMemoryRateLimit(id: string, windowMs: number): boolean {
-  const store = getMemoryStore();
-  const now = Date.now();
-  const existing = store.get(id);
+/**
+ * Calculate token expiration date (14 days from now)
+ * 
+ * @returns Date object 14 days in the future
+ */
+export function getTokenExpiryDate(): Date {
+  const expiryDate = new Date();
+  expiryDate.setDate(expiryDate.getDate() + 14); // 14 days
+  return expiryDate;
+}
 
-  if (!existing || existing.resetAt <= now) {
-    store.set(id, {
-      attempts: 1,
-      resetAt: now + windowMs,
+/**
+ * Check if verification token is valid
+ * 
+ * @param token - Token to validate
+ * @returns Object with validation status
+ */
+export async function validateVerificationToken(token: string): Promise<{
+  valid: boolean;
+  reason?: string;
+  request?: any;
+}> {
+  try {
+    // Find verification request by token
+    const request = await db.query.verificationRequests.findFirst({
+      where: eq(verificationRequests.token, token),
     });
+
+    if (!request) {
+      return {
+        valid: false,
+        reason: 'Invalid verification token',
+      };
+    }
+
+    // Check if expired
+    if (new Date() > new Date(request.expiresAt)) {
+      return {
+        valid: false,
+        reason: 'Verification token has expired',
+        request,
+      };
+    }
+
+    // Check if already used (one-time use)
+    if (request.oneTimeUse && request.usedAt) {
+      return {
+        valid: false,
+        reason: 'Verification token has already been used',
+        request,
+      };
+    }
+
+    // Check if request is still pending
+    if (request.status !== 'pending') {
+      return {
+        valid: false,
+        reason: `Verification request is ${request.status}`,
+        request,
+      };
+    }
+
+    return {
+      valid: true,
+      request,
+    };
+  } catch (error) {
+    log.error('token_validation.failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+
+    return {
+      valid: false,
+      reason: 'Unable to validate token',
+    };
+  }
+}
+
+/**
+ * Simple in-memory rate limiter for high-frequency endpoints
+ * Uses sliding window algorithm
+ */
+class InMemoryRateLimiter {
+  private requests: Map<string, number[]> = new Map();
+
+  /**
+   * Check if request is allowed
+   * 
+   * @param key - Unique identifier (userId + endpoint)
+   * @param limit - Max requests
+   * @param windowMs - Time window in milliseconds
+   * @returns True if allowed
+   */
+  check(key: string, limit: number, windowMs: number): boolean {
+    const now = Date.now();
+    const timestamps = this.requests.get(key) || [];
+
+    // Remove old timestamps outside window
+    const validTimestamps = timestamps.filter((ts) => now - ts < windowMs);
+
+    if (validTimestamps.length >= limit) {
+      return false;
+    }
+
+    // Add current timestamp
+    validTimestamps.push(now);
+    this.requests.set(key, validTimestamps);
 
     return true;
   }
 
-  const attempts = existing.attempts + 1;
-  store.set(id, {
-    attempts,
-    resetAt: existing.resetAt,
-  });
-
-  return attempts <= MAX_REQUESTS;
-}
-
-async function checkPersistentRateLimit(id: string, windowMs: number): Promise<boolean | null> {
-  const dbModule = await loadDbModule();
-  if (!dbModule) {
-    return null;
-  }
-
-  const { db, rateLimits } = dbModule;
-  try {
-    const { eq } = await import('drizzle-orm');
+  /**
+   * Clear old entries (run periodically to prevent memory leaks)
+   */
+  cleanup(olderThanMs: number = 3600000): void {
     const now = Date.now();
-    const existing = await db.query.rateLimits.findFirst({
-      where: eq(rateLimits.id, id),
-    });
-
-    const resetAtMs = existing?.resetAt ? new Date(existing.resetAt).getTime() : 0;
-
-    if (!existing || resetAtMs <= now) {
-      const resetAt = new Date(now + windowMs);
-
-      await db
-        .insert(rateLimits)
-        .values({ id, attempts: 1, resetAt })
-        .onConflictDoUpdate({
-          target: rateLimits.id,
-          set: { attempts: 1, resetAt },
-        });
-
-      return true;
+    for (const [key, timestamps] of this.requests.entries()) {
+      const validTimestamps = timestamps.filter((ts) => now - ts < olderThanMs);
+      if (validTimestamps.length === 0) {
+        this.requests.delete(key);
+      } else {
+        this.requests.set(key, validTimestamps);
+      }
     }
-
-    const currentAttempts = Number(existing.attempts ?? 0);
-    const attempts = currentAttempts + 1;
-
-    await db.update(rateLimits).set({ attempts }).where(eq(rateLimits.id, id));
-
-    return attempts <= MAX_REQUESTS;
-  } catch (error) {
-    console.error(
-      'Rate limiter persistent storage failed, falling back to in-memory store:',
-      error
-    );
-    return null;
   }
 }
 
-export async function checkRateLimit(identifier: string, route: string): Promise<boolean> {
-  const id = `${identifier}:${route}`;
-  const windowMs = WINDOW_SECONDS * 1000;
+// Global rate limiter instance for message sending
+export const messageRateLimiter = new InMemoryRateLimiter();
 
-  const persistentResult = await checkPersistentRateLimit(id, windowMs);
-  if (persistentResult !== null) {
-    return persistentResult;
-  }
-
-  return checkInMemoryRateLimit(id, windowMs);
+// Cleanup old entries every hour
+if (typeof setInterval !== 'undefined') {
+  setInterval(() => {
+    messageRateLimiter.cleanup();
+  }, 3600000); // 1 hour
 }
 
-export function getRateLimitIdentifier(ip?: string | null): string {
-  return ip || 'unknown';
+/**
+ * Check message sending rate limit
+ * 
+ * @param userId - User ID
+ * @returns Object with allowed status
+ */
+export function checkMessageRateLimit(userId: string): {
+  allowed: boolean;
+  reason?: string;
+} {
+  const perMinuteKey = `${userId}:messages:minute`;
+  const perHourKey = `${userId}:messages:hour`;
+
+  // Check per-minute limit (10 messages)
+  const allowedPerMinute = messageRateLimiter.check(
+    perMinuteKey,
+    RATE_LIMITS.messages.perMinute,
+    60 * 1000 // 1 minute
+  );
+
+  if (!allowedPerMinute) {
+    return {
+      allowed: false,
+      reason: 'Rate limit exceeded: 10 messages per minute',
+    };
+  }
+
+  // Check per-hour limit (100 messages)
+  const allowedPerHour = messageRateLimiter.check(
+    perHourKey,
+    RATE_LIMITS.messages.perHour,
+    60 * 60 * 1000 // 1 hour
+  );
+
+  if (!allowedPerHour) {
+    return {
+      allowed: false,
+      reason: 'Rate limit exceeded: 100 messages per hour',
+    };
+  }
+
+  return { allowed: true };
 }

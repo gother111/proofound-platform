@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import { z } from 'zod';
 import { log } from '@/lib/log';
 import { notifyVerificationRequested } from '@/lib/notifications';
+import { checkVerificationRateLimit } from '@/lib/rate-limit';
 
 const SkillVerificationRequestSchema = z.object({
   skillId: z.string().min(1),
@@ -41,6 +42,19 @@ export async function POST(request: NextRequest) {
     }
 
     const { skillId, verifierEmail, message } = validation.data;
+
+    // Check rate limit (5/hour, 20/day)
+    const rateLimit = await checkVerificationRateLimit(user.id);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        {
+          error: rateLimit.reason,
+          hourlyRemaining: rateLimit.hourlyRemaining,
+          dailyRemaining: rateLimit.dailyRemaining,
+        },
+        { status: 429 }
+      );
+    }
 
     // Get requester's profile
     const { data: profile, error: profileError } = await supabase

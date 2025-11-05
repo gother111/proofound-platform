@@ -5,6 +5,7 @@ import { Toaster } from 'sonner';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { ChatWidget } from '@/components/support/ChatWidget';
 
 /**
  * Root Layout Component
@@ -53,6 +54,7 @@ export default async function RootLayout({
                 },
               }}
             />
+            <ChatWidget />
             <Analytics />
           </NextIntlClientProvider>
         </ErrorBoundary>
