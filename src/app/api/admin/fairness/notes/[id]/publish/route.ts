@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth-context';
+import { requireAuth } from '@/lib/auth';
 import { publishFairnessNote } from '@/lib/analytics/fairness-note-generator';
 
 export async function POST(
