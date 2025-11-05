@@ -8,7 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { generateFairnessNote } from '@/lib/reporting/fairness-note';
-import { sendEmail } from '@/lib/email';
+// import { sendEmail } from '@/lib/email';
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,19 +29,19 @@ export async function GET(request: NextRequest) {
     // Generate report
     const report = await generateFairnessNote(currentVersion);
 
-    // Send report to admins via email
+    // Send report to admins via email (TODO: implement when email service is ready)
     const adminEmails = process.env.ADMIN_EMAILS?.split(',') || [];
 
-    for (const email of adminEmails) {
-      await sendEmail({
-        to: email.trim(),
-        subject: `Fairness Report - ${currentVersion}`,
-        text: report,
-        html: `<pre>${report}</pre>`,
-      });
-    }
+    // for (const email of adminEmails) {
+    //   await sendEmail({
+    //     to: email.trim(),
+    //     subject: `Fairness Report - ${currentVersion}`,
+    //     text: report,
+    //     html: `<pre>${report}</pre>`,
+    //   });
+    // }
 
-    console.log(`Fairness report generated and sent to ${adminEmails.length} admins`);
+    console.log(`Fairness report generated (would notify ${adminEmails.length} admins)`);
 
     return NextResponse.json({
       success: true,

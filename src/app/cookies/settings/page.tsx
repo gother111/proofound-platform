@@ -16,6 +16,9 @@ import { Suspense } from 'react';
  * Supports returnTo parameter to redirect back after saving
  */
 
+// Force dynamic rendering since we use searchParams
+export const dynamic = 'force-dynamic';
+
 function CookieSettingsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
