@@ -20,9 +20,6 @@ export function Header() {
         <motion.div whileHover={{ scale: 1.02 }}>
           <Link href="/" className="flex items-center gap-2">
             <Logo size="sm" />
-            <span className="text-xl font-['Crimson_Pro'] text-[#1C4D3A] dark:text-[#D4C4A8]">
-              Proofound
-            </span>
           </Link>
         </motion.div>
 
