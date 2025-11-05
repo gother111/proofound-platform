@@ -391,13 +391,6 @@ export async function signOut() {
 
 export async function requestPasswordReset(formData: FormData) {
   const headersList = await headers();
-  const ip = headersList.get('x-forwarded-for') || 'unknown';
-  const identifier = getRateLimitIdentifier(ip);
-
-  const allowed = await checkRateLimit(identifier, 'reset-password');
-  if (!allowed) {
-    return { error: 'Too many requests. Please try again later.' };
-  }
 
   const data = {
     email: formData.get('email') as string,
