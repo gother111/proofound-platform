@@ -25,7 +25,7 @@ export async function GET() {
       })
       .from(matches)
       .innerJoin(assignments, eq(matches.assignmentId, assignments.id))
-      .innerJoin(organizations, eq(assignments.organizationId, organizations.id))
+      .innerJoin(organizations, eq(assignments.orgId, organizations.id))
       .where(
         and(
           eq(matches.profileId, user.id),
@@ -42,7 +42,7 @@ export async function GET() {
       snoozedUntil: row.match.snoozedUntil,
       assignment: {
         id: row.assignment.id,
-        title: row.assignment.title,
+        title: row.assignment.role,
         description: row.assignment.description,
         status: row.assignment.status,
       },

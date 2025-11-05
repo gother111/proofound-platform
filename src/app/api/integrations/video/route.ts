@@ -25,27 +25,24 @@ export async function GET(req: NextRequest) {
 
     // Fetch video integrations
     const videoIntegrations = await db.query.userIntegrations.findMany({
-      where: and(
-        eq(userIntegrations.userId, user.id),
-        // Only return video conferencing integrations
-      ),
+      where: eq(userIntegrations.userId, user.id),
     });
 
     const integrations = videoIntegrations
-      .filter((int) => ['zoom', 'google_meet'].includes(int.integrationType))
+      .filter((int) => ['zoom', 'google'].includes(int.provider))
       .map((int) => ({
-        provider: int.integrationType === 'google_meet' ? 'google' : int.integrationType,
-        connected: int.connected,
-        email: int.integrationData?.email,
-        expiresAt: int.integrationData?.expiresAt,
+        provider: int.provider,
+        connected: true, // If record exists, it's connected
+        email: null, // Could be added to schema if needed
+        expiresAt: int.tokenExpiry?.toISOString() || null,
       }));
 
     // Add placeholders for non-connected services
     if (!integrations.find((i) => i.provider === 'zoom')) {
-      integrations.push({ provider: 'zoom' as const, connected: false });
+      integrations.push({ provider: 'zoom', connected: false, email: null, expiresAt: null });
     }
     if (!integrations.find((i) => i.provider === 'google')) {
-      integrations.push({ provider: 'google' as const, connected: false });
+      integrations.push({ provider: 'google', connected: false, email: null, expiresAt: null });
     }
 
     return NextResponse.json({ integrations });

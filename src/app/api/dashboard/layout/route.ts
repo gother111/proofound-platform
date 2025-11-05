@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
 
     const layouts = await db.query.dashboardLayouts.findMany({
       where: eq(dashboardLayouts.userId, user.id),
-      orderBy: (dashboardLayouts, { asc }) => [asc(dashboardLayouts.widgetOrder)],
+      orderBy: (dashboardLayouts, { asc }) => [asc(dashboardLayouts.position)],
     });
 
     // If user has no custom layout, return default widgets
@@ -82,9 +82,9 @@ export async function GET(req: NextRequest) {
     const widgets = layouts.map((layout) => ({
       widgetId: layout.widgetId,
       visible: true,
-      position: layout.widgetOrder || 0,
-      title: layout.widgetConfig?.title || layout.widgetId,
-      description: layout.widgetConfig?.description || '',
+      position: layout.position || 0,
+      title: (layout.settings as any)?.title || layout.widgetId,
+      description: (layout.settings as any)?.description || '',
     }));
 
     return NextResponse.json({ widgets });
@@ -121,9 +121,9 @@ export async function POST(req: NextRequest) {
       const layoutRecords = widgets.map((widget) => ({
         userId: user.id,
         widgetId: widget.id,
-        widgetSize: widget.size,
-        widgetOrder: widget.order,
-        widgetConfig: {
+        size: widget.size,
+        position: widget.order,
+        settings: {
           title: widget.title,
           description: widget.description,
         },

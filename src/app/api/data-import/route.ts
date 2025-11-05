@@ -91,12 +91,12 @@ export async function POST(request: NextRequest) {
     if (validatedData.profile?.individual) {
       try {
         const existingIndividualProfile = await db.query.individualProfiles.findFirst({
-          where: eq(individualProfiles.profileId, user.id),
+          where: eq(individualProfiles.userId, user.id),
         });
 
         const profileData = {
           ...validatedData.profile.individual,
-          profileId: user.id,
+          userId: user.id,
           updatedAt: new Date(),
         };
 
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
           await db
             .update(individualProfiles)
             .set(profileData)
-            .where(eq(individualProfiles.profileId, user.id));
+            .where(eq(individualProfiles.userId, user.id));
         } else {
           await db.insert(individualProfiles).values(profileData);
         }
@@ -174,11 +174,11 @@ export async function POST(request: NextRequest) {
     // Import projects
     if (validatedData.workExperience?.projects && validatedData.workExperience.projects.length > 0) {
       try {
-        await db.delete(projects).where(eq(projects.profileId, user.id));
+        await db.delete(projects).where(eq(projects.userId, user.id));
 
         const projectsToImport = validatedData.workExperience.projects.map((project: any) => ({
           ...project,
-          profileId: user.id,
+          userId: user.id,
           createdAt: new Date(),
           updatedAt: new Date(),
         }));
@@ -199,12 +199,12 @@ export async function POST(request: NextRequest) {
       validatedData.workExperience.experiences.length > 0
     ) {
       try {
-        await db.delete(experiences).where(eq(experiences.profileId, user.id));
+        await db.delete(experiences).where(eq(experiences.userId, user.id));
 
         const experiencesToImport = validatedData.workExperience.experiences.map(
           (experience: any) => ({
             ...experience,
-            profileId: user.id,
+            userId: user.id,
             createdAt: new Date(),
             updatedAt: new Date(),
           })
@@ -223,11 +223,11 @@ export async function POST(request: NextRequest) {
     // Import education
     if (validatedData.workExperience?.education && validatedData.workExperience.education.length > 0) {
       try {
-        await db.delete(education).where(eq(education.profileId, user.id));
+        await db.delete(education).where(eq(education.userId, user.id));
 
         const educationToImport = validatedData.workExperience.education.map((edu: any) => ({
           ...edu,
-          profileId: user.id,
+          userId: user.id,
           createdAt: new Date(),
           updatedAt: new Date(),
         }));
@@ -248,11 +248,11 @@ export async function POST(request: NextRequest) {
       validatedData.workExperience.volunteering.length > 0
     ) {
       try {
-        await db.delete(volunteering).where(eq(volunteering.profileId, user.id));
+        await db.delete(volunteering).where(eq(volunteering.userId, user.id));
 
         const volunteeringToImport = validatedData.workExperience.volunteering.map((vol: any) => ({
           ...vol,
-          profileId: user.id,
+          userId: user.id,
           createdAt: new Date(),
           updatedAt: new Date(),
         }));
@@ -347,11 +347,11 @@ export async function POST(request: NextRequest) {
     // Import user consents
     if (validatedData.settings?.consents && validatedData.settings.consents.length > 0) {
       try {
-        await db.delete(userConsents).where(eq(userConsents.userId, user.id));
+        await db.delete(userConsents).where(eq(userConsents.profileId, user.id));
 
         const consentsToImport = validatedData.settings.consents.map((consent: any) => ({
           ...consent,
-          userId: user.id,
+          profileId: user.id,
           createdAt: new Date(),
         }));
 

@@ -11,7 +11,7 @@ import { db } from '@/db';
 import { fairnessNotes } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
-export async function GET(request: NextRequest, { params }: { params: { version: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ version: string }> }) {
   try {
     const supabase = await createClient();
 
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest, { params }: { params: { version:
       return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    const { version } = params;
+    const { version } = await params;
 
     if (!version) {
       return NextResponse.json({ error: 'Version parameter is required' }, { status: 400 });

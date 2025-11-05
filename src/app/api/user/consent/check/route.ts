@@ -8,13 +8,13 @@
  */
 
 import { NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { checkPolicyConsent } from '@/lib/privacy/policy-versions';
 
 export async function GET() {
   try {
     // Authenticate user
-    const supabase = await createServerClient();
+    const supabase = await createClient();
     const {
       data: { user },
       error: authError,

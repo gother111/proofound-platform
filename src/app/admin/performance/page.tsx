@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -66,11 +66,7 @@ export default function PerformanceDashboardPage() {
   const [timeRange, setTimeRange] = useState('24h');
   const [deviceFilter, setDeviceFilter] = useState('all');
 
-  useEffect(() => {
-    fetchPerformanceData();
-  }, [timeRange, deviceFilter]);
-
-  const fetchPerformanceData = async () => {
+  const fetchPerformanceData = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch(
@@ -88,7 +84,11 @@ export default function PerformanceDashboardPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [timeRange, deviceFilter]);
+
+  useEffect(() => {
+    fetchPerformanceData();
+  }, [fetchPerformanceData]);
 
   const getSLAColor = (status: string) => {
     switch (status) {

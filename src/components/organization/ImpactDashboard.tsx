@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -33,14 +33,14 @@ interface ImpactMetric {
 }
 
 interface ImpactEntry {
-  id: string;
+  id?: string;
   title: string;
   description: string;
   metrics: ImpactMetric[];
   beneficiaries?: string;
   timeframe: string;
   artifacts?: string[];
-  createdAt: string;
+  createdAt?: string;
 }
 
 interface ImpactDashboardProps {
@@ -56,11 +56,7 @@ export function ImpactDashboard({ orgId, orgName, canEdit = true }: ImpactDashbo
   const [editingEntry, setEditingEntry] = useState<ImpactEntry | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchImpactEntries();
-  }, [orgId]);
-
-  const fetchImpactEntries = async () => {
+  const fetchImpactEntries = useCallback(async () => {
     try {
       const response = await fetch(`/api/organizations/${orgId}/impact`);
       if (!response.ok) {
@@ -74,7 +70,11 @@ export function ImpactDashboard({ orgId, orgName, canEdit = true }: ImpactDashbo
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [orgId]);
+
+  useEffect(() => {
+    fetchImpactEntries();
+  }, [fetchImpactEntries]);
 
   const handleSaveEntry = async (entry: ImpactEntry) => {
     try {
@@ -241,8 +241,9 @@ export function ImpactDashboard({ orgId, orgName, canEdit = true }: ImpactDashbo
                                 Edit
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                onClick={() => setDeleteConfirm(entry.id)}
+                                onClick={() => entry.id && setDeleteConfirm(entry.id)}
                                 className="text-red-600 focus:text-red-600"
+                                disabled={!entry.id}
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 Delete

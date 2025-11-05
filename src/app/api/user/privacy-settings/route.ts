@@ -85,7 +85,6 @@ export async function POST(req: NextRequest) {
       .set({
         fieldVisibility: fieldVisibility || {},
         redactMode,
-        updatedAt: new Date(),
       })
       .where(eq(individualProfiles.userId, user.id));
 

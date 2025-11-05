@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -54,11 +54,7 @@ export function GoalsManager({ orgId, canEdit = true }: GoalsManagerProps) {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
 
-  useEffect(() => {
-    fetchGoals();
-  }, [orgId]);
-
-  const fetchGoals = async () => {
+  const fetchGoals = useCallback(async () => {
     try {
       const response = await fetch(`/api/organizations/${orgId}/goals`);
       if (!response.ok) {
@@ -72,7 +68,11 @@ export function GoalsManager({ orgId, canEdit = true }: GoalsManagerProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [orgId]);
+
+  useEffect(() => {
+    fetchGoals();
+  }, [fetchGoals]);
 
   const handleSaveGoal = async (goal: Omit<OrganizationGoal, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }) => {
     try {

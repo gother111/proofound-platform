@@ -74,6 +74,8 @@ export async function signUp(
   formData: FormData
 ): Promise<SignUpState> {
   try {
+    const headersList = await headers();
+    
     const rawEmail = (formData.get('email') as string | null) ?? '';
     const email = rawEmail.trim().toLowerCase();
 
@@ -174,6 +176,7 @@ export async function signUp(
         
         // Hash PII for audit trail
         const { anonymizeIP, anonymizeUserAgent } = await import('@/lib/utils/privacy');
+        const ip = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || 'unknown';
         const ipHash = anonymizeIP(ip);
         const userAgentHash = anonymizeUserAgent(headersList.get('user-agent') || 'unknown');
         
@@ -268,6 +271,8 @@ export async function signIn(
   formData: FormData
 ): Promise<SignInState> {
   try {
+    const headersList = await headers();
+    
     const rawEmail = (formData.get('email') as string | null) ?? '';
     const email = rawEmail.trim().toLowerCase();
     const password = (formData.get('password') as string | null) ?? '';

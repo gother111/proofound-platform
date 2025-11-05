@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Plus, Loader2, AlertCircle, Mail, Clock, CheckCircle, XCircle } from 'lucide-react';
@@ -36,7 +36,7 @@ export function AssignmentManager({ orgId }: AssignmentManagerProps) {
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const fetchAssignments = async () => {
+  const fetchAssignments = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -55,11 +55,11 @@ export function AssignmentManager({ orgId }: AssignmentManagerProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [orgId]);
 
   useEffect(() => {
     fetchAssignments();
-  }, [orgId]);
+  }, [fetchAssignments]);
 
   const handleInvitationSuccess = () => {
     fetchAssignments(); // Refresh list

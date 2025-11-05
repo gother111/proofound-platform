@@ -34,7 +34,7 @@ export async function DELETE(
       .where(
         and(
           eq(userIntegrations.userId, user.id),
-          eq(userIntegrations.integrationType, integrationType)
+          eq(userIntegrations.provider, provider as 'zoom' | 'google' | 'linkedin')
         )
       );
 

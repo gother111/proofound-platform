@@ -226,7 +226,7 @@ async function hashString(input: string): Promise<string> {
 export function getPolicyChangelog(
   policyType: 'tos' | 'privacy',
   version: string
-): { version: string; date: string; changes: string[] } | null {
+): { version: string; date: string; changes: readonly string[] } | null {
   const changelog = POLICY_CHANGELOG[policyType];
   return changelog.find((entry) => entry.version === version) || null;
 }

@@ -19,14 +19,14 @@ export async function DELETE(
     const user = await requireAuth();
     const { provider } = await params;
 
-    if (!['zoom', 'google'].includes(provider)) {
+    if (!['zoom', 'google', 'linkedin'].includes(provider)) {
       return NextResponse.json({ error: 'Invalid provider' }, { status: 400 });
     }
 
     // Delete integration
     await db
       .delete(userIntegrations)
-      .where(and(eq(userIntegrations.userId, user.id), eq(userIntegrations.provider, provider)));
+      .where(and(eq(userIntegrations.userId, user.id), eq(userIntegrations.provider, provider as 'zoom' | 'google' | 'linkedin')));
 
     return NextResponse.json({
       success: true,

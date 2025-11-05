@@ -149,8 +149,8 @@ export async function POST(req: NextRequest) {
         });
 
         const meeting = await createZoomMeeting(user.id, {
-          topic: assignment?.title
-            ? `Interview: ${assignment.title}`
+          topic: assignment?.role
+            ? `Interview: ${assignment.role}`
             : `Proofound Interview - Match ${matchId}`,
           startTime: proposedStart,
           duration,
@@ -184,8 +184,8 @@ export async function POST(req: NextRequest) {
         endTime.setMinutes(endTime.getMinutes() + duration);
 
         const meeting = await createGoogleMeeting(user.id, {
-          summary: assignment?.title
-            ? `Interview: ${assignment.title}`
+          summary: assignment?.role
+            ? `Interview: ${assignment.role}`
             : `Proofound Interview - Match ${matchId}`,
           startTime: proposedStart,
           endTime,
@@ -330,15 +330,21 @@ export async function POST(req: NextRequest) {
 
       // Send email to candidate
       if (candidateProfile && authData?.user?.email) {
-        await sendInterviewScheduledEmail({
-          to: authData.user.email,
-          candidateName: candidateProfile.displayName || 'Candidate',
-          organizationName,
-          interviewDate: proposedStart,
-          duration,
-          meetingLink: meetingData?.url,
-          assignmentTitle: assignment?.role,
-        });
+        await sendInterviewScheduledEmail(
+          authData.user.email,
+          candidateProfile.displayName || 'Candidate',
+          'candidate',
+          {
+            roleTitle: assignment?.role,
+            organizationName,
+            scheduledAt: proposedStart.toISOString(),
+            duration,
+            platform: platform as 'zoom' | 'google-meet',
+            meetingUrl: meetingData?.url || '',
+            timezone: timezone || 'UTC',
+            interviewId: interview.id,
+          }
+        );
       }
     } catch (emailError) {
       console.error('Failed to send interview scheduled email:', emailError);
@@ -424,7 +430,7 @@ export async function GET(req: NextRequest) {
     const allMatchIds = [...new Set([...candidateMatchIds, ...orgMatchIds])];
 
     // Get all interviews for these matches
-    let userInterviews = [];
+    let userInterviews: typeof interviews.$inferSelect[] = [];
     if (allMatchIds.length > 0) {
       userInterviews = await db.query.interviews.findMany({
         where: or(...allMatchIds.map((matchId) => eq(interviews.matchId, matchId))),

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -53,11 +53,7 @@ export function PartnershipsManager({ orgId, canEdit = true }: PartnershipsManag
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
 
-  useEffect(() => {
-    fetchPartnerships();
-  }, [orgId]);
-
-  const fetchPartnerships = async () => {
+  const fetchPartnerships = useCallback(async () => {
     try {
       const response = await fetch(`/api/organizations/${orgId}/partnerships`);
       if (!response.ok) {
@@ -71,7 +67,11 @@ export function PartnershipsManager({ orgId, canEdit = true }: PartnershipsManag
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [orgId]);
+
+  useEffect(() => {
+    fetchPartnerships();
+  }, [fetchPartnerships]);
 
   const handleSavePartnership = async (partnership: Omit<OrganizationPartnership, 'id' | 'isVerified' | 'createdAt' | 'updatedAt'> & { id?: string }) => {
     try {

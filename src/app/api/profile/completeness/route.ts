@@ -70,7 +70,7 @@ export async function GET() {
     const [experienceCount] = await db
       .select({ count: count() })
       .from(experiences)
-      .where(eq(experiences.profileId, user.id));
+      .where(eq(experiences.userId, user.id));
 
     // Calculate completeness
     const checks = {

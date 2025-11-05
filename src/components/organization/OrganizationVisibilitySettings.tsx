@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -73,11 +73,7 @@ export function OrganizationVisibilitySettings({
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
-  useEffect(() => {
-    fetchSettings();
-  }, [orgId]);
-
-  const fetchSettings = async () => {
+  const fetchSettings = useCallback(async () => {
     try {
       const response = await fetch(`/api/organizations/${orgId}/visibility`);
       if (response.ok) {
@@ -91,7 +87,11 @@ export function OrganizationVisibilitySettings({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [orgId]);
+
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
 
   const handleFieldChange = (field: keyof VisibilitySettings, value: string) => {
     setSettings((prev) => ({ ...prev, [field]: value }));

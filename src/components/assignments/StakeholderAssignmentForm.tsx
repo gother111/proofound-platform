@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -32,11 +32,7 @@ export function StakeholderAssignmentForm({ token }: StakeholderAssignmentFormPr
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  useEffect(() => {
-    fetchAssignment();
-  }, [token]);
-
-  const fetchAssignment = async () => {
+  const fetchAssignment = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/assignments/invite/${token}`);
@@ -53,7 +49,11 @@ export function StakeholderAssignmentForm({ token }: StakeholderAssignmentFormPr
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    fetchAssignment();
+  }, [fetchAssignment]);
 
   const handleSectionSubmit = async (sectionName: string, sectionData: any) => {
     try {

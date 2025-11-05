@@ -181,7 +181,7 @@ export async function GET(
       .eq('assignmentId', match.assignmentId)
       .order('totalScore', { ascending: false });
 
-    const rank = allMatches?.findIndex((m) => m.id === matchId) + 1;
+    const rank = allMatches ? allMatches.findIndex((m) => m.id === matchId) + 1 : 0;
     const totalCandidates = allMatches?.length || 0;
 
     // Determine rank band

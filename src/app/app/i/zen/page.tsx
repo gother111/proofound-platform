@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import {
   zenPractices,
   localGatherings,
@@ -160,7 +160,7 @@ export default function ZenHubPage() {
   };
 
   // Fetch delta and trend data
-  const fetchDeltaAndTrend = async () => {
+  const fetchDeltaAndTrend = useCallback(async () => {
     if (!optInStatus?.optedIn) return;
 
     try {
@@ -184,14 +184,14 @@ export default function ZenHubPage() {
     } finally {
       setIsLoadingDelta(false);
     }
-  };
+  }, [optInStatus]);
 
   // Fetch delta/trend when opted in
   useEffect(() => {
     if (optInStatus?.optedIn) {
       fetchDeltaAndTrend();
     }
-  }, [optInStatus]);
+  }, [optInStatus, fetchDeltaAndTrend]);
 
   const filteredPractices = useMemo(() => {
     const predicate = filterMap[activeFilter] ?? (() => true);
@@ -381,12 +381,12 @@ export default function ZenHubPage() {
 
             {/* Check-In History */}
             {!isLoadingOptIn && optInStatus?.optedIn && (
-              <CheckInHistory userId={session?.user?.id || ''} />
+              <CheckInHistory userId={''} />
             )}
 
             {/* Work Schedule Editor */}
             {!isLoadingOptIn && optInStatus?.optedIn && (
-              <WorkScheduleEditor userId={session?.user?.id || ''} />
+              <WorkScheduleEditor userId={''} />
             )}
 
             <SupportChannels />

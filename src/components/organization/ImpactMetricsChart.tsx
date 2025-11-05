@@ -10,14 +10,14 @@ interface ImpactMetric {
 }
 
 interface ImpactEntry {
-  id: string;
+  id?: string;
   title: string;
   description: string;
   metrics: ImpactMetric[];
   beneficiaries?: string;
   timeframe: string;
   artifacts?: string[];
-  createdAt: string;
+  createdAt?: string;
 }
 
 interface ImpactMetricsChartProps {
@@ -49,9 +49,11 @@ export function ImpactMetricsChart({ entries }: ImpactMetricsChartProps) {
   const uniqueMetricNames = Array.from(new Set(allMetrics.map((m) => m.name)));
   
   // Calculate some sample stats
-  const recentEntry = entries.sort((a, b) => 
-    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  )[0];
+  const recentEntry = entries
+    .filter((entry) => entry.createdAt)
+    .sort((a, b) => 
+      new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
+    )[0];
 
   return (
     <div className="space-y-4">
@@ -138,10 +140,11 @@ export function ImpactMetricsChart({ entries }: ImpactMetricsChartProps) {
         <CardContent>
           <div className="space-y-4">
             {entries
-              .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+              .filter((entry) => entry.createdAt && entry.id)
+              .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime())
               .map((entry) => (
                 <div
-                  key={entry.id}
+                  key={entry.id!}
                   className="flex gap-4 pb-4 border-b last:border-b-0 border-muted-foreground/10"
                 >
                   <div className="flex-shrink-0 w-2 h-2 mt-2 rounded-full bg-proofound-forest" />

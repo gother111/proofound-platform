@@ -61,7 +61,6 @@ export async function GET(request: NextRequest) {
           accessToken: tokens.accessToken,
           refreshToken: tokens.refreshToken,
           tokenExpiry: new Date(Date.now() + tokens.expiresIn * 1000),
-          status: 'connected',
           updatedAt: new Date(),
         })
         .where(eq(userIntegrations.id, existing.id));
@@ -73,7 +72,6 @@ export async function GET(request: NextRequest) {
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
         tokenExpiry: new Date(Date.now() + tokens.expiresIn * 1000),
-        status: 'connected',
       });
     }
 

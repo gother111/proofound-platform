@@ -18,8 +18,8 @@ export async function GET() {
     const integrations = await db
       .select({
         provider: userIntegrations.provider,
-        status: userIntegrations.status,
         createdAt: userIntegrations.createdAt,
+        tokenExpiry: userIntegrations.tokenExpiry,
       })
       .from(userIntegrations)
       .where(eq(userIntegrations.userId, user.id));
@@ -27,7 +27,7 @@ export async function GET() {
     // Format response
     const formatted = integrations.map((integration) => ({
       provider: integration.provider,
-      connected: integration.status === 'connected',
+      connected: true, // If record exists, it's connected
       connectedAt: integration.createdAt,
     }));
 

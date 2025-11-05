@@ -68,8 +68,8 @@ export async function GET(request: NextRequest) {
       userWellbeingOptIns,
       userNotifications,
       userNotificationPrefs,
-      userConsents,
-      userIntegrations,
+      userConsentsData,
+      userIntegrationsData,
       userConversations,
       userMessages,
     ] = await Promise.all([
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
         where: eq(profiles.id, user.id),
       }),
       db.query.individualProfiles.findFirst({
-        where: eq(individualProfiles.profileId, user.id),
+        where: eq(individualProfiles.userId, user.id),
       }),
       db.query.matchingProfiles.findFirst({
         where: eq(matchingProfiles.profileId, user.id),
@@ -94,19 +94,19 @@ export async function GET(request: NextRequest) {
 
       // Work and experience
       db.query.projects.findMany({
-        where: eq(projects.profileId, user.id),
+        where: eq(projects.userId, user.id),
       }),
       db.query.impactStories.findMany({
-        where: eq(impactStories.profileId, user.id),
+        where: eq(impactStories.userId, user.id),
       }),
       db.query.experiences.findMany({
-        where: eq(experiences.profileId, user.id),
+        where: eq(experiences.userId, user.id),
       }),
       db.query.education.findMany({
-        where: eq(education.profileId, user.id),
+        where: eq(education.userId, user.id),
       }),
       db.query.volunteering.findMany({
-        where: eq(volunteering.profileId, user.id),
+        where: eq(volunteering.userId, user.id),
       }),
 
       // Preferences and matching
@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
         where: eq(matches.profileId, user.id),
       }),
       db.query.matchInterest.findMany({
-        where: eq(matchInterest.profileId, user.id),
+        where: eq(matchInterest.actorProfileId, user.id),
       }),
 
       // Contracts
@@ -151,7 +151,7 @@ export async function GET(request: NextRequest) {
 
       // Consents and integrations
       db.query.userConsents.findMany({
-        where: eq(userConsents.userId, user.id),
+        where: eq(userConsents.profileId, user.id),
       }),
       db.query.userIntegrations.findMany({
         where: eq(userIntegrations.userId, user.id),
@@ -160,8 +160,8 @@ export async function GET(request: NextRequest) {
       // Communications
       db.query.conversations.findMany({
         where: or(
-          eq(conversations.user1Id, user.id),
-          eq(conversations.user2Id, user.id)
+          eq(conversations.participantOneId, user.id),
+          eq(conversations.participantTwoId, user.id)
         ),
       }),
       db.query.messages.findMany({
@@ -210,8 +210,8 @@ export async function GET(request: NextRequest) {
       settings: {
         notifications: userNotifications,
         notificationPreferences: userNotificationPrefs,
-        consents: userConsents,
-        integrations: userIntegrations,
+        consents: userConsentsData,
+        integrations: userIntegrationsData,
       },
       metadata: {
         version: '1.0',

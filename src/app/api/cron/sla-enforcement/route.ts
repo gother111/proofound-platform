@@ -107,10 +107,10 @@ export async function GET(request: NextRequest) {
     if (expiredInterviews.length > 0) {
       const interviewIds = expiredInterviews.map(i => i.id);
 
-      // Update status to expired
+      // Update status to no_show (expired interviews)
       await db
         .update(interviews)
-        .set({ status: 'expired' })
+        .set({ status: 'no_show' })
         .where(
           sql`${interviews.id} IN (${sql.join(
             interviewIds.map(id => sql`${id}`),

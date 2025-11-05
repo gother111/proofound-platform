@@ -152,11 +152,11 @@ export async function POST(request: NextRequest) {
     // Create audit log entry
     try {
       await db.insert(auditLogs).values({
-        userId: user.id,
+        actorId: user.id,
         action: 'interview_decision',
-        resourceType: 'interview',
-        resourceId: interviewId,
-        changes: {
+        targetType: 'interview',
+        targetId: interviewId,
+        meta: {
           decision,
           feedback: feedback || null,
         },

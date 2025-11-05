@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
-import { contracts, assignments, organizationMembers, profiles } from '@/db/schema';
+import { contracts, assignments, organizationMembers, profiles, organizations } from '@/db/schema';
 import { eq, and, or } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { emitContractSigned } from '@/lib/analytics/events';
@@ -280,8 +280,7 @@ export async function POST(request: NextRequest) {
         await notifyContractSigned(
           userId,
           contract.id,
-          orgName,
-          contract.contractType || 'employment'
+          orgName
         );
 
         // Notify organization members (owners and admins)
@@ -300,8 +299,7 @@ export async function POST(request: NextRequest) {
               await notifyContractSigned(
                 member.userId,
                 contract.id,
-                candidateName,
-                contract.contractType || 'employment'
+                candidateName
               );
             } catch (memberNotifError) {
               log.error('org-member-notification.failed', {

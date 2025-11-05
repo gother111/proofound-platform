@@ -9,7 +9,7 @@
  * Reference: DATA_SECURITY_PRIVACY_ARCHITECTURE.md Section 13.3
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
