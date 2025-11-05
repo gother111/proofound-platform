@@ -5,20 +5,15 @@
  * No authentication required - public transparency page
  */
 
-'use client';
-
-import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
 import { AlertCircle, CheckCircle2, Info, TrendingUp, Shield, Users } from 'lucide-react';
 import Link from 'next/link';
+import { db } from '@/db';
+import { fairnessNotes } from '@/db/schema';
+import { eq, desc } from 'drizzle-orm';
+import { FairnessNoteAccordion } from './FairnessNoteAccordion';
 
 interface FairnessNote {
   id: string;
@@ -50,68 +45,35 @@ interface Recommendation {
   targetDate?: string;
 }
 
-export default function FairnessPage() {
-  const [notes, setNotes] = useState<FairnessNote[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+// Force dynamic rendering to avoid build-time data fetching
+export const dynamic = 'force-dynamic';
+export const revalidate = 3600; // Revalidate every hour
 
-  useEffect(() => {
-    fetchNotes();
-  }, []);
+async function getPublishedNotes() {
+  try {
+    const notes = await db
+      .select()
+      .from(fairnessNotes)
+      .where(eq(fairnessNotes.status, 'published'))
+      .orderBy(desc(fairnessNotes.generatedAt));
+    
+    return notes;
+  } catch (error) {
+    console.error('Error fetching fairness notes:', error);
+    return [];
+  }
+}
 
-  const fetchNotes = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/public/fairness/notes');
-      if (!response.ok) {
-        throw new Error('Failed to fetch fairness notes');
-      }
-      const data = await response.json();
-      setNotes(data.notes || []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setLoading(false);
-    }
-  };
+function formatDate(dateString: string | Date) {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'critical':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'moderate':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'low':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'none':
-        return 'bg-green-100 text-green-800 border-green-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  const getSeverityIcon = (severity: string) => {
-    switch (severity) {
-      case 'critical':
-        return <AlertCircle className="w-4 h-4" />;
-      case 'moderate':
-        return <Info className="w-4 h-4" />;
-      case 'low':
-        return <TrendingUp className="w-4 h-4" />;
-      case 'none':
-        return <CheckCircle2 className="w-4 h-4" />;
-      default:
-        return <Info className="w-4 h-4" />;
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
+export default async function FairnessPage() {
+  const notes = await getPublishedNotes();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#F5F3EF] to-white">
@@ -195,21 +157,7 @@ export default function FairnessPage() {
         {/* Fairness Notes */}
         <h2 className="text-2xl font-bold mb-6">Published Fairness Notes</h2>
 
-        {loading && (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">Loading fairness notes...</p>
-          </div>
-        )}
-
-        {error && (
-          <Card className="border-red-200 bg-red-50">
-            <CardContent className="py-6">
-              <p className="text-red-800">Error: {error}</p>
-            </CardContent>
-          </Card>
-        )}
-
-        {!loading && !error && notes.length === 0 && (
+        {notes.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
               <Shield className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
@@ -222,9 +170,7 @@ export default function FairnessPage() {
               </p>
             </CardContent>
           </Card>
-        )}
-
-        {!loading && !error && notes.length > 0 && (
+        ) : (
           <div className="space-y-6">
             {notes.map((note) => (
               <Card key={note.id} className="overflow-hidden">
@@ -240,7 +186,7 @@ export default function FairnessPage() {
                         Release {note.releaseVersion}
                       </CardTitle>
                       <CardDescription className="mt-2">
-                        Published {formatDate(note.publishedAt)} • Generated{' '}
+                        Published {note.publishedAt && formatDate(note.publishedAt)} • Generated{' '}
                         {formatDate(note.generatedAt)}
                       </CardDescription>
                     </div>
@@ -256,133 +202,7 @@ export default function FairnessPage() {
                 </CardHeader>
 
                 <CardContent className="pt-6">
-                  <Accordion type="single" collapsible className="w-full">
-                    {/* Findings */}
-                    <AccordionItem value="findings">
-                      <AccordionTrigger>
-                        <div className="flex items-center gap-2">
-                          <Info className="w-4 h-4" />
-                          Findings ({note.findings?.length || 0})
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        {note.findings && note.findings.length > 0 ? (
-                          <div className="space-y-3">
-                            {note.findings.map((finding, idx) => (
-                              <div
-                                key={idx}
-                                className={`p-4 rounded-lg border ${getSeverityColor(finding.severity)}`}
-                              >
-                                <div className="flex items-start gap-2">
-                                  {getSeverityIcon(finding.severity)}
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <Badge variant="outline" className="text-xs">
-                                        {finding.category}
-                                      </Badge>
-                                      <Badge variant="outline" className="text-xs">
-                                        {finding.severity}
-                                      </Badge>
-                                    </div>
-                                    <p className="font-medium mb-1">{finding.description}</p>
-                                    <p className="text-sm mb-2">
-                                      Cohorts: {finding.cohorts} • Metric: {finding.metric}
-                                    </p>
-                                    {finding.gap && (
-                                      <p className="text-sm">
-                                        Gap: {(finding.gap * 100).toFixed(1)}% • p-value:{' '}
-                                        {finding.pValue?.toFixed(4)}
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-sm text-muted-foreground py-4">
-                            No significant findings in this analysis period.
-                          </p>
-                        )}
-                      </AccordionContent>
-                    </AccordionItem>
-
-                    {/* Recommendations */}
-                    <AccordionItem value="recommendations">
-                      <AccordionTrigger>
-                        <div className="flex items-center gap-2">
-                          <TrendingUp className="w-4 h-4" />
-                          Recommendations ({note.recommendations?.length || 0})
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        {note.recommendations && note.recommendations.length > 0 ? (
-                          <div className="space-y-3">
-                            {note.recommendations.map((rec, idx) => (
-                              <div key={idx} className="p-4 rounded-lg border bg-white">
-                                <div className="flex items-start gap-3">
-                                  <Badge
-                                    variant={
-                                      rec.priority === 'high'
-                                        ? 'destructive'
-                                        : rec.priority === 'medium'
-                                          ? 'default'
-                                          : 'secondary'
-                                    }
-                                  >
-                                    {rec.priority}
-                                  </Badge>
-                                  <div className="flex-1">
-                                    <p className="font-medium mb-1">{rec.action}</p>
-                                    <p className="text-sm text-muted-foreground">{rec.rationale}</p>
-                                    {rec.targetDate && (
-                                      <p className="text-xs text-muted-foreground mt-2">
-                                        Target: {formatDate(rec.targetDate)}
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-sm text-muted-foreground py-4">
-                            Continue monitoring fairness metrics in upcoming releases.
-                          </p>
-                        )}
-                      </AccordionContent>
-                    </AccordionItem>
-
-                    {/* Methodology */}
-                    <AccordionItem value="methodology">
-                      <AccordionTrigger>
-                        <div className="flex items-center gap-2">
-                          <Shield className="w-4 h-4" />
-                          Methodology
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        <div className="space-y-3 text-sm">
-                          <p>
-                            <strong>Sample Size:</strong> Minimum {note.minSampleSize} matches per cohort
-                            required for statistical validity
-                          </p>
-                          <p>
-                            <strong>Statistical Threshold:</strong> p &lt; 0.05 for significance testing
-                            {note.pValue && ` (this analysis: p = ${parseFloat(note.pValue).toFixed(4)})`}
-                          </p>
-                          <p>
-                            <strong>Controlled Variables:</strong> Skills match, experience level, location
-                            preferences, and compensation alignment
-                          </p>
-                          <p>
-                            <strong>Data Privacy:</strong> All demographic data is opt-in only. Users must
-                            explicitly consent to participate in fairness tracking.
-                          </p>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
+                  <FairnessNoteAccordion note={note} />
                 </CardContent>
               </Card>
             ))}

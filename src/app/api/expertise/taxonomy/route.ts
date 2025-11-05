@@ -76,13 +76,21 @@ function mapTaxonomyFields(item: any, type: 'l1' | 'l2' | 'l3' | 'l4') {
  */
 export async function GET(request: Request) {
   try {
-    const supabase = await createClient();
+    const supabase = await createClient({ allowCookieWrite: true });
+
+    if (!supabase) {
+      console.error('[Taxonomy API] Failed to create Supabase client');
+      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
+    }
+
     const { searchParams } = new URL(request.url);
 
     const l1 = searchParams.get('l1');
     const l2 = searchParams.get('l2');
     const l3Id = searchParams.get('l3_id');
     const search = searchParams.get('search');
+
+    console.log('[Taxonomy API] Request params:', { l1, l2, l3Id, search });
 
     // If no filters, return full L1 list (cached)
     if (!l1 && !l2 && !l3Id && !search) {
@@ -227,11 +235,11 @@ export async function GET(request: Request) {
           // Now fetch parent context (L1/L2/L3) for the filtered results
           if (filteredSkills.length > 0) {
             // Get unique cat_ids, subcat_ids, l3_ids
-            const catIds = [...new Set(filteredSkills.map((s: any) => s.cat_id).filter(Boolean))];
-            const subcatIds = [
-              ...new Set(filteredSkills.map((s: any) => s.subcat_id).filter(Boolean)),
-            ];
-            const l3Ids = [...new Set(filteredSkills.map((s: any) => s.l3_id).filter(Boolean))];
+            const catIds = Array.from(new Set(filteredSkills.map((s: any) => s.cat_id).filter(Boolean)));
+            const subcatIds = Array.from(
+              new Set(filteredSkills.map((s: any) => s.subcat_id).filter(Boolean))
+            );
+            const l3Ids = Array.from(new Set(filteredSkills.map((s: any) => s.l3_id).filter(Boolean)));
 
             // Fetch L1 domains
             const { data: l1Data } = await supabase
@@ -288,11 +296,11 @@ export async function GET(request: Request) {
               error = skillsError;
             } else {
               // Fetch parent context separately
-              const catIds = [...new Set(skillsData?.map((s: any) => s.cat_id).filter(Boolean))];
-              const subcatIds = [
-                ...new Set(skillsData?.map((s: any) => s.subcat_id).filter(Boolean)),
-              ];
-              const l3Ids = [...new Set(skillsData?.map((s: any) => s.l3_id).filter(Boolean))];
+              const catIds = Array.from(new Set(skillsData?.map((s: any) => s.cat_id).filter(Boolean)));
+              const subcatIds = Array.from(
+                new Set(skillsData?.map((s: any) => s.subcat_id).filter(Boolean))
+              );
+              const l3Ids = Array.from(new Set(skillsData?.map((s: any) => s.l3_id).filter(Boolean)));
 
               // Fetch L1 domains
               const { data: l1Data } = await supabase
@@ -437,9 +445,17 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json({ error: 'Invalid query parameters' }, { status: 400 });
-  } catch (error) {
-    console.error('Taxonomy API error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (error: any) {
+    console.error('[Taxonomy API] Caught error:', error);
+    console.error('[Taxonomy API] Error message:', error?.message);
+    console.error('[Taxonomy API] Error stack:', error?.stack);
+    return NextResponse.json(
+      {
+        error: 'Internal server error',
+        details: process.env.NODE_ENV === 'development' ? error?.message : undefined
+      },
+      { status: 500 }
+    );
   }
 }
 
