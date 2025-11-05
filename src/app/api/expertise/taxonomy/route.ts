@@ -189,56 +189,148 @@ export async function GET(request: Request) {
           console.log('Falling back to basic search...');
 
           // Fallback to basic search if smart search fails (e.g., migration not run yet)
+          // Fetch skills without complex joins to avoid FK constraint name issues
           const { data: fallbackSkills, error: fallbackError } = await supabase
             .from('skills_taxonomy')
-            .select(
-              `
-              *,
-              l1:skills_categories!skills_taxonomy_cat_id_fkey(cat_id, slug, name_i18n),
-              l2:skills_subcategories!skills_taxonomy_cat_id_subcat_id_fkey(subcat_id, cat_id, slug, name_i18n),
-              l3:skills_l3!skills_taxonomy_cat_id_subcat_id_l3_id_fkey(l3_id, subcat_id, cat_id, slug, name_i18n)
-            `
-            )
+            .select('*')
             .eq('status', 'active')
             .limit(1000);
 
           if (fallbackError) {
             console.error('Fallback search error:', fallbackError);
-            return NextResponse.json({ error: 'Failed to fetch skills' }, { status: 500 });
+            console.error('Fallback error details:', JSON.stringify(fallbackError, null, 2));
+            return NextResponse.json(
+              {
+                error: 'Failed to fetch skills',
+                details: process.env.NODE_ENV === 'development' ? fallbackError.message : undefined,
+              },
+              { status: 500 }
+            );
           }
 
           // Client-side filtering for fallback
           const searchLower = search.toLowerCase();
-          skills = (fallbackSkills || []).filter((skill: any) => {
+          const filteredSkills = (fallbackSkills || []).filter((skill: any) => {
             const name = skill.name_i18n?.en?.toLowerCase() || '';
             const slug = skill.slug?.toLowerCase() || '';
             const description = skill.description_i18n?.en?.toLowerCase() || '';
+            const tags = skill.tags || [];
+            const tagMatch = tags.some((tag: string) => tag?.toLowerCase().includes(searchLower));
             return (
               name.includes(searchLower) ||
               slug.includes(searchLower) ||
-              description.includes(searchLower)
+              description.includes(searchLower) ||
+              tagMatch
             );
           });
+
+          // Now fetch parent context (L1/L2/L3) for the filtered results
+          if (filteredSkills.length > 0) {
+            // Get unique cat_ids, subcat_ids, l3_ids
+            const catIds = [...new Set(filteredSkills.map((s: any) => s.cat_id).filter(Boolean))];
+            const subcatIds = [
+              ...new Set(filteredSkills.map((s: any) => s.subcat_id).filter(Boolean)),
+            ];
+            const l3Ids = [...new Set(filteredSkills.map((s: any) => s.l3_id).filter(Boolean))];
+
+            // Fetch L1 domains
+            const { data: l1Data } = await supabase
+              .from('skills_categories')
+              .select('cat_id, slug, name_i18n')
+              .in('cat_id', catIds);
+
+            // Fetch L2 categories
+            const { data: l2Data } = await supabase
+              .from('skills_subcategories')
+              .select('subcat_id, cat_id, slug, name_i18n')
+              .in('subcat_id', subcatIds);
+
+            // Fetch L3 subcategories
+            const { data: l3Data } = await supabase
+              .from('skills_l3')
+              .select('l3_id, subcat_id, cat_id, slug, name_i18n')
+              .in('l3_id', l3Ids);
+
+            // Create lookup maps
+            const l1Map = new Map(l1Data?.map((l) => [l.cat_id, l]) || []);
+            const l2Map = new Map(
+              l2Data?.map((l) => [`${l.cat_id}-${l.subcat_id}`, l]) || []
+            );
+            const l3Map = new Map(
+              l3Data?.map((l) => [`${l.cat_id}-${l.subcat_id}-${l.l3_id}`, l]) || []
+            );
+
+            // Map parent context to skills
+            skills = filteredSkills.map((skill: any) => ({
+              ...skill,
+              l1: l1Map.get(skill.cat_id) || null,
+              l2: l2Map.get(`${skill.cat_id}-${skill.subcat_id}`) || null,
+              l3: l3Map.get(`${skill.cat_id}-${skill.subcat_id}-${skill.l3_id}`) || null,
+            }));
+          } else {
+            skills = [];
+          }
+
           error = null;
         } else {
           // Smart search succeeded - now fetch parent context for each result
           const skillCodes = searchResults?.map((s: any) => s.code) || [];
 
           if (skillCodes.length > 0) {
-            const { data: skillsWithContext, error: contextError } = await supabase
+            // Fetch skills first
+            const { data: skillsData, error: skillsError } = await supabase
               .from('skills_taxonomy')
-              .select(
-                `
-                *,
-                l1:skills_categories!skills_taxonomy_cat_id_fkey(cat_id, slug, name_i18n),
-                l2:skills_subcategories!skills_taxonomy_cat_id_subcat_id_fkey(subcat_id, cat_id, slug, name_i18n),
-                l3:skills_l3!skills_taxonomy_cat_id_subcat_id_l3_id_fkey(l3_id, subcat_id, cat_id, slug, name_i18n)
-              `
-              )
+              .select('*')
               .in('code', skillCodes);
 
-            skills = skillsWithContext || [];
-            error = contextError;
+            if (skillsError) {
+              skills = [];
+              error = skillsError;
+            } else {
+              // Fetch parent context separately
+              const catIds = [...new Set(skillsData?.map((s: any) => s.cat_id).filter(Boolean))];
+              const subcatIds = [
+                ...new Set(skillsData?.map((s: any) => s.subcat_id).filter(Boolean)),
+              ];
+              const l3Ids = [...new Set(skillsData?.map((s: any) => s.l3_id).filter(Boolean))];
+
+              // Fetch L1 domains
+              const { data: l1Data } = await supabase
+                .from('skills_categories')
+                .select('cat_id, slug, name_i18n')
+                .in('cat_id', catIds);
+
+              // Fetch L2 categories
+              const { data: l2Data } = await supabase
+                .from('skills_subcategories')
+                .select('subcat_id, cat_id, slug, name_i18n')
+                .in('subcat_id', subcatIds);
+
+              // Fetch L3 subcategories
+              const { data: l3Data } = await supabase
+                .from('skills_l3')
+                .select('l3_id, subcat_id, cat_id, slug, name_i18n')
+                .in('l3_id', l3Ids);
+
+              // Create lookup maps
+              const l1Map = new Map(l1Data?.map((l) => [l.cat_id, l]) || []);
+              const l2Map = new Map(
+                l2Data?.map((l) => [`${l.cat_id}-${l.subcat_id}`, l]) || []
+              );
+              const l3Map = new Map(
+                l3Data?.map((l) => [`${l.cat_id}-${l.subcat_id}-${l.l3_id}`, l]) || []
+              );
+
+              // Map parent context to skills
+              skills =
+                skillsData?.map((skill: any) => ({
+                  ...skill,
+                  l1: l1Map.get(skill.cat_id) || null,
+                  l2: l2Map.get(`${skill.cat_id}-${skill.subcat_id}`) || null,
+                  l3: l3Map.get(`${skill.cat_id}-${skill.subcat_id}-${skill.l3_id}`) || null,
+                })) || [];
+              error = null;
+            }
           } else {
             skills = [];
             error = null;
@@ -247,24 +339,53 @@ export async function GET(request: Request) {
       } else if (l3Id) {
         // Regular L3 filtering
         const [catId, subcatId, l3IdNum] = l3Id.split('.').map(Number);
-        const { data: l3Skills, error: l3Error } = await supabase
+        const { data: l3SkillsData, error: l3SkillsError } = await supabase
           .from('skills_taxonomy')
-          .select(
-            `
-            *,
-            l1:skills_categories!skills_taxonomy_cat_id_fkey(cat_id, slug, name_i18n),
-            l2:skills_subcategories!skills_taxonomy_cat_id_subcat_id_fkey(subcat_id, cat_id, slug, name_i18n),
-            l3:skills_l3!skills_taxonomy_cat_id_subcat_id_l3_id_fkey(l3_id, subcat_id, cat_id, slug, name_i18n)
-          `
-          )
+          .select('*')
           .eq('status', 'active')
           .eq('cat_id', catId)
           .eq('subcat_id', subcatId)
           .eq('l3_id', l3IdNum)
           .limit(100);
 
-        skills = l3Skills || [];
-        error = l3Error;
+        if (l3SkillsError) {
+          skills = [];
+          error = l3SkillsError;
+        } else if (l3SkillsData && l3SkillsData.length > 0) {
+          // Fetch parent context for L3 skills
+          const { data: l1Data } = await supabase
+            .from('skills_categories')
+            .select('cat_id, slug, name_i18n')
+            .eq('cat_id', catId)
+            .single();
+
+          const { data: l2Data } = await supabase
+            .from('skills_subcategories')
+            .select('subcat_id, cat_id, slug, name_i18n')
+            .eq('cat_id', catId)
+            .eq('subcat_id', subcatId)
+            .single();
+
+          const { data: l3Data } = await supabase
+            .from('skills_l3')
+            .select('l3_id, subcat_id, cat_id, slug, name_i18n')
+            .eq('cat_id', catId)
+            .eq('subcat_id', subcatId)
+            .eq('l3_id', l3IdNum)
+            .single();
+
+          // Map parent context to all skills
+          skills = l3SkillsData.map((skill: any) => ({
+            ...skill,
+            l1: l1Data || null,
+            l2: l2Data || null,
+            l3: l3Data || null,
+          }));
+          error = null;
+        } else {
+          skills = [];
+          error = null;
+        }
       } else {
         skills = [];
         error = null;

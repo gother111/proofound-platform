@@ -26,11 +26,14 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { AlertCircle, CheckCircle, Download, Info, TrendingUp } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AlertCircle, CheckCircle, Download, Info, TrendingUp, Eye, Archive } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { toast } from 'sonner';
 
 interface Finding {
   type: 'gap' | 'no_gap' | 'insufficient_data';
@@ -75,6 +78,11 @@ export default function FairnessNotesPage() {
   const [error, setError] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [newVersion, setNewVersion] = useState('');
+  const [publishingId, setPublishingId] = useState<string | null>(null);
+  const [archivingId, setArchivingId] = useState<string | null>(null);
+  const [confirmPublishId, setConfirmPublishId] = useState<string | null>(null);
+  const [confirmArchiveId, setConfirmArchiveId] = useState<string | null>(null);
+  const [filterStatus, setFilterStatus] = useState<'all' | 'draft' | 'published' | 'archived'>('all');
 
   useEffect(() => {
     fetchNotes();
@@ -100,7 +108,7 @@ export default function FairnessNotesPage() {
 
   const generateNote = async () => {
     if (!newVersion.trim()) {
-      alert('Please enter a release version');
+      toast.error('Please enter a release version');
       return;
     }
 
@@ -119,17 +127,72 @@ export default function FairnessNotesPage() {
       if (data.success) {
         setNewVersion('');
         await fetchNotes();
-        alert('Fairness note generated successfully!');
+        toast.success('Fairness note generated successfully!');
       } else {
         setError(data.error || 'Failed to generate fairness note');
+        toast.error(data.error || 'Failed to generate fairness note');
       }
     } catch (err) {
       setError('Error generating fairness note');
+      toast.error('Error generating fairness note');
       console.error(err);
     } finally {
       setGenerating(false);
     }
   };
+
+  const publishNote = async (noteId: string) => {
+    setPublishingId(noteId);
+    try {
+      const response = await fetch(`/api/admin/fairness/notes/${noteId}/publish`, {
+        method: 'POST',
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        await fetchNotes();
+        toast.success('Fairness note published successfully!');
+        setConfirmPublishId(null);
+      } else {
+        toast.error(data.error || 'Failed to publish fairness note');
+      }
+    } catch (err) {
+      toast.error('Error publishing fairness note');
+      console.error(err);
+    } finally {
+      setPublishingId(null);
+    }
+  };
+
+  const archiveNote = async (noteId: string) => {
+    setArchivingId(noteId);
+    try {
+      const response = await fetch(`/api/admin/fairness/notes/${noteId}/archive`, {
+        method: 'POST',
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        await fetchNotes();
+        toast.success('Fairness note archived successfully!');
+        setConfirmArchiveId(null);
+      } else {
+        toast.error(data.error || 'Failed to archive fairness note');
+      }
+    } catch (err) {
+      toast.error('Error archiving fairness note');
+      console.error(err);
+    } finally {
+      setArchivingId(null);
+    }
+  };
+
+  const filteredNotes = notes.filter((note) => {
+    if (filterStatus === 'all') return true;
+    return note.status === filterStatus;
+  });
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -212,21 +275,38 @@ export default function FairnessNotesPage() {
         </Dialog>
       </div>
 
-      {notes.length === 0 ? (
-        <Card>
-          <CardContent className="flex items-center justify-center min-h-[300px]">
-            <div className="text-center space-y-2">
-              <Info className="h-12 w-12 mx-auto text-muted-foreground" />
-              <p className="text-muted-foreground">No fairness notes yet</p>
-              <p className="text-sm text-muted-foreground">
-                Generate your first fairness note to start tracking equity metrics
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-6">
-          {notes.map((note) => (
+      <Tabs value={filterStatus} onValueChange={(value) => setFilterStatus(value as any)}>
+        <TabsList>
+          <TabsTrigger value="all">All ({notes.length})</TabsTrigger>
+          <TabsTrigger value="draft">
+            Draft ({notes.filter((n) => n.status === 'draft').length})
+          </TabsTrigger>
+          <TabsTrigger value="published">
+            Published ({notes.filter((n) => n.status === 'published').length})
+          </TabsTrigger>
+          <TabsTrigger value="archived">
+            Archived ({notes.filter((n) => n.status === 'archived').length})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value={filterStatus} className="mt-6">
+          {filteredNotes.length === 0 ? (
+            <Card>
+              <CardContent className="flex items-center justify-center min-h-[300px]">
+                <div className="text-center space-y-2">
+                  <Info className="h-12 w-12 mx-auto text-muted-foreground" />
+                  <p className="text-muted-foreground">
+                    No {filterStatus !== 'all' ? filterStatus : ''} fairness notes yet
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Generate your first fairness note to start tracking equity metrics
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-6">
+              {filteredNotes.map((note) => (
             <Card key={note.id} className="overflow-hidden">
               <CardHeader
                 className={
@@ -387,8 +467,88 @@ export default function FairnessNotesPage() {
                   </div>
                 )}
 
-                {/* Export Button */}
-                <div className="flex justify-end pt-4 border-t">
+                {/* Action Buttons */}
+                <div className="flex justify-between items-center pt-4 border-t">
+                  <div className="flex gap-2">
+                    {note.status === 'draft' && (
+                      <>
+                        <Dialog
+                          open={confirmPublishId === note.id}
+                          onOpenChange={(open) => setConfirmPublishId(open ? note.id : null)}
+                        >
+                          <DialogTrigger asChild>
+                            <Button size="sm" variant="default">
+                              <Eye className="h-4 w-4 mr-2" />
+                              Publish to Public
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Publish Fairness Note</DialogTitle>
+                              <DialogDescription>
+                                This will make the fairness note visible on the public transparency page at
+                                /fairness. Are you sure you want to publish {note.releaseVersion}?
+                              </DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter>
+                              <Button
+                                variant="outline"
+                                onClick={() => setConfirmPublishId(null)}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                onClick={() => publishNote(note.id)}
+                                disabled={publishingId === note.id}
+                              >
+                                {publishingId === note.id ? 'Publishing...' : 'Publish'}
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      </>
+                    )}
+                    {note.status === 'published' && (
+                      <>
+                        <Dialog
+                          open={confirmArchiveId === note.id}
+                          onOpenChange={(open) => setConfirmArchiveId(open ? note.id : null)}
+                        >
+                          <DialogTrigger asChild>
+                            <Button size="sm" variant="outline">
+                              <Archive className="h-4 w-4 mr-2" />
+                              Archive
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Archive Fairness Note</DialogTitle>
+                              <DialogDescription>
+                                This will remove the fairness note from the public transparency page. It
+                                will still be accessible in the admin panel. Are you sure you want to
+                                archive {note.releaseVersion}?
+                              </DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter>
+                              <Button
+                                variant="outline"
+                                onClick={() => setConfirmArchiveId(null)}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                onClick={() => archiveNote(note.id)}
+                                disabled={archivingId === note.id}
+                                variant="destructive"
+                              >
+                                {archivingId === note.id ? 'Archiving...' : 'Archive'}
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      </>
+                    )}
+                  </div>
                   <Button variant="outline" size="sm">
                     <Download className="h-4 w-4 mr-2" />
                     Export Report (PDF)
@@ -396,9 +556,11 @@ export default function FairnessNotesPage() {
                 </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
-      )}
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
