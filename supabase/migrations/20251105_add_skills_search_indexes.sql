@@ -159,7 +159,7 @@ BEGIN
             'fuzzy'::TEXT as match_type
         FROM skills_taxonomy st
         WHERE
-            st.code NOT IN (SELECT code FROM exact_matches)
+            st.code NOT IN (SELECT em.code FROM exact_matches em)
             AND (
                 (st.name_i18n->>'en') % search_query
                 OR (st.description_i18n->>'en') % search_query
@@ -183,8 +183,8 @@ BEGIN
             'fulltext'::TEXT as match_type
         FROM skills_taxonomy st
         WHERE
-            st.code NOT IN (SELECT code FROM exact_matches)
-            AND st.code NOT IN (SELECT code FROM fuzzy_matches)
+            st.code NOT IN (SELECT em.code FROM exact_matches em)
+            AND st.code NOT IN (SELECT fm.code FROM fuzzy_matches fm)
             AND st.search_vector @@ websearch_to_tsquery('english', search_query)
         ORDER BY ts_rank(st.search_vector, websearch_to_tsquery('english', search_query)) DESC
         LIMIT 20

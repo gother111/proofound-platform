@@ -77,12 +77,20 @@ function mapTaxonomyFields(item: any, type: 'l1' | 'l2' | 'l3' | 'l4') {
 export async function GET(request: Request) {
   try {
     const supabase = await createClient();
+
+    if (!supabase) {
+      console.error('[Taxonomy API] Failed to create Supabase client');
+      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
+    }
+
     const { searchParams } = new URL(request.url);
 
     const l1 = searchParams.get('l1');
     const l2 = searchParams.get('l2');
     const l3Id = searchParams.get('l3_id');
     const search = searchParams.get('search');
+
+    console.log('[Taxonomy API] Request params:', { l1, l2, l3Id, search });
 
     // If no filters, return full L1 list (cached)
     if (!l1 && !l2 && !l3Id && !search) {
@@ -188,28 +196,27 @@ export async function GET(request: Request) {
           console.error('Smart search error:', searchError);
           console.log('Falling back to basic search...');
 
-          // Fallback to basic search if smart search fails (e.g., migration not run yet)
+          // Fallback: fetch skills without complex joins
           const { data: fallbackSkills, error: fallbackError } = await supabase
             .from('skills_taxonomy')
-            .select(
-              `
-              *,
-              l1:skills_categories!skills_taxonomy_cat_id_fkey(cat_id, slug, name_i18n),
-              l2:skills_subcategories!skills_taxonomy_cat_id_subcat_id_fkey(subcat_id, cat_id, slug, name_i18n),
-              l3:skills_l3!skills_taxonomy_cat_id_subcat_id_l3_id_fkey(l3_id, subcat_id, cat_id, slug, name_i18n)
-            `
-            )
+            .select('*')
             .eq('status', 'active')
             .limit(1000);
 
           if (fallbackError) {
             console.error('Fallback search error:', fallbackError);
-            return NextResponse.json({ error: 'Failed to fetch skills' }, { status: 500 });
+            return NextResponse.json(
+              {
+                error: 'Failed to fetch skills',
+                details: process.env.NODE_ENV === 'development' ? fallbackError.message : undefined,
+              },
+              { status: 500 }
+            );
           }
 
-          // Client-side filtering for fallback
+          // Client-side filtering
           const searchLower = search.toLowerCase();
-          skills = (fallbackSkills || []).filter((skill: any) => {
+          const filteredSkills = (fallbackSkills || []).filter((skill: any) => {
             const name = skill.name_i18n?.en?.toLowerCase() || '';
             const slug = skill.slug?.toLowerCase() || '';
             const description = skill.description_i18n?.en?.toLowerCase() || '';
@@ -219,26 +226,105 @@ export async function GET(request: Request) {
               description.includes(searchLower)
             );
           });
+
+          // Fetch parent context separately
+          if (filteredSkills.length > 0) {
+            const catIds = Array.from(
+              new Set(filteredSkills.map((s: any) => s.cat_id).filter(Boolean))
+            );
+            const subcatIds = Array.from(
+              new Set(filteredSkills.map((s: any) => s.subcat_id).filter(Boolean))
+            );
+            const l3Ids = Array.from(
+              new Set(filteredSkills.map((s: any) => s.l3_id).filter(Boolean))
+            );
+
+            const { data: l1Data } = await supabase
+              .from('skills_categories')
+              .select('cat_id, slug, name_i18n')
+              .in('cat_id', catIds);
+
+            const { data: l2Data } = await supabase
+              .from('skills_subcategories')
+              .select('subcat_id, cat_id, slug, name_i18n')
+              .in('subcat_id', subcatIds);
+
+            const { data: l3Data } = await supabase
+              .from('skills_l3')
+              .select('l3_id, subcat_id, cat_id, slug, name_i18n')
+              .in('l3_id', l3Ids);
+
+            const l1Map = new Map(l1Data?.map((l) => [l.cat_id, l]) || []);
+            const l2Map = new Map(l2Data?.map((l) => [`${l.cat_id}-${l.subcat_id}`, l]) || []);
+            const l3Map = new Map(
+              l3Data?.map((l) => [`${l.cat_id}-${l.subcat_id}-${l.l3_id}`, l]) || []
+            );
+
+            skills = filteredSkills.map((skill: any) => ({
+              ...skill,
+              l1: l1Map.get(skill.cat_id) || null,
+              l2: l2Map.get(`${skill.cat_id}-${skill.subcat_id}`) || null,
+              l3: l3Map.get(`${skill.cat_id}-${skill.subcat_id}-${skill.l3_id}`) || null,
+            }));
+          } else {
+            skills = [];
+          }
           error = null;
         } else {
-          // Smart search succeeded - now fetch parent context for each result
+          // Smart search succeeded - fetch parent context
           const skillCodes = searchResults?.map((s: any) => s.code) || [];
 
           if (skillCodes.length > 0) {
-            const { data: skillsWithContext, error: contextError } = await supabase
+            const { data: skillsData, error: skillsError } = await supabase
               .from('skills_taxonomy')
-              .select(
-                `
-                *,
-                l1:skills_categories!skills_taxonomy_cat_id_fkey(cat_id, slug, name_i18n),
-                l2:skills_subcategories!skills_taxonomy_cat_id_subcat_id_fkey(subcat_id, cat_id, slug, name_i18n),
-                l3:skills_l3!skills_taxonomy_cat_id_subcat_id_l3_id_fkey(l3_id, subcat_id, cat_id, slug, name_i18n)
-              `
-              )
+              .select('*')
               .in('code', skillCodes);
 
-            skills = skillsWithContext || [];
-            error = contextError;
+            if (skillsError) {
+              console.error('Error fetching skills data:', skillsError);
+              skills = [];
+              error = skillsError;
+            } else {
+              // Fetch parent context separately
+              const catIds = Array.from(
+                new Set(skillsData?.map((s: any) => s.cat_id).filter(Boolean))
+              );
+              const subcatIds = Array.from(
+                new Set(skillsData?.map((s: any) => s.subcat_id).filter(Boolean))
+              );
+              const l3Ids = Array.from(
+                new Set(skillsData?.map((s: any) => s.l3_id).filter(Boolean))
+              );
+
+              const { data: l1Data } = await supabase
+                .from('skills_categories')
+                .select('cat_id, slug, name_i18n')
+                .in('cat_id', catIds);
+
+              const { data: l2Data } = await supabase
+                .from('skills_subcategories')
+                .select('subcat_id, cat_id, slug, name_i18n')
+                .in('subcat_id', subcatIds);
+
+              const { data: l3Data } = await supabase
+                .from('skills_l3')
+                .select('l3_id, subcat_id, cat_id, slug, name_i18n')
+                .in('l3_id', l3Ids);
+
+              const l1Map = new Map(l1Data?.map((l) => [l.cat_id, l]) || []);
+              const l2Map = new Map(l2Data?.map((l) => [`${l.cat_id}-${l.subcat_id}`, l]) || []);
+              const l3Map = new Map(
+                l3Data?.map((l) => [`${l.cat_id}-${l.subcat_id}-${l.l3_id}`, l]) || []
+              );
+
+              skills = (skillsData || []).map((skill: any) => ({
+                ...skill,
+                l1: l1Map.get(skill.cat_id) || null,
+                l2: l2Map.get(`${skill.cat_id}-${skill.subcat_id}`) || null,
+                l3: l3Map.get(`${skill.cat_id}-${skill.subcat_id}-${skill.l3_id}`) || null,
+              }));
+              error = null;
+            }
           } else {
             skills = [];
             error = null;
@@ -316,9 +402,17 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json({ error: 'Invalid query parameters' }, { status: 400 });
-  } catch (error) {
-    console.error('Taxonomy API error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (error: any) {
+    console.error('[Taxonomy API] Caught error:', error);
+    console.error('[Taxonomy API] Error message:', error?.message);
+    console.error('[Taxonomy API] Error stack:', error?.stack);
+    return NextResponse.json(
+      {
+        error: 'Internal server error',
+        details: process.env.NODE_ENV === 'development' ? error?.message : undefined,
+      },
+      { status: 500 }
+    );
   }
 }
 
