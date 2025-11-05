@@ -5,10 +5,6 @@
       "schedule": "0 2 * * *"
     },
     {
-      "path": "/api/cron/generate-fairness-note",
-      "schedule": "0 3 1 * *"
-    },
-    {
       "path": "/api/cron/fairness-report",
       "schedule": "0 0 * * 1"
     }
