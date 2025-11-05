@@ -130,11 +130,18 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<L4Skill[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const searchAbortControllerRef = useRef<AbortController | null>(null);
 
   // Debounced global search
   const handleSearchChange = useCallback((value: string) => {
     setSearchQuery(value);
+
+    // Cancel any pending request
+    if (searchAbortControllerRef.current) {
+      searchAbortControllerRef.current.abort();
+    }
 
     // Clear existing timeout
     if (searchTimeoutRef.current) {
@@ -144,22 +151,47 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
     // Don't search if query is too short
     if (value.trim().length < 2) {
       setSearchResults([]);
+      setSearchError(null);
       return;
     }
 
     // Debounce search (300ms)
     searchTimeoutRef.current = setTimeout(async () => {
       setSearchLoading(true);
+      setSearchError(null);
+
+      // Create new abort controller for this request
+      const abortController = new AbortController();
+      searchAbortControllerRef.current = abortController;
+
       try {
-        const response = await fetch(`/api/expertise/taxonomy?search=${encodeURIComponent(value)}`);
+        const response = await fetch(
+          `/api/expertise/taxonomy?search=${encodeURIComponent(value)}`,
+          {
+            signal: abortController.signal,
+            // Add timeout using AbortSignal.timeout (10 seconds)
+          }
+        );
+
         if (response.ok) {
           const data = await response.json();
           setSearchResults(data.l4_skills || []);
+        } else {
+          setSearchResults([]);
+          setSearchError('Failed to fetch search results. Please try again.');
         }
-      } catch (error) {
-        console.error('Error searching skills:', error);
+      } catch (error: any) {
+        // Don't show error if request was aborted (user typed again)
+        if (error.name !== 'AbortError') {
+          console.error('Error searching skills:', error);
+          setSearchResults([]);
+          setSearchError('Search failed. Please check your connection and try again.');
+        }
       } finally {
-        setSearchLoading(false);
+        // Only update loading state if this request wasn't aborted
+        if (!abortController.signal.aborted) {
+          setSearchLoading(false);
+        }
       }
     }, 300);
   }, []);
@@ -167,6 +199,14 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
   // Reset drawer state when closed
   useEffect(() => {
     if (!open) {
+      // Cancel any pending search requests
+      if (searchAbortControllerRef.current) {
+        searchAbortControllerRef.current.abort();
+      }
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+
       setTimeout(() => {
         setMode('search');
         setStep(1);
@@ -187,6 +227,7 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
         setShowL4Dropdown(false);
         setSearchQuery('');
         setSearchResults([]);
+        setSearchError(null);
       }, 300);
     }
   }, [open]);
@@ -502,12 +543,22 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
               <div className="text-center py-8 text-[#6B6760]">Searching skills...</div>
             )}
 
-            {!searchLoading && searchQuery.length >= 2 && searchResults.length === 0 && (
-              <div className="text-center py-8 text-[#6B6760]">
-                <p className="mb-2">No skills found matching &ldquo;{searchQuery}&rdquo;</p>
-                <p className="text-sm">Try a different search term or browse categories above</p>
+            {searchError && (
+              <div className="text-center py-8 text-[#C76B4A] bg-[#FFF0F0] rounded-lg border border-[#C76B4A]">
+                <p className="font-medium mb-1">Search Error</p>
+                <p className="text-sm">{searchError}</p>
               </div>
             )}
+
+            {!searchLoading &&
+              !searchError &&
+              searchQuery.length >= 2 &&
+              searchResults.length === 0 && (
+                <div className="text-center py-8 text-[#6B6760]">
+                  <p className="mb-2">No skills found matching &ldquo;{searchQuery}&rdquo;</p>
+                  <p className="text-sm">Try a different search term or browse categories above</p>
+                </div>
+              )}
 
             {!searchLoading && searchResults.length > 0 && (
               <div className="space-y-2 max-h-[500px] overflow-y-auto">

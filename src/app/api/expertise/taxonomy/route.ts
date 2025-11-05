@@ -170,70 +170,118 @@ export async function GET(request: Request) {
 
     // If L3 specified or search query, return L4 skills
     if (l3Id || search) {
-      let query = supabase
-        .from('skills_taxonomy')
-        .select(
-          `
-          *,
-          l1:skills_categories!skills_taxonomy_cat_id_fkey(cat_id, slug, name_i18n),
-          l2:skills_subcategories!skills_taxonomy_cat_id_subcat_id_fkey(subcat_id, cat_id, slug, name_i18n),
-          l3:skills_l3!skills_taxonomy_cat_id_subcat_id_l3_id_fkey(l3_id, subcat_id, cat_id, slug, name_i18n)
-        `
-        )
-        .eq('status', 'active');
+      let skills: any[];
+      let error: any;
 
-      if (l3Id) {
+      // Use smart search function if searching, otherwise use regular query
+      if (search) {
+        // Use the database function for smart fuzzy search
+        const { data: searchResults, error: searchError } = await supabase.rpc(
+          'search_skills_smart',
+          {
+            search_query: search,
+            result_limit: 50,
+          }
+        );
+
+        if (searchError) {
+          console.error('Smart search error:', searchError);
+          console.log('Falling back to basic search...');
+
+          // Fallback to basic search if smart search fails (e.g., migration not run yet)
+          const { data: fallbackSkills, error: fallbackError } = await supabase
+            .from('skills_taxonomy')
+            .select(
+              `
+              *,
+              l1:skills_categories!skills_taxonomy_cat_id_fkey(cat_id, slug, name_i18n),
+              l2:skills_subcategories!skills_taxonomy_cat_id_subcat_id_fkey(subcat_id, cat_id, slug, name_i18n),
+              l3:skills_l3!skills_taxonomy_cat_id_subcat_id_l3_id_fkey(l3_id, subcat_id, cat_id, slug, name_i18n)
+            `
+            )
+            .eq('status', 'active')
+            .limit(1000);
+
+          if (fallbackError) {
+            console.error('Fallback search error:', fallbackError);
+            return NextResponse.json({ error: 'Failed to fetch skills' }, { status: 500 });
+          }
+
+          // Client-side filtering for fallback
+          const searchLower = search.toLowerCase();
+          skills = (fallbackSkills || []).filter((skill: any) => {
+            const name = skill.name_i18n?.en?.toLowerCase() || '';
+            const slug = skill.slug?.toLowerCase() || '';
+            const description = skill.description_i18n?.en?.toLowerCase() || '';
+            return (
+              name.includes(searchLower) ||
+              slug.includes(searchLower) ||
+              description.includes(searchLower)
+            );
+          });
+          error = null;
+        } else {
+          // Smart search succeeded - now fetch parent context for each result
+          const skillCodes = searchResults?.map((s: any) => s.code) || [];
+
+          if (skillCodes.length > 0) {
+            const { data: skillsWithContext, error: contextError } = await supabase
+              .from('skills_taxonomy')
+              .select(
+                `
+                *,
+                l1:skills_categories!skills_taxonomy_cat_id_fkey(cat_id, slug, name_i18n),
+                l2:skills_subcategories!skills_taxonomy_cat_id_subcat_id_fkey(subcat_id, cat_id, slug, name_i18n),
+                l3:skills_l3!skills_taxonomy_cat_id_subcat_id_l3_id_fkey(l3_id, subcat_id, cat_id, slug, name_i18n)
+              `
+              )
+              .in('code', skillCodes);
+
+            skills = skillsWithContext || [];
+            error = contextError;
+          } else {
+            skills = [];
+            error = null;
+          }
+        }
+      } else if (l3Id) {
+        // Regular L3 filtering
         const [catId, subcatId, l3IdNum] = l3Id.split('.').map(Number);
-        query = query.eq('cat_id', catId).eq('subcat_id', subcatId).eq('l3_id', l3IdNum);
+        const { data: l3Skills, error: l3Error } = await supabase
+          .from('skills_taxonomy')
+          .select(
+            `
+            *,
+            l1:skills_categories!skills_taxonomy_cat_id_fkey(cat_id, slug, name_i18n),
+            l2:skills_subcategories!skills_taxonomy_cat_id_subcat_id_fkey(subcat_id, cat_id, slug, name_i18n),
+            l3:skills_l3!skills_taxonomy_cat_id_subcat_id_l3_id_fkey(l3_id, subcat_id, cat_id, slug, name_i18n)
+          `
+          )
+          .eq('status', 'active')
+          .eq('cat_id', catId)
+          .eq('subcat_id', subcatId)
+          .eq('l3_id', l3IdNum)
+          .limit(100);
+
+        skills = l3Skills || [];
+        error = l3Error;
+      } else {
+        skills = [];
+        error = null;
       }
-
-      // If searching, fetch more results for client-side filtering
-      // This is a workaround for JSONB query limitations
-      const fetchLimit = search ? 1000 : 100;
-
-      // Execute the filtered query
-      const { data: skills, error } = await query.limit(fetchLimit);
 
       if (error) {
         console.error('Error fetching L4 skills:', error);
-        console.error('Search query:', search);
-        console.error('Error details:', JSON.stringify(error, null, 2));
         return NextResponse.json({ error: 'Failed to fetch skills' }, { status: 500 });
       }
 
-      // If search query provided, filter results on the server
-      let filteredSkills = skills;
-      if (search && skills) {
-        const searchLower = search.toLowerCase();
-        filteredSkills = skills.filter((skill: any) => {
-          // Search in English name
-          const name = skill.name_i18n?.en?.toLowerCase() || '';
-          // Search in slug
-          const slug = skill.slug?.toLowerCase() || '';
-          // Search in description
-          const description = skill.description_i18n?.en?.toLowerCase() || '';
-          // Search in aliases
-          const aliases = skill.aliases_i18n?.en || [];
-          const aliasMatch = Array.isArray(aliases)
-            ? aliases.some((alias: string) => alias?.toLowerCase().includes(searchLower))
-            : false;
-
-          return (
-            name.includes(searchLower) ||
-            slug.includes(searchLower) ||
-            description.includes(searchLower) ||
-            aliasMatch
-          );
-        });
-      }
-
       console.log(
-        `✅ Skills search for "${search}" returned ${filteredSkills?.length || 0} results (filtered from ${skills?.length || 0})`
+        `✅ Skills ${search ? 'search' : 'query'} ${search ? `for "${search}"` : ''} returned ${skills?.length || 0} results`
       );
 
-      // Map filtered skills with parent context
+      // Map skills with parent context
       const mappedSkills =
-        filteredSkills?.map((s) => {
+        skills?.map((s) => {
           const baseSkill = mapTaxonomyFields(s, 'l4');
           return {
             ...baseSkill,

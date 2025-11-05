@@ -2204,9 +2204,154 @@ export const fairnessMetrics = pgTable('fairness_metrics', {
   hasSignificantGaps: boolean('has_significant_gaps').default(false).notNull(),
 });
 
+// Fairness notes - automated fairness reports per release
+export const fairnessNotes = pgTable('fairness_notes', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  releaseVersion: text('release_version').notNull(),
+  generatedAt: timestamp('generated_at').defaultNow().notNull(),
+  cohortData: jsonb('cohort_data').notNull(), // Array of cohort analysis results
+  findings: jsonb('findings').notNull(), // Array of significant findings
+  recommendations: jsonb('recommendations').notNull(), // Array of actionable recommendations
+  status: text('status', {
+    enum: ['draft', 'published', 'archived'],
+  })
+    .default('draft')
+    .notNull(),
+  minSampleSize: integer('min_sample_size').default(40).notNull(),
+  hasSignificantGaps: boolean('has_significant_gaps').default(false).notNull(),
+  pValue: numeric('p_value'), // Statistical significance threshold
+  createdBy: uuid('created_by').references(() => profiles.id),
+  publishedAt: timestamp('published_at'),
+});
+
+// ============================================================================
+// PERFORMANCE MONITORING
+// ============================================================================
+
+// Performance metrics for tracking page load times and API latency
+export const performanceMetrics = pgTable('performance_metrics', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  metricType: text('metric_type', {
+    enum: ['page_load', 'api_latency', 'tti', 'fcp', 'lcp', 'cls', 'fid'],
+  }).notNull(),
+  pageRoute: text('page_route'), // For page load metrics
+  apiEndpoint: text('api_endpoint'), // For API latency metrics
+  valueMs: numeric('value_ms').notNull(), // Value in milliseconds
+  deviceType: text('device_type', {
+    enum: ['desktop', 'mobile', 'tablet'],
+  }),
+  // Aggregated percentiles (computed periodically)
+  p50: numeric('p50'),
+  p95: numeric('p95'),
+  p99: numeric('p99'),
+  // Sample metadata
+  userAgent: text('user_agent'),
+  timestamp: timestamp('timestamp').defaultNow().notNull(),
+  // Aggregation period (for rolled-up metrics)
+  periodStart: timestamp('period_start'),
+  periodEnd: timestamp('period_end'),
+  sampleCount: integer('sample_count').default(1),
+});
+
+// Performance alerts for SLA violations
+export const performanceAlerts = pgTable('performance_alerts', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  alertType: text('alert_type', {
+    enum: ['sla_violation', 'degradation', 'spike'],
+  }).notNull(),
+  metricType: text('metric_type').notNull(),
+  route: text('route'), // Page route or API endpoint
+  thresholdMs: numeric('threshold_ms').notNull(),
+  actualValueMs: numeric('actual_value_ms').notNull(),
+  percentile: text('percentile'), // e.g., 'p95', 'p99'
+  deviceType: text('device_type'),
+  severity: text('severity', {
+    enum: ['low', 'medium', 'high', 'critical'],
+  }).notNull(),
+  status: text('status', {
+    enum: ['open', 'acknowledged', 'resolved', 'ignored'],
+  })
+    .default('open')
+    .notNull(),
+  acknowledgedBy: uuid('acknowledged_by').references(() => profiles.id),
+  acknowledgedAt: timestamp('acknowledged_at'),
+  resolvedAt: timestamp('resolved_at'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 // Type exports for privacy & fairness
 // ProfileFieldVisibility types removed - now using JSONB in individualProfiles
 export type DemographicOptIn = typeof demographicOptIns.$inferSelect;
 export type InsertDemographicOptIn = typeof demographicOptIns.$inferInsert;
 export type FairnessMetric = typeof fairnessMetrics.$inferSelect;
 export type InsertFairnessMetric = typeof fairnessMetrics.$inferInsert;
+export type FairnessNote = typeof fairnessNotes.$inferSelect;
+export type InsertFairnessNote = typeof fairnessNotes.$inferInsert;
+
+// Type exports for performance monitoring
+export type PerformanceMetric = typeof performanceMetrics.$inferSelect;
+export type InsertPerformanceMetric = typeof performanceMetrics.$inferInsert;
+export type PerformanceAlert = typeof performanceAlerts.$inferSelect;
+export type InsertPerformanceAlert = typeof performanceAlerts.$inferInsert;
+
+// ============================================================================
+// USER FEEDBACK & USABILITY
+// ============================================================================
+
+// System Usability Scale (SUS) surveys
+export const susSurveys = pgTable('sus_surveys', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  task: text('task'), // What task prompted this survey (e.g., 'profile_activation', 'assignment_creation')
+  responses: jsonb('responses').notNull(), // Array of 10 responses (1-5 scale)
+  score: numeric('score').notNull(), // Calculated SUS score (0-100)
+  // Survey metadata
+  dismissed: boolean('dismissed').default(false).notNull(), // User dismissed without completing
+  completedAt: timestamp('completed_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Survey display tracking (to avoid over-surveying users)
+export const surveyDisplayLog = pgTable('survey_display_log', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  surveyType: text('survey_type').notNull(), // 'sus', 'nps', 'feedback', etc.
+  task: text('task'), // Task context
+  displayedAt: timestamp('displayed_at').defaultNow().notNull(),
+  completed: boolean('completed').default(false).notNull(),
+});
+
+// Type exports for user feedback
+export type SusSurvey = typeof susSurveys.$inferSelect;
+export type InsertSusSurvey = typeof susSurveys.$inferInsert;
+export type SurveyDisplayLog = typeof surveyDisplayLog.$inferSelect;
+export type InsertSurveyDisplayLog = typeof surveyDisplayLog.$inferInsert;
+
+// ============================================================================
+// AUDIT & COMPLIANCE
+// ============================================================================
+
+// Purpose edit audit log (immutable, append-only)
+export const purposeEditLog = pgTable('purpose_edit_log', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  fieldName: text('field_name', {
+    enum: ['mission', 'vision', 'values', 'causes'],
+  }).notNull(),
+  oldValue: text('old_value'), // JSON string for values/causes
+  newValue: text('new_value').notNull(), // JSON string for values/causes
+  changedAt: timestamp('changed_at').defaultNow().notNull(),
+  ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
+});
+
+// Type exports for audit
+export type PurposeEditLog = typeof purposeEditLog.$inferSelect;
+export type InsertPurposeEditLog = typeof purposeEditLog.$inferInsert;

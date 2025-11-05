@@ -30,11 +30,22 @@ interface PACResult {
   };
 }
 
+interface SUSResult {
+  average: number;
+  median: number;
+  min: number;
+  max: number;
+  meetsTarget: boolean;
+  sampleSize: number;
+  responseRate: number;
+}
+
 interface MetricsData {
   ttsc: TTSCResult | null;
   ttfqi: TTSCResult | null;
   ttv: TTSCResult | null;
   pac: PACResult | null;
+  sus: SUSResult | null;
   timestamp: string;
 }
 
@@ -189,35 +200,27 @@ export function MetricsDashboard() {
               <div className="space-y-4">
                 <div>
                   <div className="flex justify-between items-baseline mb-1">
-                    <span className="text-sm font-medium text-gray-700">
-                      Acceptance Lift
-                    </span>
+                    <span className="text-sm font-medium text-gray-700">Acceptance Lift</span>
                     <span
                       className={`text-2xl font-bold ${
-                        metrics.pac.meetsAcceptanceTarget
-                          ? 'text-green-600'
-                          : 'text-amber-600'
+                        metrics.pac.meetsAcceptanceTarget ? 'text-green-600' : 'text-amber-600'
                       }`}
                     >
                       +{metrics.pac.acceptanceLift.toFixed(1)}%
                     </span>
                   </div>
                   <div className="text-xs text-gray-500">
-                    High PAC: {metrics.pac.highPacAcceptanceRate.toFixed(1)}% vs Low
-                    PAC: {metrics.pac.lowPacAcceptanceRate.toFixed(1)}%
+                    High PAC: {metrics.pac.highPacAcceptanceRate.toFixed(1)}% vs Low PAC:{' '}
+                    {metrics.pac.lowPacAcceptanceRate.toFixed(1)}%
                   </div>
                 </div>
 
                 <div>
                   <div className="flex justify-between items-baseline mb-1">
-                    <span className="text-sm font-medium text-gray-700">
-                      Contract Lift
-                    </span>
+                    <span className="text-sm font-medium text-gray-700">Contract Lift</span>
                     <span
                       className={`text-2xl font-bold ${
-                        metrics.pac.meetsContractTarget
-                          ? 'text-green-600'
-                          : 'text-amber-600'
+                        metrics.pac.meetsContractTarget ? 'text-green-600' : 'text-amber-600'
                       }`}
                     >
                       +{metrics.pac.contractLift.toFixed(1)}%
@@ -232,6 +235,55 @@ export function MetricsDashboard() {
                 <div className="pt-2 border-t border-gray-200 text-xs text-gray-600">
                   Sample: {metrics.pac.sampleSize.highPac} high PAC matches,{' '}
                   {metrics.pac.sampleSize.lowPac} low PAC matches
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="text-gray-500 italic">No data available</div>
+          )}
+        </div>
+
+        {/* SUS - System Usability Scale */}
+        <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">SUS - System Usability Scale</h3>
+          <p className="text-sm text-gray-600 mb-4">Target: ≥75 (Good usability)</p>
+
+          {metrics?.sus ? (
+            <>
+              <div className="space-y-4">
+                <div>
+                  <div className="text-4xl font-bold">
+                    <span className={metrics.sus.meetsTarget ? 'text-green-600' : 'text-amber-600'}>
+                      {metrics.sus.average.toFixed(1)}
+                    </span>
+                    <span className="text-xl text-gray-600 ml-2">/ 100</span>
+                  </div>
+                  <div className="mt-2 text-sm text-gray-600">
+                    <span>Median: {metrics.sus.median.toFixed(1)}</span>
+                    <span className="mx-2">•</span>
+                    <span>
+                      Range: {metrics.sus.min.toFixed(0)} - {metrics.sus.max.toFixed(0)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-gray-200 text-xs text-gray-600">
+                  <div className="flex justify-between">
+                    <span>Sample size: {metrics.sus.sampleSize} surveys</span>
+                    <span>Response rate: {(metrics.sus.responseRate * 100).toFixed(1)}%</span>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      metrics.sus.meetsTarget
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-amber-100 text-amber-800'
+                    }`}
+                  >
+                    {metrics.sus.meetsTarget ? '✓ Meeting Target' : '⚠ Below Target'}
+                  </span>
                 </div>
               </div>
             </>
@@ -267,19 +319,13 @@ function MetricCard({ title, target, metric, renderValue }: MetricCardProps) {
 
       {metric ? (
         <>
-          <div
-            className={
-              meetsTarget ? 'text-green-600' : 'text-amber-600'
-            }
-          >
+          <div className={meetsTarget ? 'text-green-600' : 'text-amber-600'}>
             {renderValue(metric)}
           </div>
           <div className="mt-4 pt-4 border-t border-gray-200">
             <span
               className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                meetsTarget
-                  ? 'bg-green-100 text-green-800'
-                  : 'bg-amber-100 text-amber-800'
+                meetsTarget ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'
               }`}
             >
               {meetsTarget ? '✓ Meeting Target' : '⚠ Below Target'}

@@ -247,10 +247,41 @@ export async function updateBasicInfo(updates: Partial<BasicInfo>) {
 
 export async function updateMission(mission: string | null) {
   const user = await requireAuth();
+
+  // Get current value for audit trail
+  const current = await db
+    .select({ mission: individualProfiles.mission })
+    .from(individualProfiles)
+    .where(eq(individualProfiles.userId, user.id))
+    .limit(1);
+
+  const oldValue = current[0]?.mission || null;
+
+  // Log the change
+  const { logPurposeEdit } = await import('@/lib/audit/purpose-log');
+  await logPurposeEdit({
+    userId: user.id,
+    fieldName: 'mission',
+    oldValue,
+    newValue: mission || '',
+  });
+
   await db
     .update(individualProfiles)
     .set({ mission })
     .where(eq(individualProfiles.userId, user.id));
+
+  // Emit analytics event
+  const { emitEvent } = await import('@/lib/analytics/events');
+  await emitEvent({
+    eventType: 'purpose_updated',
+    userId: user.id,
+    properties: {
+      field: 'mission',
+      wordCount: mission?.split(/\s+/).length || 0,
+      hasValue: !!mission,
+    },
+  });
 
   // Check if profile now meets activation criteria
   await checkAndEmitProfileActivation(user.id);
@@ -260,7 +291,38 @@ export async function updateMission(mission: string | null) {
 
 export async function updateVision(vision: string | null) {
   const user = await requireAuth();
+
+  // Get current value for audit trail
+  const current = await db
+    .select({ vision: individualProfiles.vision })
+    .from(individualProfiles)
+    .where(eq(individualProfiles.userId, user.id))
+    .limit(1);
+
+  const oldValue = current[0]?.vision || null;
+
+  // Log the change
+  const { logPurposeEdit } = await import('@/lib/audit/purpose-log');
+  await logPurposeEdit({
+    userId: user.id,
+    fieldName: 'vision',
+    oldValue,
+    newValue: vision || '',
+  });
+
   await db.update(individualProfiles).set({ vision }).where(eq(individualProfiles.userId, user.id));
+
+  // Emit analytics event
+  const { emitEvent } = await import('@/lib/analytics/events');
+  await emitEvent({
+    eventType: 'purpose_updated',
+    userId: user.id,
+    properties: {
+      field: 'vision',
+      wordCount: vision?.split(/\s+/).length || 0,
+      hasValue: !!vision,
+    },
+  });
 
   // Check if profile now meets activation criteria
   await checkAndEmitProfileActivation(user.id);
@@ -270,13 +332,77 @@ export async function updateVision(vision: string | null) {
 
 export async function replaceValues(values: Value[]) {
   const user = await requireAuth();
+
+  // Get current values for audit trail
+  const current = await db
+    .select({ values: individualProfiles.values })
+    .from(individualProfiles)
+    .where(eq(individualProfiles.userId, user.id))
+    .limit(1);
+
+  const oldValues = (current[0]?.values as Value[]) || [];
+
+  // Log the change
+  const { logPurposeEdit } = await import('@/lib/audit/purpose-log');
+  await logPurposeEdit({
+    userId: user.id,
+    fieldName: 'values',
+    oldValue: oldValues.map((v) => v.label),
+    newValue: values.map((v) => v.label),
+  });
+
   await db.update(individualProfiles).set({ values }).where(eq(individualProfiles.userId, user.id));
+
+  // Emit analytics event
+  const { emitEvent } = await import('@/lib/analytics/events');
+  await emitEvent({
+    eventType: 'purpose_updated',
+    userId: user.id,
+    properties: {
+      field: 'values',
+      count: values.length,
+      hasValue: values.length > 0,
+    },
+  });
+
   revalidatePath('/app/i/profile');
 }
 
 export async function replaceCauses(causes: string[]) {
   const user = await requireAuth();
+
+  // Get current causes for audit trail
+  const current = await db
+    .select({ causes: individualProfiles.causes })
+    .from(individualProfiles)
+    .where(eq(individualProfiles.userId, user.id))
+    .limit(1);
+
+  const oldCauses = current[0]?.causes || [];
+
+  // Log the change
+  const { logPurposeEdit } = await import('@/lib/audit/purpose-log');
+  await logPurposeEdit({
+    userId: user.id,
+    fieldName: 'causes',
+    oldValue: oldCauses,
+    newValue: causes,
+  });
+
   await db.update(individualProfiles).set({ causes }).where(eq(individualProfiles.userId, user.id));
+
+  // Emit analytics event
+  const { emitEvent } = await import('@/lib/analytics/events');
+  await emitEvent({
+    eventType: 'purpose_updated',
+    userId: user.id,
+    properties: {
+      field: 'causes',
+      count: causes.length,
+      hasValue: causes.length > 0,
+    },
+  });
+
   revalidatePath('/app/i/profile');
 }
 

@@ -415,12 +415,276 @@ function calculatePercentile(sortedValues: number[], percentile: number): number
   return sortedValues[lower] * (1 - weight) + sortedValues[upper] * weight;
 }
 
+/**
+ * Calculate Fairness Gap between two cohorts
+ * Target: No statistically significant gaps (p < 0.05) in introduction or contract rates
+ *
+ * Compares rates between two demographic cohorts with statistical significance testing
+ */
+export interface FairnessGapResult {
+  cohortA: {
+    name: string;
+    introductionRate: number;
+    contractRate: number;
+    sampleSize: number;
+  };
+  cohortB: {
+    name: string;
+    introductionRate: number;
+    contractRate: number;
+    sampleSize: number;
+  };
+  introductionGap: number; // Percentage point difference
+  contractGap: number; // Percentage point difference
+  pValueIntroduction: number; // Statistical significance
+  pValueContract: number; // Statistical significance
+  isSignificant: boolean; // p < 0.05 for either metric
+  timestamp: Date;
+}
+
+export async function calculateFairnessGap(
+  cohortAName: string,
+  cohortBName: string,
+  startDate?: Date,
+  endDate?: Date
+): Promise<FairnessGapResult | null> {
+  const start = startDate || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+  const end = endDate || new Date();
+
+  try {
+    // Get demographic opt-ins with their cohort information
+    const { demographicOptIns } = await import('@/db/schema');
+
+    const optIns = await db
+      .select()
+      .from(demographicOptIns)
+      .where(eq(demographicOptIns.optedIn, true));
+
+    // Filter users by cohort (simplified - in production would use more sophisticated cohort definition)
+    const cohortAUsers = optIns
+      .filter((opt) => {
+        const cohortData = [
+          opt.gender,
+          opt.ethnicity,
+          opt.ageRange,
+          opt.disability,
+          opt.veteranStatus,
+        ];
+        return cohortData.some((data) => data?.toLowerCase().includes(cohortAName.toLowerCase()));
+      })
+      .map((opt) => opt.profileId);
+
+    const cohortBUsers = optIns
+      .filter((opt) => {
+        const cohortData = [
+          opt.gender,
+          opt.ethnicity,
+          opt.ageRange,
+          opt.disability,
+          opt.veteranStatus,
+        ];
+        return cohortData.some((data) => data?.toLowerCase().includes(cohortBName.toLowerCase()));
+      })
+      .map((opt) => opt.profileId);
+
+    if (cohortAUsers.length === 0 || cohortBUsers.length === 0) {
+      return null;
+    }
+
+    // Get all matches for these users
+    const allMatches = await db
+      .select({
+        id: matches.id,
+        profileId: matches.profileId,
+        assignmentId: matches.assignmentId,
+        createdAt: matches.createdAt,
+      })
+      .from(matches)
+      .where(and(gte(matches.createdAt, start), lte(matches.createdAt, end)));
+
+    const cohortAMatches = allMatches.filter((m) => cohortAUsers.includes(m.profileId));
+    const cohortBMatches = allMatches.filter((m) => cohortBUsers.includes(m.profileId));
+
+    if (cohortAMatches.length < 40 || cohortBMatches.length < 40) {
+      // Insufficient sample size for statistical validity
+      return null;
+    }
+
+    // Get introduction events
+    const introEvents = await db
+      .select({
+        matchId: analyticsEvents.entityId,
+        action: sql<string>`properties->>'action'`,
+      })
+      .from(analyticsEvents)
+      .where(eq(analyticsEvents.eventType, 'match_actioned'));
+
+    const introMatchIds = new Set(
+      introEvents.filter((e) => e.action === 'introduce').map((e) => e.matchId)
+    );
+
+    // Calculate introduction rates
+    const cohortAIntros = cohortAMatches.filter((m) => introMatchIds.has(m.id)).length;
+    const cohortAIntroRate = (cohortAIntros / cohortAMatches.length) * 100;
+
+    const cohortBIntros = cohortBMatches.filter((m) => introMatchIds.has(m.id)).length;
+    const cohortBIntroRate = (cohortBIntros / cohortBMatches.length) * 100;
+
+    // Get contract events
+    const contractEvents = await db
+      .select({
+        assignmentId: analyticsEvents.entityId,
+      })
+      .from(analyticsEvents)
+      .where(eq(analyticsEvents.eventType, 'contract_signed'));
+
+    const contractedAssignments = new Set(contractEvents.map((e) => e.assignmentId));
+
+    // Calculate contract rates
+    const cohortAContracts = cohortAMatches.filter((m) =>
+      contractedAssignments.has(m.assignmentId)
+    ).length;
+    const cohortAContractRate = (cohortAContracts / cohortAMatches.length) * 100;
+
+    const cohortBContracts = cohortBMatches.filter((m) =>
+      contractedAssignments.has(m.assignmentId)
+    ).length;
+    const cohortBContractRate = (cohortBContracts / cohortBMatches.length) * 100;
+
+    // Calculate statistical significance using two-proportion z-test
+    const pValueIntro = calculateTwoProportionZTest(
+      cohortAIntros,
+      cohortAMatches.length,
+      cohortBIntros,
+      cohortBMatches.length
+    );
+
+    const pValueContract = calculateTwoProportionZTest(
+      cohortAContracts,
+      cohortAMatches.length,
+      cohortBContracts,
+      cohortBMatches.length
+    );
+
+    return {
+      cohortA: {
+        name: cohortAName,
+        introductionRate: cohortAIntroRate,
+        contractRate: cohortAContractRate,
+        sampleSize: cohortAMatches.length,
+      },
+      cohortB: {
+        name: cohortBName,
+        introductionRate: cohortBIntroRate,
+        contractRate: cohortBContractRate,
+        sampleSize: cohortBMatches.length,
+      },
+      introductionGap: cohortAIntroRate - cohortBIntroRate,
+      contractGap: cohortAContractRate - cohortBContractRate,
+      pValueIntroduction: pValueIntro,
+      pValueContract: pValueContract,
+      isSignificant: pValueIntro < 0.05 || pValueContract < 0.05,
+      timestamp: new Date(),
+    };
+  } catch (error) {
+    console.error('Fairness gap calculation error:', error);
+    return null;
+  }
+}
+
+/**
+ * Two-proportion z-test for statistical significance
+ * Returns p-value (two-tailed)
+ */
+function calculateTwoProportionZTest(x1: number, n1: number, x2: number, n2: number): number {
+  const p1 = x1 / n1;
+  const p2 = x2 / n2;
+  const pPool = (x1 + x2) / (n1 + n2);
+  const se = Math.sqrt(pPool * (1 - pPool) * (1 / n1 + 1 / n2));
+
+  if (se === 0) return 1; // No difference
+
+  const z = Math.abs(p1 - p2) / se;
+
+  // Convert z-score to p-value (two-tailed)
+  // Using standard normal cumulative distribution approximation
+  const pValue = 2 * (1 - standardNormalCDF(z));
+
+  return pValue;
+}
+
+/**
+ * Standard normal cumulative distribution function
+ * Approximation using error function
+ */
+function standardNormalCDF(z: number): number {
+  const t = 1 / (1 + 0.2316419 * Math.abs(z));
+  const d = 0.3989423 * Math.exp((-z * z) / 2);
+  const p =
+    d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+
+  return z > 0 ? 1 - p : p;
+}
+
+/**
+ * Calculate SUS (System Usability Scale) metrics
+ * Target: ≥75 (Good usability)
+ */
+export async function calculateSUSMetrics(): Promise<{
+  average: number;
+  median: number;
+  min: number;
+  max: number;
+  meetsTarget: boolean;
+  sampleSize: number;
+  responseRate: number;
+} | null> {
+  try {
+    const { susSurveys, surveyDisplayLog } = await import('@/db/schema');
+
+    // Get all completed SUS surveys
+    const surveys = await db.select().from(susSurveys).where(eq(susSurveys.dismissed, false));
+
+    if (surveys.length === 0) return null;
+
+    const scores = surveys.map((s) => parseFloat(s.score));
+    const sortedScores = [...scores].sort((a, b) => a - b);
+
+    const average = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+    const median =
+      sortedScores.length % 2 === 0
+        ? (sortedScores[sortedScores.length / 2 - 1] + sortedScores[sortedScores.length / 2]) / 2
+        : sortedScores[Math.floor(sortedScores.length / 2)];
+
+    // Calculate response rate
+    const displayed = await db
+      .select()
+      .from(surveyDisplayLog)
+      .where(eq(surveyDisplayLog.surveyType, 'sus'));
+    const responseRate = displayed.length > 0 ? surveys.length / displayed.length : 0;
+
+    return {
+      average,
+      median,
+      min: sortedScores[0],
+      max: sortedScores[sortedScores.length - 1],
+      meetsTarget: average >= 75,
+      sampleSize: surveys.length,
+      responseRate,
+    };
+  } catch (error) {
+    console.error('SUS metrics calculation error:', error);
+    return null;
+  }
+}
+
 export async function getAllMetrics() {
-  const [ttsc, ttfqi, ttv, pac] = await Promise.all([
+  const [ttsc, ttfqi, ttv, pac, sus] = await Promise.all([
     calculateTTSC(),
     calculateTTFQI(),
     calculateTTV(),
     calculatePACLift(),
+    calculateSUSMetrics(),
   ]);
 
   return {
@@ -428,6 +692,7 @@ export async function getAllMetrics() {
     ttfqi,
     ttv,
     pac,
+    sus,
     timestamp: new Date().toISOString(),
   };
 }
