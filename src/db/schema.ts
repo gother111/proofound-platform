@@ -2419,3 +2419,20 @@ export const verificationRequests = pgTable('verification_requests', {
 // Type exports for verification
 export type VerificationRequest = typeof verificationRequests.$inferSelect;
 export type InsertVerificationRequest = typeof verificationRequests.$inferInsert;
+
+// ====================================
+// Fairness Reporting System
+// ====================================
+// Implements PRD Gap 3: Automated fairness note generation
+
+export const fairnessReports = pgTable('fairness_reports', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  releaseVersion: text('release_version').notNull(),
+  reportMarkdown: text('report_markdown').notNull(),
+  metricsJson: jsonb('metrics_json').notNull(), // Full analysis data
+  publishedAt: timestamp('published_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export type FairnessReport = typeof fairnessReports.$inferSelect;
+export type InsertFairnessReport = typeof fairnessReports.$inferInsert;

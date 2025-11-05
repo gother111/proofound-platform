@@ -1,8 +1,10 @@
-import { Metadata } from 'next';
+'use client';
+
 import Link from 'next/link';
 import { ArrowLeft, Cookie } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { CookiePreferences } from '@/components/cookies/CookiePreferences';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
 /**
  * Cookie Settings Page
@@ -11,18 +13,19 @@ import { CookiePreferences } from '@/components/cookies/CookiePreferences';
  * Accessible from cookie banner's "Cookie Settings" link
  * GDPR-compliant with clear category descriptions
  *
- * Note: This page is dynamic because it uses localStorage via the CookiePreferences component
+ * Supports returnTo parameter to redirect back after saving
  */
 
-// Force dynamic rendering since this page uses browser APIs (localStorage)
-export const dynamic = 'force-dynamic';
+function CookieSettingsContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTo = searchParams.get('returnTo') || '/';
 
-export const metadata: Metadata = {
-  title: 'Cookie Settings | Proofound',
-  description: 'Manage your cookie preferences and privacy settings for Proofound.',
-};
+  // After saving preferences, redirect to the original page
+  const handleSave = () => {
+    router.push(returnTo);
+  };
 
-export default function CookieSettingsPage() {
   return (
     <div className="min-h-screen bg-[#F7F6F1]">
       {/* Header */}
@@ -30,11 +33,11 @@ export default function CookieSettingsPage() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link
-              href="/"
+              href={returnTo}
               className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back to Home
+              Back
             </Link>
             {/* Logo */}
             <Link href="/" className="font-serif text-2xl font-bold text-proofound-forest">
@@ -68,8 +71,8 @@ export default function CookieSettingsPage() {
           </p>
         </div>
 
-        {/* Cookie Preferences Component */}
-        <CookiePreferences />
+        {/* Cookie Preferences Component with onSave callback */}
+        <CookiePreferences onSave={handleSave} />
 
         {/* Additional Information */}
         <div className="mt-12 pt-8 border-t space-y-4">
@@ -116,5 +119,19 @@ export default function CookieSettingsPage() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function CookieSettingsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#F7F6F1] flex items-center justify-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      }
+    >
+      <CookieSettingsContent />
+    </Suspense>
   );
 }

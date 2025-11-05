@@ -2,6 +2,8 @@
  * File upload utilities for Supabase Storage
  */
 
+import { getUserErrorMessage, logError } from '@/lib/error-handler';
+
 export type UploadType = 'avatar' | 'cover' | 'document';
 export type DocumentCategory = 'proof' | 'certificate' | 'artifact';
 
@@ -67,35 +69,43 @@ export async function uploadFile(options: UploadOptions): Promise<UploadResult> 
           try {
             const result = JSON.parse(xhr.responseText);
             resolve(result);
-          } catch (e) {
+          } catch (parseError) {
+            logError('upload.parseResponse', parseError);
             reject(new Error('Invalid response from server'));
           }
         } else {
           try {
             const error = JSON.parse(xhr.responseText);
             resolve({ success: false, error: error.error, message: error.message });
-          } catch (e) {
+          } catch (parseError) {
+            logError('upload.parseError', parseError);
             reject(new Error(`Upload failed with status ${xhr.status}`));
           }
         }
       });
 
-      xhr.addEventListener('error', () => {
-        reject(new Error('Network error during upload'));
+      xhr.addEventListener('error', (event) => {
+        // Extract useful error info from the error event
+        logError('upload.networkError', event);
+        reject(
+          new Error('Network error during upload. Please check your connection and try again.')
+        );
       });
 
-      xhr.addEventListener('abort', () => {
-        reject(new Error('Upload aborted'));
+      xhr.addEventListener('abort', (event) => {
+        logError('upload.abort', event);
+        reject(new Error('Upload was cancelled'));
       });
 
       xhr.open('POST', endpoint);
       xhr.send(formData);
     });
   } catch (error) {
+    logError('uploadFile', error);
     return {
       success: false,
       error: 'Upload failed',
-      message: error instanceof Error ? error.message : 'Unknown error',
+      message: getUserErrorMessage(error, 'Failed to upload file. Please try again.'),
     };
   }
 }
@@ -117,10 +127,11 @@ export async function deleteFile(path: string, type: UploadType): Promise<Upload
     const result = await response.json();
     return result;
   } catch (error) {
+    logError('deleteFile', error);
     return {
       success: false,
       error: 'Delete failed',
-      message: error instanceof Error ? error.message : 'Unknown error',
+      message: getUserErrorMessage(error, 'Failed to delete file. Please try again.'),
     };
   }
 }

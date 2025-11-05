@@ -1,250 +1,167 @@
+/**
+ * Matching Profile API
+ * GET/PUT /api/matching-profile
+ *
+ * Implements PRD Gap 5: Manage user matching preferences
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
-import { requireAuth } from '@/lib/auth';
-import { db } from '@/db';
-import { matchingProfiles, skills } from '@/db/schema';
-import { eq } from 'drizzle-orm';
-import { log } from '@/lib/log';
-import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit/index';
-
-export const dynamic = 'force-dynamic';
-
-// Validation schemas
-const LanguageSchema = z.object({
-  code: z.string(),
-  level: z.enum(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']),
-});
-
-const SkillInputSchema = z.object({
-  skillId: z.string(),
-  level: z.number().min(0).max(5),
-  monthsExperience: z.number().min(0),
-});
 
 const MatchingProfileSchema = z.object({
-  valuesTags: z.array(z.string()).optional(),
-  causeTags: z.array(z.string()).optional(),
-  timezone: z.string().optional(),
-  languages: z.array(LanguageSchema).optional(),
-  verified: z.record(z.boolean()).optional(),
-  rightToWork: z.enum(['yes', 'no', 'conditional']).optional(),
-  country: z.string().optional(),
-  city: z.string().optional(),
-  availabilityEarliest: z.string().optional(), // ISO date string
-  availabilityLatest: z.string().optional(),
-  workMode: z.enum(['remote', 'onsite', 'hybrid']).optional(),
-  radiusKm: z.number().optional(),
-  hoursMin: z.number().optional(),
-  hoursMax: z.number().optional(),
-  compMin: z.number().optional(),
-  compMax: z.number().optional(),
-  currency: z.string().optional(),
-  weights: z.record(z.number()).optional(),
-  skills: z.array(SkillInputSchema).optional(),
+  profileId: z.string().uuid(),
+  desiredRoles: z.array(z.string()),
+  desiredIndustries: z.array(z.string()),
+  orgTypes: z.array(z.string()),
+  weights: z.object({
+    mission: z.number().min(0).max(100),
+    expertise: z.number().min(0).max(100),
+    tools: z.number().min(0).max(100),
+    logistics: z.number().min(0).max(100),
+    recency: z.number().min(0).max(100),
+  }),
+  workMode: z.enum(['remote', 'hybrid', 'onsite']),
+  preferredLocations: z.array(z.string()),
+  minSalary: z.number().min(0),
+  maxSalary: z.number().min(0),
+  currency: z.string(),
+  hoursMin: z.number().min(0),
+  hoursMax: z.number().min(0).max(168),
+  availabilityEarliest: z.string(),
+  availabilityLatest: z.string(),
+  visibility: z
+    .object({
+      showExactSalary: z.boolean(),
+      showExactLocation: z.boolean(),
+      allowNameRedaction: z.boolean(),
+      showFullSkillLevels: z.boolean(),
+    })
+    .optional(),
 });
 
 /**
- * GET /api/matching-profile
- *
- * Returns the current user's matching profile, or null if not set up.
+ * GET matching profile
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const user = await requireAuth();
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-    // Fetch matching profile
-    const profile = await db.query.matchingProfiles.findFirst({
-      where: eq(matchingProfiles.profileId, user.id),
-    });
-
-    // Fetch skills separately
-    const userSkills = await db.query.skills.findMany({
-      where: eq(skills.profileId, user.id),
-    });
-
-    if (!profile) {
-      return NextResponse.json({ profile: null });
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    return NextResponse.json({
-      profile: {
-        ...profile,
-        skills: userSkills,
-      },
-    });
-  } catch (error) {
-    // Database connection errors
-    if (error instanceof Error && (
-      error.message.includes('connect') || 
-      error.message.includes('ECONNREFUSED') ||
-      error.message.includes('timeout')
-    )) {
-      log.error('matching-profile.db.connection.failed', {
-        error: error.message,
-        stack: error.stack,
-      });
-      return NextResponse.json({ 
-        error: 'Database connection failed',
-        message: 'Unable to connect to database. Please try again later.'
-      }, { status: 503 });
+    const { searchParams } = new URL(request.url);
+    const profileId = searchParams.get('profileId') || user.id;
+
+    // Fetch matching profile from database
+    const { data: matchingProfile, error } = await supabase
+      .from('matching_profiles')
+      .select('*')
+      .eq('profile_id', profileId)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // No matching profile yet
+        return NextResponse.json(null);
+      }
+      throw error;
     }
 
-    log.error('matching-profile.get.failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-    });
-
-    return NextResponse.json({ 
-      error: 'Failed to fetch matching profile',
-      message: error instanceof Error ? error.message : 'An unexpected error occurred.'
-    }, { status: 500 });
+    return NextResponse.json(matchingProfile);
+  } catch (error: any) {
+    console.error('Failed to fetch matching profile:', error);
+    return NextResponse.json({ error: 'Failed to fetch matching profile' }, { status: 500 });
   }
 }
 
 /**
- * PUT /api/matching-profile
- *
- * Creates or updates the current user's matching profile.
+ * PUT matching profile (update or create)
  */
 export async function PUT(request: NextRequest) {
-  // Apply rate limiting (30 req/min for matching endpoints)
-  const { allowed, result } = await checkRateLimit(request, RATE_LIMITS.matching);
-  if (!allowed) {
-    return NextResponse.json(
-      {
-        error: 'Too many requests',
-        message: 'Rate limit exceeded. Please try again later.',
-        retryAfter: Math.ceil((result.reset - Date.now()) / 1000),
-      },
-      {
-        status: 429,
-        headers: {
-          ...getRateLimitHeaders(result),
-          'Retry-After': Math.ceil((result.reset - Date.now()) / 1000).toString(),
-        },
-      }
-    );
-  }
-
   try {
-    const user = await requireAuth();
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
+    const data = MatchingProfileSchema.parse(body);
 
-    // Validate input
-    const validatedData = MatchingProfileSchema.parse(body);
+    // Validate weights sum to 100
+    const totalWeight = Object.values(data.weights).reduce((sum, w) => sum + w, 0);
+    if (totalWeight !== 100) {
+      return NextResponse.json({ error: 'Weights must sum to 100%' }, { status: 400 });
+    }
 
-    // Extract skills separately
-    const { skills: skillsInput, ...profileData } = validatedData;
+    // Verify user owns this profile
+    if (data.profileId !== user.id) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', data.profileId)
+        .single();
 
-    // Convert date strings to Date objects
-    const profileToUpsert = {
-      profileId: user.id,
-      ...profileData,
-      availabilityEarliest: profileData.availabilityEarliest,
-      availabilityLatest: profileData.availabilityLatest,
-    };
+      if (!profile || profile.id !== user.id) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+      }
+    }
 
     // Upsert matching profile
-    await db
-      .insert(matchingProfiles)
-      .values(profileToUpsert)
-      .onConflictDoUpdate({
-        target: matchingProfiles.profileId,
-        set: {
-          ...profileToUpsert,
-          updatedAt: new Date(),
+    const { data: savedProfile, error } = await supabase
+      .from('matching_profiles')
+      .upsert(
+        {
+          profile_id: data.profileId,
+          desired_roles: data.desiredRoles,
+          desired_industries: data.desiredIndustries,
+          org_types: data.orgTypes,
+          weights: data.weights,
+          work_mode: data.workMode,
+          preferred_locations: data.preferredLocations,
+          min_salary: data.minSalary,
+          max_salary: data.maxSalary,
+          currency: data.currency,
+          hours_min: data.hoursMin,
+          hours_max: data.hoursMax,
+          availability_earliest: data.availabilityEarliest,
+          availability_latest: data.availabilityLatest,
+          visibility: data.visibility,
+          updated_at: new Date().toISOString(),
         },
-      });
+        { onConflict: 'profile_id' }
+      )
+      .select()
+      .single();
 
-    // Update skills if provided
-    if (skillsInput) {
-      // Delete existing skills
-      await db.delete(skills).where(eq(skills.profileId, user.id));
-
-      // Insert new skills
-      if (skillsInput.length > 0) {
-        await db.insert(skills).values(
-          skillsInput.map((skill) => ({
-            profileId: user.id,
-            skillId: skill.skillId,
-            level: skill.level,
-            monthsExperience: skill.monthsExperience,
-          }))
-        );
-      }
+    if (error) {
+      throw error;
     }
-
-    log.info('matching-profile.upserted', {
-      userId: user.id,
-      skillCount: skillsInput?.length || 0,
-    });
-
-    // Track profile activation for metrics (when profile becomes matchable)
-    // This marks the profile as ready to receive matches
-    try {
-      const { emitProfileActivated } = await import('@/lib/analytics/events');
-      await emitProfileActivated(user.id, {
-        skillCount: skillsInput?.length || 0,
-        hasAvailability: !!(profileData.availabilityEarliest && profileData.availabilityLatest),
-        hasCompensation: !!(profileData.compMin && profileData.compMax),
-        workMode: profileData.workMode,
-      });
-    } catch (analyticsError) {
-      // Log but don't fail the request
-      console.error('Failed to track profile activation:', analyticsError);
-    }
-
-    // Fetch and return updated profile
-    const updatedProfile = await db.query.matchingProfiles.findFirst({
-      where: eq(matchingProfiles.profileId, user.id),
-    });
-
-    const updatedSkills = await db.query.skills.findMany({
-      where: eq(skills.profileId, user.id),
-    });
 
     return NextResponse.json({
-      profile: {
-        ...updatedProfile,
-        skills: updatedSkills,
-      },
+      success: true,
+      profile: savedProfile,
     });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      log.error('matching-profile.validation.failed', {
-        errors: error.errors,
-      });
-      return NextResponse.json({ 
-        error: 'Invalid input', 
-        details: error.errors,
-        message: 'Please check your input and try again. Some fields may be missing or invalid.'
-      }, { status: 400 });
+  } catch (error: any) {
+    console.error('Failed to save matching profile:', error);
+
+    if (error.name === 'ZodError') {
+      return NextResponse.json(
+        { error: 'Invalid request data', details: error.errors },
+        { status: 400 }
+      );
     }
 
-    // Database connection errors
-    if (error instanceof Error && (
-      error.message.includes('connect') || 
-      error.message.includes('ECONNREFUSED') ||
-      error.message.includes('timeout')
-    )) {
-      log.error('matching-profile.db.connection.failed', {
-        error: error.message,
-        stack: error.stack,
-      });
-      return NextResponse.json({ 
-        error: 'Database connection failed',
-        message: 'Unable to connect to database. Please try again later or contact support if the issue persists.'
-      }, { status: 503 });
-    }
-
-    log.error('matching-profile.upsert.failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-    });
-
-    return NextResponse.json({ 
-      error: 'Failed to update matching profile',
-      message: error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.'
-    }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to save matching profile' }, { status: 500 });
   }
 }

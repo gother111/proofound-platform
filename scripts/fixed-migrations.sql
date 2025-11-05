@@ -1,6 +1,15 @@
+-- ============================================================================
+-- CORRECTED MIGRATIONS - Compatible with Actual Schema
+-- ============================================================================
+-- These migrations work with your existing matches → conversations workflow
+-- Instead of referencing non-existent "applications" table
+-- ============================================================================
+
+-- Migration 1: Add interviews table (CORRECTED)
+-- References match_id instead of application_id
 CREATE TABLE IF NOT EXISTS "interviews" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-  "application_id" uuid NOT NULL REFERENCES "applications"("id") ON DELETE CASCADE,
+  "match_id" uuid NOT NULL REFERENCES "matches"("id") ON DELETE CASCADE,
   "scheduled_at" timestamp NOT NULL,
   "duration_minutes" integer DEFAULT 30 NOT NULL,
   "platform" text NOT NULL CHECK ("platform" IN ('zoom', 'google_meet')),
@@ -15,11 +24,16 @@ CREATE TABLE IF NOT EXISTS "interviews" (
   "updated_at" timestamp DEFAULT now() NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS "interviews_application_id_idx" ON "interviews"("application_id");
+-- Create indexes for common queries
+CREATE INDEX IF NOT EXISTS "interviews_match_id_idx" ON "interviews"("match_id");
 CREATE INDEX IF NOT EXISTS "interviews_host_user_id_idx" ON "interviews"("host_user_id");
 CREATE INDEX IF NOT EXISTS "interviews_scheduled_at_idx" ON "interviews"("scheduled_at");
 CREATE INDEX IF NOT EXISTS "interviews_status_idx" ON "interviews"("status");
 
+-- Add comment
+COMMENT ON TABLE "interviews" IS 'Interview scheduling with Zoom/Google Meet integration - uses match_id not application_id';
+
+-- Migration 2: Add fairness_reports table (unchanged - this one is fine)
 CREATE TABLE IF NOT EXISTS "fairness_reports" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
   "release_version" text NOT NULL,
@@ -29,43 +43,11 @@ CREATE TABLE IF NOT EXISTS "fairness_reports" (
   "created_at" timestamp DEFAULT now() NOT NULL
 );
 
+-- Create indexes for querying
 CREATE INDEX IF NOT EXISTS "fairness_reports_release_version_idx" ON "fairness_reports"("release_version");
 CREATE INDEX IF NOT EXISTS "fairness_reports_published_at_idx" ON "fairness_reports"("published_at");
 CREATE INDEX IF NOT EXISTS "fairness_reports_created_at_idx" ON "fairness_reports"("created_at");
 
-CREATE TABLE IF NOT EXISTS "matching_profiles" (
-  "profile_id" uuid PRIMARY KEY REFERENCES "profiles"("id") ON DELETE CASCADE,
-  "desired_roles" text[] DEFAULT '{}',
-  "desired_industries" text[] DEFAULT '{}',
-  "org_types" text[] DEFAULT '{}',
-  "weights" jsonb DEFAULT '{"mission": 30, "expertise": 40, "tools": 10, "logistics": 10, "recency": 10}',
-  "work_mode" text DEFAULT 'remote' CHECK ("work_mode" IN ('remote', 'hybrid', 'onsite')),
-  "preferred_locations" text[] DEFAULT '{}',
-  "min_salary" integer DEFAULT 0,
-  "max_salary" integer DEFAULT 0,
-  "currency" text DEFAULT 'USD',
-  "hours_min" integer DEFAULT 0,
-  "hours_max" integer DEFAULT 40,
-  "availability_earliest" date,
-  "availability_latest" date,
-  "visibility" jsonb DEFAULT '{"showExactSalary": false, "showExactLocation": true, "allowNameRedaction": false, "showFullSkillLevels": true}',
-  "created_at" timestamp DEFAULT now() NOT NULL,
-  "updated_at" timestamp DEFAULT now() NOT NULL
-);
+-- Add comment
+COMMENT ON TABLE "fairness_reports" IS 'Automated fairness analysis reports - PRD Gap 3';
 
-CREATE INDEX IF NOT EXISTS "matching_profiles_profile_id_idx" ON "matching_profiles"("profile_id");
-
-SELECT 
-  'interviews' as table_name, 
-  COUNT(*) as row_count 
-FROM "interviews"
-UNION ALL
-SELECT 
-  'fairness_reports' as table_name, 
-  COUNT(*) as row_count 
-FROM "fairness_reports"
-UNION ALL
-SELECT 
-  'matching_profiles' as table_name, 
-  COUNT(*) as row_count 
-FROM "matching_profiles";

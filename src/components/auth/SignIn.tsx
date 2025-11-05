@@ -14,6 +14,7 @@ import SocialSignInButtons from '@/components/auth/social-sign-in-buttons';
 import { NetworkBackground } from '@/components/NetworkBackground';
 import { Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { signIn, type SignInState } from '@/actions/auth';
+import { getUserErrorMessage } from '@/lib/error-handler';
 
 interface SignInProps {
   onBack?: () => void;
@@ -46,7 +47,8 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
   const [clientError, setClientError] = useState<string | null>(null);
   const [formState, formAction, _isPending] = useActionState(signIn, INITIAL_STATE);
 
-  const error = clientError ?? formState?.error ?? null;
+  // Safely extract error message (protects against Event objects)
+  const error = clientError ?? (formState?.error ? getUserErrorMessage(formState.error) : null);
 
   // Email validation helper
   const validateEmail = (email: string): boolean => {

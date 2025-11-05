@@ -1,6 +1,5 @@
--- Fix the auto_populate_field_visibility trigger
--- This trigger was trying to access NEW.created_by but assignments table doesn't have that column
--- Solution: Use auth.uid() instead
+-- Fix the auto_populate_field_visibility trigger to handle service role calls
+-- When called from service role (auth.uid() is NULL), use a system UUID
 
 CREATE OR REPLACE FUNCTION auto_populate_field_visibility()
 RETURNS TRIGGER AS $$
@@ -21,7 +20,7 @@ BEGIN
         d.default_visibility,
         d.default_redaction_type,
         d.default_generic_label,
-        auth.uid()  -- Changed from NEW.created_by to auth.uid()
+        COALESCE(auth.uid(), '00000000-0000-0000-0000-000000000000'::uuid)  -- Use system UUID if auth.uid() is NULL
     FROM assignment_field_visibility_defaults d
     WHERE d.is_system_field = true
     ON CONFLICT (assignment_id, field_name) DO NOTHING;
@@ -29,3 +28,4 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+

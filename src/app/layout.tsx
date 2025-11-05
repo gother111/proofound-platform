@@ -1,12 +1,14 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Toaster } from 'sonner';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ChatWidget } from '@/components/support/ChatWidget';
 import { CookieBanner } from '@/components/CookieBanner';
+import { GlobalErrorHandler } from '@/components/GlobalErrorHandler';
 
 /**
  * Root Layout Component
@@ -43,6 +45,7 @@ export default async function RootLayout({
         </a>
         <ErrorBoundary>
           <NextIntlClientProvider messages={messages}>
+            <GlobalErrorHandler />
             {children}
             <Toaster
               position="top-right"
@@ -58,6 +61,7 @@ export default async function RootLayout({
             <ChatWidget />
             <CookieBanner />
             <Analytics />
+            <SpeedInsights />
           </NextIntlClientProvider>
         </ErrorBoundary>
       </body>

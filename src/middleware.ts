@@ -4,6 +4,7 @@ import { getPersona } from '@/lib/auth';
 import { nanoid } from 'nanoid';
 import { logContext, log } from '@/lib/log';
 import { csrfProtection } from '@/lib/csrf';
+import { logAPILatency } from '@/lib/monitoring/api-latency';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -21,13 +22,32 @@ export async function middleware(request: NextRequest) {
 
   // CSRF protection for API routes (mutating methods only)
   if (pathname.startsWith('/api')) {
+    const startTime = Date.now();
+
     const csrfError = csrfProtection(request);
     if (csrfError) {
       csrfError.headers.set('x-request-id', requestId);
       return csrfError;
     }
+
     const response = NextResponse.next();
+    const duration = Date.now() - startTime;
+
     response.headers.set('x-request-id', requestId);
+    response.headers.set('x-response-time', `${duration}ms`);
+
+    // Log API latency for performance monitoring (Gap 2)
+    // Don't await to avoid blocking response
+    if (duration > 0) {
+      logAPILatency({
+        path: pathname,
+        method: request.method,
+        duration,
+        status: response.status,
+        requestId,
+      }).catch((err) => console.error('Failed to log API latency:', err));
+    }
+
     return response;
   }
 

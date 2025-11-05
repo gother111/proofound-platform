@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { X, Cookie } from 'lucide-react';
 import Link from 'next/link';
+import { logError, getUserErrorMessage } from '@/lib/error-handler';
 
 const CONSENT_KEY = 'proofound-cookie-consent';
 const CONSENT_VERSION = 'v1.0.2025-11-06';
@@ -53,7 +54,7 @@ export function CookieBanner() {
         });
       } catch (error) {
         // Silently fail if not authenticated - localStorage is sufficient
-        console.error('Failed to store consent in database:', error);
+        logError('CookieBanner.handleAccept', error);
       }
 
       setShow(false);
@@ -125,7 +126,7 @@ export function CookieBanner() {
                   Cookie Policy
                 </Link>
                 <Link
-                  href="/cookies/settings"
+                  href={`/cookies/settings?returnTo=${encodeURIComponent(typeof window !== 'undefined' ? window.location.pathname : '/')}`}
                   className="text-xs text-muted-foreground hover:text-foreground underline"
                 >
                   Cookie Settings

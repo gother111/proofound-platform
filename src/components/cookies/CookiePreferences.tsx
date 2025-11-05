@@ -22,6 +22,7 @@ import {
   CookiePreferences as CookiePreferencesType,
 } from '@/lib/cookies/consent';
 import { toast } from 'sonner';
+import { getUserErrorMessage, logError } from '@/lib/error-handler';
 
 // Cookie category configuration
 const COOKIE_CATEGORIES = [
@@ -107,8 +108,12 @@ export function CookiePreferences({ onSave }: CookiePreferencesProps) {
         onSave();
       }
     } catch (error) {
-      console.error('Failed to save preferences:', error);
-      toast.error('Failed to save preferences. Please try again.');
+      logError('CookiePreferences.handleSave', error);
+      const errorMessage = getUserErrorMessage(
+        error,
+        'Failed to save preferences. Please try again.'
+      );
+      toast.error(errorMessage);
     } finally {
       setIsSaving(false);
     }

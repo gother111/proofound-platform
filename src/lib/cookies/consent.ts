@@ -10,6 +10,8 @@
  * Functions that access localStorage include window checks for SSR safety.
  */
 
+import { logError } from '@/lib/error-handler';
+
 // Storage keys
 const CONSENT_KEY = 'proofound-cookie-consent';
 const PREFERENCES_KEY = 'proofound-cookie-preferences';
@@ -90,7 +92,7 @@ export function getCookiePreferences(): CookiePreferences {
       }
     }
   } catch (error) {
-    console.error('Failed to parse cookie preferences:', error);
+    logError('getCookiePreferences', error);
   }
 
   return DEFAULT_PREFERENCES;
@@ -129,7 +131,7 @@ export async function saveCookiePreferences(
       await syncPreferencesToDatabase(fullPreferences);
     } catch (error) {
       // Silently fail if not authenticated or database sync fails
-      console.error('Failed to sync preferences to database:', error);
+      logError('saveCookiePreferences', error);
     }
   }
 }
