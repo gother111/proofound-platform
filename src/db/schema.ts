@@ -2235,21 +2235,6 @@ export type InsertPerformanceAlert = typeof performanceAlerts.$inferInsert;
 // USER FEEDBACK & USABILITY
 // ============================================================================
 
-// System Usability Scale (SUS) surveys
-export const susSurveys = pgTable('sus_surveys', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id')
-    .references(() => profiles.id, { onDelete: 'cascade' })
-    .notNull(),
-  task: text('task'), // What task prompted this survey (e.g., 'profile_activation', 'assignment_creation')
-  responses: jsonb('responses').notNull(), // Array of 10 responses (1-5 scale)
-  score: numeric('score').notNull(), // Calculated SUS score (0-100)
-  // Survey metadata
-  dismissed: boolean('dismissed').default(false).notNull(), // User dismissed without completing
-  completedAt: timestamp('completed_at'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-});
-
 // Survey display tracking (to avoid over-surveying users)
 export const surveyDisplayLog = pgTable('survey_display_log', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -2262,35 +2247,11 @@ export const surveyDisplayLog = pgTable('survey_display_log', {
   completed: boolean('completed').default(false).notNull(),
 });
 
-// Type exports for user feedback
-export type SusSurvey = typeof susSurveys.$inferSelect;
-export type InsertSusSurvey = typeof susSurveys.$inferInsert;
+// Type exports for survey display tracking
 export type SurveyDisplayLog = typeof surveyDisplayLog.$inferSelect;
 export type InsertSurveyDisplayLog = typeof surveyDisplayLog.$inferInsert;
 
-// ============================================================================
-// AUDIT & COMPLIANCE
-// ============================================================================
-
-// Purpose edit audit log (immutable, append-only)
-export const purposeEditLog = pgTable('purpose_edit_log', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id')
-    .references(() => profiles.id, { onDelete: 'cascade' })
-    .notNull(),
-  fieldName: text('field_name', {
-    enum: ['mission', 'vision', 'values', 'causes'],
-  }).notNull(),
-  oldValue: text('old_value'), // JSON string for values/causes
-  newValue: text('new_value').notNull(), // JSON string for values/causes
-  changedAt: timestamp('changed_at').defaultNow().notNull(),
-  ipAddress: text('ip_address'),
-  userAgent: text('user_agent'),
-});
-
-// Type exports for audit
-export type PurposeEditLog = typeof purposeEditLog.$inferSelect;
-export type InsertPurposeEditLog = typeof purposeEditLog.$inferInsert;
+// Note: SUS surveys are defined below with comprehensive structure
 
 // ====================================
 // Staged Messaging System (Privacy-First)
