@@ -323,43 +323,43 @@ export function NetworkBackground() {
       <div className="absolute inset-0 opacity-[0.08]">
         <svg className="w-full h-full">
           <motion.path
-            d="M 0,50% Q 25%,30% 50%,50% T 100%,50%"
+            d={`M 0,${dimensions.height * 0.5} Q ${dimensions.width * 0.25},${dimensions.height * 0.3} ${dimensions.width * 0.5},${dimensions.height * 0.5} T ${dimensions.width},${dimensions.height * 0.5}`}
             stroke="#7A9278"
             strokeWidth="1.5"
             fill="none"
             animate={{
               d: [
-                'M 0,50% Q 25%,30% 50%,50% T 100%,50%',
-                'M 0,50% Q 25%,70% 50%,50% T 100%,50%',
-                'M 0,50% Q 25%,30% 50%,50% T 100%,50%',
+                `M 0,${dimensions.height * 0.5} Q ${dimensions.width * 0.25},${dimensions.height * 0.3} ${dimensions.width * 0.5},${dimensions.height * 0.5} T ${dimensions.width},${dimensions.height * 0.5}`,
+                `M 0,${dimensions.height * 0.5} Q ${dimensions.width * 0.25},${dimensions.height * 0.7} ${dimensions.width * 0.5},${dimensions.height * 0.5} T ${dimensions.width},${dimensions.height * 0.5}`,
+                `M 0,${dimensions.height * 0.5} Q ${dimensions.width * 0.25},${dimensions.height * 0.3} ${dimensions.width * 0.5},${dimensions.height * 0.5} T ${dimensions.width},${dimensions.height * 0.5}`,
               ],
             }}
             transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
           />
           <motion.path
-            d="M 0,33% Q 25%,20% 50%,33% T 100%,33%"
+            d={`M 0,${dimensions.height * 0.33} Q ${dimensions.width * 0.25},${dimensions.height * 0.2} ${dimensions.width * 0.5},${dimensions.height * 0.33} T ${dimensions.width},${dimensions.height * 0.33}`}
             stroke="#C67B5C"
             strokeWidth="1"
             fill="none"
             animate={{
               d: [
-                'M 0,33% Q 25%,20% 50%,33% T 100%,33%',
-                'M 0,33% Q 25%,46% 50%,33% T 100%,33%',
-                'M 0,33% Q 25%,20% 50%,33% T 100%,33%',
+                `M 0,${dimensions.height * 0.33} Q ${dimensions.width * 0.25},${dimensions.height * 0.2} ${dimensions.width * 0.5},${dimensions.height * 0.33} T ${dimensions.width},${dimensions.height * 0.33}`,
+                `M 0,${dimensions.height * 0.33} Q ${dimensions.width * 0.25},${dimensions.height * 0.46} ${dimensions.width * 0.5},${dimensions.height * 0.33} T ${dimensions.width},${dimensions.height * 0.33}`,
+                `M 0,${dimensions.height * 0.33} Q ${dimensions.width * 0.25},${dimensions.height * 0.2} ${dimensions.width * 0.5},${dimensions.height * 0.33} T ${dimensions.width},${dimensions.height * 0.33}`,
               ],
             }}
             transition={{ duration: 25, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
           />
           <motion.path
-            d="M 0,66% Q 25%,53% 50%,66% T 100%,66%"
+            d={`M 0,${dimensions.height * 0.66} Q ${dimensions.width * 0.25},${dimensions.height * 0.53} ${dimensions.width * 0.5},${dimensions.height * 0.66} T ${dimensions.width},${dimensions.height * 0.66}`}
             stroke="#5C8B89"
             strokeWidth="1"
             fill="none"
             animate={{
               d: [
-                'M 0,66% Q 25%,53% 50%,66% T 100%,66%',
-                'M 0,66% Q 25%,79% 50%,66% T 100%,66%',
-                'M 0,66% Q 25%,53% 50%,66% T 100%,66%',
+                `M 0,${dimensions.height * 0.66} Q ${dimensions.width * 0.25},${dimensions.height * 0.53} ${dimensions.width * 0.5},${dimensions.height * 0.66} T ${dimensions.width},${dimensions.height * 0.66}`,
+                `M 0,${dimensions.height * 0.66} Q ${dimensions.width * 0.25},${dimensions.height * 0.79} ${dimensions.width * 0.5},${dimensions.height * 0.66} T ${dimensions.width},${dimensions.height * 0.66}`,
+                `M 0,${dimensions.height * 0.66} Q ${dimensions.width * 0.25},${dimensions.height * 0.53} ${dimensions.width * 0.5},${dimensions.height * 0.66} T ${dimensions.width},${dimensions.height * 0.66}`,
               ],
             }}
             transition={{ duration: 30, repeat: Infinity, ease: 'easeInOut', delay: 4 }}

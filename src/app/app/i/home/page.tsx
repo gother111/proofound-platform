@@ -19,7 +19,24 @@ export const dynamic = 'force-dynamic';
 
 export default async function IndividualHomePage() {
   const user = await requireAuth();
-  const metrics = await getDashboardMetrics();
+
+  // Safely load metrics with fallback values
+  let metrics;
+  try {
+    metrics = await getDashboardMetrics();
+  } catch (error) {
+    console.error('Failed to load dashboard metrics:', error);
+    // Fallback to default values if metrics fail to load
+    metrics = {
+      profileScore: 0,
+      impactStoryCount: 0,
+      verifiedSkills: 0,
+      pendingVerifications: 0,
+      qualityMatches: 0,
+      activeApplications: 0,
+    };
+  }
+
   const userName = user.displayName || user.handle || 'there';
   const firstName = userName.split(' ')[0];
 
