@@ -106,117 +106,178 @@ async function checkAndEmitProfileActivation(userId: string): Promise<void> {
  * Fetch the authenticated user's profile and related records.
  */
 export async function getProfileData(): Promise<ProfileData> {
-  const user = await requireAuth();
+  try {
+    const user = await requireAuth();
 
-  const [profileRow] = await db
-    .select()
-    .from(individualProfiles)
-    .where(eq(individualProfiles.userId, user.id))
-    .limit(1);
+    let profileRow;
+    try {
+      [profileRow] = await db
+        .select()
+        .from(individualProfiles)
+        .where(eq(individualProfiles.userId, user.id))
+        .limit(1);
+    } catch (error) {
+      console.error('Failed to fetch profile row:', error);
+      // Continue with empty profile
+    }
 
-  if (!profileRow) {
-    await db.insert(individualProfiles).values({
-      userId: user.id,
-      skills: [],
-      causes: [],
+    if (!profileRow) {
+      try {
+        await db.insert(individualProfiles).values({
+          userId: user.id,
+          skills: [],
+          causes: [],
+          values: [],
+        });
+      } catch (error) {
+        console.error('Failed to create profile row:', error);
+        // Continue - profile might already exist
+      }
+    }
+
+    let profile;
+    try {
+      [profile] = await db
+        .select()
+        .from(individualProfiles)
+        .where(eq(individualProfiles.userId, user.id))
+        .limit(1);
+    } catch (error) {
+      console.error('Failed to fetch profile:', error);
+      profile = null;
+    }
+
+    let profileBasics;
+    try {
+      [profileBasics] = await db
+        .select({
+          displayName: profiles.displayName,
+          avatarUrl: profiles.avatarUrl,
+          createdAt: profiles.createdAt,
+        })
+        .from(profiles)
+        .where(eq(profiles.id, user.id))
+        .limit(1);
+    } catch (error) {
+      console.error('Failed to fetch profile basics:', error);
+      profileBasics = null;
+    }
+
+    let impactRows: any[] = [];
+    let experienceRows: any[] = [];
+    let educationRows: any[] = [];
+    let volunteeringRows: any[] = [];
+
+    try {
+      [impactRows, experienceRows, educationRows, volunteeringRows] = await Promise.all([
+        db
+          .select({
+            id: impactStories.id,
+            title: impactStories.title,
+            orgDescription: impactStories.orgDescription,
+            impact: impactStories.impact,
+            businessValue: impactStories.businessValue,
+            outcomes: impactStories.outcomes,
+            timeline: impactStories.timeline,
+            verified: impactStories.verified,
+          })
+          .from(impactStories)
+          .where(eq(impactStories.userId, user.id)),
+        db
+          .select({
+            id: experiences.id,
+            title: experiences.title,
+            orgDescription: experiences.orgDescription,
+            duration: experiences.duration,
+            learning: experiences.learning,
+            growth: experiences.growth,
+            verified: experiences.verified,
+          })
+          .from(experiences)
+          .where(eq(experiences.userId, user.id)),
+        db
+          .select({
+            id: education.id,
+            institution: education.institution,
+            degree: education.degree,
+            duration: education.duration,
+            skills: education.skills,
+            projects: education.projects,
+            verified: education.verified,
+          })
+          .from(education)
+          .where(eq(education.userId, user.id)),
+        db
+          .select({
+            id: volunteering.id,
+            title: volunteering.title,
+            orgDescription: volunteering.orgDescription,
+            duration: volunteering.duration,
+            cause: volunteering.cause,
+            impact: volunteering.impact,
+            skillsDeployed: volunteering.skillsDeployed,
+            personalWhy: volunteering.personalWhy,
+            verified: volunteering.verified,
+          })
+          .from(volunteering)
+          .where(eq(volunteering.userId, user.id)),
+      ]);
+    } catch (error) {
+      console.error('Failed to fetch profile related data:', error);
+      // Continue with empty arrays
+    }
+
+    return {
+      basicInfo: {
+        name: profileBasics?.displayName ?? user.displayName ?? 'Your Name',
+        tagline: profile?.tagline ?? null,
+        location: profile?.location ?? null,
+        joinedDate: (profileBasics?.createdAt ?? new Date()).toLocaleDateString('en-US', {
+          month: 'long',
+          year: 'numeric',
+        }),
+        avatar: profileBasics?.avatarUrl ?? user.avatarUrl ?? null,
+        coverImage: profile?.coverImageUrl ?? null,
+      },
+      mission: profile?.mission ?? null,
+      vision: profile?.vision ?? null,
+      values: (profile?.values as Value[]) ?? [],
+      causes: profile?.causes ?? [],
+      skills: (profile?.skills ?? []).map((skill) =>
+        typeof skill === 'string' ? { id: skill, name: skill, verified: false } : skill
+      ),
+      impactStories: impactRows,
+      experiences: experienceRows,
+      education: educationRows,
+      volunteering: volunteeringRows,
+    };
+  } catch (error) {
+    console.error('Failed to get profile data:', error);
+    // Return empty profile structure instead of throwing
+    // This prevents the page from crashing completely
+    return {
+      basicInfo: {
+        name: 'Your Name',
+        tagline: null,
+        location: null,
+        joinedDate: new Date().toLocaleDateString('en-US', {
+          month: 'long',
+          year: 'numeric',
+        }),
+        avatar: null,
+        coverImage: null,
+      },
+      mission: null,
+      vision: null,
       values: [],
-    });
+      causes: [],
+      skills: [],
+      impactStories: [],
+      experiences: [],
+      education: [],
+      volunteering: [],
+    };
   }
-
-  const [profile] = await db
-    .select()
-    .from(individualProfiles)
-    .where(eq(individualProfiles.userId, user.id))
-    .limit(1);
-
-  const [profileBasics] = await db
-    .select({
-      displayName: profiles.displayName,
-      avatarUrl: profiles.avatarUrl,
-      createdAt: profiles.createdAt,
-    })
-    .from(profiles)
-    .where(eq(profiles.id, user.id))
-    .limit(1);
-
-  const [impactRows, experienceRows, educationRows, volunteeringRows] = await Promise.all([
-    db
-      .select({
-        id: impactStories.id,
-        title: impactStories.title,
-        orgDescription: impactStories.orgDescription,
-        impact: impactStories.impact,
-        businessValue: impactStories.businessValue,
-        outcomes: impactStories.outcomes,
-        timeline: impactStories.timeline,
-        verified: impactStories.verified,
-      })
-      .from(impactStories)
-      .where(eq(impactStories.userId, user.id)),
-    db
-      .select({
-        id: experiences.id,
-        title: experiences.title,
-        orgDescription: experiences.orgDescription,
-        duration: experiences.duration,
-        learning: experiences.learning,
-        growth: experiences.growth,
-        verified: experiences.verified,
-      })
-      .from(experiences)
-      .where(eq(experiences.userId, user.id)),
-    db
-      .select({
-        id: education.id,
-        institution: education.institution,
-        degree: education.degree,
-        duration: education.duration,
-        skills: education.skills,
-        projects: education.projects,
-        verified: education.verified,
-      })
-      .from(education)
-      .where(eq(education.userId, user.id)),
-    db
-      .select({
-        id: volunteering.id,
-        title: volunteering.title,
-        orgDescription: volunteering.orgDescription,
-        duration: volunteering.duration,
-        cause: volunteering.cause,
-        impact: volunteering.impact,
-        skillsDeployed: volunteering.skillsDeployed,
-        personalWhy: volunteering.personalWhy,
-        verified: volunteering.verified,
-      })
-      .from(volunteering)
-      .where(eq(volunteering.userId, user.id)),
-  ]);
-
-  return {
-    basicInfo: {
-      name: profileBasics?.displayName ?? user.displayName ?? 'Your Name',
-      tagline: profile?.tagline ?? null,
-      location: profile?.location ?? null,
-      joinedDate: (profileBasics?.createdAt ?? new Date()).toLocaleDateString('en-US', {
-        month: 'long',
-        year: 'numeric',
-      }),
-      avatar: profileBasics?.avatarUrl ?? user.avatarUrl ?? null,
-      coverImage: profile?.coverImageUrl ?? null,
-    },
-    mission: profile?.mission ?? null,
-    vision: profile?.vision ?? null,
-    values: (profile?.values as Value[]) ?? [],
-    causes: profile?.causes ?? [],
-    skills: (profile?.skills ?? []).map((skill) =>
-      typeof skill === 'string' ? { id: skill, name: skill, verified: false } : skill
-    ),
-    impactStories: impactRows,
-    experiences: experienceRows,
-    education: educationRows,
-    volunteering: volunteeringRows,
-  };
 }
 
 export async function updateBasicInfo(updates: Partial<BasicInfo>) {

@@ -11,6 +11,53 @@ import { db } from '@/db';
 import { dashboardLayouts } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
+export const dynamic = 'force-dynamic';
+
+const DEFAULT_WIDGETS = [
+  {
+    widgetId: 'matching-results',
+    visible: true,
+    position: 0,
+    title: 'Quality Matches',
+    description: 'Your best-fit opportunities',
+  },
+  {
+    widgetId: 'next-best-actions',
+    visible: true,
+    position: 1,
+    title: 'Next Best Actions',
+    description: 'Recommended actions to improve your profile',
+  },
+  {
+    widgetId: 'gap-map',
+    visible: true,
+    position: 2,
+    title: 'Skills Gap Map',
+    description: 'Identify missing skills for your goals',
+  },
+  {
+    widgetId: 'goals',
+    visible: true,
+    position: 3,
+    title: 'Goals',
+    description: 'Track your career objectives',
+  },
+  {
+    widgetId: 'impact-snapshot',
+    visible: true,
+    position: 4,
+    title: 'Impact Snapshot',
+    description: 'Your recent contributions',
+  },
+  {
+    widgetId: 'while-away',
+    visible: true,
+    position: 5,
+    title: 'While You Were Away',
+    description: 'Recent updates and activity',
+  },
+];
+
 export async function GET(req: NextRequest) {
   try {
     const supabase = await createClient();
@@ -23,74 +70,36 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const layouts = await db.query.dashboardLayouts.findMany({
-      where: eq(dashboardLayouts.userId, user.id),
-      orderBy: (dashboardLayouts, { asc }) => [asc(dashboardLayouts.position)],
-    });
+    try {
+      const layouts = await db.query.dashboardLayouts.findMany({
+        where: eq(dashboardLayouts.userId, user.id),
+        orderBy: (dashboardLayouts, { asc }) => [asc(dashboardLayouts.position)],
+      });
 
-    // If user has no custom layout, return default widgets
-    if (!layouts || layouts.length === 0) {
-      const defaultWidgets = [
-        {
-          widgetId: 'matching-results',
-          visible: true,
-          position: 0,
-          title: 'Quality Matches',
-          description: 'Your best-fit opportunities',
-        },
-        {
-          widgetId: 'next-best-actions',
-          visible: true,
-          position: 1,
-          title: 'Next Best Actions',
-          description: 'Recommended actions to improve your profile',
-        },
-        {
-          widgetId: 'gap-map',
-          visible: true,
-          position: 2,
-          title: 'Skills Gap Map',
-          description: 'Identify missing skills for your goals',
-        },
-        {
-          widgetId: 'goals',
-          visible: true,
-          position: 3,
-          title: 'Goals',
-          description: 'Track your career objectives',
-        },
-        {
-          widgetId: 'impact-snapshot',
-          visible: true,
-          position: 4,
-          title: 'Impact Snapshot',
-          description: 'Your recent contributions',
-        },
-        {
-          widgetId: 'while-away',
-          visible: true,
-          position: 5,
-          title: 'While You Were Away',
-          description: 'Recent updates and activity',
-        },
-      ];
+      // If user has no custom layout, return default widgets
+      if (!layouts || layouts.length === 0) {
+        return NextResponse.json({ widgets: DEFAULT_WIDGETS });
+      }
 
-      return NextResponse.json({ widgets: defaultWidgets });
+      // Reconstruct widgets array from database records
+      const widgets = layouts.map((layout) => ({
+        widgetId: layout.widgetId,
+        visible: true,
+        position: layout.position || 0,
+        title: (layout.settings as any)?.title || layout.widgetId,
+        description: (layout.settings as any)?.description || '',
+      }));
+
+      return NextResponse.json({ widgets });
+    } catch (dbError) {
+      // If database query fails, return default widgets instead of erroring
+      console.error('Database query failed for dashboard layout, using defaults:', dbError);
+      return NextResponse.json({ widgets: DEFAULT_WIDGETS });
     }
-
-    // Reconstruct widgets array from database records
-    const widgets = layouts.map((layout) => ({
-      widgetId: layout.widgetId,
-      visible: true,
-      position: layout.position || 0,
-      title: (layout.settings as any)?.title || layout.widgetId,
-      description: (layout.settings as any)?.description || '',
-    }));
-
-    return NextResponse.json({ widgets });
   } catch (error) {
     console.error('Fetch dashboard layout error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    // Return default widgets instead of erroring
+    return NextResponse.json({ widgets: DEFAULT_WIDGETS });
   }
 }
 
