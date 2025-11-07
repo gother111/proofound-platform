@@ -1,698 +1,619 @@
 /**
- * PRD Part 2: Core Metrics
+ * Analytics Metrics Calculations
  *
- * Implements tracking and calculation for:
- * - TTSC (Time to Signed Contract): Median ≤30 days
- * - TTFQI (Time to First Qualified Introduction): Median ≤72 hours
- * - TTV (Time to Value): Median ≤7 days
- * - PAC (Purpose-Alignment Contribution): ≥20% higher intro acceptance
- * - SUS (System Usability Scale): ≥75
- * - Well-Being Delta: ≥60% show +1 improvement
+ * Calculate PRD-defined metrics from analytics events:
+ * - TTFQI (Time-to-First Qualified Introduction)
+ * - TTV (Time-to-Value)
+ * - TTSC (Time-to-Signed-Contract) - North Star Metric
+ * - Well-Being Delta
+ * - PAC Lift (Purpose-Alignment Contribution)
+ *
+ * PRD References:
+ * - Part 2: Goals & Success Metrics
+ * - Part 7: Functional Requirements
+ * - Part 8: Performance (cache for 1 hour)
  */
 
 import { db } from '@/db';
-import { analyticsEvents, wellbeingCheckins, matches } from '@/db/schema';
-import { eq, and, gte, lte, sql } from 'drizzle-orm';
+import { analyticsEvents, matches } from '@/db/schema';
+import { and, eq, gte, lte, desc, sql } from 'drizzle-orm';
+import { log } from '@/lib/log';
+import {
+  EventType,
+  TTFQI_TARGET_HOURS,
+  TTV_TARGET_DAYS,
+  TTSC_TARGET_DAYS,
+  WELLBEING_DELTA_TARGET_PERCENT,
+} from './constants';
 
-export interface MetricResult {
-  value: number;
-  unit: 'hours' | 'days' | 'percentage' | 'score';
-  timestamp: Date;
-  sampleSize: number;
-  metadata?: Record<string, any>;
+// ============================================================================
+// TYPE DEFINITIONS
+// ============================================================================
+
+export interface TTFQIResult {
+  userId: string;
+  activatedAt: Date;
+  firstIntroAt: Date;
+  hoursToFirstIntro: number;
 }
 
-export interface TTSCResult extends MetricResult {
-  median: number;
-  p25: number;
-  p75: number;
-  mean: number;
+export interface TTVResult {
+  userId: string;
+  activatedAt: Date;
+  firstInterviewAt: Date;
+  daysToFirstInterview: number;
 }
 
-export async function calculateTTSC(startDate?: Date, endDate?: Date): Promise<TTSCResult | null> {
-  const start = startDate || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-  const end = endDate || new Date();
-
-  try {
-    const contractEvents = await db
-      .select({
-        userId: analyticsEvents.userId,
-        contractDate: analyticsEvents.createdAt,
-        activationDate: sql<Date>`(
-          SELECT MIN(created_at)
-          FROM analytics_events
-          WHERE user_id = ${analyticsEvents.userId}
-          AND event_type = 'profile_activated'
-        )`,
-      })
-      .from(analyticsEvents)
-      .where(
-        and(
-          eq(analyticsEvents.eventType, 'contract_signed'),
-          gte(analyticsEvents.createdAt, start),
-          lte(analyticsEvents.createdAt, end)
-        )
-      );
-
-    if (contractEvents.length === 0) return null;
-
-    const timeToContract = contractEvents
-      .filter((e) => e.activationDate)
-      .map((e) => {
-        const diff = e.contractDate.getTime() - e.activationDate!.getTime();
-        return diff / (1000 * 60 * 60 * 24);
-      })
-      .sort((a, b) => a - b);
-
-    if (timeToContract.length === 0) return null;
-
-    const median = calculatePercentile(timeToContract, 50);
-    const p25 = calculatePercentile(timeToContract, 25);
-    const p75 = calculatePercentile(timeToContract, 75);
-    const mean = timeToContract.reduce((a, b) => a + b, 0) / timeToContract.length;
-
-    return {
-      value: median,
-      median,
-      p25,
-      p75,
-      mean,
-      unit: 'days',
-      timestamp: new Date(),
-      sampleSize: timeToContract.length,
-      metadata: {
-        target: 30,
-        status: median <= 30 ? 'meeting_target' : 'below_target',
-      },
-    };
-  } catch (error) {
-    console.error('TTSC calculation error:', error);
-    return null;
-  }
+export interface TTSCResult {
+  userId: string;
+  activatedAt: Date;
+  contractSignedAt: Date;
+  daysToContract: number;
 }
+
+export interface WellBeingDeltaResult {
+  userId: string;
+  periodDays: number;
+  startStress: number;
+  endStress: number;
+  startControl: number;
+  endControl: number;
+  stressDelta: number;
+  controlDelta: number;
+  improved: boolean;
+}
+
+export interface PACContribution {
+  matchId: string;
+  overallScore: number;
+  pacScore: number;
+  skillsScore: number;
+  constraintsScore: number;
+  verificationScore: number;
+  pacPercentage: number; // PAC as % of overall score
+}
+
+export interface CohortMetrics {
+  cohort: string;
+  count: number;
+  medianValue: number;
+  p75Value: number;
+  p95Value: number;
+  targetMet: boolean;
+}
+
+// ============================================================================
+// TTFQI (Time-to-First Qualified Introduction)
+// ============================================================================
 
 /**
- * Calculate TTFQI (Time to First Qualified Introduction)
+ * Calculate TTFQI for a specific user
+ *
+ * Per PRD Part 2: TTFQI = Activation → First Qualified Introduction
  * Target: Median ≤72 hours
- *
- * Measures time from profile/assignment activation to first qualified match introduction
  */
-export async function calculateTTFQI(
-  startDate?: Date,
-  endDate?: Date,
-  cohort?: string
-): Promise<TTSCResult | null> {
-  const start = startDate || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-  const end = endDate || new Date();
-
+export async function calculateTTFQI(userId: string): Promise<TTFQIResult | null> {
   try {
-    // Get all qualified introductions (match_actioned with action='introduce')
-    const introEvents = await db
-      .select({
-        userId: analyticsEvents.userId,
-        introDate: analyticsEvents.createdAt,
-        qualificationMet: sql<boolean>`(properties->>'qualificationMet')::boolean`,
-        activationDate: sql<Date>`(
-          SELECT MIN(created_at)
-          FROM analytics_events
-          WHERE user_id = ${analyticsEvents.userId}
-          AND event_type IN ('profile_activated', 'assignment_published')
-        )`,
-      })
+    // Get activation event
+    const activationEvent = await db
+      .select()
       .from(analyticsEvents)
       .where(
         and(
-          eq(analyticsEvents.eventType, 'match_actioned'),
-          sql`properties->>'action' = 'introduce'`,
-          gte(analyticsEvents.createdAt, start),
-          lte(analyticsEvents.createdAt, end)
+          eq(analyticsEvents.userId, userId),
+          eq(analyticsEvents.eventType, EventType.PROFILE_ACTIVATED)
         )
-      );
+      )
+      .orderBy(desc(analyticsEvents.createdAt))
+      .limit(1);
 
-    if (introEvents.length === 0) return null;
+    if (activationEvent.length === 0) {
+      return null;
+    }
 
-    // Filter for first introduction per user and calculate time in hours
-    const userFirstIntros = new Map<string, number>();
+    // Get first qualified intro event
+    const firstIntroEvent = await db
+      .select()
+      .from(analyticsEvents)
+      .where(
+        and(
+          eq(analyticsEvents.userId, userId),
+          eq(analyticsEvents.eventType, EventType.FIRST_QUALIFIED_INTRO),
+          gte(analyticsEvents.createdAt, activationEvent[0].createdAt)
+        )
+      )
+      .orderBy(analyticsEvents.createdAt)
+      .limit(1);
 
-    introEvents
-      .filter((e) => e.activationDate && e.qualificationMet && e.userId)
-      .forEach((e) => {
-        if (!userFirstIntros.has(e.userId!)) {
-          const diff = e.introDate.getTime() - e.activationDate!.getTime();
-          const hours = diff / (1000 * 60 * 60);
-          userFirstIntros.set(e.userId!, hours);
-        }
-      });
+    if (firstIntroEvent.length === 0) {
+      return null;
+    }
 
-    const timeToFirstIntro = Array.from(userFirstIntros.values()).sort((a, b) => a - b);
-
-    if (timeToFirstIntro.length === 0) return null;
-
-    const median = calculatePercentile(timeToFirstIntro, 50);
-    const p25 = calculatePercentile(timeToFirstIntro, 25);
-    const p75 = calculatePercentile(timeToFirstIntro, 75);
-    const mean = timeToFirstIntro.reduce((a, b) => a + b, 0) / timeToFirstIntro.length;
+    const activatedAt = activationEvent[0].createdAt;
+    const firstIntroAt = firstIntroEvent[0].createdAt;
+    const diffMs = firstIntroAt.getTime() - activatedAt.getTime();
+    const hoursToFirstIntro = diffMs / (1000 * 60 * 60);
 
     return {
-      value: median,
-      median,
-      p25,
-      p75,
-      mean,
-      unit: 'hours',
-      timestamp: new Date(),
-      sampleSize: timeToFirstIntro.length,
-      metadata: {
-        target: 72,
-        status: median <= 72 ? 'meeting_target' : 'below_target',
-        cohort,
-      },
+      userId,
+      activatedAt,
+      firstIntroAt,
+      hoursToFirstIntro,
     };
   } catch (error) {
-    console.error('TTFQI calculation error:', error);
+    log.error('Failed to calculate TTFQI', { error, userId });
     return null;
   }
 }
 
 /**
- * Calculate TTV (Time to Value)
+ * Calculate median TTFQI across all users (or cohort)
+ */
+export async function calculateTTFQIMedian(cohort?: string): Promise<number | null> {
+  try {
+    // Get all users with both activation and first intro events
+    const results = await db.execute<{ hours_to_intro: number }>(sql`
+      WITH activations AS (
+        SELECT 
+          user_id,
+          created_at as activated_at
+        FROM analytics_events
+        WHERE event_type = ${EventType.PROFILE_ACTIVATED}
+      ),
+      first_intros AS (
+        SELECT DISTINCT ON (user_id)
+          user_id,
+          created_at as first_intro_at
+        FROM analytics_events
+        WHERE event_type = ${EventType.FIRST_QUALIFIED_INTRO}
+        ORDER BY user_id, created_at ASC
+      )
+      SELECT 
+        EXTRACT(EPOCH FROM (fi.first_intro_at - a.activated_at)) / 3600 as hours_to_intro
+      FROM activations a
+      INNER JOIN first_intros fi ON a.user_id = fi.user_id
+      WHERE fi.first_intro_at >= a.activated_at
+      ORDER BY hours_to_intro
+    `);
+
+    if (results.rows.length === 0) {
+      return null;
+    }
+
+    const values = results.rows.map((r) => r.hours_to_intro);
+    return calculateMedian(values);
+  } catch (error) {
+    log.error('Failed to calculate TTFQI median', { error, cohort });
+    return null;
+  }
+}
+
+// ============================================================================
+// TTV (Time-to-Value)
+// ============================================================================
+
+/**
+ * Calculate TTV for a specific user
+ *
+ * Per PRD Part 2: TTV = Activation → First Interview Scheduled
  * Target: Median ≤7 days
- *
- * Measures time from activation to first meaningful step (interview scheduled OR async task accepted)
  */
-export async function calculateTTV(
-  startDate?: Date,
-  endDate?: Date,
-  cohort?: string
-): Promise<TTSCResult | null> {
-  const start = startDate || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-  const end = endDate || new Date();
-
+export async function calculateTTV(userId: string): Promise<TTVResult | null> {
   try {
-    // Get all "value" events (interview_scheduled or async_task_accepted)
-    const valueEvents = await db
-      .select({
-        userId: analyticsEvents.userId,
-        valueDate: analyticsEvents.createdAt,
-        eventType: analyticsEvents.eventType,
-        activationDate: sql<Date>`(
-          SELECT MIN(created_at)
-          FROM analytics_events
-          WHERE user_id = ${analyticsEvents.userId}
-          AND event_type = 'profile_activated'
-        )`,
-      })
+    // Get activation event
+    const activationEvent = await db
+      .select()
       .from(analyticsEvents)
       .where(
         and(
-          sql`event_type IN ('interview_scheduled', 'async_task_accepted')`,
-          gte(analyticsEvents.createdAt, start),
-          lte(analyticsEvents.createdAt, end)
+          eq(analyticsEvents.userId, userId),
+          eq(analyticsEvents.eventType, EventType.PROFILE_ACTIVATED)
         )
-      );
+      )
+      .orderBy(desc(analyticsEvents.createdAt))
+      .limit(1);
 
-    if (valueEvents.length === 0) return null;
+    if (activationEvent.length === 0) {
+      return null;
+    }
 
-    // Filter for first value event per user and calculate time in days
-    const userFirstValue = new Map<string, number>();
-
-    valueEvents
-      .filter((e) => e.activationDate && e.userId)
-      .forEach((e) => {
-        if (!userFirstValue.has(e.userId!)) {
-          const diff = e.valueDate.getTime() - e.activationDate!.getTime();
-          const days = diff / (1000 * 60 * 60 * 24);
-          userFirstValue.set(e.userId!, days);
-        }
-      });
-
-    const timeToValue = Array.from(userFirstValue.values()).sort((a, b) => a - b);
-
-    if (timeToValue.length === 0) return null;
-
-    const median = calculatePercentile(timeToValue, 50);
-    const p25 = calculatePercentile(timeToValue, 25);
-    const p75 = calculatePercentile(timeToValue, 75);
-    const mean = timeToValue.reduce((a, b) => a + b, 0) / timeToValue.length;
-
-    return {
-      value: median,
-      median,
-      p25,
-      p75,
-      mean,
-      unit: 'days',
-      timestamp: new Date(),
-      sampleSize: timeToValue.length,
-      metadata: {
-        target: 7,
-        status: median <= 7 ? 'meeting_target' : 'below_target',
-        cohort,
-      },
-    };
-  } catch (error) {
-    console.error('TTV calculation error:', error);
-    return null;
-  }
-}
-
-/**
- * Calculate PAC (Purpose-Alignment Contribution) Lift
- * Target: ≥20% higher intro acceptance and ≥15% higher contract rate for high-PAC matches
- *
- * Compares acceptance and contract rates between high-PAC (top decile) and low-PAC matches
- */
-export interface PACResult {
-  highPacAcceptanceRate: number;
-  lowPacAcceptanceRate: number;
-  acceptanceLift: number;
-  highPacContractRate: number;
-  lowPacContractRate: number;
-  contractLift: number;
-  meetsAcceptanceTarget: boolean; // ≥20% lift
-  meetsContractTarget: boolean; // ≥15% lift
-  timestamp: Date;
-  sampleSize: {
-    highPac: number;
-    lowPac: number;
-  };
-}
-
-export async function calculatePACLift(
-  startDate?: Date,
-  endDate?: Date
-): Promise<PACResult | null> {
-  const start = startDate || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-  const end = endDate || new Date();
-
-  try {
-    // Get all matches with their PAC scores
-    const allMatches = await db
-      .select({
-        id: matches.id,
-        profileId: matches.profileId,
-        assignmentId: matches.assignmentId,
-        score: matches.score,
-        vector: matches.vector,
-        createdAt: matches.createdAt,
-      })
-      .from(matches)
-      .where(and(gte(matches.createdAt, start), lte(matches.createdAt, end)));
-
-    if (allMatches.length === 0) return null;
-
-    // Extract PAC scores and calculate top decile threshold
-    const matchesWithPAC = allMatches
-      .map((m) => {
-        const vector = m.vector as any;
-        const pac = vector?.subscores?.pac || 0;
-        return { ...m, pac };
-      })
-      .sort((a, b) => b.pac - a.pac);
-
-    const topDecileIndex = Math.floor(matchesWithPAC.length * 0.1);
-    const topDecileThreshold = matchesWithPAC[topDecileIndex]?.pac || 0;
-
-    const highPacMatches = matchesWithPAC.filter((m) => m.pac >= topDecileThreshold);
-    const lowPacMatches = matchesWithPAC.filter((m) => m.pac < topDecileThreshold);
-
-    if (highPacMatches.length === 0 || lowPacMatches.length === 0) return null;
-
-    // Get introduction events for these matches
-    const introEvents = await db
-      .select({
-        matchId: analyticsEvents.entityId,
-        action: sql<string>`properties->>'action'`,
-      })
+    // Get first interview scheduled event
+    const firstInterviewEvent = await db
+      .select()
       .from(analyticsEvents)
       .where(
         and(
-          eq(analyticsEvents.eventType, 'match_actioned'),
-          sql`entity_id IN (${sql.join(
-            matchesWithPAC.map((m) => sql`${m.id}`),
-            sql`, `
-          )})`
+          eq(analyticsEvents.userId, userId),
+          eq(analyticsEvents.eventType, EventType.INTERVIEW_SCHEDULED),
+          gte(analyticsEvents.createdAt, activationEvent[0].createdAt)
         )
-      );
+      )
+      .orderBy(analyticsEvents.createdAt)
+      .limit(1);
 
-    // Get contract events
-    const contractEvents = await db
-      .select({
-        assignmentId: analyticsEvents.entityId,
-      })
-      .from(analyticsEvents)
-      .where(eq(analyticsEvents.eventType, 'contract_signed'));
+    if (firstInterviewEvent.length === 0) {
+      return null;
+    }
 
-    const contractedAssignments = new Set(contractEvents.map((e) => e.assignmentId));
-
-    // Calculate acceptance rates (introductions / total matches)
-    const highPacAccepted = introEvents.filter((e) =>
-      highPacMatches.some((m) => m.id === e.matchId)
-    ).length;
-    const highPacAcceptanceRate = (highPacAccepted / highPacMatches.length) * 100;
-
-    const lowPacAccepted = introEvents.filter((e) =>
-      lowPacMatches.some((m) => m.id === e.matchId)
-    ).length;
-    const lowPacAcceptanceRate = (lowPacAccepted / lowPacMatches.length) * 100;
-
-    // Calculate contract rates
-    const highPacContracts = highPacMatches.filter((m) =>
-      contractedAssignments.has(m.assignmentId)
-    ).length;
-    const highPacContractRate = (highPacContracts / highPacMatches.length) * 100;
-
-    const lowPacContracts = lowPacMatches.filter((m) =>
-      contractedAssignments.has(m.assignmentId)
-    ).length;
-    const lowPacContractRate = (lowPacContracts / lowPacMatches.length) * 100;
-
-    // Calculate lifts
-    const acceptanceLift =
-      lowPacAcceptanceRate > 0
-        ? ((highPacAcceptanceRate - lowPacAcceptanceRate) / lowPacAcceptanceRate) * 100
-        : 0;
-
-    const contractLift =
-      lowPacContractRate > 0
-        ? ((highPacContractRate - lowPacContractRate) / lowPacContractRate) * 100
-        : 0;
+    const activatedAt = activationEvent[0].createdAt;
+    const firstInterviewAt = firstInterviewEvent[0].createdAt;
+    const diffMs = firstInterviewAt.getTime() - activatedAt.getTime();
+    const daysToFirstInterview = diffMs / (1000 * 60 * 60 * 24);
 
     return {
-      highPacAcceptanceRate,
-      lowPacAcceptanceRate,
-      acceptanceLift,
-      highPacContractRate,
-      lowPacContractRate,
-      contractLift,
-      meetsAcceptanceTarget: acceptanceLift >= 20,
-      meetsContractTarget: contractLift >= 15,
-      timestamp: new Date(),
-      sampleSize: {
-        highPac: highPacMatches.length,
-        lowPac: lowPacMatches.length,
-      },
+      userId,
+      activatedAt,
+      firstInterviewAt,
+      daysToFirstInterview,
     };
   } catch (error) {
-    console.error('PAC calculation error:', error);
+    log.error('Failed to calculate TTV', { error, userId });
     return null;
   }
 }
 
-function calculatePercentile(sortedValues: number[], percentile: number): number {
-  if (sortedValues.length === 0) return 0;
-  if (sortedValues.length === 1) return sortedValues[0];
+/**
+ * Calculate median TTV across all users
+ */
+export async function calculateTTVMedian(): Promise<number | null> {
+  try {
+    const results = await db.execute<{ days_to_interview: number }>(sql`
+      WITH activations AS (
+        SELECT 
+          user_id,
+          created_at as activated_at
+        FROM analytics_events
+        WHERE event_type = ${EventType.PROFILE_ACTIVATED}
+      ),
+      first_interviews AS (
+        SELECT DISTINCT ON (user_id)
+          user_id,
+          created_at as first_interview_at
+        FROM analytics_events
+        WHERE event_type = ${EventType.INTERVIEW_SCHEDULED}
+        ORDER BY user_id, created_at ASC
+      )
+      SELECT 
+        EXTRACT(EPOCH FROM (fi.first_interview_at - a.activated_at)) / 86400 as days_to_interview
+      FROM activations a
+      INNER JOIN first_interviews fi ON a.user_id = fi.user_id
+      WHERE fi.first_interview_at >= a.activated_at
+      ORDER BY days_to_interview
+    `);
 
-  const index = (percentile / 100) * (sortedValues.length - 1);
-  const lower = Math.floor(index);
-  const upper = Math.ceil(index);
-  const weight = index - lower;
+    if (results.rows.length === 0) {
+      return null;
+    }
 
-  if (lower === upper) {
-    return sortedValues[lower];
+    const values = results.rows.map((r) => r.days_to_interview);
+    return calculateMedian(values);
+  } catch (error) {
+    log.error('Failed to calculate TTV median', { error });
+    return null;
   }
-
-  return sortedValues[lower] * (1 - weight) + sortedValues[upper] * weight;
 }
 
+// ============================================================================
+// TTSC (Time-to-Signed-Contract) - NORTH STAR METRIC
+// ============================================================================
+
 /**
- * Calculate Fairness Gap between two cohorts
- * Target: No statistically significant gaps (p < 0.05) in introduction or contract rates
+ * Calculate TTSC for a specific user
  *
- * Compares rates between two demographic cohorts with statistical significance testing
+ * Per PRD Part 2: TTSC = Activation → Signed Contract (North Star Metric)
+ * Target: Median ≤30 days for entry/mid roles
  */
-export interface FairnessGapResult {
-  cohortA: {
-    name: string;
-    introductionRate: number;
-    contractRate: number;
-    sampleSize: number;
-  };
-  cohortB: {
-    name: string;
-    introductionRate: number;
-    contractRate: number;
-    sampleSize: number;
-  };
-  introductionGap: number; // Percentage point difference
-  contractGap: number; // Percentage point difference
-  pValueIntroduction: number; // Statistical significance
-  pValueContract: number; // Statistical significance
-  isSignificant: boolean; // p < 0.05 for either metric
-  timestamp: Date;
-}
-
-export async function calculateFairnessGap(
-  cohortAName: string,
-  cohortBName: string,
-  startDate?: Date,
-  endDate?: Date
-): Promise<FairnessGapResult | null> {
-  const start = startDate || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-  const end = endDate || new Date();
-
+export async function calculateTTSC(userId: string): Promise<TTSCResult | null> {
   try {
-    // Get demographic opt-ins with their cohort information
-    const { demographicOptIns } = await import('@/db/schema');
-
-    const optIns = await db
+    // Get activation event
+    const activationEvent = await db
       .select()
-      .from(demographicOptIns)
-      .where(eq(demographicOptIns.optedIn, true));
+      .from(analyticsEvents)
+      .where(
+        and(
+          eq(analyticsEvents.userId, userId),
+          eq(analyticsEvents.eventType, EventType.PROFILE_ACTIVATED)
+        )
+      )
+      .orderBy(desc(analyticsEvents.createdAt))
+      .limit(1);
 
-    // Filter users by cohort (simplified - in production would use more sophisticated cohort definition)
-    const cohortAUsers = optIns
-      .filter((opt) => {
-        const cohortData = [
-          opt.gender,
-          opt.ethnicity,
-          opt.ageRange,
-          opt.disability,
-          opt.veteranStatus,
-        ];
-        return cohortData.some((data) => data?.toLowerCase().includes(cohortAName.toLowerCase()));
-      })
-      .map((opt) => opt.profileId);
-
-    const cohortBUsers = optIns
-      .filter((opt) => {
-        const cohortData = [
-          opt.gender,
-          opt.ethnicity,
-          opt.ageRange,
-          opt.disability,
-          opt.veteranStatus,
-        ];
-        return cohortData.some((data) => data?.toLowerCase().includes(cohortBName.toLowerCase()));
-      })
-      .map((opt) => opt.profileId);
-
-    if (cohortAUsers.length === 0 || cohortBUsers.length === 0) {
+    if (activationEvent.length === 0) {
       return null;
     }
 
-    // Get all matches for these users
-    const allMatches = await db
-      .select({
-        id: matches.id,
-        profileId: matches.profileId,
-        assignmentId: matches.assignmentId,
-        createdAt: matches.createdAt,
-      })
-      .from(matches)
-      .where(and(gte(matches.createdAt, start), lte(matches.createdAt, end)));
+    // Get first contract signed event
+    const contractEvent = await db
+      .select()
+      .from(analyticsEvents)
+      .where(
+        and(
+          eq(analyticsEvents.userId, userId),
+          eq(analyticsEvents.eventType, EventType.CONTRACT_SIGNED),
+          gte(analyticsEvents.createdAt, activationEvent[0].createdAt)
+        )
+      )
+      .orderBy(analyticsEvents.createdAt)
+      .limit(1);
 
-    const cohortAMatches = allMatches.filter((m) => cohortAUsers.includes(m.profileId));
-    const cohortBMatches = allMatches.filter((m) => cohortBUsers.includes(m.profileId));
-
-    if (cohortAMatches.length < 40 || cohortBMatches.length < 40) {
-      // Insufficient sample size for statistical validity
+    if (contractEvent.length === 0) {
       return null;
     }
 
-    // Get introduction events
-    const introEvents = await db
-      .select({
-        matchId: analyticsEvents.entityId,
-        action: sql<string>`properties->>'action'`,
-      })
-      .from(analyticsEvents)
-      .where(eq(analyticsEvents.eventType, 'match_actioned'));
-
-    const introMatchIds = new Set(
-      introEvents.filter((e) => e.action === 'introduce').map((e) => e.matchId)
-    );
-
-    // Calculate introduction rates
-    const cohortAIntros = cohortAMatches.filter((m) => introMatchIds.has(m.id)).length;
-    const cohortAIntroRate = (cohortAIntros / cohortAMatches.length) * 100;
-
-    const cohortBIntros = cohortBMatches.filter((m) => introMatchIds.has(m.id)).length;
-    const cohortBIntroRate = (cohortBIntros / cohortBMatches.length) * 100;
-
-    // Get contract events
-    const contractEvents = await db
-      .select({
-        assignmentId: analyticsEvents.entityId,
-      })
-      .from(analyticsEvents)
-      .where(eq(analyticsEvents.eventType, 'contract_signed'));
-
-    const contractedAssignments = new Set(contractEvents.map((e) => e.assignmentId));
-
-    // Calculate contract rates
-    const cohortAContracts = cohortAMatches.filter((m) =>
-      contractedAssignments.has(m.assignmentId)
-    ).length;
-    const cohortAContractRate = (cohortAContracts / cohortAMatches.length) * 100;
-
-    const cohortBContracts = cohortBMatches.filter((m) =>
-      contractedAssignments.has(m.assignmentId)
-    ).length;
-    const cohortBContractRate = (cohortBContracts / cohortBMatches.length) * 100;
-
-    // Calculate statistical significance using two-proportion z-test
-    const pValueIntro = calculateTwoProportionZTest(
-      cohortAIntros,
-      cohortAMatches.length,
-      cohortBIntros,
-      cohortBMatches.length
-    );
-
-    const pValueContract = calculateTwoProportionZTest(
-      cohortAContracts,
-      cohortAMatches.length,
-      cohortBContracts,
-      cohortBMatches.length
-    );
+    const activatedAt = activationEvent[0].createdAt;
+    const contractSignedAt = contractEvent[0].createdAt;
+    const diffMs = contractSignedAt.getTime() - activatedAt.getTime();
+    const daysToContract = diffMs / (1000 * 60 * 60 * 24);
 
     return {
-      cohortA: {
-        name: cohortAName,
-        introductionRate: cohortAIntroRate,
-        contractRate: cohortAContractRate,
-        sampleSize: cohortAMatches.length,
-      },
-      cohortB: {
-        name: cohortBName,
-        introductionRate: cohortBIntroRate,
-        contractRate: cohortBContractRate,
-        sampleSize: cohortBMatches.length,
-      },
-      introductionGap: cohortAIntroRate - cohortBIntroRate,
-      contractGap: cohortAContractRate - cohortBContractRate,
-      pValueIntroduction: pValueIntro,
-      pValueContract: pValueContract,
-      isSignificant: pValueIntro < 0.05 || pValueContract < 0.05,
-      timestamp: new Date(),
+      userId,
+      activatedAt,
+      contractSignedAt,
+      daysToContract,
     };
   } catch (error) {
-    console.error('Fairness gap calculation error:', error);
+    log.error('Failed to calculate TTSC', { error, userId });
     return null;
   }
 }
 
 /**
- * Two-proportion z-test for statistical significance
- * Returns p-value (two-tailed)
+ * Calculate median TTSC across all users
  */
-function calculateTwoProportionZTest(x1: number, n1: number, x2: number, n2: number): number {
-  const p1 = x1 / n1;
-  const p2 = x2 / n2;
-  const pPool = (x1 + x2) / (n1 + n2);
-  const se = Math.sqrt(pPool * (1 - pPool) * (1 / n1 + 1 / n2));
-
-  if (se === 0) return 1; // No difference
-
-  const z = Math.abs(p1 - p2) / se;
-
-  // Convert z-score to p-value (two-tailed)
-  // Using standard normal cumulative distribution approximation
-  const pValue = 2 * (1 - standardNormalCDF(z));
-
-  return pValue;
-}
-
-/**
- * Standard normal cumulative distribution function
- * Approximation using error function
- */
-function standardNormalCDF(z: number): number {
-  const t = 1 / (1 + 0.2316419 * Math.abs(z));
-  const d = 0.3989423 * Math.exp((-z * z) / 2);
-  const p =
-    d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
-
-  return z > 0 ? 1 - p : p;
-}
-
-/**
- * Calculate SUS (System Usability Scale) metrics
- * Target: ≥75 (Good usability)
- */
-export async function calculateSUSMetrics(): Promise<{
-  average: number;
-  median: number;
-  min: number;
-  max: number;
-  meetsTarget: boolean;
-  sampleSize: number;
-  responseRate: number;
-} | null> {
+export async function calculateTTSCMedian(): Promise<number | null> {
   try {
-    const { susSurveys, surveyDisplayLog } = await import('@/db/schema');
+    const results = await db.execute<{ days_to_contract: number }>(sql`
+      WITH activations AS (
+        SELECT 
+          user_id,
+          created_at as activated_at
+        FROM analytics_events
+        WHERE event_type = ${EventType.PROFILE_ACTIVATED}
+      ),
+      contracts AS (
+        SELECT DISTINCT ON (user_id)
+          user_id,
+          created_at as contract_signed_at
+        FROM analytics_events
+        WHERE event_type = ${EventType.CONTRACT_SIGNED}
+        ORDER BY user_id, created_at ASC
+      )
+      SELECT 
+        EXTRACT(EPOCH FROM (c.contract_signed_at - a.activated_at)) / 86400 as days_to_contract
+      FROM activations a
+      INNER JOIN contracts c ON a.user_id = c.user_id
+      WHERE c.contract_signed_at >= a.activated_at
+      ORDER BY days_to_contract
+    `);
 
-    // Get all completed SUS surveys
-    const surveys = await db.select().from(susSurveys).where(eq(susSurveys.dismissed, false));
+    if (results.rows.length === 0) {
+      return null;
+    }
 
-    if (surveys.length === 0) return null;
-
-    const scores = surveys.map((s) => parseFloat(s.score));
-    const sortedScores = [...scores].sort((a, b) => a - b);
-
-    const average = scores.reduce((sum, score) => sum + score, 0) / scores.length;
-    const median =
-      sortedScores.length % 2 === 0
-        ? (sortedScores[sortedScores.length / 2 - 1] + sortedScores[sortedScores.length / 2]) / 2
-        : sortedScores[Math.floor(sortedScores.length / 2)];
-
-    // Calculate response rate
-    const displayed = await db
-      .select()
-      .from(surveyDisplayLog)
-      .where(eq(surveyDisplayLog.surveyType, 'sus'));
-    const responseRate = displayed.length > 0 ? surveys.length / displayed.length : 0;
-
-    return {
-      average,
-      median,
-      min: sortedScores[0],
-      max: sortedScores[sortedScores.length - 1],
-      meetsTarget: average >= 75,
-      sampleSize: surveys.length,
-      responseRate,
-    };
+    const values = results.rows.map((r) => r.days_to_contract);
+    return calculateMedian(values);
   } catch (error) {
-    console.error('SUS metrics calculation error:', error);
+    log.error('Failed to calculate TTSC median', { error });
     return null;
   }
 }
 
-export async function getAllMetrics() {
-  const [ttsc, ttfqi, ttv, pac, sus] = await Promise.all([
-    calculateTTSC(),
-    calculateTTFQI(),
-    calculateTTV(),
-    calculatePACLift(),
-    calculateSUSMetrics(),
-  ]);
+// ============================================================================
+// WELL-BEING DELTA
+// ============================================================================
 
-  return {
-    ttsc,
-    ttfqi,
-    ttv,
-    pac,
-    sus,
-    timestamp: new Date().toISOString(),
-  };
+/**
+ * Calculate Well-Being Delta for a user over specified period
+ *
+ * Per PRD Part 2: Well-Being Delta = change in stress/control over 14/30 days
+ * Target: ≥60% show ≥+1 improvement on at least one dimension
+ * Per PRD Part 5 (F5): Non-diagnostic, opt-in, private
+ */
+export async function calculateWellBeingDelta(
+  userId: string,
+  days: 14 | 30 = 14
+): Promise<WellBeingDeltaResult | null> {
+  try {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    // Get check-ins in the period
+    const checkins = await db
+      .select()
+      .from(analyticsEvents)
+      .where(
+        and(
+          eq(analyticsEvents.userId, userId),
+          eq(analyticsEvents.eventType, EventType.WELLBEING_CHECKIN),
+          gte(analyticsEvents.createdAt, startDate)
+        )
+      )
+      .orderBy(analyticsEvents.createdAt);
+
+    if (checkins.length < 2) {
+      // Need at least 2 check-ins to calculate delta
+      return null;
+    }
+
+    const firstCheckin = checkins[0];
+    const lastCheckin = checkins[checkins.length - 1];
+
+    const startStress = (firstCheckin.properties as any)?.stress_level || 3;
+    const endStress = (lastCheckin.properties as any)?.stress_level || 3;
+    const startControl = (firstCheckin.properties as any)?.control_level || 3;
+    const endControl = (lastCheckin.properties as any)?.control_level || 3;
+
+    const stressDelta = endStress - startStress; // Negative is improvement (lower stress)
+    const controlDelta = endControl - startControl; // Positive is improvement (more control)
+
+    // Improved if stress decreased by ≥1 OR control increased by ≥1
+    const improved = stressDelta <= -1 || controlDelta >= 1;
+
+    return {
+      userId,
+      periodDays: days,
+      startStress,
+      endStress,
+      startControl,
+      endControl,
+      stressDelta,
+      controlDelta,
+      improved,
+    };
+  } catch (error) {
+    log.error('Failed to calculate Well-Being Delta', { error, userId, days });
+    return null;
+  }
+}
+
+/**
+ * Calculate percentage of users showing improvement in Well-Being
+ *
+ * Per PRD Part 2: Target ≥60% show improvement
+ */
+export async function calculateWellBeingImprovementRate(
+  days: 14 | 30 = 14
+): Promise<number | null> {
+  try {
+    // Get all users with well-being opt-in
+    const usersWithCheckins = await db.execute<{ user_id: string }>(sql`
+      SELECT DISTINCT user_id
+      FROM analytics_events
+      WHERE event_type = ${EventType.WELLBEING_CHECKIN}
+        AND created_at >= NOW() - INTERVAL '${sql.raw(days.toString())} days'
+      GROUP BY user_id
+      HAVING COUNT(*) >= 2
+    `);
+
+    if (usersWithCheckins.rows.length === 0) {
+      return null;
+    }
+
+    let improvedCount = 0;
+    const totalCount = usersWithCheckins.rows.length;
+
+    for (const row of usersWithCheckins.rows) {
+      const delta = await calculateWellBeingDelta(row.user_id, days);
+      if (delta?.improved) {
+        improvedCount++;
+      }
+    }
+
+    return (improvedCount / totalCount) * 100;
+  } catch (error) {
+    log.error('Failed to calculate Well-Being improvement rate', { error, days });
+    return null;
+  }
+}
+
+// ============================================================================
+// PAC (Purpose-Alignment Contribution)
+// ============================================================================
+
+/**
+ * Get PAC contribution from a match
+ *
+ * Per PRD Part 2: PAC = portion of match score from values/causes alignment
+ * Per PRD Part 7: Store in matches.subscores JSONB field
+ */
+export async function getPACContribution(matchId: string): Promise<PACContribution | null> {
+  try {
+    const match = await db.select().from(matches).where(eq(matches.id, matchId)).limit(1);
+
+    if (match.length === 0) {
+      return null;
+    }
+
+    const matchData = match[0];
+    const subscores = matchData.subscores as any;
+
+    if (!subscores) {
+      return null;
+    }
+
+    const overallScore = matchData.matchScore || 0;
+    const pacScore = subscores.purpose_alignment || 0;
+    const skillsScore = subscores.skills || 0;
+    const constraintsScore = subscores.constraints || 0;
+    const verificationScore = subscores.verification || 0;
+
+    const pacPercentage = overallScore > 0 ? (pacScore / overallScore) * 100 : 0;
+
+    return {
+      matchId,
+      overallScore,
+      pacScore,
+      skillsScore,
+      constraintsScore,
+      verificationScore,
+      pacPercentage,
+    };
+  } catch (error) {
+    log.error('Failed to get PAC contribution', { error, matchId });
+    return null;
+  }
+}
+
+/**
+ * Calculate PAC Lift
+ *
+ * Per PRD Part 2: Top-decile PAC matches should show ≥20% higher intro acceptance
+ */
+export async function calculatePACLift(): Promise<{ topDecileLift: number } | null> {
+  try {
+    // This would require correlation analysis between PAC scores and acceptance rates
+    // Simplified version: compare acceptance rate of top 10% PAC vs baseline
+
+    // TODO: Implement full PAC lift calculation
+    // For now, return null (requires more match acceptance data)
+
+    return null;
+  } catch (error) {
+    log.error('Failed to calculate PAC lift', { error });
+    return null;
+  }
+}
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Calculate median from array of numbers
+ */
+function calculateMedian(values: number[]): number {
+  if (values.length === 0) return 0;
+
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+
+  if (sorted.length % 2 === 0) {
+    return (sorted[mid - 1] + sorted[mid]) / 2;
+  } else {
+    return sorted[mid];
+  }
+}
+
+/**
+ * Calculate percentile from array of numbers
+ */
+function calculatePercentile(values: number[], percentile: number): number {
+  if (values.length === 0) return 0;
+
+  const sorted = [...values].sort((a, b) => a - b);
+  const index = Math.ceil((percentile / 100) * sorted.length) - 1;
+
+  return sorted[Math.max(0, index)];
+}
+
+/**
+ * Get cohort metrics for a metric type
+ */
+export async function getCohortMetrics(
+  metricType: 'ttfqi' | 'ttv' | 'ttsc'
+): Promise<CohortMetrics[]> {
+  // TODO: Implement cohort-based metric aggregation
+  // This would group by role family, seniority, geography
+
+  return [];
 }

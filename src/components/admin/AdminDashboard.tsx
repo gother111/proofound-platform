@@ -2,11 +2,20 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Users, Building2, Handshake, FileText, TrendingUp, TrendingDown, Activity } from 'lucide-react';
+import {
+  Users,
+  Building2,
+  Handshake,
+  FileText,
+  TrendingUp,
+  TrendingDown,
+  Activity,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import type { AdminUser } from '@/lib/auth/admin';
 import { AdminGrowthChart } from './analytics/AdminGrowthChart';
 import { FairnessNoteDashboard } from '../analytics/FairnessNoteDashboard';
+import { MetricsDashboard } from '../metrics/MetricsDashboard';
 
 interface AdminDashboardProps {
   adminUser: AdminUser;
@@ -90,7 +99,9 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-[#6B6760]">Total Users</p>
-                <p className="text-2xl font-bold text-[#2D3330]">{overview.users.total.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-[#2D3330]">
+                  {overview.users.total.toLocaleString()}
+                </p>
                 <p className="text-xs text-[#9B9891] mt-1">
                   +{overview.users.thisMonth} this month
                 </p>
@@ -107,7 +118,9 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-[#6B6760]">Organizations</p>
-                <p className="text-2xl font-bold text-[#2D3330]">{overview.organizations.total.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-[#2D3330]">
+                  {overview.organizations.total.toLocaleString()}
+                </p>
                 <p className="text-xs text-[#9B9891] mt-1">
                   {overview.organizations.active} active
                 </p>
@@ -124,7 +137,9 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-[#6B6760]">Matches</p>
-                <p className="text-2xl font-bold text-[#2D3330]">{overview.matches.total.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-[#2D3330]">
+                  {overview.matches.total.toLocaleString()}
+                </p>
                 <p className="text-xs text-[#9B9891] mt-1">
                   +{overview.matches.thisMonth} this month
                 </p>
@@ -141,7 +156,9 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-[#6B6760]">Contracts Signed</p>
-                <p className="text-2xl font-bold text-[#2D3330]">{overview.contracts.total.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-[#2D3330]">
+                  {overview.contracts.total.toLocaleString()}
+                </p>
                 <p className="text-xs text-[#9B9891] mt-1">
                   +{overview.contracts.thisMonth} this month
                 </p>
@@ -176,7 +193,8 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
                 <span className="text-lg font-semibold text-[#2D3330]">
                   {overview.matches.total > 0
                     ? ((overview.contracts.total / overview.matches.total) * 100).toFixed(1)
-                    : '0'}%
+                    : '0'}
+                  %
                 </span>
               </div>
             </div>
@@ -205,6 +223,9 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Core Metrics Dashboard */}
+      <MetricsDashboard />
 
       {/* Growth Chart */}
       <AdminGrowthChart />

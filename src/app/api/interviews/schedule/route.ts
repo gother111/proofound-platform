@@ -110,6 +110,30 @@ export async function POST(request: NextRequest) {
       throw insertError;
     }
 
+    // Emit interview_scheduled event for TTV tracking
+    try {
+      const { emitInterviewScheduledAsync } = await import('@/lib/analytics/events');
+
+      // Calculate days since match acceptance
+      const matchDate = new Date(match.created_at);
+      const interviewDate = new Date(data.scheduledAt);
+      const daysSinceMatch = Math.floor(
+        (interviewDate.getTime() - matchDate.getTime()) / (1000 * 60 * 60 * 24)
+      );
+
+      emitInterviewScheduledAsync(user.id, interview.id, {
+        interview_id: interview.id,
+        assignment_id: match.assignments.id,
+        match_id: data.matchId,
+        duration_minutes: 30,
+        platform: data.platform,
+        days_since_match: daysSinceMatch,
+      });
+    } catch (analyticsError) {
+      console.error('Failed to emit interview_scheduled event:', analyticsError);
+      // Don't fail the request if analytics fails
+    }
+
     return NextResponse.json({
       success: true,
       interview,

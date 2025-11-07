@@ -1,79 +1,105 @@
+/**
+ * Metrics Dashboard Component
+ *
+ * Displays the 6 core PRD metrics:
+ * 1. TTSC (Time-to-Signed-Contract) - North Star Metric
+ * 2. TTFQI (Time-to-First Qualified Introduction)
+ * 3. TTV (Time-to-Value)
+ * 4. Well-Being Delta
+ * 5. SUS (System Usability Scale)
+ * 6. PAC Lift (Purpose-Alignment Contribution)
+ *
+ * PRD References:
+ * - Part 2: Goals & Success Metrics
+ * - Part 12: Acceptance Criteria
+ */
+
 'use client';
 
-import { useEffect, useState } from 'react';
-
-interface TTSCResult {
-  median: number;
-  p25: number;
-  p75: number;
-  mean: number;
-  unit: 'days';
-  sampleSize: number;
-  metadata?: {
-    target: number;
-    status: string;
-  };
-}
-
-interface PACResult {
-  highPacAcceptanceRate: number;
-  lowPacAcceptanceRate: number;
-  acceptanceLift: number;
-  highPacContractRate: number;
-  lowPacContractRate: number;
-  contractLift: number;
-  meetsAcceptanceTarget: boolean;
-  meetsContractTarget: boolean;
-  sampleSize: {
-    highPac: number;
-    lowPac: number;
-  };
-}
-
-interface SUSResult {
-  average: number;
-  median: number;
-  min: number;
-  max: number;
-  meetsTarget: boolean;
-  sampleSize: number;
-  responseRate: number;
-}
+import { useState, useEffect } from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import {
+  TrendingUp,
+  TrendingDown,
+  Clock,
+  Target,
+  Heart,
+  ThumbsUp,
+  Sparkles,
+  Activity,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import {
+  TTSC_TARGET_DAYS,
+  TTFQI_TARGET_HOURS,
+  TTV_TARGET_DAYS,
+  SUS_TARGET_SCORE,
+  WELLBEING_DELTA_TARGET_PERCENT,
+  PAC_LIFT_TARGET_PERCENT,
+} from '@/lib/analytics/constants';
 
 interface MetricsData {
-  ttsc: TTSCResult | null;
-  ttfqi: TTSCResult | null;
-  ttv: TTSCResult | null;
-  pac: PACResult | null;
-  sus: SUSResult | null;
-  timestamp: string;
+  ttsc: {
+    median: number | null;
+    p75: number | null;
+    count: number;
+    targetMet: boolean;
+  };
+  ttfqi: {
+    median: number | null;
+    p75: number | null;
+    count: number;
+    targetMet: boolean;
+  };
+  ttv: {
+    median: number | null;
+    p75: number | null;
+    count: number;
+    targetMet: boolean;
+  };
+  wellbeing: {
+    improvementRate: number | null;
+    targetMet: boolean;
+    sampleSize: number;
+  };
+  sus: {
+    average: number | null;
+    targetMet: boolean;
+    responseCount: number;
+  };
+  pac: {
+    topDecileLift: number | null;
+    targetMet: boolean;
+    sampleSize: number;
+  };
 }
 
 export function MetricsDashboard() {
   const [metrics, setMetrics] = useState<MetricsData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   useEffect(() => {
-    fetchMetrics();
+    loadMetrics();
+    // Refresh every 5 minutes
+    const interval = setInterval(loadMetrics, 5 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
-  const fetchMetrics = async () => {
+  const loadMetrics = async () => {
     try {
-      setLoading(true);
-      setError(null);
-
-      const response = await fetch('/api/metrics?metric=all');
+      const response = await fetch('/api/admin/metrics/overview');
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to fetch metrics');
+        throw new Error('Failed to load metrics');
       }
 
       const data = await response.json();
       setMetrics(data.metrics);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setLastUpdated(new Date());
+    } catch (error) {
+      console.error('Failed to load metrics:', error);
+      toast.error('Failed to load metrics data');
     } finally {
       setLoading(false);
     }
@@ -81,260 +107,225 @@ export function MetricsDashboard() {
 
   if (loading) {
     return (
-      <div className="p-6 bg-white rounded-lg shadow">
-        <div className="animate-pulse space-y-4">
-          <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-          <div className="h-32 bg-gray-200 rounded"></div>
-          <div className="h-32 bg-gray-200 rounded"></div>
-          <div className="h-32 bg-gray-200 rounded"></div>
-        </div>
-      </div>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-center py-12">
+            <Activity className="h-8 w-8 text-[#6B6760] animate-spin" />
+            <span className="ml-2 text-[#6B6760]">Loading metrics...</span>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
-  if (error) {
+  if (!metrics) {
     return (
-      <div className="p-6 bg-red-50 rounded-lg border border-red-200">
-        <h3 className="text-red-800 font-semibold mb-2">Error Loading Metrics</h3>
-        <p className="text-red-600">{error}</p>
-        <button
-          onClick={fetchMetrics}
-          className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-        >
-          Retry
-        </button>
-      </div>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center py-12 text-[#6B6760]">No metrics data available yet</div>
+        </CardContent>
+      </Card>
     );
   }
+
+  const MetricCard = ({
+    title,
+    value,
+    target,
+    unit,
+    targetMet,
+    count,
+    icon: Icon,
+    description,
+  }: {
+    title: string;
+    value: number | null;
+    target: number;
+    unit: string;
+    targetMet: boolean;
+    count: number;
+    icon: React.ElementType;
+    description: string;
+  }) => (
+    <Card>
+      <CardContent className="pt-6">
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Icon className="h-5 w-5 text-[#1C4D3A]" />
+              <h3 className="font-semibold text-[#2D3330]">{title}</h3>
+            </div>
+            <p className="text-xs text-[#9B9891]">{description}</p>
+          </div>
+          {value !== null && (
+            <div
+              className={`px-2 py-1 rounded text-xs font-medium ${
+                targetMet ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'
+              }`}
+            >
+              {targetMet ? '✓ Target Met' : '⚠ Below Target'}
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-bold text-[#2D3330]">
+                {value !== null ? value.toFixed(value < 10 ? 1 : 0) : '—'}
+              </span>
+              <span className="text-sm text-[#6B6760]">{unit}</span>
+            </div>
+            <div className="flex items-center gap-1 mt-1">
+              <span className="text-xs text-[#9B9891]">
+                Target: {target}
+                {unit}
+              </span>
+              {value !== null &&
+                (targetMet ? (
+                  <TrendingUp className="h-3 w-3 text-green-600" />
+                ) : (
+                  <TrendingDown className="h-3 w-3 text-amber-600" />
+                ))}
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-[#E8E6DD]">
+            <p className="text-xs text-[#9B9891]">
+              Sample size: <span className="font-medium text-[#2D3330]">{count}</span>
+              {value === null && ' (insufficient data)'}
+            </p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">Platform Metrics</h2>
-        <button
-          onClick={fetchMetrics}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          Refresh
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* TTSC - Time to Signed Contract */}
-        <MetricCard
-          title="TTSC - Time to Signed Contract"
-          target="≤30 days"
-          metric={metrics?.ttsc}
-          renderValue={(m) => (
-            <>
-              <div className="text-4xl font-bold">
-                {m.median.toFixed(1)}
-                <span className="text-xl text-gray-600 ml-2">days</span>
-              </div>
-              <div className="mt-2 text-sm text-gray-600">
-                <span>P25: {m.p25.toFixed(1)}d</span>
-                <span className="mx-2">•</span>
-                <span>P75: {m.p75.toFixed(1)}d</span>
-                <span className="mx-2">•</span>
-                <span>n={m.sampleSize}</span>
-              </div>
-            </>
-          )}
-        />
-
-        {/* TTFQI - Time to First Qualified Introduction */}
-        <MetricCard
-          title="TTFQI - Time to First Qualified Introduction"
-          target="≤72 hours"
-          metric={metrics?.ttfqi}
-          renderValue={(m) => (
-            <>
-              <div className="text-4xl font-bold">
-                {m.median.toFixed(1)}
-                <span className="text-xl text-gray-600 ml-2">hours</span>
-              </div>
-              <div className="mt-2 text-sm text-gray-600">
-                <span>P25: {m.p25.toFixed(1)}h</span>
-                <span className="mx-2">•</span>
-                <span>P75: {m.p75.toFixed(1)}h</span>
-                <span className="mx-2">•</span>
-                <span>n={m.sampleSize}</span>
-              </div>
-            </>
-          )}
-        />
-
-        {/* TTV - Time to Value */}
-        <MetricCard
-          title="TTV - Time to Value"
-          target="≤7 days"
-          metric={metrics?.ttv}
-          renderValue={(m) => (
-            <>
-              <div className="text-4xl font-bold">
-                {m.median.toFixed(1)}
-                <span className="text-xl text-gray-600 ml-2">days</span>
-              </div>
-              <div className="mt-2 text-sm text-gray-600">
-                <span>P25: {m.p25.toFixed(1)}d</span>
-                <span className="mx-2">•</span>
-                <span>P75: {m.p75.toFixed(1)}d</span>
-                <span className="mx-2">•</span>
-                <span>n={m.sampleSize}</span>
-              </div>
-            </>
-          )}
-        />
-
-        {/* PAC - Purpose-Alignment Contribution */}
-        <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            PAC - Purpose-Alignment Contribution
-          </h3>
-          <p className="text-sm text-gray-600 mb-4">
-            Target: ≥20% acceptance lift, ≥15% contract lift
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-[#2D3330]">Core Metrics (PRD Part 2)</h2>
+          <p className="text-sm text-[#6B6760] mt-1">
+            North Star Metric and success indicators per Product Requirements
           </p>
-
-          {metrics?.pac ? (
-            <>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between items-baseline mb-1">
-                    <span className="text-sm font-medium text-gray-700">Acceptance Lift</span>
-                    <span
-                      className={`text-2xl font-bold ${
-                        metrics.pac.meetsAcceptanceTarget ? 'text-green-600' : 'text-amber-600'
-                      }`}
-                    >
-                      +{metrics.pac.acceptanceLift.toFixed(1)}%
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    High PAC: {metrics.pac.highPacAcceptanceRate.toFixed(1)}% vs Low PAC:{' '}
-                    {metrics.pac.lowPacAcceptanceRate.toFixed(1)}%
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-baseline mb-1">
-                    <span className="text-sm font-medium text-gray-700">Contract Lift</span>
-                    <span
-                      className={`text-2xl font-bold ${
-                        metrics.pac.meetsContractTarget ? 'text-green-600' : 'text-amber-600'
-                      }`}
-                    >
-                      +{metrics.pac.contractLift.toFixed(1)}%
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    High PAC: {metrics.pac.highPacContractRate.toFixed(1)}% vs Low PAC:{' '}
-                    {metrics.pac.lowPacContractRate.toFixed(1)}%
-                  </div>
-                </div>
-
-                <div className="pt-2 border-t border-gray-200 text-xs text-gray-600">
-                  Sample: {metrics.pac.sampleSize.highPac} high PAC matches,{' '}
-                  {metrics.pac.sampleSize.lowPac} low PAC matches
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="text-gray-500 italic">No data available</div>
-          )}
         </div>
+        {lastUpdated && (
+          <div className="text-xs text-[#9B9891]">
+            Last updated: {lastUpdated.toLocaleTimeString()}
+          </div>
+        )}
+      </div>
 
-        {/* SUS - System Usability Scale */}
-        <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">SUS - System Usability Scale</h3>
-          <p className="text-sm text-gray-600 mb-4">Target: ≥75 (Good usability)</p>
+      {/* North Star Metric - TTSC */}
+      <div>
+        <h3 className="text-lg font-semibold text-[#2D3330] mb-3 flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-amber-500" />
+          North Star Metric
+        </h3>
+        <MetricCard
+          title="TTSC (Time-to-Signed-Contract)"
+          value={metrics.ttsc.median}
+          target={TTSC_TARGET_DAYS}
+          unit=" days"
+          targetMet={metrics.ttsc.targetMet}
+          count={metrics.ttsc.count}
+          icon={Target}
+          description="Median time from profile activation to signed contract"
+        />
+      </div>
 
-          {metrics?.sus ? (
-            <>
-              <div className="space-y-4">
-                <div>
-                  <div className="text-4xl font-bold">
-                    <span className={metrics.sus.meetsTarget ? 'text-green-600' : 'text-amber-600'}>
-                      {metrics.sus.average.toFixed(1)}
-                    </span>
-                    <span className="text-xl text-gray-600 ml-2">/ 100</span>
-                  </div>
-                  <div className="mt-2 text-sm text-gray-600">
-                    <span>Median: {metrics.sus.median.toFixed(1)}</span>
-                    <span className="mx-2">•</span>
-                    <span>
-                      Range: {metrics.sus.min.toFixed(0)} - {metrics.sus.max.toFixed(0)}
-                    </span>
-                  </div>
-                </div>
+      {/* Outcome Metrics */}
+      <div>
+        <h3 className="text-lg font-semibold text-[#2D3330] mb-3">Outcome Metrics</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <MetricCard
+            title="TTFQI"
+            value={metrics.ttfqi.median}
+            target={TTFQI_TARGET_HOURS}
+            unit=" hours"
+            targetMet={metrics.ttfqi.targetMet}
+            count={metrics.ttfqi.count}
+            icon={Clock}
+            description="Time to first qualified introduction"
+          />
 
-                <div className="pt-2 border-t border-gray-200 text-xs text-gray-600">
-                  <div className="flex justify-between">
-                    <span>Sample size: {metrics.sus.sampleSize} surveys</span>
-                    <span>Response rate: {(metrics.sus.responseRate * 100).toFixed(1)}%</span>
-                  </div>
-                </div>
+          <MetricCard
+            title="TTV"
+            value={metrics.ttv.median}
+            target={TTV_TARGET_DAYS}
+            unit=" days"
+            targetMet={metrics.ttv.targetMet}
+            count={metrics.ttv.count}
+            icon={TrendingUp}
+            description="Time to first interview scheduled"
+          />
 
-                <div className="mt-4">
-                  <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      metrics.sus.meetsTarget
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-amber-100 text-amber-800'
-                    }`}
-                  >
-                    {metrics.sus.meetsTarget ? '✓ Meeting Target' : '⚠ Below Target'}
-                  </span>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="text-gray-500 italic">No data available</div>
-          )}
+          <MetricCard
+            title="Well-Being Delta"
+            value={metrics.wellbeing.improvementRate}
+            target={WELLBEING_DELTA_TARGET_PERCENT}
+            unit="%"
+            targetMet={metrics.wellbeing.targetMet}
+            count={metrics.wellbeing.sampleSize}
+            icon={Heart}
+            description="Users showing improvement in stress/control"
+          />
         </div>
       </div>
 
-      {metrics?.timestamp && (
-        <div className="text-sm text-gray-500 text-right">
-          Last updated: {new Date(metrics.timestamp).toLocaleString()}
+      {/* Quality Metrics */}
+      <div>
+        <h3 className="text-lg font-semibold text-[#2D3330] mb-3">Quality Metrics</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <MetricCard
+            title="SUS Score"
+            value={metrics.sus.average}
+            target={SUS_TARGET_SCORE}
+            unit=" / 100"
+            targetMet={metrics.sus.targetMet}
+            count={metrics.sus.responseCount}
+            icon={ThumbsUp}
+            description="System Usability Scale (industry standard)"
+          />
+
+          <MetricCard
+            title="PAC Lift"
+            value={metrics.pac.topDecileLift}
+            target={PAC_LIFT_TARGET_PERCENT}
+            unit="% higher"
+            targetMet={metrics.pac.targetMet}
+            count={metrics.pac.sampleSize}
+            icon={Sparkles}
+            description="Intro acceptance lift from purpose alignment"
+          />
         </div>
-      )}
-    </div>
-  );
-}
+      </div>
 
-interface MetricCardProps {
-  title: string;
-  target: string;
-  metric: TTSCResult | null | undefined;
-  renderValue: (metric: TTSCResult) => React.ReactNode;
-}
-
-function MetricCard({ title, target, metric, renderValue }: MetricCardProps) {
-  const meetsTarget = metric?.metadata?.status === 'meeting_target';
-
-  return (
-    <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-      <h3 className="text-lg font-semibold text-gray-900 mb-1">{title}</h3>
-      <p className="text-sm text-gray-600 mb-4">Target: {target}</p>
-
-      {metric ? (
-        <>
-          <div className={meetsTarget ? 'text-green-600' : 'text-amber-600'}>
-            {renderValue(metric)}
+      {/* Additional Context */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Metrics Context</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3 text-sm">
+            <div>
+              <span className="font-medium text-[#2D3330]">P75 Values:</span>
+              <ul className="mt-1 space-y-1 text-[#6B6760] ml-4">
+                <li>• TTSC P75: {metrics.ttsc.p75?.toFixed(0) || '—'} days</li>
+                <li>• TTFQI P75: {metrics.ttfqi.p75?.toFixed(0) || '—'} hours</li>
+                <li>• TTV P75: {metrics.ttv.p75?.toFixed(0) || '—'} days</li>
+              </ul>
+            </div>
+            <div className="pt-3 border-t border-[#E8E6DD]">
+              <p className="text-xs text-[#9B9891]">
+                <strong>Note:</strong> Metrics are calculated from analytics events and cached for 1
+                hour. All targets are defined in PRD Part 2: Goals & Success Metrics.
+              </p>
+            </div>
           </div>
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <span
-              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                meetsTarget ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'
-              }`}
-            >
-              {meetsTarget ? '✓ Meeting Target' : '⚠ Below Target'}
-            </span>
-          </div>
-        </>
-      ) : (
-        <div className="text-gray-500 italic">No data available</div>
-      )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

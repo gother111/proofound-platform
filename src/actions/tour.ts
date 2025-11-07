@@ -90,6 +90,7 @@ export async function getTourStatus() {
       success: true,
       tourCompleted: profile?.tourCompleted ?? false,
       persona: profile?.persona ?? 'unknown',
+      userId: user.id,
     };
   } catch (error) {
     console.error('Failed to get tour status:', error);
@@ -97,6 +98,7 @@ export async function getTourStatus() {
       success: false,
       tourCompleted: false,
       persona: 'unknown' as const,
+      userId: '',
       error: error instanceof Error ? error.message : 'Unknown error',
     };
   }

@@ -2,6 +2,7 @@ import { requirePersona } from '@/lib/auth';
 import { LeftNav } from '@/components/app/LeftNav';
 import { TopBar } from '@/components/app/TopBar';
 import { TourProvider } from '@/components/tour/TourProvider';
+import { SUSTriggerProvider } from '@/components/feedback/SUSTriggerProvider';
 
 /**
  * Individual User Layout
@@ -26,22 +27,24 @@ export default async function IndividualLayout({ children }: { children: React.R
     .slice(0, 2);
 
   return (
-    <div className="flex h-screen" style={{ backgroundColor: '#F7F6F1' }}>
-      <LeftNav basePath="/app/i" />
-      <div className="flex-1 flex flex-col min-w-0">
-        <TopBar userName={userName} userInitials={userInitials} />
-        {/* Main content region with ID for skip-to-content link */}
-        {/* Add bottom padding on mobile to account for bottom navigation (80px) */}
-        <main
-          id="main-content"
-          className="flex-1 overflow-auto pb-20 md:pb-0"
-          role="main"
-          aria-label="Main content"
-        >
-          {children}
-        </main>
+    <SUSTriggerProvider userId={user.id}>
+      <div className="flex h-screen" style={{ backgroundColor: '#F7F6F1' }}>
+        <LeftNav basePath="/app/i" />
+        <div className="flex-1 flex flex-col min-w-0">
+          <TopBar userName={userName} userInitials={userInitials} />
+          {/* Main content region with ID for skip-to-content link */}
+          {/* Add bottom padding on mobile to account for bottom navigation (80px) */}
+          <main
+            id="main-content"
+            className="flex-1 overflow-auto pb-20 md:pb-0"
+            role="main"
+            aria-label="Main content"
+          >
+            {children}
+          </main>
+        </div>
+        <TourProvider />
       </div>
-      <TourProvider />
-    </div>
+    </SUSTriggerProvider>
   );
 }

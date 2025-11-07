@@ -1,307 +1,121 @@
 /**
  * Guided Tour Component
  *
- * First-run guided tour to help users understand the platform.
- * Shows persona-specific steps and highlights relevant UI elements.
+ * Implements PRD Part 4, Flow I-03: First-time user tour
+ * Uses react-joyride for progressive UI disclosure
  *
  * Features:
- * - Step-by-step walkthrough
- * - Element highlighting
- * - Skip/Complete options
- * - Persists completion state
+ * - 8-step tour for individuals
+ * - 6-step tour for organizations
+ * - Skippable at any time (ESC key)
+ * - Keyboard accessible (arrows for navigation)
+ * - Marks as complete in database
+ * - Can be replayed from settings
+ *
+ * PRD References:
+ * - Part 4: User Flows - I-03 (First Login)
+ * - Part 8: Accessibility (WCAG 2.1 AA)
  */
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { X, ArrowRight, ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { getTourSteps, type TourStep } from './tourSteps';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, useCallback } from 'react';
+import Joyride, { CallBackProps, STATUS, EVENTS, ACTIONS } from 'react-joyride';
+import { individualTourSteps, organizationTourSteps, tourStyles } from './tourSteps.tsx';
+import { toast } from 'sonner';
+import { emitTourStarted, emitTourCompleted, emitTourSkipped } from '@/lib/analytics/events';
 
 interface GuidedTourProps {
-  persona: 'individual' | 'org_member' | 'unknown';
+  userId: string;
+  persona: 'individual' | 'organization';
+  shouldRun: boolean;
   onComplete: () => void;
   onSkip: () => void;
 }
 
-export function GuidedTour({ persona, onComplete, onSkip }: GuidedTourProps) {
-  const router = useRouter();
-  const [currentStep, setCurrentStep] = useState(0);
-  const [isVisible, setIsVisible] = useState(true);
-  const steps = getTourSteps(persona);
-  const step = steps[currentStep];
+export function GuidedTour({ userId, persona, shouldRun, onComplete, onSkip }: GuidedTourProps) {
+  const [run, setRun] = useState(false);
+  const [stepIndex, setStepIndex] = useState(0);
 
-  // Calculate position for the tooltip
-  const [tooltipPosition, setTooltipPosition] = useState<{
-    top: number;
-    left: number;
-  } | null>(null);
-
+  // Emit tour started event when tour begins
   useEffect(() => {
-    if (!step.target) {
-      // Center placement - no target element
-      setTooltipPosition(null);
-      return;
+    if (shouldRun && run) {
+      emitTourStarted(userId);
     }
+  }, [shouldRun, run, userId]);
 
-    // Find target element and position tooltip
-    const targetElement = document.querySelector(step.target);
-    if (!targetElement) {
-      setTooltipPosition(null);
-      return;
+  // Start tour after a short delay for better UX
+  useEffect(() => {
+    if (shouldRun) {
+      const timer = setTimeout(() => {
+        setRun(true);
+      }, 500);
+      return () => clearTimeout(timer);
     }
+  }, [shouldRun]);
 
-    const rect = targetElement.getBoundingClientRect();
-    const placement = step.placement || 'bottom';
+  const handleJoyrideCallback = useCallback(
+    (data: CallBackProps) => {
+      const { status, type, index, action } = data;
 
-    let top = 0;
-    let left = 0;
+      // Update step index for analytics
+      if (type === EVENTS.STEP_AFTER) {
+        setStepIndex(index + 1);
+      }
 
-    switch (placement) {
-      case 'top':
-        top = rect.top - 20;
-        left = rect.left + rect.width / 2;
-        break;
-      case 'bottom':
-        top = rect.bottom + 20;
-        left = rect.left + rect.width / 2;
-        break;
-      case 'left':
-        top = rect.top + rect.height / 2;
-        left = rect.left - 20;
-        break;
-      case 'right':
-        top = rect.top + rect.height / 2;
-        left = rect.right + 20;
-        break;
-    }
+      // Handle tour completion
+      if (status === STATUS.FINISHED) {
+        setRun(false);
+        emitTourCompleted(userId);
+        onComplete();
+        toast.success('Tour completed! You can replay it anytime from Settings.');
+      }
 
-    setTooltipPosition({ top, left });
+      // Handle tour being skipped
+      if (status === STATUS.SKIPPED || action === ACTIONS.CLOSE) {
+        setRun(false);
+        emitTourSkipped(userId, stepIndex);
+        onSkip();
+        toast.info('Tour skipped. You can restart it anytime from Settings.');
+      }
 
-    // Highlight target element
-    targetElement.classList.add('tour-highlight');
-    return () => {
-      targetElement.classList.remove('tour-highlight');
-    };
-  }, [currentStep, step.target, step.placement]);
+      // Log errors
+      if (type === EVENTS.ERROR) {
+        console.error('Tour error:', data);
+      }
+    },
+    [userId, onComplete, onSkip, stepIndex]
+  );
 
-  const handleNext = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      handleComplete();
-    }
-  };
+  const steps = persona === 'individual' ? individualTourSteps : organizationTourSteps;
 
-  const handleBack = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
-
-  const handleComplete = () => {
-    setIsVisible(false);
-    onComplete();
-  };
-
-  const handleSkip = () => {
-    setIsVisible(false);
-    onSkip();
-  };
-
-  const handleAction = () => {
-    if (step.action?.href) {
-      router.push(step.action.href);
-      handleComplete();
-    } else if (step.action?.onClick) {
-      step.action.onClick();
-      handleNext();
-    }
-  };
-
-  if (!isVisible) return null;
-
-  const isFirstStep = currentStep === 0;
-  const isLastStep = currentStep === steps.length - 1;
-
-  // Center placement (for welcome/complete steps)
-  if (!step.target || step.placement === 'center') {
-    return (
-      <>
-        {/* Overlay */}
-        <div className="fixed inset-0 bg-black/50 z-[9998]" />
-
-        {/* Modal */}
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-          <div
-            className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 space-y-4"
-            style={{ borderColor: '#E8E6DD' }}
-          >
-            {/* Header */}
-            <div className="flex items-start justify-between">
-              <h2 className="text-xl font-semibold" style={{ color: '#2D3330' }}>
-                {step.title}
-              </h2>
-              <button
-                onClick={handleSkip}
-                className="text-gray-400 hover:text-gray-600"
-                aria-label="Close tour"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Description */}
-            <p className="text-base leading-relaxed" style={{ color: '#6B6760' }}>
-              {step.description}
-            </p>
-
-            {/* Progress */}
-            <div className="flex items-center gap-1.5">
-              {steps.map((_, index) => (
-                <div
-                  key={index}
-                  className="h-1.5 flex-1 rounded-full"
-                  style={{
-                    backgroundColor: index <= currentStep ? '#1C4D3A' : '#E8E6DD',
-                  }}
-                />
-              ))}
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center justify-between pt-2">
-              <button onClick={handleSkip} className="text-sm" style={{ color: '#6B6760' }}>
-                Skip tour
-              </button>
-
-              <div className="flex items-center gap-2">
-                {!isFirstStep && (
-                  <Button variant="outline" size="sm" onClick={handleBack}>
-                    <ArrowLeft className="w-4 h-4 mr-1" />
-                    Back
-                  </Button>
-                )}
-                <Button
-                  size="sm"
-                  onClick={handleNext}
-                  style={{ backgroundColor: '#1C4D3A', color: 'white' }}
-                >
-                  {isLastStep ? 'Get Started' : 'Next'}
-                  <ArrowRight className="w-4 h-4 ml-1" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  // Positioned tooltip (for element-specific steps)
   return (
-    <>
-      {/* Overlay */}
-      <div className="fixed inset-0 bg-black/30 z-[9998]" />
-
-      {/* Spotlight effect on target */}
-      {step.target && (
-        <style jsx global>{`
-          .tour-highlight {
-            position: relative;
-            z-index: 9999;
-            box-shadow:
-              0 0 0 4px rgba(28, 77, 58, 0.5),
-              0 0 0 9999px rgba(0, 0, 0, 0.3);
-            border-radius: 4px;
-          }
-        `}</style>
-      )}
-
-      {/* Tooltip */}
-      {tooltipPosition && (
-        <div
-          className="fixed z-[9999] bg-white rounded-lg shadow-xl p-4 max-w-sm"
-          style={{
-            top: tooltipPosition.top,
-            left: tooltipPosition.left,
-            transform:
-              step.placement === 'bottom'
-                ? 'translate(-50%, 0)'
-                : step.placement === 'top'
-                  ? 'translate(-50%, -100%)'
-                  : step.placement === 'right'
-                    ? 'translate(0, -50%)'
-                    : 'translate(-100%, -50%)',
-            borderColor: '#E8E6DD',
-          }}
-        >
-          {/* Close button */}
-          <button
-            onClick={handleSkip}
-            className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
-            aria-label="Close tour"
-          >
-            <X className="w-4 h-4" />
-          </button>
-
-          {/* Content */}
-          <div className="space-y-3 pr-6">
-            <h3 className="font-semibold text-base" style={{ color: '#2D3330' }}>
-              {step.title}
-            </h3>
-            <p className="text-sm leading-relaxed" style={{ color: '#6B6760' }}>
-              {step.description}
-            </p>
-
-            {/* Progress dots */}
-            <div className="flex items-center gap-1">
-              {steps.map((_, index) => (
-                <div
-                  key={index}
-                  className="w-1.5 h-1.5 rounded-full"
-                  style={{
-                    backgroundColor: index === currentStep ? '#1C4D3A' : '#E8E6DD',
-                  }}
-                />
-              ))}
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center justify-between pt-1">
-              {!isFirstStep && (
-                <Button variant="ghost" size="sm" onClick={handleBack}>
-                  <ArrowLeft className="w-3.5 h-3.5 mr-1" />
-                  Back
-                </Button>
-              )}
-
-              <div className="flex-1" />
-
-              {step.action ? (
-                <Button
-                  size="sm"
-                  onClick={handleAction}
-                  style={{ backgroundColor: '#1C4D3A', color: 'white' }}
-                >
-                  {step.action.label}
-                  <ArrowRight className="w-3.5 h-3.5 ml-1" />
-                </Button>
-              ) : (
-                <Button
-                  size="sm"
-                  onClick={handleNext}
-                  style={{ backgroundColor: '#1C4D3A', color: 'white' }}
-                >
-                  {isLastStep ? 'Done' : 'Next'}
-                  <ArrowRight className="w-3.5 h-3.5 ml-1" />
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+    <Joyride
+      steps={steps}
+      run={run}
+      continuous
+      showProgress
+      showSkipButton
+      scrollToFirstStep
+      disableScrolling={false}
+      disableOverlayClose
+      spotlightClicks
+      styles={tourStyles}
+      locale={{
+        back: 'Back',
+        close: 'Close',
+        last: 'Finish',
+        next: 'Next',
+        skip: 'Skip tour',
+      }}
+      callback={handleJoyrideCallback}
+      // Accessibility
+      spotlightPadding={8}
+      disableScrollParentFix
+      // Performance
+      floaterProps={{
+        disableAnimation: false,
+      }}
+    />
   );
 }

@@ -1,161 +1,137 @@
 /**
  * Dashboard Layout API
+ * GET/POST /api/dashboard/layout
  *
- * GET - Fetch user's saved dashboard layout
- * POST - Save user's dashboard layout
+ * Manages user's customizable dashboard tile layout
+ *
+ * PRD References:
+ * - Part 5: F2 - Dashboard Customization
+ * - Part 7: Dashboard loads < 2.0s P75
+ * - Part 12: Task success ≥90%, drop-off <10%
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
 import { dashboardLayouts } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
+import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
 
-const DEFAULT_WIDGETS = [
-  {
-    widgetId: 'matching-results',
-    visible: true,
-    position: 0,
-    title: 'Quality Matches',
-    description: 'Your best-fit opportunities',
-  },
-  {
-    widgetId: 'next-best-actions',
-    visible: true,
-    position: 1,
-    title: 'Next Best Actions',
-    description: 'Recommended actions to improve your profile',
-  },
-  {
-    widgetId: 'gap-map',
-    visible: true,
-    position: 2,
-    title: 'Skills Gap Map',
-    description: 'Identify missing skills for your goals',
-  },
-  {
-    widgetId: 'goals',
-    visible: true,
-    position: 3,
-    title: 'Goals',
-    description: 'Track your career objectives',
-  },
-  {
-    widgetId: 'impact-snapshot',
-    visible: true,
-    position: 4,
-    title: 'Impact Snapshot',
-    description: 'Your recent contributions',
-  },
-  {
-    widgetId: 'while-away',
-    visible: true,
-    position: 5,
-    title: 'While You Were Away',
-    description: 'Recent updates and activity',
-  },
+// Default dashboard layout for new users
+const DEFAULT_LAYOUT = [
+  { widgetId: 'matches', position: 0, visible: true, size: 'default', settings: {} },
+  { widgetId: 'applications', position: 1, visible: true, size: 'default', settings: {} },
+  { widgetId: 'expertise-depth', position: 2, visible: true, size: 'default', settings: {} },
+  { widgetId: 'next-action', position: 3, visible: true, size: 'default', settings: {} },
+  { widgetId: 'zen-hub', position: 4, visible: false, size: 'default', settings: {} },
 ];
 
-export async function GET(req: NextRequest) {
+const LayoutItemSchema = z.object({
+  widgetId: z.string(),
+  position: z.number().int().min(0),
+  visible: z.boolean(),
+  size: z.enum(['small', 'default', 'large']),
+  settings: z.record(z.any()),
+});
+
+/**
+ * GET: Fetch user's dashboard layout
+ */
+export async function GET() {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const user = await requireAuth();
 
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const userLayouts = await db
+      .select()
+      .from(dashboardLayouts)
+      .where(eq(dashboardLayouts.userId, user.id))
+      .orderBy(dashboardLayouts.position);
 
-    try {
-      const layouts = await db.query.dashboardLayouts.findMany({
-        where: eq(dashboardLayouts.userId, user.id),
-        orderBy: (dashboardLayouts, { asc }) => [asc(dashboardLayouts.position)],
+    // If no layout exists, return default
+    if (userLayouts.length === 0) {
+      return NextResponse.json({
+        layout: DEFAULT_LAYOUT,
+        isDefault: true,
       });
-
-      // If user has no custom layout, return default widgets
-      if (!layouts || layouts.length === 0) {
-        return NextResponse.json({ widgets: DEFAULT_WIDGETS });
-      }
-
-      // Reconstruct widgets array from database records
-      const widgets = layouts.map((layout) => ({
-        widgetId: layout.widgetId,
-        visible: true,
-        position: layout.position || 0,
-        title: (layout.settings as any)?.title || layout.widgetId,
-        description: (layout.settings as any)?.description || '',
-      }));
-
-      return NextResponse.json({ widgets });
-    } catch (dbError) {
-      // If database query fails, return default widgets instead of erroring
-      console.error('Database query failed for dashboard layout, using defaults:', dbError);
-      return NextResponse.json({ widgets: DEFAULT_WIDGETS });
     }
+
+    const layout = userLayouts.map((item) => ({
+      widgetId: item.widgetId,
+      position: item.position,
+      visible: item.visible,
+      size: item.size,
+      settings: item.settings,
+    }));
+
+    return NextResponse.json({
+      layout,
+      isDefault: false,
+    });
   } catch (error) {
-    console.error('Fetch dashboard layout error:', error);
-    // Return default widgets instead of erroring
-    return NextResponse.json({ widgets: DEFAULT_WIDGETS });
+    console.error('Failed to fetch dashboard layout:', error);
+    return NextResponse.json(
+      {
+        error: 'Failed to fetch layout',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }
 
-export async function POST(req: NextRequest) {
+/**
+ * POST: Update user's dashboard layout
+ */
+export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const user = await requireAuth();
+    const body = await request.json();
 
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const body = await req.json();
-    const { widgets } = body;
-
-    if (!Array.isArray(widgets)) {
-      return NextResponse.json({ error: 'Widgets must be an array' }, { status: 400 });
-    }
+    // Validate layout
+    const layoutSchema = z.array(LayoutItemSchema);
+    const layout = layoutSchema.parse(body.layout);
 
     // Delete existing layout
     await db.delete(dashboardLayouts).where(eq(dashboardLayouts.userId, user.id));
 
     // Insert new layout
-    if (widgets.length > 0) {
-      const layoutRecords = widgets.map((widget) => ({
+    if (layout.length > 0) {
+      const layoutItems = layout.map((item) => ({
         userId: user.id,
-        widgetId: widget.id,
-        size: widget.size,
-        position: widget.order,
-        settings: {
-          title: widget.title,
-          description: widget.description,
-        },
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        widgetId: item.widgetId,
+        position: item.position,
+        visible: item.visible,
+        size: item.size,
+        settings: item.settings,
       }));
 
-      await db.insert(dashboardLayouts).values(layoutRecords);
+      await db.insert(dashboardLayouts).values(layoutItems);
     }
 
-    // Log analytics event
-    await supabase.from('analytics_events').insert({
-      user_id: user.id,
-      event_type: 'dashboard_customized',
-      event_data: {
-        widgetCount: widgets.length,
-        widgetIds: widgets.map((w: any) => w.id),
-      },
+    return NextResponse.json({
+      success: true,
+      message: 'Dashboard layout updated successfully',
     });
-
-    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Save dashboard layout error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          error: 'Invalid layout data',
+          details: error.errors,
+        },
+        { status: 400 }
+      );
+    }
+
+    console.error('Failed to update dashboard layout:', error);
+    return NextResponse.json(
+      {
+        error: 'Failed to update layout',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }

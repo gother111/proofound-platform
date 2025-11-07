@@ -110,28 +110,40 @@ export async function POST(request: NextRequest) {
         if (match) {
           // Extract PAC from match vector
           const vector = match.vector as any;
-          const pac = vector?.subscores?.pac || 0;
+          const subscores = vector?.subscores || {};
+          const pacScore = subscores?.purpose_alignment || subscores?.pac || 0;
+          const skillsScore = subscores?.skills || 0;
+          const constraintsScore = subscores?.constraints || 0;
+          const verificationScore = subscores?.verification || 0;
           const score = parseFloat(match.score.toString());
 
           // Check if this is a Qualified Introduction
           // PRD criteria: score ≥0.70, all hard constraints satisfied
           const qualificationMet = score >= 0.7;
 
-          // Emit event for both parties
-          await emitMatchActioned(user.id, match.id, 'introduce', {
-            score,
-            pac,
-            qualificationMet,
+          // Emit match actioned event with proper structure
+          await emitMatchActioned(user.id, match.id, {
+            match_id: match.id,
+            action: 'introduce' as const,
+            match_score: score,
+            pac_value: pacScore,
           });
 
           // Also emit for the other party if it's a mutual introduction
           const otherUserId = targetProfileId ? targetProfileId : assignment.orgId;
           if (otherUserId && otherUserId !== user.id) {
-            await emitMatchActioned(otherUserId, match.id, 'introduce', {
-              score,
-              pac,
-              qualificationMet,
+            await emitMatchActioned(otherUserId, match.id, {
+              match_id: match.id,
+              action: 'introduce' as const,
+              match_score: score,
+              pac_value: pacScore,
             });
+          }
+
+          // If this is a qualified intro, also emit FIRST_QUALIFIED_INTRO event (for TTFQI tracking)
+          if (qualificationMet) {
+            const { emitFirstQualifiedIntroAsync } = await import('@/lib/analytics/events');
+            emitFirstQualifiedIntroAsync(user.id, match.id, assignmentId);
           }
 
           // Send notifications to both parties about mutual interest

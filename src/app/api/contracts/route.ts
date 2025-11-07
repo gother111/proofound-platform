@@ -242,11 +242,24 @@ export async function POST(request: NextRequest) {
     // Emit contract_signed event if mutual attestation achieved and not already signed
     if (mutualAttestation && !wasAlreadySigned) {
       try {
-        await emitContractSigned(userId, assignmentId, {
-          contractType: contract.contractType,
-          mutualAttestation: true,
-          compensationAmount: contract.compensationAmount,
-          compensationCurrency: contract.compensationCurrency,
+        // Calculate days since activation and first intro (if available)
+        const { default: daysSinceActivation } = await import('@/lib/analytics/metrics').then(
+          (m) => ({ default: 0 })
+        ); // TODO: Calculate actual value
+        const { default: daysSinceFirstIntro } = await import('@/lib/analytics/metrics').then(
+          (m) => ({ default: 0 })
+        ); // TODO: Calculate actual value
+
+        await emitContractSigned(userId, contract.id, {
+          assignment_id: assignmentId,
+          contract_type: (contract.contractType || 'full_time') as
+            | 'full_time'
+            | 'part_time'
+            | 'contract'
+            | 'internship'
+            | 'volunteer',
+          days_since_activation: daysSinceActivation,
+          days_since_first_intro: daysSinceFirstIntro,
         });
 
         log.info('contract.signed', {
@@ -277,11 +290,7 @@ export async function POST(request: NextRequest) {
         const orgName = organization?.displayName || 'An organization';
 
         // Notify the candidate
-        await notifyContractSigned(
-          userId,
-          contract.id,
-          orgName
-        );
+        await notifyContractSigned(userId, contract.id, orgName);
 
         // Notify organization members (owners and admins)
         const orgMembers = await db.query.organizationMembers.findMany({
@@ -291,20 +300,18 @@ export async function POST(request: NextRequest) {
           ),
         });
 
-        const candidateName = candidateProfile?.displayName || candidateProfile?.handle || 'A candidate';
+        const candidateName =
+          candidateProfile?.displayName || candidateProfile?.handle || 'A candidate';
 
         for (const member of orgMembers) {
           if (member.role === 'owner' || member.role === 'admin') {
             try {
-              await notifyContractSigned(
-                member.userId,
-                contract.id,
-                candidateName
-              );
+              await notifyContractSigned(member.userId, contract.id, candidateName);
             } catch (memberNotifError) {
               log.error('org-member-notification.failed', {
                 memberId: member.userId,
-                error: memberNotifError instanceof Error ? memberNotifError.message : 'Unknown error',
+                error:
+                  memberNotifError instanceof Error ? memberNotifError.message : 'Unknown error',
               });
               // Continue notifying other members
             }
@@ -380,7 +387,8 @@ export async function POST(request: NextRequest) {
             } catch (memberEmailError) {
               log.error('org-member-email.failed', {
                 memberId: member.userId,
-                error: memberEmailError instanceof Error ? memberEmailError.message : 'Unknown error',
+                error:
+                  memberEmailError instanceof Error ? memberEmailError.message : 'Unknown error',
               });
               // Continue emailing other members
             }
