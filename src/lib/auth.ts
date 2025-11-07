@@ -394,6 +394,17 @@ export async function resolveUserHomePath(client?: SupabaseClient) {
     return '/login';
   }
 
+  // Check if user is a platform admin first
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('platform_role')
+    .eq('id', user.id)
+    .single();
+
+  if (profile?.platform_role === 'platform_admin' || profile?.platform_role === 'super_admin') {
+    return '/admin';
+  }
+
   const persona = await getPersona(user.id);
 
   if (persona === 'individual') {
@@ -436,13 +447,9 @@ export async function checkAdminRole(userId: string): Promise<boolean> {
   // For MVP, hardcode admin emails (Pavlo and Yurii)
   // TODO: Move to database table in Phase 2
   const adminEmails = ['pavlo@proofound.io', 'yurii@proofound.io'];
-  
+
   const supabase = await createClient();
-  const { data } = await supabase
-    .from('profiles')
-    .select('id')
-    .eq('id', userId)
-    .maybeSingle();
+  const { data } = await supabase.from('profiles').select('id').eq('id', userId).maybeSingle();
 
   if (!data) return false;
 
@@ -455,10 +462,10 @@ export async function checkAdminRole(userId: string): Promise<boolean> {
 export async function requireAdmin() {
   const user = await requireAuth();
   const isAdmin = await checkAdminRole(user.id);
-  
+
   if (!isAdmin) {
     redirect('/app/i/home');
   }
-  
+
   return user;
 }
