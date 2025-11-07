@@ -31,7 +31,15 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const messages = await getMessages();
+  // Safely load messages with fallback to prevent crashes
+  let messages = {};
+  try {
+    messages = await getMessages();
+  } catch (error) {
+    console.error('Failed to load i18n messages:', error);
+    // Fallback to empty messages object to prevent page crash
+    // The app will still work, just without translations
+  }
 
   return (
     <html lang="en" suppressHydrationWarning>
