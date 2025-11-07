@@ -1,104 +1,116 @@
 /**
  * Purpose Edit Audit Logging
  *
- * Immutable, append-only audit trail for mission, vision, values, and causes changes.
- * Tracks who/when/what changed for compliance and accountability.
- *
- * PRD Reference: Part 7 (line 1495)
+ * PRD: Part 2 - Purpose Block auditing requirement
+ * Tracks changes to mission and vision fields for compliance and transparency
  */
 
 import { db } from '@/db';
 import { purposeEditLog } from '@/db/schema';
-import type { InsertPurposeEditLog } from '@/db/schema';
-
-export interface PurposeEditParams {
-  userId: string;
-  fieldName: 'mission' | 'vision' | 'values' | 'causes';
-  oldValue: string | string[] | null;
-  newValue: string | string[];
-  ipAddress?: string;
-  userAgent?: string;
-}
+import { log } from '@/lib/log';
 
 /**
- * Log a purpose field edit
- * This is append-only and immutable
+ * Log a change to mission or vision field
+ * This is an append-only log - no updates or deletes
  */
-export async function logPurposeEdit(params: PurposeEditParams): Promise<void> {
-  const { userId, fieldName, oldValue, newValue, ipAddress, userAgent } = params;
-
+export async function logPurposeEdit(
+  userId: string,
+  fieldName: 'mission' | 'vision',
+  oldValue: string | null,
+  newValue: string | null
+): Promise<void> {
   try {
-    // Convert values/causes arrays to JSON strings for storage
-    const oldValueStr =
-      oldValue === null ? null : Array.isArray(oldValue) ? JSON.stringify(oldValue) : oldValue;
+    // Only log if there's an actual change
+    if (oldValue === newValue) {
+      return;
+    }
 
-    const newValueStr = Array.isArray(newValue) ? JSON.stringify(newValue) : newValue;
-
-    const logEntry: InsertPurposeEditLog = {
+    await db.insert(purposeEditLog).values({
       userId,
       fieldName,
-      oldValue: oldValueStr,
-      newValue: newValueStr,
+      oldValue,
+      newValue,
       changedAt: new Date(),
-      ipAddress: ipAddress || null,
-      userAgent: userAgent || null,
-    };
+    });
 
-    await db.insert(purposeEditLog).values(logEntry);
-
-    console.log(`[Audit] Purpose edit logged: ${fieldName} for user ${userId}`);
+    log.info('purpose_edit.logged', {
+      userId,
+      fieldName,
+      oldLength: oldValue?.length || 0,
+      newLength: newValue?.length || 0,
+      isCreation: oldValue === null || oldValue === '',
+      isDeletion: newValue === null || newValue === '',
+    });
   } catch (error) {
-    // Log error but don't throw - audit logging failure shouldn't block user actions
-    console.error('[Audit] Failed to log purpose edit:', error);
+    log.error('purpose_edit.log_failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      userId,
+      fieldName,
+    });
+    // Don't throw - logging failures shouldn't break profile updates
   }
 }
 
 /**
  * Get purpose edit history for a user
+ * Returns changes in reverse chronological order
  */
 export async function getPurposeEditHistory(
   userId: string,
-  fieldName?: 'mission' | 'vision' | 'values' | 'causes',
-  limit: number = 100
-): Promise<any[]> {
+  fieldName?: 'mission' | 'vision',
+  limit: number = 50
+) {
   try {
     let query = db
       .select()
       .from(purposeEditLog)
-      .where(sql`${purposeEditLog.userId} = ${userId}`)
-      .orderBy(desc(purposeEditLog.changedAt))
-      .limit(limit);
+      .where((t) => t.userId === userId)
+      .$dynamic();
 
     if (fieldName) {
-      query = query.where(
-        and(
-          sql`${purposeEditLog.userId} = ${userId}`,
-          sql`${purposeEditLog.fieldName} = ${fieldName}`
-        )
-      ) as any;
+      query = query.where((t: any) => t.fieldName === fieldName);
     }
 
-    const logs = await query;
+    const history = await query.orderBy((t: any, { desc }) => [desc(t.changedAt)]).limit(limit);
 
-    // Parse JSON strings back to arrays for values/causes
-    return logs.map((log) => ({
-      ...log,
-      oldValue:
-        log.fieldName === 'values' || log.fieldName === 'causes'
-          ? log.oldValue
-            ? JSON.parse(log.oldValue)
-            : null
-          : log.oldValue,
-      newValue:
-        log.fieldName === 'values' || log.fieldName === 'causes'
-          ? JSON.parse(log.newValue)
-          : log.newValue,
-    }));
+    return history;
   } catch (error) {
-    console.error('[Audit] Failed to fetch purpose edit history:', error);
+    log.error('purpose_edit.get_history_failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      userId,
+    });
     return [];
   }
 }
 
-// Import required for queries
-import { sql, and, desc } from 'drizzle-orm';
+/**
+ * Get summary statistics for a user's purpose edits
+ */
+export async function getPurposeEditStats(userId: string) {
+  try {
+    const history = await getPurposeEditHistory(userId);
+
+    const missionEdits = history.filter((h) => h.fieldName === 'mission');
+    const visionEdits = history.filter((h) => h.fieldName === 'vision');
+
+    return {
+      totalEdits: history.length,
+      missionEdits: missionEdits.length,
+      visionEdits: visionEdits.length,
+      firstEdit: history[history.length - 1]?.changedAt || null,
+      lastEdit: history[0]?.changedAt || null,
+    };
+  } catch (error) {
+    log.error('purpose_edit.get_stats_failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      userId,
+    });
+    return {
+      totalEdits: 0,
+      missionEdits: 0,
+      visionEdits: 0,
+      firstEdit: null,
+      lastEdit: null,
+    };
+  }
+}

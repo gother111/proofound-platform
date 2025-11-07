@@ -191,6 +191,15 @@ export async function emitMatchViewed(userId: string, matchId: string) {
     entityType: 'match',
     entityId: matchId,
   });
+
+  // Check if user has reached 10 matches milestone and trigger SUS survey
+  try {
+    const { checkTenMatchesMilestone } = await import('@/lib/surveys/sus-triggers');
+    await checkTenMatchesMilestone(userId);
+  } catch (error) {
+    // Don't let survey trigger failure break match viewing
+    console.error('Failed to check 10 matches milestone:', error);
+  }
 }
 
 export async function emitMatchIntroduced(

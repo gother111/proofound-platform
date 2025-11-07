@@ -5,18 +5,20 @@ import { sql, and, gte, lte, eq } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { sendDeletionReminderEmail, sendDeletionCompleteEmail } from '@/lib/email';
 import { createClient } from '@/lib/supabase/server';
+import { generateFairnessNote } from '@/lib/analytics/fairness-note-generator';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
- * Vercel Cron Job: Account Deletion Workflow (Combined)
+ * Vercel Cron Job: Account Deletion Workflow + Fairness Note Generation
  *
  * Schedule: Daily at 2:00 AM UTC
  *
- * This job performs two tasks in sequence:
+ * This job performs three tasks in sequence:
  * 1. Send 7-day deletion reminder emails
  * 2. Process accounts past their grace period (anonymize and delete)
+ * 3. Generate fairness note for the release (PRD Part 2, line 92)
  *
  * Combined to optimize Vercel cron job usage (2 cron limit on current plan)
  *
@@ -267,6 +269,41 @@ export async function GET(request: NextRequest) {
     });
 
     // ========================================
+    // STEP 3: Generate Fairness Note
+    // ========================================
+
+    log.info('cron.account_deletion_workflow.fairness_note_started');
+
+    let fairnessNoteId: string | null = null;
+    let fairnessNoteStatus = 'skipped';
+
+    try {
+      // Generate release version based on current date (e.g., "2025-11-07")
+      const releaseVersion = now.toISOString().split('T')[0];
+
+      // Generate fairness note for the past 7 days
+      fairnessNoteId = await generateFairnessNote(releaseVersion, 'system');
+      fairnessNoteStatus = 'success';
+
+      log.info('cron.account_deletion_workflow.fairness_note_generated', {
+        noteId: fairnessNoteId,
+        releaseVersion,
+      });
+    } catch (error) {
+      fairnessNoteStatus = 'error';
+      log.error('cron.account_deletion_workflow.fairness_note_failed', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+      // Continue execution even if fairness note fails
+    }
+
+    log.info('cron.account_deletion_workflow.fairness_note_completed', {
+      status: fairnessNoteStatus,
+      noteId: fairnessNoteId,
+    });
+
+    // ========================================
     // Final Summary
     // ========================================
 
@@ -294,6 +331,10 @@ export async function GET(request: NextRequest) {
       deletions: {
         processed: accountsToDelete.length,
         results: deletionResults,
+      },
+      fairnessNote: {
+        status: fairnessNoteStatus,
+        noteId: fairnessNoteId,
       },
     });
   } catch (error) {

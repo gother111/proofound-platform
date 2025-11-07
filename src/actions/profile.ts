@@ -16,6 +16,7 @@ import {
 } from '@/db/schema';
 import { requireAuth } from '@/lib/auth';
 import { emitProfileActivated } from '@/lib/analytics/events';
+import { triggerProfileActivationSurvey } from '@/lib/surveys/sus-triggers';
 import type {
   ProfileData,
   BasicInfo,
@@ -93,6 +94,9 @@ async function checkAndEmitProfileActivation(userId: string): Promise<void> {
       hasPurposeBlock,
       hasMatchingProfile,
     });
+
+    // Trigger SUS survey for profile activation milestone
+    await triggerProfileActivationSurvey(userId);
 
     // Mark as emitted to prevent duplicates
     activatedProfiles.add(userId);

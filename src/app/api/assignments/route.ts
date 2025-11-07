@@ -14,6 +14,7 @@ import { eq, and } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { emitAssignmentPublished } from '@/lib/analytics/events';
 import { notifyAssignmentPublished } from '@/lib/notifications';
+import { triggerFirstAssignmentSurvey } from '@/lib/surveys/sus-triggers';
 import {
   scoreValues,
   scoreCauses,
@@ -364,6 +365,27 @@ export async function POST(request: NextRequest) {
       orgId,
       role: newAssignment.role,
     });
+
+    // Check if this is the organization's first assignment and trigger SUS survey
+    try {
+      const existingAssignments = await db
+        .select({ id: assignments.id })
+        .from(assignments)
+        .where(eq(assignments.orgId, orgId))
+        .limit(2); // Just need to know if there are 1 or more
+
+      if (existingAssignments.length === 1) {
+        // This is the first assignment - trigger SUS survey for the user who created it
+        await triggerFirstAssignmentSurvey(user.id);
+      }
+    } catch (error) {
+      log.error('sus_survey.first_assignment_check_failed', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        userId: user.id,
+        orgId,
+      });
+      // Don't let survey trigger failure break assignment creation
+    }
 
     // Check if assignment was created with 'active' status and meets activation criteria
     if (newAssignment.status === 'active') {

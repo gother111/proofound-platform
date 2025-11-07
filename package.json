@@ -18,6 +18,7 @@
     "test": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "test:a11y": "playwright test tests/a11y/",
     "test:privacy": "vitest run --config vitest.supabase.config.ts tests/privacy/rls-policies.test.ts",
     "test:privacy:all": "vitest run --config vitest.supabase.config.ts tests/privacy",
     "test:privacy:watch": "vitest watch --config vitest.supabase.config.ts tests/privacy",

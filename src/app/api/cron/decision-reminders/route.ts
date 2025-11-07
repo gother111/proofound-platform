@@ -1,12 +1,18 @@
 /**
- * Decision Reminders Cron Job
+ * Decision Reminders + Performance Health Check Cron Job
  *
- * Runs every 6 hours to check for interviews awaiting decisions
- * Sends reminders at: 24h, 40h, 48h (deadline), 54h (overdue)
+ * Schedule: Daily at 10:00 AM UTC
+ *
+ * This job performs two tasks in sequence:
+ * 1. Process decision reminders for pending interviews
+ * 2. Run performance health check and alert if SLA breached (PRD Part 8, lines 1813-1817)
+ *
+ * Combined to optimize Vercel cron job usage (2 cron limit on current plan)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { processDecisionReminders } from '@/lib/decisions/automation';
+import { checkPerformanceHealth, sendPerformanceAlert } from '@/lib/analytics/health-check';
 import { log } from '@/lib/log';
 
 export const runtime = 'nodejs';
@@ -25,15 +31,64 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // ========================================
+    // STEP 1: Process Decision Reminders
+    // ========================================
+
     log.info('decision.reminders.cron.start');
 
-    const result = await processDecisionReminders();
+    const decisionResult = await processDecisionReminders();
 
-    log.info('decision.reminders.cron.complete', result);
+    log.info('decision.reminders.cron.complete', decisionResult);
+
+    // ========================================
+    // STEP 2: Performance Health Check
+    // ========================================
+
+    log.info('performance.health_check.cron.start');
+
+    let healthStatus = null;
+    let healthCheckStatus = 'skipped';
+
+    try {
+      healthStatus = await checkPerformanceHealth();
+      healthCheckStatus = healthStatus.healthy ? 'healthy' : 'unhealthy';
+
+      // Send alert if unhealthy
+      if (!healthStatus.healthy) {
+        await sendPerformanceAlert(healthStatus);
+        log.warn('performance.health_check.alert_sent', {
+          breaches: healthStatus.breaches.length,
+          metrics: healthStatus.metrics,
+        });
+      }
+
+      log.info('performance.health_check.cron.complete', {
+        status: healthCheckStatus,
+        breaches: healthStatus.breaches.length,
+      });
+    } catch (error) {
+      healthCheckStatus = 'error';
+      log.error('performance.health_check.cron.failed', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+      // Continue execution even if health check fails
+    }
+
+    // ========================================
+    // Final Summary
+    // ========================================
 
     return NextResponse.json({
       success: true,
-      ...result,
+      decisionReminders: decisionResult,
+      performanceHealthCheck: {
+        status: healthCheckStatus,
+        healthy: healthStatus?.healthy ?? null,
+        breaches: healthStatus?.breaches.length ?? 0,
+        metrics: healthStatus?.metrics ?? null,
+      },
     });
   } catch (error) {
     log.error('decision.reminders.cron.failed', {

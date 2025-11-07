@@ -2436,3 +2436,106 @@ export const fairnessReports = pgTable('fairness_reports', {
 
 export type FairnessReport = typeof fairnessReports.$inferSelect;
 export type InsertFairnessReport = typeof fairnessReports.$inferInsert;
+
+// ====================================
+// System Usability Scale (SUS) Surveys
+// ====================================
+// PRD: Part 2 (lines 83-84), Part 12
+// Target: SUS ≥75
+
+export const susSurveys = pgTable('sus_surveys', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+
+  // Collection point trigger
+  trigger: text('trigger', {
+    enum: ['profile_activation', 'first_assignment', '10_matches', 'quarterly_checkin'],
+  }).notNull(),
+
+  // Individual question responses (1-5 Likert scale)
+  q1: integer('q1').notNull(),
+  q2: integer('q2').notNull(),
+  q3: integer('q3').notNull(),
+  q4: integer('q4').notNull(),
+  q5: integer('q5').notNull(),
+  q6: integer('q6').notNull(),
+  q7: integer('q7').notNull(),
+  q8: integer('q8').notNull(),
+  q9: integer('q9').notNull(),
+  q10: integer('q10').notNull(),
+
+  // Calculated SUS score (0-100)
+  score: numeric('score', { precision: 5, scale: 2 }).notNull(),
+
+  // Grade (A, B, C, D, F)
+  grade: text('grade', { enum: ['A', 'B', 'C', 'D', 'F'] }).notNull(),
+
+  // Metadata
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  completedAt: timestamp('completed_at').defaultNow().notNull(),
+});
+
+export const susSurveyPrompts = pgTable('sus_survey_prompts', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  trigger: text('trigger', {
+    enum: ['profile_activation', 'first_assignment', '10_matches', 'quarterly_checkin'],
+  }).notNull(),
+
+  // Status: pending, completed, skipped, expired
+  status: text('status', {
+    enum: ['pending', 'completed', 'skipped', 'expired'],
+  })
+    .default('pending')
+    .notNull(),
+
+  // When the prompt should be shown
+  scheduledAt: timestamp('scheduled_at').defaultNow().notNull(),
+
+  // When the prompt was shown
+  shownAt: timestamp('shown_at'),
+
+  // When the user took action (completed/skipped)
+  actionedAt: timestamp('actioned_at'),
+
+  // Link to completed survey
+  surveyId: uuid('survey_id').references(() => susSurveys.id, { onDelete: 'set null' }),
+
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export type SusSurvey = typeof susSurveys.$inferSelect;
+export type InsertSusSurvey = typeof susSurveys.$inferInsert;
+export type SusSurveyPrompt = typeof susSurveyPrompts.$inferSelect;
+export type InsertSusSurveyPrompt = typeof susSurveyPrompts.$inferInsert;
+
+// ====================================
+// Purpose Edit Audit Trail
+// ====================================
+// PRD: Part 2 - Purpose Block auditing requirement
+// Tracks changes to mission and vision fields
+
+export const purposeEditLog = pgTable('purpose_edit_log', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+
+  // Which field was changed ('mission' or 'vision')
+  fieldName: text('field_name', { enum: ['mission', 'vision'] }).notNull(),
+
+  // Old and new values (full text)
+  oldValue: text('old_value'),
+  newValue: text('new_value'),
+
+  // When the change occurred
+  changedAt: timestamp('changed_at').defaultNow().notNull(),
+});
+
+export type PurposeEditLog = typeof purposeEditLog.$inferSelect;
+export type InsertPurposeEditLog = typeof purposeEditLog.$inferInsert;
