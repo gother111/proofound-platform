@@ -32,7 +32,6 @@ import {
   Linkedin,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { log } from '@/lib/log';
 import { generateEmbedCode, generateShareText } from '@/lib/profile/snippet-generator';
 
 interface ShareProfileDialogProps {
@@ -112,12 +111,12 @@ export function ShareProfileDialog({
         description: 'Your profile snippet is ready to share',
       });
 
-      log.info('profile.snippet.generated', {
+      console.log('profile.snippet.generated', {
         format,
         theme,
       });
     } catch (error) {
-      log.error('profile.snippet.generate.failed', {
+      console.error('profile.snippet.generate.failed', {
         error: error instanceof Error ? error.message : 'Unknown error',
       });
       toast({

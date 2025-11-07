@@ -21,7 +21,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { CheckCircle2, ArrowRight, Clock, XCircle, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { log } from '@/lib/log';
 
 interface DecisionDialogProps {
   isOpen: boolean;
@@ -79,7 +78,7 @@ export function DecisionDialog({
         deadline: data.deadline,
       });
     } catch (error) {
-      log.error('decision.window.fetch.failed', {
+      console.error('decision.window.fetch.failed', {
         interviewId,
         error: error instanceof Error ? error.message : 'Unknown error',
       });
@@ -132,7 +131,7 @@ export function DecisionDialog({
         }`,
       });
 
-      log.info('decision.submitted', {
+      console.log('decision.submitted', {
         interviewId,
         decision,
         withinSLA: data.decision.withinSLA,
@@ -148,7 +147,7 @@ export function DecisionDialog({
       setDecision(null);
       setFeedback('');
     } catch (error) {
-      log.error('decision.submit.failed', {
+      console.error('decision.submit.failed', {
         interviewId,
         decision,
         error: error instanceof Error ? error.message : 'Unknown error',

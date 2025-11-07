@@ -21,7 +21,6 @@ import {
   AlertTriangle,
   CheckCircle2,
 } from 'lucide-react';
-import { log } from '@/lib/log';
 
 interface WebVitalMetric {
   metric_name: string;
@@ -89,7 +88,7 @@ export function PerformanceDashboard() {
       const data = await response.json();
       setMetrics(data.metrics || []);
     } catch (error) {
-      log.error('performance.dashboard.load.failed', {
+      console.error('performance.dashboard.load.failed', {
         error: error instanceof Error ? error.message : 'Unknown error',
       });
     } finally {

@@ -26,7 +26,6 @@ import {
   Filter,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { log } from '@/lib/log';
 
 interface AuditEvent {
   id: string;
@@ -93,7 +92,7 @@ export function AuditLogViewer() {
       setTotal(data.total);
       setHasMore(data.hasMore);
     } catch (error) {
-      log.error('audit_log.load.failed', {
+      console.error('audit_log.load.failed', {
         error: error instanceof Error ? error.message : 'Unknown error',
       });
       toast({
@@ -135,7 +134,7 @@ export function AuditLogViewer() {
         description: 'Your activity history has been downloaded',
       });
     } catch (error) {
-      log.error('audit_log.export.failed', {
+      console.error('audit_log.export.failed', {
         error: error instanceof Error ? error.message : 'Unknown error',
       });
       toast({

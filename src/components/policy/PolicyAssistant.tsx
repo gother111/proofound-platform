@@ -14,7 +14,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { MessageCircle, Send, Sparkles, Shield, Info, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { log } from '@/lib/log';
 
 interface Message {
   id: string;
@@ -63,7 +62,7 @@ export function PolicyAssistant() {
         setCommonQuestions(data.commonQuestions || []);
       }
     } catch (error) {
-      log.error('policy.assistant.load_questions.failed', {
+      console.error('policy.assistant.load_questions.failed', {
         error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
@@ -113,7 +112,7 @@ export function PolicyAssistant() {
 
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
-      log.error('policy.assistant.ask.failed', {
+      console.error('policy.assistant.ask.failed', {
         error: error instanceof Error ? error.message : 'Unknown error',
       });
 

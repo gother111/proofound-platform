@@ -10,7 +10,6 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileDown, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { log } from '@/lib/log';
 
 interface EvidencePackButtonProps {
   candidateId: string;
@@ -34,7 +33,7 @@ export function EvidencePackButton({
     try {
       setIsGenerating(true);
 
-      log.info('evidence_pack.download.start', {
+      console.log('evidence_pack.download.start', {
         candidateId,
         assignmentId,
       });
@@ -67,12 +66,12 @@ export function EvidencePackButton({
         description: 'PDF has been saved to your downloads',
       });
 
-      log.info('evidence_pack.download.success', {
+      console.log('evidence_pack.download.success', {
         candidateId,
         assignmentId,
       });
     } catch (error) {
-      log.error('evidence_pack.download.failed', {
+      console.error('evidence_pack.download.failed', {
         candidateId,
         assignmentId,
         error: error instanceof Error ? error.message : 'Unknown error',

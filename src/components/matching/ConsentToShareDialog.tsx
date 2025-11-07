@@ -23,7 +23,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Eye, EyeOff, Shield, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { log } from '@/lib/log';
 
 interface ConsentToShareDialogProps {
   isOpen: boolean;
@@ -78,10 +77,7 @@ export function ConsentToShareDialog({
 
       await onConsent(matchId);
 
-      log.info('match.consent.given', {
-        matchId,
-        organizationName,
-      });
+      console.log('Consent given for match:', matchId);
 
       toast({
         title: 'Consent given',
@@ -90,10 +86,7 @@ export function ConsentToShareDialog({
 
       onClose();
     } catch (error) {
-      log.error('match.consent.failed', {
-        matchId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      console.error('Failed to record consent:', error);
       toast({
         title: 'Failed to record consent',
         description: 'Please try again',
