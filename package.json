@@ -76,7 +76,7 @@
     "react-dom": "^18.2.0",
     "react-email": "^4.3.2",
     "react-hook-form": "^7.50.1",
-    "react-joyride": "^2.9.3",
+    "react-joyride": "^3.0.0-7",
     "react-markdown": "^10.1.0",
     "recharts": "^2.12.7",
     "remark-gfm": "^4.0.1",

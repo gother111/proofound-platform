@@ -23,7 +23,6 @@ import { useEffect, useState, useCallback } from 'react';
 import Joyride, { CallBackProps, STATUS, EVENTS, ACTIONS } from 'react-joyride';
 import { individualTourSteps, organizationTourSteps, tourStyles } from './tourSteps.tsx';
 import { toast } from 'sonner';
-import { emitTourStarted, emitTourCompleted, emitTourSkipped } from '@/lib/analytics/events';
 
 interface GuidedTourProps {
   userId: string;
@@ -40,7 +39,12 @@ export function GuidedTour({ userId, persona, shouldRun, onComplete, onSkip }: G
   // Emit tour started event when tour begins
   useEffect(() => {
     if (shouldRun && run) {
-      emitTourStarted(userId);
+      // Emit analytics event via API to avoid Node.js imports in client component
+      fetch('/api/analytics/tour-event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, event: 'started' }),
+      }).catch(console.error);
     }
   }, [shouldRun, run, userId]);
 
@@ -66,7 +70,11 @@ export function GuidedTour({ userId, persona, shouldRun, onComplete, onSkip }: G
       // Handle tour completion
       if (status === STATUS.FINISHED) {
         setRun(false);
-        emitTourCompleted(userId);
+        fetch('/api/analytics/tour-event', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, event: 'completed' }),
+        }).catch(console.error);
         onComplete();
         toast.success('Tour completed! You can replay it anytime from Settings.');
       }
@@ -74,7 +82,11 @@ export function GuidedTour({ userId, persona, shouldRun, onComplete, onSkip }: G
       // Handle tour being skipped
       if (status === STATUS.SKIPPED || action === ACTIONS.CLOSE) {
         setRun(false);
-        emitTourSkipped(userId, stepIndex);
+        fetch('/api/analytics/tour-event', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, event: 'skipped', stepIndex }),
+        }).catch(console.error);
         onSkip();
         toast.info('Tour skipped. You can restart it anytime from Settings.');
       }
