@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation';
 import { SignIn } from '@/components/auth/SignIn';
 import { resolveUserHomePath } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: 'Sign In | Proofound',
   description: 'Sign in to your Proofound account',
