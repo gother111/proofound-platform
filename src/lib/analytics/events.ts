@@ -30,12 +30,12 @@ import {
 // ============================================================================
 
 /**
- * Base event emission function
+ * Base event emission function (internal use)
  *
  * Per PRD Part 8: Event emission must not block user actions (async)
  * Per PRD Part 7: No PII in properties; use IDs/enums
  */
-async function emitEvent(
+async function emitEventInternal(
   eventType: EventTypeValue,
   userId: string | null,
   orgId: string | null = null,
@@ -85,7 +85,7 @@ export function emitEventAsync(
   entityId: string | null = null
 ): void {
   // Fire and forget - don't await
-  emitEvent(eventType, userId, orgId, properties, entityType, entityId).catch((error) => {
+  emitEventInternal(eventType, userId, orgId, properties, entityType, entityId).catch((error) => {
     log.error('Event emission failed (async)', { error, eventType, userId });
   });
 }
@@ -106,7 +106,14 @@ export async function emitProfileActivated(
   userId: string,
   properties: ProfileActivatedProperties
 ): Promise<void> {
-  return emitEvent(EventType.PROFILE_ACTIVATED, userId, null, properties, 'profile', userId);
+  return emitEventInternal(
+    EventType.PROFILE_ACTIVATED,
+    userId,
+    null,
+    properties,
+    'profile',
+    userId
+  );
 }
 
 /**
@@ -218,7 +225,7 @@ export async function emitMatchViewed(
   matchId: string,
   properties: MatchViewedProperties
 ): Promise<void> {
-  return emitEvent(EventType.MATCH_VIEWED, userId, null, properties, 'match', matchId);
+  return emitEventInternal(EventType.MATCH_VIEWED, userId, null, properties, 'match', matchId);
 }
 
 /**
@@ -260,7 +267,7 @@ export async function emitFirstQualifiedIntro(
   matchId: string,
   assignmentId: string
 ): Promise<void> {
-  return emitEvent(
+  return emitEventInternal(
     EventType.FIRST_QUALIFIED_INTRO,
     userId,
     null,
@@ -307,7 +314,7 @@ export async function emitInterviewScheduled(
   interviewId: string,
   properties: InterviewScheduledProperties
 ): Promise<void> {
-  return emitEvent(
+  return emitEventInternal(
     EventType.INTERVIEW_SCHEDULED,
     userId,
     null,
@@ -359,7 +366,14 @@ export async function emitContractSigned(
   contractId: string,
   properties: ContractSignedProperties
 ): Promise<void> {
-  return emitEvent(EventType.CONTRACT_SIGNED, userId, null, properties, 'contract', contractId);
+  return emitEventInternal(
+    EventType.CONTRACT_SIGNED,
+    userId,
+    null,
+    properties,
+    'contract',
+    contractId
+  );
 }
 
 /**
@@ -413,7 +427,7 @@ export async function emitWellbeingCheckin(
   checkinId: string,
   properties: WellbeingCheckinProperties
 ): Promise<void> {
-  return emitEvent(
+  return emitEventInternal(
     EventType.WELLBEING_CHECKIN,
     userId,
     null,
@@ -473,7 +487,7 @@ export async function emitSUSSurveyCompleted(
   surveyId: string,
   properties: SUSSurveyProperties
 ): Promise<void> {
-  return emitEvent(
+  return emitEventInternal(
     EventType.SUS_SURVEY_COMPLETED,
     userId,
     null,
@@ -548,7 +562,7 @@ export async function emitFirstMatchShown(
   assignmentId: string,
   properties?: { score?: number; mode?: string }
 ): Promise<void> {
-  await emitEvent(EventType.FIRST_MATCH_SHOWN, userId, null, {
+  await emitEventInternal(EventType.FIRST_MATCH_SHOWN, userId, null, {
     assignment_id: assignmentId,
     ...properties,
   });
