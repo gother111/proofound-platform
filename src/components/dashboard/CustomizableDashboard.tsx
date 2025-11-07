@@ -153,6 +153,7 @@ export function CustomizableDashboard({ userId, persona }: CustomizableDashboard
 
   useEffect(() => {
     fetchLayout();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchLayout = async () => {

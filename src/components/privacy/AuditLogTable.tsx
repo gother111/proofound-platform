@@ -2,10 +2,10 @@
 
 /**
  * AuditLogTable Component
- * 
+ *
  * Displays user's audit log with pagination.
  * Shows recent activity for transparency (GDPR Article 15 compliance).
- * 
+ *
  * Reference: DATA_SECURITY_PRIVACY_ARCHITECTURE.md Section 13.3
  */
 
@@ -43,6 +43,7 @@ export function AuditLogTable() {
 
   useEffect(() => {
     fetchAuditLog();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
   const fetchAuditLog = async () => {
@@ -170,9 +171,7 @@ export function AuditLogTable() {
 
             {/* Pagination */}
             <div className="flex items-center justify-between mt-4">
-              <div className="text-sm text-muted-foreground">
-                Showing page {page} of activity
-              </div>
+              <div className="text-sm text-muted-foreground">Showing page {page} of activity</div>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
@@ -208,4 +207,3 @@ export function AuditLogTable() {
     </Card>
   );
 }
-

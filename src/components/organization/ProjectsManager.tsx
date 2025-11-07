@@ -64,6 +64,7 @@ export function ProjectsManager({ orgId }: ProjectsManagerProps) {
 
   useEffect(() => {
     fetchProjects();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orgId]);
 
   const handleSave = async (projectData: Partial<Project>) => {
@@ -179,7 +180,10 @@ export function ProjectsManager({ orgId }: ProjectsManagerProps) {
             <p className="text-sm text-muted-foreground mb-4">
               Start by adding your first project to showcase your work
             </p>
-            <Button onClick={handleAdd} className="bg-proofound-forest hover:bg-proofound-forest/90">
+            <Button
+              onClick={handleAdd}
+              className="bg-proofound-forest hover:bg-proofound-forest/90"
+            >
               <Plus className="w-4 h-4 mr-2" />
               Add Project
             </Button>
@@ -196,9 +200,7 @@ export function ProjectsManager({ orgId }: ProjectsManagerProps) {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <CardTitle className="text-lg">{project.title}</CardTitle>
-                        {project.isVerified && (
-                          <CheckCircle className="w-4 h-4 text-green-600" />
-                        )}
+                        {project.isVerified && <CheckCircle className="w-4 h-4 text-green-600" />}
                       </div>
                       <span
                         className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -218,11 +220,15 @@ export function ProjectsManager({ orgId }: ProjectsManagerProps) {
 
                   <div className="space-y-2">
                     <div>
-                      <p className="text-xs font-medium text-proofound-charcoal/60">Impact Created</p>
+                      <p className="text-xs font-medium text-proofound-charcoal/60">
+                        Impact Created
+                      </p>
                       <p className="text-sm">{project.impactCreated}</p>
                     </div>
                     <div>
-                      <p className="text-xs font-medium text-proofound-charcoal/60">Business Value</p>
+                      <p className="text-xs font-medium text-proofound-charcoal/60">
+                        Business Value
+                      </p>
                       <p className="text-sm">{project.businessValue}</p>
                     </div>
                     <div>
@@ -234,16 +240,10 @@ export function ProjectsManager({ orgId }: ProjectsManagerProps) {
                   <div className="flex items-center justify-between pt-2 border-t">
                     <span className="text-xs text-muted-foreground">
                       {new Date(project.startDate).toLocaleDateString()} -{' '}
-                      {project.endDate
-                        ? new Date(project.endDate).toLocaleDateString()
-                        : 'Ongoing'}
+                      {project.endDate ? new Date(project.endDate).toLocaleDateString() : 'Ongoing'}
                     </span>
                     <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(project)}
-                      >
+                      <Button variant="outline" size="sm" onClick={() => handleEdit(project)}>
                         Edit
                       </Button>
                       <Button

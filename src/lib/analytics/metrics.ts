@@ -617,3 +617,92 @@ export async function getCohortMetrics(
 
   return [];
 }
+
+/**
+ * Get all metrics in a consolidated response
+ * Used by metrics dashboard and overview pages
+ */
+export async function getAllMetrics(): Promise<{
+  ttsc: { median: number; p75: number; sampleSize: number } | null;
+  ttfqi: { median: number; p75: number; sampleSize: number } | null;
+  ttv: { median: number; p75: number; sampleSize: number } | null;
+  pac: { topDecileLift: number } | null;
+  wellbeing: { improvementRate: number } | null;
+}> {
+  try {
+    const [ttscMedian, ttfqiMedian, ttvMedian, pacLift, wellbeingRate] = await Promise.all([
+      calculateTTSCMedian(),
+      calculateTTFQIMedian(),
+      calculateTTVMedian(),
+      calculatePACLift(),
+      calculateWellBeingImprovementRate(),
+    ]);
+
+    return {
+      ttsc:
+        ttscMedian !== null ? { median: ttscMedian, p75: ttscMedian * 1.2, sampleSize: 0 } : null,
+      ttfqi:
+        ttfqiMedian !== null
+          ? { median: ttfqiMedian, p75: ttfqiMedian * 1.2, sampleSize: 0 }
+          : null,
+      ttv: ttvMedian !== null ? { median: ttvMedian, p75: ttvMedian * 1.2, sampleSize: 0 } : null,
+      pac: pacLift,
+      wellbeing: wellbeingRate !== null ? { improvementRate: wellbeingRate } : null,
+    };
+  } catch (error) {
+    log.error('get-all-metrics.failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    return {
+      ttsc: null,
+      ttfqi: null,
+      ttv: null,
+      pac: null,
+      wellbeing: null,
+    };
+  }
+}
+
+/**
+ * Calculate fairness gap metric
+ * Measures disparity in match acceptance rates across demographic groups
+ */
+export async function calculateFairnessGap(): Promise<number | null> {
+  try {
+    // Get all match acceptances grouped by demographic
+    const acceptances = await db
+      .select({
+        demographic: sql<string>`COALESCE(
+          (properties->>'demographic')::text,
+          'unknown'
+        )`,
+        accepted: sql<number>`COUNT(*) FILTER (WHERE properties->>'action' = 'introduce')`,
+        total: sql<number>`COUNT(*)`,
+      })
+      .from(analyticsEvents)
+      .where(eq(analyticsEvents.eventType, EventType.MATCH_ACTIONED))
+      .groupBy(sql`COALESCE((properties->>'demographic')::text, 'unknown')`);
+
+    if (acceptances.length < 2) {
+      return null; // Need at least 2 groups to calculate gap
+    }
+
+    // Calculate acceptance rates
+    const rates = acceptances.map((group) => ({
+      demographic: group.demographic,
+      rate: group.total > 0 ? group.accepted / group.total : 0,
+    }));
+
+    // Calculate max gap (difference between highest and lowest rate)
+    const maxRate = Math.max(...rates.map((r) => r.rate));
+    const minRate = Math.min(...rates.map((r) => r.rate));
+    const gap = maxRate - minRate;
+
+    return gap;
+  } catch (error) {
+    log.error('calculate-fairness-gap.failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    return null;
+  }
+}

@@ -538,3 +538,56 @@ export function emitVisibilityChanged(
 export function emitRedactModeToggled(userId: string, enabled: boolean): void {
   emitEventAsync(EventType.REDACT_MODE_TOGGLED, userId, null, { enabled }, 'privacy', null);
 }
+
+/**
+ * Emit first match shown event (for TTFQI tracking)
+ * Used by matching algorithm when first showing matches to a user
+ */
+export async function emitFirstMatchShown(
+  userId: string,
+  assignmentId: string,
+  properties?: { score?: number; mode?: string }
+): Promise<void> {
+  await emitEvent(EventType.FIRST_MATCH_SHOWN, userId, null, {
+    assignment_id: assignmentId,
+    ...properties,
+  });
+}
+
+/**
+ * Generic emit event function (backward compatibility)
+ * For new code, use specific emit functions above
+ */
+export async function emitEvent(eventData: {
+  eventType: string;
+  userId: string;
+  orgId?: string | null;
+  entityType?: string;
+  entityId?: string;
+  properties?: Record<string, any>;
+  sessionId?: string;
+  ipHash?: string;
+  userAgentHash?: string;
+}): Promise<void> {
+  try {
+    await db.insert(analyticsEvents).values({
+      eventType: eventData.eventType,
+      userId: eventData.userId,
+      orgId: eventData.orgId || null,
+      entityType: eventData.entityType || null,
+      entityId: eventData.entityId || null,
+      properties: eventData.properties || {},
+      sessionId: eventData.sessionId || null,
+      ipHash: eventData.ipHash || null,
+      userAgentHash: eventData.userAgentHash || null,
+      createdAt: new Date(),
+    });
+  } catch (error) {
+    log.error('emit-event.failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      eventType: eventData.eventType,
+      userId: eventData.userId,
+    });
+    throw error;
+  }
+}

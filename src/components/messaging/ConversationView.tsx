@@ -2,10 +2,10 @@
 
 /**
  * ConversationView Component
- * 
+ *
  * Displays a conversation with messages, handling both masked and revealed stages.
  * Shows identity reveal controls when appropriate.
- * 
+ *
  * Reference: DATA_SECURITY_PRIVACY_ARCHITECTURE.md Section 10
  */
 
@@ -78,6 +78,7 @@ export function ConversationView({ conversationId }: ConversationViewProps) {
   useEffect(() => {
     fetchConversation();
     fetchMessages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId]);
 
   // Auto-scroll to bottom on new messages
@@ -127,11 +128,13 @@ export function ConversationView({ conversationId }: ConversationViewProps) {
 
       if (res.status === 400 && data.error === 'PII_DETECTED') {
         // Return PII detection result to MessageInput
-        throw new Error(JSON.stringify({
-          type: 'PII_DETECTED',
-          message: data.message,
-          detection: data.detection,
-        }));
+        throw new Error(
+          JSON.stringify({
+            type: 'PII_DETECTED',
+            message: data.message,
+            detection: data.detection,
+          })
+        );
       }
 
       if (!res.ok) {
@@ -209,9 +212,7 @@ export function ConversationView({ conversationId }: ConversationViewProps) {
             </AvatarFallback>
           </Avatar>
           <div className="flex-1">
-            <h2 className="font-semibold">
-              {otherParticipant.displayName || 'Unknown User'}
-            </h2>
+            <h2 className="font-semibold">{otherParticipant.displayName || 'Unknown User'}</h2>
             {otherParticipant.masked && (
               <Badge variant="secondary" className="mt-1">
                 🔒 Anonymous
@@ -282,21 +283,15 @@ function MessageBubble({ message, isRevealed }: MessageBubbleProps) {
   const hasPII = message.containsEmail || message.containsPhone || message.containsUrl;
 
   return (
-    <div
-      className={`flex ${message.isOwnMessage ? 'justify-end' : 'justify-start'}`}
-    >
+    <div className={`flex ${message.isOwnMessage ? 'justify-end' : 'justify-start'}`}>
       <div
         className={`max-w-[70%] rounded-lg p-3 ${
-          message.isOwnMessage
-            ? 'bg-primary text-primary-foreground'
-            : 'bg-muted'
+          message.isOwnMessage ? 'bg-primary text-primary-foreground' : 'bg-muted'
         }`}
       >
         {/* Sender name (if not own message and revealed) */}
         {!message.isOwnMessage && message.sender.displayName && (
-          <p className="mb-1 text-xs font-semibold opacity-70">
-            {message.sender.displayName}
-          </p>
+          <p className="mb-1 text-xs font-semibold opacity-70">{message.sender.displayName}</p>
         )}
 
         {/* Message content */}
@@ -331,11 +326,7 @@ function MessageBubble({ message, isRevealed }: MessageBubbleProps) {
           <span>{format(new Date(message.sentAt), 'h:mm a')}</span>
           {message.isOwnMessage && (
             <>
-              {message.readAt ? (
-                <CheckCheck className="h-3 w-3" />
-              ) : (
-                <Check className="h-3 w-3" />
-              )}
+              {message.readAt ? <CheckCheck className="h-3 w-3" /> : <Check className="h-3 w-3" />}
             </>
           )}
         </div>
@@ -343,4 +334,3 @@ function MessageBubble({ message, isRevealed }: MessageBubbleProps) {
     </div>
   );
 }
-

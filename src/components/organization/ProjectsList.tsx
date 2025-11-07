@@ -55,6 +55,7 @@ export function ProjectsList({ orgId, canEdit = true }: ProjectsListProps) {
 
   useEffect(() => {
     fetchProjects();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orgId]);
 
   const fetchProjects = async () => {
@@ -73,12 +74,16 @@ export function ProjectsList({ orgId, canEdit = true }: ProjectsListProps) {
     }
   };
 
-  const handleSaveProject = async (project: Omit<OrganizationProject, 'id' | 'isVerified' | 'createdAt' | 'updatedAt'> & { id?: string }) => {
+  const handleSaveProject = async (
+    project: Omit<OrganizationProject, 'id' | 'isVerified' | 'createdAt' | 'updatedAt'> & {
+      id?: string;
+    }
+  ) => {
     try {
       const url = project.id
         ? `/api/organizations/${orgId}/projects/${project.id}`
         : `/api/organizations/${orgId}/projects`;
-      
+
       const method = project.id ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
@@ -125,9 +130,8 @@ export function ProjectsList({ orgId, canEdit = true }: ProjectsListProps) {
   };
 
   // Filter projects by status
-  const filteredProjects = statusFilter === 'all'
-    ? projects
-    : projects.filter((p) => p.status === statusFilter);
+  const filteredProjects =
+    statusFilter === 'all' ? projects : projects.filter((p) => p.status === statusFilter);
 
   const isEmpty = projects.length === 0;
 

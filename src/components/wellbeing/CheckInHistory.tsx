@@ -12,12 +12,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { Calendar as CalendarIcon, Download, Filter, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+  Calendar as CalendarIcon,
+  Download,
+  Filter,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+} from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -47,6 +50,7 @@ export function CheckInHistory({ userId }: CheckInHistoryProps) {
 
   useEffect(() => {
     applyFilters();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checkIns, dateRange, stressFilter]);
 
   const fetchCheckIns = async () => {
@@ -72,14 +76,10 @@ export function CheckInHistory({ userId }: CheckInHistoryProps) {
 
     // Date range filter
     if (dateRange.from) {
-      filtered = filtered.filter(
-        (c) => new Date(c.createdAt) >= dateRange.from!
-      );
+      filtered = filtered.filter((c) => new Date(c.createdAt) >= dateRange.from!);
     }
     if (dateRange.to) {
-      filtered = filtered.filter(
-        (c) => new Date(c.createdAt) <= dateRange.to!
-      );
+      filtered = filtered.filter((c) => new Date(c.createdAt) <= dateRange.to!);
     }
 
     // Stress level filter
@@ -110,10 +110,7 @@ export function CheckInHistory({ userId }: CheckInHistoryProps) {
         ];
       });
 
-      const csvContent = [
-        csvHeaders.join(','),
-        ...csvRows.map((row) => row.join(',')),
-      ].join('\n');
+      const csvContent = [csvHeaders.join(','), ...csvRows.map((row) => row.join(','))].join('\n');
 
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = window.URL.createObjectURL(blob);
@@ -140,22 +137,46 @@ export function CheckInHistory({ userId }: CheckInHistoryProps) {
 
   const getStressLevelBadge = (level: number) => {
     if (level >= 1 && level <= 3) {
-      return <Badge variant="outline" className="border-green-500 text-green-700 bg-green-50">Low ({level})</Badge>;
+      return (
+        <Badge variant="outline" className="border-green-500 text-green-700 bg-green-50">
+          Low ({level})
+        </Badge>
+      );
     }
     if (level >= 4 && level <= 6) {
-      return <Badge variant="outline" className="border-yellow-500 text-yellow-700 bg-yellow-50">Medium ({level})</Badge>;
+      return (
+        <Badge variant="outline" className="border-yellow-500 text-yellow-700 bg-yellow-50">
+          Medium ({level})
+        </Badge>
+      );
     }
-    return <Badge variant="outline" className="border-red-500 text-red-700 bg-red-50">High ({level})</Badge>;
+    return (
+      <Badge variant="outline" className="border-red-500 text-red-700 bg-red-50">
+        High ({level})
+      </Badge>
+    );
   };
 
   const getControlLevelBadge = (level: number) => {
     if (level >= 1 && level <= 3) {
-      return <Badge variant="outline" className="border-red-500 text-red-700 bg-red-50">Low ({level})</Badge>;
+      return (
+        <Badge variant="outline" className="border-red-500 text-red-700 bg-red-50">
+          Low ({level})
+        </Badge>
+      );
     }
     if (level >= 4 && level <= 6) {
-      return <Badge variant="outline" className="border-yellow-500 text-yellow-700 bg-yellow-50">Medium ({level})</Badge>;
+      return (
+        <Badge variant="outline" className="border-yellow-500 text-yellow-700 bg-yellow-50">
+          Medium ({level})
+        </Badge>
+      );
     }
-    return <Badge variant="outline" className="border-green-500 text-green-700 bg-green-50">High ({level})</Badge>;
+    return (
+      <Badge variant="outline" className="border-green-500 text-green-700 bg-green-50">
+        High ({level})
+      </Badge>
+    );
   };
 
   const getTrendIcon = (current: number, previous?: number) => {
@@ -165,9 +186,8 @@ export function CheckInHistory({ userId }: CheckInHistoryProps) {
     return <Minus className="w-4 h-4 text-gray-400" />;
   };
 
-  const activeFiltersCount = 
-    (dateRange.from || dateRange.to ? 1 : 0) +
-    (stressFilter !== 'all' ? 1 : 0);
+  const activeFiltersCount =
+    (dateRange.from || dateRange.to ? 1 : 0) + (stressFilter !== 'all' ? 1 : 0);
 
   if (isLoading) {
     return (
@@ -211,7 +231,9 @@ export function CheckInHistory({ userId }: CheckInHistoryProps) {
         <div className="flex flex-wrap gap-3 items-center p-4 bg-[#F7F6F1] dark:bg-background/50 rounded-lg border border-[#E8E6DD] dark:border-border">
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-[#6B6760]" />
-            <span className="text-sm font-medium text-[#2D3330] dark:text-foreground">Filters:</span>
+            <span className="text-sm font-medium text-[#2D3330] dark:text-foreground">
+              Filters:
+            </span>
           </div>
 
           {/* Date Range Filter */}
@@ -250,11 +272,7 @@ export function CheckInHistory({ userId }: CheckInHistoryProps) {
                 variant={stressFilter === level ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setStressFilter(level)}
-                className={
-                  stressFilter === level
-                    ? 'bg-[#1C4D3A] text-white'
-                    : 'border-[#E8E6DD]'
-                }
+                className={stressFilter === level ? 'bg-[#1C4D3A] text-white' : 'border-[#E8E6DD]'}
               >
                 {level.charAt(0).toUpperCase() + level.slice(1)}
               </Button>
@@ -272,7 +290,9 @@ export function CheckInHistory({ userId }: CheckInHistoryProps) {
         {filteredCheckIns.length > 0 && (
           <div className="grid grid-cols-3 gap-4 p-4 bg-white dark:bg-background border border-[#E8E6DD] dark:border-border rounded-lg">
             <div className="text-center">
-              <p className="text-sm text-[#6B6760] dark:text-muted-foreground mb-1">Total Check-Ins</p>
+              <p className="text-sm text-[#6B6760] dark:text-muted-foreground mb-1">
+                Total Check-Ins
+              </p>
               <p className="text-2xl font-semibold text-[#2D3330] dark:text-foreground">
                 {filteredCheckIns.length}
               </p>
@@ -333,7 +353,9 @@ export function CheckInHistory({ userId }: CheckInHistoryProps) {
 
                   <div className="flex gap-4 mb-2">
                     <div>
-                      <p className="text-xs text-[#6B6760] dark:text-muted-foreground">Stress Level</p>
+                      <p className="text-xs text-[#6B6760] dark:text-muted-foreground">
+                        Stress Level
+                      </p>
                       <div className="flex items-center gap-2">
                         <div className="w-24 h-2 bg-[#E8E6DD] dark:bg-border rounded-full overflow-hidden">
                           <div
@@ -348,7 +370,9 @@ export function CheckInHistory({ userId }: CheckInHistoryProps) {
                     </div>
 
                     <div>
-                      <p className="text-xs text-[#6B6760] dark:text-muted-foreground">Control Level</p>
+                      <p className="text-xs text-[#6B6760] dark:text-muted-foreground">
+                        Control Level
+                      </p>
                       <div className="flex items-center gap-2">
                         <div className="w-24 h-2 bg-[#E8E6DD] dark:bg-border rounded-full overflow-hidden">
                           <div
@@ -377,4 +401,3 @@ export function CheckInHistory({ userId }: CheckInHistoryProps) {
     </Card>
   );
 }
-

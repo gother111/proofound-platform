@@ -47,6 +47,7 @@ export function WellBeingDeltaChart({ period = 14, autoFetch = true }: WellBeing
     if (autoFetch) {
       fetchDelta();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPeriod, autoFetch]);
 
   const fetchDelta = async () => {
@@ -55,17 +56,18 @@ export function WellBeingDeltaChart({ period = 14, autoFetch = true }: WellBeing
       const response = await fetch(`/api/wellbeing/delta?period=${selectedPeriod}`);
       if (response.ok) {
         const data = await response.json();
-        
+
         // Fetch check-in history for chart
         const historyResponse = await fetch('/api/wellbeing/checkins');
         if (historyResponse.ok) {
           const historyData = await historyResponse.json();
-          const checkIns = historyData.checkIns?.map((c: any) => ({
-            date: c.created_at,
-            stress: c.stress_level,
-            control: c.control_level,
-          })) || [];
-          
+          const checkIns =
+            historyData.checkIns?.map((c: any) => ({
+              date: c.created_at,
+              stress: c.stress_level,
+              control: c.control_level,
+            })) || [];
+
           setDeltaData({ ...data, checkIns });
         } else {
           setDeltaData(data);
@@ -144,9 +146,7 @@ export function WellBeingDeltaChart({ period = 14, autoFetch = true }: WellBeing
   // Prepare chart data
   const recentCheckIns = (deltaData.checkIns || [])
     .filter((c) => {
-      const daysAgo = Math.floor(
-        (Date.now() - new Date(c.date).getTime()) / (1000 * 60 * 60 * 24)
-      );
+      const daysAgo = Math.floor((Date.now() - new Date(c.date).getTime()) / (1000 * 60 * 60 * 24));
       return daysAgo <= selectedPeriod;
     })
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -194,7 +194,7 @@ export function WellBeingDeltaChart({ period = 14, autoFetch = true }: WellBeing
             <CardTitle className="text-lg font-['Crimson_Pro']">Well-Being Delta</CardTitle>
             <Lock className="w-4 h-4 text-[#6B6760]" />
           </div>
-          
+
           {/* Period Toggle */}
           <div className="flex gap-1">
             <Button
@@ -223,7 +223,7 @@ export function WellBeingDeltaChart({ period = 14, autoFetch = true }: WellBeing
             </Button>
           </div>
         </div>
-        
+
         <CardDescription className="text-[#6B6760]">
           {deltaData.checkinsCount} check-ins • {selectedPeriod}-day comparison to baseline
         </CardDescription>
@@ -257,7 +257,11 @@ export function WellBeingDeltaChart({ period = 14, autoFetch = true }: WellBeing
               </Badge>
             </div>
             <p className="text-xs text-[#6B6760]">
-              {deltaData.stressDelta > 0 ? 'Less stress ↓' : deltaData.stressDelta < 0 ? 'More stress ↑' : 'No change'}
+              {deltaData.stressDelta > 0
+                ? 'Less stress ↓'
+                : deltaData.stressDelta < 0
+                  ? 'More stress ↑'
+                  : 'No change'}
             </p>
           </div>
 
@@ -286,7 +290,11 @@ export function WellBeingDeltaChart({ period = 14, autoFetch = true }: WellBeing
               </Badge>
             </div>
             <p className="text-xs text-[#6B6760]">
-              {deltaData.controlDelta > 0 ? 'More control ↑' : deltaData.controlDelta < 0 ? 'Less control ↓' : 'No change'}
+              {deltaData.controlDelta > 0
+                ? 'More control ↑'
+                : deltaData.controlDelta < 0
+                  ? 'Less control ↓'
+                  : 'No change'}
             </p>
           </div>
         </div>
@@ -324,7 +332,7 @@ export function WellBeingDeltaChart({ period = 14, autoFetch = true }: WellBeing
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
-                
+
                 {/* Control line (green) */}
                 <path
                   d={controlPath}
@@ -399,4 +407,3 @@ export function WellBeingDeltaChart({ period = 14, autoFetch = true }: WellBeing
     </Card>
   );
 }
-
