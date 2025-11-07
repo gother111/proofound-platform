@@ -9,24 +9,43 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Eye, EyeOff, Users, Globe } from 'lucide-react';
 
 interface MissionEditorProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   mission: string | null;
-  onSave: (mission: string) => void;
+  visibility?: 'public' | 'network' | 'private';
+  onSave: (mission: string, visibility?: 'public' | 'network' | 'private') => void;
 }
 
-export function MissionEditor({ open, onOpenChange, mission, onSave }: MissionEditorProps) {
+export function MissionEditor({
+  open,
+  onOpenChange,
+  mission,
+  visibility = 'public',
+  onSave,
+}: MissionEditorProps) {
   const [value, setValue] = useState(mission || '');
+  const [visibilityLevel, setVisibilityLevel] = useState<'public' | 'network' | 'private'>(
+    visibility
+  );
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
       setValue(mission || '');
+      setVisibilityLevel(visibility);
       setError(null);
     }
-  }, [open, mission]);
+  }, [open, mission, visibility]);
 
   const handleSave = () => {
     if (value.trim().length === 0) {
@@ -39,8 +58,34 @@ export function MissionEditor({ open, onOpenChange, mission, onSave }: MissionEd
       return;
     }
 
-    onSave(value.trim());
+    onSave(value.trim(), visibilityLevel);
     onOpenChange(false);
+  };
+
+  const getVisibilityIcon = (level: string) => {
+    switch (level) {
+      case 'public':
+        return <Globe className="w-4 h-4" />;
+      case 'network':
+        return <Users className="w-4 h-4" />;
+      case 'private':
+        return <EyeOff className="w-4 h-4" />;
+      default:
+        return <Eye className="w-4 h-4" />;
+    }
+  };
+
+  const getVisibilityDescription = (level: string) => {
+    switch (level) {
+      case 'public':
+        return 'Visible to everyone on the platform';
+      case 'network':
+        return 'Visible to your connections and potential matches';
+      case 'private':
+        return 'Only visible to you';
+      default:
+        return '';
+    }
   };
 
   const charsLeft = 500 - value.length;
@@ -82,6 +127,56 @@ export function MissionEditor({ open, onOpenChange, mission, onSave }: MissionEd
               maxLength={500}
             />
             {error && <p className="text-xs text-red-500">{error}</p>}
+          </div>
+
+          {/* Visibility Control */}
+          <div className="space-y-2">
+            <Label htmlFor="visibility">Who can see this?</Label>
+            <Select
+              value={visibilityLevel}
+              onValueChange={(value: 'public' | 'network' | 'private') => setVisibilityLevel(value)}
+            >
+              <SelectTrigger id="visibility" className="w-full">
+                <div className="flex items-center gap-2">
+                  {getVisibilityIcon(visibilityLevel)}
+                  <SelectValue />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="public">
+                  <div className="flex items-center gap-2">
+                    <Globe className="w-4 h-4" />
+                    <div className="flex flex-col">
+                      <span className="font-medium">Public</span>
+                      <span className="text-xs text-muted-foreground">
+                        Everyone on the platform
+                      </span>
+                    </div>
+                  </div>
+                </SelectItem>
+                <SelectItem value="network">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    <div className="flex flex-col">
+                      <span className="font-medium">Network</span>
+                      <span className="text-xs text-muted-foreground">Connections & matches</span>
+                    </div>
+                  </div>
+                </SelectItem>
+                <SelectItem value="private">
+                  <div className="flex items-center gap-2">
+                    <EyeOff className="w-4 h-4" />
+                    <div className="flex flex-col">
+                      <span className="font-medium">Private</span>
+                      <span className="text-xs text-muted-foreground">Only visible to you</span>
+                    </div>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              {getVisibilityDescription(visibilityLevel)}
+            </p>
           </div>
 
           <div className="bg-muted/30 rounded-lg p-3 text-xs text-muted-foreground">

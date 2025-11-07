@@ -47,12 +47,11 @@ export function SnoozeDialog({
   const handleSnooze = async () => {
     setIsSubmitting(true);
     try {
-      const response = await fetch('/api/match/snooze', {
+      const response = await fetch(`/api/matches/${matchId}/snooze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          matchId,
-          weeks: selectedWeeks,
+          duration: selectedWeeks * 7, // Convert weeks to days
         }),
       });
 
@@ -60,15 +59,12 @@ export function SnoozeDialog({
         throw new Error('Failed to snooze match');
       }
 
-      const snoozeUntil = new Date();
-      snoozeUntil.setDate(snoozeUntil.getDate() + selectedWeeks * 7);
+      const data = await response.json();
+      const snoozeUntil = new Date(data.snoozeUntil);
 
-      toast.success(
-        `Match snoozed until ${snoozeUntil.toLocaleDateString()}`,
-        {
-          description: `"${assignmentTitle}" will reappear in ${selectedWeeks} ${selectedWeeks === 1 ? 'week' : 'weeks'}`,
-        }
-      );
+      toast.success(`Match snoozed until ${snoozeUntil.toLocaleDateString()}`, {
+        description: `"${assignmentTitle}" will reappear in ${selectedWeeks} ${selectedWeeks === 1 ? 'week' : 'weeks'}`,
+      });
 
       onOpenChange(false);
       if (onSnoozed) onSnoozed();
@@ -118,7 +114,9 @@ export function SnoozeDialog({
                   <p className="text-sm text-[#6B6760]">{duration.description}</p>
                   <p className="text-xs text-[#6B6760] mt-1">
                     Returns:{' '}
-                    {new Date(Date.now() + duration.weeks * 7 * 24 * 60 * 60 * 1000).toLocaleDateString()}
+                    {new Date(
+                      Date.now() + duration.weeks * 7 * 24 * 60 * 60 * 1000
+                    ).toLocaleDateString()}
                   </p>
                 </div>
                 {selectedWeeks === duration.weeks && (
@@ -143,9 +141,8 @@ export function SnoozeDialog({
 
         <div className="bg-[#F7F6F1] rounded-lg p-3 border border-[#E8E6DD]">
           <p className="text-xs leading-relaxed text-[#2D3330]">
-            <strong className="font-semibold">Note:</strong> You can view and manage snoozed
-            matches from your Matching preferences. Snoozed matches won't affect your overall match
-            score.
+            <strong className="font-semibold">Note:</strong> You can view and manage snoozed matches
+            from your Matching preferences. Snoozed matches won't affect your overall match score.
           </p>
         </div>
 
@@ -158,7 +155,9 @@ export function SnoozeDialog({
             disabled={isSubmitting}
             className="bg-[#1C4D3A] text-white"
           >
-            {isSubmitting ? 'Snoozing...' : `Snooze for ${selectedWeeks} ${selectedWeeks === 1 ? 'week' : 'weeks'}`}
+            {isSubmitting
+              ? 'Snoozing...'
+              : `Snooze for ${selectedWeeks} ${selectedWeeks === 1 ? 'week' : 'weeks'}`}
           </Button>
         </DialogFooter>
       </DialogContent>

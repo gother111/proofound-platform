@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
 import { assignments, matchingProfiles, skills, matches } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and, gte } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { scrubDisallowedFields } from '@/lib/core/matching/firewall';
 import { getOrSet, CACHE_KEYS, CACHE_TTL } from '@/lib/cache';
@@ -120,7 +120,18 @@ export async function POST(request: NextRequest) {
     // Compute scores
     const results: MatchResult[] = [];
 
+    // Fetch snoozed matches for this user
+    const snoozedMatches = await db.query.matches.findMany({
+      where: and(eq(matches.profileId, user.id), gte(matches.snoozedUntil, new Date())),
+    });
+    const snoozedAssignmentIds = new Set(snoozedMatches.map((m) => m.assignmentId));
+
     for (const assignment of activeAssignments) {
+      // Skip snoozed matches
+      if (snoozedAssignmentIds.has(assignment.id)) {
+        continue;
+      }
+
       // Apply hard filters
       const mustHaveSkills = (assignment.mustHaveSkills as Skill[]) || [];
       const niceToHaveSkills = (assignment.niceToHaveSkills as Skill[]) || [];

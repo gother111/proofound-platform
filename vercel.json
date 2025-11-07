@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/fairness-report",
       "schedule": "0 0 * * 1"
+    },
+    {
+      "path": "/api/cron/fairness-note",
+      "schedule": "0 2 * * *"
     }
   ]
 }

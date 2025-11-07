@@ -33,6 +33,8 @@ export const EventType = {
   SHORTLIST_GENERATED: 'shortlist_generated',
   MATCH_VIEWED: 'match_viewed',
   MATCH_ACTIONED: 'match_actioned', // intro, pass, snooze
+  MATCH_SNOOZED: 'match_snoozed',
+  MATCH_UNSNOOZED: 'match_unsnoozed',
 
   // Introductions & Applications
   FIRST_QUALIFIED_INTRO: 'first_qualified_intro', // TTFQI endpoint
@@ -301,6 +303,8 @@ export function getEventDisplayName(eventType: EventTypeValue): string {
     [EventType.SHORTLIST_GENERATED]: 'Shortlist Generated',
     [EventType.MATCH_VIEWED]: 'Match Viewed',
     [EventType.MATCH_ACTIONED]: 'Match Actioned',
+    [EventType.MATCH_SNOOZED]: 'Match Snoozed',
+    [EventType.MATCH_UNSNOOZED]: 'Match Unsnoozed',
     [EventType.FIRST_QUALIFIED_INTRO]: 'First Qualified Introduction',
     [EventType.APPLICATION_SUBMITTED]: 'Application Submitted',
     [EventType.APPLICATION_ACCEPTED]: 'Application Accepted',

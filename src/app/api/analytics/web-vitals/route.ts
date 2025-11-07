@@ -1,64 +1,67 @@
 /**
- * Web Vitals Analytics API
- * POST /api/analytics/web-vitals
+ * Web Vitals API
  *
- * Stores Web Vitals metrics for performance monitoring
- * Implements PRD Gap 2: Performance instrumentation
+ * Receives and stores Core Web Vitals metrics from the client.
+ * PRD Reference: Part 8 NFR - Performance Monitoring
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { z } from 'zod';
+import { db } from '@/db';
+import { performanceMetrics } from '@/db/schema';
+import { log } from '@/lib/log';
 
-const WebVitalSchema = z.object({
-  name: z.enum(['CLS', 'FID', 'LCP', 'FCP', 'TTFB', 'INP']),
-  value: z.number(),
-  rating: z.enum(['good', 'needs-improvement', 'poor']).optional(),
-  delta: z.number().optional(),
-  id: z.string(),
-  navigationType: z.string().optional(),
-  url: z.string().optional(),
-  userAgent: z.string().optional(),
-  timestamp: z.number().optional(),
-});
+interface WebVitalPayload {
+  metricName: string;
+  value: number;
+  rating: 'good' | 'needs-improvement' | 'poor';
+  delta: number;
+  id: string;
+  navigationType: string;
+  pagePath: string;
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const data = WebVitalSchema.parse(body);
+    const payload: WebVitalPayload = await request.json();
 
-    const supabase = await createClient();
+    // Extract user agent for diagnostics
+    const userAgent = request.headers.get('user-agent') || 'unknown';
 
-    // Get user if authenticated (optional for web vitals)
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    // Map Web Vitals metric names to schema enum values
+    const metricTypeMap: Record<string, string> = {
+      LCP: 'lcp',
+      FID: 'fid',
+      CLS: 'cls',
+      FCP: 'fcp',
+      TTFB: 'page_load', // TTFB maps to page_load
+    };
 
-    // Store in analytics events table
-    await supabase.from('analytics_events').insert({
-      event: 'web_vital',
-      properties: {
-        metric_name: data.name,
-        metric_value: data.value,
-        rating: data.rating,
-        delta: data.delta,
-        metric_id: data.id,
-        navigation_type: data.navigationType,
-        url: data.url,
-        user_agent: data.userAgent,
-      },
-      user_id: user?.id || null,
-      created_at: data.timestamp ? new Date(data.timestamp) : new Date(),
+    const metricType = metricTypeMap[payload.metricName] || 'page_load';
+
+    // Store metric in database
+    await db.insert(performanceMetrics).values({
+      metricType,
+      pageRoute: payload.pagePath,
+      valueMs: payload.value.toString(), // Store as string for precision
+      userAgent,
     });
 
-    return NextResponse.json({ success: true });
-  } catch (error: any) {
-    console.error('Failed to store web vital:', error);
+    // Alert if metric is poor (for monitoring)
+    if (payload.rating === 'poor') {
+      log.warn('web-vitals.poor', {
+        metric: payload.metricName,
+        value: payload.value,
+        path: payload.pagePath,
+      });
+    }
 
-    // Don't fail hard on analytics errors
-    return NextResponse.json(
-      { success: false, error: 'Failed to store metric' },
-      { status: 200 } // Return 200 to avoid console errors
-    );
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    log.error('web-vitals.store.failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+
+    // Don't fail the client request even if storage fails
+    return NextResponse.json({ success: false }, { status: 200 });
   }
 }

@@ -9,6 +9,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ChatWidget } from '@/components/support/ChatWidget';
 import { CookieBanner } from '@/components/CookieBanner';
 import { GlobalErrorHandler } from '@/components/GlobalErrorHandler';
+import { WebVitalsReporter } from '@/components/WebVitalsReporter';
 
 /**
  * Root Layout Component
@@ -68,6 +69,7 @@ export default async function RootLayout({
             />
             <ChatWidget />
             <CookieBanner />
+            <WebVitalsReporter />
             <Analytics />
             <SpeedInsights />
           </NextIntlClientProvider>

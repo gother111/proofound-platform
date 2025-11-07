@@ -1,103 +1,143 @@
 /**
- * Web Vitals Tracking
- * Implements PRD Gap 2: Performance monitoring
+ * Web Vitals Instrumentation
  *
- * Tracks Core Web Vitals:
- * - LCP (Largest Contentful Paint) - target ≤ 2.5s
- * - FID (First Input Delay) - target ≤ 100ms
- * - CLS (Cumulative Layout Shift) - target ≤ 0.1
- * - FCP (First Contentful Paint) - target ≤ 1.8s
- * - TTFB (Time to First Byte) - target ≤ 600ms
+ * Tracks Core Web Vitals metrics for performance monitoring.
+ * PRD Reference: Part 8 NFR - Performance Monitoring
+ *
+ * Target thresholds (PRD):
+ * - LCP (Largest Contentful Paint): ≤2.5s
+ * - FID (First Input Delay): ≤100ms
+ * - CLS (Cumulative Layout Shift): ≤0.1
+ * - FCP (First Contentful Paint): ≤1.8s
+ * - TTFB (Time to First Byte): ≤600ms
  */
+
+'use client';
 
 import { onCLS, onFID, onLCP, onFCP, onTTFB, type Metric } from 'web-vitals';
 
-export function initWebVitals() {
-  // Track all Core Web Vitals
-  onCLS((metric) => sendToAnalytics('CLS', metric));
-  onFID((metric) => sendToAnalytics('FID', metric));
-  onLCP((metric) => sendToAnalytics('LCP', metric));
-  onFCP((metric) => sendToAnalytics('FCP', metric));
-  onTTFB((metric) => sendToAnalytics('TTFB', metric));
+// Thresholds per PRD
+export const WEB_VITALS_THRESHOLDS = {
+  LCP: 2500, // 2.5s
+  FID: 100, // 100ms
+  CLS: 0.1,
+  FCP: 1800, // 1.8s
+  TTFB: 600, // 600ms
+} as const;
+
+interface PerformanceMetricPayload {
+  metricName: string;
+  value: number;
+  rating: 'good' | 'needs-improvement' | 'poor';
+  delta: number;
+  id: string;
+  navigationType: string;
+  pagePath: string;
 }
 
-function sendToAnalytics(name: string, metric: Metric) {
-  const body = JSON.stringify({
-    name,
+/**
+ * Send metric to backend for storage and analysis
+ */
+async function sendMetricToBackend(payload: PerformanceMetricPayload): Promise<void> {
+  try {
+    // Use sendBeacon for reliability (works even on page unload)
+    if (navigator.sendBeacon) {
+      const blob = new Blob([JSON.stringify(payload)], {
+        type: 'application/json',
+      });
+      navigator.sendBeacon('/api/analytics/web-vitals', blob);
+    } else {
+      // Fallback to fetch
+      fetch('/api/analytics/web-vitals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        keepalive: true,
+      }).catch((error) => {
+        console.error('Failed to send web vital:', error);
+      });
+    }
+  } catch (error) {
+    console.error('Failed to send web vital:', error);
+  }
+}
+
+/**
+ * Get rating based on metric thresholds
+ */
+function getRating(name: string, value: number): 'good' | 'needs-improvement' | 'poor' {
+  const thresholds = {
+    LCP: [2500, 4000],
+    FID: [100, 300],
+    CLS: [0.1, 0.25],
+    FCP: [1800, 3000],
+    TTFB: [600, 1500],
+  } as const;
+
+  const [good, poor] = thresholds[name as keyof typeof thresholds] || [0, Infinity];
+
+  if (value <= good) return 'good';
+  if (value <= poor) return 'needs-improvement';
+  return 'poor';
+}
+
+/**
+ * Process and send metric
+ */
+function trackMetric(metric: Metric): void {
+  const payload: PerformanceMetricPayload = {
+    metricName: metric.name,
     value: metric.value,
-    rating: metric.rating,
+    rating: getRating(metric.name, metric.value),
     delta: metric.delta,
     id: metric.id,
     navigationType: metric.navigationType,
-    // Additional context
-    url: window.location.href,
-    userAgent: navigator.userAgent,
-    timestamp: Date.now(),
-  });
+    pagePath: window.location.pathname,
+  };
 
-  // Use `navigator.sendBeacon()` if available, falling back to `fetch()`.
-  const blob = new Blob([body], { type: 'application/json' });
-  if (navigator.sendBeacon) {
-    navigator.sendBeacon('/api/analytics/web-vitals', blob);
-  } else {
-    fetch('/api/analytics/web-vitals', {
-      method: 'POST',
-      body,
-      headers: { 'Content-Type': 'application/json' },
-      keepalive: true,
-    }).catch((error) => {
-      console.error('Failed to send web vital:', error);
+  sendMetricToBackend(payload);
+
+  // Log to console in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[Web Vitals] ${metric.name}:`, {
+      value: Math.round(metric.value),
+      rating: payload.rating,
+      threshold: WEB_VITALS_THRESHOLDS[metric.name as keyof typeof WEB_VITALS_THRESHOLDS],
     });
   }
 }
 
 /**
- * Report Web Vitals helper for Next.js
- * Can be used in _app.tsx or layout.tsx
+ * Initialize Web Vitals tracking
+ *
+ * Call this from your root layout component (client-side only)
  */
-export function reportWebVitals(metric: Metric) {
-  sendToAnalytics(metric.name, metric);
+export function reportWebVitals(): void {
+  try {
+    onCLS(trackMetric);
+    onFID(trackMetric);
+    onLCP(trackMetric);
+    onFCP(trackMetric);
+    onTTFB(trackMetric);
+  } catch (error) {
+    console.error('Failed to initialize web vitals:', error);
+  }
 }
 
 /**
- * Check if metric passes PRD targets
+ * Check if a metric passes the threshold
  */
-export function meetsPerformanceTarget(name: string, value: number): boolean {
-  const targets: Record<string, number> = {
-    LCP: 2500, // 2.5s
-    FID: 100, // 100ms
-    CLS: 0.1, // 0.1
-    FCP: 1800, // 1.8s
-    TTFB: 600, // 600ms
-    TTI: 2500, // 2.5s (Time to Interactive - P95 desktop per PRD)
-  };
-
-  const target = targets[name];
-  if (!target) return true;
-
-  return value <= target;
+export function isMetricGood(metricName: string, value: number): boolean {
+  const threshold = WEB_VITALS_THRESHOLDS[metricName as keyof typeof WEB_VITALS_THRESHOLDS];
+  return threshold !== undefined && value <= threshold;
 }
 
 /**
- * Get performance rating (good/needs-improvement/poor)
+ * Format metric value for display
  */
-export function getPerformanceRating(
-  name: string,
-  value: number
-): 'good' | 'needs-improvement' | 'poor' {
-  // Based on Web Vitals thresholds
-  const thresholds: Record<string, { good: number; poor: number }> = {
-    LCP: { good: 2500, poor: 4000 },
-    FID: { good: 100, poor: 300 },
-    CLS: { good: 0.1, poor: 0.25 },
-    FCP: { good: 1800, poor: 3000 },
-    TTFB: { good: 800, poor: 1800 },
-  };
-
-  const threshold = thresholds[name];
-  if (!threshold) return 'good';
-
-  if (value <= threshold.good) return 'good';
-  if (value <= threshold.poor) return 'needs-improvement';
-  return 'poor';
+export function formatMetricValue(metricName: string, value: number): string {
+  if (metricName === 'CLS') {
+    return value.toFixed(3);
+  }
+  return `${Math.round(value)}ms`;
 }
