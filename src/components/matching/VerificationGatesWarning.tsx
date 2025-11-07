@@ -21,8 +21,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { AlertCircle, CheckCircle, Shield, ExternalLink } from 'lucide-react';
-import { getGateDescription, getGateActionLink } from '@/lib/verification/gates';
-import type { VerificationGate, VerificationStatus } from '@/lib/verification/gates';
+import { getGateDescription, getGateActionLink } from '@/lib/verification/gates-utils';
+import type { VerificationGate, VerificationStatus } from '@/lib/verification/gates-utils';
 
 interface VerificationGatesWarningProps {
   open: boolean;

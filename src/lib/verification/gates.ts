@@ -1,46 +1,30 @@
 /**
- * Verification Gates Library
+ * Verification Gates Library (Server-Side)
  *
  * Checks if user meets verification requirements before matching/introducing
  * PRD Requirement: Assignments can specify required verifications (gates)
  * that must be passed before introduction
+ *
+ * NOTE: This file is server-only. For client-safe utilities, use gates-utils.ts
  */
 
 import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
 
-// ============================================================================
-// TYPES
-// ============================================================================
+// Re-export types from client-safe utils
+export type {
+  VerificationGateType,
+  VerificationGate,
+  VerificationStatus,
+  GateCheckResult,
+} from './gates-utils';
 
-export type VerificationGateType =
-  | 'identity' // Identity verification (Veriff)
-  | 'work_email' // Work email verification
-  | 'linkedin' // LinkedIn connection
-  | 'peer_attestation' // Peer/mentor attestation
-  | 'skill_proof'; // Skill evidence/proof
+// Re-export utility functions
+export { getGateDescription, getGateActionLink } from './gates-utils';
 
-export interface VerificationGate {
-  type: VerificationGateType;
-  required: boolean;
-  description?: string;
-}
-
-export interface VerificationStatus {
-  type: VerificationGateType;
-  verified: boolean;
-  verifiedAt?: Date;
-  provider?: string;
-}
-
-export interface GateCheckResult {
-  passed: boolean;
-  unmetGates: VerificationGate[];
-  userVerifications: VerificationStatus[];
-  canIntroduce: boolean;
-  blockingMessage?: string;
-}
+// Import types for local use
+import type { VerificationGate, VerificationStatus, GateCheckResult } from './gates-utils';
 
 // ============================================================================
 // GATE CHECKING
@@ -211,44 +195,4 @@ async function getUserVerifications(userId: string): Promise<VerificationStatus[
   }
 
   return verifications;
-}
-
-/**
- * Get human-readable gate description
- */
-export function getGateDescription(type: VerificationGateType): string {
-  switch (type) {
-    case 'identity':
-      return 'Identity verification (government ID)';
-    case 'work_email':
-      return 'Work email verification';
-    case 'linkedin':
-      return 'LinkedIn profile connection';
-    case 'peer_attestation':
-      return 'Peer or mentor attestation';
-    case 'skill_proof':
-      return 'Portfolio or skill evidence';
-    default:
-      return 'Verification required';
-  }
-}
-
-/**
- * Get action link for completing verification
- */
-export function getGateActionLink(type: VerificationGateType): string {
-  switch (type) {
-    case 'identity':
-      return '/app/i/settings/verification';
-    case 'work_email':
-      return '/verify-work-email';
-    case 'linkedin':
-      return '/app/i/settings/connections';
-    case 'peer_attestation':
-      return '/app/i/profile#attestations';
-    case 'skill_proof':
-      return '/app/i/expertise';
-    default:
-      return '/app/i/settings';
-  }
 }

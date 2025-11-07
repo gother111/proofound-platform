@@ -19,7 +19,6 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Save, RotateCcw, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { log } from '@/lib/log';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 // Default weights from matching scorers
@@ -93,10 +92,7 @@ export function MatchingProfileEditor({ profileId, onSave, onCancel }: MatchingP
       const data = await response.json();
       setProfile(data.profile);
     } catch (error) {
-      log.error('matching.profile.load.failed', {
-        profileId: id,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      console.error('Failed to load matching profile:', error);
       toast({
         title: 'Failed to load profile',
         description: 'Could not load matching preferences',
@@ -171,18 +167,13 @@ export function MatchingProfileEditor({ profileId, onSave, onCancel }: MatchingP
         description: 'Your matching preferences have been saved',
       });
 
-      log.info('matching.profile.saved', {
-        profileId: data.profile.id,
-        name: profile.name,
-      });
+      console.log('Matching profile saved:', data.profile.id);
 
       if (onSave) {
         onSave(data.profile);
       }
     } catch (error) {
-      log.error('matching.profile.save.failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      console.error('Failed to save matching profile:', error);
       toast({
         title: 'Failed to save profile',
         description: error instanceof Error ? error.message : 'Please try again',
