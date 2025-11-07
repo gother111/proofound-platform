@@ -7,6 +7,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -112,9 +113,7 @@ export function SnoozedMatchesList() {
     return (
       <Card className="p-12 text-center">
         <Clock className="h-16 w-16 mx-auto mb-4 text-[#A8B69D]" />
-        <h3 className="text-lg font-semibold text-[#2D3330] mb-2">
-          No Snoozed Matches
-        </h3>
+        <h3 className="text-lg font-semibold text-[#2D3330] mb-2">No Snoozed Matches</h3>
         <p className="text-sm text-[#6B6760] mb-6">
           Matches you snooze will appear here until they're unsnoozed or the snooze period ends.
         </p>
@@ -139,9 +138,11 @@ export function SnoozedMatchesList() {
               <div className="flex items-start gap-4">
                 {/* Organization Logo */}
                 {match.organization.logoUrl ? (
-                  <img
+                  <Image
                     src={match.organization.logoUrl}
                     alt={match.organization.name}
+                    width={48}
+                    height={48}
                     className="w-12 h-12 rounded-lg object-cover"
                   />
                 ) : (
@@ -157,9 +158,7 @@ export function SnoozedMatchesList() {
                   <h3 className="text-lg font-semibold text-[#2D3330] mb-1">
                     {match.assignment.title}
                   </h3>
-                  <p className="text-sm text-[#6B6760] mb-2">
-                    {match.organization.name}
-                  </p>
+                  <p className="text-sm text-[#6B6760] mb-2">{match.organization.name}</p>
 
                   {/* Match Score */}
                   <div className="flex items-center gap-3 mb-3">
@@ -228,4 +227,3 @@ export function SnoozedMatchesList() {
     </div>
   );
 }
-

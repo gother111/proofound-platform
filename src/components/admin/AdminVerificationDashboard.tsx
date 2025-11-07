@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -269,9 +270,11 @@ export function AdminVerificationDashboard() {
           <div className="flex items-start gap-4 mb-4">
             <Avatar className="w-12 h-12 flex-shrink-0">
               {verification.userAvatar ? (
-                <img
+                <Image
                   src={verification.userAvatar}
                   alt={verification.userName}
+                  width={48}
+                  height={48}
                   className="w-full h-full object-cover"
                 />
               ) : (

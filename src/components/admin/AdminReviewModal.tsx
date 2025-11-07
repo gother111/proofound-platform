@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import {
   Dialog,
   DialogContent,
@@ -161,9 +162,11 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
           <div className="flex items-start gap-4 p-4 bg-[#F7F6F1] rounded-lg">
             <Avatar className="w-16 h-16 flex-shrink-0">
               {verification.userAvatar ? (
-                <img
+                <Image
                   src={verification.userAvatar}
                   alt={verification.userName}
+                  width={64}
+                  height={64}
                   className="w-full h-full object-cover"
                 />
               ) : (

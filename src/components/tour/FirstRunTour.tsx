@@ -15,7 +15,17 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { X, ArrowRight, ArrowLeft, Home, User, Compass, Target, Heart, Settings } from 'lucide-react';
+import {
+  X,
+  ArrowRight,
+  ArrowLeft,
+  Home,
+  User,
+  Compass,
+  Target,
+  Heart,
+  Settings,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 
@@ -76,7 +86,7 @@ const individualTourSteps: TourStep[] = [
     id: 'expertise',
     title: 'Expertise Hub',
     description:
-      "Map your skills using our comprehensive taxonomy of 20,000+ skills. Add evidence and verification to stand out. This is your credibility engine.",
+      'Map your skills using our comprehensive taxonomy of 20,000+ skills. Add evidence and verification to stand out. This is your credibility engine.',
     icon: Target,
     target: '[data-tour="expertise-link"]',
     placement: 'right',
@@ -127,6 +137,31 @@ export function FirstRunTour({ onComplete, onSkip, basePath = '/app/i' }: FirstR
   const steps = individualTourSteps; // Can be extended for org tours
   const step = steps[currentStep];
 
+  // Handler functions wrapped in useCallback for stable references
+  const handleComplete = useCallback(async () => {
+    setIsVisible(false);
+    await onComplete();
+  }, [onComplete]);
+
+  const handleSkip = useCallback(async () => {
+    setIsVisible(false);
+    await onSkip();
+  }, [onSkip]);
+
+  const handleNext = useCallback(() => {
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      handleComplete();
+    }
+  }, [currentStep, steps.length, handleComplete]);
+
+  const handleBack = useCallback(() => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  }, [currentStep]);
+
   // Keyboard navigation
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -147,7 +182,7 @@ export function FirstRunTour({ onComplete, onSkip, basePath = '/app/i' }: FirstR
           break;
       }
     },
-    [isVisible, currentStep]
+    [isVisible, handleSkip, handleNext, handleBack]
   );
 
   useEffect(() => {
@@ -168,7 +203,7 @@ export function FirstRunTour({ onComplete, onSkip, basePath = '/app/i' }: FirstR
       if (targetElement) {
         const rect = targetElement.getBoundingClientRect();
         setHighlightPosition(rect);
-        
+
         // Scroll element into view if needed
         targetElement.scrollIntoView({
           behavior: 'smooth',
@@ -180,30 +215,6 @@ export function FirstRunTour({ onComplete, onSkip, basePath = '/app/i' }: FirstR
 
     return () => clearTimeout(timer);
   }, [currentStep, step.target, step.revealDelay]);
-
-  const handleNext = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      handleComplete();
-    }
-  };
-
-  const handleBack = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
-
-  const handleComplete = async () => {
-    setIsVisible(false);
-    await onComplete();
-  };
-
-  const handleSkip = async () => {
-    setIsVisible(false);
-    await onSkip();
-  };
 
   const handleActionButton = () => {
     // For "complete" step, suggest going to profile
@@ -430,4 +441,3 @@ export function FirstRunTour({ onComplete, onSkip, basePath = '/app/i' }: FirstR
     </>
   );
 }
-
