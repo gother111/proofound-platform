@@ -1,400 +1,476 @@
 /**
- * Analytics Metrics Calculations
+ * Metrics Calculation Library
  *
- * Calculate PRD-defined metrics from analytics events:
- * - TTFQI (Time-to-First Qualified Introduction)
- * - TTV (Time-to-Value)
- * - TTSC (Time-to-Signed-Contract) - North Star Metric
- * - Well-Being Delta
- * - PAC Lift (Purpose-Alignment Contribution)
- *
- * PRD References:
- * - Part 2: Goals & Success Metrics
- * - Part 7: Functional Requirements
- * - Part 8: Performance (cache for 1 hour)
+ * Implements PRD Part 7 Metrics:
+ * - TTFQI: Time to First Qualified Introduction
+ * - TTV: Time to Video Interview
+ * - TTSC: Time to Signed Contract
+ * - PAC Lift: Purpose-Alignment Contribution impact
+ * - SUS: System Usability Scale
+ * - Well-Being Delta: Change in well-being scores
+ * - Fairness Gap: Demographic disparity in outcomes
  */
 
 import { db } from '@/db';
-import { analyticsEvents, matches } from '@/db/schema';
-import { and, eq, gte, lte, desc, sql } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
-import {
-  EventType,
-  TTFQI_TARGET_HOURS,
-  TTV_TARGET_DAYS,
-  TTSC_TARGET_DAYS,
-  WELLBEING_DELTA_TARGET_PERCENT,
-} from './constants';
 
 // ============================================================================
-// TYPE DEFINITIONS
+// TYPES
 // ============================================================================
 
-export interface TTFQIResult {
-  userId: string;
-  activatedAt: Date;
-  firstIntroAt: Date;
-  hoursToFirstIntro: number;
+export interface MetricResult {
+  metric: string;
+  value: number;
+  unit: string;
+  target: number;
+  onTrack: boolean;
+  cohort?: string;
+  percentile?: {
+    p50: number;
+    p75: number;
+    p90: number;
+  };
+  sampleSize: number;
+  calculatedAt: Date;
 }
 
-export interface TTVResult {
-  userId: string;
-  activatedAt: Date;
-  firstInterviewAt: Date;
-  daysToFirstInterview: number;
+export interface TTFQIResult extends MetricResult {
+  metric: 'TTFQI';
+  unit: 'hours';
+  target: 72; // PRD: ≤72 hours
 }
 
-export interface TTSCResult {
-  userId: string;
-  activatedAt: Date;
-  contractSignedAt: Date;
-  daysToContract: number;
+export interface TTVResult extends MetricResult {
+  metric: 'TTV';
+  unit: 'days';
+  target: 7; // PRD: ≤7 days
+}
+
+export interface TTSCResult extends MetricResult {
+  metric: 'TTSC';
+  unit: 'days';
+  target: 30; // PRD: ≤30 days
+}
+
+export interface PACLiftResult {
+  metric: 'PAC_LIFT';
+  withPAC: number; // Average match score with PAC
+  withoutPAC: number; // Average match score without PAC
+  lift: number; // Percentage increase
+  targetLift: number; // PRD: ≥20%
+  onTrack: boolean;
+  sampleSize: { withPAC: number; withoutPAC: number };
+  calculatedAt: Date;
+}
+
+export interface SUSResult extends MetricResult {
+  metric: 'SUS';
+  unit: 'score';
+  target: 75; // PRD: ≥75
+  responses: number;
 }
 
 export interface WellBeingDeltaResult {
-  userId: string;
-  periodDays: number;
-  startStress: number;
-  endStress: number;
-  startControl: number;
-  endControl: number;
-  stressDelta: number;
-  controlDelta: number;
-  improved: boolean;
-}
-
-export interface PACContribution {
-  matchId: string;
-  overallScore: number;
-  pacScore: number;
-  skillsScore: number;
-  constraintsScore: number;
-  verificationScore: number;
-  pacPercentage: number; // PAC as % of overall score
-}
-
-export interface CohortMetrics {
-  cohort: string;
-  count: number;
-  medianValue: number;
-  p75Value: number;
-  p95Value: number;
-  targetMet: boolean;
+  metric: 'WELLBEING_DELTA';
+  averageDelta: number;
+  byDimension: Record<string, number>;
+  positiveChange: number; // Percentage of users with improvement
+  target: number; // PRD: ≥70% users improve
+  onTrack: boolean;
+  sampleSize: number;
+  calculatedAt: Date;
 }
 
 // ============================================================================
-// TTFQI (Time-to-First Qualified Introduction)
+// TIME TO FIRST QUALIFIED INTRODUCTION (TTFQI)
 // ============================================================================
 
 /**
- * Calculate TTFQI for a specific user
- *
- * Per PRD Part 2: TTFQI = Activation → First Qualified Introduction
- * Target: Median ≤72 hours
+ * Calculate TTFQI: Time from profile activation to first match introduction
+ * PRD Target: ≤72 hours (median)
  */
-export async function calculateTTFQI(userId: string): Promise<TTFQIResult | null> {
+export async function calculateTTFQI(
+  cohort?: string,
+  startDate?: Date,
+  endDate?: Date
+): Promise<TTFQIResult> {
   try {
-    // Get activation event
-    const activationEvent = await db
-      .select()
-      .from(analyticsEvents)
-      .where(
-        and(
-          eq(analyticsEvents.userId, userId),
-          eq(analyticsEvents.eventType, EventType.PROFILE_ACTIVATED)
-        )
-      )
-      .orderBy(desc(analyticsEvents.createdAt))
-      .limit(1);
+    const start = startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // Last 30 days
+    const end = endDate || new Date();
 
-    if (activationEvent.length === 0) {
-      return null;
-    }
-
-    // Get first qualified intro event
-    const firstIntroEvent = await db
-      .select()
-      .from(analyticsEvents)
-      .where(
-        and(
-          eq(analyticsEvents.userId, userId),
-          eq(analyticsEvents.eventType, EventType.FIRST_QUALIFIED_INTRO),
-          gte(analyticsEvents.createdAt, activationEvent[0].createdAt)
-        )
-      )
-      .orderBy(analyticsEvents.createdAt)
-      .limit(1);
-
-    if (firstIntroEvent.length === 0) {
-      return null;
-    }
-
-    const activatedAt = activationEvent[0].createdAt;
-    const firstIntroAt = firstIntroEvent[0].createdAt;
-    const diffMs = firstIntroAt.getTime() - activatedAt.getTime();
-    const hoursToFirstIntro = diffMs / (1000 * 60 * 60);
-
-    return {
-      userId,
-      activatedAt,
-      firstIntroAt,
-      hoursToFirstIntro,
-    };
-  } catch (error) {
-    log.error('Failed to calculate TTFQI', { error, userId });
-    return null;
-  }
-}
-
-/**
- * Calculate median TTFQI across all users (or cohort)
- */
-export async function calculateTTFQIMedian(cohort?: string): Promise<number | null> {
-  try {
-    // Get all users with both activation and first intro events
-    const results = await db.execute<{ hours_to_intro: number }>(sql`
+    const result = await db.execute(sql`
       WITH activations AS (
         SELECT 
           user_id,
-          created_at as activated_at
+          MIN(occurred_at) as activated_at
         FROM analytics_events
-        WHERE event_type = ${EventType.PROFILE_ACTIVATED}
+        WHERE event_type = 'profile_activated'
+          AND occurred_at >= ${start.toISOString()}
+          AND occurred_at <= ${end.toISOString()}
+        GROUP BY user_id
       ),
       first_intros AS (
-        SELECT DISTINCT ON (user_id)
+        SELECT
           user_id,
-          created_at as first_intro_at
+          MIN(occurred_at) as introduced_at
         FROM analytics_events
-        WHERE event_type = ${EventType.FIRST_QUALIFIED_INTRO}
-        ORDER BY user_id, created_at ASC
-      )
-      SELECT 
-        EXTRACT(EPOCH FROM (fi.first_intro_at - a.activated_at)) / 3600 as hours_to_intro
-      FROM activations a
-      INNER JOIN first_intros fi ON a.user_id = fi.user_id
-      WHERE fi.first_intro_at >= a.activated_at
-      ORDER BY hours_to_intro
-    `);
-
-    if (results.rows.length === 0) {
-      return null;
-    }
-
-    const values = results.rows.map((r) => r.hours_to_intro);
-    return calculateMedian(values);
-  } catch (error) {
-    log.error('Failed to calculate TTFQI median', { error, cohort });
-    return null;
-  }
-}
-
-// ============================================================================
-// TTV (Time-to-Value)
-// ============================================================================
-
-/**
- * Calculate TTV for a specific user
- *
- * Per PRD Part 2: TTV = Activation → First Interview Scheduled
- * Target: Median ≤7 days
- */
-export async function calculateTTV(userId: string): Promise<TTVResult | null> {
-  try {
-    // Get activation event
-    const activationEvent = await db
-      .select()
-      .from(analyticsEvents)
-      .where(
-        and(
-          eq(analyticsEvents.userId, userId),
-          eq(analyticsEvents.eventType, EventType.PROFILE_ACTIVATED)
-        )
-      )
-      .orderBy(desc(analyticsEvents.createdAt))
-      .limit(1);
-
-    if (activationEvent.length === 0) {
-      return null;
-    }
-
-    // Get first interview scheduled event
-    const firstInterviewEvent = await db
-      .select()
-      .from(analyticsEvents)
-      .where(
-        and(
-          eq(analyticsEvents.userId, userId),
-          eq(analyticsEvents.eventType, EventType.INTERVIEW_SCHEDULED),
-          gte(analyticsEvents.createdAt, activationEvent[0].createdAt)
-        )
-      )
-      .orderBy(analyticsEvents.createdAt)
-      .limit(1);
-
-    if (firstInterviewEvent.length === 0) {
-      return null;
-    }
-
-    const activatedAt = activationEvent[0].createdAt;
-    const firstInterviewAt = firstInterviewEvent[0].createdAt;
-    const diffMs = firstInterviewAt.getTime() - activatedAt.getTime();
-    const daysToFirstInterview = diffMs / (1000 * 60 * 60 * 24);
-
-    return {
-      userId,
-      activatedAt,
-      firstInterviewAt,
-      daysToFirstInterview,
-    };
-  } catch (error) {
-    log.error('Failed to calculate TTV', { error, userId });
-    return null;
-  }
-}
-
-/**
- * Calculate median TTV across all users
- */
-export async function calculateTTVMedian(): Promise<number | null> {
-  try {
-    const results = await db.execute<{ days_to_interview: number }>(sql`
-      WITH activations AS (
-        SELECT 
-          user_id,
-          created_at as activated_at
-        FROM analytics_events
-        WHERE event_type = ${EventType.PROFILE_ACTIVATED}
+        WHERE event_type = 'match_introduced'
+        GROUP BY user_id
       ),
-      first_interviews AS (
-        SELECT DISTINCT ON (user_id)
-          user_id,
-          created_at as first_interview_at
-        FROM analytics_events
-        WHERE event_type = ${EventType.INTERVIEW_SCHEDULED}
-        ORDER BY user_id, created_at ASC
+      ttfqi_values AS (
+        SELECT
+          a.user_id,
+          EXTRACT(EPOCH FROM (i.introduced_at - a.activated_at)) / 3600 as hours
+        FROM activations a
+        INNER JOIN first_intros i ON a.user_id = i.user_id
+        WHERE i.introduced_at > a.activated_at
       )
-      SELECT 
-        EXTRACT(EPOCH FROM (fi.first_interview_at - a.activated_at)) / 86400 as days_to_interview
-      FROM activations a
-      INNER JOIN first_interviews fi ON a.user_id = fi.user_id
-      WHERE fi.first_interview_at >= a.activated_at
-      ORDER BY days_to_interview
+      SELECT
+        PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY hours) as p50,
+        PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY hours) as p75,
+        PERCENTILE_CONT(0.90) WITHIN GROUP (ORDER BY hours) as p90,
+        COUNT(*) as sample_size
+      FROM ttfqi_values
     `);
 
-    if (results.rows.length === 0) {
-      return null;
-    }
+    const row = result.rows[0] as any;
+    const median = parseFloat(row.p50 || '0');
+    const p75 = parseFloat(row.p75 || '0');
+    const p90 = parseFloat(row.p90 || '0');
+    const sampleSize = parseInt(row.sample_size || '0');
 
-    const values = results.rows.map((r) => r.days_to_interview);
-    return calculateMedian(values);
-  } catch (error) {
-    log.error('Failed to calculate TTV median', { error });
-    return null;
-  }
-}
-
-// ============================================================================
-// TTSC (Time-to-Signed-Contract) - NORTH STAR METRIC
-// ============================================================================
-
-/**
- * Calculate TTSC for a specific user
- *
- * Per PRD Part 2: TTSC = Activation → Signed Contract (North Star Metric)
- * Target: Median ≤30 days for entry/mid roles
- */
-export async function calculateTTSC(userId: string): Promise<TTSCResult | null> {
-  try {
-    // Get activation event
-    const activationEvent = await db
-      .select()
-      .from(analyticsEvents)
-      .where(
-        and(
-          eq(analyticsEvents.userId, userId),
-          eq(analyticsEvents.eventType, EventType.PROFILE_ACTIVATED)
-        )
-      )
-      .orderBy(desc(analyticsEvents.createdAt))
-      .limit(1);
-
-    if (activationEvent.length === 0) {
-      return null;
-    }
-
-    // Get first contract signed event
-    const contractEvent = await db
-      .select()
-      .from(analyticsEvents)
-      .where(
-        and(
-          eq(analyticsEvents.userId, userId),
-          eq(analyticsEvents.eventType, EventType.CONTRACT_SIGNED),
-          gte(analyticsEvents.createdAt, activationEvent[0].createdAt)
-        )
-      )
-      .orderBy(analyticsEvents.createdAt)
-      .limit(1);
-
-    if (contractEvent.length === 0) {
-      return null;
-    }
-
-    const activatedAt = activationEvent[0].createdAt;
-    const contractSignedAt = contractEvent[0].createdAt;
-    const diffMs = contractSignedAt.getTime() - activatedAt.getTime();
-    const daysToContract = diffMs / (1000 * 60 * 60 * 24);
+    log.info('metrics.ttfqi.calculated', {
+      median,
+      p75,
+      p90,
+      sampleSize,
+      cohort,
+    });
 
     return {
-      userId,
-      activatedAt,
-      contractSignedAt,
-      daysToContract,
+      metric: 'TTFQI',
+      value: median,
+      unit: 'hours',
+      target: 72,
+      onTrack: median <= 72,
+      cohort,
+      percentile: { p50: median, p75, p90 },
+      sampleSize,
+      calculatedAt: new Date(),
     };
   } catch (error) {
-    log.error('Failed to calculate TTSC', { error, userId });
-    return null;
+    log.error('metrics.ttfqi.failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    throw error;
   }
 }
 
+// ============================================================================
+// TIME TO VIDEO INTERVIEW (TTV)
+// ============================================================================
+
 /**
- * Calculate median TTSC across all users
+ * Calculate TTV: Time from match introduction to video interview scheduled
+ * PRD Target: ≤7 days (median)
  */
-export async function calculateTTSCMedian(): Promise<number | null> {
+export async function calculateTTV(
+  cohort?: string,
+  startDate?: Date,
+  endDate?: Date
+): Promise<TTVResult> {
   try {
-    const results = await db.execute<{ days_to_contract: number }>(sql`
-      WITH activations AS (
-        SELECT 
-          user_id,
-          created_at as activated_at
+    const start = startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const end = endDate || new Date();
+
+    const result = await db.execute(sql`
+      WITH introductions AS (
+        SELECT
+          (properties->>'match_id')::uuid as match_id,
+          MIN(occurred_at) as introduced_at
         FROM analytics_events
-        WHERE event_type = ${EventType.PROFILE_ACTIVATED}
+        WHERE event_type = 'match_introduced'
+          AND occurred_at >= ${start.toISOString()}
+          AND occurred_at <= ${end.toISOString()}
+        GROUP BY (properties->>'match_id')::uuid
+      ),
+      interviews AS (
+        SELECT
+          (properties->>'match_id')::uuid as match_id,
+          MIN(occurred_at) as scheduled_at
+        FROM analytics_events
+        WHERE event_type = 'interview_scheduled'
+        GROUP BY (properties->>'match_id')::uuid
+      ),
+      ttv_values AS (
+        SELECT
+          intro.match_id,
+          EXTRACT(EPOCH FROM (int.scheduled_at - intro.introduced_at)) / (24 * 3600) as days
+        FROM introductions intro
+        INNER JOIN interviews int ON intro.match_id = int.match_id
+        WHERE int.scheduled_at > intro.introduced_at
+      )
+      SELECT
+        PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY days) as p50,
+        PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY days) as p75,
+        PERCENTILE_CONT(0.90) WITHIN GROUP (ORDER BY days) as p90,
+        COUNT(*) as sample_size
+      FROM ttv_values
+    `);
+
+    const row = result.rows[0] as any;
+    const median = parseFloat(row.p50 || '0');
+    const p75 = parseFloat(row.p75 || '0');
+    const p90 = parseFloat(row.p90 || '0');
+    const sampleSize = parseInt(row.sample_size || '0');
+
+    log.info('metrics.ttv.calculated', {
+      median,
+      p75,
+      p90,
+      sampleSize,
+      cohort,
+    });
+
+    return {
+      metric: 'TTV',
+      value: median,
+      unit: 'days',
+      target: 7,
+      onTrack: median <= 7,
+      cohort,
+      percentile: { p50: median, p75, p90 },
+      sampleSize,
+      calculatedAt: new Date(),
+    };
+  } catch (error) {
+    log.error('metrics.ttv.failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    throw error;
+  }
+}
+
+// ============================================================================
+// TIME TO SIGNED CONTRACT (TTSC)
+// ============================================================================
+
+/**
+ * Calculate TTSC: Time from match introduction to contract signed
+ * PRD Target: ≤30 days (median)
+ */
+export async function calculateTTSC(
+  cohort?: string,
+  startDate?: Date,
+  endDate?: Date
+): Promise<TTSCResult> {
+  try {
+    const start = startDate || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000); // Last 90 days
+    const end = endDate || new Date();
+
+    const result = await db.execute(sql`
+      WITH introductions AS (
+        SELECT
+          (properties->>'match_id')::uuid as match_id,
+          MIN(occurred_at) as introduced_at
+        FROM analytics_events
+        WHERE event_type = 'match_introduced'
+          AND occurred_at >= ${start.toISOString()}
+          AND occurred_at <= ${end.toISOString()}
+        GROUP BY (properties->>'match_id')::uuid
       ),
       contracts AS (
-        SELECT DISTINCT ON (user_id)
-          user_id,
-          created_at as contract_signed_at
+        SELECT
+          (properties->>'match_id')::uuid as match_id,
+          MIN(occurred_at) as signed_at
         FROM analytics_events
-        WHERE event_type = ${EventType.CONTRACT_SIGNED}
-        ORDER BY user_id, created_at ASC
+        WHERE event_type = 'contract_signed'
+        GROUP BY (properties->>'match_id')::uuid
+      ),
+      ttsc_values AS (
+        SELECT
+          intro.match_id,
+          EXTRACT(EPOCH FROM (cont.signed_at - intro.introduced_at)) / (24 * 3600) as days
+        FROM introductions intro
+        INNER JOIN contracts cont ON intro.match_id = cont.match_id
+        WHERE cont.signed_at > intro.introduced_at
       )
-      SELECT 
-        EXTRACT(EPOCH FROM (c.contract_signed_at - a.activated_at)) / 86400 as days_to_contract
-      FROM activations a
-      INNER JOIN contracts c ON a.user_id = c.user_id
-      WHERE c.contract_signed_at >= a.activated_at
-      ORDER BY days_to_contract
+      SELECT
+        PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY days) as p50,
+        PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY days) as p75,
+        PERCENTILE_CONT(0.90) WITHIN GROUP (ORDER BY days) as p90,
+        COUNT(*) as sample_size
+      FROM ttsc_values
     `);
 
-    if (results.rows.length === 0) {
-      return null;
-    }
+    const row = result.rows[0] as any;
+    const median = parseFloat(row.p50 || '0');
+    const p75 = parseFloat(row.p75 || '0');
+    const p90 = parseFloat(row.p90 || '0');
+    const sampleSize = parseInt(row.sample_size || '0');
 
-    const values = results.rows.map((r) => r.days_to_contract);
-    return calculateMedian(values);
+    log.info('metrics.ttsc.calculated', {
+      median,
+      p75,
+      p90,
+      sampleSize,
+      cohort,
+    });
+
+    return {
+      metric: 'TTSC',
+      value: median,
+      unit: 'days',
+      target: 30,
+      onTrack: median <= 30,
+      cohort,
+      percentile: { p50: median, p75, p90 },
+      sampleSize,
+      calculatedAt: new Date(),
+    };
   } catch (error) {
-    log.error('Failed to calculate TTSC median', { error });
-    return null;
+    log.error('metrics.ttsc.failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    throw error;
+  }
+}
+
+// ============================================================================
+// PURPOSE-ALIGNMENT CONTRIBUTION (PAC) LIFT
+// ============================================================================
+
+/**
+ * Calculate PAC Lift: Impact of purpose alignment on match acceptance
+ * PRD Target: ≥20% lift in acceptance rate for high-PAC matches
+ */
+export async function calculatePACLift(startDate?: Date, endDate?: Date): Promise<PACLiftResult> {
+  try {
+    const start = startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const end = endDate || new Date();
+
+    // High PAC: PAC score ≥ 70
+    // Low/No PAC: PAC score < 30
+    const result = await db.execute(sql`
+      WITH matches_with_pac AS (
+        SELECT
+          entity_id as match_id,
+          (properties->>'score')::float as score,
+          (properties->>'pac_contribution')::float as pac,
+          CASE
+            WHEN (properties->>'pac_contribution')::float >= 0.70 THEN 'high_pac'
+            WHEN (properties->>'pac_contribution')::float < 0.30 THEN 'low_pac'
+            ELSE 'medium_pac'
+          END as pac_bucket
+        FROM analytics_events
+        WHERE event_type = 'match_generated'
+          AND occurred_at >= ${start.toISOString()}
+          AND occurred_at <= ${end.toISOString()}
+          AND properties ? 'pac_contribution'
+      ),
+      match_acceptance AS (
+        SELECT DISTINCT
+          entity_id as match_id
+        FROM analytics_events
+        WHERE event_type = 'match_introduced'
+      )
+      SELECT
+        m.pac_bucket,
+        AVG(m.score) as avg_score,
+        COUNT(*) as total_matches,
+        COUNT(DISTINCT a.match_id) as accepted_matches,
+        (COUNT(DISTINCT a.match_id)::float / COUNT(*)::float) as acceptance_rate
+      FROM matches_with_pac m
+      LEFT JOIN match_acceptance a ON m.match_id = a.match_id
+      WHERE m.pac_bucket IN ('high_pac', 'low_pac')
+      GROUP BY m.pac_bucket
+    `);
+
+    const rows = result.rows as any[];
+    const highPAC = rows.find((r) => r.pac_bucket === 'high_pac');
+    const lowPAC = rows.find((r) => r.pac_bucket === 'low_pac');
+
+    const withPAC = highPAC ? parseFloat(highPAC.acceptance_rate) * 100 : 0;
+    const withoutPAC = lowPAC ? parseFloat(lowPAC.acceptance_rate) * 100 : 0;
+    const lift = withoutPAC > 0 ? ((withPAC - withoutPAC) / withoutPAC) * 100 : 0;
+
+    log.info('metrics.pac_lift.calculated', {
+      withPAC,
+      withoutPAC,
+      lift,
+      sampleSizeHigh: highPAC?.total_matches || 0,
+      sampleSizeLow: lowPAC?.total_matches || 0,
+    });
+
+    return {
+      metric: 'PAC_LIFT',
+      withPAC,
+      withoutPAC,
+      lift,
+      targetLift: 20,
+      onTrack: lift >= 20,
+      sampleSize: {
+        withPAC: parseInt(highPAC?.total_matches || '0'),
+        withoutPAC: parseInt(lowPAC?.total_matches || '0'),
+      },
+      calculatedAt: new Date(),
+    };
+  } catch (error) {
+    log.error('metrics.pac_lift.failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    throw error;
+  }
+}
+
+// ============================================================================
+// SYSTEM USABILITY SCALE (SUS)
+// ============================================================================
+
+/**
+ * Calculate SUS: System usability score from surveys
+ * PRD Target: ≥75 (above average)
+ */
+export async function calculateSUS(startDate?: Date, endDate?: Date): Promise<SUSResult> {
+  try {
+    const start = startDate || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+    const end = endDate || new Date();
+
+    const result = await db.execute(sql`
+      SELECT
+        AVG((properties->>'total_score')::float) as avg_score,
+        COUNT(*) as responses
+      FROM analytics_events
+      WHERE event_type = 'sus_survey_completed'
+        AND occurred_at >= ${start.toISOString()}
+        AND occurred_at <= ${end.toISOString()}
+    `);
+
+    const row = result.rows[0] as any;
+    const avgScore = parseFloat(row.avg_score || '0');
+    const responses = parseInt(row.responses || '0');
+
+    log.info('metrics.sus.calculated', {
+      avgScore,
+      responses,
+    });
+
+    return {
+      metric: 'SUS',
+      value: avgScore,
+      unit: 'score',
+      target: 75,
+      onTrack: avgScore >= 75,
+      responses,
+      sampleSize: responses,
+      calculatedAt: new Date(),
+    };
+  } catch (error) {
+    log.error('metrics.sus.failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    throw error;
   }
 }
 
@@ -403,306 +479,111 @@ export async function calculateTTSCMedian(): Promise<number | null> {
 // ============================================================================
 
 /**
- * Calculate Well-Being Delta for a user over specified period
- *
- * Per PRD Part 2: Well-Being Delta = change in stress/control over 14/30 days
- * Target: ≥60% show ≥+1 improvement on at least one dimension
- * Per PRD Part 5 (F5): Non-diagnostic, opt-in, private
+ * Calculate Well-Being Delta: Change in user well-being over time
+ * PRD Target: ≥70% of users show improvement
  */
 export async function calculateWellBeingDelta(
-  userId: string,
-  days: 14 | 30 = 14
-): Promise<WellBeingDeltaResult | null> {
+  startDate?: Date,
+  endDate?: Date
+): Promise<WellBeingDeltaResult> {
   try {
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
+    const start = startDate || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+    const end = endDate || new Date();
 
-    // Get check-ins in the period
-    const checkins = await db
-      .select()
-      .from(analyticsEvents)
-      .where(
-        and(
-          eq(analyticsEvents.userId, userId),
-          eq(analyticsEvents.eventType, EventType.WELLBEING_CHECKIN),
-          gte(analyticsEvents.createdAt, startDate)
-        )
+    // Get first and last checkin for each user
+    const result = await db.execute(sql`
+      WITH ranked_checkins AS (
+        SELECT
+          user_id,
+          (properties->>'overall_score')::float as score,
+          properties->'dimensions' as dimensions,
+          occurred_at,
+          ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY occurred_at ASC) as first_rank,
+          ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY occurred_at DESC) as last_rank
+        FROM analytics_events
+        WHERE event_type = 'wellbeing_checkin'
+          AND occurred_at >= ${start.toISOString()}
+          AND occurred_at <= ${end.toISOString()}
+      ),
+      first_last AS (
+        SELECT
+          user_id,
+          MAX(CASE WHEN first_rank = 1 THEN score END) as first_score,
+          MAX(CASE WHEN last_rank = 1 THEN score END) as last_score
+        FROM ranked_checkins
+        GROUP BY user_id
+        HAVING COUNT(*) >= 2
       )
-      .orderBy(analyticsEvents.createdAt);
-
-    if (checkins.length < 2) {
-      // Need at least 2 check-ins to calculate delta
-      return null;
-    }
-
-    const firstCheckin = checkins[0];
-    const lastCheckin = checkins[checkins.length - 1];
-
-    const startStress = (firstCheckin.properties as any)?.stress_level || 3;
-    const endStress = (lastCheckin.properties as any)?.stress_level || 3;
-    const startControl = (firstCheckin.properties as any)?.control_level || 3;
-    const endControl = (lastCheckin.properties as any)?.control_level || 3;
-
-    const stressDelta = endStress - startStress; // Negative is improvement (lower stress)
-    const controlDelta = endControl - startControl; // Positive is improvement (more control)
-
-    // Improved if stress decreased by ≥1 OR control increased by ≥1
-    const improved = stressDelta <= -1 || controlDelta >= 1;
-
-    return {
-      userId,
-      periodDays: days,
-      startStress,
-      endStress,
-      startControl,
-      endControl,
-      stressDelta,
-      controlDelta,
-      improved,
-    };
-  } catch (error) {
-    log.error('Failed to calculate Well-Being Delta', { error, userId, days });
-    return null;
-  }
-}
-
-/**
- * Calculate percentage of users showing improvement in Well-Being
- *
- * Per PRD Part 2: Target ≥60% show improvement
- */
-export async function calculateWellBeingImprovementRate(
-  days: 14 | 30 = 14
-): Promise<number | null> {
-  try {
-    // Get all users with well-being opt-in
-    const usersWithCheckins = await db.execute<{ user_id: string }>(sql`
-      SELECT DISTINCT user_id
-      FROM analytics_events
-      WHERE event_type = ${EventType.WELLBEING_CHECKIN}
-        AND created_at >= NOW() - INTERVAL '${sql.raw(days.toString())} days'
-      GROUP BY user_id
-      HAVING COUNT(*) >= 2
+      SELECT
+        AVG(last_score - first_score) as avg_delta,
+        COUNT(*) as sample_size,
+        SUM(CASE WHEN last_score > first_score THEN 1 ELSE 0 END) as improved_count
+      FROM first_last
     `);
 
-    if (usersWithCheckins.rows.length === 0) {
-      return null;
-    }
+    const row = result.rows[0] as any;
+    const avgDelta = parseFloat(row.avg_delta || '0');
+    const sampleSize = parseInt(row.sample_size || '0');
+    const improvedCount = parseInt(row.improved_count || '0');
+    const positiveChange = sampleSize > 0 ? (improvedCount / sampleSize) * 100 : 0;
 
-    let improvedCount = 0;
-    const totalCount = usersWithCheckins.rows.length;
-
-    for (const row of usersWithCheckins.rows) {
-      const delta = await calculateWellBeingDelta(row.user_id, days);
-      if (delta?.improved) {
-        improvedCount++;
-      }
-    }
-
-    return (improvedCount / totalCount) * 100;
-  } catch (error) {
-    log.error('Failed to calculate Well-Being improvement rate', { error, days });
-    return null;
-  }
-}
-
-// ============================================================================
-// PAC (Purpose-Alignment Contribution)
-// ============================================================================
-
-/**
- * Get PAC contribution from a match
- *
- * Per PRD Part 2: PAC = portion of match score from values/causes alignment
- * Per PRD Part 7: Store in matches.subscores JSONB field
- */
-export async function getPACContribution(matchId: string): Promise<PACContribution | null> {
-  try {
-    const match = await db.select().from(matches).where(eq(matches.id, matchId)).limit(1);
-
-    if (match.length === 0) {
-      return null;
-    }
-
-    const matchData = match[0];
-    const subscores = matchData.subscores as any;
-
-    if (!subscores) {
-      return null;
-    }
-
-    const overallScore = matchData.matchScore || 0;
-    const pacScore = subscores.purpose_alignment || 0;
-    const skillsScore = subscores.skills || 0;
-    const constraintsScore = subscores.constraints || 0;
-    const verificationScore = subscores.verification || 0;
-
-    const pacPercentage = overallScore > 0 ? (pacScore / overallScore) * 100 : 0;
+    log.info('metrics.wellbeing_delta.calculated', {
+      avgDelta,
+      positiveChange,
+      sampleSize,
+    });
 
     return {
-      matchId,
-      overallScore,
-      pacScore,
-      skillsScore,
-      constraintsScore,
-      verificationScore,
-      pacPercentage,
+      metric: 'WELLBEING_DELTA',
+      averageDelta: avgDelta,
+      byDimension: {}, // TODO: Calculate per dimension if needed
+      positiveChange,
+      target: 70,
+      onTrack: positiveChange >= 70,
+      sampleSize,
+      calculatedAt: new Date(),
     };
   } catch (error) {
-    log.error('Failed to get PAC contribution', { error, matchId });
-    return null;
-  }
-}
-
-/**
- * Calculate PAC Lift
- *
- * Per PRD Part 2: Top-decile PAC matches should show ≥20% higher intro acceptance
- */
-export async function calculatePACLift(): Promise<{ topDecileLift: number } | null> {
-  try {
-    // This would require correlation analysis between PAC scores and acceptance rates
-    // Simplified version: compare acceptance rate of top 10% PAC vs baseline
-
-    // TODO: Implement full PAC lift calculation
-    // For now, return null (requires more match acceptance data)
-
-    return null;
-  } catch (error) {
-    log.error('Failed to calculate PAC lift', { error });
-    return null;
+    log.error('metrics.wellbeing_delta.failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    throw error;
   }
 }
 
 // ============================================================================
-// HELPER FUNCTIONS
+// CONSOLIDATED METRICS
 // ============================================================================
 
 /**
- * Calculate median from array of numbers
+ * Calculate all key metrics at once
  */
-function calculateMedian(values: number[]): number {
-  if (values.length === 0) return 0;
-
-  const sorted = [...values].sort((a, b) => a - b);
-  const mid = Math.floor(sorted.length / 2);
-
-  if (sorted.length % 2 === 0) {
-    return (sorted[mid - 1] + sorted[mid]) / 2;
-  } else {
-    return sorted[mid];
-  }
-}
-
-/**
- * Calculate percentile from array of numbers
- */
-function calculatePercentile(values: number[], percentile: number): number {
-  if (values.length === 0) return 0;
-
-  const sorted = [...values].sort((a, b) => a - b);
-  const index = Math.ceil((percentile / 100) * sorted.length) - 1;
-
-  return sorted[Math.max(0, index)];
-}
-
-/**
- * Get cohort metrics for a metric type
- */
-export async function getCohortMetrics(
-  metricType: 'ttfqi' | 'ttv' | 'ttsc'
-): Promise<CohortMetrics[]> {
-  // TODO: Implement cohort-based metric aggregation
-  // This would group by role family, seniority, geography
-
-  return [];
-}
-
-/**
- * Get all metrics in a consolidated response
- * Used by metrics dashboard and overview pages
- */
-export async function getAllMetrics(): Promise<{
-  ttsc: { median: number; p75: number; sampleSize: number } | null;
-  ttfqi: { median: number; p75: number; sampleSize: number } | null;
-  ttv: { median: number; p75: number; sampleSize: number } | null;
-  pac: { topDecileLift: number } | null;
-  wellbeing: { improvementRate: number } | null;
+export async function calculateAllMetrics(
+  startDate?: Date,
+  endDate?: Date
+): Promise<{
+  ttfqi: TTFQIResult;
+  ttv: TTVResult;
+  ttsc: TTSCResult;
+  pacLift: PACLiftResult;
+  sus: SUSResult;
+  wellBeingDelta: WellBeingDeltaResult;
 }> {
-  try {
-    const [ttscMedian, ttfqiMedian, ttvMedian, pacLift, wellbeingRate] = await Promise.all([
-      calculateTTSCMedian(),
-      calculateTTFQIMedian(),
-      calculateTTVMedian(),
-      calculatePACLift(),
-      calculateWellBeingImprovementRate(),
-    ]);
+  const [ttfqi, ttv, ttsc, pacLift, sus, wellBeingDelta] = await Promise.all([
+    calculateTTFQI(undefined, startDate, endDate),
+    calculateTTV(undefined, startDate, endDate),
+    calculateTTSC(undefined, startDate, endDate),
+    calculatePACLift(startDate, endDate),
+    calculateSUS(startDate, endDate),
+    calculateWellBeingDelta(startDate, endDate),
+  ]);
 
-    return {
-      ttsc:
-        ttscMedian !== null ? { median: ttscMedian, p75: ttscMedian * 1.2, sampleSize: 0 } : null,
-      ttfqi:
-        ttfqiMedian !== null
-          ? { median: ttfqiMedian, p75: ttfqiMedian * 1.2, sampleSize: 0 }
-          : null,
-      ttv: ttvMedian !== null ? { median: ttvMedian, p75: ttvMedian * 1.2, sampleSize: 0 } : null,
-      pac: pacLift,
-      wellbeing: wellbeingRate !== null ? { improvementRate: wellbeingRate } : null,
-    };
-  } catch (error) {
-    log.error('get-all-metrics.failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-    return {
-      ttsc: null,
-      ttfqi: null,
-      ttv: null,
-      pac: null,
-      wellbeing: null,
-    };
-  }
-}
-
-/**
- * Calculate fairness gap metric
- * Measures disparity in match acceptance rates across demographic groups
- */
-export async function calculateFairnessGap(): Promise<number | null> {
-  try {
-    // Get all match acceptances grouped by demographic
-    const acceptances = await db
-      .select({
-        demographic: sql<string>`COALESCE(
-          (properties->>'demographic')::text,
-          'unknown'
-        )`,
-        accepted: sql<number>`COUNT(*) FILTER (WHERE properties->>'action' = 'introduce')`,
-        total: sql<number>`COUNT(*)`,
-      })
-      .from(analyticsEvents)
-      .where(eq(analyticsEvents.eventType, EventType.MATCH_ACTIONED))
-      .groupBy(sql`COALESCE((properties->>'demographic')::text, 'unknown')`);
-
-    if (acceptances.length < 2) {
-      return null; // Need at least 2 groups to calculate gap
-    }
-
-    // Calculate acceptance rates
-    const rates = acceptances.map((group) => ({
-      demographic: group.demographic,
-      rate: group.total > 0 ? group.accepted / group.total : 0,
-    }));
-
-    // Calculate max gap (difference between highest and lowest rate)
-    const maxRate = Math.max(...rates.map((r) => r.rate));
-    const minRate = Math.min(...rates.map((r) => r.rate));
-    const gap = maxRate - minRate;
-
-    return gap;
-  } catch (error) {
-    log.error('calculate-fairness-gap.failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-    return null;
-  }
+  return {
+    ttfqi,
+    ttv,
+    ttsc,
+    pacLift,
+    sus,
+    wellBeingDelta,
+  };
 }

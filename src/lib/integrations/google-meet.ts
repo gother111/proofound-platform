@@ -1,310 +1,205 @@
 /**
  * Google Meet API Integration
- * Implements PRD Gap 1: Interview scheduling with Google Meet
  *
- * Features:
- * - OAuth 2.0 authentication
- * - Calendar event creation with Google Meet link
- * - Event cancellation
- * - Calendar invite generation
- *
- * Uses Google Calendar API v3 with conference data
- * Docs: https://developers.google.com/calendar/api/v3/reference
+ * Handles Google OAuth and Google Calendar/Meet event creation
+ * PRD Requirement: Video conferencing integration for interviews
  */
 
-interface GoogleMeetEventParams {
-  summary: string; // Meeting title
-  startTime: string; // ISO 8601 format
-  endTime: string; // ISO 8601 format
-  attendees: string[]; // Email addresses
-  organizerEmail: string;
-  description?: string;
-  timezone?: string;
-}
+import { google } from 'googleapis';
+import { log } from '@/lib/log';
 
-interface GoogleCalendarEvent {
+export interface GoogleMeetEvent {
   id: string;
+  htmlLink: string;
+  hangoutLink: string; // Google Meet link
   summary: string;
-  start: {
-    dateTime: string;
-    timeZone: string;
-  };
-  end: {
-    dateTime: string;
-    timeZone: string;
-  };
-  attendees?: Array<{
-    email: string;
-    responseStatus: string;
-  }>;
-  hangoutLink?: string; // Google Meet link
-  conferenceData?: {
-    entryPoints: Array<{
-      entryPointType: string;
-      uri: string;
-      label?: string;
-    }>;
-    conferenceSolution: {
-      name: string;
-      iconUri: string;
-    };
-    conferenceId: string;
-  };
+  start: { dateTime: string; timeZone: string };
+  end: { dateTime: string; timeZone: string };
 }
 
-interface GoogleTokenResponse {
-  access_token: string;
-  expires_in: number;
-  refresh_token?: string;
-  scope: string;
-  token_type: string;
+export interface CreateGoogleMeetParams {
+  summary: string;
+  start_time: string; // ISO 8601 format
+  duration: number; // minutes
+  timezone?: string;
+  description?: string;
+  attendees?: string[]; // email addresses
 }
 
 /**
- * Get Google OAuth access token
- * This assumes we have a refresh token stored for the user
- * For server-to-server, use service account
+ * Create a Google Meet meeting via Google Calendar
  */
-export async function getGoogleAccessToken(refreshToken?: string): Promise<string> {
+export async function createGoogleMeet(
+  accessToken: string,
+  params: CreateGoogleMeetParams
+): Promise<GoogleMeetEvent> {
+  try {
+    const oauth2Client = new google.auth.OAuth2();
+    oauth2Client.setCredentials({ access_token: accessToken });
+
+    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+
+    const startDate = new Date(params.start_time);
+    const endDate = new Date(startDate.getTime() + params.duration * 60000);
+
+    const event = {
+      summary: params.summary,
+      description: params.description || '',
+      start: {
+        dateTime: startDate.toISOString(),
+        timeZone: params.timezone || 'UTC',
+      },
+      end: {
+        dateTime: endDate.toISOString(),
+        timeZone: params.timezone || 'UTC',
+      },
+      attendees: params.attendees?.map((email) => ({ email })) || [],
+      conferenceData: {
+        createRequest: {
+          requestId: `meet-${Date.now()}`,
+          conferenceSolutionKey: { type: 'hangoutsMeet' },
+        },
+      },
+      reminders: {
+        useDefault: false,
+        overrides: [
+          { method: 'email', minutes: 24 * 60 },
+          { method: 'popup', minutes: 15 },
+        ],
+      },
+    };
+
+    const response = await calendar.events.insert({
+      calendarId: 'primary',
+      requestBody: event,
+      conferenceDataVersion: 1,
+      sendUpdates: 'all',
+    });
+
+    const createdEvent = response.data;
+
+    if (!createdEvent.hangoutLink) {
+      throw new Error('Failed to create Google Meet link');
+    }
+
+    log.info('google.meet.created', {
+      eventId: createdEvent.id,
+      summary: params.summary,
+      duration: params.duration,
+    });
+
+    return {
+      id: createdEvent.id!,
+      htmlLink: createdEvent.htmlLink!,
+      hangoutLink: createdEvent.hangoutLink,
+      summary: createdEvent.summary!,
+      start: createdEvent.start as any,
+      end: createdEvent.end as any,
+    };
+  } catch (error) {
+    log.error('google.meet.create.failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    throw error;
+  }
+}
+
+/**
+ * Exchange OAuth code for access token
+ */
+export async function exchangeGoogleCode(
+  code: string,
+  redirectUri: string
+): Promise<{
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  scope: string;
+}> {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
   if (!clientId || !clientSecret) {
-    throw new Error('Missing Google OAuth credentials');
+    throw new Error('Google credentials not configured');
   }
 
-  // If using service account (for org-level integration)
-  if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
-    return await getServiceAccountToken();
-  }
+  const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUri);
 
-  // User-level OAuth with refresh token
-  if (!refreshToken) {
-    throw new Error('No refresh token available for Google Calendar');
-  }
+  const { tokens } = await oauth2Client.getToken(code);
 
-  const response = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams({
-      client_id: clientId,
-      client_secret: clientSecret,
-      refresh_token: refreshToken,
-      grant_type: 'refresh_token',
-    }),
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Failed to get Google access token: ${error}`);
-  }
-
-  const data: GoogleTokenResponse = await response.json();
-  return data.access_token;
-}
-
-/**
- * Get service account token for server-to-server Google Calendar access
- */
-async function getServiceAccountToken(): Promise<string> {
-  const serviceAccountKey = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY || '{}');
-
-  // Use Google Auth library for service account
-  // For MVP, we'll implement OAuth flow per user
-  throw new Error('Service account not yet implemented - use user OAuth');
-}
-
-/**
- * Create Google Calendar event with Meet link
- * API Docs: https://developers.google.com/calendar/api/v3/reference/events/insert
- */
-export async function createGoogleMeetEvent(
-  params: GoogleMeetEventParams,
-  accessToken: string
-): Promise<{
-  eventId: string;
-  meetLink: string;
-  calendarLink: string;
-}> {
-  // PRD requirement: 30-minute duration
-  // Calculate end time if not provided
-  const startDate = new Date(params.startTime);
-  const endDate = params.endTime
-    ? new Date(params.endTime)
-    : new Date(startDate.getTime() + 30 * 60000);
-
-  const requestBody = {
-    summary: params.summary,
-    description: params.description || '',
-    start: {
-      dateTime: startDate.toISOString(),
-      timeZone: params.timezone || 'UTC',
-    },
-    end: {
-      dateTime: endDate.toISOString(),
-      timeZone: params.timezone || 'UTC',
-    },
-    attendees: params.attendees.map((email) => ({ email })),
-    conferenceData: {
-      createRequest: {
-        requestId: `meet-${Date.now()}`, // Unique request ID
-        conferenceSolutionKey: {
-          type: 'hangoutsMeet', // Creates Google Meet link
-        },
-      },
-    },
-    reminders: {
-      useDefault: false,
-      overrides: [
-        { method: 'email', minutes: 24 * 60 }, // 1 day before
-        { method: 'popup', minutes: 30 }, // 30 minutes before
-      ],
-    },
-    sendUpdates: 'all', // Send calendar invites to all attendees
-  };
-
-  const response = await fetch(
-    'https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1&sendUpdates=all',
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-    }
-  );
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Failed to create Google Calendar event: ${error}`);
-  }
-
-  const event: GoogleCalendarEvent = await response.json();
-
-  // Extract Google Meet link
-  const meetLink =
-    event.hangoutLink ||
-    event.conferenceData?.entryPoints?.find((ep) => ep.entryPointType === 'video')?.uri ||
-    '';
-
-  if (!meetLink) {
-    throw new Error('Failed to generate Google Meet link');
+  if (!tokens.access_token || !tokens.refresh_token) {
+    throw new Error('Failed to get Google tokens');
   }
 
   return {
-    eventId: event.id,
-    meetLink,
-    calendarLink: `https://calendar.google.com/calendar/event?eid=${event.id}`,
+    access_token: tokens.access_token,
+    refresh_token: tokens.refresh_token,
+    expires_in: tokens.expiry_date ? Math.floor((tokens.expiry_date - Date.now()) / 1000) : 3600,
+    scope: tokens.scope || '',
   };
 }
 
 /**
- * Cancel Google Calendar event
- * API Docs: https://developers.google.com/calendar/api/v3/reference/events/delete
+ * Refresh Google access token
  */
-export async function cancelGoogleMeetEvent(eventId: string, accessToken: string): Promise<void> {
-  const response = await fetch(
-    `https://www.googleapis.com/calendar/v3/calendars/primary/events/${eventId}?sendUpdates=all`,
-    {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    }
-  );
+export async function refreshGoogleToken(refreshToken: string): Promise<{
+  access_token: string;
+  expires_in: number;
+}> {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
-  if (!response.ok && response.status !== 404 && response.status !== 410) {
-    // 404/410 are acceptable - event might already be deleted
-    const error = await response.text();
-    throw new Error(`Failed to cancel Google Calendar event: ${error}`);
+  if (!clientId || !clientSecret) {
+    throw new Error('Google credentials not configured');
   }
+
+  const oauth2Client = new google.auth.OAuth2(clientId, clientSecret);
+  oauth2Client.setCredentials({ refresh_token: refreshToken });
+
+  const { credentials } = await oauth2Client.refreshAccessToken();
+
+  if (!credentials.access_token) {
+    throw new Error('Failed to refresh Google token');
+  }
+
+  return {
+    access_token: credentials.access_token,
+    expires_in: credentials.expiry_date
+      ? Math.floor((credentials.expiry_date - Date.now()) / 1000)
+      : 3600,
+  };
 }
 
 /**
- * Get Google Calendar event details
- * API Docs: https://developers.google.com/calendar/api/v3/reference/events/get
+ * Get Google OAuth URL
  */
-export async function getGoogleCalendarEvent(
-  eventId: string,
-  accessToken: string
-): Promise<GoogleCalendarEvent> {
-  const response = await fetch(
-    `https://www.googleapis.com/calendar/v3/calendars/primary/events/${eventId}`,
-    {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    }
-  );
+export function getGoogleAuthUrl(redirectUri: string, state: string): string {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Failed to get Google Calendar event: ${error}`);
+  if (!clientId || !clientSecret) {
+    throw new Error('Google credentials not configured');
   }
 
-  return response.json();
+  const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUri);
+
+  return oauth2Client.generateAuthUrl({
+    access_type: 'offline',
+    scope: [
+      'https://www.googleapis.com/auth/calendar.events',
+      'https://www.googleapis.com/auth/calendar',
+    ],
+    state,
+    prompt: 'consent', // Force refresh token
+  });
 }
 
 /**
- * Update Google Calendar event (for rescheduling)
- * API Docs: https://developers.google.com/calendar/api/v3/reference/events/patch
+ * Revoke Google access
  */
-export async function updateGoogleCalendarEvent(
-  eventId: string,
-  params: Partial<GoogleMeetEventParams>,
-  accessToken: string
-): Promise<void> {
-  const requestBody: any = {};
+export async function revokeGoogleAccess(accessToken: string): Promise<void> {
+  const oauth2Client = new google.auth.OAuth2();
+  oauth2Client.setCredentials({ access_token: accessToken });
 
-  if (params.summary) requestBody.summary = params.summary;
-  if (params.description) requestBody.description = params.description;
-
-  if (params.startTime) {
-    requestBody.start = {
-      dateTime: params.startTime,
-      timeZone: params.timezone || 'UTC',
-    };
-  }
-
-  if (params.endTime) {
-    requestBody.end = {
-      dateTime: params.endTime,
-      timeZone: params.timezone || 'UTC',
-    };
-  }
-
-  if (params.attendees) {
-    requestBody.attendees = params.attendees.map((email) => ({ email }));
-  }
-
-  const response = await fetch(
-    `https://www.googleapis.com/calendar/v3/calendars/primary/events/${eventId}?sendUpdates=all`,
-    {
-      method: 'PATCH',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-    }
-  );
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Failed to update Google Calendar event: ${error}`);
-  }
-}
-
-/**
- * Check if user has Google Calendar connected
- */
-export async function hasGoogleCalendarConnected(userId: string): Promise<boolean> {
-  // This would check the user_integrations table
-  // Implementation depends on how we store integration tokens
-  // For now, return a placeholder
-  return false;
+  await oauth2Client.revokeToken(accessToken);
 }

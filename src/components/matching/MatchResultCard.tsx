@@ -9,6 +9,9 @@ import { MapPin, Clock, DollarSign, Shield, Eye, EyeOff, BellOff } from 'lucide-
 import { PACScoreExplainer } from './PACScoreExplainer';
 import { MatchExplainerModal } from './MatchExplainerModal';
 import { SnoozeDialog } from './SnoozeDialog';
+import { VerificationGatesWarning } from './VerificationGatesWarning';
+import { RankDisplay } from './RankDisplay';
+import { ConsentToShareDialog } from './ConsentToShareDialog';
 
 interface MatchResultCardProps {
   result: {
@@ -68,6 +71,10 @@ export function MatchResultCard({
   const [matchExplanation, setMatchExplanation] = useState<any>(null);
   const [isLoadingExplanation, setIsLoadingExplanation] = useState(false);
   const [isSnoozeDialogOpen, setIsSnoozeDialogOpen] = useState(false);
+  const [showGatesWarning, setShowGatesWarning] = useState(false);
+  const [gateCheckResult, setGateCheckResult] = useState<any>(null);
+  const [isConsentDialogOpen, setIsConsentDialogOpen] = useState(false);
+  const [visibleFieldsData, setVisibleFieldsData] = useState<any>(null);
 
   // Top 3 skills
   const topSkills = skills.slice(0, 3);
@@ -95,6 +102,40 @@ export function MatchResultCard({
       console.error('Failed to fetch match explanation:', error);
     } finally {
       setIsLoadingExplanation(false);
+    }
+  };
+
+  // Fetch visible fields for consent dialog
+  const fetchVisibleFields = async () => {
+    if (!result.id) return;
+
+    try {
+      const response = await fetch(`/api/match/visible-fields/${result.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setVisibleFieldsData(data);
+        setIsConsentDialogOpen(true);
+      }
+    } catch (error) {
+      console.error('Failed to fetch visible fields:', error);
+    }
+  };
+
+  // Handle consent and interest
+  const handleInterested = async () => {
+    if (!isOrgView) {
+      // Individual view - show consent dialog first
+      await fetchVisibleFields();
+    } else {
+      // Org view - direct action
+      if (onInterested) onInterested();
+    }
+  };
+
+  // Handle consent given - actually express interest
+  const handleConsentGiven = async (matchId: string) => {
+    if (onInterested) {
+      await onInterested();
     }
   };
 
@@ -129,17 +170,33 @@ export function MatchResultCard({
           {result.id && (
             <div className="mt-2">
               {matchExplanation ? (
-                <MatchExplainerModal
-                  matchId={matchExplanation.matchId}
-                  compositeScore={matchExplanation.compositeScore}
-                  rank={matchExplanation.rank}
-                  totalCandidates={matchExplanation.totalCandidates}
-                  rankBand={matchExplanation.rankBand}
-                  subscores={matchExplanation.subscores}
-                  skillsMatch={matchExplanation.skillsMatch}
-                  pac={matchExplanation.pac}
-                  constraints={matchExplanation.constraints}
-                />
+                <>
+                  <MatchExplainerModal
+                    matchId={matchExplanation.matchId}
+                    compositeScore={matchExplanation.compositeScore}
+                    rank={matchExplanation.rank}
+                    totalCandidates={matchExplanation.totalCandidates}
+                    rankBand={matchExplanation.rankBand}
+                    subscores={matchExplanation.subscores}
+                    skillsMatch={matchExplanation.skillsMatch}
+                    pac={matchExplanation.pac}
+                    constraints={matchExplanation.constraints}
+                  />
+                  {/* Rank Display - Show candidate's ranking */}
+                  {matchExplanation.rank && matchExplanation.totalCandidates && !isOrgView && (
+                    <div className="mt-2">
+                      <RankDisplay
+                        rank={matchExplanation.rank}
+                        totalCandidates={matchExplanation.totalCandidates}
+                        score={matchExplanation.compositeScore}
+                        topPercentile={Math.round(
+                          (matchExplanation.rank / matchExplanation.totalCandidates) * 100
+                        )}
+                        variant="compact"
+                      />
+                    </div>
+                  )}
+                </>
               ) : (
                 <Button
                   variant="ghost"
@@ -153,21 +210,23 @@ export function MatchResultCard({
               )}
             </div>
           )}
-          
+
           {/* Fallback PAC Explainer if no match ID */}
-          {!result.id && result.subscores && (result.subscores.pac || result.subscores.values || result.subscores.causes) && (
-            <div className="mt-2">
-              <PACScoreExplainer
-                pacScore={result.subscores.pac || result.score}
-                valuesOverlap={result.subscores.values || 0}
-                causesOverlap={result.subscores.causes || 0}
-                sharedValues={data?.valuesTags || []}
-                sharedCauses={data?.causeTags || []}
-                totalValues={(data?.valuesTags?.length || 0)}
-                totalCauses={(data?.causeTags?.length || 0)}
-              />
-            </div>
-          )}
+          {!result.id &&
+            result.subscores &&
+            (result.subscores.pac || result.subscores.values || result.subscores.causes) && (
+              <div className="mt-2">
+                <PACScoreExplainer
+                  pacScore={result.subscores.pac || result.score}
+                  valuesOverlap={result.subscores.values || 0}
+                  causesOverlap={result.subscores.causes || 0}
+                  sharedValues={data?.valuesTags || []}
+                  sharedCauses={data?.causeTags || []}
+                  totalValues={data?.valuesTags?.length || 0}
+                  totalCauses={data?.causeTags?.length || 0}
+                />
+              </div>
+            )}
         </div>
       </div>
 
@@ -278,7 +337,7 @@ export function MatchResultCard({
           <div className="flex gap-2">
             <Button
               size="sm"
-              onClick={onInterested}
+              onClick={handleInterested}
               style={{ backgroundColor: '#1C4D3A' }}
               className="flex-1"
             >
@@ -333,6 +392,30 @@ export function MatchResultCard({
             // Refresh matches list or remove from current view
             if (onHide) onHide();
           }}
+        />
+      )}
+
+      {/* Verification Gates Warning */}
+      {gateCheckResult && (
+        <VerificationGatesWarning
+          open={showGatesWarning}
+          onOpenChange={setShowGatesWarning}
+          unmetGates={gateCheckResult.unmetGates || []}
+          userVerifications={gateCheckResult.userVerifications || []}
+          assignmentTitle={result.assignment?.role || 'this role'}
+        />
+      )}
+
+      {/* Consent to Share Dialog */}
+      {visibleFieldsData && (
+        <ConsentToShareDialog
+          isOpen={isConsentDialogOpen}
+          onClose={() => setIsConsentDialogOpen(false)}
+          matchId={result.id || ''}
+          organizationName={visibleFieldsData.organizationName}
+          assignmentRole={visibleFieldsData.assignmentRole}
+          visibleFields={visibleFieldsData.visibleFields || []}
+          onConsent={handleConsentGiven}
         />
       )}
     </Card>

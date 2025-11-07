@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { skillsTaxonomy } from '@/db/schema';
 import { ilike, or, sql } from 'drizzle-orm';
+import { extractSkillsWithAI } from '@/lib/ai/skill-extractor';
+import { log } from '@/lib/log';
 
 /**
  * POST /api/expertise/auto-suggest
@@ -13,7 +15,9 @@ import { ilike, or, sql } from 'drizzle-orm';
  */
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -23,45 +27,72 @@ export async function POST(request: NextRequest) {
     const { text, context } = await request.json();
 
     if (!text || typeof text !== 'string') {
-      return NextResponse.json({
-        error: 'Invalid input',
-        message: 'text field is required and must be a string',
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Invalid input',
+          message: 'text field is required and must be a string',
+        },
+        { status: 400 }
+      );
     }
 
-    // Normalize and tokenize text
-    const normalizedText = text.toLowerCase();
-    const words = normalizedText
-      .split(/[\s,;.()[\]{}]+/)
-      .filter(w => w.length > 2) // Filter out very short words
-      .filter(w => !isCommonWord(w)); // Filter out common words
+    log.info('skill.auto_suggest.start', {
+      userId: user.id,
+      textLength: text.length,
+      context: context || 'general',
+    });
 
-    // Build unique search terms (skills might be multi-word)
-    const searchTerms = extractPotentialSkills(words, normalizedText);
+    // Use AI-powered extraction
+    const result = await extractSkillsWithAI(text, context || 'general');
 
-    // Search taxonomy for matches
-    const suggestions = await findMatchingSkills(searchTerms);
+    // Format skills for frontend
+    const suggestions = result.skills.map((skill) => ({
+      id: skill.taxonomyCode || skill.skillName.toLowerCase().replace(/\s+/g, '-'),
+      code: skill.taxonomyCode || '',
+      name: skill.skillName,
+      aliases: [],
+      description: skill.context,
+      slug: skill.skillName.toLowerCase().replace(/\s+/g, '-'),
+      tags: null,
+      score: skill.level,
+      confidence: skill.confidence,
+      level: skill.level,
+      monthsExperience: skill.monthsExperience,
+      relevance: skill.relevance,
+    }));
 
-    // Score and rank suggestions
-    const rankedSuggestions = rankSuggestions(suggestions, normalizedText, context);
+    log.info('skill.auto_suggest.success', {
+      userId: user.id,
+      skillCount: suggestions.length,
+      totalExperience: result.totalExperienceYears,
+    });
 
     return NextResponse.json({
       success: true,
-      suggestions: rankedSuggestions.slice(0, 20), // Top 20 suggestions
+      suggestions: suggestions.slice(0, 20), // Top 20 suggestions
       metadata: {
         textLength: text.length,
-        uniqueTerms: searchTerms.length,
         totalMatches: suggestions.length,
         context: context || 'general',
+        summary: result.summary,
+        totalExperienceYears: result.totalExperienceYears,
+        industries: result.industries,
+        roles: result.roles,
+        method: process.env.ANTHROPIC_API_KEY ? 'ai' : 'rule-based',
       },
     });
-
   } catch (error) {
-    console.error('Auto-suggest error:', error);
-    return NextResponse.json({
-      error: 'Failed to generate suggestions',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    }, { status: 500 });
+    log.error('skill.auto_suggest.failed', {
+      userId: user.id,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    return NextResponse.json(
+      {
+        error: 'Failed to generate suggestions',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }
 
@@ -70,15 +101,88 @@ export async function POST(request: NextRequest) {
  */
 function isCommonWord(word: string): boolean {
   const commonWords = new Set([
-    'the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with',
-    'a', 'an', 'as', 'by', 'from', 'that', 'this', 'these', 'those', 'was',
-    'were', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did',
-    'will', 'would', 'should', 'could', 'may', 'might', 'must', 'can',
-    'am', 'is', 'are', 'not', 'no', 'yes', 'also', 'very', 'just', 'only',
-    'about', 'into', 'through', 'over', 'after', 'before', 'between',
-    'under', 'above', 'below', 'up', 'down', 'out', 'off', 'than', 'when',
-    'where', 'why', 'how', 'all', 'each', 'every', 'both', 'few', 'more',
-    'most', 'some', 'such', 'other', 'any', 'own', 'same', 'so', 'then',
+    'the',
+    'and',
+    'or',
+    'but',
+    'in',
+    'on',
+    'at',
+    'to',
+    'for',
+    'of',
+    'with',
+    'a',
+    'an',
+    'as',
+    'by',
+    'from',
+    'that',
+    'this',
+    'these',
+    'those',
+    'was',
+    'were',
+    'been',
+    'being',
+    'have',
+    'has',
+    'had',
+    'do',
+    'does',
+    'did',
+    'will',
+    'would',
+    'should',
+    'could',
+    'may',
+    'might',
+    'must',
+    'can',
+    'am',
+    'is',
+    'are',
+    'not',
+    'no',
+    'yes',
+    'also',
+    'very',
+    'just',
+    'only',
+    'about',
+    'into',
+    'through',
+    'over',
+    'after',
+    'before',
+    'between',
+    'under',
+    'above',
+    'below',
+    'up',
+    'down',
+    'out',
+    'off',
+    'than',
+    'when',
+    'where',
+    'why',
+    'how',
+    'all',
+    'each',
+    'every',
+    'both',
+    'few',
+    'more',
+    'most',
+    'some',
+    'such',
+    'other',
+    'any',
+    'own',
+    'same',
+    'so',
+    'then',
   ]);
 
   return commonWords.has(word);
@@ -92,7 +196,7 @@ function extractPotentialSkills(words: string[], fullText: string): string[] {
   const skills = new Set<string>();
 
   // Add single words
-  words.forEach(w => skills.add(w));
+  words.forEach((w) => skills.add(w));
 
   // Look for common skill patterns (2-3 word phrases)
   const skillPatterns = [
@@ -101,10 +205,10 @@ function extractPotentialSkills(words: string[], fullText: string): string[] {
     /\b([a-z]+\s+(?:skills?|experience|expertise|proficiency))\b/gi,
   ];
 
-  skillPatterns.forEach(pattern => {
+  skillPatterns.forEach((pattern) => {
     const matches = fullText.match(pattern);
     if (matches) {
-      matches.forEach(m => skills.add(m.toLowerCase().trim()));
+      matches.forEach((m) => skills.add(m.toLowerCase().trim()));
     }
   });
 
@@ -120,7 +224,7 @@ async function findMatchingSkills(searchTerms: string[]) {
   if (searchTerms.length === 0) return [];
 
   // Build OR conditions for ILIKE search using SQL cast
-  const conditions = searchTerms.flatMap(term => [
+  const conditions = searchTerms.flatMap((term) => [
     sql`${skillsTaxonomy.nameI18n}::text ILIKE ${`%${term}%`}`,
     sql`${skillsTaxonomy.aliasesI18n}::text ILIKE ${`%${term}%`}`,
     sql`${skillsTaxonomy.descriptionI18n}::text ILIKE ${`%${term}%`}`,
@@ -137,12 +241,8 @@ async function findMatchingSkills(searchTerms: string[]) {
 /**
  * Rank suggestions by relevance
  */
-function rankSuggestions(
-  matches: any[],
-  originalText: string,
-  context?: 'cv' | 'jd' | 'general'
-) {
-  const scored = matches.map(skill => {
+function rankSuggestions(matches: any[], originalText: string, context?: 'cv' | 'jd' | 'general') {
+  const scored = matches.map((skill) => {
     let score = 0;
 
     // Extract English names from JSONB fields

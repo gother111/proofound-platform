@@ -1,16 +1,19 @@
 /**
- * Web Vitals API
+ * Web Vitals Analytics API
  *
- * Receives and stores Core Web Vitals metrics from the client.
- * PRD Reference: Part 8 NFR - Performance Monitoring
+ * POST /api/analytics/web-vitals - Record web vital metrics
+ * GET /api/analytics/web-vitals - Retrieve aggregated metrics
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
-import { performanceMetrics } from '@/db/schema';
+import { sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
 
-interface WebVitalPayload {
+export const dynamic = 'force-dynamic';
+
+interface WebVitalMetric {
   metricName: string;
   value: number;
   rating: 'good' | 'needs-improvement' | 'poor';
@@ -20,48 +23,161 @@ interface WebVitalPayload {
   pagePath: string;
 }
 
-export async function POST(request: NextRequest) {
+/**
+ * POST - Record a web vital metric
+ */
+export async function POST(req: NextRequest) {
   try {
-    const payload: WebVitalPayload = await request.json();
+    const metric: WebVitalMetric = await req.json();
 
-    // Extract user agent for diagnostics
-    const userAgent = request.headers.get('user-agent') || 'unknown';
+    // Get user ID if authenticated (optional for web vitals)
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    // Map Web Vitals metric names to schema enum values
-    const metricTypeMap: Record<string, string> = {
-      LCP: 'lcp',
-      FID: 'fid',
-      CLS: 'cls',
-      FCP: 'fcp',
-      TTFB: 'page_load', // TTFB maps to page_load
-    };
+    // Store metric
+    await db.execute(sql`
+      INSERT INTO web_vitals_metrics (
+        user_id,
+        metric_name,
+        value,
+        rating,
+        delta,
+        metric_id,
+        navigation_type,
+        page_path,
+        user_agent,
+        created_at
+      ) VALUES (
+        ${user?.id || null},
+        ${metric.metricName},
+        ${metric.value},
+        ${metric.rating},
+        ${metric.delta},
+        ${metric.id},
+        ${metric.navigationType},
+        ${metric.pagePath},
+        ${req.headers.get('user-agent')},
+        NOW()
+      )
+    `);
 
-    const metricType = metricTypeMap[payload.metricName] || 'page_load';
-
-    // Store metric in database
-    await db.insert(performanceMetrics).values({
-      metricType,
-      pageRoute: payload.pagePath,
-      valueMs: payload.value.toString(), // Store as string for precision
-      userAgent,
-    });
-
-    // Alert if metric is poor (for monitoring)
-    if (payload.rating === 'poor') {
-      log.warn('web-vitals.poor', {
-        metric: payload.metricName,
-        value: payload.value,
-        path: payload.pagePath,
+    // Log if metric is poor
+    if (metric.rating === 'poor') {
+      log.warn('web_vitals.poor_metric', {
+        metric: metric.metricName,
+        value: metric.value,
+        page: metric.pagePath,
+        userId: user?.id,
       });
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    log.error('web-vitals.store.failed', {
+    log.error('web_vitals.record.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
     });
-
-    // Don't fail the client request even if storage fails
+    // Don't fail the request - web vitals should never break user experience
     return NextResponse.json({ success: false }, { status: 200 });
+  }
+}
+
+/**
+ * GET - Retrieve aggregated web vitals metrics
+ */
+export async function GET(req: NextRequest) {
+  try {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Check if user is admin
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const days = parseInt(searchParams.get('days') || '7');
+    const page = searchParams.get('page') || null;
+
+    // Get aggregated metrics for last N days
+    const result = await db.execute(sql`
+      SELECT
+        metric_name,
+        COUNT(*) as sample_count,
+        ROUND(AVG(value)::numeric, 2) as avg_value,
+        ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY value)::numeric, 2) as p50,
+        ROUND(PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY value)::numeric, 2) as p75,
+        ROUND(PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY value)::numeric, 2) as p95,
+        ROUND(MIN(value)::numeric, 2) as min_value,
+        ROUND(MAX(value)::numeric, 2) as max_value,
+        COUNT(CASE WHEN rating = 'good' THEN 1 END) as good_count,
+        COUNT(CASE WHEN rating = 'needs-improvement' THEN 1 END) as needs_improvement_count,
+        COUNT(CASE WHEN rating = 'poor' THEN 1 END) as poor_count
+      FROM web_vitals_metrics
+      WHERE created_at >= NOW() - INTERVAL '${days} days'
+        ${page ? sql`AND page_path = ${page}` : sql``}
+      GROUP BY metric_name
+      ORDER BY metric_name
+    `);
+
+    // Get daily trend data
+    const trendResult = await db.execute(sql`
+      SELECT
+        DATE(created_at) as date,
+        metric_name,
+        ROUND(AVG(value)::numeric, 2) as avg_value,
+        COUNT(*) as count
+      FROM web_vitals_metrics
+      WHERE created_at >= NOW() - INTERVAL '${days} days'
+        ${page ? sql`AND page_path = ${page}` : sql``}
+      GROUP BY DATE(created_at), metric_name
+      ORDER BY date DESC, metric_name
+    `);
+
+    // Get page performance breakdown
+    const pageBreakdown = await db.execute(sql`
+      SELECT
+        page_path,
+        metric_name,
+        COUNT(*) as sample_count,
+        ROUND(AVG(value)::numeric, 2) as avg_value,
+        COUNT(CASE WHEN rating = 'poor' THEN 1 END) as poor_count
+      FROM web_vitals_metrics
+      WHERE created_at >= NOW() - INTERVAL '${days} days'
+      GROUP BY page_path, metric_name
+      HAVING COUNT(*) >= 10
+      ORDER BY poor_count DESC, avg_value DESC
+      LIMIT 20
+    `);
+
+    return NextResponse.json({
+      success: true,
+      metrics: result.rows,
+      trends: trendResult.rows,
+      pageBreakdown: pageBreakdown.rows,
+      period: {
+        days,
+        startDate: new Date(Date.now() - days * 24 * 60 * 60 * 1000),
+        endDate: new Date(),
+      },
+    });
+  } catch (error) {
+    log.error('web_vitals.get.failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    return NextResponse.json({ error: 'Failed to retrieve metrics' }, { status: 500 });
   }
 }

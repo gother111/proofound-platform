@@ -231,6 +231,28 @@ export default function MatchingPage() {
               }
               onInterested={async () => {
                 try {
+                  // Check verification gates first
+                  const gatesResponse = await fetch('/api/match/gates', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      assignmentId: match.assignmentId,
+                    }),
+                  });
+
+                  if (gatesResponse.ok) {
+                    const gatesData = await gatesResponse.json();
+
+                    if (!gatesData.canIntroduce) {
+                      // Show toast with verification requirement
+                      toast.error(gatesData.blockingMessage || 'Verification required', {
+                        description: 'Please complete required verifications first.',
+                      });
+                      return;
+                    }
+                  }
+
+                  // Proceed with introduction if gates passed
                   const response = await fetch('/api/match/interest', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

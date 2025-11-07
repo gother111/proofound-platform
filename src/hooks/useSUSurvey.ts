@@ -1,119 +1,83 @@
 /**
  * useSUSSurvey Hook
  *
- * Manages SUS survey triggers and display logic.
- * Shows survey max once per 14 days per user.
+ * Manages SUS survey trigger logic
+ * Shows survey at appropriate moments in user journey
  *
  * Trigger points:
  * - After profile activation
- * - After creating first assignment
- * - After first match action
- * - After interview scheduling
- * - Every 30 days of active use
+ * - After first match acceptance
+ * - After 7 days of usage
+ * - Monthly for active users
  */
 
-'use client';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 
-import { useState, useEffect } from 'react';
-import { useUser } from '@/hooks/useUser';
-import type { SUSResponse } from '@/lib/feedback/sus-scoring';
-
-const MIN_DAYS_BETWEEN_SURVEYS = 14;
-const SURVEY_STORAGE_KEY = 'sus_last_shown';
-
-export interface SurveyShouldShow {
+export interface SUSurveyTrigger {
   shouldShow: boolean;
-  task?: string;
+  triggerPoint: string;
+  delay?: number; // Delay in ms before showing
 }
 
-export function useSUSSurvey(task?: string) {
-  const { user } = useUser();
-  const [showSurvey, setShowSurvey] = useState(false);
-  const [currentTask, setCurrentTask] = useState<string | undefined>(task);
+export function useSUSSurvey() {
+  const [shouldShowSurvey, setShouldShowSurvey] = useState(false);
+  const [triggerPoint, setTriggerPoint] = useState('');
+  const router = useRouter();
 
-  useEffect(() => {
-    if (!user) return;
-
-    // Check if survey should be shown
-    const lastShown = localStorage.getItem(SURVEY_STORAGE_KEY);
-    const now = Date.now();
-
-    if (lastShown) {
-      const daysSinceLastShown = (now - parseInt(lastShown)) / (1000 * 60 * 60 * 24);
-      if (daysSinceLastShown < MIN_DAYS_BETWEEN_SURVEYS) {
-        return; // Too soon to show again
-      }
-    }
-
-    // Random sampling: show to 20% of users
-    if (Math.random() > 0.2) {
-      return;
-    }
-
-    // Show the survey
-    setShowSurvey(true);
-    localStorage.setItem(SURVEY_STORAGE_KEY, now.toString());
-  }, [user]);
-
-  const handleComplete = async (responses: SUSResponse[]) => {
+  /**
+   * Check if user should see survey
+   */
+  const checkSurveyEligibility = useCallback(async (): Promise<SUSurveyTrigger> => {
     try {
-      const response = await fetch('/api/feedback/sus', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          responses,
-          task: currentTask,
-          dismissed: false,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to submit survey');
+      const response = await fetch('/api/surveys/sus/eligibility');
+      if (response.ok) {
+        const data = await response.json();
+        return {
+          shouldShow: data.eligible,
+          triggerPoint: data.trigger_point,
+          delay: data.delay,
+        };
       }
-
-      setShowSurvey(false);
     } catch (error) {
-      console.error('Error submitting SUS survey:', error);
-      throw error;
+      console.error('Failed to check SUS survey eligibility:', error);
     }
-  };
 
-  const handleDismiss = async () => {
-    try {
-      // Record dismissal
-      await fetch('/api/feedback/sus', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          dismissed: true,
-          task: currentTask,
-        }),
-      });
+    return { shouldShow: false, triggerPoint: '' };
+  }, []);
 
-      setShowSurvey(false);
-    } catch (error) {
-      console.error('Error recording survey dismissal:', error);
-      setShowSurvey(false);
-    }
-  };
+  /**
+   * Trigger survey based on user action
+   */
+  const triggerSurvey = useCallback((point: string, delayMs = 0) => {
+    setTimeout(() => {
+      setTriggerPoint(point);
+      setShouldShowSurvey(true);
+    }, delayMs);
+  }, []);
+
+  /**
+   * Dismiss survey
+   */
+  const dismissSurvey = useCallback(() => {
+    setShouldShowSurvey(false);
+    setTriggerPoint('');
+  }, []);
+
+  /**
+   * Mark survey as completed
+   */
+  const completeSurvey = useCallback(() => {
+    dismissSurvey();
+    // Could add celebration or thank you message here
+  }, [dismissSurvey]);
 
   return {
-    showSurvey,
-    setShowSurvey,
-    task: currentTask,
-    handleComplete,
-    handleDismiss,
+    shouldShowSurvey,
+    triggerPoint,
+    checkSurveyEligibility,
+    triggerSurvey,
+    dismissSurvey,
+    completeSurvey,
   };
-}
-
-/**
- * Trigger survey after a specific task
- * Call this when a user completes a significant action
- */
-export function triggerSUSurvey(task: string): void {
-  // Set a flag that the survey should be shown
-  // The next page load will check this flag
-  sessionStorage.setItem('sus_trigger_task', task);
 }

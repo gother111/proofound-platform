@@ -1,59 +1,120 @@
 /**
  * Fairness Report Cron Job
- * GET /api/cron/fairness-report
  *
- * Implements PRD Gap 3: Weekly automated fairness note generation
- * Scheduled to run every Monday at midnight (vercel.json)
+ * Automatically generates fairness reports on deployments
+ * Triggered by Vercel Cron or deployment webhooks
+ *
+ * PRD Requirement: Automated fairness note generation per release
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { generateFairnessNote } from '@/lib/reporting/fairness-note';
-// import { sendEmail } from '@/lib/email';
+import { db } from '@/db';
+import { fairnessReports } from '@/db/schema';
+import { eq } from 'drizzle-orm';
+import { calculateFairnessGaps } from '@/lib/analytics/fairness';
+import { generateFairnessMarkdown, generateFairnessSummary } from '@/lib/reports/fairness-note';
+import { log } from '@/lib/log';
 
+/**
+ * Generate fairness report on deployment
+ *
+ * Usage:
+ * - Can be triggered by Vercel Cron (e.g., weekly)
+ * - Can be triggered by deployment webhook
+ * - Requires CRON_SECRET env var for authentication
+ */
 export async function GET(request: NextRequest) {
   try {
-    // Verify cron secret for security
+    // Verify cron secret
     const authHeader = request.headers.get('authorization');
-    const expectedAuth = `Bearer ${process.env.CRON_SECRET}`;
+    const expectedSecret = process.env.CRON_SECRET;
 
-    if (authHeader !== expectedAuth) {
+    if (!expectedSecret || authHeader !== `Bearer ${expectedSecret}`) {
+      log.warn('fairness.cron.unauthorized', {
+        hasAuth: !!authHeader,
+        hasSecret: !!expectedSecret,
+      });
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get current version (use commit SHA or version tag)
-    const currentVersion =
-      process.env.VERCEL_GIT_COMMIT_SHA || process.env.npm_package_version || 'dev';
+    // Get release version from environment or git tag
+    const releaseVersion =
+      process.env.VERCEL_GIT_COMMIT_REF ||
+      process.env.VERCEL_DEPLOYMENT_ID ||
+      `auto-${new Date().toISOString().split('T')[0]}`;
 
-    console.log(`Generating fairness report for version: ${currentVersion}`);
+    log.info('fairness.cron.start', { releaseVersion });
 
-    // Generate report
-    const report = await generateFairnessNote(currentVersion);
+    // Check if report already exists
+    const existing = await db.query.fairnessReports.findFirst({
+      where: eq(fairnessReports.releaseVersion, releaseVersion),
+    });
 
-    // Send report to admins via email (TODO: implement when email service is ready)
-    const adminEmails = process.env.ADMIN_EMAILS?.split(',') || [];
+    if (existing) {
+      log.info('fairness.cron.skip', { releaseVersion, reason: 'report_exists' });
+      return NextResponse.json({
+        message: 'Report already exists',
+        releaseVersion,
+        reportId: existing.id,
+      });
+    }
 
-    // for (const email of adminEmails) {
-    //   await sendEmail({
-    //     to: email.trim(),
-    //     subject: `Fairness Report - ${currentVersion}`,
-    //     text: report,
-    //     html: `<pre>${report}</pre>`,
-    //   });
-    // }
+    // Generate fairness analysis
+    const report = await calculateFairnessGaps(releaseVersion);
 
-    console.log(`Fairness report generated (would notify ${adminEmails.length} admins)`);
+    // Generate markdown
+    const reportMarkdown = generateFairnessMarkdown(report);
+
+    // Store in database
+    const [savedReport] = await db
+      .insert(fairnessReports)
+      .values({
+        releaseVersion: report.releaseVersion,
+        reportMarkdown,
+        metricsJson: report as any,
+      })
+      .returning();
+
+    // Send email notification if gaps detected
+    const significantGaps = report.segments.filter((s) => s.significant);
+    if (significantGaps.length > 0) {
+      log.warn('fairness.gaps.detected', {
+        releaseVersion,
+        gapCount: significantGaps.length,
+      });
+
+      // TODO: Send email to admins
+      // await sendEmail({
+      //   to: 'admins@proofound.com',
+      //   subject: `⚠️ Fairness Gaps Detected - ${releaseVersion}`,
+      //   text: generateFairnessSummary(report),
+      // });
+    }
+
+    log.info('fairness.cron.complete', {
+      releaseVersion,
+      reportId: savedReport.id,
+      significantGaps: significantGaps.length,
+    });
 
     return NextResponse.json({
       success: true,
-      version: currentVersion,
-      reportLength: report.length,
-      recipientsNotified: adminEmails.length,
+      releaseVersion,
+      reportId: savedReport.id,
+      significantGaps: significantGaps.length,
+      summary: report.summary,
     });
-  } catch (error: any) {
-    console.error('Fairness report cron error:', error);
-    return NextResponse.json(
-      { error: 'Failed to generate fairness report', message: error.message },
-      { status: 500 }
-    );
+  } catch (error) {
+    log.error('fairness.cron.failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    return NextResponse.json({ error: 'Failed to generate fairness report' }, { status: 500 });
   }
+}
+
+/**
+ * POST endpoint for manual triggering (with auth check)
+ */
+export async function POST(request: NextRequest) {
+  return GET(request);
 }
