@@ -33,12 +33,14 @@ export function NetworkBackground() {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [connections, setConnections] = useState<Connection[]>([]);
   const [dimensions, setDimensions] = useState({ width: 1920, height: 1080 });
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
     const updateDimensions = () => {
       setDimensions({
-        width: window.innerWidth,
-        height: window.innerHeight,
+        width: window.innerWidth || 1920,
+        height: window.innerHeight || 1080,
       });
     };
     updateDimensions();
@@ -137,6 +139,11 @@ export function NetworkBackground() {
     nodes.forEach((node) => map.set(node.id, node));
     return map;
   }, [nodes]);
+
+  // Don't render until mounted to avoid SSR/hydration issues
+  if (!isMounted) {
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden">
