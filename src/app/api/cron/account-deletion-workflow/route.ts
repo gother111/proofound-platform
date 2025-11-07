@@ -6,19 +6,20 @@ import { log } from '@/lib/log';
 import { sendDeletionReminderEmail, sendDeletionCompleteEmail } from '@/lib/email';
 import { createClient } from '@/lib/supabase/server';
 
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
  * Vercel Cron Job: Account Deletion Workflow (Combined)
- * 
+ *
  * Schedule: Daily at 2:00 AM UTC
- * 
+ *
  * This job performs two tasks in sequence:
  * 1. Send 7-day deletion reminder emails
  * 2. Process accounts past their grace period (anonymize and delete)
- * 
+ *
  * Combined to optimize Vercel cron job usage (2 cron limit on current plan)
- * 
+ *
  * Vercel cron config (vercel.json):
  * {
  *   "crons": [{
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest) {
     // ========================================
     // STEP 1: Send 7-day deletion reminders
     // ========================================
-    
+
     const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
     const lowerBound = new Date(sevenDaysFromNow.getTime() - 12 * 60 * 60 * 1000); // 6.5 days
     const upperBound = new Date(sevenDaysFromNow.getTime() + 12 * 60 * 60 * 1000); // 7.5 days
@@ -108,7 +109,7 @@ export async function GET(request: NextRequest) {
 
         // Get user email
         const { data: authData } = await supabase.auth.admin.getUserById(account.id);
-        
+
         if (!authData.user?.email) {
           log.warn('cron.account_deletion_workflow.reminder_no_email', {
             userId: account.id,
@@ -182,7 +183,7 @@ export async function GET(request: NextRequest) {
     // ========================================
     // STEP 2: Process pending deletions
     // ========================================
-    
+
     log.info('cron.account_deletion_workflow.deletions_started');
 
     // Find accounts scheduled for deletion (grace period expired)
@@ -192,12 +193,7 @@ export async function GET(request: NextRequest) {
         deletionScheduledFor: profiles.deletionScheduledFor,
       })
       .from(profiles)
-      .where(
-        and(
-          lte(profiles.deletionScheduledFor, now),
-          eq(profiles.deleted, false)
-        )
-      );
+      .where(and(lte(profiles.deletionScheduledFor, now), eq(profiles.deleted, false)));
 
     log.info('cron.account_deletion_workflow.deletion_accounts_found', {
       count: accountsToDelete.length,
@@ -273,7 +269,7 @@ export async function GET(request: NextRequest) {
     // ========================================
     // Final Summary
     // ========================================
-    
+
     log.info('cron.account_deletion_workflow.completed', {
       reminders: {
         total: accountsToRemind.length,
@@ -315,4 +311,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
