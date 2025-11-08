@@ -91,11 +91,22 @@ export async function GET() {
       .where(gte(analyticsEvents.createdAt, last7Days));
     const activeUsersLast7Days = activeUsersResult[0]?.count || 0;
 
-    // Calculate TTSC metric
-    const ttsc = await calculateTTSC();
+    // Calculate TTSC metric (optional - don't fail if this errors)
+    let ttsc = null;
+    try {
+      ttsc = await calculateTTSC();
+    } catch (ttscError) {
+      console.warn('Failed to calculate TTSC metric:', ttscError);
+      // Continue without TTSC data - it's not critical for the dashboard to load
+    }
 
-    // Log admin access
-    await logAnalyticsAccess(adminUser.userId, 'overview');
+    // Log admin access (optional - don't fail if this errors)
+    try {
+      await logAnalyticsAccess(adminUser.userId, 'overview');
+    } catch (logError) {
+      console.warn('Failed to log admin access:', logError);
+      // Continue - logging failure shouldn't prevent dashboard from loading
+    }
 
     return NextResponse.json({
       success: true,
