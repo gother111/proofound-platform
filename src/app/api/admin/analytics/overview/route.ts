@@ -21,75 +21,149 @@ export async function GET() {
     const last30Days = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
+    // Helper function to safely execute database queries
+    async function safeQuery<T>(
+      queryName: string,
+      queryFn: () => Promise<T>,
+      defaultValue: T
+    ): Promise<T> {
+      try {
+        return await queryFn();
+      } catch (error) {
+        console.error(`Failed to execute ${queryName}:`, error);
+        return defaultValue;
+      }
+    }
+
     // Total users
-    const totalUsersResult = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(profiles)
-      .where(eq(profiles.deleted, false));
-    const totalUsers = totalUsersResult[0]?.count || 0;
+    const totalUsers = await safeQuery(
+      'totalUsers',
+      async () => {
+        const result = await db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(profiles)
+          .where(eq(profiles.deleted, false));
+        return result[0]?.count || 0;
+      },
+      0
+    );
 
     // Users this month
-    const usersThisMonthResult = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(profiles)
-      .where(and(eq(profiles.deleted, false), gte(profiles.createdAt, last30Days)));
-    const usersThisMonth = usersThisMonthResult[0]?.count || 0;
+    const usersThisMonth = await safeQuery(
+      'usersThisMonth',
+      async () => {
+        const result = await db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(profiles)
+          .where(and(eq(profiles.deleted, false), gte(profiles.createdAt, last30Days)));
+        return result[0]?.count || 0;
+      },
+      0
+    );
 
     // Total organizations
-    const totalOrgsResult = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(organizations);
-    const totalOrgs = totalOrgsResult[0]?.count || 0;
+    const totalOrgs = await safeQuery(
+      'totalOrgs',
+      async () => {
+        const result = await db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(organizations);
+        return result[0]?.count || 0;
+      },
+      0
+    );
 
     // Active organizations (with at least one assignment)
-    const activeOrgsResult = await db
-      .select({ count: sql<number>`count(DISTINCT org_id)::int` })
-      .from(assignments);
-    const activeOrgs = activeOrgsResult[0]?.count || 0;
+    const activeOrgs = await safeQuery(
+      'activeOrgs',
+      async () => {
+        const result = await db
+          .select({ count: sql<number>`count(DISTINCT org_id)::int` })
+          .from(assignments);
+        return result[0]?.count || 0;
+      },
+      0
+    );
 
     // Total matches
-    const totalMatchesResult = await db.select({ count: sql<number>`count(*)::int` }).from(matches);
-    const totalMatches = totalMatchesResult[0]?.count || 0;
+    const totalMatches = await safeQuery(
+      'totalMatches',
+      async () => {
+        const result = await db.select({ count: sql<number>`count(*)::int` }).from(matches);
+        return result[0]?.count || 0;
+      },
+      0
+    );
 
     // Matches this month
-    const matchesThisMonthResult = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(matches)
-      .where(gte(matches.createdAt, last30Days));
-    const matchesThisMonth = matchesThisMonthResult[0]?.count || 0;
+    const matchesThisMonth = await safeQuery(
+      'matchesThisMonth',
+      async () => {
+        const result = await db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(matches)
+          .where(gte(matches.createdAt, last30Days));
+        return result[0]?.count || 0;
+      },
+      0
+    );
 
     // Contracts signed (from analytics events)
-    const contractsSignedResult = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(analyticsEvents)
-      .where(eq(analyticsEvents.eventType, 'contract_signed'));
-    const contractsSigned = contractsSignedResult[0]?.count || 0;
+    const contractsSigned = await safeQuery(
+      'contractsSigned',
+      async () => {
+        const result = await db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(analyticsEvents)
+          .where(eq(analyticsEvents.eventType, 'contract_signed'));
+        return result[0]?.count || 0;
+      },
+      0
+    );
 
     // Contracts this month
-    const contractsThisMonthResult = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(analyticsEvents)
-      .where(
-        and(
-          eq(analyticsEvents.eventType, 'contract_signed'),
-          gte(analyticsEvents.createdAt, last30Days)
-        )
-      );
-    const contractsThisMonth = contractsThisMonthResult[0]?.count || 0;
+    const contractsThisMonth = await safeQuery(
+      'contractsThisMonth',
+      async () => {
+        const result = await db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(analyticsEvents)
+          .where(
+            and(
+              eq(analyticsEvents.eventType, 'contract_signed'),
+              gte(analyticsEvents.createdAt, last30Days)
+            )
+          );
+        return result[0]?.count || 0;
+      },
+      0
+    );
 
     // Active assignments
-    const activeAssignmentsResult = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(assignments)
-      .where(eq(assignments.status, 'active'));
-    const activeAssignments = activeAssignmentsResult[0]?.count || 0;
+    const activeAssignments = await safeQuery(
+      'activeAssignments',
+      async () => {
+        const result = await db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(assignments)
+          .where(eq(assignments.status, 'active'));
+        return result[0]?.count || 0;
+      },
+      0
+    );
 
     // User activity (last 7 days)
-    const activeUsersResult = await db
-      .select({ count: sql<number>`count(DISTINCT user_id)::int` })
-      .from(analyticsEvents)
-      .where(gte(analyticsEvents.createdAt, last7Days));
-    const activeUsersLast7Days = activeUsersResult[0]?.count || 0;
+    const activeUsersLast7Days = await safeQuery(
+      'activeUsersLast7Days',
+      async () => {
+        const result = await db
+          .select({ count: sql<number>`count(DISTINCT user_id)::int` })
+          .from(analyticsEvents)
+          .where(gte(analyticsEvents.createdAt, last7Days));
+        return result[0]?.count || 0;
+      },
+      0
+    );
 
     // Calculate TTSC metric (optional - don't fail if this errors)
     let ttsc = null;
@@ -153,6 +227,15 @@ export async function GET() {
     });
   } catch (error) {
     console.error('Admin analytics overview error:', error);
+    
+    // Log detailed error information for debugging
+    if (error instanceof Error) {
+      console.error('Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      });
+    }
 
     // Check if this is a redirect (from requirePlatformAdmin)
     if (error && typeof error === 'object' && 'digest' in error) {
@@ -161,8 +244,10 @@ export async function GET() {
 
     return NextResponse.json(
       {
+        success: false,
         error: 'Failed to fetch analytics overview',
         message: error instanceof Error ? error.message : 'Unknown error',
+        details: error instanceof Error ? error.stack : undefined,
       },
       { status: 500 }
     );

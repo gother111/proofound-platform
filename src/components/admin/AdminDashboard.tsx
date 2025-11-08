@@ -47,6 +47,7 @@ interface OverviewData {
 export function AdminDashboard({ adminUser }: AdminDashboardProps) {
   const [overview, setOverview] = useState<OverviewData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadOverview();
@@ -57,15 +58,26 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
       const response = await fetch('/api/admin/analytics/overview');
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to load overview');
+        const errorData = await response.json();
+        console.error('API Error Response:', errorData);
+        throw new Error(errorData.message || errorData.error || 'Failed to load overview');
       }
 
       const data = await response.json();
+      
+      // Check if the response indicates success
+      if (!data.success && data.success !== undefined) {
+        throw new Error(data.message || data.error || 'API returned unsuccessful response');
+      }
+      
       setOverview(data.data);
     } catch (error) {
       console.error('Failed to load admin overview:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to load overview data');
+      
+      // Show detailed error in toast and state
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load overview data';
+      setError(errorMessage);
+      toast.error(`Dashboard Error: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -85,7 +97,27 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
   if (!overview) {
     return (
       <div className="text-center py-12">
-        <p className="text-[#6B6760]">Failed to load dashboard data</p>
+        <div className="max-w-md mx-auto">
+          <p className="text-[#2D3330] font-semibold mb-2">Failed to load dashboard data</p>
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+              <p className="text-sm text-red-800 font-mono">{error}</p>
+            </div>
+          )}
+          <p className="text-[#6B6760] text-sm mb-4">
+            Check the browser console (F12) for more details.
+          </p>
+          <button
+            onClick={() => {
+              setLoading(true);
+              setError(null);
+              loadOverview();
+            }}
+            className="px-4 py-2 bg-[#2D3330] text-white rounded-lg hover:bg-[#1a1f1c] transition-colors"
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
   }
