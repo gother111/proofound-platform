@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import {
   Users,
@@ -207,18 +208,27 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <button className="w-full text-left p-3 rounded-lg border border-[#E8E6DD] hover:bg-[#F5F4F0] transition-colors">
+              <Link
+                href="/admin/users"
+                className="block w-full text-left p-3 rounded-lg border border-[#E8E6DD] hover:bg-[#F5F4F0] transition-colors"
+              >
                 <p className="font-medium text-sm text-[#2D3330]">View All Users</p>
                 <p className="text-xs text-[#9B9891]">Manage user accounts and permissions</p>
-              </button>
-              <button className="w-full text-left p-3 rounded-lg border border-[#E8E6DD] hover:bg-[#F5F4F0] transition-colors">
+              </Link>
+              <Link
+                href="/admin/organizations"
+                className="block w-full text-left p-3 rounded-lg border border-[#E8E6DD] hover:bg-[#F5F4F0] transition-colors"
+              >
                 <p className="font-medium text-sm text-[#2D3330]">View Organizations</p>
                 <p className="text-xs text-[#9B9891]">Browse and manage organizations</p>
-              </button>
-              <button className="w-full text-left p-3 rounded-lg border border-[#E8E6DD] hover:bg-[#F5F4F0] transition-colors">
+              </Link>
+              <Link
+                href="/admin/audit"
+                className="block w-full text-left p-3 rounded-lg border border-[#E8E6DD] hover:bg-[#F5F4F0] transition-colors"
+              >
                 <p className="font-medium text-sm text-[#2D3330]">Audit Log</p>
                 <p className="text-xs text-[#9B9891]">Review admin actions and changes</p>
-              </button>
+              </Link>
             </div>
           </CardContent>
         </Card>
