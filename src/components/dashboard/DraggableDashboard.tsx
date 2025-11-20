@@ -20,9 +20,20 @@ import { ExploreCard } from './ExploreCard';
 import { GapMapWidget } from './GapMapWidget';
 import { NextBestActionsWidget } from './NextBestActionsWidget';
 import { Button } from '@/components/ui/button';
-import { Settings2, Save, RotateCcw } from 'lucide-react';
+import { Settings2, Save, RotateCcw, Plus } from 'lucide-react';
 import { toast } from 'sonner';
-import { DashboardWidget } from '@/lib/dashboard/layout';
+import { DashboardWidget, AVAILABLE_WIDGETS, WidgetSize } from '@/lib/dashboard/layout';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Try to import dnd-kit packages, fallback to null if not installed
 let DndContext: any = null;
@@ -54,6 +65,7 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isWidgetPickerOpen, setIsWidgetPickerOpen] = useState(false);
 
   useEffect(() => {
     // Fetch user's layout from API
@@ -134,6 +146,39 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
       console.error('Error resetting layout:', error);
       toast.error('Failed to reset layout');
     }
+  };
+
+  const handleToggleWidget = (widgetId: string, checked: boolean) => {
+    setLayout((prev) => {
+      const existingIndex = prev.findIndex((w) => w.widgetId === widgetId);
+      
+      if (existingIndex >= 0) {
+        // Toggle visibility of existing widget
+        const newLayout = [...prev];
+        newLayout[existingIndex] = {
+          ...newLayout[existingIndex],
+          visible: checked,
+        };
+        return newLayout;
+      } else if (checked) {
+        // Add new widget
+        const config = AVAILABLE_WIDGETS[widgetId];
+        if (!config) return prev;
+        
+        return [
+          ...prev,
+          {
+            widgetId,
+            visible: true,
+            position: prev.length,
+            size: config.defaultSize,
+            settings: {},
+          },
+        ];
+      }
+      
+      return prev;
+    });
   };
 
   const getWidgetComponent = (widgetId: string) => {
@@ -228,6 +273,15 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
               <Button
                 variant="outline"
                 size="sm"
+                onClick={() => setIsWidgetPickerOpen(true)}
+                className="border-[#D8D2C8] text-[#6B6760]"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Widgets
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleReset}
                 className="border-[#D8D2C8] text-[#6B6760]"
               >
@@ -276,6 +330,52 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
           </div>
         </SortableContext>
       </DndContext>
+
+      {/* Widget Picker Dialog */}
+      <Dialog open={isWidgetPickerOpen} onOpenChange={setIsWidgetPickerOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Manage Widgets</DialogTitle>
+            <DialogDescription>
+              Select the widgets you want to display on your dashboard.
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="h-[300px] pr-4">
+            <div className="space-y-4">
+              {Object.values(AVAILABLE_WIDGETS).map((widget) => {
+                const isVisible = layout.find(
+                  (w) => w.widgetId === widget.id && w.visible
+                );
+                return (
+                  <div key={widget.id} className="flex items-start space-x-3 p-2 rounded hover:bg-muted/50">
+                    <Checkbox
+                      id={`widget-${widget.id}`}
+                      checked={!!isVisible}
+                      onCheckedChange={(checked) => 
+                        handleToggleWidget(widget.id, checked as boolean)
+                      }
+                    />
+                    <div className="grid gap-1.5 leading-none">
+                      <Label
+                        htmlFor={`widget-${widget.id}`}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                      >
+                        {widget.name}
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        {widget.description}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </ScrollArea>
+          <DialogFooter>
+            <Button onClick={() => setIsWidgetPickerOpen(false)}>Done</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
