@@ -182,30 +182,33 @@ export async function createClient(options: CreateClientOptions = {}): Promise<S
   }
 
   const cookieStore = await cookies();
-  const env = getEnv(false);
 
-  // Use defaults if env vars aren't set (from aggregateEnv defaults)
-  const supabaseUrl =
-    env.SUPABASE_URL ||
-    process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    process.env.SUPABASE_URL ||
-    'https://cjpfrgmsxwxhuomnvciq.supabase.co';
-  const supabaseKey =
-    env.SUPABASE_ANON_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    process.env.SUPABASE_ANON_KEY ||
+  // Get defaults directly (these are the hardcoded defaults)
+  const DEFAULT_SUPABASE_URL = 'https://cjpfrgmsxwxhuomnvciq.supabase.co';
+  const DEFAULT_SUPABASE_KEY =
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqcGZyZ21zeHd4aHVvbW52Y2lxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAxODM3NzEsImV4cCI6MjA3NTc1OTc3MX0.3QEig0RLF9rpf6pCURJ9WGTksGQLLC5gfKeKRn5TPQk';
 
+  // Get values with explicit fallback to defaults
+  // Check env vars directly, then fall back to defaults
+  const supabaseUrl = (
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    process.env.SUPABASE_URL ||
+    DEFAULT_SUPABASE_URL
+  ).trim();
+  const supabaseKey = (
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    process.env.SUPABASE_ANON_KEY ||
+    DEFAULT_SUPABASE_KEY
+  ).trim();
+
   // Validate that we have both URL and key before creating client
-  if (!supabaseUrl || !supabaseKey) {
+  if (!supabaseUrl || !supabaseKey || supabaseUrl === '' || supabaseKey === '') {
     throw new Error(
-      `Missing required Supabase credentials. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your environment variables.`
+      `Missing required Supabase credentials. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your environment variables. Got URL: ${supabaseUrl ? 'set' : 'empty'}, Key: ${supabaseKey ? 'set' : 'empty'}`
     );
   }
 
-  return createSupabaseServerClient({
-    supabaseUrl: supabaseUrl.trim(),
-    supabaseKey: supabaseKey.trim(),
+  return createSupabaseServerClient(supabaseUrl.trim(), supabaseKey.trim(), {
     cookies: {
       getAll() {
         return cookieStore.getAll();
