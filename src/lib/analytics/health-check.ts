@@ -9,7 +9,7 @@ import { db } from '@/db';
 import { analyticsEvents } from '@/db/schema';
 import { sql, and, gte } from 'drizzle-orm';
 import { log } from '@/lib/log';
-import { sendEmail } from '@/lib/email';
+import { sendEmail } from '@/lib/email/sender';
 
 export interface PerformanceHealthStatus {
   healthy: boolean;

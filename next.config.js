@@ -76,7 +76,7 @@ const nextConfig = {
               "img-src 'self' data: https: blob:",
               "font-src 'self' data: https://fonts.gstatic.com https:",
               "connect-src 'self' https://*.supabase.co https://vercel.live https://*.sentry.io wss://*.supabase.co",
-              "frame-src 'self' https://www.youtube.com https://player.vimeo.com",
+              "frame-src 'self' https://www.youtube.com https://player.vimeo.com https://vercel.live",
               "media-src 'self' https://*.supabase.co",
               "object-src 'none'",
               "base-uri 'self'",

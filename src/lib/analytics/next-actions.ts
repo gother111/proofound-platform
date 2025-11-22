@@ -6,7 +6,7 @@
  */
 
 import { db } from '@/db';
-import { assignments, matches, applications } from '@/db/schema';
+import { assignments, matches } from '@/db/schema';
 import { eq, and, lt, gte, sql } from 'drizzle-orm';
 
 export interface NextAction {
@@ -57,13 +57,15 @@ export async function calculateNextActions(organizationId: string): Promise<Next
     }
   }
 
+  /*
   // 2. Check for pending candidate reviews
+  // TODO: Re-enable when applications table is defined
   const pendingApplications = await db.execute(sql`
     SELECT 
       COUNT(*) as pending_count,
       a.id as assignment_id,
       a.role
-    FROM ${applications} app
+    FROM applications app
     JOIN ${assignments} a ON app.assignment_id = a.id
     WHERE a.organization_id = ${organizationId}
       AND app.status = 'pending'
@@ -89,6 +91,7 @@ export async function calculateNextActions(organizationId: string): Promise<Next
       });
     }
   }
+  */
 
   // 3. Check for low match quality (average score <0.5)
   const lowQualityAssignments = await db.execute(sql`
@@ -120,7 +123,9 @@ export async function calculateNextActions(organizationId: string): Promise<Next
     });
   }
 
+  /*
   // 4. Check for drop-off patterns (high application rate, low interview rate)
+  // TODO: Re-enable when applications table is defined
   const dropOffAnalysis = await db.execute(sql`
     WITH assignment_funnel AS (
       SELECT 
@@ -129,7 +134,7 @@ export async function calculateNextActions(organizationId: string): Promise<Next
         COUNT(DISTINCT CASE WHEN app.status = 'submitted' THEN app.id END) as applications,
         COUNT(DISTINCT CASE WHEN app.status = 'interview_scheduled' THEN app.id END) as interviews
       FROM ${assignments} a
-      LEFT JOIN ${applications} app ON app.assignment_id = a.id
+      LEFT JOIN applications app ON app.assignment_id = a.id
       WHERE a.organization_id = ${organizationId}
         AND a.created_at >= ${new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)}
       GROUP BY a.id, a.role
@@ -162,6 +167,7 @@ export async function calculateNextActions(organizationId: string): Promise<Next
       metadata: { assignmentId: row.assignment_id, conversionRate },
     });
   }
+  */
 
   // Sort by priority
   const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
