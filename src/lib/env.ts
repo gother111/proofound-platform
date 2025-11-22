@@ -119,9 +119,15 @@ function getHeaderValue(
 }
 
 function aggregateEnv(): EnvShape {
-  const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '').trim();
+  const supabaseUrl = (
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    process.env.SUPABASE_URL ||
+    ''
+  ).trim();
   const supabaseAnonKey = (
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || ''
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    process.env.SUPABASE_ANON_KEY ||
+    ''
   ).trim();
   const supabaseServiceRoleKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
   const siteUrl = normalizeSiteUrl(process.env.NEXT_PUBLIC_SITE_URL ?? process.env.SITE_URL, {
@@ -137,11 +143,20 @@ function aggregateEnv(): EnvShape {
   };
 }
 
-export function getEnv(strict: boolean = process.env.NODE_ENV === 'production'): Required<EnvShape> {
+export function getEnv(
+  strict: boolean = process.env.NODE_ENV === 'production'
+): Required<EnvShape> {
   const env = aggregateEnv();
   const missing: string[] = [];
 
-  const requiredKeys: (keyof EnvShape)[] = ['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'SITE_URL', 'DATABASE_URL'];
+  // Check if mocks are enabled - if so, we don't need DATABASE_URL
+  const allowMocks = process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true';
+
+  // Required keys depend on whether we're using mocks
+  const requiredKeys: (keyof EnvShape)[] = allowMocks
+    ? ['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'SITE_URL'] // Mocks don't need DATABASE_URL
+    : ['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'SITE_URL', 'DATABASE_URL']; // Real Supabase needs DATABASE_URL
+
   for (const k of requiredKeys) {
     if (!env[k]) missing.push(k);
   }
@@ -152,8 +167,13 @@ export function getEnv(strict: boolean = process.env.NODE_ENV === 'production'):
       `How to fix:\n` +
       `- Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY (or SUPABASE_URL/SUPABASE_ANON_KEY) in your hosting env.\n` +
       `- Set NEXT_PUBLIC_SITE_URL (or SITE_URL) to your deployed domain (e.g., https://your-domain.tld).\n` +
-      `- Set DATABASE_URL (or SUPABASE_DB_URL/POSTGRES_URL) to your Postgres connection string (e.g., from Supabase; Prefer ?sslmode=require).\n` +
-      `- In Supabase → Auth → URL configuration, set Site URL to NEXT_PUBLIC_SITE_URL and add redirect paths: /auth/callback, /reset-password/confirm, /verify-email.`;
+      (allowMocks
+        ? ''
+        : `- Set DATABASE_URL (or SUPABASE_DB_URL/POSTGRES_URL) to your Postgres connection string (e.g., from Supabase; Prefer ?sslmode=require).\n`) +
+      `- In Supabase → Auth → URL configuration, set Site URL to NEXT_PUBLIC_SITE_URL and add redirect paths: /auth/callback, /reset-password/confirm, /verify-email.` +
+      (allowMocks
+        ? `\n- Note: Mocks are enabled (NEXT_PUBLIC_USE_MOCK_SUPABASE=true), so DATABASE_URL is not required.`
+        : '');
 
     const err = new Error(msg) as Error & { code?: string };
     err.code = 'ENV_MISCONFIG';

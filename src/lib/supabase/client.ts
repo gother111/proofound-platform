@@ -149,6 +149,17 @@ export function createClient() {
     console.log('Returning mock Supabase client (ORG MODE)');
     return mockSupabaseClient;
   }
-  const env = getEnv();
-  return createBrowserClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  // Client-side doesn't need DATABASE_URL, so use non-strict mode
+  // but still validate Supabase URL and key
+  const env = getEnv(false);
+
+  // Still validate required Supabase vars
+  if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) {
+    throw new Error(
+      `Missing required Supabase environment variables: ${!env.SUPABASE_URL ? 'NEXT_PUBLIC_SUPABASE_URL' : ''} ${!env.SUPABASE_ANON_KEY ? 'NEXT_PUBLIC_SUPABASE_ANON_KEY' : ''}. ` +
+        `Set these in your Vercel environment variables.`
+    );
+  }
+
+  return createBrowserClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
 }
