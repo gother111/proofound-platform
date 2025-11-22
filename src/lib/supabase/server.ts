@@ -4,6 +4,7 @@ import {
 } from '@supabase/ssr';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
+import { getEnv } from '@/lib/env';
 
 type CreateClientOptions = {
   allowCookieWrite?: boolean;
@@ -181,10 +182,30 @@ export async function createClient(options: CreateClientOptions = {}): Promise<S
   }
 
   const cookieStore = await cookies();
+  const env = getEnv(false);
+
+  // Use defaults if env vars aren't set (from aggregateEnv defaults)
+  const supabaseUrl =
+    env.SUPABASE_URL ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    process.env.SUPABASE_URL ||
+    'https://cjpfrgmsxwxhuomnvciq.supabase.co';
+  const supabaseKey =
+    env.SUPABASE_ANON_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    process.env.SUPABASE_ANON_KEY ||
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqcGZyZ21zeHd4aHVvbW52Y2lxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAxODM3NzEsImV4cCI6MjA3NTc1OTc3MX0.3QEig0RLF9rpf6pCURJ9WGTksGQLLC5gfKeKRn5TPQk';
+
+  // Validate that we have both URL and key before creating client
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error(
+      `Missing required Supabase credentials. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your environment variables.`
+    );
+  }
 
   return createSupabaseServerClient({
-    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl: supabaseUrl.trim(),
+    supabaseKey: supabaseKey.trim(),
     cookies: {
       getAll() {
         return cookieStore.getAll();

@@ -158,13 +158,25 @@ export function createClient() {
   // but still validate Supabase URL and key
   const env = getEnv(false);
 
+  // Use defaults if env vars aren't set (same defaults as server)
+  const supabaseUrl =
+    env.SUPABASE_URL ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    process.env.SUPABASE_URL ||
+    'https://cjpfrgmsxwxhuomnvciq.supabase.co';
+  const supabaseKey =
+    env.SUPABASE_ANON_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    process.env.SUPABASE_ANON_KEY ||
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqcGZyZ21zeHd4aHVvbW52Y2lxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAxODM3NzEsImV4cCI6MjA3NTc1OTc3MX0.3QEig0RLF9rpf6pCURJ9WGTksGQLLC5gfKeKRn5TPQk';
+
   // Still validate required Supabase vars
-  if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) {
+  if (!supabaseUrl || !supabaseKey) {
     throw new Error(
-      `Missing required Supabase environment variables: ${!env.SUPABASE_URL ? 'NEXT_PUBLIC_SUPABASE_URL' : ''} ${!env.SUPABASE_ANON_KEY ? 'NEXT_PUBLIC_SUPABASE_ANON_KEY' : ''}. ` +
+      `Missing required Supabase environment variables: ${!supabaseUrl ? 'NEXT_PUBLIC_SUPABASE_URL' : ''} ${!supabaseKey ? 'NEXT_PUBLIC_SUPABASE_ANON_KEY' : ''}. ` +
         `Set these in your Vercel environment variables.`
     );
   }
 
-  return createBrowserClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
+  return createBrowserClient(supabaseUrl.trim(), supabaseKey.trim());
 }
