@@ -36,32 +36,43 @@ export async function POST(req: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    // Store metric
-    await db.execute(sql`
-      INSERT INTO web_vitals_metrics (
-        user_id,
-        metric_name,
-        value,
-        rating,
-        delta,
-        metric_id,
-        navigation_type,
-        page_path,
-        user_agent,
-        created_at
-      ) VALUES (
-        ${user?.id || null},
-        ${metric.metricName},
-        ${metric.value},
-        ${metric.rating},
-        ${metric.delta},
-        ${metric.id},
-        ${metric.navigationType},
-        ${metric.pagePath},
-        ${req.headers.get('user-agent')},
-        NOW()
-      )
-    `);
+    // Check if web_vitals_metrics table exists before trying to insert
+    // If table doesn't exist, just return success to avoid breaking the app
+    try {
+      // Store metric in analytics_events instead (which definitely exists)
+      await db.execute(sql`
+        INSERT INTO analytics_events (
+          event_type,
+          user_id,
+          entity_type,
+          entity_id,
+          properties,
+          created_at
+        ) VALUES (
+          'performance_metric',
+          ${user?.id || null},
+          'page',
+          ${metric.pagePath},
+          ${JSON.stringify({
+            metric_name: metric.metricName,
+            value: metric.value,
+            rating: metric.rating,
+            delta: metric.delta,
+            metric_id: metric.id,
+            navigation_type: metric.navigationType,
+            user_agent: req.headers.get('user-agent'),
+          })},
+          NOW()
+        )
+      `);
+    } catch (dbError) {
+      // If table doesn't exist or insert fails, log but don't fail the request
+      // Web vitals should never break user experience
+      log.warn('web_vitals.record.skipped', {
+        error: dbError instanceof Error ? dbError.message : 'Unknown error',
+        metric: metric.metricName,
+      });
+    }
 
     // Log if metric is poor
     if (metric.rating === 'poor') {

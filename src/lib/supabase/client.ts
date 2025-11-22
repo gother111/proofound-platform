@@ -144,9 +144,14 @@ const mockSupabaseClient = {
 } as any;
 
 export function createClient() {
-  console.log('createClient called, env:', process.env.NODE_ENV);
+  // Only log in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log('createClient called, env:', process.env.NODE_ENV);
+  }
   if (process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true') {
-    console.log('Returning mock Supabase client (ORG MODE)');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Returning mock Supabase client (ORG MODE)');
+    }
     return mockSupabaseClient;
   }
   // Client-side doesn't need DATABASE_URL, so use non-strict mode

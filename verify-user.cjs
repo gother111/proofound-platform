@@ -56,4 +56,4 @@ async function verifyUser(email) {
     }
 }
 
-verifyUser('demo@circularcraft.eu');
+verifyUser('alex.rivera@proofound-demo.com');
