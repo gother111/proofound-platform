@@ -46,7 +46,7 @@ export const individualTourSteps: Step[] = [
     disableBeacon: true,
   },
   {
-    target: '[data-tour="navigation"]',
+    target: '[data-tour="left-nav"]',
     content: (
       <div className="space-y-2">
         <h3 className="text-base font-semibold text-[#2D3330]">Your Navigation</h3>
@@ -72,7 +72,7 @@ export const individualTourSteps: Step[] = [
     disableBeacon: true,
   },
   {
-    target: '[data-tour="profile"]',
+    target: '[data-tour="profile-link"]',
     content: (
       <div className="space-y-2">
         <h3 className="text-base font-semibold text-[#2D3330]">Your Profile</h3>
@@ -89,7 +89,7 @@ export const individualTourSteps: Step[] = [
     disableBeacon: true,
   },
   {
-    target: '[data-tour="expertise"]',
+    target: '[data-tour="expertise-link"]',
     content: (
       <div className="space-y-2">
         <h3 className="text-base font-semibold text-[#2D3330]">Expertise Hub</h3>
@@ -107,7 +107,7 @@ export const individualTourSteps: Step[] = [
     disableBeacon: true,
   },
   {
-    target: '[data-tour="matching"]',
+    target: '[data-tour="matching-link"]',
     content: (
       <div className="space-y-2">
         <h3 className="text-base font-semibold text-[#2D3330]">Matching Profile</h3>
@@ -124,7 +124,7 @@ export const individualTourSteps: Step[] = [
     disableBeacon: true,
   },
   {
-    target: '[data-tour="zen"]',
+    target: '[data-tour="zen-link"]',
     content: (
       <div className="space-y-2">
         <h3 className="text-base font-semibold text-[#2D3330]">Zen Hub (Well-Being)</h3>
@@ -142,7 +142,7 @@ export const individualTourSteps: Step[] = [
     disableBeacon: true,
   },
   {
-    target: '[data-tour="settings"]',
+    target: '[data-tour="settings-link"]',
     content: (
       <div className="space-y-2">
         <h3 className="text-base font-semibold text-[#2D3330]">Settings</h3>
@@ -199,7 +199,7 @@ export const organizationTourSteps: Step[] = [
     disableBeacon: true,
   },
   {
-    target: '[data-tour="navigation"]',
+    target: '[data-tour="left-nav"]',
     content: (
       <div className="space-y-2">
         <h3 className="text-base font-semibold text-[#2D3330]">Organization Navigation</h3>

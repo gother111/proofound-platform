@@ -5,6 +5,28 @@
     },
     "SupabaseMCP": {
       "url": "https://mcp.supabase.com/mcp?project_ref=cjpfrgmsxwxhuomnvciq"
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "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"
+      }
+    },
+    "vercel": {
+      "command": "npx",
+      "args": ["-y", "@robinson_ai_systems/vercel-mcp"],
+      "env": {
+        "VERCEL_API_TOKEN": "LKLCRRIiRC7RxBoR2MPHb8lO"
+      }
+    },
+    "postgres": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://postgres:Gara1299442!@db.cjpfrgmsxwxhuomnvciq.supabase.co:5432/postgres?sslmode=require&connect_timeout=10"
+      ]
     }
   }
 }

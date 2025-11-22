@@ -1,5 +1,9 @@
 import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
+import dns from 'dns';
+
+// Force IPv4 to avoid EHOSTUNREACH errors with Supabase on some networks
+dns.setDefaultResultOrder('ipv4first');
 
 import { getEnv } from '@/lib/env';
 
@@ -60,7 +64,8 @@ const queryClient = connectionString
   ? postgres(connectionString, {
       idle_timeout: 10,
       max_lifetime: 60 * 30,
-      ssl: 'require',
+      ssl: process.env.NODE_ENV === 'production' ? 'require' : false,
+      prepare: false,
     })
   : null;
 

@@ -19,6 +19,7 @@ export type EventType =
   | 'profile_activated'
   | 'profile_updated'
   | 'profile_viewed'
+  | 'user_signup' // Added missing type
 
   // Matching events
   | 'match_generated'
@@ -27,6 +28,9 @@ export type EventType =
   | 'match_introduced'
   | 'match_snoozed'
   | 'match_hidden'
+  | 'match_actioned' // Added missing type
+  | 'first_match_shown'
+  | 'first_qualified_intro' // Added missing type
 
   // Interview events
   | 'interview_scheduled'
@@ -55,16 +59,24 @@ export type EventType =
   | 'attestation_provided'
 
   // System events
-  | 'first_match_shown'
   | 'sus_survey_completed'
-  | 'tour_completed';
+  | 'tour_started' // Added missing type
+  | 'tour_completed'
+  | 'tour_skipped' // Added missing type
+
+  // Assignment events
+  | 'assignment_published' // Added missing type
+
+  // Privacy events
+  | 'visibility_changed' // Added missing type
+  | 'redact_mode_toggled'; // Added missing type
 
 export interface AnalyticsEvent {
   eventType: EventType;
   userId: string;
   profileId?: string;
   organizationId?: string;
-  entityType?: 'match' | 'interview' | 'contract' | 'profile' | 'assignment';
+  entityType?: 'match' | 'interview' | 'contract' | 'profile' | 'assignment' | 'survey' | 'tour';
   entityId?: string;
   properties?: Record<string, any>;
   privacyPartition?: string; // For demographic segmentation (opt-in)
@@ -127,6 +139,10 @@ export function emitAnalyticsEventAsync(event: AnalyticsEvent): void {
   Promise.resolve().then(() => emitAnalyticsEvent(event));
 }
 
+// Alias for emitAnalyticsEvent
+export const emitEvent = emitAnalyticsEvent;
+export const trackEvent = emitAnalyticsEvent;
+
 // ============================================================================
 // PROFILE EVENTS
 // ============================================================================
@@ -139,6 +155,17 @@ export async function emitProfileCreated(userId: string, properties?: Record<str
     entityType: 'profile',
     entityId: userId,
     properties,
+  });
+}
+
+export async function emitUserSignup(userId: string, method: string) {
+  await emitAnalyticsEvent({
+    eventType: 'user_signup',
+    userId,
+    profileId: userId,
+    entityType: 'profile',
+    entityId: userId,
+    properties: { method },
   });
 }
 
@@ -157,6 +184,44 @@ export async function emitProfileActivated(
       activation_duration_ms: activationDurationMs,
       ...properties,
     },
+  });
+}
+
+export function emitProfileActivatedAsync(
+  userId: string,
+  activationDurationMs: number,
+  properties?: Record<string, any>
+) {
+  emitAnalyticsEventAsync({
+    eventType: 'profile_activated',
+    userId,
+    profileId: userId,
+    entityType: 'profile',
+    entityId: userId,
+    properties: {
+      activation_duration_ms: activationDurationMs,
+      ...properties,
+    },
+  });
+}
+
+export async function emitVisibilityChanged(userId: string, field: string, isVisible: boolean) {
+  await emitAnalyticsEvent({
+    eventType: 'visibility_changed',
+    userId,
+    entityType: 'profile',
+    entityId: userId,
+    properties: { field, is_visible: isVisible },
+  });
+}
+
+export async function emitRedactModeToggled(userId: string, isEnabled: boolean) {
+  await emitAnalyticsEvent({
+    eventType: 'redact_mode_toggled',
+    userId,
+    entityType: 'profile',
+    entityId: userId,
+    properties: { enabled: isEnabled },
   });
 }
 
@@ -216,6 +281,68 @@ export async function emitMatchIntroduced(
     userId,
     entityType: 'match',
     entityId: matchId,
+    properties,
+  });
+}
+
+export async function emitFirstQualifiedIntroAsync(
+  userId: string,
+  matchId: string,
+  properties: {
+    assignment_id: string;
+    match_id: string;
+    ttfqi_hours?: number;
+  }
+) {
+  emitAnalyticsEventAsync({
+    eventType: 'first_qualified_intro',
+    userId,
+    entityType: 'match',
+    entityId: matchId,
+    properties,
+  });
+}
+
+export async function emitFirstMatchShown(userId: string, matchId: string) {
+  await emitAnalyticsEvent({
+    eventType: 'first_match_shown',
+    userId,
+    entityType: 'match',
+    entityId: matchId,
+  });
+}
+
+export async function emitMatchActioned(
+  userId: string,
+  matchId: string,
+  action: string,
+  reason?: string
+) {
+  await emitAnalyticsEvent({
+    eventType: 'match_actioned',
+    userId,
+    entityType: 'match',
+    entityId: matchId,
+    properties: { action, reason },
+  });
+}
+
+// ============================================================================
+// ASSIGNMENT EVENTS
+// ============================================================================
+
+export async function emitAssignmentPublished(
+  userId: string,
+  assignmentId: string,
+  organizationId: string,
+  properties?: Record<string, any>
+) {
+  await emitAnalyticsEvent({
+    eventType: 'assignment_published',
+    userId,
+    organizationId,
+    entityType: 'assignment',
+    entityId: assignmentId,
     properties,
   });
 }
@@ -375,7 +502,55 @@ export async function emitSUSCompleted(
   await emitAnalyticsEvent({
     eventType: 'sus_survey_completed',
     userId,
+    entityType: 'survey',
     properties,
+  });
+}
+
+export function emitSUSSurveyCompletedAsync(
+  userId: string,
+  properties: {
+    total_score: number;
+    individual_scores: number[];
+    trigger_point: string;
+  }
+) {
+  emitAnalyticsEventAsync({
+    eventType: 'sus_survey_completed',
+    userId,
+    entityType: 'survey',
+    properties,
+  });
+}
+
+// ============================================================================
+// TOUR EVENTS
+// ============================================================================
+
+export async function emitTourStarted(userId: string, tourId: string) {
+  await emitAnalyticsEvent({
+    eventType: 'tour_started',
+    userId,
+    entityType: 'tour',
+    entityId: tourId,
+  });
+}
+
+export async function emitTourCompleted(userId: string, tourId: string) {
+  await emitAnalyticsEvent({
+    eventType: 'tour_completed',
+    userId,
+    entityType: 'tour',
+    entityId: tourId,
+  });
+}
+
+export async function emitTourSkipped(userId: string, tourId: string) {
+  await emitAnalyticsEvent({
+    eventType: 'tour_skipped',
+    userId,
+    entityType: 'tour',
+    entityId: tourId,
   });
 }
 
@@ -407,7 +582,7 @@ export async function getUserEvents(
   query = sql`${query} ORDER BY occurred_at DESC`;
 
   const result = await db.execute(query);
-  return result.rows as any[];
+  return result as any[];
 }
 
 /**
@@ -426,7 +601,8 @@ export async function getEventCount(
       AND occurred_at <= ${endDate.toISOString()}
   `);
 
-  return parseInt((result.rows[0] as any).count || '0');
+  const row = result[0] as any;
+  return parseInt(row?.count || '0');
 }
 
 /**
@@ -445,5 +621,6 @@ export async function getUniqueUsersWithEvent(
       AND occurred_at <= ${endDate.toISOString()}
   `);
 
-  return parseInt((result.rows[0] as any).count || '0');
+  const row = result[0] as any;
+  return parseInt(row?.count || '0');
 }

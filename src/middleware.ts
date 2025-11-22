@@ -99,7 +99,7 @@ export async function middleware(request: NextRequest) {
         .from('profiles')
         .select('platform_role')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       const isPlatformAdmin =
         profile?.platform_role === 'platform_admin' || profile?.platform_role === 'super_admin';

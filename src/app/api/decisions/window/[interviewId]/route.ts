@@ -9,9 +9,12 @@ import { createClient } from '@/lib/supabase/server';
 import { getDecisionWindow } from '@/lib/decisions/automation';
 import { log } from '@/lib/log';
 
-export async function GET(req: NextRequest, { params }: { params: { interviewId: string } }) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ interviewId: string }> }
+) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -20,7 +23,7 @@ export async function GET(req: NextRequest, { params }: { params: { interviewId:
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { interviewId } = params;
+    const { interviewId } = await params;
 
     if (!interviewId) {
       return NextResponse.json({ error: 'interviewId is required' }, { status: 400 });

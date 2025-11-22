@@ -273,14 +273,26 @@ async function generateMatchesForAssignment(assignmentId: string): Promise<numbe
  * - offset: Number of items to skip (default: 0)
  * - status: Filter by status (draft, active, paused, closed)
  */
+import * as fs from 'fs';
+import * as path from 'path';
+
+function debugLog(message: string) {
+  const logPath = path.join(process.cwd(), 'debug_log.txt');
+  fs.appendFileSync(logPath, `${new Date().toISOString()} - ${message}\n`);
+}
+
 export async function GET(request: NextRequest) {
+  debugLog('GET /api/assignments called');
   try {
     const user = await requireAuth();
+    debugLog(`User authenticated: ${user.id}`);
 
     // Check if user is a member of an organization
     const orgId = await getUserOrgId(user.id);
+    debugLog(`User orgId: ${orgId}`);
 
     if (!orgId) {
+      debugLog('No orgId found for user');
       return NextResponse.json({ items: [], hasMore: false });
     }
 
@@ -306,6 +318,8 @@ export async function GET(request: NextRequest) {
       .limit(limit + 1)
       .offset(offset);
 
+    debugLog(`Found ${orgAssignments.length} assignments`);
+
     // Check if there are more results
     const hasMore = orgAssignments.length > limit;
     const assignmentsToReturn = hasMore ? orgAssignments.slice(0, limit) : orgAssignments;
@@ -316,6 +330,7 @@ export async function GET(request: NextRequest) {
       nextOffset: hasMore ? offset + limit : null,
     });
   } catch (error) {
+    debugLog(`Error in GET: ${error instanceof Error ? error.message : 'Unknown error'}`);
     log.error('assignments.list.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
     });
@@ -330,13 +345,17 @@ export async function GET(request: NextRequest) {
  * Creates a new assignment for the current user's organization.
  */
 export async function POST(request: NextRequest) {
+  debugLog('POST /api/assignments called');
   try {
     const user = await requireAuth();
+    debugLog(`User authenticated: ${user.id}`);
 
     // Check if user is a member of an organization
     const orgId = await getUserOrgId(user.id);
+    debugLog(`User orgId: ${orgId}`);
 
     if (!orgId) {
+      debugLog('No orgId found for user');
       return NextResponse.json(
         { error: 'You must be a member of an organization to create assignments' },
         { status: 403 }

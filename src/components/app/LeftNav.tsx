@@ -14,6 +14,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Video,
+  Briefcase,
+  Building,
+  ClipboardList,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -43,7 +46,9 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const pathname = usePathname();
 
-  const navItems = [
+  const isOrg = basePath?.startsWith('/app/o/');
+
+  const individualNavItems = [
     { href: `${basePath}/home`, icon: Home, label: 'Dashboard', dataTour: 'home-link' },
     { href: `${basePath}/profile`, icon: User, label: 'Profile', dataTour: 'profile-link' },
     {
@@ -68,6 +73,22 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
     { href: `${basePath}/zen`, icon: Sparkles, label: 'Zen Hub', dataTour: 'zen-link' },
     { href: `${basePath}/settings`, icon: Settings, label: 'Settings', dataTour: 'settings-link' },
   ];
+
+  const orgNavItems = [
+    { href: `${basePath}/home`, icon: Home, label: 'Dashboard', dataTour: 'home-link' },
+    {
+      href: `${basePath}/assignments`,
+      icon: Briefcase,
+      label: 'Assignments',
+      dataTour: 'assignments',
+    },
+    { href: `${basePath}/candidates`, icon: Users, label: 'Candidates', dataTour: 'candidates' },
+    { href: `${basePath}/profile`, icon: Building, label: 'Org Profile', dataTour: 'org-profile' },
+    { href: `${basePath}/team`, icon: Users, label: 'Team', dataTour: 'team-link' },
+    { href: `${basePath}/settings`, icon: Settings, label: 'Settings', dataTour: 'settings-link' },
+  ];
+
+  const navItems = isOrg ? orgNavItems : individualNavItems;
 
   return (
     <>

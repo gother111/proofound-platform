@@ -49,17 +49,17 @@ interface AssignmentData {
   description: string;
   department: string;
   employmentType: string;
-  
+
   // Step 2: Skills & Requirements
   requiredSkills: Array<{ name: string; level: number }>;
   niceToHaveSkills: Array<{ name: string }>;
   yearsExperience: number;
-  
+
   // Step 3: Values & Causes
   values: string[];
   causes: string[];
   impactGoals: string;
-  
+
   // Step 4: Logistics
   location: string;
   locationMode: string;
@@ -68,7 +68,7 @@ interface AssignmentData {
   compensationCurrency: string;
   startDate: string;
   applicationDeadline: string;
-  
+
   // Step 5: Review
   isDraft: boolean;
 }
@@ -127,21 +127,33 @@ export function AssignmentWizard({ organizationId }: { organizationId: string })
   const handleSaveDraft = async () => {
     setIsSaving(true);
     try {
-      const response = await fetch('/api/assignments/create', {
+      // Map frontend data to backend schema
+      const payload = {
+        ...data,
+        status: 'draft',
+        // Map skills to expected schema (using dummy IDs for now as we don't have a skill selector)
+        mustHaveSkills: data.requiredSkills.map((s) => ({
+          id: crypto.randomUUID(),
+          level: s.level,
+        })),
+        niceToHaveSkills: data.niceToHaveSkills.map((s) => ({ id: crypto.randomUUID(), level: 1 })),
+      };
+
+      const response = await fetch('/api/assignments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...data,
-          organizationId,
-          isDraft: true,
-        }),
+        body: JSON.stringify(payload),
       });
 
-      if (!response.ok) throw new Error('Failed to save draft');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save draft');
+      }
 
       const result = await response.json();
       toast.success('Draft saved successfully');
-      return result.assignmentId;
+      // The backend returns { assignment: { ... } }
+      return result.assignment.id;
     } catch (error) {
       console.error('Failed to save draft:', error);
       toast.error('Failed to save draft');
@@ -154,24 +166,35 @@ export function AssignmentWizard({ organizationId }: { organizationId: string })
   const handlePublish = async () => {
     setIsSaving(true);
     try {
-      const response = await fetch('/api/assignments/create', {
+      // Map frontend data to backend schema
+      const payload = {
+        ...data,
+        status: 'active',
+        // Map skills to expected schema (using dummy IDs for now)
+        mustHaveSkills: data.requiredSkills.map((s) => ({
+          id: crypto.randomUUID(),
+          level: s.level,
+        })),
+        niceToHaveSkills: data.niceToHaveSkills.map((s) => ({ id: crypto.randomUUID(), level: 1 })),
+      };
+
+      const response = await fetch('/api/assignments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...data,
-          organizationId,
-          isDraft: false,
-        }),
+        body: JSON.stringify(payload),
       });
 
-      if (!response.ok) throw new Error('Failed to publish assignment');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to publish assignment');
+      }
 
       const result = await response.json();
       toast.success('Assignment published successfully!');
-      router.push(`/app/o/${organizationId}/assignments/${result.assignmentId}`);
+      router.push(`/app/o/${organizationId}/assignments/${result.assignment.id}`);
     } catch (error) {
       console.error('Failed to publish assignment:', error);
-      toast.error('Failed to publish assignment');
+      toast.error(error instanceof Error ? error.message : 'Failed to publish assignment');
     } finally {
       setIsSaving(false);
     }
@@ -204,8 +227,8 @@ export function AssignmentWizard({ organizationId }: { organizationId: string })
                       step.id === currentStep
                         ? 'text-[#1C4D3A] font-semibold'
                         : step.id < currentStep
-                        ? 'text-green-600'
-                        : 'text-[#6B6760]'
+                          ? 'text-green-600'
+                          : 'text-[#6B6760]'
                     }`}
                   >
                     {step.id < currentStep ? (
@@ -275,7 +298,10 @@ export function AssignmentWizard({ organizationId }: { organizationId: string })
 
                 <div>
                   <Label htmlFor="employmentType">Employment Type *</Label>
-                  <Select value={data.employmentType} onValueChange={(val) => updateData('employmentType', val)}>
+                  <Select
+                    value={data.employmentType}
+                    onValueChange={(val) => updateData('employmentType', val)}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -333,10 +359,19 @@ export function AssignmentWizard({ organizationId }: { organizationId: string })
                   Select values that align with this role
                 </p>
                 <div className="grid grid-cols-2 gap-2">
-                  {['Integrity', 'Innovation', 'Collaboration', 'Impact', 'Transparency', 'Equity'].map((value) => (
+                  {[
+                    'Integrity',
+                    'Innovation',
+                    'Collaboration',
+                    'Impact',
+                    'Transparency',
+                    'Equity',
+                  ].map((value) => (
                     <div key={value} className="flex items-center space-x-2">
                       <Checkbox id={value} />
-                      <Label htmlFor={value} className="font-normal">{value}</Label>
+                      <Label htmlFor={value} className="font-normal">
+                        {value}
+                      </Label>
                     </div>
                   ))}
                 </div>
@@ -371,7 +406,10 @@ export function AssignmentWizard({ organizationId }: { organizationId: string })
 
                 <div>
                   <Label htmlFor="locationMode">Work Mode</Label>
-                  <Select value={data.locationMode} onValueChange={(val) => updateData('locationMode', val)}>
+                  <Select
+                    value={data.locationMode}
+                    onValueChange={(val) => updateData('locationMode', val)}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -399,7 +437,10 @@ export function AssignmentWizard({ organizationId }: { organizationId: string })
                     onChange={(e) => updateData('compensationMax', parseInt(e.target.value) || 0)}
                     placeholder="Max"
                   />
-                  <Select value={data.compensationCurrency} onValueChange={(val) => updateData('compensationCurrency', val)}>
+                  <Select
+                    value={data.compensationCurrency}
+                    onValueChange={(val) => updateData('compensationCurrency', val)}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -440,7 +481,9 @@ export function AssignmentWizard({ organizationId }: { organizationId: string })
           {currentStep === 5 && (
             <div className="space-y-6">
               <div className="p-4 bg-[#F7F6F1] dark:bg-background/50 rounded-lg border border-[#E8E6DD] dark:border-border">
-                <h3 className="font-semibold text-[#2D3330] dark:text-foreground mb-4">Role Summary</h3>
+                <h3 className="font-semibold text-[#2D3330] dark:text-foreground mb-4">
+                  Role Summary
+                </h3>
                 <dl className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <dt className="text-[#6B6760] dark:text-muted-foreground">Title:</dt>
@@ -452,7 +495,9 @@ export function AssignmentWizard({ organizationId }: { organizationId: string })
                   </div>
                   <div className="flex justify-between">
                     <dt className="text-[#6B6760] dark:text-muted-foreground">Location:</dt>
-                    <dd className="font-medium capitalize">{data.location} ({data.locationMode})</dd>
+                    <dd className="font-medium capitalize">
+                      {data.location} ({data.locationMode})
+                    </dd>
                   </div>
                   {data.compensationMin > 0 && (
                     <div className="flex justify-between">
@@ -476,21 +521,13 @@ export function AssignmentWizard({ organizationId }: { organizationId: string })
 
       {/* Navigation Buttons */}
       <div className="flex justify-between">
-        <Button
-          variant="outline"
-          onClick={handleBack}
-          disabled={currentStep === 1}
-        >
+        <Button variant="outline" onClick={handleBack} disabled={currentStep === 1}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back
         </Button>
 
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={handleSaveDraft}
-            disabled={isSaving}
-          >
+          <Button variant="outline" onClick={handleSaveDraft} disabled={isSaving}>
             <Save className="w-4 h-4 mr-2" />
             Save Draft
           </Button>
@@ -515,4 +552,3 @@ export function AssignmentWizard({ organizationId }: { organizationId: string })
     </div>
   );
 }
-

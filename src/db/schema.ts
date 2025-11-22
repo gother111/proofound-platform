@@ -22,7 +22,7 @@ import { sql } from 'drizzle-orm';
 const bit = customType<{ data: string; notNull?: boolean; default?: boolean }>({
   dataType(config) {
     const dimensions = (config as { dimensions?: number } | undefined)?.dimensions;
-    return dimensions ? `bit(${dimensions})` : 'bit';
+    return 'text';
   },
 });
 
@@ -1917,24 +1917,6 @@ export type SkillEndorsement = typeof skillEndorsements.$inferSelect;
 export type InsertSkillEndorsement = typeof skillEndorsements.$inferInsert;
 export type GrowthPlan = typeof growthPlans.$inferSelect;
 export type InsertGrowthPlan = typeof growthPlans.$inferInsert;
-
-// Verification system types
-export type VerificationRequest = typeof verificationRequests.$inferSelect;
-export type InsertVerificationRequest = typeof verificationRequests.$inferInsert;
-export type VerificationResponse = typeof verificationResponses.$inferSelect;
-export type InsertVerificationResponse = typeof verificationResponses.$inferInsert;
-export type VerificationAppeal = typeof verificationAppeals.$inferSelect;
-export type InsertVerificationAppeal = typeof verificationAppeals.$inferInsert;
-export type OrgVerification = typeof orgVerification.$inferSelect;
-export type InsertOrgVerification = typeof orgVerification.$inferInsert;
-
-// Messaging system types
-export type Conversation = typeof conversations.$inferSelect;
-export type InsertConversation = typeof conversations.$inferInsert;
-export type Message = typeof messages.$inferSelect;
-export type InsertMessage = typeof messages.$inferInsert;
-export type BlockedUser = typeof blockedUsers.$inferSelect;
-export type InsertBlockedUser = typeof blockedUsers.$inferInsert;
 
 // Moderation system types
 export type ContentReport = typeof contentReports.$inferSelect;

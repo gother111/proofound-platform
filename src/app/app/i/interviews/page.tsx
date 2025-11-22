@@ -10,6 +10,7 @@
 import { useState, useEffect } from 'react';
 import { Calendar, Clock, Video, ExternalLink } from 'lucide-react';
 import { ScheduleInterviewButton } from '@/components/interviews/ScheduleInterviewButton';
+import { SkeletonCard } from '@/components/ui/skeleton';
 
 export const dynamic = 'force-dynamic';
 
@@ -89,10 +90,15 @@ export default function InterviewsPage() {
     return (
       <div className="p-8">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-semibold mb-6" style={{ color: '#2D3330' }}>
-            Interviews
-          </h1>
-          <p className="text-gray-600">Loading...</p>
+          <div className="mb-8">
+            <div className="h-8 w-48 bg-[#E8E6DD] dark:bg-[#2C3244] rounded animate-pulse mb-2" />
+            <div className="h-4 w-64 bg-[#E8E6DD] dark:bg-[#2C3244] rounded animate-pulse" />
+          </div>
+          <div className="space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -113,17 +119,17 @@ export default function InterviewsPage() {
 
         {/* Interviews List */}
         {interviews.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-            <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-            <h2 className="text-lg font-medium mb-2" style={{ color: '#2D3330' }}>
+          <div className="flex flex-col items-center justify-center py-16 px-4 bg-white rounded-xl border border-dashed border-gray-300 text-center">
+            <div className="w-16 h-16 bg-[#F7F6F1] rounded-full flex items-center justify-center mb-4">
+              <Calendar className="w-8 h-8" style={{ color: '#1C4D3A' }} />
+            </div>
+            <h2 className="text-xl font-medium mb-2" style={{ color: '#2D3330' }}>
               No Interviews Scheduled
             </h2>
-            <p className="text-sm mb-4" style={{ color: '#6B6760' }}>
+            <p className="text-sm text-[#6B6760] max-w-md mb-6">
               Once you match with an organization and they shortlist you, you can schedule an
-              interview.
-            </p>
-            <p className="text-xs" style={{ color: '#6B6760' }}>
-              Interviews are 30 minutes and must be scheduled within 7 days of match acceptance.
+              interview. Interviews are 30 minutes and must be scheduled within 7 days of
+              acceptance.
             </p>
           </div>
         ) : (

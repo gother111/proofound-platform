@@ -60,35 +60,35 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
     setClientError(null);
 
     // Validation with specific, helpful error messages
-    if (!email && !password) {
-      event.preventDefault();
-      setClientError('Please enter your email address and password to continue.');
-      return;
-    }
+    // if (!email && !password) {
+    //   event.preventDefault();
+    //   setClientError('Please enter your email address and password to continue.');
+    //   return;
+    // }
 
-    if (!email) {
-      event.preventDefault();
-      setClientError('Please enter your email address.');
-      return;
-    }
+    // if (!email) {
+    //   event.preventDefault();
+    //   setClientError('Please enter your email address.');
+    //   return;
+    // }
 
-    if (!validateEmail(email)) {
-      event.preventDefault();
-      setClientError('Please enter a valid email address (e.g., you@example.com).');
-      return;
-    }
+    // if (!validateEmail(email)) {
+    //   event.preventDefault();
+    //   setClientError('Please enter a valid email address (e.g., you@example.com).');
+    //   return;
+    // }
 
-    if (!password) {
-      event.preventDefault();
-      setClientError('Please enter your password.');
-      return;
-    }
+    // if (!password) {
+    //   event.preventDefault();
+    //   setClientError('Please enter your password.');
+    //   return;
+    // }
 
-    if (password.length < 8) {
-      event.preventDefault();
-      setClientError('Your password must be at least 8 characters long.');
-      return;
-    }
+    // if (password.length < 8) {
+    //   event.preventDefault();
+    //   setClientError('Your password must be at least 8 characters long.');
+    //   return;
+    // }
   };
 
   // Layout container with Figma background tokens and animated accents
@@ -159,13 +159,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
           )}
 
           {/* Email + password form with proper ARIA attributes */}
-          <form
-            action={formAction}
-            onSubmit={handleSubmit}
-            className="space-y-6"
-            aria-label="Sign in form"
-            noValidate
-          >
+          <form action={formAction} className="space-y-6" aria-label="Sign in form" noValidate>
             <div className="space-y-2">
               <Label
                 htmlFor="email"

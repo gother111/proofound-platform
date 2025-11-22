@@ -61,7 +61,9 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
     // Validate GDPR consent (required)
     if (!gdprConsent) {
       event.preventDefault();
-      setClientError('You must agree to the Privacy Policy and Terms of Service to create an account');
+      setClientError(
+        'You must agree to the Privacy Policy and Terms of Service to create an account'
+      );
       return;
     }
 
@@ -234,6 +236,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                 />
                 <Input
                   id="email"
+                  name="email"
                   type="email"
                   placeholder="you@example.com"
                   autoComplete="email"
@@ -263,6 +266,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
               <div className="relative">
                 <Input
                   id="password"
+                  name="password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="At least 8 characters"
                   autoComplete="new-password"
@@ -300,6 +304,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
               </Label>
               <Input
                 id="confirm-password"
+                name="confirmPassword"
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Re-enter your password"
                 autoComplete="new-password"

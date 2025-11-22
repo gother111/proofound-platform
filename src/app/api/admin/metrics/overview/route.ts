@@ -12,10 +12,12 @@
 import { NextResponse } from 'next/server';
 import { requirePlatformAdmin } from '@/lib/auth/admin';
 import {
-  calculateTTSCMedian,
-  calculateTTFQIMedian,
-  calculateTTVMedian,
-  calculateWellBeingImprovementRate,
+  calculateTTSC,
+  calculateTTFQI,
+  calculateTTV,
+  calculateWellBeingDelta,
+  calculateSUS,
+  calculatePACLift,
 } from '@/lib/analytics/metrics';
 import { db } from '@/db';
 import { analyticsEvents } from '@/db/schema';
@@ -39,64 +41,56 @@ export async function GET() {
     await requirePlatformAdmin();
 
     // Calculate TTSC (North Star Metric)
-    const ttscMedian = await calculateTTSCMedian();
-    const ttscCount = await getEventCount(EventType.CONTRACT_SIGNED);
-    const ttscP75 = await calculatePercentile('ttsc', 75);
+    const ttscResult = await calculateTTSC();
 
     // Calculate TTFQI
-    const ttfqiMedian = await calculateTTFQIMedian();
-    const ttfqiCount = await getEventCount(EventType.FIRST_QUALIFIED_INTRO);
-    const ttfqiP75 = await calculatePercentile('ttfqi', 75);
+    const ttfqiResult = await calculateTTFQI();
 
     // Calculate TTV
-    const ttvMedian = await calculateTTVMedian();
-    const ttvCount = await getEventCount(EventType.INTERVIEW_SCHEDULED);
-    const ttvP75 = await calculatePercentile('ttv', 75);
+    const ttvResult = await calculateTTV();
 
     // Calculate Well-Being Delta
-    const wellbeingRate = await calculateWellBeingImprovementRate(14);
-    const wellbeingCount = await getEventCount(EventType.WELLBEING_CHECKIN);
+    const wellbeingResult = await calculateWellBeingDelta();
 
     // Calculate SUS Score
-    const susData = await calculateAverageSUS();
+    const susResult = await calculateSUS();
 
-    // Calculate PAC Lift (placeholder - requires more complex analysis)
-    const pacLift = null; // TODO: Implement PAC lift calculation
-    const pacCount = await getEventCount(EventType.MATCH_VIEWED);
+    // Calculate PAC Lift
+    const pacResult = await calculatePACLift();
 
     const metrics = {
       ttsc: {
-        median: ttscMedian,
-        p75: ttscP75,
-        count: ttscCount,
-        targetMet: ttscMedian !== null && ttscMedian <= TTSC_TARGET_DAYS,
+        median: ttscResult.value,
+        p75: ttscResult.percentile?.p75 || null,
+        count: ttscResult.sampleSize,
+        targetMet: ttscResult.onTrack,
       },
       ttfqi: {
-        median: ttfqiMedian,
-        p75: ttfqiP75,
-        count: ttfqiCount,
-        targetMet: ttfqiMedian !== null && ttfqiMedian <= TTFQI_TARGET_HOURS,
+        median: ttfqiResult.value,
+        p75: ttfqiResult.percentile?.p75 || null,
+        count: ttfqiResult.sampleSize,
+        targetMet: ttfqiResult.onTrack,
       },
       ttv: {
-        median: ttvMedian,
-        p75: ttvP75,
-        count: ttvCount,
-        targetMet: ttvMedian !== null && ttvMedian <= TTV_TARGET_DAYS,
+        median: ttvResult.value,
+        p75: ttvResult.percentile?.p75 || null,
+        count: ttvResult.sampleSize,
+        targetMet: ttvResult.onTrack,
       },
       wellbeing: {
-        improvementRate: wellbeingRate,
-        targetMet: wellbeingRate !== null && wellbeingRate >= WELLBEING_DELTA_TARGET_PERCENT,
-        sampleSize: wellbeingCount,
+        improvementRate: wellbeingResult.positiveChange,
+        targetMet: wellbeingResult.onTrack,
+        sampleSize: wellbeingResult.sampleSize,
       },
       sus: {
-        average: susData.average,
-        targetMet: susData.average !== null && susData.average >= SUS_TARGET_SCORE,
-        responseCount: susData.count,
+        average: susResult.value,
+        targetMet: susResult.onTrack,
+        responseCount: susResult.responses,
       },
       pac: {
-        topDecileLift: pacLift,
-        targetMet: pacLift !== null && pacLift >= PAC_LIFT_TARGET_PERCENT,
-        sampleSize: pacCount,
+        topDecileLift: pacResult.lift,
+        targetMet: pacResult.onTrack,
+        sampleSize: pacResult.sampleSize.withPAC + pacResult.sampleSize.withoutPAC,
       },
     };
 

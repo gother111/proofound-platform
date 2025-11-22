@@ -135,7 +135,7 @@ export default async function IndividualHomePage() {
           </section>
 
           {/* KPI Grid */}
-          <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <section data-tour="dashboard" className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {kpiCards.map(
               ({ title, value, description, footnote, Icon, changeColor, ctaHref, ctaLabel }) => (
                 <Card

@@ -17,9 +17,9 @@ interface VisibleField {
   isRedacted: boolean;
 }
 
-export async function GET(req: NextRequest, { params }: { params: { matchId: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ matchId: string }> }) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest, { params }: { params: { matchId: str
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { matchId } = params;
+    const { matchId } = await params;
 
     // Get match details
     const match = await db.execute(sql`
@@ -42,11 +42,11 @@ export async function GET(req: NextRequest, { params }: { params: { matchId: str
         AND m.individual_id = ${user.id}
     `);
 
-    if (!match.rows.length) {
+    if (!match.length) {
       return NextResponse.json({ error: 'Match not found' }, { status: 404 });
     }
 
-    const matchData = match.rows[0] as any;
+    const matchData = match[0] as any;
     const organizationId = matchData.organization_id;
 
     // Get individual's profile
@@ -56,11 +56,11 @@ export async function GET(req: NextRequest, { params }: { params: { matchId: str
       WHERE user_id = ${user.id}
     `);
 
-    if (!profile.rows.length) {
+    if (!profile.length) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    const profileData = profile.rows[0] as any;
+    const profileData = profile[0] as any;
 
     // Get field visibility settings
     const visibility = await db.execute(sql`
@@ -69,9 +69,7 @@ export async function GET(req: NextRequest, { params }: { params: { matchId: str
       WHERE user_id = ${user.id}
     `);
 
-    const visibilityMap = new Map(
-      visibility.rows.map((row: any) => [row.field_name, row.is_visible])
-    );
+    const visibilityMap = new Map(visibility.map((row: any) => [row.field_name, row.is_visible]));
 
     // Define all profile fields with their labels
     const allFields = [
@@ -161,7 +159,7 @@ export async function GET(req: NextRequest, { params }: { params: { matchId: str
       WHERE id = ${organizationId}
     `);
 
-    const organizationName = org.rows.length > 0 ? (org.rows[0] as any).name : 'the organization';
+    const organizationName = org.length > 0 ? (org[0] as any).name : 'the organization';
 
     log.info('match.visible_fields.retrieved', {
       userId: user.id,

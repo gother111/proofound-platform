@@ -11,9 +11,9 @@ import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     // Get profile
     const result = await db.execute(sql`
@@ -32,11 +32,11 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         AND user_id = ${user.id}
     `);
 
-    if (!result.rows.length) {
+    if (!result.length) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    const profile = result.rows[0] as any;
+    const profile = result[0] as any;
 
     return NextResponse.json({
       success: true,
@@ -59,9 +59,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -70,7 +70,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     // Verify ownership
     const existing = await db.execute(sql`
@@ -79,11 +79,11 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       WHERE id = ${id}
     `);
 
-    if (!existing.rows.length) {
+    if (!existing.length) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    if ((existing.rows[0] as any).user_id !== user.id) {
+    if ((existing[0] as any).user_id !== user.id) {
       return NextResponse.json({ error: 'Unauthorized to delete this profile' }, { status: 403 });
     }
 

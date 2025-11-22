@@ -6,6 +6,7 @@ import { IndividualMatchingEmpty } from '@/components/matching/IndividualMatchin
 import { MatchingProfileSetup } from '@/components/matching/MatchingProfileSetup';
 import { MatchResultCard } from '@/components/matching/MatchResultCard';
 import { EnhancedMatchFilters } from '@/components/matching/EnhancedMatchFilters';
+import { SkeletonCard } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 
 export const dynamic = 'force-dynamic';
@@ -147,8 +148,16 @@ export default function MatchingPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh] bg-proofound-parchment dark:bg-background">
-        <p className="text-proofound-charcoal/70 dark:text-muted-foreground">Loading...</p>
+      <div className="max-w-5xl mx-auto px-4 py-6">
+        <div className="mb-6">
+          <div className="h-8 w-48 bg-[#E8E6DD] dark:bg-[#2C3244] rounded animate-pulse mb-2" />
+          <div className="h-4 w-64 bg-[#E8E6DD] dark:bg-[#2C3244] rounded animate-pulse" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
       </div>
     );
   }
@@ -231,28 +240,7 @@ export default function MatchingPage() {
               }
               onInterested={async () => {
                 try {
-                  // Check verification gates first
-                  const gatesResponse = await fetch('/api/match/gates', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      assignmentId: match.assignmentId,
-                    }),
-                  });
-
-                  if (gatesResponse.ok) {
-                    const gatesData = await gatesResponse.json();
-
-                    if (!gatesData.canIntroduce) {
-                      // Show toast with verification requirement
-                      toast.error(gatesData.blockingMessage || 'Verification required', {
-                        description: 'Please complete required verifications first.',
-                      });
-                      return;
-                    }
-                  }
-
-                  // Proceed with introduction if gates passed
+                  // Proceed with introduction (gates checked by card component)
                   const response = await fetch('/api/match/interest', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

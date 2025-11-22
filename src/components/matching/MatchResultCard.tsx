@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { MapPin, Clock, DollarSign, Shield, Eye, EyeOff, BellOff } from 'lucide-react';
+import { MapPin, Clock, DollarSign, Shield, Eye, EyeOff, BellOff, Loader2 } from 'lucide-react';
 import { PACScoreExplainer } from './PACScoreExplainer';
 import { MatchExplainerModal } from './MatchExplainerModal';
 import { SnoozeDialog } from './SnoozeDialog';
@@ -124,7 +124,31 @@ export function MatchResultCard({
   // Handle consent and interest
   const handleInterested = async () => {
     if (!isOrgView) {
-      // Individual view - show consent dialog first
+      // Individual view - check gates first
+      if (result.assignmentId) {
+        try {
+          const gatesResponse = await fetch('/api/match/gates', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              assignmentId: result.assignmentId,
+            }),
+          });
+
+          if (gatesResponse.ok) {
+            const gatesData = await gatesResponse.json();
+            if (!gatesData.canIntroduce) {
+              setGateCheckResult(gatesData);
+              setShowGatesWarning(true);
+              return;
+            }
+          }
+        } catch (error) {
+          console.error('Failed to check verification gates:', error);
+        }
+      }
+
+      // If gates passed (or failed to check/org view), proceed to consent
       await fetchVisibleFields();
     } else {
       // Org view - direct action
@@ -205,7 +229,14 @@ export function MatchResultCard({
                   onClick={fetchMatchExplanation}
                   disabled={isLoadingExplanation}
                 >
-                  {isLoadingExplanation ? 'Loading...' : 'Why this match?'}
+                  {isLoadingExplanation ? (
+                    <>
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    'Why this match?'
+                  )}
                 </Button>
               )}
             </div>

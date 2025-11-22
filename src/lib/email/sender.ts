@@ -23,7 +23,9 @@ export interface SendEmailParams {
 /**
  * Send an email via Resend
  */
-export async function sendEmail(params: SendEmailParams): Promise<{ success: boolean; id?: string; error?: string }> {
+export async function sendEmail(
+  params: SendEmailParams
+): Promise<{ success: boolean; id?: string; error?: string }> {
   // Check if email is configured
   if (!isEmailConfigured() || !resend) {
     console.warn('[Email] Email service not configured. Set RESEND_API_KEY environment variable.');
@@ -45,7 +47,7 @@ export async function sendEmail(params: SendEmailParams): Promise<{ success: boo
       subject: params.subject,
       html: params.html,
       text: params.text,
-      replyTo: params.replyTo || EMAIL_CONFIG.replyTo,
+      reply_to: params.replyTo || EMAIL_CONFIG.replyTo,
       cc: params.cc,
       bcc: params.bcc,
     });
@@ -69,16 +71,16 @@ export async function sendEmail(params: SendEmailParams): Promise<{ success: boo
 /**
  * Send multiple emails in batch
  */
-export async function sendBatchEmails(emails: SendEmailParams[]): Promise<{ success: boolean; results: any[] }> {
+export async function sendBatchEmails(
+  emails: SendEmailParams[]
+): Promise<{ success: boolean; results: any[] }> {
   if (!isEmailConfigured() || !resend) {
     console.warn('[Email] Email service not configured. Batch send skipped.');
     return { success: false, results: [] };
   }
 
   try {
-    const results = await Promise.allSettled(
-      emails.map((email) => sendEmail(email))
-    );
+    const results = await Promise.allSettled(emails.map((email) => sendEmail(email)));
 
     const successful = results.filter((r) => r.status === 'fulfilled').length;
     const failed = results.filter((r) => r.status === 'rejected').length;
@@ -87,7 +89,9 @@ export async function sendBatchEmails(emails: SendEmailParams[]): Promise<{ succ
 
     return {
       success: failed === 0,
-      results: results.map((r) => r.status === 'fulfilled' ? r.value : { success: false, error: 'Promise rejected' }),
+      results: results.map((r) =>
+        r.status === 'fulfilled' ? r.value : { success: false, error: 'Promise rejected' }
+      ),
     };
   } catch (error) {
     console.error('[Email] Error sending batch emails:', error);

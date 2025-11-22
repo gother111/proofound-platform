@@ -1,109 +1,207 @@
-import { createServerClient as createSupabaseServerClient, type CookieOptions } from '@supabase/ssr';
+import {
+  createServerClient as createSupabaseServerClient,
+  type CookieOptions,
+} from '@supabase/ssr';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
 type CreateClientOptions = {
-  /**
-   * When `true`, allow Supabase helpers to mutate response cookies.
-   * Keep this disabled (default) inside React Server Components to avoid
-   * Next.js runtime errors: "Cookies can only be modified in a Server Action or Route Handler".
-   */
   allowCookieWrite?: boolean;
 };
 
+const MOCK_USER_ID = '88888888-8888-4888-8888-888888888888';
+const ORG_ID = '99999999-9999-4999-9999-999999999999';
+
 const mockSupabaseClient = {
   auth: {
-    getSession: async () => ({ data: { session: null }, error: null }),
-    getUser: async () => ({ data: { user: null }, error: null }),
-    signInWithPassword: async () => ({ data: null, error: new Error('Supabase not configured') }),
+    getSession: async () => ({
+      data: {
+        session: {
+          user: { id: MOCK_USER_ID, email: 'admin@test-org.com', role: 'authenticated' },
+          access_token: 'mock-token',
+        },
+      },
+      error: null,
+    }),
+    getUser: async () => ({
+      data: {
+        user: { id: MOCK_USER_ID, email: 'admin@test-org.com', role: 'authenticated' },
+      },
+      error: null,
+    }),
+    signInWithPassword: async () => ({
+      data: { user: { id: MOCK_USER_ID }, session: {} },
+      error: null,
+    }),
     signOut: async () => ({ error: null }),
-    signUp: async () => ({ data: null, error: new Error('Supabase not configured') }),
-    resetPasswordForEmail: async () => ({
-      data: null,
-      error: new Error('Supabase not configured'),
-    }),
-    verifyOtp: async () => ({ data: null, error: new Error('Supabase not configured') }),
+    signUp: async () => ({ data: { user: { id: MOCK_USER_ID }, session: {} }, error: null }),
+    resetPasswordForEmail: async () => ({ data: {}, error: null }),
+    verifyOtp: async () => ({ data: { user: { id: MOCK_USER_ID }, session: {} }, error: null }),
+    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
   },
-  from: () => ({
-    insert: async () => ({ data: null, error: new Error('Supabase not configured') }),
-    update: () => ({
-      eq: async () => ({ data: null, error: new Error('Supabase not configured') }),
-    }),
-    select: () => ({ eq: async () => ({ data: [], error: new Error('Supabase not configured') }) }),
+  from: (table: string) => ({
+    select: (query?: string) => {
+      const chain: any = {
+        eq: (col: string, val: any) => {
+          // If querying organization_members list for the org
+          if (table === 'organization_members' && col === 'org_id') {
+            chain.then = (resolve: any) => {
+              resolve({
+                data: [
+                  {
+                    orgId: ORG_ID,
+                    userId: MOCK_USER_ID,
+                    role: 'admin',
+                    status: 'active',
+                    profiles: {
+                      id: MOCK_USER_ID,
+                      displayName: 'Org Admin',
+                      handle: 'orgadmin',
+                    },
+                  },
+                ],
+                error: null,
+              });
+            };
+          }
+          // If querying getUserOrganizations
+          if (table === 'organization_members' && col === 'user_id') {
+            chain.eq = (col2: string, val2: any) => {
+              chain.then = (resolve: any) => {
+                resolve({
+                  data: [
+                    {
+                      orgId: ORG_ID,
+                      userId: MOCK_USER_ID,
+                      role: 'admin',
+                      status: 'active',
+                      joinedAt: new Date().toISOString(),
+                      org: {
+                        id: ORG_ID,
+                        slug: 'test-org',
+                        displayName: 'Test Organization',
+                        slug: 'test-org',
+                      },
+                    },
+                  ],
+                  error: null,
+                });
+              };
+              return chain;
+            };
+          }
+          return chain;
+        },
+        maybeSingle: async () => {
+          if (table === 'profiles') {
+            return {
+              data: {
+                id: MOCK_USER_ID,
+                platform_role: null,
+                tour_completed: false,
+                persona: 'org_member',
+              },
+              error: null,
+            };
+          }
+          if (table === 'organizations') {
+            // For getActiveOrg
+            return {
+              data: {
+                id: ORG_ID,
+                slug: 'test-org',
+                displayName: 'Test Organization',
+                type: 'company',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                membership: [
+                  {
+                    orgId: ORG_ID,
+                    userId: MOCK_USER_ID,
+                    role: 'admin',
+                    status: 'active',
+                    joinedAt: new Date().toISOString(),
+                  },
+                ],
+              },
+              error: null,
+            };
+          }
+          if (table === 'organization_members') {
+            // For assertOrgRole
+            return {
+              data: {
+                orgId: ORG_ID,
+                userId: MOCK_USER_ID,
+                role: 'admin',
+                status: 'active',
+                joinedAt: new Date().toISOString(),
+              },
+              error: null,
+            };
+          }
+          return { data: null, error: null };
+        },
+        single: async () => {
+          if (table === 'profiles') {
+            return {
+              data: {
+                id: MOCK_USER_ID,
+                platform_role: null,
+                tour_completed: false,
+                persona: 'org_member',
+              },
+              error: null,
+            };
+          }
+          return { data: null, error: null };
+        },
+      };
+      return chain;
+    },
+    insert: async () => ({ data: [], error: null }),
+    update: async () => ({ data: [], error: null }),
   }),
-  rpc: async () => ({ data: null, error: new Error('Supabase not configured') }),
+  rpc: async () => ({ data: null, error: null }),
   storage: {
     from: () => ({
-      upload: async () => ({ data: null, error: new Error('Supabase not configured') }),
+      upload: async () => ({ data: null, error: null }),
+      download: async () => ({ data: null, error: null }),
+      getPublicUrl: () => ({ data: { publicUrl: 'mock-url' } }),
     }),
   },
-  schema: () => ({}),
 } as unknown as SupabaseClient;
 
 export async function createClient(options: CreateClientOptions = {}): Promise<SupabaseClient> {
   const { allowCookieWrite = false } = options;
-  const supabaseUrl =
-    process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || process.env.SUPABASE_URL?.trim() || '';
-  const supabaseAnonKey =
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ||
-    process.env.SUPABASE_ANON_KEY?.trim() ||
-    '';
 
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn(
-      '[supabase] URL or anon key missing; returning mock Supabase client for build-time safety.'
-    );
+  // FORCE MOCK AUTH FOR TESTING
+  if (process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true') {
     return mockSupabaseClient;
   }
 
   const cookieStore = await cookies();
 
-  const warnCookieWrite = (action: 'set' | 'remove', name: string) => {
-    if (allowCookieWrite) {
-      return;
-    }
-
-    if (process.env.NODE_ENV !== 'production') {
-      console.warn(
-        `[supabase] Ignoring cookie ${action} for "${name}" because allowCookieWrite=false. ` +
-          'Enable via createClient({ allowCookieWrite: true }) inside a Server Action or Route Handler.'
-      );
-    }
-  };
-
-  return createSupabaseServerClient(supabaseUrl, supabaseAnonKey, {
+  return createSupabaseServerClient({
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     cookies: {
-      get(name: string) {
-        return cookieStore.get(name)?.value;
+      getAll() {
+        return cookieStore.getAll();
       },
-      set(name: string, value: string, options?: CookieOptions) {
-        if (!allowCookieWrite) {
-          warnCookieWrite('set', name);
-          return;
+      setAll(cookiesToSet) {
+        if (allowCookieWrite) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch {
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
         }
-
-        cookieStore.set({
-          name,
-          value,
-          ...(options ?? {}),
-        });
-      },
-      remove(name: string, options?: CookieOptions) {
-        if (!allowCookieWrite) {
-          warnCookieWrite('remove', name);
-          return;
-        }
-
-        cookieStore.set({
-          name,
-          value: '',
-          ...(options ?? {}),
-          maxAge: 0,
-        });
       },
     },
   });
 }
-
-// Export as createServerClient for backwards compatibility
-export const createServerClient = createClient;

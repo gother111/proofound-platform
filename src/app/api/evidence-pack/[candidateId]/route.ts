@@ -13,9 +13,12 @@ import { generateEvidencePackPDF } from '@/lib/reports/evidence-pack-generator';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(req: NextRequest, { params }: { params: { candidateId: string } }) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ candidateId: string }> }
+) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -24,7 +27,7 @@ export async function GET(req: NextRequest, { params }: { params: { candidateId:
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { candidateId } = params;
+    const { candidateId } = await params;
     const { searchParams } = new URL(req.url);
     const assignmentId = searchParams.get('assignmentId');
 
@@ -43,11 +46,11 @@ export async function GET(req: NextRequest, { params }: { params: { candidateId:
         AND a.organization_id = ${user.id}
     `);
 
-    if (!assignment.rows.length) {
+    if (!assignment.length) {
       return NextResponse.json({ error: 'Assignment not found or unauthorized' }, { status: 404 });
     }
 
-    const assignmentData = assignment.rows[0] as any;
+    const assignmentData = assignment[0] as any;
 
     // Get candidate profile
     const profile = await db.execute(sql`
@@ -59,25 +62,25 @@ export async function GET(req: NextRequest, { params }: { params: { candidateId:
       WHERE ip.user_id = ${candidateId}
     `);
 
-    if (!profile.rows.length) {
+    if (!profile.length) {
       return NextResponse.json({ error: 'Candidate profile not found' }, { status: 404 });
     }
 
-    const profileData = profile.rows[0] as any;
+    const profileData = profile[0] as any;
 
     // Get skills with verifications
     const skills = await db.execute(sql`
       SELECT
         s.*,
         COALESCE(
-          json_agg(
-            json_build_object(
-              'verifierName', v.verifier_name,
-              'verifiedAt', v.verified_at,
-              'relationship', v.relationship
-            )
-          ) FILTER (WHERE v.id IS NOT NULL),
-          '[]'
+        json_agg(
+          json_build_object(
+            'verifierName', v.verifier_name,
+            'verifiedAt', v.verified_at,
+            'relationship', v.relationship
+          )
+        ) FILTER (WHERE v.id IS NOT NULL),
+        '[]'
         ) as verifications
       FROM user_skills s
       LEFT JOIN skill_verifications v ON s.id = v.skill_id
@@ -109,7 +112,7 @@ export async function GET(req: NextRequest, { params }: { params: { candidateId:
         AND individual_id = ${candidateId}
     `);
 
-    const matchData = match.rows[0] as any;
+    const matchData = match[0] as any;
 
     // Get interview and decision information
     const interview = await db.execute(sql`
@@ -126,7 +129,7 @@ export async function GET(req: NextRequest, { params }: { params: { candidateId:
       LIMIT 1
     `);
 
-    const interviewData = interview.rows[0] as any;
+    const interviewData = interview[0] as any;
 
     // Build profile data structure
     const evidenceProfile = {
@@ -136,20 +139,20 @@ export async function GET(req: NextRequest, { params }: { params: { candidateId:
       location: profileData.location,
       headline: profileData.headline,
       bio: profileData.bio,
-      skills: skills.rows.map((s: any) => ({
+      skills: skills.map((s: any) => ({
         name: s.skill_name || s.skill_code,
         level: s.level || 0,
         monthsExperience: s.months_experience,
         verifications: s.verifications || [],
       })),
-      experiences: experiences.rows.map((e: any) => ({
+      experiences: experiences.map((e: any) => ({
         title: e.title,
         company: e.company,
         startDate: new Date(e.start_date),
         endDate: e.end_date ? new Date(e.end_date) : undefined,
         description: e.description,
       })),
-      education: education.rows.map((e: any) => ({
+      education: education.map((e: any) => ({
         institution: e.institution,
         degree: e.degree,
         field: e.field,
