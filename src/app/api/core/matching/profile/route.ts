@@ -12,12 +12,17 @@ import {
   scoreValues,
   scoreCauses,
   scoreSkills,
+  scoreSkillsEnhanced,
   scoreExperience,
   scoreVerifications,
   scoreAvailability,
   scoreLocation,
   scoreCompensation,
   scoreLanguage,
+  scorePAC,
+  scoreSkillsRecency,
+  scoreSkillsEvidence,
+  scoreWorkAuthorization,
   composeWeighted,
   compareMatches,
   type Skill,
@@ -26,6 +31,7 @@ import {
   type LocationMode,
 } from '@/lib/core/matching/scorers';
 import { getPreset, normalizeWeights, type PresetKey } from '@/lib/core/matching/presets';
+import { batchGetMissionVisionScoresForProfile } from '@/lib/matching/semantic';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,10 +39,12 @@ export const dynamic = 'force-dynamic';
 const MatchRequestSchema = z.object({
   weights: z.record(z.number()).optional(),
   mode: z.enum(['mission-first', 'skills-first', 'balanced']).optional(),
+  useSemanticMatching: z.boolean().optional(), // Enable semantic PAC scoring
   k: z.number().positive().max(100).optional(), // Top k results
 });
 
 interface MatchResult {
+  id?: string; // Match ID from database if exists
   assignmentId: string;
   score: number;
   subscores: Record<string, number>;
@@ -44,6 +52,13 @@ interface MatchResult {
   gaps: Array<{ id: string; required: number; have: number }>;
   missing: string[];
   assignment: unknown; // Scrubbed assignment data
+  // PRD: PAC for analytics and transparency
+  pac: {
+    total: number;
+    valuesScore: number;
+    causesScore: number;
+    missionVisionScore: number;
+  };
 }
 
 /**
@@ -61,7 +76,7 @@ export async function POST(request: NextRequest) {
 
     // Validate input
     const validatedData = MatchRequestSchema.parse(body);
-    const { mode, k = 20 } = validatedData;
+    const { mode, k = 20, useSemanticMatching = false } = validatedData;
 
     // Fetch user's matching profile (with caching)
     const cacheKeyProfile = `${CACHE_KEYS.PROFILE}matching:${user.id}`;
@@ -100,8 +115,18 @@ export async function POST(request: NextRequest) {
         id: skill.skillId,
         level: skill.level,
         months: skill.monthsExperience,
+        // Enhanced attributes for PRD-compliant scoring
+        evidenceStrength: skill.evidenceStrength ? parseFloat(skill.evidenceStrength) : undefined,
+        recencyMultiplier: skill.recencyMultiplier
+          ? parseFloat(skill.recencyMultiplier)
+          : undefined,
+        impactScore: skill.impactScore ? parseFloat(skill.impactScore) : undefined,
+        lastUsedAt: skill.lastUsedAt || undefined,
       };
     }
+
+    // Pre-compute aggregate skill quality metrics
+    const userSkillsList = Object.values(skillsMap);
 
     // Determine weights
     const weights = validatedData.weights
@@ -117,14 +142,30 @@ export async function POST(request: NextRequest) {
       where: eq(assignments.status, 'active'),
     });
 
+    // Batch fetch mission/vision scores for PAC (if using semantic matching)
+    let missionVisionScores: Map<string, number> = new Map();
+    if (useSemanticMatching && activeAssignments.length > 0) {
+      const assignmentIds = activeAssignments.map((a) => a.id);
+      missionVisionScores = await batchGetMissionVisionScoresForProfile(user.id, assignmentIds);
+    }
+
     // Compute scores
     const results: MatchResult[] = [];
 
-    // Fetch snoozed matches for this user
-    const snoozedMatches = await db.query.matches.findMany({
-      where: and(eq(matches.profileId, user.id), gte(matches.snoozedUntil, new Date())),
+    // Fetch all existing matches for this user (for IDs and snooze status)
+    const existingMatches = await db.query.matches.findMany({
+      where: eq(matches.profileId, user.id),
     });
-    const snoozedAssignmentIds = new Set(snoozedMatches.map((m) => m.assignmentId));
+
+    // Map assignmentId to matchId for returning with results
+    const matchIdMap = new Map(existingMatches.map((m) => [m.assignmentId, m.id]));
+
+    // Filter snoozed matches
+    const snoozedAssignmentIds = new Set(
+      existingMatches
+        .filter((m) => m.snoozedUntil && new Date(m.snoozedUntil) >= new Date())
+        .map((m) => m.assignmentId)
+    );
 
     for (const assignment of activeAssignments) {
       // Skip snoozed matches
@@ -136,17 +177,38 @@ export async function POST(request: NextRequest) {
       const mustHaveSkills = (assignment.mustHaveSkills as Skill[]) || [];
       const niceToHaveSkills = (assignment.niceToHaveSkills as Skill[]) || [];
 
-      const skillScore = scoreSkills(mustHaveSkills, niceToHaveSkills, skillsMap);
+      // Use enhanced skills scoring with recency/evidence/impact
+      const enhancedSkillScore = scoreSkillsEnhanced(mustHaveSkills, niceToHaveSkills, skillsMap);
 
-      if (skillScore.hardFail) {
+      if (enhancedSkillScore.hardFail) {
         continue; // Skip assignments where user doesn't meet must-haves
       }
 
-      // Compute subscores
+      // Calculate PAC (Purpose-Alignment Contribution) with semantic matching
+      // Use mission/vision score from embeddings if available
+      const missionVisionScore = missionVisionScores.get(assignment.id);
+      const pacScore = scorePAC(
+        profile.valuesTags || [],
+        profile.causeTags || [],
+        assignment.valuesRequired || [],
+        assignment.causeTags || [],
+        missionVisionScore // Semantic similarity from embeddings (Phase 3)
+      );
+
+      // Calculate work authorization score
+      const workAuthScore = scoreWorkAuthorization({
+        candidateNeedsSponsorship: profile.needsSponsorship ?? false,
+        candidateWishesSponsorship: profile.wishesSponsorship ?? false,
+        orgCanSponsor: (assignment as any).canSponsor ?? true, // Default to true if not specified
+      });
+
+      // Compute subscores with new PRD-aligned metrics
       const subscores: Record<string, number> = {
-        values: scoreValues(profile.valuesTags || [], assignment.valuesRequired || []),
-        causes: scoreCauses(profile.causeTags || [], assignment.causeTags || []),
-        skills: skillScore.score,
+        // Legacy scores (for backward compatibility)
+        values: pacScore.valuesScore,
+        causes: pacScore.causesScore,
+        // Core skills (using enhanced weighted score)
+        skills: enhancedSkillScore.weightedScore,
         experience: scoreExperience(
           Object.values(skillsMap).reduce((sum, s) => sum + (s.months || 0), 0) /
             Math.max(Object.keys(skillsMap).length, 1)
@@ -155,6 +217,11 @@ export async function POST(request: NextRequest) {
           assignment.verificationGates || [],
           (profile.verified as Record<string, boolean>) || {}
         ),
+        // New PRD-aligned scores
+        pac: pacScore.total, // Purpose-Alignment Contribution
+        recency: enhancedSkillScore.recencyScore,
+        evidence: enhancedSkillScore.evidenceScore,
+        workAuthorization: workAuthScore,
       };
 
       // Availability
@@ -217,14 +284,25 @@ export async function POST(request: NextRequest) {
       // Scrub org-identifying info from assignment
       const scrubbedAssignment = scrubDisallowedFields(assignment);
 
+      // Include match ID if one exists in the database
+      const existingMatchId = matchIdMap.get(assignment.id);
+
       results.push({
+        ...(existingMatchId && { id: existingMatchId }),
         assignmentId: assignment.id,
         score: composed.total,
         subscores,
         contributions: composed.contributions,
-        gaps: skillScore.gaps,
-        missing: skillScore.missing,
+        gaps: enhancedSkillScore.gaps,
+        missing: enhancedSkillScore.missing,
         assignment: scrubbedAssignment,
+        // PRD: Include PAC breakdown for analytics and "Why this match" transparency
+        pac: {
+          total: pacScore.total,
+          valuesScore: pacScore.valuesScore,
+          causesScore: pacScore.causesScore,
+          missionVisionScore: pacScore.missionVisionScore,
+        },
       });
     }
 
@@ -253,6 +331,8 @@ export async function POST(request: NextRequest) {
           await emitFirstMatchShown(user.id, topK[0].assignmentId, {
             score: topK[0].score,
             mode,
+            // PRD: Include PAC for analytics
+            pac_contribution: topK[0].pac.total,
           });
         }
       } catch (analyticsError) {

@@ -49,6 +49,11 @@ const config: Config = {
           bamboo: '#6B7F5F',
         },
         // shadcn/ui semantic tokens
+        'japandi-bg': '#F7F6F1',
+        'japandi-sage': '#8A9A5B',
+        'japandi-terracotta': '#E2725B',
+        'japandi-charcoal': '#333333',
+        'japandi-gray': '#E5E5E5',
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',

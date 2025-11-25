@@ -71,8 +71,8 @@ export function ValuesEditor({ open, onOpenChange, values, onSave }: ValuesEdito
       return;
     }
 
-    if (editedValues.length >= 8) {
-      setError('Maximum of 8 values allowed');
+    if (editedValues.length >= 5) {
+      setError('Maximum of 5 values allowed');
       return;
     }
 
@@ -188,7 +188,7 @@ export function ValuesEditor({ open, onOpenChange, values, onSave }: ValuesEdito
               size="sm"
               onClick={handleAddValue}
               className="w-full"
-              disabled={editedValues.length >= 8}
+              disabled={editedValues.length >= 5}
             >
               Add Value
             </Button>
@@ -196,7 +196,7 @@ export function ValuesEditor({ open, onOpenChange, values, onSave }: ValuesEdito
 
           {error && <p className="text-xs text-red-500">{error}</p>}
 
-          <p className="text-xs text-muted-foreground">{editedValues.length}/8 values added</p>
+          <p className="text-xs text-muted-foreground">{editedValues.length}/5 values added</p>
         </div>
 
         <DialogFooter>

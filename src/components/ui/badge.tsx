@@ -46,18 +46,21 @@ import { cn } from '@/lib/utils';
  */
 
 const badgeVariants = cva(
-  'inline-flex items-center rounded-full border font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-[#1C4D3A] focus:ring-offset-2',
+  'inline-flex items-center rounded-full border font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-proofound-forest focus:ring-offset-2',
   {
     variants: {
       variant: {
         default:
-          'border-transparent bg-[#1C4D3A] text-white hover:bg-[#2D5D4A] dark:bg-[#D4C4A8] dark:text-[#1A1D2E]',
-        secondary: 'border-transparent bg-[#C76B4A] text-white hover:bg-[#D77B5A]',
-        destructive: 'border-transparent bg-[#B5542D] text-white hover:bg-[#A54927]',
-        success: 'border-transparent bg-[#7A9278] text-white hover:bg-[#8AA288]',
-        warning: 'border-transparent bg-[#D4A574] text-[#2D3330] hover:bg-[#E4B584]', // Dark text for better contrast
-        info: 'border-transparent bg-[#5C8B89] text-white hover:bg-[#6C9B99]',
-        outline: 'text-[#2D3330] dark:text-[#E8DCC4] border-[#E8E6DD] dark:border-[#D4C4A8]/10',
+          'border-transparent bg-proofound-forest text-white hover:bg-proofound-forest/90 dark:bg-[#D4C4A8] dark:text-[#1A1D2E]',
+        secondary:
+          'border-transparent bg-proofound-terracotta text-white hover:bg-proofound-terracotta/90',
+        destructive: 'border-transparent bg-destructive text-white hover:bg-destructive/90',
+        success: 'border-transparent bg-extended-sage text-white hover:bg-extended-sage/90',
+        warning:
+          'border-transparent bg-extended-ochre text-proofound-charcoal hover:bg-extended-ochre/90', // Dark text for better contrast
+        info: 'border-transparent bg-extended-teal text-white hover:bg-extended-teal/90',
+        outline:
+          'text-proofound-charcoal dark:text-[#E8DCC4] border-proofound-stone dark:border-[#D4C4A8]/10',
       },
       size: {
         sm: 'px-2 py-0.5 text-xs',

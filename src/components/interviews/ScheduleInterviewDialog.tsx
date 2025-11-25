@@ -53,12 +53,13 @@ export function ScheduleInterviewDialog({
   participantNames,
 }: ScheduleInterviewDialogProps) {
   const router = useRouter();
-  const [platform, setPlatform] = useState<'zoom' | 'google_meet'>('zoom');
+  const [platform, setPlatform] = useState<'zoom' | 'google_meet' | 'manual'>('manual');
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [timeHour, setTimeHour] = useState('14');
   const [timeMinute, setTimeMinute] = useState('00');
   const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
   const [notes, setNotes] = useState('');
+  const [manualMeetingLink, setManualMeetingLink] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSchedule = async () => {
@@ -87,17 +88,24 @@ export function ScheduleInterviewDialog({
 
     setIsSubmitting(true);
 
+    // Validate manual link if platform is manual
+    if (platform === 'manual' && !manualMeetingLink) {
+      toast.error('Please provide a meeting link');
+      return;
+    }
+
     try {
       const response = await fetch('/api/interviews/schedule', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          applicationId,
+          matchId: applicationId, // API expects matchId
           scheduledAt: scheduledDateTime.toISOString(),
           platform,
           participantUserIds: participantIds,
           timezone,
           notes,
+          ...(platform === 'manual' && { manualMeetingLink }),
         }),
       });
 
@@ -142,24 +150,49 @@ export function ScheduleInterviewDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="manual">
+                  <div className="flex items-center gap-2">
+                    <Video className="w-4 h-4" />
+                    Manual (provide your own link)
+                  </div>
+                </SelectItem>
                 <SelectItem value="zoom">
                   <div className="flex items-center gap-2">
                     <Video className="w-4 h-4" />
-                    Zoom
+                    Zoom (auto-generate)
                   </div>
                 </SelectItem>
                 <SelectItem value="google_meet">
                   <div className="flex items-center gap-2">
                     <Video className="w-4 h-4" />
-                    Google Meet
+                    Google Meet (auto-generate)
                   </div>
                 </SelectItem>
               </SelectContent>
             </Select>
             <p className="text-sm text-muted-foreground">
+              {platform === 'manual' && 'Provide your own Zoom, Google Meet, or Teams link'}
+              {platform === 'zoom' && 'Requires Zoom account connection'}
               {platform === 'google_meet' && 'Requires Google Calendar connection'}
             </p>
           </div>
+
+          {/* Manual Meeting Link Input */}
+          {platform === 'manual' && (
+            <div className="space-y-2">
+              <Label htmlFor="meetingLink">Meeting Link</Label>
+              <Input
+                id="meetingLink"
+                type="url"
+                value={manualMeetingLink}
+                onChange={(e) => setManualMeetingLink(e.target.value)}
+                placeholder="https://zoom.us/j/... or https://meet.google.com/..."
+              />
+              <p className="text-sm text-muted-foreground">
+                Paste your Zoom, Google Meet, Microsoft Teams, or other video call link
+              </p>
+            </div>
+          )}
 
           {/* Date Selection */}
           <div className="space-y-2">

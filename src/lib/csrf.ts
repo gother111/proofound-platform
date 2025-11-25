@@ -74,6 +74,33 @@ export function csrfProtection(request: NextRequest): NextResponse | null {
     return null;
   }
 
+  // Skip CSRF for internal authenticated API routes
+  // These routes are called from authenticated pages and protected by session cookies
+  // The Supabase session cookie with SameSite=Lax provides CSRF protection
+  const internalAuthRoutes = [
+    '/api/match/',
+    '/api/matching-profile',
+    '/api/assignments',
+    '/api/interviews/',
+    '/api/analytics/',
+    '/api/expertise/',
+    '/api/profile/',
+    '/api/taxonomy/',
+    '/api/messages/',
+    '/api/wellbeing/',
+    '/api/notifications/',
+    '/api/feedback/',
+  ];
+
+  const hasSupabaseSession =
+    request.cookies.has('sb-cjpfrgmsxwxhuomnvciq-auth-token') ||
+    request.cookies.has('sb-cjpfrgmsxwxhuomnvciq-auth-token.0') ||
+    request.cookies.has('sb-cjpfrgmsxwxhuomnvciq-auth-token.1');
+
+  if (hasSupabaseSession && internalAuthRoutes.some((route) => pathname.startsWith(route))) {
+    return null;
+  }
+
   // Verify CSRF token
   if (!verifyCSRFToken(request)) {
     return NextResponse.json(

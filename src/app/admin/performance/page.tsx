@@ -123,7 +123,7 @@ export default function PerformanceDashboardPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto py-8">
+      <div className="max-w-[1600px] mx-auto px-6 py-6">
         <div className="flex items-center justify-center min-h-[400px]">
           <p className="text-muted-foreground">Loading performance data...</p>
         </div>
@@ -132,7 +132,7 @@ export default function PerformanceDashboardPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="max-w-[1600px] mx-auto px-6 py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Performance Dashboard</h1>

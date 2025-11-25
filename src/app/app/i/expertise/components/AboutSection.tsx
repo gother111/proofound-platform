@@ -28,7 +28,7 @@ export function AboutSection() {
       >
         <div className="flex items-center gap-3">
           <div className="rounded-full bg-[#EEF1EA] p-2">
-            <BookOpen className="h-5 w-5 text-[#4A5943]" />
+            <BookOpen className="h-5 w-5 text-[#1C4D3A]" />
           </div>
           <div>
             <h3 className="font-semibold text-[#2D3330]">What is the Expertise Atlas?</h3>
@@ -71,7 +71,7 @@ export function AboutSection() {
               <div className="flex gap-3">
                 <div className="flex-shrink-0">
                   <div className="rounded-full bg-[#EEF1EA] p-2">
-                    <Map className="h-4 w-4 text-[#4A5943]" />
+                    <Map className="h-4 w-4 text-[#1C4D3A]" />
                   </div>
                 </div>
                 <div>
@@ -85,7 +85,7 @@ export function AboutSection() {
               <div className="flex gap-3">
                 <div className="flex-shrink-0">
                   <div className="rounded-full bg-[#EEF1EA] p-2">
-                    <TrendingUp className="h-4 w-4 text-[#4A5943]" />
+                    <TrendingUp className="h-4 w-4 text-[#1C4D3A]" />
                   </div>
                 </div>
                 <div>
@@ -99,7 +99,7 @@ export function AboutSection() {
               <div className="flex gap-3">
                 <div className="flex-shrink-0">
                   <div className="rounded-full bg-[#EEF1EA] p-2">
-                    <FileCheck className="h-4 w-4 text-[#4A5943]" />
+                    <FileCheck className="h-4 w-4 text-[#1C4D3A]" />
                   </div>
                 </div>
                 <div>
@@ -113,7 +113,7 @@ export function AboutSection() {
               <div className="flex gap-3">
                 <div className="flex-shrink-0">
                   <div className="rounded-full bg-[#EEF1EA] p-2">
-                    <CheckCircle2 className="h-4 w-4 text-[#4A5943]" />
+                    <CheckCircle2 className="h-4 w-4 text-[#1C4D3A]" />
                   </div>
                 </div>
                 <div>
@@ -127,7 +127,7 @@ export function AboutSection() {
               <div className="flex gap-3">
                 <div className="flex-shrink-0">
                   <div className="rounded-full bg-[#EEF1EA] p-2">
-                    <TrendingUp className="h-4 w-4 text-[#4A5943]" />
+                    <TrendingUp className="h-4 w-4 text-[#1C4D3A]" />
                   </div>
                 </div>
                 <div>
@@ -141,7 +141,7 @@ export function AboutSection() {
               <div className="flex gap-3">
                 <div className="flex-shrink-0">
                   <div className="rounded-full bg-[#EEF1EA] p-2">
-                    <Shield className="h-4 w-4 text-[#4A5943]" />
+                    <Shield className="h-4 w-4 text-[#1C4D3A]" />
                   </div>
                 </div>
                 <div>
@@ -171,7 +171,7 @@ export function AboutSection() {
           <div className="flex justify-center pt-2">
             <Button
               variant="outline"
-              className="border-[#4A5943] text-[#4A5943] hover:bg-[#EEF1EA]"
+              className="border-[#1C4D3A] text-[#1C4D3A] hover:bg-[#EEF1EA]"
               asChild
             >
               <a href="/docs/expertise-atlas" target="_blank" rel="noopener noreferrer">

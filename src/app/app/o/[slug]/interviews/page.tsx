@@ -8,8 +8,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, Video, ExternalLink, User } from 'lucide-react';
+import { Calendar, Clock, Video, ExternalLink, User, FileCheck } from 'lucide-react';
 import { ScheduleInterviewButton } from '@/components/interviews/ScheduleInterviewButton';
+import { DecisionDialog } from '@/components/decisions/DecisionDialog';
+import { Button } from '@/components/ui/button';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,10 +31,26 @@ interface Interview {
 export default function OrganizationInterviewsPage() {
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [decisionDialogOpen, setDecisionDialogOpen] = useState(false);
+  const [selectedInterview, setSelectedInterview] = useState<Interview | null>(null);
 
   useEffect(() => {
     loadInterviews();
   }, []);
+
+  const handleOpenDecisionDialog = (interview: Interview) => {
+    setSelectedInterview(interview);
+    setDecisionDialogOpen(true);
+  };
+
+  const handleCloseDecisionDialog = () => {
+    setDecisionDialogOpen(false);
+    setSelectedInterview(null);
+  };
+
+  const handleDecisionMade = () => {
+    loadInterviews(); // Refresh interviews after decision
+  };
 
   const loadInterviews = async () => {
     setIsLoading(true);
@@ -227,11 +245,38 @@ export default function OrganizationInterviewsPage() {
                           onScheduled={loadInterviews}
                         />
                       )}
+                    {/* Decision button for completed interviews or past scheduled interviews */}
+                    {(interview.status === 'completed' ||
+                      (interview.status === 'scheduled' &&
+                        new Date(interview.scheduledAt) < new Date())) && (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => handleOpenDecisionDialog(interview)}
+                        className="flex items-center gap-2"
+                        style={{ backgroundColor: '#1C4D3A' }}
+                      >
+                        <FileCheck className="w-4 h-4" />
+                        Record Decision
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
             ))}
           </div>
+        )}
+
+        {/* Decision Dialog */}
+        {selectedInterview && (
+          <DecisionDialog
+            isOpen={decisionDialogOpen}
+            onClose={handleCloseDecisionDialog}
+            interviewId={selectedInterview.id}
+            candidateName={selectedInterview.candidateName || 'Candidate'}
+            role={selectedInterview.assignmentTitle || 'Assignment'}
+            onDecisionMade={handleDecisionMade}
+          />
         )}
       </div>
     </div>

@@ -2244,6 +2244,7 @@ export type InsertSurveyDisplayLog = typeof surveyDisplayLog.$inferInsert;
 export const conversations = pgTable('conversations', {
   id: uuid('id').defaultRandom().primaryKey(),
   matchId: uuid('match_id').references(() => matches.id, { onDelete: 'cascade' }),
+  assignmentId: uuid('assignment_id').references(() => assignments.id, { onDelete: 'cascade' }),
 
   // Participants
   participantOneId: uuid('participant_one_id')

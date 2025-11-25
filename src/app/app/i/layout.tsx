@@ -28,7 +28,7 @@ export default async function IndividualLayout({ children }: { children: React.R
 
   return (
     <SUSTriggerProvider userId={user.id}>
-      <div className="flex h-screen" style={{ backgroundColor: '#F7F6F1' }}>
+      <div className="flex h-screen bg-proofound-parchment">
         <LeftNav basePath="/app/i" />
         <div className="flex-1 flex flex-col min-w-0">
           <TopBar userName={userName} userInitials={userInitials} />

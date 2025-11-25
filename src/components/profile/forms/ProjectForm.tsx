@@ -1,6 +1,6 @@
 /**
  * Project Form Component
- * 
+ *
  * Create or edit projects (work, volunteer, education, side projects)
  */
 
@@ -12,7 +12,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2 } from 'lucide-react';
 
@@ -104,9 +110,7 @@ export function ProjectForm({ onSuccess, onCancel, initialData, projectId }: Pro
           placeholder="e.g., Redesigned mobile app"
           {...register('title', { required: 'Title is required' })}
         />
-        {errors.title && (
-          <p className="text-sm text-red-600">{errors.title.message}</p>
-        )}
+        {errors.title && <p className="text-sm text-red-600">{errors.title.message}</p>}
       </div>
 
       {/* Type and Status */}
@@ -115,10 +119,7 @@ export function ProjectForm({ onSuccess, onCancel, initialData, projectId }: Pro
           <Label htmlFor="type">
             Type <span className="text-red-600">*</span>
           </Label>
-          <Select
-            value={projectType}
-            onValueChange={(value) => setValue('type', value as any)}
-          >
+          <Select value={projectType} onValueChange={(value) => setValue('type', value as any)}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -135,10 +136,7 @@ export function ProjectForm({ onSuccess, onCancel, initialData, projectId }: Pro
           <Label htmlFor="status">
             Status <span className="text-red-600">*</span>
           </Label>
-          <Select
-            value={projectStatus}
-            onValueChange={(value) => setValue('status', value as any)}
-          >
+          <Select value={projectStatus} onValueChange={(value) => setValue('status', value as any)}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -156,20 +154,12 @@ export function ProjectForm({ onSuccess, onCancel, initialData, projectId }: Pro
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="organization">Organization (Optional)</Label>
-          <Input
-            id="organization"
-            placeholder="e.g., Acme Corp"
-            {...register('organization')}
-          />
+          <Input id="organization" placeholder="e.g., Acme Corp" {...register('organization')} />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="role">Your Role (Optional)</Label>
-          <Input
-            id="role"
-            placeholder="e.g., Lead Designer"
-            {...register('role')}
-          />
+          <Input id="role" placeholder="e.g., Lead Designer" {...register('role')} />
         </div>
       </div>
 
@@ -184,19 +174,12 @@ export function ProjectForm({ onSuccess, onCancel, initialData, projectId }: Pro
             type="month"
             {...register('startDate', { required: 'Start date is required' })}
           />
-          {errors.startDate && (
-            <p className="text-sm text-red-600">{errors.startDate.message}</p>
-          )}
+          {errors.startDate && <p className="text-sm text-red-600">{errors.startDate.message}</p>}
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="endDate">End Date</Label>
-          <Input
-            id="endDate"
-            type="month"
-            disabled={isOngoing}
-            {...register('endDate')}
-          />
+          <Input id="endDate" type="month" disabled={isOngoing} {...register('endDate')} />
           <div className="flex items-center gap-2">
             <Checkbox
               id="isOngoing"
@@ -232,19 +215,10 @@ export function ProjectForm({ onSuccess, onCancel, initialData, projectId }: Pro
 
       {/* Actions */}
       <div className="flex items-center justify-end gap-3 pt-4 border-t">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onCancel}
-          disabled={isSubmitting}
-        >
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
           Cancel
         </Button>
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="bg-[#4A5943] hover:bg-[#3A4733]"
-        >
+        <Button type="submit" disabled={isSubmitting} className="bg-[#1C4D3A] hover:bg-[#2D5F4A]">
           {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
           {projectId ? 'Update Project' : 'Create Project'}
         </Button>
@@ -252,4 +226,3 @@ export function ProjectForm({ onSuccess, onCancel, initialData, projectId }: Pro
     </form>
   );
 }
-

@@ -20,12 +20,14 @@ import { z } from 'zod';
 export const dynamic = 'force-dynamic';
 
 // Default dashboard layout for new users
+// Uses widgets from lib/dashboard/layout.ts
 const DEFAULT_LAYOUT = [
-  { widgetId: 'matches', position: 0, visible: true, size: 'default', settings: {} },
-  { widgetId: 'applications', position: 1, visible: true, size: 'default', settings: {} },
-  { widgetId: 'expertise-depth', position: 2, visible: true, size: 'default', settings: {} },
-  { widgetId: 'next-action', position: 3, visible: true, size: 'default', settings: {} },
-  { widgetId: 'zen-hub', position: 4, visible: false, size: 'default', settings: {} },
+  { widgetId: 'while-away', position: 0, visible: true, size: 'default', settings: {} },
+  { widgetId: 'next-best-actions', position: 1, visible: true, size: 'default', settings: {} },
+  { widgetId: 'matching-results', position: 2, visible: true, size: 'default', settings: {} },
+  { widgetId: 'gap-map', position: 3, visible: true, size: 'default', settings: {} },
+  { widgetId: 'goals', position: 4, visible: true, size: 'default', settings: {} },
+  { widgetId: 'impact-snapshot', position: 5, visible: true, size: 'default', settings: {} },
 ];
 
 const LayoutItemSchema = z.object({
@@ -52,12 +54,12 @@ export async function GET() {
     // If no layout exists, return default
     if (userLayouts.length === 0) {
       return NextResponse.json({
-        layout: DEFAULT_LAYOUT,
+        widgets: DEFAULT_LAYOUT,
         isDefault: true,
       });
     }
 
-    const layout = userLayouts.map((item) => ({
+    const widgets = userLayouts.map((item) => ({
       widgetId: item.widgetId,
       position: item.position,
       visible: item.visible,
@@ -66,7 +68,7 @@ export async function GET() {
     }));
 
     return NextResponse.json({
-      layout,
+      widgets,
       isDefault: false,
     });
   } catch (error) {
@@ -89,9 +91,18 @@ export async function POST(request: NextRequest) {
     const user = await requireAuth();
     const body = await request.json();
 
-    // Validate layout
+    // Validate layout (accept both 'layout' and 'widgets' keys for backwards compatibility)
     const layoutSchema = z.array(LayoutItemSchema);
-    const layout = layoutSchema.parse(body.layout);
+    const layoutData = body.widgets || body.layout;
+
+    if (!layoutData) {
+      return NextResponse.json(
+        { error: 'Missing layout data. Provide either "widgets" or "layout" array.' },
+        { status: 400 }
+      );
+    }
+
+    const layout = layoutSchema.parse(layoutData);
 
     // Delete existing layout
     await db.delete(dashboardLayouts).where(eq(dashboardLayouts.userId, user.id));

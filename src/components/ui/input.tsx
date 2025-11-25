@@ -92,19 +92,20 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const hasSuccess = success && !hasError;
 
     const inputClasses = cn(
-      'flex h-11 w-full rounded-md border bg-white px-3 py-2 text-base text-[#2D3330] transition-all duration-200',
+      'flex h-11 w-full rounded-md border bg-white px-3 py-2 text-base text-proofound-charcoal transition-all duration-200',
       'file:border-0 file:bg-transparent file:text-sm file:font-medium',
-      'placeholder:text-[#9B9891]',
+      'placeholder:text-muted-foreground/70',
       'focus-visible:outline-none focus-visible:ring-2',
-      'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-[#F7F6F1]',
+      'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-proofound-parchment',
       // Default state
       !hasError &&
         !hasSuccess &&
-        'border-[#E8E6DD] focus-visible:ring-[#1C4D3A] focus-visible:border-[#1C4D3A]',
+        'border-proofound-stone focus-visible:ring-proofound-forest focus-visible:border-proofound-forest',
       // Error state
-      hasError && 'border-[#B5542D] focus-visible:ring-[#B5542D] focus-visible:border-[#B5542D]',
+      hasError &&
+        'border-destructive focus-visible:ring-destructive focus-visible:border-destructive',
       // Success state
-      hasSuccess && 'border-[#4A7C59] focus-visible:ring-[#4A7C59] focus-visible:border-[#4A7C59]',
+      hasSuccess && 'border-success focus-visible:ring-success focus-visible:border-success',
       // Dark mode
       'dark:border-[#D4C4A8]/10 dark:bg-[#2C3244] dark:text-[#E8DCC4] dark:placeholder:text-[#6B6760] dark:focus-visible:ring-[#D4C4A8]',
       className
@@ -124,11 +125,11 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className="block text-sm font-medium text-[#2D3330] dark:text-[#E8DCC4] mb-1.5"
+            className="block text-sm font-medium text-proofound-charcoal dark:text-[#E8DCC4] mb-1.5"
           >
             {label}
             {isRequired && (
-              <span className="text-[#B5542D] ml-1" aria-label="required">
+              <span className="text-destructive ml-1" aria-label="required">
                 *
               </span>
             )}
@@ -160,7 +161,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
               <button
                 type="button"
                 onClick={handleClear}
-                className="text-[#6B6760] hover:text-[#2D3330] transition-colors"
+                className="text-muted-foreground hover:text-proofound-charcoal transition-colors"
                 aria-label="Clear input"
               >
                 <X className="h-4 w-4" />
@@ -168,10 +169,10 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             )}
 
             {/* Error icon */}
-            {hasError && <AlertCircle className="h-4 w-4 text-[#B5542D]" aria-hidden="true" />}
+            {hasError && <AlertCircle className="h-4 w-4 text-destructive" aria-hidden="true" />}
 
             {/* Success icon */}
-            {hasSuccess && <CheckCircle2 className="h-4 w-4 text-[#4A7C59]" aria-hidden="true" />}
+            {hasSuccess && <CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" />}
           </div>
         </div>
 
@@ -182,7 +183,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             {hasError && (
               <p
                 id={errorId}
-                className="text-sm text-[#B5542D] flex items-start gap-1.5"
+                className="text-sm text-destructive flex items-start gap-1.5"
                 role="alert"
               >
                 <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" aria-hidden="true" />
@@ -192,7 +193,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
             {/* Helper text */}
             {!hasError && helperText && (
-              <p id={helperId} className="text-sm text-[#6B6760] dark:text-[#8A8174]">
+              <p id={helperId} className="text-sm text-muted-foreground dark:text-[#8A8174]">
                 {helperText}
               </p>
             )}
@@ -203,7 +204,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             <p
               className={cn(
                 'text-sm tabular-nums',
-                valueLength > maxLength * 0.9 ? 'text-[#B5542D]' : 'text-[#6B6760]'
+                valueLength > maxLength * 0.9 ? 'text-destructive' : 'text-muted-foreground'
               )}
               aria-live="polite"
             >

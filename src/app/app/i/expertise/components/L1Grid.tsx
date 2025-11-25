@@ -36,7 +36,7 @@ interface L1GridProps {
 }
 
 const DOMAIN_COLORS: Record<number, { bg: string; border: string; text: string }> = {
-  1: { bg: 'bg-[#EEF1EA]', border: 'border-[#7A9278]', text: 'text-[#4A5943]' }, // U - Universal
+  1: { bg: 'bg-[#EEF1EA]', border: 'border-[#7A9278]', text: 'text-[#1C4D3A]' }, // U - Universal
   2: { bg: 'bg-[#FFF4E6]', border: 'border-[#D4A574]', text: 'text-[#8B6F47]' }, // F - Functional
   3: { bg: 'bg-[#E8F3F8]', border: 'border-[#6B9AB8]', text: 'text-[#3E5C73]' }, // T - Tools
   4: { bg: 'bg-[#F5EEF8]', border: 'border-[#9B7BA8]', text: 'text-[#6B4C7A]' }, // L - Languages
@@ -57,7 +57,7 @@ export function L1Grid({ domains, onDomainClick, l2CategoriesPerL1, onL2Click }:
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {domains.map((domain) => {
         const colors = DOMAIN_COLORS[domain.catId] || DOMAIN_COLORS[1];
         const isExpanded = expandedDomain === domain.catId;
@@ -65,79 +65,88 @@ export function L1Grid({ domains, onDomainClick, l2CategoriesPerL1, onL2Click }:
         return (
           <Card
             key={domain.catId}
-            className={`border ${colors.border} bg-white/90 p-6 cursor-pointer transition-all hover:shadow-md ${
-              isExpanded ? 'ring-2 ring-offset-2 ring-[#4A5943]' : ''
+            className={`border ${colors.border} bg-white p-6 cursor-pointer transition-all duration-300 hover:shadow-lg rounded-xl ${
+              isExpanded ? 'ring-2 ring-offset-2 ring-proofound-forest shadow-lg' : 'shadow-sm'
             }`}
             onClick={() => handleDomainClick(domain.catId)}
           >
             {/* Domain Icon & Name */}
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className={`${colors.bg} ${colors.text} rounded-lg p-3 text-2xl font-bold`}>
+            <div className="flex items-start justify-between mb-6">
+              <div className="flex items-center gap-4">
+                <div
+                  className={`${colors.bg} ${colors.text} rounded-xl p-3 text-2xl font-bold shadow-inner`}
+                >
                   {domain.icon}
                 </div>
                 <div>
-                  <h3 className="font-semibold text-[#2D3330]">
+                  <h3 className="font-semibold text-proofound-charcoal text-lg font-display">
                     {domain.nameI18n?.en || 'Unknown'}
                   </h3>
-                  <p className="text-xs text-[#6B6760]">{domain.skillCount} skills</p>
+                  <p className="text-sm text-muted-foreground font-sans">
+                    {domain.skillCount} skills
+                  </p>
                 </div>
               </div>
               {isExpanded ? (
-                <ChevronUp className="h-5 w-5 text-[#6B6760]" />
+                <ChevronUp className="h-5 w-5 text-muted-foreground" />
               ) : (
-                <ChevronDown className="h-5 w-5 text-[#6B6760]" />
+                <ChevronDown className="h-5 w-5 text-muted-foreground" />
               )}
             </div>
 
             {/* Stats Row */}
-            <div className="space-y-3">
+            <div className="space-y-4">
               {/* Average Level */}
               <div className="flex items-center justify-between text-sm">
-                <span className="text-[#6B6760]">Avg level</span>
-                <Badge variant="outline" className={`${colors.border} ${colors.text}`}>
+                <span className="text-muted-foreground font-medium">Avg level</span>
+                <Badge
+                  variant="outline"
+                  className={`${colors.border} ${colors.text} bg-white font-semibold`}
+                >
                   {domain.avgLevel.toFixed(1)} / 5.0
                 </Badge>
               </div>
 
               {/* Recency Mix */}
               <div>
-                <span className="text-xs text-[#6B6760] mb-2 block">Recency</span>
-                <div className="flex gap-1 h-2 rounded-full overflow-hidden">
+                <span className="text-xs text-muted-foreground mb-2 block font-medium uppercase tracking-wider">
+                  Recency
+                </span>
+                <div className="flex gap-1 h-2.5 rounded-full overflow-hidden bg-gray-100">
                   {domain.recencyMix.active > 0 && (
                     <div
-                      className="bg-[#7A9278]"
+                      className="bg-proofound-sage"
                       style={{ width: `${domain.recencyMix.active}%` }}
                       title={`Active: ${domain.recencyMix.active}%`}
                     />
                   )}
                   {domain.recencyMix.recent > 0 && (
                     <div
-                      className="bg-[#D4A574]"
+                      className="bg-proofound-ochre"
                       style={{ width: `${domain.recencyMix.recent}%` }}
                       title={`Recent: ${domain.recencyMix.recent}%`}
                     />
                   )}
                   {domain.recencyMix.rusty > 0 && (
                     <div
-                      className="bg-[#C76B4A]"
+                      className="bg-proofound-terracotta"
                       style={{ width: `${domain.recencyMix.rusty}%` }}
                       title={`Rusty: ${domain.recencyMix.rusty}%`}
                     />
                   )}
                 </div>
-                <div className="flex gap-3 mt-2 text-xs">
-                  <span className="flex items-center gap-1">
-                    <div className="w-2 h-2 rounded-full bg-[#7A9278]" />
-                    Active ({domain.recencyMix.active}%)
+                <div className="flex gap-3 mt-2 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-proofound-sage" />
+                    Active
                   </span>
-                  <span className="flex items-center gap-1">
-                    <div className="w-2 h-2 rounded-full bg-[#D4A574]" />
-                    Recent ({domain.recencyMix.recent}%)
+                  <span className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-proofound-ochre" />
+                    Recent
                   </span>
-                  <span className="flex items-center gap-1">
-                    <div className="w-2 h-2 rounded-full bg-[#C76B4A]" />
-                    Rusty ({domain.recencyMix.rusty}%)
+                  <span className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-proofound-terracotta" />
+                    Rusty
                   </span>
                 </div>
               </div>
@@ -149,9 +158,9 @@ export function L1Grid({ domains, onDomainClick, l2CategoriesPerL1, onL2Click }:
                 const l2Categories = l2CategoriesPerL1[domain.catId] || [];
 
                 return (
-                  <div className="mt-4 pt-4 border-t border-[#D8D2C8]">
+                  <div className="mt-6 pt-4 border-t border-proofound-stone">
                     {l2Categories.length === 0 ? (
-                      <p className="text-xs text-[#6B6760] italic">
+                      <p className="text-sm text-muted-foreground italic text-center py-2">
                         No L2 categories with skills in this domain.
                       </p>
                     ) : (
@@ -163,21 +172,21 @@ export function L1Grid({ domains, onDomainClick, l2CategoriesPerL1, onL2Click }:
                               e.stopPropagation();
                               onL2Click(l2);
                             }}
-                            className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-[#F7F6F1] transition-colors rounded-md border border-[#E5E3DA]"
+                            className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-proofound-parchment transition-colors rounded-lg border border-transparent hover:border-proofound-stone group"
                           >
                             <div className="flex-1">
-                              <p className="font-medium text-[#2D3330] text-sm">
+                              <p className="font-medium text-proofound-charcoal text-sm group-hover:text-proofound-forest transition-colors">
                                 {l2.nameI18n?.en || 'Unknown'}
                               </p>
                             </div>
                             <div className="flex items-center gap-2">
                               <Badge
-                                variant="outline"
-                                className={`text-xs ${colors.border} ${colors.text}`}
+                                variant="secondary"
+                                className="text-xs bg-gray-100 text-gray-600 group-hover:bg-white group-hover:text-proofound-forest transition-colors"
                               >
-                                {l2.l4Count} {l2.l4Count === 1 ? 'skill' : 'skills'}
+                                {l2.l4Count}
                               </Badge>
-                              <ChevronRight className="h-4 w-4 text-[#6B6760]" />
+                              <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-proofound-forest transition-colors" />
                             </div>
                           </button>
                         ))}

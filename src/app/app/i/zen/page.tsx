@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
   zenPractices,
   localGatherings,
@@ -12,104 +12,40 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Check,
-  Clock,
-  Compass,
-  Heart,
-  Info,
-  MapPin,
-  Moon,
-  Sparkles,
-  Sun,
-  Users,
-  Zap,
-} from 'lucide-react';
+import { MapPin, Heart, Info, Phone, Shield } from 'lucide-react';
 import { PrivacyBanner } from '@/components/zen/PrivacyBanner';
 import { CheckInDialog } from '@/components/zen/CheckInDialog';
 import { ReflectionDialog } from '@/components/zen/ReflectionDialog';
-
-export const dynamic = 'force-dynamic';
+import { MoodResponsiveContainer, useMood } from '@/components/zen/MoodResponsiveContainer';
+import { QuickCheckIn } from '@/components/zen/QuickCheckIn';
+import { GuidedBreathing } from '@/components/zen/GuidedBreathing';
+import { ReflectionJournal } from '@/components/zen/ReflectionJournal';
+import { PracticeCard } from '@/components/zen/PracticeCard';
 import { WellBeingDeltaWidget } from '@/components/wellbeing/WellBeingDeltaWidget';
 import { WellBeingTrendChart } from '@/components/wellbeing/WellBeingTrendChart';
-import { WellBeingDeltaChart } from '@/components/wellbeing/WellBeingDeltaChart';
 import { CheckInHistory } from '@/components/wellbeing/CheckInHistory';
-import { SelfAssessmentDialog } from '@/components/wellbeing/SelfAssessmentDialog';
 import { WorkScheduleEditor } from '@/components/wellbeing/WorkScheduleEditor';
 import { toast } from 'sonner';
 
-const riskStates = [
-  {
-    id: 'normal',
-    label: 'Steady nervous system',
-    tone: 'bg-[#4A5943] text-white',
-    description: 'Clear to focus · light check-ins only',
-  },
-  {
-    id: 'elevated',
-    label: 'Heightened alert',
-    tone: 'bg-amber-600 text-white',
-    description: 'Recommend 10 minute reset + breathing stack',
-  },
-  {
-    id: 'high',
-    label: 'Emergency support',
-    tone: 'bg-rose-600 text-white',
-    description: 'Pause deliverables · escalate to support team',
-  },
-] as const;
+export const dynamic = 'force-dynamic';
 
-type RiskState = (typeof riskStates)[number]['id'];
-type DeviceView = 'desktop' | 'mobile';
-
-type FilterMode = 'all' | 'short' | 'long' | 'spiritual' | 'secular';
-
-const filterMap: Record<FilterMode, (practice: ZenPractice) => boolean> = {
-  all: () => true,
-  short: (practice) => practice.time > 0 && practice.time <= 5,
-  long: (practice) => practice.time > 5 && practice.time < 900,
-  spiritual: (practice) => practice.isSpiritual,
-  secular: (practice) => !practice.isSpiritual,
-};
-
-const filterFromLabel = (label: string): FilterMode => {
-  const normalised = label.toLowerCase();
-  if (normalised.includes('short')) return 'short';
-  if (normalised.includes('long') || normalised.includes('deep')) return 'long';
-  if (normalised.includes('spiritual')) return 'spiritual';
-  if (normalised.includes('secular')) return 'secular';
-  return 'all';
-};
-
-export default function ZenHubPage() {
-  const [risk, setRisk] = useState<RiskState>('normal');
-  const [deviceView, setDeviceView] = useState<DeviceView>('desktop');
-  const [isDark, setIsDark] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<FilterMode>('short');
-  const [selectedPracticeId, setSelectedPracticeId] = useState<string>(zenPractices[0]?.id ?? '');
-
-  // Backend integration state
+function ZenHubContent() {
+  const { mood } = useMood();
   const [optInStatus, setOptInStatus] = useState<{
     optedIn: boolean;
     privacyBannerAcknowledged: boolean;
   } | null>(null);
   const [isLoadingOptIn, setIsLoadingOptIn] = useState(true);
-  const [showCheckInDialog, setShowCheckInDialog] = useState(false);
-  const [showReflectionDialog, setShowReflectionDialog] = useState(false);
-  const [showPhq2Dialog, setShowPhq2Dialog] = useState(false);
-  const [showGad2Dialog, setShowGad2Dialog] = useState(false);
+  const [activeTab, setActiveTab] = useState('checkin');
+  const [activeFilter, setActiveFilter] = useState('All');
 
-  // Well-being delta and trend data
+  // Dialog states
+  const [showReflectionDialog, setShowReflectionDialog] = useState(false);
+
+  // Data states
   const [deltaData, setDeltaData] = useState<any>(null);
   const [trendData, setTrendData] = useState<any[]>([]);
-  const [isLoadingDelta, setIsLoadingDelta] = useState(true);
 
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', isDark);
-    return () => document.documentElement.classList.remove('dark');
-  }, [isDark]);
-
-  // Fetch opt-in status on mount
   useEffect(() => {
     const fetchOptInStatus = async () => {
       try {
@@ -124,543 +60,271 @@ export default function ZenHubPage() {
         setIsLoadingOptIn(false);
       }
     };
-
     fetchOptInStatus();
   }, []);
+
+  useEffect(() => {
+    if (optInStatus?.optedIn) {
+      // Fetch insights data
+      const fetchData = async () => {
+        try {
+          const [deltaRes, trendRes] = await Promise.all([
+            fetch('/api/wellbeing/delta?period=14'),
+            fetch('/api/wellbeing/trend?weeks=4'),
+          ]);
+          if (deltaRes.ok) setDeltaData(await deltaRes.json());
+          if (trendRes.ok) setTrendData(await trendRes.json());
+        } catch (e) {
+          console.error('Failed to fetch insights', e);
+        }
+      };
+      fetchData();
+    }
+  }, [optInStatus]);
 
   const handleOptIn = async () => {
     try {
       const response = await fetch('/api/wellbeing/opt-in', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          optedIn: true,
-          privacyBannerAcknowledged: true,
-        }),
+        body: JSON.stringify({ optedIn: true, privacyBannerAcknowledged: true }),
       });
-
       if (response.ok) {
-        const data = await response.json();
-        setOptInStatus(data);
-        toast.success('Welcome to Zen Hub', {
-          description: 'Your well-being center is now active.',
-        });
+        // The POST response has a different format, so set the expected structure
+        setOptInStatus({ optedIn: true, privacyBannerAcknowledged: true });
+        toast.success('Welcome to Zen Hub');
       }
     } catch (error) {
-      console.error('Failed to opt in:', error);
-      toast.error('Failed to enable Zen Hub', {
-        description: 'Please try again.',
-      });
+      toast.error('Failed to enable Zen Hub');
     }
   };
-
-  const refreshData = async () => {
-    // Refresh delta and trend data
-    await fetchDeltaAndTrend();
-  };
-
-  // Fetch delta and trend data
-  const fetchDeltaAndTrend = useCallback(async () => {
-    if (!optInStatus?.optedIn) return;
-
-    try {
-      setIsLoadingDelta(true);
-      const [deltaResponse, trendResponse] = await Promise.all([
-        fetch('/api/wellbeing/delta?period=14'),
-        fetch('/api/wellbeing/trend?weeks=4'),
-      ]);
-
-      if (deltaResponse.ok) {
-        const delta = await deltaResponse.json();
-        setDeltaData(delta);
-      }
-
-      if (trendResponse.ok) {
-        const trend = await trendResponse.json();
-        setTrendData(trend);
-      }
-    } catch (error) {
-      console.error('Failed to fetch well-being data:', error);
-    } finally {
-      setIsLoadingDelta(false);
-    }
-  }, [optInStatus]);
-
-  // Fetch delta/trend when opted in
-  useEffect(() => {
-    if (optInStatus?.optedIn) {
-      fetchDeltaAndTrend();
-    }
-  }, [optInStatus, fetchDeltaAndTrend]);
 
   const filteredPractices = useMemo(() => {
-    const predicate = filterMap[activeFilter] ?? (() => true);
-    return zenPractices.filter(predicate);
+    if (activeFilter === 'All') return zenPractices;
+    return zenPractices.filter(
+      (p) =>
+        p.style.toLowerCase() === activeFilter.toLowerCase() ||
+        (activeFilter === 'Short' && p.time <= 5) ||
+        (activeFilter === 'Long' && p.time > 5)
+    );
   }, [activeFilter]);
 
-  const selectedPractice = useMemo(
-    () => zenPractices.find((practice) => practice.id === selectedPracticeId) ?? zenPractices[0],
-    [selectedPracticeId]
-  );
+  if (isLoadingOptIn) {
+    return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
+  }
+
+  if (!optInStatus?.optedIn) {
+    return (
+      <div className="mx-auto max-w-4xl p-8">
+        <h1 className="mb-6 font-serif text-3xl text-[#2D3330] dark:text-[#E8E6DD]">Zen Hub</h1>
+        <PrivacyBanner onOptIn={handleOptIn} />
+      </div>
+    );
+  }
 
   return (
-    <div
-      className="min-h-screen transition-colors duration-300"
-      style={{ backgroundColor: isDark ? '#2A2520' : '#F7F6F1' }}
-    >
-      <div className="relative mx-auto flex max-w-6xl flex-col gap-8 px-6 py-10 lg:px-10">
-        <HeaderBar
-          risk={risk}
-          onRiskChange={setRisk}
-          deviceView={deviceView}
-          onDeviceViewChange={setDeviceView}
-          isDark={isDark}
-          onThemeToggle={() => setIsDark((prev) => !prev)}
-        />
-
-        <div className="grid gap-8 lg:grid-cols-[2fr,1.4fr]">
-          <div className="space-y-8">
-            <section className="space-y-4">
-              <div>
-                <Badge variant="outline" className="border-[#7A9278] text-[#4A5943]">
-                  Zen Hub · Quiet tools to steady the mind
-                </Badge>
-                <div className="mt-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                  <div>
-                    <h1 className="text-3xl font-semibold text-[#2D3330] dark:text-[#E8E6DD]">
-                      Your proof-backed nervous system kit
-                    </h1>
-                    <p className="mt-2 max-w-2xl text-sm text-[#6B6760] dark:text-[#D8D2C8]">
-                      Practices sized to the moment, grounded in research, and ready when the
-                      internet gets loud.
-                    </p>
-                  </div>
-                  {!isLoadingOptIn && optInStatus?.optedIn && (
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => setShowCheckInDialog(true)}
-                        size="sm"
-                        className="bg-[#7A9278] hover:bg-[#7A9278]/90 text-white"
-                      >
-                        <Heart className="w-4 h-4 mr-2" />
-                        Log Check-In
-                      </Button>
-                      <Button
-                        onClick={() => setShowReflectionDialog(true)}
-                        size="sm"
-                        variant="outline"
-                        className="border-[#7A9278] text-[#7A9278] hover:bg-[#7A9278]/10"
-                      >
-                        Write Reflection
-                      </Button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Self-Assessment Quick Access */}
-                {!isLoadingOptIn && optInStatus?.optedIn && (
-                  <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 rounded-lg">
-                    <h3 className="text-sm font-semibold text-[#2D3330] dark:text-foreground mb-2 flex items-center gap-2">
-                      <Info className="w-4 h-4" />
-                      Mental Health Screenings
-                    </h3>
-                    <p className="text-xs text-[#6B6760] dark:text-muted-foreground mb-3">
-                      Validated 2-minute questionnaires to assess your mental well-being
-                    </p>
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => setShowPhq2Dialog(true)}
-                        size="sm"
-                        variant="outline"
-                        className="flex-1 border-blue-300 text-blue-700 hover:bg-blue-100 dark:border-blue-700 dark:text-blue-300"
-                      >
-                        Depression (PHQ-2)
-                      </Button>
-                      <Button
-                        onClick={() => setShowGad2Dialog(true)}
-                        size="sm"
-                        variant="outline"
-                        className="flex-1 border-blue-300 text-blue-700 hover:bg-blue-100 dark:border-blue-700 dark:text-blue-300"
-                      >
-                        Anxiety (GAD-2)
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Privacy Banner - Show if not opted in or banner not acknowledged */}
-              {!isLoadingOptIn && optInStatus && !optInStatus.privacyBannerAcknowledged && (
-                <PrivacyBanner onOptIn={handleOptIn} />
-              )}
-
-              <div className="rounded-2xl border border-[#D8D2C8] bg-white/80 p-4 shadow-sm backdrop-blur lg:p-6 dark:border-[#3C332C] dark:bg-[#2F2823]/80">
-                <ToolkitFilters
-                  activeFilter={activeFilter}
-                  onFilterChange={(value) => setActiveFilter(filterFromLabel(value))}
-                />
-
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  {filteredPractices.slice(0, 4).map((practice) => (
-                    <QuickPracticeCard
-                      key={practice.id}
-                      practice={practice}
-                      isActive={practice.id === selectedPractice?.id}
-                      onSelect={() => setSelectedPracticeId(practice.id)}
-                    />
-                  ))}
-                </div>
-              </div>
-            </section>
-
-            <section className="space-y-4">
-              <h2 className="text-xl font-semibold text-[#2D3330] dark:text-[#E8E6DD]">
-                Local & virtual gatherings
-              </h2>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {localGatherings.map((gathering) => (
-                  <Card
-                    key={gathering.id}
-                    className="border border-[#D8D2C8] bg-white/80 p-4 backdrop-blur dark:border-[#3C332C] dark:bg-[#2F2823]/70"
-                  >
-                    <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-[#7A9278]">
-                      <MapPin className="h-3.5 w-3.5" />
-                      {gathering.location}
-                    </div>
-                    <h3 className="mt-2 text-lg font-semibold text-[#2D3330] dark:text-[#F2ECE3]">
-                      {gathering.title}
-                    </h3>
-                    <p className="mt-1 text-sm text-[#6B6760] dark:text-[#C9C2B8]">
-                      {gathering.subtitle}
-                    </p>
-                    <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-[#4A5943] dark:text-[#CBE5CA]">
-                      <Badge
-                        variant="secondary"
-                        className="bg-[#EEF1EA] text-[#4A5943] dark:bg-[#3F473B] dark:text-[#E8F2E4]"
-                      >
-                        {gathering.when}
-                      </Badge>
-                      <span>{gathering.host}</span>
-                    </div>
-                    <div className="mt-4 flex items-center justify-between text-sm">
-                      <span className="text-[#6B6760] dark:text-[#D8D2C8]">
-                        {gathering.spotsRemaining} spots open
-                      </span>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="border-[#4A5943] text-[#4A5943]"
-                      >
-                        RSVP
-                      </Button>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </section>
-          </div>
-
-          <aside className="space-y-6">
-            <PracticeDetailCard practice={selectedPractice} risk={risk} />
-
-            {/* Well-Being Delta Widget */}
-            {!isLoadingOptIn && optInStatus?.optedIn && !isLoadingDelta && deltaData && (
-              <WellBeingDeltaWidget
-                stressDelta={deltaData.stressDelta}
-                controlDelta={deltaData.controlDelta}
-                period={deltaData.period}
-                checkinsCount={deltaData.checkinsCount}
-                hasBaseline={deltaData.hasBaseline}
-              />
-            )}
-
-            {/* Well-Being Trend Chart */}
-            {!isLoadingOptIn && optInStatus?.optedIn && !isLoadingDelta && trendData.length > 0 && (
-              <WellBeingTrendChart trend={trendData} />
-            )}
-
-            {/* Check-In History */}
-            {!isLoadingOptIn && optInStatus?.optedIn && (
-              <CheckInHistory userId={''} />
-            )}
-
-            {/* Work Schedule Editor */}
-            {!isLoadingOptIn && optInStatus?.optedIn && (
-              <WorkScheduleEditor userId={''} />
-            )}
-
-            <SupportChannels />
-          </aside>
+    <div className="mx-auto max-w-6xl p-6 lg:p-10 space-y-8">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="font-serif text-3xl font-medium text-[#2D3330] dark:text-[#E8E6DD]">
+            Zen Hub
+          </h1>
+          <p className="text-[#6B6760] dark:text-[#C9C2B8]">
+            Your private center for calm and clarity.
+          </p>
         </div>
+
+        {/* Crisis Support (Visible when mood is 'support') */}
+        {mood === 'support' && (
+          <div className="flex items-center gap-3 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-rose-800 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-200 animate-in fade-in slide-in-from-top-2">
+            <Phone className="h-4 w-4" />
+            <span className="text-sm font-medium">Crisis Support Available 24/7</span>
+            <div className="h-4 w-px bg-rose-200 dark:bg-rose-800" />
+            <a href="tel:988" className="text-sm font-bold hover:underline">
+              Call 988
+            </a>
+          </div>
+        )}
       </div>
 
-      {/* Backend Integration Dialogs */}
-      <CheckInDialog
-        open={showCheckInDialog}
-        onOpenChange={setShowCheckInDialog}
-        onSuccess={refreshData}
-      />
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+        <TabsList className="bg-[#EEF1EA] dark:bg-[#3F473B] p-1">
+          <TabsTrigger
+            value="checkin"
+            className="data-[state=active]:bg-white dark:data-[state=active]:bg-[#2F2823]"
+          >
+            Check-In
+          </TabsTrigger>
+          <TabsTrigger
+            value="practices"
+            className="data-[state=active]:bg-white dark:data-[state=active]:bg-[#2F2823]"
+          >
+            Practices
+          </TabsTrigger>
+          <TabsTrigger
+            value="journal"
+            className="data-[state=active]:bg-white dark:data-[state=active]:bg-[#2F2823]"
+          >
+            Journal
+          </TabsTrigger>
+          <TabsTrigger
+            value="insights"
+            className="data-[state=active]:bg-white dark:data-[state=active]:bg-[#2F2823]"
+          >
+            Insights
+          </TabsTrigger>
+        </TabsList>
+
+        {/* CHECK-IN TAB */}
+        <TabsContent value="checkin" className="space-y-8 animate-in fade-in duration-500">
+          <QuickCheckIn />
+
+          <div className="grid gap-8 md:grid-cols-2">
+            <div className="space-y-4">
+              <h3 className="font-serif text-xl text-[#2D3330] dark:text-[#E8E6DD]">Quick Reset</h3>
+              <GuidedBreathing />
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="font-serif text-xl text-[#2D3330] dark:text-[#E8E6DD]">
+                Recommended for You
+              </h3>
+              <div className="space-y-4">
+                {zenPractices.slice(0, 2).map((practice) => (
+                  <PracticeCard
+                    key={practice.id}
+                    practice={practice}
+                    onStart={() => {
+                      toast.success(`Started ${practice.title}`);
+                      // In real app, this might open a modal or navigation
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* PRACTICES TAB */}
+        <TabsContent value="practices" className="space-y-6 animate-in fade-in duration-500">
+          <div className="flex flex-wrap gap-2">
+            {['All', ...toolkitFilters].map((filter) => (
+              <Button
+                key={filter}
+                variant={activeFilter === filter ? 'default' : 'outline'}
+                onClick={() => setActiveFilter(filter)}
+                size="sm"
+                className={activeFilter === filter ? 'bg-[#1C4D3A] text-white' : 'border-[#E8E6DD]'}
+              >
+                {filter}
+              </Button>
+            ))}
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredPractices.map((practice) => (
+              <PracticeCard
+                key={practice.id}
+                practice={practice}
+                onStart={() => toast.success(`Started ${practice.title}`)}
+              />
+            ))}
+          </div>
+
+          <div className="pt-8 border-t border-[#E8E6DD] dark:border-[#3C332C]">
+            <h3 className="font-serif text-xl mb-4 text-[#2D3330] dark:text-[#E8E6DD] flex items-center gap-2">
+              <MapPin className="h-5 w-5" /> Local Gatherings
+            </h3>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {localGatherings.map((gathering) => (
+                <Card
+                  key={gathering.id}
+                  className="p-4 bg-white/50 dark:bg-[#2F2823]/50 border border-[#E8E6DD] dark:border-[#3C332C]"
+                >
+                  <div className="text-xs font-bold uppercase tracking-wider text-[#7A9278] mb-1">
+                    {gathering.location}
+                  </div>
+                  <h4 className="font-medium text-[#2D3330] dark:text-[#E8E6DD]">
+                    {gathering.title}
+                  </h4>
+                  <p className="text-sm text-[#6B6760] dark:text-[#C9C2B8] mt-1">
+                    {gathering.when}
+                  </p>
+                  <div className="mt-4 flex justify-between items-center">
+                    <span className="text-xs text-[#6B6760]">
+                      {gathering.spotsRemaining} spots left
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-[#1C4D3A] hover:text-[#1C4D3A] hover:bg-[#EEF1EA]"
+                    >
+                      RSVP
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+            <p className="text-xs text-center mt-4 text-[#6B6760] dark:text-[#C9C2B8]">
+              <Info className="h-3 w-3 inline mr-1" />
+              Location features require opt-in. Currently showing examples.
+            </p>
+          </div>
+        </TabsContent>
+
+        {/* JOURNAL TAB */}
+        <TabsContent value="journal" className="space-y-6 animate-in fade-in duration-500">
+          <div className="flex justify-between items-center">
+            <h3 className="font-serif text-xl text-[#2D3330] dark:text-[#E8E6DD]">
+              Your Reflections
+            </h3>
+            <Button
+              onClick={() => setShowReflectionDialog(true)}
+              className="bg-[#1C4D3A] text-white"
+            >
+              New Entry
+            </Button>
+          </div>
+          <ReflectionJournal />
+        </TabsContent>
+
+        {/* INSIGHTS TAB */}
+        <TabsContent value="insights" className="space-y-8 animate-in fade-in duration-500">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="space-y-6">
+              {deltaData && (
+                <WellBeingDeltaWidget
+                  stressDelta={deltaData.stressDelta}
+                  controlDelta={deltaData.controlDelta}
+                  period={deltaData.period}
+                  checkinsCount={deltaData.checkinsCount}
+                  hasBaseline={deltaData.hasBaseline}
+                />
+              )}
+              <WorkScheduleEditor userId="" />
+            </div>
+            <div className="space-y-6">
+              {trendData.length > 0 && <WellBeingTrendChart trend={trendData} />}
+              <CheckInHistory userId="" />
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
 
       <ReflectionDialog
         open={showReflectionDialog}
         onOpenChange={setShowReflectionDialog}
-        onSuccess={refreshData}
-      />
-
-      <SelfAssessmentDialog
-        open={showPhq2Dialog}
-        onOpenChange={setShowPhq2Dialog}
-        type="phq2"
-        onComplete={(score, severity) => {
-          toast.success(`PHQ-2 Assessment completed. Score: ${score}/6 (${severity})`);
-          refreshData();
-        }}
-      />
-
-      <SelfAssessmentDialog
-        open={showGad2Dialog}
-        onOpenChange={setShowGad2Dialog}
-        type="gad2"
-        onComplete={(score, severity) => {
-          toast.success(`GAD-2 Assessment completed. Score: ${score}/6 (${severity})`);
-          refreshData();
-        }}
+        onSuccess={() => toast.success('Reflection saved')}
       />
     </div>
   );
 }
 
-function HeaderBar({
-  risk,
-  onRiskChange,
-  deviceView,
-  onDeviceViewChange,
-  isDark,
-  onThemeToggle,
-}: {
-  risk: RiskState;
-  onRiskChange: (value: RiskState) => void;
-  deviceView: DeviceView;
-  onDeviceViewChange: (value: DeviceView) => void;
-  isDark: boolean;
-  onThemeToggle: () => void;
-}) {
+export default function ZenHubPage() {
   return (
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-      <Card className="border border-[#D8D2C8] bg-white/80 p-4 backdrop-blur dark:border-[#3C332C] dark:bg-[#2F2823]/70">
-        <div className="flex items-center justify-between gap-4">
-          <div className="space-y-1">
-            <p className="text-xs uppercase tracking-wide text-[#7A9278]">Risk signal (demo)</p>
-            <p className="text-sm text-[#2D3330] dark:text-[#E8E6DD]">
-              Choose the nervous system guidance that matches what you are feeling.
-            </p>
-          </div>
-          <div className="flex gap-2">
-            {riskStates.map((state) => (
-              <button
-                key={state.id}
-                onClick={() => onRiskChange(state.id)}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                  risk === state.id
-                    ? state.tone
-                    : 'bg-[#EEF1EA] text-[#4A5943] hover:bg-[#E2E8DD] dark:bg-[#3C4539] dark:text-[#E2EDD9]'
-                }`}
-              >
-                {state.label}
-              </button>
-            ))}
-          </div>
-        </div>
-        <p className="mt-3 text-xs text-[#6B6760] dark:text-[#C9C2B8]">
-          {riskStates.find((state) => state.id === risk)?.description}
-        </p>
-      </Card>
-    </div>
-  );
-}
-
-function ToolkitFilters({
-  activeFilter,
-  onFilterChange,
-}: {
-  activeFilter: FilterMode;
-  onFilterChange: (label: string) => void;
-}) {
-  return (
-    <div>
-      <p className="text-xs uppercase tracking-wide text-[#7A9278]">Filter toolkit</p>
-      <div className="mt-2 flex flex-wrap gap-2">
-        {toolkitFilters.map((label) => {
-          const isActive = activeFilter === filterFromLabel(label);
-          return (
-            <button
-              key={label}
-              onClick={() => onFilterChange(label)}
-              className={`rounded-full px-3 py-1 text-xs transition-colors ${
-                isActive
-                  ? 'bg-[#4A5943] text-white shadow-sm'
-                  : 'bg-[#EEF1EA] text-[#4A5943] hover:bg-[#E2E8DD]'
-              }`}
-            >
-              {label}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function QuickPracticeCard({
-  practice,
-  isActive,
-  onSelect,
-}: {
-  practice: ZenPractice;
-  isActive: boolean;
-  onSelect: () => void;
-}) {
-  return (
-    <button
-      onClick={onSelect}
-      className={`flex h-full flex-col rounded-xl border p-4 text-left transition-all ${
-        isActive
-          ? 'border-[#4A5943] bg-[#EEF1EA] shadow-md'
-          : 'border-[#D8D2C8] bg-white/80 hover:border-[#4A5943] dark:border-[#3C332C] dark:bg-[#2F2823]/80'
-      }`}
-    >
-      <div className="flex items-center justify-between text-xs uppercase tracking-wide text-[#7A9278]">
-        <span>{practice.duration}</span>
-        <span className="flex items-center gap-1">
-          <Sparkles className="h-3.5 w-3.5" />
-          {practice.benefit}
-        </span>
-      </div>
-      <h3 className="mt-3 text-lg font-semibold text-[#2D3330] dark:text-[#F2ECE3]">
-        {practice.title}
-      </h3>
-      <p className="mt-2 text-sm text-[#6B6760] dark:text-[#C9C2B8] line-clamp-2">
-        {practice.whatToExpect}
-      </p>
-      <div className="mt-3 flex items-center justify-between text-xs text-[#4A5943] dark:text-[#CBE5CA]">
-        <span>{practice.evidenceType.replace('-', ' ')} evidence</span>
-        {isActive && <Check className="h-4 w-4" />}
-      </div>
-    </button>
-  );
-}
-
-function PracticeDetailCard({
-  practice,
-  risk,
-}: {
-  practice: ZenPractice | undefined;
-  risk: RiskState;
-}) {
-  if (!practice) return null;
-  return (
-    <Card className="space-y-4 border border-[#D8D2C8] bg-white/85 p-5 backdrop-blur dark:border-[#3C332C] dark:bg-[#2F2823]/75">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs uppercase tracking-wide text-[#7A9278]">Featured practice</p>
-          <h2 className="mt-1 text-xl font-semibold text-[#2D3330] dark:text-[#F2ECE3]">
-            {practice.title}
-          </h2>
-          <p className="mt-1 text-sm text-[#6B6760] dark:text-[#C9C2B8]">{practice.whatToExpect}</p>
-        </div>
-        <Badge variant="outline" className="border-[#4A5943] text-[#4A5943]">
-          {practice.duration}
-        </Badge>
-      </div>
-
-      <Tabs defaultValue="steps" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 bg-[#EEF1EA] text-[#4A5943]">
-          <TabsTrigger value="steps">Steps</TabsTrigger>
-          <TabsTrigger value="evidence">Evidence</TabsTrigger>
-        </TabsList>
-        <TabsContent value="steps" className="mt-4 space-y-2">
-          {practice.steps.map((step, index) => (
-            <div
-              key={index}
-              className="flex items-start gap-3 rounded-xl bg-[#FDFCFA] p-3 text-sm text-[#2D3330] shadow-sm dark:bg-[#3A332E] dark:text-[#E8E1D8]"
-            >
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#EEF1EA] text-xs font-semibold text-[#4A5943] dark:bg-[#3F473B] dark:text-[#D8E8D0]">
-                {index + 1}
-              </span>
-              <span>{step}</span>
-            </div>
-          ))}
-        </TabsContent>
-        <TabsContent
-          value="evidence"
-          className="mt-4 space-y-3 text-sm text-[#2D3330] dark:text-[#E8E1D8]"
-        >
-          {practice.evidencePoints.map((point, index) => (
-            <div key={index} className="flex items-start gap-3">
-              <Zap className="mt-0.5 h-4 w-4 text-[#4A5943]" />
-              <span>{point}</span>
-            </div>
-          ))}
-          {practice.adverseNote && (
-            <div className="flex items-start gap-3 text-xs text-[#B4584A] dark:text-[#F2B7A9]">
-              <Heart className="mt-0.5 h-4 w-4" />
-              <span>{practice.adverseNote}</span>
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
-
-      <div className="grid gap-3 rounded-xl bg-[#EEF1EA] p-3 text-sm text-[#4A5943] dark:bg-[#3F473B] dark:text-[#E2EDD9]">
-        <div className="flex items-center gap-2">
-          <Users className="h-4 w-4" />
-          <span>{practice.isThirdParty ? 'Third-party partner' : 'Proofound guided'}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Compass className="h-4 w-4" />
-          <span>
-            {practice.style} practice · goal: {practice.goal}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Clock className="h-4 w-4" />
-          <span>
-            {risk === 'high'
-              ? 'Extend to 10 minutes and notify support contact.'
-              : risk === 'elevated'
-                ? 'Pair with grounded movement or a short walk.'
-                : 'Return to work gently. Save progress to proof vault.'}
-          </span>
-        </div>
-      </div>
-    </Card>
-  );
-}
-
-function SupportChannels() {
-  return (
-    <Card className="space-y-4 border border-[#D8D2C8] bg-white/85 p-5 backdrop-blur dark:border-[#3C332C] dark:bg-[#2F2823]/75">
-      <div className="flex items-center gap-2 text-[#4A5943]">
-        <Heart className="h-5 w-5" />
-        <h3 className="text-lg font-semibold">Support network</h3>
-      </div>
-      <div className="space-y-3">
-        {supportChannels.map((channel) => (
-          <div
-            key={channel.id}
-            className="rounded-xl border border-[#D8D2C8] bg-[#FDFCFA] p-3 text-sm text-[#2D3330] transition-colors hover:border-[#4A5943] dark:border-[#3C332C] dark:bg-[#3A332E] dark:text-[#E8E1D8]"
-          >
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-medium">{channel.label}</p>
-                <p className="text-xs text-[#6B6760] dark:text-[#C9C2B8]">{channel.description}</p>
-              </div>
-              <span className="text-xs font-medium text-[#4A5943] dark:text-[#CBE5CA]">
-                {channel.contact}
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </Card>
+    <MoodResponsiveContainer>
+      <ZenHubContent />
+    </MoodResponsiveContainer>
   );
 }

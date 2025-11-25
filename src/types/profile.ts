@@ -65,6 +65,21 @@ export interface Volunteering {
   verified: boolean | null;
 }
 
+export type VisibilityLevel = 'public' | 'network' | 'private';
+
+export interface FieldVisibility {
+  mission?: VisibilityLevel;
+  vision?: VisibilityLevel;
+  values?: VisibilityLevel;
+  causes?: VisibilityLevel;
+  skills?: VisibilityLevel;
+  experiences?: VisibilityLevel;
+  education?: VisibilityLevel;
+  volunteering?: VisibilityLevel;
+  impactStories?: VisibilityLevel;
+  [key: string]: VisibilityLevel | undefined;
+}
+
 export interface ProfileData {
   basicInfo: BasicInfo;
   mission: string | null;
@@ -76,4 +91,6 @@ export interface ProfileData {
   experiences: Experience[];
   education: Education[];
   volunteering: Volunteering[];
+  fieldVisibility: FieldVisibility;
+  redactMode: boolean;
 }

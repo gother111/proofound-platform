@@ -173,23 +173,38 @@ export function ProfileView({ data }: ProfileViewProps) {
             <div className="lg:col-span-2">
               <Tabs defaultValue="impact" className="space-y-6">
                 <TabsList className="grid grid-cols-5 w-full rounded-full bg-muted/30 p-1">
-                  <TabsTrigger value="impact" className="rounded-full text-xs sm:text-sm">
+                  <TabsTrigger
+                    value="impact"
+                    className="rounded-full text-xs sm:text-sm text-[#2D3330]/70 hover:text-[#2D3330] dark:text-[#E8DCC4]/70 dark:hover:text-[#E8DCC4] data-[state=active]:text-[#2D3330] dark:data-[state=active]:text-[#E8DCC4]"
+                  >
                     <Target className="w-4 h-4 mr-1" />
                     <span className="hidden sm:inline">Impact</span>
                   </TabsTrigger>
-                  <TabsTrigger value="journey" className="rounded-full text-xs sm:text-sm">
+                  <TabsTrigger
+                    value="journey"
+                    className="rounded-full text-xs sm:text-sm text-[#2D3330]/70 hover:text-[#2D3330] dark:text-[#E8DCC4]/70 dark:hover:text-[#E8DCC4] data-[state=active]:text-[#2D3330] dark:data-[state=active]:text-[#E8DCC4]"
+                  >
                     <Briefcase className="w-4 h-4 mr-1" />
                     <span className="hidden sm:inline">Journey</span>
                   </TabsTrigger>
-                  <TabsTrigger value="learning" className="rounded-full text-xs sm:text-sm">
+                  <TabsTrigger
+                    value="learning"
+                    className="rounded-full text-xs sm:text-sm text-[#2D3330]/70 hover:text-[#2D3330] dark:text-[#E8DCC4]/70 dark:hover:text-[#E8DCC4] data-[state=active]:text-[#2D3330] dark:data-[state=active]:text-[#E8DCC4]"
+                  >
                     <GraduationCap className="w-4 h-4 mr-1" />
                     <span className="hidden sm:inline">Learning</span>
                   </TabsTrigger>
-                  <TabsTrigger value="service" className="rounded-full text-xs sm:text-sm">
+                  <TabsTrigger
+                    value="service"
+                    className="rounded-full text-xs sm:text-sm text-[#2D3330]/70 hover:text-[#2D3330] dark:text-[#E8DCC4]/70 dark:hover:text-[#E8DCC4] data-[state=active]:text-[#2D3330] dark:data-[state=active]:text-[#E8DCC4]"
+                  >
                     <HandHeart className="w-4 h-4 mr-1" />
                     <span className="hidden sm:inline">Service</span>
                   </TabsTrigger>
-                  <TabsTrigger value="network" className="rounded-full text-xs sm:text-sm">
+                  <TabsTrigger
+                    value="network"
+                    className="rounded-full text-xs sm:text-sm text-[#2D3330]/70 hover:text-[#2D3330] dark:text-[#E8DCC4]/70 dark:hover:text-[#E8DCC4] data-[state=active]:text-[#2D3330] dark:data-[state=active]:text-[#E8DCC4]"
+                  >
                     <Network className="w-4 h-4 mr-1" />
                     <span className="hidden sm:inline">Network</span>
                   </TabsTrigger>

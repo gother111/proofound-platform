@@ -61,7 +61,7 @@ export function GapMapWidget() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Target className="h-5 w-5 text-[#4A5943]" />
+            <Target className="h-5 w-5 text-[#1C4D3A]" />
             Skill Gaps
           </CardTitle>
         </CardHeader>
@@ -84,7 +84,7 @@ export function GapMapWidget() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Target className="h-5 w-5 text-[#4A5943]" />
+            <Target className="h-5 w-5 text-[#1C4D3A]" />
             Skill Gaps
           </CardTitle>
         </CardHeader>
@@ -98,7 +98,7 @@ export function GapMapWidget() {
               variant="outline"
               size="sm"
               onClick={() => router.push('/app/i/expertise')}
-              className="border-[#4A5943] text-[#4A5943]"
+              className="border-[#1C4D3A] text-[#1C4D3A]"
             >
               Add Skills
             </Button>
@@ -112,14 +112,14 @@ export function GapMapWidget() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <CardTitle className="flex items-center gap-2 text-lg">
-          <Target className="h-5 w-5 text-[#4A5943]" />
+          <Target className="h-5 w-5 text-[#1C4D3A]" />
           Top Skill Gaps
         </CardTitle>
         <Button
           variant="ghost"
           size="sm"
           onClick={handleViewAll}
-          className="text-[#4A5943] hover:bg-[#EEF1EA]"
+          className="text-[#1C4D3A] hover:bg-[#EEF1EA]"
         >
           View All
           <ArrowRight className="h-4 w-4 ml-1" />
@@ -132,9 +132,7 @@ export function GapMapWidget() {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-medium text-[#2D3330]">
-                      {gap.skillName}
-                    </span>
+                    <span className="text-sm font-medium text-[#2D3330]">{gap.skillName}</span>
                     <Badge
                       variant="outline"
                       className="text-xs"
@@ -167,9 +165,7 @@ export function GapMapWidget() {
                 </p>
               </div>
 
-              {index < topGaps.length - 1 && (
-                <div className="border-b border-[#E8E6DD] pt-2"></div>
-              )}
+              {index < topGaps.length - 1 && <div className="border-b border-[#E8E6DD] pt-2"></div>}
             </div>
           ))}
         </div>
@@ -179,7 +175,7 @@ export function GapMapWidget() {
             onClick={handleViewAll}
             variant="outline"
             size="sm"
-            className="w-full border-[#4A5943] text-[#4A5943] hover:bg-[#EEF1EA]"
+            className="w-full border-[#1C4D3A] text-[#1C4D3A] hover:bg-[#EEF1EA]"
           >
             <TrendingUp className="h-4 w-4 mr-2" />
             Analyze All Gaps

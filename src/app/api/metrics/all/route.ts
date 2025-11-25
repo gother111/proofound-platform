@@ -3,26 +3,18 @@
  *
  * GET /api/metrics/all
  * Returns all key PRD metrics in one call
+ * Requires: platform_admin or super_admin
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
-import { db } from '@/db';
+import { requirePlatformAdmin } from '@/lib/auth/admin';
 import { calculateAllMetrics } from '@/lib/analytics/metrics';
 import { log } from '@/lib/log';
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireAuth();
-
-    // Only platform admins can view metrics
-    const { data: profile } = await db.query.profiles.findFirst({
-      where: (profiles, { eq }) => eq(profiles.id, user.id),
-    });
-
-    if (!profile || profile.platformRole !== 'platform_admin') {
-      return NextResponse.json({ error: 'Unauthorized - Admin only' }, { status: 403 });
-    }
+    // Use consistent admin auth pattern
+    const adminUser = await requirePlatformAdmin();
 
     // Get date range from query params
     const url = new URL(request.url);
@@ -33,7 +25,7 @@ export async function GET(request: NextRequest) {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    log.info('metrics.all.request', { admin: user.id, days });
+    log.info('metrics.all.request', { admin: adminUser.userId, days });
 
     // Calculate all metrics
     const metrics = await calculateAllMetrics(startDate, endDate);
@@ -47,6 +39,11 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
+    // Check if this is a redirect from requirePlatformAdmin
+    if (error && typeof error === 'object' && 'digest' in error) {
+      throw error;
+    }
+
     log.error('metrics.all.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
     });

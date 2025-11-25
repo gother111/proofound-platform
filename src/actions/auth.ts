@@ -75,7 +75,7 @@ export async function signUp(
 ): Promise<SignUpState> {
   try {
     const headersList = await headers();
-    
+
     const rawEmail = (formData.get('email') as string | null) ?? '';
     const email = rawEmail.trim().toLowerCase();
 
@@ -96,6 +96,7 @@ export async function signUp(
 
     const result = signUpSchema.safeParse(data);
     if (!result.success) {
+      console.error('SignUp Validation Failed:', result.error.format());
       return {
         error: 'Enter a valid email, password (8+ characters), and account type.',
         success: false,
@@ -124,6 +125,7 @@ export async function signUp(
     });
 
     if (error) {
+      console.error('Supabase SignUp Error:', error);
       if (/already registered/i.test(error.message)) {
         return {
           error: 'An account with this email already exists. Try logging in instead.',
@@ -173,16 +175,16 @@ export async function signUp(
       try {
         const { createAdminClient } = await import('@/lib/supabase/admin');
         const serviceSupabase = createAdminClient();
-        
+
         // Hash PII for audit trail
         const { anonymizeIP, anonymizeUserAgent } = await import('@/lib/utils/privacy');
         const ip = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || 'unknown';
         const ipHash = anonymizeIP(ip);
         const userAgentHash = anonymizeUserAgent(headersList.get('user-agent') || 'unknown');
-        
+
         // Current policy version
         const policyVersion = 'v1.0.2025-10-30';
-        
+
         // Prepare consent records
         const consentRecords = [
           {
@@ -219,29 +221,33 @@ export async function signUp(
             updated_at: new Date().toISOString(),
           },
         ];
-        
+
         // Store consent records directly using service role
         const { error: consentError } = await serviceSupabase
           .from('user_consents')
           .insert(consentRecords);
-          
+
         if (consentError) {
           console.error('Failed to store consent records:', consentError);
           // This is a critical GDPR compliance issue - we should not continue silently
-          throw new Error(`GDPR compliance error: Failed to store consent records - ${consentError.message}`);
+          throw new Error(
+            `GDPR compliance error: Failed to store consent records - ${consentError.message}`
+          );
         }
-        
+
         console.log('GDPR consent records stored successfully for user:', signUpResult.user.id);
       } catch (consentError) {
         // This is a critical GDPR compliance failure - log and re-throw
         console.error('CRITICAL: GDPR consent storage failed:', consentError);
-        throw new Error(`GDPR compliance error: Unable to store required consent records. Signup cannot proceed.`);
+        throw new Error(
+          `GDPR compliance error: Unable to store required consent records. Signup cannot proceed.`
+        );
       }
 
       // Track user signup event for TTFQI and TTV metrics
       try {
         const { emitUserSignup } = await import('@/lib/analytics/events');
-        await emitUserSignup(signUpResult.user.id, {
+        await emitUserSignup(signUpResult.user.id, 'email', {
           persona: result.data.persona,
           marketingOptIn: result.data.marketingOptIn,
         });
@@ -272,7 +278,7 @@ export async function signIn(
 ): Promise<SignInState> {
   try {
     const headersList = await headers();
-    
+
     const rawEmail = (formData.get('email') as string | null) ?? '';
     const email = rawEmail.trim().toLowerCase();
     const password = (formData.get('password') as string | null) ?? '';
@@ -280,6 +286,13 @@ export async function signIn(
       email,
       password,
     };
+
+    console.log('DEBUG: signIn formData:', {
+      rawEmail,
+      email,
+      passwordLength: password.length,
+      keys: Array.from(formData.keys()),
+    });
 
     const result = signInSchema.safeParse(data);
     if (!result.success) {
@@ -298,7 +311,8 @@ export async function signIn(
       return { error: mapSupabaseSignInError(error, email) };
     }
 
-    const destination = await resolveUserHomePath();
+    // Pass the same supabase client that has the authenticated session
+    const destination = await resolveUserHomePath(supabase);
 
     revalidatePath('/', 'layout');
     redirect(destination);

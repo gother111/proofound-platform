@@ -21,6 +21,13 @@ export type EventType =
   | 'profile_viewed'
   | 'user_signup' // Added missing type
 
+  // Skill events (PRD F3)
+  | 'skill_added'
+  | 'skill_updated'
+  | 'skill_deleted'
+  | 'skill_proof_added'
+  | 'skill_proof_deleted'
+
   // Matching events
   | 'match_generated'
   | 'match_viewed'
@@ -92,6 +99,17 @@ export interface AnalyticsEvent {
  */
 export async function emitAnalyticsEvent(event: AnalyticsEvent): Promise<void> {
   try {
+    // MOCK ANALYTICS FOR LOCAL DEV
+    if (process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true') {
+      log.info('analytics.event.mocked', {
+        eventType: event.eventType,
+        userId: event.userId,
+        entityId: event.entityId,
+        properties: event.properties,
+      });
+      return;
+    }
+
     await db.execute(sql`
       INSERT INTO analytics_events (
         event_type,
@@ -158,14 +176,18 @@ export async function emitProfileCreated(userId: string, properties?: Record<str
   });
 }
 
-export async function emitUserSignup(userId: string, method: string) {
+export async function emitUserSignup(
+  userId: string,
+  method: string,
+  options?: { persona?: string; marketingOptIn?: boolean }
+) {
   await emitAnalyticsEvent({
     eventType: 'user_signup',
     userId,
     profileId: userId,
     entityType: 'profile',
     entityId: userId,
-    properties: { method },
+    properties: { method, ...options },
   });
 }
 
@@ -222,6 +244,267 @@ export async function emitRedactModeToggled(userId: string, isEnabled: boolean) 
     entityType: 'profile',
     entityId: userId,
     properties: { enabled: isEnabled },
+  });
+}
+
+// ============================================================================
+// SKILL EVENTS (PRD F3 - Expertise Atlas)
+// ============================================================================
+
+export async function emitSkillAdded(
+  userId: string,
+  skillId: string,
+  properties: {
+    skill_code?: string;
+    skill_name: string;
+    level: number;
+    is_custom: boolean;
+    total_skills: number;
+  }
+) {
+  await emitAnalyticsEvent({
+    eventType: 'skill_added',
+    userId,
+    profileId: userId,
+    entityType: 'profile',
+    entityId: skillId,
+    properties,
+  });
+}
+
+export function emitSkillAddedAsync(
+  userId: string,
+  skillId: string,
+  properties: {
+    skill_code?: string;
+    skill_name: string;
+    level: number;
+    is_custom: boolean;
+    total_skills: number;
+  }
+) {
+  emitAnalyticsEventAsync({
+    eventType: 'skill_added',
+    userId,
+    profileId: userId,
+    entityType: 'profile',
+    entityId: skillId,
+    properties,
+  });
+}
+
+export async function emitSkillUpdated(
+  userId: string,
+  skillId: string,
+  properties: {
+    skill_name: string;
+    changes: string[];
+  }
+) {
+  await emitAnalyticsEvent({
+    eventType: 'skill_updated',
+    userId,
+    profileId: userId,
+    entityType: 'profile',
+    entityId: skillId,
+    properties,
+  });
+}
+
+export function emitSkillUpdatedAsync(
+  userId: string,
+  skillId: string,
+  properties: {
+    skill_name: string;
+    changes: string[];
+  }
+) {
+  emitAnalyticsEventAsync({
+    eventType: 'skill_updated',
+    userId,
+    profileId: userId,
+    entityType: 'profile',
+    entityId: skillId,
+    properties,
+  });
+}
+
+export async function emitSkillDeleted(
+  userId: string,
+  skillId: string,
+  properties: {
+    skill_name: string;
+    remaining_skills: number;
+  }
+) {
+  await emitAnalyticsEvent({
+    eventType: 'skill_deleted',
+    userId,
+    profileId: userId,
+    entityType: 'profile',
+    entityId: skillId,
+    properties,
+  });
+}
+
+export function emitSkillDeletedAsync(
+  userId: string,
+  skillId: string,
+  properties: {
+    skill_name: string;
+    remaining_skills: number;
+  }
+) {
+  emitAnalyticsEventAsync({
+    eventType: 'skill_deleted',
+    userId,
+    profileId: userId,
+    entityType: 'profile',
+    entityId: skillId,
+    properties,
+  });
+}
+
+export async function emitSkillProofAdded(
+  userId: string,
+  skillId: string,
+  proofId: string,
+  properties: {
+    skill_name: string;
+    proof_type: string;
+  }
+) {
+  await emitAnalyticsEvent({
+    eventType: 'skill_proof_added',
+    userId,
+    profileId: userId,
+    entityType: 'profile',
+    entityId: proofId,
+    properties: {
+      skill_id: skillId,
+      ...properties,
+    },
+  });
+}
+
+export function emitSkillProofAddedAsync(
+  userId: string,
+  skillId: string,
+  proofId: string,
+  properties: {
+    skill_name: string;
+    proof_type: string;
+  }
+) {
+  emitAnalyticsEventAsync({
+    eventType: 'skill_proof_added',
+    userId,
+    profileId: userId,
+    entityType: 'profile',
+    entityId: proofId,
+    properties: {
+      skill_id: skillId,
+      ...properties,
+    },
+  });
+}
+
+export async function emitSkillProofDeleted(
+  userId: string,
+  skillId: string,
+  proofId: string,
+  properties: {
+    skill_name: string;
+    proof_type: string;
+  }
+) {
+  await emitAnalyticsEvent({
+    eventType: 'skill_proof_deleted',
+    userId,
+    profileId: userId,
+    entityType: 'profile',
+    entityId: proofId,
+    properties: {
+      skill_id: skillId,
+      ...properties,
+    },
+  });
+}
+
+export function emitSkillProofDeletedAsync(
+  userId: string,
+  skillId: string,
+  proofId: string,
+  properties: {
+    skill_name: string;
+    proof_type: string;
+  }
+) {
+  emitAnalyticsEventAsync({
+    eventType: 'skill_proof_deleted',
+    userId,
+    profileId: userId,
+    entityType: 'profile',
+    entityId: proofId,
+    properties: {
+      skill_id: skillId,
+      ...properties,
+    },
+  });
+}
+
+export async function emitVerificationRequested(
+  userId: string,
+  requestId: string,
+  properties: {
+    skill_id: string;
+    skill_name: string;
+    verifier_source: string;
+  }
+) {
+  await emitAnalyticsEvent({
+    eventType: 'attestation_requested',
+    userId,
+    profileId: userId,
+    entityType: 'profile',
+    entityId: requestId,
+    properties,
+  });
+}
+
+export function emitVerificationRequestedAsync(
+  userId: string,
+  requestId: string,
+  properties: {
+    skill_id: string;
+    skill_name: string;
+    verifier_source: string;
+  }
+) {
+  emitAnalyticsEventAsync({
+    eventType: 'attestation_requested',
+    userId,
+    profileId: userId,
+    entityType: 'profile',
+    entityId: requestId,
+    properties,
+  });
+}
+
+export async function emitVerificationProvided(
+  requestId: string,
+  properties: {
+    skill_id: string;
+    requester_id: string;
+    action: 'accepted' | 'declined';
+  }
+) {
+  await emitAnalyticsEvent({
+    eventType: 'attestation_provided',
+    userId: properties.requester_id, // Track under requester's profile
+    entityType: 'profile',
+    entityId: requestId,
+    properties,
   });
 }
 
@@ -303,12 +586,21 @@ export async function emitFirstQualifiedIntroAsync(
   });
 }
 
-export async function emitFirstMatchShown(userId: string, matchId: string) {
+export async function emitFirstMatchShown(
+  userId: string,
+  matchId: string,
+  metadata?: {
+    score?: number;
+    mode?: string;
+    pac_contribution?: number;
+  }
+) {
   await emitAnalyticsEvent({
     eventType: 'first_match_shown',
     userId,
     entityType: 'match',
     entityId: matchId,
+    properties: metadata,
   });
 }
 

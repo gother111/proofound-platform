@@ -37,7 +37,7 @@ export const AVAILABLE_WIDGETS: Record<string, WidgetConfig> = {
     defaultSize: 'default',
     availableSizes: ['default'],
   },
-  'goals': {
+  goals: {
     id: 'goals',
     name: 'Goals',
     description: 'Track your career goals',
@@ -45,7 +45,7 @@ export const AVAILABLE_WIDGETS: Record<string, WidgetConfig> = {
     defaultSize: 'default',
     availableSizes: ['small', 'default'],
   },
-  'tasks': {
+  tasks: {
     id: 'tasks',
     name: 'Tasks',
     description: 'Upcoming tasks and to-dos',
@@ -53,7 +53,7 @@ export const AVAILABLE_WIDGETS: Record<string, WidgetConfig> = {
     defaultSize: 'default',
     availableSizes: ['small', 'default'],
   },
-  'projects': {
+  projects: {
     id: 'projects',
     name: 'Projects',
     description: 'Active projects and collaborations',
@@ -93,7 +93,7 @@ export const AVAILABLE_WIDGETS: Record<string, WidgetConfig> = {
     defaultSize: 'default',
     availableSizes: ['default', 'large'],
   },
-  'explore': {
+  explore: {
     id: 'explore',
     name: 'Explore',
     description: 'Discover new opportunities',
@@ -117,34 +117,82 @@ export const DEFAULT_LAYOUT: DashboardWidget[] = [
 
 /**
  * Preset layouts for different personas
+ * PRD Reference: F2 - Customizable Dashboard with persona presets
  */
-export const PRESET_LAYOUTS: Record<string, DashboardWidget[]> = {
-  student: [
-    { widgetId: 'next-best-actions', position: 0, visible: true, size: 'default', settings: {} },
-    { widgetId: 'gap-map', position: 1, visible: true, size: 'default', settings: {} },
-    { widgetId: 'goals', position: 2, visible: true, size: 'default', settings: {} },
-    { widgetId: 'matching-results', position: 3, visible: true, size: 'default', settings: {} },
-    { widgetId: 'projects', position: 4, visible: true, size: 'default', settings: {} },
-  ],
-  switcher: [
-    { widgetId: 'gap-map', position: 0, visible: true, size: 'large', settings: {} },
-    { widgetId: 'matching-results', position: 1, visible: true, size: 'large', settings: {} },
-    { widgetId: 'next-best-actions', position: 2, visible: true, size: 'default', settings: {} },
-    { widgetId: 'while-away', position: 3, visible: true, size: 'default', settings: {} },
-  ],
-  mentor: [
-    { widgetId: 'impact-snapshot', position: 0, visible: true, size: 'default', settings: {} },
-    { widgetId: 'projects', position: 1, visible: true, size: 'large', settings: {} },
-    { widgetId: 'goals', position: 2, visible: true, size: 'default', settings: {} },
-    { widgetId: 'while-away', position: 3, visible: true, size: 'default', settings: {} },
-  ],
-  professional: [
-    { widgetId: 'while-away', position: 0, visible: true, size: 'default', settings: {} },
-    { widgetId: 'matching-results', position: 1, visible: true, size: 'default', settings: {} },
-    { widgetId: 'goals', position: 2, visible: true, size: 'default', settings: {} },
-    { widgetId: 'impact-snapshot', position: 3, visible: true, size: 'default', settings: {} },
-    { widgetId: 'projects', position: 4, visible: true, size: 'default', settings: {} },
-  ],
+export const PRESET_LAYOUTS: Record<
+  string,
+  { label: string; description: string; widgets: DashboardWidget[] }
+> = {
+  // Job seekers looking for new opportunities
+  'job-seeker': {
+    label: 'Job Seeker',
+    description: 'Focus on matches and skill gaps',
+    widgets: [
+      { widgetId: 'matching-results', position: 0, visible: true, size: 'large', settings: {} },
+      { widgetId: 'next-best-actions', position: 1, visible: true, size: 'default', settings: {} },
+      { widgetId: 'gap-map', position: 2, visible: true, size: 'default', settings: {} },
+      { widgetId: 'goals', position: 3, visible: true, size: 'default', settings: {} },
+      { widgetId: 'impact-snapshot', position: 4, visible: true, size: 'default', settings: {} },
+    ],
+  },
+  // Career builders focusing on growth
+  'career-builder': {
+    label: 'Career Builder',
+    description: 'Focus on skills and growth',
+    widgets: [
+      { widgetId: 'gap-map', position: 0, visible: true, size: 'default', settings: {} },
+      { widgetId: 'goals', position: 1, visible: true, size: 'default', settings: {} },
+      { widgetId: 'next-best-actions', position: 2, visible: true, size: 'default', settings: {} },
+      { widgetId: 'projects', position: 3, visible: true, size: 'default', settings: {} },
+      { widgetId: 'matching-results', position: 4, visible: true, size: 'default', settings: {} },
+    ],
+  },
+  // Students and early career professionals
+  student: {
+    label: 'Student',
+    description: 'Focus on learning and opportunities',
+    widgets: [
+      { widgetId: 'next-best-actions', position: 0, visible: true, size: 'default', settings: {} },
+      { widgetId: 'gap-map', position: 1, visible: true, size: 'default', settings: {} },
+      { widgetId: 'goals', position: 2, visible: true, size: 'default', settings: {} },
+      { widgetId: 'matching-results', position: 3, visible: true, size: 'default', settings: {} },
+      { widgetId: 'projects', position: 4, visible: true, size: 'default', settings: {} },
+    ],
+  },
+  // Career switchers making big transitions
+  switcher: {
+    label: 'Career Switcher',
+    description: 'Focus on transitions and new paths',
+    widgets: [
+      { widgetId: 'gap-map', position: 0, visible: true, size: 'large', settings: {} },
+      { widgetId: 'matching-results', position: 1, visible: true, size: 'large', settings: {} },
+      { widgetId: 'next-best-actions', position: 2, visible: true, size: 'default', settings: {} },
+      { widgetId: 'while-away', position: 3, visible: true, size: 'default', settings: {} },
+    ],
+  },
+  // Mentors and advisors
+  mentor: {
+    label: 'Mentor',
+    description: 'Focus on impact and helping others',
+    widgets: [
+      { widgetId: 'impact-snapshot', position: 0, visible: true, size: 'default', settings: {} },
+      { widgetId: 'projects', position: 1, visible: true, size: 'large', settings: {} },
+      { widgetId: 'goals', position: 2, visible: true, size: 'default', settings: {} },
+      { widgetId: 'while-away', position: 3, visible: true, size: 'default', settings: {} },
+    ],
+  },
+  // Experienced professionals
+  professional: {
+    label: 'Professional',
+    description: 'Balanced overview of all areas',
+    widgets: [
+      { widgetId: 'while-away', position: 0, visible: true, size: 'default', settings: {} },
+      { widgetId: 'matching-results', position: 1, visible: true, size: 'default', settings: {} },
+      { widgetId: 'goals', position: 2, visible: true, size: 'default', settings: {} },
+      { widgetId: 'impact-snapshot', position: 3, visible: true, size: 'default', settings: {} },
+      { widgetId: 'projects', position: 4, visible: true, size: 'default', settings: {} },
+    ],
+  },
 };
 
 /**

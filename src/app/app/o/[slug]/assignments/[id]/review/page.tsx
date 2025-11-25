@@ -127,7 +127,7 @@ export default function AssignmentReviewPage() {
             <Button
               onClick={handlePublish}
               disabled={isPublishing}
-              className="bg-[#4A5943] hover:bg-[#3A4733]"
+              className="bg-[#1C4D3A] hover:bg-[#2D5F4A]"
             >
               {isPublishing ? 'Publishing...' : 'Publish Assignment'}
               <ChevronRight className="h-4 w-4 ml-2" />
@@ -138,7 +138,7 @@ export default function AssignmentReviewPage() {
         {/* Business Value */}
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-full bg-[#4A5943] text-white flex items-center justify-center font-semibold">
+            <div className="w-8 h-8 rounded-full bg-[#1C4D3A] text-white flex items-center justify-center font-semibold">
               1
             </div>
             <h2 className="text-xl font-semibold text-[#2D3330]">Business Value</h2>
@@ -164,7 +164,7 @@ export default function AssignmentReviewPage() {
         {/* Target Outcomes */}
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-full bg-[#4A5943] text-white flex items-center justify-center font-semibold">
+            <div className="w-8 h-8 rounded-full bg-[#1C4D3A] text-white flex items-center justify-center font-semibold">
               2
             </div>
             <h2 className="text-xl font-semibold text-[#2D3330]">Target Outcomes</h2>
@@ -174,7 +174,7 @@ export default function AssignmentReviewPage() {
               <div className="space-y-3">
                 {assignment.outcomes.map((outcome: any, index: number) => (
                   <div key={index} className="flex items-center gap-3 p-3 bg-[#F7F6F1] rounded-lg">
-                    <Check className="h-5 w-5 text-[#4A5943]" />
+                    <Check className="h-5 w-5 text-[#1C4D3A]" />
                     <div className="flex-1">
                       <p className="font-medium text-[#2D3330]">{outcome.metric}</p>
                       <p className="text-sm text-[#6B6760]">
@@ -193,7 +193,7 @@ export default function AssignmentReviewPage() {
         {/* Weight Matrix */}
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-full bg-[#4A5943] text-white flex items-center justify-center font-semibold">
+            <div className="w-8 h-8 rounded-full bg-[#1C4D3A] text-white flex items-center justify-center font-semibold">
               3
             </div>
             <h2 className="text-xl font-semibold text-[#2D3330]">Weight Matrix</h2>
@@ -213,7 +213,7 @@ export default function AssignmentReviewPage() {
         {/* Practicals */}
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-full bg-[#4A5943] text-white flex items-center justify-center font-semibold">
+            <div className="w-8 h-8 rounded-full bg-[#1C4D3A] text-white flex items-center justify-center font-semibold">
               4
             </div>
             <h2 className="text-xl font-semibold text-[#2D3330]">Practical Details</h2>
@@ -256,7 +256,7 @@ export default function AssignmentReviewPage() {
         {/* Required Skills */}
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-full bg-[#4A5943] text-white flex items-center justify-center font-semibold">
+            <div className="w-8 h-8 rounded-full bg-[#1C4D3A] text-white flex items-center justify-center font-semibold">
               5
             </div>
             <h2 className="text-xl font-semibold text-[#2D3330]">Required Skills</h2>
@@ -265,7 +265,7 @@ export default function AssignmentReviewPage() {
             {assignment.requiredSkills && assignment.requiredSkills.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {assignment.requiredSkills.map((skill: any, index: number) => (
-                  <Badge key={index} variant="outline" className="border-[#7A9278] text-[#4A5943]">
+                  <Badge key={index} variant="outline" className="border-[#7A9278] text-[#1C4D3A]">
                     {skill.label || skill.id} (Level {skill.level}/5)
                   </Badge>
                 ))}

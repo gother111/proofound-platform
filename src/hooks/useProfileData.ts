@@ -25,6 +25,7 @@ import {
   deleteEducation as deleteEducationAction,
   createVolunteering,
   deleteVolunteering as deleteVolunteeringAction,
+  toggleRedactMode as toggleRedactModeAction,
 } from '@/actions/profile';
 import { calculateProfileCompletion } from '@/lib/profileStorage';
 import { toast } from 'sonner';
@@ -40,6 +41,7 @@ interface PendingState {
   experience: boolean;
   education: boolean;
   volunteering: boolean;
+  redactMode: boolean;
 }
 
 const initialPending: PendingState = {
@@ -53,6 +55,7 @@ const initialPending: PendingState = {
   experience: false,
   education: false,
   volunteering: false,
+  redactMode: false,
 };
 
 export function useProfileData() {
@@ -124,11 +127,11 @@ export function useProfileData() {
   );
 
   const updateMission = useCallback(
-    (mission: string) => {
+    (mission: string, visibility?: 'public' | 'network' | 'private') => {
       if (!profile) return;
       setProfile((prev) => (prev ? { ...prev, mission } : prev));
       startTransition(() => {
-        runWithPending('mission', () => updateMissionAction(mission)).catch(() => {
+        runWithPending('mission', () => updateMissionAction(mission, visibility)).catch(() => {
           toast.error('Failed to update mission.');
         });
       });
@@ -137,11 +140,11 @@ export function useProfileData() {
   );
 
   const updateVision = useCallback(
-    (vision: string) => {
+    (vision: string, visibility?: 'public' | 'network' | 'private') => {
       if (!profile) return;
       setProfile((prev) => (prev ? { ...prev, vision } : prev));
       startTransition(() => {
-        runWithPending('vision', () => updateVisionAction(vision)).catch(() => {
+        runWithPending('vision', () => updateVisionAction(vision, visibility)).catch(() => {
           toast.error('Failed to update vision.');
         });
       });
@@ -374,6 +377,21 @@ export function useProfileData() {
     [profile, runWithPending]
   );
 
+  const toggleRedactMode = useCallback(
+    (enabled: boolean) => {
+      if (!profile) return;
+      setProfile((prev) => (prev ? { ...prev, redactMode: enabled } : prev));
+      startTransition(() => {
+        runWithPending('redactMode', () => toggleRedactModeAction(enabled)).catch(() => {
+          toast.error('Failed to update privacy setting.');
+          // Revert on error
+          setProfile((prev) => (prev ? { ...prev, redactMode: !enabled } : prev));
+        });
+      });
+    },
+    [profile, runWithPending]
+  );
+
   return {
     profile,
     isLoading,
@@ -394,5 +412,6 @@ export function useProfileData() {
     deleteEducation,
     addVolunteering,
     deleteVolunteering,
+    toggleRedactMode,
   };
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { X, Search, ChevronRight, Check, ChevronDown, List } from 'lucide-react';
+import { X, Search, ChevronRight, Check, ChevronDown, List, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,10 +16,11 @@ import {
 } from '@/components/ui/sheet';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 
 // L1 Domain colors (matching L1Grid)
 const DOMAIN_COLORS: Record<number, { bg: string; border: string; text: string; icon: string }> = {
-  1: { bg: 'bg-[#EEF1EA]', border: 'border-[#7A9278]', text: 'text-[#4A5943]', icon: '🌍' }, // U - Universal
+  1: { bg: 'bg-[#EEF1EA]', border: 'border-[#7A9278]', text: 'text-[#1C4D3A]', icon: '🌍' }, // U - Universal
   2: { bg: 'bg-[#FFF4E6]', border: 'border-[#D4A574]', text: 'text-[#8B6F47]', icon: '⚙️' }, // F - Functional
   3: { bg: 'bg-[#E8F3F8]', border: 'border-[#6B9AB8]', text: 'text-[#3E5C73]', icon: '🔧' }, // T - Tools
   4: { bg: 'bg-[#F5EEF8]', border: 'border-[#9B7BA8]', text: 'text-[#6B4C7A]', icon: '🗣️' }, // L - Languages
@@ -91,6 +92,8 @@ interface AddSkillDrawerProps {
 }
 
 export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: AddSkillDrawerProps) {
+  const { toast } = useToast();
+
   // Mode: 'search' (default) or 'browse' (L1→L2→L3→L4)
   const [mode, setMode] = useState<'search' | 'browse'>('search');
   const [step, setStep] = useState(1);
@@ -432,8 +435,39 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
       });
 
       if (response.ok) {
-        // TODO: If proof URL is provided, attach it as a separate step
-        // For now, we'll handle proofs in the Edit Skill window
+        const skillData = await response.json();
+
+        // If proof URL is provided, attach it to the newly created skill
+        let proofAttached = false;
+        if (proofUrl && skillData.skill?.id) {
+          try {
+            const proofResponse = await fetch(
+              `/api/expertise/user-skills/${skillData.skill.id}/proofs`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  proofType: 'link',
+                  title: proofNotes || 'Proof Link',
+                  description: proofNotes || '',
+                  url: proofUrl,
+                }),
+              }
+            );
+            proofAttached = proofResponse.ok;
+          } catch (proofError) {
+            console.error('Error attaching proof:', proofError);
+            // Don't fail the whole operation if proof attachment fails
+          }
+        }
+
+        // Show success toast
+        toast({
+          title: '✅ Skill Added',
+          description: proofAttached
+            ? `"${l4Search}" has been added to your atlas with proof attached.`
+            : `"${l4Search}" has been added to your Expertise Atlas.`,
+        });
 
         onSkillAdded();
 
@@ -460,11 +494,19 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
       } else {
         const error = await response.json();
         console.error('Error saving skill:', error);
-        alert(error.error || 'Failed to save skill. Please try again.');
+        toast({
+          title: 'Error',
+          description: error.error || 'Failed to save skill. Please try again.',
+          variant: 'destructive',
+        });
       }
     } catch (error) {
       console.error('Error saving skill:', error);
-      alert('Failed to save skill. Please try again.');
+      toast({
+        title: 'Error',
+        description: 'Failed to save skill. Please try again.',
+        variant: 'destructive',
+      });
     } finally {
       setSaving(false);
     }
@@ -540,7 +582,10 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
 
             {/* Search Results */}
             {searchLoading && (
-              <div className="text-center py-8 text-[#6B6760]">Searching skills...</div>
+              <div className="flex items-center justify-center gap-2 py-8 text-[#6B6760]">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Searching skills...</span>
+              </div>
             )}
 
             {searchError && (
@@ -627,7 +672,7 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
                       s === step
-                        ? 'bg-[#4A5943] text-white'
+                        ? 'bg-[#1C4D3A] text-white'
                         : s < step
                           ? 'bg-[#7A9278] text-white'
                           : 'bg-[#E5E3DA] text-[#6B6760]'
@@ -666,7 +711,10 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
                 </div>
 
                 {domainsLoading ? (
-                  <div className="text-center py-8 text-[#6B6760]">Loading domains...</div>
+                  <div className="flex items-center justify-center gap-2 py-8 text-[#6B6760]">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>Loading domains...</span>
+                  </div>
                 ) : loadedDomains.length === 0 ? (
                   <div className="text-center py-8 text-[#6B6760]">
                     No domains available. Please try again later.
@@ -711,7 +759,7 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
                     variant="ghost"
                     size="sm"
                     onClick={handleBack}
-                    className="mb-2 text-[#4A5943]"
+                    className="mb-2 text-[#1C4D3A]"
                   >
                     ← Back to Domains
                   </Button>
@@ -726,7 +774,10 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
 
                 {/* L2 List */}
                 {l2Loading ? (
-                  <div className="text-center py-8 text-[#6B6760]">Loading categories...</div>
+                  <div className="flex items-center justify-center gap-2 py-8 text-[#6B6760]">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>Loading categories...</span>
+                  </div>
                 ) : l2Categories.length === 0 ? (
                   <div className="text-center py-8 text-[#6B6760]">No categories found.</div>
                 ) : (
@@ -765,7 +816,7 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
                     variant="ghost"
                     size="sm"
                     onClick={handleBack}
-                    className="mb-2 text-[#4A5943]"
+                    className="mb-2 text-[#1C4D3A]"
                   >
                     ← Back to Categories
                   </Button>
@@ -780,7 +831,10 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
 
                 {/* L3 List */}
                 {l3Loading ? (
-                  <div className="text-center py-8 text-[#6B6760]">Loading subcategories...</div>
+                  <div className="flex items-center justify-center gap-2 py-8 text-[#6B6760]">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>Loading subcategories...</span>
+                  </div>
                 ) : l3Subcategories.length === 0 ? (
                   <div className="text-center py-8 text-[#6B6760]">No subcategories found.</div>
                 ) : (
@@ -819,7 +873,7 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
                     variant="ghost"
                     size="sm"
                     onClick={handleBack}
-                    className="mb-2 text-[#4A5943]"
+                    className="mb-2 text-[#1C4D3A]"
                   >
                     ← Back to Subcategories
                   </Button>
@@ -852,7 +906,10 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
                   {showL4Dropdown && l4Search && (
                     <div className="absolute z-50 w-full mt-1 bg-white border border-[#E5E3DA] rounded-lg shadow-lg max-h-[300px] overflow-y-auto">
                       {l4Loading ? (
-                        <div className="p-4 text-center text-[#6B6760]">Loading skills...</div>
+                        <div className="flex items-center justify-center gap-2 p-4 text-[#6B6760]">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span>Loading skills...</span>
+                        </div>
                       ) : (
                         (() => {
                           const filtered = l4Skills
@@ -968,7 +1025,7 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
                       <Label htmlFor="relevance-current" className="cursor-pointer">
                         <Badge
                           variant="outline"
-                          className="bg-[#EEF1EA] text-[#4A5943] border-[#7A9278]"
+                          className="bg-[#EEF1EA] text-[#1C4D3A] border-[#7A9278]"
                         >
                           Current
                         </Badge>
@@ -1043,16 +1100,23 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
                     variant="outline"
                     onClick={() => handleSave(true)}
                     disabled={!l4Name || saving}
-                    className="flex-1 border-[#4A5943] text-[#4A5943] hover:bg-[#EEF1EA]"
+                    className="flex-1 border-[#1C4D3A] text-[#1C4D3A] hover:bg-[#EEF1EA]"
                   >
                     Save & Add Another
                   </Button>
                   <Button
                     onClick={() => handleSave(false)}
                     disabled={!l4Name || saving}
-                    className="flex-1 bg-[#4A5943] text-white hover:bg-[#3C4936]"
+                    className="flex-1 bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]"
                   >
-                    {saving ? 'Saving...' : 'Save'}
+                    {saving ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      'Save'
+                    )}
                   </Button>
                 </div>
               </div>

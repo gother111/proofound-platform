@@ -1,7 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { ShieldCheck, Clock, CheckCircle2, XCircle, User, Briefcase, ExternalLink } from 'lucide-react';
+import {
+  ShieldCheck,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  User,
+  Briefcase,
+  ExternalLink,
+} from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -50,15 +58,18 @@ interface VerificationsClientProps {
   userEmail: string;
 }
 
-export function VerificationsClient({ requests: initialRequests, userEmail }: VerificationsClientProps) {
+export function VerificationsClient({
+  requests: initialRequests,
+  userEmail,
+}: VerificationsClientProps) {
   const [requests, setRequests] = useState(initialRequests);
   const [selectedRequest, setSelectedRequest] = useState<VerificationRequest | null>(null);
   const [respondDialogOpen, setRespondDialogOpen] = useState(false);
   const [respondAction, setRespondAction] = useState<'accept' | 'decline'>('accept');
 
-  const pendingRequests = requests.filter(r => r.status === 'pending');
-  const acceptedRequests = requests.filter(r => r.status === 'accepted');
-  const declinedRequests = requests.filter(r => r.status === 'declined');
+  const pendingRequests = requests.filter((r) => r.status === 'pending');
+  const acceptedRequests = requests.filter((r) => r.status === 'accepted');
+  const declinedRequests = requests.filter((r) => r.status === 'declined');
 
   const handleRespond = (request: VerificationRequest, action: 'accept' | 'decline') => {
     setSelectedRequest(request);
@@ -68,9 +79,7 @@ export function VerificationsClient({ requests: initialRequests, userEmail }: Ve
 
   const handleResponseComplete = (updatedRequest: VerificationRequest) => {
     // Update the request in the list
-    setRequests(prev =>
-      prev.map(r => (r.id === updatedRequest.id ? updatedRequest : r))
-    );
+    setRequests((prev) => prev.map((r) => (r.id === updatedRequest.id ? updatedRequest : r)));
     setRespondDialogOpen(false);
     setSelectedRequest(null);
   };
@@ -78,12 +87,12 @@ export function VerificationsClient({ requests: initialRequests, userEmail }: Ve
   const getSkillName = (request: VerificationRequest): string => {
     const skill = request.skills;
     if (!skill) return 'Unknown Skill';
-    
+
     // Custom skill
     if (skill.name_i18n && typeof skill.name_i18n === 'object' && skill.name_i18n.en) {
       return skill.name_i18n.en;
     }
-    
+
     // Taxonomy skill
     if (skill.skills_taxonomy?.name_i18n) {
       const taxName = skill.skills_taxonomy.name_i18n;
@@ -94,35 +103,35 @@ export function VerificationsClient({ requests: initialRequests, userEmail }: Ve
         return taxName;
       }
     }
-    
+
     return 'Unknown Skill';
   };
 
   const getBreadcrumb = (request: VerificationRequest): string => {
     const skill = request.skills;
     if (!skill?.skills_taxonomy?.skills_l3) return '';
-    
+
     const l3 = skill.skills_taxonomy.skills_l3;
     const l2 = l3.skills_subcategories;
     const l1 = l2?.skills_categories;
-    
+
     const parts: string[] = [];
-    
+
     if (l1?.name_i18n) {
       const l1Name = typeof l1.name_i18n === 'object' ? l1.name_i18n.en : l1.name_i18n;
       if (l1Name) parts.push(l1Name);
     }
-    
+
     if (l2?.name_i18n) {
       const l2Name = typeof l2.name_i18n === 'object' ? l2.name_i18n.en : l2.name_i18n;
       if (l2Name) parts.push(l2Name);
     }
-    
+
     if (l3.name_i18n) {
       const l3Name = typeof l3.name_i18n === 'object' ? l3.name_i18n.en : l3.name_i18n;
       if (l3Name) parts.push(l3Name);
     }
-    
+
     return parts.join(' › ');
   };
 
@@ -135,7 +144,7 @@ export function VerificationsClient({ requests: initialRequests, userEmail }: Ve
     const name = getRequesterName(request);
     return name
       .split(' ')
-      .map(n => n[0])
+      .map((n) => n[0])
       .join('')
       .toUpperCase()
       .slice(0, 2);
@@ -151,7 +160,7 @@ export function VerificationsClient({ requests: initialRequests, userEmail }: Ve
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0) return 'Today';
     if (diffDays === 1) return 'Yesterday';
     if (diffDays < 7) return `${diffDays} days ago`;
@@ -196,20 +205,20 @@ export function VerificationsClient({ requests: initialRequests, userEmail }: Ve
                     request.status === 'pending'
                       ? '#F59E0B'
                       : request.status === 'accepted'
-                      ? '#10B981'
-                      : '#EF4444',
+                        ? '#10B981'
+                        : '#EF4444',
                   color:
                     request.status === 'pending'
                       ? '#F59E0B'
                       : request.status === 'accepted'
-                      ? '#10B981'
-                      : '#EF4444',
+                        ? '#10B981'
+                        : '#EF4444',
                   backgroundColor:
                     request.status === 'pending'
                       ? '#FEF3C7'
                       : request.status === 'accepted'
-                      ? '#D1FAE5'
-                      : '#FEE2E2',
+                        ? '#D1FAE5'
+                        : '#FEE2E2',
                 }}
               >
                 {request.status === 'pending' && <Clock className="w-3 h-3 mr-1" />}
@@ -228,7 +237,9 @@ export function VerificationsClient({ requests: initialRequests, userEmail }: Ve
               >
                 {request.verifier_source === 'peer' && <User className="w-3 h-3 mr-1" />}
                 {request.verifier_source === 'manager' && <Briefcase className="w-3 h-3 mr-1" />}
-                {request.verifier_source === 'external' && <ExternalLink className="w-3 h-3 mr-1" />}
+                {request.verifier_source === 'external' && (
+                  <ExternalLink className="w-3 h-3 mr-1" />
+                )}
                 {request.verifier_source}
               </Badge>
             </div>
@@ -256,7 +267,10 @@ export function VerificationsClient({ requests: initialRequests, userEmail }: Ve
 
           {/* Message */}
           {request.message && (
-            <div className="mb-3 p-3 rounded border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+            <div
+              className="mb-3 p-3 rounded border"
+              style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}
+            >
               <p className="text-sm" style={{ color: '#2D3330' }}>
                 &ldquo;{request.message}&rdquo;
               </p>
@@ -265,7 +279,10 @@ export function VerificationsClient({ requests: initialRequests, userEmail }: Ve
 
           {/* Response Message (if responded) */}
           {request.response_message && (
-            <div className="mb-3 p-3 rounded border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)', backgroundColor: '#F7F6F1' }}>
+            <div
+              className="mb-3 p-3 rounded border"
+              style={{ borderColor: 'rgba(232, 230, 221, 0.6)', backgroundColor: '#F7F6F1' }}
+            >
               <p className="text-xs font-medium mb-1" style={{ color: '#6B7470' }}>
                 Your response:
               </p>
@@ -281,7 +298,7 @@ export function VerificationsClient({ requests: initialRequests, userEmail }: Ve
               Requested {formatDate(request.created_at)}
               {request.responded_at && ` • Responded ${formatDate(request.responded_at)}`}
             </p>
-            
+
             {/* Action Buttons (pending only) */}
             {request.status === 'pending' && (
               <div className="flex gap-2">
@@ -333,8 +350,10 @@ export function VerificationsClient({ requests: initialRequests, userEmail }: Ve
         {status === 'pending'
           ? "You don't have any pending verification requests to review."
           : status === 'accepted'
-          ? "You haven't accepted any verification requests yet."
-          : "You haven't declined any verification requests yet."}
+            ? "You haven't accepted any verification requests yet."
+            : status === 'declined'
+              ? "You haven't declined any verification requests yet."
+              : "You don't have any verification requests yet."}
       </p>
     </div>
   );
@@ -415,9 +434,7 @@ export function VerificationsClient({ requests: initialRequests, userEmail }: Ve
 
           {/* All Tab */}
           <TabsContent value="all" className="space-y-4">
-            {requests.length === 0
-              ? renderEmptyState('all')
-              : requests.map(renderRequestCard)}
+            {requests.length === 0 ? renderEmptyState('all') : requests.map(renderRequestCard)}
           </TabsContent>
         </Tabs>
       </div>
@@ -439,4 +456,3 @@ export function VerificationsClient({ requests: initialRequests, userEmail }: Ve
     </div>
   );
 }
-

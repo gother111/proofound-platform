@@ -98,7 +98,7 @@ export function NextBestActionsWidget() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Sparkles className="h-5 w-5 text-[#4A5943]" />
+            <Sparkles className="h-5 w-5 text-[#1C4D3A]" />
             Next Best Actions
           </CardTitle>
         </CardHeader>
@@ -138,7 +138,7 @@ export function NextBestActionsWidget() {
       <CardHeader className="space-y-4">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Sparkles className="h-5 w-5 text-[#4A5943]" />
+            <Sparkles className="h-5 w-5 text-[#1C4D3A]" />
             Next Best Actions
           </CardTitle>
           <Badge variant="outline" className={status.color}>
@@ -176,24 +176,22 @@ export function NextBestActionsWidget() {
               <button
                 key={action.id}
                 onClick={() => router.push(action.actionUrl)}
-                className="w-full text-left p-3 rounded-lg border border-[#E8E6DD] hover:border-[#4A5943] hover:bg-[#F7F6F1] transition-all group"
+                className="w-full text-left p-3 rounded-lg border border-[#E8E6DD] hover:border-[#1C4D3A] hover:bg-[#F7F6F1] transition-all group"
               >
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 mt-1">
                     {action.completed ? (
                       <CheckCircle2 className="h-5 w-5 text-green-500" />
                     ) : (
-                      <div className="w-5 h-5 rounded-full border-2 border-[#4A5943] flex items-center justify-center">
-                        <span className="text-xs font-semibold text-[#4A5943]">
-                          {index + 1}
-                        </span>
+                      <div className="w-5 h-5 rounded-full border-2 border-[#1C4D3A] flex items-center justify-center">
+                        <span className="text-xs font-semibold text-[#1C4D3A]">{index + 1}</span>
                       </div>
                     )}
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-medium text-[#2D3330] group-hover:text-[#4A5943]">
+                      <span className="text-sm font-medium text-[#2D3330] group-hover:text-[#1C4D3A]">
                         {action.title}
                       </span>
                       {action.priority === 'high' && (
@@ -209,7 +207,7 @@ export function NextBestActionsWidget() {
                   </div>
 
                   <div className="flex-shrink-0">
-                    <ArrowRight className="h-4 w-4 text-[#A8B69D] group-hover:text-[#4A5943] transition-colors" />
+                    <ArrowRight className="h-4 w-4 text-[#A8B69D] group-hover:text-[#1C4D3A] transition-colors" />
                   </div>
                 </div>
               </button>
@@ -220,7 +218,7 @@ export function NextBestActionsWidget() {
                 variant="ghost"
                 size="sm"
                 onClick={() => router.push('/app/i/profile')}
-                className="w-full text-[#4A5943] hover:bg-[#EEF1EA]"
+                className="w-full text-[#1C4D3A] hover:bg-[#EEF1EA]"
               >
                 View All {actions.length} Actions
                 <ArrowRight className="h-4 w-4 ml-2" />

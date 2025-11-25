@@ -22,7 +22,12 @@ import { NextBestActionsWidget } from './NextBestActionsWidget';
 import { Button } from '@/components/ui/button';
 import { Settings2, Save, RotateCcw, Plus } from 'lucide-react';
 import { toast } from 'sonner';
-import { DashboardWidget, AVAILABLE_WIDGETS, WidgetSize } from '@/lib/dashboard/layout';
+import {
+  DashboardWidget,
+  AVAILABLE_WIDGETS,
+  PRESET_LAYOUTS,
+  WidgetSize,
+} from '@/lib/dashboard/layout';
 import {
   Dialog,
   DialogContent,
@@ -31,6 +36,13 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -148,10 +160,18 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
     }
   };
 
+  const handleApplyPreset = (presetKey: string) => {
+    const preset = PRESET_LAYOUTS[presetKey];
+    if (preset) {
+      setLayout(preset.widgets);
+      toast.success(`Applied ${preset.label} preset`);
+    }
+  };
+
   const handleToggleWidget = (widgetId: string, checked: boolean) => {
     setLayout((prev) => {
       const existingIndex = prev.findIndex((w) => w.widgetId === widgetId);
-      
+
       if (existingIndex >= 0) {
         // Toggle visibility of existing widget
         const newLayout = [...prev];
@@ -164,7 +184,7 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
         // Add new widget
         const config = AVAILABLE_WIDGETS[widgetId];
         if (!config) return prev;
-        
+
         return [
           ...prev,
           {
@@ -176,7 +196,7 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
           },
         ];
       }
-      
+
       return prev;
     });
   };
@@ -270,6 +290,22 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
         <div className="flex items-center gap-2">
           {editMode && (
             <>
+              {/* Preset Selector */}
+              <Select onValueChange={handleApplyPreset}>
+                <SelectTrigger className="w-[160px] h-8 text-sm border-[#D8D2C8]">
+                  <SelectValue placeholder="Quick presets..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(PRESET_LAYOUTS).map(([key, preset]) => (
+                    <SelectItem key={key} value={key}>
+                      <div className="flex flex-col items-start">
+                        <span className="font-medium">{preset.label}</span>
+                        <span className="text-xs text-muted-foreground">{preset.description}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Button
                 variant="outline"
                 size="sm"
@@ -292,7 +328,7 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
                 size="sm"
                 onClick={handleSave}
                 disabled={saving}
-                className="bg-[#4A5943] text-white hover:bg-[#3C4936]"
+                className="bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]"
               >
                 <Save className="h-4 w-4 mr-2" />
                 {saving ? 'Saving...' : 'Save Layout'}
@@ -306,7 +342,7 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
             className={
               editMode
                 ? 'border-[#D8D2C8] text-[#6B6760]'
-                : 'bg-[#4A5943] text-white hover:bg-[#3C4936]'
+                : 'bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]'
             }
           >
             <Settings2 className="h-4 w-4 mr-2" />
@@ -343,15 +379,16 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
           <ScrollArea className="h-[300px] pr-4">
             <div className="space-y-4">
               {Object.values(AVAILABLE_WIDGETS).map((widget) => {
-                const isVisible = layout.find(
-                  (w) => w.widgetId === widget.id && w.visible
-                );
+                const isVisible = layout.find((w) => w.widgetId === widget.id && w.visible);
                 return (
-                  <div key={widget.id} className="flex items-start space-x-3 p-2 rounded hover:bg-muted/50">
+                  <div
+                    key={widget.id}
+                    className="flex items-start space-x-3 p-2 rounded hover:bg-muted/50"
+                  >
                     <Checkbox
                       id={`widget-${widget.id}`}
                       checked={!!isVisible}
-                      onCheckedChange={(checked) => 
+                      onCheckedChange={(checked) =>
                         handleToggleWidget(widget.id, checked as boolean)
                       }
                     />
@@ -362,9 +399,7 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
                       >
                         {widget.name}
                       </Label>
-                      <p className="text-xs text-muted-foreground">
-                        {widget.description}
-                      </p>
+                      <p className="text-xs text-muted-foreground">{widget.description}</p>
                     </div>
                   </div>
                 );
@@ -430,7 +465,7 @@ function SortableItem({
       style={style}
       {...(editMode ? attributes : {})}
       {...(editMode ? listeners : {})}
-      className={editMode ? 'ring-2 ring-[#4A5943] ring-offset-2 rounded-lg' : ''}
+      className={editMode ? 'ring-2 ring-[#1C4D3A] ring-offset-2 rounded-lg' : ''}
     >
       {children}
     </div>

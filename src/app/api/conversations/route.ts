@@ -1,14 +1,26 @@
 /**
  * Conversations API
  *
- * List user's conversations with last message and unread count
+ * GET - List user's conversations with last message and unread count
+ * POST - Create a new conversation (after mutual interest)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
-import { conversations, messages, profiles, assignments } from '@/db/schema';
+import { conversations, messages, profiles, assignments, matches } from '@/db/schema';
 import { eq, or, and, sql, desc } from 'drizzle-orm';
+import { z } from 'zod';
+import { nanoid } from 'nanoid';
+import { log } from '@/lib/log';
+
+// Schema for creating a conversation
+const CreateConversationSchema = z.object({
+  matchId: z.string().uuid(),
+  assignmentId: z.string().uuid(),
+  participantOneId: z.string().uuid(), // Individual
+  participantTwoId: z.string().uuid(), // Org representative
+});
 
 export async function GET(request: NextRequest) {
   try {
@@ -36,7 +48,6 @@ export async function GET(request: NextRequest) {
         participantOneId: conversations.participantOneId,
         participantTwoId: conversations.participantTwoId,
         stage: conversations.stage,
-        status: conversations.status,
         lastMessageAt: conversations.lastMessageAt,
         createdAt: conversations.createdAt,
       })
@@ -106,7 +117,7 @@ export async function GET(request: NextRequest) {
 
         if (otherPartyProfile.length > 0) {
           const profile = otherPartyProfile[0];
-          if (conv.stage === 2) {
+          if (conv.stage === 'revealed') {
             // Stage 2: Identity revealed
             displayName = profile.displayName || 'Anonymous';
             displayAvatar = profile.avatarUrl;
@@ -129,7 +140,6 @@ export async function GET(request: NextRequest) {
             persona: otherPartyProfile[0]?.persona || 'individual',
           },
           stage: conv.stage,
-          status: conv.status,
           lastMessage: lastMessage[0] || null,
           unreadCount: unreadCount[0]?.count || 0,
           lastMessageAt: conv.lastMessageAt,
@@ -146,5 +156,141 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Get conversations error:', error);
     return NextResponse.json({ error: 'Failed to fetch conversations' }, { status: 500 });
+  }
+}
+
+/**
+ * POST /api/conversations
+ *
+ * Create a new conversation after mutual interest is confirmed.
+ * This is called from the interest API when both parties have expressed interest.
+ *
+ * Required fields:
+ * - matchId: The match that triggered the conversation
+ * - assignmentId: The assignment being discussed
+ * - participantOneId: First participant (typically the individual)
+ * - participantTwoId: Second participant (typically the org representative)
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Parse and validate request body
+    const body = await request.json();
+    const validation = CreateConversationSchema.safeParse(body);
+
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: validation.error.errors },
+        { status: 400 }
+      );
+    }
+
+    const { matchId, assignmentId, participantOneId, participantTwoId } = validation.data;
+
+    // Verify user is one of the participants
+    if (user.id !== participantOneId && user.id !== participantTwoId) {
+      return NextResponse.json(
+        { error: 'You must be a participant to create a conversation' },
+        { status: 403 }
+      );
+    }
+
+    // Check if conversation already exists for this match
+    const existingConversation = await db
+      .select()
+      .from(conversations)
+      .where(eq(conversations.matchId, matchId))
+      .limit(1);
+
+    if (existingConversation.length > 0) {
+      // Return existing conversation instead of creating duplicate
+      log.info('conversation.already_exists', {
+        matchId,
+        conversationId: existingConversation[0].id,
+      });
+      return NextResponse.json({
+        conversation: existingConversation[0],
+        created: false,
+      });
+    }
+
+    // Verify match exists
+    const match = await db.select().from(matches).where(eq(matches.id, matchId)).limit(1);
+
+    if (!match.length) {
+      return NextResponse.json({ error: 'Match not found' }, { status: 404 });
+    }
+
+    // Get participant profiles to generate masked handles
+    const [participantOne, participantTwo] = await Promise.all([
+      db
+        .select({ persona: profiles.persona })
+        .from(profiles)
+        .where(eq(profiles.id, participantOneId))
+        .limit(1),
+      db
+        .select({ persona: profiles.persona })
+        .from(profiles)
+        .where(eq(profiles.id, participantTwoId))
+        .limit(1),
+    ]);
+
+    // Generate masked handles based on persona type
+    // Format: "Candidate #ABC123" or "Organization Representative #XYZ789"
+    const maskedHandleOne =
+      participantOne[0]?.persona === 'individual'
+        ? `Candidate #${nanoid(6).toUpperCase()}`
+        : `Organization #${nanoid(6).toUpperCase()}`;
+
+    const maskedHandleTwo =
+      participantTwo[0]?.persona === 'individual'
+        ? `Candidate #${nanoid(6).toUpperCase()}`
+        : `Organization #${nanoid(6).toUpperCase()}`;
+
+    // Create the conversation
+    const [newConversation] = await db
+      .insert(conversations)
+      .values({
+        matchId,
+        assignmentId,
+        participantOneId,
+        participantTwoId,
+        stage: 'masked', // Start with masked identities per PRD
+        maskedHandleOne,
+        maskedHandleTwo,
+        lastMessageAt: new Date(),
+      })
+      .returning();
+
+    log.info('conversation.created', {
+      conversationId: newConversation.id,
+      matchId,
+      assignmentId,
+      participantOneId,
+      participantTwoId,
+    });
+
+    return NextResponse.json(
+      {
+        conversation: newConversation,
+        created: true,
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error('Create conversation error:', error);
+    log.error('conversation.create.failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    return NextResponse.json({ error: 'Failed to create conversation' }, { status: 500 });
   }
 }

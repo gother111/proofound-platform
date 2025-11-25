@@ -32,15 +32,15 @@ import { cn } from '@/lib/utils';
  */
 
 const cardVariants = cva(
-  'rounded-lg border bg-white text-[#2D3330] transition-all duration-200 dark:bg-[#252834] dark:text-[#E8DCC4]',
+  'rounded-lg border bg-white text-proofound-charcoal transition-all duration-200 dark:bg-[#252834] dark:text-[#E8DCC4]',
   {
     variants: {
       variant: {
-        default: 'border-[#E8E6DD] shadow-sm dark:border-[#D4C4A8]/10',
-        flat: 'border-[#E8E6DD] dark:border-[#D4C4A8]/10',
-        elevated: 'border-[#E8E6DD] shadow-md dark:border-[#D4C4A8]/10',
+        default: 'border-proofound-stone shadow-sm dark:border-[#D4C4A8]/10',
+        flat: 'border-proofound-stone dark:border-[#D4C4A8]/10',
+        elevated: 'border-proofound-stone shadow-md dark:border-[#D4C4A8]/10',
         interactive:
-          'border-[#E8E6DD] shadow-sm hover:shadow-md hover:-translate-y-0.5 cursor-pointer dark:border-[#D4C4A8]/10',
+          'border-proofound-stone shadow-sm hover:shadow-md hover:-translate-y-0.5 cursor-pointer dark:border-[#D4C4A8]/10',
       },
     },
     defaultVariants: {
@@ -83,10 +83,7 @@ const CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HT
   ({ className, children, ...props }, ref) => (
     <h3
       ref={ref}
-      className={cn(
-        "text-2xl font-semibold leading-none tracking-tight font-['Crimson_Pro']",
-        className
-      )}
+      className={cn('text-2xl font-semibold leading-none tracking-tight font-display', className)}
       {...props}
     >
       {children}
@@ -99,7 +96,11 @@ const CardDescription = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => (
-  <p ref={ref} className={cn('text-sm text-[#6B6760] dark:text-[#A8A299]', className)} {...props} />
+  <p
+    ref={ref}
+    className={cn('text-sm text-muted-foreground dark:text-[#A8A299]', className)}
+    {...props}
+  />
 ));
 CardDescription.displayName = 'CardDescription';
 

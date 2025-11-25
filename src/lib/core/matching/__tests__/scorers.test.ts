@@ -4,11 +4,19 @@ import {
   scoreValues,
   scoreCauses,
   scoreSkills,
+  scoreSkillsEnhanced,
   scoreExperience,
   scoreVerifications,
   scoreLocation,
   scoreCompensation,
   scoreLanguage,
+  scorePAC,
+  scoreRecency,
+  scoreSkillsRecency,
+  scoreEvidence,
+  scoreSkillsEvidence,
+  scoreWorkAuthorization,
+  cosineSimilarity,
   composeWeighted,
   tieBreaker,
   compareMatches,
@@ -310,6 +318,296 @@ describe('Scorers', () => {
       const result2 = compareMatches(a, b);
 
       expect(result1).toBe(result2);
+    });
+  });
+
+  // ============================================================================
+  // NEW PRD-ALIGNED SCORING FUNCTIONS (Phase 1-2)
+  // ============================================================================
+
+  describe('scorePAC', () => {
+    it('should calculate combined PAC score without mission/vision', () => {
+      const result = scorePAC(
+        ['innovation', 'sustainability'],
+        ['climate-action'],
+        ['innovation', 'collaboration'],
+        ['climate-action', 'education']
+      );
+
+      // Values: intersection = 1 (innovation), union = 3 → 1/3
+      // Causes: intersection = 1, union = 2 → 0.5
+      // Without mission/vision: 0.5 * (1/3) + 0.5 * 0.5 = 0.416...
+      expect(result.valuesScore).toBeCloseTo(1 / 3, 2);
+      expect(result.causesScore).toBeCloseTo(0.5, 2);
+      expect(result.missionVisionScore).toBe(0);
+      expect(result.total).toBeCloseTo(0.5 * (1 / 3) + 0.5 * 0.5, 2);
+    });
+
+    it('should include mission/vision score when provided', () => {
+      const result = scorePAC(
+        ['innovation'],
+        ['climate-action'],
+        ['innovation'],
+        ['climate-action'],
+        0.8 // missionVisionScore
+      );
+
+      // With mission/vision: 0.4 * 1 + 0.3 * 1 + 0.3 * 0.8 = 0.94
+      expect(result.missionVisionScore).toBe(0.8);
+      expect(result.total).toBeCloseTo(0.4 * 1 + 0.3 * 1 + 0.3 * 0.8, 2);
+    });
+
+    it('should return perfect score for identical values/causes', () => {
+      const result = scorePAC(['a', 'b'], ['x', 'y'], ['a', 'b'], ['x', 'y']);
+
+      expect(result.valuesScore).toBe(1);
+      expect(result.causesScore).toBe(1);
+      expect(result.total).toBe(1);
+    });
+  });
+
+  describe('scoreRecency', () => {
+    it('should return 1 for null/undefined (currently using)', () => {
+      expect(scoreRecency(null)).toBe(1);
+      expect(scoreRecency(undefined)).toBe(1);
+    });
+
+    it('should return 1 for skills used within last month', () => {
+      const recent = new Date();
+      recent.setDate(recent.getDate() - 15); // 15 days ago
+
+      expect(scoreRecency(recent)).toBe(1);
+    });
+
+    it('should decay over time', () => {
+      const now = new Date();
+      const sixMonthsAgo = new Date(now.getTime() - 6 * 30 * 24 * 60 * 60 * 1000);
+      const oneYearAgo = new Date(now.getTime() - 12 * 30 * 24 * 60 * 60 * 1000);
+      const twoYearsAgo = new Date(now.getTime() - 24 * 30 * 24 * 60 * 60 * 1000);
+
+      const score6m = scoreRecency(sixMonthsAgo);
+      const score1y = scoreRecency(oneYearAgo);
+      const score2y = scoreRecency(twoYearsAgo);
+
+      // Verify decay ordering
+      expect(score6m).toBeGreaterThan(score1y);
+      expect(score1y).toBeGreaterThan(score2y);
+
+      // Verify reasonable values (exponential decay with α = 0.02)
+      expect(score6m).toBeGreaterThan(0.8);
+      expect(score1y).toBeGreaterThan(0.7);
+      expect(score2y).toBeGreaterThan(0.5);
+    });
+
+    it('should handle string dates', () => {
+      const recent = new Date();
+      recent.setDate(recent.getDate() - 15);
+
+      const score = scoreRecency(recent.toISOString());
+      expect(score).toBe(1);
+    });
+  });
+
+  describe('scoreSkillsRecency', () => {
+    it('should return 1 for empty skills', () => {
+      expect(scoreSkillsRecency([])).toBe(1);
+    });
+
+    it('should weight by skill level', () => {
+      const now = new Date();
+      const oldDate = new Date(now.getTime() - 24 * 30 * 24 * 60 * 60 * 1000);
+
+      const skills = [
+        { id: 'a', level: 5, lastUsedAt: now }, // High level, recent
+        { id: 'b', level: 1, lastUsedAt: oldDate }, // Low level, old
+      ];
+
+      const score = scoreSkillsRecency(skills);
+
+      // High-level recent skill should dominate
+      expect(score).toBeGreaterThan(0.9);
+    });
+  });
+
+  describe('scoreEvidence', () => {
+    it('should return 0.5 for null/undefined (baseline)', () => {
+      expect(scoreEvidence(null as any)).toBe(0.5);
+      expect(scoreEvidence(undefined)).toBe(0.5);
+    });
+
+    it('should return 0.5 for 0 evidence', () => {
+      expect(scoreEvidence(0)).toBe(0.5);
+    });
+
+    it('should return 1 for perfect evidence', () => {
+      expect(scoreEvidence(1)).toBe(1);
+    });
+
+    it('should scale linearly between 0.5 and 1', () => {
+      expect(scoreEvidence(0.5)).toBe(0.75);
+    });
+
+    it('should clamp out-of-range values', () => {
+      expect(scoreEvidence(-0.5)).toBe(0.5);
+      expect(scoreEvidence(1.5)).toBe(1);
+    });
+  });
+
+  describe('scoreSkillsEvidence', () => {
+    it('should return 0.5 for empty skills', () => {
+      expect(scoreSkillsEvidence([])).toBe(0.5);
+    });
+
+    it('should weight by skill level', () => {
+      const skills = [
+        { id: 'a', level: 5, evidenceStrength: 1.0 }, // High level, strong evidence
+        { id: 'b', level: 1, evidenceStrength: 0.0 }, // Low level, no evidence
+      ];
+
+      const score = scoreSkillsEvidence(skills);
+
+      // High-level skill with strong evidence should dominate
+      expect(score).toBeGreaterThan(0.9);
+    });
+  });
+
+  describe('scoreWorkAuthorization', () => {
+    it('should return 0 when needs sponsorship but org cannot', () => {
+      const score = scoreWorkAuthorization({
+        candidateNeedsSponsorship: true,
+        candidateWishesSponsorship: false,
+        orgCanSponsor: false,
+      });
+
+      expect(score).toBe(0);
+    });
+
+    it('should return 1 when needs sponsorship and org can', () => {
+      const score = scoreWorkAuthorization({
+        candidateNeedsSponsorship: true,
+        candidateWishesSponsorship: false,
+        orgCanSponsor: true,
+      });
+
+      expect(score).toBe(1);
+    });
+
+    it('should return 0.85 when wishes sponsorship and org can', () => {
+      const score = scoreWorkAuthorization({
+        candidateNeedsSponsorship: false,
+        candidateWishesSponsorship: true,
+        orgCanSponsor: true,
+      });
+
+      expect(score).toBe(0.85);
+    });
+
+    it('should return 0.5 when wishes sponsorship but org cannot', () => {
+      const score = scoreWorkAuthorization({
+        candidateNeedsSponsorship: false,
+        candidateWishesSponsorship: true,
+        orgCanSponsor: false,
+      });
+
+      expect(score).toBe(0.5);
+    });
+
+    it('should return 1 when no sponsorship needed', () => {
+      const score = scoreWorkAuthorization({
+        candidateNeedsSponsorship: false,
+        candidateWishesSponsorship: false,
+        orgCanSponsor: false,
+      });
+
+      expect(score).toBe(1);
+    });
+  });
+
+  describe('cosineSimilarity', () => {
+    it('should return 0.5 for orthogonal vectors (normalized)', () => {
+      // Orthogonal vectors have cosine similarity of 0
+      // Normalized to [0,1] range: (0 + 1) / 2 = 0.5
+      const a = [1, 0, 0];
+      const b = [0, 1, 0];
+
+      expect(cosineSimilarity(a, b)).toBeCloseTo(0.5);
+    });
+
+    it('should return 1 for identical vectors', () => {
+      const v = [1, 2, 3];
+
+      expect(cosineSimilarity(v, v)).toBeCloseTo(1);
+    });
+
+    it('should return 0 for opposite vectors (normalized)', () => {
+      // Opposite vectors have cosine similarity of -1
+      // Normalized to [0,1] range: (-1 + 1) / 2 = 0
+      const a = [1, 0, 0];
+      const b = [-1, 0, 0];
+
+      expect(cosineSimilarity(a, b)).toBeCloseTo(0);
+    });
+
+    it('should return 0 for empty vectors', () => {
+      expect(cosineSimilarity([], [])).toBe(0);
+    });
+
+    it('should return 0 for mismatched lengths', () => {
+      expect(cosineSimilarity([1, 2], [1, 2, 3])).toBe(0);
+    });
+  });
+
+  describe('scoreSkillsEnhanced', () => {
+    it('should hard fail like basic scoreSkills', () => {
+      const required = [{ id: 'typescript', level: 4 }];
+      const niceToHave: typeof required = [];
+      const have = {};
+
+      const result = scoreSkillsEnhanced(required, niceToHave, have);
+
+      expect(result.hardFail).toBe(true);
+      expect(result.score).toBe(0);
+      expect(result.weightedScore).toBe(0);
+    });
+
+    it('should include recency and evidence scores', () => {
+      const now = new Date();
+      const required = [{ id: 'typescript', level: 4 }];
+      const niceToHave: typeof required = [];
+      const have = {
+        typescript: {
+          id: 'typescript',
+          level: 5,
+          months: 24,
+          evidenceStrength: 0.8,
+          lastUsedAt: now,
+        },
+      };
+
+      const result = scoreSkillsEnhanced(required, niceToHave, have);
+
+      expect(result.hardFail).toBe(false);
+      expect(result.recencyScore).toBeGreaterThan(0);
+      expect(result.evidenceScore).toBeGreaterThan(0.5);
+      expect(result.weightedScore).toBeGreaterThan(0);
+    });
+
+    it('should weight skills by evidence/recency/impact', () => {
+      const required = [{ id: 'typescript', level: 4 }];
+      const have = {
+        typescript: {
+          id: 'typescript',
+          level: 4,
+          evidenceStrength: 1.0,
+          recencyMultiplier: 1.0,
+          impactScore: 1.0,
+        },
+      };
+
+      const result = scoreSkillsEnhanced(required, [], have);
+
+      // With all factors at 1.0, weighted score should be high
+      expect(result.weightedScore).toBeGreaterThan(0.9);
     });
   });
 });

@@ -13,9 +13,9 @@ interface CredibilityPieProps {
 }
 
 const COLORS = {
-  verified: '#10b981', // Green
-  proofOnly: '#f59e0b', // Yellow/Amber
-  claimOnly: '#ef4444', // Red
+  verified: '#1C4D3A', // Forest Green
+  proofOnly: '#D4A574', // Ochre
+  claimOnly: '#C76B4A', // Terracotta
 };
 
 export function CredibilityPie({ data, onSegmentClick }: CredibilityPieProps) {
@@ -23,17 +23,19 @@ export function CredibilityPie({ data, onSegmentClick }: CredibilityPieProps) {
     { name: 'Verified', value: data.verified, status: 'verified' as const, icon: CheckCircle2 },
     { name: 'Proof Only', value: data.proofOnly, status: 'proofOnly' as const, icon: FileCheck },
     { name: 'Claim Only', value: data.claimOnly, status: 'claimOnly' as const, icon: AlertCircle },
-  ].filter(item => item.value > 0);
+  ].filter((item) => item.value > 0);
 
   const total = data.verified + data.proofOnly + data.claimOnly;
-  
+
   // Empty state
   if (total === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-[300px] text-center p-6">
         <AlertCircle className="w-12 h-12 text-muted-foreground mb-3" />
         <p className="text-sm text-muted-foreground">No skills to display</p>
-        <p className="text-xs text-muted-foreground mt-1">Add your first skill to see credibility stats</p>
+        <p className="text-xs text-muted-foreground mt-1">
+          Add your first skill to see credibility stats
+        </p>
       </div>
     );
   }
@@ -45,8 +47,8 @@ export function CredibilityPie({ data, onSegmentClick }: CredibilityPieProps) {
     const percentage = ((data.value / total) * 100).toFixed(1);
 
     return (
-      <div className="bg-background border rounded-lg shadow-lg p-3">
-        <p className="font-medium">{data.name}</p>
+      <div className="bg-white border border-proofound-stone rounded-xl shadow-lg p-4">
+        <p className="font-display font-semibold text-proofound-charcoal">{data.name}</p>
         <p className="text-sm text-muted-foreground">
           {data.value} skills ({percentage}%)
         </p>
@@ -56,9 +58,11 @@ export function CredibilityPie({ data, onSegmentClick }: CredibilityPieProps) {
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">Credibility Status</h3>
-        <p className="text-sm text-muted-foreground">{total} total skills</p>
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-lg font-semibold font-display text-proofound-charcoal">
+          Credibility Status
+        </h3>
+        <p className="text-sm text-muted-foreground font-sans">{total} total skills</p>
       </div>
 
       <ResponsiveContainer width="100%" height={300}>
@@ -76,33 +80,27 @@ export function CredibilityPie({ data, onSegmentClick }: CredibilityPieProps) {
             style={{ cursor: 'pointer' }}
           >
             {chartData.map((entry, index) => (
-              <Cell 
-                key={`cell-${index}`} 
-                fill={COLORS[entry.status]} 
-              />
+              <Cell key={`cell-${index}`} fill={COLORS[entry.status]} stroke="transparent" />
             ))}
           </Pie>
           <Tooltip content={<CustomTooltip />} />
         </PieChart>
       </ResponsiveContainer>
 
-      <div className="grid grid-cols-3 gap-2 mt-4">
+      <div className="grid grid-cols-3 gap-3 mt-6">
         {chartData.map((item) => {
           const Icon = item.icon;
           const percentage = ((item.value / total) * 100).toFixed(0);
-          
+
           return (
             <button
               key={item.status}
               onClick={() => onSegmentClick(item.status)}
-              className="flex flex-col items-center p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+              className="flex flex-col items-center p-3 rounded-xl border border-transparent hover:border-proofound-stone hover:bg-proofound-parchment transition-all duration-300"
             >
-              <Icon 
-                className="w-5 h-5 mb-1" 
-                style={{ color: COLORS[item.status] }}
-              />
-              <p className="text-xs font-medium">{item.name}</p>
-              <p className="text-lg font-bold">{item.value}</p>
+              <Icon className="w-5 h-5 mb-2" style={{ color: COLORS[item.status] }} />
+              <p className="text-xs font-medium text-proofound-charcoal mb-1">{item.name}</p>
+              <p className="text-xl font-bold text-proofound-charcoal font-display">{item.value}</p>
               <p className="text-xs text-muted-foreground">{percentage}%</p>
             </button>
           );
@@ -111,5 +109,3 @@ export function CredibilityPie({ data, onSegmentClick }: CredibilityPieProps) {
     </div>
   );
 }
-
-

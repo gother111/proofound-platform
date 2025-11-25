@@ -120,7 +120,7 @@ export function SnoozedMatchesList() {
         <Button
           variant="outline"
           onClick={() => (window.location.href = '/app/i/matching')}
-          className="border-[#4A5943] text-[#4A5943]"
+          className="border-[#1C4D3A] text-[#1C4D3A]"
         >
           View All Matches
         </Button>
@@ -148,7 +148,7 @@ export function SnoozedMatchesList() {
                 ) : (
                   <div
                     className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-semibold"
-                    style={{ backgroundColor: '#4A5943' }}
+                    style={{ backgroundColor: '#1C4D3A' }}
                   >
                     {match.organization.name.charAt(0)}
                   </div>
@@ -191,7 +191,7 @@ export function SnoozedMatchesList() {
                 size="sm"
                 onClick={() => handleUnsnooze(match.id)}
                 disabled={unsnoozing === match.id}
-                className="bg-[#4A5943] text-white hover:bg-[#3C4936]"
+                className="bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]"
               >
                 <Bell className="w-3.5 h-3.5 mr-1.5" />
                 {unsnoozing === match.id ? 'Unsnoozing...' : 'Unsnooze'}

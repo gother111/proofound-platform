@@ -29,6 +29,7 @@ export function EditProfileModal({ open, onOpenChange, basicInfo, onSave }: Edit
   // Reset form when modal opens
   useEffect(() => {
     if (open) {
+      console.log('DEBUG: EditProfileModal opened', basicInfo);
       setName(basicInfo.name);
       setTagline(basicInfo.tagline || '');
       setLocation(basicInfo.location || '');

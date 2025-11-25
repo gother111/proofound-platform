@@ -1,7 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Plus, Trash2, Save, FileText, CheckCircle2, AlertTriangle } from 'lucide-react';
+import {
+  X,
+  Plus,
+  Trash2,
+  Save,
+  FileText,
+  CheckCircle2,
+  AlertTriangle,
+  Loader2,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,6 +26,7 @@ import {
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
 
 const LEVEL_LABELS = [
   { value: 1, label: 'Novice', description: 'Learning the basics' },
@@ -51,13 +61,14 @@ export function EditSkillWindow({
   onSkillUpdated,
   onSkillDeleted,
 }: EditSkillWindowProps) {
+  const { toast } = useToast();
   const [level, setLevel] = useState(2);
   const [lastUsedDate, setLastUsedDate] = useState('');
   const [relevance, setRelevance] = useState<'current' | 'emerging' | 'obsolete'>('current');
   const [saving, setSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  
+
   // Proofs management
   const [proofs, setProofs] = useState<Proof[]>([]);
   const [loadingProofs, setLoadingProofs] = useState(false);
@@ -88,12 +99,10 @@ export function EditSkillWindow({
       if (skill && open) {
         setLevel(skill.level || 2);
         setLastUsedDate(
-          skill.last_used_at
-            ? new Date(skill.last_used_at).toISOString().split('T')[0]
-            : ''
+          skill.last_used_at ? new Date(skill.last_used_at).toISOString().split('T')[0] : ''
         );
         setRelevance(skill.relevance || 'current');
-        
+
         // Load proofs from API
         setLoadingProofs(true);
         try {
@@ -111,7 +120,9 @@ export function EditSkillWindow({
         // Load verification requests from API
         setLoadingVerifications(true);
         try {
-          const verifyResponse = await fetch(`/api/expertise/user-skills/${skill.id}/verification-request`);
+          const verifyResponse = await fetch(
+            `/api/expertise/user-skills/${skill.id}/verification-request`
+          );
           if (verifyResponse.ok) {
             const verifyData = await verifyResponse.json();
             setVerificationRequests(verifyData.requests || []);
@@ -123,7 +134,7 @@ export function EditSkillWindow({
         }
       }
     };
-    
+
     loadData();
   }, [skill, open]);
 
@@ -145,16 +156,28 @@ export function EditSkillWindow({
       });
 
       if (response.ok) {
+        toast({
+          title: '✅ Skill Updated',
+          description: `"${skillName}" has been updated successfully.`,
+        });
         onSkillUpdated();
         onOpenChange(false);
       } else {
         const error = await response.json();
         console.error('Error updating skill:', error);
-        alert(error.error || 'Failed to update skill. Please try again.');
+        toast({
+          title: 'Error',
+          description: error.error || 'Failed to update skill. Please try again.',
+          variant: 'destructive',
+        });
       }
     } catch (error) {
       console.error('Error updating skill:', error);
-      alert('Failed to update skill. Please try again.');
+      toast({
+        title: 'Error',
+        description: 'Failed to update skill. Please try again.',
+        variant: 'destructive',
+      });
     } finally {
       setSaving(false);
     }
@@ -170,17 +193,29 @@ export function EditSkillWindow({
       });
 
       if (response.ok) {
+        toast({
+          title: '🗑️ Skill Removed',
+          description: `"${skillName}" has been removed from your Expertise Atlas.`,
+        });
         onSkillDeleted();
         onOpenChange(false);
         setShowDeleteConfirm(false);
       } else {
         const error = await response.json();
         console.error('Error deleting skill:', error);
-        alert(error.error || 'Failed to delete skill. Please try again.');
+        toast({
+          title: 'Error',
+          description: error.error || 'Failed to delete skill. Please try again.',
+          variant: 'destructive',
+        });
       }
     } catch (error) {
       console.error('Error deleting skill:', error);
-      alert('Failed to delete skill. Please try again.');
+      toast({
+        title: 'Error',
+        description: 'Failed to delete skill. Please try again.',
+        variant: 'destructive',
+      });
     } finally {
       setDeleting(false);
     }
@@ -188,7 +223,7 @@ export function EditSkillWindow({
 
   const handleAddProof = async () => {
     if (!skill || !newProof.title) return;
-    
+
     setAddingProof(true);
     try {
       const response = await fetch(`/api/expertise/user-skills/${skill.id}/proofs`, {
@@ -196,10 +231,14 @@ export function EditSkillWindow({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newProof),
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setProofs([...proofs, data.proof]);
+        toast({
+          title: '📎 Proof Added',
+          description: `"${newProof.title}" has been attached to this skill.`,
+        });
         setNewProof({
           proofType: 'project',
           title: '',
@@ -211,7 +250,11 @@ export function EditSkillWindow({
       } else {
         const error = await response.json();
         console.error('Error adding proof:', error);
-        alert(error.error || 'Failed to add proof. Please try again.');
+        toast({
+          title: 'Error',
+          description: error.error || 'Failed to add proof. Please try again.',
+          variant: 'destructive',
+        });
       }
     } catch (error) {
       console.error('Error adding proof:', error);
@@ -223,18 +266,26 @@ export function EditSkillWindow({
 
   const handleDeleteProof = async (proofId: string) => {
     if (!skill) return;
-    
+
     try {
       const response = await fetch(`/api/expertise/user-skills/${skill.id}/proofs/${proofId}`, {
         method: 'DELETE',
       });
-      
+
       if (response.ok) {
         setProofs(proofs.filter((p) => p.id !== proofId));
+        toast({
+          title: 'Proof Removed',
+          description: 'The proof has been removed from this skill.',
+        });
       } else {
         const error = await response.json();
         console.error('Error deleting proof:', error);
-        alert(error.error || 'Failed to delete proof. Please try again.');
+        toast({
+          title: 'Error',
+          description: error.error || 'Failed to delete proof. Please try again.',
+          variant: 'destructive',
+        });
       }
     } catch (error) {
       console.error('Error deleting proof:', error);
@@ -244,7 +295,7 @@ export function EditSkillWindow({
 
   const handleRequestVerification = async () => {
     if (!skill || !newVerificationRequest.verifierEmail) return;
-    
+
     setRequestingVerification(true);
     try {
       const response = await fetch(`/api/expertise/user-skills/${skill.id}/verification-request`, {
@@ -252,10 +303,14 @@ export function EditSkillWindow({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newVerificationRequest),
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setVerificationRequests([data.request, ...verificationRequests]);
+        toast({
+          title: '✉️ Verification Request Sent',
+          description: `An email has been sent to ${newVerificationRequest.verifierEmail}.`,
+        });
         setNewVerificationRequest({
           verifierEmail: '',
           verifierSource: 'peer',
@@ -265,7 +320,11 @@ export function EditSkillWindow({
       } else {
         const error = await response.json();
         console.error('Error requesting verification:', error);
-        alert(error.error || 'Failed to request verification. Please try again.');
+        toast({
+          title: 'Error',
+          description: error.error || 'Failed to request verification. Please try again.',
+          variant: 'destructive',
+        });
       }
     } catch (error) {
       console.error('Error requesting verification:', error);
@@ -277,16 +336,15 @@ export function EditSkillWindow({
 
   if (!skill) return null;
 
-  const skillName = skill.taxonomy?.name_i18n?.en || skill.custom_skill_name || 'Unknown Skill';
+  const skillName =
+    skill.skill_name || skill.taxonomy?.name_i18n?.en || skill.custom_skill_name || 'Unknown Skill';
 
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-semibold text-[#2D3330]">
-              Edit Skill
-            </DialogTitle>
+            <DialogTitle className="text-2xl font-semibold text-[#2D3330]">Edit Skill</DialogTitle>
             <DialogDescription className="text-[#6B6760]">
               Update your skill details, add proofs, and request verification.
             </DialogDescription>
@@ -301,11 +359,7 @@ export function EditSkillWindow({
                 {skill.taxonomy?.tags && skill.taxonomy.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-2">
                     {skill.taxonomy.tags.map((tag: string) => (
-                      <Badge
-                        key={tag}
-                        variant="outline"
-                        className="text-xs bg-white"
-                      >
+                      <Badge key={tag} variant="outline" className="text-xs bg-white">
                         {tag}
                       </Badge>
                     ))}
@@ -316,9 +370,7 @@ export function EditSkillWindow({
 
             {/* Proficiency Level */}
             <div>
-              <Label className="text-[#2D3330] mb-3 block font-medium">
-                Proficiency Level
-              </Label>
+              <Label className="text-[#2D3330] mb-3 block font-medium">Proficiency Level</Label>
               <RadioGroup
                 value={level.toString()}
                 onValueChange={(val: string) => setLevel(parseInt(val))}
@@ -350,49 +402,47 @@ export function EditSkillWindow({
                 onChange={(e) => setLastUsedDate(e.target.value)}
                 className="mt-2"
               />
-              <p className="text-xs text-[#6B6760] mt-1">
-                When did you last use this skill?
-              </p>
+              <p className="text-xs text-[#6B6760] mt-1">When did you last use this skill?</p>
             </div>
 
             {/* Relevance */}
             <div>
               <Label className="text-[#2D3330] mb-3 block font-medium">Relevance</Label>
-              <RadioGroup
-                value={relevance}
-                onValueChange={(val: any) => setRelevance(val)}
-              >
+              <RadioGroup value={relevance} onValueChange={(val: any) => setRelevance(val)}>
                 <div className="flex items-center space-x-3 mb-2">
                   <RadioGroupItem value="current" id="edit-relevance-current" />
                   <Label htmlFor="edit-relevance-current" className="cursor-pointer">
-                    <Badge variant="outline" className="bg-[#EEF1EA] text-[#4A5943] border-[#7A9278]">
+                    <Badge
+                      variant="outline"
+                      className="bg-[#EEF1EA] text-[#1C4D3A] border-[#7A9278]"
+                    >
                       Current
                     </Badge>
-                    <span className="ml-2 text-sm text-[#6B6760]">
-                      Widely used today
-                    </span>
+                    <span className="ml-2 text-sm text-[#6B6760]">Widely used today</span>
                   </Label>
                 </div>
                 <div className="flex items-center space-x-3 mb-2">
                   <RadioGroupItem value="emerging" id="edit-relevance-emerging" />
                   <Label htmlFor="edit-relevance-emerging" className="cursor-pointer">
-                    <Badge variant="outline" className="bg-[#E8F3F8] text-[#3E5C73] border-[#6B9AB8]">
+                    <Badge
+                      variant="outline"
+                      className="bg-[#E8F3F8] text-[#3E5C73] border-[#6B9AB8]"
+                    >
                       Emerging
                     </Badge>
-                    <span className="ml-2 text-sm text-[#6B6760]">
-                      Growing in demand
-                    </span>
+                    <span className="ml-2 text-sm text-[#6B6760]">Growing in demand</span>
                   </Label>
                 </div>
                 <div className="flex items-center space-x-3">
                   <RadioGroupItem value="obsolete" id="edit-relevance-obsolete" />
                   <Label htmlFor="edit-relevance-obsolete" className="cursor-pointer">
-                    <Badge variant="outline" className="bg-[#FFF0F0] text-[#8B4A36] border-[#C76B4A]">
+                    <Badge
+                      variant="outline"
+                      className="bg-[#FFF0F0] text-[#8B4A36] border-[#C76B4A]"
+                    >
                       Obsolete
                     </Badge>
-                    <span className="ml-2 text-sm text-[#6B6760]">
-                      Declining use
-                    </span>
+                    <span className="ml-2 text-sm text-[#6B6760]">Declining use</span>
                   </Label>
                 </div>
               </RadioGroup>
@@ -405,15 +455,13 @@ export function EditSkillWindow({
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <h3 className="font-medium text-[#2D3330]">Proofs</h3>
-                  <p className="text-sm text-[#6B6760]">
-                    Add evidence to strengthen credibility
-                  </p>
+                  <p className="text-sm text-[#6B6760]">Add evidence to strengthen credibility</p>
                 </div>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setShowAddProof(!showAddProof)}
-                  className="border-[#4A5943] text-[#4A5943] hover:bg-[#EEF1EA]"
+                  className="border-[#1C4D3A] text-[#1C4D3A] hover:bg-[#EEF1EA]"
                 >
                   <Plus className="h-4 w-4 mr-1" />
                   Add Proof
@@ -455,9 +503,7 @@ export function EditSkillWindow({
                         type="text"
                         placeholder="e.g., React App for Client X"
                         value={newProof.title}
-                        onChange={(e) =>
-                          setNewProof({ ...newProof, title: e.target.value })
-                        }
+                        onChange={(e) => setNewProof({ ...newProof, title: e.target.value })}
                         className="mt-1"
                       />
                     </div>
@@ -470,9 +516,7 @@ export function EditSkillWindow({
                         type="url"
                         placeholder="https://..."
                         value={newProof.url}
-                        onChange={(e) =>
-                          setNewProof({ ...newProof, url: e.target.value })
-                        }
+                        onChange={(e) => setNewProof({ ...newProof, url: e.target.value })}
                         className="mt-1"
                       />
                     </div>
@@ -484,9 +528,7 @@ export function EditSkillWindow({
                         id="proof-date"
                         type="date"
                         value={newProof.issuedDate}
-                        onChange={(e) =>
-                          setNewProof({ ...newProof, issuedDate: e.target.value })
-                        }
+                        onChange={(e) => setNewProof({ ...newProof, issuedDate: e.target.value })}
                         className="mt-1"
                       />
                     </div>
@@ -509,14 +551,18 @@ export function EditSkillWindow({
                       <Button
                         onClick={handleAddProof}
                         disabled={!newProof.title || addingProof}
-                        className="bg-[#4A5943] text-white hover:bg-[#3C4936]"
+                        className="bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]"
                       >
-                        {addingProof ? 'Adding...' : 'Add Proof'}
+                        {addingProof ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Adding...
+                          </>
+                        ) : (
+                          'Add Proof'
+                        )}
                       </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => setShowAddProof(false)}
-                      >
+                      <Button variant="outline" onClick={() => setShowAddProof(false)}>
                         Cancel
                       </Button>
                     </div>
@@ -526,7 +572,8 @@ export function EditSkillWindow({
 
               {/* Proofs List */}
               {loadingProofs ? (
-                <div className="text-center py-6 border border-dashed border-[#E5E3DA] rounded-lg">
+                <div className="flex items-center justify-center gap-2 py-6 border border-dashed border-[#E5E3DA] rounded-lg">
+                  <Loader2 className="h-5 w-5 animate-spin text-[#6B6760]" />
                   <p className="text-sm text-[#6B6760]">Loading proofs...</p>
                 </div>
               ) : proofs.length === 0 ? (
@@ -553,7 +600,7 @@ export function EditSkillWindow({
                               href={proof.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-sm text-[#4A5943] hover:underline"
+                              className="text-sm text-[#1C4D3A] hover:underline"
                             >
                               {proof.url}
                             </a>
@@ -597,7 +644,7 @@ export function EditSkillWindow({
                   variant="outline"
                   size="sm"
                   onClick={() => setShowRequestVerification(!showRequestVerification)}
-                  className="border-[#4A5943] text-[#4A5943] hover:bg-[#EEF1EA]"
+                  className="border-[#1C4D3A] text-[#1C4D3A] hover:bg-[#EEF1EA]"
                 >
                   <CheckCircle2 className="h-4 w-4 mr-1" />
                   Request Verification
@@ -668,14 +715,18 @@ export function EditSkillWindow({
                       <Button
                         onClick={handleRequestVerification}
                         disabled={!newVerificationRequest.verifierEmail || requestingVerification}
-                        className="bg-[#4A5943] text-white hover:bg-[#3C4936]"
+                        className="bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]"
                       >
-                        {requestingVerification ? 'Sending...' : 'Send Request'}
+                        {requestingVerification ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Sending...
+                          </>
+                        ) : (
+                          'Send Request'
+                        )}
                       </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => setShowRequestVerification(false)}
-                      >
+                      <Button variant="outline" onClick={() => setShowRequestVerification(false)}>
                         Cancel
                       </Button>
                     </div>
@@ -685,7 +736,8 @@ export function EditSkillWindow({
 
               {/* Verification Requests List */}
               {loadingVerifications ? (
-                <div className="text-center py-6 border border-dashed border-[#E5E3DA] rounded-lg">
+                <div className="flex items-center justify-center gap-2 py-6 border border-dashed border-[#E5E3DA] rounded-lg">
+                  <Loader2 className="h-5 w-5 animate-spin text-[#6B6760]" />
                   <p className="text-sm text-[#6B6760]">Loading verification requests...</p>
                 </div>
               ) : verificationRequests.length === 0 ? (
@@ -707,8 +759,8 @@ export function EditSkillWindow({
                                 request.status === 'accepted'
                                   ? 'default'
                                   : request.status === 'declined'
-                                  ? 'destructive'
-                                  : 'outline'
+                                    ? 'destructive'
+                                    : 'outline'
                               }
                               className="text-xs capitalize"
                             >
@@ -759,9 +811,13 @@ export function EditSkillWindow({
                 <Button
                   onClick={handleSave}
                   disabled={saving}
-                  className="bg-[#4A5943] text-white hover:bg-[#3C4936]"
+                  className="bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]"
                 >
-                  <Save className="h-4 w-4 mr-2" />
+                  {saving ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
                   {saving ? 'Saving...' : 'Save Changes'}
                 </Button>
               </div>
@@ -778,8 +834,8 @@ export function EditSkillWindow({
               Delete Skill?
             </DialogTitle>
             <DialogDescription className="text-[#6B6760]">
-              This will permanently remove <strong>{skillName}</strong> and all its proofs
-              from your Expertise Atlas. This action cannot be undone.
+              This will permanently remove <strong>{skillName}</strong> and all its proofs from your
+              Expertise Atlas. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="flex gap-3 mt-6">
@@ -796,7 +852,14 @@ export function EditSkillWindow({
               disabled={deleting}
               className="flex-1 bg-[#C76B4A] text-white hover:bg-[#8B4A36]"
             >
-              {deleting ? 'Deleting...' : 'Delete'}
+              {deleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete'
+              )}
             </Button>
           </div>
         </DialogContent>
@@ -804,4 +867,3 @@ export function EditSkillWindow({
     </>
   );
 }
-

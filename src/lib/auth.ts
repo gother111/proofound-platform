@@ -394,10 +394,10 @@ export async function resolveUserHomePath(client?: SupabaseClient) {
     return '/login';
   }
 
-  // Check if user is a platform admin first
+  // Check if user is a platform admin first AND get persona in one query
   const { data: profile } = await supabase
     .from('profiles')
-    .select('platform_role')
+    .select('platform_role, persona')
     .eq('id', user.id)
     .single();
 
@@ -405,7 +405,8 @@ export async function resolveUserHomePath(client?: SupabaseClient) {
     return '/admin';
   }
 
-  const persona = await getPersona(user.id);
+  // Use persona from the same query instead of calling getPersona separately
+  const persona = (profile?.persona as ProfileRow['persona']) ?? 'unknown';
 
   if (persona === 'individual') {
     return '/app/i/home';

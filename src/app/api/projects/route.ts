@@ -1,108 +1,157 @@
 /**
  * Projects API Route
- * 
+ *
  * GET - List user's projects with optional filters
  * POST - Create new project
+ *
+ * Used by ProjectsCard dashboard widget
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { requireAuth } from '@/lib/auth';
+import { db } from '@/db';
+import { projects, organizations } from '@/db/schema';
+import { eq, and, desc, sql } from 'drizzle-orm';
+import { z } from 'zod';
+
+export const dynamic = 'force-dynamic';
+
+// Schema for creating a new project
+const CreateProjectSchema = z.object({
+  title: z.string().min(1).max(200),
+  description: z.string().max(2000).optional(),
+  projectType: z.enum(['work', 'volunteer', 'education', 'side_project', 'hobby']),
+  status: z.enum(['ongoing', 'concluded', 'paused', 'archived']).default('ongoing'),
+  startDate: z.string(), // ISO date string
+  endDate: z.string().optional().nullable(),
+  organizationName: z.string().max(200).optional().nullable(),
+  roleTitle: z.string().max(200).optional().nullable(),
+  impactSummary: z.string().max(1000).optional().nullable(),
+  tags: z.array(z.string()).optional(),
+  visibility: z.enum(['public', 'network', 'private']).default('public'),
+});
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const user = await requireAuth();
 
     // Get query parameters for filtering
     const searchParams = request.nextUrl.searchParams;
     const type = searchParams.get('type');
     const status = searchParams.get('status');
+    const limit = Math.min(parseInt(searchParams.get('limit') || '10', 10), 50);
 
-    let query = supabase
-      .from('projects')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('start_date', { ascending: false });
+    // Build where clause
+    let whereClause = eq(projects.userId, user.id);
 
-    if (type && type !== 'all') {
-      query = query.eq('type', type);
+    if (type && ['work', 'volunteer', 'education', 'side_project', 'hobby'].includes(type)) {
+      whereClause = and(eq(projects.userId, user.id), eq(projects.projectType, type as any))!;
     }
 
-    if (status && status !== 'all') {
-      query = query.eq('status', status);
+    if (status && ['ongoing', 'concluded', 'paused', 'archived'].includes(status)) {
+      whereClause = and(whereClause, eq(projects.status, status as any))!;
     }
 
-    const { data: projects, error } = await query;
+    // Fetch projects
+    const userProjects = await db
+      .select({
+        id: projects.id,
+        title: projects.title,
+        description: projects.description,
+        projectType: projects.projectType,
+        status: projects.status,
+        startDate: projects.startDate,
+        endDate: projects.endDate,
+        organizationName: projects.organizationName,
+        organizationId: projects.organizationId,
+        roleTitle: projects.roleTitle,
+        impactSummary: projects.impactSummary,
+        outcomes: projects.outcomes,
+        verified: projects.verified,
+        artifacts: projects.artifacts,
+        tags: projects.tags,
+        visibility: projects.visibility,
+        createdAt: projects.createdAt,
+        updatedAt: projects.updatedAt,
+      })
+      .from(projects)
+      .where(whereClause)
+      .orderBy(desc(projects.startDate))
+      .limit(limit);
 
-    if (error) {
-      console.error('Error fetching projects:', error);
-      return NextResponse.json({ error: 'Failed to fetch projects' }, { status: 500 });
-    }
+    // Calculate stats
+    const allProjects = await db
+      .select({
+        status: projects.status,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(projects)
+      .where(eq(projects.userId, user.id))
+      .groupBy(projects.status);
 
-    // TODO: Fetch skills count for each project from project_skills table
-    const projectsWithCounts = projects?.map(project => ({
-      ...project,
-      skillsCount: 0, // Placeholder
-      outcomes: [], // Placeholder
-    }));
+    const stats = {
+      total: allProjects.reduce((sum, p) => sum + (p.count || 0), 0),
+      ongoing: allProjects.find((p) => p.status === 'ongoing')?.count || 0,
+      concluded: allProjects.find((p) => p.status === 'concluded')?.count || 0,
+      paused: allProjects.find((p) => p.status === 'paused')?.count || 0,
+    };
 
-    return NextResponse.json({ projects: projectsWithCounts || [] });
+    return NextResponse.json({ projects: userProjects, stats });
   } catch (error) {
     console.error('Error in GET /api/projects:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Failed to fetch projects',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+    const user = await requireAuth();
     const body = await request.json();
-    const { title, type, status, startDate, endDate, description, organization, role } = body;
 
-    // Validation
-    if (!title || !type || !status || !startDate) {
+    // Validate input
+    const validatedData = CreateProjectSchema.parse(body);
+
+    // Insert project
+    const [newProject] = await db
+      .insert(projects)
+      .values({
+        userId: user.id,
+        title: validatedData.title,
+        description: validatedData.description,
+        projectType: validatedData.projectType,
+        status: validatedData.status,
+        startDate: validatedData.startDate,
+        endDate: validatedData.endDate,
+        organizationName: validatedData.organizationName,
+        roleTitle: validatedData.roleTitle,
+        impactSummary: validatedData.impactSummary,
+        tags: validatedData.tags || [],
+        visibility: validatedData.visibility,
+      })
+      .returning();
+
+    return NextResponse.json({ success: true, project: newProject }, { status: 201 });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Missing required fields: title, type, status, startDate' },
+        { error: 'Invalid project data', details: error.errors },
         { status: 400 }
       );
     }
 
-    // Insert project
-    const { data: project, error } = await supabase
-      .from('projects')
-      .insert({
-        user_id: user.id,
-        title,
-        type,
-        status,
-        start_date: startDate,
-        end_date: endDate || null,
-        description,
-        organization,
-        role,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error creating project:', error);
-      return NextResponse.json({ error: 'Failed to create project' }, { status: 500 });
-    }
-
-    return NextResponse.json({ project }, { status: 201 });
-  } catch (error) {
     console.error('Error in POST /api/projects:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Failed to create project',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }
-

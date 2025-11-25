@@ -1,6 +1,6 @@
 /**
  * Well-Being Check-ins API
- * 
+ *
  * GET /api/wellbeing/checkins - Get user's check-in history
  * Used by WellBeingDeltaChart to display trends
  */
@@ -11,8 +11,11 @@ import { createClient } from '@/lib/supabase/server';
 export async function GET(req: NextRequest) {
   try {
     const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -36,22 +39,24 @@ export async function GET(req: NextRequest) {
 
     if (error) {
       console.error('Database error:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch check-ins' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to fetch check-ins' }, { status: 500 });
     }
 
+    // Map snake_case to camelCase for frontend
+    const mappedCheckIns = (checkIns || []).map((c) => ({
+      id: c.id,
+      stressLevel: c.stress_level,
+      controlLevel: c.control_level,
+      milestone: c.milestone,
+      createdAt: c.created_at,
+    }));
+
     return NextResponse.json({
-      checkIns: checkIns || [],
+      checkIns: mappedCheckIns,
       count: checkIns?.length || 0,
     });
   } catch (error) {
     console.error('Check-ins API error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

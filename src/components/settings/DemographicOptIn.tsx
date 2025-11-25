@@ -21,12 +21,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Shield, Lock, Eye, Info, Scale } from 'lucide-react';
 import { toast } from 'sonner';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface DemographicData {
   optedIn: boolean;
@@ -62,33 +57,13 @@ const ETHNICITY_OPTIONS = [
   'Prefer not to say',
 ];
 
-const AGE_RANGE_OPTIONS = [
-  '18-24',
-  '25-34',
-  '35-44',
-  '45-54',
-  '55-64',
-  '65+',
-  'Prefer not to say',
-];
+const AGE_RANGE_OPTIONS = ['18-24', '25-34', '35-44', '45-54', '55-64', '65+', 'Prefer not to say'];
 
-const DISABILITY_OPTIONS = [
-  'Yes',
-  'No',
-  'Prefer not to say',
-];
+const DISABILITY_OPTIONS = ['Yes', 'No', 'Prefer not to say'];
 
-const VETERAN_OPTIONS = [
-  'Yes',
-  'No',
-  'Prefer not to say',
-];
+const VETERAN_OPTIONS = ['Yes', 'No', 'Prefer not to say'];
 
-export function DemographicOptIn({
-  userId,
-  initialData = {},
-  onSave,
-}: DemographicOptInProps) {
+export function DemographicOptIn({ userId, initialData = {}, onSave }: DemographicOptInProps) {
   const [optedIn, setOptedIn] = useState(initialData.optedIn || false);
   const [gender, setGender] = useState(initialData.gender || '');
   const [ethnicity, setEthnicity] = useState(initialData.ethnicity || '');
@@ -138,12 +113,12 @@ export function DemographicOptIn({
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="text-xl flex items-center gap-2">
-              <Scale className="h-5 w-5" style={{ color: '#4A5943' }} />
+              <Scale className="h-5 w-5" style={{ color: '#1C4D3A' }} />
               Fairness Analytics Opt-In
             </CardTitle>
             <CardDescription className="mt-2">
-              Help us promote fair hiring by providing optional demographic information.
-              All data is anonymized and used only for fairness metrics.
+              Help us promote fair hiring by providing optional demographic information. All data is
+              anonymized and used only for fairness metrics.
             </CardDescription>
           </div>
         </div>
@@ -155,9 +130,7 @@ export function DemographicOptIn({
           <div className="flex items-start gap-2">
             <Shield className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-xs font-medium text-blue-900 dark:text-blue-100">
-                100% Voluntary
-              </p>
+              <p className="text-xs font-medium text-blue-900 dark:text-blue-100">100% Voluntary</p>
               <p className="text-xs text-blue-800 dark:text-blue-200">
                 Completely optional, withdraw anytime
               </p>
@@ -166,9 +139,7 @@ export function DemographicOptIn({
           <div className="flex items-start gap-2">
             <Lock className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-xs font-medium text-blue-900 dark:text-blue-100">
-                Anonymized
-              </p>
+              <p className="text-xs font-medium text-blue-900 dark:text-blue-100">Anonymized</p>
               <p className="text-xs text-blue-800 dark:text-blue-200">
                 Never linked to your identity
               </p>
@@ -189,18 +160,14 @@ export function DemographicOptIn({
 
         {/* Opt-In Checkbox */}
         <div className="flex items-start gap-3 p-4 rounded-lg border border-[#E8E6DD]">
-          <Checkbox
-            id="opt-in"
-            checked={optedIn}
-            onCheckedChange={handleOptInChange}
-          />
+          <Checkbox id="opt-in" checked={optedIn} onCheckedChange={handleOptInChange} />
           <div className="flex-1">
             <Label htmlFor="opt-in" className="text-sm font-medium cursor-pointer text-[#2D3330]">
               Yes, I want to contribute to fairness analytics
             </Label>
             <p className="text-xs text-[#6B6760] mt-1">
-              By opting in, you help organizations identify and reduce bias in their hiring processes.
-              Your data is aggregated with others and cannot be traced back to you.
+              By opting in, you help organizations identify and reduce bias in their hiring
+              processes. Your data is aggregated with others and cannot be traced back to you.
             </p>
           </div>
         </div>
@@ -208,9 +175,7 @@ export function DemographicOptIn({
         {/* Demographic Fields (only shown if opted in) */}
         {optedIn && (
           <div className="space-y-4 p-4 bg-[#F7F6F1] rounded-lg">
-            <p className="text-sm font-medium text-[#2D3330]">
-              Demographic Information (Optional)
-            </p>
+            <p className="text-sm font-medium text-[#2D3330]">Demographic Information (Optional)</p>
             <p className="text-xs text-[#6B6760]">
               All fields are optional. You can skip any question.
             </p>
@@ -220,7 +185,13 @@ export function DemographicOptIn({
               <Label htmlFor="gender" className="text-sm text-[#2D3330]">
                 Gender
               </Label>
-              <Select value={gender} onValueChange={(val) => {setGender(val); setHasChanges(true);}}>
+              <Select
+                value={gender}
+                onValueChange={(val) => {
+                  setGender(val);
+                  setHasChanges(true);
+                }}
+              >
                 <SelectTrigger id="gender">
                   <SelectValue placeholder="Select or skip" />
                 </SelectTrigger>
@@ -239,7 +210,13 @@ export function DemographicOptIn({
               <Label htmlFor="ethnicity" className="text-sm text-[#2D3330]">
                 Ethnicity/Race
               </Label>
-              <Select value={ethnicity} onValueChange={(val) => {setEthnicity(val); setHasChanges(true);}}>
+              <Select
+                value={ethnicity}
+                onValueChange={(val) => {
+                  setEthnicity(val);
+                  setHasChanges(true);
+                }}
+              >
                 <SelectTrigger id="ethnicity">
                   <SelectValue placeholder="Select or skip" />
                 </SelectTrigger>
@@ -258,7 +235,13 @@ export function DemographicOptIn({
               <Label htmlFor="ageRange" className="text-sm text-[#2D3330]">
                 Age Range
               </Label>
-              <Select value={ageRange} onValueChange={(val) => {setAgeRange(val); setHasChanges(true);}}>
+              <Select
+                value={ageRange}
+                onValueChange={(val) => {
+                  setAgeRange(val);
+                  setHasChanges(true);
+                }}
+              >
                 <SelectTrigger id="ageRange">
                   <SelectValue placeholder="Select or skip" />
                 </SelectTrigger>
@@ -293,7 +276,13 @@ export function DemographicOptIn({
                   </Tooltip>
                 </TooltipProvider>
               </div>
-              <Select value={disability} onValueChange={(val) => {setDisability(val); setHasChanges(true);}}>
+              <Select
+                value={disability}
+                onValueChange={(val) => {
+                  setDisability(val);
+                  setHasChanges(true);
+                }}
+              >
                 <SelectTrigger id="disability">
                   <SelectValue placeholder="Select or skip" />
                 </SelectTrigger>
@@ -312,7 +301,13 @@ export function DemographicOptIn({
               <Label htmlFor="veteranStatus" className="text-sm text-[#2D3330]">
                 Veteran Status
               </Label>
-              <Select value={veteranStatus} onValueChange={(val) => {setVeteranStatus(val); setHasChanges(true);}}>
+              <Select
+                value={veteranStatus}
+                onValueChange={(val) => {
+                  setVeteranStatus(val);
+                  setHasChanges(true);
+                }}
+              >
                 <SelectTrigger id="veteranStatus">
                   <SelectValue placeholder="Select or skip" />
                 </SelectTrigger>
@@ -336,7 +331,7 @@ export function DemographicOptIn({
           <Button
             onClick={handleSave}
             disabled={!hasChanges || saving}
-            className="bg-[#4A5943] text-white hover:bg-[#3C4936]"
+            className="bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]"
           >
             {saving ? 'Saving...' : 'Save Preferences'}
           </Button>
@@ -345,15 +340,13 @@ export function DemographicOptIn({
         {/* Legal Notice */}
         <div className="text-xs text-[#6B6760] pt-3 border-t border-[#E8E6DD]">
           <p>
-            <strong>Legal Notice:</strong> This information is collected for
-            statistical analysis only and is never used for hiring decisions.
-            Organizations cannot see your individual responses. Data is stored
-            securely and may be deleted upon request. Compliant with GDPR, CCPA,
-            and EEO regulations.
+            <strong>Legal Notice:</strong> This information is collected for statistical analysis
+            only and is never used for hiring decisions. Organizations cannot see your individual
+            responses. Data is stored securely and may be deleted upon request. Compliant with GDPR,
+            CCPA, and EEO regulations.
           </p>
         </div>
       </CardContent>
     </Card>
   );
 }
-

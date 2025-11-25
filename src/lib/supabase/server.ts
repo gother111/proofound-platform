@@ -13,6 +13,9 @@ type CreateClientOptions = {
 const MOCK_USER_ID = '88888888-8888-4888-8888-888888888888';
 const ORG_ID = '99999999-9999-4999-9999-999999999999';
 
+// Determine if mock should return org_member persona (for testing org features)
+const getMockPersona = () => (process.env.MOCK_ORG_MODE === 'true' ? 'org_member' : 'individual');
+
 const mockSupabaseClient = {
   auth: {
     getSession: async () => ({
@@ -35,13 +38,193 @@ const mockSupabaseClient = {
       error: null,
     }),
     signOut: async () => ({ error: null }),
-    signUp: async () => ({ data: { user: { id: MOCK_USER_ID }, session: {} }, error: null }),
+    signUp: async () => ({
+      data: {
+        user: {
+          id: MOCK_USER_ID,
+          identities: [
+            { id: 'mock-identity-id', provider: 'email', created_at: new Date().toISOString() },
+          ],
+        },
+        session: {},
+      },
+      error: null,
+    }),
     resetPasswordForEmail: async () => ({ data: {}, error: null }),
     verifyOtp: async () => ({ data: { user: { id: MOCK_USER_ID }, session: {} }, error: null }),
+    resend: async () => ({ data: {}, error: null }),
     onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
   },
   from: (table: string) => ({
     select: (query?: string) => {
+      if (table === 'skills_categories') {
+        const chain: any = {
+          order: () => ({
+            then: (resolve: any) => {
+              resolve({
+                data: [
+                  {
+                    cat_id: 1,
+                    slug: 'universal',
+                    name_i18n: { en: 'Universal Capabilities' },
+                    display_order: 1,
+                  },
+                  {
+                    cat_id: 2,
+                    slug: 'functional',
+                    name_i18n: { en: 'Functional Competencies' },
+                    display_order: 2,
+                  },
+                  {
+                    cat_id: 3,
+                    slug: 'tools',
+                    name_i18n: { en: 'Tools & Technologies' },
+                    display_order: 3,
+                  },
+                ],
+                error: null,
+              });
+            },
+          }),
+          select: () => chain,
+        };
+        return chain;
+      }
+
+      if (table === 'skills_subcategories') {
+        const chain: any = {
+          select: () => ({
+            then: (resolve: any) => {
+              resolve({
+                data: [
+                  { subcat_id: 10, cat_id: 3, name_i18n: { en: 'Frontend Development' } },
+                  { subcat_id: 20, cat_id: 2, name_i18n: { en: 'Management' } },
+                ],
+                error: null,
+              });
+            },
+          }),
+        };
+        return chain;
+      }
+
+      if (table === 'skills') {
+        return {
+          eq: () => ({
+            then: (resolve: any) => {
+              resolve({
+                data: [
+                  {
+                    id: 'skill-1',
+                    profile_id: MOCK_USER_ID,
+                    skill_code: 'react',
+                    level: 4,
+                    relevance: 'current',
+                    lastUsedAt: new Date().toISOString(),
+                    taxonomy: {
+                      code: 'react',
+                      name_i18n: { en: 'React' },
+                      cat_id: 3,
+                      subcat_id: 10,
+                      l3_id: 100,
+                      slug: 'react',
+                    },
+                  },
+                  {
+                    id: 'skill-2',
+                    profile_id: MOCK_USER_ID,
+                    skill_code: 'typescript',
+                    level: 5,
+                    relevance: 'current',
+                    lastUsedAt: new Date().toISOString(),
+                    taxonomy: {
+                      code: 'typescript',
+                      name_i18n: { en: 'TypeScript' },
+                      cat_id: 3,
+                      subcat_id: 10,
+                      l3_id: 100,
+                      slug: 'typescript',
+                    },
+                  },
+                ],
+                error: null,
+              });
+            },
+          }),
+        };
+      }
+
+      if (table === 'skills_taxonomy') {
+        console.log('Mock Supabase: Hit skills_taxonomy table');
+        const mockSkills = [
+          {
+            code: 'python',
+            name_i18n: { en: 'Python' },
+            description_i18n: {
+              en: 'Interpreted, high-level and general-purpose programming language',
+            },
+            cat_id: 3,
+            subcat_id: 10,
+            l3_id: 100,
+            slug: 'python',
+            status: 'active',
+            tags: ['language', 'backend', 'data-science'],
+          },
+          {
+            code: 'react',
+            name_i18n: { en: 'React' },
+            description_i18n: { en: 'JavaScript library for building user interfaces' },
+            cat_id: 3,
+            subcat_id: 10,
+            l3_id: 100,
+            slug: 'react',
+            status: 'active',
+            tags: ['frontend', 'library', 'javascript'],
+          },
+          {
+            code: 'typescript',
+            name_i18n: { en: 'TypeScript' },
+            description_i18n: { en: 'Typed superset of JavaScript' },
+            cat_id: 3,
+            subcat_id: 10,
+            l3_id: 100,
+            slug: 'typescript',
+            status: 'active',
+            tags: ['language', 'frontend', 'backend'],
+          },
+          {
+            code: 'project-management',
+            name_i18n: { en: 'Project Management' },
+            description_i18n: {
+              en: 'Planning, executing, monitoring, controlling, and closing projects',
+            },
+            cat_id: 2,
+            subcat_id: 20,
+            l3_id: 200,
+            slug: 'project-management',
+            status: 'active',
+            tags: ['management', 'planning'],
+          },
+        ];
+
+        const chain: any = {
+          eq: () => chain,
+          limit: () => ({
+            then: (resolve: any) => resolve({ data: mockSkills, error: null }),
+          }),
+          in: (col: string, vals: any[]) => ({
+            then: (resolve: any) =>
+              resolve({
+                data: mockSkills.filter((s) => vals.includes(s.code)),
+                error: null,
+              }),
+          }),
+        };
+
+        console.log('Mock Supabase: select called for skills_taxonomy');
+        return chain;
+      }
+
       const chain: any = {
         eq: (col: string, val: any) => {
           // If querying organization_members list for the org
@@ -81,7 +264,6 @@ const mockSupabaseClient = {
                         id: ORG_ID,
                         slug: 'test-org',
                         displayName: 'Test Organization',
-                        slug: 'test-org',
                       },
                     },
                   ],
@@ -91,16 +273,134 @@ const mockSupabaseClient = {
               return chain;
             };
           }
+          if (table === 'skills' && col === 'user_id') {
+            chain.then = (resolve: any) => {
+              resolve({
+                data: [
+                  {
+                    id: 'skill-1',
+                    name: 'JavaScript',
+                    category: 'Programming Languages',
+                    level: 'Expert',
+                    userId: MOCK_USER_ID,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                  },
+                  {
+                    id: 'skill-2',
+                    name: 'React',
+                    category: 'Frontend Frameworks',
+                    level: 'Advanced',
+                    userId: MOCK_USER_ID,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                  },
+                ],
+                error: null,
+              });
+            };
+          }
+          // Mock L3 query by ID
+          if (table === 'skills_l3' && col === 'l3_id') {
+            chain.then = (resolve: any) => {
+              resolve({
+                data: [
+                  {
+                    l3_id: 100,
+                    subcat_id: 10,
+                    cat_id: 3,
+                    slug: 'frontend-frameworks',
+                    name_i18n: { en: 'Frontend Frameworks' },
+                  },
+                  {
+                    l3_id: 200,
+                    subcat_id: 20,
+                    cat_id: 2,
+                    slug: 'project-planning',
+                    name_i18n: { en: 'Project Planning' },
+                  },
+                ],
+                error: null,
+              });
+            };
+          }
           return chain;
         },
+        in: (col: string, vals: any[]) => {
+          // Mock IN queries for context fetching
+          if (table === 'skills_categories' && col === 'cat_id') {
+            return {
+              then: (resolve: any) =>
+                resolve({
+                  data: [
+                    { cat_id: 1, slug: 'universal', name_i18n: { en: 'Universal Capabilities' } },
+                    { cat_id: 2, slug: 'functional', name_i18n: { en: 'Functional Competencies' } },
+                    { cat_id: 3, slug: 'tools', name_i18n: { en: 'Tools & Technologies' } },
+                  ],
+                  error: null,
+                }),
+            };
+          }
+          if (table === 'skills_subcategories' && col === 'subcat_id') {
+            return {
+              then: (resolve: any) =>
+                resolve({
+                  data: [
+                    {
+                      subcat_id: 10,
+                      cat_id: 3,
+                      slug: 'frontend',
+                      name_i18n: { en: 'Frontend Development' },
+                    },
+                    {
+                      subcat_id: 20,
+                      cat_id: 2,
+                      slug: 'management',
+                      name_i18n: { en: 'Management' },
+                    },
+                  ],
+                  error: null,
+                }),
+            };
+          }
+          if (table === 'skills_l3' && col === 'l3_id') {
+            return {
+              then: (resolve: any) =>
+                resolve({
+                  data: [
+                    {
+                      l3_id: 100,
+                      subcat_id: 10,
+                      cat_id: 3,
+                      slug: 'frontend-frameworks',
+                      name_i18n: { en: 'Frontend Frameworks' },
+                    },
+                    {
+                      l3_id: 200,
+                      subcat_id: 20,
+                      cat_id: 2,
+                      slug: 'project-planning',
+                      name_i18n: { en: 'Project Planning' },
+                    },
+                  ],
+                  error: null,
+                }),
+            };
+          }
+          return chain;
+        },
+        order: (col: string, opts?: any) => {
+          return chain;
+        },
+        limit: () => chain,
         maybeSingle: async () => {
           if (table === 'profiles') {
             return {
               data: {
                 id: MOCK_USER_ID,
                 platform_role: null,
-                tour_completed: false,
-                persona: 'org_member',
+                tour_completed: true,
+                persona: getMockPersona(),
               },
               error: null,
             };
@@ -149,8 +449,8 @@ const mockSupabaseClient = {
               data: {
                 id: MOCK_USER_ID,
                 platform_role: null,
-                tour_completed: false,
-                persona: 'org_member',
+                tour_completed: true,
+                persona: getMockPersona(),
               },
               error: null,
             };
@@ -163,7 +463,8 @@ const mockSupabaseClient = {
     insert: async () => ({ data: [], error: null }),
     update: async () => ({ data: [], error: null }),
   }),
-  rpc: async () => ({ data: null, error: null }),
+  // Return error for RPC to trigger fallback
+  rpc: async () => ({ data: null, error: { message: 'Mock RPC not implemented' } }),
   storage: {
     from: () => ({
       upload: async () => ({ data: null, error: null }),
@@ -177,7 +478,9 @@ export async function createClient(options: CreateClientOptions = {}): Promise<S
   const { allowCookieWrite = false } = options;
 
   // FORCE MOCK AUTH FOR TESTING
+  console.log('Checking Mock Supabase Env:', process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE);
   if (process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true') {
+    console.log('Using Mock Supabase Client');
     return mockSupabaseClient;
   }
 

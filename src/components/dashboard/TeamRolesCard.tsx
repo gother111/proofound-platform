@@ -1,39 +1,308 @@
 'use client';
 
-import { Users } from 'lucide-react';
+/**
+ * TeamRolesCard Widget
+ *
+ * Displays organization team members with roles
+ * Part of the org dashboard (PRD O8)
+ *
+ * Features:
+ * - Shows team members with avatars and roles
+ * - Role badges with icons
+ * - Quick stats summary
+ * - Invite new members action
+ */
+
+import {
+  Users,
+  Crown,
+  Shield,
+  User,
+  Eye,
+  Loader2,
+  AlertCircle,
+  Plus,
+  UserPlus,
+} from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
-export function TeamRolesCard() {
+interface TeamRolesCardProps {
+  orgSlug?: string;
+  orgId?: string;
+}
+
+// Type definitions
+interface TeamMember {
+  userId: string;
+  role: 'owner' | 'admin' | 'member' | 'viewer';
+  status: 'active' | 'invited' | 'suspended';
+  displayName: string | null;
+  handle: string | null;
+  avatarUrl: string | null;
+  createdAt: string;
+}
+
+interface TeamStats {
+  total: number;
+  owners: number;
+  admins: number;
+  members: number;
+  viewers: number;
+}
+
+// Role configuration
+const roleConfig = {
+  owner: { label: 'Owner', icon: Crown, color: '#F59E0B', bg: '#FEF3C7' },
+  admin: { label: 'Admin', icon: Shield, color: '#1C4D3A', bg: '#D8EDE4' },
+  member: { label: 'Member', icon: User, color: '#3B82F6', bg: '#DBEAFE' },
+  viewer: { label: 'Viewer', icon: Eye, color: '#6B6760', bg: '#E8E6DD' },
+};
+
+// Get initials from name
+function getInitials(name: string | null | undefined): string {
+  if (!name) return '?';
+  return name
+    .split(' ')
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+}
+
+export function TeamRolesCard({ orgSlug, orgId }: TeamRolesCardProps) {
+  const [members, setMembers] = useState<TeamMember[]>([]);
+  const [stats, setStats] = useState<TeamStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
 
+  // Fetch team members from API
+  useEffect(() => {
+    async function fetchTeam() {
+      if (!orgId) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const response = await fetch(`/api/organizations/${orgId}/team`);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch team');
+        }
+
+        const data = await response.json();
+        setMembers((data.members || []).slice(0, 5)); // Show top 5 members
+        setStats(data.stats);
+      } catch (err) {
+        console.error('Error fetching team:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load team');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchTeam();
+  }, [orgId]);
+
+  // If no orgId provided, show individual placeholder
+  if (!orgId) {
+    return (
+      <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+        <div className="flex items-center justify-between mb-3">
+          <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
+            Team
+          </h5>
+        </div>
+        <div className="text-center py-6">
+          <Users className="w-10 h-10 mx-auto mb-2" style={{ color: '#E8E6DD' }} />
+          <p className="text-xs mb-3" style={{ color: '#6B6760' }}>
+            Build your team.
+          </p>
+          <Button
+            size="sm"
+            className="h-7 text-xs"
+            style={{
+              backgroundColor: isHovered ? '#2D5F4A' : '#1C4D3A',
+              color: '#F7F6F1',
+              transition: 'background-color 200ms',
+            }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+          >
+            Add members
+          </Button>
+        </div>
+      </Card>
+    );
+  }
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+        <div className="flex items-center justify-between mb-3">
+          <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
+            Team
+          </h5>
+        </div>
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#1C4D3A' }} />
+        </div>
+      </Card>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+        <div className="flex items-center justify-between mb-3">
+          <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
+            Team
+          </h5>
+        </div>
+        <div className="text-center py-4">
+          <AlertCircle className="w-8 h-8 mx-auto mb-2" style={{ color: '#DC2626' }} />
+          <p className="text-xs" style={{ color: '#6B6760' }}>
+            {error}
+          </p>
+        </div>
+      </Card>
+    );
+  }
+
+  // Empty state
+  if (members.length === 0) {
+    return (
+      <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+        <div className="flex items-center justify-between mb-3">
+          <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
+            Team
+          </h5>
+        </div>
+        <div className="text-center py-6">
+          <Users className="w-10 h-10 mx-auto mb-2" style={{ color: '#E8E6DD' }} />
+          <p className="text-xs mb-3" style={{ color: '#6B6760' }}>
+            Add team members to collaborate on your organization.
+          </p>
+          <Link href={`/app/o/${orgSlug}/settings/team`}>
+            <Button
+              size="sm"
+              className="h-7 text-xs"
+              style={{
+                backgroundColor: isHovered ? '#2D5F4A' : '#1C4D3A',
+                color: '#F7F6F1',
+                transition: 'background-color 200ms',
+              }}
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
+            >
+              <UserPlus className="w-3 h-3 mr-1" />
+              Invite members
+            </Button>
+          </Link>
+        </div>
+      </Card>
+    );
+  }
+
+  // Team list view
   return (
     <Card className="p-4 border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+      {/* Header with stats */}
       <div className="flex items-center justify-between mb-3">
-        <h5 className="text-sm" style={{ color: '#2D3330' }}>
-          Team
-        </h5>
-      </div>
-      <div className="text-center py-6">
-        <Users className="w-10 h-10 mx-auto mb-2" style={{ color: '#E8E6DD' }} />
-        <p className="text-xs mb-3" style={{ color: '#6B6760' }}>
-          Build your team.
-        </p>
-        <Button
-          size="sm"
-          className="h-7 text-xs"
-          style={{
-            backgroundColor: isHovered ? '#2D5F4A' : '#1C4D3A',
-            color: '#F7F6F1',
-            transition: 'background-color 200ms',
-          }}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
+        <div className="flex items-center gap-2">
+          <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
+            Team
+          </h5>
+          {stats && (
+            <span
+              className="text-xs px-1.5 py-0.5 rounded"
+              style={{ backgroundColor: '#D8EDE4', color: '#1C4D3A' }}
+            >
+              {stats.total} members
+            </span>
+          )}
+        </div>
+        <Link
+          href={`/app/o/${orgSlug}/settings/team`}
+          className="text-xs hover:underline"
+          style={{ color: '#1C4D3A' }}
         >
-          Add members
-        </Button>
+          Manage
+        </Link>
       </div>
+
+      {/* Members list */}
+      <div className="space-y-2.5">
+        {members.map((member) => {
+          const config = roleConfig[member.role];
+          const RoleIcon = config.icon;
+
+          return (
+            <div key={member.userId} className="flex items-center gap-3">
+              <Avatar className="w-8 h-8">
+                <AvatarImage src={member.avatarUrl || undefined} alt={member.displayName || ''} />
+                <AvatarFallback
+                  style={{ backgroundColor: '#E8E6DD', color: '#2D3330', fontSize: '11px' }}
+                >
+                  {getInitials(member.displayName || member.handle)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate" style={{ color: '#2D3330' }}>
+                  {member.displayName || member.handle || 'Unnamed'}
+                </p>
+              </div>
+              <Badge
+                variant="secondary"
+                className="text-[10px] px-1.5 py-0 flex-shrink-0 flex items-center gap-1"
+                style={{ backgroundColor: config.bg, color: config.color }}
+              >
+                <RoleIcon className="w-2.5 h-2.5" />
+                {config.label}
+              </Badge>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Footer with stats */}
+      {stats && (
+        <div
+          className="mt-4 pt-3 border-t flex items-center justify-between"
+          style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}
+        >
+          <div className="flex items-center gap-2">
+            {/* Avatar stack for remaining members */}
+            {stats.total > 5 && (
+              <span className="text-xs" style={{ color: '#6B6760' }}>
+                +{stats.total - 5} more
+              </span>
+            )}
+          </div>
+          <Link href={`/app/o/${orgSlug}/settings/team/invite`}>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 px-2 text-xs"
+              style={{ color: '#1C4D3A' }}
+            >
+              <UserPlus className="w-3 h-3 mr-1" />
+              Invite
+            </Button>
+          </Link>
+        </div>
+      )}
     </Card>
   );
 }

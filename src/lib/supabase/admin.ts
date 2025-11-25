@@ -4,6 +4,30 @@ export function createAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || process.env.SUPABASE_URL?.trim();
   const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
 
+  // FORCE MOCK AUTH FOR TESTING
+  if (process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true') {
+    console.log('Using Mock Admin Client');
+    return {
+      from: (table: string) => ({
+        select: () => ({
+          eq: () => ({
+            maybeSingle: async () => ({ data: null, error: null }),
+            single: async () => ({ data: null, error: null }),
+          }),
+        }),
+        insert: async () => ({ data: null, error: null }),
+        update: async () => ({ eq: async () => ({ data: null, error: null }) }),
+        delete: async () => ({ eq: async () => ({ data: null, error: null }) }),
+      }),
+      auth: {
+        admin: {
+          createUser: async () => ({ data: { user: { id: 'mock-user-id' } }, error: null }),
+          deleteUser: async () => ({ data: {}, error: null }),
+        },
+      },
+    } as any;
+  }
+
   if (!url || !serviceRole) {
     throw new Error('Missing SUPABASE env for admin client');
   }

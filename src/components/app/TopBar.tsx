@@ -30,7 +30,7 @@ import { NotificationBell } from '@/components/notifications/NotificationBell';
  * Responsive:
  * - Maintains minimum touch target sizes (44px)
  * - Logo/branding stays visible at all sizes
- * Animation: Smooth transitions on hover/focus (200ms)
+ * - Animation: Smooth transitions on hover/focus (200ms)
  */
 
 interface TopBarProps {
@@ -72,11 +72,7 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
     <>
       {/* Semantic header with role="banner" for main site header */}
       <header
-        className="sticky top-0 z-50 min-h-14 px-4 border-b flex items-center justify-between gap-2 md:gap-4 py-2 md:py-0"
-        style={{
-          backgroundColor: '#FDFCFA',
-          borderColor: 'rgba(232, 230, 221, 0.6)',
-        }}
+        className="sticky top-0 z-50 min-h-14 px-4 border-b flex items-center justify-between gap-2 md:gap-4 py-2 md:py-0 bg-neutral-light-50 border-proofound-stone/60"
         role="banner"
       >
         {/* Left: Logo + Proofound + Separator + Title */}
@@ -84,7 +80,7 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
           {/* Logo - Branded identity */}
           <div className="flex items-center gap-2">
             <Logo size="sm" />
-            <span className="font-semibold text-sm hidden sm:inline" style={{ color: '#2D3330' }}>
+            <span className="font-semibold text-sm hidden sm:inline text-proofound-charcoal">
               Proofound
             </span>
           </div>
@@ -92,7 +88,7 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
           <Separator orientation="vertical" className="h-6 hidden sm:block" aria-hidden="true" />
 
           {/* Current page indicator - hide on very small screens */}
-          <h1 className="text-base font-normal hidden sm:block" style={{ color: '#2D3330' }}>
+          <h1 className="text-base font-normal hidden sm:block text-proofound-charcoal">
             {getPageTitle()}
           </h1>
         </div>
@@ -105,8 +101,7 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
             variant="outline"
             size="sm"
             onClick={() => setCustomizeOpen(true)}
-            className="text-xs h-8 focus-visible:ring-2 focus-visible:ring-[#1C4D3A] focus-visible:ring-offset-2 hidden md:flex"
-            style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}
+            className="text-xs h-8 focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 hidden md:flex border-proofound-stone/60"
           >
             Customize
           </Button>
@@ -115,23 +110,16 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
               <button
                 type="button"
                 aria-label="Open profile menu"
-                className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1C4D3A] focus-visible:ring-offset-2"
+                className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
               >
                 <Avatar className="w-7 h-7">
-                  <AvatarFallback
-                    className="text-xs font-medium"
-                    style={{ backgroundColor: '#1C4D3A', color: '#F7F6F1' }}
-                  >
+                  <AvatarFallback className="text-xs font-medium bg-proofound-forest text-proofound-parchment">
                     {userInitials}
                   </AvatarFallback>
                 </Avatar>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-48"
-              style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}
-            >
+            <DropdownMenuContent align="end" className="w-48 border-proofound-stone/60">
               <DropdownMenuLabel className="flex flex-col">
                 <span className="text-sm font-medium">{userName}</span>
                 <span className="text-xs text-muted-foreground">Signed in</span>

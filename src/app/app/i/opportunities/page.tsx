@@ -186,7 +186,7 @@ export default function OpportunitiesPage() {
           </div>
           <Button
             onClick={() => (window.location.href = '/app/i/profile')}
-            className="bg-[#4A5943] hover:bg-[#3A4733]"
+            className="bg-[#1C4D3A] hover:bg-[#2D5F4A]"
           >
             Complete Profile
           </Button>
@@ -266,7 +266,7 @@ export default function OpportunitiesPage() {
                   <div>
                     <button
                       onClick={() => setExpandedId(expandedId === opp.id ? null : opp.id)}
-                      className="flex items-center gap-2 text-sm font-medium text-[#4A5943] hover:text-[#3A4733]"
+                      className="flex items-center gap-2 text-sm font-medium text-[#1C4D3A] hover:text-[#2D5F4A]"
                     >
                       Why this match?
                       {expandedId === opp.id ? (
@@ -288,7 +288,7 @@ export default function OpportunitiesPage() {
                   <div className="flex items-center gap-3 pt-4 border-t">
                     <Button
                       onClick={() => handleAction(opp.id, 'interested')}
-                      className="flex-1 bg-[#4A5943] hover:bg-[#3A4733]"
+                      className="flex-1 bg-[#1C4D3A] hover:bg-[#2D5F4A]"
                     >
                       <ThumbsUp className="h-4 w-4 mr-2" />
                       Express Interest
@@ -308,7 +308,7 @@ export default function OpportunitiesPage() {
                   </div>
                 ) : (
                   <div className="pt-4 border-t">
-                    <Badge variant="outline" className="text-[#4A5943]">
+                    <Badge variant="outline" className="text-[#1C4D3A]">
                       Status: {opp.status}
                     </Badge>
                   </div>

@@ -15,7 +15,53 @@ export type ZenPractice = {
   isSpiritual: boolean;
 };
 
+export const riskStates = [
+  {
+    id: 'calm',
+    label: 'Calm & Steady',
+    tone: 'bg-[#1C4D3A] text-white',
+    description: 'Clear to focus · light check-ins only',
+  },
+  {
+    id: 'focus',
+    label: 'Heightened Alert',
+    tone: 'bg-amber-600 text-white',
+    description: 'Recommend 10 minute reset + breathing stack',
+  },
+  {
+    id: 'support',
+    label: 'Need Support',
+    tone: 'bg-rose-600 text-white',
+    description: 'Pause deliverables · escalate to support team',
+  },
+] as const;
+
+export type RiskState = (typeof riskStates)[number]['id'];
+
 export const zenPractices: ZenPractice[] = [
+  {
+    id: 'quick-calm',
+    title: 'Quick Calm Breath',
+    duration: '1m',
+    benefit: 'Instant reset',
+    evidenceType: 'physiologic-response',
+    whatToExpect: 'Simple extended exhale to activate the vagus nerve.',
+    steps: [
+      'Inhale deeply through nose (4s)',
+      'Sigh out through mouth (6s)',
+      'Repeat 6 times',
+      'Notice the drop in shoulder tension',
+    ],
+    evidencePoints: [
+      'Extended exhalation triggers parasympathetic response',
+      'Lowers heart rate within 60 seconds',
+    ],
+    isThirdParty: false,
+    goal: 'Stress',
+    style: 'Somatic',
+    time: 1,
+    isSpiritual: false,
+  },
   {
     id: '1',
     title: 'Box Breathing',

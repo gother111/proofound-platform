@@ -473,7 +473,7 @@ export default function AssignmentBuilderPage() {
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
                     currentStep === step.id
-                      ? 'bg-[#4A5943] text-white'
+                      ? 'bg-[#1C4D3A] text-white'
                       : currentStep > step.id
                         ? 'bg-[#7A9278] text-white'
                         : 'bg-gray-200 text-gray-600'

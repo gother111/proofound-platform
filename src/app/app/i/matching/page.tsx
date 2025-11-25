@@ -150,8 +150,8 @@ export default function MatchingPage() {
     return (
       <div className="max-w-5xl mx-auto px-4 py-6">
         <div className="mb-6">
-          <div className="h-8 w-48 bg-[#E8E6DD] dark:bg-[#2C3244] rounded animate-pulse mb-2" />
-          <div className="h-4 w-64 bg-[#E8E6DD] dark:bg-[#2C3244] rounded animate-pulse" />
+          <div className="h-8 w-48 bg-proofound-stone dark:bg-[#2C3244] rounded animate-pulse mb-2" />
+          <div className="h-4 w-64 bg-proofound-stone dark:bg-[#2C3244] rounded animate-pulse" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -188,7 +188,7 @@ export default function MatchingPage() {
     <div className="max-w-5xl mx-auto px-4 py-6">
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
-          <h1 className="text-2xl font-semibold">Matching</h1>
+          <h1 className="text-2xl font-semibold text-[#2D3330] dark:text-[#E8DCC4]">Matching</h1>
           <div className="flex items-center gap-2">
             <EnhancedMatchFilters
               activeFilters={activeFilters}
@@ -198,14 +198,13 @@ export default function MatchingPage() {
               onClick={() => {
                 setShowSetup(true);
               }}
-              className="text-sm underline"
-              style={{ color: '#1C4D3A' }}
+              className="text-sm underline text-proofound-forest"
             >
               Edit Profile
             </button>
           </div>
         </div>
-        <p className="text-sm" style={{ color: '#6B6760' }}>
+        <p className="text-sm text-[#6B6760] dark:text-[#8A8174]">
           {filteredMatches.length} opportunit{filteredMatches.length === 1 ? 'y' : 'ies'} aligned
           with your skills and values
         </p>
@@ -213,10 +212,8 @@ export default function MatchingPage() {
 
       {filteredMatches.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-lg mb-2" style={{ color: '#2D3330' }}>
-            No matches yet
-          </p>
-          <p className="text-sm" style={{ color: '#6B6760' }}>
+          <p className="text-lg mb-2 text-proofound-charcoal">No matches yet</p>
+          <p className="text-sm text-muted-foreground">
             {matches.length === 0
               ? 'Check back soon for new opportunities'
               : 'No matches found with current filters. Try adjusting your filters.'}
@@ -253,7 +250,16 @@ export default function MatchingPage() {
 
                   const data = await response.json();
                   if (data.revealed) {
-                    toast.success('Mutual interest! Identity revealed.');
+                    // Mutual interest detected - navigate to conversation
+                    if (data.conversationId) {
+                      toast.success('Mutual interest! Starting conversation...');
+                      // Small delay to let the toast be visible
+                      setTimeout(() => {
+                        router.push(`/app/i/messages?conversation=${data.conversationId}`);
+                      }, 500);
+                    } else {
+                      toast.success('Mutual interest! Go to Messages to start chatting.');
+                    }
                   } else {
                     toast.success('Interest recorded! Waiting for org response.');
                   }

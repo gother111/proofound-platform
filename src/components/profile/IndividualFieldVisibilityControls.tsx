@@ -21,12 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { Eye, Users, Handshake, Lock, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export type IndividualVisibilityLevel = 'public' | 'network_only' | 'match_only' | 'private';
 
@@ -84,83 +79,83 @@ const VISIBILITY_OPTIONS = [
 ];
 
 const FIELDS = [
-  { 
-    key: 'displayName', 
-    label: 'Display Name', 
+  {
+    key: 'displayName',
+    label: 'Display Name',
     recommended: 'public',
-    description: 'Your name as it appears to others'
+    description: 'Your name as it appears to others',
   },
-  { 
-    key: 'avatar', 
-    label: 'Profile Photo', 
+  {
+    key: 'avatar',
+    label: 'Profile Photo',
     recommended: 'public',
-    description: 'Your profile picture'
+    description: 'Your profile picture',
   },
-  { 
-    key: 'headline', 
-    label: 'Headline', 
+  {
+    key: 'headline',
+    label: 'Headline',
     recommended: 'public',
-    description: 'Professional headline or tagline'
+    description: 'Professional headline or tagline',
   },
-  { 
-    key: 'location', 
-    label: 'Location', 
+  {
+    key: 'location',
+    label: 'Location',
     recommended: 'network_only',
-    description: 'City/country information'
+    description: 'City/country information',
   },
-  { 
-    key: 'mission', 
-    label: 'Mission Statement', 
+  {
+    key: 'mission',
+    label: 'Mission Statement',
     recommended: 'public',
-    description: 'Your personal mission'
+    description: 'Your personal mission',
   },
-  { 
-    key: 'vision', 
-    label: 'Vision Statement', 
+  {
+    key: 'vision',
+    label: 'Vision Statement',
     recommended: 'public',
-    description: 'Your future vision'
+    description: 'Your future vision',
   },
-  { 
-    key: 'values', 
-    label: 'Core Values', 
+  {
+    key: 'values',
+    label: 'Core Values',
     recommended: 'public',
-    description: 'What you stand for'
+    description: 'What you stand for',
   },
-  { 
-    key: 'causes', 
-    label: 'Causes', 
+  {
+    key: 'causes',
+    label: 'Causes',
     recommended: 'public',
-    description: 'Causes you support'
+    description: 'Causes you support',
   },
-  { 
-    key: 'skills', 
-    label: 'Skills', 
+  {
+    key: 'skills',
+    label: 'Skills',
     recommended: 'public',
-    description: 'Your expertise and capabilities'
+    description: 'Your expertise and capabilities',
   },
-  { 
-    key: 'experiences', 
-    label: 'Work Experience', 
+  {
+    key: 'experiences',
+    label: 'Work Experience',
     recommended: 'network_only',
-    description: 'Employment history'
+    description: 'Employment history',
   },
-  { 
-    key: 'education', 
-    label: 'Education', 
+  {
+    key: 'education',
+    label: 'Education',
     recommended: 'public',
-    description: 'Academic background'
+    description: 'Academic background',
   },
-  { 
-    key: 'volunteering', 
-    label: 'Volunteering', 
+  {
+    key: 'volunteering',
+    label: 'Volunteering',
     recommended: 'public',
-    description: 'Volunteer work and community service'
+    description: 'Volunteer work and community service',
   },
-  { 
-    key: 'impactStories', 
-    label: 'Impact Stories', 
+  {
+    key: 'impactStories',
+    label: 'Impact Stories',
     recommended: 'match_only',
-    description: 'Detailed case studies and achievements'
+    description: 'Detailed case studies and achievements',
   },
 ];
 
@@ -188,7 +183,10 @@ export function IndividualFieldVisibilityControls({
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
-  const handleFieldChange = (field: keyof IndividualFieldVisibility, value: IndividualVisibilityLevel) => {
+  const handleFieldChange = (
+    field: keyof IndividualFieldVisibility,
+    value: IndividualVisibilityLevel
+  ) => {
     setVisibility((prev) => ({ ...prev, [field]: value }));
     setHasChanges(true);
   };
@@ -254,12 +252,15 @@ export function IndividualFieldVisibilityControls({
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <Label htmlFor={field.key} className="text-sm font-medium text-[#2D3330] cursor-pointer">
+                    <Label
+                      htmlFor={field.key}
+                      className="text-sm font-medium text-[#2D3330] cursor-pointer"
+                    >
                       {field.label}
                     </Label>
                     {getVisibilityIcon(currentVisibility)}
                     {field.recommended === currentVisibility && (
-                      <Badge variant="secondary" className="text-xs bg-[#EEF1EA] text-[#4A5943]">
+                      <Badge variant="secondary" className="text-xs bg-[#EEF1EA] text-[#1C4D3A]">
                         Recommended
                       </Badge>
                     )}
@@ -271,7 +272,10 @@ export function IndividualFieldVisibilityControls({
                   <Select
                     value={currentVisibility}
                     onValueChange={(value) =>
-                      handleFieldChange(field.key as keyof IndividualFieldVisibility, value as IndividualVisibilityLevel)
+                      handleFieldChange(
+                        field.key as keyof IndividualFieldVisibility,
+                        value as IndividualVisibilityLevel
+                      )
                     }
                   >
                     <SelectTrigger id={field.key} className="w-[140px]">
@@ -303,7 +307,10 @@ export function IndividualFieldVisibilityControls({
                         <p className="text-xs">
                           <strong>Recommended:</strong> {field.recommended}
                           <br />
-                          {VISIBILITY_OPTIONS.find((opt) => opt.value === field.recommended)?.description}
+                          {
+                            VISIBILITY_OPTIONS.find((opt) => opt.value === field.recommended)
+                              ?.description
+                          }
                         </p>
                       </TooltipContent>
                     </Tooltip>
@@ -322,7 +329,7 @@ export function IndividualFieldVisibilityControls({
           <Button
             onClick={handleSave}
             disabled={!hasChanges || saving}
-            className="bg-[#4A5943] text-white hover:bg-[#3C4936]"
+            className="bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]"
           >
             {saving ? 'Saving...' : 'Save Privacy Settings'}
           </Button>
@@ -335,8 +342,9 @@ export function IndividualFieldVisibilityControls({
             <div className="text-sm text-blue-900 dark:text-blue-100">
               <p className="font-medium mb-1">Privacy First</p>
               <p className="text-xs">
-                Your privacy settings are enforced at the API level. Organizations and other users will only see
-                fields based on your visibility rules. You can change these settings anytime.
+                Your privacy settings are enforced at the API level. Organizations and other users
+                will only see fields based on your visibility rules. You can change these settings
+                anytime.
               </p>
             </div>
           </div>
@@ -345,4 +353,3 @@ export function IndividualFieldVisibilityControls({
     </Card>
   );
 }
-

@@ -152,7 +152,7 @@ export default function ProjectsPage() {
 
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-[#4A5943] hover:bg-[#3A4733]">
+            <Button className="bg-[#1C4D3A] hover:bg-[#2D5F4A]">
               <Plus className="h-4 w-4 mr-2" />
               Create Project
             </Button>
@@ -243,7 +243,7 @@ export default function ProjectsPage() {
           </div>
           <Button
             onClick={() => setIsCreateDialogOpen(true)}
-            className="bg-[#4A5943] hover:bg-[#3A4733]"
+            className="bg-[#1C4D3A] hover:bg-[#2D5F4A]"
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Your First Project
@@ -270,7 +270,7 @@ export default function ProjectsPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3 flex-1 min-w-0">
                       <div className="p-2 bg-[#EEF1EA] rounded-lg">
-                        <Icon className="h-5 w-5 text-[#4A5943]" />
+                        <Icon className="h-5 w-5 text-[#1C4D3A]" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-[#2D3330] truncate">{project.title}</h3>
@@ -302,13 +302,13 @@ export default function ProjectsPage() {
                   <div className="flex items-center gap-3 text-xs text-[#6B6760]">
                     {project.skillsCount !== undefined && (
                       <div className="flex items-center gap-1">
-                        <span className="font-medium text-[#4A5943]">{project.skillsCount}</span>
+                        <span className="font-medium text-[#1C4D3A]">{project.skillsCount}</span>
                         <span>skills</span>
                       </div>
                     )}
                     {project.outcomes && project.outcomes.length > 0 && (
                       <div className="flex items-center gap-1">
-                        <span className="font-medium text-[#4A5943]">
+                        <span className="font-medium text-[#1C4D3A]">
                           {project.outcomes.length}
                         </span>
                         <span>outcomes</span>
@@ -317,7 +317,7 @@ export default function ProjectsPage() {
                   </div>
 
                   {/* Type Badge */}
-                  <Badge variant="outline" className="text-xs border-[#7A9278] text-[#4A5943]">
+                  <Badge variant="outline" className="text-xs border-[#7A9278] text-[#1C4D3A]">
                     {PROJECT_TYPE_LABELS[project.type]}
                   </Badge>
                 </div>

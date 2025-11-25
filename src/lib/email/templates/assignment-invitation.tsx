@@ -65,7 +65,7 @@ export function AssignmentInvitationEmail({
     }
     .message {
       background-color: #F7F6F1;
-      border-left: 4px solid #4A5943;
+      border-left: 4px solid #1C4D3A;
       padding: 16px;
       margin: 20px 0;
       font-style: italic;
@@ -91,7 +91,7 @@ export function AssignmentInvitationEmail({
     }
     .button {
       display: inline-block;
-      background-color: #4A5943;
+      background-color: #1C4D3A;
       color: #ffffff !important;
       text-decoration: none;
       padding: 14px 32px;
@@ -101,7 +101,7 @@ export function AssignmentInvitationEmail({
       text-align: center;
     }
     .button:hover {
-      background-color: #3C4936;
+      background-color: #2D5F4A;
     }
     .expiry {
       background-color: #FFF4E6;
@@ -121,7 +121,7 @@ export function AssignmentInvitationEmail({
       border-top: 1px solid: #E8E6DD;
     }
     .footer a {
-      color: #4A5943;
+      color: #1C4D3A;
       text-decoration: none;
     }
   </style>
@@ -141,17 +141,21 @@ export function AssignmentInvitationEmail({
         <strong>${organizationName}</strong> has invited you to help complete their organization profile on Proofound.
       </p>
 
-      ${message ? `
+      ${
+        message
+          ? `
       <div class="message">
         <strong>Personal message from ${organizationName}:</strong><br>
         ${message}
       </div>
-      ` : ''}
+      `
+          : ''
+      }
 
       <div class="sections">
         <h3>You've been asked to complete the following sections:</h3>
         <ul>
-          ${assignedSections.map(section => `<li><strong>${section.charAt(0).toUpperCase() + section.slice(1)}</strong></li>`).join('')}
+          ${assignedSections.map((section) => `<li><strong>${section.charAt(0).toUpperCase() + section.slice(1)}</strong></li>`).join('')}
         </ul>
       </div>
 
@@ -211,7 +215,7 @@ ${organizationName} has invited you to help complete their organization profile 
 ${message ? `Personal message from ${organizationName}:\n${message}\n\n` : ''}
 
 You've been asked to complete the following sections:
-${assignedSections.map(s => `- ${s.charAt(0).toUpperCase() + s.slice(1)}`).join('\n')}
+${assignedSections.map((s) => `- ${s.charAt(0).toUpperCase() + s.slice(1)}`).join('\n')}
 
 Your input will help provide a complete and accurate picture of ${organizationName}'s work and impact. No account is required.
 

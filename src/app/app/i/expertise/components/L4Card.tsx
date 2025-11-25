@@ -3,14 +3,7 @@
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
-  Edit2, 
-  FileText, 
-  CheckCircle2, 
-  Clock, 
-  TrendingUp,
-  Link as LinkIcon
-} from 'lucide-react';
+import { Edit2, FileText, CheckCircle2, Clock, TrendingUp, Link as LinkIcon } from 'lucide-react';
 
 interface L4Skill {
   id: string;
@@ -22,7 +15,9 @@ interface L4Skill {
   monthsExperience: number;
   evidenceStrength: number;
   impactScore: number;
+  skill_name?: string; // Computed skill name from API
   custom_skill_name?: string; // For custom user-created skills
+  is_custom?: boolean; // Whether this is a custom skill
   taxonomy?: {
     code: string;
     nameI18n?: { en?: string };
@@ -52,72 +47,77 @@ const LEVEL_LABELS = {
 export function L4Card({ skill, onEdit }: L4CardProps) {
   const relevanceStyle = RELEVANCE_COLORS[skill.relevance];
   const levelInfo = LEVEL_LABELS[skill.level as keyof typeof LEVEL_LABELS] || LEVEL_LABELS[1];
-  
-  const recencyText = skill.lastUsedAt 
-    ? getRecencyText(new Date(skill.lastUsedAt))
-    : 'Never used';
+
+  const recencyText = skill.lastUsedAt ? getRecencyText(new Date(skill.lastUsedAt)) : 'Never used';
 
   return (
-    <Card className="border border-[#D8D2C8] bg-white p-6 space-y-4">
+    <Card className="border border-proofound-stone bg-white p-6 space-y-5 shadow-sm hover:shadow-md transition-shadow duration-300 rounded-xl">
       {/* Header Row */}
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <h4 className="text-lg font-semibold text-[#2D3330] mb-1">
-            {skill.taxonomy?.nameI18n?.en || skill.custom_skill_name || 'Unknown Skill'}
+          <h4 className="text-xl font-semibold text-proofound-charcoal mb-1 font-display">
+            {skill.skill_name ||
+              skill.taxonomy?.nameI18n?.en ||
+              skill.custom_skill_name ||
+              'Unknown Skill'}
           </h4>
-          <p className="text-xs text-[#6B6760] font-mono">{skill.skillCode}</p>
+          <p className="text-xs text-muted-foreground font-mono bg-proofound-parchment inline-block px-2 py-0.5 rounded-md border border-proofound-stone/50">
+            {skill.skillCode}
+          </p>
         </div>
         <Button
           size="sm"
           variant="ghost"
           onClick={onEdit}
-          className="text-[#4A5943] hover:bg-[#EEF1EA]"
+          className="text-proofound-forest hover:bg-proofound-forest/10 hover:text-proofound-forest rounded-full h-8 w-8 p-0"
         >
           <Edit2 className="h-4 w-4" />
         </Button>
       </div>
 
       {/* Metrics Grid */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-x-6 gap-y-4">
         {/* Level */}
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-xs text-[#6B6760]">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium uppercase tracking-wider">
             <TrendingUp className="h-3.5 w-3.5" />
             <span>Competency</span>
           </div>
-          <p className={`text-sm font-semibold ${levelInfo.color}`}>
+          <p className={`text-sm font-semibold ${levelInfo.color} font-display`}>
             Level {skill.level} - {levelInfo.label}
           </p>
         </div>
 
         {/* Experience */}
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-xs text-[#6B6760]">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium uppercase tracking-wider">
             <Clock className="h-3.5 w-3.5" />
             <span>Experience</span>
           </div>
-          <p className="text-sm font-semibold text-[#2D3330]">
+          <p className="text-sm font-semibold text-proofound-charcoal font-display">
             {skill.monthsExperience} months
           </p>
         </div>
 
         {/* Recency */}
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-xs text-[#6B6760]">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium uppercase tracking-wider">
             <Clock className="h-3.5 w-3.5" />
             <span>Last Used</span>
           </div>
-          <p className="text-sm font-semibold text-[#2D3330]">{recencyText}</p>
+          <p className="text-sm font-semibold text-proofound-charcoal font-display">
+            {recencyText}
+          </p>
         </div>
 
         {/* Relevance */}
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-xs text-[#6B6760]">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium uppercase tracking-wider">
             <CheckCircle2 className="h-3.5 w-3.5" />
             <span>Relevance</span>
           </div>
-          <Badge 
-            className={`${relevanceStyle.bg} ${relevanceStyle.text} ${relevanceStyle.border} capitalize`}
+          <Badge
+            className={`${relevanceStyle.bg} ${relevanceStyle.text} ${relevanceStyle.border} capitalize font-medium border shadow-none`}
           >
             {skill.relevance}
           </Badge>
@@ -125,28 +125,28 @@ export function L4Card({ skill, onEdit }: L4CardProps) {
       </div>
 
       {/* Evidence & Impact Bar */}
-      <div className="space-y-3 pt-3 border-t border-[#D8D2C8]">
+      <div className="space-y-4 pt-4 border-t border-proofound-stone">
         <div>
-          <div className="flex items-center justify-between text-xs text-[#6B6760] mb-1">
-            <span>Evidence Strength</span>
-            <span>{Math.round(skill.evidenceStrength * 100)}%</span>
+          <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
+            <span className="font-medium">Evidence Strength</span>
+            <span className="font-mono">{Math.round(skill.evidenceStrength * 100)}%</span>
           </div>
-          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-[#4A5943] transition-all"
+          <div className="h-2 bg-proofound-stone/30 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-proofound-forest transition-all duration-500 ease-out rounded-full"
               style={{ width: `${skill.evidenceStrength * 100}%` }}
             />
           </div>
         </div>
 
         <div>
-          <div className="flex items-center justify-between text-xs text-[#6B6760] mb-1">
-            <span>Impact Score</span>
-            <span>{Math.round(skill.impactScore * 100)}%</span>
+          <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
+            <span className="font-medium">Impact Score</span>
+            <span className="font-mono">{Math.round(skill.impactScore * 100)}%</span>
           </div>
-          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-[#C76B4A] transition-all"
+          <div className="h-2 bg-proofound-stone/30 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-proofound-terracotta transition-all duration-500 ease-out rounded-full"
               style={{ width: `${skill.impactScore * 100}%` }}
             />
           </div>
@@ -155,12 +155,12 @@ export function L4Card({ skill, onEdit }: L4CardProps) {
 
       {/* Tags */}
       {skill.taxonomy?.tags && skill.taxonomy.tags.length > 0 && (
-        <div className="flex flex-wrap gap-2 pt-3 border-t border-[#D8D2C8]">
+        <div className="flex flex-wrap gap-2 pt-4 border-t border-proofound-stone">
           {skill.taxonomy.tags.slice(0, 5).map((tag) => (
-            <Badge 
-              key={tag} 
+            <Badge
+              key={tag}
               variant="outline"
-              className="text-xs border-[#D8D2C8] text-[#6B6760]"
+              className="text-xs border-proofound-stone text-muted-foreground bg-proofound-parchment/50 font-normal"
             >
               {tag}
             </Badge>
@@ -169,21 +169,21 @@ export function L4Card({ skill, onEdit }: L4CardProps) {
       )}
 
       {/* Action Buttons */}
-      <div className="flex gap-2 pt-3 border-t border-[#D8D2C8]">
-        <Button 
-          size="sm" 
+      <div className="flex gap-3 pt-4 border-t border-proofound-stone">
+        <Button
+          size="sm"
           variant="outline"
           onClick={onEdit}
-          className="flex-1 text-[#4A5943] border-[#4A5943] hover:bg-[#EEF1EA]"
+          className="flex-1 text-proofound-forest border-proofound-forest/30 hover:bg-proofound-forest/5 hover:border-proofound-forest hover:text-proofound-forest transition-all"
         >
           <FileText className="h-4 w-4 mr-2" />
           Add Proof
         </Button>
-        <Button 
-          size="sm" 
+        <Button
+          size="sm"
           variant="outline"
           onClick={onEdit}
-          className="flex-1 text-[#4A5943] border-[#4A5943] hover:bg-[#EEF1EA]"
+          className="flex-1 text-proofound-teal border-proofound-teal/30 hover:bg-proofound-teal/5 hover:border-proofound-teal hover:text-proofound-teal transition-all"
         >
           <CheckCircle2 className="h-4 w-4 mr-2" />
           Request Verification
@@ -199,11 +199,10 @@ export function L4Card({ skill, onEdit }: L4CardProps) {
 function getRecencyText(date: Date): string {
   const now = new Date();
   const monthsAgo = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24 * 30));
-  
+
   if (monthsAgo < 1) return 'This month';
   if (monthsAgo < 6) return `${monthsAgo} months ago`;
   if (monthsAgo < 12) return `${monthsAgo} months ago (Recent)`;
   if (monthsAgo < 24) return `${Math.floor(monthsAgo / 12)} year ago`;
   return `${Math.floor(monthsAgo / 12)} years ago (Rusty)`;
 }
-

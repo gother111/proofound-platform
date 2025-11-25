@@ -17,6 +17,7 @@ import {
   Briefcase,
   Building,
   ClipboardList,
+  MessageCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -57,6 +58,12 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
       label: 'Matching',
       dataTour: 'matching-link',
     },
+    {
+      href: `${basePath}/messages`,
+      icon: MessageCircle,
+      label: 'Messages',
+      dataTour: 'messages-link',
+    },
     { href: `${basePath}/expertise`, icon: MapPin, label: 'Expertise', dataTour: 'expertise-link' },
     {
       href: `${basePath}/interviews`,
@@ -83,6 +90,18 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
       dataTour: 'assignments',
     },
     { href: `${basePath}/candidates`, icon: Users, label: 'Candidates', dataTour: 'candidates' },
+    {
+      href: `${basePath}/messages`,
+      icon: MessageCircle,
+      label: 'Messages',
+      dataTour: 'messages-link',
+    },
+    {
+      href: `${basePath}/interviews`,
+      icon: Video,
+      label: 'Interviews',
+      dataTour: 'interviews-link',
+    },
     { href: `${basePath}/profile`, icon: Building, label: 'Org Profile', dataTour: 'org-profile' },
     { href: `${basePath}/team`, icon: Users, label: 'Team', dataTour: 'team-link' },
     { href: `${basePath}/settings`, icon: Settings, label: 'Settings', dataTour: 'settings-link' },
@@ -95,13 +114,9 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
       {/* Desktop/Tablet Sidebar Navigation */}
       <aside
         data-tour="left-nav"
-        className={`hidden md:flex border-r transition-all duration-300 ease-in-out flex-shrink-0 flex-col ${
+        className={`hidden md:flex border-r transition-all duration-300 ease-in-out flex-shrink-0 flex-col bg-neutral-light-50 border-proofound-stone/60 ${
           isExpanded ? 'w-52' : 'w-14'
         }`}
-        style={{
-          backgroundColor: '#FDFCFA',
-          borderColor: 'rgba(232, 230, 221, 0.6)',
-        }}
         aria-label={isExpanded ? 'Main navigation' : 'Main navigation (collapsed)'}
       >
         <div className="flex-1 py-3 overflow-y-auto">
@@ -121,10 +136,10 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
                   <Link
                     href={item.href}
                     data-tour={item.dataTour}
-                    className={`group flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-all duration-200 min-h-12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1C4D3A] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FDFCFA] ${
+                    className={`group flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-all duration-200 min-h-12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-light-50 ${
                       isActive
-                        ? 'bg-[#1C4D3A] text-[#F7F6F1]'
-                        : 'text-[#2D3330] hover:bg-[#E8E6DD]/50 focus-visible:bg-[#E8E6DD]/60'
+                        ? 'bg-proofound-forest text-proofound-parchment'
+                        : 'text-proofound-charcoal hover:bg-proofound-stone/50 focus-visible:bg-proofound-stone/60'
                     }`}
                     title={!isExpanded ? item.label : ''}
                     aria-label={item.label}
@@ -138,23 +153,9 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
 
                   {/* Enhanced tooltip for collapsed state */}
                   {!isExpanded && hoveredItem === item.label && (
-                    <div
-                      className="absolute left-full ml-2 px-3 py-2 rounded-md shadow-lg whitespace-nowrap z-50 pointer-events-none"
-                      style={{
-                        backgroundColor: '#2D3330',
-                        color: '#F7F6F1',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                      }}
-                    >
+                    <div className="absolute left-full ml-2 px-3 py-2 rounded-md shadow-lg whitespace-nowrap z-50 pointer-events-none bg-proofound-charcoal text-proofound-parchment top-1/2 -translate-y-1/2">
                       {item.label}
-                      <div
-                        className="absolute right-full top-1/2 border-4 border-transparent"
-                        style={{
-                          borderRightColor: '#2D3330',
-                          transform: 'translateY(-50%)',
-                        }}
-                      />
+                      <div className="absolute right-full top-1/2 border-4 border-transparent border-r-proofound-charcoal -translate-y-1/2" />
                     </div>
                   )}
                 </div>
@@ -163,7 +164,7 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
           </nav>
         </div>
 
-        <div className="p-2 border-t" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
+        <div className="p-2 border-t border-proofound-stone/60">
           <Button
             variant="ghost"
             size="sm"
@@ -182,11 +183,7 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
 
       {/* Mobile Bottom Tab Bar Navigation */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-white"
-        style={{
-          backgroundColor: '#FDFCFA',
-          borderColor: 'rgba(232, 230, 221, 0.6)',
-        }}
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-neutral-light-50 border-proofound-stone/60"
         role="navigation"
         aria-label="Mobile primary navigation"
       >
@@ -201,7 +198,9 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
                 key={item.href}
                 href={item.href}
                 className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors min-w-[64px] min-h-[64px] justify-center ${
-                  isActive ? 'text-[#1C4D3A]' : 'text-[#6B6760] hover:text-[#2D3330]'
+                  isActive
+                    ? 'text-proofound-forest'
+                    : 'text-muted-foreground hover:text-proofound-charcoal'
                 }`}
                 aria-current={isActive ? 'page' : undefined}
                 aria-label={item.label}

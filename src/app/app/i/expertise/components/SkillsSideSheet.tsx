@@ -7,6 +7,7 @@ import { Edit2, Calendar, TrendingUp, Award } from 'lucide-react';
 
 interface Skill {
   id: string;
+  skill_name?: string; // Computed skill name from API
   taxonomy?: {
     name_i18n?: { en: string };
   };
@@ -38,12 +39,10 @@ function getLevelColor(level: number): string {
 
 function formatRecency(lastUsedAt?: string): string {
   if (!lastUsedAt) return 'Never used';
-  
+
   const now = new Date();
   const lastUsed = new Date(lastUsedAt);
-  const monthsAgo = Math.floor(
-    (now.getTime() - lastUsed.getTime()) / (1000 * 60 * 60 * 24 * 30)
-  );
+  const monthsAgo = Math.floor((now.getTime() - lastUsed.getTime()) / (1000 * 60 * 60 * 24 * 30));
 
   if (monthsAgo === 0) return 'This month';
   if (monthsAgo === 1) return '1 month ago';
@@ -73,13 +72,15 @@ export function SkillsSideSheet({
         <div className="mt-6 space-y-3">
           {skills.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-sm text-muted-foreground">
-                No skills match the current filters
-              </p>
+              <p className="text-sm text-muted-foreground">No skills match the current filters</p>
             </div>
           ) : (
-            skills.map(skill => {
-              const skillName = skill.taxonomy?.name_i18n?.en || skill.custom_skill_name || 'Unknown Skill';
+            skills.map((skill) => {
+              const skillName =
+                skill.skill_name ||
+                skill.taxonomy?.name_i18n?.en ||
+                skill.custom_skill_name ||
+                'Unknown Skill';
               const level = skill.level || 1;
               const recency = formatRecency(skill.lastUsedAt);
               const relevance = skill.relevance || 'current';
@@ -102,9 +103,7 @@ export function SkillsSideSheet({
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    <Badge className={getLevelColor(level)}>
-                      {getLevelLabel(level)}
-                    </Badge>
+                    <Badge className={getLevelColor(level)}>{getLevelLabel(level)}</Badge>
 
                     <Badge variant="outline" className="gap-1">
                       <Calendar className="w-3 h-3" />
@@ -112,11 +111,11 @@ export function SkillsSideSheet({
                     </Badge>
 
                     {relevance !== 'current' && (
-                      <Badge 
-                        variant="outline" 
+                      <Badge
+                        variant="outline"
                         className={`gap-1 ${
-                          relevance === 'emerging' 
-                            ? 'text-blue-600 dark:text-blue-400' 
+                          relevance === 'emerging'
+                            ? 'text-blue-600 dark:text-blue-400'
                             : 'text-red-600 dark:text-red-400'
                         }`}
                       >
@@ -134,4 +133,3 @@ export function SkillsSideSheet({
     </Sheet>
   );
 }
-

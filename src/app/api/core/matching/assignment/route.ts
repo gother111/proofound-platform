@@ -3,19 +3,22 @@ import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
 import { assignments, matchingProfiles, skills, organizationMembers } from '@/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { scrubDisallowedFields } from '@/lib/core/matching/firewall';
 import {
   scoreValues,
   scoreCauses,
   scoreSkills,
+  scoreSkillsEnhanced,
   scoreExperience,
   scoreVerifications,
   scoreAvailability,
   scoreLocation,
   scoreCompensation,
   scoreLanguage,
+  scorePAC,
+  scoreWorkAuthorization,
   composeWeighted,
   compareMatches,
   type Skill,
@@ -24,6 +27,7 @@ import {
   type LocationMode,
 } from '@/lib/core/matching/scorers';
 import { getPreset, normalizeWeights, type PresetKey } from '@/lib/core/matching/presets';
+import { annRetrieveSimilarProfiles, batchGetMissionVisionScores } from '@/lib/matching/semantic';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,6 +37,8 @@ const MatchRequestSchema = z.object({
   weights: z.record(z.number()).optional(),
   mode: z.enum(['mission-first', 'skills-first', 'balanced']).optional(),
   k: z.number().positive().max(100).optional(), // Top k results
+  useTwoStage: z.boolean().optional(), // Enable two-stage matching (ANN + re-rank)
+  annLimit: z.number().positive().max(1000).optional(), // Stage-1 ANN retrieval limit
 });
 
 interface MatchResult {
@@ -43,6 +49,13 @@ interface MatchResult {
   gaps: Array<{ id: string; required: number; have: number }>;
   missing: string[];
   profile: unknown; // Scrubbed profile data
+  // PRD: PAC for analytics and transparency
+  pac: {
+    total: number;
+    valuesScore: number;
+    causesScore: number;
+    missionVisionScore: number;
+  };
 }
 
 /**
@@ -60,7 +73,7 @@ export async function POST(request: NextRequest) {
 
     // Validate input
     const validatedData = MatchRequestSchema.parse(body);
-    const { assignmentId, mode, k = 20 } = validatedData;
+    const { assignmentId, mode, k = 20, useTwoStage = false, annLimit = 500 } = validatedData;
 
     // Fetch assignment
     const assignment = await db.query.assignments.findFirst({
@@ -91,14 +104,62 @@ export async function POST(request: NextRequest) {
         ? getPreset(mode as PresetKey)
         : getPreset('balanced');
 
-    // Fetch all matching profiles
-    const candidateProfiles = await db.query.matchingProfiles.findMany();
+    // ========================================================================
+    // TWO-STAGE MATCHING (PRD: Proofound_Matching_Conversation.md)
+    // Stage 1: ANN retrieval using pgvector HNSW index
+    // Stage 2: Precise multi-factor re-ranking
+    // ========================================================================
 
-    // Fetch skills for all candidates
-    const allSkills = await db.query.skills.findMany();
+    let candidateProfiles: (typeof matchingProfiles.$inferSelect)[];
+    let annSimilarityScores: Map<string, number> = new Map();
+    let stage1Count = 0;
+
+    if (useTwoStage) {
+      // Stage 1: ANN retrieval - get top candidates by semantic similarity
+      log.info('match.assignment.stage1.start', { assignmentId, limit: annLimit });
+
+      const annResults = await annRetrieveSimilarProfiles(assignmentId, annLimit);
+      stage1Count = annResults.length;
+
+      if (annResults.length > 0) {
+        // Store ANN similarity scores for later use
+        for (const result of annResults) {
+          annSimilarityScores.set(result.id, result.similarity);
+        }
+
+        // Fetch only the profiles from ANN results
+        const profileIds = annResults.map((r) => r.id);
+        candidateProfiles = await db.query.matchingProfiles.findMany({
+          where: inArray(matchingProfiles.profileId, profileIds),
+        });
+
+        log.info('match.assignment.stage1.complete', {
+          assignmentId,
+          annResultCount: annResults.length,
+          profilesFetched: candidateProfiles.length,
+        });
+      } else {
+        // Fallback to full scan if ANN returns no results (embeddings not ready)
+        log.warn('match.assignment.stage1.fallback', {
+          assignmentId,
+          reason: 'No ANN results, falling back to full scan',
+        });
+        candidateProfiles = await db.query.matchingProfiles.findMany();
+      }
+    } else {
+      // Traditional full scan
+      candidateProfiles = await db.query.matchingProfiles.findMany();
+    }
+
+    // Fetch skills for candidates with enhanced attributes
+    const profileIds = candidateProfiles.map((p) => p.profileId);
+    const candidateSkills = await db.query.skills.findMany({
+      where: inArray(skills.profileId, profileIds),
+    });
+
     const skillsByProfile: Record<string, Record<string, Skill>> = {};
 
-    for (const skill of allSkills) {
+    for (const skill of candidateSkills) {
       if (!skillsByProfile[skill.profileId]) {
         skillsByProfile[skill.profileId] = {};
       }
@@ -106,7 +167,20 @@ export async function POST(request: NextRequest) {
         id: skill.skillId,
         level: skill.level,
         months: skill.monthsExperience,
+        // Enhanced attributes for PRD-compliant scoring
+        evidenceStrength: skill.evidenceStrength ? parseFloat(skill.evidenceStrength) : undefined,
+        recencyMultiplier: skill.recencyMultiplier
+          ? parseFloat(skill.recencyMultiplier)
+          : undefined,
+        impactScore: skill.impactScore ? parseFloat(skill.impactScore) : undefined,
+        lastUsedAt: skill.lastUsedAt || undefined,
       };
+    }
+
+    // Batch fetch mission/vision scores for PAC (if using semantic matching)
+    let missionVisionScores: Map<string, number> = new Map();
+    if (useTwoStage && profileIds.length > 0) {
+      missionVisionScores = await batchGetMissionVisionScores(profileIds, assignmentId);
     }
 
     // Compute scores
@@ -115,21 +189,45 @@ export async function POST(request: NextRequest) {
     for (const profile of candidateProfiles) {
       const candidateSkills = skillsByProfile[profile.profileId] || {};
 
-      // Apply hard filters
+      // Apply hard filters with enhanced scoring
       const mustHaveSkills = (assignment.mustHaveSkills as Skill[]) || [];
       const niceToHaveSkills = (assignment.niceToHaveSkills as Skill[]) || [];
 
-      const skillScore = scoreSkills(mustHaveSkills, niceToHaveSkills, candidateSkills);
+      const enhancedSkillScore = scoreSkillsEnhanced(
+        mustHaveSkills,
+        niceToHaveSkills,
+        candidateSkills
+      );
 
-      if (skillScore.hardFail) {
+      if (enhancedSkillScore.hardFail) {
         continue; // Skip candidates who don't meet must-haves
       }
 
-      // Compute subscores
+      // Calculate PAC (Purpose-Alignment Contribution) with semantic matching
+      // Use mission/vision score from embeddings if available (two-stage mode)
+      const missionVisionScore = missionVisionScores.get(profile.profileId);
+      const pacScore = scorePAC(
+        profile.valuesTags || [],
+        profile.causeTags || [],
+        assignment.valuesRequired || [],
+        assignment.causeTags || [],
+        missionVisionScore // Semantic similarity from embeddings (Phase 3)
+      );
+
+      // Calculate work authorization score
+      const workAuthScore = scoreWorkAuthorization({
+        candidateNeedsSponsorship: profile.needsSponsorship ?? false,
+        candidateWishesSponsorship: profile.wishesSponsorship ?? false,
+        orgCanSponsor: (assignment as any).canSponsor ?? true, // Default to true if not specified
+      });
+
+      // Compute subscores with new PRD-aligned metrics
       const subscores: Record<string, number> = {
-        values: scoreValues(profile.valuesTags || [], assignment.valuesRequired || []),
-        causes: scoreCauses(profile.causeTags || [], assignment.causeTags || []),
-        skills: skillScore.score,
+        // Legacy scores (for backward compatibility)
+        values: pacScore.valuesScore,
+        causes: pacScore.causesScore,
+        // Core skills (using enhanced weighted score)
+        skills: enhancedSkillScore.weightedScore,
         experience: scoreExperience(
           Object.values(candidateSkills).reduce((sum, s) => sum + (s.months || 0), 0) /
             Math.max(Object.keys(candidateSkills).length, 1)
@@ -138,6 +236,11 @@ export async function POST(request: NextRequest) {
           assignment.verificationGates || [],
           (profile.verified as Record<string, boolean>) || {}
         ),
+        // New PRD-aligned scores
+        pac: pacScore.total, // Purpose-Alignment Contribution
+        recency: enhancedSkillScore.recencyScore,
+        evidence: enhancedSkillScore.evidenceScore,
+        workAuthorization: workAuthScore,
       };
 
       // Availability
@@ -205,9 +308,16 @@ export async function POST(request: NextRequest) {
         score: composed.total,
         subscores,
         contributions: composed.contributions,
-        gaps: skillScore.gaps,
-        missing: skillScore.missing,
+        gaps: enhancedSkillScore.gaps,
+        missing: enhancedSkillScore.missing,
         profile: scrubbedProfile,
+        // PRD: Include PAC breakdown for analytics and "Why this match" transparency
+        pac: {
+          total: pacScore.total,
+          valuesScore: pacScore.valuesScore,
+          causesScore: pacScore.causesScore,
+          missionVisionScore: pacScore.missionVisionScore,
+        },
       });
     }
 
@@ -219,7 +329,7 @@ export async function POST(request: NextRequest) {
       )
     );
 
-    // Return top k
+    // Return top k (Stage 2 re-ranking complete)
     const topK = results.slice(0, k);
 
     const duration = Date.now() - startTime;
@@ -229,6 +339,8 @@ export async function POST(request: NextRequest) {
       poolSize: candidateProfiles.length,
       resultCount: topK.length,
       durationMs: duration,
+      twoStage: useTwoStage,
+      stage1Count: useTwoStage ? stage1Count : undefined,
     });
 
     return NextResponse.json({
@@ -238,6 +350,10 @@ export async function POST(request: NextRequest) {
         returned: topK.length,
         durationMs: duration,
         weights: weights,
+        // Two-stage matching metadata
+        twoStage: useTwoStage,
+        stage1Count: useTwoStage ? stage1Count : undefined,
+        hasMissionVisionScores: missionVisionScores.size > 0,
       },
     });
   } catch (error) {

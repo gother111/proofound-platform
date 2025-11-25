@@ -154,14 +154,14 @@ export function MessageThread({
               {stage === 'revealed' && otherPartyAvatar ? (
                 <AvatarImage src={otherPartyAvatar} alt={displayName} />
               ) : null}
-              <AvatarFallback className="bg-[#4A5943] text-white">
+              <AvatarFallback className="bg-[#1C4D3A] text-white">
                 {getInitials(displayName)}
               </AvatarFallback>
             </Avatar>
             <div>
               <div className="font-semibold text-[#2D3330]">{displayName}</div>
               {stage === 'masked' && (
-                <Badge variant="outline" className="text-xs border-[#7A9278] text-[#4A5943]">
+                <Badge variant="outline" className="text-xs border-[#7A9278] text-[#1C4D3A]">
                   Identity revealed after introduction
                 </Badge>
               )}
@@ -190,7 +190,7 @@ export function MessageThread({
                     {stage === 'revealed' && otherPartyAvatar ? (
                       <AvatarImage src={otherPartyAvatar} alt={displayName} />
                     ) : null}
-                    <AvatarFallback className="bg-[#4A5943] text-white text-xs">
+                    <AvatarFallback className="bg-[#1C4D3A] text-white text-xs">
                       {getInitials(displayName)}
                     </AvatarFallback>
                   </Avatar>
@@ -203,7 +203,7 @@ export function MessageThread({
                     className={cn(
                       'rounded-2xl px-4 py-2 break-words',
                       isOwnMessage
-                        ? 'bg-[#4A5943] text-white rounded-br-sm'
+                        ? 'bg-[#1C4D3A] text-white rounded-br-sm'
                         : 'bg-white border border-[#D8D2C8] text-[#2D3330] rounded-bl-sm'
                     )}
                   >
@@ -240,7 +240,7 @@ export function MessageThread({
                 {stage === 'revealed' && otherPartyAvatar ? (
                   <AvatarImage src={otherPartyAvatar} alt={displayName} />
                 ) : null}
-                <AvatarFallback className="bg-[#4A5943] text-white text-xs">
+                <AvatarFallback className="bg-[#1C4D3A] text-white text-xs">
                   {getInitials(displayName)}
                 </AvatarFallback>
               </Avatar>
@@ -290,7 +290,7 @@ export function MessageThread({
                 disabled={
                   !messageText.trim() || isSending || messageText.length > MAX_MESSAGE_LENGTH
                 }
-                className="bg-[#4A5943] hover:bg-[#3A4733] h-auto px-4"
+                className="bg-[#1C4D3A] hover:bg-[#2D5F4A] h-auto px-4"
               >
                 {isSending ? (
                   <Loader2 className="h-5 w-5 animate-spin" />

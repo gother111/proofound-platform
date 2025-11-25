@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -24,6 +25,10 @@ import {
   TrendingUp,
   X,
   Eye,
+  EyeOff,
+  Shield,
+  Share2,
+  Leaf,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useProfileData } from '@/hooks/useProfileData';
@@ -34,7 +39,7 @@ import { MissionEditor } from './MissionEditor';
 import { VisionEditor } from './VisionEditor';
 import { ValuesEditor } from './ValuesEditor';
 import { CausesEditor } from './CausesEditor';
-import { SkillsEditor } from './SkillsEditor';
+// Skills are now managed via Expertise Atlas - SkillsEditor removed
 import { ImpactStoryForm } from './forms/ImpactStoryForm';
 import { ExperienceForm } from './forms/ExperienceForm';
 import { EducationForm } from './forms/EducationForm';
@@ -46,8 +51,10 @@ import { CausesCard } from './CausesCard';
 import { SkillsCard } from './SkillsCard';
 import { Value, Skill } from '@/types/profile';
 import { EmptyProfileStateView } from './EmptyProfileStateView';
+import { ShareProfileDialog } from './ShareProfileDialog';
 
 export function EditableProfileView() {
+  const router = useRouter();
   const {
     profile,
     isLoading,
@@ -59,7 +66,7 @@ export function EditableProfileView() {
     updateVision,
     replaceValues,
     replaceCauses,
-    replaceSkills,
+    // replaceSkills removed - Skills managed via Expertise Atlas
     addImpactStory,
     deleteImpactStory,
     addExperience,
@@ -68,6 +75,7 @@ export function EditableProfileView() {
     deleteEducation,
     addVolunteering,
     deleteVolunteering,
+    toggleRedactMode,
   } = useProfileData();
 
   // Modal/form states
@@ -76,11 +84,12 @@ export function EditableProfileView() {
   const [isVisionEditorOpen, setIsVisionEditorOpen] = useState(false);
   const [isValuesEditorOpen, setIsValuesEditorOpen] = useState(false);
   const [isCausesEditorOpen, setIsCausesEditorOpen] = useState(false);
-  const [isSkillsEditorOpen, setIsSkillsEditorOpen] = useState(false);
+  // Skills are now managed via Expertise Atlas - no local editor state needed
   const [isImpactStoryFormOpen, setIsImpactStoryFormOpen] = useState(false);
   const [isExperienceFormOpen, setIsExperienceFormOpen] = useState(false);
   const [isEducationFormOpen, setIsEducationFormOpen] = useState(false);
   const [isVolunteerFormOpen, setIsVolunteerFormOpen] = useState(false);
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
 
   const isEmptyProfile = useMemo(() => {
     if (!profile) {
@@ -143,7 +152,7 @@ export function EditableProfileView() {
         onOpenMission={() => setIsMissionEditorOpen(true)}
         onOpenValues={() => setIsValuesEditorOpen(true)}
         onOpenCauses={() => setIsCausesEditorOpen(true)}
-        onOpenSkills={() => setIsSkillsEditorOpen(true)}
+        onOpenSkills={() => router.push('/app/i/expertise')}
         onAddImpactStory={() => setIsImpactStoryFormOpen(true)}
         onAddExperience={() => setIsExperienceFormOpen(true)}
         onAddEducation={() => setIsEducationFormOpen(true)}
@@ -203,7 +212,8 @@ export function EditableProfileView() {
         {/* Profile Info */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative -mt-16 mb-8">
-            <Card className="p-6 border-2">
+            <Card className="p-6 border-0 shadow-xl bg-white/90 dark:bg-stone-900/90 backdrop-blur-sm rounded-2xl overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#7A9278] via-[#C67B5C] to-[#5C8B89]" />
               <div className="flex flex-col sm:flex-row gap-6 items-start">
                 {/* Avatar Upload */}
                 <AvatarUpload
@@ -225,6 +235,46 @@ export function EditableProfileView() {
                       disabled={pending.updatingBasicInfo || isPending}
                     >
                       <Edit3 className="w-3 h-3" />
+                    </Button>
+                    {/* Redact Mode Toggle */}
+                    <Button
+                      variant={profile.redactMode ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => toggleRedactMode(!profile.redactMode)}
+                      className={`h-8 gap-1.5 ${
+                        profile.redactMode
+                          ? 'bg-amber-500 hover:bg-amber-600 text-white'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                      disabled={pending.redactMode || isPending}
+                      title={
+                        profile.redactMode
+                          ? 'Redact mode is ON - Your profile is hidden from viewers'
+                          : 'Turn on redact mode to hide your profile temporarily'
+                      }
+                    >
+                      {profile.redactMode ? (
+                        <>
+                          <EyeOff className="w-3 h-3" />
+                          <span className="text-xs">Hidden</span>
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="w-3 h-3" />
+                          <span className="text-xs">Visible</span>
+                        </>
+                      )}
+                    </Button>
+                    {/* Share Profile Button */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsShareDialogOpen(true)}
+                      className="h-8 gap-1.5 text-muted-foreground hover:text-foreground"
+                      title="Share your profile"
+                    >
+                      <Share2 className="w-3 h-3" />
+                      <span className="text-xs">Share</span>
                     </Button>
                   </div>
 
@@ -256,7 +306,10 @@ export function EditableProfileView() {
                     </p>
                   ) : (
                     <button
-                      onClick={() => setIsEditProfileOpen(true)}
+                      onClick={() => {
+                        console.log('DEBUG: Clicked Add Tagline');
+                        setIsEditProfileOpen(true);
+                      }}
                       className="w-full text-left p-4 rounded-xl border-2 border-dashed border-muted-foreground/20 hover:border-[#7A9278]/40 transition-colors group/tagline mb-4"
                     >
                       <div className="flex items-start gap-3">
@@ -295,15 +348,21 @@ export function EditableProfileView() {
                 {profile.mission ? (
                   <MissionCard mission={profile.mission} />
                 ) : (
-                  <Card className="p-6 border-2 border-dashed border-muted-foreground/20 hover:border-[#7A9278]/40 transition-colors">
+                  <Card className="p-6 border-2 border-dashed border-[#7A9278]/20 bg-[#7A9278]/5 hover:bg-[#7A9278]/10 hover:border-[#7A9278]/40 transition-all group/card">
                     <div className="flex items-center gap-2 mb-4">
-                      <Target className="w-5 h-5 text-[#7A9278]" />
-                      <h3>Mission</h3>
+                      <div className="p-2 rounded-full bg-[#7A9278]/10 group-hover/card:bg-[#7A9278]/20 transition-colors">
+                        <Target className="w-4 h-4 text-[#7A9278]" />
+                      </div>
+                      <h3 className="font-display font-medium">Mission</h3>
                     </div>
-                    <p className="text-sm text-muted-foreground/60 leading-relaxed italic mb-3">
+                    <p className="text-sm text-muted-foreground/80 leading-relaxed italic mb-4">
                       What drives your work? Share the change you want to create in the world.
                     </p>
-                    <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start text-xs hover:bg-[#7A9278]/20 text-[#7A9278]"
+                    >
                       <Plus className="w-3 h-3 mr-2" />
                       Add your mission
                     </Button>
@@ -327,15 +386,21 @@ export function EditableProfileView() {
                 {profile.vision ? (
                   <VisionCard vision={profile.vision} />
                 ) : (
-                  <Card className="p-6 border-2 border-dashed border-muted-foreground/20 hover:border-[#7A9278]/40 transition-colors">
+                  <Card className="p-6 border-2 border-dashed border-[#7A9278]/20 bg-[#7A9278]/5 hover:bg-[#7A9278]/10 hover:border-[#7A9278]/40 transition-all group/card">
                     <div className="flex items-center gap-2 mb-4">
-                      <Eye className="w-5 h-5 text-[#7A9278]" />
-                      <h3>Vision</h3>
+                      <div className="p-2 rounded-full bg-[#7A9278]/10 group-hover/card:bg-[#7A9278]/20 transition-colors">
+                        <Eye className="w-4 h-4 text-[#7A9278]" />
+                      </div>
+                      <h3 className="font-display font-medium">Vision</h3>
                     </div>
-                    <p className="text-sm text-muted-foreground/60 leading-relaxed italic mb-3">
+                    <p className="text-sm text-muted-foreground/80 leading-relaxed italic mb-4">
                       Where do you see yourself in the future? Describe your long-term aspirations.
                     </p>
-                    <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start text-xs hover:bg-[#7A9278]/20 text-[#7A9278]"
+                    >
                       <Plus className="w-3 h-3 mr-2" />
                       Add your vision
                     </Button>
@@ -359,15 +424,21 @@ export function EditableProfileView() {
                 {profile.values.length > 0 ? (
                   <ValuesCard values={profile.values} />
                 ) : (
-                  <Card className="p-6 border-2 border-dashed border-muted-foreground/20 hover:border-[#C67B5C]/40 transition-colors">
+                  <Card className="p-6 border-2 border-dashed border-[#C67B5C]/20 bg-[#C67B5C]/5 hover:bg-[#C67B5C]/10 hover:border-[#C67B5C]/40 transition-all group/card">
                     <div className="flex items-center gap-2 mb-4">
-                      <Sparkles className="w-5 h-5 text-[#C67B5C]" />
-                      <h3>Core Values</h3>
+                      <div className="p-2 rounded-full bg-[#C67B5C]/10 group-hover/card:bg-[#C67B5C]/20 transition-colors">
+                        <Sparkles className="w-4 h-4 text-[#C67B5C]" />
+                      </div>
+                      <h3 className="font-display font-medium">Core Values</h3>
                     </div>
-                    <p className="text-sm text-muted-foreground/60 leading-relaxed italic mb-3">
+                    <p className="text-sm text-muted-foreground/80 leading-relaxed italic mb-4">
                       The principles that guide your decisions and actions.
                     </p>
-                    <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start text-xs hover:bg-[#C67B5C]/20 text-[#C67B5C]"
+                    >
                       <Plus className="w-3 h-3 mr-2" />
                       Define your values
                     </Button>
@@ -391,15 +462,21 @@ export function EditableProfileView() {
                 {profile.causes.length > 0 ? (
                   <CausesCard causes={profile.causes} />
                 ) : (
-                  <Card className="p-6 border-2 border-dashed border-muted-foreground/20 hover:border-[#5C8B89]/40 transition-colors">
+                  <Card className="p-6 border-2 border-dashed border-[#5C8B89]/20 bg-[#5C8B89]/5 hover:bg-[#5C8B89]/10 hover:border-[#5C8B89]/40 transition-all group/card">
                     <div className="flex items-center gap-2 mb-4">
-                      <Sparkles className="w-5 h-5 text-[#5C8B89]" />
-                      <h3>Causes I Support</h3>
+                      <div className="p-2 rounded-full bg-[#5C8B89]/10 group-hover/card:bg-[#5C8B89]/20 transition-colors">
+                        <Leaf className="w-4 h-4 text-[#5C8B89]" />
+                      </div>
+                      <h3 className="font-display font-medium">Causes I Support</h3>
                     </div>
-                    <p className="text-sm text-muted-foreground/60 leading-relaxed italic mb-3">
+                    <p className="text-sm text-muted-foreground/80 leading-relaxed italic mb-4">
                       The issues and movements you&apos;re passionate about.
                     </p>
-                    <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start text-xs hover:bg-[#5C8B89]/20 text-[#5C8B89]"
+                    >
                       <Plus className="w-3 h-3 mr-2" />
                       Add causes
                     </Button>
@@ -407,62 +484,60 @@ export function EditableProfileView() {
                 )}
               </div>
 
-              {/* Skills Card - Click to edit */}
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={() => setIsSkillsEditorOpen(true)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    setIsSkillsEditorOpen(true);
-                  }
-                }}
-                className="cursor-pointer"
-              >
-                {profile.skills.length > 0 ? (
-                  <SkillsCard skills={profile.skills} />
-                ) : (
-                  <Card className="p-6 border-2 border-dashed border-muted-foreground/20 hover:border-[#D4A574]/40 transition-colors">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Lightbulb className="w-5 h-5 text-[#D4A574]" />
-                      <h3>Skills & Expertise</h3>
-                    </div>
-                    <p className="text-sm text-muted-foreground/60 leading-relaxed italic mb-3">
-                      Your capabilities and areas of knowledge.
-                    </p>
-                    <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
-                      <Plus className="w-3 h-3 mr-2" />
-                      Add skills
-                    </Button>
-                  </Card>
-                )}
+              {/* Skills Card - Now linked to Expertise Atlas */}
+              <div>
+                <SkillsCard skills={profile.skills} showManageLink={true} />
               </div>
             </div>
 
             {/* Main Content - Tabs */}
             <div className="lg:col-span-2">
-              <Tabs defaultValue="impact" className="space-y-6">
-                <TabsList className="grid grid-cols-5 w-full rounded-full bg-muted/30 p-1">
-                  <TabsTrigger value="impact" className="rounded-full text-xs sm:text-sm">
-                    <Target className="w-4 h-4 mr-1" />
-                    <span className="hidden sm:inline">Impact</span>
+              <Tabs defaultValue="impact" className="space-y-8">
+                <TabsList className="w-full justify-start bg-transparent border-b rounded-none h-auto p-0 gap-6">
+                  <TabsTrigger
+                    value="impact"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#7A9278] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-2 py-3 text-muted-foreground data-[state=active]:text-[#7A9278] transition-all"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Target className="w-4 h-4" />
+                      <span>Impact</span>
+                    </div>
                   </TabsTrigger>
-                  <TabsTrigger value="journey" className="rounded-full text-xs sm:text-sm">
-                    <Briefcase className="w-4 h-4 mr-1" />
-                    <span className="hidden sm:inline">Journey</span>
+                  <TabsTrigger
+                    value="journey"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#C67B5C] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-2 py-3 text-muted-foreground data-[state=active]:text-[#C67B5C] transition-all"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Briefcase className="w-4 h-4" />
+                      <span>Journey</span>
+                    </div>
                   </TabsTrigger>
-                  <TabsTrigger value="learning" className="rounded-full text-xs sm:text-sm">
-                    <GraduationCap className="w-4 h-4 mr-1" />
-                    <span className="hidden sm:inline">Learning</span>
+                  <TabsTrigger
+                    value="learning"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#5C8B89] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-2 py-3 text-muted-foreground data-[state=active]:text-[#5C8B89] transition-all"
+                  >
+                    <div className="flex items-center gap-2">
+                      <GraduationCap className="w-4 h-4" />
+                      <span>Learning</span>
+                    </div>
                   </TabsTrigger>
-                  <TabsTrigger value="service" className="rounded-full text-xs sm:text-sm">
-                    <HandHeart className="w-4 h-4 mr-1" />
-                    <span className="hidden sm:inline">Service</span>
+                  <TabsTrigger
+                    value="service"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#C67B5C] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-2 py-3 text-muted-foreground data-[state=active]:text-[#C67B5C] transition-all"
+                  >
+                    <div className="flex items-center gap-2">
+                      <HandHeart className="w-4 h-4" />
+                      <span>Service</span>
+                    </div>
                   </TabsTrigger>
-                  <TabsTrigger value="network" className="rounded-full text-xs sm:text-sm">
-                    <Network className="w-4 h-4 mr-1" />
-                    <span className="hidden sm:inline">Network</span>
+                  <TabsTrigger
+                    value="network"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#7A9278] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-2 py-3 text-muted-foreground data-[state=active]:text-[#7A9278] transition-all"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Network className="w-4 h-4" />
+                      <span>Network</span>
+                    </div>
                   </TabsTrigger>
                 </TabsList>
 
@@ -536,8 +611,9 @@ export function EditableProfileView() {
                     profile.impactStories.map((story) => (
                       <Card
                         key={story.id}
-                        className="p-6 border-2 hover:border-[rgb(122,146,120)]/30 transition-colors group relative"
+                        className="p-6 border-2 hover:border-[#7A9278]/30 hover:shadow-md transition-all duration-300 group relative overflow-hidden"
                       >
+                        <div className="absolute top-0 left-0 w-1 h-full bg-[#7A9278] opacity-0 group-hover:opacity-100 transition-opacity" />
                         <Button
                           variant="ghost"
                           size="icon"
@@ -666,8 +742,9 @@ export function EditableProfileView() {
                     profile.experiences.map((exp) => (
                       <Card
                         key={exp.id}
-                        className="p-6 border-2 hover:border-[rgb(122,146,120)]/30 transition-colors group relative"
+                        className="p-6 border-2 hover:border-[#C67B5C]/30 hover:shadow-md transition-all duration-300 group relative overflow-hidden"
                       >
+                        <div className="absolute top-0 left-0 w-1 h-full bg-[#C67B5C] opacity-0 group-hover:opacity-100 transition-opacity" />
                         <Button
                           variant="ghost"
                           size="icon"
@@ -768,8 +845,9 @@ export function EditableProfileView() {
                     profile.education.map((edu) => (
                       <Card
                         key={edu.id}
-                        className="p-6 border-2 hover:border-[rgb(122,146,120)]/30 transition-colors group relative"
+                        className="p-6 border-2 hover:border-[#5C8B89]/30 hover:shadow-md transition-all duration-300 group relative overflow-hidden"
                       >
+                        <div className="absolute top-0 left-0 w-1 h-full bg-[#5C8B89] opacity-0 group-hover:opacity-100 transition-opacity" />
                         <Button
                           variant="ghost"
                           size="icon"
@@ -866,8 +944,9 @@ export function EditableProfileView() {
                     profile.volunteering.map((vol) => (
                       <Card
                         key={vol.id}
-                        className="p-6 border-2 hover:border-[rgb(122,146,120)]/30 transition-colors group relative"
+                        className="p-6 border-2 hover:border-[#C67B5C]/30 hover:shadow-md transition-all duration-300 group relative overflow-hidden"
                       >
+                        <div className="absolute top-0 left-0 w-1 h-full bg-[#C67B5C] opacity-0 group-hover:opacity-100 transition-opacity" />
                         <Button
                           variant="ghost"
                           size="icon"
@@ -943,20 +1022,20 @@ export function EditableProfileView() {
                       </p>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
-                      <div className="text-center p-4 bg-muted/20 rounded-xl">
-                        <User className="w-6 h-6 mx-auto mb-2 text-[#7A9278]" />
+                      <div className="text-center p-4 bg-muted/20 rounded-xl border border-transparent hover:border-[#7A9278]/20 hover:bg-[#7A9278]/5 transition-colors group">
+                        <User className="w-6 h-6 mx-auto mb-2 text-[#7A9278] group-hover:scale-110 transition-transform" />
                         <p className="text-sm text-muted-foreground mb-1">People</p>
                         <p className="text-2xl font-semibold">0</p>
                         <p className="text-xs text-muted-foreground mt-1">Active connections</p>
                       </div>
-                      <div className="text-center p-4 bg-muted/20 rounded-xl">
-                        <Briefcase className="w-6 h-6 mx-auto mb-2 text-[#C67B5C]" />
+                      <div className="text-center p-4 bg-muted/20 rounded-xl border border-transparent hover:border-[#C67B5C]/20 hover:bg-[#C67B5C]/5 transition-colors group">
+                        <Briefcase className="w-6 h-6 mx-auto mb-2 text-[#C67B5C] group-hover:scale-110 transition-transform" />
                         <p className="text-sm text-muted-foreground mb-1">Organizations</p>
                         <p className="text-2xl font-semibold">0</p>
                         <p className="text-xs text-muted-foreground mt-1">Active connections</p>
                       </div>
-                      <div className="text-center p-4 bg-muted/20 rounded-xl">
-                        <GraduationCap className="w-6 h-6 mx-auto mb-2 text-[#5C8B89]" />
+                      <div className="text-center p-4 bg-muted/20 rounded-xl border border-transparent hover:border-[#5C8B89]/20 hover:bg-[#5C8B89]/5 transition-colors group">
+                        <GraduationCap className="w-6 h-6 mx-auto mb-2 text-[#5C8B89] group-hover:scale-110 transition-transform" />
                         <p className="text-sm text-muted-foreground mb-1">Institutions</p>
                         <p className="text-2xl font-semibold">0</p>
                         <p className="text-xs text-muted-foreground mt-1">Active connections</p>
@@ -994,12 +1073,18 @@ export function EditableProfileView() {
         open={isMissionEditorOpen}
         onOpenChange={setIsMissionEditorOpen}
         mission={profile.mission}
+        visibility={
+          (profile.fieldVisibility?.mission as 'public' | 'network' | 'private') || 'public'
+        }
         onSave={updateMission}
       />
       <VisionEditor
         open={isVisionEditorOpen}
         onOpenChange={setIsVisionEditorOpen}
         vision={profile.vision}
+        visibility={
+          (profile.fieldVisibility?.vision as 'public' | 'network' | 'private') || 'network'
+        }
         onSave={updateVision}
       />
       <ValuesEditor
@@ -1018,14 +1103,7 @@ export function EditableProfileView() {
           replaceCauses(causes);
         }}
       />
-      <SkillsEditor
-        open={isSkillsEditorOpen}
-        onOpenChange={setIsSkillsEditorOpen}
-        skills={profile.skills}
-        onSave={(skills: Skill[]) => {
-          replaceSkills(skills);
-        }}
-      />
+      {/* SkillsEditor removed - Skills are now managed via Expertise Atlas */}
       <ImpactStoryForm
         open={isImpactStoryFormOpen}
         onOpenChange={setIsImpactStoryFormOpen}
@@ -1045,6 +1123,12 @@ export function EditableProfileView() {
         open={isVolunteerFormOpen}
         onOpenChange={setIsVolunteerFormOpen}
         onSave={addVolunteering}
+      />
+      <ShareProfileDialog
+        isOpen={isShareDialogOpen}
+        onClose={() => setIsShareDialogOpen(false)}
+        userName={profile.basicInfo.name}
+        userHeadline={profile.basicInfo.tagline || undefined}
       />
     </div>
   );

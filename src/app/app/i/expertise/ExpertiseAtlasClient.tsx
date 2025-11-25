@@ -37,7 +37,7 @@ export function ExpertiseAtlasClient({
   domains,
   hasSkills,
   widgetData,
-  linkedInConnected
+  linkedInConnected,
 }: ExpertiseAtlasClientProps) {
   const [activeTab, setActiveTab] = useState<string>('atlas');
   const [selectedL1, setSelectedL1] = useState<number | null>(null);
@@ -62,21 +62,21 @@ export function ExpertiseAtlasClient({
   // Filter skills for side sheet (must be before early return)
   const filteredSkills = useMemo(() => {
     // First filter out skills without taxonomy (custom skills with null skill_code)
-    let filtered = initialSkills.filter(skill => skill.taxonomy !== null && skill.taxonomy !== undefined);
+    let filtered = initialSkills.filter(
+      (skill) => skill.taxonomy !== null && skill.taxonomy !== undefined
+    );
 
     // Apply L1 domain filter
     if (filters.l1Domains.length > 0) {
-      filtered = filtered.filter(skill => 
-        filters.l1Domains.includes(skill.taxonomy?.cat_id)
-      );
+      filtered = filtered.filter((skill) => filters.l1Domains.includes(skill.taxonomy?.cat_id));
     }
 
     // Apply status filter (credibility)
     if (filters.status !== 'all') {
-      filtered = filtered.filter(skill => {
+      filtered = filtered.filter((skill) => {
         const hasProof = (skill.proof_count || 0) > 0;
         const hasVerification = (skill.verification_count || 0) > 0;
-        
+
         if (filters.status === 'verified') {
           return hasProof && hasVerification;
         } else if (filters.status === 'proofOnly') {
@@ -91,9 +91,9 @@ export function ExpertiseAtlasClient({
     // Apply recency filter
     if (filters.recency !== 'all') {
       const now = new Date();
-      filtered = filtered.filter(skill => {
+      filtered = filtered.filter((skill) => {
         if (!skill.lastUsedAt) return filters.recency === 'rusty';
-        
+
         const monthsAgo = Math.floor(
           (now.getTime() - new Date(skill.lastUsedAt).getTime()) / (1000 * 60 * 60 * 24 * 30)
         );
@@ -133,9 +133,10 @@ export function ExpertiseAtlasClient({
   // Filter L3 subcategories based on selected L2
   const l3Subcategories = selectedL2
     ? initialSkills
-        .filter((skill: any) => 
-          skill.taxonomy?.cat_id === selectedL2.catId &&
-          skill.taxonomy?.subcat_id === selectedL2.subcatId
+        .filter(
+          (skill: any) =>
+            skill.taxonomy?.cat_id === selectedL2.catId &&
+            skill.taxonomy?.subcat_id === selectedL2.subcatId
         )
         .reduce((acc: any[], skill: any) => {
           const existing = acc.find((item) => item.l3Id === skill.taxonomy.l3_id);
@@ -157,27 +158,28 @@ export function ExpertiseAtlasClient({
 
   // Filter L4 skills based on selected L3
   const l4Skills = selectedL3
-    ? initialSkills.filter((skill: any) =>
-        skill.taxonomy?.cat_id === selectedL3.catId &&
-        skill.taxonomy?.subcat_id === selectedL3.subcatId &&
-        skill.taxonomy?.l3_id === selectedL3.l3Id
+    ? initialSkills.filter(
+        (skill: any) =>
+          skill.taxonomy?.cat_id === selectedL3.catId &&
+          skill.taxonomy?.subcat_id === selectedL3.subcatId &&
+          skill.taxonomy?.l3_id === selectedL3.l3Id
       )
     : [];
 
   // Calculate L2 categories per L1 domain (only those with user skills)
   const l2CategoriesPerL1 = useMemo(() => {
     const result: Record<number, any[]> = {};
-    
+
     initialSkills.forEach((skill: any) => {
       if (!skill.taxonomy?.cat_id || !skill.taxonomy?.subcat_id) return;
-      
+
       const catId = skill.taxonomy.cat_id;
       const subcatId = skill.taxonomy.subcat_id;
-      
+
       if (!result[catId]) {
         result[catId] = [];
       }
-      
+
       // Check if this L2 category already exists in the array
       const existing = result[catId].find((l2: any) => l2.subcatId === subcatId);
       if (!existing) {
@@ -192,7 +194,7 @@ export function ExpertiseAtlasClient({
         existing.l4Count++;
       }
     });
-    
+
     return result;
   }, [initialSkills]);
 
@@ -253,12 +255,12 @@ export function ExpertiseAtlasClient({
   };
 
   const handleScatterClick = (skillId: string) => {
-    const skill = initialSkills.find(s => s.id === skillId);
+    const skill = initialSkills.find((s) => s.id === skillId);
     if (skill) handleSkillEdit(skill);
   };
 
   const handleActionClick = (skillId: string) => {
-    const skill = initialSkills.find(s => s.id === skillId);
+    const skill = initialSkills.find((s) => s.id === skillId);
     if (skill) handleSkillEdit(skill);
   };
 
@@ -270,22 +272,23 @@ export function ExpertiseAtlasClient({
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F6F1]">
+    <div className="min-h-screen bg-proofound-parchment">
       <div className="mx-auto max-w-7xl px-6 py-8">
         {/* Header */}
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-semibold text-[#2D3330] mb-2">
+            <h1 className="text-4xl font-semibold text-proofound-charcoal mb-2 font-display">
               Expertise Atlas
             </h1>
-            <p className="text-[#6B6760]">
-              Your skills mapped across {initialSkills.length} entries in {domains.filter(d => d.skillCount > 0).length} domains
+            <p className="text-muted-foreground font-sans text-lg">
+              Your skills mapped across {initialSkills.length} entries in{' '}
+              {domains.filter((d) => d.skillCount > 0).length} domains
             </p>
           </div>
           <div className="flex items-center gap-3">
             <Button
               variant="outline"
-              className="border-[#4A5943] text-[#4A5943] hover:bg-[#EEF1EA]"
+              className="border-proofound-forest text-proofound-forest hover:bg-proofound-forest/10 font-medium rounded-xl"
             >
               <BookOpen className="h-4 w-4 mr-2" />
               Learn More
@@ -294,15 +297,18 @@ export function ExpertiseAtlasClient({
               <Button
                 onClick={() => setIsLinkedInImportModalOpen(true)}
                 variant="outline"
-                className="border-[#0A66C2] text-[#0A66C2] hover:bg-blue-50"
+                className="border-[#0A66C2] text-[#0A66C2] hover:bg-blue-50 font-medium rounded-xl"
               >
                 <Linkedin className="h-4 w-4 mr-2" />
                 Import from LinkedIn
               </Button>
             )}
             <Button
-              onClick={() => setIsAddSkillDrawerOpen(true)}
-              className="bg-[#4A5943] text-white hover:bg-[#3C4936]"
+              onClick={() => {
+                console.log('DEBUG: Add Skill button clicked');
+                setIsAddSkillDrawerOpen(true);
+              }}
+              className="bg-proofound-forest text-white hover:bg-proofound-forest/90 font-medium rounded-xl shadow-sm"
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Skill
@@ -320,11 +326,19 @@ export function ExpertiseAtlasClient({
               <Grid3x3 className="h-4 w-4" />
               Skills Atlas
             </TabsTrigger>
-            <TabsTrigger value="gap-analysis" className="flex items-center gap-2" data-tour="gap-analysis-tab">
+            <TabsTrigger
+              value="gap-analysis"
+              className="flex items-center gap-2"
+              data-tour="gap-analysis-tab"
+            >
               <TrendingUp className="h-4 w-4" />
               Gap Analysis
             </TabsTrigger>
-            <TabsTrigger value="import-cv" className="flex items-center gap-2" data-tour="import-cv-tab">
+            <TabsTrigger
+              value="import-cv"
+              className="flex items-center gap-2"
+              data-tour="import-cv-tab"
+            >
               <FileText className="h-4 w-4" />
               Import from CV
             </TabsTrigger>
@@ -339,92 +353,91 @@ export function ExpertiseAtlasClient({
                 {/* Dashboard Section */}
                 {widgetData && (
                   <div className="mb-8 space-y-6">
-            <h2 className="text-2xl font-semibold text-[#2D3330]">Dashboard</h2>
-            
-            {/* Filters */}
-            <DashboardFilters filters={filters} onFilterChange={setFilters} />
+                    <h2 className="text-2xl font-semibold text-proofound-charcoal font-display">
+                      Dashboard
+                    </h2>
 
-            {/* Widgets Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Row 1 */}
-              <div className="bg-white rounded-lg p-6 shadow-sm border">
-                <CredibilityPie 
-                  data={widgetData.credibility} 
-                  onSegmentClick={handleCredibilityClick}
-                />
-              </div>
-              <div className="bg-white rounded-lg p-6 shadow-sm border">
-                <RelevanceBars 
-                  data={widgetData.relevance} 
-                  onBarClick={handleRelevanceClick}
-                />
-              </div>
+                    {/* Filters */}
+                    <DashboardFilters filters={filters} onFilterChange={setFilters} />
 
-              {/* Row 2 */}
-              <div className="bg-white rounded-lg p-6 shadow-sm border">
-                <SkillWheel 
-                  data={widgetData.skillWheel} 
-                  onSectorClick={handleWheelClick}
-                />
-              </div>
-              <div className="bg-white rounded-lg p-6 shadow-sm border">
-                <VerificationSourcesPie 
-                  data={widgetData.verificationSources} 
-                  onSegmentClick={handleVerificationClick}
-                />
-              </div>
+                    {/* Widgets Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Row 1 */}
+                      <div className="bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
+                        <CredibilityPie
+                          data={widgetData.credibility}
+                          onSegmentClick={handleCredibilityClick}
+                        />
+                      </div>
+                      <div className="bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
+                        <RelevanceBars
+                          data={widgetData.relevance}
+                          onBarClick={handleRelevanceClick}
+                        />
+                      </div>
 
-              {/* Row 3 - Full Width */}
-              <div className="lg:col-span-2 bg-white rounded-lg p-6 shadow-sm border">
-                <RecencyScatter 
-                  data={widgetData.scatter} 
-                  onSkillClick={handleScatterClick}
+                      {/* Row 2 */}
+                      <div className="bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
+                        <SkillWheel data={widgetData.skillWheel} onSectorClick={handleWheelClick} />
+                      </div>
+                      <div className="bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
+                        <VerificationSourcesPie
+                          data={widgetData.verificationSources}
+                          onSegmentClick={handleVerificationClick}
+                        />
+                      </div>
+
+                      {/* Row 3 - Full Width */}
+                      <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
+                        <RecencyScatter
+                          data={widgetData.scatter}
+                          onSkillClick={handleScatterClick}
+                        />
+                      </div>
+
+                      {/* Row 4 - Full Width */}
+                      <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
+                        <CoverageHeatmap
+                          data={widgetData.coverage}
+                          onCellClick={handleCoverageClick}
+                        />
+                      </div>
+
+                      {/* Row 5 - Full Width */}
+                      <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
+                        <NextBestActions
+                          actions={widgetData.nextBestActions}
+                          onActionClick={handleActionClick}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* L1 Grid */}
+                <div>
+                  <h2 className="text-2xl font-semibold text-[#2D3330] mb-4">Skill Domains</h2>
+                  <L1Grid
+                    domains={domains}
+                    onDomainClick={handleDomainClick}
+                    l2CategoriesPerL1={l2CategoriesPerL1}
+                    onL2Click={handleL2Click}
+                  />
+                </div>
+
+                {/* L2 Modal */}
+                <L2Modal
+                  open={isL2ModalOpen}
+                  onOpenChange={setIsL2ModalOpen}
+                  l1Name={selectedDomain?.nameI18n?.en || ''}
+                  l2Category={selectedL2}
+                  l3Subcategories={l3Subcategories}
+                  l4Skills={l4Skills}
+                  expandedL4={expandedL4}
+                  onL3Click={handleL3Click}
+                  onL4Toggle={handleL4Toggle}
+                  onL4Edit={handleSkillEdit}
                 />
-              </div>
-
-              {/* Row 4 - Full Width */}
-              <div className="lg:col-span-2 bg-white rounded-lg p-6 shadow-sm border">
-                <CoverageHeatmap 
-                  data={widgetData.coverage} 
-                  onCellClick={handleCoverageClick}
-                />
-              </div>
-
-              {/* Row 5 - Full Width */}
-              <div className="lg:col-span-2 bg-white rounded-lg p-6 shadow-sm border">
-                <NextBestActions 
-                  actions={widgetData.nextBestActions} 
-                  onActionClick={handleActionClick}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-            {/* L1 Grid */}
-            <div>
-              <h2 className="text-2xl font-semibold text-[#2D3330] mb-4">Skill Domains</h2>
-              <L1Grid 
-                domains={domains} 
-                onDomainClick={handleDomainClick}
-                l2CategoriesPerL1={l2CategoriesPerL1}
-                onL2Click={handleL2Click}
-              />
-            </div>
-
-        {/* L2 Modal */}
-        <L2Modal
-          open={isL2ModalOpen}
-          onOpenChange={setIsL2ModalOpen}
-          l1Name={selectedDomain?.nameI18n?.en || ''}
-          l2Category={selectedL2}
-          l3Subcategories={l3Subcategories}
-          l4Skills={l4Skills}
-          expandedL4={expandedL4}
-          onL3Click={handleL3Click}
-          onL4Toggle={handleL4Toggle}
-          onL4Edit={handleSkillEdit}
-        />
 
                 {/* L4 Skills Grid (when L3 is selected) */}
                 {selectedL3 && l4Skills.length > 0 && (
@@ -451,9 +464,12 @@ export function ExpertiseAtlasClient({
           <TabsContent value="gap-analysis">
             <div className="space-y-6">
               <div className="bg-white rounded-lg p-6 shadow-sm border">
-                <h2 className="text-2xl font-semibold text-[#2D3330] mb-4">Identify Your Skill Gaps</h2>
+                <h2 className="text-2xl font-semibold text-[#2D3330] mb-4">
+                  Identify Your Skill Gaps
+                </h2>
                 <p className="text-[#6B6760] mb-6">
-                  Analyze your current skills against target role requirements and get personalized recommendations for growth.
+                  Analyze your current skills against target role requirements and get personalized
+                  recommendations for growth.
                 </p>
                 <GapMap />
               </div>
@@ -464,9 +480,12 @@ export function ExpertiseAtlasClient({
           <TabsContent value="import-cv">
             <div className="space-y-6">
               <div className="bg-white rounded-lg p-6 shadow-sm border">
-                <h2 className="text-2xl font-semibold text-[#2D3330] mb-4">Import Skills from CV/Resume</h2>
+                <h2 className="text-2xl font-semibold text-[#2D3330] mb-4">
+                  Import Skills from CV/Resume
+                </h2>
                 <p className="text-[#6B6760] mb-6">
-                  Paste your CV, resume, or job description to automatically extract and suggest relevant skills.
+                  Paste your CV, resume, or job description to automatically extract and suggest
+                  relevant skills.
                 </p>
                 <CVJDAutoSuggest onSkillsAdded={handleSkillsImportedFromCV} />
               </div>
@@ -505,7 +524,7 @@ export function ExpertiseAtlasClient({
           skills={filteredSkills}
           filterDescription={sideSheetFilter || 'All Skills'}
           onSkillClick={(skillId: string) => {
-            const skill = initialSkills.find(s => s.id === skillId);
+            const skill = initialSkills.find((s) => s.id === skillId);
             if (skill) handleSkillEdit(skill);
           }}
         />
@@ -513,4 +532,3 @@ export function ExpertiseAtlasClient({
     </div>
   );
 }
-

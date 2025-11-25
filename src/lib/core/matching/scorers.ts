@@ -16,6 +16,30 @@ export interface Skill {
   id: string;
   level: number; // 0-5
   months?: number;
+  // Enhanced skill attributes for advanced scoring
+  evidenceStrength?: number; // 0-1
+  recencyMultiplier?: number; // 0-1
+  impactScore?: number; // 0-1
+  lastUsedAt?: Date | string;
+}
+
+export interface EnhancedSkillScore extends SkillScore {
+  weightedScore: number; // Score weighted by evidence/recency/impact
+  recencyScore: number;
+  evidenceScore: number;
+}
+
+export interface PACScore {
+  total: number; // 0-1 combined PAC score
+  valuesScore: number;
+  causesScore: number;
+  missionVisionScore: number; // For semantic matching (defaults to tag-based if no embeddings)
+}
+
+export interface WorkAuthorizationParams {
+  candidateNeedsSponsorship: boolean;
+  candidateWishesSponsorship: boolean;
+  orgCanSponsor: boolean;
 }
 
 export interface SkillScore {
@@ -86,6 +110,230 @@ export function scoreCauses(profileCauses: string[], assignmentCauses: string[])
   return jaccard(profileCauses, assignmentCauses);
 }
 
+// ============================================================================
+// PAC (PURPOSE-ALIGNMENT CONTRIBUTION) SCORING
+// ============================================================================
+
+/**
+ * Calculate PAC (Purpose-Alignment Contribution) score.
+ *
+ * PAC is a composite metric that captures how well a candidate's purpose
+ * aligns with an organization's mission. It combines:
+ * - Values alignment (Jaccard similarity)
+ * - Causes alignment (Jaccard similarity)
+ * - Mission/Vision semantic similarity (cosine, if embeddings available)
+ *
+ * PRD Reference: Part 2 - PAC should show ≥20% higher intro acceptance for top-decile matches
+ *
+ * Formula (without embeddings): PAC = 0.5 * values + 0.5 * causes
+ * Formula (with embeddings): PAC = 0.4 * values + 0.3 * causes + 0.3 * missionVision
+ */
+export function scorePAC(
+  profileValues: string[],
+  profileCauses: string[],
+  assignmentValues: string[],
+  assignmentCauses: string[],
+  missionVisionScore?: number // Optional: cosine similarity from embeddings
+): PACScore {
+  const valuesScore = scoreValues(profileValues, assignmentValues);
+  const causesScore = scoreCauses(profileCauses, assignmentCauses);
+
+  let total: number;
+
+  if (missionVisionScore !== undefined && missionVisionScore >= 0) {
+    // With semantic matching: 40% values, 30% causes, 30% mission/vision
+    total = 0.4 * valuesScore + 0.3 * causesScore + 0.3 * missionVisionScore;
+  } else {
+    // Without semantic matching: 50% values, 50% causes
+    total = 0.5 * valuesScore + 0.5 * causesScore;
+  }
+
+  return {
+    total: Math.min(total, 1.0),
+    valuesScore,
+    causesScore,
+    missionVisionScore: missionVisionScore ?? 0,
+  };
+}
+
+/**
+ * Calculate cosine similarity between two vectors.
+ * Used for semantic matching of mission/vision embeddings.
+ *
+ * @param a First embedding vector
+ * @param b Second embedding vector
+ * @returns Cosine similarity in range [-1, 1], normalized to [0, 1]
+ */
+export function cosineSimilarity(a: number[], b: number[]): number {
+  if (a.length !== b.length || a.length === 0) {
+    return 0;
+  }
+
+  let dotProduct = 0;
+  let normA = 0;
+  let normB = 0;
+
+  for (let i = 0; i < a.length; i++) {
+    dotProduct += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  }
+
+  const magnitude = Math.sqrt(normA) * Math.sqrt(normB);
+  if (magnitude === 0) {
+    return 0;
+  }
+
+  // Cosine similarity is [-1, 1], normalize to [0, 1]
+  const similarity = dotProduct / magnitude;
+  return (similarity + 1) / 2;
+}
+
+// ============================================================================
+// RECENCY SCORING
+// ============================================================================
+
+/**
+ * Score skill recency based on last used date.
+ *
+ * Uses exponential decay: recency = exp(-α * months_since_last_used)
+ * Where α = 0.02 (half-life of ~35 months)
+ *
+ * Skills used recently score higher.
+ * Ongoing skills (lastUsedAt = null or recent) get maximum score.
+ *
+ * @param lastUsedAt Date when skill was last used (null = currently using)
+ * @param referenceDate Reference date for calculation (default: now)
+ * @returns Recency multiplier in range (0, 1]
+ */
+export function scoreRecency(
+  lastUsedAt?: Date | string | null,
+  referenceDate: Date = new Date()
+): number {
+  // If no last used date, assume skill is current
+  if (!lastUsedAt) {
+    return 1.0;
+  }
+
+  const lastUsed = typeof lastUsedAt === 'string' ? new Date(lastUsedAt) : lastUsedAt;
+  const monthsSinceUsed =
+    (referenceDate.getTime() - lastUsed.getTime()) / (1000 * 60 * 60 * 24 * 30);
+
+  // If used very recently (within 1 month), max score
+  if (monthsSinceUsed <= 1) {
+    return 1.0;
+  }
+
+  // Exponential decay with α = 0.02
+  // This gives: 6 months = 0.89, 12 months = 0.79, 24 months = 0.62, 36 months = 0.49
+  const alpha = 0.02;
+  return Math.exp(-alpha * monthsSinceUsed);
+}
+
+/**
+ * Calculate aggregate recency score for a set of skills.
+ *
+ * @param skills Array of skills with recency data
+ * @returns Average recency score weighted by skill level
+ */
+export function scoreSkillsRecency(skills: Skill[]): number {
+  if (skills.length === 0) {
+    return 1.0; // No skills = neutral
+  }
+
+  let totalWeight = 0;
+  let weightedRecency = 0;
+
+  for (const skill of skills) {
+    const weight = skill.level || 1;
+    const recency = skill.recencyMultiplier ?? scoreRecency(skill.lastUsedAt);
+    weightedRecency += recency * weight;
+    totalWeight += weight;
+  }
+
+  return totalWeight > 0 ? weightedRecency / totalWeight : 1.0;
+}
+
+// ============================================================================
+// EVIDENCE STRENGTH SCORING
+// ============================================================================
+
+/**
+ * Score evidence strength for a skill.
+ *
+ * Evidence strength is a measure of how well-documented/proven a skill is:
+ * - Peer attestations
+ * - Employer verifications
+ * - Public artifacts (GitHub, portfolio, etc.)
+ * - Certifications
+ *
+ * @param evidenceStrength Pre-computed evidence strength (0-1)
+ * @returns Evidence score in range [0.5, 1.0] (baseline of 0.5 for no evidence)
+ */
+export function scoreEvidence(evidenceStrength?: number): number {
+  if (evidenceStrength === undefined || evidenceStrength === null) {
+    return 0.5; // Neutral baseline for unverified skills
+  }
+
+  // Ensure in valid range
+  const normalized = Math.max(0, Math.min(1, evidenceStrength));
+
+  // Scale from [0,1] to [0.5, 1.0] - even unproven skills get some credit
+  return 0.5 + 0.5 * normalized;
+}
+
+/**
+ * Calculate aggregate evidence score for a set of skills.
+ */
+export function scoreSkillsEvidence(skills: Skill[]): number {
+  if (skills.length === 0) {
+    return 0.5;
+  }
+
+  let totalWeight = 0;
+  let weightedEvidence = 0;
+
+  for (const skill of skills) {
+    const weight = skill.level || 1;
+    const evidence = scoreEvidence(skill.evidenceStrength);
+    weightedEvidence += evidence * weight;
+    totalWeight += weight;
+  }
+
+  return totalWeight > 0 ? weightedEvidence / totalWeight : 0.5;
+}
+
+// ============================================================================
+// WORK AUTHORIZATION SCORING
+// ============================================================================
+
+/**
+ * Score work authorization compatibility.
+ *
+ * Scoring logic (from PRD):
+ * - Candidate needs sponsorship & org can't sponsor → 0 (hard fail)
+ * - Candidate needs sponsorship & org can sponsor → 1.0 (perfect match)
+ * - Candidate wishes sponsorship & org can sponsor → 0.85 (good match)
+ * - Candidate wishes sponsorship & org can't sponsor → 0.5 (partial match)
+ * - No sponsorship needed → 1.0 (no constraint)
+ */
+export function scoreWorkAuthorization(params: WorkAuthorizationParams): number {
+  const { candidateNeedsSponsorship, candidateWishesSponsorship, orgCanSponsor } = params;
+
+  // Hard requirement: candidate NEEDS sponsorship
+  if (candidateNeedsSponsorship) {
+    return orgCanSponsor ? 1.0 : 0; // Hard fail if org can't sponsor
+  }
+
+  // Soft preference: candidate WISHES sponsorship (nice-to-have)
+  if (candidateWishesSponsorship) {
+    return orgCanSponsor ? 0.85 : 0.5; // Reduced score but not blocking
+  }
+
+  // No sponsorship needed - perfect match
+  return 1.0;
+}
+
 /**
  * Score skills match with hard filters.
  *
@@ -148,6 +396,99 @@ export function scoreSkills(
   const score = maxScore > 0 ? Math.min(totalScore / maxScore, 1.0) : 1.0;
 
   return { score, gaps, missing, hardFail: false };
+}
+
+/**
+ * Enhanced skills scoring with evidence, recency, and impact factors.
+ *
+ * This function extends basic skill matching with additional quality signals:
+ * - Evidence strength: How well-documented is the skill?
+ * - Recency: How recently was the skill used?
+ * - Impact: What outcomes has the candidate achieved with this skill?
+ *
+ * Formula per skill:
+ *   skillWeight = levelFactor * evidenceFactor * recencyFactor * (0.5 + 0.5 * impactScore)
+ *
+ * PRD Reference: Proofound_Matching_Conversation.md - Stage-2 re-rank
+ */
+export function scoreSkillsEnhanced(
+  required: Skill[],
+  niceToHave: Skill[],
+  have: Record<string, Skill>
+): EnhancedSkillScore {
+  const baseScore = scoreSkills(required, niceToHave, have);
+
+  if (baseScore.hardFail) {
+    return {
+      ...baseScore,
+      weightedScore: 0,
+      recencyScore: 0,
+      evidenceScore: 0,
+    };
+  }
+
+  // Collect all candidate skills that matched
+  const matchedSkills: Skill[] = [];
+  for (const req of required) {
+    const candidate = have[req.id];
+    if (candidate) {
+      matchedSkills.push(candidate);
+    }
+  }
+  for (const nice of niceToHave) {
+    const candidate = have[nice.id];
+    if (candidate && candidate.level >= nice.level) {
+      matchedSkills.push(candidate);
+    }
+  }
+
+  // Calculate aggregate recency and evidence scores
+  const recencyScore = scoreSkillsRecency(matchedSkills);
+  const evidenceScore = scoreSkillsEvidence(matchedSkills);
+
+  // Calculate weighted score incorporating all factors
+  let weightedTotal = 0;
+  let maxWeight = 0;
+
+  // Must-haves (weight = 2)
+  for (const req of required) {
+    const candidate = have[req.id];
+    if (candidate) {
+      const levelFactor = Math.min(candidate.level / Math.max(req.level, 1), 1.5);
+      const recency = candidate.recencyMultiplier ?? scoreRecency(candidate.lastUsedAt);
+      const evidence = scoreEvidence(candidate.evidenceStrength);
+      const impact = candidate.impactScore ?? 0;
+
+      // Combined factor: level * evidence * recency * (0.5 + 0.5 * impact)
+      const combinedFactor = levelFactor * evidence * recency * (0.5 + 0.5 * impact);
+      weightedTotal += combinedFactor * 2;
+      maxWeight += 2;
+    }
+  }
+
+  // Nice-to-haves (weight = 1)
+  for (const nice of niceToHave) {
+    const candidate = have[nice.id];
+    if (candidate && candidate.level >= nice.level) {
+      const levelFactor = Math.min(candidate.level / Math.max(nice.level, 1), 1.5);
+      const recency = candidate.recencyMultiplier ?? scoreRecency(candidate.lastUsedAt);
+      const evidence = scoreEvidence(candidate.evidenceStrength);
+      const impact = candidate.impactScore ?? 0;
+
+      const combinedFactor = levelFactor * evidence * recency * (0.5 + 0.5 * impact);
+      weightedTotal += combinedFactor;
+      maxWeight += 1;
+    }
+  }
+
+  const weightedScore = maxWeight > 0 ? Math.min(weightedTotal / maxWeight, 1.0) : 1.0;
+
+  return {
+    ...baseScore,
+    weightedScore,
+    recencyScore,
+    evidenceScore,
+  };
 }
 
 /**

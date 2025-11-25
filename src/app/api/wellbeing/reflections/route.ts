@@ -4,14 +4,17 @@ import { createClient } from '@/lib/supabase/server';
 /**
  * Well-being Reflections API
  * POST /api/wellbeing/reflections
- * 
+ *
  * Saves a reflection linked to a milestone or check-in
  */
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -26,14 +29,15 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (!optInData?.opted_in) {
-      return NextResponse.json(
-        { error: 'User has not opted in to Zen Hub' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: 'User has not opted in to Zen Hub' }, { status: 403 });
     }
 
     // 2. Validate input
-    if (!reflectionText || typeof reflectionText !== 'string' || reflectionText.trim().length === 0) {
+    if (
+      !reflectionText ||
+      typeof reflectionText !== 'string' ||
+      reflectionText.trim().length === 0
+    ) {
       return NextResponse.json(
         { error: 'reflectionText is required and must be a non-empty string' },
         { status: 400 }
@@ -61,37 +65,34 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error('Database error:', error);
-      return NextResponse.json(
-        { error: 'Failed to save reflection' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to save reflection' }, { status: 500 });
     }
 
     // 4. Return success
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
       reflectionId: reflection.id,
       data: reflection,
     });
   } catch (error) {
     console.error('Reflection error:', error);
-    return NextResponse.json(
-      { error: 'Failed to save reflection' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to save reflection' }, { status: 500 });
   }
 }
 
 /**
  * GET /api/wellbeing/reflections
- * 
+ *
  * Retrieves user's reflection journal
  */
 export async function GET(req: NextRequest) {
   try {
     const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -110,24 +111,26 @@ export async function GET(req: NextRequest) {
 
     if (error) {
       console.error('Database error:', error);
-      return NextResponse.json(
-        { error: 'Failed to retrieve reflections' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to retrieve reflections' }, { status: 500 });
     }
 
-    return NextResponse.json({ 
-      reflections: reflections || [],
+    // Map snake_case to camelCase for frontend
+    const mappedReflections = (reflections || []).map((r) => ({
+      id: r.id,
+      reflectionText: r.reflection_text,
+      milestoneType: r.milestone_type,
+      linkedCheckinId: r.linked_checkin_id,
+      createdAt: r.created_at,
+    }));
+
+    return NextResponse.json({
+      reflections: mappedReflections,
       count: reflections?.length || 0,
       limit,
       offset,
     });
   } catch (error) {
     console.error('Get reflections error:', error);
-    return NextResponse.json(
-      { error: 'Failed to retrieve reflections' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to retrieve reflections' }, { status: 500 });
   }
 }
-

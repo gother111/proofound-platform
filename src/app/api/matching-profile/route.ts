@@ -68,12 +68,12 @@ export async function GET(request: NextRequest) {
     if (error) {
       if (error.code === 'PGRST116') {
         // No matching profile yet
-        return NextResponse.json(null);
+        return NextResponse.json({ profile: null });
       }
       throw error;
     }
 
-    return NextResponse.json(matchingProfile);
+    return NextResponse.json({ profile: matchingProfile });
   } catch (error: any) {
     console.error('Failed to fetch matching profile:', error);
     return NextResponse.json({ error: 'Failed to fetch matching profile' }, { status: 500 });

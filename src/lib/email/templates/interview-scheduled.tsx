@@ -50,7 +50,7 @@ export function InterviewScheduledEmail({
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
     .header {
-      background: linear-gradient(135deg, #4A5943 0%, #5F6E52 100%);
+      background: linear-gradient(135deg, #1C4D3A 0%, #5F6E52 100%);
       color: #ffffff;
       padding: 40px 30px;
       text-align: center;
@@ -88,7 +88,7 @@ export function InterviewScheduledEmail({
     }
     .button {
       display: inline-block;
-      background-color: #4A5943;
+      background-color: #1C4D3A;
       color: #ffffff !important;
       text-decoration: none;
       padding: 14px 32px;
@@ -105,7 +105,7 @@ export function InterviewScheduledEmail({
     }
     .tips {
       background-color: #E8F5E9;
-      border-left: 4px solid: #4A5943;
+      border-left: 4px solid: #1C4D3A;
       border-radius: 6px;
       padding: 16px;
       margin: 24px 0;
@@ -132,7 +132,7 @@ export function InterviewScheduledEmail({
       border-top: 1px solid #E8E6DD;
     }
     .footer a {
-      color: #4A5943;
+      color: #1C4D3A;
       text-decoration: none;
     }
   </style>
@@ -165,25 +165,37 @@ export function InterviewScheduledEmail({
           <div class="detail-label">⏱️ Duration:</div>
           <div class="detail-value">${duration} minutes</div>
         </div>
-        ${meetingLink ? `
+        ${
+          meetingLink
+            ? `
         <div class="detail-row">
           <div class="detail-label">🔗 Meeting Link:</div>
-          <div class="detail-value"><a href="${meetingLink}" style="color: #4A5943;">${meetingLink}</a></div>
+          <div class="detail-value"><a href="${meetingLink}" style="color: #1C4D3A;">${meetingLink}</a></div>
         </div>
-        ` : ''}
+        `
+            : ''
+        }
       </div>
 
       <div style="text-align: center;">
-        ${meetingLink ? `
+        ${
+          meetingLink
+            ? `
         <a href="${meetingLink}" class="button">
           Join Video Call
         </a>
-        ` : ''}
-        ${calendarInvite ? `
+        `
+            : ''
+        }
+        ${
+          calendarInvite
+            ? `
         <a href="${calendarInvite}" class="button button-secondary">
           Add to Calendar
         </a>
-        ` : ''}
+        `
+            : ''
+        }
       </div>
 
       <div class="tips">

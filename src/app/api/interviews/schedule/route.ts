@@ -1,6 +1,7 @@
 /**
  * Interview Scheduling API
- * POST /api/interviews/schedule
+ * GET /api/interviews/schedule - List scheduled interviews for current user
+ * POST /api/interviews/schedule - Create interview with Zoom or Google Meet
  *
  * Implements PRD Gap 1: Create interview with Zoom or Google Meet
  *
@@ -16,12 +17,116 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
+/**
+ * GET /api/interviews/schedule
+ * Returns scheduled interviews for the current user (as host or participant)
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status'); // Optional filter: scheduled, completed, cancelled
+    const matchId = searchParams.get('matchId'); // Optional filter by match
+
+    // Build query - get interviews where user is host or participant
+    let query = supabase
+      .from('interviews')
+      .select(
+        `
+        id,
+        match_id,
+        scheduled_at,
+        duration_minutes,
+        platform,
+        meeting_link,
+        status,
+        host_user_id,
+        participant_user_ids,
+        created_at,
+        matches!inner (
+          id,
+          profile_id,
+          assignment_id,
+          created_at,
+          assignments!inner (
+            id,
+            role,
+            org_id,
+            organizations!inner (
+              id,
+              display_name
+            )
+          ),
+          profiles!inner (
+            id,
+            display_name
+          )
+        )
+      `
+      )
+      .or(`host_user_id.eq.${user.id},participant_user_ids.cs.{${user.id}}`)
+      .order('scheduled_at', { ascending: true });
+
+    // Apply optional filters
+    if (status) {
+      query = query.eq('status', status);
+    }
+    if (matchId) {
+      query = query.eq('match_id', matchId);
+    }
+
+    const { data: interviews, error } = await query;
+
+    if (error) {
+      console.error('Failed to fetch interviews:', error);
+      return NextResponse.json({ error: 'Failed to fetch interviews' }, { status: 500 });
+    }
+
+    // Transform the data for the frontend
+    const transformedInterviews = (interviews || []).map((interview: any) => ({
+      id: interview.id,
+      matchId: interview.match_id,
+      scheduledAt: interview.scheduled_at,
+      duration: interview.duration_minutes,
+      platform: interview.platform,
+      meetingUrl: interview.meeting_link || 'pending',
+      status: interview.status,
+      matchAgreedAt: interview.matches?.created_at,
+      // Include context for org-side view
+      candidateName: interview.matches?.profiles?.display_name || 'Candidate',
+      assignmentTitle: interview.matches?.assignments?.role || 'Assignment',
+      organizationName:
+        interview.matches?.assignments?.organizations?.display_name || 'Organization',
+    }));
+
+    return NextResponse.json({
+      interviews: transformedInterviews,
+      count: transformedInterviews.length,
+    });
+  } catch (error: any) {
+    console.error('Failed to fetch interviews:', error);
+    return NextResponse.json({ error: 'Failed to fetch interviews' }, { status: 500 });
+  }
+}
+
 const ScheduleInterviewSchema = z.object({
   matchId: z.string().uuid(),
   scheduledAt: z.string().datetime(),
-  platform: z.enum(['zoom', 'google_meet']),
+  platform: z.enum(['zoom', 'google_meet', 'manual']), // Added manual option
   participantUserIds: z.array(z.string().uuid()).min(2), // At least candidate + host
   timezone: z.string().optional().default('UTC'),
+  manualMeetingLink: z.string().url().optional(), // For manual platform - user provides link
 });
 
 export async function POST(request: NextRequest) {
@@ -76,95 +181,108 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4. Get user's video integration token
-    const { data: videoIntegration, error: integrationError } = await supabase
-      .from('user_video_integrations')
-      .select('access_token, refresh_token, token_expiry')
-      .eq('user_id', user.id)
-      .eq('provider', data.platform)
-      .single();
-
-    if (integrationError || !videoIntegration) {
-      return NextResponse.json(
-        {
-          error: `${data.platform === 'zoom' ? 'Zoom' : 'Google Meet'} not connected. Please connect your account first.`,
-        },
-        { status: 400 }
-      );
-    }
-
-    // Check if token needs refresh
-    let accessToken = videoIntegration.access_token;
-    if (new Date(videoIntegration.token_expiry) < new Date()) {
-      // Token expired, refresh it
-      if (data.platform === 'zoom') {
-        const { refreshZoomToken } = await import('@/lib/integrations/zoom');
-        const newTokens = await refreshZoomToken(videoIntegration.refresh_token);
-        accessToken = newTokens.access_token;
-
-        // Update stored token
-        await supabase
-          .from('user_video_integrations')
-          .update({
-            access_token: newTokens.access_token,
-            token_expiry: new Date(Date.now() + newTokens.expires_in * 1000).toISOString(),
-          })
-          .eq('user_id', user.id)
-          .eq('provider', 'zoom');
-      } else {
-        const { refreshGoogleToken } = await import('@/lib/integrations/google-meet');
-        const newTokens = await refreshGoogleToken(videoIntegration.refresh_token);
-        accessToken = newTokens.access_token;
-
-        // Update stored token
-        await supabase
-          .from('user_video_integrations')
-          .update({
-            access_token: newTokens.access_token,
-            token_expiry: new Date(Date.now() + newTokens.expires_in * 1000).toISOString(),
-          })
-          .eq('user_id', user.id)
-          .eq('provider', 'google_meet');
-      }
-    }
-
-    // 5. Create meeting link
+    // 4. Handle meeting link based on platform
     let meetingLink = '';
     let meetingId = '';
 
-    if (data.platform === 'zoom') {
-      const { createZoomMeeting } = await import('@/lib/integrations/zoom');
-      const meeting = await createZoomMeeting(accessToken, {
-        topic: `Interview - ${match.assignments.role || 'Proofound Match'}`,
-        start_time: data.scheduledAt,
-        duration: 30,
-        timezone: data.timezone,
-        agenda: 'Interview session via Proofound',
-      });
-      meetingLink = meeting.join_url;
-      meetingId = meeting.id;
+    if (data.platform === 'manual') {
+      // Manual platform: user provides their own meeting link
+      if (!data.manualMeetingLink) {
+        return NextResponse.json(
+          { error: 'Meeting link is required when using manual platform' },
+          { status: 400 }
+        );
+      }
+      meetingLink = data.manualMeetingLink;
+      meetingId = `manual-${Date.now()}`;
     } else {
-      const { createGoogleMeet } = await import('@/lib/integrations/google-meet');
+      // Zoom or Google Meet: use video integration
+      const { data: videoIntegration, error: integrationError } = await supabase
+        .from('user_video_integrations')
+        .select('access_token, refresh_token, token_expiry')
+        .eq('user_id', user.id)
+        .eq('provider', data.platform)
+        .single();
 
-      // Get participant emails
-      const participantEmails: string[] = [];
-      for (const participantId of data.participantUserIds) {
-        const { data: profile } = await supabase.auth.admin.getUserById(participantId);
-        if (profile.user?.email) {
-          participantEmails.push(profile.user.email);
+      if (integrationError || !videoIntegration) {
+        return NextResponse.json(
+          {
+            error: `${data.platform === 'zoom' ? 'Zoom' : 'Google Meet'} not connected. Please connect your account first, or use "manual" to provide your own meeting link.`,
+          },
+          { status: 400 }
+        );
+      }
+
+      // Check if token needs refresh
+      let accessToken = videoIntegration.access_token;
+      if (new Date(videoIntegration.token_expiry) < new Date()) {
+        // Token expired, refresh it
+        if (data.platform === 'zoom') {
+          const { refreshZoomToken } = await import('@/lib/integrations/zoom');
+          const newTokens = await refreshZoomToken(videoIntegration.refresh_token);
+          accessToken = newTokens.access_token;
+
+          // Update stored token
+          await supabase
+            .from('user_video_integrations')
+            .update({
+              access_token: newTokens.access_token,
+              token_expiry: new Date(Date.now() + newTokens.expires_in * 1000).toISOString(),
+            })
+            .eq('user_id', user.id)
+            .eq('provider', 'zoom');
+        } else {
+          const { refreshGoogleToken } = await import('@/lib/integrations/google-meet');
+          const newTokens = await refreshGoogleToken(videoIntegration.refresh_token);
+          accessToken = newTokens.access_token;
+
+          // Update stored token
+          await supabase
+            .from('user_video_integrations')
+            .update({
+              access_token: newTokens.access_token,
+              token_expiry: new Date(Date.now() + newTokens.expires_in * 1000).toISOString(),
+            })
+            .eq('user_id', user.id)
+            .eq('provider', 'google_meet');
         }
       }
 
-      const meeting = await createGoogleMeet(accessToken, {
-        summary: `Interview - ${match.assignments.role || 'Proofound Match'}`,
-        start_time: data.scheduledAt,
-        duration: 30,
-        timezone: data.timezone,
-        description: 'Interview session via Proofound',
-        attendees: participantEmails,
-      });
-      meetingLink = meeting.hangoutLink;
-      meetingId = meeting.id;
+      // 5. Create meeting link
+      if (data.platform === 'zoom') {
+        const { createZoomMeeting } = await import('@/lib/integrations/zoom');
+        const meeting = await createZoomMeeting(accessToken, {
+          topic: `Interview - ${match.assignments.role || 'Proofound Match'}`,
+          start_time: data.scheduledAt,
+          duration: 30,
+          timezone: data.timezone,
+          agenda: 'Interview session via Proofound',
+        });
+        meetingLink = meeting.join_url;
+        meetingId = meeting.id;
+      } else {
+        const { createGoogleMeet } = await import('@/lib/integrations/google-meet');
+
+        // Get participant emails
+        const participantEmails: string[] = [];
+        for (const participantId of data.participantUserIds) {
+          const { data: profile } = await supabase.auth.admin.getUserById(participantId);
+          if (profile.user?.email) {
+            participantEmails.push(profile.user.email);
+          }
+        }
+
+        const meeting = await createGoogleMeet(accessToken, {
+          summary: `Interview - ${match.assignments.role || 'Proofound Match'}`,
+          start_time: data.scheduledAt,
+          duration: 30,
+          timezone: data.timezone,
+          description: 'Interview session via Proofound',
+          attendees: participantEmails,
+        });
+        meetingLink = meeting.hangoutLink;
+        meetingId = meeting.id;
+      }
     }
 
     // 6. Create interview record

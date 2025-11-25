@@ -1,17 +1,9 @@
-import { requireAdmin } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 
-export default async function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  try {
-    await requireAdmin();
-  } catch {
-    redirect('/app/i/home');
-  }
-
-  return <>{children}</>;
+/**
+ * This layout redirects from the deprecated /app/admin route
+ * to the main /admin route which has proper navigation and auth
+ */
+export default function AdminLayout() {
+  redirect('/admin');
 }
-

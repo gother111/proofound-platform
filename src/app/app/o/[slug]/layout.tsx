@@ -30,7 +30,7 @@ export default async function OrganizationLayout({
     .slice(0, 2);
 
   return (
-    <div className="flex h-screen" style={{ backgroundColor: '#F7F6F1' }}>
+    <div className="flex h-screen bg-proofound-parchment">
       <LeftNav basePath={`/app/o/${slug}`} />
       <div className="flex-1 flex flex-col">
         <TopBar userName={orgName} userInitials={orgInitials} />

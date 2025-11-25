@@ -17,7 +17,7 @@ export function EmptyState({ onAddSkill, onImportCV }: EmptyStateProps) {
           {/* Icon */}
           <div className="flex justify-center mb-6">
             <div className="rounded-full bg-[#EEF1EA] p-6">
-              <Sparkles className="h-12 w-12 text-[#4A5943]" />
+              <Sparkles className="h-12 w-12 text-[#1C4D3A]" />
             </div>
           </div>
 
@@ -33,12 +33,12 @@ export function EmptyState({ onAddSkill, onImportCV }: EmptyStateProps) {
           </p>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center w-full">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3 justify-center items-center w-full">
             {onImportCV && (
               <Button
                 size="lg"
                 onClick={onImportCV}
-                className="flex items-center justify-center bg-[#4A5943] text-white hover:bg-[#3C4936] w-full sm:w-auto"
+                className="flex items-center justify-center bg-[#1C4D3A] text-white hover:bg-[#2D5F4A] w-full sm:w-auto"
               >
                 <span className="flex items-center">
                   <FileText className="mr-2 h-5 w-5" />
@@ -52,8 +52,8 @@ export function EmptyState({ onAddSkill, onImportCV }: EmptyStateProps) {
               variant={onImportCV ? 'outline' : 'default'}
               className={`flex items-center justify-center w-full sm:w-auto ${
                 onImportCV
-                  ? 'border-[#4A5943] text-[#4A5943] hover:bg-[#EEF1EA]'
-                  : 'bg-[#4A5943] text-white hover:bg-[#3C4936]'
+                  ? 'border-[#1C4D3A] text-[#1C4D3A] hover:bg-[#EEF1EA]'
+                  : 'bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]'
               }`}
             >
               <span className="flex items-center">
@@ -64,7 +64,7 @@ export function EmptyState({ onAddSkill, onImportCV }: EmptyStateProps) {
             <Button
               size="lg"
               variant="outline"
-              className="flex items-center justify-center border-[#4A5943] text-[#4A5943] hover:bg-[#EEF1EA] w-full sm:w-auto"
+              className="flex items-center justify-center border-[#1C4D3A] text-[#1C4D3A] hover:bg-[#EEF1EA] w-full sm:w-auto"
             >
               <span className="flex items-center">
                 <BookOpen className="mr-2 h-5 w-5" />
@@ -74,7 +74,7 @@ export function EmptyState({ onAddSkill, onImportCV }: EmptyStateProps) {
           </div>
 
           {/* Info Pills */}
-          <div className="mt-8 flex flex-wrap gap-3 justify-center items-center text-xs text-[#4A5943]">
+          <div className="mt-8 flex flex-wrap gap-3 justify-center items-center text-xs text-[#1C4D3A]">
             <span className="flex items-center gap-2 rounded-full bg-[#EEF1EA] px-4 py-2">
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path

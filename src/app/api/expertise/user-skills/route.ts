@@ -96,20 +96,57 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch skills' }, { status: 500 });
     }
 
+    // Add computed skill_name for each skill (from taxonomy or parsed from skill_id)
+    const enrichedSkills =
+      skills?.map((skill: any) => {
+        let skillName = 'Unknown Skill';
+        let isCustom = false;
+
+        // Try to get name from taxonomy first
+        if (skill.taxonomy?.name_i18n?.en) {
+          skillName = skill.taxonomy.name_i18n.en;
+        }
+        // For custom skills, parse name from skill_id (format: custom-{cat}-{subcat}-{l3}-{name})
+        else if (skill.skill_id?.startsWith('custom-')) {
+          isCustom = true;
+          const parts = skill.skill_id.split('-');
+          // Name is everything after the first 4 parts (custom-cat-subcat-l3-)
+          if (parts.length > 4) {
+            skillName = parts
+              .slice(4)
+              .join(' ')
+              .replace(/-/g, ' ')
+              .replace(/\b\w/g, (c: string) => c.toUpperCase()); // Title case
+          }
+        }
+        // Legacy skills might have a readable skill_id
+        else if (skill.skill_id && !skill.skill_id.includes('-')) {
+          skillName = skill.skill_id
+            .replace(/_/g, ' ')
+            .replace(/\b\w/g, (c: string) => c.toUpperCase());
+        }
+
+        return {
+          ...skill,
+          skill_name: skillName,
+          is_custom: isCustom,
+        };
+      }) || [];
+
     // Filter by L1 if specified (post-query filter since cat_id is in joined table)
-    let filteredSkills = skills;
+    let filteredSkills = enrichedSkills;
     if (l1Filter) {
       const catId = l1CodeToCatId(l1Filter);
-      filteredSkills = skills?.filter((s: any) => s.taxonomy?.cat_id === catId) || [];
+      filteredSkills = enrichedSkills.filter((s: any) => s.taxonomy?.cat_id === catId);
     }
 
     // Group by L1 for easier rendering
-    const groupedByL1 = groupSkillsByL1(filteredSkills || []);
+    const groupedByL1 = groupSkillsByL1(filteredSkills);
 
     return NextResponse.json({
       skills: filteredSkills,
       grouped_by_l1: groupedByL1,
-      total_count: filteredSkills?.length || 0,
+      total_count: filteredSkills.length,
     });
   } catch (error) {
     console.error('User skills API error:', error);
@@ -297,6 +334,31 @@ export async function POST(request: NextRequest) {
     } catch (activationError) {
       console.error('Failed to check/emit profile activation:', activationError);
       // Don't fail the request if activation tracking fails
+    }
+
+    // Emit skill added analytics event (PRD F3)
+    try {
+      const { emitSkillAddedAsync } = await import('@/lib/analytics/events');
+      const skillName =
+        (newSkill?.taxonomy as any)?.name_i18n?.en ||
+        validated.custom_skill_name ||
+        'Unknown Skill';
+
+      // Get total skill count for the event
+      const { data: allSkillsCount } = await supabase
+        .from('skills')
+        .select('id', { count: 'exact', head: true })
+        .eq('profile_id', user.id);
+
+      emitSkillAddedAsync(user.id, newSkill?.id || '', {
+        skill_code: skillCodeToUse || undefined,
+        skill_name: skillName,
+        level: validated.level,
+        is_custom: isCustomSkill,
+        total_skills: allSkillsCount?.length || 1,
+      });
+    } catch (analyticsError) {
+      console.error('Failed to emit skill_added event:', analyticsError);
     }
 
     return NextResponse.json(

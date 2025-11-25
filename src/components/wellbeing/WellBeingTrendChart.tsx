@@ -47,7 +47,7 @@ export function WellBeingTrendChart({ trend }: WellBeingTrendChartProps) {
   };
 
   const yScale = (value: number) => {
-    return chartHeight - (value / 10) * chartHeight; // Scale 0-10 to chart height
+    return chartHeight - (value / 5) * chartHeight; // Scale 0-5 to chart height
   };
 
   // Generate path for line
@@ -80,8 +80,8 @@ export function WellBeingTrendChart({ trend }: WellBeingTrendChartProps) {
       {/* Chart */}
       <div className="overflow-x-auto">
         <svg width={width} height={height} className="mx-auto">
-          {/* Grid lines */}
-          {[0, 2.5, 5, 7.5, 10].map((value) => (
+          {/* Grid lines (1-5 scale) */}
+          {[0, 1, 2, 3, 4, 5].map((value) => (
             <g key={value}>
               <line
                 x1={padding.left}

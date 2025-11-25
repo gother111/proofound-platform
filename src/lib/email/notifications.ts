@@ -198,12 +198,16 @@ export async function sendDecisionFeedbackEmail(params: {
 
     <p>Thank you for your interest in ${params.assignmentTitle ? `the <strong>${params.assignmentTitle}</strong> opportunity with` : ''} <strong>${params.organizationName}</strong>.</p>
 
-    ${params.feedback ? `
-    <div style="background-color: #F7F6F1; border-left: 4px solid #4A5943; border-radius: 6px; padding: 16px; margin: 24px 0;">
+    ${
+      params.feedback
+        ? `
+    <div style="background-color: #F7F6F1; border-left: 4px solid #1C4D3A; border-radius: 6px; padding: 16px; margin: 24px 0;">
       <h3 style="margin: 0 0 12px 0; color: #1C4D3A;">Feedback from ${params.organizationName}:</h3>
       <p style="margin: 0;">${params.feedback}</p>
     </div>
-    ` : ''}
+    `
+        : ''
+    }
 
     <p style="font-size: 14px; color: #6B6760; margin-top: 30px;">
       ${isAccepted ? 'You will receive next steps shortly.' : 'We encourage you to continue exploring opportunities on Proofound.'}

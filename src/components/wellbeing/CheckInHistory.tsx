@@ -82,12 +82,12 @@ export function CheckInHistory({ userId }: CheckInHistoryProps) {
       filtered = filtered.filter((c) => new Date(c.createdAt) <= dateRange.to!);
     }
 
-    // Stress level filter
+    // Stress level filter (1-5 scale)
     if (stressFilter !== 'all') {
       filtered = filtered.filter((c) => {
-        if (stressFilter === 'low') return c.stressLevel >= 1 && c.stressLevel <= 3;
-        if (stressFilter === 'medium') return c.stressLevel >= 4 && c.stressLevel <= 6;
-        if (stressFilter === 'high') return c.stressLevel >= 7 && c.stressLevel <= 10;
+        if (stressFilter === 'low') return c.stressLevel >= 1 && c.stressLevel <= 2;
+        if (stressFilter === 'medium') return c.stressLevel === 3;
+        if (stressFilter === 'high') return c.stressLevel >= 4 && c.stressLevel <= 5;
         return true;
       });
     }
@@ -135,15 +135,16 @@ export function CheckInHistory({ userId }: CheckInHistoryProps) {
     toast.info('Filters cleared');
   };
 
+  // Stress level badge (1-5 scale: lower is better)
   const getStressLevelBadge = (level: number) => {
-    if (level >= 1 && level <= 3) {
+    if (level >= 1 && level <= 2) {
       return (
         <Badge variant="outline" className="border-green-500 text-green-700 bg-green-50">
           Low ({level})
         </Badge>
       );
     }
-    if (level >= 4 && level <= 6) {
+    if (level === 3) {
       return (
         <Badge variant="outline" className="border-yellow-500 text-yellow-700 bg-yellow-50">
           Medium ({level})
@@ -157,15 +158,16 @@ export function CheckInHistory({ userId }: CheckInHistoryProps) {
     );
   };
 
+  // Control level badge (1-5 scale: higher is better)
   const getControlLevelBadge = (level: number) => {
-    if (level >= 1 && level <= 3) {
+    if (level >= 1 && level <= 2) {
       return (
         <Badge variant="outline" className="border-red-500 text-red-700 bg-red-50">
           Low ({level})
         </Badge>
       );
     }
-    if (level >= 4 && level <= 6) {
+    if (level === 3) {
       return (
         <Badge variant="outline" className="border-yellow-500 text-yellow-700 bg-yellow-50">
           Medium ({level})
@@ -360,11 +362,11 @@ export function CheckInHistory({ userId }: CheckInHistoryProps) {
                         <div className="w-24 h-2 bg-[#E8E6DD] dark:bg-border rounded-full overflow-hidden">
                           <div
                             className="h-full bg-gradient-to-r from-green-500 via-yellow-500 to-red-500"
-                            style={{ width: `${(checkIn.stressLevel / 10) * 100}%` }}
+                            style={{ width: `${(checkIn.stressLevel / 5) * 100}%` }}
                           />
                         </div>
                         <span className="text-sm font-medium text-[#2D3330] dark:text-foreground">
-                          {checkIn.stressLevel}/10
+                          {checkIn.stressLevel}/5
                         </span>
                       </div>
                     </div>
@@ -377,11 +379,11 @@ export function CheckInHistory({ userId }: CheckInHistoryProps) {
                         <div className="w-24 h-2 bg-[#E8E6DD] dark:bg-border rounded-full overflow-hidden">
                           <div
                             className="h-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500"
-                            style={{ width: `${(checkIn.controlLevel / 10) * 100}%` }}
+                            style={{ width: `${(checkIn.controlLevel / 5) * 100}%` }}
                           />
                         </div>
                         <span className="text-sm font-medium text-[#2D3330] dark:text-foreground">
-                          {checkIn.controlLevel}/10
+                          {checkIn.controlLevel}/5
                         </span>
                       </div>
                     </div>

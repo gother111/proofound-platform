@@ -34,12 +34,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ matc
     const match = await db.execute(sql`
       SELECT
         m.*,
-        a.organization_id,
+        a.org_id as organization_id,
         a.role
       FROM matches m
       INNER JOIN assignments a ON m.assignment_id = a.id
       WHERE m.id = ${matchId}
-        AND m.individual_id = ${user.id}
+        AND m.profile_id = ${user.id}
     `);
 
     if (!match.length) {
@@ -49,33 +49,41 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ matc
     const matchData = match[0] as any;
     const organizationId = matchData.organization_id;
 
-    // Get individual's profile
+    // Get user profile (basic info from profiles table)
+    const userProfile = await db.execute(sql`
+      SELECT display_name, avatar_url
+      FROM profiles
+      WHERE id = ${user.id}
+    `);
+
+    // Get individual's profile (extended info)
     const profile = await db.execute(sql`
-      SELECT *
+      SELECT headline, bio, skills, location, values, causes, linkedin_profile_url
       FROM individual_profiles
       WHERE user_id = ${user.id}
     `);
 
-    if (!profile.length) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
-    }
-
-    const profileData = profile[0] as any;
+    const userData = userProfile.length > 0 ? (userProfile[0] as any) : {};
+    const profileData = profile.length > 0 ? (profile[0] as any) : {};
 
     // Get field visibility settings
-    const visibility = await db.execute(sql`
-      SELECT field_name, is_visible
-      FROM profile_field_visibility
-      WHERE user_id = ${user.id}
-    `);
+    let visibilityMap = new Map<string, boolean>();
+    try {
+      const visibility = await db.execute(sql`
+        SELECT field_name, is_visible
+        FROM profile_field_visibility
+        WHERE user_id = ${user.id}
+      `);
+      visibilityMap = new Map(visibility.map((row: any) => [row.field_name, row.is_visible]));
+    } catch {
+      // Table might be empty - default all fields to visible
+      log.warn('match.visible_fields.no_visibility_settings', { userId: user.id });
+    }
 
-    const visibilityMap = new Map(visibility.map((row: any) => [row.field_name, row.is_visible]));
-
-    // Define all profile fields with their labels
+    // Define all profile fields with their labels using correct column names
     const allFields = [
-      { field: 'name', label: 'Name', value: profileData.name },
-      { field: 'email', label: 'Email', value: profileData.email },
-      { field: 'phone', label: 'Phone', value: profileData.phone },
+      { field: 'name', label: 'Name', value: userData.display_name },
+      { field: 'email', label: 'Email', value: user.email },
       { field: 'location', label: 'Location', value: profileData.location },
       {
         field: 'headline',
@@ -84,52 +92,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ matc
       },
       { field: 'bio', label: 'Biography', value: profileData.bio },
       { field: 'skills', label: 'Skills', value: profileData.skills || [] },
-      {
-        field: 'experience',
-        label: 'Years of Experience',
-        value: profileData.years_of_experience?.toString() || 'Not specified',
-      },
-      {
-        field: 'education',
-        label: 'Education',
-        value: profileData.education || [],
-      },
-      {
-        field: 'languages',
-        label: 'Languages',
-        value: profileData.languages || [],
-      },
       { field: 'values', label: 'Core Values', value: profileData.values || [] },
       { field: 'causes', label: 'Causes', value: profileData.causes || [] },
       {
-        field: 'availability',
-        label: 'Availability',
-        value: profileData.availability || 'Not specified',
-      },
-      {
-        field: 'compensation',
-        label: 'Compensation Expectations',
-        value: profileData.compensation_expectations || 'Not specified',
-      },
-      {
-        field: 'work_authorization',
-        label: 'Work Authorization',
-        value: profileData.work_authorization || 'Not specified',
-      },
-      {
-        field: 'portfolio_url',
-        label: 'Portfolio',
-        value: profileData.portfolio_url || 'Not provided',
-      },
-      {
-        field: 'github_url',
-        label: 'GitHub',
-        value: profileData.github_url || 'Not provided',
-      },
-      {
         field: 'linkedin_url',
         label: 'LinkedIn',
-        value: profileData.linkedin_url || 'Not provided',
+        value: profileData.linkedin_profile_url || 'Not provided',
       },
     ];
 
@@ -154,12 +122,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ matc
 
     // Get organization details
     const org = await db.execute(sql`
-      SELECT name
+      SELECT display_name
       FROM organizations
       WHERE id = ${organizationId}
     `);
 
-    const organizationName = org.length > 0 ? (org[0] as any).name : 'the organization';
+    const organizationName = org.length > 0 ? (org[0] as any).display_name : 'the organization';
 
     log.info('match.visible_fields.retrieved', {
       userId: user.id,

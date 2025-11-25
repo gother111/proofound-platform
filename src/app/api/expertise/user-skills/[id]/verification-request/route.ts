@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server';
 import { requireAuth } from '@/lib/auth';
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
+import { randomBytes } from 'crypto';
+import { sendEmail } from '@/lib/email/sender';
 
 const CreateVerificationRequestSchema = z.object({
   verifierSource: z.enum(['peer', 'manager', 'external']),
@@ -10,38 +12,64 @@ const CreateVerificationRequestSchema = z.object({
 });
 
 /**
- * POST /api/expertise/user-skills/[id]/verification-request
- * 
- * Request verification for a user's skill.
+ * Generate a secure verification token
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+function generateVerificationToken(): string {
+  return randomBytes(32).toString('hex');
+}
+
+/**
+ * POST /api/expertise/user-skills/[id]/verification-request
+ *
+ * Request verification for a user's skill.
+ * PRD F7: Users can request peer/mentor attests via magic link
+ */
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await requireAuth();
     const supabase = await createClient();
     const body = await request.json();
     const { id: skillId } = await params;
-    
+
     // Validate input
     const validated = CreateVerificationRequestSchema.parse(body);
-    
-    // Verify skill belongs to user
+
+    // Verify skill belongs to user and get skill details
     const { data: skill, error: skillError } = await supabase
       .from('skills')
-      .select('id, profile_id, skill_code')
+      .select(
+        `
+        id, 
+        profile_id, 
+        skill_code,
+        skill_id,
+        taxonomy:skill_code (
+          name_i18n
+        )
+      `
+      )
       .eq('id', skillId)
       .single();
-    
+
     if (skillError || !skill || skill.profile_id !== user.id) {
-      return NextResponse.json(
-        { error: 'Skill not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Skill not found' }, { status: 404 });
     }
-    
-    // Create verification request
+
+    // Get requester profile info for the email
+    const { data: requesterProfile } = await supabase
+      .from('profiles')
+      .select('display_name, avatar_url')
+      .eq('id', user.id)
+      .single();
+
+    // Generate secure verification token for magic link
+    const verificationToken = generateVerificationToken();
+
+    // Calculate expiration (7 days from now per PRD F7)
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+
+    // Create verification request with token
     const { data: verificationRequest, error: createError } = await supabase
       .from('skill_verification_requests')
       .insert({
@@ -50,24 +78,146 @@ export async function POST(
         verifier_email: validated.verifierEmail,
         verifier_source: validated.verifierSource,
         message: validated.message || null,
+        verification_token: verificationToken,
+        expires_at: expiresAt.toISOString(),
       })
       .select()
       .single();
-    
+
     if (createError) {
       console.error('Error creating verification request:', createError);
-      return NextResponse.json(
-        { error: 'Failed to create verification request' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to create verification request' }, { status: 500 });
     }
-    
-    // TODO: Send email notification to verifier (optional for MVP)
-    
-    return NextResponse.json({
-      request: verificationRequest,
-    }, { status: 201 });
-    
+
+    // Get skill name for email
+    const skillName =
+      (skill.taxonomy as any)?.name_i18n?.en || parseCustomSkillName(skill.skill_id) || 'a skill';
+
+    // Build magic link URL
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3002';
+    const verifyUrl = `${baseUrl}/verify/${verificationToken}`;
+
+    // Get requester name
+    const requesterName = requesterProfile?.display_name || user.email?.split('@')[0] || 'Someone';
+
+    // Send verification email to verifier
+    const relationshipLabel =
+      validated.verifierSource === 'manager'
+        ? 'a manager'
+        : validated.verifierSource === 'external'
+          ? 'a client/external contact'
+          : 'a peer/colleague';
+
+    const emailResult = await sendEmail({
+      to: validated.verifierEmail,
+      subject: `${requesterName} requested your verification on Proofound`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #2D3330; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #1C4D3A 0%, #2D5F4A 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">Skill Verification Request</h1>
+          </div>
+          
+          <div style="background: #F7F6F1; padding: 30px; border-radius: 0 0 12px 12px; border: 1px solid #E5E3DA; border-top: none;">
+            <p style="font-size: 16px; margin-bottom: 20px;">
+              Hi there,
+            </p>
+            
+            <p style="font-size: 16px; margin-bottom: 20px;">
+              <strong>${requesterName}</strong> has listed you as ${relationshipLabel} and is requesting your verification of their expertise in:
+            </p>
+            
+            <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #1C4D3A; margin: 20px 0;">
+              <p style="font-size: 18px; font-weight: 600; color: #1C4D3A; margin: 0;">
+                ${skillName}
+              </p>
+            </div>
+            
+            ${
+              validated.message
+                ? `
+              <div style="background: white; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <p style="font-size: 14px; color: #6B6760; margin: 0 0 8px 0; font-weight: 500;">Message from ${requesterName}:</p>
+                <p style="font-size: 14px; margin: 0; font-style: italic;">"${validated.message}"</p>
+              </div>
+            `
+                : ''
+            }
+            
+            <p style="font-size: 16px; margin-bottom: 25px;">
+              By verifying, you're confirming that ${requesterName} has demonstrated this skill based on your professional interaction with them.
+            </p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${verifyUrl}" 
+                 style="display: inline-block; background: #1C4D3A; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                Review & Verify Skill
+              </a>
+            </div>
+            
+            <p style="font-size: 14px; color: #6B6760; margin-top: 25px;">
+              This link will expire in 7 days. If you don't recognize this request or have concerns, you can simply ignore this email.
+            </p>
+            
+            <hr style="border: none; border-top: 1px solid #E5E3DA; margin: 25px 0;">
+            
+            <p style="font-size: 12px; color: #6B6760; margin: 0;">
+              This email was sent by Proofound on behalf of ${requesterName}. 
+              <br>You're receiving this because ${requesterName} provided your email address.
+            </p>
+          </div>
+        </body>
+        </html>
+      `,
+      text: `
+Skill Verification Request
+
+Hi there,
+
+${requesterName} has listed you as ${relationshipLabel} and is requesting your verification of their expertise in: ${skillName}
+
+${validated.message ? `Message from ${requesterName}: "${validated.message}"` : ''}
+
+By verifying, you're confirming that ${requesterName} has demonstrated this skill based on your professional interaction with them.
+
+Click here to review and verify: ${verifyUrl}
+
+This link will expire in 7 days.
+
+---
+This email was sent by Proofound on behalf of ${requesterName}.
+      `.trim(),
+    });
+
+    if (!emailResult.success) {
+      console.warn('Failed to send verification email:', emailResult.error);
+      // Don't fail the request - the verification request is created, email is optional
+    }
+
+    // Emit verification requested analytics event (PRD F7)
+    try {
+      const { emitVerificationRequestedAsync } = await import('@/lib/analytics/events');
+      emitVerificationRequestedAsync(user.id, verificationRequest.id, {
+        skill_id: skillId,
+        skill_name: skillName,
+        verifier_source: validated.verifierSource,
+      });
+    } catch (analyticsError) {
+      console.error('Failed to emit attestation_requested event:', analyticsError);
+    }
+
+    return NextResponse.json(
+      {
+        request: verificationRequest,
+        email_sent: emailResult.success,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -81,33 +231,41 @@ export async function POST(
 }
 
 /**
+ * Parse custom skill name from skill_id (format: custom-{cat}-{subcat}-{l3}-{name})
+ */
+function parseCustomSkillName(skillId: string | null): string | null {
+  if (!skillId?.startsWith('custom-')) return null;
+  const parts = skillId.split('-');
+  if (parts.length <= 4) return null;
+  return parts
+    .slice(4)
+    .join(' ')
+    .replace(/-/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/**
  * GET /api/expertise/user-skills/[id]/verification-request
- * 
+ *
  * Get verification status for a user's skill.
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await requireAuth();
     const supabase = await createClient();
     const { id: skillId } = await params;
-    
+
     // Verify skill belongs to user
     const { data: skill, error: skillError } = await supabase
       .from('skills')
       .select('id, profile_id')
       .eq('id', skillId)
       .single();
-    
+
     if (skillError || !skill || skill.profile_id !== user.id) {
-      return NextResponse.json(
-        { error: 'Skill not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Skill not found' }, { status: 404 });
     }
-    
+
     // Fetch verification requests for this skill
     const { data: requests, error: requestsError } = await supabase
       .from('skill_verification_requests')
@@ -115,27 +273,22 @@ export async function GET(
       .eq('skill_id', skillId)
       .eq('requester_profile_id', user.id)
       .order('created_at', { ascending: false });
-    
+
     if (requestsError) {
       console.error('Error fetching verification requests:', requestsError);
-      return NextResponse.json(
-        { error: 'Failed to fetch verification requests' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to fetch verification requests' }, { status: 500 });
     }
-    
+
     // Determine overall verification status
-    const hasAccepted = requests?.some(r => r.status === 'accepted');
+    const hasAccepted = requests?.some((r) => r.status === 'accepted');
     const verification_status = hasAccepted ? 'verified' : 'pending';
-    
+
     return NextResponse.json({
       verification_status,
       requests: requests || [],
     });
-    
   } catch (error) {
     console.error('Verification GET error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

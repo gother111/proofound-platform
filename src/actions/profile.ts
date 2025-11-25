@@ -13,6 +13,8 @@ import {
   volunteering,
   matchingProfiles,
   skills as skillsTable,
+  skillsTaxonomy,
+  skillProofs,
 } from '@/db/schema';
 import { requireAuth } from '@/lib/auth';
 import { emitProfileActivated } from '@/lib/analytics/events';
@@ -171,9 +173,10 @@ export async function getProfileData(): Promise<ProfileData> {
     let experienceRows: any[] = [];
     let educationRows: any[] = [];
     let volunteeringRows: any[] = [];
+    let skillRows: any[] = [];
 
     try {
-      [impactRows, experienceRows, educationRows, volunteeringRows] = await Promise.all([
+      [impactRows, experienceRows, educationRows, volunteeringRows, skillRows] = await Promise.all([
         db
           .select({
             id: impactStories.id,
@@ -225,11 +228,48 @@ export async function getProfileData(): Promise<ProfileData> {
           })
           .from(volunteering)
           .where(eq(volunteering.userId, user.id)),
+        // Fetch L4 skills from the skills table with taxonomy data
+        db
+          .select({
+            id: skillsTable.id,
+            skillCode: skillsTable.skillCode,
+            skillId: skillsTable.skillId,
+            level: skillsTable.level,
+            nameI18n: skillsTaxonomy.nameI18n,
+          })
+          .from(skillsTable)
+          .leftJoin(skillsTaxonomy, eq(skillsTable.skillCode, skillsTaxonomy.code))
+          .where(eq(skillsTable.profileId, user.id)),
       ]);
     } catch (error) {
       console.error('Failed to fetch profile related data:', error);
       // Continue with empty arrays
     }
+
+    // Transform L4 skills to profile format
+    // Check for proofs to determine verified status
+    let proofCounts: Record<string, number> = {};
+    try {
+      const proofs = await db
+        .select({ skillId: skillProofs.skillId })
+        .from(skillProofs)
+        .where(eq(skillProofs.profileId, user.id));
+      proofs.forEach((p) => {
+        proofCounts[p.skillId] = (proofCounts[p.skillId] || 0) + 1;
+      });
+    } catch {
+      // Continue without proof counts
+    }
+
+    const mappedSkills: Skill[] = skillRows.map((row: any) => {
+      const nameI18n = row.nameI18n as Record<string, string> | null;
+      const skillName = nameI18n?.en || row.skillId || 'Unknown Skill';
+      return {
+        id: row.id,
+        name: skillName,
+        verified: (proofCounts[row.id] || 0) > 0,
+      };
+    });
 
     return {
       basicInfo: {
@@ -247,13 +287,13 @@ export async function getProfileData(): Promise<ProfileData> {
       vision: profile?.vision ?? null,
       values: (profile?.values as Value[]) ?? [],
       causes: profile?.causes ?? [],
-      skills: (profile?.skills ?? []).map((skill) =>
-        typeof skill === 'string' ? { id: skill, name: skill, verified: false } : skill
-      ),
+      skills: mappedSkills, // Now fetched from L4 skills table
       impactStories: impactRows,
       experiences: experienceRows,
       education: educationRows,
       volunteering: volunteeringRows,
+      fieldVisibility: (profile?.fieldVisibility as Record<string, string>) ?? {},
+      redactMode: profile?.redactMode ?? false,
     };
   } catch (error) {
     console.error('Failed to get profile data:', error);
@@ -280,6 +320,8 @@ export async function getProfileData(): Promise<ProfileData> {
       experiences: [],
       education: [],
       volunteering: [],
+      fieldVisibility: {},
+      redactMode: false,
     };
   }
 }
@@ -310,17 +352,24 @@ export async function updateBasicInfo(updates: Partial<BasicInfo>) {
   revalidatePath('/app/i/profile');
 }
 
-export async function updateMission(mission: string | null) {
+export async function updateMission(
+  mission: string | null,
+  visibility?: 'public' | 'network' | 'private'
+) {
   const user = await requireAuth();
 
   // Get current value for audit trail
   const current = await db
-    .select({ mission: individualProfiles.mission })
+    .select({
+      mission: individualProfiles.mission,
+      fieldVisibility: individualProfiles.fieldVisibility,
+    })
     .from(individualProfiles)
     .where(eq(individualProfiles.userId, user.id))
     .limit(1);
 
   const oldValue = current[0]?.mission || null;
+  const currentFieldVisibility = (current[0]?.fieldVisibility as Record<string, string>) || {};
 
   // Log the change
   const { logPurposeEdit } = await import('@/lib/audit/purpose-log');
@@ -331,10 +380,16 @@ export async function updateMission(mission: string | null) {
     newValue: mission || '',
   });
 
-  await db
-    .update(individualProfiles)
-    .set({ mission })
-    .where(eq(individualProfiles.userId, user.id));
+  // Update mission text and optionally visibility
+  const updateData: Record<string, unknown> = { mission };
+  if (visibility) {
+    updateData.fieldVisibility = {
+      ...currentFieldVisibility,
+      mission: visibility,
+    };
+  }
+
+  await db.update(individualProfiles).set(updateData).where(eq(individualProfiles.userId, user.id));
 
   // Emit analytics event
   const { emitEvent } = await import('@/lib/analytics/events');
@@ -345,6 +400,7 @@ export async function updateMission(mission: string | null) {
       field: 'mission',
       wordCount: mission?.split(/\s+/).length || 0,
       hasValue: !!mission,
+      visibility: visibility || currentFieldVisibility.mission || 'public',
     },
   });
 
@@ -354,17 +410,24 @@ export async function updateMission(mission: string | null) {
   revalidatePath('/app/i/profile');
 }
 
-export async function updateVision(vision: string | null) {
+export async function updateVision(
+  vision: string | null,
+  visibility?: 'public' | 'network' | 'private'
+) {
   const user = await requireAuth();
 
   // Get current value for audit trail
   const current = await db
-    .select({ vision: individualProfiles.vision })
+    .select({
+      vision: individualProfiles.vision,
+      fieldVisibility: individualProfiles.fieldVisibility,
+    })
     .from(individualProfiles)
     .where(eq(individualProfiles.userId, user.id))
     .limit(1);
 
   const oldValue = current[0]?.vision || null;
+  const currentFieldVisibility = (current[0]?.fieldVisibility as Record<string, string>) || {};
 
   // Log the change
   const { logPurposeEdit } = await import('@/lib/audit/purpose-log');
@@ -375,7 +438,16 @@ export async function updateVision(vision: string | null) {
     newValue: vision || '',
   });
 
-  await db.update(individualProfiles).set({ vision }).where(eq(individualProfiles.userId, user.id));
+  // Update vision text and optionally visibility
+  const updateData: Record<string, unknown> = { vision };
+  if (visibility) {
+    updateData.fieldVisibility = {
+      ...currentFieldVisibility,
+      vision: visibility,
+    };
+  }
+
+  await db.update(individualProfiles).set(updateData).where(eq(individualProfiles.userId, user.id));
 
   // Emit analytics event
   const { emitEvent } = await import('@/lib/analytics/events');
@@ -386,6 +458,7 @@ export async function updateVision(vision: string | null) {
       field: 'vision',
       wordCount: vision?.split(/\s+/).length || 0,
       hasValue: !!vision,
+      visibility: visibility || currentFieldVisibility.vision || 'network',
     },
   });
 
@@ -588,5 +661,31 @@ export async function deleteVolunteering(id: string) {
   await db
     .delete(volunteering)
     .where(and(eq(volunteering.id, id), eq(volunteering.userId, user.id)));
+  revalidatePath('/app/i/profile');
+}
+
+/**
+ * Toggle redact mode for privacy
+ * When enabled, sensitive profile information is hidden from viewers
+ */
+export async function toggleRedactMode(enabled: boolean) {
+  const user = await requireAuth();
+
+  await db
+    .update(individualProfiles)
+    .set({ redactMode: enabled })
+    .where(eq(individualProfiles.userId, user.id));
+
+  // Emit analytics event
+  const { emitEvent } = await import('@/lib/analytics/events');
+  await emitEvent({
+    eventType: 'privacy_settings_updated',
+    userId: user.id,
+    properties: {
+      redactMode: enabled,
+      action: enabled ? 'enabled' : 'disabled',
+    },
+  });
+
   revalidatePath('/app/i/profile');
 }

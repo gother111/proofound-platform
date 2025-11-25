@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
-import { matchInterest, assignments, matches, profiles } from '@/db/schema';
+import { matchInterest, assignments, matches, profiles, conversations } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { emitMatchActioned } from '@/lib/analytics/events';
 import { notifyIntroAccepted } from '@/lib/notifications';
+import { nanoid } from 'nanoid';
 
 export const dynamic = 'force-dynamic';
 
@@ -173,6 +174,82 @@ export async function POST(request: NextRequest) {
             log.error('mutual-interest-notification.failed', {
               error: notifError instanceof Error ? notifError.message : 'Unknown error',
             });
+          }
+
+          // Create conversation for mutual interest (PRD I-20)
+          try {
+            // Check if conversation already exists for this match
+            const existingConversation = await db
+              .select()
+              .from(conversations)
+              .where(eq(conversations.matchId, match.id))
+              .limit(1);
+
+            let conversationId: string;
+
+            if (existingConversation.length > 0) {
+              // Use existing conversation
+              conversationId = existingConversation[0].id;
+              log.info('conversation.already_exists', {
+                matchId: match.id,
+                conversationId,
+              });
+            } else {
+              // Determine participants:
+              // - participantOne: the individual (match.profileId)
+              // - participantTwo: the org representative (user.id if org, else find org owner)
+              const individualId = match.profileId;
+              const orgRepId = targetProfileId ? user.id : otherUserId;
+
+              // Get participant personas for masked handle generation
+              const [individualProfile, orgRepProfile] = await Promise.all([
+                db.query.profiles.findFirst({ where: eq(profiles.id, individualId) }),
+                orgRepId ? db.query.profiles.findFirst({ where: eq(profiles.id, orgRepId) }) : null,
+              ]);
+
+              // Generate masked handles
+              const maskedHandleOne = `Candidate #${nanoid(6).toUpperCase()}`;
+              const maskedHandleTwo = `Organization #${nanoid(6).toUpperCase()}`;
+
+              // Create conversation
+              const [newConversation] = await db
+                .insert(conversations)
+                .values({
+                  matchId: match.id,
+                  assignmentId,
+                  participantOneId: individualId,
+                  participantTwoId: orgRepId || user.id,
+                  stage: 'masked',
+                  maskedHandleOne,
+                  maskedHandleTwo,
+                  lastMessageAt: new Date(),
+                })
+                .returning();
+
+              conversationId = newConversation.id;
+
+              log.info('conversation.created_on_mutual_interest', {
+                conversationId,
+                matchId: match.id,
+                assignmentId,
+                individualId,
+                orgRepId: orgRepId || user.id,
+              });
+            }
+
+            // Return with conversation ID
+            return NextResponse.json({
+              revealed: true,
+              conversationId,
+              matchId: match.id,
+            });
+          } catch (convError) {
+            log.error('conversation.creation.failed', {
+              error: convError instanceof Error ? convError.message : 'Unknown error',
+              matchId: match.id,
+            });
+            // Still return success for mutual interest, just without conversation
+            return NextResponse.json({ revealed: true, matchId: match.id });
           }
         }
       } catch (error) {
