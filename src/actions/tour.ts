@@ -14,18 +14,36 @@ import { revalidatePath } from 'next/cache';
 
 /**
  * Mark the guided tour as completed for the current user
+ * This is called both when the tour is completed and when it's skipped
+ * to ensure the tour doesn't show again.
  */
 export async function completeTour() {
   try {
     const user = await requireAuth();
 
-    await db
+    const result = await db
       .update(profiles)
       .set({
         tourCompleted: true,
         updatedAt: new Date(),
       })
       .where(eq(profiles.id, user.id));
+
+    // Verify the update was successful by checking the profile
+    const updatedProfile = await db.query.profiles.findFirst({
+      where: eq(profiles.id, user.id),
+      columns: {
+        tourCompleted: true,
+      },
+    });
+
+    if (!updatedProfile || !updatedProfile.tourCompleted) {
+      console.error('Tour completion update may have failed - profile not updated');
+      return {
+        success: false,
+        error: 'Failed to verify tour completion in database',
+      };
+    }
 
     // Revalidate pages that might show tour
     revalidatePath('/app');

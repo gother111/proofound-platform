@@ -370,14 +370,21 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
   // Handle selecting a skill from search results
   const handleSearchResultSelect = (skill: L4Skill) => {
     setSelectedL4(skill);
-    setL4Search(skill.nameI18n?.en || '');
+    const skillName = skill.nameI18n?.en || '';
+    setL4Search(skillName);
+    setL4Name(skillName); // Also set l4Name for consistency with button validation
 
     // Auto-populate L1/L2/L3 from the skill's parent context
+    let hasAllContext = true;
     if (skill.l1) {
       const l1Domain = domains.find((d) => d.catId === skill.l1?.catId);
       if (l1Domain) {
         setSelectedL1(l1Domain);
+      } else {
+        hasAllContext = false;
       }
+    } else {
+      hasAllContext = false;
     }
     if (skill.l2) {
       setSelectedL2({
@@ -386,6 +393,8 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
         slug: skill.l2.slug,
         nameI18n: skill.l2.nameI18n,
       });
+    } else {
+      hasAllContext = false;
     }
     if (skill.l3) {
       setSelectedL3({
@@ -395,6 +404,18 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
         slug: skill.l3.slug,
         nameI18n: skill.l3.nameI18n,
       });
+    } else {
+      hasAllContext = false;
+    }
+
+    // Warn if parent context is incomplete
+    if (!hasAllContext) {
+      toast({
+        title: '⚠️ Incomplete Skill Data',
+        description:
+          'Some parent category information is missing. You may need to select the parent categories manually.',
+        variant: 'destructive',
+      });
     }
 
     // Go directly to details step (step 4)
@@ -403,7 +424,43 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
   };
 
   const handleSave = async (saveAndAddAnother: boolean = false) => {
-    if (!selectedL1 || !selectedL2 || !selectedL3 || !l4Search) {
+    // Validate required fields with user-friendly error messages
+    if (!l4Search || l4Search.trim() === '') {
+      toast({
+        title: 'Missing Skill Name',
+        description: 'Please enter or select a skill name before saving.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!selectedL1) {
+      toast({
+        title: 'Missing Domain',
+        description:
+          'Please select a domain (L1) for this skill. Try browsing categories to select the correct domain.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!selectedL2) {
+      toast({
+        title: 'Missing Category',
+        description:
+          'Please select a category (L2) for this skill. Try browsing categories to select the correct category.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!selectedL3) {
+      toast({
+        title: 'Missing Subcategory',
+        description:
+          'Please select a subcategory (L3) for this skill. Try browsing categories to select the correct subcategory.',
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -1099,14 +1156,14 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
                   <Button
                     variant="outline"
                     onClick={() => handleSave(true)}
-                    disabled={!l4Name || saving}
+                    disabled={!l4Search || saving}
                     className="flex-1 border-[#1C4D3A] text-[#1C4D3A] hover:bg-[#EEF1EA]"
                   >
                     Save & Add Another
                   </Button>
                   <Button
                     onClick={() => handleSave(false)}
-                    disabled={!l4Name || saving}
+                    disabled={!l4Search || saving}
                     className="flex-1 bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]"
                   >
                     {saving ? (

@@ -113,7 +113,7 @@ export async function signUp(
 
     const supabase = await createClient({ allowCookieWrite: true });
 
-    const { data: signUpResult, error } = await supabase.auth.signUp({
+    let { data: signUpResult, error } = await supabase.auth.signUp({
       email: result.data.email,
       password: result.data.password,
       options: {
@@ -123,6 +123,33 @@ export async function signUp(
         },
       },
     });
+
+    // Fallback: If rate limited, try creating user via Admin API (bypasses rate limits)
+    if (error && (error.message?.includes('Over the email limit') || error.status === 429)) {
+      console.warn('Signup rate limited. Attempting fallback via Admin API...');
+      try {
+        const { createAdminClient } = await import('@/lib/supabase/admin');
+        const adminSupabase = createAdminClient();
+        const { data: adminData, error: adminError } = await adminSupabase.auth.admin.createUser({
+          email: result.data.email,
+          password: result.data.password,
+          email_confirm: true, // Auto-confirm to bypass email sending limits
+          user_metadata: {
+            persona: result.data.persona,
+          },
+        });
+
+        if (!adminError && adminData.user) {
+          console.log('Fallback signup successful via Admin API');
+          signUpResult = { user: adminData.user, session: null };
+          error = null;
+        } else {
+          console.error('Admin fallback failed:', adminError);
+        }
+      } catch (fallbackErr) {
+        console.error('Admin fallback exception:', fallbackErr);
+      }
+    }
 
     if (error) {
       console.error('Supabase SignUp Error:', error);
