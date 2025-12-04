@@ -40,4 +40,10 @@ async function checkTables() {
     }
 }
 
-checkTables();
+// Run and ensure the async work completes before exit
+checkTables()
+    .then(() => process.exit(0))
+    .catch((err) => {
+        console.error('❌ Unexpected error running checkTables:', err);
+        process.exit(1);
+    });

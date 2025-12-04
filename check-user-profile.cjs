@@ -56,4 +56,10 @@ async function checkUser() {
     }
 }
 
-checkUser();
+// Run and ensure the async work finishes before exiting
+checkUser()
+    .then(() => process.exit(0))
+    .catch((err) => {
+        console.error('❌ Unexpected error running checkUser:', err);
+        process.exit(1);
+    });

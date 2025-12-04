@@ -81,8 +81,11 @@ export function OrgShortlistClient({ items }: Props) {
 
         <div className="flex flex-wrap gap-2">
           <div className="flex items-center gap-2">
-            <label className="text-sm text-muted-foreground">Assignment</label>
+            <label htmlFor="assignment-filter" className="text-sm text-muted-foreground">
+              Assignment
+            </label>
             <select
+              id="assignment-filter"
               value={assignmentFilter}
               onChange={(e) => setAssignmentFilter(e.target.value)}
               className="h-9 rounded-md border border-neutral-300 bg-white px-2 text-sm"
@@ -97,8 +100,11 @@ export function OrgShortlistClient({ items }: Props) {
           </div>
 
           <div className="flex items-center gap-2">
-            <label className="text-sm text-muted-foreground">Sort</label>
+            <label htmlFor="sort-by" className="text-sm text-muted-foreground">
+              Sort
+            </label>
             <select
+              id="sort-by"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
               className="h-9 rounded-md border border-neutral-300 bg-white px-2 text-sm"
@@ -109,8 +115,11 @@ export function OrgShortlistClient({ items }: Props) {
           </div>
 
           <div className="flex items-center gap-2">
-            <label className="text-sm text-muted-foreground">Search</label>
+            <label htmlFor="shortlist-search" className="text-sm text-muted-foreground">
+              Search
+            </label>
             <Input
+              id="shortlist-search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Name or email"
