@@ -9,8 +9,9 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
+import { apiFetch } from '@/lib/api/fetch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
@@ -74,16 +75,11 @@ export function MatchingProfileEditor({ profileId, onSave, onCancel }: MatchingP
   const { toast } = useToast();
 
   // Load existing profile if profileId provided
-  useEffect(() => {
-    if (profileId) {
-      loadProfile(profileId);
-    }
-  }, [profileId]);
-
-  const loadProfile = async (id: string) => {
+  const loadProfile = useCallback(
+    async (id: string) => {
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/matching/profile/${id}`);
+      const response = await apiFetch(`/api/matching/profile/${id}`);
 
       if (!response.ok) {
         throw new Error('Failed to load profile');
@@ -101,7 +97,15 @@ export function MatchingProfileEditor({ profileId, onSave, onCancel }: MatchingP
     } finally {
       setIsLoading(false);
     }
-  };
+    },
+    [toast]
+  );
+
+  useEffect(() => {
+    if (profileId) {
+      loadProfile(profileId);
+    }
+  }, [profileId, loadProfile]);
 
   const handleWeightChange = (factor: string, value: number[]) => {
     const newValue = value[0] / 100; // Convert from 0-100 to 0-1
@@ -144,7 +148,7 @@ export function MatchingProfileEditor({ profileId, onSave, onCancel }: MatchingP
     try {
       setIsSaving(true);
 
-      const response = await fetch('/api/matching/profile', {
+      const response = await apiFetch('/api/matching/profile', {
         method: profileId ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',

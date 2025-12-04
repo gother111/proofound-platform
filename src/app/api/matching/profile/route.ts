@@ -11,10 +11,24 @@ import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
+import { z } from 'zod';
+
+const createProfileSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  weights: z.record(z.any()),
+  constraints: z.record(z.any()),
+});
+
+const updateProfileSchema = z.object({
+  id: z.string().min(1, 'id is required'),
+  name: z.string().min(1).optional(),
+  weights: z.record(z.any()).optional(),
+  constraints: z.record(z.any()).optional(),
+});
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -23,16 +37,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { name, weights, constraints } = body;
-
-    // Validate input
-    if (!name || !weights || !constraints) {
-      return NextResponse.json(
-        { error: 'name, weights, and constraints are required' },
-        { status: 400 }
-      );
+    const parsed = createProfileSchema.safeParse(await req.json());
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid profile payload', details: parsed.error.flatten() }, { status: 400 });
     }
+
+    const { name, weights, constraints } = parsed.data;
 
     // Insert profile
     const result = await db.execute(sql`
@@ -52,7 +62,7 @@ export async function POST(req: NextRequest) {
       RETURNING *
     `);
 
-    const profile = result.rows[0] as any;
+    const profile = (result as any[])[0];
 
     log.info('matching.profile.created', {
       userId: user.id,
@@ -82,7 +92,7 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -91,12 +101,11 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { id, name, weights, constraints } = body;
-
-    if (!id) {
-      return NextResponse.json({ error: 'id is required for updates' }, { status: 400 });
+    const parsed = updateProfileSchema.safeParse(await req.json());
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid profile payload', details: parsed.error.flatten() }, { status: 400 });
     }
+    const { id, name, weights, constraints } = parsed.data;
 
     // Verify ownership
     const existing = await db.execute(sql`
@@ -105,11 +114,11 @@ export async function PUT(req: NextRequest) {
       WHERE id = ${id}
     `);
 
-    if (!existing.rows.length) {
+    if (!(existing as any[]).length) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    if ((existing.rows[0] as any).user_id !== user.id) {
+    if (((existing as any[])[0] as any).user_id !== user.id) {
       return NextResponse.json({ error: 'Unauthorized to update this profile' }, { status: 403 });
     }
 
@@ -125,7 +134,7 @@ export async function PUT(req: NextRequest) {
       RETURNING *
     `);
 
-    const profile = result.rows[0] as any;
+    const profile = (result as any[])[0];
 
     log.info('matching.profile.updated', {
       userId: user.id,
@@ -155,7 +164,7 @@ export async function PUT(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -172,7 +181,7 @@ export async function GET(req: NextRequest) {
       ORDER BY created_at DESC
     `);
 
-    const profiles = result.rows.map((row: any) => ({
+    const profiles = (result as any[]).map((row: any) => ({
       id: row.id,
       name: row.name,
       weights: row.weights,

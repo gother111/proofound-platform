@@ -17,6 +17,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/button';
 import { TrendingUp, TrendingDown, Minus, Calendar, Lock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface CheckInData {
   date: string; // ISO date string
@@ -53,12 +54,12 @@ export function WellBeingDeltaChart({ period = 14, autoFetch = true }: WellBeing
   const fetchDelta = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/wellbeing/delta?period=${selectedPeriod}`);
+      const response = await apiFetch(`/api/wellbeing/delta?period=${selectedPeriod}`);
       if (response.ok) {
         const data = await response.json();
 
         // Fetch check-in history for chart
-        const historyResponse = await fetch('/api/wellbeing/checkins');
+        const historyResponse = await apiFetch('/api/wellbeing/checkins');
         if (historyResponse.ok) {
           const historyData = await historyResponse.json();
           const checkIns =

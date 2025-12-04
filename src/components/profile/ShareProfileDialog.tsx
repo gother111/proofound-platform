@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { generateEmbedCode, generateShareText } from '@/lib/profile/snippet-generator';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface ShareProfileDialogProps {
   isOpen: boolean;
@@ -81,7 +82,7 @@ export function ShareProfileDialog({
     try {
       setIsGenerating(true);
 
-      const response = await fetch('/api/profile/snippet', {
+      const response = await apiFetch('/api/profile/snippet', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { FieldVisibilityControls } from './FieldVisibilityControls';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface VisibilitySettingsModalProps {
   open: boolean;
@@ -21,7 +22,7 @@ export function VisibilitySettingsModal({ open, onOpenChange, userId }: Visibili
   useEffect(() => {
     if (open && !userId) {
       // Fetch current user ID
-      fetch('/api/user/me')
+      apiFetch('/api/user/me')
         .then((res) => res.json())
         .then((data) => setCurrentUserId(data.id))
         .catch(console.error);

@@ -22,6 +22,7 @@ import {
   Settings,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface Integration {
   provider: 'zoom' | 'google';
@@ -51,7 +52,7 @@ export function MeetingLinkGenerator({
   const fetchIntegrations = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/integrations/video');
+      const response = await apiFetch('/api/integrations/video');
       if (response.ok) {
         const data = await response.json();
         setIntegrations(data.integrations || []);
@@ -66,7 +67,7 @@ export function MeetingLinkGenerator({
   const handleConnect = async (provider: 'zoom' | 'google') => {
     try {
       // In production, this would redirect to OAuth flow
-      const response = await fetch(`/api/integrations/video/${provider}/auth`);
+      const response = await apiFetch(`/api/integrations/video/${provider}/auth`);
       if (response.ok) {
         const data = await response.json();
         // Redirect to OAuth URL
@@ -82,7 +83,7 @@ export function MeetingLinkGenerator({
 
   const handleDisconnect = async (provider: 'zoom' | 'google') => {
     try {
-      const response = await fetch(`/api/integrations/video/${provider}`, {
+      const response = await apiFetch(`/api/integrations/video/${provider}`, {
         method: 'DELETE',
       });
 
@@ -101,7 +102,7 @@ export function MeetingLinkGenerator({
   const handleGenerateLink = async (provider: 'zoom' | 'google') => {
     setIsGenerating(true);
     try {
-      const response = await fetch('/api/integrations/video/generate-link', {
+      const response = await apiFetch('/api/integrations/video/generate-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -26,6 +26,7 @@ import {
   Filter,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface AuditEvent {
   id: string;
@@ -80,7 +81,7 @@ export function AuditLogViewer() {
   const loadEvents = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/user/audit-log?limit=${LIMIT}&offset=${offset}`);
+      const response = await apiFetch(`/api/user/audit-log?limit=${LIMIT}&offset=${offset}`);
 
       if (!response.ok) {
         throw new Error('Failed to load audit log');
@@ -108,7 +109,7 @@ export function AuditLogViewer() {
   const handleExport = async () => {
     try {
       // Export all events as JSON
-      const response = await fetch(`/api/user/audit-log?limit=1000&offset=0`);
+      const response = await apiFetch(`/api/user/audit-log?limit=1000&offset=0`);
 
       if (!response.ok) {
         throw new Error('Failed to export audit log');

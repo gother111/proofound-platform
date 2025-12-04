@@ -16,6 +16,7 @@ import { GoalForm } from './GoalForm';
 import { GoalProgressChart } from './GoalProgressChart';
 import { Plus, Target, BarChart3, AlertCircle, List } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -56,7 +57,7 @@ export function GoalsManager({ orgId, canEdit = true }: GoalsManagerProps) {
 
   const fetchGoals = useCallback(async () => {
     try {
-      const response = await fetch(`/api/organizations/${orgId}/goals`);
+      const response = await apiFetch(`/api/organizations/${orgId}/goals`);
       if (!response.ok) {
         throw new Error('Failed to fetch goals');
       }
@@ -82,7 +83,7 @@ export function GoalsManager({ orgId, canEdit = true }: GoalsManagerProps) {
       
       const method = goal.id ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(goal),
@@ -109,7 +110,7 @@ export function GoalsManager({ orgId, canEdit = true }: GoalsManagerProps) {
 
   const handleDelete = async (id: string) => {
     try {
-      const response = await fetch(`/api/organizations/${orgId}/goals/${id}`, {
+      const response = await apiFetch(`/api/organizations/${orgId}/goals/${id}`, {
         method: 'DELETE',
       });
 

@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Bell, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface SnoozedMatch {
   id: string;
@@ -42,7 +43,7 @@ export function SnoozedMatchesList() {
 
   const fetchSnoozedMatches = async () => {
     try {
-      const response = await fetch('/api/match/snoozed');
+      const response = await apiFetch('/api/match/snoozed');
       if (response.ok) {
         const data = await response.json();
         setMatches(data.matches || []);
@@ -57,7 +58,7 @@ export function SnoozedMatchesList() {
   const handleUnsnooze = async (matchId: string) => {
     setUnsnoozing(matchId);
     try {
-      const response = await fetch(`/api/match/snooze?matchId=${matchId}`, {
+      const response = await apiFetch(`/api/match/snooze?matchId=${matchId}`, {
         method: 'DELETE',
       });
 

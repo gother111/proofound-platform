@@ -241,11 +241,10 @@ export function EditableProfileView() {
                       variant={profile.redactMode ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => toggleRedactMode(!profile.redactMode)}
-                      className={`h-8 gap-1.5 ${
-                        profile.redactMode
-                          ? 'bg-amber-500 hover:bg-amber-600 text-white'
-                          : 'text-muted-foreground hover:text-foreground'
-                      }`}
+                      className={`h-8 gap-1.5 ${profile.redactMode
+                        ? 'bg-amber-500 hover:bg-amber-600 text-white'
+                        : 'text-muted-foreground hover:text-foreground'
+                        }`}
                       disabled={pending.redactMode || isPending}
                       title={
                         profile.redactMode

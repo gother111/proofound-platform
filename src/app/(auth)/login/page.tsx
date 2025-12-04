@@ -4,6 +4,8 @@ import { SignIn } from '@/components/auth/SignIn';
 import { resolveUserHomePath } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
+// Force Node.js runtime so server helpers (Supabase + crypto) run outside Edge
+export const runtime = 'nodejs';
 
 export const metadata = {
   title: 'Sign In | Proofound',

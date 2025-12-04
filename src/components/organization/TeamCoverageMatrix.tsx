@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Users, Download, Filter, AlertTriangle, CheckCircle2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface TeamMember {
   id: string;
@@ -53,7 +54,7 @@ export function TeamCoverageMatrix({ organizationId }: TeamCoverageMatrixProps) 
   const fetchCoverage = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/org/${organizationId}/coverage`);
+      const response = await apiFetch(`/api/org/${organizationId}/coverage`);
       if (response.ok) {
         const data = await response.json();
         setMembers(data.members || []);

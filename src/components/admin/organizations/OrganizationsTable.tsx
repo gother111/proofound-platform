@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Table,
   TableBody,
@@ -35,6 +35,7 @@ import { format } from 'date-fns';
 import { Organization } from '@/db/schema';
 import { OrgDetailModal } from './OrgDetailModal';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface OrgsResponse {
   organizations: Organization[];
@@ -63,11 +64,7 @@ export function OrganizationsTable() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  useEffect(() => {
-    fetchOrgs();
-  }, [page, debouncedSearch]);
-
-  const fetchOrgs = async () => {
+  const fetchOrgs = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -75,8 +72,12 @@ export function OrganizationsTable() {
         limit: '10',
         search: debouncedSearch,
       });
-      const res = await fetch(`/api/admin/organizations?${params}`);
-      if (!res.ok) throw new Error('Failed to fetch organizations');
+      const res = await apiFetch(`/api/admin/organizations?${params}`);
+
+      if (!res.ok) {
+        throw new Error('Failed to fetch organizations');
+      }
+
       const json = await res.json();
       setData(json);
     } catch (error) {
@@ -85,7 +86,11 @@ export function OrganizationsTable() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, debouncedSearch]);
+
+  useEffect(() => {
+    fetchOrgs();
+  }, [fetchOrgs]);
 
   const handleViewOrg = (org: Organization) => {
     setSelectedOrg(org);
@@ -108,6 +113,8 @@ export function OrganizationsTable() {
   };
 
   const getVerificationBadge = (org: Organization) => {
+    // TODO: Add verification status to organization schema
+    /*
     if (org.verified) {
       return (
         <Badge className="bg-green-600 hover:bg-green-700 gap-1">
@@ -116,6 +123,7 @@ export function OrganizationsTable() {
         </Badge>
       );
     }
+    */
     return (
       <Badge variant="outline" className="gap-1">
         <XCircle className="h-3 w-3" />
@@ -214,8 +222,8 @@ export function OrganizationsTable() {
                           <Eye className="h-4 w-4 mr-2" />
                           View Details
                         </DropdownMenuItem>
-                        {org.websiteUrl && (
-                          <DropdownMenuItem onClick={() => window.open(org.websiteUrl!, '_blank')}>
+                        {org.website && (
+                          <DropdownMenuItem onClick={() => window.open(org.website!, '_blank')}>
                             <ExternalLink className="h-4 w-4 mr-2" />
                             Visit Website
                           </DropdownMenuItem>

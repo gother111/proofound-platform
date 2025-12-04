@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Heart, CheckCircle2, AlertCircle, Zap } from 'lucide-react';
 import { useMood } from './MoodResponsiveContainer';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 
 export function QuickCheckIn() {
   const { setMood } = useMood();
@@ -19,7 +20,7 @@ export function QuickCheckIn() {
     setIsSubmitting(true);
     try {
       // Save to backend
-      const response = await fetch('/api/wellbeing/checkin', {
+      const response = await apiFetch('/api/wellbeing/checkin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

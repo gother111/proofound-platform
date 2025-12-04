@@ -7,6 +7,7 @@ import { Plus, Loader2, AlertCircle, Mail, Clock, CheckCircle, XCircle } from 'l
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { StakeholderInviteDialog } from './StakeholderInviteDialog';
 import { Badge } from '@/components/ui/badge';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface Assignment {
   id: string;
@@ -41,7 +42,7 @@ export function AssignmentManager({ orgId }: AssignmentManagerProps) {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/organizations/${orgId}/assignments`);
+      const response = await apiFetch(`/api/organizations/${orgId}/assignments`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch assignments');

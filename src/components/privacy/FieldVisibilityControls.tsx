@@ -23,6 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Eye, EyeOff, Lock, Globe, Users, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 
 type VisibilityLevel = 'public' | 'network' | 'private' | 'hidden';
 
@@ -84,7 +85,7 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
   const fetchPrivacySettings = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/user/privacy-settings');
+      const response = await apiFetch('/api/user/privacy-settings');
       if (response.ok) {
         const data = await response.json();
         setFieldVisibility(data.fieldVisibility || {});
@@ -123,7 +124,7 @@ export function FieldVisibilityControls({ userId }: FieldVisibilityControlsProps
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const response = await fetch('/api/user/privacy-settings', {
+      const response = await apiFetch('/api/user/privacy-settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

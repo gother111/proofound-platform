@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
-import { Toaster } from 'sonner';
+import { Toaster } from '@/components/ui/sonner';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -56,17 +56,7 @@ export default async function RootLayout({
           <NextIntlClientProvider messages={messages}>
             <GlobalErrorHandler />
             {children}
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                // Accessible toast styling with proper contrast
-                style: {
-                  background: 'white',
-                  color: '#2D3330',
-                  border: '1px solid #E8E6DD',
-                },
-              }}
-            />
+            <Toaster />
             <ChatWidget />
             <CookieBanner />
             <WebVitalsReporter />

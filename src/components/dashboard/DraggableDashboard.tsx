@@ -129,6 +129,7 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
       const response = await fetch('/api/dashboard/layout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Ensure cookies are sent
         body: JSON.stringify({ widgets: layout }),
       });
 
@@ -357,12 +358,84 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
           items={visibleWidgets.map((w) => w.widgetId)}
           strategy={verticalListSortingStrategy}
         >
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {visibleWidgets.map((widget) => (
-              <SortableWidget key={widget.widgetId} id={widget.widgetId} editMode={editMode}>
-                {getWidgetComponent(widget.widgetId)}
-              </SortableWidget>
-            ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 grid-flow-dense auto-rows-min">
+            {(() => {
+              // Smart Layout Algorithm
+              // Calculate optimal positions and sizes to eliminate gaps
+              let currentColumn = 0;
+
+              return visibleWidgets.map((widget, index) => {
+                const isLast = index === visibleWidgets.length - 1;
+
+                // Determine base size
+                let baseSize = widget.size;
+                // Force Next Best Actions to be full width if not specified
+                if (widget.widgetId === 'next-best-actions' && baseSize !== 'full') {
+                  baseSize = 'full';
+                }
+
+                // Map size to columns
+                const sizeMap: Record<string, number> = {
+                  small: 1,
+                  default: 1,
+                  large: 2,
+                  full: 3,
+                };
+
+                let colSpan = sizeMap[baseSize] || 1;
+
+                // Check if it fits in current row
+                if (currentColumn + colSpan > 3) {
+                  // Wrap to next row
+                  currentColumn = 0;
+                }
+
+                // Smart expansion:
+                // If this is the last widget, expand it to fill the remaining space in the row
+                // OR if it's a full-width widget that wrapped, it takes 3 cols
+                if (isLast) {
+                  const remainingInRow = 3 - currentColumn;
+                  // If it fits, expand to fill. If it wrapped (currentColumn=0), it takes full width (3)
+                  if (remainingInRow > 0) {
+                    // If the widget is naturally smaller than remaining space, expand it
+                    // If naturally larger (shouldn't happen if we wrapped logic correctly above), clamp it?
+                    // Actually, if we just wrapped, currentColumn is 0. remaining is 3.
+                    // If we didn't wrap, currentColumn is e.g. 2. remaining is 1.
+                    colSpan = remainingInRow;
+                  }
+                }
+
+                // Update current column for next iteration
+                currentColumn = (currentColumn + colSpan) % 3;
+
+                // Generate class name
+                let colSpanClass = 'md:col-span-1'; // Default for tablet
+
+                // Desktop classes based on calculated colSpan
+                if (colSpan === 3) colSpanClass += ' lg:col-span-3';
+                else if (colSpan === 2) colSpanClass += ' lg:col-span-2';
+                else colSpanClass += ' lg:col-span-1';
+
+                // Tablet logic (simple 2-col grid)
+                // If it's a large/full widget, make it span 2 on tablet
+                if (baseSize === 'large' || baseSize === 'full') {
+                  colSpanClass = 'md:col-span-2 ' + colSpanClass.split(' ').filter(c => !c.startsWith('md:')).join(' ');
+                }
+
+                return (
+                  <SortableWidget
+                    key={widget.widgetId}
+                    id={widget.widgetId}
+                    editMode={editMode}
+                    className={`${colSpanClass} min-h-[300px]`}
+                  >
+                    <div className="h-full">
+                      {getWidgetComponent(widget.widgetId)}
+                    </div>
+                  </SortableWidget>
+                );
+              });
+            })()}
           </div>
         </SortableContext>
       </DndContext>
@@ -420,19 +493,21 @@ function SortableWidget({
   id,
   children,
   editMode,
+  className,
 }: {
   id: string;
   children: React.ReactNode;
   editMode: boolean;
+  className?: string;
 }) {
   // If dnd-kit is not available, render without drag functionality
   if (!useSortable || !CSS) {
-    return <div>{children}</div>;
+    return <div className={className}>{children}</div>;
   }
 
   // Create a separate component to call hooks unconditionally
   return (
-    <SortableItem id={id} editMode={editMode}>
+    <SortableItem id={id} editMode={editMode} className={className}>
       {children}
     </SortableItem>
   );
@@ -443,10 +518,12 @@ function SortableItem({
   id,
   children,
   editMode,
+  className,
 }: {
   id: string;
   children: React.ReactNode;
   editMode: boolean;
+  className?: string;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
@@ -457,6 +534,7 @@ function SortableItem({
     transition,
     opacity: isDragging ? 0.5 : 1,
     cursor: editMode ? 'grab' : 'default',
+    zIndex: isDragging ? 50 : 'auto', // Ensure dragged item is on top
   };
 
   return (
@@ -465,7 +543,7 @@ function SortableItem({
       style={style}
       {...(editMode ? attributes : {})}
       {...(editMode ? listeners : {})}
-      className={editMode ? 'ring-2 ring-[#1C4D3A] ring-offset-2 rounded-lg' : ''}
+      className={`${className || ''} ${editMode ? 'ring-2 ring-[#1C4D3A] ring-offset-2 rounded-lg' : ''}`}
     >
       {children}
     </div>

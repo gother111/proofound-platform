@@ -30,6 +30,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface ContentReport {
   id: string;
@@ -79,7 +80,9 @@ export function ModerationQueue() {
   const fetchReports = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/admin/moderation/queue?status=${selectedStatus}&limit=50`);
+      const response = await apiFetch(
+        `/api/admin/moderation/queue?status=${selectedStatus}&limit=50`
+      );
 
       if (!response.ok) {
         throw new Error('Failed to fetch reports');
@@ -110,7 +113,7 @@ export function ModerationQueue() {
     try {
       setActionLoading(true);
 
-      const response = await fetch('/api/admin/moderation/action', {
+      const response = await apiFetch('/api/admin/moderation/action', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

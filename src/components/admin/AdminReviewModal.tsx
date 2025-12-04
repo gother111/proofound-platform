@@ -30,6 +30,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface VerificationSignals {
   hasVerificationBadge: boolean;
@@ -80,7 +81,7 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
       setProcessing(true);
       setDecision(selectedDecision);
 
-      const response = await fetch(
+      const response = await apiFetch(
         `/api/admin/verification/linkedin/${verification.userId}/review`,
         {
           method: 'POST',

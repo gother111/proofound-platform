@@ -142,16 +142,18 @@ export async function DELETE(
 
       // Parse skill name
       let skillName = 'Unknown Skill';
-      if ((skillToDelete?.taxonomy as any)?.name_i18n?.en) {
-        skillName = (skillToDelete.taxonomy as any).name_i18n.en;
-      } else if (skillToDelete?.skill_id?.startsWith('custom-')) {
-        const parts = skillToDelete.skill_id.split('-');
-        if (parts.length > 4) {
-          skillName = parts
-            .slice(4)
-            .join(' ')
-            .replace(/-/g, ' ')
-            .replace(/\b\w/g, (c: string) => c.toUpperCase());
+      if (skillToDelete) {
+        if ((skillToDelete.taxonomy as any)?.name_i18n?.en) {
+          skillName = (skillToDelete.taxonomy as any).name_i18n.en;
+        } else if (skillToDelete.skill_id?.startsWith('custom-')) {
+          const parts = skillToDelete.skill_id.split('-');
+          if (parts.length > 4) {
+            skillName = parts
+              .slice(4)
+              .join(' ')
+              .replace(/-/g, ' ')
+              .replace(/\b\w/g, (c: string) => c.toUpperCase());
+          }
         }
       }
 

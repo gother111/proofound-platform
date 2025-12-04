@@ -1,18 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { profiles } from '@/db/schema';
 import { requireAuth } from '@/lib/auth';
 import { log } from '@/lib/log';
 import { db } from '@/db';
 import { createClient } from '@/lib/supabase/server';
-import { sendDeletionScheduledEmail } from '@/lib/email';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
 
 // Validation schema for deletion request
 const AccountDeletionSchema = z.object({
   password: z.string().min(1, 'Password is required to confirm deletion'),
+  confirmPhrase: z.literal('DELETE MY ACCOUNT', {
+    errorMap: () => ({
+      message: 'You must type the confirmation phrase exactly: DELETE MY ACCOUNT',
+    }),
+  }),
   reason: z.string().max(500).optional(),
 });
 
@@ -21,23 +26,7 @@ const AccountDeletionSchema = z.object({
  * 
  * GDPR Article 17 (Right to Erasure)
  * 
- * Request account deletion with 30-day grace period
- * 
- * Flow:
- * 1. Verify user password using Supabase auth (security check)
- * 2. Set deletion_requested_at = NOW()
- * 3. Set deletion_scheduled_for = NOW() + 30 days
- * 4. Send confirmation email with cancellation link
- * 5. Return scheduled deletion date
- * 
- * During grace period:
- * - User can cancel deletion via /api/user/account/cancel-deletion
- * - User receives reminder email at day 23 (7 days before deletion)
- * 
- * After grace period:
- * - Background job (cron) anonymizes account
- * - All PII is removed/replaced with "Deleted User"
- * - Some data retained for 90 days for legal/fraud prevention
+ * PRD I-25: Immediate, irreversible deletion (no grace period).
  */
 export async function DELETE(request: NextRequest) {
   try {
@@ -94,71 +83,71 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Check if account deletion is already scheduled
-    if (profile.deletionScheduledFor) {
+    // Remove Supabase auth user to revoke future access
+    try {
+      const adminClient = createAdminClient();
+      const { error: deleteError } = await adminClient.auth.admin.deleteUser(user.id);
+      if (deleteError) {
+        log.error('privacy.account_deletion.auth_delete_failed', {
+          userId: user.id,
+          error: deleteError.message,
+        });
+        return NextResponse.json(
+          {
+            error: 'Failed to delete account',
+            message: 'Could not revoke account access. Please try again shortly.',
+          },
+          { status: 500 }
+        );
+      }
+    } catch (authDeleteError) {
+      log.error('privacy.account_deletion.auth_delete_failed', {
+        userId: user.id,
+        error: authDeleteError instanceof Error ? authDeleteError.message : 'Unknown error',
+      });
       return NextResponse.json(
         {
-          error: 'Account deletion already scheduled',
-          scheduledFor: profile.deletionScheduledFor.toISOString(),
-          message: 'Your account deletion is already scheduled. You can cancel it from your settings.',
+          error: 'Failed to delete account',
+          message: 'Could not revoke account access. Please try again shortly.',
         },
-        { status: 409 }
+        { status: 500 }
       );
     }
 
-    // Calculate deletion date (30 days from now)
-    const now = new Date();
-    const scheduledDeletionDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
+    // Immediate deletion: anonymize data now (stored procedure handles cascading cleanup)
+    try {
+      await db.execute(sql`SELECT anonymize_user_account(${user.id}::uuid)`);
+    } catch (anonymizeError) {
+      log.error('privacy.account_deletion.anonymize_failed', {
+        userId: user.id,
+        error: anonymizeError instanceof Error ? anonymizeError.message : 'Unknown error',
+      });
+      return NextResponse.json(
+        { error: 'Failed to delete account', message: 'An error occurred while deleting your account.' },
+        { status: 500 }
+      );
+    }
 
-    // Update profile with deletion request
+    // Mark profile as deleted (defense-in-depth if procedure did not)
     await db
       .update(profiles)
       .set({
-        deletionRequestedAt: now,
-        deletionScheduledFor: scheduledDeletionDate,
+        deletionRequestedAt: new Date(),
+        deletionScheduledFor: null,
         deletionReason: parsed.reason || null,
-        updatedAt: now,
+        deleted: true,
+        updatedAt: new Date(),
       })
       .where(eq(profiles.id, user.id));
 
-    // Log deletion request
-    log.info('privacy.account_deletion.requested', {
+    log.info('privacy.account_deletion.completed', {
       userId: user.id,
-      scheduledFor: scheduledDeletionDate.toISOString(),
       reason: parsed.reason || 'Not provided',
     });
 
-    // Send confirmation email with cancellation link
-    // Note: Email failures are logged but don't block the deletion request
-    try {
-      await sendDeletionScheduledEmail(authUser.email, user.id, scheduledDeletionDate);
-      log.info('privacy.account_deletion.email_sent', {
-        userId: user.id,
-        email: authUser.email,
-      });
-    } catch (emailError) {
-      // Log email failure but don't block the deletion request
-      log.error('privacy.account_deletion.email_failed', {
-        userId: user.id,
-        error: emailError instanceof Error ? emailError.message : 'Unknown error',
-      });
-    }
-
-    // Generate cancellation URL
-    const cancellationUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/settings?tab=privacy`;
-
     return NextResponse.json({
-      status: 'deletion_scheduled',
-      scheduledFor: scheduledDeletionDate.toISOString(),
-      gracePeriodDays: 30,
-      cancellationUrl,
-      message: 'Your account deletion has been scheduled. You have 30 days to cancel this request.',
-      nextSteps: [
-        'You will receive a confirmation email shortly',
-        'You can cancel this request anytime within the next 30 days',
-        'A reminder email will be sent 7 days before deletion',
-        'After 30 days, your account will be permanently anonymized',
-      ],
+      status: 'deleted',
+      message: 'Your account has been permanently deleted. This action cannot be undone.',
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

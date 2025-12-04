@@ -9,6 +9,7 @@ import { ImpactMetricsChart } from './ImpactMetricsChart';
 import { EvidencePackGenerator } from './EvidencePackGenerator';
 import { Plus, Target, BarChart3, FileText, Edit2, Trash2, MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -58,7 +59,7 @@ export function ImpactDashboard({ orgId, orgName, canEdit = true }: ImpactDashbo
 
   const fetchImpactEntries = useCallback(async () => {
     try {
-      const response = await fetch(`/api/organizations/${orgId}/impact`);
+      const response = await apiFetch(`/api/organizations/${orgId}/impact`);
       if (!response.ok) {
         throw new Error('Failed to fetch impact entries');
       }
@@ -84,7 +85,7 @@ export function ImpactDashboard({ orgId, orgName, canEdit = true }: ImpactDashbo
       
       const method = entry.id ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(entry),
@@ -111,7 +112,7 @@ export function ImpactDashboard({ orgId, orgName, canEdit = true }: ImpactDashbo
 
   const handleDelete = async (id: string) => {
     try {
-      const response = await fetch(`/api/organizations/${orgId}/impact/${id}`, {
+      const response = await apiFetch(`/api/organizations/${orgId}/impact/${id}`, {
         method: 'DELETE',
       });
 

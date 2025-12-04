@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createHash, randomBytes } from 'crypto';
 
 /**
  * CSRF Protection Utility
@@ -16,14 +15,10 @@ const TOKEN_LENGTH = 32;
  * Generate a cryptographically secure CSRF token
  */
 export function generateCSRFToken(): string {
-  return randomBytes(TOKEN_LENGTH).toString('hex');
-}
-
-/**
- * Hash a CSRF token for comparison (prevents timing attacks)
- */
-function hashToken(token: string): string {
-  return createHash('sha256').update(token).digest('hex');
+  // Use Web Crypto (Edge/Browser/Node 18+) to avoid Node crypto in middleware
+  const bytes = new Uint8Array(TOKEN_LENGTH);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 /**
@@ -51,11 +46,8 @@ export function verifyCSRFToken(request: NextRequest): boolean {
     return false;
   }
 
-  // Compare hashed tokens to prevent timing attacks
-  const headerHash = hashToken(headerToken);
-  const cookieHash = hashToken(cookieToken);
-
-  return headerHash === cookieHash;
+  // Compare tokens directly (double-submit cookie pattern)
+  return headerToken === cookieToken;
 }
 
 /**
@@ -90,6 +82,7 @@ export function csrfProtection(request: NextRequest): NextResponse | null {
     '/api/wellbeing/',
     '/api/notifications/',
     '/api/feedback/',
+    '/api/dashboard/',
   ];
 
   const hasSupabaseSession =

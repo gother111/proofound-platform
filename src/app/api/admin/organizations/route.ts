@@ -1,19 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requirePlatformAdmin } from '@/lib/auth/admin';
+import { jsonError } from '@/lib/api/route-helpers';
 import { db } from '@/db';
 import { organizations } from '@/db/schema';
 import { ilike, or, desc, asc, sql } from 'drizzle-orm';
+import { adminListGuard } from '../_utils';
 
 export async function GET(request: NextRequest) {
   try {
-    await requirePlatformAdmin();
-
-    const searchParams = request.nextUrl.searchParams;
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const search = searchParams.get('search') || '';
-    const sortField = searchParams.get('sortField') || 'createdAt';
-    const sortDir = searchParams.get('sortDir') || 'desc';
+    const guardResult = await adminListGuard(request);
+    if (guardResult instanceof NextResponse) return guardResult;
+    const { page, limit, search, sortField, sortDir } = guardResult.params;
 
     const offset = (page - 1) * limit;
 
@@ -26,12 +22,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    let orderBy = desc(organizations.createdAt);
-    if (sortField === 'displayName') {
-      orderBy = sortDir === 'desc' ? desc(organizations.displayName) : asc(organizations.displayName);
-    } else if (sortField === 'createdAt') {
-      orderBy = sortDir === 'desc' ? desc(organizations.createdAt) : asc(organizations.createdAt);
-    }
+    const orderBy =
+      sortField === 'displayName'
+        ? sortDir === 'desc'
+          ? desc(organizations.displayName)
+          : asc(organizations.displayName)
+        : sortDir === 'desc'
+          ? desc(organizations.createdAt)
+          : asc(organizations.createdAt);
 
     const orgsQuery = db
       .select()
@@ -59,7 +57,13 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error fetching organizations:', error);
-    return NextResponse.json({ error: 'Failed to fetch organizations' }, { status: 500 });
+    return NextResponse.json(
+      {
+      error: 'Failed to fetch organizations',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }
 

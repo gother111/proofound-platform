@@ -29,6 +29,9 @@ export async function createTestProfile(
 ) {
   const client = createServiceRoleClient();
 
+  // Ensure a clean slate for this user ID (handles reruns)
+  await client.from('profiles').delete().eq('id', userId);
+
   const { data: profile, error } = await client
     .from('profiles')
     .insert({
@@ -65,6 +68,9 @@ export async function createTestMatchingProfile(
   } = {}
 ) {
   const client = createServiceRoleClient();
+
+  // Clean existing matching profile to avoid PK conflicts on reruns
+  await client.from('matching_profiles').delete().eq('profile_id', userId);
 
   const { data: matchingProfile, error } = await client
     .from('matching_profiles')
@@ -113,7 +119,7 @@ export async function createTestVerificationRequest(
     .insert({
       profile_id: profileId,
       claim_type: claimType,
-      claim_id: crypto.randomUUID(), // Dummy claim ID
+      claim_data: 'test_claim',
       verifier_email: verifierEmail,
       verifier_name: verifierName || 'Test Verifier',
       token,
@@ -144,20 +150,58 @@ export async function createTestVerificationRequest(
 export async function createTestConversation(
   participantOneId: string,
   participantTwoId: string,
-  stage: number = 1
+  stage: number | 'masked' | 'revealed' = 1
 ) {
   const client = createServiceRoleClient();
+  const stageValue = stage === 2 || stage === 'revealed' ? 'revealed' : 'masked';
+
+  // Create a dummy organization to satisfy NOT NULL org_id on assignments
+  const slug = `test-org-${Math.random().toString(36).slice(2, 8)}`;
+  const { data: org, error: orgError } = await client
+    .from('organizations')
+    .insert({
+      slug,
+      display_name: `Test Org ${slug}`,
+      type: 'company',
+    })
+    .select()
+    .single();
+
+  if (orgError || !org) {
+    throw new Error(`Failed to create test organization: ${orgError?.message}`);
+  }
+
+  // Add both participants as members for assignment/match visibility
+  await client.from('organization_members').delete().eq('org_id', org.id).in('user_id', [participantOneId, participantTwoId]);
+  await client
+    .from('organization_members')
+    .insert([
+      {
+        org_id: org.id,
+        user_id: participantOneId,
+        role: 'admin',
+        status: 'active',
+      },
+      {
+        org_id: org.id,
+        user_id: participantTwoId,
+        role: 'member',
+        status: 'active',
+      },
+    ]);
 
   // First create a dummy assignment (required by FK)
   const { data: assignment, error: assignmentError } = await client
     .from('assignments')
     .insert({
-      poster_profile_id: participantOneId,
-      poster_org_id: null,
-      title: 'Test Assignment',
+      org_id: org.id,
+      role: 'Test Assignment',
       description: 'Test assignment for RLS testing',
-      status: 'published',
-      visibility: 'public',
+      status: 'active',
+      values_required: [],
+      cause_tags: [],
+      must_have_skills: [],
+      nice_to_have_skills: [],
     })
     .select()
     .single();
@@ -171,11 +215,11 @@ export async function createTestConversation(
     .from('matches')
     .insert({
       assignment_id: assignment.id,
-      seeker_profile_id: participantTwoId,
-      poster_profile_id: participantOneId,
-      status: 'pending',
+      profile_id: participantOneId,
       score: 0.85,
-      ranking: 1,
+      vector: {},
+      weights: {},
+      subscores: {},
     })
     .select()
     .single();
@@ -192,8 +236,7 @@ export async function createTestConversation(
       assignment_id: assignment.id,
       participant_one_id: participantOneId,
       participant_two_id: participantTwoId,
-      stage,
-      status: 'active',
+      stage: stageValue,
     })
     .select()
     .single();
@@ -264,9 +307,6 @@ export async function createTestAnalyticsEvent(
       user_id: userId,
       event_type: eventType,
       properties,
-      ip_hash: 'test_ip_hash_' + Math.random().toString(36).slice(2),
-      user_agent_hash: 'test_ua_hash_' + Math.random().toString(36).slice(2),
-      session_id: 'test_session_' + Math.random().toString(36).slice(2),
     })
     .select()
     .single();
@@ -295,6 +335,7 @@ export async function cleanupTestData(userId: string): Promise<void> {
     'conversations',
     'matches',
     'assignments',
+    'organizations',
     'verification_requests',
     'analytics_events',
     'matching_profiles',
@@ -314,13 +355,11 @@ export async function cleanupTestData(userId: string): Promise<void> {
           .delete()
           .or(`participant_one_id.eq.${userId},participant_two_id.eq.${userId}`);
       } else if (table === 'matches') {
-        // Matches have multiple user ID columns
-        await client
-          .from(table)
-          .delete()
-          .or(`seeker_profile_id.eq.${userId},poster_profile_id.eq.${userId}`);
+        await client.from(table).delete().eq('profile_id', userId);
       } else if (table === 'assignments') {
-        await client.from(table).delete().eq('poster_profile_id', userId);
+        await client.from(table).delete().eq('role', 'Test Assignment');
+      } else if (table === 'organizations') {
+        await client.from(table).delete().like('slug', 'test-org-%');
       } else if (table === 'verification_requests') {
         await client.from(table).delete().eq('profile_id', userId);
       } else if (table === 'analytics_events') {

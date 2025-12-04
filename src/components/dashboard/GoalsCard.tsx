@@ -19,6 +19,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { apiFetch } from '@/lib/api/fetch';
 
 // Type definitions for goal data
 interface Goal {
@@ -72,7 +73,7 @@ export function GoalsCard() {
         setError(null);
 
         // Fetch active goals (exclude archived)
-        const response = await fetch('/api/goals?limit=5');
+        const response = await apiFetch('/api/goals?limit=5');
 
         if (!response.ok) {
           throw new Error('Failed to fetch goals');

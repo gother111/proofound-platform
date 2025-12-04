@@ -13,6 +13,7 @@ import {
 import { MatchResultCard } from './MatchResultCard';
 import { toast } from 'sonner';
 import { Plus, Settings } from 'lucide-react';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface Assignment {
   id: string;
@@ -49,7 +50,7 @@ export function MatchingOrganizationView({
     const fetchMatches = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch('/api/match/assignment', {
+        const response = await apiFetch('/api/match/assignment', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -77,7 +78,7 @@ export function MatchingOrganizationView({
 
   const handleInterested = async (profileId: string) => {
     try {
-      const response = await fetch('/api/match/interest', {
+      const response = await apiFetch('/api/match/interest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

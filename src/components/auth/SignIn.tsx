@@ -42,8 +42,6 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [clientError, setClientError] = useState<string | null>(null);
   const [formState, formAction, _isPending] = useActionState(signIn, INITIAL_STATE);
 
@@ -186,11 +184,9 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
                   placeholder="you@example.com"
                   autoComplete="email"
                   disabled={false}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
                   required
                   aria-required="true"
-                  aria-invalid={error && !password ? 'true' : 'false'}
+                  aria-invalid={error ? 'true' : 'false'}
                   aria-describedby={error ? 'signin-error' : undefined}
                   className="h-11 rounded-xl border border-[#E8E6DD] bg-white pl-12 pr-4 text-[15px] text-[#2D3330] placeholder:text-[#2D3330]/40 transition-all focus-visible:border-2 focus-visible:border-proofound-forest focus-visible:px-[43px] focus-visible:ring-[3px] focus-visible:ring-proofound-forest/10"
                 />
@@ -223,8 +219,6 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
                   placeholder="Enter your password"
                   autoComplete="current-password"
                   disabled={false}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
                   required
                   aria-required="true"
                   aria-invalid={error ? 'true' : 'false'}

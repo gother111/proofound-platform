@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useRef } from 'react';
+import Image from 'next/image';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
@@ -44,7 +45,7 @@ export function HeroSection({ onGetStarted, shouldReduceMotion }: HeroSectionPro
         />
       </div>
 
-      <div className="max-w-7xl mx-auto w-full grid lg:grid-cols-2 gap-12 items-center relative z-10">
+      <div className="max-w-7xl mx-auto w-full grid lg:grid-cols-2 gap-16 items-center relative z-10">
         {/* Text Content */}
         <motion.div
           style={{ y: shouldReduceMotion ? 0 : y, opacity: shouldReduceMotion ? 1 : opacity }}
@@ -94,21 +95,27 @@ export function HeroSection({ onGetStarted, shouldReduceMotion }: HeroSectionPro
             </Button>
           </motion.div>
         </motion.div>
-      </div>
 
-      {/* Visual Element - Isolated Shape Image - Positioned Absolutely to Right Edge */}
-      <motion.div
-        initial={{ opacity: 0, x: 100 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 1.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-        className="absolute top-0 right-0 bottom-0 hidden lg:block w-[60%] pointer-events-none z-10"
-      >
-        <img
-          src="/hero-shape.png"
-          alt="Abstract organic shape"
-          className="absolute right-0 bottom-[-4px] h-[85vh] w-auto object-contain max-h-[90vh]"
-        />
-      </motion.div>
+        {/* Visual Element - Abstract sculpture */}
+        <motion.div
+          initial={{ opacity: 0, x: 100 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 1.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          className="relative mt-10 lg:mt-0 flex items-center justify-center lg:justify-end"
+        >
+          {/* Container scales with viewport while maintaining image aspect ratio (532:1024 ≈ 1:1.92) */}
+          <div className="relative w-[280px] h-[540px] sm:w-[340px] sm:h-[655px] md:w-[400px] md:h-[770px] lg:w-[420px] lg:h-[810px] xl:w-[480px] xl:h-[925px] 2xl:w-[532px] 2xl:h-[1024px] drop-shadow-2xl">
+            <Image
+              src="/hero-shape.png"
+              alt="Abstract organic sculpture"
+              fill
+              sizes="(min-width: 1536px) 532px, (min-width: 1280px) 480px, (min-width: 1024px) 420px, (min-width: 768px) 400px, (min-width: 640px) 340px, 280px"
+              className="object-contain"
+              priority
+            />
+          </div>
+        </motion.div>
+      </div>
     </section>
   );
 }

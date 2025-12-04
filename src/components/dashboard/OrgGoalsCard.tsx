@@ -32,6 +32,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { useState, useEffect } from 'react';
+import { apiFetch } from '@/lib/api/fetch';
 import Link from 'next/link';
 
 interface OrgGoalsCardProps {
@@ -84,7 +85,7 @@ export function OrgGoalsCard({ orgSlug, orgId }: OrgGoalsCardProps) {
         setIsLoading(true);
         setError(null);
 
-        const response = await fetch(`/api/organizations/${orgId}/goals`);
+        const response = await apiFetch(`/api/organizations/${orgId}/goals`);
 
         if (!response.ok) {
           throw new Error('Failed to fetch goals');

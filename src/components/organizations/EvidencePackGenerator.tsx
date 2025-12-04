@@ -44,6 +44,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface EvidencePackGeneratorProps {
   organizationId: string;
@@ -100,7 +101,7 @@ export function EvidencePackGenerator({
     setGeneratedUrl(null);
 
     try {
-      const response = await fetch('/api/organizations/evidence-pack', {
+      const response = await apiFetch('/api/organizations/evidence-pack', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -132,7 +133,7 @@ export function EvidencePackGenerator({
       toast.success('Evidence Pack generated successfully!');
 
       // Log analytics
-      await fetch('/api/analytics/events', {
+      await apiFetch('/api/analytics/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -34,6 +34,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Trash2, AlertTriangle, Shield } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { apiFetch } from '@/lib/api/fetch';
 
 const DELETION_REASONS = [
   'No longer need the service',
@@ -67,7 +68,7 @@ export function DeleteAccountSection() {
     try {
       setDeleting(true);
 
-      const response = await fetch('/api/user/account', {
+      const response = await apiFetch('/api/user/account', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

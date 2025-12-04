@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { Twitter, Linkedin, Github, Mail, ArrowUpRight } from 'lucide-react';
 
@@ -40,10 +41,13 @@ export function FooterSection() {
         <div className="grid md:grid-cols-12 gap-12 mb-24">
           <div className="md:col-span-5 space-y-8">
             <Link href="/" className="inline-block">
-              <img
+              <Image
                 src="/logo.png"
                 alt="Proofound"
+                width={120}
+                height={48}
                 className="h-12 w-auto brightness-0 invert opacity-90"
+                priority
               />
             </Link>
             <p className="text-white/60 leading-relaxed font-sans text-lg max-w-md">

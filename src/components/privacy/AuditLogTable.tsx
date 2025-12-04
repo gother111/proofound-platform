@@ -23,6 +23,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, ChevronRight, Activity } from 'lucide-react';
 import { format } from 'date-fns';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface AuditLogEntry {
   id: string;
@@ -50,7 +51,7 @@ export function AuditLogTable() {
     try {
       setLoading(true);
 
-      const response = await fetch(`/api/user/audit-log?page=${page}&limit=${pageSize}`);
+      const response = await apiFetch(`/api/user/audit-log?page=${page}&limit=${pageSize}`);
       if (!response.ok) throw new Error('Failed to fetch audit log');
 
       const data = await response.json();

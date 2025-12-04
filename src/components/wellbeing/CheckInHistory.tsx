@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface CheckIn {
   id: string;
@@ -56,7 +57,7 @@ export function CheckInHistory({ userId }: CheckInHistoryProps) {
   const fetchCheckIns = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/wellbeing/checkins?limit=100');
+      const response = await apiFetch('/api/wellbeing/checkins?limit=100');
       if (response.ok) {
         const data = await response.json();
         setCheckIns(data.checkins || []);

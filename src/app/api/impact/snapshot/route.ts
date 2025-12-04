@@ -35,7 +35,7 @@ export async function GET() {
       db
         .select({
           total: sql<number>`count(*)::int`,
-          verified: sql<number>`count(*) filter (where verified = true)::int`,
+          verified: sql<number>`count(*) filter (where ${impactStories.verified} = true)::int`,
         })
         .from(impactStories)
         .where(eq(impactStories.userId, user.id)),
@@ -44,8 +44,8 @@ export async function GET() {
       db
         .select({
           total: sql<number>`count(*)::int`,
-          verified: sql<number>`count(*) filter (where verification_status = 'verified')::int`,
-          pending: sql<number>`count(*) filter (where verification_status = 'pending')::int`,
+          verified: sql<number>`count(*) filter (where ${capabilities.verificationStatus} = 'verified')::int`,
+          pending: sql<number>`count(*) filter (where ${capabilities.verificationStatus} = 'pending')::int`,
         })
         .from(capabilities)
         .where(eq(capabilities.profileId, user.id)),
@@ -54,9 +54,9 @@ export async function GET() {
       db
         .select({
           total: sql<number>`count(*)::int`,
-          verified: sql<number>`count(*) filter (where verified = true)::int`,
-          ongoing: sql<number>`count(*) filter (where status = 'ongoing')::int`,
-          concluded: sql<number>`count(*) filter (where status = 'concluded')::int`,
+          verified: sql<number>`count(*) filter (where ${projects.verified} = true)::int`,
+          ongoing: sql<number>`count(*) filter (where ${projects.status} = 'ongoing')::int`,
+          concluded: sql<number>`count(*) filter (where ${projects.status} = 'concluded')::int`,
         })
         .from(projects)
         .where(eq(projects.userId, user.id)),
@@ -65,8 +65,8 @@ export async function GET() {
       db
         .select({
           count: sql<number>`count(*)::int`,
-          avgScore: sql<number>`round(avg(score)::numeric, 2)`,
-          highQualityMatches: sql<number>`count(*) filter (where score >= 70)::int`,
+          avgScore: sql<number>`round(avg(${matches.score})::numeric, 2)`,
+          highQualityMatches: sql<number>`count(*) filter (where ${matches.score} >= 70)::int`,
         })
         .from(matches)
         .where(eq(matches.profileId, user.id)),
@@ -78,7 +78,7 @@ export async function GET() {
         })
         .from(verificationRequests)
         .where(
-          and(eq(verificationRequests.userId, user.id), eq(verificationRequests.status, 'pending'))
+          and(eq(verificationRequests.profileId, user.id), eq(verificationRequests.status, 'pending'))
         ),
     ]);
 
@@ -103,7 +103,7 @@ export async function GET() {
 
     const recentActivity = await db
       .select({
-        recentStories: sql<number>`count(*) filter (where created_at >= ${thirtyDaysAgo})::int`,
+        recentStories: sql<number>`count(*) filter (where ${impactStories.createdAt} >= ${thirtyDaysAgo})::int`,
       })
       .from(impactStories)
       .where(eq(impactStories.userId, user.id));

@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface GrowthDataPoint {
   period: string;
@@ -26,7 +27,7 @@ export function AdminGrowthChart() {
   const loadGrowthData = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/admin/analytics/growth?period=${period}&groupBy=day`);
+      const response = await apiFetch(`/api/admin/analytics/growth?period=${period}&groupBy=day`);
 
       if (!response.ok) {
         const error = await response.json();

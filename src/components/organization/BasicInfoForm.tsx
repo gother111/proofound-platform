@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { OrganizationCausesEditor } from './CausesEditor';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface Organization {
   id: string;
@@ -46,7 +47,7 @@ export function BasicInfoForm({ org, canEdit }: BasicInfoFormProps) {
     setLoading(true);
 
     try {
-      const response = await fetch(`/api/organizations/${org.id}`, {
+      const response = await apiFetch(`/api/organizations/${org.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

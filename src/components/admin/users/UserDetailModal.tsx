@@ -46,6 +46,7 @@ import {
   UserCheck,
   Loader2,
 } from 'lucide-react';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface UserDetailModalProps {
   user: Profile | null;
@@ -87,7 +88,7 @@ export function UserDetailModal({ user, open, onClose, onUserUpdated }: UserDeta
 
     setIsUpdating(true);
     try {
-      const response = await fetch(`/api/admin/users/${user.id}/role`, {
+      const response = await apiFetch(`/api/admin/users/${user.id}/role`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ role: newRole === 'user' ? null : newRole }),
@@ -111,7 +112,7 @@ export function UserDetailModal({ user, open, onClose, onUserUpdated }: UserDeta
   const handleSuspendUser = async () => {
     setIsUpdating(true);
     try {
-      const response = await fetch(`/api/admin/users/${user.id}/suspend`, {
+      const response = await apiFetch(`/api/admin/users/${user.id}/suspend`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ suspended: !user.deleted }),

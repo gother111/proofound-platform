@@ -33,9 +33,9 @@ export async function POST(request: NextRequest) {
     const score = calculateSUSScore(responses as SUSResponse[]);
 
     // Emit analytics event
-    emitSUSSurveyCompletedAsync(user.id, crypto.randomUUID(), {
-      score,
-      responses: responses.map((r: SUSResponse) => r.value),
+    emitSUSSurveyCompletedAsync(user.id, {
+      total_score: score.score,
+      individual_scores: responses.map((r: SUSResponse) => r.value),
       trigger_point: triggerPoint || 'periodic',
     });
 

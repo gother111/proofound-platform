@@ -28,6 +28,7 @@ import {
   type SUSResponse,
 } from '@/lib/surveys/sus-calculator';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface SUSQuestionnaireProps {
   trigger: 'profile_activation' | 'first_assignment' | '10_matches' | 'quarterly_checkin';
@@ -82,7 +83,7 @@ export function SUSQuestionnaire({ trigger, userId, onComplete, onSkip }: SUSQue
       const susResult = calculateSUSScore(responses as SUSResponse);
 
       // Submit to API
-      const response = await fetch('/api/surveys/sus', {
+      const response = await apiFetch('/api/surveys/sus', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

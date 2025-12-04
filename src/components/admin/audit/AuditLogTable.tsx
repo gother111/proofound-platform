@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Table,
   TableBody,
@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Search, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { adminAuditLog } from '@/db/schema';
+import { apiFetch } from '@/lib/api/fetch';
 
 type AdminAuditLogEntry = typeof adminAuditLog.$inferSelect & {
   admin: {
@@ -48,11 +49,7 @@ export function AuditLogTable() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  useEffect(() => {
-    fetchLogs();
-  }, [page, debouncedSearch]);
-
-  const fetchLogs = async () => {
+  const fetchLogs = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -60,7 +57,7 @@ export function AuditLogTable() {
         limit: '20',
         search: debouncedSearch,
       });
-      const res = await fetch(`/api/admin/audit?${params}`);
+      const res = await apiFetch(`/api/admin/audit?${params}`);
       if (!res.ok) throw new Error('Failed to fetch audit logs');
       const json = await res.json();
       setData(json);
@@ -69,7 +66,11 @@ export function AuditLogTable() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, debouncedSearch]);
+
+  useEffect(() => {
+    fetchLogs();
+  }, [fetchLogs]);
 
   return (
     <div className="space-y-4">

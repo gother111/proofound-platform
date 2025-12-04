@@ -23,18 +23,18 @@ export const dynamic = 'force-dynamic';
 // Uses widgets from lib/dashboard/layout.ts
 const DEFAULT_LAYOUT = [
   { widgetId: 'while-away', position: 0, visible: true, size: 'default', settings: {} },
-  { widgetId: 'next-best-actions', position: 1, visible: true, size: 'default', settings: {} },
+  { widgetId: 'next-best-actions', position: 1, visible: true, size: 'full', settings: {} },
   { widgetId: 'matching-results', position: 2, visible: true, size: 'default', settings: {} },
   { widgetId: 'gap-map', position: 3, visible: true, size: 'default', settings: {} },
   { widgetId: 'goals', position: 4, visible: true, size: 'default', settings: {} },
-  { widgetId: 'impact-snapshot', position: 5, visible: true, size: 'default', settings: {} },
+  { widgetId: 'impact-snapshot', position: 5, visible: true, size: 'large', settings: {} },
 ];
 
 const LayoutItemSchema = z.object({
   widgetId: z.string(),
   position: z.number().int().min(0),
   visible: z.boolean(),
-  size: z.enum(['small', 'default', 'large']),
+  size: z.enum(['small', 'default', 'large', 'full']),
   settings: z.record(z.any()),
 });
 

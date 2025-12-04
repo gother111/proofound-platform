@@ -63,14 +63,14 @@ export async function GET() {
       const metrics = await getAllMetrics();
 
       // Check TTSC (Time to Signed Contract)
-      if (metrics.ttsc && metrics.ttsc.median > 35) {
+      if (metrics.ttsc && metrics.ttsc.value > 35) {
         checks.ttsc = {
           status: 'warning',
-          message: `TTSC median ${metrics.ttsc.median} days exceeds target of 30 days`,
+          message: `TTSC median ${metrics.ttsc.value} days exceeds target of 30 days`,
         };
 
         log.warn('health.check.ttsc.exceeds.target', {
-          median: metrics.ttsc.median,
+          median: metrics.ttsc.value,
           target: 30,
         });
       } else {
@@ -78,14 +78,14 @@ export async function GET() {
       }
 
       // Check TTFQI (Time to First Qualified Introduction)
-      if (metrics.ttfqi && metrics.ttfqi.median > 96) {
+      if (metrics.ttfqi && metrics.ttfqi.value > 96) {
         checks.ttfqi = {
           status: 'warning',
-          message: `TTFQI median ${metrics.ttfqi.median} hours exceeds target of 72 hours`,
+          message: `TTFQI median ${metrics.ttfqi.value} hours exceeds target of 72 hours`,
         };
 
         log.warn('health.check.ttfqi.exceeds.target', {
-          median: metrics.ttfqi.median,
+          median: metrics.ttfqi.value,
           target: 72,
         });
       } else {
@@ -93,20 +93,20 @@ export async function GET() {
       }
 
       // Check PAC (Purpose-Alignment Contribution)
-      if (metrics.pac) {
-        if (metrics.pac.acceptanceLift < 15) {
+      if (metrics.pacLift) {
+        if (metrics.pacLift.lift < 15) {
           checks.pac_acceptance = {
             status: 'warning',
-            message: `PAC acceptance lift ${metrics.pac.acceptanceLift.toFixed(1)}% below target of 20%`,
+            message: `PAC acceptance lift ${metrics.pacLift.lift.toFixed(1)}% below target of 20%`,
           };
         } else {
           checks.pac_acceptance = { status: 'healthy' };
         }
 
-        if (metrics.pac.contractLift < 12) {
+        if (metrics.pacLift.lift < 12) {
           checks.pac_contract = {
             status: 'warning',
-            message: `PAC contract lift ${metrics.pac.contractLift.toFixed(1)}% below target of 15%`,
+            message: `PAC contract lift ${metrics.pacLift.lift.toFixed(1)}% below target of 15%`,
           };
         } else {
           checks.pac_contract = { status: 'healthy' };

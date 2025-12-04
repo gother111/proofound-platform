@@ -11,12 +11,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminUser, requirePlatformAdmin } from '@/lib/auth/admin';
+import { getAdminUser } from '@/lib/auth/admin';
 import { db } from '@/db';
 import { featureFlags, adminAuditLog } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { log } from '@/lib/log';
+import { requirePlatformAdminJson } from '@/lib/api/route-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,7 +32,8 @@ interface RouteParams {
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const adminUser = await requirePlatformAdmin();
+    const adminUser = await requirePlatformAdminJson();
+    if (adminUser instanceof NextResponse) return adminUser;
     const { key } = await params;
 
     const flag = await db.query.featureFlags.findFirst({

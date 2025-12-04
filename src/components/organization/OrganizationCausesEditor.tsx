@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { X, Plus, Save, Heart, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 
 const SUGGESTED_CAUSES = [
   'Climate Justice',
@@ -87,7 +88,7 @@ export function OrganizationCausesEditor({
     setError(null);
 
     try {
-      const response = await fetch(`/api/organizations/${orgId}/causes`, {
+      const response = await apiFetch(`/api/organizations/${orgId}/causes`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ causes }),

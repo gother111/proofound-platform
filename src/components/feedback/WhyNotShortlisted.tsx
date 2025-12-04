@@ -34,6 +34,7 @@ import {
   AlertDescription,
   AlertTitle,
 } from '@/components/ui/alert';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface FeedbackItem {
   category: 'skills' | 'verification' | 'availability' | 'location' | 'compensation';
@@ -74,7 +75,7 @@ export function WhyNotShortlisted({ assignmentId, assignmentTitle }: WhyNotShort
     async function fetchFeedback() {
       try {
         setLoading(true);
-        const response = await fetch('/api/feedback/why-not-shortlisted', {
+        const response = await apiFetch('/api/feedback/why-not-shortlisted', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ assignmentId }),

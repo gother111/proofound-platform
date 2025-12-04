@@ -48,17 +48,35 @@ export async function POST(request: NextRequest) {
     // Calculate SUS score
     const susResult = calculateSUSScore(responses as SUSResponse[]);
 
-    // Store survey in database
-    const survey: InsertSusSurvey = {
+    // Determine grade from score
+    const getGrade = (score: number): 'A' | 'B' | 'C' | 'D' | 'F' => {
+      if (score >= 80.3) return 'A';
+      if (score >= 68) return 'B';
+      if (score >= 51) return 'C';
+      if (score >= 25.1) return 'D';
+      return 'F';
+    };
+
+    // Store survey in database with q1-q10 format per schema
+    const surveyData = {
       userId: user.id,
-      task: task || null,
-      responses: responses as any,
+      trigger: (task as 'profile_activation' | 'first_assignment' | '10_matches' | 'quarterly_checkin') || 'quarterly_checkin',
+      q1: (responses[0] as SUSResponse).value,
+      q2: (responses[1] as SUSResponse).value,
+      q3: (responses[2] as SUSResponse).value,
+      q4: (responses[3] as SUSResponse).value,
+      q5: (responses[4] as SUSResponse).value,
+      q6: (responses[5] as SUSResponse).value,
+      q7: (responses[6] as SUSResponse).value,
+      q8: (responses[7] as SUSResponse).value,
+      q9: (responses[8] as SUSResponse).value,
+      q10: (responses[9] as SUSResponse).value,
       score: String(susResult.score),
-      dismissed: false,
+      grade: getGrade(susResult.score),
       completedAt: new Date(),
     };
 
-    const [created] = await db.insert(susSurveys).values(survey).returning();
+    const [created] = await db.insert(susSurveys).values(surveyData).returning();
 
     // Update survey display log to mark as completed
     await db

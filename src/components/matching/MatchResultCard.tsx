@@ -12,6 +12,7 @@ import { SnoozeDialog } from './SnoozeDialog';
 import { VerificationGatesWarning } from './VerificationGatesWarning';
 import { RankDisplay } from './RankDisplay';
 import { ConsentToShareDialog } from './ConsentToShareDialog';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface MatchResultCardProps {
   result: {
@@ -93,7 +94,7 @@ export function MatchResultCard({
 
     setIsLoadingExplanation(true);
     try {
-      const response = await fetch(`/api/match/explain/${result.id}`);
+      const response = await apiFetch(`/api/match/explain/${result.id}`);
       if (response.ok) {
         const data = await response.json();
         setMatchExplanation(data);
@@ -110,7 +111,7 @@ export function MatchResultCard({
     if (!result.id) return;
 
     try {
-      const response = await fetch(`/api/match/visible-fields/${result.id}`);
+      const response = await apiFetch(`/api/match/visible-fields/${result.id}`);
       if (response.ok) {
         const data = await response.json();
         setVisibleFieldsData(data);
@@ -127,7 +128,7 @@ export function MatchResultCard({
       // Individual view - check gates first
       if (result.assignmentId) {
         try {
-          const gatesResponse = await fetch('/api/match/gates', {
+          const gatesResponse = await apiFetch('/api/match/gates', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

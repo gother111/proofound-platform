@@ -58,7 +58,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       ORDER BY p.display_name
     `);
 
-    const teamMembers = members.rows as any[];
+    const teamMembers = members as any[];
 
     // Get all unique L4 skills across the team
     const allSkills = await db.execute(sql`
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       ORDER BY coverage_count ASC, s.l2_name, s.l4_name
     `);
 
-    const skillCoverage = allSkills.rows.map((row: any) => ({
+    const skillCoverage = (allSkills as any[]).map((row: any) => ({
       l4_id: row.l4_id,
       l4_name: row.l4_name,
       l2_name: row.l2_name,

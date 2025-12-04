@@ -100,7 +100,13 @@ export function ProductsSection({
                   {plan.title}
                 </h3>
                 <div className="flex items-baseline gap-2 mb-6">
-                  <span className="text-5xl md:text-6xl font-bold font-display">{plan.price}</span>
+                  <span
+                    className={`text-5xl md:text-6xl font-bold font-display ${
+                      plan.highlight ? 'text-white' : 'text-japandi-charcoal'
+                    }`}
+                  >
+                    {plan.price}
+                  </span>
                   <span
                     className={`text-lg font-sans ${plan.highlight ? 'text-white/60' : 'text-japandi-charcoal/40'}`}
                   >

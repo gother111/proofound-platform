@@ -17,6 +17,7 @@ import type { AdminUser } from '@/lib/auth/admin';
 import { AdminGrowthChart } from './analytics/AdminGrowthChart';
 import { FairnessNoteDashboard } from '../analytics/FairnessNoteDashboard';
 import { MetricsDashboard } from '../metrics/MetricsDashboard';
+import { safeToLocaleString, safePercentage } from '@/lib/utils/data-validation';
 
 interface AdminDashboardProps {
   adminUser: AdminUser;
@@ -55,7 +56,7 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
 
   const loadOverview = async () => {
     try {
-      const response = await fetch('/api/admin/analytics/overview');
+      const response = await apiFetch('/api/admin/analytics/overview');
 
       if (!response.ok) {
         const error = await response.json();
@@ -95,77 +96,88 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
     <div className="space-y-6">
       {/* Overview Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+        <Card className="overflow-hidden transition-all hover:shadow-md border-border/50">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-[#6B6760]">Total Users</p>
-                <p className="text-2xl font-bold text-[#2D3330]">
-                  {overview.users.total.toLocaleString()}
+                <p className="text-sm font-medium text-muted-foreground">Total Users</p>
+                <p className="text-2xl font-bold text-foreground mt-1">
+                  {safeToLocaleString(overview.users.total)}
                 </p>
-                <p className="text-xs text-[#9B9891] mt-1">
-                  +{overview.users.thisMonth} this month
-                </p>
+                <div className="flex items-center mt-1">
+                  <span className="text-xs text-green-600 font-medium bg-green-100 px-1.5 py-0.5 rounded-full">
+                    +{safeToLocaleString(overview.users.thisMonth)}
+                  </span>
+                  <span className="text-xs text-muted-foreground ml-2">this month</span>
+                </div>
               </div>
-              <div className="p-3 bg-blue-100 rounded-full">
-                <Users className="h-6 w-6 text-blue-600" />
+              <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
+                <Users className="h-5 w-5 text-blue-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="overflow-hidden transition-all hover:shadow-md border-border/50">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-[#6B6760]">Organizations</p>
-                <p className="text-2xl font-bold text-[#2D3330]">
-                  {overview.organizations.total.toLocaleString()}
+                <p className="text-sm font-medium text-muted-foreground">Organizations</p>
+                <p className="text-2xl font-bold text-foreground mt-1">
+                  {safeToLocaleString(overview.organizations.total)}
                 </p>
-                <p className="text-xs text-[#9B9891] mt-1">
-                  {overview.organizations.active} active
-                </p>
+                <div className="flex items-center mt-1">
+                  <span className="text-xs text-muted-foreground">
+                    {safeToLocaleString(overview.organizations.active)} active
+                  </span>
+                </div>
               </div>
-              <div className="p-3 bg-green-100 rounded-full">
-                <Building2 className="h-6 w-6 text-green-600" />
+              <div className="p-3 bg-green-50 rounded-xl border border-green-100">
+                <Building2 className="h-5 w-5 text-green-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="overflow-hidden transition-all hover:shadow-md border-border/50">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-[#6B6760]">Matches</p>
-                <p className="text-2xl font-bold text-[#2D3330]">
-                  {overview.matches.total.toLocaleString()}
+                <p className="text-sm font-medium text-muted-foreground">Matches</p>
+                <p className="text-2xl font-bold text-foreground mt-1">
+                  {safeToLocaleString(overview.matches.total)}
                 </p>
-                <p className="text-xs text-[#9B9891] mt-1">
-                  +{overview.matches.thisMonth} this month
-                </p>
+                <div className="flex items-center mt-1">
+                  <span className="text-xs text-purple-600 font-medium bg-purple-100 px-1.5 py-0.5 rounded-full">
+                    +{safeToLocaleString(overview.matches.thisMonth)}
+                  </span>
+                  <span className="text-xs text-muted-foreground ml-2">this month</span>
+                </div>
               </div>
-              <div className="p-3 bg-purple-100 rounded-full">
-                <Handshake className="h-6 w-6 text-purple-600" />
+              <div className="p-3 bg-purple-50 rounded-xl border border-purple-100">
+                <Handshake className="h-5 w-5 text-purple-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="overflow-hidden transition-all hover:shadow-md border-border/50">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-[#6B6760]">Contracts Signed</p>
-                <p className="text-2xl font-bold text-[#2D3330]">
-                  {overview.contracts.total.toLocaleString()}
+                <p className="text-sm font-medium text-muted-foreground">Contracts Signed</p>
+                <p className="text-2xl font-bold text-foreground mt-1">
+                  {safeToLocaleString(overview.contracts.total)}
                 </p>
-                <p className="text-xs text-[#9B9891] mt-1">
-                  +{overview.contracts.thisMonth} this month
-                </p>
+                <div className="flex items-center mt-1">
+                  <span className="text-xs text-amber-600 font-medium bg-amber-100 px-1.5 py-0.5 rounded-full">
+                    +{safeToLocaleString(overview.contracts.thisMonth)}
+                  </span>
+                  <span className="text-xs text-muted-foreground ml-2">this month</span>
+                </div>
               </div>
-              <div className="p-3 bg-amber-100 rounded-full">
-                <FileText className="h-6 w-6 text-amber-600" />
+              <div className="p-3 bg-amber-50 rounded-xl border border-amber-100">
+                <FileText className="h-5 w-5 text-amber-600" />
               </div>
             </div>
           </CardContent>
@@ -180,22 +192,19 @@ export function AdminDashboard({ adminUser }: AdminDashboardProps) {
               <div className="flex items-center justify-between pb-2 border-b border-[#E8E6DD]">
                 <span className="text-sm text-[#6B6760]">Active Users (7d)</span>
                 <span className="text-lg font-semibold text-[#2D3330]">
-                  {overview.users.activeLastWeek.toLocaleString()}
+                  {safeToLocaleString(overview.users.activeLastWeek)}
                 </span>
               </div>
               <div className="flex items-center justify-between pb-2 border-b border-[#E8E6DD]">
                 <span className="text-sm text-[#6B6760]">Active Assignments</span>
                 <span className="text-lg font-semibold text-[#2D3330]">
-                  {overview.assignments.active.toLocaleString()}
+                  {safeToLocaleString(overview.assignments.active)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-[#6B6760]">Conversion Rate</span>
                 <span className="text-lg font-semibold text-[#2D3330]">
-                  {overview.matches.total > 0
-                    ? ((overview.contracts.total / overview.matches.total) * 100).toFixed(1)
-                    : '0'}
-                  %
+                  {safePercentage(overview.contracts.total, overview.matches.total)}%
                 </span>
               </div>
             </div>

@@ -339,6 +339,13 @@ CREATE POLICY "Users can delete own skills"
   ON public.skills FOR DELETE
   USING (profile_id = auth.uid());
 
+-- Restrictive safeguard: matching profiles only visible to owner
+CREATE POLICY "Matching profiles - owner only (restrictive)"
+  AS RESTRICTIVE
+  ON public.matching_profiles
+  FOR SELECT
+  USING (profile_id = auth.uid());
+
 -- Assignments
 ALTER TABLE public.assignments ENABLE ROW LEVEL SECURITY;
 
@@ -512,4 +519,106 @@ CREATE POLICY "Users can update own growth plans"
 CREATE POLICY "Users can delete own growth plans"
   ON public.growth_plans FOR DELETE
   USING (profile_id = auth.uid());
+
+-- ============================================================================
+-- VERIFICATION REQUESTS (soft attestations)
+-- ============================================================================
+ALTER TABLE public.verification_requests ENABLE ROW LEVEL SECURITY;
+
+-- Requester can view their own verification requests
+CREATE POLICY "Verification requests - requester can select"
+  ON public.verification_requests FOR SELECT
+  USING (profile_id = auth.uid());
+
+-- Requester can insert their own verification requests
+CREATE POLICY "Verification requests - requester can insert"
+  ON public.verification_requests FOR INSERT
+  WITH CHECK (profile_id = auth.uid());
+
+-- Requester can update their own verification requests
+CREATE POLICY "Verification requests - requester can update"
+  ON public.verification_requests FOR UPDATE
+  USING (profile_id = auth.uid())
+  WITH CHECK (profile_id = auth.uid());
+
+-- ============================================================================
+-- CONVERSATIONS & MESSAGES (private messaging)
+-- ============================================================================
+ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
+
+-- Participants can view their conversations
+CREATE POLICY "Conversations - participants can select"
+  ON public.conversations FOR SELECT
+  USING (
+    participant_one_id = auth.uid()
+    OR participant_two_id = auth.uid()
+  );
+
+-- Participants can create conversations (if client-created)
+CREATE POLICY "Conversations - participants can insert"
+  ON public.conversations FOR INSERT
+  WITH CHECK (
+    participant_one_id = auth.uid()
+    OR participant_two_id = auth.uid()
+  );
+
+-- Participants can send messages in conversations they belong to
+CREATE POLICY "Messages - participants can insert"
+  ON public.messages FOR INSERT
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.conversations c
+      WHERE c.id = messages.conversation_id
+        AND (
+          c.participant_one_id = auth.uid()
+          OR c.participant_two_id = auth.uid()
+        )
+    )
+  );
+
+-- Participants can read messages in their conversations
+CREATE POLICY "Messages - participants can select"
+  ON public.messages FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.conversations c
+      WHERE c.id = messages.conversation_id
+        AND (
+          c.participant_one_id = auth.uid()
+          OR c.participant_two_id = auth.uid()
+        )
+    )
+  );
+
+-- Participants can update their own messages
+CREATE POLICY "Messages - participants can update own"
+  ON public.messages FOR UPDATE
+  USING (
+    sender_id = auth.uid()
+    AND EXISTS (
+      SELECT 1 FROM public.conversations c
+      WHERE c.id = messages.conversation_id
+        AND (
+          c.participant_one_id = auth.uid()
+          OR c.participant_two_id = auth.uid()
+        )
+    )
+  )
+  WITH CHECK (sender_id = auth.uid());
+
+-- Participants can delete their own messages
+CREATE POLICY "Messages - participants can delete own"
+  ON public.messages FOR DELETE
+  USING (
+    sender_id = auth.uid()
+    AND EXISTS (
+      SELECT 1 FROM public.conversations c
+      WHERE c.id = messages.conversation_id
+        AND (
+          c.participant_one_id = auth.uid()
+          OR c.participant_two_id = auth.uid()
+        )
+    )
+  );
 

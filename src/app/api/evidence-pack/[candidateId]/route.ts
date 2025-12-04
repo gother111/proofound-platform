@@ -177,10 +177,10 @@ export async function GET(
       interviewDate: interviewData?.scheduled_at ? new Date(interviewData.scheduled_at) : undefined,
       decision: interviewData?.decision
         ? {
-            type: interviewData.decision,
-            madeAt: new Date(interviewData.decision_made_at),
-            feedback: interviewData.feedback,
-          }
+          type: interviewData.decision,
+          madeAt: new Date(interviewData.decision_made_at),
+          feedback: interviewData.feedback,
+        }
         : undefined,
     };
 
@@ -219,7 +219,7 @@ export async function GET(
     // Return PDF as download
     const filename = `evidence-pack-${profileData.name.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`;
 
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${filename}"`,
@@ -227,8 +227,9 @@ export async function GET(
       },
     });
   } catch (error) {
+    const resolvedParams = await params;
     log.error('evidence_pack.generate.api.failed', {
-      candidateId: params.candidateId,
+      candidateId: resolvedParams.candidateId,
       error: error instanceof Error ? error.message : 'Unknown error',
     });
     return NextResponse.json({ error: 'Failed to generate evidence pack' }, { status: 500 });

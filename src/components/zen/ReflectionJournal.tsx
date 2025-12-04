@@ -8,6 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { BookOpen, Calendar, Download, ChevronDown, ChevronUp, Tag } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface Reflection {
   id: string;
@@ -28,7 +29,7 @@ export function ReflectionJournal() {
   const fetchReflections = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/wellbeing/reflections');
+      const response = await apiFetch('/api/wellbeing/reflections');
       if (response.ok) {
         const data = await response.json();
         setReflections(data.reflections || []);

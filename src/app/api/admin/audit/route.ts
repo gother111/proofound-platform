@@ -1,21 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requirePlatformAdmin } from '@/lib/auth/admin';
+import { requirePlatformAdminJson, jsonError } from '@/lib/api/route-helpers';
 import { db } from '@/db';
 import { adminAuditLog, profiles } from '@/db/schema';
 import { ilike, or, desc, asc, sql, eq, and, gte, lte } from 'drizzle-orm';
+import { adminListGuard } from '../_utils';
 
 export async function GET(request: NextRequest) {
   try {
-    await requirePlatformAdmin();
+    const guardResult = await adminListGuard(request);
+    if (guardResult instanceof NextResponse) return guardResult;
+    const { page, limit } = guardResult.params;
 
     const searchParams = request.nextUrl.searchParams;
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search') || '';
     const actionFilter = searchParams.get('action') || '';
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
-    
+
     const offset = (page - 1) * limit;
 
     const conditions = [];
@@ -71,8 +72,13 @@ export async function GET(request: NextRequest) {
 
     const total = Number(countResult[0]?.count || 0);
 
+    const flattenedLogs = logs.map(({ log, admin }) => ({
+      ...log,
+      admin,
+    }));
+
     return NextResponse.json({
-      logs,
+      logs: flattenedLogs,
       pagination: {
         page,
         limit,

@@ -7,7 +7,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,7 @@ import {
   AlertTriangle,
   CheckCircle2,
 } from 'lucide-react';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface WebVitalMetric {
   metric_name: string;
@@ -72,14 +73,10 @@ export function PerformanceDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [days, setDays] = useState(7);
 
-  useEffect(() => {
-    loadMetrics();
-  }, [days]);
-
-  const loadMetrics = async () => {
+  const loadMetrics = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/analytics/web-vitals?days=${days}`);
+      const response = await apiFetch(`/api/analytics/web-vitals?days=${days}`);
 
       if (!response.ok) {
         throw new Error('Failed to load metrics');
@@ -94,7 +91,11 @@ export function PerformanceDashboard() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [days]);
+
+  useEffect(() => {
+    loadMetrics();
+  }, [loadMetrics]);
 
   const getRatingColor = (metric: WebVitalMetric) => {
     const info = METRIC_INFO[metric.metric_name as keyof typeof METRIC_INFO];

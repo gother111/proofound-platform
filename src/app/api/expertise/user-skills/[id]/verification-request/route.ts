@@ -98,7 +98,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const verifyUrl = `${baseUrl}/verify/${verificationToken}`;
 
     // Get requester name
-    const requesterName = requesterProfile?.display_name || user.email?.split('@')[0] || 'Someone';
+    const requesterName = requesterProfile?.display_name || (user as any).email?.split('@')[0] || 'Someone';
 
     // Send verification email to verifier
     const relationshipLabel =
@@ -138,16 +138,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
               </p>
             </div>
             
-            ${
-              validated.message
-                ? `
+            ${validated.message
+          ? `
               <div style="background: white; padding: 15px; border-radius: 8px; margin: 20px 0;">
                 <p style="font-size: 14px; color: #6B6760; margin: 0 0 8px 0; font-weight: 500;">Message from ${requesterName}:</p>
                 <p style="font-size: 14px; margin: 0; font-style: italic;">"${validated.message}"</p>
               </div>
             `
-                : ''
-            }
+          : ''
+        }
             
             <p style="font-size: 16px; margin-bottom: 25px;">
               By verifying, you're confirming that ${requesterName} has demonstrated this skill based on your professional interaction with them.

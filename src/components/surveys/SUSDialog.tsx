@@ -36,6 +36,7 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { emitSUSCompleted } from '@/lib/analytics/events';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface SUSDialogProps {
   open: boolean;
@@ -122,7 +123,7 @@ export function SUSDialog({
       const individualScores = SUS_QUESTIONS.map((q) => responses[q.id]);
 
       // Submit to API
-      const response = await fetch('/api/surveys/sus', {
+      const response = await apiFetch('/api/surveys/sus', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -5,6 +5,7 @@ import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { NotificationDropdown } from './NotificationDropdown';
+import { apiFetch } from '@/lib/api/fetch';
 
 export function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
@@ -22,7 +23,7 @@ export function NotificationBell() {
 
   const fetchUnreadCount = async () => {
     try {
-      const response = await fetch('/api/notifications/unread-count');
+      const response = await apiFetch('/api/notifications/unread-count');
       if (response.ok) {
         const data = await response.json();
         setUnreadCount(data.count);

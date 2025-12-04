@@ -30,6 +30,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useState, useEffect } from 'react';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface MatchingResultsCardProps {
   className?: string;
@@ -98,7 +99,7 @@ export function MatchingResultsCard({ className, basePath = '/app/i' }: Matching
         setError(null);
         setNoProfile(false);
 
-        const response = await fetch('/api/match/profile', {
+        const response = await apiFetch('/api/match/profile', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ k: 5 }), // Fetch top 5 matches

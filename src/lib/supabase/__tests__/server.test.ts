@@ -17,6 +17,8 @@ describe('createClient', () => {
     process.env = { ...envBackup };
     process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://example.supabase.co';
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'anon-key';
+    process.env.SITE_URL = 'https://example.com';
+    process.env.DATABASE_URL = 'postgres://user:pass@localhost:5432/db';
 
     vi.resetModules();
     vi.clearAllMocks();
@@ -34,13 +36,14 @@ describe('createClient', () => {
     expect(true).toBe(true);
   });
 
-  it('handles missing environment variables gracefully', async () => {
+  it('throws when required environment variables are missing', async () => {
     process.env.NEXT_PUBLIC_SUPABASE_URL = '';
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = '';
+    process.env.SITE_URL = '';
+    process.env.DATABASE_URL = '';
 
     const { createClient } = await import('../server');
 
-    // Should not throw an error
-    await expect(createClient()).resolves.toBeDefined();
+    await expect(createClient()).rejects.toThrowError(/Missing required environment variables/);
   });
 });

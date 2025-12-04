@@ -9,6 +9,7 @@ import { StructureTree } from './StructureTree';
 import { OrgChartViewer } from './OrgChartViewer';
 import { AddDepartmentDialog } from './AddDepartmentDialog';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -71,7 +72,7 @@ export function StructureManager({ orgId, initialDepartments = [] }: StructureMa
 
       const method = department.id ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -119,7 +120,7 @@ export function StructureManager({ orgId, initialDepartments = [] }: StructureMa
         return;
       }
 
-      const response = await fetch(`/api/organizations/${orgId}/structure/${id}`, {
+      const response = await apiFetch(`/api/organizations/${orgId}/structure/${id}`, {
         method: 'DELETE',
       });
 
@@ -139,7 +140,7 @@ export function StructureManager({ orgId, initialDepartments = [] }: StructureMa
   const handleExport = async () => {
     setIsExporting(true);
     try {
-      const response = await fetch(`/api/organizations/${orgId}/structure/export`);
+      const response = await apiFetch(`/api/organizations/${orgId}/structure/export`);
 
       if (!response.ok) {
         throw new Error('Export failed');

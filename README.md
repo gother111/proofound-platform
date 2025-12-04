@@ -385,6 +385,25 @@ Design tokens from Figma Style Guidelines:
 - Webhooks for org events
 - SSO (SAML, OAuth providers)
 
+## PRD Flow Seed (Supabase)
+
+Use this seed to preload the PRD personas, orgs, assignments, matches, and Zen Hub data for end-to-end testing.
+
+1. Ensure `.env.local` contains `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (service role is required to bypass RLS during seed).
+2. Run the seed: `npm run seed:prd-supabase`
+3. Demo logins created:
+   - Individuals: `nenah@proofound-demo.com`, `mateo@proofound-demo.com`, `ola@proofound-demo.com`, `dmitry@proofound-demo.com`, `priya@proofound-demo.com`
+   - Org admins: `ops@greengrid-demo.com`, `talent@bridges-demo.org`, `sourcing@cityworks-demo.gov`
+   - Password (all): `DemoPass123!`
+
+What this populates:
+- Minimal taxonomy slice (L1-L4) for skills used in matches
+- Individual profiles with mission/vision/values/causes, matching profiles, skills + proofs, visibility settings
+- Zen Hub opt-ins and check-ins
+- Organizations (GreenGrid, Bridges for Youth, CityWorks) with field visibility and admin members
+- Assignments with verification gates, outcomes, expertise matrix
+- Matches, conversations/messages, interviews, and analytics events
+
 ## Troubleshooting
 
 ### "Database connection error"

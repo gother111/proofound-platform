@@ -14,6 +14,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { MessageCircle, Send, Sparkles, Shield, Info, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface Message {
   id: string;
@@ -56,7 +57,7 @@ export function PolicyAssistant() {
 
   const loadCommonQuestions = async () => {
     try {
-      const response = await fetch('/api/policy/explain');
+      const response = await apiFetch('/api/policy/explain');
       if (response.ok) {
         const data = await response.json();
         setCommonQuestions(data.commonQuestions || []);
@@ -84,7 +85,7 @@ export function PolicyAssistant() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/policy/explain', {
+      const response = await apiFetch('/api/policy/explain', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

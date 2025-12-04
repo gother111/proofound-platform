@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { Copy } from 'lucide-react';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface StakeholderInviteDialogProps {
   open: boolean;
@@ -51,7 +52,7 @@ export function StakeholderInviteDialog({ open, onOpenChange, orgId }: Stakehold
     try {
       setSending(true);
 
-      const response = await fetch('/api/assignments/invite', {
+      const response = await apiFetch('/api/assignments/invite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

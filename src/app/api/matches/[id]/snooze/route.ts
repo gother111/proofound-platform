@@ -110,10 +110,11 @@ export async function DELETE(
 
     // Emit analytics event
     await emitAnalyticsEvent({
-      eventType: 'match_unsnoozed',
+      eventType: 'match_actioned',
       userId: user.id,
       properties: {
         matchId,
+        action: 'unsnoozed',
       },
     });
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateCSRFToken, getOrGenerateCSRFToken, setCSRFTokenCookie } from '@/lib/csrf';
+import { getOrGenerateCSRFToken, setCSRFTokenCookie } from '@/lib/csrf';
 
 export const dynamic = 'force-dynamic';
 

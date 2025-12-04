@@ -13,6 +13,15 @@ export interface TestUser {
   handle: string;
 }
 
+export interface TestOrganization {
+  email: string;
+  password: string;
+  organizationName: string;
+  slug: string;
+  type?: string;
+  website?: string;
+}
+
 /**
  * Generate a unique test user with timestamp to avoid collisions
  */
@@ -28,6 +37,22 @@ export function generateTestUser(prefix = 'testuser'): TestUser {
 }
 
 /**
+ * Generate a unique test organization with timestamp to avoid collisions
+ */
+export function generateTestOrganization(prefix = 'testorg'): TestOrganization {
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 1000);
+  const slug = `${prefix}-${timestamp}${random}`.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+  return {
+    email: `${prefix}+${timestamp}${random}@test.proofound.com`,
+    password: 'TestPassword123!',
+    organizationName: `Test Organization ${timestamp}`,
+    slug,
+    type: 'company',
+  };
+}
+
+/**
  * Sign up a new user through the UI
  */
 export async function signupUser(
@@ -37,6 +62,30 @@ export async function signupUser(
 ) {
   await page.goto('/signup');
 
+  // Select persona if there's a choice (must be done before form if it's a multi-step or toggle)
+  const personaButton = page.getByRole('button', { name: new RegExp(persona, 'i') });
+  // We check if the button is visible and if we are not already on the form (email input not visible)
+  // Or if the button is part of the form (toggle).
+  // Based on the failure, the email input is NOT visible initially.
+
+  // Try to find the persona card/button first
+  // The page content suggests "Individual" and "Organization" are headings or buttons.
+  // We'll try to click them.
+  if (await page.getByRole('heading', { name: new RegExp(persona, 'i') }).isVisible()) {
+    // It might be a card with a heading. Let's try to click the container or a button inside.
+    // Or maybe the heading itself is clickable or there is a button nearby.
+    // Let's look for a button with that name.
+    if (await personaButton.isVisible()) {
+      await personaButton.click();
+    } else {
+      // Maybe it's a card that acts as a button
+      await page.getByText(new RegExp(persona, 'i')).first().click();
+    }
+  }
+
+  // Wait for email input to appear
+  await page.waitForSelector('input[type="email"], label:has-text("Email")', { timeout: 5000 });
+
   // Fill signup form
   await page.getByLabel(/email/i).fill(user.email);
   await page
@@ -44,17 +93,75 @@ export async function signupUser(
     .first()
     .fill(user.password);
 
-  // Select persona if there's a choice
-  const personaButton = page.getByRole('button', { name: new RegExp(persona, 'i') });
-  if (await personaButton.isVisible()) {
-    await personaButton.click();
-  }
-
   // Submit form
   await page.getByRole('button', { name: /sign up|create account/i }).click();
 
   // Wait for redirect or success message
   await page.waitForURL(/verify-email|onboarding|app/, { timeout: 10000 });
+}
+
+/**
+ * Sign up as organization through the UI
+ */
+export async function signupOrganization(
+  page: Page,
+  org: TestOrganization
+) {
+  await page.goto('/signup');
+
+  // Select organization persona
+  // Try to find the button or card
+  const orgButton = page.getByRole('button', { name: /organization/i });
+  const orgText = page.getByText(/organization/i).first();
+
+  if (await orgButton.isVisible()) {
+    await orgButton.click();
+  } else if (await orgText.isVisible()) {
+    await orgText.click();
+  }
+
+  // Wait for email input
+  await page.waitForSelector('input[type="email"], label:has-text("Email")', { timeout: 5000 });
+
+  // Fill signup form
+  await page.getByLabel(/email/i).fill(org.email);
+  await page
+    .getByLabel(/password/i)
+    .first()
+    .fill(org.password);
+
+  // Submit signup form
+  await page.getByRole('button', { name: /sign up|create account/i }).click();
+
+  // Wait for redirect to onboarding
+  await page.waitForURL(/onboarding|app/, { timeout: 10000 });
+
+  // If redirected to onboarding, complete organization setup
+  if (page.url().includes('/onboarding')) {
+    await completeOrganizationOnboarding(page, {
+      organizationName: org.organizationName,
+      website: org.website,
+      industry: org.type,
+    });
+  }
+}
+
+/**
+ * Login as organization user
+ */
+export async function loginOrganization(page: Page, email: string, password: string) {
+  await loginUser(page, email, password);
+
+  // After login, should be redirected to org dashboard
+  // If not, navigate to org context
+  if (!page.url().includes('/app/o/')) {
+    // Try to find org in navigation or wait for redirect
+    await page.waitForTimeout(2000);
+    if (!page.url().includes('/app/o/')) {
+      // Navigate to onboarding if org not set up
+      await page.goto('/onboarding');
+    }
+  }
 }
 
 /**
@@ -214,37 +321,87 @@ export async function completeOrganizationOnboarding(
   page: Page,
   orgData: {
     organizationName: string;
+    slug?: string;
     website?: string;
     industry?: string;
+    type?: string;
+    legalName?: string;
+    mission?: string;
   }
 ) {
   await page.waitForURL(/onboarding/, { timeout: 5000 });
 
-  if (await page.getByLabel(/organization name|company name/i).isVisible()) {
-    await page.getByLabel(/organization name|company name/i).fill(orgData.organizationName);
+  // Fill organization name
+  const orgNameInput = page.getByLabel(/organization name|company name|display name/i).or(
+    page.locator('input[name="displayName"]')
+  ).first();
+
+  if (await orgNameInput.isVisible()) {
+    await orgNameInput.fill(orgData.organizationName);
   }
 
-  if (orgData.website && (await page.getByLabel(/website/i).isVisible())) {
-    await page.getByLabel(/website/i).fill(orgData.website);
-  }
+  // Fill slug if provided
+  if (orgData.slug) {
+    const slugInput = page.getByLabel(/slug|url slug/i).or(
+      page.locator('input[name="slug"]')
+    ).first();
 
-  if (orgData.industry && (await page.getByLabel(/industry/i).isVisible())) {
-    await page.getByLabel(/industry/i).fill(orgData.industry);
-  }
-
-  // Complete wizard
-  let attempts = 0;
-  while (attempts < 5) {
-    const nextButton = page.getByRole('button', { name: /next|continue|complete|finish/i });
-
-    if (!(await nextButton.isVisible())) {
-      break;
+    if (await slugInput.isVisible()) {
+      await slugInput.fill(orgData.slug);
     }
-
-    await nextButton.click();
-    await page.waitForTimeout(1000);
-    attempts++;
   }
 
-  await page.waitForURL(/app/, { timeout: 10000 });
+  // Select organization type
+  const typeSelect = page.locator('select[name="type"]').or(
+    page.getByLabel(/organization type|type/i)
+  ).first();
+
+  if (await typeSelect.isVisible()) {
+    const typeValue = orgData.type || orgData.industry || 'company';
+    await typeSelect.selectOption(typeValue);
+  }
+
+  // Fill legal name if provided
+  if (orgData.legalName) {
+    const legalNameInput = page.getByLabel(/legal name/i).or(
+      page.locator('input[name="legalName"]')
+    ).first();
+
+    if (await legalNameInput.isVisible()) {
+      await legalNameInput.fill(orgData.legalName);
+    }
+  }
+
+  // Fill mission if provided
+  if (orgData.mission) {
+    const missionInput = page.locator('textarea[name="mission"]').or(
+      page.getByLabel(/mission/i)
+    ).first();
+
+    if (await missionInput.isVisible()) {
+      await missionInput.fill(orgData.mission);
+    }
+  }
+
+  // Fill website if provided
+  if (orgData.website) {
+    const websiteInput = page.getByLabel(/website/i).or(
+      page.locator('input[name="website"]')
+    ).first();
+
+    if (await websiteInput.isVisible()) {
+      await websiteInput.fill(orgData.website);
+    }
+  }
+
+  // Submit form
+  const submitButton = page.getByRole('button', { name: /create organization|submit|save/i }).first();
+
+  if (await submitButton.isVisible()) {
+    await submitButton.click();
+    await page.waitForTimeout(2000);
+  }
+
+  // Wait for redirect to org dashboard
+  await page.waitForURL(/\/app\/o\//, { timeout: 15000 });
 }

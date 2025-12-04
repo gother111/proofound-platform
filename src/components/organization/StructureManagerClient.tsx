@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { StructureManager } from './StructureManager';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface Department {
   id: string;
@@ -27,7 +28,7 @@ export function StructureManagerClient({ orgId }: StructureManagerClientProps) {
   useEffect(() => {
     async function fetchStructure() {
       try {
-        const response = await fetch(`/api/organizations/${orgId}/structure`);
+        const response = await apiFetch(`/api/organizations/${orgId}/structure`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch structure');

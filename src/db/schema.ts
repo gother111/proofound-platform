@@ -122,7 +122,7 @@ export const dashboardLayouts = pgTable(
     position: integer('position').notNull(), // display order (0-indexed)
     visible: boolean('visible').default(true).notNull(),
     size: text('size', {
-      enum: ['small', 'default', 'large'],
+      enum: ['small', 'default', 'large', 'full'],
     }).default('default'),
     settings: jsonb('settings').default(sql`'{}'::jsonb`), // widget-specific settings
     createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -600,6 +600,7 @@ export const assignments = pgTable('assignments', {
   causeTags: text('cause_tags')
     .array()
     .default(sql`'{}'::text[]`),
+  outcomes: jsonb('outcomes').default(sql`'[]'::jsonb`), // [{metric: string, target: string, timeframe: string}]
   mustHaveSkills: jsonb('must_have_skills').default(sql`'[]'::jsonb`), // [{id: 'typescript', level: 4}]
   niceToHaveSkills: jsonb('nice_to_have_skills').default(sql`'[]'::jsonb`),
   minLanguage: jsonb('min_language'), // {code: 'en', level: 'B2'}

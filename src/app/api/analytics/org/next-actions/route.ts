@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { calculateNextActions } from '@/lib/analytics/next-actions';
 import { log } from '@/lib/log';
+import { createClient } from '@/lib/supabase/server';
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,7 +21,28 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Organization ID is required' }, { status: 400 });
     }
 
-    // TODO: Verify user has access to this organization
+    // Verify user has active membership in the organization
+    const supabase = await createClient();
+    const { data: membership, error: membershipError } = await supabase
+      .from('organization_members')
+      .select('role, status')
+      .eq('org_id', orgId)
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (membershipError) {
+      log.error('next-actions.membership_check_failed', {
+        error: membershipError.message,
+        orgId,
+        userId: user.id,
+      });
+      return NextResponse.json({ error: 'Failed to verify access' }, { status: 500 });
+    }
+
+    if (!membership) {
+      return NextResponse.json({ error: 'Forbidden: No access to this organization' }, { status: 403 });
+    }
 
     const actions = await calculateNextActions(orgId);
 

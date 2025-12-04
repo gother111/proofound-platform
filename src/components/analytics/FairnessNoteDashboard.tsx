@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Shield, AlertTriangle, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface FairnessMetric {
   cohortId: string;
@@ -60,7 +61,7 @@ export function FairnessNoteDashboard() {
           break;
       }
 
-      const response = await fetch(
+      const response = await apiFetch(
         `/api/analytics/fairness?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`
       );
 

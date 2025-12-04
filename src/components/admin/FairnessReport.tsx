@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { FairnessReport } from '@/lib/analytics/fairness';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface FairnessReportViewProps {
   initialReports?: any[];
@@ -54,7 +55,7 @@ export function FairnessReportView({ initialReports = [] }: FairnessReportViewPr
   const fetchReports = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/analytics/fairness/report?limit=20');
+      const response = await apiFetch('/api/analytics/fairness/report?limit=20');
       if (response.ok) {
         const data = await response.json();
         setReports(data.reports || []);
@@ -76,7 +77,7 @@ export function FairnessReportView({ initialReports = [] }: FairnessReportViewPr
 
     setIsGenerating(true);
     try {
-      const response = await fetch('/api/analytics/fairness/report', {
+      const response = await apiFetch('/api/analytics/fairness/report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ releaseVersion: version }),

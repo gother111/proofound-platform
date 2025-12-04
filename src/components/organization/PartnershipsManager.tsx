@@ -24,6 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface OrganizationPartnership {
   id: string;
@@ -55,7 +56,7 @@ export function PartnershipsManager({ orgId, canEdit = true }: PartnershipsManag
 
   const fetchPartnerships = useCallback(async () => {
     try {
-      const response = await fetch(`/api/organizations/${orgId}/partnerships`);
+      const response = await apiFetch(`/api/organizations/${orgId}/partnerships`);
       if (!response.ok) {
         throw new Error('Failed to fetch partnerships');
       }
@@ -81,7 +82,7 @@ export function PartnershipsManager({ orgId, canEdit = true }: PartnershipsManag
       
       const method = partnership.id ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(partnership),
@@ -108,7 +109,7 @@ export function PartnershipsManager({ orgId, canEdit = true }: PartnershipsManag
 
   const handleDelete = async (id: string) => {
     try {
-      const response = await fetch(`/api/organizations/${orgId}/partnerships/${id}`, {
+      const response = await apiFetch(`/api/organizations/${orgId}/partnerships/${id}`, {
         method: 'DELETE',
       });
 

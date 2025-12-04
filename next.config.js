@@ -16,6 +16,8 @@ const nextConfig = {
       bodySizeLimit: '2mb',
     },
   },
+  // Silence multiple-lockfile root inference; set explicit tracing root to this app
+  outputFileTracingRoot: '/Users/yuriibakurov/proofound',
   images: {
     remotePatterns: [
       {

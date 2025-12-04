@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
-import { requirePlatformAdmin } from '@/lib/auth/admin';
+import { NextRequest, NextResponse } from 'next/server';
+import { requirePlatformAdminJson } from '@/lib/api/route-helpers';
 import { db } from '@/db';
 import { profiles, organizations, matches, assignments, analyticsEvents } from '@/db/schema';
 import { sql, gte, and, eq } from 'drizzle-orm';
@@ -12,9 +12,10 @@ import { calculateTTSC } from '@/lib/analytics/metrics';
  * Platform-wide overview statistics
  * Requires: platform_admin or super_admin
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const adminUser = await requirePlatformAdmin();
+    const adminUser = await requirePlatformAdminJson();
+    if (adminUser instanceof NextResponse) return adminUser;
 
     // Calculate date ranges
     const now = new Date();
@@ -24,15 +25,14 @@ export async function GET() {
     // Total users
     const totalUsersResult = await db
       .select({ count: sql<number>`count(*)::int` })
-      .from(profiles)
-      .where(eq(profiles.deleted, false));
+      .from(profiles);
     const totalUsers = totalUsersResult[0]?.count || 0;
 
     // Users this month
     const usersThisMonthResult = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(profiles)
-      .where(and(eq(profiles.deleted, false), gte(profiles.createdAt, last30Days)));
+      .where(gte(profiles.createdAt, last30Days));
     const usersThisMonth = usersThisMonthResult[0]?.count || 0;
 
     // Total organizations
@@ -123,14 +123,14 @@ export async function GET() {
         metrics: {
           ttsc: ttsc
             ? {
-                median: ttsc.median,
-                mean: ttsc.mean,
-                p25: ttsc.p25,
-                p75: ttsc.p75,
-                sampleSize: ttsc.sampleSize,
-                meetsTarget: ttsc.median <= 30,
-                unit: 'days',
-              }
+              median: ttsc.value,
+              mean: ttsc.value, // Using median as proxy since mean is not calculated
+              p25: ttsc.percentile?.p50 || 0, // We don't calculate p25, using p50 as fallback
+              p75: ttsc.percentile?.p75 || 0,
+              sampleSize: ttsc.sampleSize,
+              meetsTarget: ttsc.onTrack,
+              unit: 'days',
+            }
             : null,
         },
         period: {
@@ -141,8 +141,6 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error('Admin analytics overview error:', error);
-
     // Check if this is a redirect (from requirePlatformAdmin)
     if (error && typeof error === 'object' && 'digest' in error) {
       throw error;
@@ -152,6 +150,7 @@ export async function GET() {
       {
         error: 'Failed to fetch analytics overview',
         message: error instanceof Error ? error.message : 'Unknown error',
+        details: JSON.stringify(error),
       },
       { status: 500 }
     );

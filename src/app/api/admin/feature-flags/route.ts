@@ -10,12 +10,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminUser, requirePlatformAdmin } from '@/lib/auth/admin';
+import { getAdminUser } from '@/lib/auth/admin';
 import { db } from '@/db';
 import { featureFlags, adminAuditLog } from '@/db/schema';
 import { eq, asc } from 'drizzle-orm';
 import { z } from 'zod';
 import { log } from '@/lib/log';
+import { requirePlatformAdminJson } from '@/lib/api/route-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,7 +27,10 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET() {
   try {
-    const adminUser = await requirePlatformAdmin();
+    const adminUser = await requirePlatformAdminJson();
+    if (adminUser instanceof NextResponse) {
+      return adminUser;
+    }
 
     const flags = await db.select().from(featureFlags).orderBy(asc(featureFlags.key));
 

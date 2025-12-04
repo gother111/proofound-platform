@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { requirePlatformAdmin } from '@/lib/auth/admin';
 import { log } from '@/lib/log';
+import { adminListGuard } from '../../_utils';
+import { jsonError } from '@/lib/api/route-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,15 +15,19 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
-    const user = await requirePlatformAdmin();
+    const guardResult = await adminListGuard(request);
+    if (guardResult instanceof NextResponse) return guardResult;
+    const user = guardResult.adminUser;
 
     // Parse query parameters
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') || 'pending';
     const priority = searchParams.get('priority');
     const contentType = searchParams.get('contentType');
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const limitRaw = parseInt(searchParams.get('limit') || '50');
+    const offsetRaw = parseInt(searchParams.get('offset') || '0');
+    const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), 100) : 50;
+    const offset = Number.isFinite(offsetRaw) ? Math.max(offsetRaw, 0) : 0;
 
     // Build query
     let query = supabase

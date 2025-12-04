@@ -21,6 +21,7 @@ import {
 import { Slider } from '@/components/ui/slider';
 import { Heart, Brain } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface CheckInDialogProps {
   open: boolean;
@@ -47,7 +48,7 @@ export function CheckInDialog({
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('/api/wellbeing/checkin', {
+      const response = await apiFetch('/api/wellbeing/checkin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

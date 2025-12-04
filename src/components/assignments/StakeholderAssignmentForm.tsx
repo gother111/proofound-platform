@@ -8,6 +8,7 @@ import { Loader2, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { AddProjectDialog } from '@/components/organization/AddProjectDialog';
 import { AddPartnershipDialog } from '@/components/organization/AddPartnershipDialog';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface Assignment {
   invitation: {
@@ -35,7 +36,7 @@ export function StakeholderAssignmentForm({ token }: StakeholderAssignmentFormPr
   const fetchAssignment = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/assignments/invite/${token}`);
+      const response = await apiFetch(`/api/assignments/invite/${token}`);
 
       if (!response.ok) {
         const data = await response.json();
@@ -57,7 +58,7 @@ export function StakeholderAssignmentForm({ token }: StakeholderAssignmentFormPr
 
   const handleSectionSubmit = async (sectionName: string, sectionData: any) => {
     try {
-      const response = await fetch(`/api/assignments/invite/${token}`, {
+      const response = await apiFetch(`/api/assignments/invite/${token}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sectionName, sectionData }),

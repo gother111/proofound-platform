@@ -9,8 +9,8 @@
  * - Part 8: Performance (cache for 1 hour)
  */
 
-import { NextResponse } from 'next/server';
-import { requirePlatformAdmin } from '@/lib/auth/admin';
+import { NextRequest, NextResponse } from 'next/server';
+import { requirePlatformAdminJson } from '@/lib/api/route-helpers';
 import {
   calculateTTSC,
   calculateTTFQI,
@@ -35,10 +35,11 @@ import {
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(_request: NextRequest) {
   try {
-    // Verify admin access
-    await requirePlatformAdmin();
+    // Verify admin access (JSON-friendly)
+    const adminUser = await requirePlatformAdminJson();
+    if (adminUser instanceof NextResponse) return adminUser;
 
     // Calculate TTSC (North Star Metric)
     const ttscResult = await calculateTTSC();

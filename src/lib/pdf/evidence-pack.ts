@@ -222,9 +222,10 @@ export function generateEvidencePackHTML(data: EvidencePackData): string {
 
   <div class="metadata">
     <p><strong>Organization:</strong> ${data.organization.name}</p>
+    ${data.organization.description ? `<p><strong>Description:</strong> ${data.organization.description}</p>` : ''}
     ${data.organization.sector ? `<p><strong>Sector:</strong> ${data.organization.sector}</p>` : ''}
     ${data.organization.website ? `<p><strong>Website:</strong> ${data.organization.website}</p>` : ''}
-    <p><strong>Generated:</strong> ${formatDate(data.generatedAt)}</p>
+    <p><strong>Generated on:</strong> ${formatDate(data.generatedAt)}</p>
     ${data.periodStart && data.periodEnd
       ? `<p><strong>Period:</strong> ${formatDate(data.periodStart)} - ${formatDate(data.periodEnd)}</p>`
       : ''
@@ -269,6 +270,7 @@ export function generateEvidencePackHTML(data: EvidencePackData): string {
         ${data.artifacts.map(artifact => `
           <li>
             <strong>${artifact.name}</strong>
+            ${artifact.type ? `<br><span style="font-size: 9pt; color: #4A4844;">Type: ${artifact.type}</span>` : ''}
             ${artifact.description ? `<br><span style="font-size: 9pt; color: #6B6760;">${artifact.description}</span>` : ''}
             ${artifact.url ? `<br><span style="font-size: 9pt; color: #1C4D3A;">${artifact.url}</span>` : ''}
           </li>

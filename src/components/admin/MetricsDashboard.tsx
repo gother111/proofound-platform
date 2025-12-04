@@ -39,6 +39,8 @@ import {
   Zap,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface MetricsData {
   ttfqi: {
@@ -99,7 +101,7 @@ export function MetricsDashboard() {
   const fetchMetrics = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/metrics/all?days=${period}`);
+      const response = await apiFetch(`/api/metrics/all?days=${period}`);
       if (response.ok) {
         const data = await response.json();
         setMetrics(data.metrics);
@@ -380,60 +382,65 @@ function MetricCard({
   icon: React.ReactNode;
 }) {
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div>
-            <CardTitle className="text-lg flex items-center gap-2">
-              {icon}
-              {title}
-            </CardTitle>
-            <CardDescription>{subtitle}</CardDescription>
-          </div>
-          <Badge
-            variant={onTrack ? 'default' : 'destructive'}
-            className={onTrack ? 'bg-green-600' : ''}
-          >
-            {onTrack ? 'On Track' : 'Below Target'}
-          </Badge>
-        </div>
+    <Card className="overflow-hidden transition-all hover:shadow-md border-border/50">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+          {icon}
+          {title}
+        </CardTitle>
+        <Badge
+          variant={onTrack ? 'default' : 'destructive'}
+          className={cn(
+            'text-[10px] px-1.5 py-0 h-5 font-medium',
+            onTrack ? 'bg-green-100 text-green-700 hover:bg-green-100 border-green-200' : 'bg-red-100 text-red-700 hover:bg-red-100 border-red-200'
+          )}
+        >
+          {onTrack ? 'On Track' : 'Off Track'}
+        </Badge>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
           <div>
-            <p className="text-3xl font-bold text-[#2D3330]">
-              {value} <span className="text-lg font-normal text-[#6B6760]">{unit}</span>
-            </p>
-            <p className="text-xs text-[#6B6760] mt-1">
-              Target: ≤{target} {unit} • n={sampleSize}
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-bold tracking-tight text-foreground">
+                {value}
+              </span>
+              <span className="text-sm font-normal text-muted-foreground">{unit}</span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {subtitle}
             </p>
           </div>
 
-          {percentiles && (
-            <div className="pt-3 border-t border-[#E8E6DD]">
-              <p className="text-xs text-[#6B6760] mb-2">Percentiles</p>
-              <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="pt-3 border-t border-border/50">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Target: ≤{target} {unit}</span>
+              <span className="text-muted-foreground">n={sampleSize}</span>
+            </div>
+
+            {percentiles && (
+              <div className="grid grid-cols-3 gap-2 text-center mt-3 bg-muted/30 p-2 rounded-md">
                 <div>
-                  <p className="text-xs text-[#6B6760]">P50</p>
-                  <p className="text-sm font-semibold text-[#2D3330]">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">P50</p>
+                  <p className="text-xs font-semibold text-foreground">
                     {percentiles.p50.toFixed(1)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-[#6B6760]">P75</p>
-                  <p className="text-sm font-semibold text-[#2D3330]">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">P75</p>
+                  <p className="text-xs font-semibold text-foreground">
                     {percentiles.p75.toFixed(1)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-[#6B6760]">P90</p>
-                  <p className="text-sm font-semibold text-[#2D3330]">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">P90</p>
+                  <p className="text-xs font-semibold text-foreground">
                     {percentiles.p90.toFixed(1)}
                   </p>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>

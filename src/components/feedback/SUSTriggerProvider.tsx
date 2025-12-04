@@ -17,6 +17,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 import { SUSSurvey } from './SUSSurvey';
 import { toast } from 'sonner';
 import type { SUSResponse } from '@/lib/feedback/sus-scoring';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface SUSTriggerContextValue {
   checkForTrigger: (event: 'activation' | 'match' | 'contract') => Promise<void>;
@@ -53,7 +54,7 @@ export function SUSTriggerProvider({ children, userId }: SUSTriggerProviderProps
 
   const checkPendingSurveys = async () => {
     try {
-      const response = await fetch('/api/feedback/sus/check-trigger');
+      const response = await apiFetch('/api/feedback/sus/check-trigger');
       if (response.ok) {
         const data = await response.json();
         if (data.shouldShow && data.triggerPoint) {
@@ -80,7 +81,7 @@ export function SUSTriggerProvider({ children, userId }: SUSTriggerProviderProps
 
       const triggerPoint = triggerPointMap[event];
 
-      const response = await fetch('/api/feedback/sus/check-trigger', {
+      const response = await apiFetch('/api/feedback/sus/check-trigger', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ event: triggerPoint }),
@@ -104,7 +105,7 @@ export function SUSTriggerProvider({ children, userId }: SUSTriggerProviderProps
 
   const handleComplete = async (responses: SUSResponse[]) => {
     try {
-      const response = await fetch('/api/feedback/sus/submit', {
+      const response = await apiFetch('/api/feedback/sus/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -129,7 +130,7 @@ export function SUSTriggerProvider({ children, userId }: SUSTriggerProviderProps
 
   const dismissSurvey = () => {
     // Log dismissal but don't prevent showing again
-    fetch('/api/feedback/sus/dismiss', {
+    apiFetch('/api/feedback/sus/dismiss', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ triggerPoint: currentTrigger }),

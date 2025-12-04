@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Lock, Loader2, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 
 /**
  * PasswordChangeForm Component
@@ -72,7 +73,7 @@ export function PasswordChangeForm() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/user/password', {
+      const response = await apiFetch('/api/user/password', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

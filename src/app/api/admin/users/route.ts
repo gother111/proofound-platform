@@ -1,39 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requirePlatformAdmin } from '@/lib/auth/admin';
+import { jsonError } from '@/lib/api/route-helpers';
 import { db } from '@/db';
 import { profiles } from '@/db/schema';
 import { ilike, or, desc, asc, sql, eq, and } from 'drizzle-orm';
+import { adminListGuard } from '../_utils';
 
 export async function GET(request: NextRequest) {
   try {
-    await requirePlatformAdmin();
-
-    const searchParams = request.nextUrl.searchParams;
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const search = searchParams.get('search') || '';
-    const sortField = searchParams.get('sortField') || 'createdAt';
-    const sortDir = searchParams.get('sortDir') || 'desc';
+    const guardResult = await adminListGuard(request);
+    if (guardResult instanceof NextResponse) return guardResult;
+    const { page, limit, search, sortField, sortDir } = guardResult.params;
 
     const offset = (page - 1) * limit;
 
-    let whereClause = eq(profiles.deleted, false);
+    let whereClause = undefined;
     if (search) {
-      whereClause = and(
-        eq(profiles.deleted, false),
-        or(
-          ilike(profiles.displayName, `%${search}%`),
-          ilike(profiles.handle, `%${search}%`)
-        )
-      )!;
+      whereClause = or(
+        ilike(profiles.displayName, `%${search}%`),
+        ilike(profiles.handle, `%${search}%`)
+      );
     }
 
-    let orderBy = desc(profiles.createdAt);
-    if (sortField === 'displayName') {
-      orderBy = sortDir === 'desc' ? desc(profiles.displayName) : asc(profiles.displayName);
-    } else if (sortField === 'createdAt') {
-      orderBy = sortDir === 'desc' ? desc(profiles.createdAt) : asc(profiles.createdAt);
-    }
+    const orderBy =
+      sortField === 'displayName'
+        ? sortDir === 'desc'
+          ? desc(profiles.displayName)
+          : asc(profiles.displayName)
+        : sortDir === 'desc'
+          ? desc(profiles.createdAt)
+          : asc(profiles.createdAt);
 
     const usersQuery = db
       .select()
@@ -61,7 +56,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error fetching users:', error);
-    return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to fetch users', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
   }
 }
 

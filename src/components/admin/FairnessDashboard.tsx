@@ -39,6 +39,7 @@ import {
   MapPin,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface FairnessMetric {
   category: string;
@@ -66,7 +67,7 @@ export function FairnessDashboard() {
   const fetchMetrics = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/admin/fairness-metrics?days=${dateRange}`);
+      const response = await apiFetch(`/api/admin/fairness-metrics?days=${dateRange}`);
       if (response.ok) {
         const data = await response.json();
         setMetrics(data.metrics || []);
@@ -87,7 +88,7 @@ export function FairnessDashboard() {
   const handleGenerateReport = async () => {
     setIsGeneratingReport(true);
     try {
-      const response = await fetch('/api/admin/fairness-report', {
+      const response = await apiFetch('/api/admin/fairness-report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ dateRange }),

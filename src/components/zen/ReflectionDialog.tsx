@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/select';
 import { BookOpen } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface ReflectionDialogProps {
   open: boolean;
@@ -71,7 +72,7 @@ export function ReflectionDialog({
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('/api/wellbeing/reflections', {
+      const response = await apiFetch('/api/wellbeing/reflections', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

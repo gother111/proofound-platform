@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Table,
   TableBody,
@@ -25,6 +25,7 @@ import { format } from 'date-fns';
 import { Profile } from '@/db/schema';
 import { UserDetailModal } from './UserDetailModal';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface UsersResponse {
   users: Profile[];
@@ -53,11 +54,7 @@ export function UsersTable() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  useEffect(() => {
-    fetchUsers();
-  }, [page, debouncedSearch]);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -65,7 +62,7 @@ export function UsersTable() {
         limit: '10',
         search: debouncedSearch,
       });
-      const res = await fetch(`/api/admin/users?${params}`);
+      const res = await apiFetch(`/api/admin/users?${params}`);
       if (!res.ok) throw new Error('Failed to fetch users');
       const json = await res.json();
       setData(json);
@@ -75,7 +72,11 @@ export function UsersTable() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, debouncedSearch]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const handleViewUser = (user: Profile) => {
     setSelectedUser(user);

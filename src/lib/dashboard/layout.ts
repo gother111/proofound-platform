@@ -4,7 +4,7 @@
  * Default layouts, widget definitions, and helper functions
  */
 
-export type WidgetSize = 'small' | 'default' | 'large';
+export type WidgetSize = 'small' | 'default' | 'large' | 'full';
 
 export interface WidgetConfig {
   id: string;
@@ -58,7 +58,7 @@ export const AVAILABLE_WIDGETS: Record<string, WidgetConfig> = {
     name: 'Projects',
     description: 'Active projects and collaborations',
     category: 'productivity',
-    defaultSize: 'default',
+    defaultSize: 'large',
     availableSizes: ['default', 'large'],
   },
   'matching-results': {
@@ -74,8 +74,8 @@ export const AVAILABLE_WIDGETS: Record<string, WidgetConfig> = {
     name: 'Impact Snapshot',
     description: 'Your contribution metrics',
     category: 'insights',
-    defaultSize: 'default',
-    availableSizes: ['default'],
+    defaultSize: 'large',
+    availableSizes: ['default', 'large'],
   },
   'gap-map': {
     id: 'gap-map',
@@ -90,8 +90,8 @@ export const AVAILABLE_WIDGETS: Record<string, WidgetConfig> = {
     name: 'Next Best Actions',
     description: 'Recommended actions to improve your profile',
     category: 'growth',
-    defaultSize: 'default',
-    availableSizes: ['default', 'large'],
+    defaultSize: 'full',
+    availableSizes: ['large', 'full'],
   },
   explore: {
     id: 'explore',

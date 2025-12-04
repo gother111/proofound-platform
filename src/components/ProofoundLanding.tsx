@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
 import { motion, useScroll, useSpring, useReducedMotion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { Menu, X, ArrowRight } from 'lucide-react';
@@ -89,7 +90,14 @@ const MinimalHeader = ({
     className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-6 pointer-events-none"
   >
     <div className="pointer-events-auto">
-      <img src="/logo.png" alt="Proofound" className="h-12 w-auto" />
+      <Image
+        src="/logo.png"
+        alt="Proofound"
+        width={120}
+        height={48}
+        className="h-12 w-auto"
+        priority
+      />
     </div>
 
     <div className="pointer-events-auto">

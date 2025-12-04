@@ -7,6 +7,7 @@ import { Bell, Check, Settings, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface Notification {
   id: string;
@@ -48,7 +49,7 @@ export function NotificationDropdown({
 
   const fetchNotifications = async () => {
     try {
-      const response = await fetch('/api/notifications?limit=10');
+      const response = await apiFetch('/api/notifications?limit=10');
       if (response.ok) {
         const data = await response.json();
         setNotifications(data.items);
@@ -62,7 +63,7 @@ export function NotificationDropdown({
 
   const markAsRead = async (notificationId: string) => {
     try {
-      await fetch(`/api/notifications/${notificationId}/read`, {
+      await apiFetch(`/api/notifications/${notificationId}/read`, {
         method: 'PATCH',
       });
       onNotificationRead();
@@ -76,7 +77,7 @@ export function NotificationDropdown({
 
   const markAllAsRead = async () => {
     try {
-      await fetch('/api/notifications/mark-all-read', {
+      await apiFetch('/api/notifications/mark-all-read', {
         method: 'POST',
       });
       onNotificationRead();

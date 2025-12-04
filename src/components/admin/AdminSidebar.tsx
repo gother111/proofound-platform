@@ -16,13 +16,15 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 interface AdminSidebarProps {
   adminEmail?: string;
   adminRole?: string;
+  collapsed?: boolean;
+  setCollapsed?: (collapsed: boolean) => void;
+  mobile?: boolean;
 }
 
 const navItems = [
@@ -70,9 +72,14 @@ const navItems = [
   },
 ];
 
-export function AdminSidebar({ adminEmail, adminRole }: AdminSidebarProps) {
+export function AdminSidebar({
+  adminEmail,
+  adminRole,
+  collapsed = false,
+  setCollapsed,
+  mobile = false,
+}: AdminSidebarProps) {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
 
   const isActive = (href: string) => {
     if (href === '/admin') {
@@ -84,30 +91,33 @@ export function AdminSidebar({ adminEmail, adminRole }: AdminSidebarProps) {
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 z-40 h-screen bg-[#2D3330] text-white transition-all duration-300',
-        collapsed ? 'w-16' : 'w-64'
+        'bg-[#2D3330] text-white transition-all duration-300 flex flex-col h-full',
+        mobile ? 'w-full' : 'fixed left-0 top-0 z-40 h-screen border-r border-white/10',
+        !mobile && (collapsed ? 'w-16' : 'w-64')
       )}
     >
       {/* Header */}
-      <div className="flex h-16 items-center justify-between border-b border-white/10 px-4">
-        {!collapsed && (
+      <div className="flex h-16 items-center justify-between border-b border-white/10 px-4 shrink-0">
+        {(!collapsed || mobile) && (
           <div className="flex items-center gap-2">
-            <Shield className="h-6 w-6 text-[#1C4D3A]" />
-            <span className="font-semibold text-lg">Admin</span>
+            <Shield className="h-6 w-6 text-[#1C4D3A] fill-current text-green-400" />
+            <span className="font-semibold text-lg tracking-tight">Admin</span>
           </div>
         )}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setCollapsed(!collapsed)}
-          className="text-white/70 hover:text-white hover:bg-white/10"
-        >
-          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        </Button>
+        {!mobile && setCollapsed && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setCollapsed(!collapsed)}
+            className="text-white/70 hover:text-white hover:bg-white/10 ml-auto"
+          >
+            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          </Button>
+        )}
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-2 py-4">
+      <nav className="flex-1 space-y-1 px-2 py-4 overflow-y-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.href);
@@ -117,18 +127,22 @@ export function AdminSidebar({ adminEmail, adminRole }: AdminSidebarProps) {
               key={item.href}
               href={item.href}
               className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200',
+                'flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200 group',
                 active
-                  ? 'bg-[#1C4D3A] text-white'
+                  ? 'bg-[#1C4D3A] text-white shadow-sm'
                   : 'text-white/70 hover:bg-white/10 hover:text-white'
               )}
-              title={collapsed ? item.title : undefined}
+              title={collapsed && !mobile ? item.title : undefined}
             >
-              <Icon className="h-5 w-5 flex-shrink-0" />
-              {!collapsed && (
+              <Icon
+                className={cn(
+                  'h-5 w-5 flex-shrink-0 transition-colors',
+                  active ? 'text-white' : 'text-white/70 group-hover:text-white'
+                )}
+              />
+              {(!collapsed || mobile) && (
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{item.title}</p>
-                  <p className="text-xs text-white/50 truncate">{item.description}</p>
                 </div>
               )}
             </Link>
@@ -137,25 +151,28 @@ export function AdminSidebar({ adminEmail, adminRole }: AdminSidebarProps) {
       </nav>
 
       {/* Footer with admin info */}
-      <div className="border-t border-white/10 p-4">
-        {!collapsed ? (
+      <div className="border-t border-white/10 p-4 shrink-0">
+        {!collapsed || mobile ? (
           <div className="space-y-3">
-            <div className="text-xs text-white/50">Logged in as</div>
-            <div className="truncate text-sm text-white/90">{adminEmail || 'Admin'}</div>
-            <Badge
-              variant="outline"
-              className={cn(
-                'text-xs',
-                adminRole === 'super_admin'
-                  ? 'border-purple-400 text-purple-300'
-                  : 'border-blue-400 text-blue-300'
-              )}
-            >
-              {adminRole === 'super_admin' ? 'Super Admin' : 'Platform Admin'}
-            </Badge>
+            <div className="flex items-center justify-between">
+              <div className="truncate text-sm font-medium text-white/90">
+                {adminEmail || 'Admin'}
+              </div>
+              <Badge
+                variant="outline"
+                className={cn(
+                  'text-[10px] px-1.5 py-0 h-5',
+                  adminRole === 'super_admin'
+                    ? 'border-purple-400 text-purple-300'
+                    : 'border-blue-400 text-blue-300'
+                )}
+              >
+                {adminRole === 'super_admin' ? 'Super' : 'Admin'}
+              </Badge>
+            </div>
             <Link
               href="/app/i/home"
-              className="flex items-center gap-2 text-sm text-white/70 hover:text-white transition-colors mt-2"
+              className="flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors"
             >
               <LogOut className="h-4 w-4" />
               Back to App

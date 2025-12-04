@@ -10,6 +10,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileDown, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface EvidencePackButtonProps {
   candidateId: string;
@@ -39,7 +40,7 @@ export function EvidencePackButton({
       });
 
       // Fetch PDF
-      const response = await fetch(
+      const response = await apiFetch(
         `/api/evidence-pack/${candidateId}?assignmentId=${assignmentId}`
       );
 

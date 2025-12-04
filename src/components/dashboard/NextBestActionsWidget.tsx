@@ -24,6 +24,7 @@ import {
   Award,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface NextBestAction {
   id: string;
@@ -50,7 +51,7 @@ export function NextBestActionsWidget() {
   useEffect(() => {
     async function fetchNextBestActions() {
       try {
-        const response = await fetch('/api/profile/completeness');
+        const response = await apiFetch('/api/profile/completeness');
         if (response.ok) {
           const data = await response.json();
           setCompleteness(data);

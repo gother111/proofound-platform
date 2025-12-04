@@ -10,50 +10,38 @@ import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { fairnessNotes } from '@/db/schema';
 import { desc, eq } from 'drizzle-orm';
+import { adminListGuard } from '../_utils';
+import { jsonError } from '@/lib/api/route-helpers';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
-
-    // Check authentication
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if user is admin
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('platform_role')
-      .eq('id', user.id)
-      .single();
-
-    if (
-      !profile?.platform_role ||
-      !['platform_admin', 'super_admin'].includes(profile.platform_role)
-    ) {
-      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
-    }
+    const guardResult = await adminListGuard(request);
+    if (guardResult instanceof NextResponse) return guardResult;
 
     // Get query parameters
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') as 'draft' | 'published' | 'archived' | null;
-    const limit = parseInt(searchParams.get('limit') || '50', 10);
+    const limitRaw = parseInt(searchParams.get('limit') || '50', 10);
+    const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), 100) : 50;
 
-    // Build query
-    let query = db.select().from(fairnessNotes).orderBy(desc(fairnessNotes.generatedAt));
+    // Fetch fairness notes
+    let notes: any[] = [];
 
-    if (status) {
-      query = query.where(eq(fairnessNotes.status, status)) as any;
+    try {
+      // Build query
+      let query = db.select().from(fairnessNotes).orderBy(desc(fairnessNotes.generatedAt));
+
+      if (status) {
+        query = query.where(eq(fairnessNotes.status, status)) as any;
+      }
+
+      query = query.limit(limit) as any;
+
+      notes = await query;
+    } catch (dbError) {
+      console.error('Error fetching fairness notes from DB:', dbError);
+      // Continue with empty notes array
     }
-
-    query = query.limit(limit) as any;
-
-    const notes = await query;
 
     return NextResponse.json({
       success: true,

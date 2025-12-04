@@ -99,18 +99,30 @@ export async function createAuthenticatedClient(
     },
   });
 
-  const { data, error } = await client.auth.signInWithPassword({
-    email,
-    password,
-  });
+  // Retry to reduce flakiness from auth rate limits
+  const maxAttempts = 5;
+  let lastError: any = null;
 
-  if (error) {
-    throw new Error(`Failed to authenticate as ${email}: ${error.message}`);
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const { data, error } = await client.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (!error && data.session) {
+      return client;
+    }
+
+    lastError = error ?? new Error(`No session created for ${email}`);
+
+    // Exponential backoff with cap (300ms, 600ms, 1.2s, 2.4s)
+    const backoffMs = Math.min(300 * 2 ** (attempt - 1), 2400);
+    await new Promise((resolve) => setTimeout(resolve, backoffMs));
   }
 
-  if (!data.session) {
-    throw new Error(`No session created for ${email}`);
-  }
+  throw new Error(
+    `Failed to authenticate as ${email} after ${maxAttempts} attempts: ${lastError?.message ?? 'Unknown error'}`
+  );
 
   return client;
 }

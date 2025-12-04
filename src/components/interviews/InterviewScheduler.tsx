@@ -37,6 +37,7 @@ import { toast } from 'sonner';
 import { VideoProviderSelector } from './VideoProviderSelector';
 import { TimeSlotPicker } from './TimeSlotPicker';
 import { InterviewConfirmation } from './InterviewConfirmation';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface InterviewSchedulerProps {
   matchId: string;
@@ -133,7 +134,7 @@ export function InterviewScheduler({
       const scheduledDateTime = new Date(selectedDate);
       scheduledDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
-      const response = await fetch('/api/interviews/schedule', {
+      const response = await apiFetch('/api/interviews/schedule', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

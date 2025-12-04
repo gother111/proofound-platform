@@ -109,6 +109,12 @@ export default async function ExpertiseAtlasPage() {
       proof_count: proofCountMap[skill.id] || 0,
       verification_count: verificationCountMap[skill.id] || 0,
       verification_sources: verificationSourcesMap[skill.id] || [],
+      // Map database field names to component expected names
+      evidenceStrength: skill.evidence_strength ? parseFloat(skill.evidence_strength.toString()) : 0,
+      impactScore: skill.impact_score ? parseFloat(skill.impact_score.toString()) : 0,
+      monthsExperience: skill.months_experience || 0,
+      skillCode: skill.skill_code || skill.skill_id || '',
+      lastUsedAt: skill.last_used_at || null,
     }));
 
     // Fetch L1 domains - handle errors gracefully

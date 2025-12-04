@@ -41,6 +41,7 @@ import {
   BadgeCheck,
   Loader2,
 } from 'lucide-react';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface OrgDetailModalProps {
   org: Organization | null;
@@ -87,7 +88,7 @@ export function OrgDetailModal({ org, open, onClose, onOrgUpdated }: OrgDetailMo
   const handleToggleVerification = async () => {
     setIsUpdating(true);
     try {
-      const response = await fetch(`/api/admin/organizations/${org.id}/verify`, {
+      const response = await apiFetch(`/api/admin/organizations/${org.id}/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ verified: !org.verified }),

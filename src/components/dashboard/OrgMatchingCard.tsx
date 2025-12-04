@@ -31,6 +31,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface OrgMatchingCardProps {
   orgSlug: string;
@@ -84,7 +85,7 @@ export function OrgMatchingCard({ orgSlug, className }: OrgMatchingCardProps) {
         setIsLoading(true);
         setError(null);
 
-        const response = await fetch(`/api/org/${orgSlug}/dashboard`);
+        const response = await apiFetch(`/api/org/${orgSlug}/dashboard`);
 
         if (!response.ok) {
           throw new Error('Failed to fetch pipeline data');
@@ -243,6 +244,15 @@ export function OrgMatchingCard({ orgSlug, className }: OrgMatchingCardProps) {
           <p className="text-[10px]" style={{ color: '#6B6760' }}>
             Shortlist
           </p>
+          <div className="mt-2">
+            <Link
+              href={`/app/o/${orgSlug}/shortlist`}
+              className="text-[11px] font-medium hover:underline"
+              style={{ color: '#1C4D3A' }}
+            >
+              Open shortlist <ArrowRight className="w-3 h-3 inline-block ml-1 align-middle" />
+            </Link>
+          </div>
         </div>
 
         {/* Intros */}

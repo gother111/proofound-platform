@@ -29,6 +29,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useState, useEffect } from 'react';
+import { apiFetch } from '@/lib/api/fetch';
 import Link from 'next/link';
 
 interface TeamRolesCardProps {
@@ -93,7 +94,7 @@ export function TeamRolesCard({ orgSlug, orgId }: TeamRolesCardProps) {
         setIsLoading(true);
         setError(null);
 
-        const response = await fetch(`/api/organizations/${orgId}/team`);
+        const response = await apiFetch(`/api/organizations/${orgId}/team`);
 
         if (!response.ok) {
           throw new Error('Failed to fetch team');

@@ -5,6 +5,7 @@
  * PRD Reference: O8 - Company Dashboard
  */
 
+import { headers } from 'next/headers';
 import { requireAuth, getActiveOrg } from '@/lib/auth';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -12,6 +13,15 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Briefcase, Users, Target, TrendingUp, ArrowRight, Building2 } from 'lucide-react';
 import { OrgDashboardClient } from './OrgDashboardClient';
+import { db } from '@/db';
+import {
+  assignments,
+  matches,
+  matchInterest,
+  organizationMembers,
+  organizationGoals,
+} from '@/db/schema';
+import { eq, and, sql } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,25 +49,46 @@ export default async function OrganizationHomePage({
   };
 
   try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/org/${slug}/dashboard`,
-      {
-        headers: {
-          cookie: `sb-access-token=${process.env.SUPABASE_ACCESS_TOKEN || ''}`,
-        },
-        cache: 'no-store',
-      }
-    );
+    // Query DB directly to avoid URL/env issues during SSR
+    const [assignmentsData, teamData, matchesData, shortlistData] = await Promise.all([
+      db
+        .select({
+          status: assignments.status,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(assignments)
+        .where(eq(assignments.orgId, org.id))
+        .groupBy(assignments.status),
+      db
+        .select({
+          role: organizationMembers.role,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(organizationMembers)
+        .where(eq(organizationMembers.orgId, org.id))
+        .groupBy(organizationMembers.role),
+      db
+        .select({
+          matchCount: sql<number>`count(${matches.id})::int`,
+        })
+        .from(assignments)
+        .leftJoin(matches, and(eq(matches.assignmentId, assignments.id), eq(assignments.status, 'active')))
+        .where(eq(assignments.orgId, org.id)),
+      db
+        .select({
+          count: sql<number>`count(*)::int`,
+        })
+        .from(matchInterest)
+        .innerJoin(assignments, eq(matchInterest.assignmentId, assignments.id))
+        .where(eq(assignments.orgId, org.id)),
+    ]);
 
-    if (response.ok) {
-      const data = await response.json();
-      metrics = {
-        activeAssignments: data.pipeline?.openAssignments || 0,
-        totalMatches: data.pipeline?.matches?.totalMatches || 0,
-        teamMembers: data.team?.total || 0,
-        shortlists: data.pipeline?.shortlists || 0,
-      };
-    }
+    metrics = {
+      activeAssignments: assignmentsData.find((a) => a.status === 'active')?.count || 0,
+      totalMatches: matchesData[0]?.matchCount || 0,
+      teamMembers: teamData.reduce((sum, t) => sum + (t.count || 0), 0),
+      shortlists: shortlistData[0]?.count || 0,
+    };
   } catch (error) {
     console.error('Failed to fetch org dashboard metrics:', error);
   }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requirePlatformAdmin } from '@/lib/auth/admin';
+import { requirePlatformAdminJson } from '@/lib/api/route-helpers';
 import { getAllMetrics } from '@/lib/analytics/metrics';
 import { log } from '@/lib/log';
 
@@ -15,7 +15,8 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
   try {
-    const user = await requirePlatformAdmin();
+    const user = await requirePlatformAdminJson();
+    if (user instanceof NextResponse) return user;
 
     const metrics = await getAllMetrics();
 

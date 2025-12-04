@@ -313,18 +313,18 @@ export async function POST(request: NextRequest) {
             .eq('user_id', user.id)
             .single();
 
-          emitProfileActivatedAsync(user.id, {
+          // Calculate approximate activation duration (from profile creation)
+          const activationDurationMs = Date.now() - new Date((user as any).createdAt || Date.now()).getTime();
+          emitProfileActivatedAsync(user.id, activationDurationMs, {
             l4_count: skillCount,
             has_proofs: false, // TODO: Check actual proof count
             has_mission: !!individualProfile?.mission,
             has_vision: !!individualProfile?.vision,
-            has_values: !!(
-              individualProfile?.values &&
+            has_values: !!(individualProfile?.values &&
               Array.isArray(individualProfile.values) &&
               individualProfile.values.length > 0
             ),
-            has_causes: !!(
-              individualProfile?.causes &&
+            has_causes: !!(individualProfile?.causes &&
               Array.isArray(individualProfile.causes) &&
               individualProfile.causes.length > 0
             ),

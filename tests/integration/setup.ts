@@ -213,8 +213,8 @@ export function createMockRequest(options: {
 
 // Test data generators
 export const generators = {
-  userId: () => `test-user-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-  orgId: () => `test-org-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-  assignmentId: () => `test-assignment-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+  userId: () => crypto.randomUUID(),
+  orgId: () => crypto.randomUUID(),
+  assignmentId: () => crypto.randomUUID(),
   email: () => `test-${Date.now()}@example.com`,
 };

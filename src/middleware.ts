@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getPersona } from '@/lib/auth';
 import { nanoid } from 'nanoid';
 import { logContext, log } from '@/lib/log';
-import { csrfProtection } from '@/lib/csrf';
+import { csrfProtection, getOrGenerateCSRFToken, setCSRFTokenCookie } from '@/lib/csrf';
 import { logAPILatency } from '@/lib/monitoring/api-latency';
 
 export async function middleware(request: NextRequest) {
@@ -30,7 +30,11 @@ export async function middleware(request: NextRequest) {
       return csrfError;
     }
 
+    // Ensure CSRF cookie is present for clients to read
+    const csrfToken = getOrGenerateCSRFToken(request);
     const response = NextResponse.next();
+    setCSRFTokenCookie(response, csrfToken);
+
     const duration = Date.now() - startTime;
 
     response.headers.set('x-request-id', requestId);
@@ -65,8 +69,10 @@ export async function middleware(request: NextRequest) {
     pathname === '/403' ||
     pathname.match(/\.(ico|png|jpg|jpeg|gif|svg|css|js)$/)
   ) {
+    const csrfToken = getOrGenerateCSRFToken(request);
     const response = NextResponse.next();
     response.headers.set('x-request-id', requestId);
+    setCSRFTokenCookie(response, csrfToken);
     return response;
   }
 
@@ -220,12 +226,14 @@ export async function middleware(request: NextRequest) {
       }
     }
 
+    const csrfToken = getOrGenerateCSRFToken(request);
     const response = NextResponse.next({
       request: {
         headers: request.headers,
       },
     });
     response.headers.set('x-request-id', requestId);
+    setCSRFTokenCookie(response, csrfToken);
     return response;
   });
 }

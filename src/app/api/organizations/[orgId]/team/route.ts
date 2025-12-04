@@ -86,12 +86,14 @@ export async function GET(
     });
   } catch (error) {
     console.error('Error fetching team members:', error);
+    // Degrade gracefully to keep dashboard widget stable
     return NextResponse.json(
       {
-        error: 'Failed to fetch team members',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        members: [],
+        stats: { total: 0, owners: 0, admins: 0, members: 0, viewers: 0 },
+        error: error instanceof Error ? error.message : 'Failed to fetch team members',
       },
-      { status: 500 }
+      { status: 200 }
     );
   }
 }

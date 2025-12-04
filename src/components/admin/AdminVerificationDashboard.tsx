@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminReviewModal } from '@/components/admin/AdminReviewModal';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface VerificationSignals {
   hasVerificationBadge: boolean;
@@ -77,7 +78,7 @@ export function AdminVerificationDashboard() {
   const loadQueue = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/admin/verification/linkedin/queue');
+      const response = await apiFetch('/api/admin/verification/linkedin/queue');
 
       if (!response.ok) {
         const error = await response.json();
@@ -102,7 +103,7 @@ export function AdminVerificationDashboard() {
 
     try {
       setProcessingUserId(verification.userId);
-      const response = await fetch(
+      const response = await apiFetch(
         `/api/admin/verification/linkedin/${verification.userId}/review`,
         {
           method: 'POST',
@@ -156,7 +157,7 @@ export function AdminVerificationDashboard() {
 
     try {
       setProcessingUserId(verification.userId);
-      const response = await fetch(
+      const response = await apiFetch(
         `/api/admin/verification/linkedin/${verification.userId}/review`,
         {
           method: 'POST',

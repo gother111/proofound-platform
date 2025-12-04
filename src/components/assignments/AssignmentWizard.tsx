@@ -42,6 +42,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface AssignmentData {
   // Step 1: Role & Basic Info
@@ -139,7 +140,7 @@ export function AssignmentWizard({ organizationId }: { organizationId: string })
         niceToHaveSkills: data.niceToHaveSkills.map((s) => ({ id: crypto.randomUUID(), level: 1 })),
       };
 
-      const response = await fetch('/api/assignments', {
+      const response = await apiFetch('/api/assignments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -178,7 +179,7 @@ export function AssignmentWizard({ organizationId }: { organizationId: string })
         niceToHaveSkills: data.niceToHaveSkills.map((s) => ({ id: crypto.randomUUID(), level: 1 })),
       };
 
-      const response = await fetch('/api/assignments', {
+      const response = await apiFetch('/api/assignments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

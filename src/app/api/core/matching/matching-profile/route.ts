@@ -51,7 +51,8 @@ async function checkAndEmitProfileActivation(userId: string): Promise<void> {
 
     let completionScore = 30 + 40 + 30; // All criteria met = 100
 
-    await emitProfileActivated(userId, {
+    // Use 0 for duration since we don't track when activation started
+    await emitProfileActivated(userId, 0, {
       completionScore,
       hasMinimumL4Count,
       l4SkillsCount,

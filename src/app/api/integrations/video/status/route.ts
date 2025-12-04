@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
       },
     };
 
-    for (const row of integrations.rows as any[]) {
+    for (const row of integrations as any[]) {
       const isZoom = row.provider === 'zoom';
       const key = isZoom ? 'zoom' : 'google';
 

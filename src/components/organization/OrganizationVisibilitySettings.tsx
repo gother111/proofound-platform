@@ -14,6 +14,7 @@ import {
 import { VisibilityLevelBadge, getVisibilityDescription } from './VisibilityLevelBadge';
 import { Eye, Save, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface VisibilitySettings {
   displayName: string;
@@ -75,7 +76,7 @@ export function OrganizationVisibilitySettings({
 
   const fetchSettings = useCallback(async () => {
     try {
-      const response = await fetch(`/api/organizations/${orgId}/visibility`);
+      const response = await apiFetch(`/api/organizations/${orgId}/visibility`);
       if (response.ok) {
         const data = await response.json();
         if (data.visibility) {
@@ -101,7 +102,7 @@ export function OrganizationVisibilitySettings({
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const response = await fetch(`/api/organizations/${orgId}/visibility`, {
+      const response = await apiFetch(`/api/organizations/${orgId}/visibility`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings),

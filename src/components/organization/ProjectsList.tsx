@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
+import { apiFetch } from '@/lib/api/fetch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
@@ -60,7 +61,7 @@ export function ProjectsList({ orgId, canEdit = true }: ProjectsListProps) {
 
   const fetchProjects = async () => {
     try {
-      const response = await fetch(`/api/organizations/${orgId}/projects`);
+      const response = await apiFetch(`/api/organizations/${orgId}/projects`);
       if (!response.ok) {
         throw new Error('Failed to fetch projects');
       }
@@ -86,7 +87,7 @@ export function ProjectsList({ orgId, canEdit = true }: ProjectsListProps) {
 
       const method = project.id ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(project),
@@ -113,7 +114,7 @@ export function ProjectsList({ orgId, canEdit = true }: ProjectsListProps) {
 
   const handleDelete = async (id: string) => {
     try {
-      const response = await fetch(`/api/organizations/${orgId}/projects/${id}`, {
+      const response = await apiFetch(`/api/organizations/${orgId}/projects/${id}`, {
         method: 'DELETE',
       });
 

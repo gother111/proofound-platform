@@ -7,17 +7,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertTriangle, Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface DeleteAccountProps {
   userId: string;
 }
 
 interface AccountStatus {
-  accountStatus: 'active' | 'deletion_scheduled' | 'deleted';
+  accountStatus: 'active' | 'deleted';
   deletionRequestedAt: string | null;
-  deletionScheduledFor: string | null;
-  daysRemaining: number | null;
-  canCancelDeletion: boolean;
 }
 
 export function DeleteAccount({ userId }: DeleteAccountProps) {
@@ -28,7 +26,6 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
   const [reason, setReason] = useState('');
   const [confirmText, setConfirmText] = useState('');
   const [deleting, setDeleting] = useState(false);
-  const [cancelling, setCancelling] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -38,7 +35,7 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
 
   const fetchAccountStatus = async () => {
     try {
-      const response = await fetch('/api/user/account');
+      const response = await apiFetch('/api/user/account');
       if (!response.ok) {
         throw new Error('Failed to fetch account status');
       }
@@ -52,8 +49,8 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
   };
 
   const handleDeleteRequest = async () => {
-    if (confirmText !== 'DELETE') {
-      setError('Please type DELETE to confirm');
+    if (confirmText !== 'DELETE MY ACCOUNT') {
+      setError('Please type DELETE MY ACCOUNT to confirm');
       return;
     }
 
@@ -66,13 +63,14 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
     setError(null);
 
     try {
-      const response = await fetch('/api/user/account', {
+      const response = await apiFetch('/api/user/account', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           password,
+          confirmPhrase: confirmText,
           reason: reason || undefined,
         }),
       });
@@ -80,50 +78,17 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to schedule deletion');
+        throw new Error(data.message || 'Failed to delete account');
       }
 
-      setSuccess('Account deletion scheduled successfully');
+      setSuccess('Your account has been deleted permanently.');
       setShowConfirmDialog(false);
       await fetchAccountStatus();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to schedule deletion');
+      setError(err instanceof Error ? err.message : 'Failed to delete account');
     } finally {
       setDeleting(false);
     }
-  };
-
-  const handleCancelDeletion = async () => {
-    setCancelling(true);
-    setError(null);
-
-    try {
-      const response = await fetch('/api/user/account/cancel-deletion', {
-        method: 'POST',
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to cancel deletion');
-      }
-
-      setSuccess('Account deletion cancelled successfully');
-      await fetchAccountStatus();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to cancel deletion');
-    } finally {
-      setCancelling(false);
-    }
-  };
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-    });
   };
 
   if (loading) {
@@ -138,89 +103,24 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
     );
   }
 
-  // Show deletion scheduled banner
-  if (accountStatus?.accountStatus === 'deletion_scheduled') {
+  // Show deleted state
+  if (accountStatus?.accountStatus === 'deleted') {
     return (
-      <div className="space-y-4">
-        {success && (
-          <Card className="border-green-200 dark:border-green-900 bg-green-50 dark:bg-green-950 rounded-2xl">
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-3">
-                <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5" />
-                <p className="text-sm text-green-800 dark:text-green-300">{success}</p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        <Card className="border-amber-200 dark:border-amber-900 rounded-2xl">
-          <CardHeader>
-            <div className="flex items-start gap-4">
-              <div className="p-3 bg-amber-100 dark:bg-amber-900 rounded-lg">
-                <AlertTriangle className="h-6 w-6 text-amber-600 dark:text-amber-300" />
-              </div>
-              <div className="flex-1">
-                <CardTitle className="text-xl font-['Crimson_Pro'] text-amber-900 dark:text-amber-100">
-                  Account Deletion Scheduled
-                </CardTitle>
-                <CardDescription className="mt-2 text-amber-800 dark:text-amber-200">
-                  Your account will be permanently deleted on{' '}
-                  <strong>{formatDate(accountStatus.deletionScheduledFor)}</strong>
-                </CardDescription>
-              </div>
+      <Card className="border-green-200 dark:border-green-900 bg-green-50 dark:bg-green-950 rounded-2xl">
+        <CardHeader>
+          <div className="flex items-start gap-3">
+            <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400" />
+            <div>
+              <CardTitle className="text-xl font-['Crimson_Pro'] text-green-900 dark:text-green-100">
+                Account Deleted
+              </CardTitle>
+              <CardDescription className="mt-2 text-green-800 dark:text-green-300">
+                Your account and personal data have been deleted. You can close this window.
+              </CardDescription>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-amber-200 dark:border-amber-900">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground">Deletion Requested</p>
-                    <p className="text-sm font-medium">{formatDate(accountStatus.deletionRequestedAt)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground">Days Remaining</p>
-                    <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
-                      {accountStatus.daysRemaining}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-proofound-charcoal dark:text-foreground">
-                  What happens next:
-                </p>
-                <ul className="space-y-1 text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
-                  <li>• You can cancel this request anytime within the next {accountStatus.daysRemaining} days</li>
-                  <li>• You&apos;ll receive a reminder email 7 days before deletion</li>
-                  <li>• After {formatDate(accountStatus.deletionScheduledFor)}, your account will be permanently anonymized</li>
-                  <li>• All your PII will be removed/replaced with &quot;Deleted User&quot;</li>
-                  <li>• Some data may be retained for 90 days for legal compliance</li>
-                </ul>
-              </div>
-
-              {accountStatus.canCancelDeletion && (
-                <Button
-                  onClick={handleCancelDeletion}
-                  disabled={cancelling}
-                  className="w-full bg-proofound-forest hover:bg-proofound-forest/90"
-                  size="lg"
-                >
-                  {cancelling ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Cancelling...
-                    </>
-                  ) : (
-                    'Cancel Deletion Request'
-                  )}
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardHeader>
+      </Card>
     );
   }
 
@@ -260,7 +160,7 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
                 Delete Your Account
               </CardTitle>
               <CardDescription className="mt-2 text-red-800 dark:text-red-200">
-                This action will permanently delete all your data after a 30-day grace period
+                Permanently delete your account and data immediately. This action cannot be undone.
               </CardDescription>
             </div>
           </div>
@@ -277,17 +177,6 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
                 <li>• Projects, experiences, and impact stories</li>
                 <li>• Match history and conversations</li>
                 <li>• All analytics events</li>
-              </ul>
-            </div>
-
-            <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-900 rounded-lg p-4">
-              <p className="text-sm font-medium text-amber-900 dark:text-amber-100 mb-2">
-                Grace period:
-              </p>
-              <ul className="space-y-1 text-sm text-amber-800 dark:text-amber-200">
-                <li>• You have 30 days to cancel this request</li>
-                <li>• You&apos;ll receive reminder emails before deletion</li>
-                <li>• After 30 days, deletion is permanent and cannot be undone</li>
               </ul>
             </div>
 
@@ -312,7 +201,7 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
               Confirm Account Deletion
             </DialogTitle>
             <DialogDescription className="text-base">
-              This action will schedule your account for permanent deletion in 30 days.
+              This will delete your account and personal data right now. This cannot be undone.
             </DialogDescription>
           </DialogHeader>
 
@@ -344,13 +233,13 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirm">Type &quot;DELETE&quot; to confirm</Label>
+              <Label htmlFor="confirm">Type &quot;DELETE MY ACCOUNT&quot; to confirm</Label>
               <Input
                 id="confirm"
                 type="text"
                 value={confirmText}
                 onChange={(e) => setConfirmText(e.target.value.toUpperCase())}
-                placeholder="DELETE"
+                placeholder="DELETE MY ACCOUNT"
               />
             </div>
 
@@ -376,7 +265,7 @@ export function DeleteAccount({ userId }: DeleteAccountProps) {
             <Button
               variant="destructive"
               onClick={handleDeleteRequest}
-              disabled={deleting || confirmText !== 'DELETE' || !password}
+              disabled={deleting || confirmText !== 'DELETE MY ACCOUNT' || !password}
             >
               {deleting ? (
                 <>

@@ -18,6 +18,7 @@ import {
   Building,
   ClipboardList,
   MessageCircle,
+  UserCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -90,6 +91,7 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
       dataTour: 'assignments',
     },
     { href: `${basePath}/candidates`, icon: Users, label: 'Candidates', dataTour: 'candidates' },
+    { href: `${basePath}/shortlist`, icon: UserCheck, label: 'Shortlist', dataTour: 'shortlist' },
     {
       href: `${basePath}/messages`,
       icon: MessageCircle,

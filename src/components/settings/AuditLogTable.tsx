@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, Download } from 'lucide-react';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface AuditLogTableProps {
   userId: string;
@@ -42,7 +43,7 @@ export function AuditLogTable({ userId }: AuditLogTableProps) {
         setLoading(true);
       }
 
-      const response = await fetch(`/api/user/audit-log?limit=${limit}&offset=${newOffset}`);
+      const response = await apiFetch(`/api/user/audit-log?limit=${limit}&offset=${newOffset}`);
       if (!response.ok) {
         throw new Error('Failed to fetch audit log');
       }

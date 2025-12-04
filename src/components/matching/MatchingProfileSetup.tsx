@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { apiFetch } from '@/lib/api/fetch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
@@ -54,9 +55,9 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
     const fetchTaxonomies = async () => {
       try {
         const [valuesRes, causesRes, skillsRes] = await Promise.all([
-          fetch('/api/taxonomy/values'),
-          fetch('/api/taxonomy/causes'),
-          fetch('/api/taxonomy/skills'),
+          apiFetch('/api/taxonomy/values'),
+          apiFetch('/api/taxonomy/causes'),
+          apiFetch('/api/taxonomy/skills'),
         ]);
 
         const [valuesData, causesData, skillsData] = await Promise.all([
@@ -126,7 +127,7 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('/api/matching-profile', {
+      const response = await apiFetch('/api/matching-profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

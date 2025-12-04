@@ -29,6 +29,7 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { apiFetch } from '@/lib/api/fetch';
 
 // Type definitions
 interface ImpactSnapshot {
@@ -77,7 +78,7 @@ export function ImpactSnapshotCard() {
         setIsLoading(true);
         setError(null);
 
-        const response = await fetch('/api/impact/snapshot');
+        const response = await apiFetch('/api/impact/snapshot');
 
         if (!response.ok) {
           throw new Error('Failed to fetch impact snapshot');

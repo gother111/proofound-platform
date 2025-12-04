@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { CheckCircle2, Mail, Loader2, AlertCircle } from 'lucide-react';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface WorkEmailVerificationFormProps {
   onSuccess: () => void;
@@ -40,7 +41,7 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
   const fetchOrganizations = async () => {
     try {
       setLoadingOrgs(true);
-      const response = await fetch('/api/organizations');
+      const response = await apiFetch('/api/organizations');
       
       if (!response.ok) {
         throw new Error('Failed to fetch organizations');
@@ -104,7 +105,7 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
     setError(null);
     
     try {
-      const response = await fetch('/api/verification/work-email/send', {
+      const response = await apiFetch('/api/verification/work-email/send', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

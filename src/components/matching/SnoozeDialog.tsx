@@ -19,6 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { BellOff, Calendar, Clock } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface SnoozeDialogProps {
   open: boolean;
@@ -47,7 +48,7 @@ export function SnoozeDialog({
   const handleSnooze = async () => {
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/matches/${matchId}/snooze`, {
+      const response = await apiFetch(`/api/matches/${matchId}/snooze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

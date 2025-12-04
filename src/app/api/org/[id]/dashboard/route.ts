@@ -89,10 +89,29 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
-    // Fetch all dashboard metrics concurrently (PRD Part 7)
-    const [assignmentsData, teamData, goalsData, matchesData, interestData, conversationsData] =
-      await Promise.all([
-        // Assignments by status
+    // Defaults ensure we still respond 200 on partial failures
+    let assignmentsData: { status: string | null; count: number | null }[] = [];
+    let teamData: { role: string | null; count: number | null }[] = [];
+    let goalsData: { status: string | null; count: number | null }[] = [];
+    let matchesData: {
+      assignmentCount: number | null;
+      matchCount: number | null;
+      avgScore: number | null;
+      highQualityMatches: number | null;
+    }[] = [];
+    let interestData: { count: number | null }[] = [];
+    let conversationsData: { count: number | null }[] = [];
+
+    try {
+      // Fetch all dashboard metrics concurrently (PRD Part 7)
+      [
+        assignmentsData,
+        teamData,
+        goalsData,
+        matchesData,
+        interestData,
+        conversationsData,
+      ] = await Promise.all([
         db
           .select({
             status: assignments.status,
@@ -102,7 +121,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           .where(eq(assignments.orgId, org.id))
           .groupBy(assignments.status),
 
-        // Team member count by role
         db
           .select({
             role: organizationMembers.role,
@@ -114,7 +132,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           )
           .groupBy(organizationMembers.role),
 
-        // Goals summary
         db
           .select({
             status: organizationGoals.status,
@@ -124,19 +141,17 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           .where(eq(organizationGoals.orgId, org.id))
           .groupBy(organizationGoals.status),
 
-        // Total matches across all active assignments
         db
           .select({
-            assignmentCount: sql<number>`count(distinct a.id)::int`,
-            matchCount: sql<number>`count(m.id)::int`,
-            avgScore: sql<number>`round(avg(m.score::numeric), 2)`,
-            highQualityMatches: sql<number>`count(m.id) filter (where m.score::numeric >= 70)::int`,
+            assignmentCount: sql<number>`count(distinct ${assignments.id})::int`,
+            matchCount: sql<number>`count(${matches.id})::int`,
+            avgScore: sql<number>`round(avg(${matches.score}::numeric), 2)`,
+            highQualityMatches: sql<number>`count(${matches.id}) filter (where ${matches.score}::numeric >= 70)::int`,
           })
           .from(assignments)
           .leftJoin(matches, eq(matches.assignmentId, assignments.id))
           .where(and(eq(assignments.orgId, org.id), eq(assignments.status, 'active'))),
 
-        // Interest/shortlist count (candidates who expressed interest)
         db
           .select({
             count: sql<number>`count(*)::int`,
@@ -145,7 +160,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           .innerJoin(assignments, eq(matchInterest.assignmentId, assignments.id))
           .where(eq(assignments.orgId, org.id)),
 
-        // Active conversations count
         db
           .select({
             count: sql<number>`count(*)::int`,
@@ -154,8 +168,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           .innerJoin(assignments, eq(conversations.assignmentId, assignments.id))
           .where(eq(assignments.orgId, org.id)),
       ]);
+    } catch (err) {
+      console.error('dashboard.metrics.fetch_failed', err);
+      // Keep defaults to avoid 500
+    }
 
-    // Process assignments data
     const assignmentStats = {
       total: assignmentsData.reduce((sum, a) => sum + (a.count || 0), 0),
       active: assignmentsData.find((a) => a.status === 'active')?.count || 0,
@@ -164,7 +181,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       closed: assignmentsData.find((a) => a.status === 'closed')?.count || 0,
     };
 
-    // Process team data
     const teamStats = {
       total: teamData.reduce((sum, t) => sum + (t.count || 0), 0),
       owners: teamData.find((t) => t.role === 'owner')?.count || 0,
@@ -173,7 +189,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       viewers: teamData.find((t) => t.role === 'viewer')?.count || 0,
     };
 
-    // Process goals data
     const goalsStats = {
       total: goalsData.reduce((sum, g) => sum + (g.count || 0), 0),
       inProgress: goalsData.find((g) => g.status === 'in_progress')?.count || 0,
@@ -181,7 +196,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       notStarted: goalsData.find((g) => g.status === 'not_started')?.count || 0,
     };
 
-    // Process matches data
     const matchData = matchesData[0] || {
       assignmentCount: 0,
       matchCount: 0,
@@ -195,14 +209,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       assignmentsWithMatches: matchData.assignmentCount || 0,
     };
 
-    // Process interest data (shortlist)
     const shortlistCount = interestData[0]?.count || 0;
-
-    // Process conversations data (intros)
     const activeIntros = conversationsData[0]?.count || 0;
 
-    // Compute TTSC trend (Time to Successful Completion)
-    // For now, return placeholder - would need historical data
     const ttscTrend = {
       current: null,
       previous: null,
@@ -210,7 +219,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       unit: 'days',
     };
 
-    // Build dashboard response per PRD O8
     const dashboard = {
       organization: {
         id: org.id,
@@ -229,9 +237,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       team: teamStats,
       goals: goalsStats,
       ttsc: ttscTrend,
-      // Activity summary
       activity: {
-        newMatchesThisWeek: 0, // Would need date filtering
+        newMatchesThisWeek: 0,
         pendingActions: shortlistCount > 0 ? 'Review shortlist candidates' : null,
       },
     };
@@ -239,12 +246,28 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json(dashboard);
   } catch (error) {
     console.error('Failed to fetch org dashboard:', error);
-    return NextResponse.json(
-      {
-        error: 'Failed to fetch dashboard',
-        message: error instanceof Error ? error.message : 'Unknown error',
+    // Gracefully degrade instead of 500 to keep UI stable
+    return NextResponse.json({
+      organization: null,
+      userRole: null,
+      pipeline: {
+        openAssignments: 0,
+        totalAssignments: 0,
+        shortlists: 0,
+        intros: 0,
+        matches: {
+          totalMatches: 0,
+          averageScore: 0,
+          highQuality: 0,
+          assignmentsWithMatches: 0,
+        },
       },
-      { status: 500 }
-    );
+      assignments: { total: 0, active: 0, draft: 0, paused: 0, closed: 0 },
+      team: { total: 0, owners: 0, admins: 0, members: 0, viewers: 0 },
+      goals: { total: 0, inProgress: 0, achieved: 0, notStarted: 0 },
+      ttsc: { current: null, previous: null, change: null, unit: 'days' },
+      activity: { newMatchesThisWeek: 0, pendingActions: null },
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
 }

@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
     let hasSignificantGaps = false;
     let minPValue = 1.0;
 
-    const cohorts = cohortData.rows as any[];
+    const cohorts = cohortData as any[];
 
     if (cohorts.length < 2) {
       log.info('fairness-note.cron.insufficient-data', {

@@ -33,6 +33,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { apiFetch } from '@/lib/api/fetch';
 
 // Type definitions
 interface Project {
@@ -103,7 +104,7 @@ export function ProjectsCard() {
         setIsLoading(true);
         setError(null);
 
-        const response = await fetch('/api/projects?limit=5');
+        const response = await apiFetch('/api/projects?limit=5');
 
         if (!response.ok) {
           throw new Error('Failed to fetch projects');

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Download, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface EvidencePackExportProps {
   organizationId: string;
@@ -56,7 +57,7 @@ export function EvidencePackExport({ organizationId, organizationName }: Evidenc
     try {
       const dateParams = getDateRangeParams();
 
-      const response = await fetch('/api/evidence-pack', {
+      const response = await apiFetch('/api/evidence-pack', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

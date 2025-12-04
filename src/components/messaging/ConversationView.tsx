@@ -18,6 +18,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { CheckCheck, Check, Mail, Phone, Link2 } from 'lucide-react';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface Message {
   id: string;
@@ -88,7 +89,7 @@ export function ConversationView({ conversationId }: ConversationViewProps) {
 
   const fetchConversation = async () => {
     try {
-      const res = await fetch(`/api/conversations/${conversationId}`);
+      const res = await apiFetch(`/api/conversations/${conversationId}`);
       if (!res.ok) throw new Error('Failed to fetch conversation');
 
       const data = await res.json();
@@ -102,7 +103,7 @@ export function ConversationView({ conversationId }: ConversationViewProps) {
   const fetchMessages = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/conversations/${conversationId}/messages?limit=100`);
+      const res = await apiFetch(`/api/conversations/${conversationId}/messages?limit=100`);
       if (!res.ok) throw new Error('Failed to fetch messages');
 
       const data = await res.json();
@@ -118,7 +119,7 @@ export function ConversationView({ conversationId }: ConversationViewProps) {
     try {
       setSendingMessage(true);
 
-      const res = await fetch(`/api/conversations/${conversationId}/messages`, {
+      const res = await apiFetch(`/api/conversations/${conversationId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content, piiWarningShown }),
@@ -153,7 +154,7 @@ export function ConversationView({ conversationId }: ConversationViewProps) {
 
   const handleRevealIdentities = async () => {
     try {
-      const res = await fetch(`/api/conversations/${conversationId}/reveal`, {
+      const res = await apiFetch(`/api/conversations/${conversationId}/reveal`, {
         method: 'POST',
       });
 

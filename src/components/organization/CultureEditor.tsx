@@ -8,6 +8,7 @@ import { WorkNormsForm } from './WorkNormsForm';
 import { AccessibilityCommitments } from './AccessibilityCommitments';
 import { toast } from 'sonner';
 import { Coffee, Heart, AlertCircle, Save } from 'lucide-react';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface WorkNorms {
   asyncSyncBalance?: number;
@@ -67,7 +68,7 @@ export function CultureEditor({ orgId, initialCulture, canEdit = true }: Culture
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const response = await fetch(`/api/organizations/${orgId}/culture`, {
+      const response = await apiFetch(`/api/organizations/${orgId}/culture`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(culture),

@@ -10,34 +10,12 @@ import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { fairnessNotes } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { adminListGuard } from '../../_utils';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ version: string }> }) {
   try {
-    const supabase = await createClient();
-
-    // Check authentication
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if user is admin
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('platform_role')
-      .eq('id', user.id)
-      .single();
-
-    if (
-      !profile?.platform_role ||
-      !['platform_admin', 'super_admin'].includes(profile.platform_role)
-    ) {
-      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
-    }
+    const guardResult = await adminListGuard(request);
+    if (guardResult instanceof NextResponse) return guardResult;
 
     const { version } = await params;
 

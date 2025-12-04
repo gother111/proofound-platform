@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Sparkles, CheckCircle2, X, Info } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface JDSkillSuggestion {
   l4_id: string;
@@ -44,7 +45,7 @@ export function JDMapper({ onSkillsSelected }: JDMapperProps) {
 
     setIsProcessing(true);
     try {
-      const response = await fetch('/api/expertise/jd-to-l4', {
+      const response = await apiFetch('/api/expertise/jd-to-l4', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ jdText }),
