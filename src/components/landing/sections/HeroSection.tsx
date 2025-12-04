@@ -103,13 +103,13 @@ export function HeroSection({ onGetStarted, shouldReduceMotion }: HeroSectionPro
           transition={{ duration: 1.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
           className="relative mt-10 lg:mt-0 flex items-center justify-center lg:justify-end"
         >
-          {/* Container scales with viewport while maintaining image aspect ratio (532:1024 ≈ 1:1.92) */}
-          <div className="relative w-[280px] h-[540px] sm:w-[340px] sm:h-[655px] md:w-[400px] md:h-[770px] lg:w-[420px] lg:h-[810px] xl:w-[480px] xl:h-[925px] 2xl:w-[532px] 2xl:h-[1024px] drop-shadow-2xl">
+          {/* Container scales with viewport, max-height relative to viewport for large screens */}
+          <div className="relative w-full max-w-[320px] sm:max-w-[380px] md:max-w-[450px] lg:max-w-[500px] xl:max-w-[600px] 2xl:max-w-[700px] aspect-[532/1024] drop-shadow-2xl">
             <Image
               src="/hero-shape.png"
               alt="Abstract organic sculpture"
               fill
-              sizes="(min-width: 1536px) 532px, (min-width: 1280px) 480px, (min-width: 1024px) 420px, (min-width: 768px) 400px, (min-width: 640px) 340px, 280px"
+              sizes="(min-width: 1536px) 700px, (min-width: 1280px) 600px, (min-width: 1024px) 500px, (min-width: 768px) 450px, (min-width: 640px) 380px, 320px"
               className="object-contain"
               priority
             />
