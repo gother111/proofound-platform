@@ -6,11 +6,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { fairnessNotes } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-import { adminListGuard } from '../../_utils';
+import { adminListGuard } from '../../../_utils';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ version: string }> }) {
   try {
