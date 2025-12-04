@@ -27,7 +27,8 @@ jobs:
         NEXT_PUBLIC_SUPABASE_URL: 'http://localhost:54321/mock'
         NEXT_PUBLIC_SUPABASE_ANON_KEY: 'demo-anon-key'
         NEXT_PUBLIC_SITE_URL: 'http://localhost:3000'
-        DATABASE_URL: ${{ secrets.DATABASE_URL }} # Optional if we mock DB access too or use a service container
+        # Required for Next.js dev server; falls back to a local DSN when secret is missing
+        DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://postgres:postgrespassword@127.0.0.1:5432/proofound' }}
     - uses: actions/upload-artifact@v4
       if: always()
       with:
