@@ -5,6 +5,8 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  # Allow manual or API-triggered runs (required for MCP)
+  workflow_dispatch:
 
 jobs:
   test:
@@ -19,16 +21,19 @@ jobs:
       run: npm ci
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
-    - name: Run Playwright tests
-      run: npx playwright test
+    - name: Run Playwright tests (uses real Supabase)
+      run: |
+        # Fall back to local Postgres when the secret is not provided
+        export DATABASE_URL="${DATABASE_URL:-postgresql://postgres:postgrespassword@127.0.0.1:5432/proofound}"
+        npx playwright test
       env:
-        NEXT_PUBLIC_USE_MOCK_SUPABASE: 'true'
-        # Dummy Supabase creds are still required even when mocks are enabled
-        NEXT_PUBLIC_SUPABASE_URL: 'http://localhost:54321/mock'
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: 'demo-anon-key'
+        # Real Supabase values should come from repo secrets or env vars
+        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         NEXT_PUBLIC_SITE_URL: 'http://localhost:3000'
-        # Required for Next.js dev server; falls back to a local DSN when secret is missing
-        DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://postgres:postgrespassword@127.0.0.1:5432/proofound' }}
+        # Pull from secret when available; shell fallback handles missing secret
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
     - uses: actions/upload-artifact@v4
       if: always()
       with:
