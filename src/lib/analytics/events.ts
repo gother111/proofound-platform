@@ -38,6 +38,7 @@ export type EventType =
   | 'match_actioned' // Added missing type
   | 'first_match_shown'
   | 'first_qualified_intro' // Added missing type
+  | 'ttfqi_warning_emitted'
 
   // Interview events
   | 'interview_scheduled'

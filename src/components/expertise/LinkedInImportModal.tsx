@@ -15,6 +15,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { AlertCircle, Check, X, Linkedin, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface SkillSuggestion {
   linkedInSkillName: string;
@@ -126,7 +127,7 @@ export function LinkedInImportModal({
         if (!suggestion.matchedSkill) continue;
 
         try {
-          const response = await fetch('/api/expertise/user-skills', {
+          const response = await apiFetch('/api/expertise/user-skills', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

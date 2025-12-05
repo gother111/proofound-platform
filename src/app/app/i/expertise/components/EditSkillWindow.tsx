@@ -27,6 +27,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+import { apiFetch } from '@/lib/api/fetch';
 
 const LEVEL_LABELS = [
   { value: 1, label: 'Novice', description: 'Learning the basics' },
@@ -106,7 +107,7 @@ export function EditSkillWindow({
         // Load proofs from API
         setLoadingProofs(true);
         try {
-          const response = await fetch(`/api/expertise/user-skills/${skill.id}/proofs`);
+          const response = await apiFetch(`/api/expertise/user-skills/${skill.id}/proofs`);
           if (response.ok) {
             const data = await response.json();
             setProofs(data.proofs || []);
@@ -120,7 +121,7 @@ export function EditSkillWindow({
         // Load verification requests from API
         setLoadingVerifications(true);
         try {
-          const verifyResponse = await fetch(
+          const verifyResponse = await apiFetch(
             `/api/expertise/user-skills/${skill.id}/verification-request`
           );
           if (verifyResponse.ok) {
@@ -149,7 +150,7 @@ export function EditSkillWindow({
         relevance,
       };
 
-      const response = await fetch(`/api/expertise/user-skills/${skill.id}`, {
+      const response = await apiFetch(`/api/expertise/user-skills/${skill.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -188,7 +189,7 @@ export function EditSkillWindow({
 
     setDeleting(true);
     try {
-      const response = await fetch(`/api/expertise/user-skills/${skill.id}`, {
+      const response = await apiFetch(`/api/expertise/user-skills/${skill.id}`, {
         method: 'DELETE',
       });
 
@@ -226,7 +227,7 @@ export function EditSkillWindow({
 
     setAddingProof(true);
     try {
-      const response = await fetch(`/api/expertise/user-skills/${skill.id}/proofs`, {
+      const response = await apiFetch(`/api/expertise/user-skills/${skill.id}/proofs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newProof),
@@ -268,9 +269,12 @@ export function EditSkillWindow({
     if (!skill) return;
 
     try {
-      const response = await fetch(`/api/expertise/user-skills/${skill.id}/proofs/${proofId}`, {
-        method: 'DELETE',
-      });
+      const response = await apiFetch(
+        `/api/expertise/user-skills/${skill.id}/proofs/${proofId}`,
+        {
+          method: 'DELETE',
+        }
+      );
 
       if (response.ok) {
         setProofs(proofs.filter((p) => p.id !== proofId));
@@ -298,11 +302,14 @@ export function EditSkillWindow({
 
     setRequestingVerification(true);
     try {
-      const response = await fetch(`/api/expertise/user-skills/${skill.id}/verification-request`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newVerificationRequest),
-      });
+      const response = await apiFetch(
+        `/api/expertise/user-skills/${skill.id}/verification-request`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newVerificationRequest),
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();

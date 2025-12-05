@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { FileText, Briefcase, Sparkles, Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface Suggestion {
   id: string;           // skill code
@@ -90,7 +91,7 @@ export function CVJDAutoSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
 
       for (const skill of skillsToAdd) {
         try {
-          const response = await fetch('/api/expertise/user-skills', {
+          const response = await apiFetch('/api/expertise/user-skills', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

@@ -17,6 +17,7 @@ import {
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { apiFetch } from '@/lib/api/fetch';
 
 // L1 Domain colors (matching L1Grid)
 const DOMAIN_COLORS: Record<number, { bg: string; border: string; text: string; icon: string }> = {
@@ -485,7 +486,7 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
         payload.custom_skill_name = l4Search;
       }
 
-      const response = await fetch('/api/expertise/user-skills', {
+      const response = await apiFetch('/api/expertise/user-skills', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -498,7 +499,7 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
         let proofAttached = false;
         if (proofUrl && skillData.skill?.id) {
           try {
-            const proofResponse = await fetch(
+            const proofResponse = await apiFetch(
               `/api/expertise/user-skills/${skillData.skill.id}/proofs`,
               {
                 method: 'POST',

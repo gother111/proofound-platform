@@ -10,9 +10,9 @@ import {
   matches,
   organizations,
 } from '@/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, inArray, sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
-import { emitAssignmentPublished } from '@/lib/analytics/events';
+import { emitAssignmentPublished, emitAnalyticsEvent } from '@/lib/analytics/events';
 import { notifyAssignmentPublished } from '@/lib/notifications';
 import { triggerFirstAssignmentSurvey } from '@/lib/surveys/sus-triggers';
 import {
@@ -324,8 +324,69 @@ export async function GET(request: NextRequest) {
     const hasMore = orgAssignments.length > limit;
     const assignmentsToReturn = hasMore ? orgAssignments.slice(0, limit) : orgAssignments;
 
+    // -----------------------------------------------------------------------
+    // PRD safeguard: TTFQI 72h warning if <5 matches after 72 hours
+    // -----------------------------------------------------------------------
+    const activeAssignments = assignmentsToReturn.filter((a: any) => a.status === 'active');
+    const assignmentIds = activeAssignments.map((a: any) => a.id);
+
+    let matchCounts: Record<string, number> = {};
+
+    if (assignmentIds.length > 0) {
+      const rows = await db
+        .select({
+          assignmentId: matches.assignmentId,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(matches)
+        .where(inArray(matches.assignmentId, assignmentIds))
+        .groupBy(matches.assignmentId);
+
+      matchCounts = rows.reduce((acc, row) => {
+        acc[row.assignmentId] = row.count;
+        return acc;
+      }, {} as Record<string, number>);
+    }
+
+    const now = Date.now();
+    const itemsWithWarnings = await Promise.all(
+      assignmentsToReturn.map(async (assignment: any) => {
+        const ageHours = (now - new Date(assignment.createdAt).getTime()) / (1000 * 60 * 60);
+        const count = matchCounts[assignment.id] ?? 0;
+        const warn =
+          assignment.status === 'active' && ageHours >= 72 && count < 5
+            ? {
+                code: 'ttfqi_warning',
+                message: 'Fewer than 5 matches after 72h. Broaden constraints or relax gates.',
+                matchesCount: count,
+                ageHours: Math.round(ageHours),
+              }
+            : null;
+
+        if (warn) {
+          try {
+            await emitAnalyticsEvent({
+              eventType: 'ttfqi_warning_emitted',
+              userId: user.id,
+              organizationId: assignment.orgId,
+              entityType: 'assignment',
+              entityId: assignment.id,
+              properties: warn,
+            });
+          } catch (e) {
+            debugLog(`Failed to emit ttfqi_warning for ${assignment.id}: ${e}`);
+          }
+        }
+
+        return {
+          ...assignment,
+          ttfqiWarning: warn,
+        };
+      })
+    );
+
     return NextResponse.json({
-      items: assignmentsToReturn,
+      items: itemsWithWarnings,
       hasMore,
       nextOffset: hasMore ? offset + limit : null,
     });

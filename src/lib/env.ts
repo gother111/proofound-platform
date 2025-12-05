@@ -161,13 +161,13 @@ export function getEnv(
 
   if (strict && missing.length) {
     const msg =
-      `Missing required environment variables: ${missing.join(', ')}.\n\n` +
+      `Missing required environment variables (${missing.join(', ')}). The app will fail in production without them.\n\n` +
       `How to fix:\n` +
       `- Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY (or SUPABASE_URL/SUPABASE_ANON_KEY) in your hosting env.\n` +
       `- Set NEXT_PUBLIC_SITE_URL (or SITE_URL) to your deployed domain (e.g., https://your-domain.tld).\n` +
       (allowMocks
         ? ''
-        : `- Set DATABASE_URL (or SUPABASE_DB_URL/POSTGRES_URL) to your Postgres connection string (e.g., from Supabase; Prefer ?sslmode=require).\n`) +
+        : `- Set DATABASE_URL (or SUPABASE_DB_URL/POSTGRES_URL) to your Postgres connection string (prefer ?sslmode=require). Drizzle migrations can use DIRECT_URL; if not set, DATABASE_URL is used.\n`) +
       `- In Supabase → Auth → URL configuration, set Site URL to NEXT_PUBLIC_SITE_URL and add redirect paths: /auth/callback, /reset-password/confirm, /verify-email.` +
       (allowMocks
         ? `\n- Note: Mocks are enabled (NEXT_PUBLIC_USE_MOCK_SUPABASE=true), so DATABASE_URL is not required.`

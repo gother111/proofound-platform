@@ -10,6 +10,15 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ provider: string }> }) {
   try {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+
+    if (!appUrl) {
+      return NextResponse.json(
+        { error: 'Missing NEXT_PUBLIC_APP_URL. Set it to your site base URL (e.g., https://yourdomain.com).' },
+        { status: 500 }
+      );
+    }
+
     const supabase = await createClient();
     const {
       data: { user },
@@ -26,18 +35,37 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ prov
       return NextResponse.json({ error: 'Invalid provider' }, { status: 400 });
     }
 
-    // In production, generate OAuth URLs:
-    // Zoom: https://zoom.us/oauth/authorize
-    // Google: https://accounts.google.com/o/oauth2/v2/auth
-
-    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/integrations/video/${provider}/callback`;
-
     let authUrl: string;
 
     if (provider === 'zoom') {
-      authUrl = `https://zoom.us/oauth/authorize?response_type=code&client_id=${process.env.ZOOM_CLIENT_ID}&redirect_uri=${redirectUri}`;
+      const zoomClientId = process.env.ZOOM_CLIENT_ID;
+      const zoomRedirectUri = process.env.ZOOM_REDIRECT_URI;
+
+      if (!zoomClientId || !zoomRedirectUri) {
+        return NextResponse.json(
+          {
+            error:
+              'Zoom OAuth is not configured. Set ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET, ZOOM_REDIRECT_URI, and NEXT_PUBLIC_APP_URL.',
+          },
+          { status: 500 }
+        );
+      }
+
+      authUrl = `https://zoom.us/oauth/authorize?response_type=code&client_id=${zoomClientId}&redirect_uri=${zoomRedirectUri}`;
     } else {
-      authUrl = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${redirectUri}&scope=https://www.googleapis.com/auth/calendar.events`;
+      const googleClientId = process.env.GOOGLE_CLIENT_ID;
+      const redirectUri = `${appUrl}/api/integrations/video/${provider}/callback`;
+
+      if (!googleClientId) {
+        return NextResponse.json(
+          {
+            error: 'Google OAuth is not configured. Set GOOGLE_CLIENT_ID and NEXT_PUBLIC_APP_URL.',
+          },
+          { status: 500 }
+        );
+      }
+
+      authUrl = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${googleClientId}&redirect_uri=${redirectUri}&scope=https://www.googleapis.com/auth/calendar.events`;
     }
 
     return NextResponse.json({ authUrl });

@@ -35,12 +35,17 @@ import { batchGetMissionVisionScoresForProfile } from '@/lib/matching/semantic';
 
 export const dynamic = 'force-dynamic';
 
-// Validation schema
+// Validation schemas
 const MatchRequestSchema = z.object({
   weights: z.record(z.number()).optional(),
   mode: z.enum(['mission-first', 'skills-first', 'balanced']).optional(),
   useSemanticMatching: z.boolean().optional(), // Enable semantic PAC scoring
   k: z.number().positive().max(100).optional(), // Top k results
+});
+
+// Extended schema for service-role calls (cron refresh) that pass a target userId
+const ServiceMatchRequestSchema = MatchRequestSchema.extend({
+  userId: z.string().uuid(),
 });
 
 interface MatchResult {
@@ -71,11 +76,16 @@ export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
   try {
-    const user = await requireAuth();
-    const body = await request.json();
+    // Allow service-role cron calls to compute matches for a specific userId
+    const authHeader = request.headers.get('authorization');
+    const isServiceRoleCall =
+      authHeader && process.env.SUPABASE_SERVICE_ROLE_KEY
+        ? authHeader === `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`
+        : false;
 
-    // Validate input
-    const validatedData = MatchRequestSchema.parse(body);
+    const body = await request.json();
+    const validatedData = (isServiceRoleCall ? ServiceMatchRequestSchema : MatchRequestSchema).parse(body);
+    const user = isServiceRoleCall ? { id: validatedData.userId } : await requireAuth();
     const { mode, k = 20, useSemanticMatching = false } = validatedData;
 
     // Fetch user's matching profile (with caching)

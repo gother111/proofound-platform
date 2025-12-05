@@ -44,6 +44,38 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
 
+      - name: Start app server (background)
+        run: |
+          npm run start -- -p 3000 > /tmp/next.log 2>&1 &
+          echo $! > /tmp/next_pid
+          # simple wait for health
+          for i in {1..30}; do
+            if curl -fsS http://localhost:3000/api/health >/dev/null; then
+              echo "App is up"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "App did not become healthy" && cat /tmp/next.log && exit 1
+
+      - name: Run performance budgets (TTI/CLS/API p95)
+        env:
+          BASE_URL: http://localhost:3000
+        run: npm run perf:budgets
+
+      - name: Go / No-Go gates
+        env:
+          BASE_URL: http://localhost:3000
+          SUS_STUDY_COMPLETE: "true"
+        run: npm run go:no-go
+
+      - name: Stop app server
+        if: always()
+        run: |
+          if [ -f /tmp/next_pid ]; then
+            kill "$(cat /tmp/next_pid)" || true
+          fi
+
   e2e:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'run-e2e')

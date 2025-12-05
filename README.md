@@ -13,7 +13,7 @@ Proofound is a platform built for authenticity, not algorithms. It features:
 
 ## Tech Stack
 
-- **Framework**: Next.js 14 (App Router) + TypeScript + React Server Components
+- **Framework**: Next.js 15 (App Router) + TypeScript + React Server Components
 - **Styling**: Tailwind CSS + shadcn/ui (Radix primitives)
 - **Database**: Supabase Postgres + Drizzle ORM
 - **Auth**: Supabase Auth (email/password + magic link)
@@ -81,6 +81,15 @@ EMAIL_FROM="Proofound <no-reply@proofound.com>"
 # Rate Limiting
 RATE_LIMIT_WINDOW_SECONDS=60
 RATE_LIMIT_MAX=30
+
+# Sentry (error monitoring)
+SENTRY_DSN=
+SENTRY_ORG=
+SENTRY_PROJECT=
+SENTRY_AUTH_TOKEN=
+
+# Cron jobs
+CRON_SECRET=your-cron-bearer-token
 ```
 
 > **Heads up:** Once this works locally, open your Vercel project, go to **Settings → Environment Variables**, and add each of the keys above (Production, Preview, and Development tabs). For `DATABASE_URL`, copy the Supabase value from **Project Settings → Database → Connection string → Node.js**.
@@ -104,6 +113,14 @@ npm run db:push
 
 **Important**: Run the SQL files manually in your Supabase SQL Editor to enable RLS and triggers.
 
+**Quick guide to DB scripts:**
+
+- `npm run db:generate` — Create a new migration from schema changes.
+- `npm run db:migrate` — Apply generated migrations locally/CI.
+- `npm run db:push` — Push the current schema directly to the database (bypasses migration files).
+- `npm run db:seed` — Seed feature flags (and demo data when enabled).
+- `npm run db:seed-taxonomy` — Seed the expertise taxonomy slice used by matching.
+
 ### 5. Seed Database (Optional)
 
 ```bash
@@ -122,6 +139,17 @@ This creates feature flags. Demo users should be created via the signup flow.
    - **DMARC**: Add TXT record: `v=DMARC1; p=none; rua=mailto:dmarc@yourdomain.com`
 4. Get your API key from the dashboard
 5. Update `RESEND_API_KEY` and `EMAIL_FROM` in `.env.local`
+
+**Email previews (optional):**
+
+Run `npm run email:dev` to open the React Email preview server. If your Next.js dev server is already on port 3000, pass `--port 3001` (e.g., `npm run email:dev -- --port 3001`).
+
+### 3b. Set Up Sentry (error monitoring)
+
+1. Create a Sentry project (Platform: Next.js).
+2. In Sentry Settings → Projects → Client Keys (DSN), copy the `SENTRY_DSN`.
+3. Add these env vars (local + Vercel): `SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN` (auth token is only for source map upload in CI/build; keep it secret).
+4. Deploy or restart dev to pick up the vars. Errors will be captured via `@sentry/nextjs` wrapping in `next.config.js`.
 
 ### 7. Start Development Server
 
@@ -186,9 +214,39 @@ npm run tokens:sync      # Sync tokens from Figma (requires setup)
 npm run test             # Run unit tests (Vitest)
 npm run test:e2e         # Run E2E tests (Playwright)
 npm run test:e2e:ui      # Run E2E tests with UI
+npm run perf:budgets     # Perf budgets (Lighthouse TTI/CLS + API p95)
+npm run go:no-go         # Go/No-Go gating (perf + SUS flag + RLS/a11y evidence)
 ```
 
 > **Troubleshooting:** If `npm run lint` reports that `next` cannot be found, follow the steps in [`docs/TROUBLESHOOTING_LINT.md`](docs/TROUBLESHOOTING_LINT.md).
+
+## Cron Jobs (Ops Quick Reference)
+
+- Primary scheduler: Vercel Cron. Optional monitor/fallback: cron-job.org hitting the same URLs.
+- Auth: all cron routes require `Authorization: Bearer ${CRON_SECRET}`.
+- Routes and schedules (UTC):
+  - `/api/cron/process-deletions` — 02:00 (permanent deletes after grace period)
+  - `/api/cron/send-deletion-reminders` — 01:00 (7-day reminder emails)
+  - `/api/cron/refresh-matches` — 02:00 (refresh matching profiles)
+- Env requirements:
+  - `CRON_SECRET` (for inbound cron calls)
+  - `SUPABASE_SERVICE_ROLE_KEY` (needed by `refresh-matches` when it POSTs internally to `/api/core/matching/profile`)
+- Observability/optional routes (if scheduled via cron-job.org):
+  - `/api/cron/fairness-note` — weekly (e.g., Sun 03:00) writes to `fairnessNotes`
+  - `/api/cron/fairness-report` — weekly (e.g., Sun 03:30) writes to `fairnessReports` (skips if already exists for release)
+  - `/api/cron/sla-enforcement` — daily (e.g., 08:00) expires stale matches/interviews
+  - `/api/cron/performance-check` — daily/hourly (e.g., 06:00) aggregates metrics + checks SLAs
+  - `/api/cron/health-check` — hourly (no auth; uptime/DB/metrics sanity)
+- Tracking & troubleshooting:
+  - cron-job.org History for status/body; enable notifications on non-200.
+  - Vercel function logs for detailed errors.
+  - DB tables: `fairnessNotes`, `fairnessReports` for outputs; other crons rely on logs/status JSON.
+  - Success = 200 JSON; 401 = bad/missing bearer; 500 = code/data/env issue (check logs).
+- Manual test (example):
+  ```bash
+  curl -i -H "Authorization: Bearer $CRON_SECRET" https://proofound.io/api/cron/refresh-matches
+  ```
+- If using cron-job.org: set Method GET, the same URL, and the header `Authorization: Bearer $CRON_SECRET`. Use its notifications/logs for external monitoring.
 
 ## Database Schema
 
@@ -267,6 +325,13 @@ Test scenarios:
 ### A11y Testing
 
 E2E tests include `@axe-core/playwright` for WCAG AA compliance checks on key pages.
+
+### Specialized Tests & Checks
+
+- `npm run test:privacy` (and `:extended`, `:coverage`, `:watch`) — Supabase RLS/Privacy suites.
+- `npm run test:a11y` — Playwright accessibility-only suite.
+- `npm run perf:budgets` — Lighthouse-based performance budget check.
+- `npm run go:no-go` — Composite gate (perf + a11y + readiness signals).
 
 ## Deployment
 
@@ -464,8 +529,8 @@ MIT License - see LICENSE file for details
 
 ### Team Contacts
 
-- **Pavlo Samoshko** (CEO, Product) - pavlo@proofound.io
-- **Yurii Bakurov** (Technical Lead) - yurii@proofound.io
+- **Pavlo Samoshko** (CEO, Product) - pavlo.samoshko@proofound.io
+- **Yurii Bakurov** (Technical Lead) - yurii.bakurov@proofound.io
 
 ---
 

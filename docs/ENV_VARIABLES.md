@@ -27,6 +27,12 @@ NEXT_PUBLIC_SITE_URL=https://proofound.com
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxxx
 EMAIL_FROM="Proofound <no-reply@proofound.com>"
 CRON_SECRET=your_secure_random_token_here
+ZOOM_CLIENT_ID=your_zoom_client_id
+ZOOM_CLIENT_SECRET=your_zoom_client_secret
+ZOOM_REDIRECT_URI=https://yourdomain.com/api/integrations/video/zoom/callback
+NEXT_PUBLIC_APP_URL=https://yourdomain.com
+GOOGLE_CLIENT_ID=your_google_oauth_client_id
+DIRECT_URL=postgresql://user:pass@host:5432/db  # Optional; Drizzle uses this, otherwise falls back to DATABASE_URL
 
 # ============================================================================
 # OPTIONAL - Enhance functionality
@@ -60,6 +66,7 @@ DATABASE_URL=postgresql://user:password@host:5432/database?sslmode=require
 - Drizzle ORM for database queries
 - All data persistence operations
 - Schema migrations
+- Drizzle migrations also accept `DIRECT_URL`; if set, it is preferred, otherwise `DATABASE_URL` is used.
 
 **Where to Get It**:
 
@@ -310,6 +317,36 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 - ⚠️ Security vulnerability - DOS risk
 
 **Setup Guide**: See [CRON_SETUP.md](./CRON_SETUP.md)
+
+---
+
+### Zoom & Video OAuth
+
+**Purpose**: Enable interview scheduling via Zoom (and Google as an alternative).
+
+**Required Vars**:
+
+- `ZOOM_CLIENT_ID` and `ZOOM_CLIENT_SECRET` — Zoom OAuth app credentials.
+- `ZOOM_REDIRECT_URI` — Must match the redirect URL in your Zoom app (e.g., `https://yourdomain.com/api/integrations/video/zoom/callback`).
+- `NEXT_PUBLIC_APP_URL` — Base site URL used to build OAuth redirects (e.g., `https://yourdomain.com`).
+- `GOOGLE_CLIENT_ID` — Required if you enable the Google Meet branch.
+
+**Used By**:
+
+- `src/app/api/integrations/video/[provider]/auth/route.ts`
+- `src/lib/integrations/zoom.ts` and `src/lib/video/zoom.ts`
+
+**Without These**:
+
+- ❌ OAuth URL generation fails for Zoom/Google.
+- ❌ Users cannot connect their video provider for interviews.
+
+**Setup**:
+
+1. Create a Zoom OAuth app and copy the client ID/secret.
+2. Set `ZOOM_REDIRECT_URI` to the callback route above and add the same URL in Zoom app settings.
+3. Set `NEXT_PUBLIC_APP_URL` to your deployed base URL (no trailing slash).
+4. (Optional) Set `GOOGLE_CLIENT_ID` if you plan to enable Google Meet.
 
 ---
 
