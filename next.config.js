@@ -16,8 +16,9 @@ const nextConfig = {
       bodySizeLimit: '2mb',
     },
   },
-  // Silence multiple-lockfile root inference; set explicit tracing root to this app
-  outputFileTracingRoot: '/Users/yuriibakurov/proofound',
+  // Silence multiple-lockfile root inference; set explicit tracing root to this app.
+  // Use process.cwd() so it works both locally and on Vercel (no absolute machine path).
+  outputFileTracingRoot: process.cwd(),
   images: {
     remotePatterns: [
       {
