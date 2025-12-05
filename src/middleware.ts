@@ -12,6 +12,17 @@ export async function middleware(request: NextRequest) {
   // Generate or retrieve request ID for correlation
   const requestId = request.headers.get('x-request-id') || nanoid(12);
 
+  // Allow internal cron calls to matching profile with service-role token (skip CSRF)
+  if (pathname === '/api/core/matching/profile') {
+    const authHeader = request.headers.get('authorization');
+    const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (serviceRole && authHeader === `Bearer ${serviceRole}`) {
+      const response = NextResponse.next();
+      response.headers.set('x-request-id', requestId);
+      return response;
+    }
+  }
+
   // Create logging context
   const context = {
     requestId,
