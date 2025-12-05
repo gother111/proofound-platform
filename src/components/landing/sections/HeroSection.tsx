@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useRef } from 'react';
-import Image from 'next/image';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
@@ -45,7 +44,7 @@ export function HeroSection({ onGetStarted, shouldReduceMotion }: HeroSectionPro
         />
       </div>
 
-      <div className="max-w-7xl mx-auto w-full grid lg:grid-cols-2 gap-16 items-center relative z-10">
+      <div className="max-w-7xl mx-auto w-full grid lg:grid-cols-2 gap-12 items-center relative z-10">
         {/* Text Content */}
         <motion.div
           style={{ y: shouldReduceMotion ? 0 : y, opacity: shouldReduceMotion ? 1 : opacity }}
@@ -95,27 +94,21 @@ export function HeroSection({ onGetStarted, shouldReduceMotion }: HeroSectionPro
             </Button>
           </motion.div>
         </motion.div>
-
-        {/* Visual Element - Abstract sculpture */}
-        <motion.div
-          initial={{ opacity: 0, x: 100 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 1.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-          className="relative mt-10 lg:mt-0 flex items-center justify-center lg:justify-end"
-        >
-          {/* Container scales with viewport, max-height relative to viewport for large screens */}
-          <div className="relative w-full max-w-[320px] sm:max-w-[380px] md:max-w-[450px] lg:max-w-[500px] xl:max-w-[600px] 2xl:max-w-[700px] aspect-[532/1024] drop-shadow-2xl">
-            <Image
-              src="/hero-shape.png"
-              alt="Abstract organic sculpture"
-              fill
-              sizes="(min-width: 1536px) 700px, (min-width: 1280px) 600px, (min-width: 1024px) 500px, (min-width: 768px) 450px, (min-width: 640px) 380px, 320px"
-              className="object-contain"
-              priority
-            />
-          </div>
-        </motion.div>
       </div>
+
+      {/* Visual Element - Isolated Shape Image - Positioned Absolutely to Right Edge */}
+      <motion.div
+        initial={{ opacity: 0, x: 100 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 1.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+        className="absolute top-0 right-0 bottom-0 hidden lg:block w-[60%] pointer-events-none z-10"
+      >
+        <img
+          src="/hero-shape.png"
+          alt="Abstract organic shape"
+          className="absolute right-0 bottom-[-4px] h-[85vh] w-auto object-contain max-h-[90vh]"
+        />
+      </motion.div>
     </section>
   );
 }
