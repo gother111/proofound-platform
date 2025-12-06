@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { and, eq, sql } from 'drizzle-orm';
 
@@ -12,6 +12,7 @@ const FollowSchema = z.object({
 });
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 async function getOrganizationBySlug(slug: string) {
   return db.query.organizations.findFirst({
@@ -25,10 +26,11 @@ async function getOrganizationBySlug(slug: string) {
 }
 
 // GET /api/organizations/[slug]/follow - check follow status
-export async function GET(_request: NextRequest, { params }: { params: { slug: string } }) {
+export async function GET(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   try {
     const user = await requireAuth();
-    const org = await getOrganizationBySlug(params.slug);
+    const org = await getOrganizationBySlug(slug);
 
     if (!org) {
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
@@ -52,17 +54,18 @@ export async function GET(_request: NextRequest, { params }: { params: { slug: s
   } catch (error) {
     log.error('organization.follow.status.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
-      slug: params.slug,
+      slug: slug,
     });
     return NextResponse.json({ error: 'Failed to fetch follow status' }, { status: 500 });
   }
 }
 
 // POST /api/organizations/[slug]/follow - follow or update preference
-export async function POST(request: NextRequest, { params }: { params: { slug: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   try {
     const user = await requireAuth();
-    const org = await getOrganizationBySlug(params.slug);
+    const org = await getOrganizationBySlug(slug);
 
     if (!org) {
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
@@ -120,17 +123,18 @@ export async function POST(request: NextRequest, { params }: { params: { slug: s
 
     log.error('organization.follow.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
-      slug: params.slug,
+      slug: slug,
     });
     return NextResponse.json({ error: 'Failed to follow organization' }, { status: 500 });
   }
 }
 
 // DELETE /api/organizations/[slug]/follow - unfollow
-export async function DELETE(_request: NextRequest, { params }: { params: { slug: string } }) {
+export async function DELETE(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   try {
     const user = await requireAuth();
-    const org = await getOrganizationBySlug(params.slug);
+    const org = await getOrganizationBySlug(slug);
 
     if (!org) {
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
@@ -152,7 +156,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: { slug
   } catch (error) {
     log.error('organization.unfollow.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
-      slug: params.slug,
+      slug: slug,
     });
     return NextResponse.json({ error: 'Failed to unfollow organization' }, { status: 500 });
   }
