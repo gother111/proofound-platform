@@ -12,6 +12,8 @@ import {
   generateReferralCode,
 } from '@/services/referral-service';
 
+type ReferralRouteContext = { params: { id: string } };
+
 const UpdateReferralSchema = z.object({
   message: z.string().max(500).optional(),
   expiresAt: z.string().datetime().optional(),
@@ -33,7 +35,8 @@ async function generateUniqueCode() {
   throw new ReferralServiceError('Could not generate referral code', 500);
 }
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: ReferralRouteContext) {
+  const { id } = params;
   try {
     const user = await requireAuth();
     const origin = request.nextUrl.origin;
@@ -54,7 +57,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       )
       .where(
         and(
-          eq(referrals.id, params.id),
+          eq(referrals.id, id),
           or(eq(referrals.referrerId, user.id), eq(referrals.referredUserId, user.id))
         )
       )
@@ -78,20 +81,21 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   } catch (error) {
     log.error('referral.detail.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
-      id: params.id,
+      id: id,
     });
 
     return NextResponse.json({ error: 'Failed to load referral' }, { status: 500 });
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: ReferralRouteContext) {
+  const { id } = params;
   try {
     const user = await requireAuth();
     const body = await request.json();
     const data = UpdateReferralSchema.parse(body);
 
-    const existing = await getReferralById(params.id, user.id);
+    const existing = await getReferralById(id, user.id);
     if (existing.referrerId !== user.id) {
       return NextResponse.json({ error: 'Only the referrer can update' }, { status: 403 });
     }
@@ -115,7 +119,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const [updated] = await db
       .update(referrals)
       .set(updates)
-      .where(eq(referrals.id, params.id))
+      .where(eq(referrals.id, id))
       .returning();
 
     const referralLink = buildReferralLink(request.nextUrl.origin, updated.referralCode);
@@ -135,17 +139,18 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
     log.error('referral.update.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
-      id: params.id,
+      id: id,
     });
 
     return NextResponse.json({ error: 'Failed to update referral' }, { status: 500 });
   }
 }
 
-export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_request: NextRequest, { params }: ReferralRouteContext) {
+  const { id } = params;
   try {
     const user = await requireAuth();
-    await cancelReferral(params.id, user.id);
+    await cancelReferral(id, user.id);
     return NextResponse.json({ success: true });
   } catch (error) {
     if (error instanceof ReferralServiceError) {
@@ -154,7 +159,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
 
     log.error('referral.cancel.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
-      id: params.id,
+      id: id,
     });
 
     return NextResponse.json({ error: 'Failed to cancel referral' }, { status: 500 });
