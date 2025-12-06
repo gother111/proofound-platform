@@ -134,7 +134,7 @@ export async function clickPass(page: Page, matchIndex = 0) {
  * Click "Snooze" button
  */
 export async function clickSnooze(page: Page, matchIndex = 0) {
-  const matchCard = getMatchCard(page, matchIndex);
+  const matchCard = await getMatchCard(page, matchIndex);
 
   const snoozeButton = matchCard.locator('button:has-text("Snooze")').first();
 
