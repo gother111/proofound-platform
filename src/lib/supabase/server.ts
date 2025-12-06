@@ -480,6 +480,9 @@ export async function createClient(options: CreateClientOptions = {}): Promise<S
   // FORCE MOCK AUTH FOR TESTING
   console.log('Checking Mock Supabase Env:', process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE);
   if (process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true') {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('Mock Supabase client is disabled in production');
+    }
     console.log('Using Mock Supabase Client');
     return mockSupabaseClient;
   }

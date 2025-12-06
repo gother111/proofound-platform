@@ -11,6 +11,7 @@ import { useState, useEffect } from 'react';
 import { Calendar, Clock, Video, ExternalLink } from 'lucide-react';
 import { ScheduleInterviewButton } from '@/components/interviews/ScheduleInterviewButton';
 import { SkeletonCard } from '@/components/ui/skeleton';
+import { InterviewFeedbackSection } from '@/components/interviews/InterviewFeedbackSection';
 
 export const dynamic = 'force-dynamic';
 
@@ -219,6 +220,10 @@ export default function InterviewsPage() {
                       )}
                   </div>
                 </div>
+
+                {interview.status === 'completed' && (
+                  <InterviewFeedbackSection interviewId={interview.id} viewerRole="candidate" />
+                )}
               </div>
             ))}
           </div>

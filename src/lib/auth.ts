@@ -445,19 +445,17 @@ export async function requirePersona(expected: ProfileRow['persona']) {
 }
 
 export async function checkAdminRole(userId: string): Promise<boolean> {
-  // For MVP, hardcode admin emails (Pavlo and Yurii)
-  // TODO: Move to database table in Phase 2
-  const adminEmails = ['pavlo@proofound.io', 'yurii@proofound.io'];
-
   const supabase = await createClient();
-  const { data } = await supabase.from('profiles').select('id').eq('id', userId).maybeSingle();
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('platform_role')
+    .eq('id', userId)
+    .maybeSingle();
 
-  if (!data) return false;
+  if (!profile) return false;
 
-  const { data: authUser } = await supabase.auth.getUser();
-  if (!authUser?.user?.email) return false;
-
-  return adminEmails.includes(authUser.user.email);
+  const role = profile.platform_role as string | null;
+  return role === 'platform_admin' || role === 'super_admin';
 }
 
 export async function requireAdmin() {

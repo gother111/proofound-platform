@@ -6,13 +6,14 @@ import {
   localGatherings,
   supportChannels,
   toolkitFilters,
+  zenResources,
   type ZenPractice,
 } from '@/data/zen';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MapPin, Heart, Info, Phone, Shield } from 'lucide-react';
+import { ArrowUpRight, MapPin, Heart, Info, Phone, Shield } from 'lucide-react';
 import { PrivacyBanner } from '@/components/zen/PrivacyBanner';
 import { CheckInDialog } from '@/components/zen/CheckInDialog';
 import { ReflectionDialog } from '@/components/zen/ReflectionDialog';
@@ -21,6 +22,7 @@ import { QuickCheckIn } from '@/components/zen/QuickCheckIn';
 import { GuidedBreathing } from '@/components/zen/GuidedBreathing';
 import { ReflectionJournal } from '@/components/zen/ReflectionJournal';
 import { PracticeCard } from '@/components/zen/PracticeCard';
+import { InterviewPrepTab } from '@/components/zen/interview-prep/InterviewPrepTab';
 import { WellBeingDeltaWidget } from '@/components/wellbeing/WellBeingDeltaWidget';
 import { WellBeingTrendChart } from '@/components/wellbeing/WellBeingTrendChart';
 import { CheckInHistory } from '@/components/wellbeing/CheckInHistory';
@@ -31,6 +33,7 @@ export const dynamic = 'force-dynamic';
 
 function ZenHubContent() {
   const { mood } = useMood();
+  const miracleCardEnabled = process.env.NEXT_PUBLIC_FEATURE_ZEN_MIRACLE_OF_MIND !== 'false';
   const [optInStatus, setOptInStatus] = useState<{
     optedIn: boolean;
     privacyBannerAcknowledged: boolean;
@@ -169,6 +172,12 @@ function ZenHubContent() {
             Journal
           </TabsTrigger>
           <TabsTrigger
+            value="interview-prep"
+            className="data-[state=active]:bg-white dark:data-[state=active]:bg-[#2F2823]"
+          >
+            Interview Prep
+          </TabsTrigger>
+          <TabsTrigger
             value="insights"
             className="data-[state=active]:bg-white dark:data-[state=active]:bg-[#2F2823]"
           >
@@ -232,6 +241,73 @@ function ZenHubContent() {
             ))}
           </div>
 
+          {miracleCardEnabled && zenResources.length > 0 && (
+            <div className="pt-6 border-t border-[#E8E6DD] dark:border-[#3C332C] space-y-4">
+              <div className="flex items-center gap-2">
+                <h3 className="font-serif text-xl text-[#2D3330] dark:text-[#E8E6DD]">
+                  External Toolkit
+                </h3>
+                <Badge variant="outline" className="text-xs bg-[#F7F6F1] border-[#E8E6DD]">
+                  External link
+                </Badge>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {zenResources.map((resource) => (
+                  <Card
+                    key={resource.id}
+                    className="flex flex-col justify-between gap-3 p-4 bg-white/70 dark:bg-[#2F2823]/70 border border-[#E8E6DD] dark:border-[#3C332C]"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {resource.duration && (
+                          <Badge
+                            variant="secondary"
+                            className="bg-[#EEF1EA] text-[#1C4D3A] dark:bg-[#3F473B] dark:text-[#D8E8D0]"
+                          >
+                            {resource.duration}
+                          </Badge>
+                        )}
+                        {resource.badges.map((badge) => (
+                          <Badge
+                            key={badge}
+                            variant="outline"
+                            className="border-[#E8E6DD] text-[#2D3330] dark:border-[#3C332C] dark:text-[#E8E6DD]"
+                          >
+                            {badge}
+                          </Badge>
+                        ))}
+                      </div>
+                      <h4 className="font-medium text-[#2D3330] dark:text-[#E8E6DD]">
+                        {resource.title}
+                      </h4>
+                      <p className="text-sm text-[#6B6760] dark:text-[#C9C2B8] line-clamp-2">
+                        {resource.summary}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Button
+                        asChild
+                        variant="ghost"
+                        className="w-full justify-center text-[#1C4D3A] hover:text-white hover:bg-[#1C4D3A] dark:text-[#E8E6DD] dark:hover:text-[#1C4D3A] dark:hover:bg-[#CBE5CA]"
+                      >
+                        <a href={resource.url} target="_blank" rel="noreferrer">
+                          Open {resource.title}
+                          <ArrowUpRight className="ml-2 h-4 w-4" />
+                        </a>
+                      </Button>
+                      {resource.privacyNote && (
+                        <p className="text-xs text-[#6B6760] dark:text-[#C9C2B8]">
+                          {resource.privacyNote}
+                        </p>
+                      )}
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="pt-8 border-t border-[#E8E6DD] dark:border-[#3C332C]">
             <h3 className="font-serif text-xl mb-4 text-[#2D3330] dark:text-[#E8E6DD] flex items-center gap-2">
               <MapPin className="h-5 w-5" /> Local Gatherings
@@ -287,6 +363,11 @@ function ZenHubContent() {
             </Button>
           </div>
           <ReflectionJournal />
+        </TabsContent>
+
+        {/* INTERVIEW PREP TAB */}
+        <TabsContent value="interview-prep" className="space-y-6 animate-in fade-in duration-500">
+          <InterviewPrepTab />
         </TabsContent>
 
         {/* INSIGHTS TAB */}

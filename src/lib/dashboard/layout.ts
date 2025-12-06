@@ -69,6 +69,14 @@ export const AVAILABLE_WIDGETS: Record<string, WidgetConfig> = {
     defaultSize: 'default',
     availableSizes: ['default', 'large'],
   },
+  'application-timeline': {
+    id: 'application-timeline',
+    name: 'Application Status',
+    description: 'Track your application stages',
+    category: 'matching',
+    defaultSize: 'default',
+    availableSizes: ['default', 'large'],
+  },
   'impact-snapshot': {
     id: 'impact-snapshot',
     name: 'Impact Snapshot',
@@ -110,9 +118,10 @@ export const DEFAULT_LAYOUT: DashboardWidget[] = [
   { widgetId: 'while-away', position: 0, visible: true, size: 'default', settings: {} },
   { widgetId: 'next-best-actions', position: 1, visible: true, size: 'default', settings: {} },
   { widgetId: 'matching-results', position: 2, visible: true, size: 'default', settings: {} },
-  { widgetId: 'gap-map', position: 3, visible: true, size: 'default', settings: {} },
-  { widgetId: 'goals', position: 4, visible: true, size: 'default', settings: {} },
-  { widgetId: 'impact-snapshot', position: 5, visible: true, size: 'default', settings: {} },
+  { widgetId: 'application-timeline', position: 3, visible: true, size: 'default', settings: {} },
+  { widgetId: 'gap-map', position: 4, visible: true, size: 'default', settings: {} },
+  { widgetId: 'goals', position: 5, visible: true, size: 'default', settings: {} },
+  { widgetId: 'impact-snapshot', position: 6, visible: true, size: 'default', settings: {} },
 ];
 
 /**

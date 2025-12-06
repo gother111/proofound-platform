@@ -15,6 +15,7 @@ import InterviewScheduled from '../../emails/InterviewScheduled';
 import IdentityRevealed from '../../emails/IdentityRevealed';
 import VerificationApproved from '../../emails/VerificationApproved';
 import VerificationRejected from '../../emails/VerificationRejected';
+import SmartAlertEmail from '../../emails/SmartAlertEmail';
 
 // Allow build to succeed without RESEND_API_KEY
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder_key');
@@ -269,6 +270,36 @@ export async function sendContractSignedEmail(
   } catch (error) {
     console.error('Failed to send contract signed email:', error);
     throw new Error('Failed to send contract signed email');
+  }
+}
+
+export async function sendSmartAlertEmail(params: {
+  to: string;
+  recipientName?: string | null;
+  title: string;
+  summary: string;
+  ctaUrl: string;
+  ctaLabel?: string;
+  contextTag?: string;
+  subject?: string;
+}) {
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to: params.to,
+      subject: params.subject || params.title,
+      react: SmartAlertEmail({
+        recipientName: params.recipientName,
+        title: params.title,
+        summary: params.summary,
+        ctaUrl: params.ctaUrl,
+        ctaLabel: params.ctaLabel,
+        contextTag: params.contextTag,
+      }),
+    });
+  } catch (error) {
+    console.error('Failed to send smart alert email:', error);
+    throw new Error('Failed to send smart alert email');
   }
 }
 

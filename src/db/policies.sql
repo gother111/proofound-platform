@@ -21,6 +21,21 @@ CREATE POLICY "Users can insert own profile"
   ON public.profiles FOR INSERT
   WITH CHECK (auth.uid() = id);
 
+-- Restrict profile reads to owner, platform admins, or public individual profiles
+CREATE POLICY "Profiles restricted to owner or public visibility"
+  AS RESTRICTIVE
+  ON public.profiles FOR SELECT
+  USING (
+    auth.uid() = id
+    OR is_platform_admin()
+    OR EXISTS (
+      SELECT 1
+      FROM public.individual_profiles ip
+      WHERE ip.user_id = profiles.id
+        AND ip.visibility = 'public'
+    )
+  );
+
 -- Individual profiles policies
 CREATE POLICY "Users can view public or own individual profiles"
   ON public.individual_profiles FOR SELECT

@@ -19,6 +19,7 @@ import { ImpactSnapshotCard } from './ImpactSnapshotCard';
 import { ExploreCard } from './ExploreCard';
 import { GapMapWidget } from './GapMapWidget';
 import { NextBestActionsWidget } from './NextBestActionsWidget';
+import { ApplicationTimelineCard } from '@/components/applications/ApplicationTimelineCard';
 import { Button } from '@/components/ui/button';
 import { Settings2, Save, RotateCcw, Plus } from 'lucide-react';
 import { toast } from 'sonner';
@@ -214,6 +215,8 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
         return <ProjectsCard />;
       case 'matching-results':
         return <MatchingResultsCard />;
+      case 'application-timeline':
+        return <ApplicationTimelineCard />;
       case 'impact-snapshot':
         return <ImpactSnapshotCard />;
       case 'explore':
@@ -419,7 +422,12 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
                 // Tablet logic (simple 2-col grid)
                 // If it's a large/full widget, make it span 2 on tablet
                 if (baseSize === 'large' || baseSize === 'full') {
-                  colSpanClass = 'md:col-span-2 ' + colSpanClass.split(' ').filter(c => !c.startsWith('md:')).join(' ');
+                  colSpanClass =
+                    'md:col-span-2 ' +
+                    colSpanClass
+                      .split(' ')
+                      .filter((c) => !c.startsWith('md:'))
+                      .join(' ');
                 }
 
                 return (
@@ -429,9 +437,7 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
                     editMode={editMode}
                     className={`${colSpanClass} min-h-[300px]`}
                   >
-                    <div className="h-full">
-                      {getWidgetComponent(widget.widgetId)}
-                    </div>
+                    <div className="h-full">{getWidgetComponent(widget.widgetId)}</div>
                   </SortableWidget>
                 );
               });

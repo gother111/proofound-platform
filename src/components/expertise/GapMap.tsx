@@ -17,25 +17,28 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { TrendingUp, Plus, Target, Info, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
+interface LearningResource {
+  title: string;
+  url: string;
+  provider: string;
+  level?: string;
+}
 
 interface SkillGap {
   skillCode: string;
   skillName: string;
-  l1: string;
-  l2: string;
-  l3: string;
+  l1?: string;
+  l2?: string;
+  l3?: string;
   importance: number; // 0-100, how important for target roles
   currentLevel: number; // 0-5
   targetLevel: number; // 0-5
   gap: number; // difference
-  relatedRoles: string[];
-  learningResources?: string[];
+  assignmentCount: number;
+  assignments: string[];
+  learningResources?: LearningResource[];
 }
 
 interface GapMapProps {
@@ -47,12 +50,20 @@ export function GapMap({ targetRole, userId }: GapMapProps) {
   const [gaps, setGaps] = useState<SkillGap[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
+  const [meta, setMeta] = useState<{ assignmentCount?: number; assignmentsWithSkillData?: number }>(
+    {}
+  );
 
   useEffect(() => {
     async function fetchGaps() {
       try {
         setLoading(true);
-        const response = await fetch('/api/expertise/gap-analysis');
+        const response = await fetch('/api/gap-map', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
+        });
 
         if (!response.ok) {
           throw new Error('Failed to fetch gap analysis');
@@ -60,6 +71,8 @@ export function GapMap({ targetRole, userId }: GapMapProps) {
 
         const data = await response.json();
         setGaps(data.gaps || []);
+        setMeta(data.meta || {});
+        setInfo(data.message || null);
       } catch (err) {
         console.error('Gap analysis error:', err);
         setError(err instanceof Error ? err.message : 'Failed to analyze gaps');
@@ -88,11 +101,11 @@ export function GapMap({ targetRole, userId }: GapMapProps) {
       });
 
       // Refresh gaps
-      setGaps(prev => prev.map(gap =>
-        gap.skillCode === skillCode
-          ? { ...gap, currentLevel: 1, gap: gap.targetLevel - 1 }
-          : gap
-      ));
+      setGaps((prev) =>
+        prev.map((gap) =>
+          gap.skillCode === skillCode ? { ...gap, currentLevel: 1, gap: gap.targetLevel - 1 } : gap
+        )
+      );
     } catch (err) {
       console.error('Add skill error:', err);
       toast.error('Failed to add skill', {
@@ -124,10 +137,7 @@ export function GapMap({ targetRole, userId }: GapMapProps) {
         <CardContent className="pt-6">
           <div className="text-center py-12 space-y-3">
             <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-            <Button
-              variant="outline"
-              onClick={() => window.location.reload()}
-            >
+            <Button variant="outline" onClick={() => window.location.reload()}>
               Try Again
             </Button>
           </div>
@@ -147,7 +157,8 @@ export function GapMap({ targetRole, userId }: GapMapProps) {
             <div>
               <CardTitle className="text-lg font-['Crimson_Pro']">No Skill Gaps Found</CardTitle>
               <CardDescription>
-                Your profile is well-matched to your target roles
+                {info ||
+                  'Your profile is well-matched to your target roles. Add assignment interests to get fresh recommendations.'}
               </CardDescription>
             </div>
           </div>
@@ -171,6 +182,11 @@ export function GapMap({ targetRole, userId }: GapMapProps) {
               Top skills to develop for {targetRole || 'your target roles'}
             </CardDescription>
           </div>
+          {meta.assignmentsWithSkillData !== undefined && (
+            <div className="text-xs text-proofound-charcoal/70 dark:text-muted-foreground">
+              {meta.assignmentsWithSkillData} assignments with skill data analyzed
+            </div>
+          )}
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -180,8 +196,8 @@ export function GapMap({ targetRole, userId }: GapMapProps) {
               </TooltipTrigger>
               <TooltipContent className="max-w-sm">
                 <p className="text-xs">
-                  This analysis compares your current skills with those required for your target roles.
-                  Focus on high-importance gaps first for maximum impact.
+                  This analysis compares your current skills with those required for your target
+                  roles. Focus on high-importance gaps first for maximum impact.
                 </p>
               </TooltipContent>
             </Tooltip>
@@ -191,9 +207,8 @@ export function GapMap({ targetRole, userId }: GapMapProps) {
       <CardContent>
         <div className="space-y-4">
           {topGaps.map((gap, idx) => {
-            const progressValue = gap.currentLevel > 0
-              ? (gap.currentLevel / gap.targetLevel) * 100
-              : 0;
+            const progressValue =
+              gap.targetLevel > 0 ? Math.min((gap.currentLevel / gap.targetLevel) * 100, 100) : 0;
 
             return (
               <div
@@ -214,10 +229,20 @@ export function GapMap({ targetRole, userId }: GapMapProps) {
                         {gap.skillName}
                       </h4>
                       <Badge
-                        variant={gap.importance >= 80 ? 'destructive' : gap.importance >= 60 ? 'default' : 'secondary'}
+                        variant={
+                          gap.importance >= 80
+                            ? 'destructive'
+                            : gap.importance >= 60
+                              ? 'default'
+                              : 'secondary'
+                        }
                         className="text-xs"
                       >
-                        {gap.importance >= 80 ? 'Critical' : gap.importance >= 60 ? 'High' : 'Medium'}
+                        {gap.importance >= 80
+                          ? 'Critical'
+                          : gap.importance >= 60
+                            ? 'High'
+                            : 'Medium'}
                       </Badge>
                     </div>
 
@@ -240,13 +265,41 @@ export function GapMap({ targetRole, userId }: GapMapProps) {
                     </div>
 
                     {/* Related Roles */}
-                    {gap.relatedRoles && gap.relatedRoles.length > 0 && (
+                    {gap.assignmentCount > 0 && (
                       <div className="flex items-center gap-2 mt-2 text-xs text-proofound-charcoal/60 dark:text-muted-foreground">
                         <Target className="h-3 w-3" />
                         <span>
-                          Needed by {gap.relatedRoles.length} role{gap.relatedRoles.length > 1 ? 's' : ''}
-                          {gap.relatedRoles.length <= 3 && `: ${gap.relatedRoles.join(', ')}`}
+                          Needed in {gap.assignmentCount} assignment
+                          {gap.assignmentCount > 1 ? 's' : ''}
+                          {gap.assignments?.length > 0 &&
+                            ` (${gap.assignments.slice(0, 3).join(', ')}${
+                              gap.assignments.length > 3 ? '...' : ''
+                            })`}
                         </span>
+                      </div>
+                    )}
+
+                    {/* Learning resources */}
+                    {gap.learningResources && gap.learningResources.length > 0 && (
+                      <div className="mt-3 space-y-1">
+                        <p className="text-xs font-medium text-proofound-charcoal/80 dark:text-foreground">
+                          Recommended learning
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {gap.learningResources.slice(0, 3).map((resource) => (
+                            <Button
+                              key={resource.url}
+                              variant="secondary"
+                              size="sm"
+                              asChild
+                              className="text-xs"
+                            >
+                              <a href={resource.url} target="_blank" rel="noreferrer">
+                                {resource.provider}: {resource.title}
+                              </a>
+                            </Button>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>

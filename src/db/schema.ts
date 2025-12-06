@@ -573,6 +573,26 @@ export const skillVerificationRequests = pgTable('skill_verification_requests', 
   expiresAt: timestamp('expires_at').default(sql`NOW() + INTERVAL '30 days'`),
 });
 
+// Assignment templates / presets by role family
+export const assignmentTemplates = pgTable('assignment_templates', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  orgId: uuid('org_id').references(() => organizations.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  roleFamily: text('role_family').notNull(),
+  description: text('description'),
+  appliesToSteps: text('applies_to_steps')
+    .array()
+    .default(sql`'{}'::text[]`)
+    .notNull(),
+  presetPayload: jsonb('preset_payload')
+    .default(sql`'{}'::jsonb`)
+    .notNull(),
+  isGlobal: boolean('is_global').default(false).notNull(),
+  createdBy: uuid('created_by').references(() => profiles.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
 // Assignments - job/project postings from organizations
 export const assignments = pgTable('assignments', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -629,6 +649,51 @@ export const assignments = pgTable('assignments', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
+
+// Application stages reference
+export const applicationStages = pgTable('application_stages', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  code: text('code').notNull().unique(),
+  label: text('label').notNull(),
+  description: text('description'),
+  displayOrder: integer('display_order').notNull(),
+  icon: text('icon'),
+  color: text('color'),
+  defaultDaysToComplete: integer('default_days_to_complete'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Application timeline per candidate per assignment
+export const applicationTimeline = pgTable(
+  'application_timeline',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    profileId: uuid('profile_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    assignmentId: uuid('assignment_id')
+      .references(() => assignments.id, { onDelete: 'cascade' })
+      .notNull(),
+    currentStageCode: text('current_stage_code')
+      .references(() => applicationStages.code)
+      .notNull(),
+    stageHistory: jsonb('stage_history')
+      .default(sql`'[]'::jsonb`)
+      .notNull(),
+    expectedDecisionDate: date('expected_decision_date'),
+    outcome: text('outcome', {
+      enum: ['pending', 'accepted', 'rejected', 'withdrawn'],
+    })
+      .default('pending')
+      .notNull(),
+    outcomeReason: text('outcome_reason'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    uniqueProfileAssignment: unique().on(table.profileId, table.assignmentId),
+  })
+);
 
 // Matches - cached match results
 export const matches = pgTable(
@@ -1628,6 +1693,180 @@ export const wellbeingOptIns = pgTable('wellbeing_opt_ins', {
 });
 
 // ====================================
+// Interview Prep Assistant (Zen Hub Extension)
+// ====================================
+
+export const interviewPrepSessions = pgTable(
+  'interview_prep_sessions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    interviewId: uuid('interview_id')
+      .references(() => interviews.id, { onDelete: 'cascade' })
+      .notNull(),
+    assignmentId: uuid('assignment_id')
+      .references(() => assignments.id, { onDelete: 'cascade' })
+      .notNull(),
+    status: text('status', { enum: ['not_started', 'in_progress', 'completed'] })
+      .default('not_started')
+      .notNull(),
+    tipsViewed: boolean('tips_viewed').default(false).notNull(),
+    questionsPracticed: integer('questions_practiced').default(0).notNull(),
+    isPrivate: boolean('is_private').default(true).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    userInterviewUnique: unique().on(table.userId, table.interviewId),
+    userIdIdx: index('interview_prep_sessions_user_id_idx').on(table.userId),
+    interviewIdIdx: index('interview_prep_sessions_interview_id_idx').on(table.interviewId),
+  })
+);
+
+export const interviewPrepQuestions = pgTable(
+  'interview_prep_questions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    sessionId: uuid('session_id')
+      .references(() => interviewPrepSessions.id, { onDelete: 'cascade' })
+      .notNull(),
+    questionType: text('question_type', {
+      enum: ['behavioral', 'technical', 'role_specific', 'values_based'],
+    }).notNull(),
+    questionText: text('question_text').notNull(),
+    contextHint: text('context_hint'),
+    userAnswer: text('user_answer'),
+    answeredAt: timestamp('answered_at'),
+    rating: integer('rating'),
+    displayOrder: integer('display_order').default(0).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    sessionIdIdx: index('interview_prep_questions_session_id_idx').on(table.sessionId),
+    questionTypeIdx: index('interview_prep_questions_question_type_idx').on(table.questionType),
+    ratingRange: check(
+      'interview_prep_questions_rating_range',
+      sql`rating IS NULL OR (rating >= 1 AND rating <= 5)`
+    ),
+  })
+);
+
+export const interviewReflections = pgTable(
+  'interview_reflections',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    sessionId: uuid('session_id')
+      .references(() => interviewPrepSessions.id, { onDelete: 'cascade' })
+      .notNull(),
+    whatWentWell: text('what_went_well'),
+    areasToImprove: text('areas_to_improve'),
+    unexpectedQuestions: text('unexpected_questions'),
+    overallFeeling: integer('overall_feeling'),
+    keyLearnings: text('key_learnings'),
+    followUpActions: text('follow_up_actions'),
+    linkedCheckinId: uuid('linked_checkin_id').references(() => wellbeingCheckins.id, {
+      onDelete: 'set null',
+    }),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    sessionIdIdx: index('interview_reflections_session_id_idx').on(table.sessionId),
+    feelingRange: check(
+      'interview_reflections_feeling_range',
+      sql`overall_feeling IS NULL OR (overall_feeling >= 1 AND overall_feeling <= 5)`
+    ),
+  })
+);
+
+// ====================================
+// Saved Searches & Smart Alert Support
+// ====================================
+
+// Saved searches - user-configured filters for proactive alerts
+export const savedSearches = pgTable(
+  'saved_searches',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    name: text('name').notNull(),
+    // Filter criteria
+    causes: text('causes')
+      .array()
+      .default(sql`'{}'::text[]`),
+    valuesTags: text('values_tags')
+      .array()
+      .default(sql`'{}'::text[]`),
+    locationMode: text('location_mode'),
+    country: text('country'),
+    city: text('city'),
+    compMin: integer('comp_min'),
+    compMax: integer('comp_max'),
+    hoursMin: integer('hours_min'),
+    hoursMax: integer('hours_max'),
+    industries: text('industries')
+      .array()
+      .default(sql`'{}'::text[]`),
+    // Notification settings
+    alertEnabled: boolean('alert_enabled').default(true).notNull(),
+    alertThreshold: numeric('alert_threshold', { precision: 3, scale: 2 }).default('0.75'),
+    alertFrequency: text('alert_frequency', {
+      enum: ['immediate', 'daily', 'weekly'],
+    }).default('immediate'),
+    lastAlertedAt: timestamp('last_alerted_at'),
+    // Audit
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    userIdIdx: index('saved_searches_user_id_idx').on(table.userId),
+    alertEnabledIdx: index('saved_searches_alert_enabled_idx').on(table.alertEnabled),
+  })
+);
+
+// Organization follows - individuals following orgs for role alerts
+export const organizationFollows = pgTable(
+  'organization_follows',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    orgId: uuid('org_id')
+      .references(() => organizations.id, { onDelete: 'cascade' })
+      .notNull(),
+    notifyNewRoles: boolean('notify_new_roles').default(true).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    userOrgUnique: unique().on(table.userId, table.orgId),
+    userIdx: index('organization_follows_user_id_idx').on(table.userId),
+    orgIdx: index('organization_follows_org_id_idx').on(table.orgId),
+  })
+);
+
+// Match rank history - track rank position changes over time
+export const matchRankHistory = pgTable(
+  'match_rank_history',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    matchId: uuid('match_id')
+      .references(() => matches.id, { onDelete: 'cascade' })
+      .notNull(),
+    rank: integer('rank').notNull(),
+    recordedAt: timestamp('recorded_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    matchIdx: index('match_rank_history_match_id_idx').on(table.matchId),
+    recordedIdx: index('match_rank_history_recorded_at_idx').on(table.recordedAt),
+  })
+);
+
+// ====================================
 // Notifications System
 // ====================================
 
@@ -1648,6 +1887,18 @@ export const notifications = pgTable('notifications', {
       'assignment_published',
       'interview_scheduled',
       'contract_signed',
+      // Referrals & endorsements
+      'referral_received',
+      'referral_accepted',
+      'referral_signed_up',
+      'endorsement_received',
+      // Smart alerts
+      'new_match_alert',
+      'rank_improved',
+      'followed_org_new_role',
+      // Applications
+      'application_stage_updated',
+      'expected_timeframe_reminder',
     ],
   }).notNull(),
   title: text('title').notNull(),
@@ -1680,6 +1931,20 @@ export const notificationPreferences = pgTable('notification_preferences', {
   inAppAssignmentPublished: boolean('in_app_assignment_published').default(true).notNull(),
   inAppInterviewScheduled: boolean('in_app_interview_scheduled').default(true).notNull(),
   inAppContractSigned: boolean('in_app_contract_signed').default(true).notNull(),
+  // Referral notifications
+  inAppReferralReceived: boolean('in_app_referral_received').default(true).notNull(),
+  inAppReferralAccepted: boolean('in_app_referral_accepted').default(true).notNull(),
+  inAppReferralSignedUp: boolean('in_app_referral_signed_up').default(true).notNull(),
+  inAppEndorsementReceived: boolean('in_app_endorsement_received').default(true).notNull(),
+  // Smart alerts
+  inAppNewMatchAlert: boolean('in_app_new_match_alert').default(true).notNull(),
+  inAppRankImproved: boolean('in_app_rank_improved').default(true).notNull(),
+  inAppFollowedOrgNewRole: boolean('in_app_followed_org_new_role').default(true).notNull(),
+  // Applications
+  inAppApplicationStageUpdated: boolean('in_app_application_stage_updated').default(true).notNull(),
+  inAppExpectedTimeframeReminder: boolean('in_app_expected_timeframe_reminder')
+    .default(true)
+    .notNull(),
   // Email notification preferences (by type)
   emailMatchSuggested: boolean('email_match_suggested').default(true).notNull(),
   emailIntroAccepted: boolean('email_intro_accepted').default(true).notNull(),
@@ -1689,13 +1954,90 @@ export const notificationPreferences = pgTable('notification_preferences', {
   emailAssignmentPublished: boolean('email_assignment_published').default(true).notNull(),
   emailInterviewScheduled: boolean('email_interview_scheduled').default(true).notNull(),
   emailContractSigned: boolean('email_contract_signed').default(true).notNull(),
+  emailReferralReceived: boolean('email_referral_received').default(true).notNull(),
+  emailReferralAccepted: boolean('email_referral_accepted').default(true).notNull(),
+  emailReferralSignedUp: boolean('email_referral_signed_up').default(true).notNull(),
+  emailEndorsementReceived: boolean('email_endorsement_received').default(true).notNull(),
+  emailNewMatchAlert: boolean('email_new_match_alert').default(true).notNull(),
+  emailRankImproved: boolean('email_rank_improved').default(true).notNull(),
+  emailFollowedOrgNewRole: boolean('email_followed_org_new_role').default(true).notNull(),
+  emailApplicationStageUpdated: boolean('email_application_stage_updated').default(true).notNull(),
+  emailExpectedTimeframeReminder: boolean('email_expected_timeframe_reminder')
+    .default(true)
+    .notNull(),
   // Audit fields
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
 // ====================================
-// Contracts & Metrics Infrastructure
+// Referrals & Endorsements
+// ====================================
+
+export const referrals = pgTable(
+  'referrals',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    referrerId: uuid('referrer_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    referredEmail: text('referred_email'),
+    referredUserId: uuid('referred_user_id').references(() => profiles.id, {
+      onDelete: 'set null',
+    }),
+    referralType: text('referral_type', {
+      enum: ['platform', 'assignment'],
+    }).notNull(),
+    assignmentId: uuid('assignment_id').references(() => assignments.id, { onDelete: 'cascade' }),
+    referralCode: text('referral_code').notNull().unique(),
+    status: text('status', {
+      enum: ['pending', 'signed_up', 'hired', 'expired'],
+    })
+      .default('pending')
+      .notNull(),
+    message: text('message'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+    expiresAt: timestamp('expires_at'),
+  },
+  (table) => ({
+    referrerIdx: index('referrals_referrer_idx').on(table.referrerId),
+    referredUserIdx: index('referrals_referred_user_idx').on(table.referredUserId),
+    assignmentIdx: index('referrals_assignment_idx').on(table.assignmentId),
+    statusIdx: index('referrals_status_idx').on(table.status),
+    referralCodeUnique: unique().on(table.referralCode),
+  })
+);
+
+export const referralCredits = pgTable(
+  'referral_credits',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    referrerId: uuid('referrer_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    referralId: uuid('referral_id')
+      .references(() => referrals.id, { onDelete: 'cascade' })
+      .notNull(),
+    creditType: text('credit_type', {
+      enum: ['signup_bonus', 'hire_bonus'],
+    }).notNull(),
+    amount: numeric('amount').default('0').notNull(),
+    status: text('status', {
+      enum: ['pending', 'credited', 'expired'],
+    })
+      .default('pending')
+      .notNull(),
+    creditedAt: timestamp('credited_at'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    referralCreditTypeUnique: unique().on(table.referralId, table.creditType),
+    referrerIdx: index('referral_credits_referrer_idx').on(table.referrerId),
+    statusIdx: index('referral_credits_status_idx').on(table.status),
+  })
+);
+
 // ====================================
 
 // Contracts - Track signed employment/engagement agreements for TTSC metric
@@ -1818,6 +2160,31 @@ export const interviews = pgTable('interviews', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+// Post-interview feedback (one per side)
+export const interviewFeedback = pgTable(
+  'interview_feedback',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    interviewId: uuid('interview_id')
+      .references(() => interviews.id, { onDelete: 'cascade' })
+      .notNull(),
+    authorUserId: uuid('author_user_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    authorRole: text('author_role', { enum: ['candidate', 'org'] }).notNull(),
+    fairnessRating: integer('fairness_rating').notNull(), // 1-5
+    clarityRating: integer('clarity_rating').notNull(), // 1-5
+    experienceRating: integer('experience_rating').notNull(), // 1-5
+    comments: text('comments').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    interviewRoleUnique: unique().on(table.interviewId, table.authorRole),
+    interviewIdIdx: index('interview_feedback_interview_id_idx').on(table.interviewId),
+  })
+);
+
 // ============================================================================
 // ADMIN SYSTEM TABLES
 // ============================================================================
@@ -1908,6 +2275,12 @@ export type Match = typeof matches.$inferSelect;
 export type InsertMatch = typeof matches.$inferInsert;
 export type MatchInterest = typeof matchInterest.$inferSelect;
 export type InsertMatchInterest = typeof matchInterest.$inferInsert;
+export type SavedSearch = typeof savedSearches.$inferSelect;
+export type InsertSavedSearch = typeof savedSearches.$inferInsert;
+export type OrganizationFollow = typeof organizationFollows.$inferSelect;
+export type InsertOrganizationFollow = typeof organizationFollows.$inferInsert;
+export type MatchRankHistory = typeof matchRankHistory.$inferSelect;
+export type InsertMatchRankHistory = typeof matchRankHistory.$inferInsert;
 
 // Expertise system types
 export type Capability = typeof capabilities.$inferSelect;
@@ -1987,6 +2360,14 @@ export type InsertWellbeingReflection = typeof wellbeingReflections.$inferInsert
 export type WellbeingOptIn = typeof wellbeingOptIns.$inferSelect;
 export type InsertWellbeingOptIn = typeof wellbeingOptIns.$inferInsert;
 
+// Interview prep assistant types
+export type InterviewPrepSession = typeof interviewPrepSessions.$inferSelect;
+export type InsertInterviewPrepSession = typeof interviewPrepSessions.$inferInsert;
+export type InterviewPrepQuestion = typeof interviewPrepQuestions.$inferSelect;
+export type InsertInterviewPrepQuestion = typeof interviewPrepQuestions.$inferInsert;
+export type InterviewReflection = typeof interviewReflections.$inferSelect;
+export type InsertInterviewReflection = typeof interviewReflections.$inferInsert;
+
 // Contracts & metrics types
 export type Contract = typeof contracts.$inferSelect;
 export type InsertContract = typeof contracts.$inferInsert;
@@ -1998,6 +2379,8 @@ export type UserIntegration = typeof userIntegrations.$inferSelect;
 export type InsertUserIntegration = typeof userIntegrations.$inferInsert;
 export type Interview = typeof interviews.$inferSelect;
 export type InsertInterview = typeof interviews.$inferInsert;
+export type InterviewFeedback = typeof interviewFeedback.$inferSelect;
+export type InsertInterviewFeedback = typeof interviewFeedback.$inferInsert;
 
 export type AssignmentFieldVisibilityDefaults =
   typeof assignmentFieldVisibilityDefaults.$inferSelect;
@@ -2011,6 +2394,12 @@ export type AdminAuditLog = typeof adminAuditLog.$inferSelect;
 export type InsertAdminAuditLog = typeof adminAuditLog.$inferInsert;
 export type AdminMetricsCache = typeof adminMetricsCache.$inferSelect;
 export type InsertAdminMetricsCache = typeof adminMetricsCache.$inferInsert;
+
+// Referral system types
+export type Referral = typeof referrals.$inferSelect;
+export type InsertReferral = typeof referrals.$inferInsert;
+export type ReferralCredit = typeof referralCredits.$inferSelect;
+export type InsertReferralCredit = typeof referralCredits.$inferInsert;
 
 // Notification types
 export type Notification = typeof notifications.$inferSelect;

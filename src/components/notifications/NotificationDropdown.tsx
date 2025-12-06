@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
-import { Bell, Check, Settings, X } from 'lucide-react';
+import { ArrowUpRight, Bell, Building2, Check, Settings, Sparkles, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
@@ -24,10 +24,7 @@ interface NotificationDropdownProps {
   onNotificationRead: () => void;
 }
 
-export function NotificationDropdown({
-  onClose,
-  onNotificationRead,
-}: NotificationDropdownProps) {
+export function NotificationDropdown({ onClose, onNotificationRead }: NotificationDropdownProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -59,6 +56,24 @@ export function NotificationDropdown({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const typeMeta: Record<
+    string,
+    {
+      icon: React.ReactNode;
+      color: string;
+    }
+  > = {
+    new_match_alert: { icon: <Sparkles className="h-4 w-4" />, color: 'bg-blue-100 text-blue-700' },
+    rank_improved: {
+      icon: <ArrowUpRight className="h-4 w-4" />,
+      color: 'bg-emerald-100 text-emerald-700',
+    },
+    followed_org_new_role: {
+      icon: <Building2 className="h-4 w-4" />,
+      color: 'bg-purple-100 text-purple-700',
+    },
   };
 
   const markAsRead = async (notificationId: string) => {
@@ -158,6 +173,14 @@ export function NotificationDropdown({
                 )}
               >
                 <div className="flex items-start gap-3">
+                  <div
+                    className={cn(
+                      'p-2 rounded-full bg-gray-100 text-gray-700',
+                      typeMeta[notification.type]?.color
+                    )}
+                  >
+                    {typeMeta[notification.type]?.icon || <Bell className="h-4 w-4" />}
+                  </div>
                   <div
                     className={cn(
                       'w-2 h-2 rounded-full mt-2 flex-shrink-0',

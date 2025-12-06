@@ -17,6 +17,13 @@ const UpdatePreferencesSchema = z.object({
   inAppAssignmentPublished: z.boolean().optional(),
   inAppInterviewScheduled: z.boolean().optional(),
   inAppContractSigned: z.boolean().optional(),
+  inAppReferralReceived: z.boolean().optional(),
+  inAppReferralAccepted: z.boolean().optional(),
+  inAppReferralSignedUp: z.boolean().optional(),
+  inAppEndorsementReceived: z.boolean().optional(),
+  inAppNewMatchAlert: z.boolean().optional(),
+  inAppRankImproved: z.boolean().optional(),
+  inAppFollowedOrgNewRole: z.boolean().optional(),
   emailMatchSuggested: z.boolean().optional(),
   emailIntroAccepted: z.boolean().optional(),
   emailMessageReceived: z.boolean().optional(),
@@ -25,6 +32,13 @@ const UpdatePreferencesSchema = z.object({
   emailAssignmentPublished: z.boolean().optional(),
   emailInterviewScheduled: z.boolean().optional(),
   emailContractSigned: z.boolean().optional(),
+  emailReferralReceived: z.boolean().optional(),
+  emailReferralAccepted: z.boolean().optional(),
+  emailReferralSignedUp: z.boolean().optional(),
+  emailEndorsementReceived: z.boolean().optional(),
+  emailNewMatchAlert: z.boolean().optional(),
+  emailRankImproved: z.boolean().optional(),
+  emailFollowedOrgNewRole: z.boolean().optional(),
 });
 
 /**
@@ -57,10 +71,7 @@ export async function GET() {
       error: error instanceof Error ? error.message : 'Unknown error',
     });
 
-    return NextResponse.json(
-      { error: 'Failed to get notification preferences' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to get notification preferences' }, { status: 500 });
   }
 }
 

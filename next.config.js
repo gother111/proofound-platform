@@ -7,9 +7,8 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
-    // Temporarily ignore TypeScript errors during build
-    // TODO: Fix all TypeScript errors before production
-    ignoreBuildErrors: true,
+    // Enforce type safety in builds
+    ignoreBuildErrors: false,
   },
   experimental: {
     serverActions: {
@@ -74,7 +73,7 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://*.sentry.io",
+              "script-src 'self' 'unsafe-inline' https://vercel.live https://*.sentry.io",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: https: blob:",
               "font-src 'self' data: https://fonts.gstatic.com https:",

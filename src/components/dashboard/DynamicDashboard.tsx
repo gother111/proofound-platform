@@ -18,6 +18,7 @@ import { Settings, Loader2, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { DashboardCustomizer, type DashboardWidget } from './DashboardCustomizer';
 import { ExpertiseDepthWidget } from './ExpertiseDepthWidget';
+import { ApplicationTimelineCard } from '@/components/applications/ApplicationTimelineCard';
 
 interface DynamicDashboardProps {
   userId: string;
@@ -211,6 +212,11 @@ function getWidgetContent(widgetId: string): {
       icon: '⚡',
       title: 'Expertise Depth',
       content: <ExpertiseDepthWidget />,
+    },
+    'application-timeline': {
+      icon: '🗓️',
+      title: 'Application Timeline',
+      content: <ApplicationTimelineCard />,
     },
     'next-action': {
       icon: '💡',

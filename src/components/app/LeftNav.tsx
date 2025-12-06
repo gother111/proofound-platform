@@ -19,6 +19,8 @@ import {
   ClipboardList,
   MessageCircle,
   UserCheck,
+  Target,
+  Send,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -60,12 +62,25 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
       dataTour: 'matching-link',
     },
     {
+      href: `${basePath}/organizations`,
+      icon: Building,
+      label: 'Organizations',
+      dataTour: 'organizations-link',
+    },
+    {
       href: `${basePath}/messages`,
       icon: MessageCircle,
       label: 'Messages',
       dataTour: 'messages-link',
     },
     { href: `${basePath}/expertise`, icon: MapPin, label: 'Expertise', dataTour: 'expertise-link' },
+    { href: `${basePath}/gap-map`, icon: Target, label: 'Gap Map', dataTour: 'gap-map-link' },
+    {
+      href: `${basePath}/applications`,
+      icon: ClipboardList,
+      label: 'Applications',
+      dataTour: 'applications-link',
+    },
     {
       href: `${basePath}/interviews`,
       icon: Video,
@@ -79,6 +94,12 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
       dataTour: 'verifications-link',
     },
     { href: `${basePath}/zen`, icon: Sparkles, label: 'Zen Hub', dataTour: 'zen-link' },
+    {
+      href: `${basePath}/referrals`,
+      icon: Send,
+      label: 'Referrals',
+      dataTour: 'referrals-link',
+    },
     { href: `${basePath}/settings`, icon: Settings, label: 'Settings', dataTour: 'settings-link' },
   ];
 

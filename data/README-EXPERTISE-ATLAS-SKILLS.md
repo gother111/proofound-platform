@@ -2,11 +2,11 @@
 
 ## Overview
 
-This dataset contains **19,882 curated L4 skills** for the Expertise Atlas MVP, organized according to the taxonomy specified in `Expertise_Atlas_Product_Documentation_For_Individuals.md`.
+This dataset contains **18,708 curated L4 skills** for the Expertise Atlas MVP, organized according to the taxonomy specified in `Expertise_Atlas_Product_Documentation_For_Individuals.md`.
 
-**Generated:** 2025-10-30
-**File:** `expertise-atlas-20k-l4-skills.json`
-**Based on:** ESCO/O*NET occupational frameworks, OECD transferable skills
+**Generated:** 2025-10-30  
+**File:** `expertise-atlas-20k-l4-final.json` (18,708 unique skills verified)  
+**Based on:** ESCO/O\*NET occupational frameworks, OECD transferable skills
 
 ---
 
@@ -25,15 +25,15 @@ The skills follow a 4-level taxonomy:
 
 ## L1 Domain Distribution
 
-| Code | Domain Name | L4 Count | % of Total | Description |
-|------|------------|----------|------------|-------------|
-| **U** | Universal Capabilities | 2,500 | 12.6% | Transferable cognitive, interpersonal, and personal effectiveness skills |
-| **F** | Functional Competencies | 5,000 | 25.1% | Professional and specialized functional capabilities |
-| **T** | Tools & Technologies | 6,000 | 30.2% | Specific tools, platforms, frameworks, and technologies |
-| **L** | Languages & Culture | 1,382 | 6.9% | Natural languages and cultural competencies |
-| **M** | Methods & Practices | 2,000 | 10.1% | Methodologies, frameworks, and best practices |
-| **D** | Domain Knowledge | 3,000 | 15.1% | Industry and domain-specific expertise |
-| **Total** | | **19,882** | **100%** | |
+| Code      | Domain Name             | L4 Count   | % of Total | Description                                                              |
+| --------- | ----------------------- | ---------- | ---------- | ------------------------------------------------------------------------ |
+| **U**     | Universal Capabilities  | 2,500      | 12.6%      | Transferable cognitive, interpersonal, and personal effectiveness skills |
+| **F**     | Functional Competencies | 5,000      | 25.1%      | Professional and specialized functional capabilities                     |
+| **T**     | Tools & Technologies    | 6,000      | 30.2%      | Specific tools, platforms, frameworks, and technologies                  |
+| **L**     | Languages & Culture     | 1,382      | 6.9%       | Natural languages and cultural competencies                              |
+| **M**     | Methods & Practices     | 2,000      | 10.1%      | Methodologies, frameworks, and best practices                            |
+| **D**     | Domain Knowledge        | 3,000      | 15.1%      | Industry and domain-specific expertise                                   |
+| **Total** |                         | **19,882** | **100%**   |                                                                          |
 
 ---
 
@@ -63,7 +63,7 @@ The skills follow a 4-level taxonomy:
       "domain": "U",
       "category": "Critical Thinking",
       "subcategory": "Analytical Reasoning"
-    },
+    }
     // ... 19,881 more skills
   ]
 }
@@ -151,7 +151,7 @@ async function importSkills() {
     T: 'Tools & Technologies',
     L: 'Languages & Culture',
     M: 'Methods & Practices',
-    D: 'Domain Knowledge'
+    D: 'Domain Knowledge',
   };
 
   for (const [code, name] of Object.entries(domainMap)) {
@@ -185,10 +185,10 @@ async function importSkills() {
         if (l3Error || !l3Data) continue;
 
         // Insert L4 skills (batch)
-        const l4Skills = skills.map(name => ({
+        const l4Skills = skills.map((name) => ({
           l3_id: l3Data.id,
           name,
-          is_curated: true
+          is_curated: true,
         }));
 
         const { error: l4Error } = await supabase
@@ -207,6 +207,7 @@ importSkills().catch(console.error);
 ```
 
 Run with:
+
 ```bash
 npx tsx scripts/import-skills.ts
 ```
@@ -220,16 +221,16 @@ import skillsData from '@/data/expertise-atlas-20k-l4-skills.json';
 export function searchSkills(query: string, limit = 20) {
   const normalized = query.toLowerCase();
   return skillsData.skills
-    .filter(skill => skill.name.toLowerCase().includes(normalized))
+    .filter((skill) => skill.name.toLowerCase().includes(normalized))
     .slice(0, limit);
 }
 
 export function getSkillsByDomain(domain: 'U' | 'F' | 'T' | 'L' | 'M' | 'D') {
-  return skillsData.skills.filter(skill => skill.domain === domain);
+  return skillsData.skills.filter((skill) => skill.domain === domain);
 }
 
 export function getSkillsByCategory(category: string) {
-  return skillsData.skills.filter(skill => skill.category === category);
+  return skillsData.skills.filter((skill) => skill.category === category);
 }
 ```
 
@@ -263,7 +264,9 @@ export function SkillAutocomplete() {
         {results.map((skill, i) => (
           <li key={i}>
             <strong>{skill.name}</strong>
-            <span>{skill.domain} → {skill.category} → {skill.subcategory}</span>
+            <span>
+              {skill.domain} → {skill.category} → {skill.subcategory}
+            </span>
           </li>
         ))}
       </ul>
@@ -328,7 +331,7 @@ export function SkillAutocomplete() {
 
 ## Data Quality
 
-- ✅ **Realistic Skills:** Based on industry-standard taxonomies (ESCO, O*NET, OECD)
+- ✅ **Realistic Skills:** Based on industry-standard taxonomies (ESCO, O\*NET, OECD)
 - ✅ **Production-Ready:** Immediately usable for MVP
 - ✅ **Comprehensive Coverage:** 6 domains, multiple categories, diverse subcategories
 - ✅ **Granular:** Each skill is actionable and specific
@@ -344,14 +347,12 @@ Users can add custom L4 skills through your UI:
 
 ```typescript
 // User adds "Advanced React Performance Optimization"
-await supabase
-  .from('skills_l4')
-  .insert({
-    l3_id: 'react-subcategory-id',
-    name: 'Advanced React Performance Optimization',
-    is_curated: false, // User-created
-    created_by: userId
-  });
+await supabase.from('skills_l4').insert({
+  l3_id: 'react-subcategory-id',
+  name: 'Advanced React Performance Optimization',
+  is_curated: false, // User-created
+  created_by: userId,
+});
 ```
 
 ### Curating User Skills
