@@ -1,5 +1,3 @@
-'use server';
-
 import { NextRequest, NextResponse } from 'next/server';
 import { and, desc, eq, gt, inArray } from 'drizzle-orm';
 
@@ -450,7 +448,8 @@ async function processRankImprovements(
   for (const [, rows] of grouped) {
     const sorted = [...rows].sort((a, b) => Number(b.score) - Number(a.score));
 
-    sorted.forEach((row, idx) => {
+    for (let idx = 0; idx < sorted.length; idx += 1) {
+      const row = sorted[idx];
       const currentRank = idx + 1;
       const previousRank = lastRankMap.get(row.matchId);
 
@@ -473,7 +472,7 @@ async function processRankImprovements(
       }
 
       historyInserts.push({ matchId: row.matchId, rank: currentRank });
-    });
+    }
   }
 
   if (historyInserts.length) {
