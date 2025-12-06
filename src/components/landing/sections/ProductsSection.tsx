@@ -69,7 +69,7 @@ export function ProductsSection({
           <h2 className="text-4xl md:text-6xl font-display text-japandi-charcoal mb-6">
             Products & Subscriptions
           </h2>
-          <p className="text-xl text-japandi-charcoal/60 font-sans max-w-2xl mx-auto">
+          <p className="text-xl text-japandi-charcoal/60 font-sans max-w-2xl mx-auto text-balance">
             Simple, transparent pricing for everyone.
           </p>
         </motion.div>
@@ -83,8 +83,8 @@ export function ProductsSection({
               transition={{ duration: 0.6, delay: idx * 0.15, ease: [0.22, 1, 0.36, 1] }}
               className={`relative rounded-[2.5rem] p-10 md:p-12 transition-all duration-500 group ${
                 plan.highlight
-                  ? 'bg-japandi-charcoal text-white shadow-2xl shadow-japandi-charcoal/20 scale-105 z-10'
-                  : 'bg-white/60 backdrop-blur-xl border border-white/40 hover:bg-white/80 hover:shadow-lg'
+                  ? 'bg-japandi-charcoal text-white shadow-2xl shadow-japandi-charcoal/30 scale-105 z-10 border border-white/10'
+                  : 'bg-white/60 backdrop-blur-xl border border-white/60 hover:bg-white/80 hover:shadow-xl hover:shadow-japandi-charcoal/5 shadow-sm'
               }`}
             >
               {plan.highlight && (
@@ -114,7 +114,7 @@ export function ProductsSection({
                   </span>
                 </div>
                 <p
-                  className={`text-lg leading-relaxed font-sans ${
+                  className={`text-lg leading-relaxed font-sans text-pretty ${
                     plan.highlight ? 'text-white/70' : 'text-japandi-charcoal/60'
                   }`}
                 >

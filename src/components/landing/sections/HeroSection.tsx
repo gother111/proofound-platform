@@ -2,6 +2,7 @@
 
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 // import Magnetic from '@/components/ui/Magnetic'; // This import is no longer needed based on the new code
@@ -55,7 +56,7 @@ export function HeroSection({ onGetStarted, shouldReduceMotion }: HeroSectionPro
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1.0, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
-              className="text-5xl md:text-7xl lg:text-8xl font-serif text-japandi-charcoal leading-[0.95] tracking-tight mb-6"
+              className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-serif text-japandi-charcoal leading-[0.95] tracking-tight mb-6 text-balance"
             >
               Proofound
             </motion.h1>
@@ -63,7 +64,7 @@ export function HeroSection({ onGetStarted, shouldReduceMotion }: HeroSectionPro
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1.0, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
-              className="text-3xl md:text-4xl lg:text-5xl font-sans text-japandi-charcoal leading-tight"
+              className="text-3xl md:text-4xl lg:text-5xl font-sans text-japandi-charcoal leading-tight text-balance"
             >
               A credibility engineering platform for impactful connections
             </motion.h2>
@@ -73,7 +74,7 @@ export function HeroSection({ onGetStarted, shouldReduceMotion }: HeroSectionPro
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.0, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="text-lg md:text-xl text-japandi-charcoal/80 max-w-xl leading-relaxed font-sans"
+            className="text-lg md:text-xl text-japandi-charcoal/80 max-w-xl leading-relaxed font-sans text-pretty"
           >
             Unprecedented possibilities for work, business, and individual transformation. Backed by
             evidence, not vanity metrics.
@@ -103,11 +104,16 @@ export function HeroSection({ onGetStarted, shouldReduceMotion }: HeroSectionPro
         transition={{ duration: 1.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
         className="absolute top-0 right-0 bottom-0 hidden lg:block w-[60%] pointer-events-none z-10"
       >
-        <img
-          src="/hero-shape.png"
-          alt="Abstract organic shape"
-          className="absolute right-0 bottom-[-4px] h-[85vh] w-auto object-contain max-h-[90vh]"
-        />
+        <div className="absolute right-0 bottom-[-4px] h-[85vh] w-auto max-h-[90vh] aspect-[3/4]">
+          <Image
+            src="/hero-shape.png"
+            alt="Abstract organic shape"
+            fill
+            priority
+            className="object-contain object-right-bottom"
+            sizes="(max-width: 1024px) 100vw, 60vw"
+          />
+        </div>
       </motion.div>
     </section>
   );
