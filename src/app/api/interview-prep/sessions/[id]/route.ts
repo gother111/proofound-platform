@@ -4,17 +4,16 @@ import { db } from '@/db';
 import { interviewPrepQuestions, interviewPrepSessions, interviews } from '@/db/schema';
 import { and, desc, eq } from 'drizzle-orm';
 
-type RouteParams = {
-  params: { id: string };
-};
-
 const allowedStatuses = ['not_started', 'in_progress', 'completed'] as const;
 
 /**
  * GET /api/interview-prep/sessions/[id]
  * Returns a session plus its stored practice questions.
  */
-export async function GET(_req: NextRequest, { params }: RouteParams) {
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -53,7 +52,10 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
  * PATCH /api/interview-prep/sessions/[id]
  * Updates session status/progress flags.
  */
-export async function PATCH(request: NextRequest, { params }: RouteParams) {
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -111,7 +113,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
  * DELETE /api/interview-prep/sessions/[id]
  * Removes a session and cascades questions/reflections.
  */
-export async function DELETE(_req: NextRequest, { params }: RouteParams) {
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   const supabase = await createClient();
   const {
     data: { user },
