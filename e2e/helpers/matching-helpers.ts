@@ -309,7 +309,7 @@ export async function completeMatchingProfileSetup(
  * Verify verification gates displayed
  */
 export async function verifyVerificationGates(page: Page, matchIndex = 0): Promise<boolean> {
-  const matchCard = getMatchCard(page, matchIndex);
+  const matchCard = await getMatchCard(page, matchIndex);
 
   const gatesText = matchCard.locator('text=/verification|gate|required/i');
   return await gatesText.isVisible();
