@@ -74,6 +74,7 @@ async function ensureApplicationTimeline(profileId: string, assignmentId: string
   ];
 
   const expectedDecisionDate = await computeExpectedDecisionDate(stageCode);
+  const expectedDecisionDateStr = expectedDecisionDate.toISOString().split('T')[0];
 
   const [created] = await db
     .insert(applicationTimeline)
@@ -82,7 +83,7 @@ async function ensureApplicationTimeline(profileId: string, assignmentId: string
       assignmentId,
       currentStageCode: stageCode,
       stageHistory: history,
-      expectedDecisionDate,
+      expectedDecisionDate: expectedDecisionDateStr,
     })
     .returning();
 
