@@ -210,7 +210,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
           // Emit contract signed analytics event for TTSC tracking
           try {
-            await emitContractSigned(updatedContract.userId, updatedContract.assignmentId, {
+            await emitContractSigned(updatedContract.userId, updatedContract.id, {
               contract_id: updatedContract.id,
               assignment_id: updatedContract.assignmentId,
               match_id: updatedContract.matchId ?? '',
