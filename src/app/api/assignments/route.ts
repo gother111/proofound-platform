@@ -482,7 +482,7 @@ export async function POST(request: NextRequest) {
 
       if (hasCompleteDetails && hasMinimumSkills && hasLocationAndComp) {
         const publishTimeMinutes = 0; // Created and published simultaneously
-        await emitAssignmentPublished(orgId, newAssignment.id, {
+        await emitAssignmentPublished(user.id, newAssignment.id, orgId, {
           hasCompleteDetails,
           hasMinimumSkills,
           mustHaveSkillsCount: mustHaveSkills.length,

@@ -269,7 +269,7 @@ async function checkAndEmitAssignmentActivation(
     const publishTimeMinutes = Math.floor(publishTime / (1000 * 60));
     const publishedWithinTimeTarget = publishTimeMinutes <= 15; // ≤15 minutes
 
-    await emitAssignmentPublished(orgId, assignmentId, {
+    await emitAssignmentPublished(userId, assignmentId, orgId, {
       hasCompleteDetails,
       hasMinimumSkills,
       mustHaveSkillsCount: mustHaveSkills.length,
