@@ -19,10 +19,10 @@ export const dynamic = 'force-dynamic';
 export default async function CookieSettingsPage({
   searchParams,
 }: {
-  searchParams?: { returnTo?: string } | Promise<{ returnTo?: string }>;
+  searchParams: Promise<{ returnTo?: string }>;
 }) {
-  const resolved = await Promise.resolve(searchParams ?? {});
-  const backLink = resolved.returnTo || '/';
+  const { returnTo } = await searchParams;
+  const backLink = returnTo || '/';
 
   return (
     <div className="min-h-screen bg-[#F7F6F1]">
