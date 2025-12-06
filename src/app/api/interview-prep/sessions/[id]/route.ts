@@ -4,6 +4,8 @@ import { db } from '@/db';
 import { interviewPrepQuestions, interviewPrepSessions, interviews } from '@/db/schema';
 import { and, desc, eq } from 'drizzle-orm';
 
+export const runtime = 'nodejs';
+
 const allowedStatuses = ['not_started', 'in_progress', 'completed'] as const;
 
 /**

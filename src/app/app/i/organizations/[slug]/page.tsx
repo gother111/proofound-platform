@@ -8,6 +8,7 @@ import { OrganizationFollowButton } from '@/components/organization/Organization
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 type OrgValue = { label?: string; description?: string };
 

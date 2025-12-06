@@ -4,6 +4,8 @@ import { db } from '@/db';
 import { assignments, interviewPrepSessions, interviews, matches } from '@/db/schema';
 import { and, desc, eq } from 'drizzle-orm';
 
+export const runtime = 'nodejs';
+
 /**
  * GET /api/interview-prep/sessions
  * Returns prep sessions (or eligible interviews) for the current user.

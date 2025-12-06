@@ -4,6 +4,8 @@ import { db } from '@/db';
 import { interviewPrepSessions, interviewReflections } from '@/db/schema';
 import { and, eq } from 'drizzle-orm';
 
+export const runtime = 'nodejs';
+
 type ReflectionPayload = {
   sessionId?: string;
   id?: string;

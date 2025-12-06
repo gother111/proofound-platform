@@ -119,7 +119,7 @@ export function HowItWorksSection({ shouldReduceMotion }: HowItWorksSectionProps
                   initial={{ opacity: 0, y: 30 }}
                   animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
                   transition={{ duration: 0.8, delay: idx * 0.1, ease: [0.22, 1, 0.36, 1] }}
-                  className="snap-center w-[340px] h-[420px] bg-white/30 backdrop-blur-xl border border-white/40 rounded-[2rem] p-10 flex flex-col justify-between shadow-xl hover:shadow-2xl hover:-translate-y-2 hover:scale-[1.02] transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group"
+                  className="snap-center w-[340px] h-[420px] bg-white/30 backdrop-blur-xl border border-white/40 rounded-[2rem] p-10 flex flex-col justify-between shadow-xl hover:shadow-2xl hover:-translate-y-2 hover:scale-[1.02] transition-all duration-500 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] group"
                 >
                   <div className="space-y-8">
                     <feature.icon className="w-12 h-12 text-[#2D3330] stroke-[1.5]" />

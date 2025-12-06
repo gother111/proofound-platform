@@ -5,6 +5,8 @@ import { assignments, matches } from '@/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { buildPrepTips, questionTypeDescriptions } from '@/data/interview-prep';
 
+export const runtime = 'nodejs';
+
 /**
  * GET /api/interview-prep/tips?assignmentId=...
  * Returns contextual prep tips for the current user's assignment.

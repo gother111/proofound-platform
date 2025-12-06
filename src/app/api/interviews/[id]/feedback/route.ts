@@ -14,6 +14,8 @@ import {
 import { and, eq } from 'drizzle-orm';
 import { log } from '@/lib/log';
 
+export const runtime = 'nodejs';
+
 type AuthorRole = 'candidate' | 'org';
 type AssignmentRecord = typeof assignments.$inferSelect;
 
@@ -59,9 +61,9 @@ async function resolveUserRole(userId: string, matchId: string) {
   let assignment: AssignmentRecord | null = null;
 
   if (!isCandidate) {
-    assignment = await db.query.assignments.findFirst({
+    assignment = (await db.query.assignments.findFirst({
       where: eq(assignments.id, match.assignmentId),
-    });
+    })) ?? null;
 
     if (assignment) {
       const orgMembership = await db.query.organizationMembers.findFirst({
@@ -86,7 +88,8 @@ async function resolveUserRole(userId: string, matchId: string) {
   return { match, role: null as AuthorRole | null, assignment };
 }
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id: interviewId } = await params;
   const supabase = await createClient();
   const {
     data: { user },
@@ -98,7 +101,6 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
   }
 
   try {
-    const interviewId = params.id;
     const body = await request.json();
     const data = FeedbackSchema.parse(body);
 
@@ -193,7 +195,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     }
 
     log.error('interview.feedback.error', {
-      interviewId: params.id,
+      interviewId: interviewId,
       error: error instanceof Error ? error.message : 'Unknown error',
     });
 
@@ -201,7 +203,8 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
   }
 }
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id: interviewId } = await params;
   const supabase = await createClient();
   const {
     data: { user },
@@ -211,8 +214,6 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   if (authError || !user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-
-  const interviewId = params.id;
 
   const { interview, match } = await getInterviewContext(interviewId);
 
