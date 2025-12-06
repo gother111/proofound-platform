@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { and, desc, eq, or } from 'drizzle-orm';
 import { db } from '@/db';
@@ -12,7 +12,9 @@ import {
   generateReferralCode,
 } from '@/services/referral-service';
 
-type ReferralRouteContext = { params: { id: string } };
+type ReferralRouteContext = { params: Promise<{ id: string }> };
+
+export const runtime = 'nodejs';
 
 const UpdateReferralSchema = z.object({
   message: z.string().max(500).optional(),
@@ -35,8 +37,8 @@ async function generateUniqueCode() {
   throw new ReferralServiceError('Could not generate referral code', 500);
 }
 
-export async function GET(request: NextRequest, { params }: ReferralRouteContext) {
-  const { id } = params;
+export async function GET(request: Request, { params }: ReferralRouteContext) {
+  const { id } = await params;
   try {
     const user = await requireAuth();
     const origin = request.nextUrl.origin;
@@ -88,8 +90,8 @@ export async function GET(request: NextRequest, { params }: ReferralRouteContext
   }
 }
 
-export async function PUT(request: NextRequest, { params }: ReferralRouteContext) {
-  const { id } = params;
+export async function PUT(request: Request, { params }: ReferralRouteContext) {
+  const { id } = await params;
   try {
     const user = await requireAuth();
     const body = await request.json();
@@ -146,8 +148,8 @@ export async function PUT(request: NextRequest, { params }: ReferralRouteContext
   }
 }
 
-export async function DELETE(_request: NextRequest, { params }: ReferralRouteContext) {
-  const { id } = params;
+export async function DELETE(_request: Request, { params }: ReferralRouteContext) {
+  const { id } = await params;
   try {
     const user = await requireAuth();
     await cancelReferral(id, user.id);
