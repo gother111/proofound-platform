@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { and, eq } from 'drizzle-orm';
 
@@ -20,19 +20,21 @@ const UpdateSavedSearchSchema = z.object({
   hoursMax: z.number().int().optional(),
   industries: z.array(z.string()).optional(),
   alertEnabled: z.boolean().optional(),
-  alertThreshold: z.number().min(0).max(1).optional(),
+  alertThreshold: z.number().min(0).max(1).optional().transform(val => val !== undefined ? String(val) : undefined),
   alertFrequency: z.enum(['immediate', 'daily', 'weekly']).optional(),
 });
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 // GET /api/saved-searches/[id] - fetch a single saved search
-export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   try {
     const user = await requireAuth();
 
     const search = await db.query.savedSearches.findFirst({
-      where: and(eq(savedSearches.id, params.id), eq(savedSearches.userId, user.id)),
+      where: and(eq(savedSearches.id, id), eq(savedSearches.userId, user.id)),
     });
 
     if (!search) {
@@ -43,14 +45,15 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
   } catch (error) {
     log.error('saved-searches.get.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
-      savedSearchId: params.id,
+      savedSearchId: id,
     });
     return NextResponse.json({ error: 'Failed to fetch saved search' }, { status: 500 });
   }
 }
 
 // PUT /api/saved-searches/[id] - update a saved search
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   try {
     const user = await requireAuth();
     const body = await request.json();
@@ -62,7 +65,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         ...data,
         updatedAt: new Date(),
       })
-      .where(and(eq(savedSearches.id, params.id), eq(savedSearches.userId, user.id)))
+      .where(and(eq(savedSearches.id, id), eq(savedSearches.userId, user.id)))
       .returning();
 
     if (!updated) {
@@ -71,7 +74,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
     log.info('saved-searches.updated', {
       userId: user.id,
-      savedSearchId: params.id,
+      savedSearchId: id,
     });
 
     return NextResponse.json({ savedSearch: updated });
@@ -82,20 +85,21 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
     log.error('saved-searches.update.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
-      savedSearchId: params.id,
+      savedSearchId: id,
     });
     return NextResponse.json({ error: 'Failed to update saved search' }, { status: 500 });
   }
 }
 
 // DELETE /api/saved-searches/[id] - remove a saved search
-export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   try {
     const user = await requireAuth();
 
     const [deleted] = await db
       .delete(savedSearches)
-      .where(and(eq(savedSearches.id, params.id), eq(savedSearches.userId, user.id)))
+      .where(and(eq(savedSearches.id, id), eq(savedSearches.userId, user.id)))
       .returning();
 
     if (!deleted) {
@@ -104,14 +108,14 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
 
     log.info('saved-searches.deleted', {
       userId: user.id,
-      savedSearchId: params.id,
+      savedSearchId: id,
     });
 
     return NextResponse.json({ success: true });
   } catch (error) {
     log.error('saved-searches.delete.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
-      savedSearchId: params.id,
+      savedSearchId: id,
     });
     return NextResponse.json({ error: 'Failed to delete saved search' }, { status: 500 });
   }
