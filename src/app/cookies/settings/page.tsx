@@ -16,12 +16,12 @@ import { CookieSettingsClient } from '@/components/cookies/CookieSettingsClient'
 // Force dynamic rendering since we use searchParams
 export const dynamic = 'force-dynamic';
 
-export default function CookieSettingsPage({
+export default async function CookieSettingsPage({
   searchParams,
 }: {
-  searchParams: { returnTo?: string };
+  searchParams?: { returnTo?: string };
 }) {
-  const returnTo = searchParams.returnTo || '/';
+  const returnTo = searchParams?.returnTo || '/';
 
   return (
     <div className="min-h-screen bg-[#F7F6F1]">
