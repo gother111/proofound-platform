@@ -97,7 +97,7 @@ const eyebrow = {
   fontSize: '12px',
   color: '#6b7280',
   letterSpacing: '0.08em',
-  textTransform: 'uppercase',
+  textTransform: 'uppercase' as const,
 };
 const heading = { fontSize: '22px', fontWeight: 700, color: '#111827', margin: '6px 0' };
 const paragraph = { fontSize: '14px', color: '#374151', lineHeight: '1.5' };
@@ -112,4 +112,4 @@ const button = {
   fontWeight: 600,
 };
 const footnote = { fontSize: '12px', color: '#6b7280', lineHeight: 1.4 };
-const footer = { fontSize: '12px', color: '#9ca3af', marginTop: '16px', textAlign: 'center' };
+const footer = { fontSize: '12px', color: '#9ca3af', marginTop: '16px', textAlign: 'center' as const };
