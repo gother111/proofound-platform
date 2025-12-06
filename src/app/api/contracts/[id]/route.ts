@@ -211,8 +211,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
           // Emit contract signed analytics event for TTSC tracking
           try {
             await emitContractSigned(updatedContract.userId, updatedContract.assignmentId, {
-              contractType: updatedContract.contractType,
-              contractId: updatedContract.id,
+              contract_id: updatedContract.id,
+              assignment_id: updatedContract.assignmentId,
+              match_id: updatedContract.matchId ?? '',
+              ttsc_days: undefined,
             });
           } catch (analyticsError) {
             console.error('Failed to emit contract signed event:', analyticsError);
