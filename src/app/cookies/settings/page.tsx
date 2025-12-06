@@ -19,9 +19,10 @@ export const dynamic = 'force-dynamic';
 export default async function CookieSettingsPage({
   searchParams,
 }: {
-  searchParams?: { returnTo?: string };
+  searchParams?: { returnTo?: string } | Promise<{ returnTo?: string }>;
 }) {
-  const returnTo = searchParams?.returnTo || '/';
+  const resolved = await Promise.resolve(searchParams ?? {});
+  const backLink = resolved.returnTo || '/';
 
   return (
     <div className="min-h-screen bg-[#F7F6F1]">
@@ -30,7 +31,7 @@ export default async function CookieSettingsPage({
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link
-              href={returnTo}
+              href={backLink}
               className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -69,7 +70,7 @@ export default async function CookieSettingsPage({
         </div>
 
         {/* Cookie Preferences Component with client-side routing */}
-        <CookieSettingsClient returnTo={returnTo} />
+        <CookieSettingsClient returnTo={backLink} />
 
         {/* Additional Information */}
         <div className="mt-12 pt-8 border-t space-y-4">
