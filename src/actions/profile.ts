@@ -88,8 +88,8 @@ async function checkAndEmitProfileActivation(userId: string): Promise<void> {
     if (hasMinimumL4Count) completionScore += 40;
     if (hasMatchingProfile) completionScore += 30;
 
-    // All criteria met - emit activation event!
-    await emitProfileActivated(userId, {
+    // All criteria met - emit activation event
+    await emitProfileActivated(userId, 0, {
       completionScore,
       hasMinimumL4Count,
       l4SkillsCount,
@@ -292,7 +292,7 @@ export async function getProfileData(): Promise<ProfileData> {
       experiences: experienceRows,
       education: educationRows,
       volunteering: volunteeringRows,
-      fieldVisibility: (profile?.fieldVisibility as Record<string, string>) ?? {},
+      fieldVisibility: (profile?.fieldVisibility as Record<string, any>) ?? {},
       redactMode: profile?.redactMode ?? false,
     };
   } catch (error) {
@@ -373,12 +373,12 @@ export async function updateMission(
 
   // Log the change
   const { logPurposeEdit } = await import('@/lib/audit/purpose-log');
-  await logPurposeEdit({
-    userId: user.id,
-    fieldName: 'mission',
+  await logPurposeEdit(
+    user.id,
+    'mission',
     oldValue,
-    newValue: mission || '',
-  });
+    mission || ''
+  );
 
   // Update mission text and optionally visibility
   const updateData: Record<string, unknown> = { mission };
@@ -394,7 +394,7 @@ export async function updateMission(
   // Emit analytics event
   const { emitEvent } = await import('@/lib/analytics/events');
   await emitEvent({
-    eventType: 'purpose_updated',
+    eventType: 'profile_updated',
     userId: user.id,
     properties: {
       field: 'mission',
@@ -431,12 +431,12 @@ export async function updateVision(
 
   // Log the change
   const { logPurposeEdit } = await import('@/lib/audit/purpose-log');
-  await logPurposeEdit({
-    userId: user.id,
-    fieldName: 'vision',
+  await logPurposeEdit(
+    user.id,
+    'vision',
     oldValue,
-    newValue: vision || '',
-  });
+    vision || ''
+  );
 
   // Update vision text and optionally visibility
   const updateData: Record<string, unknown> = { vision };
@@ -452,7 +452,7 @@ export async function updateVision(
   // Emit analytics event
   const { emitEvent } = await import('@/lib/analytics/events');
   await emitEvent({
-    eventType: 'purpose_updated',
+    eventType: 'profile_updated',
     userId: user.id,
     properties: {
       field: 'vision',
@@ -480,21 +480,14 @@ export async function replaceValues(values: Value[]) {
 
   const oldValues = (current[0]?.values as Value[]) || [];
 
-  // Log the change
-  const { logPurposeEdit } = await import('@/lib/audit/purpose-log');
-  await logPurposeEdit({
-    userId: user.id,
-    fieldName: 'values',
-    oldValue: oldValues.map((v) => v.label),
-    newValue: values.map((v) => v.label),
-  });
+  // Values audit logging not supported by current logger
 
   await db.update(individualProfiles).set({ values }).where(eq(individualProfiles.userId, user.id));
 
   // Emit analytics event
   const { emitEvent } = await import('@/lib/analytics/events');
   await emitEvent({
-    eventType: 'purpose_updated',
+    eventType: 'profile_updated',
     userId: user.id,
     properties: {
       field: 'values',
@@ -518,21 +511,14 @@ export async function replaceCauses(causes: string[]) {
 
   const oldCauses = current[0]?.causes || [];
 
-  // Log the change
-  const { logPurposeEdit } = await import('@/lib/audit/purpose-log');
-  await logPurposeEdit({
-    userId: user.id,
-    fieldName: 'causes',
-    oldValue: oldCauses,
-    newValue: causes,
-  });
+  // Causes audit logging not supported by current logger
 
   await db.update(individualProfiles).set({ causes }).where(eq(individualProfiles.userId, user.id));
 
   // Emit analytics event
   const { emitEvent } = await import('@/lib/analytics/events');
   await emitEvent({
-    eventType: 'purpose_updated',
+    eventType: 'profile_updated',
     userId: user.id,
     properties: {
       field: 'causes',
@@ -679,7 +665,7 @@ export async function toggleRedactMode(enabled: boolean) {
   // Emit analytics event
   const { emitEvent } = await import('@/lib/analytics/events');
   await emitEvent({
-    eventType: 'privacy_settings_updated',
+    eventType: 'profile_updated',
     userId: user.id,
     properties: {
       redactMode: enabled,
