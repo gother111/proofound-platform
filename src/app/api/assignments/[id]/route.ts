@@ -236,7 +236,8 @@ async function generateMatchesForAssignment(assignmentId: string): Promise<numbe
 async function checkAndEmitAssignmentActivation(
   assignmentId: string,
   orgId: string,
-  createdAt: Date
+  createdAt: Date,
+  userId: string
 ): Promise<void> {
   if (activatedAssignments.has(assignmentId)) return;
 
@@ -269,10 +270,10 @@ async function checkAndEmitAssignmentActivation(
     const publishTimeMinutes = Math.floor(publishTime / (1000 * 60));
     const publishedWithinTimeTarget = publishTimeMinutes <= 15; // ≤15 minutes
 
-    // Use assignment owner as userId for analytics; falls back to org owner if needed
-    const assignmentOwnerId = assignment.ownerId ?? orgId;
+    // Use the acting user for analytics; fall back to orgId if unavailable
+    const publisherUserId = userId || orgId;
 
-    await emitAssignmentPublished(assignmentOwnerId, assignmentId, orgId, {
+    await emitAssignmentPublished(publisherUserId, assignmentId, orgId, {
       hasCompleteDetails,
       hasMinimumSkills,
       mustHaveSkillsCount: mustHaveSkills.length,
@@ -443,7 +444,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       await checkAndEmitAssignmentActivation(
         assignmentId,
         updatedAssignment.orgId,
-        updatedAssignment.createdAt
+        updatedAssignment.createdAt,
+        user.id
       );
     }
 
