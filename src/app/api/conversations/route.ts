@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
 
     // Enrich conversations with additional data
     const enrichedConversations = await Promise.all(
-      conversationsToReturn.map(async (conv: ConversationRow) => {
+      conversationsToReturn.map(async (conv) => {
         // Determine the other party
         const otherPartyId =
           conv.participantOneId === user.id ? conv.participantTwoId : conv.participantOneId;
