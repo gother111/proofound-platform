@@ -48,7 +48,7 @@ export async function GET(
         displayName: profiles.displayName,
         handle: profiles.handle,
         avatarUrl: profiles.avatarUrl,
-        createdAt: organizationMembers.createdAt,
+        joinedAt: organizationMembers.joinedAt,
       })
       .from(organizationMembers)
       .innerJoin(profiles, eq(profiles.id, organizationMembers.userId))
