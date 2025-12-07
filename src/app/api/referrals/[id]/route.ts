@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { and, desc, eq, or } from 'drizzle-orm';
 import { db } from '@/db';
@@ -37,11 +37,11 @@ async function generateUniqueCode() {
   throw new ReferralServiceError('Could not generate referral code', 500);
 }
 
-export async function GET(request: Request, { params }: ReferralRouteContext) {
+export async function GET(request: NextRequest, { params }: ReferralRouteContext) {
   const { id } = await params;
   try {
     const user = await requireAuth();
-    const origin = request.nextUrl.origin;
+    const origin = new URL(request.url).origin;
 
     const detail = await db
       .select({
@@ -90,7 +90,7 @@ export async function GET(request: Request, { params }: ReferralRouteContext) {
   }
 }
 
-export async function PUT(request: Request, { params }: ReferralRouteContext) {
+export async function PUT(request: NextRequest, { params }: ReferralRouteContext) {
   const { id } = await params;
   try {
     const user = await requireAuth();
@@ -124,7 +124,7 @@ export async function PUT(request: Request, { params }: ReferralRouteContext) {
       .where(eq(referrals.id, id))
       .returning();
 
-    const referralLink = buildReferralLink(request.nextUrl.origin, updated.referralCode);
+    const referralLink = buildReferralLink(new URL(request.url).origin, updated.referralCode);
 
     return NextResponse.json({ referral: updated, referralLink });
   } catch (error) {
@@ -148,7 +148,7 @@ export async function PUT(request: Request, { params }: ReferralRouteContext) {
   }
 }
 
-export async function DELETE(_request: Request, { params }: ReferralRouteContext) {
+export async function DELETE(_request: NextRequest, { params }: ReferralRouteContext) {
   const { id } = await params;
   try {
     const user = await requireAuth();
