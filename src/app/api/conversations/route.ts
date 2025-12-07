@@ -22,6 +22,8 @@ const CreateConversationSchema = z.object({
   participantTwoId: z.string().uuid(), // Org representative
 });
 
+type ConversationRow = typeof conversations.$inferSelect;
+
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -65,7 +67,7 @@ export async function GET(request: NextRequest) {
 
     // Enrich conversations with additional data
     const enrichedConversations = await Promise.all(
-      conversationsToReturn.map(async (conv) => {
+      conversationsToReturn.map(async (conv: ConversationRow) => {
         // Determine the other party
         const otherPartyId =
           conv.participantOneId === user.id ? conv.participantTwoId : conv.participantOneId;

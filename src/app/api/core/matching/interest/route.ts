@@ -21,12 +21,16 @@ export const dynamic = 'force-dynamic';
 
 const DEFAULT_APPLIED_STAGE = 'applied';
 
+type StageRow = typeof applicationStages.$inferSelect;
+
 async function computeExpectedDecisionDate(stageCode: string) {
   const stages = await db
     .select()
     .from(applicationStages)
     .orderBy(asc(applicationStages.displayOrder));
-  const ordered = stages.sort((a, b) => a.displayOrder - b.displayOrder);
+  const ordered: StageRow[] = [...stages].sort(
+    (a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0)
+  );
   const startIndex = ordered.findIndex((stage) => stage.code === stageCode);
   const today = new Date();
 
@@ -34,9 +38,9 @@ async function computeExpectedDecisionDate(stageCode: string) {
     return today;
   }
 
-  const remainingDays = ordered
-    .slice(startIndex)
-    .reduce((sum, stage) => sum + (stage.defaultDaysToComplete ?? 0), 0);
+  const remainingDays = ordered.slice(startIndex).reduce((sum: number, stage) => {
+    return sum + (stage.defaultDaysToComplete ?? 0);
+  }, 0);
 
   const expected = new Date(today);
   expected.setDate(expected.getDate() + remainingDays);
@@ -131,7 +135,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Record interest and check mutual interest in a transaction
-    const mutualInterest = await db.transaction(async (tx) => {
+    const mutualInterest = (await db.transaction(async (tx: any) => {
       const interestData = {
         actorProfileId: user.id,
         assignmentId,
@@ -172,7 +176,7 @@ export async function POST(request: NextRequest) {
       }
 
       return isMutual;
-    });
+    })) as boolean;
 
     log.info('match.interest.recorded', {
       userId: user.id,

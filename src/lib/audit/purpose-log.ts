@@ -9,6 +9,9 @@ import { db } from '@/db';
 import { purposeEditLog } from '@/db/schema';
 import { log } from '@/lib/log';
 
+type PurposeEditRow = typeof purposeEditLog.$inferSelect;
+import { and, eq, desc } from 'drizzle-orm';
+
 /**
  * Log a change to mission or vision field
  * This is an append-only log - no updates or deletes
@@ -61,17 +64,16 @@ export async function getPurposeEditHistory(
   limit: number = 50
 ) {
   try {
-    let query = db
+    const whereClause = fieldName
+      ? and(eq(purposeEditLog.userId, userId), eq(purposeEditLog.fieldName, fieldName))
+      : eq(purposeEditLog.userId, userId);
+
+    const history = await db
       .select()
       .from(purposeEditLog)
-      .where((t) => t.userId === userId)
-      .$dynamic();
-
-    if (fieldName) {
-      query = query.where((t: any) => t.fieldName === fieldName);
-    }
-
-    const history = await query.orderBy((t: any, { desc }) => [desc(t.changedAt)]).limit(limit);
+      .where(whereClause)
+      .orderBy(desc(purposeEditLog.changedAt))
+      .limit(limit);
 
     return history;
   } catch (error) {
@@ -90,8 +92,8 @@ export async function getPurposeEditStats(userId: string) {
   try {
     const history = await getPurposeEditHistory(userId);
 
-    const missionEdits = history.filter((h) => h.fieldName === 'mission');
-    const visionEdits = history.filter((h) => h.fieldName === 'vision');
+    const missionEdits = history.filter((h: PurposeEditRow) => h.fieldName === 'mission');
+    const visionEdits = history.filter((h: PurposeEditRow) => h.fieldName === 'vision');
 
     return {
       totalEdits: history.length,

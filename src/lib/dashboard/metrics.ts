@@ -16,6 +16,8 @@ type MatchVector = {
     total?: number;
   };
 };
+type CapabilityRow = typeof capabilities.$inferSelect;
+type MatchRow = typeof matches.$inferSelect;
 
 export interface DashboardMetrics {
   profileScore: number;
@@ -49,18 +51,18 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
   ]);
 
   const verifiedSkills = capabilitiesRows.filter(
-    (capability) => capability.verificationStatus === 'verified'
+    (capability: CapabilityRow) => capability.verificationStatus === 'verified'
   ).length;
 
   const pendingVerifications = capabilitiesRows.filter(
-    (capability) => capability.verificationStatus === 'pending'
+    (capability: CapabilityRow) => capability.verificationStatus === 'pending'
   ).length;
 
   const qualityMatches = matchRows.filter(
-    (match) => Number(match.score) >= QUALITY_MATCH_THRESHOLD
+    (match: MatchRow) => Number(match.score) >= QUALITY_MATCH_THRESHOLD
   ).length;
 
-  const activeApplications = matchRows.reduce((total, match) => {
+  const activeApplications = matchRows.reduce((total: number, match: MatchRow) => {
     const vector = (match.vector as MatchVector) ?? {};
     const highIntent = Number(vector.matches?.highIntent ?? 0);
     return total + highIntent;

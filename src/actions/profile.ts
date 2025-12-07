@@ -254,7 +254,7 @@ export async function getProfileData(): Promise<ProfileData> {
         .select({ skillId: skillProofs.skillId })
         .from(skillProofs)
         .where(eq(skillProofs.profileId, user.id));
-      proofs.forEach((p) => {
+      proofs.forEach((p: { skillId: string }) => {
         proofCounts[p.skillId] = (proofCounts[p.skillId] || 0) + 1;
       });
     } catch {
@@ -373,12 +373,7 @@ export async function updateMission(
 
   // Log the change
   const { logPurposeEdit } = await import('@/lib/audit/purpose-log');
-  await logPurposeEdit(
-    user.id,
-    'mission',
-    oldValue,
-    mission || ''
-  );
+  await logPurposeEdit(user.id, 'mission', oldValue, mission || '');
 
   // Update mission text and optionally visibility
   const updateData: Record<string, unknown> = { mission };
@@ -431,12 +426,7 @@ export async function updateVision(
 
   // Log the change
   const { logPurposeEdit } = await import('@/lib/audit/purpose-log');
-  await logPurposeEdit(
-    user.id,
-    'vision',
-    oldValue,
-    vision || ''
-  );
+  await logPurposeEdit(user.id, 'vision', oldValue, vision || '');
 
   // Update vision text and optionally visibility
   const updateData: Record<string, unknown> = { vision };

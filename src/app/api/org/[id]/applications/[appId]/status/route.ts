@@ -11,6 +11,8 @@ import {
 import { and, asc, eq, sql } from 'drizzle-orm';
 import { notifyApplicationStageUpdated } from '@/lib/notifications';
 
+type StageRow = typeof applicationStages.$inferSelect;
+
 export const dynamic = 'force-dynamic';
 
 async function getOrgWithAccess(orgIdOrSlug: string, userId: string) {
@@ -38,7 +40,9 @@ async function computeExpectedDecisionDate(stageCode: string) {
     .select()
     .from(applicationStages)
     .orderBy(asc(applicationStages.displayOrder));
-  const ordered = stages.sort((a, b) => a.displayOrder - b.displayOrder);
+  const ordered: StageRow[] = [...stages].sort(
+    (a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0)
+  );
   const startIndex = ordered.findIndex((s) => s.code === stageCode);
   const today = new Date();
 
@@ -46,9 +50,9 @@ async function computeExpectedDecisionDate(stageCode: string) {
     return today;
   }
 
-  const remainingDays = ordered
-    .slice(startIndex)
-    .reduce((sum, stage) => sum + (stage.defaultDaysToComplete ?? 0), 0);
+  const remainingDays = ordered.slice(startIndex).reduce((sum: number, stage) => {
+    return sum + (stage.defaultDaysToComplete ?? 0);
+  }, 0);
 
   const result = new Date(today);
   result.setDate(result.getDate() + remainingDays);
@@ -138,7 +142,7 @@ export async function PATCH(
       .set({
         currentStageCode: stageCode,
         stageHistory: updatedHistory,
-        expectedDecisionDate: expectedDecisionDate ? expectedDecisionDate.toISOString() : null,
+        expectedDecisionDate: expectedDecisionDate ?? null,
         outcome: outcome || timelineRow.outcome,
         outcomeReason: outcomeReason || null,
         updatedAt: new Date(),
