@@ -47,7 +47,6 @@ export async function POST(request: NextRequest) {
     const questions = generatePracticeQuestions(
       {
         role: assignment.role,
-        roleFamily: assignment.role,
         outcomes: assignment.outcomes as any,
         mustHaveSkills: assignment.mustHaveSkills as any,
         niceToHaveSkills: assignment.niceToHaveSkills as any,
