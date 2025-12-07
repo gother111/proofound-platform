@@ -22,8 +22,6 @@ const CreateConversationSchema = z.object({
   participantTwoId: z.string().uuid(), // Org representative
 });
 
-type ConversationRow = typeof conversations.$inferSelect;
-
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();

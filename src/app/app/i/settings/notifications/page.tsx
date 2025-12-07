@@ -20,9 +20,6 @@ interface NotificationPreferences {
   inAppAssignmentPublished: boolean;
   inAppInterviewScheduled: boolean;
   inAppContractSigned: boolean;
-  inAppNewMatchAlert: boolean;
-  inAppRankImproved: boolean;
-  inAppFollowedOrgNewRole: boolean;
   emailMatchSuggested: boolean;
   emailIntroAccepted: boolean;
   emailMessageReceived: boolean;
@@ -31,9 +28,6 @@ interface NotificationPreferences {
   emailAssignmentPublished: boolean;
   emailInterviewScheduled: boolean;
   emailContractSigned: boolean;
-  emailNewMatchAlert: boolean;
-  emailRankImproved: boolean;
-  emailFollowedOrgNewRole: boolean;
 }
 
 const NOTIFICATION_TYPES = [
@@ -77,21 +71,6 @@ const NOTIFICATION_TYPES = [
     label: 'Contract Updates',
     description: 'When a contract is signed or updated',
   },
-  {
-    id: 'NewMatchAlert',
-    label: 'Strong Match Alerts',
-    description: 'When a new assignment strongly matches your saved search',
-  },
-  {
-    id: 'RankImproved',
-    label: 'Rank Improved',
-    description: 'When your rank on an assignment improves',
-  },
-  {
-    id: 'FollowedOrgNewRole',
-    label: 'Followed Org Roles',
-    description: 'When an organization you follow posts a new role',
-  },
 ];
 
 export default function NotificationPreferencesPage() {
@@ -109,16 +88,7 @@ export default function NotificationPreferencesPage() {
       const response = await fetch('/api/notifications/preferences');
       if (response.ok) {
         const data = await response.json();
-        const prefs: NotificationPreferences = {
-          ...data.preferences,
-          inAppNewMatchAlert: data.preferences.inAppNewMatchAlert ?? true,
-          inAppRankImproved: data.preferences.inAppRankImproved ?? true,
-          inAppFollowedOrgNewRole: data.preferences.inAppFollowedOrgNewRole ?? true,
-          emailNewMatchAlert: data.preferences.emailNewMatchAlert ?? true,
-          emailRankImproved: data.preferences.emailRankImproved ?? true,
-          emailFollowedOrgNewRole: data.preferences.emailFollowedOrgNewRole ?? true,
-        };
-        setPreferences(prefs);
+        setPreferences(data.preferences);
       }
     } catch (error) {
       console.error('Failed to fetch preferences:', error);

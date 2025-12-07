@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
     const recommendations: any[] = [];
     let hasSignificantGaps = false;
 
-    const cohorts = cohortData as unknown as any[];
+    const cohorts = cohortData.rows as any[];
 
     if (cohorts.length < 2) {
       return NextResponse.json(

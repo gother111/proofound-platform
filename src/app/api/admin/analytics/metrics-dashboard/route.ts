@@ -26,17 +26,19 @@ export async function GET(request: NextRequest) {
         ttsc: !!metrics.ttsc,
         ttfqi: !!metrics.ttfqi,
         ttv: !!metrics.ttv,
-        pacLift: !!metrics.pacLift,
+        pac: !!metrics.pac,
       },
     });
 
     return NextResponse.json({
       metrics,
       summary: {
-        ttscMeetsTarget: metrics.ttsc ? metrics.ttsc.value <= 30 : null,
-        ttfqiMeetsTarget: metrics.ttfqi ? metrics.ttfqi.value <= 72 : null,
-        ttvMeetsTarget: metrics.ttv ? metrics.ttv.value <= 7 : null,
-        pacMeetsTargets: metrics.pacLift ? metrics.pacLift.onTrack : null,
+        ttscMeetsTarget: metrics.ttsc ? metrics.ttsc.median <= 30 : null,
+        ttfqiMeetsTarget: metrics.ttfqi ? metrics.ttfqi.median <= 72 : null,
+        ttvMeetsTarget: metrics.ttv ? metrics.ttv.median <= 7 : null,
+        pacMeetsTargets: metrics.pac
+          ? metrics.pac.meetsAcceptanceTarget && metrics.pac.meetsContractTarget
+          : null,
       },
     });
   } catch (error) {

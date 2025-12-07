@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -68,10 +68,10 @@ export async function POST(req: NextRequest) {
           'dashboard_slow_load',
           ${user.id},
           ${JSON.stringify({
-        dashboard_type: dashboardType,
-        load_time_ms: loadTimeMs,
-        tile_count: tileCount,
-      })}::jsonb,
+            dashboard_type: dashboardType,
+            load_time_ms: loadTimeMs,
+            tile_count: tileCount,
+          })}::jsonb,
           NOW()
         )
       `);

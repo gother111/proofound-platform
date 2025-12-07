@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
         HAVING COUNT(*) >= 3
       `);
 
-      const cohorts = cohortData as unknown as any[];
+      const cohorts = cohortData.rows as any[];
 
       if (cohorts.length < 2) {
         return NextResponse.json({
@@ -101,10 +101,6 @@ export async function GET(request: NextRequest) {
     }
 
     // Return stored note
-    if (!latestNote) {
-      return NextResponse.json({ hasData: false, message: 'No report available' });
-    }
-
     return NextResponse.json({
       hasData: true,
       hasSignificantGaps: latestNote.hasSignificantGaps,

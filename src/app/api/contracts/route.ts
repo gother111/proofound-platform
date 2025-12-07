@@ -251,9 +251,15 @@ export async function POST(request: NextRequest) {
         ); // TODO: Calculate actual value
 
         await emitContractSigned(userId, contract.id, {
-          contract_id: contract.id,
           assignment_id: assignmentId,
-          ttsc_days: undefined,
+          contract_type: (contract.contractType || 'full_time') as
+            | 'full_time'
+            | 'part_time'
+            | 'contract'
+            | 'internship'
+            | 'volunteer',
+          days_since_activation: daysSinceActivation,
+          days_since_first_intro: daysSinceFirstIntro,
         });
 
         log.info('contract.signed', {

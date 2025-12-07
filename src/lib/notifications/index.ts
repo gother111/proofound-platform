@@ -11,16 +11,7 @@ export type NotificationType =
   | 'verification_completed'
   | 'assignment_published'
   | 'interview_scheduled'
-  | 'contract_signed'
-  | 'referral_received'
-  | 'referral_accepted'
-  | 'referral_signed_up'
-  | 'endorsement_received'
-  | 'new_match_alert'
-  | 'rank_improved'
-  | 'followed_org_new_role'
-  | 'application_stage_updated'
-  | 'expected_timeframe_reminder';
+  | 'contract_signed';
 
 interface CreateNotificationParams {
   userId: string;
@@ -98,15 +89,6 @@ function getPreferenceKey(type: NotificationType, channel: 'in-app' | 'email'): 
     assignment_published: 'AssignmentPublished',
     interview_scheduled: 'InterviewScheduled',
     contract_signed: 'ContractSigned',
-    referral_received: 'ReferralReceived',
-    referral_accepted: 'ReferralAccepted',
-    referral_signed_up: 'ReferralSignedUp',
-    endorsement_received: 'EndorsementReceived',
-    new_match_alert: 'NewMatchAlert',
-    rank_improved: 'RankImproved',
-    followed_org_new_role: 'FollowedOrgNewRole',
-    application_stage_updated: 'ApplicationStageUpdated',
-    expected_timeframe_reminder: 'ExpectedTimeframeReminder',
   };
 
   const prefix = channel === 'in-app' ? 'inApp' : 'email';
@@ -256,7 +238,11 @@ export async function notifyInterviewScheduled(
 /**
  * Notify user of a signed contract
  */
-export async function notifyContractSigned(userId: string, contractId: string, orgName: string) {
+export async function notifyContractSigned(
+  userId: string,
+  contractId: string,
+  orgName: string
+) {
   return createNotification({
     userId,
     type: 'contract_signed',
@@ -265,142 +251,5 @@ export async function notifyContractSigned(userId: string, contractId: string, o
     actionUrl: `/app/i/contracts/${contractId}`,
     entityType: 'contract',
     entityId: contractId,
-  });
-}
-
-/**
- * Notify a user that someone referred them
- */
-export async function notifyReferralReceived(
-  userId: string,
-  referrerName: string,
-  referralCode: string,
-  referralType: 'platform' | 'assignment'
-) {
-  return createNotification({
-    userId,
-    type: 'referral_received',
-    title: 'You were referred',
-    message: `${referrerName} thinks you'd be a great fit${referralType === 'assignment' ? ' for an assignment' : ''}.`,
-    actionUrl: `/app/i/referrals?code=${referralCode}`,
-    entityType: 'referral',
-    metadata: { referralCode, referralType, referrerName },
-  });
-}
-
-/**
- * Notify the referrer that their invite was accepted
- */
-export async function notifyReferralAccepted(referrerId: string, referredName?: string) {
-  return createNotification({
-    userId: referrerId,
-    type: 'referral_accepted',
-    title: 'Referral accepted',
-    message: referredName
-      ? `${referredName} accepted your referral link`
-      : 'Your referral link was accepted',
-    actionUrl: '/app/i/referrals',
-    entityType: 'referral',
-  });
-}
-
-/**
- * Notify the referrer that the referred person signed up
- */
-export async function notifyReferralSignedUp(referrerId: string, referredName?: string) {
-  return createNotification({
-    userId: referrerId,
-    type: 'referral_signed_up',
-    title: 'Referral joined Proofound',
-    message: referredName
-      ? `${referredName} signed up using your referral`
-      : 'Someone signed up using your referral link',
-    actionUrl: '/app/i/referrals',
-    entityType: 'referral',
-  });
-}
-
-/**
- * Notify a user that they received an endorsement
- */
-export async function notifyEndorsementReceived(
-  userId: string,
-  endorserName: string,
-  message?: string
-) {
-  return createNotification({
-    userId,
-    type: 'endorsement_received',
-    title: 'New endorsement received',
-    message: message ?? `${endorserName} endorsed you on Proofound`,
-    actionUrl: '/app/i/verifications',
-    entityType: 'endorsement',
-    metadata: { endorserName },
-  });
-}
-
-/**
- * Notify user that their application stage changed
- */
-export async function notifyApplicationStageUpdated(
-  userId: string,
-  assignmentId: string,
-  stageLabel: string,
-  expectedDecisionDate?: string
-) {
-  return createNotification({
-    userId,
-    type: 'application_stage_updated',
-    title: 'Application Update',
-    message: `Your application moved to: ${stageLabel}`,
-    actionUrl: `/app/i/applications?assignment=${assignmentId}`,
-    entityType: 'assignment',
-    entityId: assignmentId,
-    metadata: { stageLabel, expectedDecisionDate },
-  });
-}
-
-/**
- * Notify user about expected timeframe reminders
- */
-export async function notifyExpectedTimeframeReminder(
-  userId: string,
-  assignmentId: string,
-  currentStageLabel: string,
-  expectedDecisionDate?: string
-) {
-  return createNotification({
-    userId,
-    type: 'expected_timeframe_reminder',
-    title: 'Timeline Reminder',
-    message: expectedDecisionDate
-      ? `Decision expected by ${expectedDecisionDate} for ${currentStageLabel}`
-      : `We are following up on your ${currentStageLabel} stage`,
-    actionUrl: `/app/i/applications?assignment=${assignmentId}`,
-    entityType: 'assignment',
-    entityId: assignmentId,
-    metadata: { currentStageLabel, expectedDecisionDate },
-  });
-}
-
-/**
- * Notify a follower that an organization posted a new role
- */
-export async function notifyFollowedOrgNewRole(
-  userId: string,
-  orgSlug: string,
-  orgName: string,
-  assignmentId: string,
-  assignmentTitle: string
-) {
-  return createNotification({
-    userId,
-    type: 'followed_org_new_role',
-    title: `${orgName} posted a new role`,
-    message: assignmentTitle || 'A new opportunity is available',
-    actionUrl: `/app/i/opportunities?org=${orgSlug}`,
-    entityType: 'assignment',
-    entityId: assignmentId,
-    metadata: { orgSlug },
   });
 }

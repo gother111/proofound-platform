@@ -111,4 +111,152 @@ export async function GET(_request: NextRequest) {
   }
 }
 
+/**
+ * Get count of events by type
+ */
+async function getEventCount(eventType: string): Promise<number> {
+  try {
+    const result = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(analyticsEvents)
+      .where(eq(analyticsEvents.eventType, eventType));
 
+    return result[0]?.count || 0;
+  } catch (error) {
+    console.error(`Failed to count events for ${eventType}:`, error);
+    return 0;
+  }
+}
+
+/**
+ * Calculate percentile for a metric type
+ */
+async function calculatePercentile(
+  metricType: 'ttsc' | 'ttfqi' | 'ttv',
+  percentile: number
+): Promise<number | null> {
+  try {
+    let query;
+
+    if (metricType === 'ttsc') {
+      query = sql`
+        WITH activations AS (
+          SELECT 
+            user_id,
+            created_at as activated_at
+          FROM analytics_events
+          WHERE event_type = ${EventType.PROFILE_ACTIVATED}
+        ),
+        contracts AS (
+          SELECT DISTINCT ON (user_id)
+            user_id,
+            created_at as contract_signed_at
+          FROM analytics_events
+          WHERE event_type = ${EventType.CONTRACT_SIGNED}
+          ORDER BY user_id, created_at ASC
+        ),
+        time_diffs AS (
+          SELECT 
+            EXTRACT(EPOCH FROM (c.contract_signed_at - a.activated_at)) / 86400 as days
+          FROM activations a
+          INNER JOIN contracts c ON a.user_id = c.user_id
+          WHERE c.contract_signed_at >= a.activated_at
+        )
+        SELECT PERCENTILE_CONT(${percentile / 100}) WITHIN GROUP (ORDER BY days) as p_value
+        FROM time_diffs
+      `;
+    } else if (metricType === 'ttfqi') {
+      query = sql`
+        WITH activations AS (
+          SELECT 
+            user_id,
+            created_at as activated_at
+          FROM analytics_events
+          WHERE event_type = ${EventType.PROFILE_ACTIVATED}
+        ),
+        first_intros AS (
+          SELECT DISTINCT ON (user_id)
+            user_id,
+            created_at as first_intro_at
+          FROM analytics_events
+          WHERE event_type = ${EventType.FIRST_QUALIFIED_INTRO}
+          ORDER BY user_id, created_at ASC
+        ),
+        time_diffs AS (
+          SELECT 
+            EXTRACT(EPOCH FROM (fi.first_intro_at - a.activated_at)) / 3600 as hours
+          FROM activations a
+          INNER JOIN first_intros fi ON a.user_id = fi.user_id
+          WHERE fi.first_intro_at >= a.activated_at
+        )
+        SELECT PERCENTILE_CONT(${percentile / 100}) WITHIN GROUP (ORDER BY hours) as p_value
+        FROM time_diffs
+      `;
+    } else {
+      // TTV
+      query = sql`
+        WITH activations AS (
+          SELECT 
+            user_id,
+            created_at as activated_at
+          FROM analytics_events
+          WHERE event_type = ${EventType.PROFILE_ACTIVATED}
+        ),
+        first_interviews AS (
+          SELECT DISTINCT ON (user_id)
+            user_id,
+            created_at as first_interview_at
+          FROM analytics_events
+          WHERE event_type = ${EventType.INTERVIEW_SCHEDULED}
+          ORDER BY user_id, created_at ASC
+        ),
+        time_diffs AS (
+          SELECT 
+            EXTRACT(EPOCH FROM (fi.first_interview_at - a.activated_at)) / 86400 as days
+          FROM activations a
+          INNER JOIN first_interviews fi ON a.user_id = fi.user_id
+          WHERE fi.first_interview_at >= a.activated_at
+        )
+        SELECT PERCENTILE_CONT(${percentile / 100}) WITHIN GROUP (ORDER BY days) as p_value
+        FROM time_diffs
+      `;
+    }
+
+    const result = await db.execute<{ p_value: number }>(query);
+    return result.rows[0]?.p_value || null;
+  } catch (error) {
+    console.error(`Failed to calculate ${percentile}th percentile for ${metricType}:`, error);
+    return null;
+  }
+}
+
+/**
+ * Calculate average SUS score
+ */
+async function calculateAverageSUS(): Promise<{ average: number | null; count: number }> {
+  try {
+    const surveys = await db
+      .select()
+      .from(analyticsEvents)
+      .where(eq(analyticsEvents.eventType, EventType.SUS_SURVEY_COMPLETED));
+
+    if (surveys.length === 0) {
+      return { average: null, count: 0 };
+    }
+
+    const scores = surveys
+      .map((s) => (s.properties as any)?.score)
+      .filter((score) => typeof score === 'number');
+
+    if (scores.length === 0) {
+      return { average: null, count: 0 };
+    }
+
+    const average = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+
+    return { average, count: scores.length };
+  } catch (error) {
+    console.error('Failed to calculate SUS average:', error);
+    return { average: null, count: 0 };
+  }
+}

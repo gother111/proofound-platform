@@ -1,18 +1,7 @@
 /**
  * Prints a friendly checklist of missing env vars. Never exits non-zero
  * unless FORCE_STRICT_DEPLOY_CHECK=true (so restricted CI won’t break).
- *
- * Note: when run locally, we also load .env.local/.env so the check reflects
- * the actual developer setup (Next.js loads these automatically).
  */
-try {
-  const dotenv = await import('dotenv');
-  dotenv.config({ path: '.env.local' });
-  dotenv.config();
-} catch {
-  // dotenv is optional; ignore if not present
-}
-
 const env = process.env;
 const missing = [];
 

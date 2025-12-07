@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       : undefined;
     const cohort = searchParams.get('cohort') || undefined;
 
-    const result = await calculateTTV(cohort, startDate, endDate);
+    const result = await calculateTTV(startDate, endDate, cohort);
 
     if (!result) {
       return NextResponse.json({
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
 
     log.info('ttv.calculated', {
       userId: user.userId,
-      median: result.value,
+      median: result.median,
       sampleSize: result.sampleSize,
       cohort,
     });

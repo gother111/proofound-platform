@@ -149,9 +149,6 @@ export function createClient() {
     console.log('createClient called, env:', process.env.NODE_ENV);
   }
   if (process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true') {
-    if (process.env.NODE_ENV === 'production') {
-      throw new Error('Mock Supabase client is disabled in production');
-    }
     if (process.env.NODE_ENV === 'development') {
       console.log('Returning mock Supabase client (ORG MODE)');
     }

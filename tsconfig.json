@@ -5,7 +5,6 @@
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
-    "noImplicitAny": true,
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
@@ -30,5 +29,5 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "proofound-mvp", "tests", "scripts", "e2e", "**/__tests__"]
+  "exclude": ["node_modules", "proofound-mvp", "tests", "scripts"]
 }

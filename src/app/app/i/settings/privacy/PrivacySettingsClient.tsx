@@ -11,7 +11,6 @@ import { toast } from 'sonner';
 export function PrivacySettingsClient() {
   const [initialVisibility, setInitialVisibility] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const userId = 'current'; // Represents the authenticated user in client context
 
   useEffect(() => {
     // Fetch existing visibility settings
@@ -74,7 +73,7 @@ export function PrivacySettingsClient() {
 
         <div className="space-y-6">
           {/* Privacy Overview */}
-          <PrivacyOverview userId={userId} />
+          <PrivacyOverview />
 
           {/* Data Breakdown */}
           <DataBreakdown />

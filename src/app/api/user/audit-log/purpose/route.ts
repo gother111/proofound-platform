@@ -25,17 +25,18 @@ export async function GET(request: NextRequest) {
 
     // Get query parameters
     const { searchParams } = new URL(request.url);
-    const requestedField = searchParams.get('field');
-    const fieldName: 'mission' | 'vision' | undefined =
-      requestedField === 'mission' || requestedField === 'vision'
-        ? (requestedField as 'mission' | 'vision')
-        : undefined;
+    const fieldName = searchParams.get('field') as
+      | 'mission'
+      | 'vision'
+      | 'values'
+      | 'causes'
+      | null;
     const limit = parseInt(searchParams.get('limit') || '100', 10);
 
     // Get audit log history
     const history = await getPurposeEditHistory(
       user.id,
-      fieldName,
+      fieldName || undefined,
       Math.min(limit, 500) // Max 500 entries
     );
 

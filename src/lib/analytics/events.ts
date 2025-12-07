@@ -8,7 +8,6 @@
 import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
-import type { MatchActionedProperties } from '@/lib/analytics/constants';
 
 // ============================================================================
 // TYPES
@@ -85,15 +84,7 @@ export interface AnalyticsEvent {
   userId: string;
   profileId?: string;
   organizationId?: string;
-  entityType?:
-    | 'match'
-    | 'interview'
-    | 'contract'
-    | 'profile'
-    | 'assignment'
-    | 'survey'
-    | 'tour'
-    | 'wellbeing_checkin';
+  entityType?: 'match' | 'interview' | 'contract' | 'profile' | 'assignment' | 'survey' | 'tour';
   entityId?: string;
   properties?: Record<string, any>;
   privacyPartition?: string; // For demographic segmentation (opt-in)
@@ -617,14 +608,15 @@ export async function emitFirstMatchShown(
 export async function emitMatchActioned(
   userId: string,
   matchId: string,
-  properties: MatchActionedProperties
+  action: string,
+  reason?: string
 ) {
   await emitAnalyticsEvent({
     eventType: 'match_actioned',
     userId,
     entityType: 'match',
     entityId: matchId,
-    properties,
+    properties: { action, reason },
   });
 }
 
@@ -660,7 +652,7 @@ export async function emitInterviewScheduled(
     assignment_id: string;
     match_id: string;
     duration_minutes: number;
-    platform: 'zoom' | 'google_meet' | 'manual';
+    platform: 'zoom' | 'google_meet';
     days_since_match: number; // For TTV calculation
   }
 ) {
@@ -681,7 +673,7 @@ export function emitInterviewScheduledAsync(
     assignment_id: string;
     match_id: string;
     duration_minutes: number;
-    platform: 'zoom' | 'google_meet' | 'manual';
+    platform: 'zoom' | 'google_meet';
     days_since_match: number;
   }
 ) {
@@ -741,6 +733,7 @@ export async function emitContractSigned(
   properties: {
     contract_id: string;
     assignment_id: string;
+    match_id: string;
     ttsc_days?: number; // Time to signed contract (from match)
   }
 ) {
@@ -759,6 +752,7 @@ export async function emitContractSigned(
 
 export async function emitWellbeingCheckin(
   userId: string,
+  checkinId: string,
   properties: {
     checkin_id: string;
     overall_score: number;
@@ -769,8 +763,6 @@ export async function emitWellbeingCheckin(
     eventType: 'wellbeing_checkin',
     userId,
     properties,
-    entityType: 'wellbeing_checkin',
-    entityId: properties.checkin_id,
   });
 }
 

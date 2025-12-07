@@ -9,12 +9,11 @@ import {
   skills,
   matches,
   organizations,
-  organizationFollows,
 } from '@/db/schema';
 import { eq, and, inArray, sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { emitAssignmentPublished, emitAnalyticsEvent } from '@/lib/analytics/events';
-import { notifyAssignmentPublished, notifyFollowedOrgNewRole } from '@/lib/notifications';
+import { notifyAssignmentPublished } from '@/lib/notifications';
 import { triggerFirstAssignmentSurvey } from '@/lib/surveys/sus-triggers';
 import {
   scoreValues,
@@ -343,13 +342,10 @@ export async function GET(request: NextRequest) {
         .where(inArray(matches.assignmentId, assignmentIds))
         .groupBy(matches.assignmentId);
 
-      matchCounts = rows.reduce(
-        (acc, row) => {
-          acc[row.assignmentId] = row.count;
-          return acc;
-        },
-        {} as Record<string, number>
-      );
+      matchCounts = rows.reduce((acc, row) => {
+        acc[row.assignmentId] = row.count;
+        return acc;
+      }, {} as Record<string, number>);
     }
 
     const now = Date.now();
@@ -482,7 +478,7 @@ export async function POST(request: NextRequest) {
 
       if (hasCompleteDetails && hasMinimumSkills && hasLocationAndComp) {
         const publishTimeMinutes = 0; // Created and published simultaneously
-        await emitAssignmentPublished(user.id, newAssignment.id, orgId, {
+        await emitAssignmentPublished(orgId, newAssignment.id, {
           hasCompleteDetails,
           hasMinimumSkills,
           mustHaveSkillsCount: mustHaveSkills.length,
@@ -529,48 +525,6 @@ export async function POST(request: NextRequest) {
           log.info('assignment.notifications.sent', {
             assignmentId: newAssignment.id,
             notificationsSent: topMatches.length,
-          });
-        }
-
-        // Notify followers of this organization about the new role
-        try {
-          const followers = await db
-            .select({
-              userId: organizationFollows.userId,
-            })
-            .from(organizationFollows)
-            .where(
-              and(
-                eq(organizationFollows.orgId, orgId),
-                eq(organizationFollows.notifyNewRoles, true)
-              )
-            );
-
-          const orgSlug = org?.slug || orgId;
-
-          await Promise.all(
-            followers.map(async (follower) => {
-              try {
-                await notifyFollowedOrgNewRole(
-                  follower.userId,
-                  orgSlug,
-                  orgName,
-                  newAssignment.id,
-                  newAssignment.role
-                );
-              } catch (notifyError) {
-                log.error('assignment.followers.notify.failed', {
-                  followerId: follower.userId,
-                  assignmentId: newAssignment.id,
-                  error: notifyError instanceof Error ? notifyError.message : 'Unknown error',
-                });
-              }
-            })
-          );
-        } catch (followerError) {
-          log.error('assignment.followers.fetch.failed', {
-            assignmentId: newAssignment.id,
-            error: followerError instanceof Error ? followerError.message : 'Unknown error',
           });
         }
       }

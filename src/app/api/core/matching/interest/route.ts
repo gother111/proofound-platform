@@ -2,97 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
-import {
-  matchInterest,
-  assignments,
-  matches,
-  profiles,
-  conversations,
-  applicationTimeline,
-  applicationStages,
-} from '@/db/schema';
-import { eq, and, asc } from 'drizzle-orm';
+import { matchInterest, assignments, matches, profiles, conversations } from '@/db/schema';
+import { eq, and } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { emitMatchActioned } from '@/lib/analytics/events';
 import { notifyIntroAccepted } from '@/lib/notifications';
 import { nanoid } from 'nanoid';
 
 export const dynamic = 'force-dynamic';
-
-const DEFAULT_APPLIED_STAGE = 'applied';
-
-type StageRow = typeof applicationStages.$inferSelect;
-
-async function computeExpectedDecisionDate(stageCode: string) {
-  const stages = await db
-    .select()
-    .from(applicationStages)
-    .orderBy(asc(applicationStages.displayOrder));
-  const ordered: StageRow[] = [...stages].sort(
-    (a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0)
-  );
-  const startIndex = ordered.findIndex((stage) => stage.code === stageCode);
-  const today = new Date();
-
-  if (startIndex === -1) {
-    return today;
-  }
-
-  const remainingDays = ordered.slice(startIndex).reduce((sum: number, stage) => {
-    return sum + (stage.defaultDaysToComplete ?? 0);
-  }, 0);
-
-  const expected = new Date(today);
-  expected.setDate(expected.getDate() + remainingDays);
-  return expected;
-}
-
-async function ensureApplicationTimeline(profileId: string, assignmentId: string) {
-  const existing = await db.query.applicationTimeline.findFirst({
-    where: and(
-      eq(applicationTimeline.profileId, profileId),
-      eq(applicationTimeline.assignmentId, assignmentId)
-    ),
-  });
-
-  if (existing) return existing;
-
-  const stage =
-    (await db.query.applicationStages.findFirst({
-      where: eq(applicationStages.code, DEFAULT_APPLIED_STAGE),
-    })) ||
-    (
-      await db
-        .select()
-        .from(applicationStages)
-        .orderBy(asc(applicationStages.displayOrder))
-        .limit(1)
-    )[0];
-
-  const stageCode = stage?.code || DEFAULT_APPLIED_STAGE;
-  const history = [
-    {
-      stage: stageCode,
-      entered_at: new Date().toISOString(),
-    },
-  ];
-
-  const expectedDecisionDate = await computeExpectedDecisionDate(stageCode);
-  const expectedDecisionDateStr = expectedDecisionDate.toISOString().split('T')[0];
-
-  const [created] = await db
-    .insert(applicationTimeline)
-    .values({
-      profileId,
-      assignmentId,
-      currentStageCode: stageCode,
-      stageHistory: history,
-      expectedDecisionDate: expectedDecisionDateStr,
-    })
-    .returning();
-
-  return created;
-}
 
 // Validation schema
 const InterestSchema = z.object({
@@ -129,13 +46,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Assignment not found' }, { status: 404 });
     }
 
-    // Create an application timeline entry for individuals expressing interest
-    if (!targetProfileId) {
-      await ensureApplicationTimeline(user.id, assignmentId);
-    }
-
     // Record interest and check mutual interest in a transaction
-    const mutualInterest = (await db.transaction(async (tx: any) => {
+    const mutualInterest = await db.transaction(async (tx) => {
       const interestData = {
         actorProfileId: user.id,
         assignmentId,
@@ -176,7 +88,7 @@ export async function POST(request: NextRequest) {
       }
 
       return isMutual;
-    })) as boolean;
+    });
 
     log.info('match.interest.recorded', {
       userId: user.id,
@@ -232,11 +144,7 @@ export async function POST(request: NextRequest) {
           // If this is a qualified intro, also emit FIRST_QUALIFIED_INTRO event (for TTFQI tracking)
           if (qualificationMet) {
             const { emitFirstQualifiedIntroAsync } = await import('@/lib/analytics/events');
-            // Emit first qualified intro event with required analytics payload
-            emitFirstQualifiedIntroAsync(user.id, match.id, {
-              assignment_id: assignmentId,
-              match_id: match.id,
-            });
+            emitFirstQualifiedIntroAsync(user.id, match.id, assignmentId);
           }
 
           // Send notifications to both parties about mutual interest

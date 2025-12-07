@@ -12,7 +12,6 @@ import { Calendar, Clock, Video, ExternalLink, User, FileCheck } from 'lucide-re
 import { ScheduleInterviewButton } from '@/components/interviews/ScheduleInterviewButton';
 import { DecisionDialog } from '@/components/decisions/DecisionDialog';
 import { Button } from '@/components/ui/button';
-import { InterviewFeedbackSection } from '@/components/interviews/InterviewFeedbackSection';
 
 export const dynamic = 'force-dynamic';
 
@@ -263,10 +262,6 @@ export default function OrganizationInterviewsPage() {
                     )}
                   </div>
                 </div>
-
-                {interview.status === 'completed' && (
-                  <InterviewFeedbackSection interviewId={interview.id} viewerRole="org" />
-                )}
               </div>
             ))}
           </div>

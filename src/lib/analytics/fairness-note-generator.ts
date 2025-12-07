@@ -14,10 +14,6 @@ import type { InsertFairnessNote } from '@/db/schema';
 import { eq, and, gte, lte, sql } from 'drizzle-orm';
 import { calculateFairnessGap, type FairnessGapResult } from './metrics';
 
-type DemographicOptInRow = typeof demographicOptIns.$inferSelect;
-type MatchRow = typeof matches.$inferSelect;
-type AnalyticsEventRow = typeof analyticsEvents.$inferSelect;
-
 export interface CohortAnalysis {
   cohortName: string;
   sampleSize: number;
@@ -37,7 +33,6 @@ export interface Finding {
   description: string;
   gapPercentage?: number;
   pValue?: number;
-  isSignificant?: boolean;
 }
 
 export interface Recommendation {
@@ -84,9 +79,9 @@ export async function generateFairnessNote(
       const cohortA = cohorts[i];
       const cohortB = cohorts[j];
 
-      const gapResult = await calculateFairnessGap(startDate, endDate);
+      const gapResult = await calculateFairnessGap(cohortA, cohortB, startDate, endDate);
 
-      if (gapResult && gapResult.cohortA && gapResult.cohortB) {
+      if (gapResult) {
         fairnessGapResults.push(gapResult);
 
         // Add cohort A analysis
@@ -163,7 +158,7 @@ async function getAvailableCohorts(): Promise<string[]> {
 
   const cohortSet = new Set<string>();
 
-  optIns.forEach((opt: DemographicOptInRow) => {
+  optIns.forEach((opt) => {
     if (opt.gender) cohortSet.add(opt.gender);
     if (opt.ethnicity) cohortSet.add(opt.ethnicity);
     if (opt.ageRange) cohortSet.add(opt.ageRange);
@@ -228,16 +223,16 @@ async function analyzeCohortIntroductions(
     .where(eq(demographicOptIns.optedIn, true));
 
   const cohortUsers = optIns
-    .filter((opt: DemographicOptInRow) => {
+    .filter((opt) => {
       const cohortData = [opt.gender, opt.ethnicity, opt.ageRange];
       return cohortData.some((data) => data?.toLowerCase() === cohortName.toLowerCase());
     })
-    .map((opt: DemographicOptInRow) => opt.profileId);
+    .map((opt) => opt.profileId);
 
   if (cohortUsers.length === 0) return null;
 
   // Get matches for these users
-  const cohortMatches: MatchRow[] = await db
+  const cohortMatches = await db
     .select()
     .from(matches)
     .where(
@@ -245,7 +240,7 @@ async function analyzeCohortIntroductions(
         gte(matches.createdAt, startDate),
         lte(matches.createdAt, endDate),
         sql`${matches.profileId} IN (${sql.join(
-          cohortUsers.map((u: string) => sql`${u}`),
+          cohortUsers.map((u) => sql`${u}`),
           sql`, `
         )})`
       )
@@ -254,7 +249,7 @@ async function analyzeCohortIntroductions(
   if (cohortMatches.length < 40) return null; // Insufficient sample size
 
   // Get introduction events
-  const introEvents: { matchId: string | null }[] = await db
+  const introEvents = await db
     .select({
       matchId: analyticsEvents.entityId,
     })
@@ -263,26 +258,20 @@ async function analyzeCohortIntroductions(
       and(eq(analyticsEvents.eventType, 'match_actioned'), sql`properties->>'action' = 'introduce'`)
     );
 
-  const introMatchIds = new Set(
-    introEvents.map((e) => e.matchId).filter((id): id is string => Boolean(id))
-  );
-  const introductions = cohortMatches.filter((m: MatchRow) => introMatchIds.has(m.id)).length;
+  const introMatchIds = new Set(introEvents.map((e) => e.matchId));
+  const introductions = cohortMatches.filter((m) => introMatchIds.has(m.id)).length;
   const introductionRate = (introductions / cohortMatches.length) * 100;
 
   // Get contract rate (simplified for cohort level)
-  const contractEvents: { assignmentId: string | null }[] = await db
+  const contractEvents = await db
     .select({
       assignmentId: analyticsEvents.entityId,
     })
     .from(analyticsEvents)
     .where(eq(analyticsEvents.eventType, 'contract_signed'));
 
-  const contractedAssignments = new Set(
-    contractEvents.map((e) => e.assignmentId).filter((id): id is string => Boolean(id))
-  );
-  const contracts = cohortMatches.filter((m: MatchRow) =>
-    contractedAssignments.has(m.assignmentId)
-  ).length;
+  const contractedAssignments = new Set(contractEvents.map((e) => e.assignmentId));
+  const contracts = cohortMatches.filter((m) => contractedAssignments.has(m.assignmentId)).length;
   const contractRate = (contracts / cohortMatches.length) * 100;
 
   return {
@@ -311,51 +300,42 @@ export function detectSignificantGaps(gapResults: FairnessGapResult[]): Finding[
   const findings: Finding[] = [];
 
   gapResults.forEach((result) => {
-    const cohortA = result.cohortA;
-    const cohortB = result.cohortB;
-    const introP = result.pValueIntroduction ?? 1;
-    const contractP = result.pValueContract ?? 1;
-
-    if (!cohortA || !cohortB) {
-      return;
-    }
-
     // Check introduction rate gap
-    if (introP < 0.05) {
-      const severity = determineSeverity(Math.abs(result.introductionGap ?? 0));
+    if (result.pValueIntroduction < 0.05) {
+      const severity = determineSeverity(Math.abs(result.introductionGap));
       findings.push({
         type: 'gap',
         severity,
-        cohorts: [cohortA.name ?? 'cohortA', cohortB.name ?? 'cohortB'],
+        cohorts: [result.cohortA.name, result.cohortB.name],
         metric: 'introduction_rate',
-        description: `Significant gap detected in introduction rates between ${cohortA.name} (${cohortA.introductionRate.toFixed(1)}%) and ${cohortB.name} (${cohortB.introductionRate.toFixed(1)}%). Gap: ${Math.abs(result.introductionGap ?? 0).toFixed(1)} percentage points.`,
-        gapPercentage: Math.abs(result.introductionGap ?? 0),
-        pValue: introP,
+        description: `Significant gap detected in introduction rates between ${result.cohortA.name} (${result.cohortA.introductionRate.toFixed(1)}%) and ${result.cohortB.name} (${result.cohortB.introductionRate.toFixed(1)}%). Gap: ${Math.abs(result.introductionGap).toFixed(1)} percentage points.`,
+        gapPercentage: Math.abs(result.introductionGap),
+        pValue: result.pValueIntroduction,
       });
     }
 
     // Check contract rate gap
-    if (contractP < 0.05) {
-      const severity = determineSeverity(Math.abs(result.contractGap ?? 0));
+    if (result.pValueContract < 0.05) {
+      const severity = determineSeverity(Math.abs(result.contractGap));
       findings.push({
         type: 'gap',
         severity,
-        cohorts: [cohortA.name ?? 'cohortA', cohortB.name ?? 'cohortB'],
+        cohorts: [result.cohortA.name, result.cohortB.name],
         metric: 'contract_rate',
-        description: `Significant gap detected in contract rates between ${cohortA.name} (${cohortA.contractRate.toFixed(1)}%) and ${cohortB.name} (${cohortB.contractRate.toFixed(1)}%). Gap: ${Math.abs(result.contractGap ?? 0).toFixed(1)} percentage points.`,
-        gapPercentage: Math.abs(result.contractGap ?? 0),
-        pValue: contractP,
+        description: `Significant gap detected in contract rates between ${result.cohortA.name} (${result.cohortA.contractRate.toFixed(1)}%) and ${result.cohortB.name} (${result.cohortB.contractRate.toFixed(1)}%). Gap: ${Math.abs(result.contractGap).toFixed(1)} percentage points.`,
+        gapPercentage: Math.abs(result.contractGap),
+        pValue: result.pValueContract,
       });
     }
 
     // If no significant gaps found for this pair
-    if (introP >= 0.05 && contractP >= 0.05) {
+    if (result.pValueIntroduction >= 0.05 && result.pValueContract >= 0.05) {
       findings.push({
         type: 'no_gap',
         severity: 'none',
-        cohorts: [cohortA.name ?? 'cohortA', cohortB.name ?? 'cohortB'],
+        cohorts: [result.cohortA.name, result.cohortB.name],
         metric: 'introduction_rate',
-        description: `No significant gaps detected between ${cohortA.name} and ${cohortB.name}. Introduction rates: ${cohortA.introductionRate.toFixed(1)}% vs ${cohortB.introductionRate.toFixed(1)}%. Contract rates: ${cohortA.contractRate.toFixed(1)}% vs ${cohortB.contractRate.toFixed(1)}%.`,
+        description: `No significant gaps detected between ${result.cohortA.name} and ${result.cohortB.name}. Introduction rates: ${result.cohortA.introductionRate.toFixed(1)}% vs ${result.cohortB.introductionRate.toFixed(1)}%. Contract rates: ${result.cohortA.contractRate.toFixed(1)}% vs ${result.cohortB.contractRate.toFixed(1)}%.`,
       });
     }
   });

@@ -20,17 +20,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing userId or event' }, { status: 400 });
     }
 
-    const tourId = body.tourId || 'onboarding';
-
     switch (event) {
       case 'started':
-        await emitTourStarted(userId, tourId);
+        await emitTourStarted(userId);
         break;
       case 'completed':
-        await emitTourCompleted(userId, tourId);
+        await emitTourCompleted(userId);
         break;
       case 'skipped':
-        await emitTourSkipped(userId, tourId);
+        await emitTourSkipped(userId, stepIndex || 0);
         break;
       default:
         return NextResponse.json({ error: 'Invalid event type' }, { status: 400 });

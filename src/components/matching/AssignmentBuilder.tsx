@@ -17,9 +17,6 @@ import {
 } from './assignment-steps';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { TemplatePicker } from './TemplatePicker';
-import { applyTemplateToForm, TEMPLATE_STEP_LABELS } from './assignment-steps/templateMapping';
-import type { AssignmentTemplate, TemplateStep } from '@/actions/assignmentTemplates';
 
 interface AssignmentBuilderProps {
   orgId: string;
@@ -38,8 +35,6 @@ export function AssignmentBuilder({ orgId, orgSlug }: AssignmentBuilderProps) {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [appliedTemplate, setAppliedTemplate] = useState<AssignmentTemplate | null>(null);
-  const [appliedTemplateSteps, setAppliedTemplateSteps] = useState<TemplateStep[]>([]);
 
   const form = useForm<AssignmentData>({
     resolver: zodResolver(AssignmentSchema),
@@ -119,19 +114,6 @@ export function AssignmentBuilder({ orgId, orgSlug }: AssignmentBuilderProps) {
     }
   };
 
-  const handleApplyTemplate = (template: AssignmentTemplate) => {
-    const result = applyTemplateToForm(form, template);
-    setAppliedTemplate(template);
-    setAppliedTemplateSteps(result.appliedSteps);
-    toast.success(`Applied template: ${template.name}`);
-  };
-
-  const handleClearTemplate = () => {
-    setAppliedTemplate(null);
-    setAppliedTemplateSteps([]);
-    toast.info('Template cleared. Current form values stay as-is.');
-  };
-
   const renderStep = () => {
     switch (currentStep) {
       case 0:
@@ -158,35 +140,6 @@ export function AssignmentBuilder({ orgId, orgSlug }: AssignmentBuilderProps) {
 
   return (
     <div className="max-w-4xl mx-auto pb-20">
-      <div className="mb-6">
-        <TemplatePicker
-          orgId={orgId}
-          appliedTemplateId={appliedTemplate?.id}
-          onApply={handleApplyTemplate}
-          onClear={handleClearTemplate}
-        />
-        {appliedTemplate && (
-          <div className="mt-2 text-xs text-muted-foreground flex flex-wrap gap-2">
-            <span>
-              Applied template: <strong>{appliedTemplate.name}</strong>
-            </span>
-            {appliedTemplateSteps.length > 0 && (
-              <span className="flex gap-1 flex-wrap items-center">
-                Prefilled steps:
-                {appliedTemplateSteps.map((step) => (
-                  <span
-                    key={step}
-                    className="px-2 py-0.5 rounded-full bg-proofound-forest/10 text-proofound-forest"
-                  >
-                    {TEMPLATE_STEP_LABELS[step as keyof typeof TEMPLATE_STEP_LABELS]}
-                  </span>
-                ))}
-              </span>
-            )}
-          </div>
-        )}
-      </div>
-
       {/* Progress Stepper */}
       <div className="mb-8">
         <div className="flex items-center justify-between relative">
@@ -196,25 +149,20 @@ export function AssignmentBuilder({ orgId, orgSlug }: AssignmentBuilderProps) {
             const isCurrent = index === currentStep;
 
             return (
-              <div
-                key={step}
-                className="flex flex-col items-center gap-2 bg-proofound-parchment dark:bg-background px-2"
-              >
+              <div key={step} className="flex flex-col items-center gap-2 bg-proofound-parchment dark:bg-background px-2">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
-                    isCompleted
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${isCompleted
                       ? 'bg-proofound-forest text-white'
                       : isCurrent
                         ? 'bg-proofound-forest/20 text-proofound-forest border-2 border-proofound-forest'
                         : 'bg-proofound-stone/30 text-proofound-charcoal/50'
-                  }`}
+                    }`}
                 >
                   {index + 1}
                 </div>
                 <span
-                  className={`text-xs font-medium hidden sm:block ${
-                    isCurrent ? 'text-proofound-forest' : 'text-proofound-charcoal/50'
-                  }`}
+                  className={`text-xs font-medium hidden sm:block ${isCurrent ? 'text-proofound-forest' : 'text-proofound-charcoal/50'
+                    }`}
                 >
                   {step}
                 </span>
@@ -226,7 +174,9 @@ export function AssignmentBuilder({ orgId, orgSlug }: AssignmentBuilderProps) {
 
       {/* Step Content */}
       <Card className="border-proofound-stone dark:border-border rounded-2xl shadow-sm">
-        <CardContent className="p-6 md:p-8">{renderStep()}</CardContent>
+        <CardContent className="p-6 md:p-8">
+          {renderStep()}
+        </CardContent>
       </Card>
 
       {/* Mobile Navigation (if not handled inside steps) */}

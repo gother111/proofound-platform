@@ -24,7 +24,7 @@ export const dynamic = 'force-dynamic';
  */
 export async function POST(req: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -75,9 +75,7 @@ export async function POST(req: NextRequest) {
       RETURNING *
     `);
 
-    // Drizzle's execute returns a RowList (array-like). Normalize to first row.
-    const rows = Array.isArray(result) ? result : (result as any).rows ?? [];
-    const snippet = (rows as any[])[0] as any;
+    const snippet = result.rows[0] as any;
 
     log.info('profile.snippet.created', {
       userId: user.id,
@@ -112,7 +110,7 @@ export async function POST(req: NextRequest) {
  */
 export async function GET(req: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -135,8 +133,7 @@ export async function GET(req: NextRequest) {
       ORDER BY ps.created_at DESC
     `);
 
-    const rows = Array.isArray(result) ? result : (result as any).rows ?? [];
-    const snippets = rows.map((row: any) => ({
+    const snippets = result.rows.map((row: any) => ({
       id: row.id,
       shareToken: row.share_token,
       url: buildPublicProfileURL(row.share_token),
@@ -166,7 +163,7 @@ export async function GET(req: NextRequest) {
  */
 export async function DELETE(req: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();

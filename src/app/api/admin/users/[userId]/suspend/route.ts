@@ -47,7 +47,8 @@ export async function POST(
       .set({
         deleted: suspended,
         updatedAt: new Date(),
-
+        // Also disable matching when suspended
+        matchingEnabled: suspended ? false : user.matchingEnabled,
       })
       .where(eq(profiles.id, userId));
 

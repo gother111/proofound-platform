@@ -48,7 +48,7 @@ export async function GET(
         displayName: profiles.displayName,
         handle: profiles.handle,
         avatarUrl: profiles.avatarUrl,
-        joinedAt: organizationMembers.joinedAt,
+        createdAt: organizationMembers.createdAt,
       })
       .from(organizationMembers)
       .innerJoin(profiles, eq(profiles.id, organizationMembers.userId))
@@ -63,8 +63,7 @@ export async function GET(
       );
 
     // Get role stats
-    type RoleStat = { role: string | null; count: number | null };
-    const roleStats: RoleStat[] = await db
+    const roleStats = await db
       .select({
         role: organizationMembers.role,
         count: sql<number>`count(*)::int`,
@@ -74,7 +73,7 @@ export async function GET(
       .groupBy(organizationMembers.role);
 
     const stats = {
-      total: roleStats.reduce((sum: number, r) => sum + (r.count || 0), 0),
+      total: roleStats.reduce((sum, r) => sum + (r.count || 0), 0),
       owners: roleStats.find((r) => r.role === 'owner')?.count || 0,
       admins: roleStats.find((r) => r.role === 'admin')?.count || 0,
       members: roleStats.find((r) => r.role === 'member')?.count || 0,

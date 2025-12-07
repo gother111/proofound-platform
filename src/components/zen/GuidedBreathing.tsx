@@ -100,7 +100,7 @@ export function GuidedBreathing() {
       <div className="relative mb-8 flex h-64 w-64 items-center justify-center">
         {/* Breathing Circle */}
         <div
-          className="absolute rounded-full bg-[#7A9278]/20 transition-all [transition-duration:4000ms] ease-in-out"
+          className="absolute rounded-full bg-[#7A9278]/20 transition-all duration-[4000ms] ease-in-out"
           style={{
             width: isActive ? '100%' : '60%',
             height: isActive ? '100%' : '60%',
@@ -109,7 +109,7 @@ export function GuidedBreathing() {
           }}
         />
         <div
-          className="absolute rounded-full bg-[#1C4D3A] shadow-lg transition-all [transition-duration:4000ms] ease-in-out flex items-center justify-center"
+          className="absolute rounded-full bg-[#1C4D3A] shadow-lg transition-all duration-[4000ms] ease-in-out flex items-center justify-center"
           style={{
             width: '40%',
             height: '40%',

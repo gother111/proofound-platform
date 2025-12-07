@@ -19,7 +19,7 @@ import { apiFetch } from '@/lib/api/fetch';
 interface SkillGap {
   skillCode: string;
   skillName: string;
-  l1?: string;
+  l1: string;
   currentLevel: number;
   targetLevel: number;
   gap: number;
@@ -34,11 +34,7 @@ export function GapMapWidget() {
   useEffect(() => {
     async function fetchTopGaps() {
       try {
-        const response = await apiFetch('/api/gap-map', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({}),
-        });
+        const response = await apiFetch('/api/expertise/gap-analysis');
         if (response.ok) {
           const data = await response.json();
           // Get top 3 gaps sorted by importance
@@ -58,7 +54,7 @@ export function GapMapWidget() {
   }, []);
 
   const handleViewAll = () => {
-    router.push('/app/i/gap-map');
+    router.push('/app/i/expertise?tab=gap-analysis');
   };
 
   if (loading) {
@@ -159,11 +155,7 @@ export function GapMapWidget() {
                   <span>Target: L{gap.targetLevel}</span>
                 </div>
                 <Progress
-                  value={
-                    gap.targetLevel > 0
-                      ? Math.min((gap.currentLevel / gap.targetLevel) * 100, 100)
-                      : 0
-                  }
+                  value={(gap.currentLevel / gap.targetLevel) * 100}
                   className="h-2 bg-secondary/20"
                 />
                 <p className="text-xs text-muted-foreground">

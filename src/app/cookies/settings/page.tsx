@@ -16,13 +16,12 @@ import { CookieSettingsClient } from '@/components/cookies/CookieSettingsClient'
 // Force dynamic rendering since we use searchParams
 export const dynamic = 'force-dynamic';
 
-export default async function CookieSettingsPage({
+export default function CookieSettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ returnTo?: string }>;
+  searchParams: { returnTo?: string };
 }) {
-  const { returnTo } = await searchParams;
-  const backLink = returnTo || '/';
+  const returnTo = searchParams.returnTo || '/';
 
   return (
     <div className="min-h-screen bg-[#F7F6F1]">
@@ -31,7 +30,7 @@ export default async function CookieSettingsPage({
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link
-              href={backLink}
+              href={returnTo}
               className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -70,7 +69,7 @@ export default async function CookieSettingsPage({
         </div>
 
         {/* Cookie Preferences Component with client-side routing */}
-        <CookieSettingsClient returnTo={backLink} />
+        <CookieSettingsClient returnTo={returnTo} />
 
         {/* Additional Information */}
         <div className="mt-12 pt-8 border-t space-y-4">

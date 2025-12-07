@@ -24,12 +24,13 @@ export async function POST(req: NextRequest) {
 
     // Emit the event
     const eventId = await emitEvent({
-      eventType: eventType as any, // Cast as we validate string type above
+      eventType,
       userId,
-      organizationId: orgId,
+      orgId,
       entityType,
       entityId,
-      properties: { ...properties, session_id: sessionId },
+      properties,
+      sessionId,
     });
 
     return NextResponse.json({ success: true, eventId });

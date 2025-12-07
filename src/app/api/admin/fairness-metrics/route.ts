@@ -24,8 +24,7 @@ export async function GET(req: NextRequest) {
     startDate.setDate(endDate.getDate() - days);
 
     // Fetch match data for analysis
-    const supabaseClient = await createClient();
-    const { data: matches } = await supabaseClient
+    const { data: matches } = await supabase
       .from('matches')
       .select('total_score, user_id, assignment_id, created_at')
       .gte('created_at', startDate.toISOString())

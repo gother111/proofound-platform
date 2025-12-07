@@ -82,106 +82,85 @@ const MinimalHeader = ({
 }: {
   menuOpen: boolean;
   setMenuOpen: (open: boolean) => void;
-}) => {
-  const [scrolled, setScrolled] = useState(false);
+}) => (
+  <motion.header
+    initial={{ y: -100 }}
+    animate={{ y: 0 }}
+    transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+    className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-6 pointer-events-none"
+  >
+    <div className="pointer-events-auto">
+      <Image
+        src="/logo.png"
+        alt="Proofound"
+        width={120}
+        height={48}
+        className="h-12 w-auto"
+        priority
+      />
+    </div>
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  return (
-    <motion.header
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-4 transition-all duration-300 pointer-events-none ${
-        scrolled
-          ? 'bg-white/70 dark:bg-[#1A1D2E]/70 backdrop-blur-md shadow-sm border-b border-gray-100/10'
-          : 'bg-transparent'
-      }`}
-    >
-      <div className="pointer-events-auto">
-        <Image
-          src="/logo.png"
-          alt="Proofound"
-          width={120}
-          height={48}
-          className="h-10 w-auto"
-          priority
-        />
-      </div>
-
-      <div className="pointer-events-auto">
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 group ${
-            scrolled
-              ? 'bg-transparent hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
-              : 'bg-white/80 dark:bg-[#2D3330]/80 backdrop-blur-md shadow-sm hover:scale-105'
-          }`}
-          aria-label="Menu"
-        >
-          {menuOpen ? (
-            <X className="w-6 h-6 text-[#1C4D3A] dark:text-[#D4C4A8]" />
-          ) : (
-            <Menu className="w-6 h-6 text-[#1C4D3A] dark:text-[#D4C4A8]" />
-          )}
-        </button>
-      </div>
-
-      {/* Fullscreen Menu Overlay */}
-      <motion.div
-        initial={{ opacity: 0, pointerEvents: 'none' }}
-        animate={{ opacity: menuOpen ? 1 : 0, pointerEvents: menuOpen ? 'auto' : 'none' }}
-        transition={{ duration: 0.3 }}
-        className="fixed inset-0 bg-[#F7F6F1]/95 dark:bg-[#1A1D2E]/95 backdrop-blur-xl z-40 flex items-center justify-center p-6"
-        onClick={() => setMenuOpen(false)}
+    <div className="pointer-events-auto">
+      <button
+        onClick={() => setMenuOpen(!menuOpen)}
+        className="w-12 h-12 rounded-full bg-white/80 dark:bg-[#2D3330]/80 backdrop-blur-md flex items-center justify-center shadow-sm hover:scale-105 transition-transform duration-300 group"
+        aria-label="Menu"
       >
-        <nav className="text-center space-y-6 md:space-y-8 w-full max-w-md">
-          {[
-            { label: 'Mission', href: '#the-problem' },
-            { label: 'How it Works', href: '#how-it-works' },
-            { label: 'Principles', href: '#principles' },
-            { label: 'Pricing', href: '#products' },
-            { label: 'Login', href: '/login' },
-          ].map((item) => (
-            <div key={item.label} className="overflow-hidden">
-              <motion.a
-                href={item.href}
-                className="block text-4xl md:text-5xl font-display text-[#1C4D3A] dark:text-[#D4C4A8] hover:text-[#C76B4A] transition-colors cursor-pointer"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setMenuOpen(false);
-                  if (item.href.startsWith('#')) {
-                    const element = document.querySelector(item.href);
-                    if (element) {
-                      const headerOffset = 80;
-                      const elementPosition = element.getBoundingClientRect().top;
-                      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+        {menuOpen ? (
+          <X className="w-5 h-5 text-[#1C4D3A] dark:text-[#D4C4A8]" />
+        ) : (
+          <Menu className="w-5 h-5 text-[#1C4D3A] dark:text-[#D4C4A8]" />
+        )}
+      </button>
+    </div>
 
-                      window.scrollTo({
-                        top: offsetPosition,
-                        behavior: 'smooth',
-                      });
-                    }
-                  } else {
-                    window.location.href = item.href;
+    {/* Fullscreen Menu Overlay */}
+    <motion.div
+      initial={{ opacity: 0, pointerEvents: 'none' }}
+      animate={{ opacity: menuOpen ? 1 : 0, pointerEvents: menuOpen ? 'auto' : 'none' }}
+      transition={{ duration: 0.3 }}
+      className="fixed inset-0 bg-[#F7F6F1]/95 dark:bg-[#1A1D2E]/95 backdrop-blur-xl z-40 flex items-center justify-center"
+      onClick={() => setMenuOpen(false)}
+    >
+      <nav className="text-center space-y-8">
+        {[
+          { label: 'Mission', href: '#the-problem' },
+          { label: 'How it Works', href: '#how-it-works' },
+          { label: 'Principles', href: '#principles' },
+          { label: 'Pricing', href: '#products' },
+          { label: 'Login', href: '/login' },
+        ].map((item) => (
+          <div key={item.label} className="overflow-hidden">
+            <motion.a
+              href={item.href}
+              className="block text-4xl md:text-5xl font-display text-[#1C4D3A] dark:text-[#D4C4A8] hover:text-[#C76B4A] transition-colors cursor-pointer"
+              onClick={(e) => {
+                e.preventDefault();
+                setMenuOpen(false);
+                if (item.href.startsWith('#')) {
+                  const element = document.querySelector(item.href);
+                  if (element) {
+                    element.scrollIntoView({ behavior: 'smooth' });
                   }
-                }}
-              >
-                {item.label}
-              </motion.a>
-            </div>
-          ))}
-        </nav>
-      </motion.div>
-    </motion.header>
-  );
-};
+                } else {
+                  // Use window.location for external/full page navigation or router if passed
+                  // Since this component is inside ProofoundLanding which has router, we can't easily access it here without passing it down.
+                  // But we can just use window.location.href for Login to ensure full reload if needed, or just let the parent handle it if we refactor.
+                  // Actually, MinimalHeader is defined *outside* the main component, so it doesn't have access to `router`.
+                  // We should probably move MinimalHeader *inside* or pass a navigation handler.
+                  // For now, window.location.href is safe for Login.
+                  window.location.href = item.href;
+                }
+              }}
+            >
+              {item.label}
+            </motion.a>
+          </div>
+        ))}
+      </nav>
+    </motion.div>
+  </motion.header>
+);
 
 const ProgressIndicator = ({ scrollYProgress }: { scrollYProgress: any }) => (
   <motion.div

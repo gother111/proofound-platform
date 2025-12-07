@@ -28,7 +28,6 @@ interface ReflectionDialogProps {
   onSuccess: () => void;
   defaultMilestone?: 'rejection' | 'interview' | 'offer';
   linkedCheckinId?: string;
-  stageContext?: 'interview' | 'rejection' | 'decision_pending';
 }
 
 const MAX_CHARS = 5000;
@@ -39,7 +38,6 @@ export function ReflectionDialog({
   onSuccess,
   defaultMilestone,
   linkedCheckinId,
-  stageContext,
 }: ReflectionDialogProps) {
   const [reflectionText, setReflectionText] = useState('');
   const [milestoneType, setMilestoneType] = useState<string | undefined>(defaultMilestone);
@@ -55,15 +53,6 @@ export function ReflectionDialog({
 
   const charsLeft = MAX_CHARS - reflectionText.length;
   const isOverLimit = charsLeft < 0;
-
-  const contextTip =
-    stageContext === 'interview'
-      ? 'Think about what went well in the interview and what you want to improve next time.'
-      : stageContext === 'rejection'
-        ? 'Rejections hurt—note what you learned and what support you need right now.'
-        : stageContext === 'decision_pending'
-          ? 'Waiting is stressful—capture what you can control and what reassurance you need.'
-          : null;
 
   const handleSubmit = async () => {
     if (reflectionText.trim().length === 0) {
@@ -191,7 +180,6 @@ Take your time—this is just for you."
           {/* Tips */}
           <div className="bg-muted/30 rounded-lg p-4 text-sm">
             <p className="font-medium mb-2">💡 Reflection Prompts:</p>
-            {contextTip ? <p className="mb-2 text-muted-foreground">{contextTip}</p> : null}
             <ul className="space-y-1 text-muted-foreground list-disc list-inside">
               <li>What challenged me today, and how did I respond?</li>
               <li>What am I grateful for in my career journey right now?</li>

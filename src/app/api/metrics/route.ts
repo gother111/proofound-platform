@@ -87,13 +87,13 @@ export async function GET(request: NextRequest) {
 
     switch (metric) {
       case 'ttsc':
-        metrics = { ttsc: await calculateTTSC(cohort, startDate, endDate) };
+        metrics = { ttsc: await calculateTTSC(startDate, endDate) };
         break;
       case 'ttfqi':
-        metrics = { ttfqi: await calculateTTFQI(cohort, startDate, endDate) };
+        metrics = { ttfqi: await calculateTTFQI(startDate, endDate, cohort) };
         break;
       case 'ttv':
-        metrics = { ttv: await calculateTTV(cohort, startDate, endDate) };
+        metrics = { ttv: await calculateTTV(startDate, endDate, cohort) };
         break;
       case 'pac':
         metrics = { pac: await calculatePACLift(startDate, endDate) };

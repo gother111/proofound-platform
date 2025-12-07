@@ -15,17 +15,6 @@ export type ZenPractice = {
   isSpiritual: boolean;
 };
 
-export type ZenResource = {
-  id: string;
-  title: string;
-  summary: string;
-  url: string;
-  duration?: string;
-  badges: string[];
-  external: boolean;
-  privacyNote?: string;
-};
-
 export const riskStates = [
   {
     id: 'calm',
@@ -222,19 +211,6 @@ export const zenPractices: ZenPractice[] = [
     style: 'Secular',
     time: 999,
     isSpiritual: false,
-  },
-];
-
-export const zenResources: ZenResource[] = [
-  {
-    id: 'miracle-of-mind',
-    title: 'Miracle of Mind — 7-min meditation',
-    summary: 'Free guided meditation, beginner-friendly. Track streaks and get short wisdom notes.',
-    url: 'https://isha.sadhguru.org/us/en/miracle-of-mind',
-    duration: '7 min',
-    badges: ['External', 'Free'],
-    external: true,
-    privacyNote: 'Opens an external site; your Zen data stays private.',
   },
 ];
 

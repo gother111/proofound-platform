@@ -96,7 +96,10 @@ export async function createAssignmentViaUI(
     const skillsSection = page.locator('text=/required skills|must have skills/i').first();
     if (await skillsSection.isVisible()) {
       for (const skill of assignment.requiredSkills) {
-        const skillInput = page.locator('input[placeholder*="skill"], input[type="text"]').first();
+        const skillInput = page
+          .locator('input[placeholder*="skill"], input[type="text"]')
+          .near(skillsSection)
+          .first();
 
         if (await skillInput.isVisible()) {
           await skillInput.fill(skill);
@@ -138,6 +141,7 @@ export async function createAssignmentViaUI(
       if (assignment.compensationMin !== undefined) {
         const minInput = page
           .getByLabel(/min|minimum/i)
+          .near(compSection)
           .or(page.locator('input[name*="min"], input[placeholder*="min"]'))
           .first();
 
@@ -149,6 +153,7 @@ export async function createAssignmentViaUI(
       if (assignment.compensationMax !== undefined) {
         const maxInput = page
           .getByLabel(/max|maximum/i)
+          .near(compSection)
           .or(page.locator('input[name*="max"], input[placeholder*="max"]'))
           .first();
 
@@ -168,10 +173,10 @@ export async function createAssignmentViaUI(
 
     if (await nextButton.isVisible()) {
       const buttonText = await nextButton.textContent();
-
-      if (buttonText?.toLowerCase().includes('publish') ||
-        buttonText?.toLowerCase().includes('create') ||
-        buttonText?.toLowerCase().includes('save')) {
+      
+      if (buttonText?.toLowerCase().includes('publish') || 
+          buttonText?.toLowerCase().includes('create') ||
+          buttonText?.toLowerCase().includes('save')) {
         await nextButton.click();
         await page.waitForTimeout(2000);
         break;
@@ -228,7 +233,7 @@ export async function viewMatchesForAssignment(
 /**
  * Get all match cards for current assignment
  */
-export function getOrgMatchCards(page: Page) {
+export async function getOrgMatchCards(page: Page) {
   return page.locator(
     '[data-testid="match-card"], .match-card, [class*="MatchCard"], [class*="match-result"]'
   );
@@ -302,7 +307,7 @@ export async function shortlistCandidate(page: Page, matchIndex = 0) {
     if (await menuButton.isVisible()) {
       await menuButton.click();
       await page.waitForTimeout(500);
-
+      
       const shortlistOption = page.locator('text=/shortlist/i').first();
       if (await shortlistOption.isVisible()) {
         await shortlistOption.click();
