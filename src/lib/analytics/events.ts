@@ -85,7 +85,15 @@ export interface AnalyticsEvent {
   userId: string;
   profileId?: string;
   organizationId?: string;
-  entityType?: 'match' | 'interview' | 'contract' | 'profile' | 'assignment' | 'survey' | 'tour';
+  entityType?:
+    | 'match'
+    | 'interview'
+    | 'contract'
+    | 'profile'
+    | 'assignment'
+    | 'survey'
+    | 'tour'
+    | 'wellbeing_checkin';
   entityId?: string;
   properties?: Record<string, any>;
   privacyPartition?: string; // For demographic segmentation (opt-in)
@@ -751,7 +759,6 @@ export async function emitContractSigned(
 
 export async function emitWellbeingCheckin(
   userId: string,
-  checkinId: string,
   properties: {
     checkin_id: string;
     overall_score: number;
@@ -762,6 +769,8 @@ export async function emitWellbeingCheckin(
     eventType: 'wellbeing_checkin',
     userId,
     properties,
+    entityType: 'wellbeing_checkin',
+    entityId: properties.checkin_id,
   });
 }
 

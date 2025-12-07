@@ -5,6 +5,8 @@ import { wellbeingCheckins, auditLogs } from '@/db/schema';
 import { eq, desc, gte } from 'drizzle-orm';
 import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit/index';
 
+type WellbeingCheckinRow = typeof wellbeingCheckins.$inferSelect;
+
 /**
  * POST /api/wellbeing/checkin
  *
@@ -91,9 +93,13 @@ export async function POST(request: NextRequest) {
     try {
       const { emitWellbeingCheckin } = await import('@/lib/analytics/events');
       await emitWellbeingCheckin(user.id, {
-        stressLevel,
-        controlLevel,
-        milestoneTriggered: !!milestoneTriggerId,
+        checkin_id: checkin.id,
+        overall_score: (stressLevel + controlLevel) / 2,
+        dimensions: {
+          stress: stressLevel,
+          control: controlLevel,
+          milestone_triggered: milestoneTriggerId ? 1 : 0,
+        },
       });
     } catch (analyticsError) {
       // Log but don't fail the check-in
@@ -143,14 +149,14 @@ export async function GET(request: NextRequest) {
 
     const cutoffDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-    const checkins = await db.query.wellbeingCheckins.findMany({
+    const checkins: WellbeingCheckinRow[] = await db.query.wellbeingCheckins.findMany({
       where: eq(wellbeingCheckins.userId, user.id),
       orderBy: [desc(wellbeingCheckins.createdAt)],
       limit,
     });
 
     // Filter by date
-    const filtered = checkins.filter((c) => c.createdAt >= cutoffDate);
+    const filtered = checkins.filter((c: WellbeingCheckinRow) => c.createdAt >= cutoffDate);
 
     // Calculate trend
     let trend: 'improving' | 'stable' | 'declining' | null = null;
@@ -159,9 +165,15 @@ export async function GET(request: NextRequest) {
       const older = filtered.slice(Math.max(0, filtered.length - 3));
 
       const recentScore =
-        recent.reduce((sum, c) => sum + (5 - c.stressLevel + c.controlLevel), 0) / recent.length;
+        recent.reduce(
+          (sum: number, c: WellbeingCheckinRow) => sum + (5 - c.stressLevel + c.controlLevel),
+          0
+        ) / recent.length;
       const olderScore =
-        older.reduce((sum, c) => sum + (5 - c.stressLevel + c.controlLevel), 0) / older.length;
+        older.reduce(
+          (sum: number, c: WellbeingCheckinRow) => sum + (5 - c.stressLevel + c.controlLevel),
+          0
+        ) / older.length;
 
       if (recentScore > olderScore + 1) trend = 'improving';
       else if (recentScore < olderScore - 1) trend = 'declining';
