@@ -4,7 +4,6 @@
 import 'postgres';
 
 declare module 'postgres' {
-  // eslint-disable-next-line @typescript-eslint/no-empty-interface
   export interface RowList<T = Record<string, unknown>> extends Array<T> {
     rows: T[];
   }
