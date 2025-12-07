@@ -138,7 +138,7 @@ export async function PATCH(
       .set({
         currentStageCode: stageCode,
         stageHistory: updatedHistory,
-        expectedDecisionDate,
+        expectedDecisionDate: expectedDecisionDate ? expectedDecisionDate.toISOString() : null,
         outcome: outcome || timelineRow.outcome,
         outcomeReason: outcomeReason || null,
         updatedAt: new Date(),
