@@ -8,6 +8,7 @@
 import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
+import type { MatchActionedProperties } from '@/lib/analytics/constants';
 
 // ============================================================================
 // TYPES
@@ -608,15 +609,14 @@ export async function emitFirstMatchShown(
 export async function emitMatchActioned(
   userId: string,
   matchId: string,
-  action: string,
-  reason?: string
+  properties: MatchActionedProperties
 ) {
   await emitAnalyticsEvent({
     eventType: 'match_actioned',
     userId,
     entityType: 'match',
     entityId: matchId,
-    properties: { action, reason },
+    properties,
   });
 }
 
