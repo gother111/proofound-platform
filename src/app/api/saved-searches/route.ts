@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { and, desc, eq } from 'drizzle-orm';
 
 import { db } from '@/db';
-import { savedSearches } from '@/db/schema';
+import { savedSearches, type InsertSavedSearch } from '@/db/schema';
 import { requireAuth } from '@/lib/auth';
 import { log } from '@/lib/log';
 
@@ -53,26 +53,26 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const data = SavedSearchSchema.parse(body);
 
-    const [created] = await db
-      .insert(savedSearches)
-      .values({
-        userId: user.id,
-        name: data.name,
-        causes: data.causes ?? [],
-        valuesTags: data.valuesTags ?? [],
-        locationMode: data.locationMode,
-        country: data.country,
-        city: data.city,
-        compMin: data.compMin,
-        compMax: data.compMax,
-        hoursMin: data.hoursMin,
-        hoursMax: data.hoursMax,
-        industries: data.industries ?? [],
-        alertEnabled: data.alertEnabled ?? true,
-        alertThreshold: data.alertThreshold ?? 0.75,
-        alertFrequency: data.alertFrequency ?? 'immediate',
-      })
-      .returning();
+    const payload: InsertSavedSearch = {
+      userId: user.id,
+      name: data.name,
+      causes: data.causes ?? [],
+      valuesTags: data.valuesTags ?? [],
+      locationMode: data.locationMode ?? null,
+      country: data.country ?? null,
+      city: data.city ?? null,
+      compMin: data.compMin ?? null,
+      compMax: data.compMax ?? null,
+      hoursMin: data.hoursMin ?? null,
+      hoursMax: data.hoursMax ?? null,
+      industries: data.industries ?? [],
+      alertEnabled: data.alertEnabled ?? true,
+      alertThreshold: (data.alertThreshold ?? 0.75).toString(),
+      alertFrequency: data.alertFrequency ?? 'immediate',
+      lastAlertedAt: null,
+    };
+
+    const [created] = await db.insert(savedSearches).values(payload).returning();
 
     log.info('saved-searches.created', {
       userId: user.id,
