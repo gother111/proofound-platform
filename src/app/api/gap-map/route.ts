@@ -84,7 +84,7 @@ async function handleGapRequest(body: GapRequestBody) {
       assignmentIds =
         interestRows
           ?.map((row: { assignment_id: string | null }) => row.assignment_id)
-          .filter(Boolean) ?? [];
+          .filter((id): id is string => typeof id === 'string' && id.length > 0) ?? [];
     }
 
     if (assignmentIds.length === 0) {
