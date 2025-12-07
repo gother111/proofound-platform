@@ -228,7 +228,11 @@ export async function POST(request: NextRequest) {
           // If this is a qualified intro, also emit FIRST_QUALIFIED_INTRO event (for TTFQI tracking)
           if (qualificationMet) {
             const { emitFirstQualifiedIntroAsync } = await import('@/lib/analytics/events');
-            emitFirstQualifiedIntroAsync(user.id, match.id, assignmentId);
+            // Emit first qualified intro event with required analytics payload
+            emitFirstQualifiedIntroAsync(user.id, match.id, {
+              assignment_id: assignmentId,
+              match_id: match.id,
+            });
           }
 
           // Send notifications to both parties about mutual interest
