@@ -30,7 +30,7 @@ export async function calculateNextActions(organizationId: string): Promise<Next
   // 1. Check for stale assignments (>14 days, no shortlist)
   const staleAssignments = await db.query.assignments.findMany({
     where: and(
-      eq(assignments.organizationId, organizationId),
+      eq(assignments.orgId, organizationId),
       eq(assignments.status, 'active'),
       lt(assignments.createdAt, new Date(Date.now() - 14 * 24 * 60 * 60 * 1000))
     ),
@@ -51,7 +51,7 @@ export async function calculateNextActions(organizationId: string): Promise<Next
         title: 'No matches for assignment',
         description: `"${assignment.role || 'Untitled'}" has been active for 14+ days with no matches. Consider adjusting criteria.`,
         actionLabel: 'Review Criteria',
-        actionUrl: `/o/${assignment.organizationId}/assignments/${assignment.id}/edit`,
+        actionUrl: `/o/${assignment.orgId}/assignments/${assignment.id}/edit`,
         metadata: { assignmentId: assignment.id },
       });
     }
@@ -109,7 +109,7 @@ export async function calculateNextActions(organizationId: string): Promise<Next
     LIMIT 2
   `);
 
-  for (const row of lowQualityAssignments.rows as any[]) {
+  for (const row of lowQualityAssignments as unknown as any[]) {
     const avgScore = Math.round(parseFloat(row.avg_score) * 100);
     actions.push({
       id: `low-quality-${row.assignment_id}`,

@@ -213,7 +213,6 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
             await emitContractSigned(updatedContract.userId, updatedContract.id, {
               contract_id: updatedContract.id,
               assignment_id: updatedContract.assignmentId,
-              match_id: '', // matchId not available on this record
               ttsc_days: undefined,
             });
           } catch (analyticsError) {

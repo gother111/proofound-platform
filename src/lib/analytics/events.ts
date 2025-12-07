@@ -733,7 +733,6 @@ export async function emitContractSigned(
   properties: {
     contract_id: string;
     assignment_id: string;
-    match_id: string;
     ttsc_days?: number; // Time to signed contract (from match)
   }
 ) {

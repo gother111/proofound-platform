@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     const metric: WebVitalMetric = await req.json();
 
     // Get user ID if authenticated (optional for web vitals)
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -54,14 +54,14 @@ export async function POST(req: NextRequest) {
           'page',
           ${metric.pagePath},
           ${JSON.stringify({
-            metric_name: metric.metricName,
-            value: metric.value,
-            rating: metric.rating,
-            delta: metric.delta,
-            metric_id: metric.id,
-            navigation_type: metric.navigationType,
-            user_agent: req.headers.get('user-agent'),
-          })},
+        metric_name: metric.metricName,
+        value: metric.value,
+        rating: metric.rating,
+        delta: metric.delta,
+        metric_id: metric.id,
+        navigation_type: metric.navigationType,
+        user_agent: req.headers.get('user-agent'),
+      })},
           NOW()
         )
       `);
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
  */
 export async function GET(req: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -176,9 +176,9 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      metrics: result.rows,
-      trends: trendResult.rows,
-      pageBreakdown: pageBreakdown.rows,
+      metrics: result,
+      trends: trendResult,
+      pageBreakdown: pageBreakdown,
       period: {
         days,
         startDate: new Date(Date.now() - days * 24 * 60 * 60 * 1000),

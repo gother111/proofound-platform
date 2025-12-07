@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { DashboardClient } from './DashboardClient';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { DashboardView } from './DashboardView';
 import { getDashboardMetrics } from '@/lib/dashboard/metrics';
 import {
   TrendingUp,
@@ -36,9 +37,6 @@ export default async function IndividualHomePage() {
       activeApplications: 0,
     };
   }
-
-  const userName = user.displayName || user.handle || 'there';
-  const firstName = userName.split(' ')[0];
 
   const heroStats = [
     {
@@ -93,92 +91,11 @@ export default async function IndividualHomePage() {
   ];
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#F7F6F1' }}>
-      <div className="max-w-[1400px] mx-auto px-4 py-4">
-        <div className="space-y-4">
-          {/* Hero */}
-          <section
-            className="rounded-2xl p-6 text-white"
-            style={{
-              background: 'linear-gradient(135deg, #1C4D3A 0%, #2D5F4A 45%, #1C4D3A 100%)',
-            }}
-          >
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-              <div className="space-y-3 max-w-xl">
-                <h1 className="text-3xl font-['Crimson_Pro']">Welcome back, {firstName}</h1>
-                <p className="text-white/90 text-sm leading-relaxed">
-                  You have {metrics.qualityMatches} high-fit matches and{' '}
-                  {metrics.pendingVerifications} verification
-                  {metrics.pendingVerifications === 1 ? '' : 's'} awaiting review. Keep your proofs
-                  active to stay momentum-ready.
-                </p>
-                <div className="flex flex-wrap gap-4 text-sm">
-                  {heroStats.map(({ icon: Icon, label, value }) => (
-                    <div key={label} className="flex items-center gap-2">
-                      <Icon className="w-5 h-5" />
-                      <span className="font-medium">{value}</span>
-                      <span className="text-white/70">{label}</span>
-                    </div>
-                  ))}
-                </div>
-                <Link href="/app/i/profile">
-                  <Button
-                    size="sm"
-                    className="text-sm mt-1 bg-white text-[#1C4D3A] hover:bg-[#F7F6F1]"
-                  >
-                    Complete your profile
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </section>
-
-          {/* KPI Grid */}
-          <section data-tour="dashboard" className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {kpiCards.map(
-              ({ title, value, description, footnote, Icon, changeColor, ctaHref, ctaLabel }) => (
-                <Card
-                  key={title}
-                  className="p-4"
-                  style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <Icon className="w-5 h-5" style={{ color: '#1C4D3A' }} />
-                    {title === 'Pending Verifications' ? (
-                      <AlertCircle className="w-4 h-4" style={{ color: '#D4A574' }} />
-                    ) : (
-                      <TrendingUp className="w-4 h-4" style={{ color: '#7A9278' }} />
-                    )}
-                  </div>
-                  <p className="text-3xl font-['Crimson_Pro']" style={{ color: '#2D3330' }}>
-                    {value}
-                  </p>
-                  <p className="text-xs" style={{ color: '#6B6760' }}>
-                    {description}
-                  </p>
-                  {ctaHref ? (
-                    <Link
-                      href={ctaHref}
-                      className="mt-3 inline-flex text-xs font-medium"
-                      style={{ color: '#1C4D3A' }}
-                    >
-                      {ctaLabel ?? 'Review now'} <ArrowRight className="w-3 h-3 ml-1" />
-                    </Link>
-                  ) : (
-                    <p className="text-xs mt-2" style={{ color: changeColor }}>
-                      {footnote}
-                    </p>
-                  )}
-                </Card>
-              )
-            )}
-          </section>
-
-          {/* Customizable Dashboard */}
-          <DashboardClient />
-        </div>
-      </div>
-    </div>
+    <DashboardView
+      user={user}
+      metrics={metrics}
+      kpiCards={kpiCards}
+      heroStats={heroStats}
+    />
   );
 }

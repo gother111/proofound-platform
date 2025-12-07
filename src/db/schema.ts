@@ -177,6 +177,7 @@ export const organizations = pgTable('organizations', {
   workCulture: jsonb('work_culture'), // {collaboration, decision_making, learning, wellbeing, inclusion}
   // Impact tracking
   impactEntries: jsonb('impact_entries').default(sql`'[]'::jsonb`), // Array of impact entries
+  verified: boolean('verified').default(false),
   createdBy: uuid('created_by').references(() => profiles.id),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

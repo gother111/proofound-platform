@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     const user = await requireAuth();
 
     // Only platform admins can generate fairness reports
-    const { data: profile } = await db.query.profiles.findFirst({
+    const profile = await db.query.profiles.findFirst({
       where: (profiles, { eq }) => eq(profiles.id, user.id),
     });
 
@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
     const user = await requireAuth();
 
     // Only platform admins can view fairness reports
-    const { data: profile } = await db.query.profiles.findFirst({
+    const profile = await db.query.profiles.findFirst({
       where: (profiles, { eq }) => eq(profiles.id, user.id),
     });
 
@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
 
     // Get recent reports
     const reports = await db.query.fairnessReports.findMany({
-      orderBy: [desc(fairnessReports.generatedAt)],
+      orderBy: [desc(fairnessReports.createdAt)],
       limit,
     });
 

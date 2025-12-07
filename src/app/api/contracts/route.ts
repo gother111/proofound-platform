@@ -253,7 +253,6 @@ export async function POST(request: NextRequest) {
         await emitContractSigned(userId, contract.id, {
           contract_id: contract.id,
           assignment_id: assignmentId,
-          match_id: '',
           ttsc_days: undefined,
         });
 

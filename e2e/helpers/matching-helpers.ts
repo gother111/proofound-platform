@@ -1,4 +1,4 @@
-import { Page, expect } from '@playwright/test';
+import { Locator, Page, expect } from '@playwright/test';
 
 /**
  * E2E Test Helpers for Matching Engine
@@ -30,7 +30,7 @@ export async function waitForMatches(page: Page, timeout = 10000) {
 /**
  * Get all match cards on the page
  */
-export async function getMatchCards(page: Page) {
+export function getMatchCards(page: Page): Locator {
   return page.locator(
     '[data-testid="match-card"], .match-card, [class*="MatchCard"], [class*="match-result"]'
   );
@@ -39,8 +39,8 @@ export async function getMatchCards(page: Page) {
 /**
  * Get match card by index
  */
-export async function getMatchCard(page: Page, index: number) {
-  const cards = await getMatchCards(page);
+export function getMatchCard(page: Page, index: number): Locator {
+  const cards = getMatchCards(page);
   return cards.nth(index);
 }
 
