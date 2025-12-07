@@ -44,6 +44,8 @@ const IN_APP_PREF_MAP: Record<NotificationType, keyof NotificationPreference> = 
   new_match_alert: 'inAppNewMatchAlert',
   rank_improved: 'inAppRankImproved',
   followed_org_new_role: 'inAppFollowedOrgNewRole',
+  application_stage_updated: 'inAppApplicationStageUpdated',
+  expected_timeframe_reminder: 'inAppExpectedTimeframeReminder',
 };
 
 const EMAIL_PREF_MAP: Record<NotificationType, keyof NotificationPreference> = {
@@ -62,6 +64,8 @@ const EMAIL_PREF_MAP: Record<NotificationType, keyof NotificationPreference> = {
   new_match_alert: 'emailNewMatchAlert',
   rank_improved: 'emailRankImproved',
   followed_org_new_role: 'emailFollowedOrgNewRole',
+  application_stage_updated: 'emailApplicationStageUpdated',
+  expected_timeframe_reminder: 'emailExpectedTimeframeReminder',
 };
 
 export const dynamic = 'force-dynamic';
