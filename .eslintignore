@@ -1,0 +1,23 @@
+# Tests and fixtures
+src/__tests__/**
+tests/**
+src/app/api/**/__tests__/**
+src/lib/__tests__/**
+
+# Helper setup files
+tests/setup-ssr-helpers.ts
+tests/helpers/**
+
+# Type shims and declarations
+src/types/**/*.d.ts
+
+# Tests in src/__tests__ and utility/test config files
+src/__tests__/**
+src/lib/__tests__/**
+tests/**/*.ts
+tests/**/*.tsx
+src/app/api/**/__tests__/**
+src/lib/__tests__/**
+tests/setup-ssr-helpers.ts
+tests/helpers/**
+
