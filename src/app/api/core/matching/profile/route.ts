@@ -84,8 +84,15 @@ export async function POST(request: NextRequest) {
         : false;
 
     const body = await request.json();
-    const validatedData = (isServiceRoleCall ? ServiceMatchRequestSchema : MatchRequestSchema).parse(body);
-    const user = isServiceRoleCall ? { id: validatedData.userId } : await requireAuth();
+    // Parse request body using the correct schema based on caller type
+    const validatedData = isServiceRoleCall
+      ? ServiceMatchRequestSchema.parse(body)
+      : MatchRequestSchema.parse(body);
+
+    // Resolve user id from service-role input or authenticated user
+    const authedUser = isServiceRoleCall ? null : await requireAuth();
+    const user = { id: isServiceRoleCall ? validatedData.userId : authedUser.id };
+
     const { mode, k = 20, useSemanticMatching = false } = validatedData;
 
     // Fetch user's matching profile (with caching)
