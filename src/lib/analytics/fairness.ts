@@ -241,20 +241,29 @@ async function calculateSegmentGaps(
 
   // Get segment-specific rates
   // This requires demographic data from wellbeing_opt_ins table
-  const segmentResults = await db.execute(sql`
-    SELECT
-      wo.${sql.raw(segmentType)} as segment_value,
-      COUNT(DISTINCT CASE WHEN e.event_type = 'match_generated' THEN e.entity_id END)::float as matches,
-      COUNT(DISTINCT CASE WHEN e.event_type = 'match_introduced' THEN e.entity_id END)::float as introductions
-    FROM analytics_events e
-    INNER JOIN wellbeing_opt_ins wo ON e.user_id = wo.user_id
-    WHERE e.occurred_at >= ${thirtyDaysAgo.toISOString()}
-      AND e.event_type IN ('match_generated', 'match_introduced')
-      AND wo.${sql.raw(segmentType)} IS NOT NULL
-      AND wo.opted_in = true
-    GROUP BY wo.${sql.raw(segmentType)}
-    HAVING COUNT(DISTINCT e.entity_id) >= 10
-  `);
+  let segmentResults;
+  try {
+    segmentResults = await db.execute(sql`
+      SELECT
+        wo.${sql.raw(segmentType)} as segment_value,
+        COUNT(DISTINCT CASE WHEN e.event_type = 'match_generated' THEN e.entity_id END)::float as matches,
+        COUNT(DISTINCT CASE WHEN e.event_type = 'match_introduced' THEN e.entity_id END)::float as introductions
+      FROM analytics_events e
+      INNER JOIN wellbeing_opt_ins wo ON e.user_id = wo.user_id
+      WHERE e.occurred_at >= ${thirtyDaysAgo.toISOString()}
+        AND e.event_type IN ('match_generated', 'match_introduced')
+        AND wo.${sql.raw(segmentType)} IS NOT NULL
+        AND wo.opted_in = true
+      GROUP BY wo.${sql.raw(segmentType)}
+      HAVING COUNT(DISTINCT e.entity_id) >= 10
+    `);
+  } catch (error) {
+    log.warn('fairness.segment.missing_demographics', {
+      segmentType,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    return [];
+  }
 
   const segments: FairnessSegment[] = [];
 
@@ -531,21 +540,30 @@ async function calculateSegmentGapsForDateRange(
 
   // Get segment-specific rates
   // This requires demographic data from wellbeing_opt_ins table
-  const segmentResults = await db.execute(sql`
-    SELECT
-      wo.${sql.raw(segmentType)} as segment_value,
-      COUNT(DISTINCT CASE WHEN e.event_type = 'match_generated' THEN e.entity_id END)::float as matches,
-      COUNT(DISTINCT CASE WHEN e.event_type = 'match_introduced' THEN e.entity_id END)::float as introductions
-    FROM analytics_events e
-    INNER JOIN wellbeing_opt_ins wo ON e.user_id = wo.user_id
-    WHERE e.occurred_at >= ${startDate.toISOString()}
-      AND e.occurred_at <= ${endDate.toISOString()}
-      AND e.event_type IN ('match_generated', 'match_introduced')
-      AND wo.${sql.raw(segmentType)} IS NOT NULL
-      AND wo.opted_in = true
-    GROUP BY wo.${sql.raw(segmentType)}
-    HAVING COUNT(DISTINCT e.entity_id) >= 10
-  `);
+  let segmentResults;
+  try {
+    segmentResults = await db.execute(sql`
+      SELECT
+        wo.${sql.raw(segmentType)} as segment_value,
+        COUNT(DISTINCT CASE WHEN e.event_type = 'match_generated' THEN e.entity_id END)::float as matches,
+        COUNT(DISTINCT CASE WHEN e.event_type = 'match_introduced' THEN e.entity_id END)::float as introductions
+      FROM analytics_events e
+      INNER JOIN wellbeing_opt_ins wo ON e.user_id = wo.user_id
+      WHERE e.occurred_at >= ${startDate.toISOString()}
+        AND e.occurred_at <= ${endDate.toISOString()}
+        AND e.event_type IN ('match_generated', 'match_introduced')
+        AND wo.${sql.raw(segmentType)} IS NOT NULL
+        AND wo.opted_in = true
+      GROUP BY wo.${sql.raw(segmentType)}
+      HAVING COUNT(DISTINCT e.entity_id) >= 10
+    `);
+  } catch (error) {
+    log.warn('fairness.segment.missing_demographics', {
+      segmentType,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    return [];
+  }
 
   const segments: FairnessSegment[] = [];
 
