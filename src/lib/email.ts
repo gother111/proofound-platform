@@ -13,6 +13,7 @@ import NewMatchNotification from '../../emails/NewMatchNotification';
 import ContractSigned from '../../emails/ContractSigned';
 import InterviewScheduled from '../../emails/InterviewScheduled';
 import IdentityRevealed from '../../emails/IdentityRevealed';
+import FeedbackRequest from '../../emails/FeedbackRequest';
 import VerificationApproved from '../../emails/VerificationApproved';
 import VerificationRejected from '../../emails/VerificationRejected';
 
@@ -399,5 +400,35 @@ export async function sendVerificationRejectedEmail(
   } catch (error) {
     console.error('Failed to send verification rejected email:', error);
     throw new Error('Failed to send verification rejected email');
+  }
+}
+
+export async function sendFeedbackRequestEmail(params: {
+  to: string;
+  direction: 'candidate_to_org' | 'org_to_candidate';
+  token: string;
+  expiresAt?: string;
+  interviewTime?: string;
+}) {
+  const feedbackUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/feedback/${params.token}`;
+
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to: params.to,
+      subject:
+        params.direction === 'candidate_to_org'
+          ? 'How was your interview? Share quick feedback'
+          : 'Share feedback with the candidate',
+      react: FeedbackRequest({
+        direction: params.direction,
+        feedbackUrl,
+        expiresAt: params.expiresAt,
+        interviewTime: params.interviewTime,
+      }),
+    });
+  } catch (error) {
+    console.error('Failed to send feedback request email:', error);
+    throw new Error('Failed to send feedback request email');
   }
 }

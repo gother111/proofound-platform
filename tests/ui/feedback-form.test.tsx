@@ -1,0 +1,101 @@
+import React from 'react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import FeedbackForm from '../../src/components/feedback/FeedbackForm';
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    refresh: vi.fn(),
+  }),
+}));
+
+// Simplify UI primitives to avoid unrelated rendering errors
+vi.mock('../../src/components/ui/card', () => ({
+  Card: (props: any) => <div {...props} />,
+  CardHeader: (props: any) => <div {...props} />,
+  CardContent: (props: any) => <div {...props} />,
+  CardTitle: (props: any) => <div {...props} />,
+}));
+
+vi.mock('../../src/components/ui/button', () => ({
+  Button: (props: any) => <button {...props} />,
+}));
+
+vi.mock('../../src/components/ui/input', () => ({
+  Input: (props: any) => <input {...props} />,
+}));
+
+vi.mock('../../src/components/ui/label', () => ({
+  Label: ({ children, htmlFor, ...rest }: any) => (
+    <label htmlFor={htmlFor ?? rest.id ?? 'mock-id'} {...rest}>
+      {children}
+    </label>
+  ),
+}));
+
+vi.mock('../../src/components/ui/textarea', () => ({
+  Textarea: (props: any) => <textarea {...props} />,
+}));
+
+const template = {
+  id: '11111111-1111-4111-8111-111111111111',
+  name: 'Candidate → Org Default',
+  direction: 'candidate_to_org' as const,
+  questions: [
+    {
+      id: 'q-scale',
+      prompt: 'Clarity of role expectations',
+      question_type: 'scale' as const,
+      scale_min: 1,
+      scale_max: 5,
+      required: true,
+      sort_order: 1,
+    },
+    {
+      id: 'q-text',
+      prompt: 'What went well?',
+      question_type: 'text' as const,
+      required: false,
+      sort_order: 2,
+    },
+  ],
+};
+
+describe('FeedbackForm', () => {
+  beforeEach(() => {
+    vi.spyOn(global, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => ({}),
+    } as any);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('shows validation when required fields are missing', async () => {
+    render(<FeedbackForm template={template} interviewId="interview-1" />);
+
+    fireEvent.click(screen.getByRole('button', { name: /submit feedback/i }));
+
+    expect(await screen.findByText(/Please complete the required questions/i)).toBeInTheDocument();
+  });
+
+  it('submits when required fields are provided', async () => {
+    render(<FeedbackForm template={template} interviewId="interview-1" token="token-1" />);
+
+    const scaleInput = screen.getByRole('spinbutton');
+    fireEvent.change(scaleInput, { target: { value: '5' } });
+    const textarea = screen.getByPlaceholderText(/Add details/);
+    fireEvent.change(textarea, { target: { value: 'Great pacing' } });
+
+    fireEvent.click(screen.getByRole('button', { name: /submit feedback/i }));
+
+    await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+    const payload = JSON.parse((global.fetch as any).mock.calls[0][1].body);
+    expect(payload.token).toBe('token-1');
+    expect(payload.answers[0].score).toBe(5);
+    expect(await screen.findByText(/Feedback submitted/)).toBeInTheDocument();
+  });
+});
