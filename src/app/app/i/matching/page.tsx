@@ -8,6 +8,8 @@ import { MatchResultCard } from '@/components/matching/MatchResultCard';
 import { EnhancedMatchFilters } from '@/components/matching/EnhancedMatchFilters';
 import { SkeletonCard } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
+import { SnoozedMatchesList } from '@/components/matching/SnoozedMatchesList';
+import { HiddenMatchesList } from '@/components/matching/HiddenMatchesList';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,100 +23,104 @@ export default function MatchingPage() {
   const [activeFilters, setActiveFilters] = useState<{
     causes: string[];
     skillDomains: string[];
+    values: string[];
     locationMode?: string;
     workMode?: string;
+    minComp?: number;
+    maxComp?: number;
   }>({
     causes: [],
     skillDomains: [],
+    values: [],
   });
+  const [showManageHiddenSnoozed, setShowManageHiddenSnoozed] = useState(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      // Create abort controller for timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+  const fetchMatches = async () => {
+    // Create abort controller for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
-      try {
-        // Fetch matching profile
-        const profileRes = await fetch('/api/matching-profile', {
+    try {
+      // Fetch matching profile
+      const profileRes = await fetch('/api/matching-profile', {
+        signal: controller.signal,
+      });
+
+      if (!profileRes.ok) {
+        const errorData = await profileRes.json().catch(() => ({}));
+        console.error('Failed to load matching profile:', errorData);
+        throw new Error(errorData.message || 'Failed to load matching profile');
+      }
+
+      const profileData = await profileRes.json();
+      setMatchingProfile(profileData.profile);
+
+      // If profile exists, fetch matches
+      if (profileData.profile) {
+        const matchesRes = await fetch('/api/match/profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
           signal: controller.signal,
         });
 
-        if (!profileRes.ok) {
-          const errorData = await profileRes.json().catch(() => ({}));
-          console.error('Failed to load matching profile:', errorData);
-          throw new Error(errorData.message || 'Failed to load matching profile');
+        if (!matchesRes.ok) {
+          const errorData = await matchesRes.json().catch(() => ({}));
+          console.error('Failed to load matches:', errorData);
+          throw new Error(errorData.message || 'Failed to load matches');
         }
 
-        const profileData = await profileRes.json();
-        setMatchingProfile(profileData.profile);
+        const matchesData = await matchesRes.json();
+        const matchItems = matchesData.items || [];
+        setMatches(matchItems);
+        setFilteredMatches(matchItems);
 
-        // If profile exists, fetch matches
-        if (profileData.profile) {
-          const matchesRes = await fetch('/api/match/profile', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({}),
-            signal: controller.signal,
-          });
-
-          if (!matchesRes.ok) {
-            const errorData = await matchesRes.json().catch(() => ({}));
-            console.error('Failed to load matches:', errorData);
-            throw new Error(errorData.message || 'Failed to load matches');
-          }
-
-          const matchesData = await matchesRes.json();
-          const matchItems = matchesData.items || [];
-          setMatches(matchItems);
-          setFilteredMatches(matchItems);
-
-          // Track first match shown for TTFQI metric
-          if (matchItems.length > 0) {
-            try {
-              await fetch('/api/analytics/track', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  eventType: 'first_match_shown',
-                  userId: matchItems[0].userId || matchItems[0].user_id,
-                  entityType: 'match',
-                  entityId: matchItems[0].id,
-                  properties: {
-                    totalMatches: matchItems.length,
-                    topScore: matchItems[0].score || matchItems[0].totalScore,
-                  },
-                }),
-              });
-            } catch (analyticsError) {
-              // Log but don't fail the page load
-              console.error('Failed to track first match shown:', analyticsError);
-            }
+        // Track first match shown for TTFQI metric
+        if (matchItems.length > 0) {
+          try {
+            await fetch('/api/analytics/track', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                eventType: 'first_match_shown',
+                userId: matchItems[0].userId || matchItems[0].user_id,
+                entityType: 'match',
+                entityId: matchItems[0].id,
+                properties: {
+                  totalMatches: matchItems.length,
+                  topScore: matchItems[0].score || matchItems[0].totalScore,
+                },
+              }),
+            });
+          } catch (analyticsError) {
+            // Log but don't fail the page load
+            console.error('Failed to track first match shown:', analyticsError);
           }
         }
-      } catch (error) {
-        if (error instanceof Error && error.name === 'AbortError') {
-          console.error('Matching data request timed out');
-          toast.error('Request timed out', {
-            description: 'Please check your connection and try again.',
-          });
-          // Set empty state on timeout
-          setMatchingProfile(null);
-          setMatches([]);
-          setFilteredMatches([]);
-        } else {
-          console.error('Error loading matching data:', error);
-          const errorMessage =
-            error instanceof Error ? error.message : 'Failed to load matching data';
-          toast.error(errorMessage);
-        }
-      } finally {
-        clearTimeout(timeoutId);
-        setIsLoading(false);
       }
-    };
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.error('Matching data request timed out');
+        toast.error('Request timed out', {
+          description: 'Please check your connection and try again.',
+        });
+        // Set empty state on timeout
+        setMatchingProfile(null);
+        setMatches([]);
+        setFilteredMatches([]);
+      } else {
+        console.error('Error loading matching data:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Failed to load matching data';
+        toast.error(errorMessage);
+      }
+    } finally {
+      clearTimeout(timeoutId);
+      setIsLoading(false);
+    }
+  };
 
-    fetchData();
+  useEffect(() => {
+    fetchMatches();
   }, []);
 
   // Apply filters when they change
@@ -140,6 +146,27 @@ export default function MatchingPage() {
     if (activeFilters.workMode) {
       filtered = filtered.filter((match: any) => {
         return match.assignment?.workMode === activeFilters.workMode;
+      });
+    }
+
+    // Filter by values
+    if (activeFilters.values.length > 0) {
+      filtered = filtered.filter((match: any) => {
+        const assignmentValues = match.assignment?.valuesTags || [];
+        return activeFilters.values.some((val) => assignmentValues.includes(val));
+      });
+    }
+
+    // Filter by compensation band
+    if (activeFilters.minComp !== undefined || activeFilters.maxComp !== undefined) {
+      filtered = filtered.filter((match: any) => {
+        const compMin = match.assignment?.compMin ?? 0;
+        const compMax = match.assignment?.compMax ?? compMin;
+        const withinMin =
+          activeFilters.minComp === undefined ? true : compMax >= activeFilters.minComp;
+        const withinMax =
+          activeFilters.maxComp === undefined ? true : compMin <= activeFilters.maxComp;
+        return withinMin && withinMax;
       });
     }
 
@@ -267,15 +294,52 @@ export default function MatchingPage() {
                   toast.error('Failed to record interest');
                 }
               }}
-              onHide={() => {
-                const updatedMatches = matches.filter((m: any) => m.id !== match.id);
+              onHide={async () => {
+                if (match.id) {
+                  try {
+                    await fetch('/api/match/hide', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ matchId: match.id }),
+                    });
+                  } catch (error) {
+                    console.error('Failed to hide match:', error);
+                  }
+                }
+
+                const shouldKeep = (m: any) => {
+                  if (match.id && m.id) return m.id !== match.id;
+                  if (match.assignmentId && m.assignmentId)
+                    return m.assignmentId !== match.assignmentId;
+                  return m !== match;
+                };
+
+                const updatedMatches = matches.filter(shouldKeep);
                 setMatches(updatedMatches);
+                setFilteredMatches((prev) => prev.filter(shouldKeep));
                 toast.success('Hidden from results');
               }}
             />
           ))}
         </div>
       )}
+
+      {/* Snoozed & Hidden management (collapsed by default to reduce noise) */}
+      <div className="mt-8">
+        <button
+          onClick={() => setShowManageHiddenSnoozed((prev) => !prev)}
+          className="text-sm text-[#1C4D3A] underline flex items-center gap-2"
+        >
+          {showManageHiddenSnoozed ? 'Hide snoozed/hidden manager' : 'Manage snoozed or hidden matches'}
+        </button>
+
+        {showManageHiddenSnoozed && (
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <SnoozedMatchesList onRestored={fetchMatches} />
+            <HiddenMatchesList onRestored={fetchMatches} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

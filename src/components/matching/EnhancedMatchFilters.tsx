@@ -30,18 +30,14 @@ import { Label } from '@/components/ui/label';
 import { SlidersHorizontal, X, Save, Search } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface FilterOptions {
-  causes: string[];
-  skillDomains: string[];
-  locationModes: string[];
-  workModes: string[];
-}
-
 interface ActiveFilters {
   causes: string[];
   skillDomains: string[];
+  values: string[];
   locationMode?: string;
   workMode?: string;
+  minComp?: number;
+  maxComp?: number;
 }
 
 interface EnhancedMatchFiltersProps {
@@ -73,6 +69,26 @@ const SKILL_DOMAINS = [
 
 const LOCATION_MODES = ['Remote', 'Onsite', 'Hybrid'];
 const WORK_MODES = ['Full-time', 'Part-time', 'Contract', 'Volunteer'];
+const VALUES_OPTIONS = [
+  'Integrity',
+  'Collaboration',
+  'Sustainability',
+  'Equity',
+  'Innovation',
+  'Transparency',
+  'Accountability',
+  'Empathy',
+  'Courage',
+  'Curiosity',
+];
+
+const COMP_BANDS = [
+  { label: 'Any', min: undefined, max: undefined },
+  { label: '$0 - $50k', min: 0, max: 50000 },
+  { label: '$50k - $100k', min: 50000, max: 100000 },
+  { label: '$100k - $150k', min: 100000, max: 150000 },
+  { label: '$150k+', min: 150000, max: undefined },
+];
 
 export function EnhancedMatchFilters({
   onFiltersChange,
@@ -83,6 +99,12 @@ export function EnhancedMatchFilters({
   const [searchQuery, setSearchQuery] = useState('');
   const [savedFilters, setSavedFilters] = useState<Array<{ name: string; filters: ActiveFilters }>>([]);
   const [filterName, setFilterName] = useState('');
+  const [compBandIndex, setCompBandIndex] = useState<number>(() => {
+    const match = COMP_BANDS.findIndex(
+      (band) => band.min === activeFilters.minComp && band.max === activeFilters.maxComp
+    );
+    return match >= 0 ? match : 0;
+  });
 
   useEffect(() => {
     // Load saved filters from localStorage
@@ -133,8 +155,11 @@ export function EnhancedMatchFilters({
     const emptyFilters: ActiveFilters = {
       causes: [],
       skillDomains: [],
+      values: [],
       locationMode: undefined,
       workMode: undefined,
+      minComp: undefined,
+      maxComp: undefined,
     };
     setLocalFilters(emptyFilters);
     onFiltersChange(emptyFilters);
@@ -165,11 +190,32 @@ export function EnhancedMatchFilters({
     cause.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleValuesToggle = (value: string) => {
+    setLocalFilters((prev) => {
+      const values = prev.values.includes(value)
+        ? prev.values.filter((v) => v !== value)
+        : [...prev.values, value];
+      return { ...prev, values };
+    });
+  };
+
+  const handleCompBandSelect = (index: number) => {
+    setCompBandIndex(index);
+    const band = COMP_BANDS[index];
+    setLocalFilters((prev) => ({
+      ...prev,
+      minComp: band.min,
+      maxComp: band.max,
+    }));
+  };
+
   const activeFilterCount =
     activeFilters.causes.length +
     activeFilters.skillDomains.length +
+    activeFilters.values.length +
     (activeFilters.locationMode ? 1 : 0) +
-    (activeFilters.workMode ? 1 : 0);
+    (activeFilters.workMode ? 1 : 0) +
+    (activeFilters.minComp || activeFilters.maxComp ? 1 : 0);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -192,7 +238,7 @@ export function EnhancedMatchFilters({
         <SheetHeader>
           <SheetTitle className="text-xl font-['Crimson_Pro']">Filter Matches</SheetTitle>
           <SheetDescription>
-            Narrow down opportunities by causes, skills, location, and work mode
+            Narrow down opportunities by causes, values, skills, location, work mode, and compensation
           </SheetDescription>
         </SheetHeader>
 
@@ -247,6 +293,27 @@ export function EnhancedMatchFilters({
                   </Label>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Values */}
+          <div>
+            <Label className="text-sm font-semibold text-[#2D3330] mb-2">Values</Label>
+            <div className="flex flex-wrap gap-2">
+              {VALUES_OPTIONS.map((val) => {
+                const selected = localFilters.values.includes(val);
+                return (
+                  <Button
+                    key={val}
+                    variant={selected ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => handleValuesToggle(val)}
+                    className={selected ? 'bg-[#1C4D3A] text-white' : ''}
+                  >
+                    {val}
+                  </Button>
+                );
+              })}
             </div>
           </div>
 
@@ -323,6 +390,27 @@ export function EnhancedMatchFilters({
                   {mode}
                 </Button>
               ))}
+            </div>
+          </div>
+
+          {/* Compensation */}
+          <div>
+            <Label className="text-sm font-semibold text-[#2D3330] mb-2">Compensation</Label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {COMP_BANDS.map((band, index) => {
+                const selected = compBandIndex === index;
+                return (
+                  <Button
+                    key={band.label}
+                    variant={selected ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => handleCompBandSelect(index)}
+                    className={selected ? 'bg-[#1C4D3A] text-white' : ''}
+                  >
+                    {band.label}
+                  </Button>
+                );
+              })}
             </div>
           </div>
 

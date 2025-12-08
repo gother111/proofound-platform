@@ -147,10 +147,34 @@ export async function POST(request: NextRequest) {
           ? normalizeWeights(profile.weights as Record<string, number>)
           : getPreset('balanced');
 
-    // Fetch all active assignments
-    const activeAssignments = await db.query.assignments.findMany({
-      where: eq(assignments.status, 'active'),
-    });
+    // Fetch active assignments with a safe column subset (skip columns that may not exist in older DBs)
+    const activeAssignments = await db
+      .select({
+        id: assignments.id,
+        role: assignments.role,
+        description: assignments.description,
+        status: assignments.status,
+        valuesRequired: assignments.valuesRequired,
+        causeTags: assignments.causeTags,
+        mustHaveSkills: assignments.mustHaveSkills,
+        niceToHaveSkills: assignments.niceToHaveSkills,
+        minLanguage: assignments.minLanguage,
+        locationMode: assignments.locationMode,
+        country: assignments.country,
+        compMin: assignments.compMin,
+        compMax: assignments.compMax,
+        currency: assignments.currency,
+        hoursMin: assignments.hoursMin,
+        hoursMax: assignments.hoursMax,
+        startEarliest: assignments.startEarliest,
+        startLatest: assignments.startLatest,
+        verificationGates: assignments.verificationGates,
+        weights: assignments.weights,
+        canSponsorVisa: assignments.canSponsorVisa,
+        sponsorshipCountries: assignments.sponsorshipCountries,
+      })
+      .from(assignments)
+      .where(eq(assignments.status, 'active'));
 
     // Batch fetch mission/vision scores for PAC (if using semantic matching)
     let missionVisionScores: Map<string, number> = new Map();
@@ -170,16 +194,28 @@ export async function POST(request: NextRequest) {
     // Map assignmentId to matchId for returning with results
     const matchIdMap = new Map(existingMatches.map((m) => [m.assignmentId, m.id]));
 
-    // Filter snoozed matches
+    // Filter snoozed or hidden matches
     const snoozedAssignmentIds = new Set(
       existingMatches
         .filter((m) => m.snoozedUntil && new Date(m.snoozedUntil) >= new Date())
+        .map((m) => m.assignmentId)
+    );
+    const hiddenAssignmentIds = new Set(
+      existingMatches
+        .filter((m: any) => {
+          const vector = (m as any).vector as any;
+          return vector && vector.hidden;
+        })
         .map((m) => m.assignmentId)
     );
 
     for (const assignment of activeAssignments) {
       // Skip snoozed matches
       if (snoozedAssignmentIds.has(assignment.id)) {
+        continue;
+      }
+      // Skip hidden matches
+      if (hiddenAssignmentIds.has(assignment.id)) {
         continue;
       }
 
@@ -327,10 +363,53 @@ export async function POST(request: NextRequest) {
     // Return top k
     const topK = results.slice(0, k);
 
+    // Ensure returned matches exist in DB and capture their IDs
+    const upsertedMatches = await Promise.all(
+      topK.map(async (match) => {
+        const vectorPayload = {
+          subscores: match.subscores,
+          contributions: match.contributions,
+          gaps: match.gaps,
+          missing: match.missing,
+        };
+
+        const [row] = await db
+          .insert(matches)
+          .values({
+            assignmentId: match.assignmentId,
+            profileId: user.id,
+            score: match.score.toString(),
+            vector: vectorPayload,
+            weights,
+          })
+          .onConflictDoUpdate({
+            target: [matches.assignmentId, matches.profileId],
+            set: {
+              score: match.score.toString(),
+              vector: vectorPayload,
+              weights,
+            },
+          })
+          .returning({ id: matches.id, assignmentId: matches.assignmentId });
+
+        return row;
+      })
+    );
+
+    // Merge returned IDs into response payload
+    upsertedMatches.forEach((row) => {
+      matchIdMap.set(row.assignmentId, row.id);
+    });
+
+    const topKWithIds = topK.map((match) => ({
+      ...match,
+      id: match.id || matchIdMap.get(match.assignmentId),
+    }));
+
     const duration = Date.now() - startTime;
 
     // Emit first match shown event for TTFQI tracking (only if there are matches)
-    if (topK.length > 0) {
+    if (topKWithIds.length > 0) {
       try {
         // Check if this is the user's first match ever
         const hasSeenMatchesBefore = await db.query.matches.findFirst({
@@ -338,11 +417,11 @@ export async function POST(request: NextRequest) {
         });
 
         if (!hasSeenMatchesBefore) {
-          await emitFirstMatchShown(user.id, topK[0].assignmentId, {
-            score: topK[0].score,
+          await emitFirstMatchShown(user.id, topKWithIds[0].assignmentId, {
+            score: topKWithIds[0].score,
             mode,
             // PRD: Include PAC for analytics
-            pac_contribution: topK[0].pac.total,
+            pac_contribution: topKWithIds[0].pac.total,
           });
         }
       } catch (analyticsError) {
@@ -359,10 +438,10 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({
-      items: topK,
+      items: topKWithIds,
       meta: {
         total: results.length,
-        returned: topK.length,
+        returned: topKWithIds.length,
         durationMs: duration,
         weights: weights,
       },

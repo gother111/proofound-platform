@@ -32,7 +32,11 @@ interface SnoozedMatch {
   };
 }
 
-export function SnoozedMatchesList() {
+interface SnoozedMatchesListProps {
+  onRestored?: () => void;
+}
+
+export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
   const [matches, setMatches] = useState<SnoozedMatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [unsnoozing, setUnsnoozing] = useState<string | null>(null);
@@ -72,6 +76,8 @@ export function SnoozedMatchesList() {
 
       // Remove from list
       setMatches((prev) => prev.filter((m) => m.id !== matchId));
+
+      if (onRestored) onRestored();
     } catch (error) {
       console.error('Error unsnoozing match:', error);
       toast.error('Failed to unsnooze match', {
