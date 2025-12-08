@@ -220,7 +220,10 @@ export function EnhancedMatchFilters({
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" className="border-[#E8E6DD] relative">
+        <Button
+          variant="outline"
+          className="border-[#E8E6DD] relative bg-white text-[#1C4D3A] hover:bg-[#F7F6F1]"
+        >
           <SlidersHorizontal className="w-4 h-4 mr-2" />
           Filters
           {activeFilterCount > 0 && (
@@ -234,10 +237,10 @@ export function EnhancedMatchFilters({
         </Button>
       </SheetTrigger>
 
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+      <SheetContent className="w-full sm:max-w-lg overflow-y-auto bg-white text-[#2D3330]">
         <SheetHeader>
-          <SheetTitle className="text-xl font-['Crimson_Pro']">Filter Matches</SheetTitle>
-          <SheetDescription>
+          <SheetTitle className="text-xl font-['Crimson_Pro'] text-[#2D3330]">Filter Matches</SheetTitle>
+          <SheetDescription className="text-[#4A4A4A]">
             Narrow down opportunities by causes, values, skills, location, work mode, and compensation
           </SheetDescription>
         </SheetHeader>
@@ -256,7 +259,7 @@ export function EnhancedMatchFilters({
                     variant="outline"
                     size="sm"
                     onClick={() => handleLoadSavedFilter(saved.filters)}
-                    className="text-xs"
+                    className="text-xs text-[#1C4D3A] border-[#1C4D3A]/40"
                   >
                     {saved.name}
                   </Button>
@@ -267,14 +270,14 @@ export function EnhancedMatchFilters({
 
           {/* Causes */}
           <div>
-            <Label className="text-sm font-semibold text-[#2D3330] mb-2">Causes</Label>
+              <Label className="text-sm font-semibold text-[#2D3330] mb-2">Causes</Label>
             <div className="relative mb-3">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#6B6760]" />
               <Input
                 placeholder="Search causes..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                  className="pl-10 text-[#2D3330]"
               />
             </div>
             <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -298,7 +301,7 @@ export function EnhancedMatchFilters({
 
           {/* Values */}
           <div>
-            <Label className="text-sm font-semibold text-[#2D3330] mb-2">Values</Label>
+              <Label className="text-sm font-semibold text-[#2D3330] mb-2">Values</Label>
             <div className="flex flex-wrap gap-2">
               {VALUES_OPTIONS.map((val) => {
                 const selected = localFilters.values.includes(val);
@@ -308,7 +311,11 @@ export function EnhancedMatchFilters({
                     variant={selected ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => handleValuesToggle(val)}
-                    className={selected ? 'bg-[#1C4D3A] text-white' : ''}
+                      className={
+                        selected
+                          ? 'bg-[#1C4D3A] text-white'
+                          : 'border-[#1C4D3A]/40 text-[#1C4D3A]'
+                      }
                   >
                     {val}
                   </Button>
@@ -319,7 +326,7 @@ export function EnhancedMatchFilters({
 
           {/* Skill Domains */}
           <div>
-            <Label className="text-sm font-semibold text-[#2D3330] mb-2">Skill Domains</Label>
+              <Label className="text-sm font-semibold text-[#2D3330] mb-2">Skill Domains</Label>
             <div className="space-y-2">
               {SKILL_DOMAINS.map((domain) => (
                 <div key={domain} className="flex items-center space-x-2">
@@ -341,7 +348,7 @@ export function EnhancedMatchFilters({
 
           {/* Location Mode */}
           <div>
-            <Label className="text-sm font-semibold text-[#2D3330] mb-2">Location</Label>
+              <Label className="text-sm font-semibold text-[#2D3330] mb-2">Location</Label>
             <div className="flex flex-wrap gap-2">
               {LOCATION_MODES.map((mode) => (
                 <Button
@@ -368,7 +375,7 @@ export function EnhancedMatchFilters({
 
           {/* Work Mode */}
           <div>
-            <Label className="text-sm font-semibold text-[#2D3330] mb-2">Work Mode</Label>
+              <Label className="text-sm font-semibold text-[#2D3330] mb-2">Work Mode</Label>
             <div className="flex flex-wrap gap-2">
               {WORK_MODES.map((mode) => (
                 <Button
@@ -395,7 +402,7 @@ export function EnhancedMatchFilters({
 
           {/* Compensation */}
           <div>
-            <Label className="text-sm font-semibold text-[#2D3330] mb-2">Compensation</Label>
+              <Label className="text-sm font-semibold text-[#2D3330] mb-2">Compensation</Label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {COMP_BANDS.map((band, index) => {
                 const selected = compBandIndex === index;
@@ -405,7 +412,11 @@ export function EnhancedMatchFilters({
                     variant={selected ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => handleCompBandSelect(index)}
-                    className={selected ? 'bg-[#1C4D3A] text-white' : ''}
+                      className={
+                        selected
+                          ? 'bg-[#1C4D3A] text-white'
+                          : 'border-[#1C4D3A]/40 text-[#1C4D3A]'
+                      }
                   >
                     {band.label}
                   </Button>
@@ -427,12 +438,14 @@ export function EnhancedMatchFilters({
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') handleSaveFilter();
                 }}
+                className="text-[#2D3330]"
               />
               <Button
                 variant="outline"
                 size="icon"
                 onClick={handleSaveFilter}
                 disabled={!filterName.trim()}
+                className="border-[#1C4D3A]/40 text-[#1C4D3A]"
               >
                 <Save className="w-4 h-4" />
               </Button>
@@ -442,7 +455,11 @@ export function EnhancedMatchFilters({
 
         {/* Footer Actions */}
         <div className="flex gap-2 pt-4 border-t border-[#E8E6DD]">
-          <Button variant="outline" onClick={handleClearAll} className="flex-1">
+          <Button
+            variant="outline"
+            onClick={handleClearAll}
+            className="flex-1 border-[#1C4D3A]/40 text-[#1C4D3A]"
+          >
             Clear All
           </Button>
           <Button onClick={handleApplyFilters} className="flex-1 bg-[#1C4D3A] text-white">

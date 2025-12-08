@@ -22,6 +22,10 @@ interface HiddenMatch {
     locationMode?: string;
     country?: string;
   };
+  organization?: {
+    name?: string | null;
+    logoUrl?: string | null;
+  };
 }
 
 interface HiddenMatchesResponse {
@@ -146,6 +150,9 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
                 <p className="text-sm font-medium text-[#2D3330] truncate">
                   {match.assignment.title || 'Opportunity'}
                 </p>
+                {match.organization?.name && (
+                  <p className="text-xs text-[#6B6760] truncate">{match.organization.name}</p>
+                )}
                 <p className="text-xs text-[#6B6760]">
                   {match.assignment.locationMode || 'Flexible'}
                   {match.assignment.country ? ` • ${match.assignment.country}` : ''}

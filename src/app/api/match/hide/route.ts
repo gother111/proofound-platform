@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
-import { matches, assignments } from '@/db/schema';
+import { matches, assignments, organizations } from '@/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
@@ -28,9 +28,11 @@ export async function GET() {
       .select({
         match: matches,
         assignment: assignments,
+        organization: organizations,
       })
       .from(matches)
       .innerJoin(assignments, eq(matches.assignmentId, assignments.id))
+      .innerJoin(organizations, eq(assignments.orgId, organizations.id))
       .where(
         and(
           eq(matches.profileId, user.id),
@@ -48,6 +50,10 @@ export async function GET() {
         title: row.assignment.role,
         locationMode: row.assignment.locationMode,
         country: row.assignment.country,
+      },
+      organization: {
+        name: row.organization.displayName,
+        logoUrl: row.organization.logoUrl,
       },
     }));
 
