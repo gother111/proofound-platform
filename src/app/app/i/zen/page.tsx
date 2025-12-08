@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import {
   zenPractices,
   localGatherings,
@@ -28,6 +28,7 @@ import { WellBeingTrendChart } from '@/components/wellbeing/WellBeingTrendChart'
 import { CheckInHistory } from '@/components/wellbeing/CheckInHistory';
 import { WorkScheduleEditor } from '@/components/wellbeing/WorkScheduleEditor';
 import { toast } from 'sonner';
+import { createClient } from '@/lib/supabase/client';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,15 +39,19 @@ function ZenHubContent() {
     privacyBannerAcknowledged: boolean;
   } | null>(null);
   const [isLoadingOptIn, setIsLoadingOptIn] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('checkin');
   const [activeFilter, setActiveFilter] = useState('All');
 
   // Dialog states
+  const [showCheckInDialog, setShowCheckInDialog] = useState(false);
   const [showReflectionDialog, setShowReflectionDialog] = useState(false);
+  const [defaultMilestone, setDefaultMilestone] = useState<'rejection' | 'interview' | 'offer' | undefined>();
 
   // Data states
   const [deltaData, setDeltaData] = useState<any>(null);
   const [trendData, setTrendData] = useState<any[]>([]);
+  const [milestoneSuggestion, setMilestoneSuggestion] = useState<'rejection' | 'interview' | 'offer' | null>(null);
 
   useEffect(() => {
     const fetchOptInStatus = async () => {
@@ -65,24 +70,56 @@ function ZenHubContent() {
     fetchOptInStatus();
   }, []);
 
+  // Get user id for widgets that need it
   useEffect(() => {
-    if (optInStatus?.optedIn) {
-      // Fetch insights data
-      const fetchData = async () => {
-        try {
-          const [deltaRes, trendRes] = await Promise.all([
-            fetch('/api/wellbeing/delta?period=14'),
-            fetch('/api/wellbeing/trend?weeks=4'),
-          ]);
-          if (deltaRes.ok) setDeltaData(await deltaRes.json());
-          if (trendRes.ok) setTrendData(await trendRes.json());
-        } catch (e) {
-          console.error('Failed to fetch insights', e);
+    const fetchUser = async () => {
+      try {
+        const supabase = createClient();
+        const { data } = await supabase.auth.getUser();
+        if (data?.user?.id) {
+          setUserId(data.user.id);
         }
-      };
-      fetchData();
+      } catch (error) {
+        console.error('ZenHub: failed to fetch user', error);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  const fetchInsights = useCallback(async () => {
+    if (!optInStatus?.optedIn) return;
+    try {
+      const [deltaRes, trendRes] = await Promise.all([
+        fetch('/api/wellbeing/delta?period=14'),
+        fetch('/api/wellbeing/trend?weeks=4'),
+      ]);
+      if (deltaRes.ok) setDeltaData(await deltaRes.json());
+      if (trendRes.ok) setTrendData(await trendRes.json());
+    } catch (e) {
+      console.error('Failed to fetch insights', e);
     }
-  }, [optInStatus]);
+  }, [optInStatus?.optedIn]);
+
+  useEffect(() => {
+    fetchInsights();
+  }, [fetchInsights]);
+
+  useEffect(() => {
+    const fetchMilestones = async () => {
+      if (!optInStatus?.optedIn || !userId) return;
+      try {
+        const res = await fetch('/api/wellbeing/milestones');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.milestones?.length > 0) {
+          setMilestoneSuggestion(data.milestones[0].type);
+        }
+      } catch (error) {
+        console.error('Failed to fetch milestones', error);
+      }
+    };
+    fetchMilestones();
+  }, [optInStatus?.optedIn, userId]);
 
   const handleOptIn = async () => {
     try {
@@ -99,6 +136,11 @@ function ZenHubContent() {
     } catch (error) {
       toast.error('Failed to enable Zen Hub');
     }
+  };
+
+  const handleOpenCheckIn = (milestone?: 'rejection' | 'interview' | 'offer') => {
+    setDefaultMilestone(milestone);
+    setShowCheckInDialog(true);
   };
 
   const filteredPractices = useMemo(() => {
@@ -186,6 +228,24 @@ function ZenHubContent() {
 
         {/* CHECK-IN TAB */}
         <TabsContent value="checkin" className="space-y-8 animate-in fade-in duration-500">
+          {milestoneSuggestion && (
+            <Card className="p-4 border-[#E8E6DD] bg-white/70 dark:bg-[#2F2823]/70">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-[#2D3330] dark:text-[#E8E6DD]">
+                    Recent update detected
+                  </p>
+                  <p className="text-sm text-[#6B6760] dark:text-[#C9C2B8]">
+                    Log a quick check-in after your recent {milestoneSuggestion}.
+                  </p>
+                </div>
+                <Button onClick={() => handleOpenCheckIn(milestoneSuggestion)} className="bg-[#1C4D3A] text-white">
+                  Log check-in
+                </Button>
+              </div>
+            </Card>
+          )}
+
           <QuickCheckIn />
 
           <div className="grid gap-8 md:grid-cols-2">
@@ -317,11 +377,11 @@ function ZenHubContent() {
                   hasBaseline={deltaData.hasBaseline}
                 />
               )}
-              <WorkScheduleEditor userId="" />
+              {userId && <WorkScheduleEditor userId={userId} />}
             </div>
             <div className="space-y-6">
               {trendData.length > 0 && <WellBeingTrendChart trend={trendData} />}
-              <CheckInHistory userId="" />
+              {userId && <CheckInHistory userId={userId} />}
             </div>
           </div>
         </TabsContent>
@@ -331,6 +391,15 @@ function ZenHubContent() {
         open={showReflectionDialog}
         onOpenChange={setShowReflectionDialog}
         onSuccess={() => toast.success('Reflection saved')}
+      />
+      <CheckInDialog
+        open={showCheckInDialog}
+        onOpenChange={setShowCheckInDialog}
+        onSuccess={() => {
+          fetchInsights();
+          setMilestoneSuggestion(null);
+        }}
+        defaultMilestone={defaultMilestone}
       />
     </div>
   );

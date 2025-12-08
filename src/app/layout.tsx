@@ -10,6 +10,8 @@ import { ChatWidget } from '@/components/support/ChatWidget';
 import { CookieBanner } from '@/components/CookieBanner';
 import { GlobalErrorHandler } from '@/components/GlobalErrorHandler';
 import { WebVitalsReporter } from '@/components/WebVitalsReporter';
+import { PerformanceTracker } from '@/components/PerformanceTracker';
+import { SUSPromptHost } from '@/components/surveys/SUSPromptHost';
 
 /**
  * Root Layout Component
@@ -55,10 +57,12 @@ export default async function RootLayout({
         <ErrorBoundary>
           <NextIntlClientProvider messages={messages}>
             <GlobalErrorHandler />
+            <SUSPromptHost />
             {children}
             <Toaster />
             <ChatWidget />
             <CookieBanner />
+            <PerformanceTracker />
             <WebVitalsReporter />
             <Analytics />
             <SpeedInsights />

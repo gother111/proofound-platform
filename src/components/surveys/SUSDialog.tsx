@@ -41,8 +41,10 @@ import { apiFetch } from '@/lib/api/fetch';
 interface SUSDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  triggerPoint?: string; // Where/when the survey was triggered
+  userId: string;
+  trigger: 'profile_activation' | 'first_assignment' | '10_matches' | 'quarterly_checkin';
   onCompleted?: () => void;
+  onSkip?: () => void;
 }
 
 const SUS_QUESTIONS = [
@@ -74,12 +76,7 @@ const SUS_QUESTIONS = [
   },
 ];
 
-export function SUSDialog({
-  open,
-  onOpenChange,
-  triggerPoint = 'manual',
-  onCompleted,
-}: SUSDialogProps) {
+export function SUSDialog({ open, onOpenChange, userId, trigger, onCompleted, onSkip }: SUSDialogProps) {
   const [responses, setResponses] = useState<Record<number, number>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -110,6 +107,14 @@ export function SUSDialog({
     return (sumOdd + sumEven) * 2.5;
   };
 
+  const calculateGrade = (score: number): string => {
+    if (score >= 90) return 'A';
+    if (score >= 80) return 'B';
+    if (score >= 70) return 'C';
+    if (score >= 60) return 'D';
+    return 'F';
+  };
+
   const handleSubmit = async () => {
     if (!isComplete) {
       toast.error('Please answer all questions');
@@ -121,15 +126,20 @@ export function SUSDialog({
     try {
       const totalScore = calculateSUSScore();
       const individualScores = SUS_QUESTIONS.map((q) => responses[q.id]);
+      const grade = calculateGrade(totalScore);
 
       // Submit to API
       const response = await apiFetch('/api/surveys/sus', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          responses,
-          totalScore,
-          triggerPoint,
+          userId,
+          trigger,
+          responses: Object.fromEntries(
+            SUS_QUESTIONS.map((q) => [`q${q.id}`, responses[q.id] ?? 0])
+          ),
+          score: totalScore,
+          grade,
         }),
       });
 
@@ -138,10 +148,10 @@ export function SUSDialog({
       }
 
       // Emit analytics event
-      await emitSUSCompleted(response.headers.get('x-user-id') || 'unknown', {
+      await emitSUSCompleted(userId, {
         total_score: totalScore,
         individual_scores: individualScores,
-        trigger_point: triggerPoint,
+        trigger_point: trigger,
       });
 
       toast.success(`Survey completed! Your score: ${totalScore.toFixed(0)}/100`);
@@ -164,6 +174,7 @@ export function SUSDialog({
 
   const handleSkip = () => {
     onOpenChange(false);
+    if (onSkip) onSkip();
     setTimeout(() => setResponses({}), 500);
   };
 

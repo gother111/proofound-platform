@@ -37,3 +37,13 @@ projects(id)` casts, which TypeScript rejected.
 
 Keeping the schema definition ordered (parent tables declared before children) prevents the Drizzle reference regressions we observed in this iteration.
 
+## Cron Jobs (current setup)
+
+- Account deletion workflow: `/api/cron/account-deletion-workflow` (02:00 UTC daily via Vercel cron)
+- Decision reminders: `/api/cron/decision-reminders` (10:00 UTC daily via Vercel cron)
+- Fairness note (external scheduler): `/api/cron/fairness-note`
+  - Run via cron-jobs.org (e.g., daily 02:00 UTC)
+  - Method: GET
+  - Auth header: `Authorization: Bearer <CRON_SECRET>`
+  - Notes: `maxDuration` 60s; returns 401 if header missing/invalid; logs `fairness-note.cron.*`
+
