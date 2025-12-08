@@ -70,7 +70,7 @@ const config: Config = {
           foreground: 'hsl(var(--secondary-foreground))',
         },
         accent: {
-          DEFAULT: 'var(--accent)',
+          DEFAULT: 'hsl(var(--accent))',
           foreground: 'hsl(var(--accent-foreground))',
         },
         'neutral-dark': {
@@ -86,7 +86,7 @@ const config: Config = {
           foreground: 'hsl(var(--destructive-foreground))',
         },
         muted: {
-          DEFAULT: 'var(--muted)',
+          DEFAULT: 'hsl(var(--muted))',
           foreground: 'hsl(var(--muted-foreground))',
         },
         popover: {
@@ -94,7 +94,7 @@ const config: Config = {
           foreground: 'hsl(var(--popover-foreground))',
         },
         card: {
-          DEFAULT: 'var(--card)',
+          DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
         success: brandTokens.colors.semantic.success,

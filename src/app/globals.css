@@ -47,27 +47,27 @@
     --proofound-stone: #e8e6dd; /* Border color - soft stone */
 
     /* Japandi Natural Palette - Aligned with Figma */
-    --background: #f5f3ee;
-    --foreground: #2d3330;
-    --card: #ffffff;
-    --card-foreground: #2d3330;
-    --popover: #ffffff;
-    --popover-foreground: #2d3330;
-    --primary: #1c4d3a;
-    --primary-foreground: #ffffff;
-    --secondary: #c76b4a;
-    --secondary-foreground: #ffffff;
-    --muted: #e8e6dd;
-    --muted-foreground: #6b6760;
-    --accent: #c76b4a;
-    --accent-foreground: #ffffff;
-    --destructive: #b5542d;
-    --destructive-foreground: #ffffff;
-    --border: rgba(232, 230, 221, 1);
-    --input: transparent;
+    --background: 43 26% 95%;
+    --foreground: 150 7% 19%;
+    --card: 0 0% 100%;
+    --card-foreground: 150 7% 19%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 150 7% 19%;
+    --primary: 157 47% 21%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 16 53% 54%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 49 19% 89%;
+    --muted-foreground: 38 5% 40%;
+    --accent: 16 53% 54%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 17 60% 44%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 49 19% 89%;
+    --input: 49 19% 89%;
     --input-background: #ffffff;
     --switch-background: #e8e6dd;
-    --ring: #1c4d3a;
+    --ring: 157 47% 21%;
 
     /* Extended Palette - Exact from Figma */
     --sage: #7a9278;
@@ -87,37 +87,37 @@
 
   .dark {
     /* Proofound Japandi Dark Mode - Exact from Figma Design System */
-    --background: #1a1d2e;
-    --foreground: #e8dcc4;
+    --background: 231 28% 14%;
+    --foreground: 40 44% 84%;
 
-    --card: #252834;
-    --card-foreground: #e8dcc4;
+    --card: 228 17% 17%;
+    --card-foreground: 40 44% 84%;
 
-    --popover: #2c3244;
-    --popover-foreground: #e8dcc4;
+    --popover: 225 21% 22%;
+    --popover-foreground: 40 44% 84%;
 
     /* Primary - Warm Beige Stone */
-    --primary: #d4c4a8;
-    --primary-foreground: #1a1d2e;
+    --primary: 38 34% 75%;
+    --primary-foreground: 231 28% 14%;
 
     /* Secondary - Deep Terracotta */
-    --secondary: #c86b4a;
-    --secondary-foreground: #e8dcc4;
+    --secondary: 16 53% 54%;
+    --secondary-foreground: 40 44% 84%;
 
-    --muted: #2c3244;
-    --muted-foreground: #8a8174;
+    --muted: 225 21% 22%;
+    --muted-foreground: 36 9% 50%;
 
-    --accent: #d4c4a8;
-    --accent-foreground: #1a1d2e;
+    --accent: 38 34% 75%;
+    --accent-foreground: 231 28% 14%;
 
-    --destructive: #d4826f;
-    --destructive-foreground: #1a1d2e;
+    --destructive: 11 54% 63%;
+    --destructive-foreground: 231 28% 14%;
 
-    --border: rgba(212, 196, 168, 0.1);
-    --input: transparent;
+    --border: 38 34% 75% / 0.1;
+    --input: 225 21% 22%;
     --input-background: #2c3244;
     --switch-background: #2c3244;
-    --ring: rgba(212, 196, 168, 0.4);
+    --ring: 38 34% 75% / 0.4;
 
     /* Extended Palette - Dark Mode Variants */
     --sage: #5a8f6f;
@@ -136,6 +136,9 @@
   }
 
   body {
+    /* Fallback to ensure text stays visible if CSS vars fail */
+    background-color: #f5f3ee;
+    color: #2d3330;
     @apply bg-background text-foreground antialiased;
     font-family:
       'Inter',
