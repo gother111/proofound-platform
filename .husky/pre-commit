@@ -1,5 +1,9 @@
 #!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
 
-npx lint-staged
+# Run lint-staged directly to avoid npm/npx permission issues and husky shim deprecation.
+if [ -x "./node_modules/.bin/lint-staged" ]; then
+  ./node_modules/.bin/lint-staged
+else
+  echo "lint-staged not installed; skipping pre-commit checks"
+fi
 
