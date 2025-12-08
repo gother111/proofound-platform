@@ -27,8 +27,14 @@ import { UserDetailModal } from './UserDetailModal';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api/fetch';
 
+type AdminProfile = Profile & {
+  onboardingCompleted?: boolean | null;
+  profileVisibility?: string | null;
+  matchingEnabled?: boolean | null;
+};
+
 interface UsersResponse {
-  users: Profile[];
+  users: AdminProfile[];
   pagination: {
     page: number;
     limit: number;
@@ -43,7 +49,7 @@ export function UsersTable() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
+  const [selectedUser, setSelectedUser] = useState<AdminProfile | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {

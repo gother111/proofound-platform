@@ -14,10 +14,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 
 interface Step1Props {
   form: UseFormReturn<any>;
   onNext: () => void;
+  onOpenTemplatePicker: () => void;
+  appliedTemplateName?: string | null;
+  isLoadingTemplates?: boolean;
 }
 
 const STAKEHOLDER_OPTIONS = [
@@ -27,7 +31,13 @@ const STAKEHOLDER_OPTIONS = [
   { id: 'ceo', label: 'CEO' },
 ];
 
-export function Step1BusinessValue({ form, onNext }: Step1Props) {
+export function Step1BusinessValue({
+  form,
+  onNext,
+  onOpenTemplatePicker,
+  appliedTemplateName,
+  isLoadingTemplates = false,
+}: Step1Props) {
   const { register, watch, setValue, formState: { errors } } = form;
   
   const role = watch('role');
@@ -49,9 +59,24 @@ export function Step1BusinessValue({ form, onNext }: Step1Props) {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-2xl font-bold">Step 1: Business Value</h2>
-          <span className="text-sm text-muted-foreground">Step 1 of 5</span>
+        <div className="flex items-center justify-between mb-2 gap-4">
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl font-bold">Step 1: Business Value</h2>
+            {appliedTemplateName && (
+              <Badge variant="secondary">Template: {appliedTemplateName}</Badge>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onOpenTemplatePicker}
+              disabled={isLoadingTemplates}
+            >
+              {isLoadingTemplates ? 'Loading...' : 'Load template'}
+            </Button>
+            <span className="text-sm text-muted-foreground">Step 1 of 5</span>
+          </div>
         </div>
         <p className="text-muted-foreground">
           Define the role and articulate the business value it will create

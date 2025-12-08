@@ -36,6 +36,58 @@ import { getPreset } from '@/lib/core/matching/presets';
 export const dynamic = 'force-dynamic';
 
 /**
+ * GET /api/assignments/[id]
+ */
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  let assignmentId: string | undefined;
+  try {
+    const user = await requireAuth();
+    const resolvedParams = await params;
+    assignmentId = resolvedParams.id;
+
+    const hasAccess = await verifyAssignmentAccess(user.id, assignmentId);
+    if (!hasAccess) {
+      return NextResponse.json({ error: 'Assignment not found or access denied' }, { status: 404 });
+    }
+
+    const assignment = await db.query.assignments.findFirst({
+      where: eq(assignments.id, assignmentId),
+    });
+
+    if (!assignment) {
+      return NextResponse.json({ error: 'Assignment not found' }, { status: 404 });
+    }
+
+    const weights = (assignment.weights as Record<string, number> | null) || {};
+    const responseAssignment = {
+      id: assignment.id,
+      role: assignment.role,
+      businessValue: (assignment as any).businessValue ?? assignment.businessValue ?? '',
+      expectedImpact: (assignment as any).expectedImpact ?? assignment.expectedImpact ?? '',
+      outcomes: (assignment as any).outcomes ?? [],
+      missionWeight: weights.mission ?? 33,
+      expertiseWeight: weights.expertise ?? 34,
+      compensationMin: assignment.compMin,
+      compensationMax: assignment.compMax,
+      currency: assignment.currency,
+      location: assignment.locationMode || assignment.city || assignment.country || '',
+      requiredSkills: (assignment.mustHaveSkills as any) || [],
+      niceToHaveSkills: (assignment.niceToHaveSkills as any) || [],
+      verificationGates: assignment.verificationGates || [],
+      status: assignment.status,
+    };
+
+    return NextResponse.json({ assignment: responseAssignment });
+  } catch (error) {
+    log.error('assignment.get.failed', {
+      assignmentId,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    return NextResponse.json({ error: 'Failed to fetch assignment' }, { status: 500 });
+  }
+}
+
+/**
  * Track if assignment was already activated (to avoid duplicate events)
  */
 const activatedAssignments = new Set<string>();

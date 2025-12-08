@@ -573,6 +573,31 @@ export const skillVerificationRequests = pgTable('skill_verification_requests', 
   expiresAt: timestamp('expires_at').default(sql`NOW() + INTERVAL '30 days'`),
 });
 
+// Assignment templates / presets by role family
+export const assignmentTemplates = pgTable(
+  'assignment_templates',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    orgId: uuid('org_id').references(() => organizations.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    roleFamily: text('role_family').notNull(),
+    summary: text('summary'),
+    description: text('description'),
+    appliesToSteps: text('applies_to_steps').array().default(sql`'{}'::text[]`).notNull(),
+    presetPayload: jsonb('preset_payload').default(sql`'{}'::jsonb`).notNull(),
+    isGlobal: boolean('is_global').default(false).notNull(),
+    status: text('status', { enum: ['active', 'archived'] }).default('active').notNull(),
+    createdBy: uuid('created_by').references(() => profiles.id),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    orgIdx: index('assignment_templates_org_idx').on(table.orgId),
+    roleFamilyIdx: index('assignment_templates_role_family_idx').on(table.roleFamily),
+    isGlobalIdx: index('assignment_templates_is_global_idx').on(table.isGlobal),
+  })
+);
+
 // Assignments - job/project postings from organizations
 export const assignments = pgTable('assignments', {
   id: uuid('id').defaultRandom().primaryKey(),

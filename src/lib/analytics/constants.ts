@@ -71,6 +71,12 @@ export const EventType = {
   // Privacy
   VISIBILITY_CHANGED: 'visibility_changed',
   REDACT_MODE_TOGGLED: 'redact_mode_toggled',
+  // Performance and diagnostics
+  PERFORMANCE_METRIC: 'performance_metric',
+  PAGE_VIEW: 'page',
+  API_EVENT: 'api',
+  WEB_VITAL: 'web_vital',
+  CUSTOM_EVENT: 'custom',
 } as const;
 
 export type EventTypeValue = (typeof EventType)[keyof typeof EventType];
@@ -279,13 +285,14 @@ export const CACHE_TTL_SECONDS = 3600;
 /**
  * Check if an event type is a lifecycle milestone
  */
-export function isLifecycleEvent(eventType: string): boolean {
-  return [
+export function isLifecycleEvent(eventType: EventTypeValue): boolean {
+  const lifecycleEvents: EventTypeValue[] = [
     EventType.PROFILE_ACTIVATED,
     EventType.FIRST_QUALIFIED_INTRO,
     EventType.INTERVIEW_SCHEDULED,
     EventType.CONTRACT_SIGNED,
-  ].includes(eventType as EventTypeValue);
+  ];
+  return lifecycleEvents.includes(eventType);
 }
 
 /**
@@ -327,6 +334,11 @@ export function getEventDisplayName(eventType: EventTypeValue): string {
     [EventType.TOUR_SKIPPED]: 'Tour Skipped',
     [EventType.VISIBILITY_CHANGED]: 'Visibility Changed',
     [EventType.REDACT_MODE_TOGGLED]: 'Redact Mode Toggled',
+    [EventType.PERFORMANCE_METRIC]: 'Performance Metric',
+    [EventType.PAGE_VIEW]: 'Page View',
+    [EventType.API_EVENT]: 'API Event',
+    [EventType.WEB_VITAL]: 'Web Vital',
+    [EventType.CUSTOM_EVENT]: 'Custom Event',
   };
 
   return names[eventType] || eventType;

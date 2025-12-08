@@ -1,8 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -36,6 +40,9 @@ export function MatchingOrganizationView({
   onCreateNew,
   onOpenWeights,
 }: MatchingOrganizationViewProps) {
+  const params = useParams();
+  const router = useRouter();
+  const slug = (params as { slug?: string })?.slug;
   const [selectedAssignment, setSelectedAssignment] = useState<string>(assignments[0]?.id || '');
   const [matches, setMatches] = useState<unknown[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -153,72 +160,91 @@ export function MatchingOrganizationView({
         </div>
       </div>
 
-      {/* Assignment tabs */}
-      <Tabs value={selectedAssignment} onValueChange={setSelectedAssignment} className="space-y-6">
-        <TabsList className="w-full justify-start overflow-x-auto">
-          {assignments.map((assignment) => (
-            <TabsTrigger key={assignment.id} value={assignment.id} className="flex-shrink-0">
-              {assignment.role}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-
+      {/* Assignment list with quick actions */}
+      <div className="grid gap-3 sm:grid-cols-2">
         {assignments.map((assignment) => (
-          <TabsContent key={assignment.id} value={assignment.id}>
-            {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <p>Loading matches...</p>
-              </div>
-            ) : matches.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-lg mb-2" style={{ color: '#2D3330' }}>
-                  No matches yet
-                </p>
-                <p className="text-sm" style={{ color: '#6B6760' }}>
-                  Check back soon or adjust your filters
-                </p>
-              </div>
-            ) : (
-              <div>
-                <p className="text-sm mb-4" style={{ color: '#6B6760' }}>
-                  {matches.length} candidate{matches.length !== 1 ? 's' : ''} match this assignment
-                </p>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {matches.map((match: any, index: number) => (
-                    <MatchResultCard
-                      key={match.profileId || index}
-                      result={match}
-                      variant="blind"
-                      skills={
-                        match.profile?.skills
-                          ? Object.entries(match.profile.skills).map(
-                              ([id, data]: [string, any]) => ({
-                                id,
-                                label: id,
-                                level: data.level,
-                              })
-                            )
-                          : []
-                      }
-                      onInterested={() => handleInterested(match.profileId)}
-                      onHide={() => handleHide(match.profileId)}
-                    />
-                  ))}
+          <Link
+            key={assignment.id}
+            href={slug ? `/app/o/${slug}/assignments/${assignment.id}/review` : '#'}
+            onClick={() => setSelectedAssignment(assignment.id)}
+          >
+            <Card className="p-4 hover:border-primary/60 transition">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="font-semibold text-base">{assignment.role}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Created: {new Date(assignment.createdAt).toLocaleDateString()}
+                  </p>
+                  <Badge variant="secondary" className="mt-2">
+                    {assignment.status}
+                  </Badge>
                 </div>
+                <Button variant="outline" size="sm">
+                  View / Edit
+                </Button>
               </div>
-            )}
-          </TabsContent>
+            </Card>
+          </Link>
         ))}
-      </Tabs>
+      </div>
 
-      {/* Assignment info footer */}
-      {currentAssignment && (
-        <div className="mt-6 p-4 rounded-md" style={{ backgroundColor: '#F7F6F1' }}>
-          <p className="text-sm" style={{ color: '#2D3330' }}>
-            <strong>Status:</strong> {currentAssignment.status} • <strong>Created:</strong>{' '}
-            {new Date(currentAssignment.createdAt).toLocaleDateString()}
-          </p>
+      {/* Matches for the currently selected assignment */}
+      {selectedAssignment && (
+        <div className="mt-8 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold">Matches</h2>
+              {currentAssignment && (
+                <p className="text-sm text-muted-foreground">
+                  {currentAssignment.role} — {currentAssignment.status}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <p>Loading matches...</p>
+            </div>
+          ) : matches.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-lg mb-2" style={{ color: '#2D3330' }}>
+                No matches yet
+              </p>
+              <p className="text-sm" style={{ color: '#6B6760' }}>
+                Check back soon or adjust your filters
+              </p>
+            </div>
+          ) : (
+            <div>
+              <p className="text-sm mb-4" style={{ color: '#6B6760' }}>
+                {matches.length} candidate{matches.length !== 1 ? 's' : ''} match this assignment
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {matches.map((match: any, index: number) => (
+                  <MatchResultCard
+                    key={match.profileId || index}
+                    result={match}
+                    variant="blind"
+                    skills={
+                      match.profile?.skills
+                        ? Object.entries(match.profile.skills).map(
+                            ([id, data]: [string, any]) => ({
+                              id,
+                              label: id,
+                              level: data.level,
+                            })
+                          )
+                        : []
+                    }
+                    onInterested={() => handleInterested(match.profileId)}
+                    onHide={() => handleHide(match.profileId)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

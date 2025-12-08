@@ -1307,6 +1307,26 @@ Each flow includes:
 
 ---
 
+### F8 — **Gap Analysis & Next-Best Skills**
+**Why Now:** Reduces activation time by showing the clearest skills/proof gaps against target roles and suggested matches.  
+**Acceptance Criteria:**  
+- Gap view highlights **must/nice L4 gaps** per chosen focus area or matched assignments, with a short “why this matters” note tied to outcomes.  
+- Suggests top **≤5 L4s or proofs** to add; user can **accept/edit inline**, carrying over level/proof fields; activation progress updates immediately.  
+- Produces a **next-best action** when gaps remain (e.g., add proof, widen availability) and tracks reduction in gap count/time-to-activation.  
+**MoSCoW:** **Should** (baseline gap map + actions).
+
+---
+
+### F9 — **Post-Interview Feedback Loop (Individual)**
+**Why Now:** Delivers timely learning and fairness after interviews, reducing uncertainty and churn.  
+**Acceptance Criteria:**  
+- Individuals see **decision + personalized feedback** per interview within the **48h SLA**; status shows pending/received.  
+- Feedback is stored with the related assignment/interview and is **notified** (in-app/email).  
+- Users can review past feedback from the Dashboard/Matching hub without exposing private notes to orgs.  
+**MoSCoW:** **Must** (SLA-aligned feedback for candidates).
+
+---
+
 ## 5.2 Organization Features
 
 ### O1 — **Purpose Block** (Mission • Vision • Values • Causes) within Org Profile
@@ -1396,6 +1416,26 @@ Each flow includes:
 
 ---
 
+### O11 — **Post-Interview Feedback & Decision SLA (Org)**
+**Why Now:** Enforces consistent, respectful closure and learning for candidates while meeting the 48h SLA.  
+**Acceptance Criteria:**  
+- Closing an interview requires a **decision + personalized feedback**; guardrails prevent closure without a note for shortlisted candidates.  
+- **Templates with editable reason codes** speed feedback; reminders trigger before **48h** breach; audit log records sender/time/content hash.  
+- Candidates receive feedback via in-app/email and see status in their view; orgs see which candidates have acknowledged receipt.  
+**MoSCoW:** **Must** (SLA enforcement + templated feedback).
+
+---
+
+### O12 — **Assignment Templates**
+**Why Now:** Speeds repeatable assignment creation and keeps quality consistent across teams.  
+**Acceptance Criteria:**  
+- Create and save templates that prefill the **5-step Assignment** flow (role/outcomes, skills, gates, logistics, review) with **owner/department tags**.  
+- Clone a template into a new assignment; edits in the new assignment **do not mutate** the source template; version label shown on publish.  
+- Template library shows usage and **time-to-publish** deltas; suggestions surface a relevant template when starting a similar role.  
+**MoSCoW:** **Should** (baseline template library + clone).
+
+---
+
 ## 5.3 Out of Scope (confirming feature boundaries)
 - Social **content feeds** and engagement mechanics.  
 - Clinical/diagnostic mental-health tooling (Zen Hub remains non-diagnostic).  
@@ -1414,8 +1454,8 @@ Each flow includes:
 ---
 
 ## 5.5 MoSCoW Summary (MVP)
-- **Must:** F1, F2, F3, F4, F5, F6; O1, O6, O7, O8, O9, O10.  
-- **Should:** F7; O2, O3, O4, O5.  
+- **Must:** F1, F2, F3, F4, F5, F6, F9; O1, O6, O7, O8, O9, O10, O11.  
+- **Should:** F7, F8; O2, O3, O4, O5, O12.  
 - **Could:** Bulk import/export niceties; richer analytics; SSO/SCIM; donor/investor views; exercises library.
 
 ---
@@ -1460,7 +1500,7 @@ Each flow includes:
 - Highly regulated sectors requiring bespoke compliance (health/defense) beyond generic controls.
 
 ## 6.3 Boundaries vs Included MVP Features
-- **Included (Part 5):** Purpose blocks, customizable dashboards, Expertise Atlas, Matching Hub (with **PAC**), Zen Hub (non‑diagnostic), visibility controls, soft **attestations**, Org Expertise Hub, 5‑step Assignment Creation, Company Dashboard, Team Hub, org‑type flag.  
+- **Included (Part 5):** Purpose blocks, customizable dashboards, Expertise Atlas, **Gap Analysis**, Matching Hub (with **PAC**), post-interview feedback loops (individual + org), Zen Hub (non-diagnostic), visibility controls, soft **attestations**, Org Expertise Hub, 5-step Assignment Creation, **Assignment Templates**, Company Dashboard, Team Hub, org-type flag.  
 - **Not included:** Anything that materially expands scope beyond these (above exclusions apply).
 
 ---
@@ -2034,6 +2074,16 @@ Each flow includes:
 - [ ] Request attestation via magic link; status visible; reminders send.
 - [ ] Assignment gates are displayed pre-intro; unmet gates block “Introduce.”
 
+**F8 Gap Analysis & Next-Best Skills**
+- [ ] Gap view surfaces must/nice L4 gaps per focus or matched assignments with “why this matters.”
+- [ ] Suggested L4/proof can be accepted/edited inline; activation progress updates when applied.
+- [ ] Next-best action generated while gaps remain; progress tracked via gap count/time-to-activation.
+
+**F9 Post-Interview Feedback Loop (Individual)**
+- [ ] Individual sees decision + personalized feedback within 48h SLA; status shows pending/received.
+- [ ] Feedback stored with assignment/interview and notified to the user.
+- [ ] Historical feedback accessible from dashboard/matching without exposing private notes to orgs.
+
 ### Organizations
 **O1 Purpose Block** — Mission/vision/values/causes editable; contributes to PAC.
 **O2 Structure Block** — Create teams; link Assignments; export simple org map.
@@ -2045,6 +2095,8 @@ Each flow includes:
 **O8 Company Dashboard** — Tiles for pipeline (Shortlists, Intros, TTSC trend).
 **O9 Team Management Hub** — Invite members; roles/permissions enforced.
 **O10 Organization Type Flag** — For-profit vs Non-profit selected & reflected in copy.
+**O11 Post-Interview Feedback & Decision SLA** — Decision + personalized feedback required; reminders before 48h breach.
+**O12 Assignment Templates** — Templates prefill 5-step assignments; clone without mutating source; usage shown.
 
 ---
 

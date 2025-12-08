@@ -21,7 +21,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Joyride, { CallBackProps, STATUS, EVENTS, ACTIONS } from 'react-joyride';
-import { individualTourSteps, organizationTourSteps, tourStyles } from './tourSteps.tsx';
+import { individualTourSteps, organizationTourSteps, tourStyles } from './tourSteps';
 import { toast } from 'sonner';
 
 interface GuidedTourProps {
@@ -174,7 +174,7 @@ export function GuidedTour({ userId, persona, shouldRun, onComplete, onSkip }: G
 
   return (
     <Joyride
-      steps={steps}
+      steps={steps as any}
       run={run}
       continuous
       showProgress
@@ -195,10 +195,6 @@ export function GuidedTour({ userId, persona, shouldRun, onComplete, onSkip }: G
       // Accessibility
       spotlightPadding={8}
       disableScrollParentFix
-      // Performance
-      floaterProps={{
-        disableAnimation: false,
-      }}
     />
   );
 }

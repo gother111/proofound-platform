@@ -46,7 +46,6 @@ export default function OrgMatchingPage() {
         onComplete={(assignmentId) => {
           setShowBuilder(false);
           router.refresh();
-          // Refresh assignments list
           fetch('/api/assignments')
             .then((res) => res.json())
             .then((data) => setAssignments(data.items || []));

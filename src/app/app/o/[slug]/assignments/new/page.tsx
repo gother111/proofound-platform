@@ -19,6 +19,8 @@ import {
   Step4Practicals,
   Step5ExpertiseMapping,
 } from '@/components/matching/assignment-steps';
+import { TemplatePicker, type AssignmentTemplate } from '@/components/matching/TemplatePicker';
+import { mapTemplateToAssignmentForm } from '@/lib/templates/prefill';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,29 +39,40 @@ interface AssignmentFormData {
   }>;
 
   // Step 3
-  missionWeight: number;
-  expertiseWeight: number;
-  workModeRequired: 'hard' | 'soft';
+  weights: {
+    mission: number;
+    expertise: number;
+    workMode: number;
+  };
+  missionWeight?: number;
+  expertiseWeight?: number;
+  workModeRequirement: 'hard' | 'soft';
   workModePreference: 'onsite' | 'hybrid' | 'remote';
 
   // Step 4
-  compensationMin?: number;
-  compensationMax?: number;
+  compMin?: number;
+  compMax?: number;
   currency: string;
-  location: string;
-  startDate?: string;
+  hoursMin?: number;
+  hoursMax?: number;
+  locationMode?: 'onsite' | 'hybrid' | 'remote';
+  city?: string;
+  country?: string;
+  startEarliest?: string;
+  startLatest?: string;
   duration?: string;
   availability?: string;
+  verificationGates?: string[];
 
   // Step 5
-  requiredSkills: Array<{
-    skillCode: string;
-    minLevel: number;
-    weight: number;
-    linkedOutcomes: string[];
-    examples: string;
+  mustHaveSkills: Array<{
+    id: string;
+    label: string;
+    level: number;
+    linkedToBV?: boolean;
+    linkedToTO?: boolean;
   }>;
-  niceToHaveSkills: string[];
+  niceToHaveSkills: Array<{ id: string; label: string; level?: number }>;
   educationRequired: boolean;
   educationJustification?: string;
 }
@@ -81,6 +94,11 @@ export default function AssignmentBuilderPage() {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [orgId, setOrgId] = useState<string | null>(null);
   const [stepStartTime, setStepStartTime] = useState<Date>(new Date());
+  const [templates, setTemplates] = useState<AssignmentTemplate[]>([]);
+  const [isTemplatePickerOpen, setIsTemplatePickerOpen] = useState(false);
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
+  const [appliedTemplateId, setAppliedTemplateId] = useState<string | null>(null);
+  const [appliedTemplateName, setAppliedTemplateName] = useState<string | null>(null);
 
   const form = useForm<AssignmentFormData>({
     defaultValues: {
@@ -88,16 +106,56 @@ export default function AssignmentBuilderPage() {
       businessValue: '',
       stakeholders: [],
       outcomes: [],
-      missionWeight: 30,
-      expertiseWeight: 70,
-      workModeRequired: 'soft',
+      weights: { mission: 33, expertise: 34, workMode: 33 },
+      workModeRequirement: 'soft',
       workModePreference: 'hybrid',
+      locationMode: 'hybrid',
+      compMin: 0,
+      compMax: 0,
       currency: 'USD',
-      requiredSkills: [],
+      hoursMin: 20,
+      hoursMax: 40,
+      duration: '12mo',
+      verificationGates: [],
+      mustHaveSkills: [],
       niceToHaveSkills: [],
       educationRequired: false,
+      educationJustification: '',
     },
   });
+
+  // Load templates for the organization
+  useEffect(() => {
+    const loadTemplates = async () => {
+      setIsLoadingTemplates(true);
+      try {
+        const response = await fetch(`/api/assignment-templates?orgSlug=${params.slug}`);
+        if (!response.ok) {
+          throw new Error('Failed to load templates');
+        }
+        const data = await response.json();
+        setTemplates(data.items || []);
+      } catch (error) {
+        console.error(error);
+        toast.error('Could not load templates');
+      } finally {
+        setIsLoadingTemplates(false);
+      }
+    };
+
+    loadTemplates();
+  }, [params.slug]);
+
+  const handleApplyTemplate = (template: AssignmentTemplate) => {
+    const mapped = mapTemplateToAssignmentForm(template.presetPayload);
+    form.reset({ ...form.getValues(), ...mapped });
+    setAppliedTemplateId(template.id);
+    setAppliedTemplateName(template.name);
+    setCurrentStep(1);
+    setStepStartTime(new Date());
+    toast.success(`Applied template: ${template.name}`);
+    setIsTemplatePickerOpen(false);
+  };
 
   // Auto-save draft every 30 seconds
   useState(() => {
@@ -499,7 +557,15 @@ export default function AssignmentBuilderPage() {
 
         {/* Step Content */}
         <Card className="p-8">
-          {currentStep === 1 && <Step1BusinessValue form={form} onNext={handleNext} />}
+          {currentStep === 1 && (
+            <Step1BusinessValue
+              form={form}
+              onNext={handleNext}
+              onOpenTemplatePicker={() => setIsTemplatePickerOpen(true)}
+              appliedTemplateName={appliedTemplateName}
+              isLoadingTemplates={isLoadingTemplates}
+            />
+          )}
           {currentStep === 2 && (
             <Step2TargetOutcomes form={form} onNext={handleNext} onBack={handleBack} />
           )}
@@ -531,6 +597,15 @@ export default function AssignmentBuilderPage() {
           </p>
         </div>
       </div>
+
+      <TemplatePicker
+        open={isTemplatePickerOpen}
+        onOpenChange={setIsTemplatePickerOpen}
+        templates={templates}
+        isLoading={isLoadingTemplates}
+        onApply={handleApplyTemplate}
+        appliedTemplateId={appliedTemplateId}
+      />
     </div>
   );
 }

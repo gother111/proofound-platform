@@ -382,7 +382,13 @@ export function MatchResultCard({
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => setIsSnoozeDialogOpen(true)}
+            onClick={() => {
+              if (result.id) {
+                setIsSnoozeDialogOpen(true);
+              }
+            }}
+            disabled={!result.id}
+            title={!result.id ? 'Snooze becomes available once this match is saved' : undefined}
             className="w-full text-xs text-[#6B6760] hover:bg-[#F7F6F1]"
           >
             <BellOff className="w-3.5 h-3.5 mr-1.5" />
