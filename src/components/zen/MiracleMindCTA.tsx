@@ -4,8 +4,8 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Sparkles, Brain, ShieldCheck } from 'lucide-react';
 
-const IOS_LINK = 'https://apps.apple.com/'; // TODO: replace with live App Store link
-const ANDROID_LINK = 'https://play.google.com/store/'; // TODO: replace with live Play Store link
+const IOS_LINK = 'https://apps.apple.com/app/miracle-of-mind-sadhguru/id6737795677';
+const ANDROID_LINK = 'https://play.google.com/store/apps/details?id=org.sadhguru.miracleofmind';
 
 /**
  * MiracleMindCTA
