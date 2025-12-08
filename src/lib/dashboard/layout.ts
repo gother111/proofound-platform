@@ -101,14 +101,6 @@ export const AVAILABLE_WIDGETS: Record<string, WidgetConfig> = {
     defaultSize: 'default',
     availableSizes: ['default'],
   },
-  'miracle-mind-app': {
-    id: 'miracle-mind-app',
-    name: 'Miracle of Mind App',
-    description: 'Download the 7-minute wellbeing app (iOS & Android)',
-    category: 'growth',
-    defaultSize: 'default',
-    availableSizes: ['default'],
-  },
 };
 
 /**

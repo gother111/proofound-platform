@@ -21,6 +21,8 @@ import { QuickCheckIn } from '@/components/zen/QuickCheckIn';
 import { GuidedBreathing } from '@/components/zen/GuidedBreathing';
 import { ReflectionJournal } from '@/components/zen/ReflectionJournal';
 import { PracticeCard } from '@/components/zen/PracticeCard';
+import { InterviewPrepTab } from '@/components/zen/interview-prep/InterviewPrepTab';
+import { MiracleMindCTA } from '@/components/zen/MiracleMindCTA';
 import { WellBeingDeltaWidget } from '@/components/wellbeing/WellBeingDeltaWidget';
 import { WellBeingTrendChart } from '@/components/wellbeing/WellBeingTrendChart';
 import { CheckInHistory } from '@/components/wellbeing/CheckInHistory';
@@ -169,6 +171,12 @@ function ZenHubContent() {
             Journal
           </TabsTrigger>
           <TabsTrigger
+            value="interview-prep"
+            className="data-[state=active]:bg-white dark:data-[state=active]:bg-[#2F2823]"
+          >
+            Interview Prep
+          </TabsTrigger>
+          <TabsTrigger
             value="insights"
             className="data-[state=active]:bg-white dark:data-[state=active]:bg-[#2F2823]"
           >
@@ -208,6 +216,8 @@ function ZenHubContent() {
 
         {/* PRACTICES TAB */}
         <TabsContent value="practices" className="space-y-6 animate-in fade-in duration-500">
+          <MiracleMindCTA />
+
           <div className="flex flex-wrap gap-2">
             {['All', ...toolkitFilters].map((filter) => (
               <Button
@@ -287,6 +297,11 @@ function ZenHubContent() {
             </Button>
           </div>
           <ReflectionJournal />
+        </TabsContent>
+
+        {/* INTERVIEW PREP TAB */}
+        <TabsContent value="interview-prep" className="space-y-6 animate-in fade-in duration-500">
+          <InterviewPrepTab />
         </TabsContent>
 
         {/* INSIGHTS TAB */}

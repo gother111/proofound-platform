@@ -19,7 +19,6 @@ import { ImpactSnapshotCard } from './ImpactSnapshotCard';
 import { ExploreCard } from './ExploreCard';
 import { GapMapWidget } from './GapMapWidget';
 import { NextBestActionsWidget } from './NextBestActionsWidget';
-import { MiracleMindCard } from './MiracleMindCard';
 import { Button } from '@/components/ui/button';
 import { Settings2, Save, RotateCcw, Plus } from 'lucide-react';
 import { toast } from 'sonner';
@@ -223,8 +222,6 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
         return <GapMapWidget />;
       case 'next-best-actions':
         return <NextBestActionsWidget />;
-      case 'miracle-mind-app':
-        return <MiracleMindCard />;
       default:
         return null;
     }
