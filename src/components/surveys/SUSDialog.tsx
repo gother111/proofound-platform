@@ -35,7 +35,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { emitSUSCompleted } from '@/lib/analytics/events';
 import { apiFetch } from '@/lib/api/fetch';
 
 interface SUSDialogProps {
@@ -147,11 +146,27 @@ export function SUSDialog({ open, onOpenChange, userId, trigger, onCompleted, on
         throw new Error('Failed to submit survey');
       }
 
-      // Emit analytics event
-      await emitSUSCompleted(userId, {
-        total_score: totalScore,
-        individual_scores: individualScores,
-        trigger_point: trigger,
+      // Fire analytics via server API to avoid bundling server-only deps in client
+      const data = await response.json().catch(() => ({}));
+      const surveyId = data?.survey?.id;
+      apiFetch('/api/analytics/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventType: 'sus_survey_completed',
+          userId,
+          entityType: 'survey',
+          entityId: surveyId,
+          properties: {
+            trigger,
+            score: totalScore,
+            grade,
+            meetsTarget: totalScore >= 75,
+            individual_scores: individualScores,
+          },
+        }),
+      }).catch((error) => {
+        console.error('Failed to emit SUS analytics event', error);
       });
 
       toast.success(`Survey completed! Your score: ${totalScore.toFixed(0)}/100`);
