@@ -19,8 +19,14 @@ interface APILatencyLog {
  */
 export async function logAPILatency(data: APILatencyLog): Promise<void> {
   try {
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL;
+    if (!baseUrl) {
+      // Without a base URL we can't log; avoid throwing in middleware/cron contexts
+      return;
+    }
+
     // Store in analytics for aggregation
-    await fetch('/api/analytics/events', {
+    await fetch(new URL('/api/analytics/events', baseUrl).toString(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

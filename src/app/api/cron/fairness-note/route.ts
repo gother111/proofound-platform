@@ -42,9 +42,9 @@ export async function GET(request: NextRequest) {
       WITH contract_events AS (
         SELECT 
           e1.user_id,
-          e1.timestamp AS activation_time,
-          e2.timestamp AS contract_time,
-          EXTRACT(EPOCH FROM (e2.timestamp - e1.timestamp)) / 86400 AS days_to_contract,
+          e1.occurred_at AS activation_time,
+          e2.occurred_at AS contract_time,
+          EXTRACT(EPOCH FROM (e2.occurred_at - e1.occurred_at)) / 86400 AS days_to_contract,
           e1.properties->>'cohort_role' AS role_family,
           e1.properties->>'cohort_seniority' AS seniority,
           e1.properties->>'cohort_geography' AS geography
@@ -53,9 +53,9 @@ export async function GET(request: NextRequest) {
           ON e1.user_id = e2.user_id
           AND e1.event_type = 'profile_activated'
           AND e2.event_type = 'contract_signed'
-          AND e2.timestamp > e1.timestamp
-        WHERE e2.timestamp >= ${startDate}
-          AND e2.timestamp <= ${endDate}
+          AND e2.occurred_at > e1.occurred_at
+        WHERE e2.occurred_at >= ${startDate}
+          AND e2.occurred_at <= ${endDate}
       )
       SELECT 
         role_family,
