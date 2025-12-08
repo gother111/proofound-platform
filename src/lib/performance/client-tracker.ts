@@ -10,7 +10,8 @@
  * - Dashboard P75 ≤2.0s
  */
 
-import { onCLS, onFCP, onFID, onLCP, onTTFB, type Metric } from 'web-vitals';
+// Web Vitals v4 replaced FID with INP; import INP to avoid build-time errors
+import { onCLS, onFCP, onINP, onLCP, onTTFB, type Metric } from 'web-vitals';
 
 interface PerformanceData {
   metricType: string;
@@ -198,7 +199,7 @@ export const initPerformanceTracking = (): void => {
   // Track Web Vitals
   onCLS(handleMetric);
   onFCP(handleMetric);
-  onFID(handleMetric);
+  onINP(handleMetric);
   onLCP(handleMetric);
   onTTFB(handleMetric);
 
