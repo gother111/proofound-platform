@@ -201,7 +201,8 @@ async function getOverallMetrics(
     WHERE occurred_at >= ${thirtyDaysAgo.toISOString()}
   `);
 
-  const row = metrics.rows[0] as any;
+  const rows = metrics?.rows ?? [];
+  const row = (rows[0] as any) || {};
 
   return {
     totalMatches: parseInt(row.total_matches || '0'),
@@ -232,7 +233,8 @@ async function calculateSegmentGaps(
       AND e.event_type IN ('match_generated', 'match_introduced')
   `);
 
-  const baselineRow = baselineResult.rows[0] as any;
+  const baselineRows = baselineResult?.rows ?? [];
+  const baselineRow = (baselineRows[0] as any) || {};
   const baselineMatches = parseFloat(baselineRow.matches || '0');
   const baselineIntroductions = parseFloat(baselineRow.introductions || '0');
   const baseline = baselineMatches > 0 ? baselineIntroductions / baselineMatches : 0;
@@ -490,7 +492,8 @@ async function getOverallMetricsForDateRange(
       AND occurred_at <= ${endDate.toISOString()}
   `);
 
-  const row = metrics.rows[0] as any;
+  const rows = metrics?.rows ?? [];
+  const row = (rows[0] as any) || {};
 
   return {
     totalMatches: parseInt(row.total_matches || '0'),
@@ -520,7 +523,8 @@ async function calculateSegmentGapsForDateRange(
       AND e.event_type IN ('match_generated', 'match_introduced')
   `);
 
-  const baselineRow = baselineResult.rows[0] as any;
+  const baselineRows = baselineResult?.rows ?? [];
+  const baselineRow = (baselineRows[0] as any) || {};
   const baselineMatches = parseFloat(baselineRow.matches || '0');
   const baselineIntroductions = parseFloat(baselineRow.introductions || '0');
   const baseline = baselineMatches > 0 ? baselineIntroductions / baselineMatches : 0;

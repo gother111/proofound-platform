@@ -15,6 +15,18 @@ import { calculateFairnessGaps } from '@/lib/analytics/fairness';
 import { generateFairnessMarkdown, generateFairnessSummary } from '@/lib/reports/fairness-note';
 import { log } from '@/lib/log';
 
+function isAuthorized(request: NextRequest): boolean {
+  const authHeader = request.headers.get('authorization');
+  const secrets = [
+    process.env.CRON_SECRET,
+    process.env.CRON_SECRET_PREVIEW,
+    process.env.NEXT_PUBLIC_CRON_SECRET,
+  ].filter(Boolean) as string[];
+
+  if (!secrets.length) return false;
+  return secrets.some(secret => authHeader === `Bearer ${secret}`);
+}
+
 /**
  * Generate fairness report on deployment
  *
@@ -25,14 +37,11 @@ import { log } from '@/lib/log';
  */
 export async function GET(request: NextRequest) {
   try {
-    // Verify cron secret
-    const authHeader = request.headers.get('authorization');
-    const expectedSecret = process.env.CRON_SECRET;
-
-    if (!expectedSecret || authHeader !== `Bearer ${expectedSecret}`) {
+    // Verify cron secret (allow preview/fallback)
+    if (!isAuthorized(request)) {
       log.warn('fairness.cron.unauthorized', {
-        hasAuth: !!authHeader,
-        hasSecret: !!expectedSecret,
+        hasAuth: !!request.headers.get('authorization'),
+        hasSecret: !!process.env.CRON_SECRET,
       });
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -60,7 +69,23 @@ export async function GET(request: NextRequest) {
     }
 
     // Generate fairness analysis
-    const report = await calculateFairnessGaps(releaseVersion);
+    let report;
+    try {
+      report = await calculateFairnessGaps(releaseVersion);
+    } catch (error) {
+      log.error('fairness.calculate.failed', {
+        releaseVersion,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Fairness calculation failed',
+          message: error instanceof Error ? error.message : 'Unknown error',
+        },
+        { status: 500 }
+      );
+    }
 
     // Generate markdown
     const reportMarkdown = generateFairnessMarkdown(report);

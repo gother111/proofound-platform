@@ -18,14 +18,25 @@ export const maxDuration = 60; // 60 seconds for Vercel Pro
 /**
  * Cron job handler - runs daily at 2 AM UTC
  */
+function isAuthorized(request: NextRequest): boolean {
+  const authHeader = request.headers.get('authorization');
+  const secrets = [
+    process.env.CRON_SECRET,
+    process.env.CRON_SECRET_PREVIEW,
+    process.env.NEXT_PUBLIC_CRON_SECRET,
+  ].filter(Boolean) as string[];
+
+  if (!secrets.length) return false;
+  return secrets.some(secret => authHeader === `Bearer ${secret}`);
+}
+
 export async function GET(request: NextRequest) {
   try {
-    // Verify this is a legitimate cron request (Vercel sets this header)
-    const authHeader = request.headers.get('authorization');
-    if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    // Verify this is a legitimate cron request
+    if (!isAuthorized(request)) {
       log.warn('fairness-note.cron.unauthorized', {
         hasSecret: !!process.env.CRON_SECRET,
-        hasAuth: !!authHeader,
+        hasAuth: !!request.headers.get('authorization'),
       });
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
