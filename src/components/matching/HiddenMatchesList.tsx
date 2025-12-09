@@ -75,12 +75,16 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
 
   const handleUnhide = async (matchId: string) => {
     setUnhidingId(matchId);
+
+    // Optimistically remove the item; keep snapshot for rollback
+    const prevHidden = hidden;
+    setHidden((prev) => prev.filter((m) => m.id !== matchId));
+
     try {
       const response = await apiFetch(`/api/match/hide?matchId=${matchId}`, { method: 'DELETE' });
       if (!response.ok) {
         throw new Error('Failed to unhide match');
       }
-      setHidden((prev) => prev.filter((m) => m.id !== matchId));
       toast.success('Match restored', { description: 'It will reappear in your matches list.' });
 
       // Kick off parallel refreshes so Matching updates immediately
@@ -97,6 +101,8 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
       ]);
     } catch (error) {
       console.error('Failed to unhide match:', error);
+      // Roll back optimistic removal
+      setHidden(prevHidden);
       toast.error('Failed to unhide match');
     } finally {
       setUnhidingId(null);

@@ -63,8 +63,12 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
 
   const handleUnsnooze = async (matchId: string) => {
     setUnsnoozing(matchId);
+
+    // Optimistically remove from local list, keep snapshot for rollback
+    const prevMatches = matches;
+    setMatches((prev) => prev.filter((m) => m.id !== matchId));
+
     try {
-      // Hitting the unsnooze endpoint for this match
       const response = await apiFetch(`/api/matches/${matchId}/snooze`, {
         method: 'DELETE',
       });
@@ -76,9 +80,6 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
       toast.success('Match unsnoozed', {
         description: 'This match will now appear in your main feed',
       });
-
-      // Remove from list
-      setMatches((prev) => prev.filter((m) => m.id !== matchId));
 
       // Refresh the main matching list before we exit (best-effort) and also warm API
       const warmMatches = fetch('/api/match/profile', {
@@ -94,6 +95,8 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
       ]);
     } catch (error) {
       console.error('Error unsnoozing match:', error);
+      // Rollback optimistic removal if API failed
+      setMatches(prevMatches);
       toast.error('Failed to unsnooze match', {
         description: 'Please try again',
       });

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { IndividualMatchingEmpty } from '@/components/matching/IndividualMatchingEmpty';
 import { MatchingProfileSetup } from '@/components/matching/MatchingProfileSetup';
@@ -34,6 +34,7 @@ export default function MatchingPage() {
     values: [],
   });
   const [showManageHiddenSnoozed, setShowManageHiddenSnoozed] = useState(false);
+  const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchMatches = async () => {
     // Create abort controller for timeout
@@ -122,6 +123,19 @@ export default function MatchingPage() {
   useEffect(() => {
     fetchMatches();
   }, []);
+
+  // Debounced refresh helper so multiple restores don't spam the API
+  const refreshMatches = () => {
+    if (refreshTimer.current) {
+      clearTimeout(refreshTimer.current);
+    }
+    refreshTimer.current = setTimeout(() => {
+      fetchMatches().catch((err) => {
+        console.error('Failed to refresh matches after restore:', err);
+        toast.error('Could not refresh matches. Please try again.');
+      });
+    }, 120);
+  };
 
   // Apply filters when they change
   useEffect(() => {
@@ -335,8 +349,8 @@ export default function MatchingPage() {
 
         {showManageHiddenSnoozed && (
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <SnoozedMatchesList onRestored={fetchMatches} />
-            <HiddenMatchesList onRestored={fetchMatches} />
+            <SnoozedMatchesList onRestored={refreshMatches} />
+            <HiddenMatchesList onRestored={refreshMatches} />
           </div>
         )}
       </div>
