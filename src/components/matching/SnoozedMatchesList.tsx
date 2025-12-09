@@ -62,7 +62,8 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
   const handleUnsnooze = async (matchId: string) => {
     setUnsnoozing(matchId);
     try {
-      const response = await apiFetch(`/api/match/snooze?matchId=${matchId}`, {
+      // Hitting the unsnooze endpoint for this match
+      const response = await apiFetch(`/api/matches/${matchId}/snooze`, {
         method: 'DELETE',
       });
 
