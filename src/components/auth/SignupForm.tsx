@@ -67,18 +67,11 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
       return;
     }
 
-    const trimmedPassword = password.trim();
-    const trimmedConfirmPassword = confirmPassword.trim();
-
-    if (trimmedPassword !== trimmedConfirmPassword) {
+    // Keep password fields in sync
+    if (password !== confirmPassword) {
       event.preventDefault();
       setClientError('Passwords do not match');
       return;
-    }
-
-    if (trimmedPassword.length < 8) {
-      event.preventDefault();
-      setClientError('Password must be at least 8 characters');
     }
   };
 
