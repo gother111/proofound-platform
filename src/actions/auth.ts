@@ -4,24 +4,13 @@ import { normalizeSiteUrl, resolveSiteUrlFromHeaders, stripTrailingSlash } from 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { z } from 'zod';
 // Rate limiting removed - server actions are protected by Vercel's built-in rate limiting
 import { headers } from 'next/headers';
 import type { AuthError } from '@supabase/supabase-js';
 import { resolveUserHomePath } from '@/lib/auth';
+import { mapSignUpValidationError, signUpSchema } from './auth.schema';
 
-export const signUpSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
-  persona: z.enum(['individual', 'org_member']),
-  gdprConsent: z.boolean().refine((val) => val === true, {
-    message: 'You must agree to the Privacy Policy and Terms of Service',
-  }),
-  marketingOptIn: z.boolean().optional(),
-});
-
-const signInSchema = z.object({
-  email: z.string().email(),
+const signInSchema = signUpSchema.pick({ email: true }).extend({
   password: z.string(),
 });
 
@@ -45,25 +34,6 @@ type ServerSupabaseClient = Awaited<ReturnType<typeof createClient>>;
 export type OAuthState = {
   error: string | null;
 };
-
-function mapSignUpValidationError(error: z.ZodError): string {
-  const passwordIssue = error.issues.find((issue) => issue.path[0] === 'password');
-  if (passwordIssue && /least 8/.test(passwordIssue.message)) {
-    return 'Password must be at least 8 characters';
-  }
-
-  const gdprIssue = error.issues.find((issue) => issue.path[0] === 'gdprConsent');
-  if (gdprIssue) {
-    return gdprIssue.message;
-  }
-
-  const emailIssue = error.issues.find((issue) => issue.path[0] === 'email');
-  if (emailIssue) {
-    return 'Enter a valid email address.';
-  }
-
-  return 'Enter a valid email, password (8+ characters), and account type.';
-}
 
 function isRedirectError(error: unknown): error is { digest: string } {
   if (typeof error !== 'object' || error === null) {

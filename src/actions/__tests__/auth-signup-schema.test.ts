@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { signUpSchema } from '@/actions/auth';
+import { signUpSchema } from '@/actions/auth.schema';
 
 const basePayload = {
   email: 'user@example.com',
