@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { db } from '@/db';
 import { matches } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
@@ -122,6 +123,9 @@ export async function DELETE(
       userId: user.id,
       matchId,
     });
+
+    // Make sure the matching page refetches fresh data after unsnooze
+    revalidatePath('/app/i/matching');
 
     return NextResponse.json({
       success: true,
