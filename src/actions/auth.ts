@@ -292,6 +292,13 @@ export async function signUp(
     };
   } catch (error) {
     console.error('Sign-up failed:', error);
+    if (error instanceof Error && error.message.includes('ENV_MISCONFIG')) {
+      return {
+        error:
+          'Signup is temporarily unavailable due to a configuration issue. Please try again shortly or contact support.',
+        success: false,
+      };
+    }
     return {
       error: mapUnexpectedAuthError(error, 'sign up'),
       success: false,

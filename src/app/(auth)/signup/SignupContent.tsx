@@ -32,6 +32,7 @@ export function SignupContent() {
 
       {/* Back to Home */}
       <motion.button
+        type="button"
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         onClick={() => router.push('/')}
@@ -78,6 +79,7 @@ export function SignupContent() {
               transition={{ delay: 0.3 }}
             >
               <button
+                type="button"
                 onClick={() => setSignupType('individual')}
                 className="group h-full w-full text-left"
               >
@@ -112,6 +114,7 @@ export function SignupContent() {
               transition={{ delay: 0.4 }}
             >
               <button
+                type="button"
                 onClick={() => setSignupType('organization')}
                 className="group h-full w-full text-left"
               >
@@ -145,6 +148,7 @@ export function SignupContent() {
             <p className="text-sm text-[#2D333099]">
               Already have an account?{' '}
               <button
+                type="button"
                 onClick={() => router.push('/login')}
                 className="font-medium text-proofound-forest hover:text-[#2D5D4A] hover:underline"
               >

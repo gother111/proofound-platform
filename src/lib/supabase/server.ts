@@ -487,7 +487,12 @@ export async function createClient(options: CreateClientOptions = {}): Promise<S
   const cookieStore = await cookies();
 
   // Strictly require Supabase credentials (no baked-in defaults)
-  const { SUPABASE_URL: supabaseUrl, SUPABASE_ANON_KEY: supabaseKey } = getEnv(true);
+  // Use non-strict env loading to avoid blocking auth flows on DATABASE_URL in production
+  const { SUPABASE_URL: supabaseUrl, SUPABASE_ANON_KEY: supabaseKey } = getEnv(false);
+
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('ENV_MISCONFIG: Missing Supabase URL or anon key');
+  }
 
   return createSupabaseServerClient(supabaseUrl.trim(), supabaseKey.trim(), {
     cookies: {
