@@ -80,15 +80,18 @@ export function SnoozedMatchesList({ onRestored }: SnoozedMatchesListProps) {
       // Remove from list
       setMatches((prev) => prev.filter((m) => m.id !== matchId));
 
-      // Refresh the main matching list before we exit
-      try {
-        await onRestored?.();
-      } catch (refreshError) {
-        console.error('Error refreshing matches after unsnooze:', refreshError);
-      }
+      // Refresh the main matching list before we exit (best-effort) and also warm API
+      const warmMatches = fetch('/api/match/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      }).catch((err) => console.error('Warm matches fetch failed after unsnooze', err));
 
-      // Force a route refresh to invalidate any stale client data
-      router.refresh();
+      await Promise.allSettled([
+        onRestored?.(),
+        warmMatches,
+        Promise.resolve().then(() => router.refresh()),
+      ]);
     } catch (error) {
       console.error('Error unsnoozing match:', error);
       toast.error('Failed to unsnooze match', {

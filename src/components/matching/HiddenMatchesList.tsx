@@ -82,14 +82,19 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
       }
       setHidden((prev) => prev.filter((m) => m.id !== matchId));
       toast.success('Match restored', { description: 'It will reappear in your matches list.' });
-      if (onRestored) {
-        try {
-          await onRestored();
-        } catch (err) {
-          console.error('Error refreshing matches after unhide:', err);
-        }
-      }
-      router.refresh(); // force matching grid to refetch
+
+      // Kick off parallel refreshes so Matching updates immediately
+      const warmMatches = fetch('/api/match/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      }).catch((err) => console.error('Warm matches fetch failed after unhide:', err));
+
+      await Promise.allSettled([
+        onRestored?.(),
+        warmMatches,
+        Promise.resolve().then(() => router.refresh()),
+      ]);
     } catch (error) {
       console.error('Failed to unhide match:', error);
       toast.error('Failed to unhide match');
