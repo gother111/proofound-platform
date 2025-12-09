@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
 import { matches, assignments, organizations } from '@/db/schema';
@@ -96,6 +97,9 @@ export async function POST(request: NextRequest) {
       })
       .where(eq(matches.id, matchId));
 
+    // Ensure the matching feed is refreshed after hiding
+    revalidatePath('/app/i/matching');
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Failed to hide match:', error);
@@ -133,6 +137,9 @@ export async function DELETE(request: NextRequest) {
         vector: updatedVector,
       })
       .where(eq(matches.id, matchId));
+
+    // Ensure the matching feed is refreshed after unhide
+    revalidatePath('/app/i/matching');
 
     return NextResponse.json({ success: true });
   } catch (error) {

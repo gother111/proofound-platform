@@ -6,6 +6,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -38,6 +39,7 @@ interface HiddenMatchesListProps {
 }
 
 export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
+  const router = useRouter();
   const [hidden, setHidden] = useState<HiddenMatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [unhidingId, setUnhidingId] = useState<string | null>(null);
@@ -80,7 +82,14 @@ export function HiddenMatchesList({ onRestored }: HiddenMatchesListProps) {
       }
       setHidden((prev) => prev.filter((m) => m.id !== matchId));
       toast.success('Match restored', { description: 'It will reappear in your matches list.' });
-      if (onRestored) onRestored();
+      if (onRestored) {
+        try {
+          await onRestored();
+        } catch (err) {
+          console.error('Error refreshing matches after unhide:', err);
+        }
+      }
+      router.refresh(); // force matching grid to refetch
     } catch (error) {
       console.error('Failed to unhide match:', error);
       toast.error('Failed to unhide match');
