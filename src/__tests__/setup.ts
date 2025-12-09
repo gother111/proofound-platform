@@ -1,19 +1,31 @@
 import { expect, afterEach } from 'vitest';
-import { cleanup } from '@testing-library/react';
-import '@testing-library/jest-dom/vitest';
 import dotenv from 'dotenv';
 import path from 'path';
+import { TextDecoder, TextEncoder } from 'node:util';
+
+// Ensure TextEncoder/TextDecoder exist (needed for esbuild in jsdom)
+if (!(globalThis as any).TextEncoder) {
+  (globalThis as any).TextEncoder = TextEncoder;
+}
+if (!(globalThis as any).TextDecoder) {
+  (globalThis as any).TextDecoder = TextDecoder;
+}
 
 // Load environment variables for tests (supports .env.local)
 dotenv.config({ path: path.join(process.cwd(), '.env.local') });
+
+// Only load DOM-specific helpers when a DOM exists (jsdom environment)
+const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
+if (isBrowser) {
+  await import('@testing-library/jest-dom/vitest');
+  const { cleanup } = await import('@testing-library/react');
+  afterEach(() => {
+    cleanup();
+  });
+}
 
 // Provide Vite SSR helper expected by Next.js transforms during Vitest
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (globalThis as any).__vite_ssr_exportName__ =
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (globalThis as any).__vite_ssr_exportName__ || ((_name: string, value: any) => value);
-
-// Cleanup after each test
-afterEach(() => {
-  cleanup();
-});
