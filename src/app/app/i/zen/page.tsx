@@ -6,6 +6,9 @@ import {
   localGatherings,
   supportChannels,
   toolkitFilters,
+  assessments,
+  externalResources,
+  locationConsentCopy,
   type ZenPractice,
 } from '@/data/zen';
 import { Button } from '@/components/ui/button';
@@ -213,6 +216,12 @@ function ZenHubContent() {
             Journal
           </TabsTrigger>
           <TabsTrigger
+            value="assessments"
+            className="data-[state=active]:bg-white dark:data-[state=active]:bg-[#2F2823]"
+          >
+            Assessments
+          </TabsTrigger>
+          <TabsTrigger
             value="interview-prep"
             className="data-[state=active]:bg-white dark:data-[state=active]:bg-[#2F2823]"
           >
@@ -338,8 +347,46 @@ function ZenHubContent() {
             </div>
             <p className="text-xs text-center mt-4 text-[#6B6760] dark:text-[#C9C2B8]">
               <Info className="h-3 w-3 inline mr-1" />
-              Location features require opt-in. Currently showing examples.
+              {locationConsentCopy.prompt} {locationConsentCopy.clearAction} · {locationConsentCopy.fallback}
             </p>
+          </div>
+
+          <div className="pt-8 border-t border-[#E8E6DD] dark:border-[#3C332C]">
+            <h3 className="font-serif text-xl mb-4 text-[#2D3330] dark:text-[#E8E6DD] flex items-center gap-2">
+              External Resources
+            </h3>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {externalResources.map((resource) => (
+                <Card
+                  key={resource.id}
+                  className="p-4 bg-white/50 dark:bg-[#2F2823]/50 border border-[#E8E6DD] dark:border-[#3C332C]"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs font-bold uppercase tracking-wider text-[#7A9278] mb-1">
+                      {resource.provider}
+                    </div>
+                    <Badge variant="outline" className="text-[10px]">
+                      {resource.cost}
+                    </Badge>
+                  </div>
+                  <h4 className="font-medium text-[#2D3330] dark:text-[#E8E6DD]">{resource.title}</h4>
+                  <p className="text-sm text-[#6B6760] dark:text-[#C9C2B8] mt-2">{resource.description}</p>
+                  {resource.safetyNote && (
+                    <p className="mt-2 text-xs text-amber-700 dark:text-amber-200">{resource.safetyNote}</p>
+                  )}
+                  <Button
+                    asChild
+                    variant="ghost"
+                    size="sm"
+                    className="mt-3 text-[#1C4D3A] hover:text-[#1C4D3A] hover:bg-[#EEF1EA]"
+                  >
+                    <a href={resource.url} target="_blank" rel="noreferrer">
+                      Open external link
+                    </a>
+                  </Button>
+                </Card>
+              ))}
+            </div>
           </div>
         </TabsContent>
 
@@ -357,6 +404,44 @@ function ZenHubContent() {
             </Button>
           </div>
           <ReflectionJournal />
+        </TabsContent>
+
+        {/* ASSESSMENTS TAB */}
+        <TabsContent value="assessments" className="space-y-6 animate-in fade-in duration-500">
+          <div className="space-y-2">
+            <h3 className="font-serif text-xl text-[#2D3330] dark:text-[#E8E6DD]">Assessments</h3>
+            <p className="text-sm text-muted-foreground">
+              Quick, non-diagnostic check-ins to spot trends. Results stay private to you.
+            </p>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {assessments.map((assessment) => (
+              <Card
+                key={assessment.id}
+                className="p-4 bg-white/70 dark:bg-[#2F2823]/70 border border-[#E8E6DD] dark:border-[#3C332C]"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <h4 className="font-medium text-[#2D3330] dark:text-[#E8E6DD]">{assessment.name}</h4>
+                    <p className="text-xs text-[#6B6760] dark:text-[#C9C2B8]">{assessment.duration}</p>
+                  </div>
+                  <Badge variant="outline" className="text-[11px]">
+                    Private
+                  </Badge>
+                </div>
+                <p className="mt-2 text-sm text-muted-foreground">{assessment.resultScale}</p>
+                <p className="mt-2 text-xs text-[#6B6760] dark:text-[#C9C2B8]">{assessment.disclaimer}</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-3"
+                  onClick={() => toast.success(`Assessment started: ${assessment.name}`)}
+                >
+                  Start assessment
+                </Button>
+              </Card>
+            ))}
+          </div>
         </TabsContent>
 
         {/* INTERVIEW PREP TAB */}

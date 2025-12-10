@@ -51,6 +51,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Emit analytics (private partition)
+    try {
+      const { emitWellbeingOptInChanged, emitPrivacyBannerAcknowledged } = await import('@/lib/analytics/events');
+      await emitWellbeingOptInChanged(user.id, { enabled: optedIn });
+      if (privacyBannerAcknowledged) {
+        await emitPrivacyBannerAcknowledged(user.id);
+      }
+    } catch (analyticsError) {
+      console.error('Failed to emit wellbeing opt-in event', analyticsError);
+    }
+
     return NextResponse.json({ 
       success: true,
       message: 'Opt-in status updated',

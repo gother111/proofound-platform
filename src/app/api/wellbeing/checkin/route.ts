@@ -87,13 +87,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Track well-being check-in for metrics
+    // Track well-being check-in for metrics (private partition)
     try {
-      const { emitWellbeingCheckin } = await import('@/lib/analytics/events');
-      await emitWellbeingCheckin(user.id, {
-        stressLevel,
-        controlLevel,
-        milestoneTriggered: !!milestoneTriggerId,
+      const { emitWellbeingCheckinSubmitted } = await import('@/lib/analytics/events');
+      await emitWellbeingCheckinSubmitted(user.id, {
+        checkin_id: checkin.id,
+        scores: { stress: stressLevel, control: controlLevel },
+        from_trigger: milestoneTriggerId || 'manual',
       });
     } catch (analyticsError) {
       // Log but don't fail the check-in
