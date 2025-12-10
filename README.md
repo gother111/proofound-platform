@@ -11,6 +11,42 @@ Proofound is a platform built for authenticity, not algorithms. It features:
 - **Privacy by Design**: Row-level security, user-controlled visibility
 - **Steward-owned Governance**: Built for long-term sustainability
 
+## Visual Architecture (quick view)
+
+```mermaid
+graph TD
+  A[User Browser] --> B[Vercel Edge]
+  B --> C[Next.js App Router]
+  C -->|Auth JWT| D[Supabase Auth]
+  C -->|Reads/Writes| E[Supabase Postgres (RLS on)]
+  C -->|Emails| F[Resend]
+  C -->|Telemetry| G[Sentry]
+  H[Vercel Cron] --> C
+  C -->|Internal API calls| C
+  E -. secure storage .- I[Supabase Storage (assets)]
+```
+
+- Traffic enters via Vercel edge, hits the Next.js app, and all data flows through Supabase with RLS enforced.
+- Cron jobs call the same API routes, so logic stays in one place.
+- Resend handles transactional email; Sentry captures errors and performance traces.
+
+## Persona & App Flow
+
+```mermaid
+flowchart LR
+  U[Sign up / Login] --> V{Email verified?}
+  V -- No --> X[Send magic link / verify email]
+  V -- Yes --> W{Persona chosen?}
+  W -- Individual --> I[(Individual profile + matches)]
+  W -- Organization --> O[(Organization + members + roles)]
+  I --> S[App Shell /app/i/*]
+  O --> T[App Shell /app/o/[slug]/*]
+  S & T --> R[Supabase (RLS enforces data per user/org)]
+```
+
+- After email verification, users branch into either the Individual or Organization shell.
+- Both shells read/write through the same Supabase backend with RLS guarding visibility.
+
 ## Documentation map
 
 - Product/architecture: `PRD_TECHNICAL_REQUIREMENTS.md`, `SYSTEM_ARCHITECTURE_COMPREHENSIVE.md`, `SYSTEM_ARCHITECTURE_SUPPLEMENT.md`, `PRD_for_a_web_platform_MVP.md`.
