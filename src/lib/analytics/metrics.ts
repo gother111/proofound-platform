@@ -71,7 +71,6 @@ export interface SUSResult extends MetricResult {
   responses: number;
 }
 
-// ... (imports)
 export interface WellBeingDeltaResult {
   metric: 'WELLBEING_DELTA';
   averageDelta: number;
@@ -82,46 +81,6 @@ export interface WellBeingDeltaResult {
   sampleSize: number;
   calculatedAt: Date;
 }
-
-export interface FairnessGapResult {
-  metric: 'FAIRNESS_GAP';
-  maxGap: number;
-  affectedSegments: string[];
-  onTrack: boolean;
-  calculatedAt: Date;
-}
-
-// ... (other interfaces)
-
-export async function calculateFairnessGap(
-  startDate?: Date,
-  endDate?: Date
-): Promise<FairnessGapResult> {
-  // Placeholder implementation or wrapping calculateFairnessGaps
-  // Since calculateFairnessGaps requires releaseVersion, we might need a simplified version here
-  // For MVP dashboard, we can just return a placeholder or query the latest report
-
-  return {
-    metric: 'FAIRNESS_GAP',
-    maxGap: 0,
-    affectedSegments: [],
-    onTrack: true,
-    calculatedAt: new Date(),
-  };
-}
-
-export async function calculateWellBeingImprovementRate(
-  startDate?: Date,
-  endDate?: Date
-): Promise<number> {
-  const result = await calculateWellBeingDelta(startDate, endDate);
-  return result.positiveChange;
-}
-
-// Alias
-export const getAllMetrics = calculateAllMetrics;
-
-// ... (rest of file with result.rows fixes)
 
 // ============================================================================
 // TIME TO FIRST QUALIFIED INTRODUCTION (TTFQI)
@@ -144,19 +103,19 @@ export async function calculateTTFQI(
       WITH activations AS (
         SELECT 
           user_id,
-          MIN(created_at) as activated_at
+          MIN(occurred_at) as activated_at
         FROM analytics_events
         WHERE event_type = 'profile_activated'
-          AND created_at >= ${start.toISOString()}
-          AND created_at <= ${end.toISOString()}
+          AND occurred_at >= ${start.toISOString()}
+          AND occurred_at <= ${end.toISOString()}
         GROUP BY user_id
       ),
       first_intros AS (
         SELECT
           user_id,
-          MIN(created_at) as introduced_at
+          MIN(occurred_at) as introduced_at
         FROM analytics_events
-        WHERE event_type = 'first_qualified_intro'
+        WHERE event_type = 'match_introduced'
         GROUP BY user_id
       ),
       ttfqi_values AS (
@@ -175,7 +134,7 @@ export async function calculateTTFQI(
       FROM ttfqi_values
     `);
 
-    const row = result[0] as any;
+    const row = result.rows[0] as any;
     const median = parseFloat(row.p50 || '0');
     const p75 = parseFloat(row.p75 || '0');
     const p90 = parseFloat(row.p90 || '0');
@@ -229,17 +188,17 @@ export async function calculateTTV(
       WITH introductions AS (
         SELECT
           (properties->>'match_id')::uuid as match_id,
-          MIN(created_at) as introduced_at
+          MIN(occurred_at) as introduced_at
         FROM analytics_events
-        WHERE event_type = 'first_qualified_intro'
-          AND created_at >= ${start.toISOString()}
-          AND created_at <= ${end.toISOString()}
+        WHERE event_type = 'match_introduced'
+          AND occurred_at >= ${start.toISOString()}
+          AND occurred_at <= ${end.toISOString()}
         GROUP BY (properties->>'match_id')::uuid
       ),
       interviews AS (
         SELECT
           (properties->>'match_id')::uuid as match_id,
-          MIN(created_at) as scheduled_at
+          MIN(occurred_at) as scheduled_at
         FROM analytics_events
         WHERE event_type = 'interview_scheduled'
         GROUP BY (properties->>'match_id')::uuid
@@ -260,7 +219,7 @@ export async function calculateTTV(
       FROM ttv_values
     `);
 
-    const row = result[0] as any;
+    const row = result.rows[0] as any;
     const median = parseFloat(row.p50 || '0');
     const p75 = parseFloat(row.p75 || '0');
     const p90 = parseFloat(row.p90 || '0');
@@ -314,17 +273,17 @@ export async function calculateTTSC(
       WITH introductions AS (
         SELECT
           (properties->>'match_id')::uuid as match_id,
-          MIN(created_at) as introduced_at
+          MIN(occurred_at) as introduced_at
         FROM analytics_events
-        WHERE event_type = 'first_qualified_intro'
-          AND created_at >= ${start.toISOString()}
-          AND created_at <= ${end.toISOString()}
+        WHERE event_type = 'match_introduced'
+          AND occurred_at >= ${start.toISOString()}
+          AND occurred_at <= ${end.toISOString()}
         GROUP BY (properties->>'match_id')::uuid
       ),
       contracts AS (
         SELECT
           (properties->>'match_id')::uuid as match_id,
-          MIN(created_at) as signed_at
+          MIN(occurred_at) as signed_at
         FROM analytics_events
         WHERE event_type = 'contract_signed'
         GROUP BY (properties->>'match_id')::uuid
@@ -345,7 +304,7 @@ export async function calculateTTSC(
       FROM ttsc_values
     `);
 
-    const row = result[0] as any;
+    const row = result.rows[0] as any;
     const median = parseFloat(row.p50 || '0');
     const p75 = parseFloat(row.p75 || '0');
     const p90 = parseFloat(row.p90 || '0');
@@ -406,15 +365,15 @@ export async function calculatePACLift(startDate?: Date, endDate?: Date): Promis
           END as pac_bucket
         FROM analytics_events
         WHERE event_type = 'match_generated'
-          AND created_at >= ${start.toISOString()}
-          AND created_at <= ${end.toISOString()}
+          AND occurred_at >= ${start.toISOString()}
+          AND occurred_at <= ${end.toISOString()}
           AND properties ? 'pac_contribution'
       ),
       match_acceptance AS (
         SELECT DISTINCT
           entity_id as match_id
         FROM analytics_events
-        WHERE event_type = 'first_qualified_intro'
+        WHERE event_type = 'match_introduced'
       )
       SELECT
         m.pac_bucket,
@@ -428,7 +387,7 @@ export async function calculatePACLift(startDate?: Date, endDate?: Date): Promis
       GROUP BY m.pac_bucket
     `);
 
-    const rows = result as any[];
+    const rows = result.rows as any[];
     const highPAC = rows.find((r) => r.pac_bucket === 'high_pac');
     const lowPAC = rows.find((r) => r.pac_bucket === 'low_pac');
 
@@ -484,11 +443,11 @@ export async function calculateSUS(startDate?: Date, endDate?: Date): Promise<SU
         COUNT(*) as responses
       FROM analytics_events
       WHERE event_type = 'sus_survey_completed'
-        AND created_at >= ${start.toISOString()}
-        AND created_at <= ${end.toISOString()}
+        AND occurred_at >= ${start.toISOString()}
+        AND occurred_at <= ${end.toISOString()}
     `);
 
-    const row = result[0] as any;
+    const row = result.rows[0] as any;
     const avgScore = parseFloat(row.avg_score || '0');
     const responses = parseInt(row.responses || '0');
 
@@ -538,13 +497,13 @@ export async function calculateWellBeingDelta(
           user_id,
           (properties->>'overall_score')::float as score,
           properties->'dimensions' as dimensions,
-          created_at,
-          ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at ASC) as first_rank,
-          ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC) as last_rank
+          occurred_at,
+          ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY occurred_at ASC) as first_rank,
+          ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY occurred_at DESC) as last_rank
         FROM analytics_events
         WHERE event_type = 'wellbeing_checkin'
-          AND created_at >= ${start.toISOString()}
-          AND created_at <= ${end.toISOString()}
+          AND occurred_at >= ${start.toISOString()}
+          AND occurred_at <= ${end.toISOString()}
       ),
       first_last AS (
         SELECT
@@ -562,7 +521,7 @@ export async function calculateWellBeingDelta(
       FROM first_last
     `);
 
-    const row = result[0] as any;
+    const row = result.rows[0] as any;
     const avgDelta = parseFloat(row.avg_delta || '0');
     const sampleSize = parseInt(row.sample_size || '0');
     const improvedCount = parseInt(row.improved_count || '0');

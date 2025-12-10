@@ -11,6 +11,7 @@
 
 import { useEffect, useState } from 'react';
 import { GuidedTour } from './GuidedTour';
+import { FirstRunTour } from './FirstRunTour';
 import { completeTour, getTourStatus } from '@/actions/tour';
 import { usePathname } from 'next/navigation';
 
@@ -72,8 +73,21 @@ export function TourProvider() {
     checkTourStatus();
   }, [pathname]);
 
+  const toggleMockMode = (enabled: boolean) => {
+    try {
+      window.dispatchEvent(
+        new CustomEvent('dashboard-mock-mode', {
+          detail: { enabled },
+        })
+      );
+    } catch (error) {
+      console.error('Failed to toggle mock mode', error);
+    }
+  };
+
   const handleComplete = async () => {
     setShowTour(false);
+    toggleMockMode(false);
     const result = await completeTour();
     if (!result.success) {
       console.error('Failed to mark tour as completed:', result.error);
@@ -84,6 +98,7 @@ export function TourProvider() {
 
   const handleSkip = async () => {
     setShowTour(false);
+    toggleMockMode(false);
     // Mark tour as completed in database so it doesn't show again
     const result = await completeTour();
     if (!result.success) {
@@ -95,6 +110,11 @@ export function TourProvider() {
 
   if (isLoading || !showTour || !userId) {
     return null;
+  }
+
+  if (persona === 'individual') {
+    toggleMockMode(true);
+    return <FirstRunTour onComplete={handleComplete} onSkip={handleSkip} basePath="/app/i" />;
   }
 
   return (

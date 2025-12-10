@@ -24,6 +24,12 @@ export type AnalyticsEventType =
   | 'signed_up'
   | 'signed_in'
   | 'signed_out'
+  // Dashboard events
+  | 'dashboard_viewed'
+  | 'dashboard_tile_added'
+  | 'dashboard_tile_removed'
+  | 'dashboard_tile_reordered'
+  | 'next_best_action_clicked'
   // Profile events
   | 'created_profile'
   | 'profile_ready_for_match'

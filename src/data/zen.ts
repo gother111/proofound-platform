@@ -13,6 +13,26 @@ export type ZenPractice = {
   style: string;
   time: number;
   isSpiritual: boolean;
+  // Optional: mark very short practices and map to moods/risk states for quick suggestions
+  isMicro?: boolean;
+  recommendedFor?: RiskState[];
+};
+
+export type CheckInScale = {
+  score: number;
+  label: string;
+  description: string;
+};
+
+export type ZenCheckInConfig = {
+  stressScale: CheckInScale[];
+  controlScale: CheckInScale[];
+  privacyBanner: string;
+  moodUiDensityHints: {
+    state: RiskState;
+    uiHint: string;
+  }[];
+  quickPracticePrompt: string;
 };
 
 export const riskStates = [
@@ -38,6 +58,32 @@ export const riskStates = [
 
 export type RiskState = (typeof riskStates)[number]['id'];
 
+export const zenCheckInConfig: ZenCheckInConfig = {
+  // UI: feed to check-in widget for 1–5 stress/control and mood-based density hints.
+  stressScale: [
+    { score: 1, label: 'Very low', description: 'Body feels loose; breathing steady.' },
+    { score: 2, label: 'Low', description: 'Slight tension but manageable.' },
+    { score: 3, label: 'Neutral', description: 'Noticeable tension; still focused.' },
+    { score: 4, label: 'High', description: 'Hard to focus; body feels tight.' },
+    { score: 5, label: 'Very high', description: 'Overwhelmed; need immediate reset.' },
+  ],
+  controlScale: [
+    { score: 1, label: 'Out of control', description: 'Feel stuck; no clear next step.' },
+    { score: 2, label: 'Low control', description: 'Need support or a pause.' },
+    { score: 3, label: 'Some control', description: 'Can act after a short reset.' },
+    { score: 4, label: 'High control', description: 'Have options; can prioritize.' },
+    { score: 5, label: 'Very high', description: 'Clear plan; calm execution.' },
+  ],
+  privacyBanner:
+    'Private by default. Zen Hub data is never used to rank or match you and stays in a separate secure partition.',
+  moodUiDensityHints: [
+    { state: 'support', uiHint: 'Hide non-essential panels and highlight 1-minute practice.' },
+    { state: 'focus', uiHint: 'Show only next actions and one short practice suggestion.' },
+    { state: 'calm', uiHint: 'Full UI with optional focus timers and longer practices.' },
+  ],
+  quickPracticePrompt: 'Pick a 1-minute reset to lower stress before continuing.',
+};
+
 export const zenPractices: ZenPractice[] = [
   {
     id: 'quick-calm',
@@ -61,6 +107,8 @@ export const zenPractices: ZenPractice[] = [
     style: 'Somatic',
     time: 1,
     isSpiritual: false,
+    isMicro: true,
+    recommendedFor: ['support', 'focus'],
   },
   {
     id: '1',
@@ -86,6 +134,8 @@ export const zenPractices: ZenPractice[] = [
     style: 'Secular',
     time: 2,
     isSpiritual: false,
+    isMicro: true,
+    recommendedFor: ['focus', 'calm'],
   },
   {
     id: '2',
@@ -115,6 +165,7 @@ export const zenPractices: ZenPractice[] = [
     style: 'Secular',
     time: 10,
     isSpiritual: false,
+    recommendedFor: ['calm'],
   },
   {
     id: '3',
@@ -138,6 +189,8 @@ export const zenPractices: ZenPractice[] = [
     style: 'Secular',
     time: 3,
     isSpiritual: false,
+    isMicro: true,
+    recommendedFor: ['support', 'focus'],
   },
   {
     id: '4',
@@ -162,6 +215,7 @@ export const zenPractices: ZenPractice[] = [
     style: 'Spiritual',
     time: 12,
     isSpiritual: true,
+    recommendedFor: ['focus'],
   },
   {
     id: '5',
@@ -186,6 +240,7 @@ export const zenPractices: ZenPractice[] = [
     style: 'Spiritual',
     time: 7,
     isSpiritual: true,
+    recommendedFor: ['calm'],
   },
   {
     id: '6',
@@ -211,6 +266,81 @@ export const zenPractices: ZenPractice[] = [
     style: 'Secular',
     time: 999,
     isSpiritual: false,
+    recommendedFor: ['calm'],
+  },
+];
+
+export type ReflectionPrompt = {
+  trigger: 'rejection' | 'interview' | 'offer';
+  prompt: string;
+};
+
+export const reflectionPrompts: ReflectionPrompt[] = [
+  // UI: show after milestones like rejection/interview/offer; store privately.
+  {
+    trigger: 'rejection',
+    prompt: 'What felt outside your control, and what one thing could you try differently next time?',
+  },
+  {
+    trigger: 'rejection',
+    prompt: 'Name one skill you showed that you want to keep sharpening.',
+  },
+  {
+    trigger: 'interview',
+    prompt: 'Where did you feel most confident in the conversation?',
+  },
+  {
+    trigger: 'interview',
+    prompt: 'Which question made you pause? Draft a tighter 2-sentence answer now.',
+  },
+  {
+    trigger: 'offer',
+    prompt: 'List the top three signals that make this opportunity feel aligned.',
+  },
+  {
+    trigger: 'offer',
+    prompt: 'What boundaries or needs do you want to state before accepting?',
+  },
+];
+
+export type Assessment = {
+  id: string;
+  name: string;
+  duration: string;
+  source: string;
+  disclaimer: string;
+  resultScale: string;
+  suggestedUse: string;
+};
+
+export const assessments: Assessment[] = [
+  // UI: lightweight, non-diagnostic self-assessments shown under Zen → Assessments.
+  {
+    id: 'stress-mini',
+    name: 'Stress Pulse (1–5)',
+    duration: '45s',
+    source: 'Proofound prompts (non-diagnostic)',
+    disclaimer: 'For personal reflection only; not a medical tool.',
+    resultScale: 'Shows a simple stress trend and nudge to a 1-minute practice.',
+    suggestedUse: 'Use after a rejection or intense work block to decide if you pause.',
+  },
+  {
+    id: 'control-sense',
+    name: 'Sense of Control Quick Check',
+    duration: '45s',
+    source: 'Proofound prompts (non-diagnostic)',
+    disclaimer: 'Private; never used for ranking.',
+    resultScale: 'Visualizes change in control sense over 14/30 days.',
+    suggestedUse: 'Run weekly to see if workload nudges are helping.',
+  },
+  {
+    id: 'focus-readiness',
+    name: 'Focus Readiness (micro)',
+    duration: '30s',
+    source: 'Proofound prompts (non-diagnostic)',
+    disclaimer: 'Private reflection; no medical claims.',
+    resultScale: 'Suggests a 1–3 minute practice before deep work.',
+    suggestedUse: 'Start of day to pair with a quick practice.',
   },
 ];
 
@@ -222,6 +352,9 @@ export type ZenGathering = {
   location: string;
   spotsRemaining: number;
   host: string;
+  city?: string;
+  cost?: 'free' | 'donation' | 'paid';
+  requiresLocationConsent?: boolean;
 };
 
 export const localGatherings: ZenGathering[] = [
@@ -233,6 +366,9 @@ export const localGatherings: ZenGathering[] = [
     location: 'Proofound Commons, Oakland',
     spotsRemaining: 8,
     host: 'Led by River (Somatic Practitioner)',
+    city: 'Oakland, CA',
+    cost: 'donation',
+    requiresLocationConsent: false,
   },
   {
     id: 'virtual',
@@ -242,6 +378,9 @@ export const localGatherings: ZenGathering[] = [
     location: 'Virtual · Proofound Spaces',
     spotsRemaining: 32,
     host: 'Hosts rotate · RSVP for link',
+    city: 'Remote',
+    cost: 'free',
+    requiresLocationConsent: false,
   },
   {
     id: 'farm',
@@ -251,6 +390,9 @@ export const localGatherings: ZenGathering[] = [
     location: 'Sebastopol regenerative farm',
     spotsRemaining: 3,
     host: 'Carpool list available',
+    city: 'Sebastopol, CA',
+    cost: 'donation',
+    requiresLocationConsent: true,
   },
 ];
 
@@ -282,4 +424,95 @@ export const supportChannels: SupportChannel[] = [
   },
 ];
 
-export const toolkitFilters = ['Secular', 'Spiritual', 'Somatic', 'Short', 'Long'];
+export type ExternalResource = {
+  id: string;
+  title: string;
+  provider: string;
+  url: string;
+  cost: 'free' | 'paid' | 'freemium';
+  tags: string[];
+  description: string;
+  isExternal: true;
+  safetyNote?: string;
+};
+
+export const externalResources: ExternalResource[] = [
+  // UI: Zen → Explore cards; always label as external and non-diagnostic.
+  {
+    id: 'headspace-box',
+    title: 'Box Breathing (Guided)',
+    provider: 'Headspace',
+    url: 'https://www.headspace.com/mindfulness/box-breathing',
+    cost: 'freemium',
+    tags: ['breathwork', 'short', 'stress'],
+    description: '90-second guided box breath with visuals. Good before interviews.',
+    isExternal: true,
+  },
+  {
+    id: 'wakingup-scan',
+    title: 'Body Scan (10m)',
+    provider: 'Waking Up',
+    url: 'https://dynamic.wakingup.com/body-scan',
+    cost: 'freemium',
+    tags: ['body', 'awareness', 'stress'],
+    description: 'Gentle, secular body scan to lower rumination.',
+    isExternal: true,
+  },
+  {
+    id: 'youtube-physio-sigh',
+    title: 'Physiological Sigh (1m)',
+    provider: 'Huberman Lab',
+    url: 'https://www.youtube.com/watch?v=2c9WZCNM1nQ',
+    cost: 'free',
+    tags: ['breathwork', 'micro', 'stress'],
+    description: 'Two quick inhales, slow exhale; proven to drop arousal fast.',
+    isExternal: true,
+    safetyNote: 'If dizzy, pause and return to normal breathing.',
+  },
+];
+
+export type BurnoutDefaults = {
+  categories: { id: string; label: string; defaultHours?: number }[];
+  alertThresholds: { soft: number; hard: number; unit: 'hours_per_week' };
+  quietHours: { start: string; end: string; timezoneNote: string };
+  shiftWorkerNote: string;
+};
+
+export const burnoutDefaults: BurnoutDefaults = {
+  // UI: Zen → Schedule; thresholds for gentle alerts and quiet hours.
+  categories: [
+    { id: 'primary_role', label: 'Primary role', defaultHours: 35 },
+    { id: 'side_projects', label: 'Side projects', defaultHours: 5 },
+    { id: 'learning', label: 'Learning', defaultHours: 4 },
+    { id: 'caregiving', label: 'Caregiving', defaultHours: 6 },
+  ],
+  alertThresholds: {
+    soft: 45,
+    hard: 55,
+    unit: 'hours_per_week',
+  },
+  quietHours: {
+    start: '22:00',
+    end: '07:00',
+    timezoneNote: 'Adjusts to user timezone; nudges respect quiet hours.',
+  },
+  shiftWorkerNote: 'Shift workers can swap quiet hours and set different day/night bands.',
+};
+
+export const locationConsentCopy = {
+  // UI: Zen → Local; consent prompt + clear/reset language.
+  prompt: 'Share your city to see nearby gatherings. You can clear this anytime.',
+  clearAction: 'Clear my location',
+  fallback: 'No nearby events? Try a virtual option instead.',
+};
+
+export const toolkitFilters = [
+  'Secular',
+  'Spiritual',
+  'Somatic',
+  'Short',
+  'Long',
+  'Micro (≤2m)',
+  'Stress',
+  'Focus',
+];

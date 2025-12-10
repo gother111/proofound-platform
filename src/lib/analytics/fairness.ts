@@ -201,8 +201,7 @@ async function getOverallMetrics(
     WHERE occurred_at >= ${thirtyDaysAgo.toISOString()}
   `);
 
-  const rows = metrics?.rows ?? [];
-  const row = (rows[0] as any) || {};
+  const row = metrics.rows[0] as any;
 
   return {
     totalMatches: parseInt(row.total_matches || '0'),
@@ -233,37 +232,27 @@ async function calculateSegmentGaps(
       AND e.event_type IN ('match_generated', 'match_introduced')
   `);
 
-  const baselineRows = baselineResult?.rows ?? [];
-  const baselineRow = (baselineRows[0] as any) || {};
+  const baselineRow = baselineResult.rows[0] as any;
   const baselineMatches = parseFloat(baselineRow.matches || '0');
   const baselineIntroductions = parseFloat(baselineRow.introductions || '0');
   const baseline = baselineMatches > 0 ? baselineIntroductions / baselineMatches : 0;
 
   // Get segment-specific rates
   // This requires demographic data from wellbeing_opt_ins table
-  let segmentResults;
-  try {
-    segmentResults = await db.execute(sql`
-      SELECT
-        wo.${sql.raw(segmentType)} as segment_value,
-        COUNT(DISTINCT CASE WHEN e.event_type = 'match_generated' THEN e.entity_id END)::float as matches,
-        COUNT(DISTINCT CASE WHEN e.event_type = 'match_introduced' THEN e.entity_id END)::float as introductions
-      FROM analytics_events e
-      INNER JOIN wellbeing_opt_ins wo ON e.user_id = wo.user_id
-      WHERE e.occurred_at >= ${thirtyDaysAgo.toISOString()}
-        AND e.event_type IN ('match_generated', 'match_introduced')
-        AND wo.${sql.raw(segmentType)} IS NOT NULL
-        AND wo.opted_in = true
-      GROUP BY wo.${sql.raw(segmentType)}
-      HAVING COUNT(DISTINCT e.entity_id) >= 10
-    `);
-  } catch (error) {
-    log.warn('fairness.segment.missing_demographics', {
-      segmentType,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-    return [];
-  }
+  const segmentResults = await db.execute(sql`
+    SELECT
+      wo.${sql.raw(segmentType)} as segment_value,
+      COUNT(DISTINCT CASE WHEN e.event_type = 'match_generated' THEN e.entity_id END)::float as matches,
+      COUNT(DISTINCT CASE WHEN e.event_type = 'match_introduced' THEN e.entity_id END)::float as introductions
+    FROM analytics_events e
+    INNER JOIN wellbeing_opt_ins wo ON e.user_id = wo.user_id
+    WHERE e.occurred_at >= ${thirtyDaysAgo.toISOString()}
+      AND e.event_type IN ('match_generated', 'match_introduced')
+      AND wo.${sql.raw(segmentType)} IS NOT NULL
+      AND wo.opted_in = true
+    GROUP BY wo.${sql.raw(segmentType)}
+    HAVING COUNT(DISTINCT e.entity_id) >= 10
+  `);
 
   const segments: FairnessSegment[] = [];
 
@@ -384,219 +373,6 @@ function generateRecommendations(segments: FairnessSegment[]): string[] {
   );
 
   return recommendations;
-}
-
-// ============================================================================
-// FAIRNESS NOTE GENERATION (Date Range Based)
-// ============================================================================
-
-/**
- * Generate a fairness note for a specific date range
- * This is used by the API route that accepts custom date ranges
- */
-export async function generateFairnessNote(
-  startDate: Date,
-  endDate: Date
-): Promise<{
-  startDate: Date;
-  endDate: Date;
-  overallMetrics: FairnessReport['overallMetrics'];
-  segments: FairnessSegment[];
-  summary: string;
-  recommendations: string[];
-  hasSignificantGaps: boolean;
-}> {
-  log.info('fairness.note.generate.start', { startDate, endDate });
-
-  try {
-    // Get overall metrics for the date range
-    const overallMetrics = await getOverallMetricsForDateRange(startDate, endDate);
-
-    // Calculate gaps for each segment type
-    const segments: FairnessSegment[] = [];
-
-    // Age segments (if users opted in)
-    const ageSegments = await calculateSegmentGapsForDateRange(
-      'age',
-      'match_acceptance',
-      startDate,
-      endDate
-    );
-    segments.push(...ageSegments);
-
-    // Gender segments (if users opted in)
-    const genderSegments = await calculateSegmentGapsForDateRange(
-      'gender',
-      'match_acceptance',
-      startDate,
-      endDate
-    );
-    segments.push(...genderSegments);
-
-    // Location segments
-    const locationSegments = await calculateSegmentGapsForDateRange(
-      'location',
-      'match_acceptance',
-      startDate,
-      endDate
-    );
-    segments.push(...locationSegments);
-
-    // Ethnicity segments (if users opted in)
-    const ethnicitySegments = await calculateSegmentGapsForDateRange(
-      'ethnicity',
-      'match_acceptance',
-      startDate,
-      endDate
-    );
-    segments.push(...ethnicitySegments);
-
-    // Generate summary and recommendations
-    const summary = generateSummary(segments);
-    const recommendations = generateRecommendations(segments);
-
-    const hasSignificantGaps = segments.some((s) => s.significant);
-
-    log.info('fairness.note.generate.complete', {
-      startDate,
-      endDate,
-      totalSegments: segments.length,
-      significantGaps: segments.filter((s) => s.significant).length,
-    });
-
-    return {
-      startDate,
-      endDate,
-      overallMetrics,
-      segments,
-      summary,
-      recommendations,
-      hasSignificantGaps,
-    };
-  } catch (error) {
-    log.error('fairness.note.generate.failed', {
-      startDate,
-      endDate,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-    throw error;
-  }
-}
-
-/**
- * Get overall metrics for a specific date range
- */
-async function getOverallMetricsForDateRange(
-  startDate: Date,
-  endDate: Date
-): Promise<FairnessReport['overallMetrics']> {
-  const metrics = await db.execute(sql`
-    SELECT
-      COUNT(DISTINCT CASE WHEN event_type = 'match_generated' THEN entity_id END) as total_matches,
-      COUNT(DISTINCT CASE WHEN event_type = 'match_introduced' THEN entity_id END) as total_introductions,
-      COUNT(DISTINCT CASE WHEN event_type = 'interview_scheduled' THEN entity_id END) as total_interviews,
-      COUNT(DISTINCT CASE WHEN event_type = 'contract_signed' THEN entity_id END) as total_contracts
-    FROM analytics_events
-    WHERE occurred_at >= ${startDate.toISOString()}
-      AND occurred_at <= ${endDate.toISOString()}
-  `);
-
-  const rows = metrics?.rows ?? [];
-  const row = (rows[0] as any) || {};
-
-  return {
-    totalMatches: parseInt(row.total_matches || '0'),
-    totalIntroductions: parseInt(row.total_introductions || '0'),
-    totalInterviews: parseInt(row.total_interviews || '0'),
-    totalContracts: parseInt(row.total_contracts || '0'),
-  };
-}
-
-/**
- * Calculate gaps for a specific segment type for a date range
- */
-async function calculateSegmentGapsForDateRange(
-  segmentType: 'age' | 'gender' | 'location' | 'ethnicity',
-  metricType: FairnessSegment['metricType'],
-  startDate: Date,
-  endDate: Date
-): Promise<FairnessSegment[]> {
-  // Get baseline acceptance rate (all users)
-  const baselineResult = await db.execute(sql`
-    SELECT
-      COUNT(DISTINCT CASE WHEN e.event_type = 'match_generated' THEN e.entity_id END)::float as matches,
-      COUNT(DISTINCT CASE WHEN e.event_type = 'match_introduced' THEN e.entity_id END)::float as introductions
-    FROM analytics_events e
-    WHERE e.occurred_at >= ${startDate.toISOString()}
-      AND e.occurred_at <= ${endDate.toISOString()}
-      AND e.event_type IN ('match_generated', 'match_introduced')
-  `);
-
-  const baselineRows = baselineResult?.rows ?? [];
-  const baselineRow = (baselineRows[0] as any) || {};
-  const baselineMatches = parseFloat(baselineRow.matches || '0');
-  const baselineIntroductions = parseFloat(baselineRow.introductions || '0');
-  const baseline = baselineMatches > 0 ? baselineIntroductions / baselineMatches : 0;
-
-  // Get segment-specific rates
-  // This requires demographic data from wellbeing_opt_ins table
-  let segmentResults;
-  try {
-    segmentResults = await db.execute(sql`
-      SELECT
-        wo.${sql.raw(segmentType)} as segment_value,
-        COUNT(DISTINCT CASE WHEN e.event_type = 'match_generated' THEN e.entity_id END)::float as matches,
-        COUNT(DISTINCT CASE WHEN e.event_type = 'match_introduced' THEN e.entity_id END)::float as introductions
-      FROM analytics_events e
-      INNER JOIN wellbeing_opt_ins wo ON e.user_id = wo.user_id
-      WHERE e.occurred_at >= ${startDate.toISOString()}
-        AND e.occurred_at <= ${endDate.toISOString()}
-        AND e.event_type IN ('match_generated', 'match_introduced')
-        AND wo.${sql.raw(segmentType)} IS NOT NULL
-        AND wo.opted_in = true
-      GROUP BY wo.${sql.raw(segmentType)}
-      HAVING COUNT(DISTINCT e.entity_id) >= 10
-    `);
-  } catch (error) {
-    log.warn('fairness.segment.missing_demographics', {
-      segmentType,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-    return [];
-  }
-
-  const segments: FairnessSegment[] = [];
-
-  for (const row of segmentResults.rows as any[]) {
-    const segmentValue = row.segment_value;
-    const segmentMatches = parseFloat(row.matches || '0');
-    const segmentIntroductions = parseFloat(row.introductions || '0');
-    const segmentRate = segmentMatches > 0 ? segmentIntroductions / segmentMatches : 0;
-
-    // Calculate gap
-    const gap = (segmentRate - baseline) * 100; // Percentage points
-
-    // Statistical test
-    const test = chiSquareTest(
-      segmentIntroductions,
-      segmentMatches,
-      baselineIntroductions,
-      baselineMatches
-    );
-
-    segments.push({
-      segment: `${segmentType}:${segmentValue}`,
-      metricType,
-      baseline: baseline * 100,
-      segmentRate: segmentRate * 100,
-      gap,
-      pValue: test.pValue,
-      significant: test.significant,
-      sampleSize: segmentMatches,
-    });
-  }
-
-  return segments;
 }
 
 // ============================================================================

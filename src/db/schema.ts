@@ -22,7 +22,7 @@ import { sql } from 'drizzle-orm';
 const bit = customType<{ data: string; notNull?: boolean; default?: boolean }>({
   dataType(config) {
     const dimensions = (config as { dimensions?: number } | undefined)?.dimensions;
-    return 'text';
+    return dimensions ? `bit(${dimensions})` : 'bit';
   },
 });
 
@@ -122,7 +122,7 @@ export const dashboardLayouts = pgTable(
     position: integer('position').notNull(), // display order (0-indexed)
     visible: boolean('visible').default(true).notNull(),
     size: text('size', {
-      enum: ['small', 'default', 'large', 'full'],
+      enum: ['small', 'default', 'large'],
     }).default('default'),
     settings: jsonb('settings').default(sql`'{}'::jsonb`), // widget-specific settings
     createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -573,31 +573,6 @@ export const skillVerificationRequests = pgTable('skill_verification_requests', 
   expiresAt: timestamp('expires_at').default(sql`NOW() + INTERVAL '30 days'`),
 });
 
-// Assignment templates / presets by role family
-export const assignmentTemplates = pgTable(
-  'assignment_templates',
-  {
-    id: uuid('id').defaultRandom().primaryKey(),
-    orgId: uuid('org_id').references(() => organizations.id, { onDelete: 'cascade' }),
-    name: text('name').notNull(),
-    roleFamily: text('role_family').notNull(),
-    summary: text('summary'),
-    description: text('description'),
-    appliesToSteps: text('applies_to_steps').array().default(sql`'{}'::text[]`).notNull(),
-    presetPayload: jsonb('preset_payload').default(sql`'{}'::jsonb`).notNull(),
-    isGlobal: boolean('is_global').default(false).notNull(),
-    status: text('status', { enum: ['active', 'archived'] }).default('active').notNull(),
-    createdBy: uuid('created_by').references(() => profiles.id),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at').defaultNow().notNull(),
-  },
-  (table) => ({
-    orgIdx: index('assignment_templates_org_idx').on(table.orgId),
-    roleFamilyIdx: index('assignment_templates_role_family_idx').on(table.roleFamily),
-    isGlobalIdx: index('assignment_templates_is_global_idx').on(table.isGlobal),
-  })
-);
-
 // Assignments - job/project postings from organizations
 export const assignments = pgTable('assignments', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -625,7 +600,6 @@ export const assignments = pgTable('assignments', {
   causeTags: text('cause_tags')
     .array()
     .default(sql`'{}'::text[]`),
-  outcomes: jsonb('outcomes').default(sql`'[]'::jsonb`), // [{metric: string, target: string, timeframe: string}]
   mustHaveSkills: jsonb('must_have_skills').default(sql`'[]'::jsonb`), // [{id: 'typescript', level: 4}]
   niceToHaveSkills: jsonb('nice_to_have_skills').default(sql`'[]'::jsonb`),
   minLanguage: jsonb('min_language'), // {code: 'en', level: 'B2'}
@@ -1944,6 +1918,24 @@ export type InsertSkillEndorsement = typeof skillEndorsements.$inferInsert;
 export type GrowthPlan = typeof growthPlans.$inferSelect;
 export type InsertGrowthPlan = typeof growthPlans.$inferInsert;
 
+// Verification system types
+export type VerificationRequest = typeof verificationRequests.$inferSelect;
+export type InsertVerificationRequest = typeof verificationRequests.$inferInsert;
+export type VerificationResponse = typeof verificationResponses.$inferSelect;
+export type InsertVerificationResponse = typeof verificationResponses.$inferInsert;
+export type VerificationAppeal = typeof verificationAppeals.$inferSelect;
+export type InsertVerificationAppeal = typeof verificationAppeals.$inferInsert;
+export type OrgVerification = typeof orgVerification.$inferSelect;
+export type InsertOrgVerification = typeof orgVerification.$inferInsert;
+
+// Messaging system types
+export type Conversation = typeof conversations.$inferSelect;
+export type InsertConversation = typeof conversations.$inferInsert;
+export type Message = typeof messages.$inferSelect;
+export type InsertMessage = typeof messages.$inferInsert;
+export type BlockedUser = typeof blockedUsers.$inferSelect;
+export type InsertBlockedUser = typeof blockedUsers.$inferInsert;
+
 // Moderation system types
 export type ContentReport = typeof contentReports.$inferSelect;
 export type InsertContentReport = typeof contentReports.$inferInsert;
@@ -2270,7 +2262,6 @@ export type InsertSurveyDisplayLog = typeof surveyDisplayLog.$inferInsert;
 export const conversations = pgTable('conversations', {
   id: uuid('id').defaultRandom().primaryKey(),
   matchId: uuid('match_id').references(() => matches.id, { onDelete: 'cascade' }),
-  assignmentId: uuid('assignment_id').references(() => assignments.id, { onDelete: 'cascade' }),
 
   // Participants
   participantOneId: uuid('participant_one_id')

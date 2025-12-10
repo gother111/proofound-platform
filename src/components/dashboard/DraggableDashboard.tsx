@@ -9,7 +9,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { WhileAwayCard } from './WhileAwayCard';
 import { GoalsCard } from './GoalsCard';
 import { TasksCard } from './TasksCard';
@@ -19,6 +19,12 @@ import { ImpactSnapshotCard } from './ImpactSnapshotCard';
 import { ExploreCard } from './ExploreCard';
 import { GapMapWidget } from './GapMapWidget';
 import { NextBestActionsWidget } from './NextBestActionsWidget';
+import { ProfileActivationCard } from './ProfileActivationCard';
+import { MatchingReadinessCard } from './MatchingReadinessCard';
+import { InterviewsFeedbackCard } from './InterviewsFeedbackCard';
+import { MomentumMetricsCard } from './MomentumMetricsCard';
+import { ZenSnapshotCard } from './ZenSnapshotCard';
+import { NotificationsCard } from './NotificationsCard';
 import { Button } from '@/components/ui/button';
 import { Settings2, Save, RotateCcw, Plus } from 'lucide-react';
 import { toast } from 'sonner';
@@ -26,7 +32,7 @@ import {
   DashboardWidget,
   AVAILABLE_WIDGETS,
   PRESET_LAYOUTS,
-  WidgetSize,
+  DEFAULT_LAYOUT,
 } from '@/lib/dashboard/layout';
 import {
   Dialog,
@@ -78,6 +84,11 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isWidgetPickerOpen, setIsWidgetPickerOpen] = useState(false);
+  const [mockMode, setMockMode] = useState(false);
+  const [hasTrackedView, setHasTrackedView] = useState(false);
+
+  const loadStartRef = useRef<number>(typeof performance !== 'undefined' ? performance.now() : 0);
+  const userLayoutRef = useRef<DashboardWidget[] | null>(initialLayout || null);
 
   useEffect(() => {
     // Fetch user's layout from API
@@ -86,10 +97,19 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
         const response = await fetch('/api/dashboard/layout');
         if (response.ok) {
           const data = await response.json();
-          setLayout(data.widgets || []);
+          const widgets = (data.widgets as DashboardWidget[] | undefined) || [];
+          if (widgets.length > 0) {
+            setLayout(widgets);
+            userLayoutRef.current = widgets;
+          } else {
+            setLayout(DEFAULT_LAYOUT);
+          }
+        } else {
+          setLayout(DEFAULT_LAYOUT);
         }
       } catch (error) {
         console.error('Failed to fetch dashboard layout:', error);
+        setLayout(DEFAULT_LAYOUT);
       } finally {
         setLoading(false);
       }
@@ -98,29 +118,102 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
     if (!initialLayout) {
       fetchLayout();
     } else {
+      userLayoutRef.current = initialLayout;
       setLoading(false);
     }
   }, [initialLayout]);
 
+  useEffect(() => {
+    const handleMockToggle = (event: Event) => {
+      const detail = (event as CustomEvent).detail as { enabled?: boolean } | undefined;
+      if (typeof detail?.enabled === 'boolean') {
+        setMockMode(detail.enabled);
+      }
+    };
+
+    window.addEventListener('dashboard-mock-mode', handleMockToggle as EventListener);
+    return () => window.removeEventListener('dashboard-mock-mode', handleMockToggle as EventListener);
+  }, []);
+
+  useEffect(() => {
+    if (mockMode) {
+      userLayoutRef.current = layout.length ? layout : userLayoutRef.current;
+      setLayout(DEFAULT_LAYOUT);
+      setLoading(false);
+    } else if (userLayoutRef.current) {
+      setLayout(userLayoutRef.current);
+    }
+  }, [mockMode]);
+
+  useEffect(() => {
+    if (!loading && !hasTrackedView) {
+      const loadMs =
+        typeof performance !== 'undefined' ? performance.now() - loadStartRef.current : undefined;
+      logDashboardEvent('dashboard_viewed', {
+        tiles: layout.filter((w) => w.visible).map((w) => w.widgetId),
+        load_ms: loadMs,
+      });
+      setHasTrackedView(true);
+    }
+  }, [loading, hasTrackedView, layout, logDashboardEvent]);
+
+  const logDashboardEvent = useCallback(
+    async (
+      eventType:
+        | 'dashboard_viewed'
+        | 'dashboard_tile_added'
+        | 'dashboard_tile_removed'
+        | 'dashboard_tile_reordered'
+        | 'next_best_action_clicked',
+      properties?: Record<string, any>
+    ) => {
+      try {
+        await fetch('/api/analytics/dashboard', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            eventType,
+            properties: {
+              ...properties,
+              fromMock: mockMode,
+            },
+          }),
+        });
+      } catch (error) {
+        console.error('Failed to log dashboard event', error);
+      }
+    },
+    [mockMode]
+  );
+
   const handleDragEnd = (event: any) => {
     const { active, over } = event;
 
-    if (active.id !== over.id) {
-      setLayout((items) => {
-        const oldIndex = items.findIndex((item) => item.widgetId === active.id);
-        const newIndex = items.findIndex((item) => item.widgetId === over.id);
+    if (!over || active.id === over.id) return;
 
-        const newItems = [...items];
-        const [moved] = newItems.splice(oldIndex, 1);
-        newItems.splice(newIndex, 0, moved);
+    setLayout((items) => {
+      const oldIndex = items.findIndex((item) => item.widgetId === active.id);
+      const newIndex = items.findIndex((item) => item.widgetId === over.id);
 
-        // Update positions
-        return newItems.map((item, index) => ({
-          ...item,
-          position: index,
-        }));
+      if (oldIndex < 0 || newIndex < 0) return items;
+
+      const newItems = [...items];
+      const [moved] = newItems.splice(oldIndex, 1);
+      newItems.splice(newIndex, 0, moved);
+
+      const reordered = newItems.map((item, index) => ({
+        ...item,
+        position: index,
+      }));
+
+      logDashboardEvent('dashboard_tile_reordered', {
+        widgetId: active.id,
+        oldIndex,
+        newIndex,
       });
-    }
+
+      return reordered;
+    });
   };
 
   const handleSave = async () => {
@@ -136,6 +229,7 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
       if (response.ok) {
         toast.success('Dashboard layout saved!');
         setEditMode(false);
+        userLayoutRef.current = layout;
       } else {
         toast.error('Failed to save layout');
       }
@@ -170,6 +264,7 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
   };
 
   const handleToggleWidget = (widgetId: string, checked: boolean) => {
+    let eventType: 'dashboard_tile_added' | 'dashboard_tile_removed' | null = null;
     setLayout((prev) => {
       const existingIndex = prev.findIndex((w) => w.widgetId === widgetId);
 
@@ -180,12 +275,14 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
           ...newLayout[existingIndex],
           visible: checked,
         };
+        eventType = checked ? 'dashboard_tile_added' : 'dashboard_tile_removed';
         return newLayout;
       } else if (checked) {
         // Add new widget
         const config = AVAILABLE_WIDGETS[widgetId];
         if (!config) return prev;
 
+        eventType = 'dashboard_tile_added';
         return [
           ...prev,
           {
@@ -200,6 +297,10 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
 
       return prev;
     });
+
+    if (eventType) {
+      logDashboardEvent(eventType, { widgetId });
+    }
   };
 
   const getWidgetComponent = (widgetId: string) => {
@@ -221,7 +322,40 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
       case 'gap-map':
         return <GapMapWidget />;
       case 'next-best-actions':
-        return <NextBestActionsWidget />;
+        return (
+          <NextBestActionsWidget
+            useMockData={mockMode}
+            onActionClick={(actionId) =>
+              logDashboardEvent('next_best_action_clicked', { actionId })
+            }
+          />
+        );
+      case 'profile-activation':
+        return <ProfileActivationCard useMockData={mockMode} />;
+      case 'matching-readiness':
+        return (
+          <MatchingReadinessCard
+            useMockData={mockMode}
+            onActionClick={(actionId) =>
+              logDashboardEvent('next_best_action_clicked', { actionId })
+            }
+          />
+        );
+      case 'interviews-feedback':
+        return (
+          <InterviewsFeedbackCard
+            useMockData={mockMode}
+            onActionClick={(actionId) =>
+              logDashboardEvent('next_best_action_clicked', { actionId })
+            }
+          />
+        );
+      case 'momentum-metrics':
+        return <MomentumMetricsCard useMockData={mockMode} />;
+      case 'zen-snapshot':
+        return <ZenSnapshotCard useMockData={mockMode} />;
+      case 'notifications':
+        return <NotificationsCard useMockData={mockMode} />;
       default:
         return null;
     }

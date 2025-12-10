@@ -43,12 +43,46 @@ interface ProfileCompleteness {
   actions: NextBestAction[];
 }
 
-export function NextBestActionsWidget() {
+type NextBestActionsWidgetProps = {
+  useMockData?: boolean;
+  onActionClick?: (actionId: string) => void;
+};
+
+export function NextBestActionsWidget({ useMockData, onActionClick }: NextBestActionsWidgetProps) {
   const [completeness, setCompleteness] = useState<ProfileCompleteness | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
+    if (useMockData) {
+      setCompleteness({
+        percentage: 72,
+        missing: ['proof'],
+        actions: [
+          {
+            id: 'add-proof',
+            title: 'Upload proof for AI Ops',
+            description: 'Add a link or PDF to verify your AI Ops work.',
+            priority: 'high',
+            category: 'verification',
+            actionUrl: '/app/i/profile?tab=proofs',
+            completed: false,
+          },
+          {
+            id: 'add-values',
+            title: 'Add values & causes',
+            description: 'Choose up to 5 values to improve PAC.',
+            priority: 'medium',
+            category: 'profile',
+            actionUrl: '/app/i/profile',
+            completed: false,
+          },
+        ],
+      });
+      setLoading(false);
+      return;
+    }
+
     async function fetchNextBestActions() {
       try {
         const response = await apiFetch('/api/profile/completeness');
@@ -177,6 +211,7 @@ export function NextBestActionsWidget() {
               <button
                 key={action.id}
                 onClick={() => router.push(action.actionUrl)}
+                onMouseUp={() => onActionClick?.(action.id)}
                 className="w-full text-left p-3 rounded-lg border border-[#E8E6DD] hover:border-[#1C4D3A] hover:bg-[#F7F6F1] transition-all group"
               >
                 <div className="flex items-start gap-3">

@@ -19,14 +19,6 @@ export type EventType =
   | 'profile_activated'
   | 'profile_updated'
   | 'profile_viewed'
-  | 'user_signup' // Added missing type
-
-  // Skill events (PRD F3)
-  | 'skill_added'
-  | 'skill_updated'
-  | 'skill_deleted'
-  | 'skill_proof_added'
-  | 'skill_proof_deleted'
 
   // Matching events
   | 'match_generated'
@@ -35,10 +27,6 @@ export type EventType =
   | 'match_introduced'
   | 'match_snoozed'
   | 'match_hidden'
-  | 'match_actioned' // Added missing type
-  | 'first_match_shown'
-  | 'first_qualified_intro' // Added missing type
-  | 'ttfqi_warning_emitted'
 
   // Interview events
   | 'interview_scheduled'
@@ -59,6 +47,10 @@ export type EventType =
   | 'wellbeing_checkin'
   | 'wellbeing_reflection'
   | 'wellbeing_opt_in'
+  | 'wellbeing_checkin_submitted'
+  | 'wellbeing_opt_in_changed'
+  | 'reflection_added'
+  | 'privacy_banner_acknowledged'
 
   // Verification events
   | 'verification_started'
@@ -67,28 +59,35 @@ export type EventType =
   | 'attestation_provided'
 
   // System events
+  | 'first_match_shown'
   | 'sus_survey_completed'
-  | 'tour_started' // Added missing type
-  | 'tour_completed'
-  | 'tour_skipped' // Added missing type
-
-  // Assignment events
-  | 'assignment_published' // Added missing type
-
-  // Privacy events
-  | 'visibility_changed' // Added missing type
-  | 'redact_mode_toggled'; // Added missing type
+  | 'tour_completed';
 
 export interface AnalyticsEvent {
   eventType: EventType;
   userId: string;
   profileId?: string;
   organizationId?: string;
-  entityType?: 'match' | 'interview' | 'contract' | 'profile' | 'assignment' | 'survey' | 'tour';
+  entityType?: 'match' | 'interview' | 'contract' | 'profile' | 'assignment';
   entityId?: string;
   properties?: Record<string, any>;
   privacyPartition?: string; // For demographic segmentation (opt-in)
 }
+
+export type WellbeingCheckinSubmittedProps = {
+  checkin_id: string;
+  scores: { stress: number; control: number };
+  from_trigger?: 'manual' | 'rejection' | 'interview' | 'offer';
+};
+
+export type WellbeingOptInChangedProps = {
+  enabled: boolean;
+};
+
+export type ReflectionAddedProps = {
+  word_count: number;
+  from_trigger?: 'rejection' | 'interview' | 'offer';
+};
 
 // ============================================================================
 // EVENT EMISSION
@@ -100,17 +99,6 @@ export interface AnalyticsEvent {
  */
 export async function emitAnalyticsEvent(event: AnalyticsEvent): Promise<void> {
   try {
-    // MOCK ANALYTICS FOR LOCAL DEV
-    if (process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true') {
-      log.info('analytics.event.mocked', {
-        eventType: event.eventType,
-        userId: event.userId,
-        entityId: event.entityId,
-        properties: event.properties,
-      });
-      return;
-    }
-
     await db.execute(sql`
       INSERT INTO analytics_events (
         event_type,
@@ -158,10 +146,6 @@ export function emitAnalyticsEventAsync(event: AnalyticsEvent): void {
   Promise.resolve().then(() => emitAnalyticsEvent(event));
 }
 
-// Alias for emitAnalyticsEvent
-export const emitEvent = emitAnalyticsEvent;
-export const trackEvent = emitAnalyticsEvent;
-
 // ============================================================================
 // PROFILE EVENTS
 // ============================================================================
@@ -174,21 +158,6 @@ export async function emitProfileCreated(userId: string, properties?: Record<str
     entityType: 'profile',
     entityId: userId,
     properties,
-  });
-}
-
-export async function emitUserSignup(
-  userId: string,
-  method: string,
-  options?: { persona?: string; marketingOptIn?: boolean }
-) {
-  await emitAnalyticsEvent({
-    eventType: 'user_signup',
-    userId,
-    profileId: userId,
-    entityType: 'profile',
-    entityId: userId,
-    properties: { method, ...options },
   });
 }
 
@@ -207,305 +176,6 @@ export async function emitProfileActivated(
       activation_duration_ms: activationDurationMs,
       ...properties,
     },
-  });
-}
-
-export function emitProfileActivatedAsync(
-  userId: string,
-  activationDurationMs: number,
-  properties?: Record<string, any>
-) {
-  emitAnalyticsEventAsync({
-    eventType: 'profile_activated',
-    userId,
-    profileId: userId,
-    entityType: 'profile',
-    entityId: userId,
-    properties: {
-      activation_duration_ms: activationDurationMs,
-      ...properties,
-    },
-  });
-}
-
-export async function emitVisibilityChanged(userId: string, field: string, isVisible: boolean) {
-  await emitAnalyticsEvent({
-    eventType: 'visibility_changed',
-    userId,
-    entityType: 'profile',
-    entityId: userId,
-    properties: { field, is_visible: isVisible },
-  });
-}
-
-export async function emitRedactModeToggled(userId: string, isEnabled: boolean) {
-  await emitAnalyticsEvent({
-    eventType: 'redact_mode_toggled',
-    userId,
-    entityType: 'profile',
-    entityId: userId,
-    properties: { enabled: isEnabled },
-  });
-}
-
-// ============================================================================
-// SKILL EVENTS (PRD F3 - Expertise Atlas)
-// ============================================================================
-
-export async function emitSkillAdded(
-  userId: string,
-  skillId: string,
-  properties: {
-    skill_code?: string;
-    skill_name: string;
-    level: number;
-    is_custom: boolean;
-    total_skills: number;
-  }
-) {
-  await emitAnalyticsEvent({
-    eventType: 'skill_added',
-    userId,
-    profileId: userId,
-    entityType: 'profile',
-    entityId: skillId,
-    properties,
-  });
-}
-
-export function emitSkillAddedAsync(
-  userId: string,
-  skillId: string,
-  properties: {
-    skill_code?: string;
-    skill_name: string;
-    level: number;
-    is_custom: boolean;
-    total_skills: number;
-  }
-) {
-  emitAnalyticsEventAsync({
-    eventType: 'skill_added',
-    userId,
-    profileId: userId,
-    entityType: 'profile',
-    entityId: skillId,
-    properties,
-  });
-}
-
-export async function emitSkillUpdated(
-  userId: string,
-  skillId: string,
-  properties: {
-    skill_name: string;
-    changes: string[];
-  }
-) {
-  await emitAnalyticsEvent({
-    eventType: 'skill_updated',
-    userId,
-    profileId: userId,
-    entityType: 'profile',
-    entityId: skillId,
-    properties,
-  });
-}
-
-export function emitSkillUpdatedAsync(
-  userId: string,
-  skillId: string,
-  properties: {
-    skill_name: string;
-    changes: string[];
-  }
-) {
-  emitAnalyticsEventAsync({
-    eventType: 'skill_updated',
-    userId,
-    profileId: userId,
-    entityType: 'profile',
-    entityId: skillId,
-    properties,
-  });
-}
-
-export async function emitSkillDeleted(
-  userId: string,
-  skillId: string,
-  properties: {
-    skill_name: string;
-    remaining_skills: number;
-  }
-) {
-  await emitAnalyticsEvent({
-    eventType: 'skill_deleted',
-    userId,
-    profileId: userId,
-    entityType: 'profile',
-    entityId: skillId,
-    properties,
-  });
-}
-
-export function emitSkillDeletedAsync(
-  userId: string,
-  skillId: string,
-  properties: {
-    skill_name: string;
-    remaining_skills: number;
-  }
-) {
-  emitAnalyticsEventAsync({
-    eventType: 'skill_deleted',
-    userId,
-    profileId: userId,
-    entityType: 'profile',
-    entityId: skillId,
-    properties,
-  });
-}
-
-export async function emitSkillProofAdded(
-  userId: string,
-  skillId: string,
-  proofId: string,
-  properties: {
-    skill_name: string;
-    proof_type: string;
-  }
-) {
-  await emitAnalyticsEvent({
-    eventType: 'skill_proof_added',
-    userId,
-    profileId: userId,
-    entityType: 'profile',
-    entityId: proofId,
-    properties: {
-      skill_id: skillId,
-      ...properties,
-    },
-  });
-}
-
-export function emitSkillProofAddedAsync(
-  userId: string,
-  skillId: string,
-  proofId: string,
-  properties: {
-    skill_name: string;
-    proof_type: string;
-  }
-) {
-  emitAnalyticsEventAsync({
-    eventType: 'skill_proof_added',
-    userId,
-    profileId: userId,
-    entityType: 'profile',
-    entityId: proofId,
-    properties: {
-      skill_id: skillId,
-      ...properties,
-    },
-  });
-}
-
-export async function emitSkillProofDeleted(
-  userId: string,
-  skillId: string,
-  proofId: string,
-  properties: {
-    skill_name: string;
-    proof_type: string;
-  }
-) {
-  await emitAnalyticsEvent({
-    eventType: 'skill_proof_deleted',
-    userId,
-    profileId: userId,
-    entityType: 'profile',
-    entityId: proofId,
-    properties: {
-      skill_id: skillId,
-      ...properties,
-    },
-  });
-}
-
-export function emitSkillProofDeletedAsync(
-  userId: string,
-  skillId: string,
-  proofId: string,
-  properties: {
-    skill_name: string;
-    proof_type: string;
-  }
-) {
-  emitAnalyticsEventAsync({
-    eventType: 'skill_proof_deleted',
-    userId,
-    profileId: userId,
-    entityType: 'profile',
-    entityId: proofId,
-    properties: {
-      skill_id: skillId,
-      ...properties,
-    },
-  });
-}
-
-export async function emitVerificationRequested(
-  userId: string,
-  requestId: string,
-  properties: {
-    skill_id: string;
-    skill_name: string;
-    verifier_source: string;
-  }
-) {
-  await emitAnalyticsEvent({
-    eventType: 'attestation_requested',
-    userId,
-    profileId: userId,
-    entityType: 'profile',
-    entityId: requestId,
-    properties,
-  });
-}
-
-export function emitVerificationRequestedAsync(
-  userId: string,
-  requestId: string,
-  properties: {
-    skill_id: string;
-    skill_name: string;
-    verifier_source: string;
-  }
-) {
-  emitAnalyticsEventAsync({
-    eventType: 'attestation_requested',
-    userId,
-    profileId: userId,
-    entityType: 'profile',
-    entityId: requestId,
-    properties,
-  });
-}
-
-export async function emitVerificationProvided(
-  requestId: string,
-  properties: {
-    skill_id: string;
-    requester_id: string;
-    action: 'accepted' | 'declined';
-  }
-) {
-  await emitAnalyticsEvent({
-    eventType: 'attestation_provided',
-    userId: properties.requester_id, // Track under requester's profile
-    entityType: 'profile',
-    entityId: requestId,
-    properties,
   });
 }
 
@@ -565,77 +235,6 @@ export async function emitMatchIntroduced(
     userId,
     entityType: 'match',
     entityId: matchId,
-    properties,
-  });
-}
-
-export async function emitFirstQualifiedIntroAsync(
-  userId: string,
-  matchId: string,
-  properties: {
-    assignment_id: string;
-    match_id: string;
-    ttfqi_hours?: number;
-  }
-) {
-  emitAnalyticsEventAsync({
-    eventType: 'first_qualified_intro',
-    userId,
-    entityType: 'match',
-    entityId: matchId,
-    properties,
-  });
-}
-
-export async function emitFirstMatchShown(
-  userId: string,
-  matchId: string,
-  metadata?: {
-    score?: number;
-    mode?: string;
-    pac_contribution?: number;
-  }
-) {
-  await emitAnalyticsEvent({
-    eventType: 'first_match_shown',
-    userId,
-    entityType: 'match',
-    entityId: matchId,
-    properties: metadata,
-  });
-}
-
-export async function emitMatchActioned(
-  userId: string,
-  matchId: string,
-  action: string,
-  reason?: string
-) {
-  await emitAnalyticsEvent({
-    eventType: 'match_actioned',
-    userId,
-    entityType: 'match',
-    entityId: matchId,
-    properties: { action, reason },
-  });
-}
-
-// ============================================================================
-// ASSIGNMENT EVENTS
-// ============================================================================
-
-export async function emitAssignmentPublished(
-  userId: string,
-  assignmentId: string,
-  organizationId: string,
-  properties?: Record<string, any>
-) {
-  await emitAnalyticsEvent({
-    eventType: 'assignment_published',
-    userId,
-    organizationId,
-    entityType: 'assignment',
-    entityId: assignmentId,
     properties,
   });
 }
@@ -766,6 +365,19 @@ export async function emitWellbeingCheckin(
   });
 }
 
+// Preferred zen hub check-in event with explicit partition and trigger context
+export async function emitWellbeingCheckinSubmitted(
+  userId: string,
+  properties: WellbeingCheckinSubmittedProps
+) {
+  await emitAnalyticsEvent({
+    eventType: 'wellbeing_checkin_submitted',
+    userId,
+    properties,
+    privacyPartition: 'wellbeing',
+  });
+}
+
 export async function emitWellbeingOptIn(
   userId: string,
   properties: {
@@ -777,6 +389,37 @@ export async function emitWellbeingOptIn(
     eventType: 'wellbeing_opt_in',
     userId,
     properties,
+  });
+}
+
+// Updated opt-in flag for Zen Hub (private partition)
+export async function emitWellbeingOptInChanged(
+  userId: string,
+  properties: WellbeingOptInChangedProps
+) {
+  await emitAnalyticsEvent({
+    eventType: 'wellbeing_opt_in_changed',
+    userId,
+    properties,
+    privacyPartition: 'wellbeing',
+  });
+}
+
+export async function emitReflectionAdded(userId: string, properties: ReflectionAddedProps) {
+  await emitAnalyticsEvent({
+    eventType: 'reflection_added',
+    userId,
+    properties,
+    privacyPartition: 'wellbeing',
+  });
+}
+
+export async function emitPrivacyBannerAcknowledged(userId: string) {
+  await emitAnalyticsEvent({
+    eventType: 'privacy_banner_acknowledged',
+    userId,
+    properties: {},
+    privacyPartition: 'wellbeing',
   });
 }
 
@@ -795,55 +438,7 @@ export async function emitSUSCompleted(
   await emitAnalyticsEvent({
     eventType: 'sus_survey_completed',
     userId,
-    entityType: 'survey',
     properties,
-  });
-}
-
-export function emitSUSSurveyCompletedAsync(
-  userId: string,
-  properties: {
-    total_score: number;
-    individual_scores: number[];
-    trigger_point: string;
-  }
-) {
-  emitAnalyticsEventAsync({
-    eventType: 'sus_survey_completed',
-    userId,
-    entityType: 'survey',
-    properties,
-  });
-}
-
-// ============================================================================
-// TOUR EVENTS
-// ============================================================================
-
-export async function emitTourStarted(userId: string, tourId: string) {
-  await emitAnalyticsEvent({
-    eventType: 'tour_started',
-    userId,
-    entityType: 'tour',
-    entityId: tourId,
-  });
-}
-
-export async function emitTourCompleted(userId: string, tourId: string) {
-  await emitAnalyticsEvent({
-    eventType: 'tour_completed',
-    userId,
-    entityType: 'tour',
-    entityId: tourId,
-  });
-}
-
-export async function emitTourSkipped(userId: string, tourId: string) {
-  await emitAnalyticsEvent({
-    eventType: 'tour_skipped',
-    userId,
-    entityType: 'tour',
-    entityId: tourId,
   });
 }
 
@@ -875,7 +470,7 @@ export async function getUserEvents(
   query = sql`${query} ORDER BY occurred_at DESC`;
 
   const result = await db.execute(query);
-  return result as any[];
+  return result.rows as any[];
 }
 
 /**
@@ -894,8 +489,7 @@ export async function getEventCount(
       AND occurred_at <= ${endDate.toISOString()}
   `);
 
-  const row = result[0] as any;
-  return parseInt(row?.count || '0');
+  return parseInt((result.rows[0] as any).count || '0');
 }
 
 /**
@@ -914,6 +508,5 @@ export async function getUniqueUsersWithEvent(
       AND occurred_at <= ${endDate.toISOString()}
   `);
 
-  const row = result[0] as any;
-  return parseInt(row?.count || '0');
+  return parseInt((result.rows[0] as any).count || '0');
 }

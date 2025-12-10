@@ -4,10 +4,11 @@ import { useState } from 'react';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Heart, CheckCircle2, AlertCircle, Zap } from 'lucide-react';
+import { Heart, CheckCircle2, AlertCircle, Zap, Sparkles } from 'lucide-react';
 import { useMood } from './MoodResponsiveContainer';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api/fetch';
+import { zenCheckInConfig, zenPractices, type RiskState } from '@/data/zen';
 
 export function QuickCheckIn() {
   const { setMood } = useMood();
@@ -15,6 +16,17 @@ export function QuickCheckIn() {
   const [control, setControl] = useState(3); // 1-5
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [justCheckedIn, setJustCheckedIn] = useState(false);
+
+  const stressLabel = zenCheckInConfig.stressScale.find((s) => s.score === stress);
+  const controlLabel = zenCheckInConfig.controlScale.find((c) => c.score === control);
+
+  const derivedMood: RiskState =
+    stress >= 4 ? 'support' : stress === 3 ? 'focus' : ('calm' as RiskState);
+
+  const microPractice =
+    zenPractices.find(
+      (p) => p.isMicro && p.recommendedFor?.includes(derivedMood)
+    ) || zenPractices.find((p) => p.isMicro);
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -83,6 +95,9 @@ export function QuickCheckIn() {
         <h2 className="mb-6 text-center font-serif text-3xl text-[#2D3330] dark:text-[#E8E6DD]">
           How are you feeling right now?
         </h2>
+        <p className="mb-4 text-center text-sm text-muted-foreground">
+          {zenCheckInConfig.privacyBanner}
+        </p>
 
         <div className="mx-auto max-w-2xl space-y-8">
           <div className="space-y-4">
@@ -98,7 +113,7 @@ export function QuickCheckIn() {
                   stress > 3 ? 'text-rose-600' : stress === 3 ? 'text-amber-600' : 'text-[#1C4D3A]'
                 }`}
               >
-                {stress === 1 ? 'Very Calm' : stress === 5 ? 'Overwhelmed' : 'Moderate'}
+                {stressLabel?.label || 'Moderate'}
               </span>
             </div>
             <div className="flex items-center gap-4">
@@ -114,6 +129,9 @@ export function QuickCheckIn() {
               />
               <AlertCircle className="h-4 w-4 text-[#6B6760]" />
             </div>
+            {stressLabel?.description && (
+              <p className="text-xs text-muted-foreground">{stressLabel.description}</p>
+            )}
           </div>
 
           <div className="space-y-4">
@@ -125,7 +143,7 @@ export function QuickCheckIn() {
                 Sense of Control
               </label>
               <span className="text-sm font-medium text-[#1C4D3A] dark:text-[#E2EDD9]">
-                {control === 1 ? 'Low' : control === 5 ? 'High' : 'Moderate'}
+                {controlLabel?.label || 'Moderate'}
               </span>
             </div>
             <div className="flex items-center gap-4">
@@ -141,7 +159,34 @@ export function QuickCheckIn() {
               />
               <div className="h-3 w-3 rounded-full bg-[#6B6760]" />
             </div>
+            {controlLabel?.description && (
+              <p className="text-xs text-muted-foreground">{controlLabel.description}</p>
+            )}
           </div>
+
+          {microPractice && (
+            <Card className="border bg-white/80 dark:bg-[#2F2823]/60 p-4 shadow-sm">
+              <div className="flex items-start gap-3">
+                <Sparkles className="h-5 w-5 text-[#7A9278]" />
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-[#2D3330] dark:text-[#E8E6DD]">
+                    {zenCheckInConfig.quickPracticePrompt}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Suggested: {microPractice.title} · {microPractice.duration}
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-[#1C4D3A] px-0"
+                    onClick={() => toast.success(`Started ${microPractice.title}`)}
+                  >
+                    Start now
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          )}
 
           <div className="flex justify-center pt-4">
             <Button
