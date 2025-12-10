@@ -16,13 +16,11 @@ export default async function LoginPage() {
   try {
     // Check if user is already logged in
     const supabase = await createClient({ allowCookieWrite: true });
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    // If there's an auth error, log it but don't crash - just show login page
-    if (authError) {
+    let user = null;
+    try {
+      const result = await supabase.auth.getUser();
+      user = result?.data?.user ?? null;
+    } catch (authError) {
       console.error('Auth check failed on login page:', authError);
     }
 
