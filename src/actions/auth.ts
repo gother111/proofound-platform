@@ -8,6 +8,7 @@ import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import type { AuthError } from '@supabase/supabase-js';
 import { resolveUserHomePath } from '@/lib/auth';
+import { z } from 'zod';
 import { mapSignUpValidationError, signUpSchema } from './auth.schema';
 
 const signInSchema = signUpSchema.pick({ email: true }).extend({
