@@ -12,6 +12,7 @@
 import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
+import { generateFairnessNote as generateFairnessNoteByVersion } from './fairness-note-generator';
 
 // ============================================================================
 // TYPES
@@ -178,6 +179,15 @@ export async function calculateFairnessGaps(releaseVersion: string): Promise<Fai
     });
     throw error;
   }
+}
+
+// ============================================================================
+// Wrapper for date-based API (exports used by /api/analytics/fairness)
+// ============================================================================
+
+export async function generateFairnessNote(startDate: Date, endDate: Date): Promise<string> {
+  const releaseVersion = `${startDate.toISOString()}_${endDate.toISOString()}`;
+  return generateFairnessNoteByVersion(releaseVersion);
 }
 
 /**

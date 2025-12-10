@@ -74,7 +74,9 @@ export const EVENT_TYPES = [
   // System events
   'first_match_shown',
   'sus_survey_completed',
+  'tour_started',
   'tour_completed',
+  'tour_skipped',
 ] as const;
 
 export type EventType = (typeof EVENT_TYPES)[number];
@@ -284,6 +286,65 @@ export function emitRedactModeToggled(userId: string, profileId: string, enabled
     entityId: profileId,
     properties: { enabled },
   });
+}
+
+// ============================================================================
+// TOUR EVENTS
+// ============================================================================
+
+export async function emitTourStarted(userId: string): Promise<void> {
+  await emitAnalyticsEvent({
+    eventType: 'tour_started',
+    userId,
+    profileId: userId,
+    entityType: 'profile',
+    entityId: userId,
+  });
+}
+
+export async function emitTourCompleted(userId: string): Promise<void> {
+  await emitAnalyticsEvent({
+    eventType: 'tour_completed',
+    userId,
+    profileId: userId,
+    entityType: 'profile',
+    entityId: userId,
+  });
+}
+
+export async function emitTourSkipped(userId: string): Promise<void> {
+  await emitAnalyticsEvent({
+    eventType: 'tour_skipped',
+    userId,
+    profileId: userId,
+    entityType: 'profile',
+    entityId: userId,
+  });
+}
+
+// ============================================================================
+// CLIENT TRACK BRIDGE
+// ============================================================================
+
+export async function emitEvent(event: {
+  eventType: EventType;
+  userId?: string;
+  orgId?: string;
+  entityType?: string;
+  entityId?: string;
+  properties?: Record<string, any>;
+  sessionId?: string;
+}): Promise<string> {
+  await emitAnalyticsEvent({
+    eventType: event.eventType,
+    userId: event.userId || 'anonymous',
+    organizationId: event.orgId,
+    entityType: event.entityType as any,
+    entityId: event.entityId,
+    properties: event.properties,
+    privacyPartition: event.sessionId,
+  });
+  return 'ok';
 }
 
 // ============================================================================
