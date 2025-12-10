@@ -22,8 +22,15 @@ export async function middleware(request: NextRequest) {
   }).catch(() => {});
   // #endregion
 
-  // CSRF protection for API routes
+  // CSRF protection for API routes (allowlist some public endpoints)
   if (pathname.startsWith('/api')) {
+    // Allow anonymous web-vitals posts without CSRF blocking
+    if (pathname.startsWith('/api/analytics/web-vitals')) {
+      const response = NextResponse.next();
+      response.headers.set('x-request-id', requestId);
+      return response;
+    }
+
     const csrfError = csrfProtection(request);
     if (csrfError) {
       csrfError.headers.set('x-request-id', requestId);

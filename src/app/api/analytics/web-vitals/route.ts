@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
           'performance_metric',
           ${userId},
           'page',
-          ${metric.pagePath},
+          NULL,
           ${JSON.stringify({
             metric_name: metric.metricName,
             value: metric.value,
@@ -70,6 +70,7 @@ export async function POST(req: NextRequest) {
             delta: metric.delta,
             metric_id: metric.id,
             navigation_type: metric.navigationType,
+            page_path: metric.pagePath,
             user_agent: req.headers.get('user-agent'),
           })},
           NOW()
