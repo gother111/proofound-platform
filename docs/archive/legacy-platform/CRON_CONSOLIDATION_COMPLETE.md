@@ -10,8 +10,9 @@
 ## What Changed
 
 ### Before: 3 Cron Jobs ❌
+
 1. `send-deletion-reminders` - Daily at 1 AM UTC
-2. `process-deletions` - Daily at 2 AM UTC  
+2. `process-deletions` - Daily at 2 AM UTC
 3. `generate-fairness-note` - Monthly (1st) at 3 AM UTC
 
 **Problem:** Exceeded Vercel plan limit (2 crons allowed)
@@ -19,6 +20,7 @@
 ---
 
 ### After: 2 Cron Jobs ✅
+
 1. **`account-deletion-workflow`** - Daily at 2 AM UTC (COMBINED)
 2. `generate-fairness-note` - Monthly (1st) at 3 AM UTC
 
@@ -33,6 +35,7 @@
 **File:** `/src/app/api/cron/account-deletion-workflow/route.ts`
 
 **What it does:**
+
 1. **Step 1:** Send 7-day deletion reminder emails
    - Finds accounts scheduled for deletion in ~7 days
    - Checks if reminder already sent (prevents duplicates)
@@ -72,35 +75,39 @@
 
 ### ✅ All Features Intact
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| 7-day deletion reminders | ✅ Working | Runs in Step 1 of workflow |
-| Account deletion processing | ✅ Working | Runs in Step 2 of workflow |
-| Duplicate prevention | ✅ Working | Analytics events track sent reminders |
-| Email notifications | ✅ Working | Both reminder and confirmation emails |
-| GDPR compliance | ✅ Working | Full 30-day grace period + anonymization |
-| Fairness note generation | ✅ Working | Automated monthly reports |
+| Feature                     | Status     | Notes                                    |
+| --------------------------- | ---------- | ---------------------------------------- |
+| 7-day deletion reminders    | ✅ Working | Runs in Step 1 of workflow               |
+| Account deletion processing | ✅ Working | Runs in Step 2 of workflow               |
+| Duplicate prevention        | ✅ Working | Analytics events track sent reminders    |
+| Email notifications         | ✅ Working | Both reminder and confirmation emails    |
+| GDPR compliance             | ✅ Working | Full 30-day grace period + anonymization |
+| Fairness note generation    | ✅ Working | Automated monthly reports                |
 
 ---
 
 ## Benefits of Consolidation
 
 ### 1. **Efficiency** ⚡
+
 - Single cron execution instead of two
 - Shared Supabase client initialization
 - Combined logging and error handling
 
 ### 2. **Cost Optimization** 💰
+
 - Fits within Vercel plan limits
 - No plan upgrade required
 - Reduced serverless function invocations
 
 ### 3. **Maintainability** 🔧
+
 - One file to maintain instead of two
 - Unified logging namespace
 - Easier to debug and monitor
 
 ### 4. **Reliability** 🛡️
+
 - Both steps run in sequence
 - Independent error handling per step
 - Comprehensive result reporting
@@ -112,12 +119,14 @@
 ### Log Events
 
 **Workflow Level:**
+
 - `cron.account_deletion_workflow.started`
 - `cron.account_deletion_workflow.completed`
 - `cron.account_deletion_workflow.unauthorized`
 - `cron.account_deletion_workflow.failed`
 
 **Reminder Step:**
+
 - `cron.account_deletion_workflow.reminders_started`
 - `cron.account_deletion_workflow.reminder_accounts_found`
 - `cron.account_deletion_workflow.reminder_sent`
@@ -126,6 +135,7 @@
 - `cron.account_deletion_workflow.reminders_completed`
 
 **Deletion Step:**
+
 - `cron.account_deletion_workflow.deletions_started`
 - `cron.account_deletion_workflow.deletion_accounts_found`
 - `cron.account_deletion_workflow.account_deleted`
@@ -204,6 +214,7 @@ These files are **no longer used** and can be deleted:
 ### Database Schema
 
 No database changes required. The combined cron uses:
+
 - Existing `profiles` table
 - Existing `analytics_events` table
 - Existing `anonymize_user_account()` function
@@ -211,6 +222,7 @@ No database changes required. The combined cron uses:
 ### Environment Variables
 
 No changes required. Uses existing:
+
 - `CRON_SECRET` - Cron authentication
 - Supabase credentials (for email lookups)
 
@@ -241,6 +253,7 @@ If any issues arise:
 4. Re-evaluate consolidation approach
 
 **Files to restore:**
+
 - Original `send-deletion-reminders/route.ts`
 - Original `process-deletions/route.ts`
 
@@ -253,19 +266,21 @@ If any issues arise:
 ✅ **Deletion workflow runs daily at 2 AM UTC**  
 ✅ **Fairness notes generate monthly (1st at 3 AM UTC)**  
 ✅ **Reminders sent 7 days before deletion**  
-✅ **Accounts anonymized after grace period**  
+✅ **Accounts anonymized after grace period**
 
 ---
 
 ## Next Steps
 
 1. **Commit these changes:**
+
    ```bash
    git add .
    git commit -m "Consolidate deletion crons to fit Vercel plan limits"
    ```
 
 2. **Push to repository:**
+
    ```bash
    git push origin <branch-name>
    ```
@@ -286,4 +301,3 @@ If any issues arise:
 **Cron Jobs:** 2/2 (within limit)  
 **All Functionality:** Preserved  
 **Build:** Expected to succeed
-

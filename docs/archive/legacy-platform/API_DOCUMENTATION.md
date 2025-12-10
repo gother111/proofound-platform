@@ -51,11 +51,13 @@ const adminEmails = ['pavlo@proofound.io', 'yurii@proofound.io'];
 ```
 
 **Admin routes:**
+
 - `/app/admin/*` - Requires admin email
 - `/api/admin/*` - Requires admin email
 - `/api/analytics/fairness` - Requires admin email
 
 **Org member routes:**
+
 - `/api/metrics` - Requires organization membership OR admin
 
 ---
@@ -74,14 +76,15 @@ Returns platform metrics for monitoring key performance indicators.
 
 #### Query Parameters
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `metric` | string | No | `all` | Specific metric to fetch |
-| `startDate` | string (ISO 8601) | No | 90 days ago | Start date for metric calculation |
-| `endDate` | string (ISO 8601) | No | Now | End date for metric calculation |
-| `cohort` | string | No | - | Cohort filter (for TTFQI, TTV) |
+| Parameter   | Type              | Required | Default     | Description                       |
+| ----------- | ----------------- | -------- | ----------- | --------------------------------- |
+| `metric`    | string            | No       | `all`       | Specific metric to fetch          |
+| `startDate` | string (ISO 8601) | No       | 90 days ago | Start date for metric calculation |
+| `endDate`   | string (ISO 8601) | No       | Now         | End date for metric calculation   |
+| `cohort`    | string            | No       | -           | Cohort filter (for TTFQI, TTV)    |
 
 **Valid `metric` values:**
+
 - `ttsc` - Time to Signed Contract
 - `ttfqi` - Time to First Qualified Introduction
 - `ttv` - Time to Value
@@ -138,6 +141,7 @@ Returns platform metrics for monitoring key performance indicators.
 ```
 
 **Targets by Metric:**
+
 - **TTSC:** ≤30 days (median)
 - **TTFQI:** ≤72 hours (median)
 - **TTV:** ≤7 days (median)
@@ -165,6 +169,7 @@ Returns platform metrics for monitoring key performance indicators.
 ```
 
 **Targets:**
+
 - **Acceptance Lift:** ≥20% (high-PAC vs low-PAC)
 - **Contract Lift:** ≥15% (high-PAC vs low-PAC)
 
@@ -187,6 +192,7 @@ Returns platform metrics for monitoring key performance indicators.
 **Target:** ≥75 (Good usability)
 
 **SUS Score Interpretation:**
+
 - 0-50: F (Poor)
 - 50-60: D (OK)
 - 60-70: C (Good)
@@ -390,6 +396,7 @@ If there's not enough data to calculate a metric, it returns `null`:
 ```
 
 **Response Headers:**
+
 ```http
 X-RateLimit-Limit: 100
 X-RateLimit-Remaining: 0
@@ -422,16 +429,17 @@ Calculate fairness gap between two demographic cohorts.
 
 #### Query Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `cohortA` | string | Yes | First cohort identifier (e.g., "women", "underrepresented") |
-| `cohortB` | string | Yes | Second cohort identifier (e.g., "men", "general") |
-| `startDate` | string (ISO 8601) | No | Start date (default: 90 days ago) |
-| `endDate` | string (ISO 8601) | No | End date (default: now) |
+| Parameter   | Type              | Required | Description                                                 |
+| ----------- | ----------------- | -------- | ----------------------------------------------------------- |
+| `cohortA`   | string            | Yes      | First cohort identifier (e.g., "women", "underrepresented") |
+| `cohortB`   | string            | Yes      | Second cohort identifier (e.g., "men", "general")           |
+| `startDate` | string (ISO 8601) | No       | Start date (default: 90 days ago)                           |
+| `endDate`   | string (ISO 8601) | No       | End date (default: now)                                     |
 
 **Cohort Matching:**
 
 The system matches cohorts by searching opt-in demographic data fields:
+
 - `gender`
 - `ethnicity`
 - `ageRange`
@@ -439,6 +447,7 @@ The system matches cohorts by searching opt-in demographic data fields:
 - `veteranStatus`
 
 Examples:
+
 - `cohortA=women` matches users with `gender` containing "women"
 - `cohortA=underrepresented` matches users with `ethnicity` marked as underrepresented
 - Case-insensitive matching
@@ -473,6 +482,7 @@ Examples:
 ```
 
 **Interpretation:**
+
 - **Gap > 0:** Cohort A has higher rate than Cohort B (positive outcome for A)
 - **Gap < 0:** Cohort A has lower rate than Cohort B (negative outcome for A)
 - **p-value < 0.05:** Difference is statistically significant
@@ -518,6 +528,7 @@ curl -X GET \
 ```
 
 **Interpretation:**
+
 - Women have 2.6 percentage points higher introduction rate (positive)
 - Women have 1.3 percentage points higher contract rate (positive)
 - Differences are NOT statistically significant (p > 0.05)
@@ -559,6 +570,7 @@ curl -X GET \
 ```
 
 **Interpretation:**
+
 - Underrepresented cohort has 11.7 percentage points LOWER introduction rate (negative)
 - Underrepresented cohort has 6.8 percentage points LOWER contract rate (negative)
 - Differences ARE statistically significant (p < 0.05)
@@ -618,12 +630,14 @@ List all users with stats.
 **Authentication:** Admin only
 
 **Query Parameters:**
+
 - `page` (number): Page number (default: 1)
 - `perPage` (number): Results per page (default: 50, max: 100)
 - `status` (string): Filter by status (`active`, `inactive`, `deleted`)
 - `role` (string): Filter by role (`individual`, `org_member`)
 
 **Response:**
+
 ```typescript
 {
   users: Array<{
@@ -658,6 +672,7 @@ List all organizations with stats.
 **Authentication:** Admin only
 
 **Response:**
+
 ```typescript
 {
   organizations: Array<{
@@ -685,6 +700,7 @@ Toggle feature flags.
 **Authentication:** Admin only
 
 **Request Body:**
+
 ```typescript
 {
   flag: string,           // Feature flag name
@@ -694,6 +710,7 @@ Toggle feature flags.
 ```
 
 **Response:**
+
 ```typescript
 {
   flag: string,
@@ -711,12 +728,12 @@ All API endpoints are rate-limited to prevent abuse.
 
 ### Rate Limit Tiers
 
-| Endpoint | Limit | Window |
-|----------|-------|--------|
-| `/api/metrics` | 100 requests | 15 minutes |
-| `/api/analytics/fairness` | 50 requests | 15 minutes |
-| `/api/admin/*` | 100 requests | 15 minutes |
-| General API | 100 requests | 15 minutes |
+| Endpoint                  | Limit        | Window     |
+| ------------------------- | ------------ | ---------- |
+| `/api/metrics`            | 100 requests | 15 minutes |
+| `/api/analytics/fairness` | 50 requests  | 15 minutes |
+| `/api/admin/*`            | 100 requests | 15 minutes |
+| General API               | 100 requests | 15 minutes |
 
 ### Rate Limit Headers
 
@@ -729,6 +746,7 @@ X-RateLimit-Reset: 1699189200
 ```
 
 **Headers:**
+
 - `X-RateLimit-Limit`: Maximum requests allowed in window
 - `X-RateLimit-Remaining`: Requests remaining in current window
 - `X-RateLimit-Reset`: Unix timestamp when limit resets
@@ -742,6 +760,7 @@ When rate limit is exceeded:
 **Status:** 429 Too Many Requests
 
 **Response:**
+
 ```json
 {
   "error": "Too many requests",
@@ -751,6 +770,7 @@ When rate limit is exceeded:
 ```
 
 **Headers:**
+
 ```http
 Retry-After: 120
 X-RateLimit-Limit: 100
@@ -778,22 +798,23 @@ X-RateLimit-Reset: 1699189200
 
 ### HTTP Status Codes
 
-| Status | Meaning | When Used |
-|--------|---------|-----------|
-| **200 OK** | Success | Request succeeded |
-| **201 Created** | Created | Resource created successfully |
-| **400 Bad Request** | Invalid input | Missing required parameters, invalid format |
-| **401 Unauthorized** | Not authenticated | Missing or invalid auth token |
-| **403 Forbidden** | Not authorized | User lacks required permissions |
-| **404 Not Found** | Resource not found | Endpoint or resource doesn't exist |
-| **429 Too Many Requests** | Rate limited | Exceeded rate limit |
-| **500 Internal Server Error** | Server error | Unexpected server-side error |
+| Status                        | Meaning            | When Used                                   |
+| ----------------------------- | ------------------ | ------------------------------------------- |
+| **200 OK**                    | Success            | Request succeeded                           |
+| **201 Created**               | Created            | Resource created successfully               |
+| **400 Bad Request**           | Invalid input      | Missing required parameters, invalid format |
+| **401 Unauthorized**          | Not authenticated  | Missing or invalid auth token               |
+| **403 Forbidden**             | Not authorized     | User lacks required permissions             |
+| **404 Not Found**             | Resource not found | Endpoint or resource doesn't exist          |
+| **429 Too Many Requests**     | Rate limited       | Exceeded rate limit                         |
+| **500 Internal Server Error** | Server error       | Unexpected server-side error                |
 
 ---
 
 ### Common Error Scenarios
 
 **Missing Authentication:**
+
 ```json
 {
   "error": "Unauthorized",
@@ -802,6 +823,7 @@ X-RateLimit-Reset: 1699189200
 ```
 
 **Insufficient Permissions:**
+
 ```json
 {
   "error": "Forbidden",
@@ -810,6 +832,7 @@ X-RateLimit-Reset: 1699189200
 ```
 
 **Invalid Date Format:**
+
 ```json
 {
   "error": "Bad Request",
@@ -818,6 +841,7 @@ X-RateLimit-Reset: 1699189200
 ```
 
 **Database Connection Error:**
+
 ```json
 {
   "error": "Internal Server Error",
@@ -950,7 +974,7 @@ data = response.json()
 with open('metrics-report.csv', 'w', newline='') as csvfile:
     writer = csv.writer(csvfile)
     writer.writerow(['Metric', 'Value', 'Unit', 'Target', 'Status', 'Sample Size'])
-    
+
     if data['metrics']['ttfqi']:
         m = data['metrics']['ttfqi']
         writer.writerow([
@@ -961,7 +985,7 @@ with open('metrics-report.csv', 'w', newline='') as csvfile:
             m['metadata']['status'],
             m['sampleSize']
         ])
-    
+
     if data['metrics']['ttv']:
         m = data['metrics']['ttv']
         writer.writerow([
@@ -972,7 +996,7 @@ with open('metrics-report.csv', 'w', newline='') as csvfile:
             m['metadata']['status'],
             m['sampleSize']
         ])
-    
+
     if data['metrics']['sus']:
         m = data['metrics']['sus']
         writer.writerow([
@@ -1021,7 +1045,7 @@ export async function fetchMetrics(
   }
 ): Promise<MetricsResponse> {
   const params = new URLSearchParams({ metric });
-  
+
   if (options?.startDate) {
     params.append('startDate', options.startDate.toISOString());
   }
@@ -1031,18 +1055,18 @@ export async function fetchMetrics(
   if (options?.cohort) {
     params.append('cohort', options.cohort);
   }
-  
+
   const response = await fetch(`/api/metrics?${params}`, {
     headers: {
       'Authorization': `Bearer ${getAuthToken()}`,
     },
   });
-  
+
   if (!response.ok) {
     const error = await response.json();
     throw new Error(error.message || 'Failed to fetch metrics');
   }
-  
+
   return response.json();
 }
 
@@ -1055,10 +1079,10 @@ function MetricsDashboard() {
     () => fetchMetrics('all'),
     { refreshInterval: 60000 } // Refresh every 60 seconds
   );
-  
+
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
-  
+
   return (
     <div>
       <h1>Metrics Dashboard</h1>
@@ -1151,11 +1175,13 @@ interface FairnessGapResult {
 ## Appendix B: Metric Calculation Logic
 
 **Implementation Files:**
+
 - Calculations: `/src/lib/analytics/metrics.ts`
 - API Endpoints: `/src/app/api/metrics/route.ts`
 - Fairness API: `/src/app/api/analytics/fairness/route.ts`
 
 **Key Functions:**
+
 - `calculateTTSC()` - Time to Signed Contract
 - `calculateTTFQI()` - Time to First Qualified Introduction
 - `calculateTTV()` - Time to Value
@@ -1164,6 +1190,7 @@ interface FairnessGapResult {
 - `calculateFairnessGap()` - Fairness Gap Analysis
 
 **Statistical Methods:**
+
 - Percentile calculation: Linear interpolation
 - Two-proportion z-test: For fairness significance testing
 - Standard normal CDF: Using error function approximation
@@ -1172,9 +1199,9 @@ interface FairnessGapResult {
 
 ## Document Revision History
 
-| Date | Version | Changes | Author |
-|------|---------|---------|--------|
-| Nov 5, 2025 | 1.0 | Initial API documentation | Yurii Bakurov |
+| Date        | Version | Changes                   | Author        |
+| ----------- | ------- | ------------------------- | ------------- |
+| Nov 5, 2025 | 1.0     | Initial API documentation | Yurii Bakurov |
 
 ---
 
@@ -1186,4 +1213,3 @@ interface FairnessGapResult {
 
 **Questions or Updates?**  
 Contact: yurii@proofound.io
-

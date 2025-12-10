@@ -118,52 +118,54 @@ Example for "Verbal communication" (L3):
 ## User Skill Journey
 
 ```
+
 ┌─────────────────┐
-│  User Profile   │
+│ User Profile │
 └────────┬────────┘
-         │
-         │ adds skill
-         ▼
+│
+│ adds skill
+▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                        USER SKILL ENTRY                         │
-│                           (skills)                              │
-│                                                                 │
-│  ┌──────────────────────────────────────────────────────────┐ │
-│  │ skill_code: "01.01.01.001"                               │ │
-│  │ level: 4 (C4 - Expert)                                   │ │
-│  │ monthsExperience: 36                                     │ │
-│  │ lastUsedAt: 2025-09-15                                   │ │
-│  │ relevance: "current"                                     │ │
-│  │ evidenceStrength: 0.85  ← computed from proofs           │ │
-│  │ recencyMultiplier: 0.95 ← recent usage                   │ │
-│  │ impactScore: 0.78       ← from projects                  │ │
-│  └──────────────────────────────────────────────────────────┘ │
+│ USER SKILL ENTRY │
+│ (skills) │
+│ │
+│ ┌──────────────────────────────────────────────────────────┐ │
+│ │ skill_code: "01.01.01.001" │ │
+│ │ level: 4 (C4 - Expert) │ │
+│ │ monthsExperience: 36 │ │
+│ │ lastUsedAt: 2025-09-15 │ │
+│ │ relevance: "current" │ │
+│ │ evidenceStrength: 0.85 ← computed from proofs │ │
+│ │ recencyMultiplier: 0.95 ← recent usage │ │
+│ │ impactScore: 0.78 ← from projects │ │
+│ └──────────────────────────────────────────────────────────┘ │
 └─────────────────┬───────────────────────────────────────────────┘
-                  │
-                  │ references
-                  ▼
+│
+│ references
+▼
 ┌─────────────────────────────────────────────────────────────────┐
-│               TAXONOMY ENTRY (skills_taxonomy)                  │
-│  ┌──────────────────────────────────────────────────────────┐ │
-│  │ code: "01.01.01.001" ← PRIMARY KEY                       │ │
-│  │ name: "Verbal communication - Foundational"              │ │
-│  │ catId: 1     → [U] Universal Capabilities                │ │
-│  │ subcatId: 101 → [U-COMM] Communication                   │ │
-│  │ l3Id: 1001   → Verbal communication                      │ │
-│  │ tags: ["communication", "speaking", "foundational"]      │ │
-│  │ embedding: [0.12, -0.45, ...] ← AI semantic vector       │ │
-│  └──────────────────────────────────────────────────────────┘ │
+│ TAXONOMY ENTRY (skills_taxonomy) │
+│ ┌──────────────────────────────────────────────────────────┐ │
+│ │ code: "01.01.01.001" ← PRIMARY KEY │ │
+│ │ name: "Verbal communication - Foundational" │ │
+│ │ catId: 1 → [U] Universal Capabilities │ │
+│ │ subcatId: 101 → [U-COMM] Communication │ │
+│ │ l3Id: 1001 → Verbal communication │ │
+│ │ tags: ["communication", "speaking", "foundational"] │ │
+│ │ embedding: [0.12, -0.45, ...] ← AI semantic vector │ │
+│ └──────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
-         │                    │                    │
-         │                    │                    │
-         ▼                    ▼                    ▼
-┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│  skill_l3    │    │ subcat table │    │  category    │
-│              │    │              │    │   table      │
-│ l3Id: 1001   │    │ subcatId:101 │    │  catId: 1    │
-│ "Verbal      │    │ "Communic..  │    │ "Universal   │
-│  communic.." │    │              │    │  Capabil.."  │
-└──────────────┘    └──────────────┘    └──────────────┘
+│ │ │
+│ │ │
+▼ ▼ ▼
+┌──────────────┐ ┌──────────────┐ ┌──────────────┐
+│ skill_l3 │ │ subcat table │ │ category │
+│ │ │ │ │ table │
+│ l3Id: 1001 │ │ subcatId:101 │ │ catId: 1 │
+│ "Verbal │ │ "Communic.. │ │ "Universal │
+│ communic.." │ │ │ │ Capabil.." │
+└──────────────┘ └──────────────┘ └──────────────┘
+
 ```
 
 ═════════════════════════════════════════════════════════════════════
@@ -171,26 +173,28 @@ Example for "Verbal communication" (L3):
 ## Proof & Verification Flow
 
 ```
+
 ┌────────────────────────────────────────────────────────────────┐
-│                        USER SKILL                              │
-│         "Verbal communication - Foundational" (L4)             │
+│ USER SKILL │
+│ "Verbal communication - Foundational" (L4) │
 └────────────────────────────────────────────────────────────────┘
-              │                           │
-              │ has many                  │ has many
-              ▼                           ▼
-    ┌─────────────────┐         ┌──────────────────────┐
-    │  SKILL PROOFS   │         │ VERIFICATION         │
-    │                 │         │ REQUESTS             │
-    ├─────────────────┤         ├──────────────────────┤
-    │ • Project       │         │ Status: accepted     │
-    │ • Certification │         │ Verifier: jane@co    │
-    │ • Media         │         │ Source: manager      │
-    │ • Reference     │         │ Message: "Great..."  │
-    │ • Link          │         └──────────────────────┘
-    └─────────────────┘
-              │
-              └─→ evidenceStrength = 0.85
-                  (computed based on # and quality of proofs)
+│ │
+│ has many │ has many
+▼ ▼
+┌─────────────────┐ ┌──────────────────────┐
+│ SKILL PROOFS │ │ VERIFICATION │
+│ │ │ REQUESTS │
+├─────────────────┤ ├──────────────────────┤
+│ • Project │ │ Status: accepted │
+│ • Certification │ │ Verifier: jane@co │
+│ • Media │ │ Source: manager │
+│ • Reference │ │ Message: "Great..." │
+│ • Link │ └──────────────────────┘
+└─────────────────┘
+│
+└─→ evidenceStrength = 0.85
+(computed based on # and quality of proofs)
+
 ```
 
 ═════════════════════════════════════════════════════════════════════
@@ -198,38 +202,40 @@ Example for "Verbal communication" (L3):
 ## Dashboard Widget Data Sources
 
 ```
+
 ┌──────────────────────────────────────────────────────────────────┐
-│                    DASHBOARD WIDGETS                             │
-│                   (7 visualizations)                             │
+│ DASHBOARD WIDGETS │
+│ (7 visualizations) │
 └──────────────────────────────────────────────────────────────────┘
-         │
-         ├─ CREDIBILITY PIE
-         │    Data: skills with proof_count + verification_count
-         │    Segments: Verified | Proof-only | Claim-only
-         │
-         ├─ COVERAGE HEATMAP
-         │    Data: Count skills per L1 × L2
-         │    Shows: Which domains user has expertise in
-         │
-         ├─ RELEVANCE BARS
-         │    Data: Count skills by relevance field
-         │    Segments: Obsolete | Current | Emerging
-         │
-         ├─ RECENCY SCATTER
-         │    Data: lastUsedAt vs level
-         │    Shows: Recent vs rusty skills
-         │
-         ├─ SKILL WHEEL
-         │    Data: Count skills per L1 domain (weighted)
-         │    Weight: Higher if verified/proven
-         │
-         ├─ VERIFICATION SOURCES
-         │    Data: verification_sources from requests
-         │    Segments: Self | Peer | Manager | External
-         │
-         └─ NEXT-BEST-ACTIONS
-              Data: Skills missing proofs or verifications
-              Prioritizes: Low credibility → No verification → Old
+│
+├─ CREDIBILITY PIE
+│ Data: skills with proof_count + verification_count
+│ Segments: Verified | Proof-only | Claim-only
+│
+├─ COVERAGE HEATMAP
+│ Data: Count skills per L1 × L2
+│ Shows: Which domains user has expertise in
+│
+├─ RELEVANCE BARS
+│ Data: Count skills by relevance field
+│ Segments: Obsolete | Current | Emerging
+│
+├─ RECENCY SCATTER
+│ Data: lastUsedAt vs level
+│ Shows: Recent vs rusty skills
+│
+├─ SKILL WHEEL
+│ Data: Count skills per L1 domain (weighted)
+│ Weight: Higher if verified/proven
+│
+├─ VERIFICATION SOURCES
+│ Data: verification_sources from requests
+│ Segments: Self | Peer | Manager | External
+│
+└─ NEXT-BEST-ACTIONS
+Data: Skills missing proofs or verifications
+Prioritizes: Low credibility → No verification → Old
+
 ```
 
 ═════════════════════════════════════════════════════════════════════
@@ -264,3 +270,4 @@ The implementation matches the architecture spec:
 
 The taxonomy is **production-ready** for the Individual Expertise Atlas! 🎉
 
+```

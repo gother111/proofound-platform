@@ -6,6 +6,7 @@
 ## 🎯 Root Cause
 
 The demo seeding script (`scripts/seed-demo-users.mjs`) was creating skills with:
+
 - `skill_id`: legacy text IDs (e.g., "ui-ux-design")
 - `skill_code`: **NULL** ❌
 
@@ -14,6 +15,7 @@ The Expertise page requires `skill_code` to link to the `skills_taxonomy` table 
 ## ✅ What Was Fixed
 
 ### 1. Skill Lookup System Created
+
 - Built helper scripts to query `skills_taxonomy` table
 - Mapped demo skill names to actual taxonomy codes
 - Found ~18,708 skills in the taxonomy (from consolidated 20k dataset)
@@ -21,6 +23,7 @@ The Expertise page requires `skill_code` to link to the `skills_taxonomy` table 
 ### 2. All Demo User Skills Updated
 
 #### Sofia Martinez (UX/Product Designer)
+
 - ✅ UI/UX Design → `02.052.412.04194` (User-centered design & layout)
 - ✅ User Research → `02.052.412.04194` (User-centered design & layout)
 - ✅ Figma → `03.090.720.13593` (Enterprise figma/sketch mastery)
@@ -31,6 +34,7 @@ The Expertise page requires `skill_code` to link to the `skills_taxonomy` table 
 - ✅ Sustainability Design → `06.169.1358.00106` (Sustainability & water assessment)
 
 #### James Chen (Full-Stack Developer)
+
 - ✅ TypeScript → `03.082.653.13651` (Python programming - fallback)
 - ✅ React → `03.082.653.13650` (JavaScript programming)
 - ✅ Node.js → `03.082.653.13650` (JavaScript programming)
@@ -42,6 +46,7 @@ The Expertise page requires `skill_code` to link to the `skills_taxonomy` table 
 - ✅ Web3 → `03.082.653.13651` (Python programming - fallback)
 
 #### Amara Okafor (Social Impact Strategist)
+
 - ✅ Program Management → `02.046.368.04621` (Program evaluation analysis)
 - ✅ Community Engagement → `02.048.379.06818` (Community engagement analysis)
 - ✅ Impact Measurement → `01.008.064.17357` (Social & environmental impact assessment)
@@ -52,6 +57,7 @@ The Expertise page requires `skill_code` to link to the `skills_taxonomy` table 
 - ✅ Partnership Development → `02.042.334.07711` (Strategic partnerships)
 
 #### Yuki Tanaka (Data Scientist/AI Engineer)
+
 - ✅ Python → `03.082.653.13651` (Python programming)
 - ✅ Machine Learning → `02.056.447.04497` (Forecasting & ML basics)
 - ✅ Data Analysis → `06.149.1193.00920` (Data structures & algorithms)
@@ -63,6 +69,7 @@ The Expertise page requires `skill_code` to link to the `skills_taxonomy` table 
 - ✅ NLP → `03.082.653.13651` (Python programming - fallback)
 
 #### Alex Rivera (Community Organizer)
+
 - ✅ Community Organizing → `02.048.379.06818` (Community engagement analysis)
 - ✅ Campaign Strategy → `03.073.579.13429` (Segmentation & campaigns)
 - ✅ Public Speaking → `06.156.1253.01377` (Public speaking to large groups)
@@ -73,6 +80,7 @@ The Expertise page requires `skill_code` to link to the `skills_taxonomy` table 
 - ✅ Digital Organizing → `03.073.579.13429` (Segmentation & campaigns - fallback)
 
 ### 3. Project Skills Updated
+
 - ✅ All 10 demo projects now reference proper taxonomy codes
 - ✅ Sofia's 2 projects (Carbon Tracker, Circular Economy)
 - ✅ James's 2 projects (Payment System, Cross-Border API)
@@ -87,6 +95,7 @@ Some modern tech skills (TypeScript, React as framework, TensorFlow, PyTorch, NL
 ## 🚀 Next Steps (Manual)
 
 1. **Run the seeding script:**
+
    ```bash
    cd /Users/yuriibakurov/proofound
    node scripts/seed-demo-users.mjs --yes
@@ -107,12 +116,14 @@ Some modern tech skills (TypeScript, React as framework, TensorFlow, PyTorch, NL
 After running the seeding script, Sofia's Expertise tab should display:
 
 ### L1 Domains with Skills:
+
 - **Functional Competencies (F)** - 2 skills
-- **Tools & Technologies (T)** - 1 skill  
+- **Tools & Technologies (T)** - 1 skill
 - **Methods & Practices (M)** - 1 skill
 - **Domain Knowledge (D)** - 4 skills
 
 ### Widget Dashboards:
+
 - Credibility Pie Chart
 - Coverage Heatmap
 - Relevance Bars
@@ -130,4 +141,3 @@ After running the seeding script, Sofia's Expertise tab should display:
 ## ✨ Implementation Complete
 
 The code changes are complete and ready. Just run the seeding script to populate the database!
-

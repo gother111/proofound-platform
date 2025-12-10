@@ -37,14 +37,14 @@ L1: Universal Capabilities (U)
 
 These are the **foundational categories** that organize all human expertise:
 
-| Code | Domain Name | Description | # of L4 Skills |
-|------|-------------|-------------|----------------|
-| **U** | **Universal Capabilities** | Transferable soft skills (communication, leadership, problem-solving) | ~2,688 |
-| **F** | **Functional Competencies** | Professional functions (finance, marketing, HR, operations) | ~5,040 |
-| **T** | **Tools & Technologies** | Software, platforms, and technical tools | ~3,920 |
-| **L** | **Languages & Culture** | Language proficiency and cultural competencies | ~1,568 |
-| **M** | **Methods & Practices** | Methodologies and frameworks (Agile, Design Thinking, etc.) | ~3,248 |
-| **D** | **Domain Knowledge** | Industry-specific knowledge (Healthcare, Finance, Climate, etc.) | ~3,472 |
+| Code  | Domain Name                 | Description                                                           | # of L4 Skills |
+| ----- | --------------------------- | --------------------------------------------------------------------- | -------------- |
+| **U** | **Universal Capabilities**  | Transferable soft skills (communication, leadership, problem-solving) | ~2,688         |
+| **F** | **Functional Competencies** | Professional functions (finance, marketing, HR, operations)           | ~5,040         |
+| **T** | **Tools & Technologies**    | Software, platforms, and technical tools                              | ~3,920         |
+| **L** | **Languages & Culture**     | Language proficiency and cultural competencies                        | ~1,568         |
+| **M** | **Methods & Practices**     | Methodologies and frameworks (Agile, Design Thinking, etc.)           | ~3,248         |
+| **D** | **Domain Knowledge**        | Industry-specific knowledge (Healthcare, Finance, Climate, etc.)      | ~3,472         |
 
 **Total L4 Skills:** ~19,936
 
@@ -70,6 +70,7 @@ skills_taxonomy (L4)
 **Purpose:** Stores the 6 top-level domains
 
 **Schema:**
+
 ```typescript
 {
   catId: integer (Primary Key)           // 1-6
@@ -86,11 +87,12 @@ skills_taxonomy (L4)
 ```
 
 **Example Row:**
+
 ```json
 {
   "catId": 1,
   "slug": "universal-capabilities",
-  "nameI18n": {"en": "Universal Capabilities"},
+  "nameI18n": { "en": "Universal Capabilities" },
   "icon": "✨",
   "displayOrder": 1,
   "status": "active"
@@ -104,6 +106,7 @@ skills_taxonomy (L4)
 **Purpose:** Categories within each L1 domain (e.g., Communication, Collaboration)
 
 **Schema:**
+
 ```typescript
 {
   subcatId: integer (Primary Key)
@@ -119,17 +122,19 @@ skills_taxonomy (L4)
 ```
 
 **Example Row:**
+
 ```json
 {
   "subcatId": 101,
   "catId": 1,
   "slug": "u-comm",
-  "nameI18n": {"en": "Communication"},
+  "nameI18n": { "en": "Communication" },
   "displayOrder": 1
 }
 ```
 
 **L2 Examples for Universal Capabilities (U):**
+
 - U-COMM: Communication
 - U-COLL: Collaboration & Teamwork
 - U-LEAD: Leadership & People Enablement
@@ -154,6 +159,7 @@ skills_taxonomy (L4)
 **Purpose:** Subcategories within L2 (specific skill areas)
 
 **Schema:**
+
 ```typescript
 {
   l3Id: integer (Primary Key)
@@ -169,17 +175,19 @@ skills_taxonomy (L4)
 ```
 
 **Example Row:**
+
 ```json
 {
   "l3Id": 1001,
   "subcatId": 101,
   "slug": "verbal-communication",
-  "nameI18n": {"en": "Verbal communication"},
+  "nameI18n": { "en": "Verbal communication" },
   "displayOrder": 1
 }
 ```
 
 **L3 Examples for Communication (U-COMM):**
+
 - Verbal communication
 - Written communication
 - Nonverbal cues & body language
@@ -196,6 +204,7 @@ skills_taxonomy (L4)
 **Purpose:** Granular, specific skills (~20,000 total)
 
 **Schema:**
+
 ```typescript
 {
   code: text (Primary Key)               // "01.03.01.142" (hierarchical code)
@@ -218,6 +227,7 @@ skills_taxonomy (L4)
 ```
 
 **Example Row:**
+
 ```json
 {
   "code": "01.01.01.001",
@@ -226,7 +236,7 @@ skills_taxonomy (L4)
   "l3Id": 1001,
   "skillId": 1,
   "slug": "verbal-communication-foundational",
-  "nameI18n": {"en": "Verbal communication - Foundational"},
+  "nameI18n": { "en": "Verbal communication - Foundational" },
   "tags": ["communication", "speaking", "foundational"],
   "status": "active"
 }
@@ -235,6 +245,7 @@ skills_taxonomy (L4)
 **L4 Skill Patterns:**
 
 L4 skills are generated with various patterns:
+
 1. **Proficiency Levels:** Foundational → Intermediate → Advanced → Expert → Master
 2. **Context-Specific:** "for Teams", "for Leaders", "in Remote Settings", "in Crisis"
 3. **Cross-Cutting:** Cross-culturally, in High-Pressure Situations
@@ -249,6 +260,7 @@ L4 skills are generated with various patterns:
 **Purpose:** Each user's personal skill entries referencing the taxonomy
 
 **Schema:**
+
 ```typescript
 {
   id: uuid (Primary Key)
@@ -269,6 +281,7 @@ L4 skills are generated with various patterns:
 ```
 
 **Key Constraint:**
+
 ```sql
 ALTER TABLE skills
 ADD CONSTRAINT fk_skills_skill_code
@@ -278,6 +291,7 @@ ON DELETE SET NULL;
 ```
 
 This ensures:
+
 - ✅ Users can only select **valid L4 skills** from the taxonomy
 - ✅ If a skill is merged/deprecated, user skills aren't orphaned
 - ✅ Enables relationship-based queries in Supabase
@@ -396,20 +410,20 @@ Step 1: Select L1 Domain
   [✨ Universal Capabilities] [⚙️ Functional Competencies]
   [🛠️ Tools & Technologies]  [🗣️ Languages & Culture]
   [📋 Methods & Practices]    [🏢 Domain Knowledge]
-  
+
 Step 2: Select L2 Category
   → User clicked "Universal Capabilities"
   [Communication] [Collaboration] [Leadership]
   [Coaching] [Negotiation] [Influence]...
-  
+
 Step 3: Select L3 Subcategory
   → User clicked "Communication"
   [Verbal communication] [Written communication]
   [Nonverbal cues] [Active listening]...
-  
+
 Step 4: Choose/Create L4 Skill + Details
   → User clicked "Verbal communication"
-  
+
   Option A: Select from curated L4 skills:
   • Verbal communication - Foundational
   • Verbal communication - Intermediate
@@ -417,10 +431,10 @@ Step 4: Choose/Create L4 Skill + Details
   • Verbal communication for Teams
   • Verbal communication in Crisis
   ...
-  
+
   Option B: Create custom L4 skill:
   "Verbal communication for climate negotiations"
-  
+
   Then enter:
   - Level: 0-5 (C1-C5)
   - Last Used: Date
@@ -484,6 +498,7 @@ Step 4: Choose/Create L4 Skill + Details
 ## 🚀 What's Next?
 
 **Implemented & Working:**
+
 - ✅ Database schema
 - ✅ Taxonomy seeding (20K skills)
 - ✅ API endpoints
@@ -494,6 +509,7 @@ Step 4: Choose/Create L4 Skill + Details
 - ✅ Verification dashboard
 
 **Future Enhancements:**
+
 - 🔜 Semantic search using embeddings
 - 🔜 Skill recommendations (adjacency graph)
 - 🔜 LinkedIn/CV auto-population
@@ -506,6 +522,7 @@ Step 4: Choose/Create L4 Skill + Details
 ## 📝 Summary
 
 The taxonomy is **correctly implemented** with:
+
 - **4 clear levels** of increasing specificity
 - **Proper database normalization** and foreign keys
 - **Consistent API layer** with field mapping
@@ -514,4 +531,3 @@ The taxonomy is **correctly implemented** with:
 - **Extensibility** for custom skills
 
 The architecture supports both **curated taxonomy** (20K L4 skills) and **user-created skills**, giving users flexibility while maintaining structure. 🎯
-

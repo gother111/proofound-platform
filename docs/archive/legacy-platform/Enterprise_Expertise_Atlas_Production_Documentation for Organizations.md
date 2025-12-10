@@ -1,8 +1,8 @@
 ---
-title: "Enterprise Expertise Atlas — Production Documentation"
-version: "1.0"
-status: "Ready for implementation"
-date: "2025-10-30"
+title: 'Enterprise Expertise Atlas — Production Documentation'
+version: '1.0'
+status: 'Ready for implementation'
+date: '2025-10-30'
 owners:
   - product: Proofound
   - design: Org Atlas squad
@@ -21,25 +21,27 @@ This document consolidates the **latest agreed spec** (UX, data, taxonomy, scori
 # 1) Scope & Non-Goals
 
 **In scope**
-- Organization view only (enterprise atlas).  
-- L1→L2→L3 taxonomy (fixed); L4 is **free text** on L3 cards (no curated list).  
-- Scoring model, evidence handling, and dashboard visualizations.  
-- ESG integrated at capability and dashboard levels.  
+
+- Organization view only (enterprise atlas).
+- L1→L2→L3 taxonomy (fixed); L4 is **free text** on L3 cards (no curated list).
+- Scoring model, evidence handling, and dashboard visualizations.
+- ESG integrated at capability and dashboard levels.
 - Figma implementation notes to ensure **visible** prototypes.
 
 **Out of scope (for now)**
-- Individual atlas details (covered elsewhere).  
-- Automated proficiency inference; external data ingestion; HRIS integrations.  
+
+- Individual atlas details (covered elsewhere).
+- Automated proficiency inference; external data ingestion; HRIS integrations.
 - Fine-grained policy engines per region (future).
 
 ---
 
 # 2) Core Principles
 
-1. **In-use filter**: Only skills/methods **linked to actual work artifacts** (tickets, batches, PRs, engagements) roll up.  
-2. **Explainability**: Every roll-up must show **why** it counts (evidence + owners + last update).  
-3. **Stability**: Model **capabilities (what)**, not processes/org chart (how/who).  
-4. **Resilience**: Highlight **coverage** (bus-factor), **single-holder risks**, and **evidence freshness**.  
+1. **In-use filter**: Only skills/methods **linked to actual work artifacts** (tickets, batches, PRs, engagements) roll up.
+2. **Explainability**: Every roll-up must show **why** it counts (evidence + owners + last update).
+3. **Stability**: Model **capabilities (what)**, not processes/org chart (how/who).
+4. **Resilience**: Highlight **coverage** (bus-factor), **single-holder risks**, and **evidence freshness**.
 5. **ESG first-class**: Metrics appear where they matter (delivery, tech/data, assurance) and at a snapshot.
 
 ---
@@ -48,10 +50,10 @@ This document consolidates the **latest agreed spec** (UX, data, taxonomy, scori
 
 **L1 grid (3×2)** → **L2 drawer** → **L3 cards board** → **L3 detail modal**.
 
-- **L1 (Domains)**: What we offer; How we deliver; Customers & market; Tech & data; Assurance; Innovation.  
-- **L2 drawer**: list of sub-capabilities with pills (**L3 count, Avg maturity, Coverage, Open risks**).  
-- **L3 cards**: the primary editing surface; include **free-text L4** and decision stats.  
-- **Detail modal**: tabs *Overview, KPIs, Evidence, ESG, Notes*.
+- **L1 (Domains)**: What we offer; How we deliver; Customers & market; Tech & data; Assurance; Innovation.
+- **L2 drawer**: list of sub-capabilities with pills (**L3 count, Avg maturity, Coverage, Open risks**).
+- **L3 cards**: the primary editing surface; include **free-text L4** and decision stats.
+- **Detail modal**: tabs _Overview, KPIs, Evidence, ESG, Notes_.
 
 **About panel**: collapsible, plain-English explainer (capability map, in-use aggregation, proof & ESG, gaps→decisions).
 
@@ -59,13 +61,13 @@ This document consolidates the **latest agreed spec** (UX, data, taxonomy, scori
 
 # 4) L3 Card — Content & Stats
 
-- Header: **Title**, one-line definition, **Criticality** (Core/Support/Experimental), **Maturity Dial (1–5)**.  
-- Tags: **Methods/Frameworks**, **Systems/Tools**.  
-- **KPI chips** (2–4).  
-- **ESG row** (optional; material metrics only).  
-- **Coverage** (people count; bus-factor), **Evidence count**, **Utilization %** (last quarter), **Last proof date**.  
-- **Risk** (Low/Med/High) with badges: `S` Single-holder, `C` Compliance-critical, `E` Evidence stale.  
-- **L4 (free text)**: “Granular skills / techniques”.  
+- Header: **Title**, one-line definition, **Criticality** (Core/Support/Experimental), **Maturity Dial (1–5)**.
+- Tags: **Methods/Frameworks**, **Systems/Tools**.
+- **KPI chips** (2–4).
+- **ESG row** (optional; material metrics only).
+- **Coverage** (people count; bus-factor), **Evidence count**, **Utilization %** (last quarter), **Last proof date**.
+- **Risk** (Low/Med/High) with badges: `S` Single-holder, `C` Compliance-critical, `E` Evidence stale.
+- **L4 (free text)**: “Granular skills / techniques”.
 - Actions: three-dot **Edit, Add evidence, Manage KPIs, Archive**.
 
 **Why these stats**: drive staffing, continuity, credibility, and improvement prioritization.
@@ -74,13 +76,14 @@ This document consolidates the **latest agreed spec** (UX, data, taxonomy, scori
 
 # 5) Scoring & Definitions
 
-- **Maturity (1–5)**: set on L3 card.  
-- **Utilization (0–1)**: share of time/volume tagged to this L3 last period.  
-- **Verification (0–1)**: artifact 0.25 / KPI 0.5 / certification 0.75 / audited cert 1.0.  
-- **Coverage (1..n)**: verified in-use holders; **bus-factor = min(Coverage, 3) / 3**.  
+- **Maturity (1–5)**: set on L3 card.
+- **Utilization (0–1)**: share of time/volume tagged to this L3 last period.
+- **Verification (0–1)**: artifact 0.25 / KPI 0.5 / certification 0.75 / audited cert 1.0.
+- **Coverage (1..n)**: verified in-use holders; **bus-factor = min(Coverage, 3) / 3**.
 - **Criticality weight**: Core 2.0, Support 1.0, Experimental 0.5.
 
-**L3 score**  
+**L3 score**
+
 ```
 score_L3 = (Maturity/5) × Utilization × Verification × (min(Coverage,3)/3) × CriticalityWeight
 ```
@@ -96,13 +99,13 @@ score_L3 = (Maturity/5) × Utilization × Verification × (min(Coverage,3)/3) ×
 
 The Org dashboard **replaces** the “Coming soon” hero and is visible by default.
 
-1. **Action Bar (Top 3)** — generated insights w/ primary action.  
-2. **KPI Strip (6 tiles)** — Capability Health Index, Coverage Risk, Evidence Freshness, Compliance Readiness, ESG Pulse, On-time Delivery.  
-3. **Capability Heatmap (L1×L2)** — color: Avg L3 Maturity; badge: Open risks.  
-4. **Coverage & Bus-Factor** — stacked bars + Single-holder list (owner, ETA).  
-5. **Utilization vs Demand** — clustered bars; over/under flags.  
-6. **Value Stream Performance** — cycle-time control chart + defect rate; “Investigate bottleneck” deep-link.  
-7. **Compliance Radar** — ISO 9001/27001, GDPR/Privacy, Sector Reg, Buyer Codes; list of audits, expiries, findings.  
+1. **Action Bar (Top 3)** — generated insights w/ primary action.
+2. **KPI Strip (6 tiles)** — Capability Health Index, Coverage Risk, Evidence Freshness, Compliance Readiness, ESG Pulse, On-time Delivery.
+3. **Capability Heatmap (L1×L2)** — color: Avg L3 Maturity; badge: Open risks.
+4. **Coverage & Bus-Factor** — stacked bars + Single-holder list (owner, ETA).
+5. **Utilization vs Demand** — clustered bars; over/under flags.
+6. **Value Stream Performance** — cycle-time control chart + defect rate; “Investigate bottleneck” deep-link.
+7. **Compliance Radar** — ISO 9001/27001, GDPR/Privacy, Sector Reg, Buyer Codes; list of audits, expiries, findings.
 8. **ESG Snapshot** — Scope 1/2/3 (or relevant intensity), Safety (TRIR/LTIFR), Governance control pass-rate with sparklines.
 
 **Interaction**: each widget has “Go fix it” linking to the exact filtered L2/L3 view.
@@ -149,7 +152,7 @@ The Org dashboard **replaces** the “Coming soon” hero and is visible by defa
     "unit": "string",
     "target": "number",
     "direction": "UP_IS_GOOD|DOWN_IS_GOOD",
-    "values": [{"date":"iso","value":0}],
+    "values": [{ "date": "iso", "value": 0 }],
     "source": "string"
   },
 
@@ -157,7 +160,7 @@ The Org dashboard **replaces** the “Coming soon” hero and is visible by defa
     "id": "string",
     "name": "SCOPE_1|SCOPE_2|SCOPE_3|TRIR|LTIFR|GOV_PASSRATE|CUSTOM",
     "unit": "tCO2e|rate|%",
-    "values": [{"date":"iso","value":0}],
+    "values": [{ "date": "iso", "value": 0 }],
     "material": true
   },
 
@@ -171,8 +174,9 @@ The Org dashboard **replaces** the “Coming soon” hero and is visible by defa
 }
 ```
 
-**Coding**  
-- IDs: `ORG.L3.<DOMAIN>.<L2NN>.<MM>` for taxonomy; entities use UUIDs.  
+**Coding**
+
+- IDs: `ORG.L3.<DOMAIN>.<L2NN>.<MM>` for taxonomy; entities use UUIDs.
 - Variables in UI: `eaOrg.view`, `eaOrg.lane`, `eaOrg.showESG`, `eaOrg.maturity`, `eaOrg.coverage`, `eaOrg.evidenceCount`, `eaOrg.utilization`, `eaOrg.openRisks`.
 
 **Evidence levels** (ordered): `ARTIFACT < KPI < CERT < AUDITED_CERT`.
@@ -181,50 +185,50 @@ The Org dashboard **replaces** the “Coming soon” hero and is visible by defa
 
 # 8) ESG Integration
 
-- **On cards**: optional ESG row with only **material** metrics for that L3.  
-- **On dashboard**: ESG Snapshot tiles + trends.  
+- **On cards**: optional ESG row with only **material** metrics for that L3.
+- **On dashboard**: ESG Snapshot tiles + trends.
 - **In detail modal (ESG tab)**: metric selection, data lineage note, link to assurance/evidence.
 
 ---
 
 # 9) Permissions & Audit
 
-- Editors: create/edit L3 cards, KPIs, evidence; viewers: read-only.  
-- All changes logged with `who/when/what`.  
+- Editors: create/edit L3 cards, KPIs, evidence; viewers: read-only.
+- All changes logged with `who/when/what`.
 - Evidence requires a **verifier** (peer or system).
 
 ---
 
 # 10) Accessibility & i18n
 
-- WCAG AA; focus rings; keyboardable menus/chevrons; target ≥44px.  
+- WCAG AA; focus rings; keyboardable menus/chevrons; target ≥44px.
 - All user strings translatable; number/date localized; language scale switcher if needed.
 
 ---
 
 # 11) Figma Implementation Notes (visibility)
 
-- Place the **dashboard widgets directly on canvas** (no hidden variants/off-canvas).  
-- Set this frame as **prototype start**.  
-- Default wiring: first L1 → opens L2 drawer; first L2 → opens L3 board prefilled with **≥6** L3 cards (mock data).  
+- Place the **dashboard widgets directly on canvas** (no hidden variants/off-canvas).
+- Set this frame as **prototype start**.
+- Default wiring: first L1 → opens L2 drawer; first L2 → opens L3 board prefilled with **≥6** L3 cards (mock data).
 - **Do not render** taxonomy markdown; keep for internal reference only.
 
 ---
 
 # 12) Success Criteria (Go/No-Go)
 
-- Dashboard replaces hero; visible with mock data; deep-links open correct boards.  
-- Adding/editing an L3 updates **maturity, coverage, utilization** and recalculates roll-ups.  
-- Single-holder risks and evidence stale flags appear correctly.  
-- ESG Snapshot displays data when configured; hides if none.  
+- Dashboard replaces hero; visible with mock data; deep-links open correct boards.
+- Adding/editing an L3 updates **maturity, coverage, utilization** and recalculates roll-ups.
+- Single-holder risks and evidence stale flags appear correctly.
+- ESG Snapshot displays data when configured; hides if none.
 - All UI meets accessibility checks.
 
 ---
 
 # 13) Risks & Mitigations
 
-- **Data sparsity** → show placeholders; encourage evidence upload with “stale” badge.  
-- **Over-complexity** → keep L1 fixed; L2 count bounded; L3 concise with free-text L4.  
+- **Data sparsity** → show placeholders; encourage evidence upload with “stale” badge.
+- **Over-complexity** → keep L1 fixed; L2 count bounded; L3 concise with free-text L4.
 - **Gaming** → require artifact links and verifiers for roll-ups.
 
 ---
@@ -234,6 +238,7 @@ The Org dashboard **replaces** the “Coming soon” hero and is visible by defa
 > Fixed, region-agnostic; L4 is free text on the L3 card.
 
 ## ORG.L1.OFFER — Offering Expertise (What we sell)
+
 - `ORG.L2.OFFER.01` — Portfolio & Catalog Management
   - `ORG.L3.OFFER.01.01` — Product family taxonomy
   - `ORG.L3.OFFER.01.02` — SKU/naming governance
@@ -284,6 +289,7 @@ The Org dashboard **replaces** the “Coming soon” hero and is visible by defa
   - `ORG.L3.OFFER.12.03` — Release communications
 
 ## ORG.L1.DELIV — Operational Delivery (How we make/fulfil/support)
+
 - `ORG.L2.DELIV.01` — Production/Service Execution
   - `ORG.L3.DELIV.01.01` — Standard work/SOPs
   - `ORG.L3.DELIV.01.02` — Takt/cycle planning
@@ -334,6 +340,7 @@ The Org dashboard **replaces** the “Coming soon” hero and is visible by defa
   - `ORG.L3.DELIV.12.03` — ASN/EDI integration
 
 ## ORG.L1.CUST — Customer & Market (Who we serve; how we win/keep)
+
 - `ORG.L2.CUST.01` — Market & Competitive Intelligence
   - `ORG.L3.CUST.01.01` — TAM/SAM/SOM modeling
   - `ORG.L3.CUST.01.02` — Competitive battlecards
@@ -384,6 +391,7 @@ The Org dashboard **replaces** the “Coming soon” hero and is visible by defa
   - `ORG.L3.CUST.12.03` — Relationship multithreading
 
 ## ORG.L1.TECH — Tech & Data Enablement (What powers delivery)
+
 - `ORG.L2.TECH.01` — Enterprise Architecture & Roadmaps
   - `ORG.L3.TECH.01.01` — Capability-to-system mapping
   - `ORG.L3.TECH.01.02` — Standards/guardrails registry
@@ -434,6 +442,7 @@ The Org dashboard **replaces** the “Coming soon” hero and is visible by defa
   - `ORG.L3.TECH.12.03` — Audit/assurance workflow
 
 ## ORG.L1.ASSURE — Assurance (Risk • Quality • Compliance • Governance)
+
 - `ORG.L2.ASSURE.01` — Quality Management System (QMS)
   - `ORG.L3.ASSURE.01.01` — Document control
   - `ORG.L3.ASSURE.01.02` — Nonconformance/CAPA
@@ -484,6 +493,7 @@ The Org dashboard **replaces** the “Coming soon” hero and is visible by defa
   - `ORG.L3.ASSURE.12.03` — Incident/near-miss reporting
 
 ## ORG.L1.INNOV — Adaptive & Innovation (How we evolve)
+
 - `ORG.L2.INNOV.01` — Research & Applied Science
   - `ORG.L3.INNOV.01.01` — Research agenda/hypotheses
   - `ORG.L3.INNOV.01.02` — Lab protocols/ethics
@@ -537,17 +547,17 @@ The Org dashboard **replaces** the “Coming soon” hero and is visible by defa
 
 # 15) Glossary
 
-- **Capability**: stable “ability to do X” that delivers value.  
-- **Bus-factor**: number of people whose loss would break the capability (we cap at 3).  
-- **Evidence**: artifacts proving in-use performance (tickets, audits, certs, KPIs).  
+- **Capability**: stable “ability to do X” that delivers value.
+- **Bus-factor**: number of people whose loss would break the capability (we cap at 3).
+- **Evidence**: artifacts proving in-use performance (tickets, audits, certs, KPIs).
 - **Material ESG**: metrics that meaningfully affect value or compliance for a capability.
 
 ---
 
 # 16) Open follow-ups (post-MVP)
 
-- HRIS/ATS integration for utilization & coverage.  
-- Automated artifact ingestion (Git, JIRA, MES, LIMS).  
+- HRIS/ATS integration for utilization & coverage.
+- Automated artifact ingestion (Git, JIRA, MES, LIMS).
 - Regional governance modes (EU AI/DE Works Council/CN PIPL).
 
 ---

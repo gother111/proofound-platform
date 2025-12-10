@@ -8,6 +8,7 @@
 ### Phase 1: Database Schema & API Foundation
 
 #### 1.1 Database Schema
+
 - ✅ Created `skill_proofs` table in Drizzle schema (`src/db/schema.ts`)
   - Fields: `id`, `skill_id`, `profile_id`, `proof_type`, `title`, `description`, `url`, `file_path`, `issued_date`, `verified`, `metadata`
   - Proof types: `project`, `certification`, `media`, `reference`, `link`
@@ -22,6 +23,7 @@
   - Helper functions (update timestamps, expire requests)
 
 #### 1.2 Proofs API Endpoints
+
 - ✅ **GET** `/api/expertise/user-skills/[id]/proofs`
   - Fetches all proofs for a skill
   - Returns proofs sorted by created_at (descending)
@@ -34,6 +36,7 @@
   - Validates ownership
 
 #### 1.3 Verification Request API Endpoints
+
 - ✅ **GET** `/api/expertise/user-skills/[id]/verification-request`
   - Fetches verification requests for a skill
   - Returns verification status and requests list
@@ -45,6 +48,7 @@
 ### Phase 2: UI Integration
 
 #### 2.1 Edit Skill Window - Proofs
+
 - ✅ Loads proofs from API when skill opens
 - ✅ Add proof form with all fields (type, title, description, URL, issued date)
 - ✅ Delete proof functionality with API integration
@@ -58,6 +62,7 @@
 ### Phase 3: Complete Verification UI (DONE)
 
 #### 3.1 Edit Skill Window - Verification Section
+
 - ⚠️ Update `handleRequestVerification` in `EditSkillWindow.tsx`
   - Replace placeholder alert with real form
   - Form fields: verifier email, source, message
@@ -69,6 +74,7 @@
   - Verifier email and source
 
 #### 3.2 Verification Response Endpoint ✅ COMPLETE
+
 - ✅ Created `/src/app/api/expertise/verification/[requestId]/respond/route.ts`
 - ✅ Implemented POST endpoint
   - Accept or decline verification requests
@@ -80,6 +86,7 @@
 ### Phase 4: Widget Data Calculations
 
 #### 4.1 Update Server-Side Widget Calculations
+
 **File:** `src/app/app/i/expertise/page.tsx`
 
 Current state: Widget calculations have TODOs for proof/verification checks
@@ -91,6 +98,7 @@ const hasVerification = false; // TODO: Check verification status
 ```
 
 **Required changes:**
+
 1. Fetch proof counts for all user skills (join or aggregation)
 2. Fetch verification counts for all user skills
 3. Update `calculateWidgetData()` to use real data:
@@ -153,34 +161,42 @@ skills.forEach((skill) => {
 ```
 
 #### 4.2 Add Proof/Verification Counts to Skills Query
+
 **File:** `src/app/app/i/expertise/page.tsx` (line ~31)
 
 Current query:
+
 ```typescript
 const { data: userSkills } = await supabase
   .from('skills')
-  .select(`
+  .select(
+    `
     *,
     taxonomy:skill_code (*)
-  `)
+  `
+  )
   .eq('profile_id', user.id);
 ```
 
 **Updated query:**
+
 ```typescript
 const { data: userSkills } = await supabase
   .from('skills')
-  .select(`
+  .select(
+    `
     *,
     taxonomy:skill_code (*),
     proofs:skill_proofs(count),
     verifications:skill_verification_requests!inner(count)
-  `)
+  `
+  )
   .eq('profile_id', user.id)
   .eq('skill_verification_requests.status', 'accepted');
 ```
 
 Or use separate aggregation queries for better performance:
+
 ```typescript
 // Fetch skills
 const { data: userSkills } = await supabase
@@ -194,10 +210,13 @@ const { data: proofCounts } = await supabase
   .select('skill_id')
   .eq('profile_id', user.id);
 
-const proofCountMap = proofCounts?.reduce((acc, { skill_id }) => {
-  acc[skill_id] = (acc[skill_id] || 0) + 1;
-  return acc;
-}, {} as Record<string, number>);
+const proofCountMap = proofCounts?.reduce(
+  (acc, { skill_id }) => {
+    acc[skill_id] = (acc[skill_id] || 0) + 1;
+    return acc;
+  },
+  {} as Record<string, number>
+);
 
 // Fetch verification counts
 const { data: verifications } = await supabase
@@ -206,13 +225,16 @@ const { data: verifications } = await supabase
   .eq('requester_profile_id', user.id)
   .eq('status', 'accepted');
 
-const verificationCountMap = verifications?.reduce((acc, { skill_id }) => {
-  acc[skill_id] = (acc[skill_id] || 0) + 1;
-  return acc;
-}, {} as Record<string, number>);
+const verificationCountMap = verifications?.reduce(
+  (acc, { skill_id }) => {
+    acc[skill_id] = (acc[skill_id] || 0) + 1;
+    return acc;
+  },
+  {} as Record<string, number>
+);
 
 // Attach counts to skills
-const enrichedSkills = userSkills?.map(skill => ({
+const enrichedSkills = userSkills?.map((skill) => ({
   ...skill,
   proof_count: proofCountMap?.[skill.id] || 0,
   verification_count: verificationCountMap?.[skill.id] || 0,
@@ -222,6 +244,7 @@ const enrichedSkills = userSkills?.map(skill => ({
 ### Phase 5: Filter Logic Updates
 
 #### 5.1 Update Filtered Skills Logic
+
 **File:** `src/app/app/i/expertise/ExpertiseAtlasClient.tsx` (lines ~50-74)
 
 Current state: Filters have placeholder TODOs
@@ -240,13 +263,14 @@ if (filters.status !== 'all') {
 ```
 
 **Required change:**
+
 ```typescript
 // Apply status filter (credibility)
 if (filters.status !== 'all') {
-  filtered = filtered.filter(skill => {
+  filtered = filtered.filter((skill) => {
     const hasProof = (skill.proof_count || 0) > 0;
     const hasVerification = (skill.verification_count || 0) > 0;
-    
+
     if (filters.status === 'verified') return hasProof && hasVerification;
     if (filters.status === 'proofOnly') return hasProof && !hasVerification;
     if (filters.status === 'claimOnly') return !hasProof && !hasVerification;
@@ -258,20 +282,22 @@ if (filters.status !== 'all') {
 ## 📊 Current System Capabilities
 
 ### What Works Now
+
 ✅ Users can add proofs to their skills (5 types)  
 ✅ Users can delete proofs from their skills  
 ✅ Proofs are stored in database with full metadata  
 ✅ Users can request skill verification  
 ✅ Verification requests are stored in database  
 ✅ API enforces ownership and security  
-✅ Row-Level Security (RLS) protects data  
+✅ Row-Level Security (RLS) protects data
 
 ### What Needs Real Data
+
 ⚠️ Credibility Status Pie - shows placeholder data  
 ⚠️ Verification Sources Donut - shows placeholder data  
 ⚠️ Skill Wheel - not weighted by proof/verification  
 ⚠️ Next-Best-Actions - not detecting missing proofs  
-⚠️ Dashboard filters - credibility filters disabled  
+⚠️ Dashboard filters - credibility filters disabled
 
 ## 🎯 Next Steps (Priority Order)
 
@@ -279,16 +305,13 @@ if (filters.status !== 'all') {
    - Modify `calculateWidgetData()` in `page.tsx`
    - Add proof/verification count queries
    - Remove all TODOs
-   
 2. **Update filter logic** (15 min)
    - Fix credibility status filtering in `ExpertiseAtlasClient.tsx`
    - Enable "verified", "proof-only", "claim-only" filters
-   
 3. **Complete verification UI** (45 min)
    - Add verification request form to `EditSkillWindow.tsx`
    - Display pending/accepted verification requests
    - Show verifier details and status
-   
 4. **Create verification response endpoint** (30 min)
    - Build `/api/expertise/verification/[requestId]/respond/route.ts`
    - Handle accept/decline actions
@@ -303,6 +326,7 @@ if (filters.status !== 'all') {
 ## 🧪 Testing Checklist
 
 ### Proofs
+
 - [x] Add proof (API works)
 - [x] Delete proof (API works)
 - [x] Proofs display in UI
@@ -310,6 +334,7 @@ if (filters.status !== 'all') {
 - [ ] Proof counts affect Skill Wheel weights
 
 ### Verifications
+
 - [x] Request verification (API works)
 - [ ] Request verification (UI form)
 - [ ] Verification requests display in UI
@@ -319,6 +344,7 @@ if (filters.status !== 'all') {
 - [ ] Verification sources populate Sources widget
 
 ### Dashboard
+
 - [ ] Credibility pie shows real distribution
 - [ ] Verification sources shows real data
 - [ ] Skill wheel uses proof/verification weighting
@@ -343,24 +369,25 @@ supabase db push
 
 ```sql
 -- Check tables exist
-SELECT table_name 
-FROM information_schema.tables 
+SELECT table_name
+FROM information_schema.tables
 WHERE table_name IN ('skill_proofs', 'skill_verification_requests');
 
 -- Check RLS is enabled
-SELECT tablename, rowsecurity 
-FROM pg_tables 
+SELECT tablename, rowsecurity
+FROM pg_tables
 WHERE tablename IN ('skill_proofs', 'skill_verification_requests');
 
 -- Check indexes
-SELECT indexname 
-FROM pg_indexes 
+SELECT indexname
+FROM pg_indexes
 WHERE tablename IN ('skill_proofs', 'skill_verification_requests');
 ```
 
 ## 🔒 Security Features
 
 ### Row-Level Security (RLS)
+
 - ✅ Users can only view their own proofs
 - ✅ Users can only add proofs to their own skills
 - ✅ Users can only delete their own proofs
@@ -369,6 +396,7 @@ WHERE tablename IN ('skill_proofs', 'skill_verification_requests');
 - ✅ Only verifiers can respond to requests
 
 ### Data Validation
+
 - ✅ Proof type must be one of 5 valid types
 - ✅ Verifier source must be peer/manager/external
 - ✅ Verification status must be pending/accepted/declined/expired
@@ -381,17 +409,14 @@ WHERE tablename IN ('skill_proofs', 'skill_verification_requests');
    - Send email when verification request created
    - Send email when request is accepted/declined
    - Use Resend integration
-   
 2. **Verification Dashboard Page**
    - `/app/i/verifications/page.tsx`
    - Incoming requests (respond here)
    - Outgoing requests (track status)
-   
 3. **File Upload for Proofs**
    - Supabase Storage integration
    - Upload certificates, documents
    - Store `file_path` in proofs
-   
 4. **Advanced Verification Features**
    - Verification expiry handling
    - Reminder emails for pending requests
@@ -401,22 +426,26 @@ WHERE tablename IN ('skill_proofs', 'skill_verification_requests');
 ## 📦 Files Created/Modified
 
 ### New Files
+
 - ✅ `src/db/migrations/20250130_skill_proofs_and_verifications.sql`
 - ✅ `src/app/api/expertise/user-skills/[id]/proofs/[proofId]/route.ts`
 - ✅ `PROOFS_AND_VERIFICATIONS_PROGRESS.md` (this file)
 
 ### Modified Files
+
 - ✅ `src/db/schema.ts` - Added `skillProofs` and `skillVerificationRequests` tables
 - ✅ `src/app/api/expertise/user-skills/[id]/proofs/route.ts` - Implemented GET/POST
 - ✅ `src/app/api/expertise/user-skills/[id]/verification-request/route.ts` - Implemented GET/POST
 - ✅ `src/app/app/i/expertise/components/EditSkillWindow.tsx` - Integrated proofs UI
 
 ### Files to Modify (Remaining)
+
 - ⚠️ `src/app/app/i/expertise/page.tsx` - Update widget calculations
 - ⚠️ `src/app/app/i/expertise/ExpertiseAtlasClient.tsx` - Fix filter logic
 - ⚠️ `src/app/app/i/expertise/components/EditSkillWindow.tsx` - Add verification UI
 
 ### Files to Create (Optional)
+
 - ⚠️ `src/app/api/expertise/verification/[requestId]/respond/route.ts` - Respond to requests
 - ⚠️ `src/app/app/i/verifications/page.tsx` - Verification dashboard
 - ⚠️ `src/emails/VerificationRequest.tsx` - Email template
@@ -433,5 +462,3 @@ WHERE tablename IN ('skill_proofs', 'skill_verification_requests');
 **Estimated time to complete remaining work:** 2-3 hours
 
 The foundation is solid! Once the widget calculations and filter logic are updated, the dashboard will show real credibility data and the system will be fully functional for MVP.
-
-

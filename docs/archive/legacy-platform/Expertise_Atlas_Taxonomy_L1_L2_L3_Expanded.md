@@ -1,4 +1,5 @@
 # Expertise Atlas — Expanded L1·L2·L3 Taxonomy
+
 _Generated on 2025-10-30_
 
 This file lists the **current curated L1→L2→L3 taxonomy** used in the Expertise Atlas.  
@@ -7,7 +8,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 ---
 
 ## U — Universal Capabilities
+
 ### U-COMM — Communication
+
 - Verbal communication
 - Written communication
 - Nonverbal cues & body language
@@ -16,7 +19,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Meeting facilitation & minutes
 - Feedback & feedforward
 - Asynchronous communication hygiene
+
 ### U-COLL — Collaboration & Teamwork
+
 - Team coordination & rituals
 - Cross-functional collaboration
 - Conflict resolution & mediation
@@ -25,7 +30,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Remote-first collaboration
 - Psychological safety practices
 - Decision-making in teams (DACI/RACI)
+
 ### U-LEAD — Leadership & People Enablement
+
 - Vision, strategy & goal setting
 - Delegation & coaching
 - Motivating & recognition
@@ -34,7 +41,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Managing up & across
 - Ethics & accountability
 - Succession & talent growth
+
 ### U-COACH — Coaching & Mentoring
+
 - Contracting & goals
 - Observation & inquiry
 - Action planning & accountability
@@ -43,7 +52,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Sponsorship & advocacy
 - Coaching ethics & boundaries
 - Measurement & reflection
+
 ### U-NEGOT — Negotiation & Mediation
+
 - Preparation, interests & BATNA
 - Value creation & trade-offs
 - Anchoring & concession tactics
@@ -52,7 +63,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Agreement drafting & closure
 - Post-deal implementation
 - Negotiation ethics
+
 ### U-INFL — Influence & Stakeholder Mgmt
+
 - Stakeholder mapping & salience
 - Executive communication
 - Influence without authority
@@ -61,7 +74,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Managing resistance
 - Political awareness
 - Expectation management
+
 ### U-CUST — Service & Client Orientation
+
 - Needs discovery & JTBD
 - Service standards & SLAs
 - Complaint handling & recovery
@@ -70,7 +85,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Success metrics & CSAT/NPS
 - Account growth & retention
 - Handoffs & escalations
+
 ### U-ETHIC — Ethics & Responsible Judgment
+
 - Integrity & confidentiality
 - Fairness & equity
 - Responsible tech/data use
@@ -79,7 +96,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Whistleblowing & reporting
 - Bias awareness & mitigation
 - Social & environmental impact
+
 ### U-CRIT — Critical Thinking & Reasoning
+
 - Assumption surfacing
 - Evidence appraisal
 - Causal reasoning & counterfactuals
@@ -88,7 +107,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Triangulation & source reliability
 - Scenario analysis
 - Decision quality review
+
 ### U-CREAT — Creativity & Ideation
+
 - Divergent thinking & prompts
 - Concept synthesis & reframing
 - Creative constraints & briefs
@@ -97,7 +118,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Inspiration boards & references
 - Brainstorm facilitation
 - Creative critique
+
 ### U-PROBL — Problem Solving & Decision Making
+
 - Problem framing & scoping
 - Root cause analysis (5-Whys, Fishbone)
 - Option generation & evaluation
@@ -106,7 +129,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Risk assessment
 - Decision recording & review
 - Implementation follow-through
+
 ### U-LEARN — Learning Agility
+
 - Learning strategies & spaced practice
 - Deliberate practice & feedback
 - Reflection & journaling
@@ -115,7 +140,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Microlearning & retrieval
 - Metacognition
 - Unlearning & relearning
+
 ### U-ADAPT — Adaptability & Change Readiness
+
 - Ambiguity coping
 - Rapid reprioritization
 - Tool & system upskilling
@@ -124,7 +151,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Change adoption behaviors
 - Rescoping & trade-offs
 - Contingency planning
+
 ### U-RESIL — Resilience & Stress Tolerance
+
 - Stress management routines
 - Focus under pressure
 - Recovery & rest
@@ -133,7 +162,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Cognitive reframing
 - Support systems
 - Crisis response basics
+
 ### U-TIME — Time & Priority Management
+
 - Prioritization frameworks
 - Calendar & timeboxing
 - Task batching & flow
@@ -142,7 +173,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Deadline management
 - Personal SLAs
 - Review & retros
+
 ### U-ORGAN — Personal Organization
+
 - Information hygiene
 - File & folder systems
 - Note-taking & Zettelkasten
@@ -151,7 +184,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Versioning & naming
 - Templates & macros
 - Search & retrieval
+
 ### U-NUM — Numeracy & Data Literacy
+
 - Descriptive statistics
 - Estimation & Fermi problems
 - Data visualization literacy
@@ -160,7 +195,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Basic forecasting
 - Units & conversions
 - Spreadsheet fluency
+
 ### U-DIGI — Digital Literacy & Online Safety
+
 - Account security & MFA
 - Privacy settings & hygiene
 - Cloud files & sharing
@@ -169,7 +206,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Phishing awareness
 - Device upkeep & updates
 - Digital etiquette
+
 ### U-DEI — Intercultural & DEI
+
 - Inclusive language
 - Bias interruption
 - Accessibility awareness
@@ -178,7 +217,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Inclusive facilitation
 - Diverse sourcing
 - Equity in decisions
+
 ### U-PRESENT — Presentation & Speaking
+
 - Narrative structure
 - Slide design essentials
 - Visual clarity & charts
@@ -187,7 +228,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Demos & live walkthroughs
 - Rehearsal techniques
 - Stagecraft & logistics
+
 ### U-WRITE — Professional Writing
+
 - Plain-language style
 - Email & memo writing
 - Reports & briefs
@@ -196,7 +239,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Proposals & RFPs
 - Editorial process
 - Grammar & style guides
+
 ### U-ANALYT — Information Synthesis
+
 - Summarization & abstracts
 - Comparative analysis
 - Executive brief writing
@@ -205,7 +250,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Insight statements
 - Synthesis visuals
 - Limits & caveats
+
 ### U-RISK — Safety & Risk Awareness
+
 - Hazard identification
 - PPE basics
 - Incident reporting
@@ -214,7 +261,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Safety culture
 - Stop work authority
 - Basic first aid
+
 ### U-ETHO — Professionalism & Work Habits
+
 - Reliability & punctuality
 - Ownership mindset
 - Follow-up discipline
@@ -227,7 +276,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 ---
 
 ## F — Functional Competencies
+
 ### F-OPS — Operations & Process Execution
+
 - SOP creation & adherence
 - Throughput & takt time
 - Bottleneck analysis
@@ -236,7 +287,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Work cell design
 - Handoffs & flow
 - Continuous improvement
+
 ### F-LOG — Logistics, Warehousing & Fulfillment
+
 - Receiving & put-away
 - Slotting optimization
 - Picking strategies
@@ -245,7 +298,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - WMS operation
 - Yard & dock management
 - Reverse logistics & returns
+
 ### F-SUPPLY — Procurement & Supply Management
+
 - Category strategy
 - Market scouting & RFx
 - Supplier qualification & audits
@@ -254,7 +309,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - P2P processes
 - SRM & performance
 - Sustainable procurement
+
 ### F-QAQC — Quality Assurance & Control
+
 - Inspection planning (AQL)
 - Control plans & SPC
 - Nonconformance & NCRs
@@ -263,7 +320,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Gage R&R & MSA
 - Audit readiness
 - Documentation & traceability
+
 ### F-MFG — Manufacturing & Production
+
 - Line balancing & OEE
 - Setup & changeover (SMED)
 - Process capability (Cp/Cpk)
@@ -272,7 +331,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Scrap & rework reduction
 - Kanban & pull
 - Safety at the line
+
 ### F-MAINT — Maintenance & Reliability
+
 - Preventive maintenance
 - Predictive monitoring (PdM)
 - CMMS & work orders
@@ -281,7 +342,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Failure analysis
 - Lubrication & alignment
 - Shutdown & turnaround
+
 ### F-CONST — Construction & Built Environment
+
 - Site logistics & permits
 - Reading plans & specs
 - Structural framing
@@ -290,7 +353,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Subcontractor oversight
 - Schedule & progress
 - QA/QC & punch lists
+
 ### F-TRADES — Skilled Trades
+
 - Welding processes & WPS
 - Electrical installation & codes
 - Plumbing & piping systems
@@ -299,7 +364,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Sheet metal & fabrication
 - Rigging & lifting
 - NDT & inspection
+
 ### F-AGRI — Agriculture, Horticulture & Forestry
+
 - Soil prep & fertility
 - Planting & irrigation
 - Crop protection & IPM
@@ -308,7 +375,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Equipment use & maintenance
 - Forestry & chainsaw safety
 - Farm records & compliance
+
 ### F-FOOD — Food & Culinary Arts
+
 - Mise en place & prep
 - Cooking methods & timing
 - Baking & pastry techniques
@@ -317,7 +386,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Menu & costing
 - Inventory & waste
 - Kitchen equipment care
+
 ### F-RETAIL — Retail & Merchandising
+
 - Planograms & merchandising
 - POS & cash handling
 - Inventory processes
@@ -326,7 +397,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Visual displays
 - Omnichannel operations
 - Store KPIs & labor
+
 ### F-HOSP — Hospitality, Tourism & Events
+
 - Front-of-house service
 - Housekeeping standards
 - Event planning & runsheet
@@ -335,7 +408,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Reservations & yield
 - Vendor coordination
 - H&S compliance
+
 ### F-CSRVC — Customer Support & Contact Centers
+
 - Triage & prioritization
 - Knowledge base usage
 - Ticket lifecycle & SLAs
@@ -344,7 +419,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - QA scorecards & coaching
 - Workforce management
 - Omnichannel tooling
+
 ### F-SALES — Sales & Business Development
+
 - ICP & prospecting
 - Discovery & qualification
 - Demos & value narrative
@@ -353,7 +430,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Pipeline management
 - Account expansion
 - Sales operations & tooling
+
 ### F-MKTG — Marketing & Communications
+
 - Audience & positioning
 - Content & editorial
 - SEO/SEM & paid media
@@ -362,7 +441,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - PR & comms
 - Analytics & attribution
 - Brand & creative ops
+
 ### F-PROD — Product Management
+
 - Opportunity assessment
 - Discovery & research
 - Prioritization frameworks
@@ -371,7 +452,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Go-to-market & launch
 - Experimentation & learning
 - Stakeholder comms
+
 ### F-PM — Project/Program Management
+
 - Scope & WBS
 - Scheduling & critical path
 - Cost & earned value
@@ -380,7 +463,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Resource & dependency mgmt
 - Governance & comms
 - Benefits realization
+
 ### F-STRAT — Strategy & Corporate Development
+
 - Market sizing & dynamics
 - Competitive analysis
 - Business case & NPV
@@ -389,7 +474,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Strategic partnerships
 - OKR & strategy cadence
 - Post-merger integration
+
 ### F-FIN — Finance, Accounting & Controlling
+
 - Budgeting & forecasting
 - Management reporting
 - Financial statements & close
@@ -398,7 +485,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Tax & audit support
 - Costing & margins
 - Investment appraisal
+
 ### F-LEGAL — Legal, Compliance & Governance
+
 - Contract drafting & review
 - Legal research & memos
 - Regulatory analysis
@@ -407,7 +496,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Dispute management
 - Board & governance
 - Policy & training
+
 ### F-HR — People, HR & Talent
+
 - Workforce planning
 - Talent acquisition
 - Onboarding & probation
@@ -416,7 +507,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Compensation & benefits
 - Employee relations
 - HRIS & analytics
+
 ### F-EDU — Education, Training & Facilitation
+
 - Curriculum design
 - Lesson planning
 - Facilitation & delivery
@@ -425,7 +518,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Classroom management
 - EdTech tooling
 - Program evaluation
+
 ### F-HEALTH — Health, Care & Clinical Services
+
 - Assessment & triage
 - Treatment & care plans
 - Infection prevention & control
@@ -434,7 +529,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Documentation & coding
 - Interdisciplinary coordination
 - Quality & audit
+
 ### F-PUB — Public Sector, Civic & Social Services
+
 - Policy implementation
 - Case management
 - Community engagement
@@ -443,7 +540,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Safeguarding & ethics
 - Interagency coordination
 - Public communications
+
 ### F-ENV — Environment, Sustainability & EHS
+
 - Environmental monitoring
 - Permits & compliance
 - EHS training & drills
@@ -452,7 +551,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Incident investigation
 - Sustainability strategy
 - Reporting & disclosure
+
 ### F-REAL — Real Estate, Property & Facilities
+
 - Leasing & tenant relations
 - Property operations
 - Maintenance & energy
@@ -461,7 +562,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Budget & CAM
 - Vendor management
 - Moves & space planning
+
 ### F-SEC — Security, Safety & Emergency Response
+
 - Access control & patrols
 - Risk & threat assessments
 - Incident response
@@ -470,7 +573,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - BCP & crisis mgmt
 - Physical security systems
 - Liaison with authorities
+
 ### F-CREATIVE — Creative, Content, Media & Entertainment
+
 - Concepting & briefs
 - Copywriting & editing
 - Photography & video
@@ -479,7 +584,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Rights & releases
 - Publishing & distribution
 - Analytics & feedback
+
 ### F-SPORT — Sports, Fitness & Wellness
+
 - Program design
 - Coaching & cueing
 - Strength & conditioning
@@ -488,7 +595,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Member services
 - Facility operations
 - Competition logistics
+
 ### F-RESEARCH — Research & Analysis
+
 - Literature review
 - Research design
 - Data collection
@@ -497,7 +606,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Visualization & reporting
 - Ethics & IRB
 - Replication & prereg
+
 ### F-IT — Software Engineering
+
 - Requirements & design
 - System architecture
 - Implementation & code quality
@@ -506,7 +617,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Performance & profiling
 - Security & dependencies
 - Documentation & handover
+
 ### F-DATA — Data Engineering & Analytics
+
 - Data modeling & governance
 - Ingestion & pipelines
 - Warehousing & lakehouse
@@ -515,7 +628,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Experimentation & A/B
 - Forecasting & ML basics
 - Data reliability & SLAs
+
 ### F-AIML — Artificial Intelligence & ML
+
 - Problem framing & data readiness
 - Feature engineering
 - Model training & tuning
@@ -524,7 +639,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Deployment & serving
 - Monitoring & drift
 - Documentation & cards
+
 ### F-CYBER — Cybersecurity & Information Assurance
+
 - Threat modeling & risk
 - Identity, auth & access
 - Vulnerability mgmt
@@ -533,7 +650,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Governance, risk & compliance
 - Security architecture
 - Awareness & training
+
 ### F-CLOUD — Cloud, DevOps & SRE
+
 - IaC & provisioning
 - CI/CD & release
 - Observability & SLOs
@@ -542,7 +661,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Runbooks & incident mgmt
 - Platform engineering
 - Multi-cloud & networking
+
 ### F-HW — Hardware, Electronics & Embedded
+
 - Schematic & PCB
 - Firmware & RTOS
 - Prototyping & bring-up
@@ -551,7 +672,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Test fixtures & validation
 - Sensors & signal
 - Power & thermal
+
 ### F-NET — Networks & Telecommunications
+
 - Routing & switching
 - Wireless & site surveys
 - Network security
@@ -560,7 +683,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Voice & collaboration
 - Monitoring & NOC
 - Documentation & diagrams
+
 ### F-UX — UX/UI & Product Design
+
 - Research & insights
 - Information architecture
 - Interaction design
@@ -569,7 +694,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Accessibility & inclusivity
 - Usability testing
 - Content design
+
 ### F-ARCH — Architecture & Urban Planning
+
 - Concept & schematic design
 - Codes & documentation
 - BIM & coordination
@@ -578,7 +705,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Site & master planning
 - Heritage & conservation
 - Post-occupancy evaluation
+
 ### F-ENERGY — Energy & Utilities
+
 - Generation & T&D
 - Grid operations & markets
 - Asset management
@@ -587,7 +716,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Demand response
 - Regulatory compliance
 - Safety & switching
+
 ### F-TRANS — Transport & Mobility
+
 - Fleet ops & scheduling
 - Maintenance & inspections
 - Safety & compliance
@@ -596,7 +727,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Customer service
 - Terminal & yard ops
 - Incident investigation
+
 ### F-MAR — Maritime & Offshore
+
 - Navigation & COLREGS
 - Cargo ops & stowage
 - Engine & platform ops
@@ -605,7 +738,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Maintenance & dry dock
 - Weather & routing
 - Crew management
+
 ### F-AERO — Aerospace & Aviation
+
 - Flight ops & dispatch
 - Ground handling
 - Maintenance & airworthiness
@@ -614,7 +749,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Regulatory compliance
 - Weight & balance
 - Human factors
+
 ### F-PHARMA — Pharma, Biotech & Lab Ops
+
 - Assay development
 - Sample handling & chain
 - GxP documentation
@@ -623,7 +760,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Stability & storage
 - Submissions & dossiers
 - Lab safety & biosafety
+
 ### F-MINES — Mining & Natural Resources
+
 - Exploration & surveying
 - Extraction & blasting
 - Processing & tailings
@@ -636,7 +775,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 ---
 
 ## T — Tools & Technologies
+
 ### T-OFFICE — Office & Productivity Suites
+
 - Docs & presentations
 - Spreadsheets & formulas
 - Email & calendar workflows
@@ -645,7 +786,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Automation & macros
 - File formats & export
 - Versioning & track changes
+
 ### T-COLLAB — Communication & Collaboration
+
 - Chat & channels
 - Video meetings & rooms
 - Whiteboards & canvases
@@ -654,7 +797,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Webinars & events
 - Integrations & bots
 - Notification hygiene
+
 ### T-CMS — Content & Knowledge Mgmt
+
 - Wikis & knowledge bases
 - DMS & records
 - DAM & media libraries
@@ -663,7 +808,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Governance & lifecycle
 - Workflows & approvals
 - Retention & compliance
+
 ### T-CRM — CRM & Marketing Platforms
+
 - Data model & objects
 - Pipeline & opportunity mgmt
 - Segmentation & campaigns
@@ -672,7 +819,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Reporting & attribution
 - Integrations & CDP
 - Data hygiene & dedupe
+
 ### T-ERP — ERP & Finance Systems
+
 - O2C & P2P
 - Inventory & MRP
 - Production & costing
@@ -681,7 +830,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Tax & compliance
 - Reporting & BI
 - Integrations & EDI
+
 ### T-HRIS — HRIS & LMS
+
 - Core HR & org data
 - Payroll & time
 - TA & onboarding
@@ -690,7 +841,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Learning catalogs
 - Compliance training
 - People analytics
+
 ### T-ECOMM — E-commerce & POS
+
 - Catalog & variants
 - Pricing & promos
 - Checkout & payments
@@ -699,7 +852,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Merch & search
 - POS & omnichannel
 - Analytics & cohorts
+
 ### T-DATA — Databases & Warehousing
+
 - Relational modeling
 - NoSQL patterns
 - ETL/ELT & CDC
@@ -708,7 +863,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Backup & recovery
 - Security & access
 - Performance tuning
+
 ### T-BI — Business Intelligence
+
 - Dashboard design
 - Semantic modeling
 - Ad hoc analysis
@@ -717,7 +874,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - KPI governance
 - Performance optimization
 - Distribution & embed
+
 ### T-ANALYT — Analytics & Experimentation
+
 - Event tracking
 - Funnels & cohorts
 - A/B & multi-armed bandits
@@ -726,7 +885,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Forecasting & seasonality
 - Metric design
 - Experiment review
+
 ### T-DS — Data Science & ML Platforms
+
 - Notebooks & environments
 - Feature stores
 - Training & tracking
@@ -735,7 +896,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Scaling & acceleration
 - Collaboration & lineage
 - Cost mgmt
+
 ### T-MLOPS — MLOps & Monitoring
+
 - Serving & endpoints
 - Drift & bias monitors
 - Explainability & SHAP
@@ -744,7 +907,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Incident response
 - Governance & approvals
 - Model cards & docs
+
 ### T-DEV — Programming Languages & SDKs
+
 - Language paradigms
 - Toolchains & build
 - Package mgmt
@@ -753,7 +918,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Interop & FFI
 - SDK usage patterns
 - Style & linting
+
 ### T-VCS — Version Control
+
 - Branching strategies
 - Code reviews
 - Merge & rebase
@@ -762,7 +929,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Hooks & CI triggers
 - Permissions & protection
 - Audit & history
+
 ### T-CICD — CI/CD & Build Systems
+
 - Pipelines & orchestration
 - Artifacts & registries
 - Test automation
@@ -771,7 +940,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Rollbacks & hotfixes
 - Caching & parallelism
 - Observability
+
 ### T-CLOUD — Cloud Platforms
+
 - Compute & containers
 - Storage & databases
 - Networking & identity
@@ -780,7 +951,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Security & KMS
 - PaaS services
 - Multi-region design
+
 ### T-INFRA — Infrastructure & OS
+
 - OS administration
 - Virtualization & containers
 - Scripting & automation
@@ -789,7 +962,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Monitoring & alerting
 - Capacity planning
 - Hardening & CIS
+
 ### T-NET — Networking & Edge
+
 - Routing & switching
 - Wireless design
 - DNS/DHCP & IPAM
@@ -798,7 +973,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Network security
 - Performance mgmt
 - Tooling & diagrams
+
 ### T-SEC — Security Tooling
+
 - SIEM & log pipelines
 - EDR & XDR
 - Vulnerability mgmt
@@ -807,7 +984,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - SASE & Zero Trust
 - DLP & CASB
 - GRC tooling
+
 ### T-ITSM — IT Service Management
+
 - Incident & problem
 - Change & release
 - CMDB & discovery
@@ -816,7 +995,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Major incident mgmt
 - Reporting & CSAT
 - Automation & VSM
+
 ### T-DESIGN — Design & Prototyping
+
 - Wireframes & flows
 - Hi-fi prototyping
 - Motion & micro-interactions
@@ -825,7 +1006,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Design QA
 - Accessibility annotations
 - Figma/Sketch mastery
+
 ### T-IMG — Imaging & 3D
+
 - Raster editing
 - Vector illustration
 - 3D modeling & UVs
@@ -834,7 +1017,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Color management
 - Asset pipelines
 - File formats
+
 ### T-AUDIO — Audio & Music
+
 - Recording & mics
 - Editing & mixing
 - Synthesis & MIDI
@@ -843,7 +1028,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Podcast workflows
 - Live sound
 - Distribution
+
 ### T-VIDEO — Video & VFX
+
 - Editing & timelines
 - Color correction & grading
 - Compositing & tracking
@@ -852,7 +1039,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Collaboration & review
 - Archival & proxies
 - QC & compliance
+
 ### T-GIS — Mapping & GIS
+
 - Spatial DB & projections
 - Digitizing & topology
 - Cartography & symbology
@@ -861,7 +1050,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Routing & networks
 - Web mapping
 - Analysis & models
+
 ### T-CAD — CAD/CAE/CAM
+
 - Part & assembly design
 - Drawings & tolerances
 - Simulation & FEA/CFD
@@ -870,7 +1061,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - DFM/DFA
 - Materials libraries
 - Standards & revisions
+
 ### T-PLC — Industrial Control (PLC/SCADA/DCS)
+
 - PLC programming & IEC 61131-3
 - HMI/SCADA design
 - Industrial protocols
@@ -879,7 +1072,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Commissioning & FAT/SAT
 - OT security
 - Maintenance & spares
+
 ### T-QA — Test & QA Tooling
+
 - Unit/UI/perf testing
 - Test data mgmt
 - Defect tracking
@@ -888,7 +1083,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - CI test integration
 - Coverage & flakiness
 - Reporting & triage
+
 ### T-IOT — IoT, Robotics & Automation
+
 - Sensors & gateways
 - Protocols & telemetry
 - Edge compute
@@ -897,7 +1094,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Fleet mgmt & OTA
 - Safety & standards
 - Maintenance analytics
+
 ### T-LAB — Laboratory Instruments
+
 - Chromatography
 - Spectroscopy
 - Microscopy
@@ -906,7 +1105,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Sample prep & storage
 - LIMS/LIS workflows
 - Safety & waste
+
 ### T-MED — Medical Devices & Records
+
 - EHR workflows
 - Imaging & PACS
 - Vitals & monitoring
@@ -915,7 +1116,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Clinical decision support
 - Privacy & security
 - Device maintenance
+
 ### T-ENERGY — Energy & BMS Systems
+
 - BMS & HVAC controls
 - Metering & submetering
 - Solar & storage integration
@@ -924,7 +1127,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Fault detection & diagnostics
 - Energy reporting
 - Retro-commissioning
+
 ### T-AGRI — AgriTech & Sensors
+
 - Weather & soil sensors
 - Drones & imagery
 - Variable rate tech
@@ -933,7 +1138,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Irrigation control
 - Yield mapping
 - Compliance & records
+
 ### T-TELEM — Telematics & Fleet
+
 - Tracking & RTLS
 - Driver behavior & safety
 - Fuel & maintenance
@@ -942,7 +1149,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Sensors & CAN bus
 - Analytics & reports
 - Integrations
+
 ### T-KITCH — Culinary Equipment
+
 - Ovens & combi
 - Mixers & sheeters
 - Chillers & freezers
@@ -955,7 +1164,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 ---
 
 ## L — Languages & Culture
+
 ### L-LANG — Natural Languages
+
 - Language families & branches
 - Dialects & sociolects
 - Registers & tone
@@ -964,7 +1175,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Pronunciation & phonology
 - Orthography & spelling
 - CEFR proficiency mapping
+
 ### L-SIGN — Sign Languages
+
 - National sign languages
 - Fingerspelling systems
 - Facial grammar & prosody
@@ -973,7 +1186,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Deaf culture & community
 - Accessibility tech
 - Ethics & boundaries
+
 ### L-MODAL — Language Modalities
+
 - Speaking & listening
 - Reading & writing
 - Pronunciation & accent
@@ -982,7 +1197,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Presentation skills
 - Conversation repair
 - Code switching
+
 ### L-INT — Interpretation & Translation
+
 - Consecutive interpreting
 - Simultaneous interpreting
 - Sight translation
@@ -991,7 +1208,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Transcreation & localization
 - QA & revision
 - Ethics & fidelity
+
 ### L-L10N — Localization & Internationalization
+
 - i18n readiness & keys
 - L10n workflows
 - Linguistic QA
@@ -1000,7 +1219,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - RTL & script handling
 - Pseudolocalization
 - Style guides & termbases
+
 ### L-WRITE — Writing Systems & Orthography
+
 - Scripts & families
 - Romanization & transliteration
 - Spelling reforms
@@ -1009,7 +1230,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Handwriting & calligraphy
 - OCR & text tech
 - Standardization bodies
+
 ### L-REGION — Regional Etiquette & Protocols
+
 - Business etiquette
 - Negotiation styles
 - Gift-giving & protocol
@@ -1018,7 +1241,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Meetings & hierarchy
 - Time & punctuality
 - Public behaviors
+
 ### L-CXCOMM — Cross-cultural Communication
+
 - High/low context patterns
 - Direct vs indirect styles
 - Nonverbal & proxemics
@@ -1027,7 +1252,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Politeness strategies
 - Misunderstanding repair
 - Culture mapping tools
+
 ### L-TEAM — Cross-cultural Teaming & Leadership
+
 - Distributed teaming
 - Feedback & evaluation styles
 - Decision-making norms
@@ -1036,7 +1263,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Holidays & rhythms
 - Onboarding across cultures
 - Remote collaboration
+
 ### L-CULTLIT — Cultural Literacy
+
 - Traditions & arts
 - Institutions & history
 - Festivals & observances
@@ -1045,7 +1274,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Civic life
 - Cultural tourism
 - Cross-cultural comparison
+
 ### L-LSP — Language for Specific Purposes
+
 - Medical language
 - Legal language
 - Technical & engineering
@@ -1054,7 +1285,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Public sector & policy
 - Academic writing
 - Customer service
+
 ### L-ACCESS — Plain Language & Accessibility
+
 - Plain language principles
 - Alt-text & captions
 - Easy-read & signage
@@ -1063,7 +1296,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Inclusive forms
 - Screen reader checks
 - Multilingual access
+
 ### L-PUBLIC — Rhetoric & Public Speaking
+
 - Speechcraft & structure
 - Persuasion techniques
 - Debate formats
@@ -1072,7 +1307,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Storytelling
 - Stage presence
 - Rehearsal & feedback
+
 ### L-CUST — Multilingual Customer Interaction
+
 - Greeting & triage
 - Chat & email
 - Phone & voice
@@ -1085,7 +1322,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 ---
 
 ## M — Methods & Practices
+
 ### M-PMBOK — Project & Portfolio Mgmt
+
 - Scope, schedule & cost
 - Risk & issue mgmt
 - Stakeholder engagement
@@ -1094,7 +1333,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Resource & capacity
 - Portfolio prioritization
 - Lessons learned
+
 ### M-AGILE — Agile Frameworks
+
 - Scrum events & roles
 - Kanban flow & WIP
 - Estimation & planning
@@ -1103,7 +1344,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Product ownership
 - DevXP practices
 - Coaching & facilitation
+
 ### M-PROD — Product Discovery & Delivery
+
 - Opportunity discovery
 - Prototyping & tests
 - Prioritization models
@@ -1112,7 +1355,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Outcomes & measures
 - Launch & comms
 - Post-launch learning
+
 ### M-LEAN — Lean Systems
+
 - Value stream mapping
 - Waste identification
 - Standard work & 5S
@@ -1121,7 +1366,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Kaizen & kata
 - Problem solving (A3)
 - Leader standard work
+
 ### M-SIX — Six Sigma
+
 - DMAIC lifecycle
 - Voice of customer
 - Measurement systems
@@ -1130,7 +1377,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Capability analysis
 - Project selection
 - Sustain & control
+
 ### M-BPM — Business Process Mgmt
+
 - Discovery & mapping
 - Modeling (BPMN)
 - Automation & RPA
@@ -1139,7 +1388,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Continuous improvement
 - Change mgmt
 - Process ownership
+
 ### M-RESEARCH — Research Methods
+
 - Design & sampling
 - Surveys & interviews
 - Experiments & quasi
@@ -1148,7 +1399,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Ethics & IRB
 - Reproducibility
 - Reporting & artifacts
+
 ### M-UX — UX Research & Design
+
 - Planning & recruitment
 - Generative research
 - Evaluative testing
@@ -1157,7 +1410,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Visual & motion
 - Accessibility & WCAG
 - Handoff & QA
+
 ### M-DATA — Data Science Lifecycle
+
 - Problem framing
 - Data prep & feature eng
 - Modeling & validation
@@ -1166,7 +1421,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Experimentation
 - Documentation
 - Deployment & monitoring
+
 ### M-MLOPS — MLOps & Model Governance
+
 - Versioning & lineage
 - CI/CD for ML
 - Bias & fairness
@@ -1175,7 +1432,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Incident response
 - Approval workflows
 - Model registry
+
 ### M-SEC — Security & Privacy
+
 - Threat & risk
 - Secure SDLC
 - Testing & response
@@ -1184,7 +1443,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Third-party risk
 - Policy & awareness
 - Compliance mapping
+
 ### M-QMS — Quality Systems
+
 - QMS documentation
 - Training & competency
 - Audits & CAPA
@@ -1193,7 +1454,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Calibration & MSA
 - Nonconformance
 - Management review
+
 ### M-GXP — GxP Practices
+
 - GLP/GMP/GCP basics
 - Validation & qualification
 - Data integrity & ALCOA
@@ -1202,7 +1465,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Inspections & readiness
 - Tech transfer
 - CAPA & change
+
 ### M-HSE — Health, Safety & Environment
+
 - HAZOP & HACCP
 - Permits & controls
 - Ergonomics
@@ -1211,7 +1476,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Environmental aspects
 - Training & drills
 - Contractor mgmt
+
 ### M-RISK — Risk Management
+
 - Identification & taxonomy
 - Analysis & scoring
 - FMEA & bow-tie
@@ -1220,7 +1487,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Risk appetite
 - Scenario planning
 - Reporting
+
 ### M-AUDIT — Audit & Compliance
+
 - Planning & scope
 - Evidence gathering
 - Testing & sampling
@@ -1229,7 +1498,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Independence & ethics
 - Continuous auditing
 - Analytics in audit
+
 ### M-FIN — Financial Methods
+
 - Budget & variance
 - Forecasting & models
 - Capital allocation
@@ -1238,7 +1509,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Investment appraisal
 - Close & consolidation
 - Controls & reconciliations
+
 ### M-PROC — Procurement & Sourcing
+
 - Category planning
 - RFx & evaluation
 - Negotiation strategy
@@ -1247,7 +1520,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Contract mgmt
 - Savings tracking
 - Compliance & audits
+
 ### M-SALES — Sales Methods
+
 - Discovery & qualification
 - Objection handling
 - Demo & proof
@@ -1256,7 +1531,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Mutual action plans
 - Account planning
 - Post-sale expansion
+
 ### M-MKTG — Marketing & Growth
+
 - Positioning & messaging
 - Experiment design
 - Attribution & MMM
@@ -1265,7 +1542,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Content & SEO/SEM
 - Product-led growth
 - Brand tracking
+
 ### M-OPS — Service & IT Ops
+
 - Incident/problem/change
 - SRE & SLOs
 - Postmortems & blameless
@@ -1274,7 +1553,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Runbooks & playbooks
 - Capacity & DR
 - Request & catalog
+
 ### M-DEV — Software Engineering
+
 - Code review & patterns
 - Testing strategy
 - Performance & security
@@ -1283,7 +1564,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Feature flags
 - Debt mgmt
 - Delivery practices
+
 ### M-DEVOPS — DevOps & Release
+
 - Pipelines & IaC
 - Blue/green & canary
 - Feature toggles
@@ -1292,7 +1575,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Security gates
 - Release governance
 - Post-release reviews
+
 ### M-EDU — Instructional Design
+
 - Objectives & outcomes
 - Chunking & pacing
 - Assessment & analytics
@@ -1301,7 +1586,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Media & interactivity
 - Facilitation guides
 - Course evaluation
+
 ### M-HR — HR & Talent Processes
+
 - Competencies & levelling
 - Hiring & selection
 - Onboarding & ramp
@@ -1310,7 +1597,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Listening & engagement
 - Rewards & recognition
 - ER & policy
+
 ### M-LEGAL — Legal Practices
+
 - Issue spotting
 - Research & memo
 - Discovery & evidence
@@ -1319,7 +1608,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Litigation support
 - Contract lifecycle
 - Ethics & privilege
+
 ### M-NEGOT — Facilitation & Mediation
+
 - Workshop design
 - Decision methods
 - Visual facilitation
@@ -1328,7 +1619,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Consensus building
 - Large-group methods
 - Hybrid facilitation
+
 ### M-LCA — Sustainability Methods
+
 - GHG accounting
 - LCA & footprint
 - Materiality & SBTi
@@ -1337,7 +1630,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Offsets & removals
 - Risk & adaptation
 - Circularity metrics
+
 ### M-BIM — BIM & Construction Workflows
+
 - Coordination & clash
 - 4D/5D & CDE
 - Quantity take-off
@@ -1350,7 +1645,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 ---
 
 ## D — Domain Knowledge
+
 ### D-MATH — Mathematics
+
 - Algebra & geometry
 - Calculus & analysis
 - Linear algebra
@@ -1359,7 +1656,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Probability theory
 - Number theory
 - Logic & proofs
+
 ### D-STAT — Statistics & Probability
+
 - Descriptive & inference
 - Regression & GLM
 - Time series
@@ -1368,7 +1667,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Multivariate analysis
 - Sampling & surveys
 - Nonparametrics
+
 ### D-CS — Computer Science
+
 - Data structures & algorithms
 - Operating systems
 - Databases
@@ -1377,7 +1678,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Compilers & PL
 - Theory & automata
 - Security & crypto basics
+
 ### D-PHYS — Physics
+
 - Mechanics
 - Thermodynamics
 - Electromagnetism
@@ -1386,7 +1689,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Condensed matter
 - Nuclear & particle
 - Astrophysics
+
 ### D-CHEM — Chemistry
+
 - Organic chemistry
 - Inorganic chemistry
 - Physical chemistry
@@ -1395,7 +1700,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Electrochemistry
 - Spectroscopy
 - Crystallography
+
 ### D-BIO — Biology
+
 - Cell biology
 - Genetics & genomics
 - Molecular biology
@@ -1404,7 +1711,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Ecology & evolution
 - Developmental biology
 - Systems biology
+
 ### D-EARTH — Earth & Environmental Sciences
+
 - Geology & petrology
 - Hydrology
 - Meteorology & climate
@@ -1413,7 +1722,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Soils & geomorphology
 - Remote sensing
 - Environmental change
+
 ### D-MATS — Materials Science
+
 - Structure & properties
 - Phase diagrams
 - Polymers & composites
@@ -1422,7 +1733,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Failure & fatigue
 - Surface & corrosion
 - Processing & fabrication
+
 ### D-MECH — Mechanical Engineering
+
 - Statics & dynamics
 - Mechanics of materials
 - Thermal & fluids
@@ -1431,7 +1744,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Manufacturing processes
 - CAD/CAE
 - Control systems
+
 ### D-EE — Electrical & Electronics
+
 - Circuits & signals
 - Power systems
 - Electronics & devices
@@ -1440,7 +1755,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Embedded systems
 - VLSI & FPGA
 - Electromagnetics
+
 ### D-CIVIL — Civil & Structural
+
 - Structural analysis
 - Geotechnical
 - Transportation
@@ -1449,7 +1766,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Materials & pavements
 - Urban systems
 - Sustainability
+
 ### D-CHE — Chemical Engineering
+
 - Balances & thermodynamics
 - Transport phenomena
 - Reaction engineering
@@ -1458,7 +1777,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Plant design
 - Safety & HAZOP
 - Bioprocessing
+
 ### D-HEALTH — Medical & Health Sciences
+
 - Anatomy & physiology
 - Pathology
 - Diagnostics
@@ -1467,7 +1788,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Health systems
 - Evidence-based medicine
 - Bioethics
+
 ### D-PHARM — Pharmaceutical Sciences
+
 - Medicinal chemistry
 - Pharmacokinetics
 - Biopharmaceutics
@@ -1476,7 +1799,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Regulatory science
 - Stability studies
 - Analytics & methods
+
 ### D-SOC — Social Sciences
+
 - Psychology
 - Sociology
 - Anthropology
@@ -1485,7 +1810,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Human geography
 - Social research methods
 - Demography
+
 ### D-ECON — Economics & Policy
+
 - Microeconomics
 - Macroeconomics
 - Econometrics
@@ -1494,7 +1821,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Public economics
 - Trade & finance
 - Policy analysis
+
 ### D-BUS — Business & Management
+
 - Organizational behavior
 - Strategy
 - Operations management
@@ -1503,7 +1832,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Corporate governance
 - Innovation mgmt
 - Business law
+
 ### D-FIN — Finance & Accounting
+
 - Financial reporting
 - Managerial accounting
 - Corporate finance
@@ -1512,7 +1843,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Taxation
 - Audit & assurance
 - Valuation
+
 ### D-LAW — Law, Regulation & Governance
+
 - Legal systems & sources
 - Contract & tort
 - Corporate & securities
@@ -1521,7 +1854,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - IP & licensing
 - Compliance & ethics
 - Litigation & ADR
+
 ### D-EDU — Education & Pedagogy
+
 - Learning theories
 - Curriculum design
 - Assessment
@@ -1530,7 +1865,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Policy & leadership
 - EdTech
 - Teacher development
+
 ### D-ARCH — Architecture & Built Environment
+
 - History & theory
 - Building physics
 - Structures & materials
@@ -1539,7 +1876,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Housing & community
 - Practice & regulation
 - Preservation
+
 ### D-MEDIA — Media & Communication
+
 - Journalism & reporting
 - Semiotics & rhetoric
 - Media law & ethics
@@ -1548,7 +1887,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Narrative & storytelling
 - Visual communication
 - Public relations
+
 ### D-AGRI — Agriculture & Food Systems
+
 - Agronomy & soils
 - Horticulture
 - Animal science
@@ -1557,7 +1898,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Sustainability & water
 - Agroecology
 - Policy & extension
+
 ### D-ENERGY — Energy Systems & Markets
+
 - Power generation
 - Transmission & distribution
 - Markets & regulation
@@ -1566,7 +1909,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Planning & reliability
 - Environmental impacts
 - Economics of energy
+
 ### D-TRANS — Transportation & Mobility Systems
+
 - Traffic engineering
 - Transit planning
 - Freight & logistics
@@ -1575,7 +1920,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Policy & regulation
 - Modeling & simulation
 - Sustainability & equity
+
 ### D-URBAN — Urban & Regional Planning
+
 - Land use & zoning
 - Transport & environment
 - Housing & community
@@ -1584,7 +1931,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Governance & finance
 - Public space & design
 - Data & visualization
+
 ### D-ENV — Sustainability, Climate & Biodiversity
+
 - Climate science
 - Ecosystems & biodiversity
 - Circular economy
@@ -1593,7 +1942,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Nature-based solutions
 - Policy & governance
 - Environmental justice
+
 ### D-SEC — Security, Defense & Geopolitics
+
 - Security studies
 - International relations
 - Defense strategy
@@ -1602,7 +1953,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Critical infrastructure
 - Human security
 - Law & ethics
+
 ### D-SPORT — Kinesiology, Sports Science & Nutrition
+
 - Exercise physiology
 - Biomechanics
 - Sport psychology
@@ -1611,7 +1964,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Performance analysis
 - Coaching science
 - Public health & activity
+
 ### D-ARTS — Arts, Culture & Aesthetics
+
 - Art history
 - Music theory
 - Theatre & performance
@@ -1620,7 +1975,9 @@ Notes: L2 and L3 are **extensible** (no hard limits); this reflects a comprehens
 - Curation & museology
 - Creative practice
 - Cultural policy
+
 ### D-HUM — Humanities
+
 - History
 - Philosophy
 - Literature

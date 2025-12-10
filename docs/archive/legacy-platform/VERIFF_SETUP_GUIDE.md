@@ -5,6 +5,7 @@
 ### 1. Create Veriff Account
 
 **🪄 DO THIS MANUALLY:**
+
 1. Go to https://www.veriff.com
 2. Click "Sign Up" or "Get Started"
 3. Choose your plan (Sandbox is free for testing)
@@ -44,7 +45,6 @@
    - **Webhook URL:** `https://yourdomain.com/api/verification/veriff/webhook`
      - Replace `yourdomain.com` with your actual domain
      - Example: `https://proofound.io/api/verification/veriff/webhook`
-   
 3. **Enable webhook events:**
    - ✅ Verification completed
    - ✅ Verification status changed
@@ -75,6 +75,7 @@ NEXT_PUBLIC_SITE_URL=https://yourdomain.com
 ```
 
 **Important Notes:**
+
 - Replace `your_api_key_here`, `your_api_secret_here`, etc. with actual values from Veriff
 - Keep these secrets secure! Never commit them to git
 - The `VERIFF_BASE_URL` is usually `https://stationapi.veriff.com` (default)
@@ -87,6 +88,7 @@ NEXT_PUBLIC_SITE_URL=https://yourdomain.com
 **🪄 DO THIS MANUALLY:**
 
 1. **Restart your development server** after adding environment variables:
+
    ```bash
    npm run dev
    ```
@@ -108,22 +110,28 @@ NEXT_PUBLIC_SITE_URL=https://yourdomain.com
 ## 🔍 Troubleshooting
 
 ### Issue: "Verification service not configured"
+
 **Solution:** Make sure `VERIFF_API_KEY` and `VERIFF_API_SECRET` are set in `.env.local`
 
 ### Issue: "Failed to create verification session"
+
 **Solutions:**
+
 - Check if API credentials are correct
 - Verify `VERIFF_BASE_URL` is correct (usually `https://stationapi.veriff.com`)
 - Check Veriff dashboard for API usage limits
 
 ### Issue: Webhook not receiving updates
+
 **Solutions:**
+
 - Verify webhook URL is publicly accessible (not localhost)
 - Check webhook secret matches in Veriff dashboard
 - Check server logs for webhook errors
 - Verify webhook is enabled in Veriff dashboard
 
 ### Issue: "Invalid webhook signature"
+
 **Solution:** Make sure `VERIFF_WEBHOOK_SECRET` matches the secret in Veriff dashboard
 
 ---
@@ -152,6 +160,7 @@ NEXT_PUBLIC_SITE_URL=https://yourdomain.com
 ## 🎯 What Happens Next
 
 Once configured:
+
 1. Users click "Verify with ID" in settings
 2. Veriff SDK loads and guides them through ID verification
 3. User takes photos of their ID and selfie
@@ -159,4 +168,3 @@ Once configured:
 5. Webhook sends result to your server
 6. Profile automatically updates with verified status
 7. Verified badge appears on user's profile! ✨
-

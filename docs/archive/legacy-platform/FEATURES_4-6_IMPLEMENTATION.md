@@ -3,9 +3,13 @@
 ## Completion Status
 
 ### ✅ **Feature 6: Visibility & Redact Mode - 100% COMPLETE**
+
 ### ✅ **Feature 2: Customizable Dashboard - 100% COMPLETE** (from previous session)
+
 ### ✅ **Feature 3: Gap Map & Auto-Suggest Integration - 100% COMPLETE** (from previous session)
+
 ### ⏸️ **Feature 5: Organization Profile Blocks - 60% COMPLETE**
+
 ### ⏸️ **Feature 4: Stakeholder Collaboration - 0% COMPLETE**
 
 ---
@@ -71,6 +75,7 @@
    - Email, phone, salary expectations
 
 ### Files Created
+
 - ✅ `/src/app/api/profile/visibility/route.ts` (Created)
 - ✅ `/src/lib/privacy/redaction.ts` (Created)
 - ✅ `/src/lib/privacy/profile-fetcher.ts` (Created)
@@ -101,13 +106,13 @@
 3. **Partnerships API** ✅
    - GET `/api/organizations/[orgId]/partnerships`: List all partnerships
    - POST `/api/organizations/[orgId]/partnerships`: Create partnership
-   - PUT/DELETE endpoints: *Need to be created*
+   - PUT/DELETE endpoints: _Need to be created_
    - Fields: partnerName, partnerType, partnershipScope, impactCreated, startDate, endDate, status, isVerified
 
 4. **Ownership API** ✅
    - GET `/api/organizations/[orgId]/ownership`: List all ownership entities
    - POST `/api/organizations/[orgId]/ownership`: Create ownership record
-   - PUT/DELETE endpoints: *Need to be created*
+   - PUT/DELETE endpoints: _Need to be created_
    - Fields: entityType, entityName, ownershipPercentage, controlType, description, isPublic
 
 5. **Structure Block (O2)** ✅ (Already implemented)
@@ -119,7 +124,9 @@
 ### What Still Needs to Be Built
 
 #### Projects Block UI (O3) - TODO
+
 Create `/src/components/organization/ProjectsManager.tsx`:
+
 - List view with project cards
 - Status badges (planning, active, completed, on_hold, cancelled)
 - Add/edit project dialog
@@ -128,7 +135,9 @@ Create `/src/components/organization/ProjectsManager.tsx`:
 - Filter by status
 
 #### Partnerships Block UI (O4) - TODO
+
 Create `/src/components/organization/PartnershipsManager.tsx`:
+
 - List view with partnership cards
 - Partner type badges (company, NGO, government, academic, network, other)
 - Add/edit partnership dialog
@@ -137,7 +146,9 @@ Create `/src/components/organization/PartnershipsManager.tsx`:
 - Verification badges
 
 #### Ownership Block UI (O5) - TODO
+
 Create `/src/components/organization/OwnershipManager.tsx`:
+
 - Table view with ownership entities
 - Ownership percentage visualization (pie chart)
 - Control type badges (voting_rights, board_seat, veto_power, management, other)
@@ -146,13 +157,16 @@ Create `/src/components/organization/OwnershipManager.tsx`:
 - Entity type icons
 
 #### Profile Page Integration - TODO
+
 Modify `/src/app/app/o/[slug]/profile/page.tsx`:
+
 - Add "Projects" tab
 - Add "Partnerships" tab
 - Add "Ownership" tab
 - Update TabsList to include new tabs
 
 ### Files Created
+
 - ✅ `/src/app/api/organizations/[orgId]/projects/route.ts` (Created)
 - ✅ `/src/app/api/organizations/[orgId]/projects/[projectId]/route.ts` (Created)
 - ✅ `/src/app/api/organizations/[orgId]/partnerships/route.ts` (Created)
@@ -172,6 +186,7 @@ Modify `/src/app/app/o/[slug]/profile/page.tsx`:
 According to PRD, this feature allows organizations to invite stakeholders to collaboratively fill out profile sections.
 
 #### Core Requirements
+
 1. **Invitation System**
    - Invite external stakeholders (clients, partners, regulators)
    - Email invitations with secure tokens
@@ -199,13 +214,16 @@ According to PRD, this feature allows organizations to invite stakeholders to co
    - Notifications when stakeholder completes task
 
 ### Database Schema Needed
+
 Create tables:
+
 - `assignment_invitations`: Invitation records with tokens
 - `assignment_steps`: Individual tasks assigned to stakeholders
 - `assignment_submissions`: Stakeholder contributions
 - `assignment_reviews`: Review/approval status
 
 ### Files to Create
+
 - `/src/app/api/assignments/invite/route.ts`
 - `/src/app/api/assignments/[token]/route.ts` (public endpoint)
 - `/src/app/api/assignments/[assignmentId]/review/route.ts`
@@ -218,39 +236,45 @@ Create tables:
 ## Next Steps (Priority Order)
 
 ### 1. Complete Feature 5 (Organization Profile Blocks) - 4-6 hours
-   a. Create ProjectsManager.tsx component (1-2 hours)
-   b. Create PartnershipsManager.tsx component (1-2 hours)
-   c. Create OwnershipManager.tsx component (1-2 hours)
-   d. Add tabs to profile page (30 min)
-   e. Create remaining PUT/DELETE endpoints (30 min)
+
+a. Create ProjectsManager.tsx component (1-2 hours)
+b. Create PartnershipsManager.tsx component (1-2 hours)
+c. Create OwnershipManager.tsx component (1-2 hours)
+d. Add tabs to profile page (30 min)
+e. Create remaining PUT/DELETE endpoints (30 min)
 
 ### 2. Implement Feature 4 (Stakeholder Collaboration) - 8-12 hours
-   a. Design database schema (1 hour)
-   b. Create database tables (1 hour)
-   c. Build invitation API (2 hours)
-   d. Build assignment API (2 hours)
-   e. Create stakeholder UI (3 hours)
-   f. Create organization management UI (2 hours)
-   g. Add email notifications (1-2 hours)
+
+a. Design database schema (1 hour)
+b. Create database tables (1 hour)
+c. Build invitation API (2 hours)
+d. Build assignment API (2 hours)
+e. Create stakeholder UI (3 hours)
+f. Create organization management UI (2 hours)
+g. Add email notifications (1-2 hours)
 
 ### 3. Extend Evidence Pack (Feature 5 continuation) - 2-3 hours
-   Currently Evidence Pack includes:
-   - Individual profile data
-   - Skills and verifications
-   - Impact stories
 
-   Need to add:
-   - Organization structure
-   - Projects
-   - Partnerships
-   - Ownership (with privacy filters)
+Currently Evidence Pack includes:
+
+- Individual profile data
+- Skills and verifications
+- Impact stories
+
+Need to add:
+
+- Organization structure
+- Projects
+- Partnerships
+- Ownership (with privacy filters)
 
 ### 4. Testing & Documentation - 2-3 hours
-   - Test visibility controls across all contexts
-   - Test redaction logic
-   - Test organization profile blocks
-   - Update user documentation
-   - Create admin guide for Evidence Packs
+
+- Test visibility controls across all contexts
+- Test redaction logic
+- Test organization profile blocks
+- Update user documentation
+- Create admin guide for Evidence Packs
 
 ---
 
@@ -300,6 +324,7 @@ Create tables:
 ## Testing Checklist
 
 ### Feature 6: Visibility & Redact Mode
+
 - [ ] Verify visibility settings save correctly
 - [ ] Test redaction for public viewers
 - [ ] Test redaction for link holders
@@ -309,6 +334,7 @@ Create tables:
 - [ ] Test profile API with different viewer contexts
 
 ### Feature 5: Organization Profile Blocks
+
 - [ ] Test projects CRUD operations
 - [ ] Test partnerships CRUD operations
 - [ ] Test ownership CRUD operations
@@ -318,6 +344,7 @@ Create tables:
 - [ ] Test org chart with new projects data
 
 ### Feature 4: Stakeholder Collaboration (when implemented)
+
 - [ ] Test invitation email delivery
 - [ ] Test token expiration
 - [ ] Test stakeholder can access assigned sections only
@@ -330,6 +357,7 @@ Create tables:
 ## PRD Compliance Check
 
 ### Feature 6 (F6): Visibility & Redact Mode ✅
+
 - ✅ Field-level visibility controls
 - ✅ 4 visibility levels (public, link_only, match_only, private)
 - ✅ Redaction logic for different viewer contexts
@@ -338,6 +366,7 @@ Create tables:
 - ✅ Reusable components for displaying redacted fields
 
 ### Feature 5 (F5): Organization Profile Blocks
+
 - ✅ Structure Block (O2) - Already implemented
 - ⏸️ Projects Block (O3) - API done, UI pending
 - ⏸️ Partnerships Block (O4) - API done, UI pending
@@ -345,6 +374,7 @@ Create tables:
 - ⏸️ Evidence Pack extension - Pending
 
 ### Feature 4 (F4): Stakeholder Collaboration
+
 - ⏸️ Invitation system - Not started
 - ⏸️ Step assignment - Not started
 - ⏸️ Collaborative editing - Not started
@@ -356,6 +386,7 @@ Create tables:
 ## Dependencies
 
 ### Required Packages (Already Installed)
+
 - drizzle-orm
 - zod
 - lucide-react

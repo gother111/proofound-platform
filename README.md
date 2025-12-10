@@ -11,6 +11,13 @@ Proofound is a platform built for authenticity, not algorithms. It features:
 - **Privacy by Design**: Row-level security, user-controlled visibility
 - **Steward-owned Governance**: Built for long-term sustainability
 
+## Documentation map
+
+- Product/architecture: `PRD_TECHNICAL_REQUIREMENTS.md`, `SYSTEM_ARCHITECTURE_COMPREHENSIVE.md`, `SYSTEM_ARCHITECTURE_SUPPLEMENT.md`, `PRD_for_a_web_platform_MVP.md`.
+- APIs: `API_DOCUMENTATION_FINAL.md`, `API_DOCUMENTATION_NEW_ENDPOINTS.md` (legacy `API_DOCUMENTATION.md` lives in `docs/archive/legacy-platform/`).
+- Runbooks: `LAUNCH_RUNBOOK.md`, `PRODUCTION_CHECKLIST.md`, `APPLY_MIGRATIONS_MANUAL.md`, `RUN_MIGRATIONS_GUIDE.md`, `OAUTH_SETUP_GUIDE.md`, `SETUP_SUPABASE.md`.
+- Archives: historical docs are grouped under `docs/archive/legacy-platform/`, status reports under `docs/archive/status-reports/`, demo artifacts under `docs/archive/demos/`.
+
 ## Tech Stack
 
 - **Framework**: Next.js 15 (App Router) + TypeScript + React Server Components
@@ -462,6 +469,7 @@ Use this seed to preload the PRD personas, orgs, assignments, matches, and Zen H
    - Password (all): `DemoPass123!`
 
 What this populates:
+
 - Minimal taxonomy slice (L1-L4) for skills used in matches
 - Individual profiles with mission/vision/values/causes, matching profiles, skills + proofs, visibility settings
 - Zen Hub opt-ins and check-ins
@@ -537,10 +545,12 @@ MIT License - see LICENSE file for details
 Built with ❤️ for authentic human connections.
 
 ### Lint in restricted CI
+
 `npm run lint` auto-skips when Next.js/deps cannot be installed (restricted CI).
 To force lint, set `FORCE_LINT=true` or run locally after `npm ci`.
 
 ### Environment setup (quick)
+
 1. Copy `.env.example` to `.env.local` and fill the values.
 2. In Supabase → Authentication → URL Configuration:
    - Set **Site URL** to the same domain as `NEXT_PUBLIC_SITE_URL` (or `SITE_URL` if you use the private fallback).

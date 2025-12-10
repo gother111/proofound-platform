@@ -7,6 +7,7 @@ Successfully populated 5 demo user accounts with comprehensive, realistic test d
 ## Demo User Accounts
 
 ### 1. **Sofia Martinez** 🎨
+
 - **Email**: sofia.martinez@proofound-demo.com
 - **Handle**: @sofia-martinez
 - **Role**: UX/Product Designer specializing in Climate Tech & Sustainable Innovation
@@ -14,6 +15,7 @@ Successfully populated 5 demo user accounts with comprehensive, realistic test d
 - **Focus**: Sustainable design, climate action, circular economy
 
 **Profile Includes**:
+
 - 8 skills (UI/UX Design, User Research, Figma, Product Strategy, Design Systems, Prototyping, Data Visualization, Sustainability Design)
 - 2 projects (Carbon Footprint Tracker App, Circular Economy Platform)
 - 1 impact story (Reducing Carbon Footprints Through User-Centered Design)
@@ -23,6 +25,7 @@ Successfully populated 5 demo user accounts with comprehensive, realistic test d
 - 4 capabilities with endorsements
 
 ### 2. **James Chen** 💻
+
 - **Email**: james.chen@proofound-demo.com
 - **Handle**: @james-chen
 - **Role**: Full-Stack Engineer building secure, scalable payment systems
@@ -30,6 +33,7 @@ Successfully populated 5 demo user accounts with comprehensive, realistic test d
 - **Focus**: Financial technology, payment infrastructure, distributed systems
 
 **Profile Includes**:
+
 - 9 skills (TypeScript, React, Node.js, PostgreSQL, System Architecture, Payment Systems, API Design, Cloud Infrastructure, Web3)
 - 2 projects (Real-time Payment Processing System, Cross-Border Payment API)
 - 1 impact story (Building Payment Infrastructure at Scale)
@@ -39,6 +43,7 @@ Successfully populated 5 demo user accounts with comprehensive, realistic test d
 - 4 capabilities with endorsements
 
 ### 3. **Amara Okafor** 🌍
+
 - **Email**: amara.okafor@proofound-demo.com
 - **Handle**: @amara-okafor
 - **Role**: Social Impact Strategist driving education equity across Africa
@@ -46,6 +51,7 @@ Successfully populated 5 demo user accounts with comprehensive, realistic test d
 - **Focus**: Education equity, youth empowerment, community development
 
 **Profile Includes**:
+
 - 8 skills (Program Management, Community Engagement, Impact Measurement, Strategic Planning, Stakeholder Management, Fundraising, M&E, Partnership Development)
 - 2 projects (Girls STEM Education Initiative, Community Learning Centers Network)
 - 1 impact story (Transforming STEM Education Access for Girls)
@@ -55,6 +61,7 @@ Successfully populated 5 demo user accounts with comprehensive, realistic test d
 - 4 capabilities with endorsements
 
 ### 4. **Yuki Tanaka** 🔬
+
 - **Email**: yuki.tanaka@proofound-demo.com
 - **Handle**: @yuki-tanaka
 - **Role**: AI/ML Engineer applying data science to healthcare challenges
@@ -62,6 +69,7 @@ Successfully populated 5 demo user accounts with comprehensive, realistic test d
 - **Focus**: Healthcare AI, predictive analytics, medical imaging
 
 **Profile Includes**:
+
 - 9 skills (Python, Machine Learning, Data Analysis, TensorFlow, PyTorch, Statistical Modeling, Healthcare Analytics, Deep Learning, NLP)
 - 2 projects (Medical Imaging AI for Early Cancer Detection, Predictive Healthcare Analytics Platform)
 - 1 impact story (AI-Powered Early Cancer Detection)
@@ -71,6 +79,7 @@ Successfully populated 5 demo user accounts with comprehensive, realistic test d
 - 4 capabilities with endorsements
 
 ### 5. **Alex Rivera** ✊
+
 - **Email**: alex.rivera@proofound-demo.com
 - **Handle**: @alex-rivera
 - **Role**: Community Organizer and Education Advocate fighting for social justice
@@ -78,6 +87,7 @@ Successfully populated 5 demo user accounts with comprehensive, realistic test d
 - **Focus**: Education access, social justice, grassroots organizing
 
 **Profile Includes**:
+
 - 8 skills (Community Organizing, Campaign Strategy, Public Speaking, Fundraising, Coalition Building, Event Management, Advocacy, Digital Organizing)
 - 2 projects (Community-Led School Funding Campaign, Digital Organizing Platform)
 - 1 impact story (Community Organizing for Education Justice)
@@ -89,6 +99,7 @@ Successfully populated 5 demo user accounts with comprehensive, realistic test d
 ## Cross-User Relationships
 
 The demo users have meaningful connections:
+
 - **Sofia endorses James** on UI implementation skills
 - **James endorses Yuki** on data architecture
 - **Amara endorses Alex** on community building
@@ -98,6 +109,7 @@ The demo users have meaningful connections:
 ## Data Summary
 
 **Total Data Created**:
+
 - ✅ 5 Profiles updated (with handles, bios, values, causes)
 - ✅ 42 Skills created (8-9 per user with proficiency levels)
 - ✅ 10 Projects created (2 per user with outcomes & metrics)
@@ -187,4 +199,3 @@ node scripts/seed-demo-users.mjs
 **Created**: November 3, 2025  
 **Script**: `scripts/seed-demo-users.mjs`  
 **User List**: Run `node scripts/list-users.mjs` to see all users
-

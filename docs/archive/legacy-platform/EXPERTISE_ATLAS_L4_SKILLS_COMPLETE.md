@@ -17,14 +17,14 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 ### Distribution by Domain
 
-| Domain | Code | Count | Percentage |
-|--------|------|-------|------------|
-| Universal Capabilities | **U** | 2,880 | 13.5% |
-| Functional Competencies | **F** | 5,400 | 25.3% |
-| Tools & Technologies | **T** | 4,200 | 19.7% |
-| Languages & Culture | **L** | 1,680 | 7.9% |
-| Methods & Practices | **M** | 3,480 | 16.3% |
-| Domain Knowledge | **D** | 3,720 | 17.4% |
+| Domain                  | Code  | Count | Percentage |
+| ----------------------- | ----- | ----- | ---------- |
+| Universal Capabilities  | **U** | 2,880 | 13.5%      |
+| Functional Competencies | **F** | 5,400 | 25.3%      |
+| Tools & Technologies    | **T** | 4,200 | 19.7%      |
+| Languages & Culture     | **L** | 1,680 | 7.9%       |
+| Methods & Practices     | **M** | 3,480 | 16.3%      |
+| Domain Knowledge        | **D** | 3,720 | 17.4%      |
 
 ---
 
@@ -36,7 +36,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Ambiguity coping
 
-*15 skills*
+_15 skills_
 
 - Ambiguity coping assessment
 - Ambiguity coping auditing
@@ -56,7 +56,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Change adoption behaviors
 
-*15 skills*
+_15 skills_
 
 - Applied Change adoption behaviors
 - Basic Change adoption behaviors
@@ -76,7 +76,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Context switching
 
-*15 skills*
+_15 skills_
 
 - Advanced Context switching techniques
 - Context switching assessment
@@ -96,7 +96,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Contingency planning
 
-*15 skills*
+_15 skills_
 
 - Applied Contingency planning
 - Basic Contingency planning
@@ -116,7 +116,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Rapid reprioritization
 
-*15 skills*
+_15 skills_
 
 - Advanced Rapid reprioritization techniques
 - Applied Rapid reprioritization
@@ -136,7 +136,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Rescoping & trade-offs
 
-*15 skills*
+_15 skills_
 
 - Large-scale rescoping & trade-offs
 - Rescoping & trade-offs assessment
@@ -156,7 +156,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Stress inoculation
 
-*15 skills*
+_15 skills_
 
 - Advanced Stress inoculation techniques
 - Applied Stress inoculation
@@ -176,7 +176,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Tool & system upskilling
 
-*15 skills*
+_15 skills_
 
 - Advanced Tool & system upskilling techniques
 - Applied Tool & system upskilling
@@ -198,7 +198,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Comparative analysis
 
-*15 skills*
+_15 skills_
 
 - Comparative analysis in Construction
 - Comparative analysis in Government
@@ -218,7 +218,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Evidence tables
 
-*15 skills*
+_15 skills_
 
 - Basic Evidence tables
 - Evidence tables automation
@@ -238,7 +238,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Executive brief writing
 
-*15 skills*
+_15 skills_
 
 - Academic executive brief writing
 - Creative executive brief writing
@@ -258,7 +258,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Insight statements
 
-*15 skills*
+_15 skills_
 
 - Advanced Insight statements techniques
 - Applied Insight statements
@@ -278,7 +278,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Limits & caveats
 
-*15 skills*
+_15 skills_
 
 - Advanced Limits & caveats techniques
 - Basic Limits & caveats
@@ -298,7 +298,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Signal vs noise
 
-*15 skills*
+_15 skills_
 
 - Advanced Signal vs noise techniques
 - Large-scale signal vs noise
@@ -318,7 +318,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Summarization & abstracts
 
-*15 skills*
+_15 skills_
 
 - Advanced Summarization & abstracts techniques
 - Applied Summarization & abstracts
@@ -338,7 +338,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Synthesis visuals
 
-*15 skills*
+_15 skills_
 
 - Advanced Synthesis visuals techniques
 - Small-scale synthesis visuals
@@ -360,7 +360,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Action planning & accountability
 
-*15 skills*
+_15 skills_
 
 - Action planning & accountability automation
 - Action planning & accountability compliance
@@ -380,7 +380,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Career navigation
 
-*15 skills*
+_15 skills_
 
 - Advanced Career navigation techniques
 - Applied Career navigation
@@ -400,7 +400,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Coaching ethics & boundaries
 
-*15 skills*
+_15 skills_
 
 - Applied Coaching ethics & boundaries
 - Coaching ethics & boundaries automation
@@ -420,7 +420,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Contracting & goals
 
-*15 skills*
+_15 skills_
 
 - Advanced Contracting & goals techniques
 - Contracting & goals auditing
@@ -440,7 +440,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Measurement & reflection
 
-*15 skills*
+_15 skills_
 
 - Applied Measurement & reflection
 - Large-scale measurement & reflection
@@ -460,7 +460,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Observation & inquiry
 
-*15 skills*
+_15 skills_
 
 - Advanced Observation & inquiry techniques
 - Basic Observation & inquiry
@@ -480,7 +480,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Skills mentoring
 
-*15 skills*
+_15 skills_
 
 - Advanced Skills mentoring techniques
 - Medium-scale skills mentoring
@@ -500,7 +500,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Sponsorship & advocacy
 
-*15 skills*
+_15 skills_
 
 - Basic Sponsorship & advocacy
 - Sponsorship & advocacy assessment
@@ -522,7 +522,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Conflict resolution & mediation
 
-*15 skills*
+_15 skills_
 
 - Advanced Conflict resolution & mediation techniques
 - Applied Conflict resolution & mediation
@@ -542,7 +542,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Cross-functional collaboration
 
-*15 skills*
+_15 skills_
 
 - Advanced Cross-functional collaboration techniques
 - Cross-functional collaboration assessment
@@ -562,7 +562,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Decision-making in teams (DACI/RACI)
 
-*15 skills*
+_15 skills_
 
 - Basic Decision-making in teams (DACI/RACI)
 - Decision-making in teams (DACI/RACI) automation
@@ -582,7 +582,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Knowledge sharing & documentation
 
-*15 skills*
+_15 skills_
 
 - Academic knowledge sharing & documentation
 - Creative knowledge sharing & documentation
@@ -602,7 +602,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Pairing & mob work practices
 
-*15 skills*
+_15 skills_
 
 - Agile pairing & mob work practices
 - Applied Pairing & mob work practices
@@ -622,7 +622,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Psychological safety practices
 
-*15 skills*
+_15 skills_
 
 - Advanced Psychological safety practices techniques
 - Applied Psychological safety practices
@@ -642,7 +642,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Remote-first collaboration
 
-*15 skills*
+_15 skills_
 
 - Large-scale remote-first collaboration
 - Medium-scale remote-first collaboration
@@ -662,7 +662,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Team coordination & rituals
 
-*15 skills*
+_15 skills_
 
 - Applied Team coordination & rituals
 - Basic Team coordination & rituals
@@ -684,7 +684,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Active listening & questioning
 
-*15 skills*
+_15 skills_
 
 - Active listening & questioning automation
 - Active listening & questioning best practices
@@ -704,7 +704,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Asynchronous communication hygiene
 
-*15 skills*
+_15 skills_
 
 - Asynchronous communication hygiene in Energy
 - Asynchronous communication hygiene in Government
@@ -724,7 +724,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Audience analysis & tailoring
 
-*15 skills*
+_15 skills_
 
 - Audience analysis & tailoring in Energy
 - Audience analysis & tailoring in Finance
@@ -744,7 +744,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Feedback & feedforward
 
-*15 skills*
+_15 skills_
 
 - Advanced Feedback & feedforward techniques
 - Basic Feedback & feedforward
@@ -764,7 +764,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Meeting facilitation & minutes
 
-*15 skills*
+_15 skills_
 
 - Applied Meeting facilitation & minutes
 - Basic Meeting facilitation & minutes
@@ -784,7 +784,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Nonverbal cues & body language
 
-*15 skills*
+_15 skills_
 
 - Advanced Nonverbal cues & body language techniques
 - Basic Nonverbal cues & body language
@@ -804,7 +804,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Verbal communication
 
-*15 skills*
+_15 skills_
 
 - Client-facing verbal communication
 - Formal verbal communication
@@ -824,7 +824,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Written communication
 
-*15 skills*
+_15 skills_
 
 - Crisis written communication
 - Cross-functional written communication
@@ -846,7 +846,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Brainstorm facilitation
 
-*15 skills*
+_15 skills_
 
 - Basic Brainstorm facilitation
 - Brainstorm facilitation auditing
@@ -866,7 +866,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Concept synthesis & reframing
 
-*15 skills*
+_15 skills_
 
 - Basic Concept synthesis & reframing
 - Concept synthesis & reframing assessment
@@ -886,7 +886,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Creative constraints & briefs
 
-*15 skills*
+_15 skills_
 
 - Creative constraints & briefs assessment
 - Creative constraints & briefs auditing
@@ -906,7 +906,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Creative critique
 
-*15 skills*
+_15 skills_
 
 - Applied Creative critique
 - Basic Creative critique
@@ -926,7 +926,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Divergent thinking & prompts
 
-*15 skills*
+_15 skills_
 
 - Applied Divergent thinking & prompts
 - Divergent thinking & prompts auditing
@@ -946,7 +946,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Evaluation & selection
 
-*15 skills*
+_15 skills_
 
 - Advanced Evaluation & selection techniques
 - Basic Evaluation & selection
@@ -966,7 +966,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Inspiration boards & references
 
-*15 skills*
+_15 skills_
 
 - Advanced Inspiration boards & references techniques
 - Basic Inspiration boards & references
@@ -986,7 +986,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Rapid prototyping
 
-*15 skills*
+_15 skills_
 
 - Advanced Rapid prototyping techniques
 - Applied Rapid prototyping
@@ -1008,7 +1008,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Assumption surfacing
 
-*15 skills*
+_15 skills_
 
 - Assumption surfacing assessment
 - Assumption surfacing auditing
@@ -1028,7 +1028,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Causal reasoning & counterfactuals
 
-*15 skills*
+_15 skills_
 
 - Advanced Causal reasoning & counterfactuals techniques
 - Causal reasoning & counterfactuals assessment
@@ -1048,7 +1048,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Decision quality review
 
-*15 skills*
+_15 skills_
 
 - Automated decision quality review
 - Decision quality review in Healthcare
@@ -1068,7 +1068,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Evidence appraisal
 
-*15 skills*
+_15 skills_
 
 - Advanced Evidence appraisal techniques
 - Basic Evidence appraisal
@@ -1088,7 +1088,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Hypothesis testing
 
-*15 skills*
+_15 skills_
 
 - Acceptance hypothesis testing
 - Automated hypothesis testing
@@ -1108,7 +1108,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Logical fallacies & biases
 
-*15 skills*
+_15 skills_
 
 - Applied Logical fallacies & biases
 - Basic Logical fallacies & biases
@@ -1128,7 +1128,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Scenario analysis
 
-*15 skills*
+_15 skills_
 
 - Competitive scenario analysis
 - Descriptive scenario analysis
@@ -1148,7 +1148,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Triangulation & source reliability
 
-*15 skills*
+_15 skills_
 
 - Applied Triangulation & source reliability
 - Basic Triangulation & source reliability
@@ -1170,7 +1170,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Account growth & retention
 
-*15 skills*
+_15 skills_
 
 - Account growth & retention auditing
 - Account growth & retention compliance
@@ -1190,7 +1190,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Complaint handling & recovery
 
-*15 skills*
+_15 skills_
 
 - Applied Complaint handling & recovery
 - Complaint handling & recovery auditing
@@ -1210,7 +1210,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Empathy & de-escalation
 
-*15 skills*
+_15 skills_
 
 - Advanced Empathy & de-escalation techniques
 - Basic Empathy & de-escalation
@@ -1230,7 +1230,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Handoffs & escalations
 
-*15 skills*
+_15 skills_
 
 - Advanced Handoffs & escalations techniques
 - Applied Handoffs & escalations
@@ -1250,7 +1250,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Needs discovery & JTBD
 
-*15 skills*
+_15 skills_
 
 - Applied Needs discovery & JTBD
 - Basic Needs discovery & JTBD
@@ -1270,7 +1270,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Service playbooks & scripts
 
-*15 skills*
+_15 skills_
 
 - Enterprise service playbooks & scripts
 - Large-scale service playbooks & scripts
@@ -1290,7 +1290,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Service standards & SLAs
 
-*15 skills*
+_15 skills_
 
 - Applied Service standards & SLAs
 - Medium-scale service standards & slas
@@ -1310,7 +1310,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Success metrics & CSAT/NPS
 
-*15 skills*
+_15 skills_
 
 - Enterprise success metrics & csat/nps
 - Large-scale success metrics & csat/nps
@@ -1332,7 +1332,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Accessibility awareness
 
-*15 skills*
+_15 skills_
 
 - Accessibility awareness assessment
 - Accessibility awareness automation
@@ -1352,7 +1352,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Allyship behaviors
 
-*15 skills*
+_15 skills_
 
 - Allyship behaviors assessment
 - Allyship behaviors auditing
@@ -1372,7 +1372,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Bias interruption
 
-*15 skills*
+_15 skills_
 
 - Advanced Bias interruption techniques
 - Bias interruption auditing
@@ -1392,7 +1392,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Cultural humility
 
-*15 skills*
+_15 skills_
 
 - Advanced Cultural humility techniques
 - Applied Cultural humility
@@ -1412,7 +1412,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Diverse sourcing
 
-*15 skills*
+_15 skills_
 
 - Advanced Diverse sourcing techniques
 - Applied Diverse sourcing
@@ -1432,7 +1432,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Equity in decisions
 
-*15 skills*
+_15 skills_
 
 - Basic Equity in decisions
 - Enterprise equity in decisions
@@ -1452,7 +1452,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Inclusive facilitation
 
-*15 skills*
+_15 skills_
 
 - Applied Inclusive facilitation
 - Enterprise inclusive facilitation
@@ -1472,7 +1472,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Inclusive language
 
-*15 skills*
+_15 skills_
 
 - Basic Inclusive language
 - Enterprise inclusive language
@@ -1494,7 +1494,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Account security & MFA
 
-*15 skills*
+_15 skills_
 
 - Account security & MFA assessment
 - Account security & MFA auditing
@@ -1514,7 +1514,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Backup & recovery basics
 
-*15 skills*
+_15 skills_
 
 - Applied Backup & recovery basics
 - Backup & recovery basics best practices
@@ -1534,7 +1534,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Browser & extension safety
 
-*15 skills*
+_15 skills_
 
 - Basic Browser & extension safety
 - Browser & extension safety assessment
@@ -1554,7 +1554,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Cloud files & sharing
 
-*15 skills*
+_15 skills_
 
 - Advanced Cloud files & sharing techniques
 - Applied Cloud files & sharing
@@ -1574,7 +1574,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Device upkeep & updates
 
-*15 skills*
+_15 skills_
 
 - Advanced Device upkeep & updates techniques
 - Basic Device upkeep & updates
@@ -1594,7 +1594,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Digital etiquette
 
-*15 skills*
+_15 skills_
 
 - Digital etiquette assessment
 - Digital etiquette auditing
@@ -1614,7 +1614,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Phishing awareness
 
-*15 skills*
+_15 skills_
 
 - Advanced Phishing awareness techniques
 - Large-scale phishing awareness
@@ -1634,7 +1634,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Privacy settings & hygiene
 
-*15 skills*
+_15 skills_
 
 - Advanced Privacy settings & hygiene techniques
 - Basic Privacy settings & hygiene
@@ -1656,7 +1656,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Bias awareness & mitigation
 
-*15 skills*
+_15 skills_
 
 - Advanced Bias awareness & mitigation techniques
 - Applied Bias awareness & mitigation
@@ -1676,7 +1676,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Conflict of interest
 
-*15 skills*
+_15 skills_
 
 - Advanced Conflict of interest techniques
 - Conflict of interest auditing
@@ -1696,7 +1696,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Ethical decision frameworks
 
-*15 skills*
+_15 skills_
 
 - Advanced Ethical decision frameworks techniques
 - Agile ethical decision frameworks
@@ -1716,7 +1716,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Fairness & equity
 
-*15 skills*
+_15 skills_
 
 - Advanced Fairness & equity techniques
 - Basic Fairness & equity
@@ -1736,7 +1736,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Integrity & confidentiality
 
-*15 skills*
+_15 skills_
 
 - Advanced Integrity & confidentiality techniques
 - Enterprise integrity & confidentiality
@@ -1756,7 +1756,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Responsible tech/data use
 
-*15 skills*
+_15 skills_
 
 - Basic Responsible tech/data use
 - Large-scale responsible tech/data use
@@ -1776,7 +1776,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Social & environmental impact
 
-*15 skills*
+_15 skills_
 
 - Advanced Social & environmental impact techniques
 - Applied Social & environmental impact
@@ -1796,7 +1796,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Whistleblowing & reporting
 
-*15 skills*
+_15 skills_
 
 - Advanced Whistleblowing & reporting techniques
 - Applied Whistleblowing & reporting
@@ -1818,7 +1818,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Boundary management
 
-*15 skills*
+_15 skills_
 
 - Boundary management in Construction
 - Boundary management in Energy
@@ -1838,7 +1838,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Confidentiality
 
-*15 skills*
+_15 skills_
 
 - Advanced Confidentiality techniques
 - Applied Confidentiality
@@ -1858,7 +1858,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Continuous improvement
 
-*15 skills*
+_15 skills_
 
 - Advanced Continuous improvement techniques
 - Applied Continuous improvement
@@ -1878,7 +1878,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Follow-up discipline
 
-*15 skills*
+_15 skills_
 
 - Advanced Follow-up discipline techniques
 - Basic Follow-up discipline
@@ -1898,7 +1898,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Ownership mindset
 
-*15 skills*
+_15 skills_
 
 - Advanced Ownership mindset techniques
 - Basic Ownership mindset
@@ -1918,7 +1918,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Professional etiquette
 
-*15 skills*
+_15 skills_
 
 - Applied Professional etiquette
 - Basic Professional etiquette
@@ -1938,7 +1938,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Reliability & punctuality
 
-*15 skills*
+_15 skills_
 
 - Advanced Reliability & punctuality techniques
 - Basic Reliability & punctuality
@@ -1958,7 +1958,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Work journaling
 
-*15 skills*
+_15 skills_
 
 - Enterprise work journaling
 - Medium-scale work journaling
@@ -1980,7 +1980,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Executive communication
 
-*15 skills*
+_15 skills_
 
 - Client-facing executive communication
 - Cross-functional executive communication
@@ -2000,7 +2000,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Expectation management
 
-*15 skills*
+_15 skills_
 
 - Change expectation management
 - Crisis expectation management
@@ -2020,7 +2020,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Framing & reframing
 
-*15 skills*
+_15 skills_
 
 - Advanced Framing & reframing techniques
 - Applied Framing & reframing
@@ -2040,7 +2040,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Influence without authority
 
-*15 skills*
+_15 skills_
 
 - Advanced Influence without authority techniques
 - Basic Influence without authority
@@ -2060,7 +2060,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Managing resistance
 
-*15 skills*
+_15 skills_
 
 - Advanced Managing resistance techniques
 - Applied Managing resistance
@@ -2080,7 +2080,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Narrative & storytelling
 
-*15 skills*
+_15 skills_
 
 - Applied Narrative & storytelling
 - Enterprise narrative & storytelling
@@ -2100,7 +2100,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Political awareness
 
-*15 skills*
+_15 skills_
 
 - Advanced Political awareness techniques
 - Applied Political awareness
@@ -2120,7 +2120,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Stakeholder mapping & salience
 
-*15 skills*
+_15 skills_
 
 - Advanced Stakeholder mapping & salience techniques
 - Large-scale stakeholder mapping & salience
@@ -2142,7 +2142,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Change leadership & adoption
 
-*15 skills*
+_15 skills_
 
 - Change change leadership & adoption
 - Change leadership & adoption in Construction
@@ -2162,7 +2162,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Delegation & coaching
 
-*15 skills*
+_15 skills_
 
 - Applied Delegation & coaching
 - Delegation & coaching automation
@@ -2182,7 +2182,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Ethics & accountability
 
-*15 skills*
+_15 skills_
 
 - Basic Ethics & accountability
 - Enterprise ethics & accountability
@@ -2202,7 +2202,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Managing up & across
 
-*15 skills*
+_15 skills_
 
 - Advanced Managing up & across techniques
 - Applied Managing up & across
@@ -2222,7 +2222,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Motivating & recognition
 
-*15 skills*
+_15 skills_
 
 - Large-scale motivating & recognition
 - Medium-scale motivating & recognition
@@ -2242,7 +2242,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Performance conversations
 
-*15 skills*
+_15 skills_
 
 - Applied Performance conversations
 - Basic Performance conversations
@@ -2262,7 +2262,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Succession & talent growth
 
-*15 skills*
+_15 skills_
 
 - Advanced Succession & talent growth techniques
 - Applied Succession & talent growth
@@ -2282,7 +2282,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Vision, strategy & goal setting
 
-*15 skills*
+_15 skills_
 
 - Applied Vision, strategy & goal setting
 - Basic Vision, strategy & goal setting
@@ -2304,7 +2304,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Deliberate practice & feedback
 
-*15 skills*
+_15 skills_
 
 - Advanced Deliberate practice & feedback techniques
 - Agile deliberate practice & feedback
@@ -2324,7 +2324,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Learning plans & goals
 
-*15 skills*
+_15 skills_
 
 - Advanced Learning plans & goals techniques
 - Basic Learning plans & goals
@@ -2344,7 +2344,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Learning strategies & spaced practice
 
-*15 skills*
+_15 skills_
 
 - Advanced Learning strategies & spaced practice techniques
 - Applied Learning strategies & spaced practice
@@ -2364,7 +2364,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Metacognition
 
-*15 skills*
+_15 skills_
 
 - Advanced Metacognition techniques
 - Applied Metacognition
@@ -2384,7 +2384,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Microlearning & retrieval
 
-*15 skills*
+_15 skills_
 
 - Applied Microlearning & retrieval
 - Enterprise microlearning & retrieval
@@ -2404,7 +2404,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Reflection & journaling
 
-*15 skills*
+_15 skills_
 
 - Advanced Reflection & journaling techniques
 - Applied Reflection & journaling
@@ -2424,7 +2424,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Teach-back & peer learning
 
-*15 skills*
+_15 skills_
 
 - Basic Teach-back & peer learning
 - Small-scale teach-back & peer learning
@@ -2444,7 +2444,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Unlearning & relearning
 
-*15 skills*
+_15 skills_
 
 - Advanced Unlearning & relearning techniques
 - Basic Unlearning & relearning
@@ -2466,7 +2466,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Agreement drafting & closure
 
-*15 skills*
+_15 skills_
 
 - Advanced Agreement drafting & closure techniques
 - Agreement drafting & closure auditing
@@ -2486,7 +2486,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Anchoring & concession tactics
 
-*15 skills*
+_15 skills_
 
 - Advanced Anchoring & concession tactics techniques
 - Anchoring & concession tactics assessment
@@ -2506,7 +2506,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Cross-cultural negotiation
 
-*15 skills*
+_15 skills_
 
 - Advanced Cross-cultural negotiation techniques
 - Basic Cross-cultural negotiation
@@ -2526,7 +2526,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Multi-party mediation
 
-*15 skills*
+_15 skills_
 
 - Enterprise multi-party mediation
 - Multi-party mediation auditing
@@ -2546,7 +2546,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Negotiation ethics
 
-*15 skills*
+_15 skills_
 
 - Advanced Negotiation ethics techniques
 - Applied Negotiation ethics
@@ -2566,7 +2566,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Post-deal implementation
 
-*15 skills*
+_15 skills_
 
 - Advanced Post-deal implementation techniques
 - Applied Post-deal implementation
@@ -2586,7 +2586,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Preparation, interests & BATNA
 
-*15 skills*
+_15 skills_
 
 - Basic Preparation, interests & BATNA
 - Enterprise preparation, interests & batna
@@ -2606,7 +2606,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Value creation & trade-offs
 
-*15 skills*
+_15 skills_
 
 - Applied Value creation & trade-offs
 - Basic Value creation & trade-offs
@@ -2628,7 +2628,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Basic forecasting
 
-*15 skills*
+_15 skills_
 
 - Basic Basic forecasting
 - Basic forecasting auditing
@@ -2648,7 +2648,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Data visualization literacy
 
-*15 skills*
+_15 skills_
 
 - Applied Data visualization literacy
 - Data visualization literacy assessment
@@ -2668,7 +2668,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Descriptive statistics
 
-*15 skills*
+_15 skills_
 
 - Applied Descriptive statistics
 - Basic Descriptive statistics
@@ -2688,7 +2688,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Estimation & Fermi problems
 
-*15 skills*
+_15 skills_
 
 - Applied Estimation & Fermi problems
 - Enterprise estimation & fermi problems
@@ -2708,7 +2708,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Probability & risk
 
-*15 skills*
+_15 skills_
 
 - Advanced Probability & risk techniques
 - Enterprise probability & risk
@@ -2728,7 +2728,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Sampling & bias awareness
 
-*15 skills*
+_15 skills_
 
 - Advanced Sampling & bias awareness techniques
 - Enterprise sampling & bias awareness
@@ -2748,7 +2748,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Spreadsheet fluency
 
-*15 skills*
+_15 skills_
 
 - Advanced Spreadsheet fluency techniques
 - Applied Spreadsheet fluency
@@ -2768,7 +2768,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Units & conversions
 
-*15 skills*
+_15 skills_
 
 - Basic Units & conversions
 - Enterprise units & conversions
@@ -2790,7 +2790,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Checklist & SOP use
 
-*15 skills*
+_15 skills_
 
 - Applied Checklist & SOP use
 - Checklist & SOP use automation
@@ -2810,7 +2810,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### File & folder systems
 
-*15 skills*
+_15 skills_
 
 - Advanced File & folder systems techniques
 - Applied File & folder systems
@@ -2830,7 +2830,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Inbox management
 
-*15 skills*
+_15 skills_
 
 - Crisis inbox management
 - Cross-functional inbox management
@@ -2850,7 +2850,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Information hygiene
 
-*15 skills*
+_15 skills_
 
 - Advanced Information hygiene techniques
 - Enterprise information hygiene
@@ -2870,7 +2870,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Note-taking & Zettelkasten
 
-*15 skills*
+_15 skills_
 
 - Advanced Note-taking & Zettelkasten techniques
 - Enterprise note-taking & zettelkasten
@@ -2890,7 +2890,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Search & retrieval
 
-*15 skills*
+_15 skills_
 
 - Advanced Search & retrieval techniques
 - Enterprise search & retrieval
@@ -2910,7 +2910,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Templates & macros
 
-*15 skills*
+_15 skills_
 
 - Applied Templates & macros
 - Large-scale templates & macros
@@ -2930,7 +2930,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Versioning & naming
 
-*15 skills*
+_15 skills_
 
 - Advanced Versioning & naming techniques
 - Applied Versioning & naming
@@ -2952,7 +2952,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Delivery & presence
 
-*15 skills*
+_15 skills_
 
 - Basic Delivery & presence
 - Delivery & presence assessment
@@ -2972,7 +2972,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Demos & live walkthroughs
 
-*15 skills*
+_15 skills_
 
 - Demos & live walkthroughs auditing
 - Demos & live walkthroughs best practices
@@ -2992,7 +2992,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Narrative structure
 
-*15 skills*
+_15 skills_
 
 - Advanced Narrative structure techniques
 - Applied Narrative structure
@@ -3012,7 +3012,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Q&A handling
 
-*15 skills*
+_15 skills_
 
 - Applied Q&A handling
 - Basic Q&A handling
@@ -3032,7 +3032,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Rehearsal techniques
 
-*15 skills*
+_15 skills_
 
 - Basic Rehearsal techniques
 - Enterprise rehearsal techniques
@@ -3052,7 +3052,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Slide design essentials
 
-*15 skills*
+_15 skills_
 
 - Collaborative slide design essentials
 - Conceptual slide design essentials
@@ -3072,7 +3072,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Stagecraft & logistics
 
-*15 skills*
+_15 skills_
 
 - Applied Stagecraft & logistics
 - Basic Stagecraft & logistics
@@ -3092,7 +3092,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Visual clarity & charts
 
-*15 skills*
+_15 skills_
 
 - Applied Visual clarity & charts
 - Large-scale visual clarity & charts
@@ -3114,7 +3114,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Decision methods (MCDA, ICE, RICE)
 
-*15 skills*
+_15 skills_
 
 - Advanced Decision methods (MCDA, ICE, RICE) techniques
 - Applied Decision methods (MCDA, ICE, RICE)
@@ -3134,7 +3134,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Decision recording & review
 
-*15 skills*
+_15 skills_
 
 - Advanced Decision recording & review techniques
 - Applied Decision recording & review
@@ -3154,7 +3154,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Experiment design
 
-*15 skills*
+_15 skills_
 
 - Collaborative experiment design
 - Conceptual experiment design
@@ -3174,7 +3174,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Implementation follow-through
 
-*15 skills*
+_15 skills_
 
 - Basic Implementation follow-through
 - Enterprise implementation follow-through
@@ -3194,7 +3194,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Option generation & evaluation
 
-*15 skills*
+_15 skills_
 
 - Enterprise option generation & evaluation
 - Option generation & evaluation auditing
@@ -3214,7 +3214,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Problem framing & scoping
 
-*15 skills*
+_15 skills_
 
 - Basic Problem framing & scoping
 - Problem framing & scoping automation
@@ -3234,7 +3234,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Risk assessment
 
-*15 skills*
+_15 skills_
 
 - Advanced Risk assessment techniques
 - Applied Risk assessment
@@ -3254,7 +3254,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Root cause analysis (5-Whys, Fishbone)
 
-*15 skills*
+_15 skills_
 
 - Competitive root cause analysis (5-whys, fishbone)
 - Descriptive root cause analysis (5-whys, fishbone)
@@ -3276,7 +3276,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Boundary setting
 
-*15 skills*
+_15 skills_
 
 - Applied Boundary setting
 - Basic Boundary setting
@@ -3296,7 +3296,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Cognitive reframing
 
-*15 skills*
+_15 skills_
 
 - Applied Cognitive reframing
 - Cognitive reframing assessment
@@ -3316,7 +3316,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Crisis response basics
 
-*15 skills*
+_15 skills_
 
 - Basic Crisis response basics
 - Crisis response basics assessment
@@ -3336,7 +3336,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Emotional regulation
 
-*15 skills*
+_15 skills_
 
 - Emotional regulation assessment
 - Emotional regulation auditing
@@ -3356,7 +3356,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Focus under pressure
 
-*15 skills*
+_15 skills_
 
 - Advanced Focus under pressure techniques
 - Focus under pressure auditing
@@ -3376,7 +3376,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Recovery & rest
 
-*15 skills*
+_15 skills_
 
 - Enterprise recovery & rest
 - Recovery & rest assessment
@@ -3396,7 +3396,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Stress management routines
 
-*15 skills*
+_15 skills_
 
 - Change stress management routines
 - Crisis stress management routines
@@ -3416,7 +3416,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Support systems
 
-*15 skills*
+_15 skills_
 
 - Applied Support systems
 - Basic Support systems
@@ -3438,7 +3438,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Basic first aid
 
-*15 skills*
+_15 skills_
 
 - Basic Basic first aid
 - Basic first aid auditing
@@ -3458,7 +3458,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Hazard identification
 
-*15 skills*
+_15 skills_
 
 - Advanced Hazard identification techniques
 - Applied Hazard identification
@@ -3478,7 +3478,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Incident reporting
 
-*15 skills*
+_15 skills_
 
 - Advanced Incident reporting techniques
 - Enterprise incident reporting
@@ -3498,7 +3498,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Near-miss capture
 
-*15 skills*
+_15 skills_
 
 - Advanced Near-miss capture techniques
 - Basic Near-miss capture
@@ -3518,7 +3518,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### PPE basics
 
-*15 skills*
+_15 skills_
 
 - Advanced PPE basics techniques
 - Applied PPE basics
@@ -3538,7 +3538,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Safety culture
 
-*15 skills*
+_15 skills_
 
 - Basic Safety culture
 - Enterprise safety culture
@@ -3558,7 +3558,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Stop work authority
 
-*15 skills*
+_15 skills_
 
 - Medium-scale stop work authority
 - Stop work authority automation
@@ -3578,7 +3578,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Toolbox talks
 
-*15 skills*
+_15 skills_
 
 - Basic Toolbox talks
 - Large-scale toolbox talks
@@ -3600,7 +3600,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Calendar & timeboxing
 
-*15 skills*
+_15 skills_
 
 - Advanced Calendar & timeboxing techniques
 - Basic Calendar & timeboxing
@@ -3620,7 +3620,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Deadline management
 
-*15 skills*
+_15 skills_
 
 - Change deadline management
 - Crisis deadline management
@@ -3640,7 +3640,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Estimate & buffer
 
-*15 skills*
+_15 skills_
 
 - Applied Estimate & buffer
 - Enterprise estimate & buffer
@@ -3660,7 +3660,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Interrupt management
 
-*15 skills*
+_15 skills_
 
 - Change interrupt management
 - Crisis interrupt management
@@ -3680,7 +3680,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Personal SLAs
 
-*15 skills*
+_15 skills_
 
 - Applied Personal SLAs
 - Basic Personal SLAs
@@ -3700,7 +3700,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Prioritization frameworks
 
-*15 skills*
+_15 skills_
 
 - Basic Prioritization frameworks
 - Enterprise prioritization frameworks
@@ -3720,7 +3720,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Review & retros
 
-*15 skills*
+_15 skills_
 
 - Advanced Review & retros techniques
 - Enterprise review & retros
@@ -3740,7 +3740,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Task batching & flow
 
-*15 skills*
+_15 skills_
 
 - Applied Task batching & flow
 - Enterprise task batching & flow
@@ -3762,7 +3762,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Editorial process
 
-*15 skills*
+_15 skills_
 
 - Advanced Editorial process techniques
 - Editorial process assessment
@@ -3782,7 +3782,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Email & memo writing
 
-*15 skills*
+_15 skills_
 
 - Business email & memo writing
 - Creative email & memo writing
@@ -3802,7 +3802,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Grammar & style guides
 
-*15 skills*
+_15 skills_
 
 - Advanced Grammar & style guides techniques
 - Applied Grammar & style guides
@@ -3822,7 +3822,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Plain-language style
 
-*15 skills*
+_15 skills_
 
 - Applied Plain-language style
 - Enterprise plain-language style
@@ -3842,7 +3842,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Proposals & RFPs
 
-*15 skills*
+_15 skills_
 
 - Basic Proposals & RFPs
 - Enterprise proposals & rfps
@@ -3862,7 +3862,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Reports & briefs
 
-*15 skills*
+_15 skills_
 
 - Advanced Reports & briefs techniques
 - Applied Reports & briefs
@@ -3882,7 +3882,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Technical documentation
 
-*15 skills*
+_15 skills_
 
 - Academic technical documentation
 - Creative technical documentation
@@ -3902,7 +3902,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### UX microcopy
 
-*15 skills*
+_15 skills_
 
 - Basic UX microcopy
 - Medium-scale ux microcopy
@@ -3920,7 +3920,6 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 - UX microcopy innovation
 - UX microcopy monitoring
 
-
 ---
 
 ## ⚙️ Functional Competencies (F)
@@ -3929,7 +3928,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Avionics & instruments
 
-*15 skills*
+_15 skills_
 
 - Advanced Avionics & instruments techniques
 - Applied Avionics & instruments
@@ -3949,7 +3948,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Flight ops & dispatch
 
-*15 skills*
+_15 skills_
 
 - Basic Flight ops & dispatch
 - Flight ops & dispatch assessment
@@ -3969,7 +3968,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Ground handling
 
-*15 skills*
+_15 skills_
 
 - Advanced Ground handling techniques
 - Applied Ground handling
@@ -3989,7 +3988,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Human factors
 
-*15 skills*
+_15 skills_
 
 - Advanced Human factors techniques
 - Applied Human factors
@@ -4009,7 +4008,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Maintenance & airworthiness
 
-*15 skills*
+_15 skills_
 
 - Advanced Maintenance & airworthiness techniques
 - Enterprise maintenance & airworthiness
@@ -4029,7 +4028,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Regulatory compliance
 
-*15 skills*
+_15 skills_
 
 - Advanced Regulatory compliance techniques
 - Applied Regulatory compliance
@@ -4049,7 +4048,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Safety management systems
 
-*15 skills*
+_15 skills_
 
 - Crisis safety management systems
 - Cross-functional safety management systems
@@ -4069,7 +4068,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Weight & balance
 
-*15 skills*
+_15 skills_
 
 - Advanced Weight & balance techniques
 - Basic Weight & balance
@@ -4091,7 +4090,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Crop protection & IPM
 
-*15 skills*
+_15 skills_
 
 - Advanced Crop protection & IPM techniques
 - Applied Crop protection & IPM
@@ -4111,7 +4110,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Equipment use & maintenance
 
-*15 skills*
+_15 skills_
 
 - Applied Equipment use & maintenance
 - Basic Equipment use & maintenance
@@ -4131,7 +4130,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Farm records & compliance
 
-*15 skills*
+_15 skills_
 
 - Advanced Farm records & compliance techniques
 - Basic Farm records & compliance
@@ -4151,7 +4150,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Forestry & chainsaw safety
 
-*15 skills*
+_15 skills_
 
 - Advanced Forestry & chainsaw safety techniques
 - Basic Forestry & chainsaw safety
@@ -4171,7 +4170,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Greenhouse ops
 
-*15 skills*
+_15 skills_
 
 - Advanced Greenhouse ops techniques
 - Basic Greenhouse ops
@@ -4191,7 +4190,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Harvest & post-harvest
 
-*15 skills*
+_15 skills_
 
 - Applied Harvest & post-harvest
 - Basic Harvest & post-harvest
@@ -4211,7 +4210,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Planting & irrigation
 
-*15 skills*
+_15 skills_
 
 - Applied Planting & irrigation
 - Basic Planting & irrigation
@@ -4231,7 +4230,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Soil prep & fertility
 
-*15 skills*
+_15 skills_
 
 - Applied Soil prep & fertility
 - Basic Soil prep & fertility
@@ -4253,7 +4252,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Deployment & serving
 
-*15 skills*
+_15 skills_
 
 - Applied Deployment & serving
 - Deployment & serving assessment
@@ -4273,7 +4272,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Documentation & cards
 
-*15 skills*
+_15 skills_
 
 - Academic documentation & cards
 - Business documentation & cards
@@ -4293,7 +4292,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Evaluation & robustness
 
-*15 skills*
+_15 skills_
 
 - Applied Evaluation & robustness
 - Basic Evaluation & robustness
@@ -4313,7 +4312,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Feature engineering
 
-*15 skills*
+_15 skills_
 
 - Advanced Feature engineering techniques
 - Basic Feature engineering
@@ -4333,7 +4332,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Model training & tuning
 
-*15 skills*
+_15 skills_
 
 - Applied Model training & tuning
 - Basic Model training & tuning
@@ -4353,7 +4352,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Monitoring & drift
 
-*15 skills*
+_15 skills_
 
 - Medium-scale monitoring & drift
 - Monitoring & drift assessment
@@ -4373,7 +4372,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Problem framing & data readiness
 
-*15 skills*
+_15 skills_
 
 - Applied Problem framing & data readiness
 - Basic Problem framing & data readiness
@@ -4393,7 +4392,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Responsible AI & bias
 
-*15 skills*
+_15 skills_
 
 - Enterprise responsible ai & bias
 - Responsible AI & bias assessment
@@ -4415,7 +4414,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### BIM & coordination
 
-*15 skills*
+_15 skills_
 
 - Applied BIM & coordination
 - BIM & coordination assessment
@@ -4435,7 +4434,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Codes & documentation
 
-*15 skills*
+_15 skills_
 
 - Academic codes & documentation
 - Codes & documentation in Construction
@@ -4455,7 +4454,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Concept & schematic design
 
-*15 skills*
+_15 skills_
 
 - Collaborative concept & schematic design
 - Concept & schematic design in Construction
@@ -4475,7 +4474,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Construction admin
 
-*15 skills*
+_15 skills_
 
 - Advanced Construction admin techniques
 - Applied Construction admin
@@ -4495,7 +4494,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Heritage & conservation
 
-*15 skills*
+_15 skills_
 
 - Advanced Heritage & conservation techniques
 - Applied Heritage & conservation
@@ -4515,7 +4514,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Post-occupancy evaluation
 
-*15 skills*
+_15 skills_
 
 - Applied Post-occupancy evaluation
 - Enterprise post-occupancy evaluation
@@ -4535,7 +4534,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Site & master planning
 
-*15 skills*
+_15 skills_
 
 - Advanced Site & master planning techniques
 - Enterprise site & master planning
@@ -4555,7 +4554,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Sustainability integration
 
-*15 skills*
+_15 skills_
 
 - Advanced Sustainability integration techniques
 - Applied Sustainability integration
@@ -4577,7 +4576,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### CI/CD & release
 
-*15 skills*
+_15 skills_
 
 - CI/CD & release assessment
 - CI/CD & release automation
@@ -4597,7 +4596,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Cost management & FinOps
 
-*15 skills*
+_15 skills_
 
 - Cost management & FinOps in Construction
 - Cost management & FinOps in Finance
@@ -4617,7 +4616,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### IaC & provisioning
 
-*15 skills*
+_15 skills_
 
 - Advanced IaC & provisioning techniques
 - Applied IaC & provisioning
@@ -4637,7 +4636,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Multi-cloud & networking
 
-*15 skills*
+_15 skills_
 
 - Advanced Multi-cloud & networking techniques
 - Applied Multi-cloud & networking
@@ -4657,7 +4656,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Observability & SLOs
 
-*15 skills*
+_15 skills_
 
 - Advanced Observability & SLOs techniques
 - Enterprise observability & slos
@@ -4677,7 +4676,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Platform engineering
 
-*15 skills*
+_15 skills_
 
 - Applied Platform engineering
 - Medium-scale platform engineering
@@ -4697,7 +4696,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Reliability engineering
 
-*15 skills*
+_15 skills_
 
 - Advanced Reliability engineering techniques
 - Applied Reliability engineering
@@ -4717,7 +4716,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Runbooks & incident mgmt
 
-*15 skills*
+_15 skills_
 
 - Enterprise runbooks & incident mgmt
 - Large-scale runbooks & incident mgmt
@@ -4739,7 +4738,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### MEP coordination
 
-*15 skills*
+_15 skills_
 
 - Advanced MEP coordination techniques
 - Basic MEP coordination
@@ -4759,7 +4758,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### QA/QC & punch lists
 
-*15 skills*
+_15 skills_
 
 - Advanced QA/QC & punch lists techniques
 - Medium-scale qa/qc & punch lists
@@ -4779,7 +4778,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Reading plans & specs
 
-*15 skills*
+_15 skills_
 
 - Advanced Reading plans & specs techniques
 - Reading plans & specs auditing
@@ -4799,7 +4798,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Safety management
 
-*15 skills*
+_15 skills_
 
 - Crisis safety management
 - Cross-functional safety management
@@ -4819,7 +4818,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Schedule & progress
 
-*15 skills*
+_15 skills_
 
 - Enterprise schedule & progress
 - Large-scale schedule & progress
@@ -4839,7 +4838,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Site logistics & permits
 
-*15 skills*
+_15 skills_
 
 - Enterprise site logistics & permits
 - Large-scale site logistics & permits
@@ -4859,7 +4858,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Structural framing
 
-*15 skills*
+_15 skills_
 
 - Advanced Structural framing techniques
 - Applied Structural framing
@@ -4879,7 +4878,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Subcontractor oversight
 
-*15 skills*
+_15 skills_
 
 - Advanced Subcontractor oversight techniques
 - Applied Subcontractor oversight
@@ -4901,7 +4900,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Analytics & feedback
 
-*15 skills*
+_15 skills_
 
 - Analytics & feedback in Education
 - Analytics & feedback in Energy
@@ -4921,7 +4920,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Concepting & briefs
 
-*15 skills*
+_15 skills_
 
 - Advanced Concepting & briefs techniques
 - Basic Concepting & briefs
@@ -4941,7 +4940,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Copywriting & editing
 
-*15 skills*
+_15 skills_
 
 - Business copywriting & editing
 - Copywriting & editing in Government
@@ -4961,7 +4960,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Design & layout
 
-*15 skills*
+_15 skills_
 
 - Conceptual design & layout
 - Design & layout in Energy
@@ -4981,7 +4980,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Editorial workflow
 
-*15 skills*
+_15 skills_
 
 - Basic Editorial workflow
 - Editorial workflow automation
@@ -5001,7 +5000,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Photography & video
 
-*15 skills*
+_15 skills_
 
 - Applied Photography & video
 - Large-scale photography & video
@@ -5021,7 +5020,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Publishing & distribution
 
-*15 skills*
+_15 skills_
 
 - Enterprise publishing & distribution
 - Medium-scale publishing & distribution
@@ -5041,7 +5040,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Rights & releases
 
-*15 skills*
+_15 skills_
 
 - Basic Rights & releases
 - Enterprise rights & releases
@@ -5063,7 +5062,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Empathy & de-escalation
 
-*15 skills*
+_15 skills_
 
 - Advanced Empathy & de-escalation techniques
 - Basic Empathy & de-escalation
@@ -5083,7 +5082,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Escalation management
 
-*15 skills*
+_15 skills_
 
 - Crisis escalation management
 - Cross-functional escalation management
@@ -5103,7 +5102,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Knowledge base usage
 
-*15 skills*
+_15 skills_
 
 - Advanced Knowledge base usage techniques
 - Applied Knowledge base usage
@@ -5123,7 +5122,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Omnichannel tooling
 
-*15 skills*
+_15 skills_
 
 - Advanced Omnichannel tooling techniques
 - Basic Omnichannel tooling
@@ -5143,7 +5142,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### QA scorecards & coaching
 
-*15 skills*
+_15 skills_
 
 - Basic QA scorecards & coaching
 - Enterprise qa scorecards & coaching
@@ -5163,7 +5162,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Ticket lifecycle & SLAs
 
-*15 skills*
+_15 skills_
 
 - Advanced Ticket lifecycle & SLAs techniques
 - Basic Ticket lifecycle & SLAs
@@ -5183,7 +5182,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Triage & prioritization
 
-*15 skills*
+_15 skills_
 
 - Advanced Triage & prioritization techniques
 - Applied Triage & prioritization
@@ -5203,7 +5202,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Workforce management
 
-*15 skills*
+_15 skills_
 
 - Change workforce management
 - Crisis workforce management
@@ -5225,7 +5224,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Application security
 
-*15 skills*
+_15 skills_
 
 - Advanced Application security techniques
 - Application security assessment
@@ -5245,7 +5244,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Awareness & training
 
-*15 skills*
+_15 skills_
 
 - Awareness & training assessment
 - Awareness & training auditing
@@ -5265,7 +5264,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Detection & response (SOC)
 
-*15 skills*
+_15 skills_
 
 - Advanced Detection & response (SOC) techniques
 - Basic Detection & response (SOC)
@@ -5285,7 +5284,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Governance, risk & compliance
 
-*15 skills*
+_15 skills_
 
 - Applied Governance, risk & compliance
 - Enterprise governance, risk & compliance
@@ -5305,7 +5304,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Identity, auth & access
 
-*15 skills*
+_15 skills_
 
 - Basic Identity, auth & access
 - Identity, auth & access auditing
@@ -5325,7 +5324,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Security architecture
 
-*15 skills*
+_15 skills_
 
 - Enterprise security architecture
 - Medium-scale security architecture
@@ -5345,7 +5344,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Threat modeling & risk
 
-*15 skills*
+_15 skills_
 
 - Applied Threat modeling & risk
 - Large-scale threat modeling & risk
@@ -5365,7 +5364,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Vulnerability mgmt
 
-*15 skills*
+_15 skills_
 
 - Medium-scale vulnerability mgmt
 - Vulnerability mgmt auditing
@@ -5387,7 +5386,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### BI & semantic layers
 
-*15 skills*
+_15 skills_
 
 - Advanced BI & semantic layers techniques
 - BI & semantic layers best practices
@@ -5407,7 +5406,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Data modeling & governance
 
-*15 skills*
+_15 skills_
 
 - Advanced Data modeling & governance techniques
 - Data modeling & governance automation
@@ -5427,7 +5426,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Data reliability & SLAs
 
-*15 skills*
+_15 skills_
 
 - Advanced Data reliability & SLAs techniques
 - Applied Data reliability & SLAs
@@ -5447,7 +5446,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Experimentation & A/B
 
-*15 skills*
+_15 skills_
 
 - Basic Experimentation & A/B
 - Experimentation & A/B assessment
@@ -5467,7 +5466,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Forecasting & ML basics
 
-*15 skills*
+_15 skills_
 
 - Basic Forecasting & ML basics
 - Enterprise forecasting & ml basics
@@ -5487,7 +5486,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Ingestion & pipelines
 
-*15 skills*
+_15 skills_
 
 - Basic Ingestion & pipelines
 - Ingestion & pipelines automation
@@ -5507,7 +5506,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Visualization & dashboards
 
-*15 skills*
+_15 skills_
 
 - Advanced Visualization & dashboards techniques
 - Basic Visualization & dashboards
@@ -5527,7 +5526,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Warehousing & lakehouse
 
-*15 skills*
+_15 skills_
 
 - Advanced Warehousing & lakehouse techniques
 - Applied Warehousing & lakehouse
@@ -5549,7 +5548,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Adaptive learning
 
-*15 skills*
+_15 skills_
 
 - Adaptive learning best practices
 - Adaptive learning compliance
@@ -5569,7 +5568,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Assessment & rubrics
 
-*15 skills*
+_15 skills_
 
 - Advanced Assessment & rubrics techniques
 - Assessment & rubrics assessment
@@ -5589,7 +5588,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Classroom management
 
-*15 skills*
+_15 skills_
 
 - Classroom management in Energy
 - Classroom management in Manufacturing
@@ -5609,7 +5608,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Curriculum design
 
-*15 skills*
+_15 skills_
 
 - Conceptual curriculum design
 - Curriculum design in Education
@@ -5629,7 +5628,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### EdTech tooling
 
-*15 skills*
+_15 skills_
 
 - Advanced EdTech tooling techniques
 - Basic EdTech tooling
@@ -5649,7 +5648,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Facilitation & delivery
 
-*15 skills*
+_15 skills_
 
 - Facilitation & delivery assessment
 - Facilitation & delivery compliance
@@ -5669,7 +5668,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Lesson planning
 
-*15 skills*
+_15 skills_
 
 - Advanced Lesson planning techniques
 - Lesson planning assessment
@@ -5689,7 +5688,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Program evaluation
 
-*15 skills*
+_15 skills_
 
 - Large-scale program evaluation
 - Medium-scale program evaluation
@@ -5711,7 +5710,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Asset management
 
-*15 skills*
+_15 skills_
 
 - Asset management in Finance
 - Asset management in Healthcare
@@ -5731,7 +5730,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Demand response
 
-*15 skills*
+_15 skills_
 
 - Demand response assessment
 - Demand response best practices
@@ -5751,7 +5750,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Generation & T&D
 
-*15 skills*
+_15 skills_
 
 - Basic Generation & T&D
 - Enterprise generation & t&d
@@ -5771,7 +5770,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Grid operations & markets
 
-*15 skills*
+_15 skills_
 
 - Advanced Grid operations & markets techniques
 - Enterprise grid operations & markets
@@ -5791,7 +5790,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Protection & relays
 
-*15 skills*
+_15 skills_
 
 - Advanced Protection & relays techniques
 - Applied Protection & relays
@@ -5811,7 +5810,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Regulatory compliance
 
-*15 skills*
+_15 skills_
 
 - Advanced Regulatory compliance techniques
 - Applied Regulatory compliance
@@ -5831,7 +5830,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Renewables integration
 
-*15 skills*
+_15 skills_
 
 - Advanced Renewables integration techniques
 - Applied Renewables integration
@@ -5851,7 +5850,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Safety & switching
 
-*15 skills*
+_15 skills_
 
 - Advanced Safety & switching techniques
 - Applied Safety & switching
@@ -5873,7 +5872,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Audits & inspections
 
-*15 skills*
+_15 skills_
 
 - Advanced Audits & inspections techniques
 - Applied Audits & inspections
@@ -5893,7 +5892,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### EHS training & drills
 
-*15 skills*
+_15 skills_
 
 - Advanced EHS training & drills techniques
 - Basic EHS training & drills
@@ -5913,7 +5912,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Environmental monitoring
 
-*15 skills*
+_15 skills_
 
 - Enterprise environmental monitoring
 - Environmental monitoring assessment
@@ -5933,7 +5932,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Incident investigation
 
-*15 skills*
+_15 skills_
 
 - Advanced Incident investigation techniques
 - Incident investigation assessment
@@ -5953,7 +5952,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Permits & compliance
 
-*15 skills*
+_15 skills_
 
 - Advanced Permits & compliance techniques
 - Applied Permits & compliance
@@ -5973,7 +5972,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Reporting & disclosure
 
-*15 skills*
+_15 skills_
 
 - Applied Reporting & disclosure
 - Basic Reporting & disclosure
@@ -5993,7 +5992,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Sustainability strategy
 
-*15 skills*
+_15 skills_
 
 - Applied Sustainability strategy
 - Basic Sustainability strategy
@@ -6013,7 +6012,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Waste & emissions
 
-*15 skills*
+_15 skills_
 
 - Advanced Waste & emissions techniques
 - Applied Waste & emissions
@@ -6035,7 +6034,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Budgeting & forecasting
 
-*15 skills*
+_15 skills_
 
 - Advanced Budgeting & forecasting techniques
 - Applied Budgeting & forecasting
@@ -6055,7 +6054,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Controls & compliance
 
-*15 skills*
+_15 skills_
 
 - Advanced Controls & compliance techniques
 - Applied Controls & compliance
@@ -6075,7 +6074,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Costing & margins
 
-*15 skills*
+_15 skills_
 
 - Applied Costing & margins
 - Basic Costing & margins
@@ -6095,7 +6094,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Financial statements & close
 
-*15 skills*
+_15 skills_
 
 - Applied Financial statements & close
 - Financial statements & close assessment
@@ -6115,7 +6114,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Investment appraisal
 
-*15 skills*
+_15 skills_
 
 - Advanced Investment appraisal techniques
 - Basic Investment appraisal
@@ -6135,7 +6134,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Management reporting
 
-*15 skills*
+_15 skills_
 
 - Crisis management reporting
 - Cross-functional management reporting
@@ -6155,7 +6154,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Tax & audit support
 
-*15 skills*
+_15 skills_
 
 - Advanced Tax & audit support techniques
 - Basic Tax & audit support
@@ -6175,7 +6174,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Treasury & cash
 
-*15 skills*
+_15 skills_
 
 - Applied Treasury & cash
 - Enterprise treasury & cash
@@ -6197,7 +6196,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Baking & pastry techniques
 
-*15 skills*
+_15 skills_
 
 - Advanced Baking & pastry techniques techniques
 - Applied Baking & pastry techniques
@@ -6217,7 +6216,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Cooking methods & timing
 
-*15 skills*
+_15 skills_
 
 - Advanced Cooking methods & timing techniques
 - Agile cooking methods & timing
@@ -6237,7 +6236,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Food safety (HACCP)
 
-*15 skills*
+_15 skills_
 
 - Basic Food safety (HACCP)
 - Enterprise food safety (haccp)
@@ -6257,7 +6256,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Inventory & waste
 
-*15 skills*
+_15 skills_
 
 - Advanced Inventory & waste techniques
 - Applied Inventory & waste
@@ -6277,7 +6276,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Kitchen equipment care
 
-*15 skills*
+_15 skills_
 
 - Advanced Kitchen equipment care techniques
 - Enterprise kitchen equipment care
@@ -6297,7 +6296,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Menu & costing
 
-*15 skills*
+_15 skills_
 
 - Basic Menu & costing
 - Enterprise menu & costing
@@ -6317,7 +6316,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Mise en place & prep
 
-*15 skills*
+_15 skills_
 
 - Advanced Mise en place & prep techniques
 - Applied Mise en place & prep
@@ -6337,7 +6336,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Plating & presentation
 
-*15 skills*
+_15 skills_
 
 - Advanced Plating & presentation techniques
 - Basic Plating & presentation
@@ -6359,7 +6358,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Assessment & triage
 
-*15 skills*
+_15 skills_
 
 - Assessment & triage assessment
 - Assessment & triage best practices
@@ -6379,7 +6378,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Documentation & coding
 
-*15 skills*
+_15 skills_
 
 - Academic documentation & coding
 - Business documentation & coding
@@ -6399,7 +6398,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Infection prevention & control
 
-*15 skills*
+_15 skills_
 
 - Applied Infection prevention & control
 - Basic Infection prevention & control
@@ -6419,7 +6418,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Interdisciplinary coordination
 
-*15 skills*
+_15 skills_
 
 - Applied Interdisciplinary coordination
 - Basic Interdisciplinary coordination
@@ -6439,7 +6438,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Medication safety
 
-*15 skills*
+_15 skills_
 
 - Applied Medication safety
 - Basic Medication safety
@@ -6459,7 +6458,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Patient education
 
-*15 skills*
+_15 skills_
 
 - Advanced Patient education techniques
 - Applied Patient education
@@ -6479,7 +6478,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Quality & audit
 
-*15 skills*
+_15 skills_
 
 - Acceptance quality & audit
 - Automated quality & audit
@@ -6499,7 +6498,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Treatment & care plans
 
-*15 skills*
+_15 skills_
 
 - Advanced Treatment & care plans techniques
 - Large-scale treatment & care plans
@@ -6521,7 +6520,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Event planning & runsheet
 
-*15 skills*
+_15 skills_
 
 - Advanced Event planning & runsheet techniques
 - Basic Event planning & runsheet
@@ -6541,7 +6540,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Front-of-house service
 
-*15 skills*
+_15 skills_
 
 - Basic Front-of-house service
 - Front-of-house service auditing
@@ -6561,7 +6560,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Guest experience & recovery
 
-*15 skills*
+_15 skills_
 
 - Advanced Guest experience & recovery techniques
 - Basic Guest experience & recovery
@@ -6581,7 +6580,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### H&S compliance
 
-*15 skills*
+_15 skills_
 
 - Applied H&S compliance
 - Basic H&S compliance
@@ -6601,7 +6600,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Housekeeping standards
 
-*15 skills*
+_15 skills_
 
 - Advanced Housekeeping standards techniques
 - Applied Housekeeping standards
@@ -6621,7 +6620,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Reservations & yield
 
-*15 skills*
+_15 skills_
 
 - Advanced Reservations & yield techniques
 - Basic Reservations & yield
@@ -6641,7 +6640,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Vendor coordination
 
-*15 skills*
+_15 skills_
 
 - Advanced Vendor coordination techniques
 - Applied Vendor coordination
@@ -6661,7 +6660,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Venue ops & logistics
 
-*15 skills*
+_15 skills_
 
 - Advanced Venue ops & logistics techniques
 - Basic Venue ops & logistics
@@ -6683,7 +6682,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Compensation & benefits
 
-*15 skills*
+_15 skills_
 
 - Advanced Compensation & benefits techniques
 - Applied Compensation & benefits
@@ -6703,7 +6702,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Employee relations
 
-*15 skills*
+_15 skills_
 
 - Advanced Employee relations techniques
 - Applied Employee relations
@@ -6723,7 +6722,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### HRIS & analytics
 
-*15 skills*
+_15 skills_
 
 - Competitive hris & analytics
 - Descriptive hris & analytics
@@ -6743,7 +6742,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Learning & development
 
-*15 skills*
+_15 skills_
 
 - Advanced Learning & development techniques
 - Applied Learning & development
@@ -6763,7 +6762,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Onboarding & probation
 
-*15 skills*
+_15 skills_
 
 - Applied Onboarding & probation
 - Enterprise onboarding & probation
@@ -6783,7 +6782,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Performance & feedback
 
-*15 skills*
+_15 skills_
 
 - Enterprise performance & feedback
 - Medium-scale performance & feedback
@@ -6803,7 +6802,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Talent acquisition
 
-*15 skills*
+_15 skills_
 
 - Advanced Talent acquisition techniques
 - Basic Talent acquisition
@@ -6823,7 +6822,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Workforce planning
 
-*15 skills*
+_15 skills_
 
 - Advanced Workforce planning techniques
 - Basic Workforce planning
@@ -6845,7 +6844,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### DFM & DFT
 
-*15 skills*
+_15 skills_
 
 - Advanced DFM & DFT techniques
 - Applied DFM & DFT
@@ -6865,7 +6864,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### EMC/EMI & compliance
 
-*15 skills*
+_15 skills_
 
 - Advanced EMC/EMI & compliance techniques
 - Basic EMC/EMI & compliance
@@ -6885,7 +6884,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Firmware & RTOS
 
-*15 skills*
+_15 skills_
 
 - Advanced Firmware & RTOS techniques
 - Firmware & RTOS assessment
@@ -6905,7 +6904,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Power & thermal
 
-*15 skills*
+_15 skills_
 
 - Applied Power & thermal
 - Basic Power & thermal
@@ -6925,7 +6924,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Prototyping & bring-up
 
-*15 skills*
+_15 skills_
 
 - Advanced Prototyping & bring-up techniques
 - Applied Prototyping & bring-up
@@ -6945,7 +6944,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Schematic & PCB
 
-*15 skills*
+_15 skills_
 
 - Enterprise schematic & pcb
 - Medium-scale schematic & pcb
@@ -6965,7 +6964,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Sensors & signal
 
-*15 skills*
+_15 skills_
 
 - Applied Sensors & signal
 - Basic Sensors & signal
@@ -6985,7 +6984,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Test fixtures & validation
 
-*15 skills*
+_15 skills_
 
 - Enterprise test fixtures & validation
 - Small-scale test fixtures & validation
@@ -7007,7 +7006,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Code review & standards
 
-*15 skills*
+_15 skills_
 
 - Advanced Code review & standards techniques
 - Applied Code review & standards
@@ -7027,7 +7026,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Documentation & handover
 
-*15 skills*
+_15 skills_
 
 - Academic documentation & handover
 - Creative documentation & handover
@@ -7047,7 +7046,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Implementation & code quality
 
-*15 skills*
+_15 skills_
 
 - Acceptance implementation & code quality
 - Automated implementation & code quality
@@ -7067,7 +7066,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Performance & profiling
 
-*15 skills*
+_15 skills_
 
 - Advanced Performance & profiling techniques
 - Applied Performance & profiling
@@ -7087,7 +7086,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Requirements & design
 
-*15 skills*
+_15 skills_
 
 - Collaborative requirements & design
 - Conceptual requirements & design
@@ -7107,7 +7106,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Security & dependencies
 
-*15 skills*
+_15 skills_
 
 - Applied Security & dependencies
 - Large-scale security & dependencies
@@ -7127,7 +7126,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### System architecture
 
-*15 skills*
+_15 skills_
 
 - Advanced System architecture techniques
 - Applied System architecture
@@ -7147,7 +7146,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Testing (unit/integration/e2e)
 
-*15 skills*
+_15 skills_
 
 - Acceptance testing (unit/integration/e2e)
 - Automated testing (unit/integration/e2e)
@@ -7169,7 +7168,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Board & governance
 
-*15 skills*
+_15 skills_
 
 - Advanced Board & governance techniques
 - Board & governance auditing
@@ -7189,7 +7188,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Compliance programs
 
-*15 skills*
+_15 skills_
 
 - Advanced Compliance programs techniques
 - Compliance programs automation
@@ -7209,7 +7208,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Contract drafting & review
 
-*15 skills*
+_15 skills_
 
 - Basic Contract drafting & review
 - Contract drafting & review assessment
@@ -7229,7 +7228,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Dispute management
 
-*15 skills*
+_15 skills_
 
 - Change dispute management
 - Crisis dispute management
@@ -7249,7 +7248,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### IP & licensing
 
-*15 skills*
+_15 skills_
 
 - Applied IP & licensing
 - Basic IP & licensing
@@ -7269,7 +7268,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Legal research & memos
 
-*15 skills*
+_15 skills_
 
 - Basic Legal research & memos
 - Enterprise legal research & memos
@@ -7289,7 +7288,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Policy & training
 
-*15 skills*
+_15 skills_
 
 - Advanced Policy & training techniques
 - Applied Policy & training
@@ -7309,7 +7308,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Regulatory analysis
 
-*15 skills*
+_15 skills_
 
 - Descriptive regulatory analysis
 - Enterprise regulatory analysis
@@ -7331,7 +7330,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Cycle counting & inventory accuracy
 
-*15 skills*
+_15 skills_
 
 - Advanced Cycle counting & inventory accuracy techniques
 - Applied Cycle counting & inventory accuracy
@@ -7351,7 +7350,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Packing & dunnage
 
-*15 skills*
+_15 skills_
 
 - Applied Packing & dunnage
 - Enterprise packing & dunnage
@@ -7371,7 +7370,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Picking strategies
 
-*15 skills*
+_15 skills_
 
 - Advanced Picking strategies techniques
 - Basic Picking strategies
@@ -7391,7 +7390,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Receiving & put-away
 
-*15 skills*
+_15 skills_
 
 - Basic Receiving & put-away
 - Enterprise receiving & put-away
@@ -7411,7 +7410,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Reverse logistics & returns
 
-*15 skills*
+_15 skills_
 
 - Advanced Reverse logistics & returns techniques
 - Enterprise reverse logistics & returns
@@ -7431,7 +7430,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Slotting optimization
 
-*15 skills*
+_15 skills_
 
 - Enterprise slotting optimization
 - Large-scale slotting optimization
@@ -7451,7 +7450,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### WMS operation
 
-*15 skills*
+_15 skills_
 
 - Advanced WMS operation techniques
 - Large-scale wms operation
@@ -7471,7 +7470,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Yard & dock management
 
-*15 skills*
+_15 skills_
 
 - Change yard & dock management
 - Crisis yard & dock management
@@ -7493,7 +7492,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### CMMS & work orders
 
-*15 skills*
+_15 skills_
 
 - Advanced CMMS & work orders techniques
 - CMMS & work orders automation
@@ -7513,7 +7512,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Failure analysis
 
-*15 skills*
+_15 skills_
 
 - Competitive failure analysis
 - Diagnostic failure analysis
@@ -7533,7 +7532,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Lubrication & alignment
 
-*15 skills*
+_15 skills_
 
 - Applied Lubrication & alignment
 - Enterprise lubrication & alignment
@@ -7553,7 +7552,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Predictive monitoring (PdM)
 
-*15 skills*
+_15 skills_
 
 - Advanced Predictive monitoring (PdM) techniques
 - Basic Predictive monitoring (PdM)
@@ -7573,7 +7572,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Preventive maintenance
 
-*15 skills*
+_15 skills_
 
 - Advanced Preventive maintenance techniques
 - Applied Preventive maintenance
@@ -7593,7 +7592,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Reliability-centered maintenance
 
-*15 skills*
+_15 skills_
 
 - Applied Reliability-centered maintenance
 - Medium-scale reliability-centered maintenance
@@ -7613,7 +7612,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Shutdown & turnaround
 
-*15 skills*
+_15 skills_
 
 - Enterprise shutdown & turnaround
 - Shutdown & turnaround assessment
@@ -7633,7 +7632,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Spares & MRO
 
-*15 skills*
+_15 skills_
 
 - Advanced Spares & MRO techniques
 - Basic Spares & MRO
@@ -7655,7 +7654,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Cargo ops & stowage
 
-*15 skills*
+_15 skills_
 
 - Applied Cargo ops & stowage
 - Cargo ops & stowage assessment
@@ -7675,7 +7674,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Crew management
 
-*15 skills*
+_15 skills_
 
 - Crew management in Education
 - Crew management in Retail
@@ -7695,7 +7694,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Engine & platform ops
 
-*15 skills*
+_15 skills_
 
 - Basic Engine & platform ops
 - Engine & platform ops best practices
@@ -7715,7 +7714,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Maintenance & dry dock
 
-*15 skills*
+_15 skills_
 
 - Advanced Maintenance & dry dock techniques
 - Applied Maintenance & dry dock
@@ -7735,7 +7734,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Navigation & COLREGS
 
-*15 skills*
+_15 skills_
 
 - Applied Navigation & COLREGS
 - Basic Navigation & COLREGS
@@ -7755,7 +7754,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Regulatory & port state
 
-*15 skills*
+_15 skills_
 
 - Advanced Regulatory & port state techniques
 - Large-scale regulatory & port state
@@ -7775,7 +7774,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Safety & emergency
 
-*15 skills*
+_15 skills_
 
 - Advanced Safety & emergency techniques
 - Applied Safety & emergency
@@ -7795,7 +7794,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Weather & routing
 
-*15 skills*
+_15 skills_
 
 - Applied Weather & routing
 - Basic Weather & routing
@@ -7817,7 +7816,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Kanban & pull
 
-*15 skills*
+_15 skills_
 
 - Advanced Kanban & pull techniques
 - Enterprise kanban & pull
@@ -7837,7 +7836,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Line balancing & OEE
 
-*15 skills*
+_15 skills_
 
 - Advanced Line balancing & OEE techniques
 - Applied Line balancing & OEE
@@ -7857,7 +7856,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Process capability (Cp/Cpk)
 
-*15 skills*
+_15 skills_
 
 - Agile process capability (cp/cpk)
 - Applied Process capability (Cp/Cpk)
@@ -7877,7 +7876,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Safety at the line
 
-*15 skills*
+_15 skills_
 
 - Advanced Safety at the line techniques
 - Enterprise safety at the line
@@ -7897,7 +7896,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Scrap & rework reduction
 
-*15 skills*
+_15 skills_
 
 - Advanced Scrap & rework reduction techniques
 - Applied Scrap & rework reduction
@@ -7917,7 +7916,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Setup & changeover (SMED)
 
-*15 skills*
+_15 skills_
 
 - Advanced Setup & changeover (SMED) techniques
 - Applied Setup & changeover (SMED)
@@ -7937,7 +7936,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Visual controls & ANDON
 
-*15 skills*
+_15 skills_
 
 - Applied Visual controls & ANDON
 - Enterprise visual controls & andon
@@ -7957,7 +7956,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Work instructions
 
-*15 skills*
+_15 skills_
 
 - Advanced Work instructions techniques
 - Applied Work instructions
@@ -7979,7 +7978,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Compliance & reporting
 
-*15 skills*
+_15 skills_
 
 - Applied Compliance & reporting
 - Basic Compliance & reporting
@@ -7999,7 +7998,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Environmental & community
 
-*15 skills*
+_15 skills_
 
 - Advanced Environmental & community techniques
 - Applied Environmental & community
@@ -8019,7 +8018,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Equipment ops & maintenance
 
-*15 skills*
+_15 skills_
 
 - Advanced Equipment ops & maintenance techniques
 - Basic Equipment ops & maintenance
@@ -8039,7 +8038,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Exploration & surveying
 
-*15 skills*
+_15 skills_
 
 - Basic Exploration & surveying
 - Exploration & surveying auditing
@@ -8059,7 +8058,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Extraction & blasting
 
-*15 skills*
+_15 skills_
 
 - Advanced Extraction & blasting techniques
 - Enterprise extraction & blasting
@@ -8079,7 +8078,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Geotech & ventilation
 
-*15 skills*
+_15 skills_
 
 - Advanced Geotech & ventilation techniques
 - Applied Geotech & ventilation
@@ -8099,7 +8098,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Processing & tailings
 
-*15 skills*
+_15 skills_
 
 - Advanced Processing & tailings techniques
 - Applied Processing & tailings
@@ -8119,7 +8118,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Safety & emergency
 
-*15 skills*
+_15 skills_
 
 - Advanced Safety & emergency techniques
 - Applied Safety & emergency
@@ -8141,7 +8140,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Analytics & attribution
 
-*15 skills*
+_15 skills_
 
 - Analytics & attribution in Education
 - Analytics & attribution in Energy
@@ -8161,7 +8160,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Audience & positioning
 
-*15 skills*
+_15 skills_
 
 - Applied Audience & positioning
 - Audience & positioning assessment
@@ -8181,7 +8180,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Brand & creative ops
 
-*15 skills*
+_15 skills_
 
 - Advanced Brand & creative ops techniques
 - Applied Brand & creative ops
@@ -8201,7 +8200,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Content & editorial
 
-*15 skills*
+_15 skills_
 
 - Advanced Content & editorial techniques
 - Content & editorial auditing
@@ -8221,7 +8220,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Email & lifecycle
 
-*15 skills*
+_15 skills_
 
 - Applied Email & lifecycle
 - Email & lifecycle assessment
@@ -8241,7 +8240,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### PR & comms
 
-*15 skills*
+_15 skills_
 
 - Advanced PR & comms techniques
 - Basic PR & comms
@@ -8261,7 +8260,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### SEO/SEM & paid media
 
-*15 skills*
+_15 skills_
 
 - Basic SEO/SEM & paid media
 - Enterprise seo/sem & paid media
@@ -8281,7 +8280,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Social & community
 
-*15 skills*
+_15 skills_
 
 - Applied Social & community
 - Social & community auditing
@@ -8303,7 +8302,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Documentation & diagrams
 
-*15 skills*
+_15 skills_
 
 - Business documentation & diagrams
 - Creative documentation & diagrams
@@ -8323,7 +8322,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Monitoring & NOC
 
-*15 skills*
+_15 skills_
 
 - Advanced Monitoring & NOC techniques
 - Applied Monitoring & NOC
@@ -8343,7 +8342,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Network security
 
-*15 skills*
+_15 skills_
 
 - Applied Network security
 - Basic Network security
@@ -8363,7 +8362,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### QoS & performance
 
-*15 skills*
+_15 skills_
 
 - Enterprise qos & performance
 - QoS & performance assessment
@@ -8383,7 +8382,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Routing & switching
 
-*15 skills*
+_15 skills_
 
 - Basic Routing & switching
 - Enterprise routing & switching
@@ -8403,7 +8402,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### SDN & automation
 
-*15 skills*
+_15 skills_
 
 - Advanced SDN & automation techniques
 - Basic SDN & automation
@@ -8423,7 +8422,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Voice & collaboration
 
-*15 skills*
+_15 skills_
 
 - Advanced Voice & collaboration techniques
 - Enterprise voice & collaboration
@@ -8443,7 +8442,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Wireless & site surveys
 
-*15 skills*
+_15 skills_
 
 - Applied Wireless & site surveys
 - Medium-scale wireless & site surveys
@@ -8465,7 +8464,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Bottleneck analysis
 
-*15 skills*
+_15 skills_
 
 - Bottleneck analysis in Finance
 - Bottleneck analysis in Government
@@ -8485,7 +8484,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Continuous improvement
 
-*15 skills*
+_15 skills_
 
 - Advanced Continuous improvement techniques
 - Applied Continuous improvement
@@ -8505,7 +8504,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Handoffs & flow
 
-*15 skills*
+_15 skills_
 
 - Applied Handoffs & flow
 - Basic Handoffs & flow
@@ -8525,7 +8524,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### SOP creation & adherence
 
-*15 skills*
+_15 skills_
 
 - Basic SOP creation & adherence
 - SOP creation & adherence assessment
@@ -8545,7 +8544,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Standard work & 5S
 
-*15 skills*
+_15 skills_
 
 - Advanced Standard work & 5S techniques
 - Basic Standard work & 5S
@@ -8565,7 +8564,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Throughput & takt time
 
-*15 skills*
+_15 skills_
 
 - Advanced Throughput & takt time techniques
 - Applied Throughput & takt time
@@ -8585,7 +8584,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Visual management
 
-*15 skills*
+_15 skills_
 
 - Change visual management
 - Crisis visual management
@@ -8605,7 +8604,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Work cell design
 
-*15 skills*
+_15 skills_
 
 - Conceptual work cell design
 - Detailed work cell design
@@ -8627,7 +8626,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Assay development
 
-*15 skills*
+_15 skills_
 
 - Assay development assessment
 - Assay development automation
@@ -8647,7 +8646,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### GxP documentation
 
-*15 skills*
+_15 skills_
 
 - Academic gxp documentation
 - Business gxp documentation
@@ -8667,7 +8666,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Lab safety & biosafety
 
-*15 skills*
+_15 skills_
 
 - Advanced Lab safety & biosafety techniques
 - Basic Lab safety & biosafety
@@ -8687,7 +8686,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Sample handling & chain
 
-*15 skills*
+_15 skills_
 
 - Advanced Sample handling & chain techniques
 - Applied Sample handling & chain
@@ -8707,7 +8706,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Stability & storage
 
-*15 skills*
+_15 skills_
 
 - Advanced Stability & storage techniques
 - Applied Stability & storage
@@ -8727,7 +8726,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Submissions & dossiers
 
-*15 skills*
+_15 skills_
 
 - Advanced Submissions & dossiers techniques
 - Basic Submissions & dossiers
@@ -8747,7 +8746,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Tech transfer
 
-*15 skills*
+_15 skills_
 
 - Advanced Tech transfer techniques
 - Large-scale tech transfer
@@ -8767,7 +8766,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Validation & qualification
 
-*15 skills*
+_15 skills_
 
 - Basic Validation & qualification
 - Enterprise validation & qualification
@@ -8789,7 +8788,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Benefits realization
 
-*15 skills*
+_15 skills_
 
 - Applied Benefits realization
 - Basic Benefits realization
@@ -8809,7 +8808,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Change control
 
-*15 skills*
+_15 skills_
 
 - Change control assessment
 - Change control auditing
@@ -8829,7 +8828,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Cost & earned value
 
-*15 skills*
+_15 skills_
 
 - Advanced Cost & earned value techniques
 - Basic Cost & earned value
@@ -8849,7 +8848,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Governance & comms
 
-*15 skills*
+_15 skills_
 
 - Advanced Governance & comms techniques
 - Enterprise governance & comms
@@ -8869,7 +8868,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Resource & dependency mgmt
 
-*15 skills*
+_15 skills_
 
 - Advanced Resource & dependency mgmt techniques
 - Basic Resource & dependency mgmt
@@ -8889,7 +8888,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Risk & issues
 
-*15 skills*
+_15 skills_
 
 - Basic Risk & issues
 - Large-scale risk & issues
@@ -8909,7 +8908,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Scheduling & critical path
 
-*15 skills*
+_15 skills_
 
 - Basic Scheduling & critical path
 - Enterprise scheduling & critical path
@@ -8929,7 +8928,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Scope & WBS
 
-*15 skills*
+_15 skills_
 
 - Large-scale scope & wbs
 - Medium-scale scope & wbs
@@ -8951,7 +8950,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Discovery & research
 
-*15 skills*
+_15 skills_
 
 - Advanced Discovery & research techniques
 - Applied Discovery & research
@@ -8971,7 +8970,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Experimentation & learning
 
-*15 skills*
+_15 skills_
 
 - Advanced Experimentation & learning techniques
 - Basic Experimentation & learning
@@ -8991,7 +8990,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Go-to-market & launch
 
-*15 skills*
+_15 skills_
 
 - Basic Go-to-market & launch
 - Enterprise go-to-market & launch
@@ -9011,7 +9010,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Opportunity assessment
 
-*15 skills*
+_15 skills_
 
 - Advanced Opportunity assessment techniques
 - Applied Opportunity assessment
@@ -9031,7 +9030,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Prioritization frameworks
 
-*15 skills*
+_15 skills_
 
 - Basic Prioritization frameworks
 - Enterprise prioritization frameworks
@@ -9051,7 +9050,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Requirements & acceptance
 
-*15 skills*
+_15 skills_
 
 - Advanced Requirements & acceptance techniques
 - Basic Requirements & acceptance
@@ -9071,7 +9070,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Roadmapping & OKRs
 
-*15 skills*
+_15 skills_
 
 - Enterprise roadmapping & okrs
 - Roadmapping & OKRs auditing
@@ -9091,7 +9090,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Stakeholder comms
 
-*15 skills*
+_15 skills_
 
 - Advanced Stakeholder comms techniques
 - Applied Stakeholder comms
@@ -9113,7 +9112,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Case management
 
-*15 skills*
+_15 skills_
 
 - Case management in Finance
 - Case management in Non-profit
@@ -9133,7 +9132,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Community engagement
 
-*15 skills*
+_15 skills_
 
 - Advanced Community engagement techniques
 - Community engagement auditing
@@ -9153,7 +9152,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Grants & procurement
 
-*15 skills*
+_15 skills_
 
 - Applied Grants & procurement
 - Basic Grants & procurement
@@ -9173,7 +9172,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Interagency coordination
 
-*15 skills*
+_15 skills_
 
 - Advanced Interagency coordination techniques
 - Basic Interagency coordination
@@ -9193,7 +9192,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Policy implementation
 
-*15 skills*
+_15 skills_
 
 - Basic Policy implementation
 - Large-scale policy implementation
@@ -9213,7 +9212,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Program evaluation
 
-*15 skills*
+_15 skills_
 
 - Large-scale program evaluation
 - Medium-scale program evaluation
@@ -9233,7 +9232,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Public communications
 
-*15 skills*
+_15 skills_
 
 - Client-facing public communications
 - Crisis public communications
@@ -9253,7 +9252,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Safeguarding & ethics
 
-*15 skills*
+_15 skills_
 
 - Advanced Safeguarding & ethics techniques
 - Applied Safeguarding & ethics
@@ -9275,7 +9274,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Audit readiness
 
-*15 skills*
+_15 skills_
 
 - Applied Audit readiness
 - Audit readiness assessment
@@ -9295,7 +9294,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### CAPA workflows
 
-*15 skills*
+_15 skills_
 
 - Applied CAPA workflows
 - Basic CAPA workflows
@@ -9315,7 +9314,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Control plans & SPC
 
-*15 skills*
+_15 skills_
 
 - Advanced Control plans & SPC techniques
 - Basic Control plans & SPC
@@ -9335,7 +9334,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Documentation & traceability
 
-*15 skills*
+_15 skills_
 
 - Academic documentation & traceability
 - Creative documentation & traceability
@@ -9355,7 +9354,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Gage R&R & MSA
 
-*15 skills*
+_15 skills_
 
 - Applied Gage R&R & MSA
 - Gage R&R & MSA assessment
@@ -9375,7 +9374,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Inspection planning (AQL)
 
-*15 skills*
+_15 skills_
 
 - Applied Inspection planning (AQL)
 - Basic Inspection planning (AQL)
@@ -9395,7 +9394,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Nonconformance & NCRs
 
-*15 skills*
+_15 skills_
 
 - Applied Nonconformance & NCRs
 - Basic Nonconformance & NCRs
@@ -9415,7 +9414,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Root cause analysis
 
-*15 skills*
+_15 skills_
 
 - Descriptive root cause analysis
 - Diagnostic root cause analysis
@@ -9437,7 +9436,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Budget & CAM
 
-*15 skills*
+_15 skills_
 
 - Advanced Budget & CAM techniques
 - Applied Budget & CAM
@@ -9457,7 +9456,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Capital projects
 
-*15 skills*
+_15 skills_
 
 - Advanced Capital projects techniques
 - Basic Capital projects
@@ -9477,7 +9476,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### H&S compliance
 
-*15 skills*
+_15 skills_
 
 - Applied H&S compliance
 - Basic H&S compliance
@@ -9497,7 +9496,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Leasing & tenant relations
 
-*15 skills*
+_15 skills_
 
 - Advanced Leasing & tenant relations techniques
 - Basic Leasing & tenant relations
@@ -9517,7 +9516,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Maintenance & energy
 
-*15 skills*
+_15 skills_
 
 - Advanced Maintenance & energy techniques
 - Applied Maintenance & energy
@@ -9537,7 +9536,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Moves & space planning
 
-*15 skills*
+_15 skills_
 
 - Advanced Moves & space planning techniques
 - Enterprise moves & space planning
@@ -9557,7 +9556,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Property operations
 
-*15 skills*
+_15 skills_
 
 - Basic Property operations
 - Enterprise property operations
@@ -9577,7 +9576,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Vendor management
 
-*15 skills*
+_15 skills_
 
 - Crisis vendor management
 - Cross-functional vendor management
@@ -9599,7 +9598,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Data collection
 
-*15 skills*
+_15 skills_
 
 - Applied Data collection
 - Data collection best practices
@@ -9619,7 +9618,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Ethics & IRB
 
-*15 skills*
+_15 skills_
 
 - Advanced Ethics & IRB techniques
 - Applied Ethics & IRB
@@ -9639,7 +9638,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Literature review
 
-*15 skills*
+_15 skills_
 
 - Advanced Literature review techniques
 - Applied Literature review
@@ -9659,7 +9658,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Qualitative analysis
 
-*15 skills*
+_15 skills_
 
 - Descriptive qualitative analysis
 - Diagnostic qualitative analysis
@@ -9679,7 +9678,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Replication & prereg
 
-*15 skills*
+_15 skills_
 
 - Basic Replication & prereg
 - Enterprise replication & prereg
@@ -9699,7 +9698,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Research design
 
-*15 skills*
+_15 skills_
 
 - Collaborative research design
 - Detailed research design
@@ -9719,7 +9718,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Statistical analysis
 
-*15 skills*
+_15 skills_
 
 - Competitive statistical analysis
 - Enterprise statistical analysis
@@ -9739,7 +9738,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Visualization & reporting
 
-*15 skills*
+_15 skills_
 
 - Advanced Visualization & reporting techniques
 - Medium-scale visualization & reporting
@@ -9761,7 +9760,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Customer service
 
-*15 skills*
+_15 skills_
 
 - Applied Customer service
 - Basic Customer service
@@ -9781,7 +9780,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Inventory processes
 
-*15 skills*
+_15 skills_
 
 - Advanced Inventory processes techniques
 - Basic Inventory processes
@@ -9801,7 +9800,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Loss prevention & shrink
 
-*15 skills*
+_15 skills_
 
 - Advanced Loss prevention & shrink techniques
 - Loss prevention & shrink assessment
@@ -9821,7 +9820,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Omnichannel operations
 
-*15 skills*
+_15 skills_
 
 - Applied Omnichannel operations
 - Enterprise omnichannel operations
@@ -9841,7 +9840,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### POS & cash handling
 
-*15 skills*
+_15 skills_
 
 - Advanced POS & cash handling techniques
 - Enterprise pos & cash handling
@@ -9861,7 +9860,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Planograms & merchandising
 
-*15 skills*
+_15 skills_
 
 - Applied Planograms & merchandising
 - Basic Planograms & merchandising
@@ -9881,7 +9880,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Store KPIs & labor
 
-*15 skills*
+_15 skills_
 
 - Advanced Store KPIs & labor techniques
 - Basic Store KPIs & labor
@@ -9901,7 +9900,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Visual displays
 
-*15 skills*
+_15 skills_
 
 - Enterprise visual displays
 - Small-scale visual displays
@@ -9923,7 +9922,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Account expansion
 
-*15 skills*
+_15 skills_
 
 - Account expansion auditing
 - Account expansion implementation
@@ -9943,7 +9942,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Demos & value narrative
 
-*15 skills*
+_15 skills_
 
 - Applied Demos & value narrative
 - Basic Demos & value narrative
@@ -9963,7 +9962,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Discovery & qualification
 
-*15 skills*
+_15 skills_
 
 - Applied Discovery & qualification
 - Discovery & qualification assessment
@@ -9983,7 +9982,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### ICP & prospecting
 
-*15 skills*
+_15 skills_
 
 - Advanced ICP & prospecting techniques
 - Applied ICP & prospecting
@@ -10003,7 +10002,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Negotiation & closing
 
-*15 skills*
+_15 skills_
 
 - Enterprise negotiation & closing
 - Medium-scale negotiation & closing
@@ -10023,7 +10022,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Pipeline management
 
-*15 skills*
+_15 skills_
 
 - Change pipeline management
 - Cross-functional pipeline management
@@ -10043,7 +10042,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Proposal & pricing
 
-*15 skills*
+_15 skills_
 
 - Applied Proposal & pricing
 - Basic Proposal & pricing
@@ -10063,7 +10062,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Sales operations & tooling
 
-*15 skills*
+_15 skills_
 
 - Basic Sales operations & tooling
 - Large-scale sales operations & tooling
@@ -10085,7 +10084,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Access control & patrols
 
-*15 skills*
+_15 skills_
 
 - Access control & patrols assessment
 - Access control & patrols auditing
@@ -10105,7 +10104,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### BCP & crisis mgmt
 
-*15 skills*
+_15 skills_
 
 - Applied BCP & crisis mgmt
 - BCP & crisis mgmt assessment
@@ -10125,7 +10124,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Emergency planning
 
-*15 skills*
+_15 skills_
 
 - Advanced Emergency planning techniques
 - Applied Emergency planning
@@ -10145,7 +10144,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Incident response
 
-*15 skills*
+_15 skills_
 
 - Enterprise incident response
 - Incident response assessment
@@ -10165,7 +10164,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Investigations & reports
 
-*15 skills*
+_15 skills_
 
 - Advanced Investigations & reports techniques
 - Basic Investigations & reports
@@ -10185,7 +10184,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Liaison with authorities
 
-*15 skills*
+_15 skills_
 
 - Advanced Liaison with authorities techniques
 - Liaison with authorities automation
@@ -10205,7 +10204,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Physical security systems
 
-*15 skills*
+_15 skills_
 
 - Enterprise physical security systems
 - Medium-scale physical security systems
@@ -10225,7 +10224,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Risk & threat assessments
 
-*15 skills*
+_15 skills_
 
 - Advanced Risk & threat assessments techniques
 - Enterprise risk & threat assessments
@@ -10247,7 +10246,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Coaching & cueing
 
-*15 skills*
+_15 skills_
 
 - Applied Coaching & cueing
 - Coaching & cueing best practices
@@ -10267,7 +10266,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Competition logistics
 
-*15 skills*
+_15 skills_
 
 - Advanced Competition logistics techniques
 - Applied Competition logistics
@@ -10287,7 +10286,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Facility operations
 
-*15 skills*
+_15 skills_
 
 - Facility operations automation
 - Facility operations best practices
@@ -10307,7 +10306,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Injury prevention
 
-*15 skills*
+_15 skills_
 
 - Basic Injury prevention
 - Injury prevention assessment
@@ -10327,7 +10326,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Member services
 
-*15 skills*
+_15 skills_
 
 - Applied Member services
 - Basic Member services
@@ -10347,7 +10346,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Nutrition basics
 
-*15 skills*
+_15 skills_
 
 - Advanced Nutrition basics techniques
 - Basic Nutrition basics
@@ -10367,7 +10366,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Program design
 
-*15 skills*
+_15 skills_
 
 - Detailed program design
 - Enterprise program design
@@ -10387,7 +10386,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Strength & conditioning
 
-*15 skills*
+_15 skills_
 
 - Basic Strength & conditioning
 - Enterprise strength & conditioning
@@ -10409,7 +10408,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Business case & NPV
 
-*15 skills*
+_15 skills_
 
 - Basic Business case & NPV
 - Business case & NPV assessment
@@ -10429,7 +10428,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Competitive analysis
 
-*15 skills*
+_15 skills_
 
 - Competitive analysis in Government
 - Competitive analysis in Healthcare
@@ -10449,7 +10448,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### M&A screening & diligence
 
-*15 skills*
+_15 skills_
 
 - Advanced M&A screening & diligence techniques
 - Applied M&A screening & diligence
@@ -10469,7 +10468,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Market sizing & dynamics
 
-*15 skills*
+_15 skills_
 
 - Advanced Market sizing & dynamics techniques
 - Applied Market sizing & dynamics
@@ -10489,7 +10488,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### OKR & strategy cadence
 
-*15 skills*
+_15 skills_
 
 - Applied OKR & strategy cadence
 - Basic OKR & strategy cadence
@@ -10509,7 +10508,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Portfolio & capital allocation
 
-*15 skills*
+_15 skills_
 
 - Advanced Portfolio & capital allocation techniques
 - Applied Portfolio & capital allocation
@@ -10529,7 +10528,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Post-merger integration
 
-*15 skills*
+_15 skills_
 
 - Advanced Post-merger integration techniques
 - Enterprise post-merger integration
@@ -10549,7 +10548,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Strategic partnerships
 
-*15 skills*
+_15 skills_
 
 - Advanced Strategic partnerships techniques
 - Basic Strategic partnerships
@@ -10571,7 +10570,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Category strategy
 
-*15 skills*
+_15 skills_
 
 - Advanced Category strategy techniques
 - Applied Category strategy
@@ -10591,7 +10590,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Contracting & T&Cs
 
-*15 skills*
+_15 skills_
 
 - Applied Contracting & T&Cs
 - Contracting & T&Cs customization
@@ -10611,7 +10610,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Cost & should-cost
 
-*15 skills*
+_15 skills_
 
 - Advanced Cost & should-cost techniques
 - Applied Cost & should-cost
@@ -10631,7 +10630,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Market scouting & RFx
 
-*15 skills*
+_15 skills_
 
 - Advanced Market scouting & RFx techniques
 - Enterprise market scouting & rfx
@@ -10651,7 +10650,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### P2P processes
 
-*15 skills*
+_15 skills_
 
 - Advanced P2P processes techniques
 - Agile p2p processes
@@ -10671,7 +10670,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### SRM & performance
 
-*15 skills*
+_15 skills_
 
 - Advanced SRM & performance techniques
 - Applied SRM & performance
@@ -10691,7 +10690,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Supplier qualification & audits
 
-*15 skills*
+_15 skills_
 
 - Applied Supplier qualification & audits
 - Basic Supplier qualification & audits
@@ -10711,7 +10710,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Sustainable procurement
 
-*15 skills*
+_15 skills_
 
 - Advanced Sustainable procurement techniques
 - Basic Sustainable procurement
@@ -10733,7 +10732,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Carpentry & finishes
 
-*15 skills*
+_15 skills_
 
 - Basic Carpentry & finishes
 - Carpentry & finishes automation
@@ -10753,7 +10752,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Electrical installation & codes
 
-*15 skills*
+_15 skills_
 
 - Advanced Electrical installation & codes techniques
 - Applied Electrical installation & codes
@@ -10773,7 +10772,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### HVAC install & service
 
-*15 skills*
+_15 skills_
 
 - Basic HVAC install & service
 - Enterprise hvac install & service
@@ -10793,7 +10792,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### NDT & inspection
 
-*15 skills*
+_15 skills_
 
 - Advanced NDT & inspection techniques
 - Applied NDT & inspection
@@ -10813,7 +10812,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Plumbing & piping systems
 
-*15 skills*
+_15 skills_
 
 - Enterprise plumbing & piping systems
 - Medium-scale plumbing & piping systems
@@ -10833,7 +10832,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Rigging & lifting
 
-*15 skills*
+_15 skills_
 
 - Applied Rigging & lifting
 - Enterprise rigging & lifting
@@ -10853,7 +10852,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Sheet metal & fabrication
 
-*15 skills*
+_15 skills_
 
 - Advanced Sheet metal & fabrication techniques
 - Enterprise sheet metal & fabrication
@@ -10873,7 +10872,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Welding processes & WPS
 
-*15 skills*
+_15 skills_
 
 - Applied Welding processes & WPS
 - Enterprise welding processes & wps
@@ -10895,7 +10894,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Customer service
 
-*15 skills*
+_15 skills_
 
 - Advanced Customer service techniques
 - Applied Customer service
@@ -10915,7 +10914,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Dispatch & routing
 
-*15 skills*
+_15 skills_
 
 - Basic Dispatch & routing
 - Dispatch & routing auditing
@@ -10935,7 +10934,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Fleet ops & scheduling
 
-*15 skills*
+_15 skills_
 
 - Enterprise fleet ops & scheduling
 - Fleet ops & scheduling assessment
@@ -10955,7 +10954,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Incident investigation
 
-*15 skills*
+_15 skills_
 
 - Advanced Incident investigation techniques
 - Incident investigation assessment
@@ -10975,7 +10974,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Maintenance & inspections
 
-*15 skills*
+_15 skills_
 
 - Basic Maintenance & inspections
 - Large-scale maintenance & inspections
@@ -10995,7 +10994,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Safety & compliance
 
-*15 skills*
+_15 skills_
 
 - Advanced Safety & compliance techniques
 - Applied Safety & compliance
@@ -11015,7 +11014,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Telematics & data
 
-*15 skills*
+_15 skills_
 
 - Applied Telematics & data
 - Basic Telematics & data
@@ -11035,7 +11034,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Terminal & yard ops
 
-*15 skills*
+_15 skills_
 
 - Enterprise terminal & yard ops
 - Large-scale terminal & yard ops
@@ -11057,7 +11056,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Accessibility & inclusivity
 
-*15 skills*
+_15 skills_
 
 - Accessibility & inclusivity assessment
 - Accessibility & inclusivity automation
@@ -11077,7 +11076,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Content design
 
-*15 skills*
+_15 skills_
 
 - Collaborative content design
 - Conceptual content design
@@ -11097,7 +11096,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Information architecture
 
-*15 skills*
+_15 skills_
 
 - Basic Information architecture
 - Information architecture assessment
@@ -11117,7 +11116,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Interaction design
 
-*15 skills*
+_15 skills_
 
 - Conceptual interaction design
 - Detailed interaction design
@@ -11137,7 +11136,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Prototyping & handoff
 
-*15 skills*
+_15 skills_
 
 - Advanced Prototyping & handoff techniques
 - Basic Prototyping & handoff
@@ -11157,7 +11156,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Research & insights
 
-*15 skills*
+_15 skills_
 
 - Advanced Research & insights techniques
 - Basic Research & insights
@@ -11177,7 +11176,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Usability testing
 
-*15 skills*
+_15 skills_
 
 - Acceptance usability testing
 - Automated usability testing
@@ -11197,7 +11196,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Visual design & systems
 
-*15 skills*
+_15 skills_
 
 - Collaborative visual design & systems
 - Conceptual visual design & systems
@@ -11215,7 +11214,6 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 - Visual design & systems in Healthcare
 - Visual visual design & systems
 
-
 ---
 
 ## 🛠️ Tools & Technologies (T)
@@ -11224,7 +11222,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Compliance & records
 
-*15 skills*
+_15 skills_
 
 - Applied Compliance & records
 - Basic Compliance & records
@@ -11244,7 +11242,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Drones & imagery
 
-*15 skills*
+_15 skills_
 
 - Basic Drones & imagery
 - Drones & imagery configuration
@@ -11264,7 +11262,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Farm mgmt systems
 
-*15 skills*
+_15 skills_
 
 - Applied Farm mgmt systems
 - Farm mgmt systems best practices
@@ -11284,7 +11282,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Irrigation control
 
-*15 skills*
+_15 skills_
 
 - Basic Irrigation control
 - Irrigation control administration
@@ -11304,7 +11302,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Livestock tracking
 
-*15 skills*
+_15 skills_
 
 - Advanced Livestock tracking techniques
 - Basic Livestock tracking
@@ -11324,7 +11322,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Variable rate tech
 
-*15 skills*
+_15 skills_
 
 - Advanced Variable rate tech techniques
 - Applied Variable rate tech
@@ -11344,7 +11342,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Weather & soil sensors
 
-*15 skills*
+_15 skills_
 
 - Advanced Weather & soil sensors techniques
 - Applied Weather & soil sensors
@@ -11364,7 +11362,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Yield mapping
 
-*15 skills*
+_15 skills_
 
 - Advanced Yield mapping techniques
 - Basic Yield mapping
@@ -11386,7 +11384,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### A/B & multi-armed bandits
 
-*15 skills*
+_15 skills_
 
 - A/B & multi-armed bandits automation
 - A/B & multi-armed bandits best practices
@@ -11406,7 +11404,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Causal inference basics
 
-*15 skills*
+_15 skills_
 
 - Basic Causal inference basics
 - Causal inference basics assessment
@@ -11426,7 +11424,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Event tracking
 
-*15 skills*
+_15 skills_
 
 - Advanced Event tracking techniques
 - Applied Event tracking
@@ -11446,7 +11444,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Experiment review
 
-*15 skills*
+_15 skills_
 
 - Applied Experiment review
 - Basic Experiment review
@@ -11466,7 +11464,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Feature flags & guardrails
 
-*15 skills*
+_15 skills_
 
 - Basic Feature flags & guardrails
 - Enterprise feature flags & guardrails
@@ -11486,7 +11484,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Forecasting & seasonality
 
-*15 skills*
+_15 skills_
 
 - Enterprise forecasting & seasonality
 - Forecasting & seasonality compliance
@@ -11506,7 +11504,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Funnels & cohorts
 
-*15 skills*
+_15 skills_
 
 - Advanced Funnels & cohorts techniques
 - Enterprise funnels & cohorts
@@ -11526,7 +11524,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Metric design
 
-*15 skills*
+_15 skills_
 
 - Collaborative metric design
 - Conceptual metric design
@@ -11548,7 +11546,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Distribution
 
-*15 skills*
+_15 skills_
 
 - Advanced Distribution techniques
 - Applied Distribution
@@ -11568,7 +11566,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Editing & mixing
 
-*15 skills*
+_15 skills_
 
 - Advanced Editing & mixing techniques
 - Applied Editing & mixing
@@ -11588,7 +11586,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Live sound
 
-*15 skills*
+_15 skills_
 
 - Advanced Live sound techniques
 - Enterprise live sound
@@ -11608,7 +11606,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Mastering & loudness
 
-*15 skills*
+_15 skills_
 
 - Advanced Mastering & loudness techniques
 - Basic Mastering & loudness
@@ -11628,7 +11626,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Podcast workflows
 
-*15 skills*
+_15 skills_
 
 - Advanced Podcast workflows techniques
 - Applied Podcast workflows
@@ -11648,7 +11646,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Recording & mics
 
-*15 skills*
+_15 skills_
 
 - Advanced Recording & mics techniques
 - Applied Recording & mics
@@ -11668,7 +11666,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Restoration & noise
 
-*15 skills*
+_15 skills_
 
 - Applied Restoration & noise
 - Basic Restoration & noise
@@ -11688,7 +11686,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Synthesis & MIDI
 
-*15 skills*
+_15 skills_
 
 - Advanced Synthesis & MIDI techniques
 - Basic Synthesis & MIDI
@@ -11710,7 +11708,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Ad hoc analysis
 
-*15 skills*
+_15 skills_
 
 - Ad hoc analysis in Energy
 - Ad hoc analysis in Non-profit
@@ -11730,7 +11728,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Alerts & subscriptions
 
-*15 skills*
+_15 skills_
 
 - Alerts & subscriptions auditing
 - Alerts & subscriptions configuration
@@ -11750,7 +11748,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Dashboard design
 
-*15 skills*
+_15 skills_
 
 - Collaborative dashboard design
 - Dashboard design administration
@@ -11770,7 +11768,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Data storytelling
 
-*15 skills*
+_15 skills_
 
 - Data storytelling administration
 - Data storytelling assessment
@@ -11790,7 +11788,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Distribution & embed
 
-*15 skills*
+_15 skills_
 
 - Applied Distribution & embed
 - Distribution & embed administration
@@ -11810,7 +11808,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### KPI governance
 
-*15 skills*
+_15 skills_
 
 - Basic KPI governance
 - KPI governance compliance
@@ -11830,7 +11828,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Performance optimization
 
-*15 skills*
+_15 skills_
 
 - Advanced Performance optimization techniques
 - Applied Performance optimization
@@ -11850,7 +11848,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Semantic modeling
 
-*15 skills*
+_15 skills_
 
 - Large-scale semantic modeling
 - Semantic modeling assessment
@@ -11872,7 +11870,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### DFM/DFA
 
-*15 skills*
+_15 skills_
 
 - Advanced DFM/DFA techniques
 - Basic DFM/DFA
@@ -11892,7 +11890,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Drawings & tolerances
 
-*15 skills*
+_15 skills_
 
 - Advanced Drawings & tolerances techniques
 - Basic Drawings & tolerances
@@ -11912,7 +11910,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Materials libraries
 
-*15 skills*
+_15 skills_
 
 - Applied Materials libraries
 - Basic Materials libraries
@@ -11932,7 +11930,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### PDM/PLM workflows
 
-*15 skills*
+_15 skills_
 
 - Advanced PDM/PLM workflows techniques
 - Applied PDM/PLM workflows
@@ -11952,7 +11950,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Part & assembly design
 
-*15 skills*
+_15 skills_
 
 - Collaborative part & assembly design
 - Conceptual part & assembly design
@@ -11972,7 +11970,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Simulation & FEA/CFD
 
-*15 skills*
+_15 skills_
 
 - Applied Simulation & FEA/CFD
 - Large-scale simulation & fea/cfd
@@ -11992,7 +11990,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Standards & revisions
 
-*15 skills*
+_15 skills_
 
 - Applied Standards & revisions
 - Basic Standards & revisions
@@ -12012,7 +12010,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Toolpaths & CAM
 
-*15 skills*
+_15 skills_
 
 - Advanced Toolpaths & CAM techniques
 - Enterprise toolpaths & cam
@@ -12034,7 +12032,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Artifacts & registries
 
-*15 skills*
+_15 skills_
 
 - Applied Artifacts & registries
 - Artifacts & registries auditing
@@ -12054,7 +12052,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Caching & parallelism
 
-*15 skills*
+_15 skills_
 
 - Advanced Caching & parallelism techniques
 - Basic Caching & parallelism
@@ -12074,7 +12072,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Observability
 
-*15 skills*
+_15 skills_
 
 - Large-scale observability
 - Medium-scale observability
@@ -12094,7 +12092,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Pipelines & orchestration
 
-*15 skills*
+_15 skills_
 
 - Advanced Pipelines & orchestration techniques
 - Applied Pipelines & orchestration
@@ -12114,7 +12112,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Release promotion
 
-*15 skills*
+_15 skills_
 
 - Advanced Release promotion techniques
 - Applied Release promotion
@@ -12134,7 +12132,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Rollbacks & hotfixes
 
-*15 skills*
+_15 skills_
 
 - Basic Rollbacks & hotfixes
 - Enterprise rollbacks & hotfixes
@@ -12154,7 +12152,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Security scanning
 
-*15 skills*
+_15 skills_
 
 - Applied Security scanning
 - Basic Security scanning
@@ -12174,7 +12172,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Test automation
 
-*15 skills*
+_15 skills_
 
 - Advanced Test automation techniques
 - Applied Test automation
@@ -12196,7 +12194,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Compute & containers
 
-*15 skills*
+_15 skills_
 
 - Compute & containers customization
 - Compute & containers execution
@@ -12216,7 +12214,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Cost controls
 
-*15 skills*
+_15 skills_
 
 - Advanced Cost controls techniques
 - Cost controls administration
@@ -12236,7 +12234,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Multi-region design
 
-*15 skills*
+_15 skills_
 
 - Collaborative multi-region design
 - Enterprise multi-region design
@@ -12256,7 +12254,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Networking & identity
 
-*15 skills*
+_15 skills_
 
 - Enterprise networking & identity
 - Medium-scale networking & identity
@@ -12276,7 +12274,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Observability & logging
 
-*15 skills*
+_15 skills_
 
 - Applied Observability & logging
 - Large-scale observability & logging
@@ -12296,7 +12294,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### PaaS services
 
-*15 skills*
+_15 skills_
 
 - Advanced PaaS services techniques
 - Applied PaaS services
@@ -12316,7 +12314,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Security & KMS
 
-*15 skills*
+_15 skills_
 
 - Advanced Security & KMS techniques
 - Basic Security & KMS
@@ -12336,7 +12334,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Storage & databases
 
-*15 skills*
+_15 skills_
 
 - Advanced Storage & databases techniques
 - Applied Storage & databases
@@ -12358,7 +12356,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### DAM & media libraries
 
-*15 skills*
+_15 skills_
 
 - Advanced DAM & media libraries techniques
 - Basic DAM & media libraries
@@ -12378,7 +12376,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### DMS & records
 
-*15 skills*
+_15 skills_
 
 - Advanced DMS & records techniques
 - Applied DMS & records
@@ -12398,7 +12396,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Governance & lifecycle
 
-*15 skills*
+_15 skills_
 
 - Applied Governance & lifecycle
 - Basic Governance & lifecycle
@@ -12418,7 +12416,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Retention & compliance
 
-*15 skills*
+_15 skills_
 
 - Advanced Retention & compliance techniques
 - Retention & compliance automation
@@ -12438,7 +12436,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Search & findability
 
-*15 skills*
+_15 skills_
 
 - Applied Search & findability
 - Search & findability assessment
@@ -12458,7 +12456,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Taxonomy & metadata
 
-*15 skills*
+_15 skills_
 
 - Applied Taxonomy & metadata
 - Enterprise taxonomy & metadata
@@ -12478,7 +12476,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Wikis & knowledge bases
 
-*15 skills*
+_15 skills_
 
 - Advanced Wikis & knowledge bases techniques
 - Applied Wikis & knowledge bases
@@ -12498,7 +12496,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Workflows & approvals
 
-*15 skills*
+_15 skills_
 
 - Advanced Workflows & approvals techniques
 - Applied Workflows & approvals
@@ -12520,7 +12518,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Chat & channels
 
-*15 skills*
+_15 skills_
 
 - Advanced Chat & channels techniques
 - Applied Chat & channels
@@ -12540,7 +12538,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Communities & forums
 
-*15 skills*
+_15 skills_
 
 - Advanced Communities & forums techniques
 - Basic Communities & forums
@@ -12560,7 +12558,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### File sharing & drives
 
-*15 skills*
+_15 skills_
 
 - Applied File sharing & drives
 - Basic File sharing & drives
@@ -12580,7 +12578,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Integrations & bots
 
-*15 skills*
+_15 skills_
 
 - Advanced Integrations & bots techniques
 - Basic Integrations & bots
@@ -12600,7 +12598,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Notification hygiene
 
-*15 skills*
+_15 skills_
 
 - Advanced Notification hygiene techniques
 - Large-scale notification hygiene
@@ -12620,7 +12618,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Video meetings & rooms
 
-*15 skills*
+_15 skills_
 
 - Large-scale video meetings & rooms
 - Medium-scale video meetings & rooms
@@ -12640,7 +12638,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Webinars & events
 
-*15 skills*
+_15 skills_
 
 - Advanced Webinars & events techniques
 - Applied Webinars & events
@@ -12660,7 +12658,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Whiteboards & canvases
 
-*15 skills*
+_15 skills_
 
 - Advanced Whiteboards & canvases techniques
 - Enterprise whiteboards & canvases
@@ -12682,7 +12680,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Automation & journeys
 
-*15 skills*
+_15 skills_
 
 - Advanced Automation & journeys techniques
 - Automation & journeys configuration
@@ -12702,7 +12700,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Data hygiene & dedupe
 
-*15 skills*
+_15 skills_
 
 - Applied Data hygiene & dedupe
 - Data hygiene & dedupe auditing
@@ -12722,7 +12720,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Data model & objects
 
-*15 skills*
+_15 skills_
 
 - Basic Data model & objects
 - Data model & objects auditing
@@ -12742,7 +12740,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Integrations & CDP
 
-*15 skills*
+_15 skills_
 
 - Enterprise integrations & cdp
 - Integrations & CDP administration
@@ -12762,7 +12760,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Lead scoring & nurture
 
-*15 skills*
+_15 skills_
 
 - Enterprise lead scoring & nurture
 - Large-scale lead scoring & nurture
@@ -12782,7 +12780,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Pipeline & opportunity mgmt
 
-*15 skills*
+_15 skills_
 
 - Enterprise pipeline & opportunity mgmt
 - Medium-scale pipeline & opportunity mgmt
@@ -12802,7 +12800,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Reporting & attribution
 
-*15 skills*
+_15 skills_
 
 - Advanced Reporting & attribution techniques
 - Applied Reporting & attribution
@@ -12822,7 +12820,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Segmentation & campaigns
 
-*15 skills*
+_15 skills_
 
 - Advanced Segmentation & campaigns techniques
 - Basic Segmentation & campaigns
@@ -12844,7 +12842,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Backup & recovery
 
-*15 skills*
+_15 skills_
 
 - Advanced Backup & recovery techniques
 - Backup & recovery administration
@@ -12864,7 +12862,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### ETL/ELT & CDC
 
-*15 skills*
+_15 skills_
 
 - Advanced ETL/ELT & CDC techniques
 - Basic ETL/ELT & CDC
@@ -12884,7 +12882,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Lakehouse architecture
 
-*15 skills*
+_15 skills_
 
 - Advanced Lakehouse architecture techniques
 - Basic Lakehouse architecture
@@ -12904,7 +12902,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### NoSQL patterns
 
-*15 skills*
+_15 skills_
 
 - Applied NoSQL patterns
 - Basic NoSQL patterns
@@ -12924,7 +12922,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Partitioning & indexing
 
-*15 skills*
+_15 skills_
 
 - Enterprise partitioning & indexing
 - Large-scale partitioning & indexing
@@ -12944,7 +12942,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Performance tuning
 
-*15 skills*
+_15 skills_
 
 - Basic Performance tuning
 - Enterprise performance tuning
@@ -12964,7 +12962,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Relational modeling
 
-*15 skills*
+_15 skills_
 
 - Advanced Relational modeling techniques
 - Applied Relational modeling
@@ -12984,7 +12982,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Security & access
 
-*15 skills*
+_15 skills_
 
 - Advanced Security & access techniques
 - Applied Security & access
@@ -13006,7 +13004,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Accessibility annotations
 
-*15 skills*
+_15 skills_
 
 - Accessibility annotations auditing
 - Accessibility annotations automation
@@ -13026,7 +13024,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Design QA
 
-*15 skills*
+_15 skills_
 
 - Design QA administration
 - Design QA configuration
@@ -13046,7 +13044,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Design tokens & systems
 
-*15 skills*
+_15 skills_
 
 - Design tokens & systems administration
 - Design tokens & systems configuration
@@ -13066,7 +13064,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Figma/Sketch mastery
 
-*15 skills*
+_15 skills_
 
 - Advanced Figma/Sketch mastery techniques
 - Enterprise figma/sketch mastery
@@ -13086,7 +13084,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Handoff & specs
 
-*15 skills*
+_15 skills_
 
 - Advanced Handoff & specs techniques
 - Applied Handoff & specs
@@ -13106,7 +13104,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Hi-fi prototyping
 
-*15 skills*
+_15 skills_
 
 - Advanced Hi-fi prototyping techniques
 - Basic Hi-fi prototyping
@@ -13126,7 +13124,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Motion & micro-interactions
 
-*15 skills*
+_15 skills_
 
 - Advanced Motion & micro-interactions techniques
 - Basic Motion & micro-interactions
@@ -13146,7 +13144,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Wireframes & flows
 
-*15 skills*
+_15 skills_
 
 - Applied Wireframes & flows
 - Basic Wireframes & flows
@@ -13168,7 +13166,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Debugging & profiling
 
-*15 skills*
+_15 skills_
 
 - Applied Debugging & profiling
 - Debugging & profiling compliance
@@ -13188,7 +13186,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Interop & FFI
 
-*15 skills*
+_15 skills_
 
 - Advanced Interop & FFI techniques
 - Applied Interop & FFI
@@ -13208,7 +13206,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Language paradigms
 
-*15 skills*
+_15 skills_
 
 - Enterprise language paradigms
 - Language paradigms implementation
@@ -13228,7 +13226,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Package mgmt
 
-*15 skills*
+_15 skills_
 
 - Advanced Package mgmt techniques
 - Applied Package mgmt
@@ -13248,7 +13246,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### SDK usage patterns
 
-*15 skills*
+_15 skills_
 
 - Advanced SDK usage patterns techniques
 - Basic SDK usage patterns
@@ -13268,7 +13266,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Style & linting
 
-*15 skills*
+_15 skills_
 
 - Basic Style & linting
 - Large-scale style & linting
@@ -13288,7 +13286,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Testing frameworks
 
-*15 skills*
+_15 skills_
 
 - Acceptance testing frameworks
 - Agile testing frameworks
@@ -13308,7 +13306,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Toolchains & build
 
-*15 skills*
+_15 skills_
 
 - Basic Toolchains & build
 - Large-scale toolchains & build
@@ -13330,7 +13328,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Collaboration & lineage
 
-*15 skills*
+_15 skills_
 
 - Basic Collaboration & lineage
 - Collaboration & lineage administration
@@ -13350,7 +13348,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Cost mgmt
 
-*15 skills*
+_15 skills_
 
 - Applied Cost mgmt
 - Cost mgmt auditing
@@ -13370,7 +13368,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Deployment patterns
 
-*15 skills*
+_15 skills_
 
 - Deployment patterns auditing
 - Deployment patterns automation
@@ -13390,7 +13388,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Feature stores
 
-*15 skills*
+_15 skills_
 
 - Advanced Feature stores techniques
 - Applied Feature stores
@@ -13410,7 +13408,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Model registry
 
-*15 skills*
+_15 skills_
 
 - Advanced Model registry techniques
 - Basic Model registry
@@ -13430,7 +13428,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Notebooks & environments
 
-*15 skills*
+_15 skills_
 
 - Advanced Notebooks & environments techniques
 - Medium-scale notebooks & environments
@@ -13450,7 +13448,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Scaling & acceleration
 
-*15 skills*
+_15 skills_
 
 - Medium-scale scaling & acceleration
 - Scaling & acceleration assessment
@@ -13470,7 +13468,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Training & tracking
 
-*15 skills*
+_15 skills_
 
 - Advanced Training & tracking techniques
 - Enterprise training & tracking
@@ -13492,7 +13490,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Analytics & cohorts
 
-*15 skills*
+_15 skills_
 
 - Analytics & cohorts administration
 - Analytics & cohorts customization
@@ -13512,7 +13510,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Catalog & variants
 
-*15 skills*
+_15 skills_
 
 - Applied Catalog & variants
 - Basic Catalog & variants
@@ -13532,7 +13530,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Checkout & payments
 
-*15 skills*
+_15 skills_
 
 - Checkout & payments auditing
 - Checkout & payments automation
@@ -13552,7 +13550,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Merch & search
 
-*15 skills*
+_15 skills_
 
 - Advanced Merch & search techniques
 - Large-scale merch & search
@@ -13572,7 +13570,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Orders & fulfillment
 
-*15 skills*
+_15 skills_
 
 - Advanced Orders & fulfillment techniques
 - Basic Orders & fulfillment
@@ -13592,7 +13590,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### POS & omnichannel
 
-*15 skills*
+_15 skills_
 
 - Applied POS & omnichannel
 - Basic POS & omnichannel
@@ -13612,7 +13610,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Pricing & promos
 
-*15 skills*
+_15 skills_
 
 - Applied Pricing & promos
 - Basic Pricing & promos
@@ -13632,7 +13630,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Returns & fraud
 
-*15 skills*
+_15 skills_
 
 - Applied Returns & fraud
 - Medium-scale returns & fraud
@@ -13654,7 +13652,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### BMS & HVAC controls
 
-*15 skills*
+_15 skills_
 
 - Advanced BMS & HVAC controls techniques
 - Applied BMS & HVAC controls
@@ -13674,7 +13672,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Demand response
 
-*15 skills*
+_15 skills_
 
 - Demand response administration
 - Demand response assessment
@@ -13694,7 +13692,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Energy reporting
 
-*15 skills*
+_15 skills_
 
 - Applied Energy reporting
 - Energy reporting auditing
@@ -13714,7 +13712,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Fault detection & diagnostics
 
-*15 skills*
+_15 skills_
 
 - Enterprise fault detection & diagnostics
 - Fault detection & diagnostics assessment
@@ -13734,7 +13732,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Metering & submetering
 
-*15 skills*
+_15 skills_
 
 - Basic Metering & submetering
 - Enterprise metering & submetering
@@ -13754,7 +13752,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Microgrids & DERMS
 
-*15 skills*
+_15 skills_
 
 - Applied Microgrids & DERMS
 - Enterprise microgrids & derms
@@ -13774,7 +13772,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Retro-commissioning
 
-*15 skills*
+_15 skills_
 
 - Advanced Retro-commissioning techniques
 - Applied Retro-commissioning
@@ -13794,7 +13792,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Solar & storage integration
 
-*15 skills*
+_15 skills_
 
 - Enterprise solar & storage integration
 - Solar & storage integration administration
@@ -13816,7 +13814,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Fixed assets
 
-*15 skills*
+_15 skills_
 
 - Fixed assets auditing
 - Fixed assets best practices
@@ -13836,7 +13834,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### GL & close
 
-*15 skills*
+_15 skills_
 
 - Enterprise gl & close
 - GL & close administration
@@ -13856,7 +13854,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Integrations & EDI
 
-*15 skills*
+_15 skills_
 
 - Applied Integrations & EDI
 - Enterprise integrations & edi
@@ -13876,7 +13874,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Inventory & MRP
 
-*15 skills*
+_15 skills_
 
 - Applied Inventory & MRP
 - Basic Inventory & MRP
@@ -13896,7 +13894,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### O2C & P2P
 
-*15 skills*
+_15 skills_
 
 - Advanced O2C & P2P techniques
 - Basic O2C & P2P
@@ -13916,7 +13914,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Production & costing
 
-*15 skills*
+_15 skills_
 
 - Advanced Production & costing techniques
 - Basic Production & costing
@@ -13936,7 +13934,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Reporting & BI
 
-*15 skills*
+_15 skills_
 
 - Advanced Reporting & BI techniques
 - Applied Reporting & BI
@@ -13956,7 +13954,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Tax & compliance
 
-*15 skills*
+_15 skills_
 
 - Advanced Tax & compliance techniques
 - Applied Tax & compliance
@@ -13978,7 +13976,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Analysis & models
 
-*15 skills*
+_15 skills_
 
 - Analysis & models administration
 - Analysis & models in Government
@@ -13998,7 +13996,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Cartography & symbology
 
-*15 skills*
+_15 skills_
 
 - Advanced Cartography & symbology techniques
 - Applied Cartography & symbology
@@ -14018,7 +14016,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Digitizing & topology
 
-*15 skills*
+_15 skills_
 
 - Applied Digitizing & topology
 - Basic Digitizing & topology
@@ -14038,7 +14036,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Field data & GPS
 
-*15 skills*
+_15 skills_
 
 - Applied Field data & GPS
 - Field data & GPS administration
@@ -14058,7 +14056,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Remote sensing
 
-*15 skills*
+_15 skills_
 
 - Enterprise remote sensing
 - Large-scale remote sensing
@@ -14078,7 +14076,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Routing & networks
 
-*15 skills*
+_15 skills_
 
 - Applied Routing & networks
 - Large-scale routing & networks
@@ -14098,7 +14096,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Spatial DB & projections
 
-*15 skills*
+_15 skills_
 
 - Applied Spatial DB & projections
 - Small-scale spatial db & projections
@@ -14118,7 +14116,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Web mapping
 
-*15 skills*
+_15 skills_
 
 - Applied Web mapping
 - Enterprise web mapping
@@ -14140,7 +14138,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Compensation cycles
 
-*15 skills*
+_15 skills_
 
 - Applied Compensation cycles
 - Basic Compensation cycles
@@ -14160,7 +14158,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Compliance training
 
-*15 skills*
+_15 skills_
 
 - Advanced Compliance training techniques
 - Basic Compliance training
@@ -14180,7 +14178,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Core HR & org data
 
-*15 skills*
+_15 skills_
 
 - Applied Core HR & org data
 - Basic Core HR & org data
@@ -14200,7 +14198,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Learning catalogs
 
-*15 skills*
+_15 skills_
 
 - Advanced Learning catalogs techniques
 - Large-scale learning catalogs
@@ -14220,7 +14218,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Payroll & time
 
-*15 skills*
+_15 skills_
 
 - Basic Payroll & time
 - Medium-scale payroll & time
@@ -14240,7 +14238,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### People analytics
 
-*15 skills*
+_15 skills_
 
 - Competitive people analytics
 - Descriptive people analytics
@@ -14260,7 +14258,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Performance & goals
 
-*15 skills*
+_15 skills_
 
 - Large-scale performance & goals
 - Medium-scale performance & goals
@@ -14280,7 +14278,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### TA & onboarding
 
-*15 skills*
+_15 skills_
 
 - Advanced TA & onboarding techniques
 - Basic TA & onboarding
@@ -14302,7 +14300,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### 3D modeling & UVs
 
-*15 skills*
+_15 skills_
 
 - 3D modeling & UVs assessment
 - 3D modeling & UVs auditing
@@ -14322,7 +14320,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Asset pipelines
 
-*15 skills*
+_15 skills_
 
 - Applied Asset pipelines
 - Asset pipelines assessment
@@ -14342,7 +14340,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Color management
 
-*15 skills*
+_15 skills_
 
 - Color management in Finance
 - Color management integration
@@ -14362,7 +14360,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### File formats
 
-*15 skills*
+_15 skills_
 
 - Basic File formats
 - Enterprise file formats
@@ -14382,7 +14380,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Motion graphics
 
-*15 skills*
+_15 skills_
 
 - Large-scale motion graphics
 - Medium-scale motion graphics
@@ -14402,7 +14400,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Raster editing
 
-*15 skills*
+_15 skills_
 
 - Basic Raster editing
 - Medium-scale raster editing
@@ -14422,7 +14420,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Rendering & lighting
 
-*15 skills*
+_15 skills_
 
 - Applied Rendering & lighting
 - Medium-scale rendering & lighting
@@ -14442,7 +14440,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Vector illustration
 
-*15 skills*
+_15 skills_
 
 - Advanced Vector illustration techniques
 - Basic Vector illustration
@@ -14464,7 +14462,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Backup & DR
 
-*15 skills*
+_15 skills_
 
 - Backup & DR automation
 - Backup & DR configuration
@@ -14484,7 +14482,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Capacity planning
 
-*15 skills*
+_15 skills_
 
 - Capacity planning administration
 - Capacity planning assessment
@@ -14504,7 +14502,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Hardening & CIS
 
-*15 skills*
+_15 skills_
 
 - Applied Hardening & CIS
 - Basic Hardening & CIS
@@ -14524,7 +14522,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Monitoring & alerting
 
-*15 skills*
+_15 skills_
 
 - Applied Monitoring & alerting
 - Basic Monitoring & alerting
@@ -14544,7 +14542,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### OS administration
 
-*15 skills*
+_15 skills_
 
 - Advanced OS administration techniques
 - Enterprise os administration
@@ -14564,7 +14562,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Patch & config mgmt
 
-*15 skills*
+_15 skills_
 
 - Advanced Patch & config mgmt techniques
 - Applied Patch & config mgmt
@@ -14584,7 +14582,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Scripting & automation
 
-*15 skills*
+_15 skills_
 
 - Advanced Scripting & automation techniques
 - Applied Scripting & automation
@@ -14604,7 +14602,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Virtualization & containers
 
-*15 skills*
+_15 skills_
 
 - Advanced Virtualization & containers techniques
 - Applied Virtualization & containers
@@ -14626,7 +14624,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Digital twins
 
-*15 skills*
+_15 skills_
 
 - Advanced Digital twins techniques
 - Applied Digital twins
@@ -14646,7 +14644,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Edge compute
 
-*15 skills*
+_15 skills_
 
 - Applied Edge compute
 - Edge compute administration
@@ -14666,7 +14664,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Fleet mgmt & OTA
 
-*15 skills*
+_15 skills_
 
 - Applied Fleet mgmt & OTA
 - Basic Fleet mgmt & OTA
@@ -14686,7 +14684,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Maintenance analytics
 
-*15 skills*
+_15 skills_
 
 - Competitive maintenance analytics
 - Diagnostic maintenance analytics
@@ -14706,7 +14704,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Protocols & telemetry
 
-*15 skills*
+_15 skills_
 
 - Advanced Protocols & telemetry techniques
 - Enterprise protocols & telemetry
@@ -14726,7 +14724,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Safety & standards
 
-*15 skills*
+_15 skills_
 
 - Applied Safety & standards
 - Medium-scale safety & standards
@@ -14746,7 +14744,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Sensors & gateways
 
-*15 skills*
+_15 skills_
 
 - Applied Sensors & gateways
 - Basic Sensors & gateways
@@ -14766,7 +14764,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Vision & perception
 
-*15 skills*
+_15 skills_
 
 - Basic Vision & perception
 - Medium-scale vision & perception
@@ -14788,7 +14786,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Automation & VSM
 
-*15 skills*
+_15 skills_
 
 - Advanced Automation & VSM techniques
 - Automation & VSM assessment
@@ -14808,7 +14806,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### CMDB & discovery
 
-*15 skills*
+_15 skills_
 
 - Applied CMDB & discovery
 - CMDB & discovery auditing
@@ -14828,7 +14826,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Change & release
 
-*15 skills*
+_15 skills_
 
 - Applied Change & release
 - Basic Change & release
@@ -14848,7 +14846,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Incident & problem
 
-*15 skills*
+_15 skills_
 
 - Basic Incident & problem
 - Enterprise incident & problem
@@ -14868,7 +14866,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Knowledge mgmt
 
-*15 skills*
+_15 skills_
 
 - Advanced Knowledge mgmt techniques
 - Enterprise knowledge mgmt
@@ -14888,7 +14886,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Major incident mgmt
 
-*15 skills*
+_15 skills_
 
 - Advanced Major incident mgmt techniques
 - Basic Major incident mgmt
@@ -14908,7 +14906,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Reporting & CSAT
 
-*15 skills*
+_15 skills_
 
 - Advanced Reporting & CSAT techniques
 - Applied Reporting & CSAT
@@ -14928,7 +14926,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Service catalog & SLAs
 
-*15 skills*
+_15 skills_
 
 - Applied Service catalog & SLAs
 - Service catalog & SLAs administration
@@ -14950,7 +14948,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Calibration & maintenance
 
-*15 skills*
+_15 skills_
 
 - Advanced Calibration & maintenance techniques
 - Calibration & maintenance assessment
@@ -14970,7 +14968,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Chillers & freezers
 
-*15 skills*
+_15 skills_
 
 - Applied Chillers & freezers
 - Basic Chillers & freezers
@@ -14990,7 +14988,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Equipment selection
 
-*15 skills*
+_15 skills_
 
 - Enterprise equipment selection
 - Equipment selection administration
@@ -15010,7 +15008,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Induction & ranges
 
-*15 skills*
+_15 skills_
 
 - Advanced Induction & ranges techniques
 - Enterprise induction & ranges
@@ -15030,7 +15028,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Mixers & sheeters
 
-*15 skills*
+_15 skills_
 
 - Applied Mixers & sheeters
 - Enterprise mixers & sheeters
@@ -15050,7 +15048,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Ovens & combi
 
-*15 skills*
+_15 skills_
 
 - Basic Ovens & combi
 - Large-scale ovens & combi
@@ -15070,7 +15068,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Safety & sanitation
 
-*15 skills*
+_15 skills_
 
 - Basic Safety & sanitation
 - Large-scale safety & sanitation
@@ -15090,7 +15088,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Smallwares mastery
 
-*15 skills*
+_15 skills_
 
 - Basic Smallwares mastery
 - Enterprise smallwares mastery
@@ -15112,7 +15110,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Calibration & QC
 
-*15 skills*
+_15 skills_
 
 - Applied Calibration & QC
 - Basic Calibration & QC
@@ -15132,7 +15130,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Chromatography
 
-*15 skills*
+_15 skills_
 
 - Chromatography administration
 - Chromatography assessment
@@ -15152,7 +15150,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### LIMS/LIS workflows
 
-*15 skills*
+_15 skills_
 
 - Applied LIMS/LIS workflows
 - Basic LIMS/LIS workflows
@@ -15172,7 +15170,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Mass spectrometry
 
-*15 skills*
+_15 skills_
 
 - Applied Mass spectrometry
 - Basic Mass spectrometry
@@ -15192,7 +15190,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Microscopy
 
-*15 skills*
+_15 skills_
 
 - Advanced Microscopy techniques
 - Microscopy assessment
@@ -15212,7 +15210,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Safety & waste
 
-*15 skills*
+_15 skills_
 
 - Basic Safety & waste
 - Enterprise safety & waste
@@ -15232,7 +15230,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Sample prep & storage
 
-*15 skills*
+_15 skills_
 
 - Advanced Sample prep & storage techniques
 - Basic Sample prep & storage
@@ -15252,7 +15250,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Spectroscopy
 
-*15 skills*
+_15 skills_
 
 - Enterprise spectroscopy
 - Large-scale spectroscopy
@@ -15274,7 +15272,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Clinical decision support
 
-*15 skills*
+_15 skills_
 
 - Applied Clinical decision support
 - Clinical decision support administration
@@ -15294,7 +15292,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Device maintenance
 
-*15 skills*
+_15 skills_
 
 - Applied Device maintenance
 - Device maintenance administration
@@ -15314,7 +15312,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### EHR workflows
 
-*15 skills*
+_15 skills_
 
 - Advanced EHR workflows techniques
 - Basic EHR workflows
@@ -15334,7 +15332,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Imaging & PACS
 
-*15 skills*
+_15 skills_
 
 - Advanced Imaging & PACS techniques
 - Basic Imaging & PACS
@@ -15354,7 +15352,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Interoperability (HL7/FHIR)
 
-*15 skills*
+_15 skills_
 
 - Advanced Interoperability (HL7/FHIR) techniques
 - Applied Interoperability (HL7/FHIR)
@@ -15374,7 +15372,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Medication & MAR
 
-*15 skills*
+_15 skills_
 
 - Advanced Medication & MAR techniques
 - Applied Medication & MAR
@@ -15394,7 +15392,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Privacy & security
 
-*15 skills*
+_15 skills_
 
 - Basic Privacy & security
 - Medium-scale privacy & security
@@ -15414,7 +15412,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Vitals & monitoring
 
-*15 skills*
+_15 skills_
 
 - Advanced Vitals & monitoring techniques
 - Applied Vitals & monitoring
@@ -15436,7 +15434,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Drift & bias monitors
 
-*15 skills*
+_15 skills_
 
 - Advanced Drift & bias monitors techniques
 - Applied Drift & bias monitors
@@ -15456,7 +15454,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Explainability & SHAP
 
-*15 skills*
+_15 skills_
 
 - Advanced Explainability & SHAP techniques
 - Basic Explainability & SHAP
@@ -15476,7 +15474,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Governance & approvals
 
-*15 skills*
+_15 skills_
 
 - Advanced Governance & approvals techniques
 - Governance & approvals assessment
@@ -15496,7 +15494,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Incident response
 
-*15 skills*
+_15 skills_
 
 - Enterprise incident response
 - Incident response administration
@@ -15516,7 +15514,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Model cards & docs
 
-*15 skills*
+_15 skills_
 
 - Advanced Model cards & docs techniques
 - Applied Model cards & docs
@@ -15536,7 +15534,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Rollouts & canaries
 
-*15 skills*
+_15 skills_
 
 - Advanced Rollouts & canaries techniques
 - Applied Rollouts & canaries
@@ -15556,7 +15554,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Serving & endpoints
 
-*15 skills*
+_15 skills_
 
 - Advanced Serving & endpoints techniques
 - Enterprise serving & endpoints
@@ -15576,7 +15574,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Shadow & backtesting
 
-*15 skills*
+_15 skills_
 
 - Acceptance shadow & backtesting
 - Enterprise shadow & backtesting
@@ -15598,7 +15596,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### DNS/DHCP & IPAM
 
-*15 skills*
+_15 skills_
 
 - Advanced DNS/DHCP & IPAM techniques
 - DNS/DHCP & IPAM administration
@@ -15618,7 +15616,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Load balancing & CDN
 
-*15 skills*
+_15 skills_
 
 - Basic Load balancing & CDN
 - Enterprise load balancing & cdn
@@ -15638,7 +15636,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Network security
 
-*15 skills*
+_15 skills_
 
 - Applied Network security
 - Basic Network security
@@ -15658,7 +15656,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Performance mgmt
 
-*15 skills*
+_15 skills_
 
 - Advanced Performance mgmt techniques
 - Basic Performance mgmt
@@ -15678,7 +15676,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Routing & switching
 
-*15 skills*
+_15 skills_
 
 - Basic Routing & switching
 - Enterprise routing & switching
@@ -15698,7 +15696,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### SD-WAN & edge
 
-*15 skills*
+_15 skills_
 
 - Basic SD-WAN & edge
 - Enterprise sd-wan & edge
@@ -15718,7 +15716,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Tooling & diagrams
 
-*15 skills*
+_15 skills_
 
 - Basic Tooling & diagrams
 - Large-scale tooling & diagrams
@@ -15738,7 +15736,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Wireless design
 
-*15 skills*
+_15 skills_
 
 - Conceptual wireless design
 - Detailed wireless design
@@ -15760,7 +15758,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Automation & macros
 
-*15 skills*
+_15 skills_
 
 - Automation & macros auditing
 - Automation & macros compliance
@@ -15780,7 +15778,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Collaboration & comments
 
-*15 skills*
+_15 skills_
 
 - Advanced Collaboration & comments techniques
 - Applied Collaboration & comments
@@ -15800,7 +15798,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Docs & presentations
 
-*15 skills*
+_15 skills_
 
 - Advanced Docs & presentations techniques
 - Applied Docs & presentations
@@ -15820,7 +15818,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Email & calendar workflows
 
-*15 skills*
+_15 skills_
 
 - Basic Email & calendar workflows
 - Email & calendar workflows automation
@@ -15840,7 +15838,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### File formats & export
 
-*15 skills*
+_15 skills_
 
 - Enterprise file formats & export
 - File formats & export administration
@@ -15860,7 +15858,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Spreadsheets & formulas
 
-*15 skills*
+_15 skills_
 
 - Advanced Spreadsheets & formulas techniques
 - Applied Spreadsheets & formulas
@@ -15880,7 +15878,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Templates & styles
 
-*15 skills*
+_15 skills_
 
 - Applied Templates & styles
 - Medium-scale templates & styles
@@ -15900,7 +15898,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Versioning & track changes
 
-*15 skills*
+_15 skills_
 
 - Advanced Versioning & track changes techniques
 - Basic Versioning & track changes
@@ -15922,7 +15920,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Alarms & safety systems
 
-*15 skills*
+_15 skills_
 
 - Alarms & safety systems administration
 - Alarms & safety systems assessment
@@ -15942,7 +15940,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Commissioning & FAT/SAT
 
-*15 skills*
+_15 skills_
 
 - Advanced Commissioning & FAT/SAT techniques
 - Applied Commissioning & FAT/SAT
@@ -15962,7 +15960,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### HMI/SCADA design
 
-*15 skills*
+_15 skills_
 
 - Conceptual hmi/scada design
 - Detailed hmi/scada design
@@ -15982,7 +15980,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Historian & trends
 
-*15 skills*
+_15 skills_
 
 - Applied Historian & trends
 - Enterprise historian & trends
@@ -16002,7 +16000,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Industrial protocols
 
-*15 skills*
+_15 skills_
 
 - Applied Industrial protocols
 - Industrial protocols assessment
@@ -16022,7 +16020,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Maintenance & spares
 
-*15 skills*
+_15 skills_
 
 - Basic Maintenance & spares
 - Enterprise maintenance & spares
@@ -16042,7 +16040,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### OT security
 
-*15 skills*
+_15 skills_
 
 - Basic OT security
 - Medium-scale ot security
@@ -16062,7 +16060,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### PLC programming & IEC 61131-3
 
-*15 skills*
+_15 skills_
 
 - Advanced PLC programming & IEC 61131-3 techniques
 - Applied PLC programming & IEC 61131-3
@@ -16084,7 +16082,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Automation frameworks
 
-*15 skills*
+_15 skills_
 
 - Advanced Automation frameworks techniques
 - Agile automation frameworks
@@ -16104,7 +16102,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### CI test integration
 
-*15 skills*
+_15 skills_
 
 - Applied CI test integration
 - CI test integration automation
@@ -16124,7 +16122,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Coverage & flakiness
 
-*15 skills*
+_15 skills_
 
 - Advanced Coverage & flakiness techniques
 - Applied Coverage & flakiness
@@ -16144,7 +16142,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Defect tracking
 
-*15 skills*
+_15 skills_
 
 - Advanced Defect tracking techniques
 - Applied Defect tracking
@@ -16164,7 +16162,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Lab rigs & instrumentation
 
-*15 skills*
+_15 skills_
 
 - Advanced Lab rigs & instrumentation techniques
 - Applied Lab rigs & instrumentation
@@ -16184,7 +16182,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Reporting & triage
 
-*15 skills*
+_15 skills_
 
 - Advanced Reporting & triage techniques
 - Basic Reporting & triage
@@ -16204,7 +16202,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Test data mgmt
 
-*15 skills*
+_15 skills_
 
 - Applied Test data mgmt
 - Enterprise test data mgmt
@@ -16224,7 +16222,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Unit/UI/perf testing
 
-*15 skills*
+_15 skills_
 
 - Acceptance unit/ui/perf testing
 - Automated unit/ui/perf testing
@@ -16246,7 +16244,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### DLP & CASB
 
-*15 skills*
+_15 skills_
 
 - DLP & CASB auditing
 - DLP & CASB configuration
@@ -16266,7 +16264,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### EDR & XDR
 
-*15 skills*
+_15 skills_
 
 - EDR & XDR administration
 - EDR & XDR assessment
@@ -16286,7 +16284,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### GRC tooling
 
-*15 skills*
+_15 skills_
 
 - Advanced GRC tooling techniques
 - Basic GRC tooling
@@ -16306,7 +16304,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### SASE & Zero Trust
 
-*15 skills*
+_15 skills_
 
 - Advanced SASE & Zero Trust techniques
 - Applied SASE & Zero Trust
@@ -16326,7 +16324,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### SIEM & log pipelines
 
-*15 skills*
+_15 skills_
 
 - Advanced SIEM & log pipelines techniques
 - Applied SIEM & log pipelines
@@ -16346,7 +16344,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Secrets & keys
 
-*15 skills*
+_15 skills_
 
 - Enterprise secrets & keys
 - Large-scale secrets & keys
@@ -16366,7 +16364,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Vulnerability mgmt
 
-*15 skills*
+_15 skills_
 
 - Medium-scale vulnerability mgmt
 - Vulnerability mgmt best practices
@@ -16386,7 +16384,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### WAF & bot mgmt
 
-*15 skills*
+_15 skills_
 
 - Advanced WAF & bot mgmt techniques
 - Basic WAF & bot mgmt
@@ -16408,7 +16406,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Analytics & reports
 
-*15 skills*
+_15 skills_
 
 - Analytics & reports administration
 - Analytics & reports configuration
@@ -16428,7 +16426,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Compliance & ELD
 
-*15 skills*
+_15 skills_
 
 - Advanced Compliance & ELD techniques
 - Basic Compliance & ELD
@@ -16448,7 +16446,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Driver behavior & safety
 
-*15 skills*
+_15 skills_
 
 - Advanced Driver behavior & safety techniques
 - Driver behavior & safety administration
@@ -16468,7 +16466,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Fuel & maintenance
 
-*15 skills*
+_15 skills_
 
 - Advanced Fuel & maintenance techniques
 - Fuel & maintenance administration
@@ -16488,7 +16486,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Integrations
 
-*15 skills*
+_15 skills_
 
 - Basic Integrations
 - Enterprise integrations
@@ -16508,7 +16506,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Routing & dispatch
 
-*15 skills*
+_15 skills_
 
 - Advanced Routing & dispatch techniques
 - Applied Routing & dispatch
@@ -16528,7 +16526,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Sensors & CAN bus
 
-*15 skills*
+_15 skills_
 
 - Large-scale sensors & can bus
 - Sensors & CAN bus administration
@@ -16548,7 +16546,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Tracking & RTLS
 
-*15 skills*
+_15 skills_
 
 - Advanced Tracking & RTLS techniques
 - Basic Tracking & RTLS
@@ -16570,7 +16568,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Audit & history
 
-*15 skills*
+_15 skills_
 
 - Advanced Audit & history techniques
 - Audit & history administration
@@ -16590,7 +16588,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Branching strategies
 
-*15 skills*
+_15 skills_
 
 - Basic Branching strategies
 - Branching strategies assessment
@@ -16610,7 +16608,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Code reviews
 
-*15 skills*
+_15 skills_
 
 - Code reviews auditing
 - Code reviews automation
@@ -16630,7 +16628,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Hooks & CI triggers
 
-*15 skills*
+_15 skills_
 
 - Hooks & CI triggers auditing
 - Hooks & CI triggers automation
@@ -16650,7 +16648,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Merge & rebase
 
-*15 skills*
+_15 skills_
 
 - Advanced Merge & rebase techniques
 - Enterprise merge & rebase
@@ -16670,7 +16668,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Permissions & protection
 
-*15 skills*
+_15 skills_
 
 - Advanced Permissions & protection techniques
 - Enterprise permissions & protection
@@ -16690,7 +16688,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Release management
 
-*15 skills*
+_15 skills_
 
 - Crisis release management
 - Department release management
@@ -16710,7 +16708,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Repo structure
 
-*15 skills*
+_15 skills_
 
 - Large-scale repo structure
 - Medium-scale repo structure
@@ -16732,7 +16730,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Archival & proxies
 
-*15 skills*
+_15 skills_
 
 - Applied Archival & proxies
 - Archival & proxies automation
@@ -16752,7 +16750,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Collaboration & review
 
-*15 skills*
+_15 skills_
 
 - Advanced Collaboration & review techniques
 - Collaboration & review administration
@@ -16772,7 +16770,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Color correction & grading
 
-*15 skills*
+_15 skills_
 
 - Basic Color correction & grading
 - Color correction & grading auditing
@@ -16792,7 +16790,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Compositing & tracking
 
-*15 skills*
+_15 skills_
 
 - Compositing & tracking assessment
 - Compositing & tracking best practices
@@ -16812,7 +16810,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Editing & timelines
 
-*15 skills*
+_15 skills_
 
 - Applied Editing & timelines
 - Basic Editing & timelines
@@ -16832,7 +16830,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Encoding & delivery
 
-*15 skills*
+_15 skills_
 
 - Advanced Encoding & delivery techniques
 - Encoding & delivery administration
@@ -16852,7 +16850,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Motion graphics
 
-*15 skills*
+_15 skills_
 
 - Large-scale motion graphics
 - Motion graphics administration
@@ -16872,7 +16870,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### QC & compliance
 
-*15 skills*
+_15 skills_
 
 - Basic QC & compliance
 - Enterprise qc & compliance
@@ -16890,7 +16888,6 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 - QC & compliance reporting
 - Small-scale qc & compliance
 
-
 ---
 
 ## 🗣️ Languages & Culture (L)
@@ -16899,7 +16896,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Alt-text & captions
 
-*15 skills*
+_15 skills_
 
 - Advanced Alt-text & captions techniques
 - Alt-text & captions assessment
@@ -16919,7 +16916,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Cognitive accessibility
 
-*15 skills*
+_15 skills_
 
 - Advanced Cognitive accessibility techniques
 - Basic Cognitive accessibility
@@ -16939,7 +16936,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Easy-read & signage
 
-*15 skills*
+_15 skills_
 
 - Advanced Easy-read & signage techniques
 - Applied Easy-read & signage
@@ -16959,7 +16956,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Inclusive forms
 
-*15 skills*
+_15 skills_
 
 - Applied Inclusive forms
 - Enterprise inclusive forms
@@ -16979,7 +16976,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Multilingual access
 
-*15 skills*
+_15 skills_
 
 - Advanced Multilingual access techniques
 - Applied Multilingual access
@@ -16999,7 +16996,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Plain language principles
 
-*15 skills*
+_15 skills_
 
 - Applied Plain language principles
 - Basic Plain language principles
@@ -17019,7 +17016,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Readability testing
 
-*15 skills*
+_15 skills_
 
 - Acceptance readability testing
 - Enterprise readability testing
@@ -17039,7 +17036,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Screen reader checks
 
-*15 skills*
+_15 skills_
 
 - Advanced Screen reader checks techniques
 - Applied Screen reader checks
@@ -17061,7 +17058,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Civic life
 
-*15 skills*
+_15 skills_
 
 - Applied Civic life
 - Civic life auditing
@@ -17081,7 +17078,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Cross-cultural comparison
 
-*15 skills*
+_15 skills_
 
 - Advanced Cross-cultural comparison techniques
 - Cross-cultural comparison assessment
@@ -17101,7 +17098,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Cultural tourism
 
-*15 skills*
+_15 skills_
 
 - Advanced Cultural tourism techniques
 - Applied Cultural tourism
@@ -17121,7 +17118,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Festivals & observances
 
-*15 skills*
+_15 skills_
 
 - Applied Festivals & observances
 - Basic Festivals & observances
@@ -17141,7 +17138,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Heritage & identity
 
-*15 skills*
+_15 skills_
 
 - Basic Heritage & identity
 - Enterprise heritage & identity
@@ -17161,7 +17158,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Institutions & history
 
-*15 skills*
+_15 skills_
 
 - Basic Institutions & history
 - Institutions & history automation
@@ -17181,7 +17178,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Media & narratives
 
-*15 skills*
+_15 skills_
 
 - Applied Media & narratives
 - Media & narratives automation
@@ -17201,7 +17198,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Traditions & arts
 
-*15 skills*
+_15 skills_
 
 - Advanced Traditions & arts techniques
 - Enterprise traditions & arts
@@ -17223,7 +17220,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Chat & email
 
-*15 skills*
+_15 skills_
 
 - Advanced Chat & email techniques
 - Applied Chat & email
@@ -17243,7 +17240,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Crisis communication
 
-*15 skills*
+_15 skills_
 
 - Client-facing crisis communication
 - Crisis communication in Energy
@@ -17263,7 +17260,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Greeting & triage
 
-*15 skills*
+_15 skills_
 
 - Advanced Greeting & triage techniques
 - Applied Greeting & triage
@@ -17283,7 +17280,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Hand-offs & escalation
 
-*15 skills*
+_15 skills_
 
 - Hand-offs & escalation assessment
 - Hand-offs & escalation automation
@@ -17303,7 +17300,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Knowledge base use
 
-*15 skills*
+_15 skills_
 
 - Applied Knowledge base use
 - Basic Knowledge base use
@@ -17323,7 +17320,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Phone & voice
 
-*15 skills*
+_15 skills_
 
 - Applied Phone & voice
 - Basic Phone & voice
@@ -17343,7 +17340,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Service recovery
 
-*15 skills*
+_15 skills_
 
 - Applied Service recovery
 - Basic Service recovery
@@ -17363,7 +17360,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Surveys & VOC
 
-*15 skills*
+_15 skills_
 
 - Advanced Surveys & VOC techniques
 - Applied Surveys & VOC
@@ -17385,7 +17382,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Culture mapping tools
 
-*15 skills*
+_15 skills_
 
 - Applied Culture mapping tools
 - Basic Culture mapping tools
@@ -17405,7 +17402,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Digital norms
 
-*15 skills*
+_15 skills_
 
 - Advanced Digital norms techniques
 - Basic Digital norms
@@ -17425,7 +17422,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Direct vs indirect styles
 
-*15 skills*
+_15 skills_
 
 - Direct vs indirect styles auditing
 - Direct vs indirect styles automation
@@ -17445,7 +17442,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### High/low context patterns
 
-*15 skills*
+_15 skills_
 
 - Enterprise high/low context patterns
 - High/low context patterns assessment
@@ -17465,7 +17462,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Humor & taboos
 
-*15 skills*
+_15 skills_
 
 - Applied Humor & taboos
 - Humor & taboos assessment
@@ -17485,7 +17482,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Misunderstanding repair
 
-*15 skills*
+_15 skills_
 
 - Advanced Misunderstanding repair techniques
 - Applied Misunderstanding repair
@@ -17505,7 +17502,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Nonverbal & proxemics
 
-*15 skills*
+_15 skills_
 
 - Basic Nonverbal & proxemics
 - Large-scale nonverbal & proxemics
@@ -17525,7 +17522,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Politeness strategies
 
-*15 skills*
+_15 skills_
 
 - Applied Politeness strategies
 - Basic Politeness strategies
@@ -17547,7 +17544,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Consecutive interpreting
 
-*15 skills*
+_15 skills_
 
 - Advanced Consecutive interpreting techniques
 - Applied Consecutive interpreting
@@ -17567,7 +17564,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Cultural adaptation
 
-*15 skills*
+_15 skills_
 
 - Advanced Cultural adaptation techniques
 - Basic Cultural adaptation
@@ -17587,7 +17584,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Date/number/currency
 
-*15 skills*
+_15 skills_
 
 - Basic Date/number/currency
 - Date/number/currency assessment
@@ -17607,7 +17604,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Ethics & fidelity
 
-*15 skills*
+_15 skills_
 
 - Basic Ethics & fidelity
 - Ethics & fidelity auditing
@@ -17627,7 +17624,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### L10n workflows
 
-*15 skills*
+_15 skills_
 
 - Advanced L10n workflows techniques
 - Applied L10n workflows
@@ -17647,7 +17644,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Linguistic QA
 
-*15 skills*
+_15 skills_
 
 - Advanced Linguistic QA techniques
 - Applied Linguistic QA
@@ -17667,7 +17664,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Pseudolocalization
 
-*15 skills*
+_15 skills_
 
 - Basic Pseudolocalization
 - Enterprise pseudolocalization
@@ -17687,7 +17684,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### QA & revision
 
-*15 skills*
+_15 skills_
 
 - Applied QA & revision
 - Enterprise qa & revision
@@ -17707,7 +17704,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### RTL & script handling
 
-*15 skills*
+_15 skills_
 
 - Basic RTL & script handling
 - RTL & script handling assessment
@@ -17727,7 +17724,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Sight translation
 
-*15 skills*
+_15 skills_
 
 - Advanced Sight translation techniques
 - Basic Sight translation
@@ -17747,7 +17744,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Simultaneous interpreting
 
-*15 skills*
+_15 skills_
 
 - Advanced Simultaneous interpreting techniques
 - Basic Simultaneous interpreting
@@ -17767,7 +17764,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Style guides & termbases
 
-*15 skills*
+_15 skills_
 
 - Advanced Style guides & termbases techniques
 - Applied Style guides & termbases
@@ -17787,7 +17784,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Subtitling & captioning
 
-*15 skills*
+_15 skills_
 
 - Advanced Subtitling & captioning techniques
 - Applied Subtitling & captioning
@@ -17807,7 +17804,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Terminology mgmt
 
-*15 skills*
+_15 skills_
 
 - Advanced Terminology mgmt techniques
 - Applied Terminology mgmt
@@ -17827,7 +17824,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Transcreation & localization
 
-*15 skills*
+_15 skills_
 
 - Basic Transcreation & localization
 - Enterprise transcreation & localization
@@ -17847,7 +17844,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### i18n readiness & keys
 
-*15 skills*
+_15 skills_
 
 - Basic i18n readiness & keys
 - Large-scale i18n readiness & keys
@@ -17869,7 +17866,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### CEFR proficiency mapping
 
-*15 skills*
+_15 skills_
 
 - Advanced CEFR proficiency mapping techniques
 - Applied CEFR proficiency mapping
@@ -17889,7 +17886,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Dialects & sociolects
 
-*15 skills*
+_15 skills_
 
 - Applied Dialects & sociolects
 - Dialects & sociolects auditing
@@ -17909,7 +17906,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Grammar & syntax
 
-*15 skills*
+_15 skills_
 
 - Basic Grammar & syntax
 - Enterprise grammar & syntax
@@ -17929,7 +17926,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Language families & branches
 
-*15 skills*
+_15 skills_
 
 - Applied Language families & branches
 - Enterprise language families & branches
@@ -17949,7 +17946,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Orthography & spelling
 
-*15 skills*
+_15 skills_
 
 - Advanced Orthography & spelling techniques
 - Large-scale orthography & spelling
@@ -17969,7 +17966,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Pronunciation & phonology
 
-*15 skills*
+_15 skills_
 
 - Advanced Pronunciation & phonology techniques
 - Enterprise pronunciation & phonology
@@ -17989,7 +17986,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Registers & tone
 
-*15 skills*
+_15 skills_
 
 - Basic Registers & tone
 - Enterprise registers & tone
@@ -18009,7 +18006,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Vocabulary & idioms
 
-*15 skills*
+_15 skills_
 
 - Large-scale vocabulary & idioms
 - Medium-scale vocabulary & idioms
@@ -18031,7 +18028,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Academic writing
 
-*15 skills*
+_15 skills_
 
 - Academic writing in Energy
 - Academic writing in Finance
@@ -18051,7 +18048,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Business & finance
 
-*15 skills*
+_15 skills_
 
 - Basic Business & finance
 - Business & finance auditing
@@ -18071,7 +18068,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Customer service
 
-*15 skills*
+_15 skills_
 
 - Advanced Customer service techniques
 - Applied Customer service
@@ -18091,7 +18088,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Legal language
 
-*15 skills*
+_15 skills_
 
 - Advanced Legal language techniques
 - Applied Legal language
@@ -18111,7 +18108,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Medical language
 
-*15 skills*
+_15 skills_
 
 - Advanced Medical language techniques
 - Medical language auditing
@@ -18131,7 +18128,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Public sector & policy
 
-*15 skills*
+_15 skills_
 
 - Large-scale public sector & policy
 - Medium-scale public sector & policy
@@ -18151,7 +18148,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Scientific discourse
 
-*15 skills*
+_15 skills_
 
 - Advanced Scientific discourse techniques
 - Applied Scientific discourse
@@ -18171,7 +18168,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Technical & engineering
 
-*15 skills*
+_15 skills_
 
 - Basic Technical & engineering
 - Enterprise technical & engineering
@@ -18193,7 +18190,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Code switching
 
-*15 skills*
+_15 skills_
 
 - Code switching customization
 - Code switching execution
@@ -18213,7 +18210,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Conversation repair
 
-*15 skills*
+_15 skills_
 
 - Advanced Conversation repair techniques
 - Applied Conversation repair
@@ -18233,7 +18230,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Digital communication
 
-*15 skills*
+_15 skills_
 
 - Cross-functional digital communication
 - Digital communication in Construction
@@ -18253,7 +18250,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Note-taking & summaries
 
-*15 skills*
+_15 skills_
 
 - Advanced Note-taking & summaries techniques
 - Basic Note-taking & summaries
@@ -18273,7 +18270,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Presentation skills
 
-*15 skills*
+_15 skills_
 
 - Advanced Presentation skills techniques
 - Enterprise presentation skills
@@ -18293,7 +18290,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Pronunciation & accent
 
-*15 skills*
+_15 skills_
 
 - Advanced Pronunciation & accent techniques
 - Basic Pronunciation & accent
@@ -18313,7 +18310,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Reading & writing
 
-*15 skills*
+_15 skills_
 
 - Email reading & writing
 - Enterprise reading & writing
@@ -18333,7 +18330,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Speaking & listening
 
-*15 skills*
+_15 skills_
 
 - Advanced Speaking & listening techniques
 - Applied Speaking & listening
@@ -18355,7 +18352,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Debate formats
 
-*15 skills*
+_15 skills_
 
 - Advanced Debate formats techniques
 - Applied Debate formats
@@ -18375,7 +18372,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Media interviews
 
-*15 skills*
+_15 skills_
 
 - Advanced Media interviews techniques
 - Applied Media interviews
@@ -18395,7 +18392,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Panel & Q&A
 
-*15 skills*
+_15 skills_
 
 - Advanced Panel & Q&A techniques
 - Basic Panel & Q&A
@@ -18415,7 +18412,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Persuasion techniques
 
-*15 skills*
+_15 skills_
 
 - Basic Persuasion techniques
 - Large-scale persuasion techniques
@@ -18435,7 +18432,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Rehearsal & feedback
 
-*15 skills*
+_15 skills_
 
 - Enterprise rehearsal & feedback
 - Large-scale rehearsal & feedback
@@ -18455,7 +18452,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Speechcraft & structure
 
-*15 skills*
+_15 skills_
 
 - Advanced Speechcraft & structure techniques
 - Basic Speechcraft & structure
@@ -18475,7 +18472,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Stage presence
 
-*15 skills*
+_15 skills_
 
 - Advanced Stage presence techniques
 - Applied Stage presence
@@ -18495,7 +18492,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Storytelling
 
-*15 skills*
+_15 skills_
 
 - Applied Storytelling
 - Basic Storytelling
@@ -18517,7 +18514,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Business etiquette
 
-*15 skills*
+_15 skills_
 
 - Advanced Business etiquette techniques
 - Applied Business etiquette
@@ -18537,7 +18534,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Dining & hospitality
 
-*15 skills*
+_15 skills_
 
 - Applied Dining & hospitality
 - Dining & hospitality automation
@@ -18557,7 +18554,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Dress & symbols
 
-*15 skills*
+_15 skills_
 
 - Dress & symbols best practices
 - Dress & symbols customization
@@ -18577,7 +18574,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Gift-giving & protocol
 
-*15 skills*
+_15 skills_
 
 - Advanced Gift-giving & protocol techniques
 - Gift-giving & protocol assessment
@@ -18597,7 +18594,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Meetings & hierarchy
 
-*15 skills*
+_15 skills_
 
 - Applied Meetings & hierarchy
 - Large-scale meetings & hierarchy
@@ -18617,7 +18614,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Negotiation styles
 
-*15 skills*
+_15 skills_
 
 - Applied Negotiation styles
 - Large-scale negotiation styles
@@ -18637,7 +18634,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Public behaviors
 
-*15 skills*
+_15 skills_
 
 - Advanced Public behaviors techniques
 - Applied Public behaviors
@@ -18657,7 +18654,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Time & punctuality
 
-*15 skills*
+_15 skills_
 
 - Advanced Time & punctuality techniques
 - Applied Time & punctuality
@@ -18679,7 +18676,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Accessibility tech
 
-*15 skills*
+_15 skills_
 
 - Accessibility tech automation
 - Accessibility tech customization
@@ -18699,7 +18696,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Classifiers & space
 
-*15 skills*
+_15 skills_
 
 - Advanced Classifiers & space techniques
 - Applied Classifiers & space
@@ -18719,7 +18716,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Deaf culture & community
 
-*15 skills*
+_15 skills_
 
 - Applied Deaf culture & community
 - Basic Deaf culture & community
@@ -18739,7 +18736,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Ethics & boundaries
 
-*15 skills*
+_15 skills_
 
 - Advanced Ethics & boundaries techniques
 - Applied Ethics & boundaries
@@ -18759,7 +18756,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Facial grammar & prosody
 
-*15 skills*
+_15 skills_
 
 - Advanced Facial grammar & prosody techniques
 - Enterprise facial grammar & prosody
@@ -18779,7 +18776,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Fingerspelling systems
 
-*15 skills*
+_15 skills_
 
 - Basic Fingerspelling systems
 - Fingerspelling systems auditing
@@ -18799,7 +18796,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Interpreting conventions
 
-*15 skills*
+_15 skills_
 
 - Applied Interpreting conventions
 - Basic Interpreting conventions
@@ -18819,7 +18816,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### National sign languages
 
-*15 skills*
+_15 skills_
 
 - Enterprise national sign languages
 - Large-scale national sign languages
@@ -18841,7 +18838,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Conflict mediation
 
-*15 skills*
+_15 skills_
 
 - Advanced Conflict mediation techniques
 - Applied Conflict mediation
@@ -18861,7 +18858,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Decision-making norms
 
-*15 skills*
+_15 skills_
 
 - Applied Decision-making norms
 - Basic Decision-making norms
@@ -18881,7 +18878,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Distributed teaming
 
-*15 skills*
+_15 skills_
 
 - Advanced Distributed teaming techniques
 - Applied Distributed teaming
@@ -18901,7 +18898,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Feedback & evaluation styles
 
-*15 skills*
+_15 skills_
 
 - Advanced Feedback & evaluation styles techniques
 - Feedback & evaluation styles assessment
@@ -18921,7 +18918,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Holidays & rhythms
 
-*15 skills*
+_15 skills_
 
 - Basic Holidays & rhythms
 - Enterprise holidays & rhythms
@@ -18941,7 +18938,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Inclusion practices
 
-*15 skills*
+_15 skills_
 
 - Basic Inclusion practices
 - Enterprise inclusion practices
@@ -18961,7 +18958,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Onboarding across cultures
 
-*15 skills*
+_15 skills_
 
 - Advanced Onboarding across cultures techniques
 - Basic Onboarding across cultures
@@ -18981,7 +18978,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Remote collaboration
 
-*15 skills*
+_15 skills_
 
 - Applied Remote collaboration
 - Large-scale remote collaboration
@@ -19003,7 +19000,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Handwriting & calligraphy
 
-*15 skills*
+_15 skills_
 
 - Creative handwriting & calligraphy
 - Editing in handwriting & calligraphy
@@ -19023,7 +19020,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### OCR & text tech
 
-*15 skills*
+_15 skills_
 
 - Basic OCR & text tech
 - Enterprise ocr & text tech
@@ -19043,7 +19040,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Punctuation norms
 
-*15 skills*
+_15 skills_
 
 - Applied Punctuation norms
 - Medium-scale punctuation norms
@@ -19063,7 +19060,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Romanization & transliteration
 
-*15 skills*
+_15 skills_
 
 - Applied Romanization & transliteration
 - Enterprise romanization & transliteration
@@ -19083,7 +19080,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Scripts & families
 
-*15 skills*
+_15 skills_
 
 - Advanced Scripts & families techniques
 - Applied Scripts & families
@@ -19103,7 +19100,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Spelling reforms
 
-*15 skills*
+_15 skills_
 
 - Enterprise spelling reforms
 - Large-scale spelling reforms
@@ -19123,7 +19120,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Standardization bodies
 
-*15 skills*
+_15 skills_
 
 - Basic Standardization bodies
 - Enterprise standardization bodies
@@ -19143,7 +19140,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Typography basics
 
-*15 skills*
+_15 skills_
 
 - Advanced Typography basics techniques
 - Applied Typography basics
@@ -19161,7 +19158,6 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 - Typography basics reporting
 - Typography basics troubleshooting
 
-
 ---
 
 ## 📋 Methods & Practices (M)
@@ -19170,7 +19166,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Coaching & facilitation
 
-*15 skills*
+_15 skills_
 
 - Advanced Coaching & facilitation techniques
 - Applied Coaching & facilitation
@@ -19190,7 +19186,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### DevXP practices
 
-*15 skills*
+_15 skills_
 
 - DevXP practices auditing
 - DevXP practices automation
@@ -19210,7 +19206,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Estimation & planning
 
-*15 skills*
+_15 skills_
 
 - Advanced Estimation & planning techniques
 - Basic Estimation & planning
@@ -19230,7 +19226,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Kanban flow & WIP
 
-*15 skills*
+_15 skills_
 
 - Advanced Kanban flow & WIP techniques
 - Basic Kanban flow & WIP
@@ -19250,7 +19246,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Metrics & improvement
 
-*15 skills*
+_15 skills_
 
 - Applied Metrics & improvement
 - Enterprise metrics & improvement
@@ -19270,7 +19266,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Product ownership
 
-*15 skills*
+_15 skills_
 
 - Advanced Product ownership techniques
 - Basic Product ownership
@@ -19290,7 +19286,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Scaling (LeSS, SAFe)
 
-*15 skills*
+_15 skills_
 
 - Enterprise scaling (less, safe)
 - Large-scale scaling (less, safe)
@@ -19310,7 +19306,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Scrum events & roles
 
-*15 skills*
+_15 skills_
 
 - Advanced Scrum events & roles techniques
 - Applied Scrum events & roles
@@ -19332,7 +19328,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Analytics in audit
 
-*15 skills*
+_15 skills_
 
 - Analytics in audit in Education
 - Analytics in audit in Energy
@@ -19352,7 +19348,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Continuous auditing
 
-*15 skills*
+_15 skills_
 
 - Advanced Continuous auditing techniques
 - Applied Continuous auditing
@@ -19372,7 +19368,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Evidence gathering
 
-*15 skills*
+_15 skills_
 
 - Advanced Evidence gathering techniques
 - Basic Evidence gathering
@@ -19392,7 +19388,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Follow-up & closure
 
-*15 skills*
+_15 skills_
 
 - Advanced Follow-up & closure techniques
 - Enterprise follow-up & closure
@@ -19412,7 +19408,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Independence & ethics
 
-*15 skills*
+_15 skills_
 
 - Advanced Independence & ethics techniques
 - Applied Independence & ethics
@@ -19432,7 +19428,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Planning & scope
 
-*15 skills*
+_15 skills_
 
 - Applied Planning & scope
 - Basic Planning & scope
@@ -19452,7 +19448,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Reporting & remediation
 
-*15 skills*
+_15 skills_
 
 - Large-scale reporting & remediation
 - Medium-scale reporting & remediation
@@ -19472,7 +19468,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Testing & sampling
 
-*15 skills*
+_15 skills_
 
 - Acceptance testing & sampling
 - Automated testing & sampling
@@ -19494,7 +19490,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### 4D/5D & CDE
 
-*15 skills*
+_15 skills_
 
 - 4D/5D & CDE automation
 - 4D/5D & CDE best practices
@@ -19514,7 +19510,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### As-built & turnover
 
-*15 skills*
+_15 skills_
 
 - Advanced As-built & turnover techniques
 - As-built & turnover compliance
@@ -19534,7 +19530,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### BIM execution plans
 
-*15 skills*
+_15 skills_
 
 - BIM execution plans auditing
 - BIM execution plans best practices
@@ -19554,7 +19550,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Coordination & clash
 
-*15 skills*
+_15 skills_
 
 - Advanced Coordination & clash techniques
 - Coordination & clash assessment
@@ -19574,7 +19570,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Field capture
 
-*15 skills*
+_15 skills_
 
 - Advanced Field capture techniques
 - Applied Field capture
@@ -19594,7 +19590,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Model standards
 
-*15 skills*
+_15 skills_
 
 - Advanced Model standards techniques
 - Large-scale model standards
@@ -19614,7 +19610,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Quantity take-off
 
-*15 skills*
+_15 skills_
 
 - Applied Quantity take-off
 - Medium-scale quantity take-off
@@ -19634,7 +19630,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### RFI & submittals
 
-*15 skills*
+_15 skills_
 
 - Advanced RFI & submittals techniques
 - Applied RFI & submittals
@@ -19656,7 +19652,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Automation & RPA
 
-*15 skills*
+_15 skills_
 
 - Automation & RPA auditing
 - Automation & RPA automation
@@ -19676,7 +19672,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Change mgmt
 
-*15 skills*
+_15 skills_
 
 - Advanced Change mgmt techniques
 - Applied Change mgmt
@@ -19696,7 +19692,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Continuous improvement
 
-*15 skills*
+_15 skills_
 
 - Advanced Continuous improvement techniques
 - Applied Continuous improvement
@@ -19716,7 +19712,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Controls & compliance
 
-*15 skills*
+_15 skills_
 
 - Advanced Controls & compliance techniques
 - Applied Controls & compliance
@@ -19736,7 +19732,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Discovery & mapping
 
-*15 skills*
+_15 skills_
 
 - Advanced Discovery & mapping techniques
 - Applied Discovery & mapping
@@ -19756,7 +19752,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Modeling (BPMN)
 
-*15 skills*
+_15 skills_
 
 - Medium-scale modeling (bpmn)
 - Modeling (BPMN) assessment
@@ -19776,7 +19772,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Process ownership
 
-*15 skills*
+_15 skills_
 
 - Basic Process ownership
 - Hybrid process ownership
@@ -19796,7 +19792,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### SLAs & monitoring
 
-*15 skills*
+_15 skills_
 
 - Advanced SLAs & monitoring techniques
 - Basic SLAs & monitoring
@@ -19818,7 +19814,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Data prep & feature eng
 
-*15 skills*
+_15 skills_
 
 - Data prep & feature eng assessment
 - Data prep & feature eng automation
@@ -19838,7 +19834,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Deployment & monitoring
 
-*15 skills*
+_15 skills_
 
 - Advanced Deployment & monitoring techniques
 - Applied Deployment & monitoring
@@ -19858,7 +19854,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Documentation
 
-*15 skills*
+_15 skills_
 
 - Academic documentation
 - Business documentation
@@ -19878,7 +19874,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Evaluation & metrics
 
-*15 skills*
+_15 skills_
 
 - Advanced Evaluation & metrics techniques
 - Applied Evaluation & metrics
@@ -19898,7 +19894,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Experimentation
 
-*15 skills*
+_15 skills_
 
 - Advanced Experimentation techniques
 - Applied Experimentation
@@ -19918,7 +19914,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Modeling & validation
 
-*15 skills*
+_15 skills_
 
 - Advanced Modeling & validation techniques
 - Modeling & validation auditing
@@ -19938,7 +19934,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Problem framing
 
-*15 skills*
+_15 skills_
 
 - Basic Problem framing
 - Large-scale problem framing
@@ -19958,7 +19954,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Reproducibility & MLops
 
-*15 skills*
+_15 skills_
 
 - Basic Reproducibility & MLops
 - Medium-scale reproducibility & mlops
@@ -19980,7 +19976,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Code review & patterns
 
-*15 skills*
+_15 skills_
 
 - Advanced Code review & patterns techniques
 - Applied Code review & patterns
@@ -20000,7 +19996,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Debt mgmt
 
-*15 skills*
+_15 skills_
 
 - Basic Debt mgmt
 - Debt mgmt assessment
@@ -20020,7 +20016,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Delivery practices
 
-*15 skills*
+_15 skills_
 
 - Advanced Delivery practices techniques
 - Agile delivery practices
@@ -20040,7 +20036,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Documentation standards
 
-*15 skills*
+_15 skills_
 
 - Academic documentation standards
 - Business documentation standards
@@ -20060,7 +20056,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Feature flags
 
-*15 skills*
+_15 skills_
 
 - Applied Feature flags
 - Feature flags assessment
@@ -20080,7 +20076,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Observability
 
-*15 skills*
+_15 skills_
 
 - Basic Observability
 - Large-scale observability
@@ -20100,7 +20096,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Performance & security
 
-*15 skills*
+_15 skills_
 
 - Applied Performance & security
 - Large-scale performance & security
@@ -20120,7 +20116,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Testing strategy
 
-*15 skills*
+_15 skills_
 
 - Acceptance testing strategy
 - Automated testing strategy
@@ -20142,7 +20138,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Blue/green & canary
 
-*15 skills*
+_15 skills_
 
 - Applied Blue/green & canary
 - Blue/green & canary auditing
@@ -20162,7 +20158,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Feature toggles
 
-*15 skills*
+_15 skills_
 
 - Feature toggles assessment
 - Feature toggles best practices
@@ -20182,7 +20178,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Observability & tracing
 
-*15 skills*
+_15 skills_
 
 - Advanced Observability & tracing techniques
 - Basic Observability & tracing
@@ -20202,7 +20198,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Pipelines & IaC
 
-*15 skills*
+_15 skills_
 
 - Medium-scale pipelines & iac
 - Pipelines & IaC assessment
@@ -20222,7 +20218,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Post-release reviews
 
-*15 skills*
+_15 skills_
 
 - Applied Post-release reviews
 - Enterprise post-release reviews
@@ -20242,7 +20238,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Release governance
 
-*15 skills*
+_15 skills_
 
 - Basic Release governance
 - Enterprise release governance
@@ -20262,7 +20258,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Reliability & rollback
 
-*15 skills*
+_15 skills_
 
 - Advanced Reliability & rollback techniques
 - Basic Reliability & rollback
@@ -20282,7 +20278,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Security gates
 
-*15 skills*
+_15 skills_
 
 - Advanced Security gates techniques
 - Applied Security gates
@@ -20304,7 +20300,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Accessibility & UDL
 
-*15 skills*
+_15 skills_
 
 - Accessibility & UDL assessment
 - Accessibility & UDL auditing
@@ -20324,7 +20320,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Assessment & analytics
 
-*15 skills*
+_15 skills_
 
 - Assessment & analytics in Construction
 - Assessment & analytics in Education
@@ -20344,7 +20340,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Chunking & pacing
 
-*15 skills*
+_15 skills_
 
 - Applied Chunking & pacing
 - Basic Chunking & pacing
@@ -20364,7 +20360,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Course evaluation
 
-*15 skills*
+_15 skills_
 
 - Advanced Course evaluation techniques
 - Applied Course evaluation
@@ -20384,7 +20380,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Facilitation guides
 
-*15 skills*
+_15 skills_
 
 - Applied Facilitation guides
 - Basic Facilitation guides
@@ -20404,7 +20400,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Media & interactivity
 
-*15 skills*
+_15 skills_
 
 - Advanced Media & interactivity techniques
 - Applied Media & interactivity
@@ -20424,7 +20420,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Objectives & outcomes
 
-*15 skills*
+_15 skills_
 
 - Advanced Objectives & outcomes techniques
 - Applied Objectives & outcomes
@@ -20444,7 +20440,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Peer learning & feedback
 
-*15 skills*
+_15 skills_
 
 - Basic Peer learning & feedback
 - Medium-scale peer learning & feedback
@@ -20466,7 +20462,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Budget & variance
 
-*15 skills*
+_15 skills_
 
 - Advanced Budget & variance techniques
 - Budget & variance auditing
@@ -20486,7 +20482,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Capital allocation
 
-*15 skills*
+_15 skills_
 
 - Advanced Capital allocation techniques
 - Basic Capital allocation
@@ -20506,7 +20502,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Close & consolidation
 
-*15 skills*
+_15 skills_
 
 - Advanced Close & consolidation techniques
 - Close & consolidation auditing
@@ -20526,7 +20522,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Controls & reconciliations
 
-*15 skills*
+_15 skills_
 
 - Advanced Controls & reconciliations techniques
 - Controls & reconciliations assessment
@@ -20546,7 +20542,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Costing methods
 
-*15 skills*
+_15 skills_
 
 - Agile costing methods
 - Applied Costing methods
@@ -20566,7 +20562,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Forecasting & models
 
-*15 skills*
+_15 skills_
 
 - Applied Forecasting & models
 - Basic Forecasting & models
@@ -20586,7 +20582,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Investment appraisal
 
-*15 skills*
+_15 skills_
 
 - Advanced Investment appraisal techniques
 - Basic Investment appraisal
@@ -20606,7 +20602,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Working capital
 
-*15 skills*
+_15 skills_
 
 - Applied Working capital
 - Medium-scale working capital
@@ -20628,7 +20624,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Batch records & logbooks
 
-*15 skills*
+_15 skills_
 
 - Advanced Batch records & logbooks techniques
 - Basic Batch records & logbooks
@@ -20648,7 +20644,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### CAPA & change
 
-*15 skills*
+_15 skills_
 
 - Advanced CAPA & change techniques
 - CAPA & change auditing
@@ -20668,7 +20664,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Data integrity & ALCOA
 
-*15 skills*
+_15 skills_
 
 - Advanced Data integrity & ALCOA techniques
 - Basic Data integrity & ALCOA
@@ -20688,7 +20684,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Deviations & OOS/OOT
 
-*15 skills*
+_15 skills_
 
 - Applied Deviations & OOS/OOT
 - Deviations & OOS/OOT automation
@@ -20708,7 +20704,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### GLP/GMP/GCP basics
 
-*15 skills*
+_15 skills_
 
 - Applied GLP/GMP/GCP basics
 - GLP/GMP/GCP basics assessment
@@ -20728,7 +20724,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Inspections & readiness
 
-*15 skills*
+_15 skills_
 
 - Basic Inspections & readiness
 - Enterprise inspections & readiness
@@ -20748,7 +20744,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Tech transfer
 
-*15 skills*
+_15 skills_
 
 - Advanced Tech transfer techniques
 - Large-scale tech transfer
@@ -20768,7 +20764,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Validation & qualification
 
-*15 skills*
+_15 skills_
 
 - Basic Validation & qualification
 - Enterprise validation & qualification
@@ -20790,7 +20786,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Competencies & levelling
 
-*15 skills*
+_15 skills_
 
 - Advanced Competencies & levelling techniques
 - Competencies & levelling automation
@@ -20810,7 +20806,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### ER & policy
 
-*15 skills*
+_15 skills_
 
 - Basic ER & policy
 - ER & policy best practices
@@ -20830,7 +20826,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Hiring & selection
 
-*15 skills*
+_15 skills_
 
 - Hiring & selection auditing
 - Hiring & selection automation
@@ -20850,7 +20846,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Listening & engagement
 
-*15 skills*
+_15 skills_
 
 - Enterprise listening & engagement
 - Large-scale listening & engagement
@@ -20870,7 +20866,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Onboarding & ramp
 
-*15 skills*
+_15 skills_
 
 - Advanced Onboarding & ramp techniques
 - Enterprise onboarding & ramp
@@ -20890,7 +20886,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Performance & feedback
 
-*15 skills*
+_15 skills_
 
 - Enterprise performance & feedback
 - Medium-scale performance & feedback
@@ -20910,7 +20906,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Rewards & recognition
 
-*15 skills*
+_15 skills_
 
 - Advanced Rewards & recognition techniques
 - Applied Rewards & recognition
@@ -20930,7 +20926,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Succession & mobility
 
-*15 skills*
+_15 skills_
 
 - Advanced Succession & mobility techniques
 - Basic Succession & mobility
@@ -20952,7 +20948,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Contractor mgmt
 
-*15 skills*
+_15 skills_
 
 - Advanced Contractor mgmt techniques
 - Contractor mgmt assessment
@@ -20972,7 +20968,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Emergency response
 
-*15 skills*
+_15 skills_
 
 - Emergency response assessment
 - Emergency response auditing
@@ -20992,7 +20988,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Environmental aspects
 
-*15 skills*
+_15 skills_
 
 - Advanced Environmental aspects techniques
 - Enterprise environmental aspects
@@ -21012,7 +21008,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Ergonomics
 
-*15 skills*
+_15 skills_
 
 - Basic Ergonomics
 - Enterprise ergonomics
@@ -21032,7 +21028,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### HAZOP & HACCP
 
-*15 skills*
+_15 skills_
 
 - Basic HAZOP & HACCP
 - Enterprise hazop & haccp
@@ -21052,7 +21048,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Incident investigation
 
-*15 skills*
+_15 skills_
 
 - Advanced Incident investigation techniques
 - Incident investigation assessment
@@ -21072,7 +21068,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Permits & controls
 
-*15 skills*
+_15 skills_
 
 - Advanced Permits & controls techniques
 - Permits & controls assessment
@@ -21092,7 +21088,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Training & drills
 
-*15 skills*
+_15 skills_
 
 - Advanced Training & drills techniques
 - Basic Training & drills
@@ -21114,7 +21110,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Circularity metrics
 
-*15 skills*
+_15 skills_
 
 - Advanced Circularity metrics techniques
 - Applied Circularity metrics
@@ -21134,7 +21130,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### GHG accounting
 
-*15 skills*
+_15 skills_
 
 - Advanced GHG accounting techniques
 - Applied GHG accounting
@@ -21154,7 +21150,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### LCA & footprint
 
-*15 skills*
+_15 skills_
 
 - LCA & footprint automation
 - LCA & footprint compliance
@@ -21174,7 +21170,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Materiality & SBTi
 
-*15 skills*
+_15 skills_
 
 - Advanced Materiality & SBTi techniques
 - Enterprise materiality & sbti
@@ -21194,7 +21190,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Offsets & removals
 
-*15 skills*
+_15 skills_
 
 - Advanced Offsets & removals techniques
 - Applied Offsets & removals
@@ -21214,7 +21210,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Reporting (GRI/CSRD)
 
-*15 skills*
+_15 skills_
 
 - Applied Reporting (GRI/CSRD)
 - Enterprise reporting (gri/csrd)
@@ -21234,7 +21230,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Risk & adaptation
 
-*15 skills*
+_15 skills_
 
 - Advanced Risk & adaptation techniques
 - Enterprise risk & adaptation
@@ -21254,7 +21250,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Supplier audits
 
-*15 skills*
+_15 skills_
 
 - Advanced Supplier audits techniques
 - Basic Supplier audits
@@ -21276,7 +21272,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Flow & pull
 
-*15 skills*
+_15 skills_
 
 - Advanced Flow & pull techniques
 - Flow & pull compliance
@@ -21296,7 +21292,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Kaizen & kata
 
-*15 skills*
+_15 skills_
 
 - Applied Kaizen & kata
 - Basic Kaizen & kata
@@ -21316,7 +21312,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Leader standard work
 
-*15 skills*
+_15 skills_
 
 - Advanced Leader standard work techniques
 - Applied Leader standard work
@@ -21336,7 +21332,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Problem solving (A3)
 
-*15 skills*
+_15 skills_
 
 - Advanced Problem solving (A3) techniques
 - Applied Problem solving (A3)
@@ -21356,7 +21352,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Standard work & 5S
 
-*15 skills*
+_15 skills_
 
 - Advanced Standard work & 5S techniques
 - Basic Standard work & 5S
@@ -21376,7 +21372,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Value stream mapping
 
-*15 skills*
+_15 skills_
 
 - Advanced Value stream mapping techniques
 - Basic Value stream mapping
@@ -21396,7 +21392,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Visual management
 
-*15 skills*
+_15 skills_
 
 - Change visual management
 - Crisis visual management
@@ -21416,7 +21412,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Waste identification
 
-*15 skills*
+_15 skills_
 
 - Applied Waste identification
 - Large-scale waste identification
@@ -21438,7 +21434,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Compliance mapping
 
-*15 skills*
+_15 skills_
 
 - Advanced Compliance mapping techniques
 - Applied Compliance mapping
@@ -21458,7 +21454,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Contract lifecycle
 
-*15 skills*
+_15 skills_
 
 - Advanced Contract lifecycle techniques
 - Contract lifecycle assessment
@@ -21478,7 +21474,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Discovery & evidence
 
-*15 skills*
+_15 skills_
 
 - Advanced Discovery & evidence techniques
 - Applied Discovery & evidence
@@ -21498,7 +21494,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Ethics & privilege
 
-*15 skills*
+_15 skills_
 
 - Advanced Ethics & privilege techniques
 - Basic Ethics & privilege
@@ -21518,7 +21514,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Issue spotting
 
-*15 skills*
+_15 skills_
 
 - Advanced Issue spotting techniques
 - Basic Issue spotting
@@ -21538,7 +21534,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Litigation support
 
-*15 skills*
+_15 skills_
 
 - Advanced Litigation support techniques
 - Applied Litigation support
@@ -21558,7 +21554,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Negotiation & settlement
 
-*15 skills*
+_15 skills_
 
 - Advanced Negotiation & settlement techniques
 - Applied Negotiation & settlement
@@ -21578,7 +21574,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Research & memo
 
-*15 skills*
+_15 skills_
 
 - Enterprise research & memo
 - Large-scale research & memo
@@ -21600,7 +21596,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Attribution & MMM
 
-*15 skills*
+_15 skills_
 
 - Applied Attribution & MMM
 - Attribution & MMM auditing
@@ -21620,7 +21616,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Brand tracking
 
-*15 skills*
+_15 skills_
 
 - Applied Brand tracking
 - Brand tracking assessment
@@ -21640,7 +21636,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Community & advocacy
 
-*15 skills*
+_15 skills_
 
 - Advanced Community & advocacy techniques
 - Applied Community & advocacy
@@ -21660,7 +21656,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Content & SEO/SEM
 
-*15 skills*
+_15 skills_
 
 - Content & SEO/SEM automation
 - Content & SEO/SEM compliance
@@ -21680,7 +21676,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Experiment design
 
-*15 skills*
+_15 skills_
 
 - Collaborative experiment design
 - Conceptual experiment design
@@ -21700,7 +21696,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Lifecycle & CRM
 
-*15 skills*
+_15 skills_
 
 - Advanced Lifecycle & CRM techniques
 - Applied Lifecycle & CRM
@@ -21720,7 +21716,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Positioning & messaging
 
-*15 skills*
+_15 skills_
 
 - Enterprise positioning & messaging
 - Large-scale positioning & messaging
@@ -21740,7 +21736,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Product-led growth
 
-*15 skills*
+_15 skills_
 
 - Advanced Product-led growth techniques
 - Large-scale product-led growth
@@ -21762,7 +21758,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Approval workflows
 
-*15 skills*
+_15 skills_
 
 - Advanced Approval workflows techniques
 - Approval workflows auditing
@@ -21782,7 +21778,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Bias & fairness
 
-*15 skills*
+_15 skills_
 
 - Advanced Bias & fairness techniques
 - Bias & fairness automation
@@ -21802,7 +21798,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### CI/CD for ML
 
-*15 skills*
+_15 skills_
 
 - Advanced CI/CD for ML techniques
 - CI/CD for ML assessment
@@ -21822,7 +21818,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Explainability
 
-*15 skills*
+_15 skills_
 
 - Applied Explainability
 - Basic Explainability
@@ -21842,7 +21838,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Incident response
 
-*15 skills*
+_15 skills_
 
 - Enterprise incident response
 - Incident response assessment
@@ -21862,7 +21858,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Model registry
 
-*15 skills*
+_15 skills_
 
 - Advanced Model registry techniques
 - Basic Model registry
@@ -21882,7 +21878,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Monitoring & drift
 
-*15 skills*
+_15 skills_
 
 - Monitoring & drift assessment
 - Monitoring & drift best practices
@@ -21902,7 +21898,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Versioning & lineage
 
-*15 skills*
+_15 skills_
 
 - Basic Versioning & lineage
 - Enterprise versioning & lineage
@@ -21924,7 +21920,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Conflict mediation
 
-*15 skills*
+_15 skills_
 
 - Advanced Conflict mediation techniques
 - Applied Conflict mediation
@@ -21944,7 +21940,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Consensus building
 
-*15 skills*
+_15 skills_
 
 - Advanced Consensus building techniques
 - Consensus building automation
@@ -21964,7 +21960,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Decision methods
 
-*15 skills*
+_15 skills_
 
 - Advanced Decision methods techniques
 - Basic Decision methods
@@ -21984,7 +21980,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Hybrid facilitation
 
-*15 skills*
+_15 skills_
 
 - Advanced Hybrid facilitation techniques
 - Applied Hybrid facilitation
@@ -22004,7 +22000,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Large-group methods
 
-*15 skills*
+_15 skills_
 
 - Advanced Large-group methods techniques
 - Agile large-group methods
@@ -22024,7 +22020,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Retros & reviews
 
-*15 skills*
+_15 skills_
 
 - Advanced Retros & reviews techniques
 - Applied Retros & reviews
@@ -22044,7 +22040,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Visual facilitation
 
-*15 skills*
+_15 skills_
 
 - Advanced Visual facilitation techniques
 - Applied Visual facilitation
@@ -22064,7 +22060,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Workshop design
 
-*15 skills*
+_15 skills_
 
 - Collaborative workshop design
 - Conceptual workshop design
@@ -22086,7 +22082,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### CMDB & config
 
-*15 skills*
+_15 skills_
 
 - Basic CMDB & config
 - CMDB & config assessment
@@ -22106,7 +22102,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Capacity & DR
 
-*15 skills*
+_15 skills_
 
 - Advanced Capacity & DR techniques
 - Applied Capacity & DR
@@ -22126,7 +22122,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Incident/problem/change
 
-*15 skills*
+_15 skills_
 
 - Advanced Incident/problem/change techniques
 - Applied Incident/problem/change
@@ -22146,7 +22142,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Postmortems & blameless
 
-*15 skills*
+_15 skills_
 
 - Applied Postmortems & blameless
 - Basic Postmortems & blameless
@@ -22166,7 +22162,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Release & CAB
 
-*15 skills*
+_15 skills_
 
 - Advanced Release & CAB techniques
 - Applied Release & CAB
@@ -22186,7 +22182,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Request & catalog
 
-*15 skills*
+_15 skills_
 
 - Applied Request & catalog
 - Basic Request & catalog
@@ -22206,7 +22202,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Runbooks & playbooks
 
-*15 skills*
+_15 skills_
 
 - Medium-scale runbooks & playbooks
 - Runbooks & playbooks auditing
@@ -22226,7 +22222,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### SRE & SLOs
 
-*15 skills*
+_15 skills_
 
 - Applied SRE & SLOs
 - Basic SRE & SLOs
@@ -22248,7 +22244,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Benefits realization
 
-*15 skills*
+_15 skills_
 
 - Applied Benefits realization
 - Basic Benefits realization
@@ -22268,7 +22264,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Governance & gates
 
-*15 skills*
+_15 skills_
 
 - Basic Governance & gates
 - Enterprise governance & gates
@@ -22288,7 +22284,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Lessons learned
 
-*15 skills*
+_15 skills_
 
 - Advanced Lessons learned techniques
 - Large-scale lessons learned
@@ -22308,7 +22304,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Portfolio prioritization
 
-*15 skills*
+_15 skills_
 
 - Advanced Portfolio prioritization techniques
 - Applied Portfolio prioritization
@@ -22328,7 +22324,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Resource & capacity
 
-*15 skills*
+_15 skills_
 
 - Advanced Resource & capacity techniques
 - Applied Resource & capacity
@@ -22348,7 +22344,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Risk & issue mgmt
 
-*15 skills*
+_15 skills_
 
 - Applied Risk & issue mgmt
 - Enterprise risk & issue mgmt
@@ -22368,7 +22364,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Scope, schedule & cost
 
-*15 skills*
+_15 skills_
 
 - Basic Scope, schedule & cost
 - Scope, schedule & cost assessment
@@ -22388,7 +22384,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Stakeholder engagement
 
-*15 skills*
+_15 skills_
 
 - Advanced Stakeholder engagement techniques
 - Basic Stakeholder engagement
@@ -22410,7 +22406,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Category planning
 
-*15 skills*
+_15 skills_
 
 - Advanced Category planning techniques
 - Applied Category planning
@@ -22430,7 +22426,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Compliance & audits
 
-*15 skills*
+_15 skills_
 
 - Basic Compliance & audits
 - Compliance & audits auditing
@@ -22450,7 +22446,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Contract mgmt
 
-*15 skills*
+_15 skills_
 
 - Advanced Contract mgmt techniques
 - Basic Contract mgmt
@@ -22470,7 +22466,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Negotiation strategy
 
-*15 skills*
+_15 skills_
 
 - Advanced Negotiation strategy techniques
 - Medium-scale negotiation strategy
@@ -22490,7 +22486,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### RFx & evaluation
 
-*15 skills*
+_15 skills_
 
 - Advanced RFx & evaluation techniques
 - Enterprise rfx & evaluation
@@ -22510,7 +22506,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Risk & sustainability
 
-*15 skills*
+_15 skills_
 
 - Enterprise risk & sustainability
 - Large-scale risk & sustainability
@@ -22530,7 +22526,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### SRM & scorecards
 
-*15 skills*
+_15 skills_
 
 - Advanced SRM & scorecards techniques
 - Enterprise srm & scorecards
@@ -22550,7 +22546,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Savings tracking
 
-*15 skills*
+_15 skills_
 
 - Advanced Savings tracking techniques
 - Enterprise savings tracking
@@ -22572,7 +22568,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Delivery cadence
 
-*15 skills*
+_15 skills_
 
 - Advanced Delivery cadence techniques
 - Applied Delivery cadence
@@ -22592,7 +22588,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Launch & comms
 
-*15 skills*
+_15 skills_
 
 - Advanced Launch & comms techniques
 - Basic Launch & comms
@@ -22612,7 +22608,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Opportunity discovery
 
-*15 skills*
+_15 skills_
 
 - Enterprise opportunity discovery
 - Large-scale opportunity discovery
@@ -22632,7 +22628,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Outcomes & measures
 
-*15 skills*
+_15 skills_
 
 - Advanced Outcomes & measures techniques
 - Basic Outcomes & measures
@@ -22652,7 +22648,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Post-launch learning
 
-*15 skills*
+_15 skills_
 
 - Basic Post-launch learning
 - Enterprise post-launch learning
@@ -22672,7 +22668,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Prioritization models
 
-*15 skills*
+_15 skills_
 
 - Advanced Prioritization models techniques
 - Enterprise prioritization models
@@ -22692,7 +22688,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Prototyping & tests
 
-*15 skills*
+_15 skills_
 
 - Enterprise prototyping & tests
 - Large-scale prototyping & tests
@@ -22712,7 +22708,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Roadmaps & bets
 
-*15 skills*
+_15 skills_
 
 - Applied Roadmaps & bets
 - Basic Roadmaps & bets
@@ -22734,7 +22730,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Audits & CAPA
 
-*15 skills*
+_15 skills_
 
 - Advanced Audits & CAPA techniques
 - Audits & CAPA auditing
@@ -22754,7 +22750,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Calibration & MSA
 
-*15 skills*
+_15 skills_
 
 - Advanced Calibration & MSA techniques
 - Applied Calibration & MSA
@@ -22774,7 +22770,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Change control
 
-*15 skills*
+_15 skills_
 
 - Change control assessment
 - Change control auditing
@@ -22794,7 +22790,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Management review
 
-*15 skills*
+_15 skills_
 
 - Change management review
 - Crisis management review
@@ -22814,7 +22810,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Nonconformance
 
-*15 skills*
+_15 skills_
 
 - Basic Nonconformance
 - Large-scale nonconformance
@@ -22834,7 +22830,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### QMS documentation
 
-*15 skills*
+_15 skills_
 
 - Academic qms documentation
 - Creative qms documentation
@@ -22854,7 +22850,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Supplier quality
 
-*15 skills*
+_15 skills_
 
 - Acceptance supplier quality
 - Enterprise supplier quality
@@ -22874,7 +22870,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Training & competency
 
-*15 skills*
+_15 skills_
 
 - Basic Training & competency
 - Enterprise training & competency
@@ -22896,7 +22892,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Design & sampling
 
-*15 skills*
+_15 skills_
 
 - Collaborative design & sampling
 - Conceptual design & sampling
@@ -22916,7 +22912,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Ethics & IRB
 
-*15 skills*
+_15 skills_
 
 - Advanced Ethics & IRB techniques
 - Applied Ethics & IRB
@@ -22936,7 +22932,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Experiments & quasi
 
-*15 skills*
+_15 skills_
 
 - Advanced Experiments & quasi techniques
 - Applied Experiments & quasi
@@ -22956,7 +22952,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Qualitative analysis
 
-*15 skills*
+_15 skills_
 
 - Descriptive qualitative analysis
 - Diagnostic qualitative analysis
@@ -22976,7 +22972,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Quantitative analysis
 
-*15 skills*
+_15 skills_
 
 - Descriptive quantitative analysis
 - Diagnostic quantitative analysis
@@ -22996,7 +22992,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Reporting & artifacts
 
-*15 skills*
+_15 skills_
 
 - Applied Reporting & artifacts
 - Large-scale reporting & artifacts
@@ -23016,7 +23012,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Reproducibility
 
-*15 skills*
+_15 skills_
 
 - Applied Reproducibility
 - Basic Reproducibility
@@ -23036,7 +23032,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Surveys & interviews
 
-*15 skills*
+_15 skills_
 
 - Advanced Surveys & interviews techniques
 - Enterprise surveys & interviews
@@ -23058,7 +23054,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Analysis & scoring
 
-*15 skills*
+_15 skills_
 
 - Analysis & scoring in Government
 - Analysis & scoring in Manufacturing
@@ -23078,7 +23074,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### FMEA & bow-tie
 
-*15 skills*
+_15 skills_
 
 - Advanced FMEA & bow-tie techniques
 - Applied FMEA & bow-tie
@@ -23098,7 +23094,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Identification & taxonomy
 
-*15 skills*
+_15 skills_
 
 - Identification & taxonomy assessment
 - Identification & taxonomy auditing
@@ -23118,7 +23114,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Monitoring & KRIs
 
-*15 skills*
+_15 skills_
 
 - Applied Monitoring & KRIs
 - Large-scale monitoring & kris
@@ -23138,7 +23134,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Reporting
 
-*15 skills*
+_15 skills_
 
 - Advanced Reporting techniques
 - Applied Reporting
@@ -23158,7 +23154,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Risk appetite
 
-*15 skills*
+_15 skills_
 
 - Advanced Risk appetite techniques
 - Applied Risk appetite
@@ -23178,7 +23174,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Scenario planning
 
-*15 skills*
+_15 skills_
 
 - Basic Scenario planning
 - Large-scale scenario planning
@@ -23198,7 +23194,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Treatment & mitigation
 
-*15 skills*
+_15 skills_
 
 - Applied Treatment & mitigation
 - Basic Treatment & mitigation
@@ -23220,7 +23216,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Account planning
 
-*15 skills*
+_15 skills_
 
 - Account planning auditing
 - Account planning best practices
@@ -23240,7 +23236,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Closing strategies
 
-*15 skills*
+_15 skills_
 
 - Applied Closing strategies
 - Closing strategies assessment
@@ -23260,7 +23256,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Demo & proof
 
-*15 skills*
+_15 skills_
 
 - Applied Demo & proof
 - Demo & proof assessment
@@ -23280,7 +23276,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Discovery & qualification
 
-*15 skills*
+_15 skills_
 
 - Applied Discovery & qualification
 - Discovery & qualification assessment
@@ -23300,7 +23296,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Mutual action plans
 
-*15 skills*
+_15 skills_
 
 - Advanced Mutual action plans techniques
 - Applied Mutual action plans
@@ -23320,7 +23316,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Objection handling
 
-*15 skills*
+_15 skills_
 
 - Advanced Objection handling techniques
 - Applied Objection handling
@@ -23340,7 +23336,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Post-sale expansion
 
-*15 skills*
+_15 skills_
 
 - Applied Post-sale expansion
 - Basic Post-sale expansion
@@ -23360,7 +23356,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Proposal & pricing
 
-*15 skills*
+_15 skills_
 
 - Applied Proposal & pricing
 - Basic Proposal & pricing
@@ -23382,7 +23378,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Compliance mapping
 
-*15 skills*
+_15 skills_
 
 - Advanced Compliance mapping techniques
 - Applied Compliance mapping
@@ -23402,7 +23398,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Data retention & DPIA
 
-*15 skills*
+_15 skills_
 
 - Advanced Data retention & DPIA techniques
 - Data retention & DPIA assessment
@@ -23422,7 +23418,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Policy & awareness
 
-*15 skills*
+_15 skills_
 
 - Medium-scale policy & awareness
 - Policy & awareness assessment
@@ -23442,7 +23438,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Privacy by design
 
-*15 skills*
+_15 skills_
 
 - Conceptual privacy by design
 - Detailed privacy by design
@@ -23462,7 +23458,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Secure SDLC
 
-*15 skills*
+_15 skills_
 
 - Advanced Secure SDLC techniques
 - Enterprise secure sdlc
@@ -23482,7 +23478,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Testing & response
 
-*15 skills*
+_15 skills_
 
 - Acceptance testing & response
 - Automated testing & response
@@ -23502,7 +23498,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Third-party risk
 
-*15 skills*
+_15 skills_
 
 - Basic Third-party risk
 - Enterprise third-party risk
@@ -23522,7 +23518,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Threat & risk
 
-*15 skills*
+_15 skills_
 
 - Advanced Threat & risk techniques
 - Enterprise threat & risk
@@ -23544,7 +23540,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Capability analysis
 
-*15 skills*
+_15 skills_
 
 - Capability analysis in Education
 - Capability analysis in Government
@@ -23564,7 +23560,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Control charts
 
-*15 skills*
+_15 skills_
 
 - Advanced Control charts techniques
 - Control charts assessment
@@ -23584,7 +23580,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### DMAIC lifecycle
 
-*15 skills*
+_15 skills_
 
 - Applied DMAIC lifecycle
 - Basic DMAIC lifecycle
@@ -23604,7 +23600,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### DOE & regression
 
-*15 skills*
+_15 skills_
 
 - Applied DOE & regression
 - DOE & regression assessment
@@ -23624,7 +23620,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Measurement systems
 
-*15 skills*
+_15 skills_
 
 - Applied Measurement systems
 - Enterprise measurement systems
@@ -23644,7 +23640,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Project selection
 
-*15 skills*
+_15 skills_
 
 - Advanced Project selection techniques
 - Applied Project selection
@@ -23664,7 +23660,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Sustain & control
 
-*15 skills*
+_15 skills_
 
 - Advanced Sustain & control techniques
 - Enterprise sustain & control
@@ -23684,7 +23680,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Voice of customer
 
-*15 skills*
+_15 skills_
 
 - Advanced Voice of customer techniques
 - Enterprise voice of customer
@@ -23706,7 +23702,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Accessibility & WCAG
 
-*15 skills*
+_15 skills_
 
 - Accessibility & WCAG assessment
 - Accessibility & WCAG auditing
@@ -23726,7 +23722,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Evaluative testing
 
-*15 skills*
+_15 skills_
 
 - Automated evaluative testing
 - Enterprise evaluative testing
@@ -23746,7 +23742,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Generative research
 
-*15 skills*
+_15 skills_
 
 - Advanced Generative research techniques
 - Basic Generative research
@@ -23766,7 +23762,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Handoff & QA
 
-*15 skills*
+_15 skills_
 
 - Enterprise handoff & qa
 - Handoff & QA assessment
@@ -23786,7 +23782,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### IA & navigation
 
-*15 skills*
+_15 skills_
 
 - Advanced IA & navigation techniques
 - Applied IA & navigation
@@ -23806,7 +23802,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Interaction & flows
 
-*15 skills*
+_15 skills_
 
 - Enterprise interaction & flows
 - Interaction & flows auditing
@@ -23826,7 +23822,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Planning & recruitment
 
-*15 skills*
+_15 skills_
 
 - Advanced Planning & recruitment techniques
 - Enterprise planning & recruitment
@@ -23846,7 +23842,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Visual & motion
 
-*15 skills*
+_15 skills_
 
 - Basic Visual & motion
 - Enterprise visual & motion
@@ -23864,7 +23860,6 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 - Visual & motion reporting
 - Visual & motion troubleshooting
 
-
 ---
 
 ## 🏢 Domain Knowledge (D)
@@ -23873,7 +23868,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Agroecology
 
-*15 skills*
+_15 skills_
 
 - Advanced Agroecology techniques
 - Agroecology automation
@@ -23893,7 +23888,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Agronomy & soils
 
-*15 skills*
+_15 skills_
 
 - Agronomy & soils assessment
 - Agronomy & soils compliance
@@ -23913,7 +23908,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Animal science
 
-*15 skills*
+_15 skills_
 
 - Animal science auditing
 - Animal science automation
@@ -23933,7 +23928,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Food science
 
-*15 skills*
+_15 skills_
 
 - Applied Food science
 - Basic Food science
@@ -23953,7 +23948,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Horticulture
 
-*15 skills*
+_15 skills_
 
 - Advanced Horticulture techniques
 - Applied Horticulture
@@ -23973,7 +23968,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Policy & extension
 
-*15 skills*
+_15 skills_
 
 - Enterprise policy & extension
 - Large-scale policy & extension
@@ -23993,7 +23988,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Supply chains
 
-*15 skills*
+_15 skills_
 
 - Applied Supply chains
 - Basic Supply chains
@@ -24013,7 +24008,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Sustainability & water
 
-*15 skills*
+_15 skills_
 
 - Sustainability & water assessment
 - Sustainability & water auditing
@@ -24035,7 +24030,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Building physics
 
-*15 skills*
+_15 skills_
 
 - Advanced Building physics techniques
 - Applied Building physics
@@ -24055,7 +24050,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### History & theory
 
-*15 skills*
+_15 skills_
 
 - Applied History & theory
 - Basic History & theory
@@ -24075,7 +24070,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Housing & community
 
-*15 skills*
+_15 skills_
 
 - Advanced Housing & community techniques
 - Basic Housing & community
@@ -24095,7 +24090,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Practice & regulation
 
-*15 skills*
+_15 skills_
 
 - Advanced Practice & regulation techniques
 - Agile practice & regulation
@@ -24115,7 +24110,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Preservation
 
-*15 skills*
+_15 skills_
 
 - Applied Preservation
 - Basic Preservation
@@ -24135,7 +24130,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Structures & materials
 
-*15 skills*
+_15 skills_
 
 - Advanced Structures & materials techniques
 - Applied Structures & materials
@@ -24155,7 +24150,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Sustainability & energy
 
-*15 skills*
+_15 skills_
 
 - Advanced Sustainability & energy techniques
 - Basic Sustainability & energy
@@ -24175,7 +24170,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Urban design
 
-*15 skills*
+_15 skills_
 
 - Collaborative urban design
 - Conceptual urban design
@@ -24197,7 +24192,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Aesthetics & criticism
 
-*15 skills*
+_15 skills_
 
 - Advanced Aesthetics & criticism techniques
 - Aesthetics & criticism auditing
@@ -24217,7 +24212,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Art history
 
-*15 skills*
+_15 skills_
 
 - Art history assessment
 - Art history auditing
@@ -24237,7 +24232,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Creative practice
 
-*15 skills*
+_15 skills_
 
 - Advanced Creative practice techniques
 - Applied Creative practice
@@ -24257,7 +24252,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Cultural policy
 
-*15 skills*
+_15 skills_
 
 - Advanced Cultural policy techniques
 - Applied Cultural policy
@@ -24277,7 +24272,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Curation & museology
 
-*15 skills*
+_15 skills_
 
 - Advanced Curation & museology techniques
 - Basic Curation & museology
@@ -24297,7 +24292,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Film & media
 
-*15 skills*
+_15 skills_
 
 - Advanced Film & media techniques
 - Applied Film & media
@@ -24317,7 +24312,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Music theory
 
-*15 skills*
+_15 skills_
 
 - Applied Music theory
 - Large-scale music theory
@@ -24337,7 +24332,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Theatre & performance
 
-*15 skills*
+_15 skills_
 
 - Applied Theatre & performance
 - Enterprise theatre & performance
@@ -24359,7 +24354,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Cell biology
 
-*15 skills*
+_15 skills_
 
 - Advanced Cell biology techniques
 - Cell biology assessment
@@ -24379,7 +24374,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Developmental biology
 
-*15 skills*
+_15 skills_
 
 - Applied Developmental biology
 - Basic Developmental biology
@@ -24399,7 +24394,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Ecology & evolution
 
-*15 skills*
+_15 skills_
 
 - Advanced Ecology & evolution techniques
 - Basic Ecology & evolution
@@ -24419,7 +24414,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Genetics & genomics
 
-*15 skills*
+_15 skills_
 
 - Advanced Genetics & genomics techniques
 - Genetics & genomics assessment
@@ -24439,7 +24434,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Microbiology
 
-*15 skills*
+_15 skills_
 
 - Applied Microbiology
 - Enterprise microbiology
@@ -24459,7 +24454,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Molecular biology
 
-*15 skills*
+_15 skills_
 
 - Advanced Molecular biology techniques
 - Applied Molecular biology
@@ -24479,7 +24474,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Physiology
 
-*15 skills*
+_15 skills_
 
 - Advanced Physiology techniques
 - Applied Physiology
@@ -24499,7 +24494,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Systems biology
 
-*15 skills*
+_15 skills_
 
 - Advanced Systems biology techniques
 - Basic Systems biology
@@ -24521,7 +24516,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Business law
 
-*15 skills*
+_15 skills_
 
 - Advanced Business law techniques
 - Applied Business law
@@ -24541,7 +24536,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Corporate governance
 
-*15 skills*
+_15 skills_
 
 - Advanced Corporate governance techniques
 - Applied Corporate governance
@@ -24561,7 +24556,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Entrepreneurship
 
-*15 skills*
+_15 skills_
 
 - Entrepreneurship assessment
 - Entrepreneurship auditing
@@ -24581,7 +24576,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Innovation mgmt
 
-*15 skills*
+_15 skills_
 
 - Applied Innovation mgmt
 - Enterprise innovation mgmt
@@ -24601,7 +24596,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Marketing
 
-*15 skills*
+_15 skills_
 
 - Basic Marketing
 - Marketing assessment
@@ -24621,7 +24616,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Operations management
 
-*15 skills*
+_15 skills_
 
 - Change operations management
 - Crisis operations management
@@ -24641,7 +24636,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Organizational behavior
 
-*15 skills*
+_15 skills_
 
 - Large-scale organizational behavior
 - Medium-scale organizational behavior
@@ -24661,7 +24656,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Strategy
 
-*15 skills*
+_15 skills_
 
 - Advanced Strategy techniques
 - Basic Strategy
@@ -24683,7 +24678,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Balances & thermodynamics
 
-*15 skills*
+_15 skills_
 
 - Advanced Balances & thermodynamics techniques
 - Balances & thermodynamics automation
@@ -24703,7 +24698,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Bioprocessing
 
-*15 skills*
+_15 skills_
 
 - Agile bioprocessing
 - Applied Bioprocessing
@@ -24723,7 +24718,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Plant design
 
-*15 skills*
+_15 skills_
 
 - Collaborative plant design
 - Detailed plant design
@@ -24743,7 +24738,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Process control
 
-*15 skills*
+_15 skills_
 
 - Applied Process control
 - Enterprise process control
@@ -24763,7 +24758,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Reaction engineering
 
-*15 skills*
+_15 skills_
 
 - Applied Reaction engineering
 - Enterprise reaction engineering
@@ -24783,7 +24778,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Safety & HAZOP
 
-*15 skills*
+_15 skills_
 
 - Applied Safety & HAZOP
 - Enterprise safety & hazop
@@ -24803,7 +24798,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Separations
 
-*15 skills*
+_15 skills_
 
 - Advanced Separations techniques
 - Basic Separations
@@ -24823,7 +24818,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Transport phenomena
 
-*15 skills*
+_15 skills_
 
 - Applied Transport phenomena
 - Basic Transport phenomena
@@ -24845,7 +24840,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Analytical chemistry
 
-*15 skills*
+_15 skills_
 
 - Analytical chemistry auditing
 - Analytical chemistry automation
@@ -24865,7 +24860,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Crystallography
 
-*15 skills*
+_15 skills_
 
 - Advanced Crystallography techniques
 - Basic Crystallography
@@ -24885,7 +24880,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Electrochemistry
 
-*15 skills*
+_15 skills_
 
 - Basic Electrochemistry
 - Electrochemistry assessment
@@ -24905,7 +24900,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Inorganic chemistry
 
-*15 skills*
+_15 skills_
 
 - Applied Inorganic chemistry
 - Enterprise inorganic chemistry
@@ -24925,7 +24920,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Materials chemistry
 
-*15 skills*
+_15 skills_
 
 - Applied Materials chemistry
 - Basic Materials chemistry
@@ -24945,7 +24940,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Organic chemistry
 
-*15 skills*
+_15 skills_
 
 - Advanced Organic chemistry techniques
 - Basic Organic chemistry
@@ -24965,7 +24960,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Physical chemistry
 
-*15 skills*
+_15 skills_
 
 - Advanced Physical chemistry techniques
 - Enterprise physical chemistry
@@ -24985,7 +24980,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Spectroscopy
 
-*15 skills*
+_15 skills_
 
 - Enterprise spectroscopy
 - Large-scale spectroscopy
@@ -25007,7 +25002,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Construction mgmt
 
-*15 skills*
+_15 skills_
 
 - Advanced Construction mgmt techniques
 - Applied Construction mgmt
@@ -25027,7 +25022,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Geotechnical
 
-*15 skills*
+_15 skills_
 
 - Advanced Geotechnical techniques
 - Basic Geotechnical
@@ -25047,7 +25042,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Materials & pavements
 
-*15 skills*
+_15 skills_
 
 - Enterprise materials & pavements
 - Large-scale materials & pavements
@@ -25067,7 +25062,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Structural analysis
 
-*15 skills*
+_15 skills_
 
 - Competitive structural analysis
 - Diagnostic structural analysis
@@ -25087,7 +25082,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Sustainability
 
-*15 skills*
+_15 skills_
 
 - Applied Sustainability
 - Basic Sustainability
@@ -25107,7 +25102,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Transportation
 
-*15 skills*
+_15 skills_
 
 - Advanced Transportation techniques
 - Large-scale transportation
@@ -25127,7 +25122,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Urban systems
 
-*15 skills*
+_15 skills_
 
 - Applied Urban systems
 - Large-scale urban systems
@@ -25147,7 +25142,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Water resources
 
-*15 skills*
+_15 skills_
 
 - Basic Water resources
 - Enterprise water resources
@@ -25169,7 +25164,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Compilers & PL
 
-*15 skills*
+_15 skills_
 
 - Advanced Compilers & PL techniques
 - Applied Compilers & PL
@@ -25189,7 +25184,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Data structures & algorithms
 
-*15 skills*
+_15 skills_
 
 - Applied Data structures & algorithms
 - Basic Data structures & algorithms
@@ -25209,7 +25204,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Databases
 
-*15 skills*
+_15 skills_
 
 - Applied Databases
 - Basic Databases
@@ -25229,7 +25224,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Distributed systems
 
-*15 skills*
+_15 skills_
 
 - Applied Distributed systems
 - Basic Distributed systems
@@ -25249,7 +25244,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Networks & protocols
 
-*15 skills*
+_15 skills_
 
 - Applied Networks & protocols
 - Basic Networks & protocols
@@ -25269,7 +25264,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Operating systems
 
-*15 skills*
+_15 skills_
 
 - Applied Operating systems
 - Large-scale operating systems
@@ -25289,7 +25284,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Security & crypto basics
 
-*15 skills*
+_15 skills_
 
 - Applied Security & crypto basics
 - Enterprise security & crypto basics
@@ -25309,7 +25304,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Theory & automata
 
-*15 skills*
+_15 skills_
 
 - Applied Theory & automata
 - Basic Theory & automata
@@ -25331,7 +25326,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Environmental change
 
-*15 skills*
+_15 skills_
 
 - Advanced Environmental change techniques
 - Basic Environmental change
@@ -25351,7 +25346,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Geology & petrology
 
-*15 skills*
+_15 skills_
 
 - Applied Geology & petrology
 - Enterprise geology & petrology
@@ -25371,7 +25366,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Geophysics
 
-*15 skills*
+_15 skills_
 
 - Basic Geophysics
 - Enterprise geophysics
@@ -25391,7 +25386,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Hydrology
 
-*15 skills*
+_15 skills_
 
 - Advanced Hydrology techniques
 - Hydrology auditing
@@ -25411,7 +25406,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Meteorology & climate
 
-*15 skills*
+_15 skills_
 
 - Applied Meteorology & climate
 - Enterprise meteorology & climate
@@ -25431,7 +25426,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Oceanography
 
-*15 skills*
+_15 skills_
 
 - Advanced Oceanography techniques
 - Applied Oceanography
@@ -25451,7 +25446,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Remote sensing
 
-*15 skills*
+_15 skills_
 
 - Advanced Remote sensing techniques
 - Enterprise remote sensing
@@ -25471,7 +25466,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Soils & geomorphology
 
-*15 skills*
+_15 skills_
 
 - Basic Soils & geomorphology
 - Medium-scale soils & geomorphology
@@ -25493,7 +25488,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Development economics
 
-*15 skills*
+_15 skills_
 
 - Applied Development economics
 - Development economics assessment
@@ -25513,7 +25508,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Econometrics
 
-*15 skills*
+_15 skills_
 
 - Applied Econometrics
 - Econometrics assessment
@@ -25533,7 +25528,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Industrial organization
 
-*15 skills*
+_15 skills_
 
 - Basic Industrial organization
 - Enterprise industrial organization
@@ -25553,7 +25548,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Macroeconomics
 
-*15 skills*
+_15 skills_
 
 - Advanced Macroeconomics techniques
 - Basic Macroeconomics
@@ -25573,7 +25568,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Microeconomics
 
-*15 skills*
+_15 skills_
 
 - Advanced Microeconomics techniques
 - Applied Microeconomics
@@ -25593,7 +25588,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Policy analysis
 
-*15 skills*
+_15 skills_
 
 - Descriptive policy analysis
 - Diagnostic policy analysis
@@ -25613,7 +25608,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Public economics
 
-*15 skills*
+_15 skills_
 
 - Applied Public economics
 - Enterprise public economics
@@ -25633,7 +25628,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Trade & finance
 
-*15 skills*
+_15 skills_
 
 - Advanced Trade & finance techniques
 - Basic Trade & finance
@@ -25655,7 +25650,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Assessment
 
-*15 skills*
+_15 skills_
 
 - Advanced Assessment techniques
 - Assessment assessment
@@ -25675,7 +25670,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Curriculum design
 
-*15 skills*
+_15 skills_
 
 - Conceptual curriculum design
 - Curriculum design in Energy
@@ -25695,7 +25690,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### EdTech
 
-*15 skills*
+_15 skills_
 
 - Basic EdTech
 - EdTech assessment
@@ -25715,7 +25710,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Educational psychology
 
-*15 skills*
+_15 skills_
 
 - Advanced Educational psychology techniques
 - Educational psychology assessment
@@ -25735,7 +25730,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Inclusive education
 
-*15 skills*
+_15 skills_
 
 - Applied Inclusive education
 - Basic Inclusive education
@@ -25755,7 +25750,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Learning theories
 
-*15 skills*
+_15 skills_
 
 - Applied Learning theories
 - Basic Learning theories
@@ -25775,7 +25770,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Policy & leadership
 
-*15 skills*
+_15 skills_
 
 - Change policy & leadership
 - Crisis policy & leadership
@@ -25795,7 +25790,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Teacher development
 
-*15 skills*
+_15 skills_
 
 - Applied Teacher development
 - Enterprise teacher development
@@ -25817,7 +25812,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Circuits & signals
 
-*15 skills*
+_15 skills_
 
 - Applied Circuits & signals
 - Circuits & signals best practices
@@ -25837,7 +25832,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Communications
 
-*15 skills*
+_15 skills_
 
 - Communications in Construction
 - Communications in Healthcare
@@ -25857,7 +25852,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Control & automation
 
-*15 skills*
+_15 skills_
 
 - Applied Control & automation
 - Basic Control & automation
@@ -25877,7 +25872,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Electromagnetics
 
-*15 skills*
+_15 skills_
 
 - Electromagnetics best practices
 - Electromagnetics customization
@@ -25897,7 +25892,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Electronics & devices
 
-*15 skills*
+_15 skills_
 
 - Electronics & devices assessment
 - Electronics & devices auditing
@@ -25917,7 +25912,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Embedded systems
 
-*15 skills*
+_15 skills_
 
 - Embedded systems assessment
 - Embedded systems auditing
@@ -25937,7 +25932,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Power systems
 
-*15 skills*
+_15 skills_
 
 - Applied Power systems
 - Medium-scale power systems
@@ -25957,7 +25952,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### VLSI & FPGA
 
-*15 skills*
+_15 skills_
 
 - Applied VLSI & FPGA
 - VLSI & FPGA assessment
@@ -25979,7 +25974,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Economics of energy
 
-*15 skills*
+_15 skills_
 
 - Advanced Economics of energy techniques
 - Applied Economics of energy
@@ -25999,7 +25994,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Efficiency & demand
 
-*15 skills*
+_15 skills_
 
 - Basic Efficiency & demand
 - Efficiency & demand auditing
@@ -26019,7 +26014,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Environmental impacts
 
-*15 skills*
+_15 skills_
 
 - Basic Environmental impacts
 - Environmental impacts assessment
@@ -26039,7 +26034,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Markets & regulation
 
-*15 skills*
+_15 skills_
 
 - Applied Markets & regulation
 - Basic Markets & regulation
@@ -26059,7 +26054,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Planning & reliability
 
-*15 skills*
+_15 skills_
 
 - Advanced Planning & reliability techniques
 - Applied Planning & reliability
@@ -26079,7 +26074,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Power generation
 
-*15 skills*
+_15 skills_
 
 - Applied Power generation
 - Basic Power generation
@@ -26099,7 +26094,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Renewables & storage
 
-*15 skills*
+_15 skills_
 
 - Advanced Renewables & storage techniques
 - Applied Renewables & storage
@@ -26119,7 +26114,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Transmission & distribution
 
-*15 skills*
+_15 skills_
 
 - Basic Transmission & distribution
 - Large-scale transmission & distribution
@@ -26141,7 +26136,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Adaptation & resilience
 
-*15 skills*
+_15 skills_
 
 - Adaptation & resilience assessment
 - Adaptation & resilience auditing
@@ -26161,7 +26156,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Circular economy
 
-*15 skills*
+_15 skills_
 
 - Advanced Circular economy techniques
 - Circular economy auditing
@@ -26181,7 +26176,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Climate science
 
-*15 skills*
+_15 skills_
 
 - Applied Climate science
 - Basic Climate science
@@ -26201,7 +26196,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Ecosystems & biodiversity
 
-*15 skills*
+_15 skills_
 
 - Advanced Ecosystems & biodiversity techniques
 - Applied Ecosystems & biodiversity
@@ -26221,7 +26216,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Environmental justice
 
-*15 skills*
+_15 skills_
 
 - Applied Environmental justice
 - Basic Environmental justice
@@ -26241,7 +26236,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### GHG accounting
 
-*15 skills*
+_15 skills_
 
 - Advanced GHG accounting techniques
 - Applied GHG accounting
@@ -26261,7 +26256,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Nature-based solutions
 
-*15 skills*
+_15 skills_
 
 - Applied Nature-based solutions
 - Basic Nature-based solutions
@@ -26281,7 +26276,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Policy & governance
 
-*15 skills*
+_15 skills_
 
 - Advanced Policy & governance techniques
 - Applied Policy & governance
@@ -26303,7 +26298,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Audit & assurance
 
-*15 skills*
+_15 skills_
 
 - Applied Audit & assurance
 - Audit & assurance assessment
@@ -26323,7 +26318,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Corporate finance
 
-*15 skills*
+_15 skills_
 
 - Basic Corporate finance
 - Corporate finance automation
@@ -26343,7 +26338,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Financial reporting
 
-*15 skills*
+_15 skills_
 
 - Advanced Financial reporting techniques
 - Applied Financial reporting
@@ -26363,7 +26358,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Managerial accounting
 
-*15 skills*
+_15 skills_
 
 - Advanced Managerial accounting techniques
 - Applied Managerial accounting
@@ -26383,7 +26378,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Markets & instruments
 
-*15 skills*
+_15 skills_
 
 - Advanced Markets & instruments techniques
 - Basic Markets & instruments
@@ -26403,7 +26398,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Risk management
 
-*15 skills*
+_15 skills_
 
 - Change risk management
 - Cross-functional risk management
@@ -26423,7 +26418,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Taxation
 
-*15 skills*
+_15 skills_
 
 - Applied Taxation
 - Basic Taxation
@@ -26443,7 +26438,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Valuation
 
-*15 skills*
+_15 skills_
 
 - Enterprise valuation
 - Large-scale valuation
@@ -26465,7 +26460,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Anatomy & physiology
 
-*15 skills*
+_15 skills_
 
 - Anatomy & physiology automation
 - Anatomy & physiology best practices
@@ -26485,7 +26480,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Bioethics
 
-*15 skills*
+_15 skills_
 
 - Applied Bioethics
 - Bioethics auditing
@@ -26505,7 +26500,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Diagnostics
 
-*15 skills*
+_15 skills_
 
 - Applied Diagnostics
 - Basic Diagnostics
@@ -26525,7 +26520,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Evidence-based medicine
 
-*15 skills*
+_15 skills_
 
 - Applied Evidence-based medicine
 - Basic Evidence-based medicine
@@ -26545,7 +26540,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Health systems
 
-*15 skills*
+_15 skills_
 
 - Advanced Health systems techniques
 - Applied Health systems
@@ -26565,7 +26560,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Pathology
 
-*15 skills*
+_15 skills_
 
 - Advanced Pathology techniques
 - Applied Pathology
@@ -26585,7 +26580,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Public health & epi
 
-*15 skills*
+_15 skills_
 
 - Advanced Public health & epi techniques
 - Applied Public health & epi
@@ -26605,7 +26600,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Therapeutics
 
-*15 skills*
+_15 skills_
 
 - Advanced Therapeutics techniques
 - Applied Therapeutics
@@ -26627,7 +26622,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Cultural studies
 
-*15 skills*
+_15 skills_
 
 - Advanced Cultural studies techniques
 - Applied Cultural studies
@@ -26647,7 +26642,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Ethics
 
-*15 skills*
+_15 skills_
 
 - Advanced Ethics techniques
 - Applied Ethics
@@ -26667,7 +26662,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### History
 
-*15 skills*
+_15 skills_
 
 - History assessment
 - History auditing
@@ -26687,7 +26682,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Linguistics
 
-*15 skills*
+_15 skills_
 
 - Applied Linguistics
 - Linguistics compliance
@@ -26707,7 +26702,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Literature
 
-*15 skills*
+_15 skills_
 
 - Advanced Literature techniques
 - Basic Literature
@@ -26727,7 +26722,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Philosophy
 
-*15 skills*
+_15 skills_
 
 - Advanced Philosophy techniques
 - Applied Philosophy
@@ -26747,7 +26742,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Religious studies
 
-*15 skills*
+_15 skills_
 
 - Advanced Religious studies techniques
 - Basic Religious studies
@@ -26767,7 +26762,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Rhetoric & writing
 
-*15 skills*
+_15 skills_
 
 - Academic rhetoric & writing
 - Business rhetoric & writing
@@ -26789,7 +26784,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Administrative & privacy
 
-*15 skills*
+_15 skills_
 
 - Administrative & privacy assessment
 - Administrative & privacy auditing
@@ -26809,7 +26804,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Compliance & ethics
 
-*15 skills*
+_15 skills_
 
 - Advanced Compliance & ethics techniques
 - Basic Compliance & ethics
@@ -26829,7 +26824,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Contract & tort
 
-*15 skills*
+_15 skills_
 
 - Advanced Contract & tort techniques
 - Applied Contract & tort
@@ -26849,7 +26844,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Corporate & securities
 
-*15 skills*
+_15 skills_
 
 - Advanced Corporate & securities techniques
 - Corporate & securities automation
@@ -26869,7 +26864,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### IP & licensing
 
-*15 skills*
+_15 skills_
 
 - Applied IP & licensing
 - Basic IP & licensing
@@ -26889,7 +26884,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### International & public law
 
-*15 skills*
+_15 skills_
 
 - Advanced International & public law techniques
 - Basic International & public law
@@ -26909,7 +26904,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Legal systems & sources
 
-*15 skills*
+_15 skills_
 
 - Applied Legal systems & sources
 - Large-scale legal systems & sources
@@ -26929,7 +26924,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Litigation & ADR
 
-*15 skills*
+_15 skills_
 
 - Basic Litigation & ADR
 - Enterprise litigation & adr
@@ -26951,7 +26946,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Algebra & geometry
 
-*15 skills*
+_15 skills_
 
 - Algebra & geometry auditing
 - Algebra & geometry automation
@@ -26971,7 +26966,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Calculus & analysis
 
-*15 skills*
+_15 skills_
 
 - Calculus & analysis in Construction
 - Calculus & analysis in Finance
@@ -26991,7 +26986,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Discrete math
 
-*15 skills*
+_15 skills_
 
 - Discrete math assessment
 - Discrete math automation
@@ -27011,7 +27006,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Linear algebra
 
-*15 skills*
+_15 skills_
 
 - Applied Linear algebra
 - Enterprise linear algebra
@@ -27031,7 +27026,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Logic & proofs
 
-*15 skills*
+_15 skills_
 
 - Advanced Logic & proofs techniques
 - Basic Logic & proofs
@@ -27051,7 +27046,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Number theory
 
-*15 skills*
+_15 skills_
 
 - Large-scale number theory
 - Number theory assessment
@@ -27071,7 +27066,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Optimization
 
-*15 skills*
+_15 skills_
 
 - Advanced Optimization techniques
 - Optimization assessment
@@ -27091,7 +27086,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Probability theory
 
-*15 skills*
+_15 skills_
 
 - Large-scale probability theory
 - Medium-scale probability theory
@@ -27113,7 +27108,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Ceramics & glasses
 
-*15 skills*
+_15 skills_
 
 - Advanced Ceramics & glasses techniques
 - Ceramics & glasses assessment
@@ -27133,7 +27128,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Failure & fatigue
 
-*15 skills*
+_15 skills_
 
 - Advanced Failure & fatigue techniques
 - Failure & fatigue assessment
@@ -27153,7 +27148,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Metals & alloys
 
-*15 skills*
+_15 skills_
 
 - Advanced Metals & alloys techniques
 - Applied Metals & alloys
@@ -27173,7 +27168,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Phase diagrams
 
-*15 skills*
+_15 skills_
 
 - Advanced Phase diagrams techniques
 - Basic Phase diagrams
@@ -27193,7 +27188,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Polymers & composites
 
-*15 skills*
+_15 skills_
 
 - Basic Polymers & composites
 - Enterprise polymers & composites
@@ -27213,7 +27208,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Processing & fabrication
 
-*15 skills*
+_15 skills_
 
 - Advanced Processing & fabrication techniques
 - Applied Processing & fabrication
@@ -27233,7 +27228,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Structure & properties
 
-*15 skills*
+_15 skills_
 
 - Advanced Structure & properties techniques
 - Basic Structure & properties
@@ -27253,7 +27248,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Surface & corrosion
 
-*15 skills*
+_15 skills_
 
 - Advanced Surface & corrosion techniques
 - Basic Surface & corrosion
@@ -27275,7 +27270,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### CAD/CAE
 
-*15 skills*
+_15 skills_
 
 - Advanced CAD/CAE techniques
 - Applied CAD/CAE
@@ -27295,7 +27290,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Control systems
 
-*15 skills*
+_15 skills_
 
 - Advanced Control systems techniques
 - Basic Control systems
@@ -27315,7 +27310,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Machine design
 
-*15 skills*
+_15 skills_
 
 - Collaborative machine design
 - Conceptual machine design
@@ -27335,7 +27330,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Manufacturing processes
 
-*15 skills*
+_15 skills_
 
 - Advanced Manufacturing processes techniques
 - Basic Manufacturing processes
@@ -27355,7 +27350,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Mechanics of materials
 
-*15 skills*
+_15 skills_
 
 - Advanced Mechanics of materials techniques
 - Basic Mechanics of materials
@@ -27375,7 +27370,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Mechatronics
 
-*15 skills*
+_15 skills_
 
 - Enterprise mechatronics
 - Large-scale mechatronics
@@ -27395,7 +27390,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Statics & dynamics
 
-*15 skills*
+_15 skills_
 
 - Advanced Statics & dynamics techniques
 - Applied Statics & dynamics
@@ -27415,7 +27410,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Thermal & fluids
 
-*15 skills*
+_15 skills_
 
 - Applied Thermal & fluids
 - Basic Thermal & fluids
@@ -27437,7 +27432,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Audience & analytics
 
-*15 skills*
+_15 skills_
 
 - Audience & analytics in Education
 - Audience & analytics in Government
@@ -27457,7 +27452,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Digital media & platforms
 
-*15 skills*
+_15 skills_
 
 - Advanced Digital media & platforms techniques
 - Digital media & platforms auditing
@@ -27477,7 +27472,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Journalism & reporting
 
-*15 skills*
+_15 skills_
 
 - Applied Journalism & reporting
 - Enterprise journalism & reporting
@@ -27497,7 +27492,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Media law & ethics
 
-*15 skills*
+_15 skills_
 
 - Applied Media law & ethics
 - Basic Media law & ethics
@@ -27517,7 +27512,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Narrative & storytelling
 
-*15 skills*
+_15 skills_
 
 - Applied Narrative & storytelling
 - Enterprise narrative & storytelling
@@ -27537,7 +27532,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Public relations
 
-*15 skills*
+_15 skills_
 
 - Advanced Public relations techniques
 - Applied Public relations
@@ -27557,7 +27552,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Semiotics & rhetoric
 
-*15 skills*
+_15 skills_
 
 - Advanced Semiotics & rhetoric techniques
 - Applied Semiotics & rhetoric
@@ -27577,7 +27572,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Visual communication
 
-*15 skills*
+_15 skills_
 
 - Crisis visual communication
 - Enterprise visual communication
@@ -27599,7 +27594,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Analytics & methods
 
-*15 skills*
+_15 skills_
 
 - Agile analytics & methods
 - Analytics & methods in Education
@@ -27619,7 +27614,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Biopharmaceutics
 
-*15 skills*
+_15 skills_
 
 - Advanced Biopharmaceutics techniques
 - Biopharmaceutics assessment
@@ -27639,7 +27634,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Formulation & delivery
 
-*15 skills*
+_15 skills_
 
 - Applied Formulation & delivery
 - Formulation & delivery auditing
@@ -27659,7 +27654,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Medicinal chemistry
 
-*15 skills*
+_15 skills_
 
 - Large-scale medicinal chemistry
 - Medicinal chemistry automation
@@ -27679,7 +27674,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Pharmacokinetics
 
-*15 skills*
+_15 skills_
 
 - Basic Pharmacokinetics
 - Large-scale pharmacokinetics
@@ -27699,7 +27694,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Quality by design
 
-*15 skills*
+_15 skills_
 
 - Collaborative quality by design
 - Detailed quality by design
@@ -27719,7 +27714,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Regulatory science
 
-*15 skills*
+_15 skills_
 
 - Applied Regulatory science
 - Basic Regulatory science
@@ -27739,7 +27734,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Stability studies
 
-*15 skills*
+_15 skills_
 
 - Basic Stability studies
 - Large-scale stability studies
@@ -27761,7 +27756,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Astrophysics
 
-*15 skills*
+_15 skills_
 
 - Advanced Astrophysics techniques
 - Astrophysics assessment
@@ -27781,7 +27776,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Condensed matter
 
-*15 skills*
+_15 skills_
 
 - Applied Condensed matter
 - Basic Condensed matter
@@ -27801,7 +27796,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Electromagnetism
 
-*15 skills*
+_15 skills_
 
 - Applied Electromagnetism
 - Electromagnetism assessment
@@ -27821,7 +27816,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Mechanics
 
-*15 skills*
+_15 skills_
 
 - Advanced Mechanics techniques
 - Applied Mechanics
@@ -27841,7 +27836,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Nuclear & particle
 
-*15 skills*
+_15 skills_
 
 - Advanced Nuclear & particle techniques
 - Enterprise nuclear & particle
@@ -27861,7 +27856,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Optics
 
-*15 skills*
+_15 skills_
 
 - Applied Optics
 - Basic Optics
@@ -27881,7 +27876,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Quantum mechanics
 
-*15 skills*
+_15 skills_
 
 - Advanced Quantum mechanics techniques
 - Applied Quantum mechanics
@@ -27901,7 +27896,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Thermodynamics
 
-*15 skills*
+_15 skills_
 
 - Advanced Thermodynamics techniques
 - Small-scale thermodynamics
@@ -27923,7 +27918,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Critical infrastructure
 
-*15 skills*
+_15 skills_
 
 - Advanced Critical infrastructure techniques
 - Applied Critical infrastructure
@@ -27943,7 +27938,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Cyber & hybrid threats
 
-*15 skills*
+_15 skills_
 
 - Advanced Cyber & hybrid threats techniques
 - Basic Cyber & hybrid threats
@@ -27963,7 +27958,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Defense strategy
 
-*15 skills*
+_15 skills_
 
 - Basic Defense strategy
 - Defense strategy assessment
@@ -27983,7 +27978,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Human security
 
-*15 skills*
+_15 skills_
 
 - Advanced Human security techniques
 - Basic Human security
@@ -28003,7 +27998,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Intelligence analysis
 
-*15 skills*
+_15 skills_
 
 - Competitive intelligence analysis
 - Diagnostic intelligence analysis
@@ -28023,7 +28018,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### International relations
 
-*15 skills*
+_15 skills_
 
 - Basic International relations
 - Enterprise international relations
@@ -28043,7 +28038,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Law & ethics
 
-*15 skills*
+_15 skills_
 
 - Large-scale law & ethics
 - Law & ethics assessment
@@ -28063,7 +28058,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Security studies
 
-*15 skills*
+_15 skills_
 
 - Advanced Security studies techniques
 - Applied Security studies
@@ -28085,7 +28080,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Anthropology
 
-*15 skills*
+_15 skills_
 
 - Advanced Anthropology techniques
 - Anthropology assessment
@@ -28105,7 +28100,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Demography
 
-*15 skills*
+_15 skills_
 
 - Basic Demography
 - Demography assessment
@@ -28125,7 +28120,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Economics
 
-*15 skills*
+_15 skills_
 
 - Applied Economics
 - Basic Economics
@@ -28145,7 +28140,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Human geography
 
-*15 skills*
+_15 skills_
 
 - Applied Human geography
 - Human geography assessment
@@ -28165,7 +28160,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Political science
 
-*15 skills*
+_15 skills_
 
 - Applied Political science
 - Basic Political science
@@ -28185,7 +28180,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Psychology
 
-*15 skills*
+_15 skills_
 
 - Advanced Psychology techniques
 - Applied Psychology
@@ -28205,7 +28200,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Social research methods
 
-*15 skills*
+_15 skills_
 
 - Hybrid social research methods
 - Iterative social research methods
@@ -28225,7 +28220,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Sociology
 
-*15 skills*
+_15 skills_
 
 - Advanced Sociology techniques
 - Applied Sociology
@@ -28247,7 +28242,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Biomechanics
 
-*15 skills*
+_15 skills_
 
 - Basic Biomechanics
 - Biomechanics auditing
@@ -28267,7 +28262,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Coaching science
 
-*15 skills*
+_15 skills_
 
 - Basic Coaching science
 - Coaching science auditing
@@ -28287,7 +28282,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Exercise physiology
 
-*15 skills*
+_15 skills_
 
 - Advanced Exercise physiology techniques
 - Applied Exercise physiology
@@ -28307,7 +28302,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Injury & rehab
 
-*15 skills*
+_15 skills_
 
 - Advanced Injury & rehab techniques
 - Applied Injury & rehab
@@ -28327,7 +28322,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Nutrition & metabolism
 
-*15 skills*
+_15 skills_
 
 - Advanced Nutrition & metabolism techniques
 - Applied Nutrition & metabolism
@@ -28347,7 +28342,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Performance analysis
 
-*15 skills*
+_15 skills_
 
 - Competitive performance analysis
 - Descriptive performance analysis
@@ -28367,7 +28362,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Public health & activity
 
-*15 skills*
+_15 skills_
 
 - Advanced Public health & activity techniques
 - Applied Public health & activity
@@ -28387,7 +28382,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Sport psychology
 
-*15 skills*
+_15 skills_
 
 - Applied Sport psychology
 - Basic Sport psychology
@@ -28409,7 +28404,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Bayesian methods
 
-*15 skills*
+_15 skills_
 
 - Agile bayesian methods
 - Bayesian methods auditing
@@ -28429,7 +28424,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Descriptive & inference
 
-*15 skills*
+_15 skills_
 
 - Advanced Descriptive & inference techniques
 - Applied Descriptive & inference
@@ -28449,7 +28444,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Experimental design
 
-*15 skills*
+_15 skills_
 
 - Collaborative experimental design
 - Conceptual experimental design
@@ -28469,7 +28464,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Multivariate analysis
 
-*15 skills*
+_15 skills_
 
 - Descriptive multivariate analysis
 - Diagnostic multivariate analysis
@@ -28489,7 +28484,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Nonparametrics
 
-*15 skills*
+_15 skills_
 
 - Basic Nonparametrics
 - Enterprise nonparametrics
@@ -28509,7 +28504,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Regression & GLM
 
-*15 skills*
+_15 skills_
 
 - Advanced Regression & GLM techniques
 - Large-scale regression & glm
@@ -28529,7 +28524,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Sampling & surveys
 
-*15 skills*
+_15 skills_
 
 - Advanced Sampling & surveys techniques
 - Large-scale sampling & surveys
@@ -28549,7 +28544,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Time series
 
-*15 skills*
+_15 skills_
 
 - Advanced Time series techniques
 - Basic Time series
@@ -28571,7 +28566,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Freight & logistics
 
-*15 skills*
+_15 skills_
 
 - Basic Freight & logistics
 - Enterprise freight & logistics
@@ -28591,7 +28586,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Modeling & simulation
 
-*15 skills*
+_15 skills_
 
 - Advanced Modeling & simulation techniques
 - Applied Modeling & simulation
@@ -28611,7 +28606,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Policy & regulation
 
-*15 skills*
+_15 skills_
 
 - Basic Policy & regulation
 - Large-scale policy & regulation
@@ -28631,7 +28626,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Safety & human factors
 
-*15 skills*
+_15 skills_
 
 - Advanced Safety & human factors techniques
 - Applied Safety & human factors
@@ -28651,7 +28646,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Sustainability & equity
 
-*15 skills*
+_15 skills_
 
 - Advanced Sustainability & equity techniques
 - Basic Sustainability & equity
@@ -28671,7 +28666,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Traffic engineering
 
-*15 skills*
+_15 skills_
 
 - Applied Traffic engineering
 - Medium-scale traffic engineering
@@ -28691,7 +28686,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Transit planning
 
-*15 skills*
+_15 skills_
 
 - Advanced Transit planning techniques
 - Applied Transit planning
@@ -28711,7 +28706,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Vehicle technology
 
-*15 skills*
+_15 skills_
 
 - Advanced Vehicle technology techniques
 - Basic Vehicle technology
@@ -28733,7 +28728,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Data & visualization
 
-*15 skills*
+_15 skills_
 
 - Applied Data & visualization
 - Data & visualization assessment
@@ -28753,7 +28748,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Economic development
 
-*15 skills*
+_15 skills_
 
 - Advanced Economic development techniques
 - Economic development assessment
@@ -28773,7 +28768,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Governance & finance
 
-*15 skills*
+_15 skills_
 
 - Advanced Governance & finance techniques
 - Applied Governance & finance
@@ -28793,7 +28788,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Housing & community
 
-*15 skills*
+_15 skills_
 
 - Advanced Housing & community techniques
 - Basic Housing & community
@@ -28813,7 +28808,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Land use & zoning
 
-*15 skills*
+_15 skills_
 
 - Enterprise land use & zoning
 - Land use & zoning auditing
@@ -28833,7 +28828,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Public space & design
 
-*15 skills*
+_15 skills_
 
 - Conceptual public space & design
 - Detailed public space & design
@@ -28853,7 +28848,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Resilience & climate
 
-*15 skills*
+_15 skills_
 
 - Advanced Resilience & climate techniques
 - Basic Resilience & climate
@@ -28873,7 +28868,7 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 
 #### Transport & environment
 
-*15 skills*
+_15 skills_
 
 - Applied Transport & environment
 - Small-scale transport & environment
@@ -28890,7 +28885,6 @@ L1 (Domain) → L2 (Category) → L3 (Subcategory) → L4 (Specific Skill)
 - Transport & environment planning
 - Transport & environment standardization
 - Transport & environment troubleshooting
-
 
 ---
 
