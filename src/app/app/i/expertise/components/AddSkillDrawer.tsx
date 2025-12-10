@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { X, Search, ChevronRight, Check, ChevronDown, List, Loader2, Plus } from 'lucide-react';
+import { X, Search, ChevronRight, Check, ChevronDown, List, Loader2, Plus, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Sheet,
   SheetContent,
@@ -18,6 +19,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { apiFetch } from '@/lib/api/fetch';
+import { ToastAction } from '@/components/ui/toast';
 
 // L1 Domain colors (matching L1Grid)
 const DOMAIN_COLORS: Record<number, { bg: string; border: string; text: string; icon: string }> = {
@@ -138,6 +140,20 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const searchAbortControllerRef = useRef<AbortController | null>(null);
   const [quickAddingCodes, setQuickAddingCodes] = useState<Set<string>>(new Set());
+  const [bulkSelection, setBulkSelection] = useState<Set<string>>(new Set());
+  const [bulkAdding, setBulkAdding] = useState(false);
+  const lastSelectionsRef = useRef<{
+    l1?: L1Domain | null;
+    l2?: L2Category | null;
+    l3?: L3Subcategory | null;
+  }>({});
+  const emitClientMetric = (event: string, payload?: Record<string, any>) => {
+    try {
+      console.debug('analytics:event', event, payload);
+    } catch (err) {
+      // ignore
+    }
+  };
 
   const handleKeyActivate = (event: React.KeyboardEvent, action: () => void) => {
     if (event.key === 'Enter' || event.key === ' ') {
@@ -240,7 +256,27 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
         setSearchQuery('');
         setSearchResults([]);
         setSearchError(null);
+        setBulkSelection(new Set());
+        setBulkAdding(false);
       }, 300);
+    }
+  }, [open]);
+
+  // Reuse last selections when reopening for faster add
+  useEffect(() => {
+    if (open && lastSelectionsRef.current.l1) {
+      setMode('browse');
+      setSelectedL1(lastSelectionsRef.current.l1 || null);
+      if (lastSelectionsRef.current.l2) {
+        setSelectedL2(lastSelectionsRef.current.l2 || null);
+        setStep(3);
+      } else {
+        setStep(2);
+      }
+      if (lastSelectionsRef.current.l3) {
+        setSelectedL3(lastSelectionsRef.current.l3 || null);
+        setStep(4);
+      }
     }
   }, [open]);
 
@@ -363,16 +399,19 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
 
   const handleL1Select = (domain: L1Domain) => {
     setSelectedL1(domain);
+    lastSelectionsRef.current.l1 = domain;
     setStep(2);
   };
 
   const handleL2Select = (category: L2Category) => {
     setSelectedL2(category);
+    lastSelectionsRef.current.l2 = category;
     setStep(3);
   };
 
   const handleL3Select = (subcategory: L3Subcategory) => {
     setSelectedL3(subcategory);
+    lastSelectionsRef.current.l3 = subcategory;
     setStep(4);
   };
 
@@ -389,6 +428,7 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
       const l1Domain = domains.find((d) => d.catId === skill.l1?.catId);
       if (l1Domain) {
         setSelectedL1(l1Domain);
+        lastSelectionsRef.current.l1 = l1Domain;
       } else {
         hasAllContext = false;
       }
@@ -402,6 +442,13 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
         slug: skill.l2.slug,
         nameI18n: skill.l2.nameI18n,
       });
+      lastSelectionsRef.current.l2 = {
+        subcatId: skill.l2.subcatId,
+        catId: skill.l2.catId,
+        slug: skill.l2.slug,
+        nameI18n: skill.l2.nameI18n,
+        l4Count: 0,
+      };
     } else {
       hasAllContext = false;
     }
@@ -413,6 +460,14 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
         slug: skill.l3.slug,
         nameI18n: skill.l3.nameI18n,
       });
+      lastSelectionsRef.current.l3 = {
+        l3Id: skill.l3.l3Id,
+        subcatId: skill.l3.subcatId,
+        catId: skill.l3.catId,
+        slug: skill.l3.slug,
+        nameI18n: skill.l3.nameI18n,
+        l4Count: 0,
+      };
     } else {
       hasAllContext = false;
     }
@@ -430,6 +485,36 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
     // Go directly to details step (step 4)
     setMode('browse'); // Switch to browse mode for step navigation
     setStep(4);
+  };
+
+  // Undo helper for quick/bulk add
+  const handleUndoAdd = async (skillId: string, skillName: string) => {
+    try {
+      const response = await apiFetch(`/api/expertise/user-skills/${skillId}`, {
+        method: 'DELETE',
+      });
+      if (response.ok) {
+        emitClientMetric('expertise_undo_add', { skill_id: skillId, skill_name: skillName });
+        toast({
+          title: 'Skill removed',
+          description: `"${skillName}" was removed.`,
+        });
+        onSkillAdded();
+      } else {
+        toast({
+          title: 'Undo failed',
+          description: 'Could not remove the skill. Please refresh and try again.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Undo add failed:', error);
+      toast({
+        title: 'Undo failed',
+        description: 'Please check your connection and try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   // Quick add straight from search card with defaults
@@ -452,9 +537,22 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
 
       if (response.ok) {
         const data = await response.json();
+        emitClientMetric('expertise_quick_add', {
+          skill_code: skill.code,
+          skill_name: skill.nameI18n?.en,
+        });
         toast({
           title: '✅ Skill Added',
           description: `"${skill.nameI18n?.en || 'Skill'}" was added to your atlas.`,
+          action:
+            data?.skill?.id && (
+              <ToastAction
+                altText="Undo add"
+                onClick={() => handleUndoAdd(data.skill.id, skill.nameI18n?.en || 'Skill')}
+              >
+                Undo
+              </ToastAction>
+            ),
         });
         onSkillAdded(data?.skill || skill);
       } else {
@@ -467,6 +565,7 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
       }
     } catch (error) {
       console.error('Quick add failed:', error);
+      emitClientMetric('expertise_quick_add_failed', { skill_code: skill.code });
       toast({
         title: 'Could not add skill',
         description: 'Please check your connection and try again.',
@@ -477,6 +576,80 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
         const next = new Set(prev);
         next.delete(skill.code);
         return next;
+      });
+    }
+  };
+
+  const toggleBulkSelection = (code: string) => {
+    setBulkSelection((prev) => {
+      const next = new Set(prev);
+      if (next.has(code)) {
+        next.delete(code);
+      } else {
+        next.add(code);
+      }
+      return next;
+    });
+  };
+
+  const handleBulkAdd = async () => {
+    if (bulkSelection.size === 0) return;
+    setBulkAdding(true);
+
+    const selectedSkills = searchResults.filter((skill) => bulkSelection.has(skill.code));
+    const successes: string[] = [];
+    const failures: string[] = [];
+
+    for (const skill of selectedSkills) {
+      try {
+        const response = await apiFetch('/api/expertise/user-skills', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            skill_code: skill.code,
+            level: 2,
+            months_experience: 0,
+            last_used_at: new Date().toISOString(),
+            relevance: 'current',
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          successes.push(skill.nameI18n?.en || skill.code);
+          onSkillAdded(data?.skill || skill);
+          emitClientMetric('expertise_bulk_add_item', { skill_code: skill.code });
+        } else {
+          failures.push(skill.nameI18n?.en || skill.code);
+        }
+      } catch (error) {
+        console.error('Bulk add failed for', skill.code, error);
+        failures.push(skill.nameI18n?.en || skill.code);
+      }
+    }
+
+    setBulkSelection(new Set());
+    setBulkAdding(false);
+
+    if (successes.length > 0) {
+      emitClientMetric('expertise_bulk_add', {
+        added: successes.length,
+        failed: failures.length,
+      });
+      toast({
+        title: `Added ${successes.length} skill${successes.length > 1 ? 's' : ''}`,
+        description:
+          failures.length > 0
+            ? `Added: ${successes.join(', ')}. Failed: ${failures.join(', ')}.`
+            : successes.join(', '),
+      });
+    }
+
+    if (failures.length > 0 && successes.length === 0) {
+      toast({
+        title: 'Could not add selected skills',
+        description: failures.join(', '),
+        variant: 'destructive',
       });
     }
   };
@@ -725,11 +898,27 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
                 <p className="text-sm font-medium text-[#2D3330] mb-3">
                   Found {searchResults.length} skill{searchResults.length > 1 ? 's' : ''}
                 </p>
+                {bulkSelection.size > 0 && (
+                  <div className="flex items-center justify-between bg-[#F7F6F1] border border-[#E5E3DA] rounded-lg px-3 py-2 text-sm">
+                    <span className="text-[#2D3330]">
+                      Selected {bulkSelection.size} skill{bulkSelection.size > 1 ? 's' : ''} for bulk add
+                    </span>
+                    <Button
+                      size="sm"
+                      disabled={bulkAdding}
+                      onClick={handleBulkAdd}
+                      className="bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]"
+                    >
+                      {bulkAdding ? 'Adding…' : 'Add selected'}
+                    </Button>
+                  </div>
+                )}
                 {searchResults.map((skill) => {
                   const domainColor = skill.l1
                     ? DOMAIN_COLORS[skill.l1.catId] || DOMAIN_COLORS[1]
                     : DOMAIN_COLORS[1];
                   const isQuickAdding = quickAddingCodes.has(skill.code);
+                  const isSelected = bulkSelection.has(skill.code);
 
                   return (
                     <Card
@@ -776,6 +965,14 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
                           )}
                         </div>
                         <div className="flex flex-col items-end gap-2">
+                          <div className="flex items-center gap-2">
+                            <Checkbox
+                              checked={isSelected}
+                              onCheckedChange={() => toggleBulkSelection(skill.code)}
+                              aria-label="Select for bulk add"
+                            />
+                            <span className="text-xs text-[#6B6760]">Select</span>
+                          </div>
                           <Button
                             size="sm"
                             disabled={isQuickAdding}
@@ -856,7 +1053,8 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
                 <div>
                   <h3 className="text-lg font-medium text-[#2D3330] mb-2">Step 1: Choose Domain</h3>
                   <p className="text-sm text-[#6B6760] mb-4">
-                    Select the top-level domain that best fits your skill.
+                    Select the top-level domain that best fits your skill. Pick the closest match;
+                    you can refine wording later.
                   </p>
                 </div>
 
@@ -918,7 +1116,8 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
                   </h3>
                   <p className="text-sm text-[#6B6760] mb-4">
                     Select a category within{' '}
-                    <strong>{selectedL1?.nameI18n?.en || 'Unknown'}</strong>.
+                    <strong>{selectedL1?.nameI18n?.en || 'Unknown'}</strong>. If you can’t find the
+                    exact wording, choose the nearest synonym—the next step will show examples.
                   </p>
                 </div>
 
@@ -975,7 +1174,8 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
                   </h3>
                   <p className="text-sm text-[#6B6760] mb-4">
                     Select a subcategory within{' '}
-                    <strong>{selectedL2?.nameI18n?.en || 'Unknown'}</strong>.
+                    <strong>{selectedL2?.nameI18n?.en || 'Unknown'}</strong>. Look for example
+                    descriptions—synonyms are supported.
                   </p>
                 </div>
 
@@ -1051,6 +1251,9 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
                       className="pl-10"
                     />
                   </div>
+                  <p className="text-xs text-[#6B6760] mt-1">
+                    Tip: try synonyms or common terms. We’ll match close wording to the Atlas skill.
+                  </p>
 
                   {/* Autocomplete Dropdown */}
                   {showL4Dropdown && l4Search && (
@@ -1212,6 +1415,11 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
                 {/* Optional Proof */}
                 <div className="border-t border-[#E5E3DA] pt-6">
                   <h4 className="font-medium text-[#2D3330] mb-3">Add Proof (Optional)</h4>
+                  <div className="flex items-center gap-2 text-xs text-[#6B6760] mb-2">
+                    <Lock className="h-3.5 w-3.5" />
+                    Proofs default to <strong className="ml-1">match-only</strong>; you can change
+                    visibility later.
+                  </div>
                   <div className="space-y-3">
                     <div>
                       <Label htmlFor="proof-url" className="text-[#2D3330]">

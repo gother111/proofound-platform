@@ -57,7 +57,13 @@ export function L1Grid({ domains, onDomainClick, l2CategoriesPerL1, onL2Click }:
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="space-y-3">
+      <p className="text-sm text-muted-foreground">
+        Tip: tap a domain to see a plain-English description, common synonyms, and its categories.
+        If the wording feels unfamiliar, pick the closest match—examples will appear as you drill
+        down.
+      </p>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {domains.map((domain) => {
         const colors = DOMAIN_COLORS[domain.catId] || DOMAIN_COLORS[1];
         const isExpanded = expandedDomain === domain.catId;
@@ -83,7 +89,7 @@ export function L1Grid({ domains, onDomainClick, l2CategoriesPerL1, onL2Click }:
                     {domain.nameI18n?.en || 'Unknown'}
                   </h3>
                   <p className="text-sm text-muted-foreground font-sans">
-                    {domain.skillCount} skills
+                    {domain.skillCount} skills • tap for examples & synonyms
                   </p>
                 </div>
               </div>

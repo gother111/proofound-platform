@@ -3,7 +3,7 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit2, Calendar, TrendingUp, Award } from 'lucide-react';
+import { Edit2, Calendar, TrendingUp, Award, Lock } from 'lucide-react';
 
 interface Skill {
   id: string;
@@ -15,6 +15,8 @@ interface Skill {
   level?: number;
   lastUsedAt?: string;
   relevance?: string;
+  proof_count?: number;
+  verification_count?: number;
 }
 
 interface SkillsSideSheetProps {
@@ -84,6 +86,8 @@ export function SkillsSideSheet({
               const level = skill.level || 1;
               const recency = formatRecency(skill.lastUsedAt);
               const relevance = skill.relevance || 'current';
+              const proofCount = (skill as any).proof_count ?? 0;
+              const verificationCount = (skill as any).verification_count ?? 0;
 
               return (
                 <div
@@ -108,6 +112,16 @@ export function SkillsSideSheet({
                     <Badge variant="outline" className="gap-1">
                       <Calendar className="w-3 h-3" />
                       {recency}
+                    </Badge>
+
+                    <Badge variant="outline" className="gap-1">
+                      <Lock className="w-3 h-3" />
+                      Proofs: match-only
+                    </Badge>
+
+                    <Badge variant="outline" className="gap-1">
+                      <Award className="w-3 h-3" />
+                      {verificationCount > 0 ? `${verificationCount} verified` : 'Request verification'}
                     </Badge>
 
                     {relevance !== 'current' && (

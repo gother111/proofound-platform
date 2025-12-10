@@ -3,7 +3,16 @@
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Edit2, FileText, CheckCircle2, Clock, TrendingUp, Link as LinkIcon } from 'lucide-react';
+import {
+  Edit2,
+  FileText,
+  CheckCircle2,
+  Clock,
+  TrendingUp,
+  Link as LinkIcon,
+  Lock,
+  ShieldCheck,
+} from 'lucide-react';
 
 interface L4Skill {
   id: string;
@@ -18,6 +27,8 @@ interface L4Skill {
   skill_name?: string; // Computed skill name from API
   custom_skill_name?: string; // For custom user-created skills
   is_custom?: boolean; // Whether this is a custom skill
+  proof_count?: number;
+  verification_count?: number;
   taxonomy?: {
     code: string;
     nameI18n?: { en?: string };
@@ -64,6 +75,18 @@ export function L4Card({ skill, onEdit }: L4CardProps) {
           <p className="text-xs text-muted-foreground font-mono bg-proofound-parchment inline-block px-2 py-0.5 rounded-md border border-proofound-stone/50">
             {skill.skillCode}
           </p>
+        </div>
+        <div className="flex flex-col items-end gap-2">
+          <Badge variant="outline" className="gap-1 text-xs">
+            <Lock className="h-3.5 w-3.5" />
+            Proofs: match-only by default
+          </Badge>
+          <Badge variant="outline" className="gap-1 text-xs">
+            <ShieldCheck className="h-3.5 w-3.5" />
+            {skill.verification_count && skill.verification_count > 0
+              ? `${skill.verification_count} verified`
+              : 'Request verification'}
+          </Badge>
         </div>
         <Button
           size="sm"

@@ -50,7 +50,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         description: validated.description || null,
         url: validated.url || null,
         issued_date: validated.issuedDate || null,
-        metadata: validated.metadata || {},
+        metadata: {
+          visibility: 'match-only', // default privacy guardrail
+          ...(validated.metadata || {}),
+        },
       })
       .select()
       .single();

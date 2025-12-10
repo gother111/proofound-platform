@@ -28,8 +28,8 @@ export function EmptyState({ onAddSkill, onImportCV }: EmptyStateProps) {
 
           {/* Description */}
           <p className="text-[#6B6760] mb-8 max-w-lg text-center">
-            Start building your skills map by adding your first capability. Import from your
-            CV/resume, choose from over 18,000 curated skills, or create your own.
+            Add your first 3 skills to unlock charts and matching. Import from your CV/resume,
+            choose from over 18,000 curated skills, or create your own.
           </p>
 
           {/* CTA Buttons */}

@@ -10,9 +10,12 @@ import {
   TrendingUp,
   Shield,
   BookOpen,
+  Clock3,
+  Info,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 export function AboutSection() {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -57,6 +60,16 @@ export function AboutSection() {
               your capabilities using a structured, extensible taxonomy and proof-based credibility
               system.
             </p>
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              <Badge variant="secondary" className="gap-1 bg-[#EEF1EA] text-[#1C4D3A]">
+                <Clock3 className="h-3.5 w-3.5" />
+                First 3 skills ≈ 2–3 mins
+              </Badge>
+              <Badge variant="outline" className="gap-1 border-[#D8D2C8] text-[#2D3330]">
+                <Info className="h-3.5 w-3.5" />
+                Use synonyms—search matches common wording
+              </Badge>
+            </div>
             <p className="text-[#2D3330]">
               Unlike simple skill tags, the Atlas organizes your expertise across 6 universal
               domains and over 18,000 curated skills, allowing you to track proficiency levels,

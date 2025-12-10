@@ -24,6 +24,8 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, BookOpen, Linkedin, TrendingUp, FileText, Grid3x3 } from 'lucide-react';
 import { AboutSection } from './components/AboutSection';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 
 interface ExpertiseAtlasClientProps {
   initialSkills: any[];
@@ -61,6 +63,45 @@ export function ExpertiseAtlasClient({
   });
   const [isSideSheetOpen, setIsSideSheetOpen] = useState(false);
   const [sideSheetFilter, setSideSheetFilter] = useState<string>('');
+  const emitClientMetric = (event: string, payload?: Record<string, any>) => {
+    try {
+      console.debug('analytics:event', event, payload);
+    } catch {
+      // ignore
+    }
+  };
+  const readiness = useMemo(() => {
+    const total = skills.length;
+    const proofed = skills.filter((s: any) => (s.proof_count || 0) > 0).length;
+    const verified = skills.filter((s: any) => (s.verification_count || 0) > 0).length;
+    const fresh = skills.filter((s: any) => {
+      if (!s.lastUsedAt) return false;
+      const monthsAgo =
+        (Date.now() - new Date(s.lastUsedAt).getTime()) / (1000 * 60 * 60 * 24 * 30);
+      return monthsAgo <= 18;
+    }).length;
+
+    const score =
+      Math.min(total / 3, 1) * 40 +
+      Math.min(proofed / 2, 1) * 30 +
+      Math.min(verified / 1, 1) * 20 +
+      (total > 0 ? Math.min(fresh / total, 1) * 10 : 0);
+
+    let nextStep = 'You look match-ready!';
+    if (total < 3) nextStep = 'Add 3 skills to unlock the dashboard and matching.';
+    else if (proofed < 2) nextStep = 'Attach proofs to your top 2 skills.';
+    else if (verified < 1) nextStep = 'Request one verification to boost credibility.';
+    else if (fresh < Math.max(1, Math.ceil(total * 0.5))) nextStep = 'Update recency on a key skill.';
+
+    return {
+      score: Math.round(Math.min(100, score)),
+      total,
+      proofed,
+      verified,
+      fresh,
+      nextStep,
+    };
+  }, [skills]);
 
   // Keep local skills in sync when server data changes
   useEffect(() => {
@@ -370,6 +411,54 @@ export function ExpertiseAtlasClient({
                       Dashboard
                     </h2>
 
+                    <div className="bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Match-readiness snapshot</p>
+                          <h3 className="text-xl font-semibold text-proofound-charcoal mt-1">
+                            {readiness.score}% ready
+                          </h3>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Why this matters: solid signals (skills + proofs + recency) increase your
+                            rank transparency and intro quality.
+                          </p>
+                        </div>
+                        <Badge variant="secondary" className="bg-proofound-parchment text-proofound-forest">
+                          {readiness.nextStep}
+                        </Badge>
+                      </div>
+                      <div className="mt-4">
+                        <Progress value={readiness.score} className="h-2" />
+                        <div className="flex flex-wrap gap-4 mt-3 text-xs text-muted-foreground">
+                          <span>{readiness.total} skills</span>
+                          <span>{readiness.proofed} with proofs</span>
+                          <span>{readiness.verified} verified</span>
+                          <span>{readiness.fresh} used in last 18 months</span>
+                        </div>
+                      </div>
+                      <div className="mt-4 flex gap-3">
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            emitClientMetric('expertise_readiness_cta', { action: 'add_skill' });
+                            setIsAddSkillDrawerOpen(true);
+                          }}
+                        >
+                          Add skill or proof now
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            emitClientMetric('expertise_readiness_cta', { action: 'import_cv' });
+                            setActiveTab('import-cv');
+                          }}
+                        >
+                          Auto-suggest from CV
+                        </Button>
+                      </div>
+                    </div>
+
                     {/* Filters */}
                     <DashboardFilters filters={filters} onFilterChange={setFilters} />
 
@@ -377,12 +466,18 @@ export function ExpertiseAtlasClient({
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       {/* Row 1 */}
                       <div className="bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
+                        <p className="text-xs text-muted-foreground mb-2">
+                          Why this matters: proofs + verifications boost trust in matches.
+                        </p>
                         <CredibilityPie
                           data={widgetData.credibility}
                           onSegmentClick={handleCredibilityClick}
                         />
                       </div>
                       <div className="bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
+                        <p className="text-xs text-muted-foreground mb-2">
+                          Why this matters: align your skills to what roles need now.
+                        </p>
                         <RelevanceBars
                           data={widgetData.relevance}
                           onBarClick={handleRelevanceClick}
@@ -391,9 +486,15 @@ export function ExpertiseAtlasClient({
 
                       {/* Row 2 */}
                       <div className="bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
+                        <p className="text-xs text-muted-foreground mb-2">
+                          Why this matters: breadth vs focus—click a sector to deepen proof.
+                        </p>
                         <SkillWheel data={widgetData.skillWheel} onSectorClick={handleWheelClick} />
                       </div>
                       <div className="bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
+                        <p className="text-xs text-muted-foreground mb-2">
+                          Why this matters: see where verifications come from; rebalance if needed.
+                        </p>
                         <VerificationSourcesPie
                           data={widgetData.verificationSources}
                           onSegmentClick={handleVerificationClick}
@@ -402,6 +503,9 @@ export function ExpertiseAtlasClient({
 
                       {/* Row 3 - Full Width */}
                       <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
+                        <p className="text-xs text-muted-foreground mb-2">
+                          Why this matters: freshness drives match rank. Update stale items.
+                        </p>
                         <RecencyScatter
                           data={widgetData.scatter}
                           onSkillClick={handleScatterClick}
@@ -410,6 +514,9 @@ export function ExpertiseAtlasClient({
 
                       {/* Row 4 - Full Width */}
                       <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
+                        <p className="text-xs text-muted-foreground mb-2">
+                          Why this matters: coverage shows where you’re strong and what to fill next.
+                        </p>
                         <CoverageHeatmap
                           data={widgetData.coverage}
                           onCellClick={handleCoverageClick}
@@ -418,6 +525,9 @@ export function ExpertiseAtlasClient({
 
                       {/* Row 5 - Full Width */}
                       <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
+                        <p className="text-xs text-muted-foreground mb-2">
+                          Why this matters: do the next best actions to lift readiness quickly.
+                        </p>
                         <NextBestActions
                           actions={widgetData.nextBestActions}
                           onActionClick={handleActionClick}
