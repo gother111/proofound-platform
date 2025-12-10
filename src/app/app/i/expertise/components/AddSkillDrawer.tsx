@@ -89,7 +89,7 @@ interface AddSkillDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   domains: L1Domain[];
-  onSkillAdded: () => void;
+  onSkillAdded: (skill?: any) => void;
 }
 
 export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: AddSkillDrawerProps) {
@@ -451,11 +451,12 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
       });
 
       if (response.ok) {
+        const data = await response.json();
         toast({
           title: '✅ Skill Added',
           description: `"${skill.nameI18n?.en || 'Skill'}" was added to your atlas.`,
         });
-        onSkillAdded();
+        onSkillAdded(data?.skill || skill);
       } else {
         const error = await response.json();
         toast({
@@ -583,7 +584,7 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
             : `"${l4Search}" has been added to your Expertise Atlas.`,
         });
 
-        onSkillAdded();
+        onSkillAdded(skillData?.skill);
 
         if (saveAndAddAnother) {
           // Reset to step 1 but keep drawer open

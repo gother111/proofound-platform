@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { EmptyState } from './components/EmptyState';
 import { L1Grid } from './components/L1Grid';
@@ -41,6 +41,7 @@ export function ExpertiseAtlasClient({
   linkedInConnected,
 }: ExpertiseAtlasClientProps) {
   const router = useRouter();
+  const [skills, setSkills] = useState(initialSkills);
   const [activeTab, setActiveTab] = useState<string>('atlas');
   const [selectedL1, setSelectedL1] = useState<number | null>(null);
   const [selectedL2, setSelectedL2] = useState<any | null>(null);
@@ -61,12 +62,15 @@ export function ExpertiseAtlasClient({
   const [isSideSheetOpen, setIsSideSheetOpen] = useState(false);
   const [sideSheetFilter, setSideSheetFilter] = useState<string>('');
 
+  // Keep local skills in sync when server data changes
+  useEffect(() => {
+    setSkills(initialSkills);
+  }, [initialSkills]);
+
   // Filter skills for side sheet (must be before early return)
   const filteredSkills = useMemo(() => {
     // First filter out skills without taxonomy (custom skills with null skill_code)
-    let filtered = initialSkills.filter(
-      (skill) => skill.taxonomy !== null && skill.taxonomy !== undefined
-    );
+    let filtered = skills.filter((skill) => skill.taxonomy !== null && skill.taxonomy !== undefined);
 
     // Apply L1 domain filter
     if (filters.l1Domains.length > 0) {
@@ -108,11 +112,19 @@ export function ExpertiseAtlasClient({
     }
 
     return filtered;
-  }, [initialSkills, filters]);
+  }, [skills, filters]);
 
-  // Handle skill added - refresh page
-  const handleSkillAdded = () => {
-    // Soft refresh to pull latest skills without a full page reload
+  // Handle skill added - optimistic update + soft refresh
+  const handleSkillAdded = (skill?: any) => {
+    if (skill) {
+      setSkills((prev) => {
+        const existing = prev.find((s) => s.id === skill.id);
+        if (existing) {
+          return prev.map((s) => (s.id === skill.id ? { ...existing, ...skill } : s));
+        }
+        return [...prev, skill];
+      });
+    }
     router.refresh();
   };
 
@@ -134,7 +146,7 @@ export function ExpertiseAtlasClient({
 
   // Filter L3 subcategories based on selected L2
   const l3Subcategories = selectedL2
-    ? initialSkills
+    ? skills
         .filter(
           (skill: any) =>
             skill.taxonomy?.cat_id === selectedL2.catId &&
@@ -160,7 +172,7 @@ export function ExpertiseAtlasClient({
 
   // Filter L4 skills based on selected L3
   const l4Skills = selectedL3
-    ? initialSkills.filter(
+    ? skills.filter(
         (skill: any) =>
           skill.taxonomy?.cat_id === selectedL3.catId &&
           skill.taxonomy?.subcat_id === selectedL3.subcatId &&
@@ -172,7 +184,7 @@ export function ExpertiseAtlasClient({
   const l2CategoriesPerL1 = useMemo(() => {
     const result: Record<number, any[]> = {};
 
-    initialSkills.forEach((skill: any) => {
+    skills.forEach((skill: any) => {
       if (!skill.taxonomy?.cat_id || !skill.taxonomy?.subcat_id) return;
 
       const catId = skill.taxonomy.cat_id;
@@ -198,7 +210,7 @@ export function ExpertiseAtlasClient({
     });
 
     return result;
-  }, [initialSkills]);
+  }, [skills]);
 
   const handleDomainClick = (catId: number) => {
     setSelectedL1(catId);
@@ -257,20 +269,19 @@ export function ExpertiseAtlasClient({
   };
 
   const handleScatterClick = (skillId: string) => {
-    const skill = initialSkills.find((s) => s.id === skillId);
+    const skill = skills.find((s) => s.id === skillId);
     if (skill) handleSkillEdit(skill);
   };
 
   const handleActionClick = (skillId: string) => {
-    const skill = initialSkills.find((s) => s.id === skillId);
+    const skill = skills.find((s) => s.id === skillId);
     if (skill) handleSkillEdit(skill);
   };
 
   const selectedDomain = domains.find((d) => d.catId === selectedL1);
 
   const handleSkillsImportedFromCV = () => {
-    // Refresh page after CV import
-    window.location.reload();
+    router.refresh();
   };
 
   return (
@@ -283,7 +294,7 @@ export function ExpertiseAtlasClient({
               Expertise Atlas
             </h1>
             <p className="text-muted-foreground font-sans text-lg">
-              Your skills mapped across {initialSkills.length} entries in{' '}
+              Your skills mapped across {skills.length} entries in{' '}
               {domains.filter((d) => d.skillCount > 0).length} domains
             </p>
           </div>
@@ -526,7 +537,7 @@ export function ExpertiseAtlasClient({
           skills={filteredSkills}
           filterDescription={sideSheetFilter || 'All Skills'}
           onSkillClick={(skillId: string) => {
-            const skill = initialSkills.find((s) => s.id === skillId);
+            const skill = skills.find((s) => s.id === skillId);
             if (skill) handleSkillEdit(skill);
           }}
         />
