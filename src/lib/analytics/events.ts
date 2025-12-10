@@ -13,55 +13,71 @@ import { log } from '@/lib/log';
 // TYPES
 // ============================================================================
 
-export type EventType =
+export const EVENT_TYPES = [
   // Profile events
-  | 'profile_created'
-  | 'profile_activated'
-  | 'profile_updated'
-  | 'profile_viewed'
+  'profile_created',
+  'profile_activated',
+  'profile_updated',
+  'profile_viewed',
 
   // Matching events
-  | 'match_generated'
-  | 'match_viewed'
-  | 'match_interested'
-  | 'match_introduced'
-  | 'match_snoozed'
-  | 'match_hidden'
+  'match_generated',
+  'match_viewed',
+  'match_interested',
+  'match_introduced',
+  'match_snoozed',
+  'match_hidden',
 
   // Interview events
-  | 'interview_scheduled'
-  | 'interview_rescheduled'
-  | 'interview_completed'
-  | 'interview_cancelled'
+  'interview_scheduled',
+  'interview_rescheduled',
+  'interview_completed',
+  'interview_cancelled',
 
   // Decision events
-  | 'decision_made'
-  | 'decision_reminder_sent'
+  'decision_made',
+  'decision_reminder_sent',
 
   // Contract events
-  | 'contract_offered'
-  | 'contract_signed'
-  | 'contract_declined'
+  'contract_offered',
+  'contract_signed',
+  'contract_declined',
 
   // Well-being events
-  | 'wellbeing_checkin'
-  | 'wellbeing_reflection'
-  | 'wellbeing_opt_in'
-  | 'wellbeing_checkin_submitted'
-  | 'wellbeing_opt_in_changed'
-  | 'reflection_added'
-  | 'privacy_banner_acknowledged'
+  'wellbeing_checkin',
+  'wellbeing_reflection',
+  'wellbeing_opt_in',
+  'wellbeing_checkin_submitted',
+  'wellbeing_opt_in_changed',
+  'reflection_added',
+  'privacy_banner_acknowledged',
+
+  // Assignment & performance events
+  'assignment_published',
+  'performance_metric',
+
+  // Additional matching/skill events
+  'match_actioned',
+  'skill_proof_added',
+  'skill_proof_deleted',
+
+  // Privacy events
+  'visibility_changed',
+  'redact_mode_toggled',
 
   // Verification events
-  | 'verification_started'
-  | 'verification_completed'
-  | 'attestation_requested'
-  | 'attestation_provided'
+  'verification_started',
+  'verification_completed',
+  'attestation_requested',
+  'attestation_provided',
 
   // System events
-  | 'first_match_shown'
-  | 'sus_survey_completed'
-  | 'tour_completed';
+  'first_match_shown',
+  'sus_survey_completed',
+  'tour_completed',
+] as const;
+
+export type EventType = (typeof EVENT_TYPES)[number];
 
 export interface AnalyticsEvent {
   eventType: EventType;
@@ -144,6 +160,130 @@ export async function emitAnalyticsEvent(event: AnalyticsEvent): Promise<void> {
 export function emitAnalyticsEventAsync(event: AnalyticsEvent): void {
   // Use setImmediate or process.nextTick in Node.js environment
   Promise.resolve().then(() => emitAnalyticsEvent(event));
+}
+
+/**
+ * Lightweight wrapper to emit arbitrary analytics events (fire-and-forget)
+ */
+export function trackEvent(event: AnalyticsEvent): void {
+  emitAnalyticsEventAsync(event);
+}
+
+// ============================================================================
+// ASSIGNMENT EVENTS
+// ============================================================================
+
+export async function emitAssignmentPublished(
+  userId: string,
+  assignmentId: string,
+  organizationId?: string
+): Promise<void> {
+  await emitAnalyticsEvent({
+    eventType: 'assignment_published',
+    userId,
+    organizationId,
+    entityType: 'assignment',
+    entityId: assignmentId,
+  });
+}
+
+// ============================================================================
+// MATCHING EVENTS (additional)
+// ============================================================================
+
+export async function emitMatchActioned(
+  userId: string,
+  matchId: string,
+  action: 'accept' | 'decline' | 'snooze'
+): Promise<void> {
+  await emitAnalyticsEvent({
+    eventType: 'match_actioned',
+    userId,
+    entityType: 'match',
+    entityId: matchId,
+    properties: { action },
+  });
+}
+
+export async function emitFirstMatchShown(userId: string, matchId: string): Promise<void> {
+  await emitAnalyticsEvent({
+    eventType: 'first_match_shown',
+    userId,
+    entityType: 'match',
+    entityId: matchId,
+  });
+}
+
+// ============================================================================
+// SKILL PROOF EVENTS
+// ============================================================================
+
+export function emitSkillProofAddedAsync(userId: string, proofId: string, skillId?: string): void {
+  emitAnalyticsEventAsync({
+    eventType: 'skill_proof_added',
+    userId,
+    entityType: 'profile',
+    entityId: proofId,
+    properties: { skill_id: skillId },
+  });
+}
+
+export function emitSkillProofDeletedAsync(
+  userId: string,
+  proofId: string,
+  skillId?: string
+): void {
+  emitAnalyticsEventAsync({
+    eventType: 'skill_proof_deleted',
+    userId,
+    entityType: 'profile',
+    entityId: proofId,
+    properties: { skill_id: skillId },
+  });
+}
+
+// ============================================================================
+// SUS / FEEDBACK EVENTS
+// ============================================================================
+
+export function emitSUSSurveyCompletedAsync(userId: string, score: number): void {
+  emitAnalyticsEventAsync({
+    eventType: 'sus_survey_completed',
+    userId,
+    entityType: 'profile',
+    entityId: userId,
+    properties: { score },
+  });
+}
+
+// ============================================================================
+// PRIVACY EVENTS
+// ============================================================================
+
+export function emitVisibilityChanged(
+  userId: string,
+  profileId: string,
+  visibility: 'public' | 'network' | 'private'
+): void {
+  emitAnalyticsEventAsync({
+    eventType: 'visibility_changed',
+    userId,
+    profileId,
+    entityType: 'profile',
+    entityId: profileId,
+    properties: { visibility },
+  });
+}
+
+export function emitRedactModeToggled(userId: string, profileId: string, enabled: boolean): void {
+  emitAnalyticsEventAsync({
+    eventType: 'redact_mode_toggled',
+    userId,
+    profileId,
+    entityType: 'profile',
+    entityId: profileId,
+    properties: { enabled },
+  });
 }
 
 // ============================================================================

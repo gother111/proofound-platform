@@ -573,6 +573,30 @@ export const skillVerificationRequests = pgTable('skill_verification_requests', 
   expiresAt: timestamp('expires_at').default(sql`NOW() + INTERVAL '30 days'`),
 });
 
+// Assignment templates - reusable presets for assignment creation
+export const assignmentTemplates = pgTable('assignment_templates', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  orgId: uuid('org_id').references(() => organizations.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  roleFamily: text('role_family').notNull(),
+  summary: text('summary'),
+  description: text('description'),
+  appliesToSteps: text('applies_to_steps')
+    .array()
+    .default(sql`'{}'::text[]`)
+    .notNull(),
+  presetPayload: jsonb('preset_payload')
+    .default(sql`'{}'::jsonb`)
+    .notNull(),
+  isGlobal: boolean('is_global').default(false).notNull(),
+  status: text('status', { enum: ['active', 'archived'] })
+    .default('active')
+    .notNull(),
+  createdBy: uuid('created_by').references(() => profiles.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
 // Assignments - job/project postings from organizations
 export const assignments = pgTable('assignments', {
   id: uuid('id').defaultRandom().primaryKey(),

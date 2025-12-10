@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { apiFetch } from '@/lib/api/fetch';
-import { CheckCircle2, CircleAlert, Lock, Target, ArrowRight } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Lock, Target, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 type ProfileCompletenessResponse = {
@@ -104,7 +104,9 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
             <Target className="h-5 w-5 text-[#1C4D3A]" />
             Profile Activation
           </CardTitle>
-          <p className="text-sm text-muted-foreground">Hit the activation gate to unlock matches.</p>
+          <p className="text-sm text-muted-foreground">
+            Hit the activation gate to unlock matches.
+          </p>
         </div>
         <Badge variant="outline" className="text-xs">
           {status.badge}
@@ -126,7 +128,7 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
               {item.pass ? (
                 <CheckCircle2 className="h-4 w-4 text-green-600" />
               ) : (
-                <CircleAlert className="h-4 w-4 text-amber-600" />
+                <AlertCircle className="h-4 w-4 text-amber-600" />
               )}
               <span className="text-muted-foreground">{item.label}</span>
             </div>
@@ -158,11 +160,7 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
           Private by default; shared only when you opt in.
         </div>
 
-        <Button
-          className="w-full bg-[#1C4D3A] hover:bg-[#1A4634]"
-          size="sm"
-          asChild
-        >
+        <Button className="w-full bg-[#1C4D3A] hover:bg-[#1A4634]" size="sm" asChild>
           <Link href="/app/i/profile">Open profile</Link>
         </Button>
       </CardContent>

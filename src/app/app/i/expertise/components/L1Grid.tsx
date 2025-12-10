@@ -47,12 +47,58 @@ const DOMAIN_COLORS: Record<number, { bg: string; border: string; text: string }
 export function L1Grid({ domains, onDomainClick, l2CategoriesPerL1, onL2Click }: L1GridProps) {
   const [expandedDomain, setExpandedDomain] = useState<number | null>(null);
 
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/381d9e33-65b3-4af0-9925-b21521306aaa', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      sessionId: 'debug-session',
+      runId: 'pre-fix-1',
+      hypothesisId: 'H1',
+      location: 'L1Grid.tsx:entry',
+      message: 'L1Grid render start',
+      data: { domainCount: domains?.length ?? 0 },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
+
   const handleDomainClick = (catId: number) => {
     if (expandedDomain === catId) {
       setExpandedDomain(null);
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/381d9e33-65b3-4af0-9925-b21521306aaa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: 'debug-session',
+          runId: 'pre-fix-1',
+          hypothesisId: 'H2',
+          location: 'L1Grid.tsx:toggle',
+          message: 'Collapse domain',
+          data: { catId },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
     } else {
       setExpandedDomain(catId);
       onDomainClick(catId);
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/381d9e33-65b3-4af0-9925-b21521306aaa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: 'debug-session',
+          runId: 'pre-fix-1',
+          hypothesisId: 'H2',
+          location: 'L1Grid.tsx:toggle',
+          message: 'Expand domain',
+          data: { catId },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
     }
   };
 
@@ -64,114 +110,171 @@ export function L1Grid({ domains, onDomainClick, l2CategoriesPerL1, onL2Click }:
         down.
       </p>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {domains.map((domain) => {
-        const colors = DOMAIN_COLORS[domain.catId] || DOMAIN_COLORS[1];
-        const isExpanded = expandedDomain === domain.catId;
+        {domains.map((domain) => {
+          const colors = DOMAIN_COLORS[domain.catId] || DOMAIN_COLORS[1];
+          const isExpanded = expandedDomain === domain.catId;
+          const l2Categories = l2CategoriesPerL1[domain.catId] || [];
 
-        return (
-          <Card
-            key={domain.catId}
-            className={`border ${colors.border} bg-white p-6 cursor-pointer transition-all duration-300 hover:shadow-lg rounded-xl ${
-              isExpanded ? 'ring-2 ring-offset-2 ring-proofound-forest shadow-lg' : 'shadow-sm'
-            }`}
-            onClick={() => handleDomainClick(domain.catId)}
-          >
-            {/* Domain Icon & Name */}
-            <div className="flex items-start justify-between mb-6">
-              <div className="flex items-center gap-4">
-                <div
-                  className={`${colors.bg} ${colors.text} rounded-xl p-3 text-2xl font-bold shadow-inner`}
-                >
-                  {domain.icon}
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/381d9e33-65b3-4af0-9925-b21521306aaa', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              sessionId: 'debug-session',
+              runId: 'pre-fix-1',
+              hypothesisId: 'H1',
+              location: 'L1Grid.tsx:map',
+              message: 'Render domain card',
+              data: {
+                catId: domain.catId,
+                name: domain.nameI18n?.en,
+                skillCount: domain.skillCount,
+                l2Count: l2Categories.length,
+              },
+              timestamp: Date.now(),
+            }),
+          }).catch(() => {});
+          // #endregion
+
+          if (isExpanded) {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/381d9e33-65b3-4af0-9925-b21521306aaa', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                sessionId: 'debug-session',
+                runId: 'pre-fix-1',
+                hypothesisId: 'H3',
+                location: 'L1Grid.tsx:l2Block',
+                message: 'Render L2 block',
+                data: { catId: domain.catId, l2Count: l2Categories.length },
+                timestamp: Date.now(),
+              }),
+            }).catch(() => {});
+            // #endregion
+          }
+
+          return (
+            <Card
+              key={domain.catId}
+              className={`border ${colors.border} bg-white p-6 cursor-pointer transition-all duration-300 hover:shadow-lg rounded-xl ${
+                isExpanded ? 'ring-2 ring-offset-2 ring-proofound-forest shadow-lg' : 'shadow-sm'
+              }`}
+              onClick={() => handleDomainClick(domain.catId)}
+            >
+              {/* Domain Icon & Name */}
+              <div className="flex items-start justify-between mb-6">
+                <div className="flex items-center gap-4">
+                  <div
+                    className={`${colors.bg} ${colors.text} rounded-xl p-3 text-2xl font-bold shadow-inner`}
+                  >
+                    {domain.icon}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-proofound-charcoal text-lg font-display">
+                      {domain.nameI18n?.en || 'Unknown'}
+                    </h3>
+                    <p className="text-sm text-muted-foreground font-sans">
+                      {domain.skillCount} skills • tap for examples & synonyms
+                    </p>
+                  </div>
                 </div>
+                {isExpanded ? (
+                  <ChevronUp className="h-5 w-5 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                )}
+              </div>
+
+              {/* Stats Row */}
+              <div className="space-y-4">
+                {/* Average Level */}
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground font-medium">Avg level</span>
+                  <Badge
+                    variant="outline"
+                    className={`${colors.border} ${colors.text} bg-white font-semibold`}
+                  >
+                    {domain.avgLevel.toFixed(1)} / 5.0
+                  </Badge>
+                </div>
+
+                {/* Recency Mix */}
                 <div>
-                  <h3 className="font-semibold text-proofound-charcoal text-lg font-display">
-                    {domain.nameI18n?.en || 'Unknown'}
-                  </h3>
-                  <p className="text-sm text-muted-foreground font-sans">
-                    {domain.skillCount} skills • tap for examples & synonyms
-                  </p>
+                  <span className="text-xs text-muted-foreground mb-2 block font-medium uppercase tracking-wider">
+                    Recency
+                  </span>
+                  <div className="flex gap-1 h-2.5 rounded-full overflow-hidden bg-gray-100">
+                    {domain.recencyMix.active > 0 && (
+                      <div
+                        className="bg-proofound-sage"
+                        style={{ width: `${domain.recencyMix.active}%` }}
+                        title={`Active: ${domain.recencyMix.active}%`}
+                      />
+                    )}
+                    {domain.recencyMix.recent > 0 && (
+                      <div
+                        className="bg-proofound-ochre"
+                        style={{ width: `${domain.recencyMix.recent}%` }}
+                        title={`Recent: ${domain.recencyMix.recent}%`}
+                      />
+                    )}
+                    {domain.recencyMix.rusty > 0 && (
+                      <div
+                        className="bg-proofound-terracotta"
+                        style={{ width: `${domain.recencyMix.rusty}%` }}
+                        title={`Rusty: ${domain.recencyMix.rusty}%`}
+                      />
+                    )}
+                  </div>
+                  <div className="flex gap-3 mt-2 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-proofound-sage" />
+                      Active
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-proofound-ochre" />
+                      Recent
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-proofound-terracotta" />
+                      Rusty
+                    </span>
+                  </div>
                 </div>
               </div>
-              {isExpanded ? (
-                <ChevronUp className="h-5 w-5 text-muted-foreground" />
-              ) : (
-                <ChevronDown className="h-5 w-5 text-muted-foreground" />
-              )}
-            </div>
 
-            {/* Stats Row */}
-            <div className="space-y-4">
-              {/* Average Level */}
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground font-medium">Avg level</span>
-                <Badge
-                  variant="outline"
-                  className={`${colors.border} ${colors.text} bg-white font-semibold`}
-                >
-                  {domain.avgLevel.toFixed(1)} / 5.0
-                </Badge>
-              </div>
+              {/* Expanded L2 Categories */}
+              {isExpanded && (
+                <div className="mt-6 pt-4 border-t border-proofound-stone">
+                  {l2Categories.length === 0 ? (
+                    <p className="text-sm text-muted-foreground italic text-center py-2">
+                      No L2 categories with skills in this domain.
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {l2Categories.map((l2) => {
+                        // #region agent log
+                        fetch('http://127.0.0.1:7242/ingest/381d9e33-65b3-4af0-9925-b21521306aaa', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            sessionId: 'debug-session',
+                            runId: 'pre-fix-1',
+                            hypothesisId: 'H3',
+                            location: 'L1Grid.tsx:l2Item',
+                            message: 'Render L2 item',
+                            data: {
+                              catId: domain.catId,
+                              subcatId: l2.subcatId,
+                              name: l2.nameI18n?.en,
+                            },
+                            timestamp: Date.now(),
+                          }),
+                        }).catch(() => {});
+                        // #endregion
 
-              {/* Recency Mix */}
-              <div>
-                <span className="text-xs text-muted-foreground mb-2 block font-medium uppercase tracking-wider">
-                  Recency
-                </span>
-                <div className="flex gap-1 h-2.5 rounded-full overflow-hidden bg-gray-100">
-                  {domain.recencyMix.active > 0 && (
-                    <div
-                      className="bg-proofound-sage"
-                      style={{ width: `${domain.recencyMix.active}%` }}
-                      title={`Active: ${domain.recencyMix.active}%`}
-                    />
-                  )}
-                  {domain.recencyMix.recent > 0 && (
-                    <div
-                      className="bg-proofound-ochre"
-                      style={{ width: `${domain.recencyMix.recent}%` }}
-                      title={`Recent: ${domain.recencyMix.recent}%`}
-                    />
-                  )}
-                  {domain.recencyMix.rusty > 0 && (
-                    <div
-                      className="bg-proofound-terracotta"
-                      style={{ width: `${domain.recencyMix.rusty}%` }}
-                      title={`Rusty: ${domain.recencyMix.rusty}%`}
-                    />
-                  )}
-                </div>
-                <div className="flex gap-3 mt-2 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-proofound-sage" />
-                    Active
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-proofound-ochre" />
-                    Recent
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-proofound-terracotta" />
-                    Rusty
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Expanded L2 Categories */}
-            {isExpanded &&
-              (() => {
-                const l2Categories = l2CategoriesPerL1[domain.catId] || [];
-
-                return (
-                  <div className="mt-6 pt-4 border-t border-proofound-stone">
-                    {l2Categories.length === 0 ? (
-                      <p className="text-sm text-muted-foreground italic text-center py-2">
-                        No L2 categories with skills in this domain.
-                      </p>
-                    ) : (
-                      <div className="space-y-2">
-                        {l2Categories.map((l2) => (
+                        return (
                           <button
                             key={l2.subcatId}
                             onClick={(e) => {
@@ -195,15 +298,16 @@ export function L1Grid({ domains, onDomainClick, l2CategoriesPerL1, onL2Click }:
                               <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-proofound-forest transition-colors" />
                             </div>
                           </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
-          </Card>
-        );
-      })}
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </Card>
+          );
+        })}
+      </div>
     </div>
   );
 }

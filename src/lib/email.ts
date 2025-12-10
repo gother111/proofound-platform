@@ -10,6 +10,7 @@ import { DeletionComplete } from '../../emails/DeletionComplete';
 import WorkEmailVerification from '../../emails/WorkEmailVerification';
 import SkillVerificationRequest from '../../emails/SkillVerificationRequest';
 import NewMatchNotification from '../../emails/NewMatchNotification';
+import FeedbackRequest from '../../emails/FeedbackRequest';
 import ContractSigned from '../../emails/ContractSigned';
 import InterviewScheduled from '../../emails/InterviewScheduled';
 import IdentityRevealed from '../../emails/IdentityRevealed';
@@ -348,6 +349,53 @@ export async function sendIdentityRevealedEmail(
   } catch (error) {
     console.error('Failed to send identity revealed email:', error);
     throw new Error('Failed to send identity revealed email');
+  }
+}
+
+export async function sendFeedbackRequestEmail(params: {
+  to: string;
+  direction: 'candidate_to_org' | 'org_to_candidate';
+  token: string;
+  expiresAt?: string;
+  interviewTime?: string;
+}) {
+  const { to, direction, token, expiresAt, interviewTime } = params;
+  const feedbackUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/feedback/${token}`;
+
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/381d9e33-65b3-4af0-9925-b21521306aaa', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      sessionId: 'debug-session',
+      runId: 'pre-fix-1',
+      hypothesisId: 'H-email',
+      location: 'email.ts:sendFeedbackRequestEmail',
+      message: 'Send feedback request email',
+      data: {
+        direction,
+        hasToken: Boolean(token),
+        hasExpiresAt: Boolean(expiresAt),
+        hasInterviewTime: Boolean(interviewTime),
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
+
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to,
+      subject:
+        direction === 'candidate_to_org'
+          ? 'Share your interview experience'
+          : 'Share feedback with the candidate',
+      react: FeedbackRequest({ direction, feedbackUrl, expiresAt, interviewTime }),
+    });
+  } catch (error) {
+    console.error('Failed to send feedback request email', error);
+    throw new Error('Failed to send feedback request email');
   }
 }
 

@@ -587,3 +587,49 @@ export async function calculateAllMetrics(
     wellBeingDelta,
   };
 }
+
+// ============================================================================
+// FAIRNESS GAP (placeholder to unblock build)
+// ============================================================================
+
+export type FairnessGapResult = {
+  cohortA: { name: string; introductionRate: number; contractRate: number; sampleSize: number };
+  cohortB: { name: string; introductionRate: number; contractRate: number; sampleSize: number };
+  gap: number;
+  pValue: number;
+  isSignificant: boolean;
+};
+
+export async function calculateFairnessGap(
+  cohortA: string,
+  cohortB: string,
+  startDate?: Date,
+  endDate?: Date
+): Promise<FairnessGapResult | null> {
+  void startDate;
+  void endDate;
+  log.warn('metrics.fairness_gap.placeholder', { cohortA, cohortB });
+  return null;
+}
+
+// ============================================================================
+// GET ALL (lightweight)
+// ============================================================================
+
+export async function getAllMetrics(): Promise<Record<string, any>> {
+  try {
+    const [ttsc, ttfqi, ttv, pac] = await Promise.all([
+      calculateTTSC(),
+      calculateTTFQI(),
+      calculateTTV(),
+      calculatePACLift(),
+    ]);
+
+    return { ttsc, ttfqi, ttv, pac };
+  } catch (error) {
+    log.error('metrics.get_all.failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    return { ttsc: null, ttfqi: null, ttv: null, pac: null };
+  }
+}

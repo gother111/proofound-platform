@@ -14,12 +14,12 @@
 
 'use client';
 
-import { onCLS, onFID, onLCP, onFCP, onTTFB, type Metric } from 'web-vitals';
+import { onCLS, onINP, onLCP, onFCP, onTTFB, type Metric } from 'web-vitals';
 
 // Thresholds per PRD
 export const WEB_VITALS_THRESHOLDS = {
   LCP: 2500, // 2.5s
-  FID: 100, // 100ms
+  INP: 200, // 200ms target (replaces FID)
   CLS: 0.1,
   FCP: 1800, // 1.8s
   TTFB: 600, // 600ms
@@ -68,7 +68,7 @@ async function sendMetricToBackend(payload: PerformanceMetricPayload): Promise<v
 function getRating(name: string, value: number): 'good' | 'needs-improvement' | 'poor' {
   const thresholds = {
     LCP: [2500, 4000],
-    FID: [100, 300],
+    INP: [200, 500],
     CLS: [0.1, 0.25],
     FCP: [1800, 3000],
     TTFB: [600, 1500],
@@ -115,7 +115,7 @@ function trackMetric(metric: Metric): void {
 export function reportWebVitals(): void {
   try {
     onCLS(trackMetric);
-    onFID(trackMetric);
+    onINP(trackMetric);
     onLCP(trackMetric);
     onFCP(trackMetric);
     onTTFB(trackMetric);

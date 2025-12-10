@@ -68,7 +68,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to save reflection' }, { status: 500 });
     }
 
-    // 4. Return success
+    // 4. Emit analytics (private partition)
+    try {
+      const { emitReflectionAdded } = await import('@/lib/analytics/events');
+      await emitReflectionAdded(user.id, {
+        word_count: reflectionText.trim().split(/\s+/).length,
+        from_trigger: milestoneType || undefined,
+      });
+    } catch (analyticsError) {
+      console.error('Failed to emit reflection_added event', analyticsError);
+    }
+
+    // 5. Return success
     return NextResponse.json({
       success: true,
       reflectionId: reflection.id,
