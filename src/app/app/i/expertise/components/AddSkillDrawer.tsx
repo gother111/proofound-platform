@@ -139,6 +139,13 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
   const searchAbortControllerRef = useRef<AbortController | null>(null);
   const [quickAddingCodes, setQuickAddingCodes] = useState<Set<string>>(new Set());
 
+  const handleKeyActivate = (event: React.KeyboardEvent, action: () => void) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      action();
+    }
+  };
+
   // Debounced global search
   const handleSearchChange = useCallback((value: string) => {
     setSearchQuery(value);
@@ -730,8 +737,11 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div
-                          className="flex-1 cursor-pointer"
+                          role="button"
+                          tabIndex={0}
+                          className="flex-1 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1C4D3A] focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded-md"
                           onClick={() => handleSearchResultSelect(skill)}
+                          onKeyDown={(e) => handleKeyActivate(e, () => handleSearchResultSelect(skill))}
                         >
                           <h4 className="font-medium text-[#2D3330] mb-1">
                             {skill.nameI18n?.en || 'Unknown'}

@@ -4,6 +4,7 @@ import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
+import Image from 'next/image';
 // import Magnetic from '@/components/ui/Magnetic'; // This import is no longer needed based on the new code
 
 interface HeroSectionProps {
@@ -103,11 +104,16 @@ export function HeroSection({ onGetStarted, shouldReduceMotion }: HeroSectionPro
         transition={{ duration: 1.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
         className="absolute top-0 right-0 bottom-0 hidden lg:block w-[60%] pointer-events-none z-10"
       >
-        <img
-          src="/hero-shape.png"
-          alt="Abstract organic shape"
-          className="absolute right-0 bottom-[-4px] h-[85vh] w-auto object-contain max-h-[90vh]"
-        />
+        <div className="absolute right-0 bottom-[-4px] h-[85vh] w-auto max-h-[90vh]">
+          <Image
+            src="/hero-shape.png"
+            alt="Abstract organic shape"
+            width={1200}
+            height={1200}
+            className="h-full w-auto object-contain"
+            priority
+          />
+        </div>
       </motion.div>
     </section>
   );
