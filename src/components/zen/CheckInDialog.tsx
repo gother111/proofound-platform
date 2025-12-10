@@ -22,6 +22,7 @@ import { Slider } from '@/components/ui/slider';
 import { Heart, Brain } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api/fetch';
+import { zenCheckInConfig, zenPractices, type RiskState } from '@/data/zen';
 
 interface CheckInDialogProps {
   open: boolean;
@@ -29,9 +30,6 @@ interface CheckInDialogProps {
   onSuccess: () => void;
   defaultMilestone?: 'rejection' | 'interview' | 'offer';
 }
-
-const STRESS_LABELS = ['Very Low', 'Low', 'Moderate', 'High', 'Very High'];
-const CONTROL_LABELS = ['Very Low', 'Low', 'Moderate', 'High', 'Very High'];
 
 export function CheckInDialog({
   open,
@@ -43,6 +41,17 @@ export function CheckInDialog({
   const [controlLevel, setControlLevel] = useState(3);
   const [milestone, setMilestone] = useState<string | undefined>(defaultMilestone);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const stressLabel = zenCheckInConfig.stressScale.find((s) => s.score === stressLevel);
+  const controlLabel = zenCheckInConfig.controlScale.find((c) => c.score === controlLevel);
+
+  const derivedMood: RiskState =
+    stressLevel >= 4 ? 'support' : stressLevel === 3 ? 'focus' : ('calm' as RiskState);
+
+  const microPractice =
+    zenPractices.find(
+      (p) => p.isMicro && p.recommendedFor?.includes(derivedMood)
+    ) || zenPractices.find((p) => p.isMicro);
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -105,7 +114,7 @@ export function CheckInDialog({
                 Current Stress Level
               </Label>
               <span className="text-sm font-semibold text-[#7A9278]">
-                {STRESS_LABELS[stressLevel - 1]}
+                {stressLabel?.label || 'Moderate'}
               </span>
             </div>
             <Slider
@@ -121,6 +130,9 @@ export function CheckInDialog({
               <span>Very Low</span>
               <span>Very High</span>
             </div>
+            {stressLabel?.description && (
+              <p className="text-xs text-muted-foreground">{stressLabel.description}</p>
+            )}
           </div>
 
           {/* Sense of Control */}
@@ -130,7 +142,7 @@ export function CheckInDialog({
                 Sense of Control
               </Label>
               <span className="text-sm font-semibold text-[#7A9278]">
-                {CONTROL_LABELS[controlLevel - 1]}
+                {controlLabel?.label || 'Moderate'}
               </span>
             </div>
             <Slider
@@ -146,6 +158,9 @@ export function CheckInDialog({
               <span>Very Low</span>
               <span>Very High</span>
             </div>
+            {controlLabel?.description && (
+              <p className="text-xs text-muted-foreground">{controlLabel.description}</p>
+            )}
           </div>
 
           {/* Milestone Trigger (Optional) */}
@@ -182,6 +197,19 @@ export function CheckInDialog({
               </div>
             </div>
           </div>
+
+          {/* Quick practice nudge */}
+          {microPractice && (
+            <div className="bg-muted/20 rounded-lg p-4 text-sm">
+              <p className="font-medium mb-1">Try a 1-minute reset</p>
+              <p className="text-muted-foreground mb-2">
+                {zenCheckInConfig.quickPracticePrompt}
+              </p>
+              <p className="text-muted-foreground">
+                Suggested: {microPractice.title} · {microPractice.duration}
+              </p>
+            </div>
+          )}
 
           {/* Privacy Reminder */}
           <div className="text-xs text-muted-foreground bg-muted/20 p-3 rounded-lg">

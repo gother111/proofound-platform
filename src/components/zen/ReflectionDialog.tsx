@@ -21,6 +21,7 @@ import {
 import { BookOpen } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api/fetch';
+import { reflectionPrompts } from '@/data/zen';
 
 interface ReflectionDialogProps {
   open: boolean;
@@ -42,6 +43,8 @@ export function ReflectionDialog({
   const [reflectionText, setReflectionText] = useState('');
   const [milestoneType, setMilestoneType] = useState<string | undefined>(defaultMilestone);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const relevantPrompts =
+    reflectionPrompts.filter((p) => p.trigger === milestoneType) || reflectionPrompts;
 
   // Reset form when dialog opens
   useEffect(() => {
@@ -180,12 +183,24 @@ Take your time—this is just for you."
           {/* Tips */}
           <div className="bg-muted/30 rounded-lg p-4 text-sm">
             <p className="font-medium mb-2">💡 Reflection Prompts:</p>
-            <ul className="space-y-1 text-muted-foreground list-disc list-inside">
-              <li>What challenged me today, and how did I respond?</li>
-              <li>What am I grateful for in my career journey right now?</li>
-              <li>What patterns do I notice in how I react to setbacks?</li>
-              <li>What would I tell a friend experiencing what I&apos;m going through?</li>
-            </ul>
+            <div className="space-y-2">
+              {(relevantPrompts.length > 0 ? relevantPrompts : reflectionPrompts).map((prompt) => (
+                <div
+                  key={prompt.prompt}
+                  className="flex items-start justify-between gap-3 rounded-md bg-background/60 px-3 py-2"
+                >
+                  <p className="text-muted-foreground text-sm leading-snug">{prompt.prompt}</p>
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    onClick={() => setReflectionText(prompt.prompt)}
+                    className="text-[12px]"
+                  >
+                    Use
+                  </Button>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Privacy Reminder */}

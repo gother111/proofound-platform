@@ -17,6 +17,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { AlertTriangle, CheckCircle2, Clock, Save, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
+import { burnoutDefaults } from '@/data/zen';
 
 interface WorkSchedule {
   monday: number;
@@ -43,9 +44,9 @@ const DAYS_OF_WEEK = [
 ] as const;
 
 const BURNOUT_THRESHOLDS = {
-  safe: 40,
-  warning: 50,
-  danger: 60,
+  safe: burnoutDefaults.alertThresholds.soft,
+  warning: burnoutDefaults.alertThresholds.hard,
+  danger: burnoutDefaults.alertThresholds.hard + 5,
 };
 
 export function WorkScheduleEditor({ userId }: WorkScheduleEditorProps) {
@@ -384,10 +385,7 @@ export function WorkScheduleEditor({ userId }: WorkScheduleEditorProps) {
         {/* Research Citation */}
         <div className="text-xs text-[#6B6760] dark:text-muted-foreground p-3 bg-[#F7F6F1] dark:bg-background/50 rounded-lg border border-[#E8E6DD] dark:border-border">
           <p>
-            <strong>Evidence-based thresholds:</strong> Research shows working more than 50 hours
-            per week increases risk of cardiovascular disease by 33% and stroke by 13% (Kivimäki et
-            al., 2015). The 40-hour threshold aligns with APA recommendations for sustainable
-            work-life balance.
+            <strong>Evidence-based thresholds:</strong> Based on burnoutDefaults (soft {BURNOUT_THRESHOLDS.safe}h, hard {BURNOUT_THRESHOLDS.warning}h). Quiet hours: {burnoutDefaults.quietHours.start}–{burnoutDefaults.quietHours.end} ({burnoutDefaults.quietHours.timezoneNote}).
           </p>
         </div>
       </CardContent>
