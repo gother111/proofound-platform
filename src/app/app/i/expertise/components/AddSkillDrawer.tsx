@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { X, Search, ChevronRight, Check, ChevronDown, List, Loader2 } from 'lucide-react';
+import { X, Search, ChevronRight, Check, ChevronDown, List, Loader2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -137,6 +137,7 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
   const [searchError, setSearchError] = useState<string | null>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const searchAbortControllerRef = useRef<AbortController | null>(null);
+  const [quickAddingCodes, setQuickAddingCodes] = useState<Set<string>>(new Set());
 
   // Debounced global search
   const handleSearchChange = useCallback((value: string) => {
@@ -424,6 +425,54 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
     setStep(4);
   };
 
+  // Quick add straight from search card with defaults
+  const handleQuickAdd = async (skill: L4Skill) => {
+    if (!skill?.code) return;
+
+    setQuickAddingCodes((prev) => new Set(prev).add(skill.code));
+    try {
+      const response = await apiFetch('/api/expertise/user-skills', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          skill_code: skill.code,
+          level: 2,
+          months_experience: 0,
+          last_used_at: new Date().toISOString(),
+          relevance: 'current',
+        }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: '✅ Skill Added',
+          description: `"${skill.nameI18n?.en || 'Skill'}" was added to your atlas.`,
+        });
+        onSkillAdded();
+      } else {
+        const error = await response.json();
+        toast({
+          title: 'Could not add skill',
+          description: error?.error || 'Please try again.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Quick add failed:', error);
+      toast({
+        title: 'Could not add skill',
+        description: 'Please check your connection and try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setQuickAddingCodes((prev) => {
+        const next = new Set(prev);
+        next.delete(skill.code);
+        return next;
+      });
+    }
+  };
+
   const handleSave = async (saveAndAddAnother: boolean = false) => {
     // Validate required fields with user-friendly error messages
     if (!l4Search || l4Search.trim() === '') {
@@ -672,14 +721,18 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
                   const domainColor = skill.l1
                     ? DOMAIN_COLORS[skill.l1.catId] || DOMAIN_COLORS[1]
                     : DOMAIN_COLORS[1];
+                  const isQuickAdding = quickAddingCodes.has(skill.code);
+
                   return (
                     <Card
                       key={skill.code}
-                      className="p-4 hover:bg-[#F7F6F1] transition-colors cursor-pointer border border-[#E5E3DA]"
-                      onClick={() => handleSearchResultSelect(skill)}
+                      className="p-4 border border-[#E5E3DA]"
                     >
                       <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1">
+                        <div
+                          className="flex-1 cursor-pointer"
+                          onClick={() => handleSearchResultSelect(skill)}
+                        >
                           <h4 className="font-medium text-[#2D3330] mb-1">
                             {skill.nameI18n?.en || 'Unknown'}
                           </h4>
@@ -711,7 +764,35 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
                             </div>
                           )}
                         </div>
-                        <ChevronRight className="h-5 w-5 text-[#6B6760] flex-shrink-0" />
+                        <div className="flex flex-col items-end gap-2">
+                          <Button
+                            size="sm"
+                            disabled={isQuickAdding}
+                            onClick={() => handleQuickAdd(skill)}
+                            className="bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]"
+                          >
+                            {isQuickAdding ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Adding...
+                              </>
+                            ) : (
+                              <>
+                                <Plus className="h-4 w-4 mr-1" />
+                                Add
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleSearchResultSelect(skill)}
+                            aria-label="Open details"
+                            className="text-[#6B6760]"
+                          >
+                            <ChevronRight className="h-5 w-5" />
+                          </Button>
+                        </div>
                       </div>
                     </Card>
                   );

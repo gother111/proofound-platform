@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { EmptyState } from './components/EmptyState';
 import { L1Grid } from './components/L1Grid';
 import { L2Modal } from './components/L2Modal';
@@ -39,6 +40,7 @@ export function ExpertiseAtlasClient({
   widgetData,
   linkedInConnected,
 }: ExpertiseAtlasClientProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<string>('atlas');
   const [selectedL1, setSelectedL1] = useState<number | null>(null);
   const [selectedL2, setSelectedL2] = useState<any | null>(null);
@@ -110,8 +112,8 @@ export function ExpertiseAtlasClient({
 
   // Handle skill added - refresh page
   const handleSkillAdded = () => {
-    // Trigger page refresh to show new skill
-    window.location.reload();
+    // Soft refresh to pull latest skills without a full page reload
+    router.refresh();
   };
 
   // Render empty state in a tab if no skills
