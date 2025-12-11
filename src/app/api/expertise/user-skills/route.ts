@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
       .select(
         `
         *,
-        taxonomy:skill_code (
+        taxonomy:skills_taxonomy!skills_skill_code_fkey (
           code,
           slug,
           name_i18n,
@@ -240,7 +240,7 @@ export async function POST(request: NextRequest) {
       .select(
         `
         *,
-        taxonomy:skill_code (
+        taxonomy:skills_taxonomy!skills_skill_code_fkey (
           code,
           slug,
           name_i18n,

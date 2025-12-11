@@ -43,7 +43,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         profile_id, 
         skill_code,
         skill_id,
-        taxonomy:skill_code (
+        taxonomy:skills_taxonomy!skills_skill_code_fkey (
           name_i18n
         )
       `

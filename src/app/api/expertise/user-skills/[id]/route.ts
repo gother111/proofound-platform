@@ -48,7 +48,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       .select(
         `
         *,
-        taxonomy:skill_code (
+        taxonomy:skills_taxonomy!skills_skill_code_fkey (
           code,
           slug,
           name_i18n,
