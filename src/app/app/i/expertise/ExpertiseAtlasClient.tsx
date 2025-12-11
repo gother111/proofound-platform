@@ -26,6 +26,7 @@ import { Plus, BookOpen, Linkedin, TrendingUp, FileText, Grid3x3 } from 'lucide-
 import { AboutSection } from './components/AboutSection';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { normalizeSkillForClient } from './utils/normalizeSkill';
 
 interface ExpertiseAtlasClientProps {
   initialSkills: any[];
@@ -110,8 +111,8 @@ export function ExpertiseAtlasClient({
 
   // Filter skills for side sheet (must be before early return)
   const filteredSkills = useMemo(() => {
-    // First filter out skills without taxonomy (custom skills with null skill_code)
-    let filtered = skills.filter((skill) => skill.taxonomy !== null && skill.taxonomy !== undefined);
+    // Keep all skills; ensure we don’t drop custom/unnormalized items
+    let filtered = skills.map((s) => normalizeSkillForClient(s) || s);
 
     // Apply L1 domain filter
     if (filters.l1Domains.length > 0) {
@@ -158,12 +159,13 @@ export function ExpertiseAtlasClient({
   // Handle skill added - optimistic update + soft refresh
   const handleSkillAdded = (skill?: any) => {
     if (skill) {
+      const normalized = normalizeSkillForClient(skill);
       setSkills((prev) => {
-        const existing = prev.find((s) => s.id === skill.id);
+        const existing = normalized?.id ? prev.find((s) => s.id === normalized.id) : undefined;
         if (existing) {
-          return prev.map((s) => (s.id === skill.id ? { ...existing, ...skill } : s));
+          return prev.map((s) => (s.id === normalized?.id ? { ...existing, ...normalized } : s));
         }
-        return [...prev, skill];
+        return normalized ? [...prev, normalized] : prev;
       });
     }
     router.refresh();

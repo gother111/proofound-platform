@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { apiFetch } from '@/lib/api/fetch';
 import { ToastAction } from '@/components/ui/toast';
+import { normalizeSkillForClient, type L4Skill } from '../utils/normalizeSkill';
 
 // L1 Domain colors (matching L1Grid)
 const DOMAIN_COLORS: Record<number, { bg: string; border: string; text: string; icon: string }> = {
@@ -63,7 +64,7 @@ interface L3Subcategory {
   descriptionI18n?: { en: string };
 }
 
-interface L4Skill {
+export interface L4Skill {
   code: string;
   nameI18n: { en: string };
   descriptionI18n?: { en: string };
@@ -537,6 +538,7 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
 
       if (response.ok) {
         const data = await response.json();
+        const normalized = normalizeSkillForClient(data?.skill || skill, skill as unknown as L4Skill);
         emitClientMetric('expertise_quick_add', {
           skill_code: skill.code,
           skill_name: skill.nameI18n?.en,
@@ -554,7 +556,7 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
               </ToastAction>
             ),
         });
-        onSkillAdded(data?.skill || skill);
+        onSkillAdded(normalized || data?.skill || skill);
       } else {
         const error = await response.json();
         toast({
@@ -616,8 +618,9 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
 
         if (response.ok) {
           const data = await response.json();
+          const normalized = normalizeSkillForClient(data?.skill || skill, skill as unknown as L4Skill);
           successes.push(skill.nameI18n?.en || skill.code);
-          onSkillAdded(data?.skill || skill);
+          onSkillAdded(normalized || data?.skill || skill);
           emitClientMetric('expertise_bulk_add_item', { skill_code: skill.code });
         } else {
           failures.push(skill.nameI18n?.en || skill.code);
