@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
     // Fetch check-ins
     const { data: checkIns, error } = await supabase
       .from('wellbeing_checkins')
-      .select('id, stress_level, control_level, milestone, created_at')
+      .select('id, stress_level, control_level, milestone_trigger_id, created_at')
       .eq('user_id', user.id)
       .gte('created_at', startDate.toISOString())
       .order('created_at', { ascending: false })
@@ -47,13 +47,15 @@ export async function GET(req: NextRequest) {
       id: c.id,
       stressLevel: c.stress_level,
       controlLevel: c.control_level,
-      milestone: c.milestone,
+      milestoneTriggerId: c.milestone_trigger_id,
       createdAt: c.created_at,
     }));
 
     return NextResponse.json({
+      // Preserve both camelCase variants so existing UI consumers keep working
       checkIns: mappedCheckIns,
-      count: checkIns?.length || 0,
+      checkins: mappedCheckIns,
+      count: mappedCheckIns.length,
     });
   } catch (error) {
     console.error('Check-ins API error:', error);

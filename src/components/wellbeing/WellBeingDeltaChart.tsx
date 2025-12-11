@@ -62,12 +62,15 @@ export function WellBeingDeltaChart({ period = 14, autoFetch = true }: WellBeing
         const historyResponse = await apiFetch('/api/wellbeing/checkins');
         if (historyResponse.ok) {
           const historyData = await historyResponse.json();
+          const historyCheckIns = historyData.checkIns || historyData.checkins || [];
           const checkIns =
-            historyData.checkIns?.map((c: any) => ({
-              date: c.created_at,
-              stress: c.stress_level,
-              control: c.control_level,
-            })) || [];
+            historyCheckIns
+              .map((c: any) => ({
+                date: c.createdAt ?? c.created_at,
+                stress: c.stressLevel ?? c.stress_level,
+                control: c.controlLevel ?? c.control_level,
+              }))
+              .filter((c: any) => c.date && c.stress && c.control) || [];
 
           setDeltaData({ ...data, checkIns });
         } else {

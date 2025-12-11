@@ -127,7 +127,7 @@ export async function getWellBeingTrend(
 ): Promise<
   Array<{
     week: number;
-    weekStart: Date;
+    weekStart: string;
     avgStress: number;
     avgControl: number;
     checkinsCount: number;
@@ -168,7 +168,7 @@ export async function getWellBeingTrend(
   // 3. Calculate averages per week
   const trend = Array.from(weeklyData.entries()).map(([week, data]) => ({
     week,
-    weekStart: data.weekStart,
+    weekStart: data.weekStart.toISOString(),
     avgStress: Math.round((data.stress.reduce((a, b) => a + b, 0) / data.stress.length) * 10) / 10,
     avgControl:
       Math.round((data.control.reduce((a, b) => a + b, 0) / data.control.length) * 10) / 10,

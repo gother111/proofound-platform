@@ -9,7 +9,7 @@
 
 interface TrendDataPoint {
   week: number;
-  weekStart: Date;
+  weekStart: Date | string;
   avgStress: number;
   avgControl: number;
   checkinsCount: number;
@@ -20,7 +20,14 @@ interface WellBeingTrendChartProps {
 }
 
 export function WellBeingTrendChart({ trend }: WellBeingTrendChartProps) {
-  if (trend.length === 0) {
+  const normalizedTrend = trend
+    .map((d) => {
+      const weekStartDate = typeof d.weekStart === 'string' ? new Date(d.weekStart) : d.weekStart;
+      return { ...d, weekStartDate };
+    })
+    .filter((d) => !Number.isNaN(d.weekStartDate.getTime()));
+
+  if (normalizedTrend.length === 0) {
     return (
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h3 className="font-semibold mb-3" style={{ color: '#2D3330' }}>
@@ -42,8 +49,9 @@ export function WellBeingTrendChart({ trend }: WellBeingTrendChartProps) {
 
   // Scale functions
   const xScale = (week: number) => {
-    const maxWeek = Math.max(...trend.map((d) => d.week));
-    return (week / maxWeek) * chartWidth;
+    const maxWeek = Math.max(...normalizedTrend.map((d) => d.week));
+    const safeMaxWeek = maxWeek === 0 ? 1 : maxWeek;
+    return (week / safeMaxWeek) * chartWidth;
   };
 
   const yScale = (value: number) => {
@@ -52,7 +60,7 @@ export function WellBeingTrendChart({ trend }: WellBeingTrendChartProps) {
 
   // Generate path for line
   const generatePath = (dataKey: 'avgStress' | 'avgControl') => {
-    return trend
+    return normalizedTrend
       .map((d, i) => {
         const x = padding.left + xScale(d.week);
         const y = padding.top + yScale(d[dataKey]);
@@ -105,7 +113,7 @@ export function WellBeingTrendChart({ trend }: WellBeingTrendChartProps) {
           ))}
 
           {/* X-axis labels */}
-          {trend.map((d) => (
+          {normalizedTrend.map((d) => (
             <text
               key={d.week}
               x={padding.left + xScale(d.week)}
@@ -114,7 +122,7 @@ export function WellBeingTrendChart({ trend }: WellBeingTrendChartProps) {
               fontSize="10"
               fill="#6B7280"
             >
-              {formatWeekLabel(d.weekStart)}
+              {formatWeekLabel(d.weekStartDate)}
             </text>
           ))}
 
@@ -139,7 +147,7 @@ export function WellBeingTrendChart({ trend }: WellBeingTrendChartProps) {
           />
 
           {/* Data points */}
-          {trend.map((d) => (
+          {normalizedTrend.map((d) => (
             <g key={d.week}>
               {/* Stress point */}
               <circle
