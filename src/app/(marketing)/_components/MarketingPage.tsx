@@ -1,0 +1,42 @@
+import Link from 'next/link';
+import type { ReactNode } from 'react';
+
+type MarketingPageProps = {
+  title: string;
+  description: string;
+  children?: ReactNode;
+  ctaLabel?: string;
+  ctaHref?: string;
+};
+
+// Simple, shared marketing layout to avoid repeated markup across static pages.
+export function MarketingPage({
+  title,
+  description,
+  children,
+  ctaLabel = 'Return to home',
+  ctaHref = '/',
+}: MarketingPageProps) {
+  return (
+    <main className="mx-auto flex min-h-[60vh] max-w-4xl flex-col gap-6 px-6 py-16 md:px-10">
+      <div className="flex flex-col gap-3">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Proofound
+        </p>
+        <h1 className="text-3xl font-semibold text-foreground md:text-4xl">{title}</h1>
+        <p className="text-base text-muted-foreground">{description}</p>
+      </div>
+
+      {children ? <div className="flex flex-col gap-4">{children}</div> : null}
+
+      <div>
+        <Link
+          href={ctaHref}
+          className="inline-flex items-center rounded-lg bg-proofound-forest px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:translate-y-[-1px] hover:bg-proofound-forest/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-proofound-forest"
+        >
+          {ctaLabel}
+        </Link>
+      </div>
+    </main>
+  );
+}

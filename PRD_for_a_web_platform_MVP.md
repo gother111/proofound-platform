@@ -2534,7 +2534,7 @@ Each flow includes:
 
 ## 14.5 Support & Incident Response
 
-- **User support:** **hello@profound.io** (primary).
+- **User support:** **hello@proofound.io** (primary).
 - **Operational:** On-call pager for P1; publish post‑mortems for user‑impacting incidents.
 
 ## 14.6 Post‑Launch Checkpoints (user milestones)
