@@ -17,7 +17,7 @@ interface EditProfileModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   basicInfo: BasicInfo;
-  onSave: (updates: Partial<BasicInfo>) => void;
+  onSave: (updates: Partial<BasicInfo>) => Promise<void> | void;
 }
 
 export function EditProfileModal({ open, onOpenChange, basicInfo, onSave }: EditProfileModalProps) {
@@ -58,14 +58,17 @@ export function EditProfileModal({ open, onOpenChange, basicInfo, onSave }: Edit
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = () => {
+  const handleSave = async (event?: React.FormEvent) => {
+    event?.preventDefault();
     if (!validate()) return;
 
-    onSave({
-      name: name.trim(),
-      tagline: tagline.trim() || null,
-      location: location.trim() || null,
-    });
+    await Promise.resolve(
+      onSave({
+        name: name.trim(),
+        tagline: tagline.trim() || null,
+        location: location.trim() || null,
+      })
+    );
     onOpenChange(false);
   };
 
@@ -74,80 +77,89 @@ export function EditProfileModal({ open, onOpenChange, basicInfo, onSave }: Edit
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Edit Profile</DialogTitle>
-          <DialogDescription>Update your basic information</DialogDescription>
-        </DialogHeader>
+        <form onSubmit={handleSave} className="space-y-4">
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+            <DialogDescription>Update your basic information</DialogDescription>
+          </DialogHeader>
 
-        <FormErrorBoundary>
-          <div className="space-y-4 py-4">
-            {/* Name */}
-            <div className="space-y-2">
-              <Label htmlFor="name">
-                Name <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Your full name"
-                className={errors.name ? 'border-red-500' : ''}
-              />
-              {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
-            </div>
-
-            {/* Tagline */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="tagline">Tagline</Label>
-                <span
-                  className={`text-xs ${
-                    taglineCharsLeft < 0
-                      ? 'text-red-500'
-                      : taglineCharsLeft < 20
-                        ? 'text-yellow-600'
-                        : 'text-muted-foreground'
-                  }`}
-                >
-                  {taglineCharsLeft} characters left
-                </span>
+          <FormErrorBoundary>
+            <div className="space-y-4 py-4">
+              {/* Name */}
+              <div className="space-y-2">
+                <Label htmlFor="name">
+                  Name <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    setErrors((prev) => ({ ...prev, name: '' }));
+                  }}
+                  placeholder="Your full name"
+                  className={errors.name ? 'border-red-500' : ''}
+                />
+                {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
               </div>
-              <textarea
-                id="tagline"
-                value={tagline}
-                onChange={(e) => setTagline(e.target.value)}
-                placeholder="A brief statement that captures who you are and what you care about"
-                className={`flex min-h-[80px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${
-                  errors.tagline ? 'border-red-500' : ''
-                }`}
-                maxLength={200}
-              />
-              {errors.tagline && <p className="text-xs text-red-500">{errors.tagline}</p>}
-            </div>
 
-            {/* Location */}
-            <div className="space-y-2">
-              <Label htmlFor="location">Location</Label>
-              <Input
-                id="location"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="City, Country"
-                className={errors.location ? 'border-red-500' : ''}
-              />
-              {errors.location && <p className="text-xs text-red-500">{errors.location}</p>}
-            </div>
-          </div>
-        </FormErrorBoundary>
+              {/* Tagline */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="tagline">Tagline</Label>
+                  <span
+                    className={`text-xs ${
+                      taglineCharsLeft < 0
+                        ? 'text-red-500'
+                        : taglineCharsLeft < 20
+                          ? 'text-yellow-600'
+                          : 'text-muted-foreground'
+                    }`}
+                  >
+                    {taglineCharsLeft} characters left
+                  </span>
+                </div>
+                <textarea
+                  id="tagline"
+                  value={tagline}
+                  onChange={(e) => {
+                    setTagline(e.target.value);
+                    setErrors((prev) => ({ ...prev, tagline: '' }));
+                  }}
+                  placeholder="A brief statement that captures who you are and what you care about"
+                  className={`flex min-h-[80px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${
+                    errors.tagline ? 'border-red-500' : ''
+                  }`}
+                  maxLength={200}
+                />
+                {errors.tagline && <p className="text-xs text-red-500">{errors.tagline}</p>}
+              </div>
 
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button type="button" onClick={handleSave}>
-            Save Changes
-          </Button>
-        </DialogFooter>
+              {/* Location */}
+              <div className="space-y-2">
+                <Label htmlFor="location">Location</Label>
+                <Input
+                  id="location"
+                  value={location}
+                  onChange={(e) => {
+                    setLocation(e.target.value);
+                    setErrors((prev) => ({ ...prev, location: '' }));
+                  }}
+                  placeholder="City, Country"
+                  className={errors.location ? 'border-red-500' : ''}
+                />
+                {errors.location && <p className="text-xs text-red-500">{errors.location}</p>}
+              </div>
+            </div>
+          </FormErrorBoundary>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit">Save Changes</Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
