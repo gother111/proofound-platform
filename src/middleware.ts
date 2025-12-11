@@ -10,7 +10,8 @@ const applySecurityHeaders = (response: NextResponse, request: NextRequest) => {
 
   const cspDirectives = [
     "default-src 'self' https:",
-    "script-src 'self' https:",
+    // Allow inline boot scripts from Next.js; safer nonce/hashes could be added later.
+    "script-src 'self' 'unsafe-inline' https:",
     "style-src 'self' 'unsafe-inline' https:",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data: https:",
