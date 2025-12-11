@@ -66,7 +66,9 @@ export function ZenSnapshotCard({ useMockData }: ZenSnapshotCardProps) {
             <HeartPulse className="h-5 w-5 text-[#1C4D3A]" />
             Zen Snapshot
           </CardTitle>
-          <p className="text-sm text-muted-foreground">Private wellbeing check-ins; never shared.</p>
+          <p className="text-sm text-muted-foreground">
+            Private wellbeing check-ins; never shared.
+          </p>
         </div>
         <Badge className={`text-xs ${badge.tone}`}>{badge.text}</Badge>
       </CardHeader>
@@ -76,7 +78,9 @@ export function ZenSnapshotCard({ useMockData }: ZenSnapshotCardProps) {
             <Activity className="h-4 w-4 text-[#1C4D3A]" />
             <p className="text-sm text-[#2D3330]">Latest check-in</p>
           </div>
-          <p className="text-xl font-semibold text-[#2D3330]">{loading ? '—' : lastScore ?? '—'}</p>
+          <p className="text-xl font-semibold text-[#2D3330]">
+            {loading ? '—' : (lastScore ?? '—')}
+          </p>
         </div>
 
         <div className="flex items-center gap-2 text-xs text-muted-foreground">

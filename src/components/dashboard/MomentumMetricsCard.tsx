@@ -96,7 +96,9 @@ export function MomentumMetricsCard({ useMockData }: MomentumMetricsCardProps) {
             >
               <div>
                 <p className="text-sm font-medium text-[#2D3330]">{metric.metric}</p>
-                <p className="text-xs text-muted-foreground">Target ≤ {metric.target} {metric.unit}</p>
+                <p className="text-xs text-muted-foreground">
+                  Target ≤ {metric.target} {metric.unit}
+                </p>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-lg font-semibold text-[#2D3330]">

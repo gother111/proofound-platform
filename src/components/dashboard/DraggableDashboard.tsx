@@ -78,7 +78,10 @@ interface DraggableDashboardProps {
   initialLayout?: DashboardWidget[];
 }
 
-export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
+export function DraggableDashboard({
+  initialLayout,
+  onError,
+}: DraggableDashboardProps & { onError?: (message: string) => void }) {
   const [layout, setLayout] = useState<DashboardWidget[]>(initialLayout || []);
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -109,6 +112,7 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
         }
       } catch (error) {
         console.error('Failed to fetch dashboard layout:', error);
+        onError?.('Failed to load dashboard layout');
         setLayout(DEFAULT_LAYOUT);
       } finally {
         setLoading(false);
@@ -122,40 +126,6 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
       setLoading(false);
     }
   }, [initialLayout]);
-
-  useEffect(() => {
-    const handleMockToggle = (event: Event) => {
-      const detail = (event as CustomEvent).detail as { enabled?: boolean } | undefined;
-      if (typeof detail?.enabled === 'boolean') {
-        setMockMode(detail.enabled);
-      }
-    };
-
-    window.addEventListener('dashboard-mock-mode', handleMockToggle as EventListener);
-    return () => window.removeEventListener('dashboard-mock-mode', handleMockToggle as EventListener);
-  }, []);
-
-  useEffect(() => {
-    if (mockMode) {
-      userLayoutRef.current = layout.length ? layout : userLayoutRef.current;
-      setLayout(DEFAULT_LAYOUT);
-      setLoading(false);
-    } else if (userLayoutRef.current) {
-      setLayout(userLayoutRef.current);
-    }
-  }, [mockMode]);
-
-  useEffect(() => {
-    if (!loading && !hasTrackedView) {
-      const loadMs =
-        typeof performance !== 'undefined' ? performance.now() - loadStartRef.current : undefined;
-      logDashboardEvent('dashboard_viewed', {
-        tiles: layout.filter((w) => w.visible).map((w) => w.widgetId),
-        load_ms: loadMs,
-      });
-      setHasTrackedView(true);
-    }
-  }, [loading, hasTrackedView, layout, logDashboardEvent]);
 
   const logDashboardEvent = useCallback(
     async (
@@ -181,10 +151,46 @@ export function DraggableDashboard({ initialLayout }: DraggableDashboardProps) {
         });
       } catch (error) {
         console.error('Failed to log dashboard event', error);
+        onError?.('Failed to log dashboard event');
       }
     },
-    [mockMode]
+    [mockMode, onError]
   );
+
+  useEffect(() => {
+    const handleMockToggle = (event: Event) => {
+      const detail = (event as CustomEvent).detail as { enabled?: boolean } | undefined;
+      if (typeof detail?.enabled === 'boolean') {
+        setMockMode(detail.enabled);
+      }
+    };
+
+    window.addEventListener('dashboard-mock-mode', handleMockToggle as EventListener);
+    return () =>
+      window.removeEventListener('dashboard-mock-mode', handleMockToggle as EventListener);
+  }, []);
+
+  useEffect(() => {
+    if (mockMode) {
+      userLayoutRef.current = layout.length ? layout : userLayoutRef.current;
+      setLayout(DEFAULT_LAYOUT);
+      setLoading(false);
+    } else if (userLayoutRef.current) {
+      setLayout(userLayoutRef.current);
+    }
+  }, [mockMode]);
+
+  useEffect(() => {
+    if (!loading && !hasTrackedView) {
+      const loadMs =
+        typeof performance !== 'undefined' ? performance.now() - loadStartRef.current : undefined;
+      logDashboardEvent('dashboard_viewed', {
+        tiles: layout.filter((w) => w.visible).map((w) => w.widgetId),
+        load_ms: loadMs,
+      });
+      setHasTrackedView(true);
+    }
+  }, [loading, hasTrackedView, layout, logDashboardEvent]);
 
   const handleDragEnd = (event: any) => {
     const { active, over } = event;

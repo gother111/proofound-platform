@@ -38,9 +38,24 @@ export function NotificationsCard({ useMockData }: NotificationsCardProps) {
   useEffect(() => {
     if (useMockData) {
       setItems([
-        { id: '1', title: 'New match ready', message: 'Check your shortlist', actionUrl: '/app/i/matching' },
-        { id: '2', title: 'Verification approved', message: 'Skill evidence verified', actionUrl: '/app/i/profile' },
-        { id: '3', title: 'Interview feedback', message: 'Feedback due in 12h', actionUrl: '/app/i/matching?tab=feedback' },
+        {
+          id: '1',
+          title: 'New match ready',
+          message: 'Check your shortlist',
+          actionUrl: '/app/i/matching',
+        },
+        {
+          id: '2',
+          title: 'Verification approved',
+          message: 'Skill evidence verified',
+          actionUrl: '/app/i/profile',
+        },
+        {
+          id: '3',
+          title: 'Interview feedback',
+          message: 'Feedback due in 12h',
+          actionUrl: '/app/i/matching?tab=feedback',
+        },
       ]);
       setLoading(false);
       return;

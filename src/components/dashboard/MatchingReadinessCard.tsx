@@ -69,7 +69,9 @@ export function MatchingReadinessCard({ useMockData, onActionClick }: MatchingRe
             <Sparkles className="h-5 w-5 text-[#1C4D3A]" />
             Matching Readiness
           </CardTitle>
-          <p className="text-sm text-muted-foreground">Fix the top gaps to unlock better matches.</p>
+          <p className="text-sm text-muted-foreground">
+            Fix the top gaps to unlock better matches.
+          </p>
         </div>
         <Badge variant="outline" className="text-xs">
           {status.label}

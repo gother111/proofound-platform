@@ -17,22 +17,11 @@ type DashboardPayload = {
 };
 
 function sanitizeProperties(raw: Record<string, unknown> = {}) {
-  const {
-    tiles,
-    load_ms,
-    fromMock,
-    widgetId,
-    oldIndex,
-    newIndex,
-    actionId,
-    position,
-  } = raw as any;
+  const { tiles, load_ms, fromMock, widgetId, oldIndex, newIndex, actionId, position } = raw as any;
 
   return {
     tiles: Array.isArray(tiles)
-      ? tiles
-          .map((tile) => (typeof tile === 'string' ? tile : 'unknown'))
-          .slice(0, 20)
+      ? tiles.map((tile) => (typeof tile === 'string' ? tile : 'unknown')).slice(0, 20)
       : undefined,
     load_ms: typeof load_ms === 'number' ? load_ms : undefined,
     from_mock: Boolean(fromMock),
