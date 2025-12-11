@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useActionState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, useActionState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useFormStatus } from 'react-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -40,10 +40,19 @@ function SignInSubmitButton() {
 
 export function SignIn({ onBack, onCreateAccount }: SignInProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [clientError, setClientError] = useState<string | null>(null);
   const [formState, formAction, _isPending] = useActionState(signIn, INITIAL_STATE);
+
+  // Surface OAuth errors passed back via the callback route
+  useEffect(() => {
+    const oauthError = searchParams.get('error');
+    if (oauthError) {
+      setClientError(oauthError);
+    }
+  }, [searchParams]);
 
   // Safely extract error message (protects against Event objects)
   const error = clientError ?? (formState?.error ? getUserErrorMessage(formState.error) : null);

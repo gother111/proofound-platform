@@ -18,7 +18,7 @@ const initialState: OAuthState = {
 };
 
 export default function SocialSignInButtons({ className }: SocialSignInButtonsProps) {
-  const [state, formAction, _isPending] = useActionState(signInWithOAuth, initialState);
+  const [state, formAction, isPending] = useActionState(signInWithOAuth, initialState);
 
   return (
     <div className={cn('space-y-3', className)}>
@@ -30,8 +30,12 @@ export default function SocialSignInButtons({ className }: SocialSignInButtonsPr
           <LinkedInIcon className="h-5 w-5" aria-hidden="true" />
         </OAuthProviderForm>
       </div>
-      {state.error ? (
-        <p className="text-sm text-destructive" role="alert">
+      {isPending ? (
+        <p className="text-sm text-muted-foreground" role="status" aria-live="polite">
+          Redirecting to provider…
+        </p>
+      ) : state.error ? (
+        <p className="text-sm text-destructive" role="alert" aria-live="assertive">
           {state.error}
         </p>
       ) : null}

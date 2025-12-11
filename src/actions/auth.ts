@@ -533,7 +533,8 @@ export async function signInWithOAuth(
       return { error: 'Unable to start the sign-in flow. Please try again later.' };
     }
 
-    const supabase = await createClient();
+    // Allow Supabase to set the PKCE verifier + auth cookies for the OAuth flow
+    const supabase = await createClient({ allowCookieWrite: true });
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: result.data,
       options: {

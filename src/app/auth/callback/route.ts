@@ -66,7 +66,9 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const destinationPath = await resolveUserHomePath();
+  // Use the same Supabase client (which now holds the new session) to compute the destination.
+  // Creating a fresh client here would miss the just-set auth cookies and send users back to /login.
+  const destinationPath = await resolveUserHomePath(supabase);
 
   return NextResponse.redirect(new URL(destinationPath, requestUrl.origin));
 }
