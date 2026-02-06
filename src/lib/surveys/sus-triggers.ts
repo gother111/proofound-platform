@@ -13,6 +13,7 @@ import { db } from '@/db';
 import { susSurveyPrompts, profiles } from '@/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
+import { getRows } from '@/lib/db/rows';
 
 type SurveyTrigger = 'profile_activation' | 'first_assignment' | '10_matches' | 'quarterly_checkin';
 
@@ -105,7 +106,7 @@ export async function checkTenMatchesMilestone(userId: string): Promise<void> {
         AND user_id = ${userId}
     `);
 
-    const rows = result.rows as any[];
+    const rows = getRows(result as any) as any[];
     const matchCount = rows.length > 0 ? parseInt(rows[0].match_count) : 0;
 
     // Trigger survey exactly at 10 matches
@@ -220,7 +221,7 @@ export async function createQuarterlyCheckIns(): Promise<void> {
       LIMIT 100 -- Process in batches
     `);
 
-    const users = activeUsers.rows as any[];
+    const users = getRows(activeUsers as any) as any[];
     let created = 0;
 
     for (const user of users) {
