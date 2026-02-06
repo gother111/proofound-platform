@@ -6,6 +6,7 @@
 - Current state:
   - Clean worktree `npm ci` + `npm run build` passes on Node 20.
   - Vercel deployment failures since commit `400cc9e` were analyzed via Vercel deployment events and addressed with a sequence of build/type fixes.
+  - Remote Supabase migration workflow was reconciled so `supabase db push` works with pooler-safe parameters (migration-history sync PR: [#118](https://github.com/gother111/proofound-platform/pull/118)).
 
 ## Decisions
 - Standardize Drizzle raw SQL results with a helper (`getRows`) instead of relying on `.rows`. (`/Users/yuriibakurov/proofound/src/lib/db/rows.ts:3`)
@@ -36,5 +37,5 @@
 
 ## TODOs
 - Clarify and document migration source of truth (`supabase/migrations/` vs remote history) and recommended workflow.
+  - Documented: `supabase_migrations.schema_migrations` is canonical; `supabase db push` must use `statement_cache_capacity=0&prefer_simple_protocol=true&pgbouncer=true` when connecting via pooler (`:6543`).
 - Add a canonical “Vercel-like build reproduction” script (clean worktree, Node 20, `npm ci`, `npm run build`) and include it in `verification.md`.
-
