@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
 
     // Get recent reports
     const reports = await db.query.fairnessReports.findMany({
-      orderBy: [desc(fairnessReports.generatedAt)],
+      orderBy: [desc(fairnessReports.createdAt)],
       limit,
     });
 
