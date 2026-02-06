@@ -1,21 +1,10 @@
 import { headers } from 'next/headers';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { OrgShortlistClient, ShortlistItem } from '@/components/shortlist/OrgShortlistClient';
+import { OrgShortlistClient } from '@/components/shortlist/OrgShortlistClient';
+import type { ShortlistItem } from '@/components/shortlist/OrgShortlistClient';
 
 export const dynamic = 'force-dynamic';
-
-interface ShortlistItem {
-  id: string;
-  assignmentId: string;
-  assignmentRole: string | null;
-  assignmentStatus: string | null;
-  candidateId: string | null;
-  candidateName: string | null;
-  candidateEmail: string | null;
-  score: string | number | null;
-  createdAt: string;
-}
 
 export default async function OrgShortlistPage({
   params,
@@ -73,4 +62,3 @@ export default async function OrgShortlistPage({
     </div>
   );
 }
-
