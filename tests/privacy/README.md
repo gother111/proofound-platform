@@ -9,7 +9,7 @@ The tests are based on requirements from **CROSS_DOCUMENT_PRIVACY_AUDIT.md Secti
 ### 🎯 Core Privacy Scenarios (5)
 
 1. **Profile Privacy** - User A cannot read User B's profile
-2. **Verifier Email Protection** - Verifier emails hidden from public queries  
+2. **Verifier Email Protection** - Verifier emails hidden from public queries
 3. **Message Privacy** - Users can only read their own conversations
 4. **Analytics Isolation** - Users only see their own analytics events
 5. **Compensation Privacy** - Compensation data only visible to matched users
@@ -41,7 +41,7 @@ tests/privacy/
 
 ### 1. Prerequisites
 
-- ✅ Node.js 18+ installed
+- ✅ Node.js 20.20.0 installed (see `.nvmrc`)
 - ✅ Separate test Supabase project (NOT your production database!)
 - ✅ All dependencies installed (`npm install`)
 
@@ -169,24 +169,24 @@ expectOnlyUserData(data, userId, 'user_id', 'All data should belong to this user
 ```typescript
 test('✅ Positive case: User can access their own data', async () => {
   const userClient = await createAuthenticatedClient(user.email, user.password);
-  
+
   const { data, error } = await userClient
     .from('table_name')
     .select('*')
     .eq('user_id', user.id);
-  
+
   expectAuthorized(data, error, 'User should access their own data');
   expect(data).toBeDefined();
 });
 
 test('❌ Negative case: User cannot access other user's data', async () => {
   const userAClient = await createAuthenticatedClient(userA.email, userA.password);
-  
+
   const { data, error } = await userAClient
     .from('table_name')
     .select('*')
     .eq('user_id', userB.id);
-  
+
   expectUnauthorized(data, error, 'User A should not access User B's data');
 });
 ```
@@ -220,6 +220,7 @@ test('❌ Negative case: User cannot access other user's data', async () => {
 **Cause:** Environment variables not set correctly.
 
 **Solution:**
+
 1. Check that `.env.test` or `.env.local` exists
 2. Verify variable names are correct (e.g., `NEXT_PUBLIC_SUPABASE_URL`)
 3. Restart your terminal/IDE
@@ -229,6 +230,7 @@ test('❌ Negative case: User cannot access other user's data', async () => {
 **Cause:** Service role key is incorrect or missing.
 
 **Solution:**
+
 1. Verify `SUPABASE_SERVICE_ROLE_KEY` is set
 2. Check the key is correct in Supabase Dashboard → Settings → API
 3. Ensure email auth is enabled in your test project
@@ -238,6 +240,7 @@ test('❌ Negative case: User cannot access other user's data', async () => {
 **Cause:** Test database is missing tables.
 
 **Solution:**
+
 1. Run migrations on your test project:
    ```bash
    supabase db push --project-ref your-test-project-ref
@@ -249,6 +252,7 @@ test('❌ Negative case: User cannot access other user's data', async () => {
 **Cause:** Network latency to Supabase.
 
 **Solutions:**
+
 1. Use a test project in the same region
 2. Increase timeout in `vitest.supabase.config.ts`:
    ```typescript
@@ -262,6 +266,7 @@ test('❌ Negative case: User cannot access other user's data', async () => {
 **Cause:** Test failed before cleanup could run.
 
 **Solution:**
+
 1. Use Supabase Dashboard → Table Editor to delete test records
 2. Look for records with email containing `_rls_test@` or `_extended@`
 3. Or query and delete:
@@ -272,11 +277,13 @@ test('❌ Negative case: User cannot access other user's data', async () => {
 ### Test Passes Locally But Fails in CI
 
 **Causes:**
+
 1. Environment variables not set in CI
 2. Different Supabase project in CI
 3. Migrations not applied to CI test database
 
 **Solutions:**
+
 1. Set environment secrets in your CI platform (GitHub Actions, etc.)
 2. Ensure test database schema matches local
 3. Add migration step to CI workflow
@@ -321,18 +328,18 @@ Your RLS policies are correctly implemented if:
 
 ## 🎯 Test Coverage Goals
 
-| Category | Coverage | Status |
-|----------|----------|--------|
-| Profile Privacy | 100% | ✅ |
-| Verification Privacy | 100% | ✅ |
-| Message Privacy | 100% | ✅ |
-| Analytics Privacy | 100% | ✅ |
-| Compensation Privacy | 100% | ✅ |
-| Skills Privacy | 100% | ✅ |
-| Assignment Privacy | 100% | ✅ |
-| Organization Privacy | 100% | ✅ |
-| Blocked Users | 100% | ✅ |
-| Conversation Stages | 100% | ✅ |
+| Category             | Coverage | Status |
+| -------------------- | -------- | ------ |
+| Profile Privacy      | 100%     | ✅     |
+| Verification Privacy | 100%     | ✅     |
+| Message Privacy      | 100%     | ✅     |
+| Analytics Privacy    | 100%     | ✅     |
+| Compensation Privacy | 100%     | ✅     |
+| Skills Privacy       | 100%     | ✅     |
+| Assignment Privacy   | 100%     | ✅     |
+| Organization Privacy | 100%     | ✅     |
+| Blocked Users        | 100%     | ✅     |
+| Conversation Stages  | 100%     | ✅     |
 
 ## 📞 Need Help?
 
@@ -347,4 +354,3 @@ Your RLS policies are correctly implemented if:
 **Maintained By:** Engineering Team  
 **Test Framework:** Vitest + Supabase  
 **Test Count:** 50+ tests across 10 scenarios
-

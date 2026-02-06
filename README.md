@@ -75,7 +75,7 @@ Design system extracted from Figma "Proofound Style Guidelines":
 
 ## Prerequisites
 
-- Node.js 18+ and npm
+- Node.js 20.20.0 (see `.nvmrc`) and npm
 - Supabase account (free tier works)
 - Resend account (free tier works)
 - Vercel account (optional, for deployment)
