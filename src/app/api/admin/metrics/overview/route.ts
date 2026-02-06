@@ -222,8 +222,8 @@ async function calculatePercentile(
       `;
     }
 
-    const result = await db.execute<{ p_value: number }>(query);
-    return result.rows[0]?.p_value || null;
+    const [row] = await db.execute<{ p_value: number }>(query);
+    return row?.p_value ?? null;
   } catch (error) {
     console.error(`Failed to calculate ${percentile}th percentile for ${metricType}:`, error);
     return null;
