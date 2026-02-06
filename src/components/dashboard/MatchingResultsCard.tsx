@@ -324,18 +324,14 @@ export function MatchingResultsCard({ className, basePath = '/app/i' }: Matching
                     style={{ backgroundColor: '#E8E6DD' }}
                   />
                   {match.subscores.skills >= 0.7 && (
-                    <Star
-                      className="w-3 h-3"
-                      style={{ color: '#F59E0B' }}
-                      title="Strong skills match"
-                    />
+                    <span title="Strong skills match">
+                      <Star className="w-3 h-3" style={{ color: '#F59E0B' }} />
+                    </span>
                   )}
                   {match.subscores.values >= 0.7 && (
-                    <Shield
-                      className="w-3 h-3"
-                      style={{ color: '#1C4D3A' }}
-                      title="Values aligned"
-                    />
+                    <span title="Values aligned">
+                      <Shield className="w-3 h-3" style={{ color: '#1C4D3A' }} />
+                    </span>
                   )}
                 </div>
               </div>
