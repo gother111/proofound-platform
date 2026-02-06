@@ -15,13 +15,31 @@ export function ResetPasswordForm() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const validateEmail = (value: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(value);
+  };
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
 
+    const normalizedEmail = email.trim();
+    if (!normalizedEmail) {
+      setError('Please enter your email address.');
+      setIsLoading(false);
+      return;
+    }
+
+    if (!validateEmail(normalizedEmail)) {
+      setError('Please enter a valid email address.');
+      setIsLoading(false);
+      return;
+    }
+
     const formData = new FormData();
-    formData.append('email', email);
+    formData.append('email', normalizedEmail);
 
     const result = await requestPasswordReset(formData);
 
@@ -81,7 +99,7 @@ export function ResetPasswordForm() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6" noValidate>
             <div>
               <Label htmlFor="email" className="text-proofound-charcoal dark:text-foreground">
                 Email

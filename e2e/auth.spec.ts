@@ -152,7 +152,8 @@ test.describe('Authentication', () => {
       await expect(signupLink).toBeVisible();
 
       await signupLink.click();
-      await page.waitForURL(/signup/, { timeout: 5000 });
+      // In dev mode Next may need to compile the target route on first navigation.
+      await page.waitForURL(/signup/, { timeout: 15000 });
       await expect(page).toHaveURL(/signup/);
     });
 
@@ -163,7 +164,7 @@ test.describe('Authentication', () => {
       await expect(resetLink).toBeVisible();
 
       await resetLink.click();
-      await page.waitForURL(/reset-password/, { timeout: 5000 });
+      await page.waitForURL(/reset-password/, { timeout: 15000 });
       await expect(page).toHaveURL(/reset-password/);
     });
   });
@@ -201,7 +202,7 @@ test.describe('Authentication', () => {
       await expect(loginLink).toBeVisible();
 
       await loginLink.click();
-      await page.waitForURL(/login/, { timeout: 5000 });
+      await page.waitForURL(/login/, { timeout: 15000 });
       await expect(page).toHaveURL(/login/);
     });
   });
@@ -215,7 +216,7 @@ test.describe('Authentication', () => {
     test('should show error for invalid token', async ({ page }) => {
       await page.goto('/verify-email?token=invalid-token-12345');
       await expect(page.getByText(/invalid or expired verification link/i)).toBeVisible({
-        timeout: 5000,
+        timeout: 15000,
       });
     });
 

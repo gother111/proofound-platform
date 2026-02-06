@@ -55,8 +55,38 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
   const state = formState ?? INITIAL_STATE;
   const errorMessage = clientError ?? state.error;
 
+  const validateEmail = (value: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(value);
+  };
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     setClientError(null);
+
+    const normalizedEmail = email.trim();
+    if (!normalizedEmail) {
+      event.preventDefault();
+      setClientError('Please enter your email address.');
+      return;
+    }
+
+    if (!validateEmail(normalizedEmail)) {
+      event.preventDefault();
+      setClientError('Enter a valid email address.');
+      return;
+    }
+
+    if (!password) {
+      event.preventDefault();
+      setClientError('Please enter a password.');
+      return;
+    }
+
+    if (password.length < 8) {
+      event.preventDefault();
+      setClientError('Password must be at least 8 characters');
+      return;
+    }
 
     // Validate GDPR consent (required)
     if (!gdprConsent) {
@@ -208,7 +238,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
           )}
 
           {/* Signup Form */}
-          <form action={formAction} onSubmit={handleSubmit} className="space-y-6">
+          <form action={formAction} onSubmit={handleSubmit} className="space-y-6" noValidate>
             <input type="hidden" name="persona" value={personaValue} />
             <input type="hidden" name="gdprConsent" value={gdprConsent.toString()} />
             <input type="hidden" name="marketingOptIn" value={marketingOptIn.toString()} />
@@ -320,6 +350,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
               <label className="flex items-start gap-3 cursor-pointer group">
                 <input
                   type="checkbox"
+                  data-testid="gdpr-consent"
                   checked={gdprConsent}
                   onChange={(e) => setGdprConsent(e.target.checked)}
                   required
@@ -364,6 +395,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
               <label className="flex items-start gap-3 cursor-pointer group">
                 <input
                   type="checkbox"
+                  data-testid="marketing-opt-in"
                   checked={marketingOptIn}
                   onChange={(e) => setMarketingOptIn(e.target.checked)}
                   className={`mt-0.5 h-4 w-4 cursor-pointer rounded border-[#E8E6DD] transition-colors ${

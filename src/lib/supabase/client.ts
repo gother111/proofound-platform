@@ -21,12 +21,47 @@ const mockSupabaseClient = {
       },
       error: null,
     }),
-    signInWithPassword: async () => ({
-      data: { user: { id: MOCK_USER_ID }, session: {} },
-      error: null,
-    }),
+    signInWithPassword: async (credentials: { email?: string; password?: string }) => {
+      const email = (credentials?.email ?? '').trim().toLowerCase();
+      const password = credentials?.password ?? '';
+
+      const shouldFail =
+        !email ||
+        !password ||
+        email.includes('nonexistent') ||
+        password.startsWith('Wrong') ||
+        password.includes('WrongPassword');
+
+      if (shouldFail) {
+        return {
+          data: { user: null, session: null },
+          error: { message: 'Invalid login credentials', status: 400 },
+        };
+      }
+
+      return { data: { user: { id: MOCK_USER_ID }, session: {} }, error: null };
+    },
     signOut: async () => ({ error: null }),
-    signUp: async () => ({ data: { user: { id: MOCK_USER_ID }, session: {} }, error: null }),
+    signUp: async (payload: { email?: string; password?: string }) => {
+      const email = (payload?.email ?? '').trim().toLowerCase();
+
+      if (email.includes('existing@')) {
+        return { data: { user: { id: MOCK_USER_ID, identities: [] }, session: {} }, error: null };
+      }
+
+      return {
+        data: {
+          user: {
+            id: MOCK_USER_ID,
+            identities: [
+              { id: 'mock-identity-id', provider: 'email', created_at: new Date().toISOString() },
+            ],
+          },
+          session: {},
+        },
+        error: null,
+      };
+    },
     onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
   },
   from: (table: string) => ({

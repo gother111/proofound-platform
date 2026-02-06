@@ -33,25 +33,72 @@ const mockSupabaseClient = {
       },
       error: null,
     }),
-    signInWithPassword: async () => ({
-      data: { user: { id: MOCK_USER_ID }, session: {} },
-      error: null,
-    }),
+    signInWithPassword: async (credentials: { email?: string; password?: string }) => {
+      const email = (credentials?.email ?? '').trim().toLowerCase();
+      const password = credentials?.password ?? '';
+
+      // Deterministic failures for E2E coverage.
+      const shouldFail =
+        !email ||
+        !password ||
+        email.includes('nonexistent') ||
+        password.startsWith('Wrong') ||
+        password.includes('WrongPassword');
+
+      if (shouldFail) {
+        return {
+          data: { user: null, session: null },
+          error: { message: 'Invalid login credentials', status: 400 },
+        };
+      }
+
+      return {
+        data: { user: { id: MOCK_USER_ID }, session: {} },
+        error: null,
+      };
+    },
     signOut: async () => ({ error: null }),
-    signUp: async () => ({
-      data: {
-        user: {
-          id: MOCK_USER_ID,
-          identities: [
-            { id: 'mock-identity-id', provider: 'email', created_at: new Date().toISOString() },
-          ],
+    signUp: async (payload: { email?: string; password?: string }) => {
+      const email = (payload?.email ?? '').trim().toLowerCase();
+
+      // Simulate "email already registered" by returning no identities (Supabase behavior).
+      if (email.includes('existing@')) {
+        return {
+          data: {
+            user: { id: MOCK_USER_ID, identities: [] },
+            session: {},
+          },
+          error: null,
+        };
+      }
+
+      return {
+        data: {
+          user: {
+            id: MOCK_USER_ID,
+            identities: [
+              { id: 'mock-identity-id', provider: 'email', created_at: new Date().toISOString() },
+            ],
+          },
+          session: {},
         },
-        session: {},
-      },
-      error: null,
-    }),
+        error: null,
+      };
+    },
     resetPasswordForEmail: async () => ({ data: {}, error: null }),
-    verifyOtp: async () => ({ data: { user: { id: MOCK_USER_ID }, session: {} }, error: null }),
+    verifyOtp: async (payload: { token_hash?: string }) => {
+      const token = (payload?.token_hash ?? '').trim();
+      const shouldFail = !token || token.includes('invalid') || token.length < 8;
+
+      if (shouldFail) {
+        return {
+          data: { user: null, session: null },
+          error: { message: 'Invalid or expired verification link', status: 400 },
+        };
+      }
+
+      return { data: { user: { id: MOCK_USER_ID }, session: {} }, error: null };
+    },
     resend: async () => ({ data: {}, error: null }),
     onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
   },

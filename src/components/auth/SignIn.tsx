@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useActionState } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useFormStatus } from 'react-dom';
 import { motion } from 'framer-motion';
@@ -66,36 +67,27 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     setClientError(null);
 
-    // Validation with specific, helpful error messages
-    // if (!email && !password) {
-    //   event.preventDefault();
-    //   setClientError('Please enter your email address and password to continue.');
-    //   return;
-    // }
+    const formData = new FormData(event.currentTarget);
+    const email = String(formData.get('email') ?? '').trim();
+    const password = String(formData.get('password') ?? '');
 
-    // if (!email) {
-    //   event.preventDefault();
-    //   setClientError('Please enter your email address.');
-    //   return;
-    // }
+    if (!email) {
+      event.preventDefault();
+      setClientError('Please enter your email address.');
+      return;
+    }
 
-    // if (!validateEmail(email)) {
-    //   event.preventDefault();
-    //   setClientError('Please enter a valid email address (e.g., you@example.com).');
-    //   return;
-    // }
+    if (!validateEmail(email)) {
+      event.preventDefault();
+      setClientError('Please enter a valid email address.');
+      return;
+    }
 
-    // if (!password) {
-    //   event.preventDefault();
-    //   setClientError('Please enter your password.');
-    //   return;
-    // }
-
-    // if (password.length < 8) {
-    //   event.preventDefault();
-    //   setClientError('Your password must be at least 8 characters long.');
-    //   return;
-    // }
+    if (!password) {
+      event.preventDefault();
+      setClientError('Please enter your password.');
+      return;
+    }
   };
 
   // Layout container with Figma background tokens and animated accents
@@ -166,7 +158,13 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
           )}
 
           {/* Email + password form with proper ARIA attributes */}
-          <form action={formAction} className="space-y-6" aria-label="Sign in form" noValidate>
+          <form
+            action={formAction}
+            onSubmit={handleSubmit}
+            className="space-y-6"
+            aria-label="Sign in form"
+            noValidate
+          >
             <div className="space-y-2">
               <Label
                 htmlFor="email"
@@ -261,13 +259,12 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
                 />
                 Remember me
               </label>
-              <button
-                type="button"
+              <Link
+                href="/reset-password"
                 className="text-[14px] font-medium text-proofound-forest transition-colors hover:text-[#2D5D4A]"
-                onClick={() => router.push('/reset-password')}
               >
                 Forgot password?
-              </button>
+              </Link>
             </div>
 
             <SignInSubmitButton />
@@ -287,13 +284,18 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
           {/* Create account helper */}
           <div className="mt-7 text-center text-sm text-neutral-dark-500">
             <span>Don&apos;t have an account? </span>
-            <button
-              type="button"
-              onClick={onCreateAccount || (() => router.push('/signup'))}
+            <Link
+              href="/signup"
+              onClick={(event) => {
+                if (onCreateAccount) {
+                  event.preventDefault();
+                  onCreateAccount();
+                }
+              }}
               className="font-medium text-proofound-forest transition-colors hover:text-[#2D5D4A]"
             >
               Create account
-            </button>
+            </Link>
           </div>
         </Card>
 

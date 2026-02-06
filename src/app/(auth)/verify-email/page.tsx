@@ -2,8 +2,14 @@ import { Suspense } from 'react';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { VerifyEmailContent } from './VerifyEmailContent';
+import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: 'Verify Email | Proofound',
+  description: 'Verify your Proofound account email address.',
+};
 
 export default function VerifyEmailPage() {
   return (
