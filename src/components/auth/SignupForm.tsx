@@ -134,7 +134,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
             <h2 className="font-display text-2xl font-semibold tracking-tight text-[#2D3330]">
               Check your email
             </h2>
-            <p className="mt-3 text-sm leading-6 text-[#2D333099]">
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">
               We&apos;ve sent a verification link to{' '}
               <span
                 className={`font-medium ${
@@ -146,7 +146,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                 {email}
               </span>
             </p>
-            <p className="mt-4 text-sm leading-6 text-[#2D333099]">
+            <p className="mt-4 text-sm leading-6 text-muted-foreground">
               Click the link in the email to verify your account and complete your registration.
             </p>
             <Button
@@ -179,7 +179,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           onClick={onBack}
-          className="absolute left-6 top-6 flex items-center gap-2 text-[#2D333099] transition-colors hover:text-[#2D3330]"
+          className="absolute left-6 top-6 flex items-center gap-2 text-muted-foreground transition-colors hover:text-proofound-charcoal"
         >
           <ArrowLeft className="w-4 h-4" />
           <span className="text-sm">Back</span>
@@ -219,7 +219,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
             <h1 className="font-display text-[28px] font-semibold leading-9 tracking-[-0.01em] text-[#2D3330]">
               Create your {accountType} account
             </h1>
-            <p className="mt-3 text-sm leading-6 text-[#2D333099]">
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">
               Join Proofound and start building credibility.
             </p>
           </div>
@@ -267,7 +267,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className={`h-11 rounded-xl border border-[#E8E6DD] bg-white pl-12 pr-4 text-[15px] text-[#2D3330] placeholder:text-[#2D3330]/40 transition-all focus-visible:border-2 focus-visible:px-[43px] focus-visible:ring-[3px] ${
+                  className={`h-11 rounded-xl border border-[#E8E6DD] bg-white pl-12 pr-4 text-[15px] text-[#2D3330] transition-all focus-visible:border-2 focus-visible:px-[43px] focus-visible:ring-[3px] ${
                     accountType === 'organization'
                       ? 'focus-visible:border-proofound-terracotta focus-visible:ring-proofound-terracotta/10'
                       : 'focus-visible:border-proofound-forest focus-visible:ring-proofound-forest/10'
@@ -298,7 +298,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={8}
-                  className={`h-11 rounded-xl border border-[#E8E6DD] bg-white pl-12 pr-12 text-[15px] text-[#2D3330] placeholder:text-[#2D3330]/40 transition-all focus-visible:border-2 focus-visible:px-[43px] focus-visible:ring-[3px] ${
+                  className={`h-11 rounded-xl border border-[#E8E6DD] bg-white pl-12 pr-12 text-[15px] text-[#2D3330] transition-all focus-visible:border-2 focus-visible:px-[43px] focus-visible:ring-[3px] ${
                     accountType === 'organization'
                       ? 'focus-visible:border-proofound-terracotta focus-visible:ring-proofound-terracotta/10'
                       : 'focus-visible:border-proofound-forest focus-visible:ring-proofound-forest/10'
@@ -307,7 +307,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#2D333099] transition-colors hover:text-[#2D3330]"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-proofound-charcoal"
                   tabIndex={-1}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -336,7 +336,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 minLength={8}
-                className={`h-11 rounded-xl border border-[#E8E6DD] bg-white px-4 text-[15px] text-[#2D3330] placeholder:text-[#2D3330]/40 transition-all focus-visible:border-2 focus-visible:px-[15px] focus-visible:ring-[3px] ${
+                className={`h-11 rounded-xl border border-[#E8E6DD] bg-white px-4 text-[15px] text-[#2D3330] transition-all focus-visible:border-2 focus-visible:px-[15px] focus-visible:ring-[3px] ${
                   accountType === 'organization'
                     ? 'focus-visible:border-proofound-terracotta focus-visible:ring-proofound-terracotta/10'
                     : 'focus-visible:border-proofound-forest focus-visible:ring-proofound-forest/10'
@@ -404,7 +404,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                       : 'text-proofound-forest focus:ring-proofound-forest/20'
                   }`}
                 />
-                <span className="text-sm leading-5 text-[#2D333099]">
+                <span className="text-sm leading-5 text-muted-foreground">
                   Send me updates about new features and matching opportunities
                 </span>
               </label>
@@ -418,7 +418,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
           {/* Divider */}
           <div className="relative my-6">
             <Separator className="bg-[#E8E6DD]" />
-            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-4 text-center text-xs font-medium uppercase tracking-[0.16em] text-[#2D333099]">
+            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-4 text-center text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
               Or continue with
             </span>
           </div>
@@ -428,7 +428,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
 
           {/* Sign In Link */}
           <div className="mt-6 text-center">
-            <p className="text-sm text-[#2D333099]">
+            <p className="text-sm text-muted-foreground">
               Already have an account?{' '}
               <button
                 type="button"
@@ -446,7 +446,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
         </Card>
 
         {/* Footer Text */}
-        <p className="mt-6 text-center text-xs text-[#2D333099]">
+        <p className="mt-6 text-center text-xs text-muted-foreground">
           By creating an account, you agree to our{' '}
           <a
             href="/terms"

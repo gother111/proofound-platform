@@ -12,6 +12,7 @@ import { GlobalErrorHandler } from '@/components/GlobalErrorHandler';
 import { WebVitalsReporter } from '@/components/WebVitalsReporter';
 import { PerformanceTracker } from '@/components/PerformanceTracker';
 import { SUSPromptHost } from '@/components/surveys/SUSPromptHost';
+import { SkipToContentLink } from '@/components/a11y/SkipToContentLink';
 
 /**
  * Root Layout Component
@@ -47,18 +48,15 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="font-sans antialiased">
-        {/* Skip to main content link for keyboard users - hidden until focused */}
-        <a
-          href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-proofound-forest focus:text-white focus:rounded-lg focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-proofound-forest focus:ring-offset-2"
-        >
-          Skip to main content
-        </a>
+        <SkipToContentLink />
         <ErrorBoundary>
           <NextIntlClientProvider messages={messages}>
             <GlobalErrorHandler />
             <SUSPromptHost />
-            {children}
+            {/* Focus target for the skip link. Avoid wrapping in <main> to prevent nested main landmarks. */}
+            <div id="main-content" tabIndex={-1}>
+              {children}
+            </div>
             <Toaster />
             <ChatWidget />
             <CookieBanner />

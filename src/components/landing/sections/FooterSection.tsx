@@ -56,14 +56,16 @@ export function FooterSection() {
             </p>
             <div className="flex gap-4 pt-4">
               {[
-                { icon: Twitter, href: '#' },
-                { icon: Linkedin, href: '#' },
-                { icon: Github, href: '#' },
-                { icon: Mail, href: 'mailto:hello@proofound.io' },
+                { icon: Twitter, href: '#', label: 'Twitter' },
+                { icon: Linkedin, href: '#', label: 'LinkedIn' },
+                { icon: Github, href: '#', label: 'GitHub' },
+                { icon: Mail, href: 'mailto:hello@proofound.io', label: 'Email' },
               ].map((social, idx) => (
                 <a
                   key={idx}
                   href={social.href}
+                  aria-label={social.label}
+                  title={social.label}
                   className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white hover:text-japandi-charcoal transition-all duration-300 hover:scale-110 group"
                 >
                   <social.icon className="w-5 h-5" />

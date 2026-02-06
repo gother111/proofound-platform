@@ -41,22 +41,34 @@ test.describe('Keyboard Navigation', () => {
   test('Form inputs should be keyboard accessible', async ({ page }) => {
     await page.goto('/login');
 
-    // Tab to email field
-    await page.keyboard.press('Tab'); // Skip link
-    await page.keyboard.press('Tab'); // Email input
+    const emailInput = page.getByLabel(/email address/i);
+    const passwordInput = page.getByLabel(/^password/i);
+    const submitButton = page.getByRole('button', { name: /sign in/i });
+
+    // Tab forward until the email field receives focus (avoid brittle tab counts).
+    for (let i = 0; i < 25; i++) {
+      if (await emailInput.evaluate((el) => el === document.activeElement)) break;
+      await page.keyboard.press('Tab');
+    }
+    await expect(emailInput).toBeFocused();
 
     // Type in email
     await page.keyboard.type('test@example.com');
 
-    // Tab to password
-    await page.keyboard.press('Tab');
+    // Tab forward until the password field receives focus.
+    for (let i = 0; i < 25; i++) {
+      if (await passwordInput.evaluate((el) => el === document.activeElement)) break;
+      await page.keyboard.press('Tab');
+    }
+    await expect(passwordInput).toBeFocused();
     await page.keyboard.type('password123');
 
-    // Tab to submit button
-    await page.keyboard.press('Tab');
-
-    // Should be on the submit button
-    const submitButton = page.getByRole('button', { name: /sign in/i });
+    // Tab forward until the submit button receives focus (there may be intermediate controls
+    // like "show password" buttons).
+    for (let i = 0; i < 25; i++) {
+      if (await submitButton.evaluate((el) => el === document.activeElement)) break;
+      await page.keyboard.press('Tab');
+    }
     await expect(submitButton).toBeFocused();
 
     // Press Enter to submit (will fail auth, but that's ok)
