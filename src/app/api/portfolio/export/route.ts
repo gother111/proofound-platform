@@ -37,20 +37,15 @@ export async function GET() {
       visibility: data.visibility,
     });
 
-    // NextResponse's BodyInit typing doesn't accept Node.js Buffer directly.
-    // Convert to an ArrayBuffer-backed Uint8Array.
-    const arrayBuffer = buffer.buffer.slice(
-      buffer.byteOffset,
-      buffer.byteOffset + buffer.byteLength
-    );
-    const bytes = new Uint8Array(arrayBuffer);
+    // Use a Blob to satisfy NextResponse BodyInit typing across runtimes.
+    const blob = new Blob([buffer], { type: 'application/pdf' });
 
-    return new NextResponse(bytes, {
+    return new NextResponse(blob, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': 'attachment; filename="proofound-trust.pdf"',
-        'Content-Length': bytes.byteLength.toString(),
+        'Content-Length': buffer.byteLength.toString(),
       },
     });
   } catch (error) {
