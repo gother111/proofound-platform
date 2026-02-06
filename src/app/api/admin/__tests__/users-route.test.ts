@@ -3,7 +3,6 @@ import { NextRequest } from 'next/server';
 import { GET } from '../users/route';
 import * as adminAuth from '@/lib/auth/admin';
 import * as dbModule from '@/db';
-import { profiles } from '@/db/schema';
 
 // Helper to build a NextRequest with query params
 function buildRequest(url: string) {
@@ -32,6 +31,7 @@ describe('admin users route', () => {
       email: 'a@example.com',
     } as any);
 
+    // DB is never called if query validation fails, but keep a safe stub.
     vi.spyOn(dbModule, 'db', 'get').mockReturnValue({
       select: () => ({
         from: () => ({
@@ -81,25 +81,27 @@ describe('admin users route', () => {
       where: vi.fn().mockReturnThis(),
     } as any);
 
-    vi.spyOn(dbModule, 'db', 'get').mockReturnValueOnce({
-      select: () => ({
-        from: () => ({
-          where: () => ({
-            limit: () => ({
-              offset: () => ({
-                orderBy: () => mockUsers,
+    vi.spyOn(dbModule, 'db', 'get')
+      .mockReturnValueOnce({
+        select: () => ({
+          from: () => ({
+            where: () => ({
+              limit: () => ({
+                offset: () => ({
+                  orderBy: () => mockUsers,
+                }),
               }),
             }),
           }),
         }),
-      }),
-    } as any).mockReturnValue({
-      select: () => ({
-        from: () => ({
-          where: () => [{ count: 2 }],
+      } as any)
+      .mockReturnValue({
+        select: () => ({
+          from: () => ({
+            where: () => [{ count: 2 }],
+          }),
         }),
-      }),
-    } as any);
+      } as any);
 
     const req = buildRequest('https://example.com/api/admin/users?limit=2&page=1');
     const res = (await GET(req)) as Response;
@@ -109,4 +111,3 @@ describe('admin users route', () => {
     expect(body.users.length).toBe(2);
   });
 });
-
