@@ -471,9 +471,13 @@ export async function emitProfileCreated(userId: string, properties?: Record<str
 
 export async function emitProfileActivated(
   userId: string,
-  activationDurationMs: number,
+  activationDurationMsOrProperties: number | Record<string, any>,
   properties?: Record<string, any>
 ) {
+  const isDuration = typeof activationDurationMsOrProperties === 'number';
+  const activationDurationMs = isDuration ? activationDurationMsOrProperties : undefined;
+  const props = isDuration ? properties : activationDurationMsOrProperties;
+
   await emitAnalyticsEvent({
     eventType: 'profile_activated',
     userId,
@@ -481,17 +485,21 @@ export async function emitProfileActivated(
     entityType: 'profile',
     entityId: userId,
     properties: {
-      activation_duration_ms: activationDurationMs,
-      ...properties,
+      ...(activationDurationMs != null ? { activation_duration_ms: activationDurationMs } : null),
+      ...props,
     },
   });
 }
 
 export function emitProfileActivatedAsync(
   userId: string,
-  activationDurationMs: number,
+  activationDurationMsOrProperties: number | Record<string, any>,
   properties?: Record<string, any>
 ): void {
+  const isDuration = typeof activationDurationMsOrProperties === 'number';
+  const activationDurationMs = isDuration ? activationDurationMsOrProperties : undefined;
+  const props = isDuration ? properties : activationDurationMsOrProperties;
+
   emitAnalyticsEventAsync({
     eventType: 'profile_activated',
     userId,
@@ -499,8 +507,8 @@ export function emitProfileActivatedAsync(
     entityType: 'profile',
     entityId: userId,
     properties: {
-      activation_duration_ms: activationDurationMs,
-      ...properties,
+      ...(activationDurationMs != null ? { activation_duration_ms: activationDurationMs } : null),
+      ...props,
     },
   });
 }
