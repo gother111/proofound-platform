@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { AdminUser } from '@/lib/auth/admin';
+import { apiFetch } from '@/lib/api/fetch';
 import { AdminGrowthChart } from './analytics/AdminGrowthChart';
 import { FairnessNoteDashboard } from '../analytics/FairnessNoteDashboard';
 import { MetricsDashboard } from '../metrics/MetricsDashboard';
