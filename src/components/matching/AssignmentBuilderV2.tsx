@@ -281,19 +281,25 @@ export function AssignmentBuilderV2({ onComplete, onCancel }: AssignmentBuilderV
 
       <div className="bg-card rounded-lg border p-6">
         {currentStep === 1 && (
-          <Step1BusinessValue form={form} onNext={handleNext} />
+          <Step1BusinessValue
+            form={form}
+            onNext={() => void handleNext()}
+            onOpenTemplatePicker={() => {}}
+            appliedTemplateName={null}
+            isLoadingTemplates={false}
+          />
         )}
 
         {currentStep === 2 && (
-          <Step2TargetOutcomes form={form} onNext={handleNext} onBack={handleBack} />
+          <Step2TargetOutcomes form={form} onNext={() => void handleNext()} onBack={handleBack} />
         )}
 
         {currentStep === 3 && (
-          <Step3WeightMatrix form={form} onNext={handleNext} onBack={handleBack} />
+          <Step3WeightMatrix form={form} onNext={() => void handleNext()} onBack={handleBack} />
         )}
 
         {currentStep === 4 && (
-          <Step4Practicals form={form} onNext={handleNext} onBack={handleBack} />
+          <Step4Practicals form={form} onNext={() => void handleNext()} onBack={handleBack} />
         )}
 
         {currentStep === 5 && (
@@ -319,4 +325,3 @@ export function AssignmentBuilderV2({ onComplete, onCancel }: AssignmentBuilderV
     </div>
   );
 }
-
