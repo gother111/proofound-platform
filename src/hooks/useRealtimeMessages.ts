@@ -1,6 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import type {
+  RealtimePostgresChangesPayload,
+  RealtimePresenceJoinPayload,
+  RealtimePresenceLeavePayload,
+} from '@supabase/realtime-js';
 import { toast } from 'sonner';
 
 export interface Message {
@@ -69,7 +74,7 @@ export function useRealtimeMessages({
           table: 'messages',
           filter: `conversation_id=eq.${conversationId}`,
         },
-        (payload) => {
+        (payload: RealtimePostgresChangesPayload<Message>) => {
           const newMessage = payload.new as Message;
 
           // Don't show notification for own messages
@@ -89,7 +94,7 @@ export function useRealtimeMessages({
           table: 'messages',
           filter: `conversation_id=eq.${conversationId}`,
         },
-        (payload) => {
+        (payload: RealtimePostgresChangesPayload<Message>) => {
           const updatedMessage = payload.new as Message;
 
           // Handle read receipt
@@ -115,13 +120,13 @@ export function useRealtimeMessages({
           onTypingStop?.(otherUsers[0]);
         }
       })
-      .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+      .on('presence', { event: 'join' }, ({ key, newPresences }: RealtimePresenceJoinPayload<PresenceState>) => {
         console.log('User joined:', key, newPresences);
       })
-      .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+      .on('presence', { event: 'leave' }, ({ key, leftPresences }: RealtimePresenceLeavePayload<PresenceState>) => {
         console.log('User left:', key, leftPresences);
       })
-      .subscribe(async (status) => {
+      .subscribe(async (status: string) => {
         if (status === 'SUBSCRIBED') {
           setIsConnected(true);
 
