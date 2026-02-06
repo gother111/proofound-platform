@@ -24,10 +24,10 @@
   },
   "include": [
     "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "proofound-mvp", "tests", "scripts"]
+  "exclude": ["node_modules", "proofound-mvp", "tests", "e2e", "scripts"]
 }
