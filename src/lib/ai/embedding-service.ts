@@ -47,10 +47,11 @@ async function getEmbeddingPipeline(): Promise<Pipeline> {
       const startTime = Date.now();
 
       // Load the feature-extraction pipeline
-      embeddingPipeline = await pipeline('feature-extraction', MODEL_NAME, {
+      const loaded = await pipeline('feature-extraction', MODEL_NAME, {
         // Use quantized model for faster loading and inference
         quantized: true,
       });
+      embeddingPipeline = loaded;
 
       const loadTime = Date.now() - startTime;
       log.info('embedding.model.loaded', {
@@ -58,7 +59,7 @@ async function getEmbeddingPipeline(): Promise<Pipeline> {
         loadTimeMs: loadTime,
       });
 
-      return embeddingPipeline;
+      return loaded;
     } catch (error) {
       log.error('embedding.model.load_failed', {
         model: MODEL_NAME,
