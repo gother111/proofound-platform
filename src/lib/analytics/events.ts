@@ -444,6 +444,20 @@ export async function emitEvent(event: {
 // PROFILE EVENTS
 // ============================================================================
 
+export async function emitUserSignup(
+  userId: string,
+  signupMethod: string,
+  properties?: { persona?: string; marketingOptIn?: boolean; [key: string]: any }
+): Promise<void> {
+  const { persona, marketingOptIn, ...rest } = properties ?? {};
+  await emitProfileCreated(userId, {
+    signup_method: signupMethod,
+    persona,
+    marketing_opt_in: marketingOptIn,
+    ...rest,
+  });
+}
+
 export async function emitProfileCreated(userId: string, properties?: Record<string, any>) {
   await emitAnalyticsEvent({
     eventType: 'profile_created',
