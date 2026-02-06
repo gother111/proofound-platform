@@ -22,6 +22,7 @@ export const EventType = {
   PROFILE_CREATED: 'profile_created',
   PROFILE_ACTIVATED: 'profile_activated', // Minimum L4 skills + matchable
   PROFILE_UPDATED: 'profile_updated',
+  PURPOSE_UPDATED: 'purpose_updated',
 
   // Expertise & Skills
   L4_SKILL_ADDED: 'l4_skill_added',
@@ -29,12 +30,15 @@ export const EventType = {
   CV_IMPORTED: 'cv_imported',
 
   // Matching
+  MATCH_GENERATED: 'match_generated',
   MATCHING_PROFILE_CREATED: 'matching_profile_created',
   SHORTLIST_GENERATED: 'shortlist_generated',
   MATCH_VIEWED: 'match_viewed',
   MATCH_ACTIONED: 'match_actioned', // intro, pass, snooze
+  MATCH_INTRODUCED: 'match_introduced',
   MATCH_SNOOZED: 'match_snoozed',
   MATCH_UNSNOOZED: 'match_unsnoozed',
+  FIRST_MATCH_SHOWN: 'first_match_shown',
 
   // Introductions & Applications
   FIRST_QUALIFIED_INTRO: 'first_qualified_intro', // TTFQI endpoint
@@ -53,24 +57,41 @@ export const EventType = {
   OFFER_ACCEPTED: 'offer_accepted',
   CONTRACT_SIGNED: 'contract_signed', // TTSC endpoint
 
+  // Decisions
+  DECISION_MADE: 'decision_made',
+
   // Organizations
   ASSIGNMENT_CREATED: 'assignment_created',
   ASSIGNMENT_PUBLISHED: 'assignment_published',
+  TTFQI_WARNING_EMITTED: 'ttfqi_warning_emitted',
 
   // Well-being (Zen Hub)
   WELLBEING_OPT_IN: 'wellbeing_opt_in',
   WELLBEING_CHECKIN: 'wellbeing_checkin',
   WELLBEING_REFLECTION: 'wellbeing_reflection',
+  WELLBEING_CHECKIN_SUBMITTED: 'wellbeing_checkin_submitted',
+  WELLBEING_OPT_IN_CHANGED: 'wellbeing_opt_in_changed',
+  REFLECTION_ADDED: 'reflection_added',
 
   // Usability
   SUS_SURVEY_COMPLETED: 'sus_survey_completed',
   TOUR_STARTED: 'tour_started',
   TOUR_COMPLETED: 'tour_completed',
   TOUR_SKIPPED: 'tour_skipped',
+  PRIVACY_BANNER_ACKNOWLEDGED: 'privacy_banner_acknowledged',
+
+  // Verification & attestations
+  ATTESTATION_REQUESTED: 'attestation_requested',
+  ATTESTATION_PROVIDED: 'attestation_provided',
+
+  // Skill proof events
+  SKILL_PROOF_ADDED: 'skill_proof_added',
+  SKILL_PROOF_DELETED: 'skill_proof_deleted',
 
   // Privacy
   VISIBILITY_CHANGED: 'visibility_changed',
   REDACT_MODE_TOGGLED: 'redact_mode_toggled',
+  PRIVACY_SETTINGS_UPDATED: 'privacy_settings_updated',
   // Performance and diagnostics
   PERFORMANCE_METRIC: 'performance_metric',
   PAGE_VIEW: 'page',
@@ -303,15 +324,19 @@ export function getEventDisplayName(eventType: EventTypeValue): string {
     [EventType.PROFILE_CREATED]: 'Profile Created',
     [EventType.PROFILE_ACTIVATED]: 'Profile Activated',
     [EventType.PROFILE_UPDATED]: 'Profile Updated',
+    [EventType.PURPOSE_UPDATED]: 'Purpose Updated',
     [EventType.L4_SKILL_ADDED]: 'Skill Added',
     [EventType.PROOF_UPLOADED]: 'Proof Uploaded',
     [EventType.CV_IMPORTED]: 'CV Imported',
+    [EventType.MATCH_GENERATED]: 'Match Generated',
     [EventType.MATCHING_PROFILE_CREATED]: 'Matching Profile Created',
     [EventType.SHORTLIST_GENERATED]: 'Shortlist Generated',
     [EventType.MATCH_VIEWED]: 'Match Viewed',
     [EventType.MATCH_ACTIONED]: 'Match Actioned',
+    [EventType.MATCH_INTRODUCED]: 'Match Introduced',
     [EventType.MATCH_SNOOZED]: 'Match Snoozed',
     [EventType.MATCH_UNSNOOZED]: 'Match Unsnoozed',
+    [EventType.FIRST_MATCH_SHOWN]: 'First Match Shown',
     [EventType.FIRST_QUALIFIED_INTRO]: 'First Qualified Introduction',
     [EventType.APPLICATION_SUBMITTED]: 'Application Submitted',
     [EventType.APPLICATION_ACCEPTED]: 'Application Accepted',
@@ -323,17 +348,28 @@ export function getEventDisplayName(eventType: EventTypeValue): string {
     [EventType.OFFER_SENT]: 'Offer Sent',
     [EventType.OFFER_ACCEPTED]: 'Offer Accepted',
     [EventType.CONTRACT_SIGNED]: 'Contract Signed',
+    [EventType.DECISION_MADE]: 'Decision Made',
     [EventType.ASSIGNMENT_CREATED]: 'Assignment Created',
     [EventType.ASSIGNMENT_PUBLISHED]: 'Assignment Published',
+    [EventType.TTFQI_WARNING_EMITTED]: 'TTFQI Warning Emitted',
     [EventType.WELLBEING_OPT_IN]: 'Well-being Opt-In',
     [EventType.WELLBEING_CHECKIN]: 'Well-being Check-In',
     [EventType.WELLBEING_REFLECTION]: 'Well-being Reflection',
+    [EventType.WELLBEING_CHECKIN_SUBMITTED]: 'Well-being Check-In Submitted',
+    [EventType.WELLBEING_OPT_IN_CHANGED]: 'Well-being Opt-In Changed',
+    [EventType.REFLECTION_ADDED]: 'Reflection Added',
     [EventType.SUS_SURVEY_COMPLETED]: 'SUS Survey Completed',
     [EventType.TOUR_STARTED]: 'Tour Started',
     [EventType.TOUR_COMPLETED]: 'Tour Completed',
     [EventType.TOUR_SKIPPED]: 'Tour Skipped',
+    [EventType.PRIVACY_BANNER_ACKNOWLEDGED]: 'Privacy Banner Acknowledged',
+    [EventType.ATTESTATION_REQUESTED]: 'Attestation Requested',
+    [EventType.ATTESTATION_PROVIDED]: 'Attestation Provided',
+    [EventType.SKILL_PROOF_ADDED]: 'Skill Proof Added',
+    [EventType.SKILL_PROOF_DELETED]: 'Skill Proof Deleted',
     [EventType.VISIBILITY_CHANGED]: 'Visibility Changed',
     [EventType.REDACT_MODE_TOGGLED]: 'Redact Mode Toggled',
+    [EventType.PRIVACY_SETTINGS_UPDATED]: 'Privacy Settings Updated',
     [EventType.PERFORMANCE_METRIC]: 'Performance Metric',
     [EventType.PAGE_VIEW]: 'Page View',
     [EventType.API_EVENT]: 'API Event',
