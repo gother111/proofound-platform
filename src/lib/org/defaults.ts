@@ -209,7 +209,15 @@ export function getOnboardingChecklist(type: OrgType | string | undefined | null
 }> {
   const orgType = (type as OrgType) || 'company';
 
-  const baseChecklists = {
+  const baseChecklists: Partial<Record<
+    OrgType,
+    Array<{
+      id: string;
+      label: string;
+      description: string;
+      priority: 'high' | 'medium' | 'low';
+    }>
+  >> = {
     company: [
       {
         id: 'mission',
@@ -290,5 +298,5 @@ export function getOnboardingChecklist(type: OrgType | string | undefined | null
     ],
   };
 
-  return baseChecklists[orgType] || baseChecklists.company;
+  return baseChecklists[orgType] || baseChecklists.company || [];
 }
