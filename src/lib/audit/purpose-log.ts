@@ -8,6 +8,7 @@
 import { db } from '@/db';
 import { purposeEditLog } from '@/db/schema';
 import { log } from '@/lib/log';
+import { and, desc, eq } from 'drizzle-orm';
 
 /**
  * Log a change to mission or vision field
@@ -61,17 +62,16 @@ export async function getPurposeEditHistory(
   limit: number = 50
 ) {
   try {
-    let query = db
+    const whereClause = fieldName
+      ? and(eq(purposeEditLog.userId, userId), eq(purposeEditLog.fieldName, fieldName))
+      : eq(purposeEditLog.userId, userId);
+
+    const history = await db
       .select()
       .from(purposeEditLog)
-      .where((t) => t.userId === userId)
-      .$dynamic();
-
-    if (fieldName) {
-      query = query.where((t: any) => t.fieldName === fieldName);
-    }
-
-    const history = await query.orderBy((t: any, { desc }) => [desc(t.changedAt)]).limit(limit);
+      .where(whereClause)
+      .orderBy(desc(purposeEditLog.changedAt))
+      .limit(limit);
 
     return history;
   } catch (error) {
