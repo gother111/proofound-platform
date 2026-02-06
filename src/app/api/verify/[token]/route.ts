@@ -235,7 +235,7 @@ export async function POST(
     // Emit verification provided analytics event (PRD F7)
     try {
       const { emitVerificationProvided } = await import('@/lib/analytics/events');
-      await emitVerificationProvided(verification.id, {
+      await emitVerificationProvided(verification.requester_profile_id, verification.id, {
         skill_id: verification.skill_id,
         requester_id: verification.requester_profile_id,
         action: validated.action === 'accept' ? 'accepted' : 'declined',
