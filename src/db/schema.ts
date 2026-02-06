@@ -139,6 +139,7 @@ export const organizations = pgTable('organizations', {
   slug: text('slug').unique().notNull(),
   legalName: text('legal_name'),
   displayName: text('display_name').notNull(),
+  verified: boolean('verified').default(false),
   type: text('type', {
     enum: ['company', 'ngo', 'government', 'network', 'other'],
   }),
