@@ -3,7 +3,6 @@ import { NextRequest } from 'next/server';
 import { GET } from '../users/route';
 import * as adminAuth from '@/lib/auth/admin';
 import * as dbModule from '@/db';
-import { profiles } from '@/db/schema';
 
 // Helper to build a NextRequest with query params
 function buildRequest(url: string) {
@@ -32,6 +31,7 @@ describe('admin users route', () => {
       email: 'a@example.com',
     } as any);
 
+    // DB is never called if query validation fails, but keep a safe stub.
     vi.spyOn(dbModule, 'db', 'get').mockReturnValue({
       select: () => ({
         from: () => ({
