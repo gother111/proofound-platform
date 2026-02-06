@@ -117,13 +117,21 @@ export function AssignmentBuilder({ orgId, orgSlug }: AssignmentBuilderProps) {
   const renderStep = () => {
     switch (currentStep) {
       case 0:
-        return <Step1BusinessValue form={form} onNext={handleNext} />;
+        return (
+          <Step1BusinessValue
+            form={form}
+            onNext={() => void handleNext()}
+            onOpenTemplatePicker={() => {}}
+            appliedTemplateName={null}
+            isLoadingTemplates={false}
+          />
+        );
       case 1:
-        return <Step2TargetOutcomes form={form} onNext={handleNext} onBack={handleBack} />;
+        return <Step2TargetOutcomes form={form} onNext={() => void handleNext()} onBack={handleBack} />;
       case 2:
-        return <Step3WeightMatrix form={form} onNext={handleNext} onBack={handleBack} />;
+        return <Step3WeightMatrix form={form} onNext={() => void handleNext()} onBack={handleBack} />;
       case 3:
-        return <Step4Practicals form={form} onNext={handleNext} onBack={handleBack} />;
+        return <Step4Practicals form={form} onNext={() => void handleNext()} onBack={handleBack} />;
       case 4:
         return (
           <Step5ExpertiseMapping
