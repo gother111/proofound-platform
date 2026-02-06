@@ -54,10 +54,7 @@ export async function GET(request: NextRequest) {
     // For now, we'll allow any authenticated user to view metrics
     // TODO: Implement proper admin/org-level authorization
     const isOrgMember = await db.query.organizationMembers.findFirst({
-      where: and(
-        eq(organizationMembers.userId, user.id),
-        eq(organizationMembers.status, 'active')
-      ),
+      where: and(eq(organizationMembers.userId, user.id), eq(organizationMembers.status, 'active')),
     });
 
     if (!isOrgMember) {
@@ -87,13 +84,13 @@ export async function GET(request: NextRequest) {
 
     switch (metric) {
       case 'ttsc':
-        metrics = { ttsc: await calculateTTSC(startDate, endDate) };
+        metrics = { ttsc: await calculateTTSC(cohort, startDate, endDate) };
         break;
       case 'ttfqi':
-        metrics = { ttfqi: await calculateTTFQI(startDate, endDate, cohort) };
+        metrics = { ttfqi: await calculateTTFQI(cohort, startDate, endDate) };
         break;
       case 'ttv':
-        metrics = { ttv: await calculateTTV(startDate, endDate, cohort) };
+        metrics = { ttv: await calculateTTV(cohort, startDate, endDate) };
         break;
       case 'pac':
         metrics = { pac: await calculatePACLift(startDate, endDate) };
