@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { OrganizationMatchingEmpty } from '@/components/matching/OrganizationMatchingEmpty';
-import { AssignmentBuilder } from '@/components/matching/AssignmentBuilder';
+import { AssignmentBuilderV2 } from '@/components/matching/AssignmentBuilderV2';
 import { MatchingOrganizationView } from '@/components/matching/MatchingOrganizationView';
 import { toast } from 'sonner';
 
@@ -42,7 +42,7 @@ export default function OrgMatchingPage() {
   // Show builder if triggered
   if (showBuilder) {
     return (
-      <AssignmentBuilder
+      <AssignmentBuilderV2
         onComplete={(assignmentId) => {
           setShowBuilder(false);
           router.refresh();
