@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       : undefined;
     const cohort = searchParams.get('cohort') || undefined;
 
-    const result = await calculateTTFQI(startDate, endDate, cohort);
+    const result = await calculateTTFQI(cohort, startDate, endDate);
 
     if (!result) {
       return NextResponse.json({
