@@ -36,12 +36,9 @@ export async function GET(request: NextRequest) {
     };
 
     for (const row of integrations as any[]) {
-      const isZoom = row.provider === 'zoom';
-      const key = isZoom ? 'zoom' : 'google';
-
-      // Check if token is expired
-      const expiry = new Date(row.token_expiry);
-      const isExpired = expiry < new Date();
+      const key = row.provider === 'zoom' ? 'zoom' : 'google';
+      const expiry = row.token_expiry ? new Date(row.token_expiry) : null;
+      const isExpired = expiry ? expiry < new Date() : false;
 
       status[key] = {
         connected: !isExpired,

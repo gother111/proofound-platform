@@ -52,6 +52,16 @@ This folder is the durable “project memory” surface for Proofound. It is mea
     - `npm run typecheck`
     - `npm run test`
     - `npm run build`
+- Fix run: Zoom and Google meeting flow wiring (2026-02-06):
+  - Problem: Video provider connection state was split between `userIntegrations` (Drizzle) and `user_video_integrations` (Supabase). UI could show “connected” while interview scheduling still failed with “not connected”. (source: src/app/app/i/settings/integrations/IntegrationsClient.tsx, src/app/api/interviews/schedule/route.ts, supabase/migrations/20251108_add_video_integrations.sql)
+  - Fix: Standardize video provider connect, callback, status, and disconnect on `user_video_integrations` and make Settings -> Integrations call the video integration endpoints. (source: src/app/api/integrations/video/route.ts, src/app/api/integrations/video/status/route.ts, src/app/api/integrations/video/[provider]/route.ts, src/app/api/integrations/video/[provider]/auth/route.ts, src/app/api/integrations/zoom/connect/route.ts, src/app/api/integrations/zoom/callback/route.ts, src/app/api/integrations/google/connect/route.ts, src/app/api/integrations/google/callback/route.ts)
+  - Safety: Add `state` cookie checks (`zoom_oauth_state`, `google_oauth_state`) so OAuth callbacks reject mismatched or expired state. (source: src/app/api/integrations/zoom/connect/route.ts, src/app/api/integrations/zoom/callback/route.ts, src/app/api/integrations/google/connect/route.ts, src/app/api/integrations/google/callback/route.ts)
+  - Compatibility: Keep `/api/auth/zoom/callback` and `/api/auth/google/callback` writing to `user_video_integrations` so existing provider redirect URIs still work. (source: src/app/api/auth/zoom/callback/route.ts, src/app/api/auth/google/callback/route.ts)
+  - Verify (Node 20.20.0):
+    - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`
+    - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`
+    - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`
+    - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`
 
 ## Curated Doc Index (Validated Paths)
 

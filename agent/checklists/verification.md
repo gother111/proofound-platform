@@ -31,6 +31,14 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 - A11y: `npm run test:a11y` (source: package.json)
   - TODO: Validate `playwright.a11y.config.ts` exists; do not create it as part of docs-only work. (source: package.json)
 
+## Manual Smoke Checks (OAuth Integrations)
+
+- Zoom connect:
+  - Visit `/app/i/settings/integrations`
+  - Click "Connect Zoom" and confirm you are redirected to Zoom and then back with `?success=zoom_connected`.
+- Meeting creation:
+  - Schedule an interview with `platform=zoom` and confirm the record has `meeting_link` populated.
+
 ## Husky / lint-staged Policy
 
 - If hooks fail, fix only what affects the intended change set.

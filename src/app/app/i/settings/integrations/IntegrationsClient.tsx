@@ -12,6 +12,7 @@ interface Integration {
   provider: 'zoom' | 'google';
   connected: boolean;
   connectedAt?: string;
+  expiresAt?: string | null;
 }
 
 export function IntegrationsClient() {
@@ -43,7 +44,7 @@ export function IntegrationsClient() {
 
   const fetchIntegrations = async () => {
     try {
-      const response = await fetch('/api/integrations');
+      const response = await fetch('/api/integrations/video');
       if (response.ok) {
         const data = await response.json();
         setIntegrations(data.integrations || []);
@@ -58,14 +59,14 @@ export function IntegrationsClient() {
   const handleConnect = async (provider: 'zoom' | 'google') => {
     setConnecting(provider);
     try {
-      // Request OAuth URL
-      const response = await fetch(`/api/integrations/${provider}/connect`);
+      // Request connect URL (server endpoint sets state cookie and redirects to OAuth provider)
+      const response = await fetch(`/api/integrations/video/${provider}/auth`);
       if (!response.ok) {
         throw new Error('Failed to initiate connection');
       }
 
       const data = await response.json();
-      
+
       // Redirect to OAuth URL
       window.location.href = data.authUrl;
     } catch (error) {
@@ -76,12 +77,16 @@ export function IntegrationsClient() {
   };
 
   const handleDisconnect = async (provider: 'zoom' | 'google') => {
-    if (!confirm(`Are you sure you want to disconnect ${provider === 'zoom' ? 'Zoom' : 'Google Calendar'}?`)) {
+    if (
+      !confirm(
+        `Are you sure you want to disconnect ${provider === 'zoom' ? 'Zoom' : 'Google Calendar'}?`
+      )
+    ) {
       return;
     }
 
     try {
-      const response = await fetch(`/api/integrations/${provider}/disconnect`, {
+      const response = await fetch(`/api/integrations/video/${provider}`, {
         method: 'DELETE',
       });
 
@@ -135,7 +140,10 @@ export function IntegrationsClient() {
                   </div>
                 </div>
                 {zoomIntegration?.connected ? (
-                  <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
+                  <Badge
+                    variant="secondary"
+                    className="bg-green-100 text-green-800 border-green-200"
+                  >
                     <CheckCircle2 className="w-3 h-3 mr-1" />
                     Connected
                   </Badge>
@@ -209,7 +217,10 @@ export function IntegrationsClient() {
                   </div>
                 </div>
                 {googleIntegration?.connected ? (
-                  <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
+                  <Badge
+                    variant="secondary"
+                    className="bg-green-100 text-green-800 border-green-200"
+                  >
                     <CheckCircle2 className="w-3 h-3 mr-1" />
                     Connected
                   </Badge>
@@ -273,4 +284,3 @@ export function IntegrationsClient() {
     </div>
   );
 }
-

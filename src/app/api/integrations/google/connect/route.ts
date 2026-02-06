@@ -9,22 +9,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { getGoogleAuthUrl } from '@/lib/integrations/google-meet';
 import { log } from '@/lib/log';
+import { randomBytes } from 'crypto';
 
 export async function GET(request: NextRequest) {
   try {
     const user = await requireAuth();
 
-    // Generate state token for CSRF protection
-    const state = Buffer.from(
-      JSON.stringify({
-        userId: user.id,
-        timestamp: Date.now(),
-      })
-    ).toString('base64');
-
     // Get redirect URI
     const baseUrl = process.env.NEXT_PUBLIC_URL || request.nextUrl.origin;
-    const redirectUri = `${baseUrl}/api/integrations/google/callback`;
+    const configuredRedirect = process.env.GOOGLE_REDIRECT_URI;
+    const redirectUri = configuredRedirect
+      ? configuredRedirect.startsWith('/')
+        ? `${baseUrl}${configuredRedirect}`
+        : configuredRedirect
+      : `${baseUrl}/api/integrations/google/callback`;
+
+    // CSRF protection: tie `state` to an httpOnly cookie (10 min window)
+    const state = randomBytes(32).toString('hex');
 
     // Generate Google auth URL
     const authUrl = getGoogleAuthUrl(redirectUri, state);
@@ -32,7 +33,15 @@ export async function GET(request: NextRequest) {
     log.info('google.oauth.initiated', { userId: user.id });
 
     // Redirect to Google OAuth
-    return NextResponse.redirect(authUrl);
+    const res = NextResponse.redirect(authUrl);
+    res.cookies.set('google_oauth_state', state, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 10 * 60,
+      path: '/',
+    });
+    return res;
   } catch (error) {
     log.error('google.oauth.connect.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',

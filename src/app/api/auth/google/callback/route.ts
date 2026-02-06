@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
-import { exchangeGoogleCode } from '@/lib/video/google-meet';
 import { db } from '@/db';
-import { userIntegrations } from '@/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
+import { exchangeGoogleCode } from '@/lib/integrations/google-meet';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,6 +32,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const expectedState = request.cookies.get('google_oauth_state')?.value;
+    if (!state || !expectedState || state !== expectedState) {
+      return NextResponse.redirect(
+        new URL(
+          '/app/i/settings/integrations?error=google_auth_failed&message=Invalid%20or%20expired%20OAuth%20state.%20Please%20try%20connecting%20again.',
+          request.url
+        )
+      );
+    }
+
     // Verify code exists
     if (!code) {
       return NextResponse.redirect(
@@ -43,42 +52,35 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Exchange code for tokens
-    const tokens = await exchangeGoogleCode(code);
+    const baseUrl = process.env.NEXT_PUBLIC_URL || request.nextUrl.origin;
+    const configuredRedirect = process.env.GOOGLE_REDIRECT_URI;
+    const redirectUri = configuredRedirect
+      ? configuredRedirect.startsWith('/')
+        ? `${baseUrl}${configuredRedirect}`
+        : configuredRedirect
+      : `${baseUrl}${request.nextUrl.pathname}`;
 
-    // Check if integration already exists
-    const [existing] = await db
-      .select()
-      .from(userIntegrations)
-      .where(and(eq(userIntegrations.userId, user.id), eq(userIntegrations.provider, 'google')))
-      .limit(1);
+    const tokens = await exchangeGoogleCode(code, redirectUri);
+    const tokenExpiry = new Date(Date.now() + tokens.expires_in * 1000);
 
-    if (existing) {
-      // Update existing integration
-      await db
-        .update(userIntegrations)
-        .set({
-          accessToken: tokens.accessToken,
-          refreshToken: tokens.refreshToken,
-          tokenExpiry: new Date(Date.now() + tokens.expiresIn * 1000),
-          updatedAt: new Date(),
-        })
-        .where(eq(userIntegrations.id, existing.id));
-    } else {
-      // Create new integration
-      await db.insert(userIntegrations).values({
-        userId: user.id,
-        provider: 'google',
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-        tokenExpiry: new Date(Date.now() + tokens.expiresIn * 1000),
-      });
-    }
+    await db.execute(sql`
+      INSERT INTO user_video_integrations (user_id, provider, access_token, refresh_token, token_expiry, scope)
+      VALUES (${user.id}, 'google_meet', ${tokens.access_token}, ${tokens.refresh_token}, ${tokenExpiry.toISOString()}, ${tokens.scope})
+      ON CONFLICT (user_id, provider)
+      DO UPDATE SET
+        access_token = EXCLUDED.access_token,
+        refresh_token = EXCLUDED.refresh_token,
+        token_expiry = EXCLUDED.token_expiry,
+        scope = EXCLUDED.scope,
+        updated_at = NOW()
+    `);
 
     // Redirect to settings page with success message
-    return NextResponse.redirect(
+    const res = NextResponse.redirect(
       new URL('/app/i/settings/integrations?success=google_connected', request.url)
     );
+    res.cookies.set('google_oauth_state', '', { maxAge: 0, path: '/' });
+    return res;
   } catch (error) {
     console.error('Error handling Google OAuth callback:', error);
     return NextResponse.redirect(
