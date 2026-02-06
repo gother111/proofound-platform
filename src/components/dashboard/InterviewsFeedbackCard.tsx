@@ -24,6 +24,8 @@ type InterviewsResponse = {
   }[];
 };
 
+type Interview = NonNullable<InterviewsResponse['interviews']>[number];
+
 type InterviewsFeedbackCardProps = {
   useMockData?: boolean;
   onActionClick?: (actionId: string) => void;
@@ -33,7 +35,7 @@ export function InterviewsFeedbackCard({
   useMockData,
   onActionClick,
 }: InterviewsFeedbackCardProps) {
-  const [data, setData] = useState<InterviewsResponse['interviews']>([]);
+  const [data, setData] = useState<Interview[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
