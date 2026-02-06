@@ -18,7 +18,11 @@ import { log } from '@/lib/log';
 import { Resend } from 'resend';
 import IdentityRevealed from '@/../emails/IdentityRevealed';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+function getResendClient(): Resend | null {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) return null;
+  return new Resend(apiKey);
+}
 
 interface RouteParams {
   params: Promise<{
@@ -188,6 +192,18 @@ async function sendIdentityRevealedEmails(
   conversationId: string
 ): Promise<void> {
   try {
+    const resend = getResendClient();
+    if (!resend) {
+      log.error('identity_revealed_email.missing_resend_api_key', { conversationId });
+      return;
+    }
+
+    const emailFrom = process.env.EMAIL_FROM;
+    if (!emailFrom) {
+      log.error('identity_revealed_email.missing_email_from', { conversationId });
+      return;
+    }
+
     // Fetch participant profiles
     const participantOne = await db.query.profiles.findFirst({
       where: eq(profiles.id, participantOneId),
@@ -227,7 +243,7 @@ async function sendIdentityRevealedEmails(
 
     // Send to participant one
     await resend.emails.send({
-      from: process.env.EMAIL_FROM!,
+      from: emailFrom,
       to: userOneEmail,
       subject: 'Identities Revealed - Continue Your Conversation',
       react: IdentityRevealed({
@@ -241,7 +257,7 @@ async function sendIdentityRevealedEmails(
 
     // Send to participant two
     await resend.emails.send({
-      from: process.env.EMAIL_FROM!,
+      from: emailFrom,
       to: userTwoEmail,
       subject: 'Identities Revealed - Continue Your Conversation',
       react: IdentityRevealed({
