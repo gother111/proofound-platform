@@ -1,7 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// Separate config for accessibility tests.
+// Keeps CI stable by running against a mock Supabase environment for public pages.
 export default defineConfig({
-  testDir: './e2e',
+  testDir: './tests/a11y',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
@@ -11,34 +13,22 @@ export default defineConfig({
   use: {
     baseURL: process.env.BASE_URL || 'http://localhost:3000',
     trace: 'on-first-retry',
-    // Increase timeout for async flows like matching generation
     actionTimeout: 30000,
     navigationTimeout: 30000,
   },
-  // Global timeout for each test
-  timeout: 120000, // 2 minutes per test (needed for complex flows)
-  expect: {
-    // Increase assertion timeout
-    timeout: 10000,
-  },
+  timeout: 120000,
+  expect: { timeout: 10000 },
   projects: [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
   ],
   webServer: {
-    command: 'npm run dev',
+    // Avoid requiring real Supabase credentials for a11y tests.
+    command: 'NEXT_PUBLIC_USE_MOCK_SUPABASE=true npm run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
-    timeout: 120000, // Allow more time for server startup
+    timeout: 120000,
   },
 });

@@ -137,7 +137,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
             <h1 className="font-display text-[28px] font-semibold leading-9 tracking-[-0.01em] text-[#2D3330]">
               Welcome back
             </h1>
-            <p className="mt-3 text-[15px] leading-[22px] text-[#2D333099]">
+            <p className="mt-3 text-[15px] leading-[22px] text-muted-foreground">
               Sign in to continue to Proofound
             </p>
           </div>
@@ -195,7 +195,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
                   aria-required="true"
                   aria-invalid={error ? 'true' : 'false'}
                   aria-describedby={error ? 'signin-error' : undefined}
-                  className="h-11 rounded-xl border border-[#E8E6DD] bg-white pl-12 pr-4 text-[15px] text-[#2D3330] placeholder:text-[#2D3330]/40 transition-all focus-visible:border-2 focus-visible:border-proofound-forest focus-visible:px-[43px] focus-visible:ring-[3px] focus-visible:ring-proofound-forest/10"
+                  className="h-11 rounded-xl border border-[#E8E6DD] bg-white pl-12 pr-4 text-[15px] text-[#2D3330] transition-all focus-visible:border-2 focus-visible:border-proofound-forest focus-visible:px-[43px] focus-visible:ring-[3px] focus-visible:ring-proofound-forest/10"
                 />
               </div>
             </div>
@@ -230,12 +230,12 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
                   aria-required="true"
                   aria-invalid={error ? 'true' : 'false'}
                   aria-describedby={error ? 'signin-error' : undefined}
-                  className="h-11 rounded-xl border border-[#E8E6DD] bg-white pl-12 pr-12 text-[15px] text-[#2D3330] placeholder:text-[#2D3330]/40 transition-all focus-visible:border-2 focus-visible:border-proofound-forest focus-visible:px-[43px] focus-visible:ring-[3px] focus-visible:ring-proofound-forest/10"
+                  className="h-11 rounded-xl border border-[#E8E6DD] bg-white pl-12 pr-12 text-[15px] text-[#2D3330] transition-all focus-visible:border-2 focus-visible:border-proofound-forest focus-visible:px-[43px] focus-visible:ring-[3px] focus-visible:ring-proofound-forest/10"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#2D333099] transition-colors hover:text-[#2D3330] focus:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest rounded"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-proofound-charcoal focus:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest rounded"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? (
@@ -273,7 +273,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
           {/* Divider with soft typography */}
           <div className="relative my-7">
             <Separator className="bg-[#E8E6DD]" />
-            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-4 text-center text-xs font-medium uppercase tracking-[0.16em] text-[#2D333099]">
+            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-4 text-center text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
               Or continue with
             </span>
           </div>
@@ -300,7 +300,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
         </Card>
 
         {/* Legal copy stays subtle */}
-        <p className="mt-8 text-center text-xs text-[#2D333099]">
+        <p className="mt-8 text-center text-xs text-muted-foreground">
           By signing in, you agree to our{' '}
           <a
             href="/terms"
