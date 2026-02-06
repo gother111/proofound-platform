@@ -10,6 +10,7 @@ import { analyticsEvents } from '@/db/schema';
 import { sql, and, gte } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { sendEmail } from '@/lib/email/sender';
+import { getRows } from '@/lib/db/rows';
 
 export interface PerformanceHealthStatus {
   healthy: boolean;
@@ -152,7 +153,7 @@ async function getPageLoadP95(startDate: Date, endDate: Date): Promise<number | 
         AND (properties->>'duration')::float IS NOT NULL
     `);
 
-    const rows = result.rows as any[];
+    const rows = getRows(result) as any[];
     return rows.length > 0 && rows[0].p95 !== null ? parseFloat(rows[0].p95) : null;
   } catch (error) {
     log.error('performance.page_load_p95.failed', {
@@ -178,7 +179,7 @@ async function getAPILatencyP95(startDate: Date, endDate: Date): Promise<number 
         AND (properties->>'duration')::float IS NOT NULL
     `);
 
-    const rows = result.rows as any[];
+    const rows = getRows(result) as any[];
     return rows.length > 0 && rows[0].p95 !== null ? parseFloat(rows[0].p95) : null;
   } catch (error) {
     log.error('performance.api_latency_p95.failed', {
@@ -217,7 +218,7 @@ async function getErrorRate(startDate: Date, endDate: Date): Promise<number | nu
       FROM total_requests, error_requests
     `);
 
-    const rows = result.rows as any[];
+    const rows = getRows(result) as any[];
     return rows.length > 0 && rows[0].error_rate !== null ? parseFloat(rows[0].error_rate) : null;
   } catch (error) {
     log.error('performance.error_rate.failed', {
