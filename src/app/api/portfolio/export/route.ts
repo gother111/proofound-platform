@@ -37,12 +37,14 @@ export async function GET() {
       visibility: data.visibility,
     });
 
-    return new NextResponse(buffer, {
+    const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+
+    return new NextResponse(bytes, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': 'attachment; filename="proofound-trust.pdf"',
-        'Content-Length': buffer.length.toString(),
+        'Content-Length': bytes.byteLength.toString(),
       },
     });
   } catch (error) {
