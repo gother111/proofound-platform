@@ -48,8 +48,19 @@ import {
 } from 'lucide-react';
 import { apiFetch } from '@/lib/api/fetch';
 
+type AdminUserDetail = Profile & {
+  headline?: string | null;
+  bio?: string | null;
+  location?: string | null;
+  desiredRoles?: string[] | null;
+  yearsExperience?: number | null;
+  workPreferences?: Record<string, any> | null;
+  onboardingCompleted?: boolean | null;
+  profileVisibility?: string | null;
+};
+
 interface UserDetailModalProps {
-  user: Profile | null;
+  user: AdminUserDetail | null;
   open: boolean;
   onClose: () => void;
   onUserUpdated?: () => void;
