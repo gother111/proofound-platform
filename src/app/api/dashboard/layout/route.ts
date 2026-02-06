@@ -114,7 +114,8 @@ export async function POST(request: NextRequest) {
         widgetId: item.widgetId,
         position: item.position,
         visible: item.visible,
-        size: item.size,
+        // DB only supports small/default/large; map legacy "full" to "large".
+        size: item.size === 'full' ? 'large' : item.size,
         settings: item.settings,
       }));
 
