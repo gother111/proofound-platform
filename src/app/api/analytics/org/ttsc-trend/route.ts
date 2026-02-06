@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
     `);
 
     // Format results
-    const trends: TTSCTrendPoint[] = (trendData.rows as any[]).map((row: any) => ({
+    const trends: TTSCTrendPoint[] = (trendData as unknown as any[]).map((row: any) => ({
       period: row.period,
       medianDays: Math.round(parseFloat(row.median_days)),
       count: parseInt(row.contract_count),
