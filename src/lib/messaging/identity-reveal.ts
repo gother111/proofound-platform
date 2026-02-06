@@ -31,7 +31,7 @@ export async function triggerIdentityReveal(conversationId: string): Promise<voi
     await db
       .update(conversations)
       .set({
-        stage: 2, // Revealed
+        stage: 'revealed',
       })
       .where(eq(conversations.id, conversationId));
 
@@ -107,7 +107,7 @@ export async function isIdentityRevealed(conversationId: string): Promise<boolea
       throw new Error('Conversation not found');
     }
 
-    return conversation[0].stage === 2;
+    return conversation[0].stage === 'revealed';
   } catch (error) {
     console.error('Check identity reveal error:', error);
     return false;
