@@ -17,7 +17,7 @@ This document records a lightweight, repo-grounded architecture view. Statements
 
 - App routes (pages/layouts): `src/app/` (source: src/app/)
 - API routes: `src/app/api/` (source: src/app/api/)
-- Server actions: `src/actions/` (source: src/actions/)
+- Server-side actions/business logic: `src/actions/` (source: src/actions/)
 - Components: `src/components/` (source: src/components/)
 - Libraries (domain + infra): `src/lib/` (source: src/lib/)
 - DB schema and SQL: `src/db/schema.ts`, `src/db/policies.sql`, `src/db/triggers.sql` (source: src/db/schema.ts, src/db/policies.sql, src/db/triggers.sql)
@@ -43,7 +43,7 @@ This document records a lightweight, repo-grounded architecture view. Statements
 
 ### API Security Flow (Repo Truth)
 
-- Most `/api/*` routes pass through CSRF enforcement in middleware; security headers are applied consistently. (source: src/middleware.ts)
+- API routes are protected by CSRF middleware with an allowlist for public endpoints; security headers are applied in both `src/middleware.ts` and `next.config.js`. (source: src/middleware.ts, next.config.js)
 
 ### CI Gate Flow (Repo Truth)
 
@@ -56,4 +56,5 @@ This document records a lightweight, repo-grounded architecture view. Statements
 - Repo Truth: CI tests Node 18.x and 20.x, but engines require Node >= 20.20.0. (source: .github/workflows/ci.yml, package.json, .nvmrc)
 - TODO: `npm run test:a11y` references `playwright.a11y.config.ts`; validate that file exists and is aligned. Do not create it in docs-only runs. (source: package.json)
 - TODO: `scripts/go-no-go-check.mjs` requires `ACCESSIBILITY_AUDIT_REPORT.md`; ensure the repo contains the required evidence file(s) before relying on this gate. Do not invent missing evidence files. (source: scripts/go-no-go-check.mjs)
-- Repo Truth: CSP/security headers are set both in `next.config.js` and `src/middleware.ts`; changes should be coordinated to avoid conflicts. (source: next.config.js, src/middleware.ts)
+- Repo Truth: CSP/security headers are set in both `next.config.js` and `src/middleware.ts`. (source: next.config.js, src/middleware.ts)
+- Guidance: Coordinate changes across both to avoid conflicting policies.

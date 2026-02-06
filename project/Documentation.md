@@ -6,8 +6,8 @@ This folder is the durable “project memory” surface for Proofound. It is mea
 
 ## Known Drift (Repo Truth)
 
-- `README.md` prerequisites say Node.js 18+, but the repo pins Node `20.20.0` and `package.json` engines require `>=20.20.0 <21`. (source: README.md, .nvmrc, package.json)
-- `.github/workflows/ci.yml` runs Node 18.x and 20.x, but Node 18.x does not satisfy the repo’s `engines.node` constraint. (source: .github/workflows/ci.yml, package.json)
+- `.github/workflows/ci.yml` matrix runs Node 18.x and 20.x, but `package.json` engines require Node `>=20.20.0 <21` (and `.nvmrc` pins `20.20.0`). (source: .github/workflows/ci.yml, package.json, .nvmrc)
+- `.github/workflows/playwright.yml` uses `node-version: lts/*`, which is not pinned to `package.json` engines and can drift as the LTS line changes over time. (source: .github/workflows/playwright.yml, package.json)
 
 ## Decisions
 
@@ -17,7 +17,8 @@ This folder is the durable “project memory” surface for Proofound. It is mea
 
 ## Last Run Summary
 
-- This run: created `project/` and `agent/` markdown only (no application code changes).
+- Bootstrap run: created `project/` and `agent/` markdown only (no application code changes).
+- This run: tightened repo-truth wording/citations after verifying against cited sources.
 
 ## Curated Doc Index (Validated Paths)
 

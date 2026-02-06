@@ -1,6 +1,6 @@
 # MVP Milestones (Proposal)
 
-Context: This repo already contains substantial implementation. Use this file as a stable milestone framing plus validation checklists; for current progress and launch readiness context, start with `IMPLEMENTATION_STATUS_CURRENT.md` and `PRODUCTION_CHECKLIST.md`. (source: IMPLEMENTATION_STATUS_CURRENT.md, PRODUCTION_CHECKLIST.md)
+Context: This repo already contains substantial implementation. Use this file as a stable milestone framing plus validation checklists. For an implementation status snapshot (dated November 3, 2025) and a launch readiness checklist, start with `IMPLEMENTATION_STATUS_CURRENT.md` and `PRODUCTION_CHECKLIST.md`. (source: IMPLEMENTATION_STATUS_CURRENT.md, PRODUCTION_CHECKLIST.md)
 
 ## Milestone 1: Foundations (Local Dev + CI Parity Baseline)
 
@@ -41,5 +41,5 @@ Validation checklist:
 Validation checklist:
 
 - CI passes on the target branch (lint/typecheck/unit/build + perf budgets + go/no-go). (source: .github/workflows/ci.yml)
-- Cron jobs are configured in production and protected by `CRON_SECRET`. (source: vercel.json, docs/ENV_VARIABLES.md)
-- Observability is configured (Sentry/logging/alerts) for production. (source: docs/sentry-setup.md, docs/structured-logging.md, docs/monitoring-alerting.md)
+- Cron schedules are defined in `vercel.json`; cron endpoints validate Bearer `CRON_SECRET` from the `authorization` header. (source: vercel.json, src/app/api/cron/account-deletion-workflow/route.ts, src/app/api/cron/decision-reminders/route.ts, docs/ENV_VARIABLES.md)
+- Observability: setup docs exist for Sentry, structured logging, and monitoring/alerting; confirm production env vars and integrations are configured before launch. (source: docs/sentry-setup.md, docs/structured-logging.md, docs/monitoring-alerting.md)

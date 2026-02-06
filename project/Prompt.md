@@ -19,12 +19,13 @@ Proofound is a credibility and connection platform built for authenticity rather
 ## Non-Negotiables (Engineering Invariants)
 
 - Never expose `SUPABASE_SERVICE_ROLE_KEY` (or any server-only secret) to the browser. (source: docs/ENV_VARIABLES.md)
-- Privacy regressions are P0: do not weaken RLS or visibility/redaction semantics. (source: README.md)
+- Privacy by design is a core product principle (RLS + user-controlled visibility). (source: README.md)
+- Policy: Treat privacy regressions as P0; do not weaken RLS or visibility/redaction semantics.
 - Do not commit secrets; follow `.gitignore` and use `.env.local` for local values. (source: .gitignore, .env.example)
 
 ## Assumptions / TODO Questions (Product + Scope)
 
 - TODO: Define the primary MVP success metric (e.g., time-to-first-qualified-intro, contracts signed, retention).
 - TODO: Confirm which persona flows are “must ship” for MVP vs “later” (repo contains many implemented features). (source: IMPLEMENTATION_STATUS_CURRENT.md)
-- TODO: Confirm which verification methods are required for MVP (work email, LinkedIn, Veriff). (source: docs/ENV_VARIABLES.md)
+- TODO: Confirm which verification methods are required for MVP (work email, LinkedIn, Veriff). (source: IDENTITY_VERIFICATION_IMPLEMENTATION.md, docs/LINKEDIN_VERIFICATION_SETUP.md)
 - TODO: Confirm target locales/regions (i18n exists; decide launch scope). (source: README.md)
