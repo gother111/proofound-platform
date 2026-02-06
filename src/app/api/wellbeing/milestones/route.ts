@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
       .where(
         and(
           eq(analyticsEvents.userId, user.id),
-          inArray(analyticsEvents.eventType, MILESTONE_EVENTS),
+          inArray(analyticsEvents.eventType, [...MILESTONE_EVENTS]),
           gte(analyticsEvents.createdAt, since)
         )
       )
@@ -65,4 +65,3 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to fetch milestones' }, { status: 500 });
   }
 }
-
