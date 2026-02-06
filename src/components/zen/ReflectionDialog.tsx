@@ -191,7 +191,7 @@ Take your time—this is just for you."
                 >
                   <p className="text-muted-foreground text-sm leading-snug">{prompt.prompt}</p>
                   <Button
-                    size="xs"
+                    size="sm"
                     variant="outline"
                     onClick={() => setReflectionText(prompt.prompt)}
                     className="text-[12px]"
