@@ -300,42 +300,26 @@ export function detectSignificantGaps(gapResults: FairnessGapResult[]): Finding[
   const findings: Finding[] = [];
 
   gapResults.forEach((result) => {
-    // Check introduction rate gap
-    if (result.pValueIntroduction < 0.05) {
-      const severity = determineSeverity(Math.abs(result.introductionGap));
+    const isSignificant = result.isSignificant || result.pValue < 0.05;
+    if (isSignificant) {
+      const gapAbs = Math.abs(result.gap);
+      const severity = determineSeverity(gapAbs);
       findings.push({
         type: 'gap',
         severity,
         cohorts: [result.cohortA.name, result.cohortB.name],
         metric: 'introduction_rate',
-        description: `Significant gap detected in introduction rates between ${result.cohortA.name} (${result.cohortA.introductionRate.toFixed(1)}%) and ${result.cohortB.name} (${result.cohortB.introductionRate.toFixed(1)}%). Gap: ${Math.abs(result.introductionGap).toFixed(1)} percentage points.`,
-        gapPercentage: Math.abs(result.introductionGap),
-        pValue: result.pValueIntroduction,
+        description: `Significant cohort gap detected between ${result.cohortA.name} and ${result.cohortB.name}. Gap: ${gapAbs.toFixed(1)} percentage points (p=${result.pValue.toFixed(4)}).`,
+        gapPercentage: gapAbs,
+        pValue: result.pValue,
       });
-    }
-
-    // Check contract rate gap
-    if (result.pValueContract < 0.05) {
-      const severity = determineSeverity(Math.abs(result.contractGap));
-      findings.push({
-        type: 'gap',
-        severity,
-        cohorts: [result.cohortA.name, result.cohortB.name],
-        metric: 'contract_rate',
-        description: `Significant gap detected in contract rates between ${result.cohortA.name} (${result.cohortA.contractRate.toFixed(1)}%) and ${result.cohortB.name} (${result.cohortB.contractRate.toFixed(1)}%). Gap: ${Math.abs(result.contractGap).toFixed(1)} percentage points.`,
-        gapPercentage: Math.abs(result.contractGap),
-        pValue: result.pValueContract,
-      });
-    }
-
-    // If no significant gaps found for this pair
-    if (result.pValueIntroduction >= 0.05 && result.pValueContract >= 0.05) {
+    } else {
       findings.push({
         type: 'no_gap',
         severity: 'none',
         cohorts: [result.cohortA.name, result.cohortB.name],
         metric: 'introduction_rate',
-        description: `No significant gaps detected between ${result.cohortA.name} and ${result.cohortB.name}. Introduction rates: ${result.cohortA.introductionRate.toFixed(1)}% vs ${result.cohortB.introductionRate.toFixed(1)}%. Contract rates: ${result.cohortA.contractRate.toFixed(1)}% vs ${result.cohortB.contractRate.toFixed(1)}%.`,
+        description: `No significant gaps detected between ${result.cohortA.name} and ${result.cohortB.name}. Gap: ${Math.abs(result.gap).toFixed(1)}pp (p=${result.pValue.toFixed(4)}).`,
       });
     }
   });
