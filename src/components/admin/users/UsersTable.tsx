@@ -84,7 +84,7 @@ export function UsersTable() {
     fetchUsers();
   }, [fetchUsers]);
 
-  const handleViewUser = (user: Profile) => {
+  const handleViewUser = (user: AdminProfile) => {
     setSelectedUser(user);
     setModalOpen(true);
   };
@@ -110,7 +110,7 @@ export function UsersTable() {
     }
   };
 
-  const getStatusBadge = (user: Profile) => {
+  const getStatusBadge = (user: AdminProfile) => {
     if (user.deleted) {
       return <Badge variant="destructive">Deleted</Badge>;
     }
