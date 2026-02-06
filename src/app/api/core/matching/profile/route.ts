@@ -84,8 +84,22 @@ export async function POST(request: NextRequest) {
         : false;
 
     const body = await request.json();
-    const validatedData = (isServiceRoleCall ? ServiceMatchRequestSchema : MatchRequestSchema).parse(body);
-    const user = isServiceRoleCall ? { id: validatedData.userId } : await requireAuth();
+
+    let validatedData:
+      | z.infer<typeof MatchRequestSchema>
+      | z.infer<typeof ServiceMatchRequestSchema>;
+    let user: { id: string };
+
+    if (isServiceRoleCall) {
+      const serviceValidated = ServiceMatchRequestSchema.parse(body);
+      validatedData = serviceValidated;
+      user = { id: serviceValidated.userId };
+    } else {
+      validatedData = MatchRequestSchema.parse(body);
+      const authedUser = await requireAuth();
+      user = { id: authedUser.id };
+    }
+
     const { mode, k = 20, useSemanticMatching = false } = validatedData;
 
     // Fetch user's matching profile (with caching)
