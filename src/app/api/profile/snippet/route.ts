@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
+import { getRows } from '@/lib/db/rows';
 import {
   generateShareToken,
   buildPublicProfileURL,
@@ -24,7 +25,7 @@ export const dynamic = 'force-dynamic';
  */
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -75,7 +76,7 @@ export async function POST(req: NextRequest) {
       RETURNING *
     `);
 
-    const snippet = result.rows[0] as any;
+    const [snippet] = getRows<any>(result as any);
 
     log.info('profile.snippet.created', {
       userId: user.id,
@@ -110,7 +111,7 @@ export async function POST(req: NextRequest) {
  */
 export async function GET(req: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -133,7 +134,7 @@ export async function GET(req: NextRequest) {
       ORDER BY ps.created_at DESC
     `);
 
-    const snippets = result.rows.map((row: any) => ({
+    const snippets = getRows<any>(result as any).map((row: any) => ({
       id: row.id,
       shareToken: row.share_token,
       url: buildPublicProfileURL(row.share_token),
@@ -163,7 +164,7 @@ export async function GET(req: NextRequest) {
  */
 export async function DELETE(req: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
