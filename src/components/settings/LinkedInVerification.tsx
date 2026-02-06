@@ -1,6 +1,6 @@
 /**
  * LinkedIn Verification Component
- * 
+ *
  * Handles the user flow for LinkedIn identity verification
  */
 
@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { apiFetch } from '@/lib/api/fetch';
 import {
   Linkedin,
   Loader2,
@@ -57,7 +58,7 @@ export function LinkedInVerification({ onSuccess }: LinkedInVerificationProps) {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/verification/linkedin/initiate', {
+      const response = await apiFetch('/api/verification/linkedin/initiate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -72,7 +73,7 @@ export function LinkedInVerification({ onSuccess }: LinkedInVerificationProps) {
       const data = await response.json();
 
       setCheckResult(data.automatedCheck);
-      
+
       toast.success(data.message || 'Verification check complete!', {
         duration: 5000,
       });
@@ -101,21 +102,15 @@ export function LinkedInVerification({ onSuccess }: LinkedInVerificationProps) {
   const getConfidenceBadge = (confidence: number) => {
     if (confidence >= 80) {
       return (
-        <Badge className="bg-green-500 hover:bg-green-600">
-          {confidence}% - High Confidence
-        </Badge>
+        <Badge className="bg-green-500 hover:bg-green-600">{confidence}% - High Confidence</Badge>
       );
     } else if (confidence >= 50) {
       return (
-        <Badge className="bg-amber-500 hover:bg-amber-600">
-          {confidence}% - Medium Confidence
-        </Badge>
+        <Badge className="bg-amber-500 hover:bg-amber-600">{confidence}% - Medium Confidence</Badge>
       );
     } else {
       return (
-        <Badge className="bg-gray-500 hover:bg-gray-600">
-          {confidence}% - Low Confidence
-        </Badge>
+        <Badge className="bg-gray-500 hover:bg-gray-600">{confidence}% - Low Confidence</Badge>
       );
     }
   };
@@ -150,8 +145,8 @@ export function LinkedInVerification({ onSuccess }: LinkedInVerificationProps) {
                 {checkResult.confidence >= 80
                   ? 'High confidence - Quick admin approval typically within 1 hour'
                   : checkResult.confidence >= 50
-                  ? 'Medium confidence - Manual admin review within 1-2 business days'
-                  : 'Low confidence - Consider using another verification method'}
+                    ? 'Medium confidence - Manual admin review within 1-2 business days'
+                    : 'Low confidence - Consider using another verification method'}
               </p>
             </div>
 
@@ -166,12 +161,13 @@ export function LinkedInVerification({ onSuccess }: LinkedInVerificationProps) {
                       <span>Verification Badge</span>
                     </div>
                   )}
-                  {checkResult.signals.connectionCount && checkResult.signals.connectionCount >= 500 && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <CheckCircle2 className="w-4 h-4 text-green-600" />
-                      <span>{checkResult.signals.connectionCount}+ Connections</span>
-                    </div>
-                  )}
+                  {checkResult.signals.connectionCount &&
+                    checkResult.signals.connectionCount >= 500 && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <CheckCircle2 className="w-4 h-4 text-green-600" />
+                        <span>{checkResult.signals.connectionCount}+ Connections</span>
+                      </div>
+                    )}
                   {checkResult.signals.profileCompleteness >= 70 && (
                     <div className="flex items-center gap-2 text-sm">
                       <CheckCircle2 className="w-4 h-4 text-green-600" />
@@ -224,8 +220,8 @@ export function LinkedInVerification({ onSuccess }: LinkedInVerificationProps) {
           <div className="flex-1">
             <h3 className="font-semibold text-lg mb-2">LinkedIn Identity Verification</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              We&apos;ll automatically check if your LinkedIn profile has an identity verification badge and
-              analyze other trust signals. Fast and free!
+              We&apos;ll automatically check if your LinkedIn profile has an identity verification
+              badge and analyze other trust signals. Fast and free!
             </p>
 
             {/* How it works */}
@@ -288,7 +284,8 @@ export function LinkedInVerification({ onSuccess }: LinkedInVerificationProps) {
             </Button>
 
             <p className="text-xs text-center text-muted-foreground mt-3">
-              This will connect to your LinkedIn account via OAuth. We only read public profile information.
+              This will connect to your LinkedIn account via OAuth. We only read public profile
+              information.
             </p>
           </div>
         </div>
@@ -304,4 +301,3 @@ export function LinkedInVerification({ onSuccess }: LinkedInVerificationProps) {
     </div>
   );
 }
-

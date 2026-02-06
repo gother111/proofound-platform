@@ -32,6 +32,26 @@ This folder is the durable “project memory” surface for Proofound. It is mea
     - Tests: fix mocks/expectations: `tests/api/assignments.test.ts`, `tests/actions/auth.test.ts`, `src/lib/supabase/__tests__/server.test.ts`
     - UI: prefer custom validation messaging for feedback form: `src/components/feedback/FeedbackForm.tsx`
     - Typecheck/test stabilization: `src/types/pdfkit.d.ts`, `src/lib/portfolio/pdf.ts`, `src/lib/reports/evidence-pack-generator.ts`, `src/app/api/admin/__tests__/users-route.test.ts`, `src/lib/__tests__/rate-limit.test.ts`
+- Vercel pre-commit gate run (2026-02-06 23:52 CET) @ `1c096b3` (Node `v20.20.0`, npm `10.8.2`, Vercel CLI `50.13.1`):
+  - `npm ci`: PASS
+  - `npm run lint`: PASS
+  - `npm run typecheck`: PASS
+  - `npm run test`: PASS
+  - `npm run build`: PASS
+  - `npx vercel pull --yes --environment=production --token $VERCEL_TOKEN`: PASS
+  - `npx vercel build --prod --yes --token $VERCEL_TOKEN`: PASS
+  - Notes:
+    - `prebuild` readiness check still warns about missing env vars in local build logs; it is warning-only due to `|| true`. (source: package.json)
+    - `vercel pull` overwrote `.vercel/.env.production.local` as expected (gitignored). (source: .gitignore)
+- Fix run: LinkedIn verification CSRF (2026-02-06):
+  - Bug: Clicking Settings -> Identity Verification -> LinkedIn -> "Start Verification Check" returned `CSRF validation failed` because the request did not include `x-csrf-token`. (source: src/components/settings/LinkedInVerification.tsx, src/lib/csrf.ts, src/middleware.ts)
+  - Fix: Use `apiFetch` for the POST so CSRF token is attached automatically. (source: src/components/settings/LinkedInVerification.tsx, src/lib/api/fetch.ts)
+  - Regression test: `tests/ui/linkedin-verification.test.tsx`
+  - Verify:
+    - `npm run lint`
+    - `npm run typecheck`
+    - `npm run test`
+    - `npm run build`
 
 ## Curated Doc Index (Validated Paths)
 
