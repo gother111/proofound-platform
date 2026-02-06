@@ -6,6 +6,7 @@
 
 import { createClient } from '@/lib/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import type { RealtimePostgresChangesPayload } from '@supabase/realtime-js';
 
 export interface MessagePayload {
   id: string;
@@ -40,7 +41,7 @@ export function subscribeToConversation(
         table: 'messages',
         filter: `conversation_id=eq.${conversationId}`,
       },
-      (payload) => {
+      (payload: RealtimePostgresChangesPayload<MessagePayload>) => {
         const newMessage = payload.new as MessagePayload;
         onMessage(newMessage);
       }
@@ -76,7 +77,7 @@ export function subscribeToConversationUpdates(
         table: 'conversations',
         filter: `id=eq.${conversationId}`,
       },
-      (payload) => {
+      (payload: RealtimePostgresChangesPayload<any>) => {
         onUpdate(payload.new);
       }
     )
@@ -104,4 +105,3 @@ export async function markMessageAsRead(messageId: string): Promise<void> {
     console.error('Error marking message as read:', error);
   }
 }
-
