@@ -51,7 +51,7 @@ const findReusableToken = async (
   const nowIso = new Date().toISOString();
   const { data } = await admin
     .from('feedback_tokens')
-    .select('token, template_id')
+    .select('token, template_id, expires_at')
     .eq('interview_id', interviewId)
     .eq('direction', direction)
     .is('used_at', null)
@@ -59,7 +59,13 @@ const findReusableToken = async (
     .limit(1)
     .maybeSingle();
 
-  return data as { token: string; template_id: string } | null;
+  if (!data) return null;
+
+  return data as {
+    token: string;
+    template_id: string;
+    expires_at: string;
+  };
 };
 
 const createToken = async (
@@ -142,7 +148,7 @@ export const issueFeedbackInvites = async (interviewId: string) => {
     tokens.push({
       direction: 'candidate_to_org',
       token: tokenData.token,
-      expiresAt: tokenData.expiresAt,
+      expiresAt: 'expiresAt' in tokenData ? tokenData.expiresAt : tokenData.expires_at,
       recipientEmail: candidateEmail,
     });
   }
@@ -162,7 +168,7 @@ export const issueFeedbackInvites = async (interviewId: string) => {
     tokens.push({
       direction: 'org_to_candidate',
       token: tokenData.token,
-      expiresAt: tokenData.expiresAt,
+      expiresAt: 'expiresAt' in tokenData ? tokenData.expiresAt : tokenData.expires_at,
       recipientEmail: orgEmail,
     });
   }
