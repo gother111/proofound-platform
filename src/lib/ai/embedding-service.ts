@@ -6,7 +6,7 @@
  * without external API calls.
  */
 
-import { pipeline, Pipeline, env } from '@xenova/transformers';
+import { pipeline, type FeatureExtractionPipeline, env } from '@xenova/transformers';
 import { log } from '@/lib/log';
 
 // Configure transformers.js for server-side usage
@@ -19,15 +19,15 @@ const MODEL_NAME = 'Xenova/all-MiniLM-L6-v2';
 const EMBEDDING_DIMENSION = 384; // all-MiniLM-L6-v2 outputs 384-dim vectors
 
 // Singleton instance
-let embeddingPipeline: Pipeline | null = null;
+let embeddingPipeline: FeatureExtractionPipeline | null = null;
 let isLoading = false;
-let loadPromise: Promise<Pipeline> | null = null;
+let loadPromise: Promise<FeatureExtractionPipeline> | null = null;
 
 /**
  * Initialize the embedding pipeline (singleton pattern)
  * Downloads model on first use (~25MB), then caches it
  */
-async function getEmbeddingPipeline(): Promise<Pipeline> {
+async function getEmbeddingPipeline(): Promise<FeatureExtractionPipeline> {
   // Return existing pipeline if available
   if (embeddingPipeline) {
     return embeddingPipeline;
