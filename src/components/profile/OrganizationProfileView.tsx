@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useState } from 'react';
 import { OrganizationHero } from '@/components/organization/OrganizationHero';
 import { OrganizationPurpose } from '@/components/organization/OrganizationPurpose';
 import { OrganizationBasicInfoEditor } from '@/components/organization/OrganizationBasicInfoEditor';
