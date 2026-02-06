@@ -25,7 +25,7 @@ export function useAuth(): UseAuthReturn {
     const supabase = createClient();
 
     // Get initial user
-    supabase.auth.getUser().then(({ data, error }) => {
+    supabase.auth.getUser().then(({ data, error }: { data: { user: User | null }; error: any }) => {
       if (error) {
         setError(error);
         setUser(null);
