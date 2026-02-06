@@ -28,6 +28,7 @@ import type {
   Experience,
   Education as EducationType,
   Volunteering as VolunteeringType,
+  FieldVisibility,
 } from '@/types/profile';
 
 /**
@@ -89,7 +90,7 @@ async function checkAndEmitProfileActivation(userId: string): Promise<void> {
     if (hasMatchingProfile) completionScore += 30;
 
     // All criteria met - emit activation event!
-    await emitProfileActivated(userId, {
+    await emitProfileActivated(userId, 0, {
       completionScore,
       hasMinimumL4Count,
       l4SkillsCount,
@@ -292,7 +293,10 @@ export async function getProfileData(): Promise<ProfileData> {
       experiences: experienceRows,
       education: educationRows,
       volunteering: volunteeringRows,
-      fieldVisibility: (profile?.fieldVisibility as Record<string, string>) ?? {},
+      fieldVisibility:
+        profile?.fieldVisibility && typeof profile.fieldVisibility === 'object'
+          ? (profile.fieldVisibility as FieldVisibility)
+          : {},
       redactMode: profile?.redactMode ?? false,
     };
   } catch (error) {
@@ -369,16 +373,11 @@ export async function updateMission(
     .limit(1);
 
   const oldValue = current[0]?.mission || null;
-  const currentFieldVisibility = (current[0]?.fieldVisibility as Record<string, string>) || {};
+  const currentFieldVisibility = (current[0]?.fieldVisibility as FieldVisibility) || {};
 
   // Log the change
   const { logPurposeEdit } = await import('@/lib/audit/purpose-log');
-  await logPurposeEdit({
-    userId: user.id,
-    fieldName: 'mission',
-    oldValue,
-    newValue: mission || '',
-  });
+  await logPurposeEdit(user.id, 'mission', oldValue, mission || '');
 
   // Update mission text and optionally visibility
   const updateData: Record<string, unknown> = { mission };
@@ -427,16 +426,11 @@ export async function updateVision(
     .limit(1);
 
   const oldValue = current[0]?.vision || null;
-  const currentFieldVisibility = (current[0]?.fieldVisibility as Record<string, string>) || {};
+  const currentFieldVisibility = (current[0]?.fieldVisibility as FieldVisibility) || {};
 
   // Log the change
   const { logPurposeEdit } = await import('@/lib/audit/purpose-log');
-  await logPurposeEdit({
-    userId: user.id,
-    fieldName: 'vision',
-    oldValue,
-    newValue: vision || '',
-  });
+  await logPurposeEdit(user.id, 'vision', oldValue, vision || '');
 
   // Update vision text and optionally visibility
   const updateData: Record<string, unknown> = { vision };
@@ -480,14 +474,7 @@ export async function replaceValues(values: Value[]) {
 
   const oldValues = (current[0]?.values as Value[]) || [];
 
-  // Log the change
-  const { logPurposeEdit } = await import('@/lib/audit/purpose-log');
-  await logPurposeEdit({
-    userId: user.id,
-    fieldName: 'values',
-    oldValue: oldValues.map((v) => v.label),
-    newValue: values.map((v) => v.label),
-  });
+  // Purpose edit log is only for mission/vision; values are tracked via analytics below.
 
   await db.update(individualProfiles).set({ values }).where(eq(individualProfiles.userId, user.id));
 
@@ -518,14 +505,7 @@ export async function replaceCauses(causes: string[]) {
 
   const oldCauses = current[0]?.causes || [];
 
-  // Log the change
-  const { logPurposeEdit } = await import('@/lib/audit/purpose-log');
-  await logPurposeEdit({
-    userId: user.id,
-    fieldName: 'causes',
-    oldValue: oldCauses,
-    newValue: causes,
-  });
+  // Purpose edit log is only for mission/vision; causes are tracked via analytics below.
 
   await db.update(individualProfiles).set({ causes }).where(eq(individualProfiles.userId, user.id));
 
