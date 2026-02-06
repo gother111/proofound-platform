@@ -2,21 +2,16 @@
  * Redaction utilities for privacy controls
  *
  * Determines which profile fields should be visible based on:
- * 1. Field visibility settings (public, link_only, match_only, private)
- * 2. Viewer context (public, link-holder, matched-org, self)
+ * 1. Field visibility settings (public, network_only, match_only, private)
+ * 2. Viewer context (public, link-holder/network, matched-org, self)
  */
 
 import { db } from '@/db';
 import { profileFieldVisibility } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
-export type ViewerContext = 'public' | 'link_only' | 'match_only' | 'self';
-export type VisibilityLevel = 'public' | 'link_only' | 'match_only' | 'private';
-
-interface FieldVisibility {
-  fieldName: string;
-  visibilityLevel: VisibilityLevel;
-}
+export type ViewerContext = 'public' | 'network_only' | 'match_only' | 'self';
+export type VisibilityLevel = 'public' | 'network_only' | 'match_only' | 'private';
 
 /**
  * Fetch visibility settings for a profile
@@ -27,9 +22,31 @@ export async function getProfileVisibilitySettings(
   const settings = await db
     .select()
     .from(profileFieldVisibility)
-    .where(eq(profileFieldVisibility.profileId, profileId));
+    .where(eq(profileFieldVisibility.profileId, profileId))
+    .limit(1);
 
-  return new Map(settings.map((s) => [s.fieldName, s.visibilityLevel as VisibilityLevel]));
+  const row = settings[0];
+  if (!row) {
+    return new Map();
+  }
+
+  // profile_field_visibility is a single row per profile with per-field columns.
+  // This map normalizes those columns back into the profile object keys used by redaction.
+  return new Map<string, VisibilityLevel>([
+    ['display_name', row.displayName as VisibilityLevel],
+    ['avatar_url', row.avatar as VisibilityLevel],
+    ['headline', row.headline as VisibilityLevel],
+    ['location', row.location as VisibilityLevel],
+    ['mission', row.mission as VisibilityLevel],
+    ['vision', row.vision as VisibilityLevel],
+    ['values', row.values as VisibilityLevel],
+    ['causes', row.causes as VisibilityLevel],
+    ['experiences', row.experiences as VisibilityLevel],
+    ['education', row.education as VisibilityLevel],
+    ['volunteering', row.volunteering as VisibilityLevel],
+    ['skills', row.skills as VisibilityLevel],
+    ['impact_stories', row.impactStories as VisibilityLevel],
+  ]);
 }
 
 /**
@@ -51,16 +68,12 @@ export function isFieldVisible(
 
   // Match-only fields are visible to matched orgs and self
   if (fieldVisibility === 'match_only') {
-    return viewerContext === 'match_only' || viewerContext === 'self';
+    return viewerContext === 'match_only';
   }
 
   // Link-only fields are visible to link-holders, matched orgs, and self
-  if (fieldVisibility === 'link_only') {
-    return (
-      viewerContext === 'link_only' ||
-      viewerContext === 'match_only' ||
-      viewerContext === 'self'
-    );
+  if (fieldVisibility === 'network_only') {
+    return viewerContext === 'network_only' || viewerContext === 'match_only';
   }
 
   // Public fields are visible to everyone
@@ -102,9 +115,9 @@ export const DEFAULT_FIELD_VISIBILITY: Record<string, VisibilityLevel> = {
   // Contact info
   email: 'private',
   phone: 'private',
-  linkedin_url: 'link_only',
-  github_url: 'link_only',
-  website_url: 'link_only',
+  linkedin_url: 'network_only',
+  github_url: 'network_only',
+  website_url: 'network_only',
 };
 
 /**
@@ -170,7 +183,7 @@ export function determineViewerContext(params: {
   }
 
   if (params.hasProfileLink) {
-    return 'link_only';
+    return 'network_only';
   }
 
   return 'public';
