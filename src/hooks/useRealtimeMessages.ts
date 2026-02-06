@@ -96,9 +96,10 @@ export function useRealtimeMessages({
         },
         (payload: RealtimePostgresChangesPayload<Message>) => {
           const updatedMessage = payload.new as Message;
+          const oldMessage = payload.old as Partial<Message> | undefined;
 
           // Handle read receipt
-          if (updatedMessage.read_at && !payload.old.read_at) {
+          if (updatedMessage.read_at && !oldMessage?.read_at) {
             onMessageRead?.(updatedMessage.id);
           }
         }
