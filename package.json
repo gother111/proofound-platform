@@ -1,7 +1,7 @@
 {
   "type": "module",
   "engines": {
-    "node": ">=20.20.0"
+    "node": ">=20.20.0 <21"
   },
   "scripts": {
     "prebuild": "node ./scripts/check-deploy-readiness.mjs || true",
