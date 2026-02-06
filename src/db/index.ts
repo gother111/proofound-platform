@@ -1,6 +1,7 @@
 import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import dns from 'dns';
+import { PHASE_PRODUCTION_BUILD } from 'next/constants';
 
 // Force IPv4 to avoid EHOSTUNREACH errors with Supabase on some networks
 dns.setDefaultResultOrder('ipv4first');
@@ -30,11 +31,14 @@ function createMockDb(): DbType {
 if (!connectionString) {
   // Check if we are allowed to use mocks
   const allowMocks = process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true';
+  const isNextBuild = process.env.NEXT_PHASE === PHASE_PRODUCTION_BUILD;
 
   // In production, DATABASE_URL is required unless mocks are explicitly enabled
   if (
     (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') &&
-    !allowMocks
+    !allowMocks &&
+    // `next build` runs with NODE_ENV=production but should not require runtime env vars.
+    !isNextBuild
   ) {
     throw new Error(
       'DATABASE_URL is required in production. ' +
