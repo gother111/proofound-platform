@@ -139,7 +139,10 @@ const PERSONA_PRESETS = {
     Recruiter: ['candidates', 'assignments', 'org-goals'],
     'Hiring Manager': ['assignments', 'candidates', 'org-goals'],
   },
-};
+} as const satisfies Record<
+  CustomizableDashboardProps['persona'],
+  Record<string, readonly string[]>
+>;
 
 export function CustomizableDashboard({ userId, persona }: CustomizableDashboardProps) {
   const [widgets, setWidgets] = useState<DashboardWidget[]>([]);
@@ -263,11 +266,11 @@ export function CustomizableDashboard({ userId, persona }: CustomizableDashboard
   };
 
   const handleApplyPreset = (presetName: string) => {
-    const preset =
-      PERSONA_PRESETS[persona][presetName as keyof (typeof PERSONA_PRESETS)[typeof persona]];
+    const presetsForPersona = PERSONA_PRESETS[persona];
+    const preset = presetsForPersona[presetName as keyof typeof presetsForPersona];
     if (!preset) return;
 
-    const presetWidgets = preset
+    const presetWidgets = [...preset]
       .map((widgetId, index) => {
         const template = availableWidgets.find((w) => w.id === widgetId);
         if (!template) return null;
