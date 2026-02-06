@@ -114,7 +114,7 @@ export async function generateFairnessNote(
   const recommendations = generateRecommendations(findings, cohortAnalyses);
 
   // Determine if there are significant gaps
-  const hasSignificantGaps = findings.some((f) => f.type === 'gap' && f.isSignificant);
+  const hasSignificantGaps = findings.some((f) => f.type === 'gap');
 
   // Create the fairness note
   const noteData: FairnessNoteData = {
