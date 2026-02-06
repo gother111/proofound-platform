@@ -37,7 +37,13 @@ export async function GET() {
       visibility: data.visibility,
     });
 
-    const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+    // NextResponse's BodyInit typing doesn't accept Node.js Buffer directly.
+    // Convert to an ArrayBuffer-backed Uint8Array.
+    const arrayBuffer = buffer.buffer.slice(
+      buffer.byteOffset,
+      buffer.byteOffset + buffer.byteLength
+    );
+    const bytes = new Uint8Array(arrayBuffer);
 
     return new NextResponse(bytes, {
       status: 200,
