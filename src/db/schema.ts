@@ -2348,12 +2348,6 @@ export const messages = pgTable('messages', {
   }).default('sent'),
 });
 
-// Type exports for messaging
-export type Conversation = typeof conversations.$inferSelect;
-export type InsertConversation = typeof conversations.$inferInsert;
-export type Message = typeof messages.$inferSelect;
-export type InsertMessage = typeof messages.$inferInsert;
-
 // ====================================
 // Verification Privacy System
 // ====================================
