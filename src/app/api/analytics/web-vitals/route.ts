@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
+import { getRows } from '@/lib/db/rows';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,93 +31,24 @@ export async function POST(req: NextRequest) {
   try {
     const metric: WebVitalMetric = await req.json();
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/381d9e33-65b3-4af0-9925-b21521306aaa', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId: 'debug-session',
-        runId: 'run-webvitals-1',
-        hypothesisId: 'H-userid-null',
-        location: 'web-vitals/route.ts:POST:start',
-        message: 'Received metric',
-        data: {
-          metricName: metric.metricName,
-          rating: metric.rating,
-          pagePath: metric.pagePath,
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
-
     // Get user ID if authenticated (optional for web vitals)
     let userId: string | null = null;
     try {
-      const supabase = createClient();
+      const supabase = await createClient();
       if (supabase?.auth?.getUser) {
         const {
           data: { user },
         } = await supabase.auth.getUser();
         userId = user?.id ?? null;
       }
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/381d9e33-65b3-4af0-9925-b21521306aaa', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: 'debug-session',
-          runId: 'run-webvitals-1',
-          hypothesisId: 'H-userid-null',
-          location: 'web-vitals/route.ts:POST:user',
-          message: 'Auth check complete',
-          data: { hasUser: Boolean(userId) },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
     } catch (authError) {
       log.warn('web_vitals.auth.skipped', {
         error: authError instanceof Error ? authError.message : 'Unknown error',
       });
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/381d9e33-65b3-4af0-9925-b21521306aaa', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: 'debug-session',
-          runId: 'run-webvitals-1',
-          hypothesisId: 'H-userid-null',
-          location: 'web-vitals/route.ts:POST:user-error',
-          message: 'Auth check failed',
-          data: { error: authError instanceof Error ? authError.message : 'unknown' },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
     }
 
     // If user is anonymous, skip DB insert to avoid FK/NOT NULL issues
     if (!userId) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/381d9e33-65b3-4af0-9925-b21521306aaa', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: 'debug-session',
-          runId: 'run-webvitals-1',
-          hypothesisId: 'H-userid-null',
-          location: 'web-vitals/route.ts:POST:skip-anon',
-          message: 'Skipping insert for anonymous metric',
-          data: {
-            metricName: metric.metricName,
-            pagePath: metric.pagePath,
-          },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
-
       return NextResponse.json({ success: true, skipped: 'anonymous' });
     }
 
@@ -147,28 +79,10 @@ export async function POST(req: NextRequest) {
             page_path: metric.pagePath,
             user_agent: req.headers.get('user-agent'),
             is_anonymous: false,
-            // #region agent log
-            logEndpoint: 'http://127.0.0.1:7242/ingest/381d9e33-65b3-4af0-9925-b21521306aaa',
-            // #endregion
           })},
           NOW()
         )
       `);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/381d9e33-65b3-4af0-9925-b21521306aaa', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: 'debug-session',
-          runId: 'run-webvitals-1',
-          hypothesisId: 'H-userid-null',
-          location: 'web-vitals/route.ts:POST:insert',
-          message: 'Inserted analytics event',
-          data: { hasUser: Boolean(userId) },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
     } catch (dbError) {
       // If table doesn't exist or insert fails, log but don't fail the request
       // Web vitals should never break user experience
@@ -176,24 +90,6 @@ export async function POST(req: NextRequest) {
         error: dbError instanceof Error ? dbError.message : 'Unknown error',
         metric: metric.metricName,
       });
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/381d9e33-65b3-4af0-9925-b21521306aaa', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: 'debug-session',
-          runId: 'run-webvitals-1',
-          hypothesisId: 'H-userid-null',
-          location: 'web-vitals/route.ts:POST:insert-error',
-          message: 'Insert failed',
-          data: {
-            error: dbError instanceof Error ? dbError.message : 'unknown',
-            hasUser: Boolean(userId),
-          },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
     }
 
     // Log if metric is poor
@@ -204,21 +100,6 @@ export async function POST(req: NextRequest) {
         page: metric.pagePath,
         userId,
       });
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/381d9e33-65b3-4af0-9925-b21521306aaa', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: 'debug-session',
-          runId: 'run-webvitals-1',
-          hypothesisId: 'H-userid-null',
-          location: 'web-vitals/route.ts:POST:poor',
-          message: 'Poor metric logged',
-          data: { metricName: metric.metricName, hasUser: Boolean(userId) },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
     }
 
     return NextResponse.json({ success: true });
@@ -236,7 +117,7 @@ export async function POST(req: NextRequest) {
  */
 export async function GET(req: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
       error: authError,
@@ -310,9 +191,9 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      metrics: result.rows,
-      trends: trendResult.rows,
-      pageBreakdown: pageBreakdown.rows,
+      metrics: getRows(result),
+      trends: getRows(trendResult),
+      pageBreakdown: getRows(pageBreakdown),
       period: {
         days,
         startDate: new Date(Date.now() - days * 24 * 60 * 60 * 1000),
