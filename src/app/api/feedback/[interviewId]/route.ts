@@ -6,7 +6,10 @@ const ParamsSchema = z.object({
   interviewId: z.string().uuid(),
 });
 
-export async function GET(_req: NextRequest, { params }: { params: { interviewId: string } }) {
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ interviewId: string }> }
+) {
   const supabase = await createClient();
 
   try {
@@ -19,7 +22,7 @@ export async function GET(_req: NextRequest, { params }: { params: { interviewId
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { interviewId } = ParamsSchema.parse(params);
+    const { interviewId } = ParamsSchema.parse(await params);
 
     const { data: interview, error: interviewError } = await supabase
       .from('interviews')
