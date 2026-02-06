@@ -35,7 +35,6 @@ import {
   Briefcase,
   CheckCircle,
   XCircle,
-  Link as LinkIcon,
   Target,
   Shield,
   BadgeCheck,
@@ -194,23 +193,23 @@ export function OrgDetailModal({ org, open, onClose, onOrgUpdated }: OrgDetailMo
                   </span>
                 </div>
 
-                {org.location && (
+                {Array.isArray(org.locations) && org.locations.length > 0 && (
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">{org.location}</span>
+                    <span className="text-sm">{org.locations.filter(Boolean).join(', ')}</span>
                   </div>
                 )}
 
-                {org.websiteUrl && (
+                {org.website && (
                   <div className="flex items-center gap-2">
                     <Globe className="h-4 w-4 text-muted-foreground" />
                     <a
-                      href={org.websiteUrl}
+                      href={org.website}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-sm text-blue-600 hover:underline truncate"
                     >
-                      {org.websiteUrl}
+                      {org.website}
                     </a>
                   </div>
                 )}
@@ -225,28 +224,28 @@ export function OrgDetailModal({ org, open, onClose, onOrgUpdated }: OrgDetailMo
 
             <Separator />
 
-            {/* Description & Mission */}
+            {/* Mission & Vision */}
             <div className="space-y-4">
               <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
                 About
               </h3>
 
-              {org.description && (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Description:</p>
-                  <p className="text-sm">{org.description}</p>
-                </div>
-              )}
-
-              {org.missionStatement && (
+              {org.mission && (
                 <div className="bg-[#E8F5E1] p-3 rounded-lg border border-[#1C4D3A]/20">
                   <div className="flex items-start gap-2">
                     <Target className="h-4 w-4 text-[#1C4D3A] mt-0.5" />
                     <div>
-                      <p className="text-xs text-[#1C4D3A] font-medium mb-1">Mission Statement</p>
-                      <p className="text-sm">{org.missionStatement}</p>
+                      <p className="text-xs text-[#1C4D3A] font-medium mb-1">Mission</p>
+                      <p className="text-sm">{org.mission}</p>
                     </div>
                   </div>
+                </div>
+              )}
+
+              {org.vision && (
+                <div className="bg-muted/50 p-3 rounded-lg border border-border/50">
+                  <p className="text-xs text-muted-foreground font-medium mb-1">Vision</p>
+                  <p className="text-sm">{org.vision}</p>
                 </div>
               )}
             </div>
@@ -270,67 +269,20 @@ export function OrgDetailModal({ org, open, onClose, onOrgUpdated }: OrgDetailMo
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {org.isPublic ? (
-                    <CheckCircle className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <XCircle className="h-4 w-4 text-amber-600" />
-                  )}
-                  <span className="text-sm">Public: {org.isPublic ? 'Yes' : 'No'}</span>
+                  <span className="text-sm text-muted-foreground">Type: {org.type ?? 'N/A'}</span>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-muted-foreground">
-                    Org Type: {org.organizationType || 'Standard'}
+                    Legal Name: {org.legalName || 'N/A'}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">
-                    Stage: {org.fundingStage || 'N/A'}
-                  </span>
-                </div>
               </div>
             </div>
 
-            {/* Social Links */}
-            {(org.linkedinUrl || org.twitterUrl) && (
-              <>
-                <Separator />
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                    Social Links
-                  </h3>
-
-                  <div className="flex gap-4">
-                    {org.linkedinUrl && (
-                      <a
-                        href={org.linkedinUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-sm text-blue-600 hover:underline"
-                      >
-                        <LinkIcon className="h-4 w-4" />
-                        LinkedIn
-                      </a>
-                    )}
-                    {org.twitterUrl && (
-                      <a
-                        href={org.twitterUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-sm text-blue-600 hover:underline"
-                      >
-                        <LinkIcon className="h-4 w-4" />
-                        Twitter
-                      </a>
-                    )}
-                  </div>
-                </div>
-              </>
-            )}
-
             {/* Values & Culture */}
-            {org.coreValues && Array.isArray(org.coreValues) && org.coreValues.length > 0 && (
+            {Array.isArray(org.values) && org.values.length > 0 && (
               <>
                 <Separator />
                 <div className="space-y-4">
@@ -338,11 +290,22 @@ export function OrgDetailModal({ org, open, onClose, onOrgUpdated }: OrgDetailMo
                     Core Values
                   </h3>
                   <div className="flex flex-wrap gap-2">
-                    {(org.coreValues as string[]).map((value, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {value}
-                      </Badge>
-                    ))}
+                    {org.values.map((value, index) => {
+                      const label =
+                        typeof value === 'string'
+                          ? value
+                          : value && typeof value === 'object' && 'label' in value
+                            ? String((value as any).label)
+                            : null;
+
+                      if (!label) return null;
+
+                      return (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {label}
+                        </Badge>
+                      );
+                    })}
                   </div>
                 </div>
               </>
