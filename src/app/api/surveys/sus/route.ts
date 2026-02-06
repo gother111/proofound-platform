@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
     // Track analytics event
     trackEvent({
       eventType: 'sus_survey_completed',
-      entityType: 'survey',
+      entityType: 'custom',
       entityId: survey.id,
       userId: user.id,
       properties: {
