@@ -13,6 +13,8 @@ export const metadata = {
 };
 
 export default async function LoginPage() {
+  const isMock = process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true';
+
   try {
     // Check if user is already logged in
     const supabase = await createClient({ allowCookieWrite: true });
@@ -55,9 +57,17 @@ export default async function LoginPage() {
     }
 
     // If already logged in, redirect to appropriate dashboard based on persona
-    if (user) {
+    // In mock mode we intentionally keep the login page reachable for auth E2E tests.
+    if (user && !isMock) {
+      let homePath: string | null = null;
       try {
-        const homePath = await resolveUserHomePath(supabase);
+        homePath = await resolveUserHomePath(supabase);
+      } catch (resolveError) {
+        console.error('Error resolving home path:', resolveError);
+        // Fall through to show login page if home path resolution fails
+      }
+
+      if (homePath) {
         // #region agent log
         fetch('http://127.0.0.1:7242/ingest/381d9e33-65b3-4af0-9925-b21521306aaa', {
           method: 'POST',
@@ -73,25 +83,9 @@ export default async function LoginPage() {
           }),
         }).catch(() => {});
         // #endregion
+
+        // Important: do not catch the redirect (it throws NEXT_REDIRECT internally).
         redirect(homePath);
-      } catch (redirectError) {
-        console.error('Error resolving home path:', redirectError);
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/381d9e33-65b3-4af0-9925-b21521306aaa', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sessionId: 'debug-session',
-            runId: 'run-login-3',
-            hypothesisId: 'H-redirect-loop',
-            location: 'login/page.tsx:redirect-error',
-            message: 'Home path resolution failed',
-            data: { error: redirectError instanceof Error ? redirectError.message : 'unknown' },
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {});
-        // #endregion
-        // Fall through to show login page if redirect fails
       }
     }
   } catch (error) {

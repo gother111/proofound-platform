@@ -7,15 +7,26 @@ import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit/index';
 const applySecurityHeaders = (response: NextResponse, request: NextRequest) => {
   const host = request.headers.get('host') || '';
   const isProd = host.includes('proofound.io');
+  const isDev = process.env.NODE_ENV !== 'production';
+
+  // Note: Next dev uses eval-like codepaths (React Refresh / Webpack runtime). If CSP blocks
+  // unsafe-eval in development, the app may never hydrate, breaking interactive flows.
+  const scriptSrc = isDev
+    ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:"
+    : "script-src 'self' 'unsafe-inline' https:";
+
+  const connectSrc = isDev
+    ? "connect-src 'self' https: wss: ws:"
+    : "connect-src 'self' https: wss:";
 
   const cspDirectives = [
     "default-src 'self' https:",
     // Allow inline boot scripts from Next.js; safer nonce/hashes could be added later.
-    "script-src 'self' 'unsafe-inline' https:",
+    scriptSrc,
     "style-src 'self' 'unsafe-inline' https:",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data: https:",
-    "connect-src 'self' https: wss:",
+    connectSrc,
     "frame-src 'self' https:",
     "object-src 'none'",
     "frame-ancestors 'none'",

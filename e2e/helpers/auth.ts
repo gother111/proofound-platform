@@ -25,14 +25,16 @@ export interface TestOrganization {
 /**
  * Generate a unique test user with timestamp to avoid collisions
  */
-export function generateTestUser(prefix = 'testuser'): TestUser {
+export function generateTestUser(prefix: string = 'testuser'): TestUser {
   const timestamp = Date.now();
   const random = Math.floor(Math.random() * 1000);
+  const normalizedPrefix =
+    prefix === 'individual' || prefix === 'organization' ? `test-${prefix}` : prefix;
   return {
-    email: `${prefix}+${timestamp}${random}@test.proofound.com`,
+    email: `${normalizedPrefix}+${timestamp}${random}@test.proofound.com`,
     password: 'TestPassword123!',
     fullName: `Test User ${timestamp}`,
-    handle: `${prefix}${timestamp}${random}`,
+    handle: `${normalizedPrefix}${timestamp}${random}`,
   };
 }
 
@@ -103,10 +105,7 @@ export async function signupUser(
 /**
  * Sign up as organization through the UI
  */
-export async function signupOrganization(
-  page: Page,
-  org: TestOrganization
-) {
+export async function signupOrganization(page: Page, org: TestOrganization) {
   await page.goto('/signup');
 
   // Select organization persona
@@ -332,9 +331,10 @@ export async function completeOrganizationOnboarding(
   await page.waitForURL(/onboarding/, { timeout: 5000 });
 
   // Fill organization name
-  const orgNameInput = page.getByLabel(/organization name|company name|display name/i).or(
-    page.locator('input[name="displayName"]')
-  ).first();
+  const orgNameInput = page
+    .getByLabel(/organization name|company name|display name/i)
+    .or(page.locator('input[name="displayName"]'))
+    .first();
 
   if (await orgNameInput.isVisible()) {
     await orgNameInput.fill(orgData.organizationName);
@@ -342,9 +342,10 @@ export async function completeOrganizationOnboarding(
 
   // Fill slug if provided
   if (orgData.slug) {
-    const slugInput = page.getByLabel(/slug|url slug/i).or(
-      page.locator('input[name="slug"]')
-    ).first();
+    const slugInput = page
+      .getByLabel(/slug|url slug/i)
+      .or(page.locator('input[name="slug"]'))
+      .first();
 
     if (await slugInput.isVisible()) {
       await slugInput.fill(orgData.slug);
@@ -352,9 +353,10 @@ export async function completeOrganizationOnboarding(
   }
 
   // Select organization type
-  const typeSelect = page.locator('select[name="type"]').or(
-    page.getByLabel(/organization type|type/i)
-  ).first();
+  const typeSelect = page
+    .locator('select[name="type"]')
+    .or(page.getByLabel(/organization type|type/i))
+    .first();
 
   if (await typeSelect.isVisible()) {
     const typeValue = orgData.type || orgData.industry || 'company';
@@ -363,9 +365,10 @@ export async function completeOrganizationOnboarding(
 
   // Fill legal name if provided
   if (orgData.legalName) {
-    const legalNameInput = page.getByLabel(/legal name/i).or(
-      page.locator('input[name="legalName"]')
-    ).first();
+    const legalNameInput = page
+      .getByLabel(/legal name/i)
+      .or(page.locator('input[name="legalName"]'))
+      .first();
 
     if (await legalNameInput.isVisible()) {
       await legalNameInput.fill(orgData.legalName);
@@ -374,9 +377,10 @@ export async function completeOrganizationOnboarding(
 
   // Fill mission if provided
   if (orgData.mission) {
-    const missionInput = page.locator('textarea[name="mission"]').or(
-      page.getByLabel(/mission/i)
-    ).first();
+    const missionInput = page
+      .locator('textarea[name="mission"]')
+      .or(page.getByLabel(/mission/i))
+      .first();
 
     if (await missionInput.isVisible()) {
       await missionInput.fill(orgData.mission);
@@ -385,9 +389,10 @@ export async function completeOrganizationOnboarding(
 
   // Fill website if provided
   if (orgData.website) {
-    const websiteInput = page.getByLabel(/website/i).or(
-      page.locator('input[name="website"]')
-    ).first();
+    const websiteInput = page
+      .getByLabel(/website/i)
+      .or(page.locator('input[name="website"]'))
+      .first();
 
     if (await websiteInput.isVisible()) {
       await websiteInput.fill(orgData.website);
@@ -395,7 +400,9 @@ export async function completeOrganizationOnboarding(
   }
 
   // Submit form
-  const submitButton = page.getByRole('button', { name: /create organization|submit|save/i }).first();
+  const submitButton = page
+    .getByRole('button', { name: /create organization|submit|save/i })
+    .first();
 
   if (await submitButton.isVisible()) {
     await submitButton.click();

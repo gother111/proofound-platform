@@ -116,6 +116,25 @@ export async function getProfileData(): Promise<ProfileData> {
   try {
     const user = await requireAuth();
 
+    // In some environments (notably mock auth during E2E) the authenticated user may not have a
+    // corresponding `profiles` row yet. Since `individual_profiles.user_id` FK references
+    // `profiles.id`, ensure the parent exists before attempting to create the child row.
+    try {
+      await db
+        .insert(profiles)
+        .values({
+          id: user.id,
+          persona: (user.persona as any) ?? 'unknown',
+          displayName: user.displayName ?? null,
+          avatarUrl: user.avatarUrl ?? null,
+          locale: user.locale ?? 'en',
+        })
+        .onConflictDoNothing();
+    } catch (error) {
+      console.error('Failed to ensure profiles row exists:', error);
+      // Continue - downstream queries may still work if the profile already exists.
+    }
+
     let profileRow;
     try {
       [profileRow] = await db

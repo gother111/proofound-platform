@@ -1,51 +1,33 @@
 # Manual Migration Instructions
 
-Since the Supabase CLI isn't linked yet, you can apply migrations manually via the Supabase Dashboard.
+Prefer applying migrations via `supabase db push` (remote). Only use the Dashboard for emergency hotfixes.
 
-## Steps:
+## Recommended: Apply Via CLI (Remote)
 
-### 1. Go to your Supabase Dashboard
+This repo uses the Supabase pooler (`:6543`), which requires disabling prepared statement caching for the Supabase CLI.
 
-Visit: https://supabase.com/dashboard/project/YOUR-PROJECT-ID/sql/new
+1. Read `DATABASE_URL` from `.env.local`.
+2. Percent-encode the password portion (but not the entire URL).
+3. Append pooler-safe params:
+   - `statement_cache_capacity=0`
+   - `prefer_simple_protocol=true`
+   - `pgbouncer=true`
+4. Run:
 
-### 2. Apply Migration 1: Staged Messaging System
-
-Copy the entire contents of:
-
-```
-/Users/yuriibakurov/proofound/supabase/migrations/20251106_staged_messaging_system.sql
-```
-
-Paste into the SQL Editor and click **Run**.
-
-**What this creates:**
-
-- `conversations` table (17 columns)
-- `messages` table (12 columns)
-- 12+ RLS policies
-- Helper functions for masked handles
-- Triggers for auto-reveal
-- Indexes for performance
-
-### 3. Apply Migration 2: Verification Privacy
-
-Copy the entire contents of:
-
-```
-/Users/yuriibakurov/proofound/supabase/migrations/20251107_verification_privacy.sql
+```bash
+supabase db push --db-url "postgresql://...:6543/postgres?sslmode=require&statement_cache_capacity=0&prefer_simple_protocol=true&pgbouncer=true" --dry-run
+supabase db push --db-url "postgresql://...:6543/postgres?sslmode=require&statement_cache_capacity=0&prefer_simple_protocol=true&pgbouncer=true" --yes
 ```
 
-Paste into the SQL Editor and click **Run**.
+## Notes On Legacy Migration Files
 
-**What this creates:**
+Some older migration scripts (for example staged messaging + verification privacy) are **not safe to re-apply** on an already-migrated database (they include non-idempotent `CREATE POLICY` / `CREATE INDEX` statements). Those files are kept for reference under:
 
-- `verification_requests` table (19 columns)
-- 15+ RLS policies
-- Rate limiting views
-- Token expiration functions
-- Analytics integration
+`supabase/migrations_legacy/`
 
-### 4. Verify Success
+The canonical migration history is the remote `supabase_migrations.schema_migrations` table.
+
+## Verify Success (Remote)
 
 Run this query to confirm tables were created:
 
@@ -64,7 +46,7 @@ Expected result:
 - messages: 12 columns
 - verification_requests: 19 columns
 
-### 5. Check RLS Policies
+Check RLS policy counts:
 
 ```sql
 SELECT tablename, COUNT(*) as policy_count
