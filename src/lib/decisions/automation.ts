@@ -9,6 +9,7 @@ import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { emitDecisionMade } from '@/lib/analytics/events';
+import { getRows } from '@/lib/db/rows';
 
 // ============================================================================
 // TYPES
@@ -56,11 +57,12 @@ export async function recordDecision(
       WHERE id = ${interviewId}
     `);
 
-    if (!interview.rows.length) {
+    const interviewRows = getRows(interview) as any[];
+    if (!interviewRows.length) {
       throw new Error('Interview not found');
     }
 
-    const completedAt = new Date((interview.rows[0] as any).completed_at);
+    const completedAt = new Date(interviewRows[0].completed_at);
     const now = new Date();
     const hoursSinceInterview = (now.getTime() - completedAt.getTime()) / (1000 * 60 * 60);
     const withinSLA = hoursSinceInterview <= 48;
@@ -85,7 +87,7 @@ export async function recordDecision(
       RETURNING *
     `);
 
-    const decisionRecord = result.rows[0] as any;
+    const decisionRecord = (getRows(result)[0] ?? null) as any;
 
     // Emit analytics event
     await emitDecisionMade(userId, interviewId, {
@@ -134,11 +136,12 @@ export async function getDecisionWindow(interviewId: string): Promise<DecisionWi
         AND status = 'completed'
     `);
 
-    if (!interview.rows.length) {
+    const interviewRows = getRows(interview) as any[];
+    if (!interviewRows.length) {
       return null;
     }
 
-    const completedAt = new Date((interview.rows[0] as any).completed_at);
+    const completedAt = new Date(interviewRows[0].completed_at);
     const deadline = new Date(completedAt.getTime() + 48 * 60 * 60 * 1000); // 48 hours
     const now = new Date();
     const hoursRemaining = (deadline.getTime() - now.getTime()) / (1000 * 60 * 60);
@@ -151,7 +154,7 @@ export async function getDecisionWindow(interviewId: string): Promise<DecisionWi
       WHERE interview_id = ${interviewId}
     `);
 
-    const remindersSent = parseInt((reminders.rows[0] as any)?.count || '0');
+    const remindersSent = parseInt(((getRows(reminders)[0] as any)?.count ?? '0') as string);
 
     return {
       interviewId,
@@ -190,7 +193,7 @@ export async function getInterviewsAwaitingDecision(): Promise<
         i.id as interview_id,
         i.assignment_id,
         i.participant_user_ids[1] as candidate_id,
-        a.organization_id,
+        a.org_id as organization_id,
         i.completed_at,
         EXTRACT(EPOCH FROM (i.completed_at + INTERVAL '48 hours' - NOW())) / 3600 as hours_remaining
       FROM interviews i
@@ -202,7 +205,7 @@ export async function getInterviewsAwaitingDecision(): Promise<
       ORDER BY i.completed_at ASC
     `);
 
-    return result.rows.map((row: any) => ({
+    return (getRows(result) as any[]).map((row: any) => ({
       interviewId: row.interview_id,
       assignmentId: row.assignment_id,
       candidateId: row.candidate_id,
@@ -238,25 +241,26 @@ export async function sendDecisionReminder(
       SELECT
         i.*,
         a.role,
-        a.organization_id
+        a.org_id as organization_id
       FROM interviews i
       INNER JOIN assignments a ON i.assignment_id = a.id
       WHERE i.id = ${interviewId}
     `);
 
-    if (!interview.rows.length) {
+    const interviewRows = getRows(interview) as any[];
+    if (!interviewRows.length) {
       log.warn('decision.reminder.no_interview', { interviewId });
       return false;
     }
 
-    const interviewData = interview.rows[0] as any;
+    const interviewData = interviewRows[0] as any;
 
     // Check if decision already made
     const decision = await db.execute(sql`
       SELECT id FROM decisions WHERE interview_id = ${interviewId}
     `);
 
-    if (decision.rows.length > 0) {
+    if (getRows(decision).length > 0) {
       log.info('decision.reminder.already_decided', { interviewId });
       return false;
     }
@@ -343,7 +347,7 @@ export async function processDecisionReminders(): Promise<{
         WHERE interview_id = ${interview.interviewId}
       `);
 
-      const sentTypes = new Set(existingReminders.rows.map((r: any) => r.reminder_type));
+      const sentTypes = new Set((getRows(existingReminders) as any[]).map((r: any) => r.reminder_type));
 
       // Determine which reminder to send based on hours elapsed
       let reminderType: '24h' | '40h' | '48h_deadline' | '54h_overdue' | null = null;
