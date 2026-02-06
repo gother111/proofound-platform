@@ -194,9 +194,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
           });
 
           // Get candidate email from Supabase auth
-          const { data: authData } = await supabase.auth.admin.getUserById(
-            updatedContract.userId
-          );
+          const { data: authData } = await supabase.auth.admin.getUserById(updatedContract.userId);
 
           // Get organization name
           const org = await db.query.organizations.findFirst({
@@ -210,9 +208,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
           // Emit contract signed analytics event for TTSC tracking
           try {
-            await emitContractSigned(updatedContract.userId, updatedContract.assignmentId, {
-              contractType: updatedContract.contractType,
-              contractId: updatedContract.id,
+            await emitContractSigned(updatedContract.userId, updatedContract.id, {
+              contract_id: updatedContract.id,
+              assignment_id: updatedContract.assignmentId,
+              contract_type: updatedContract.contractType ?? undefined,
             });
           } catch (analyticsError) {
             console.error('Failed to emit contract signed event:', analyticsError);
