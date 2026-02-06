@@ -24,6 +24,18 @@ export function getEmptyProfile(): ProfileData {
     experiences: [],
     education: [],
     volunteering: [],
+    fieldVisibility: {
+      mission: 'public',
+      vision: 'public',
+      values: 'public',
+      causes: 'public',
+      skills: 'public',
+      experiences: 'public',
+      education: 'public',
+      volunteering: 'public',
+      impactStories: 'public',
+    },
+    redactMode: false,
   };
 }
 
