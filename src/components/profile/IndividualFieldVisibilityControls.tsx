@@ -211,7 +211,7 @@ export function IndividualFieldVisibilityControls({
 
   const getVisibilityIcon = (level: IndividualVisibilityLevel) => {
     const option = VISIBILITY_OPTIONS.find((opt) => opt.value === level);
-    if (!option) return Eye;
+    if (!option) return <Eye className="h-4 w-4 text-muted-foreground" />;
     const Icon = option.icon;
     return <Icon className={`h-4 w-4 ${option.color}`} />;
   };
