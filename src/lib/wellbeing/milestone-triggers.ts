@@ -12,6 +12,7 @@ import { db } from '@/db';
 import { wellbeingReflections } from '@/db/schema';
 import { sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
+import { getRows } from '@/lib/db/rows';
 
 export type MilestoneType = 'rejection' | 'interview' | 'offer';
 
@@ -62,12 +63,12 @@ async function checkWellBeingOptIn(userId: string): Promise<boolean> {
     const result = await db.execute(sql`
       SELECT EXISTS(
         SELECT 1 FROM wellbeing_checkins
-        WHERE profile_id = ${userId}
+        WHERE user_id = ${userId}
         LIMIT 1
       ) as opted_in
     `);
 
-    const rows = result.rows as any[];
+    const rows = getRows(result as any) as any[];
     return rows[0]?.opted_in === true;
   } catch (error) {
     log.error('wellbeing.opt_in_check_failed', {
@@ -125,10 +126,9 @@ async function createReflectionPrompt(
   // Store as a reflection template/suggestion
   // (In a full implementation, this would be in a separate table for prompts)
   await db.insert(wellbeingReflections).values({
-    profileId: userId,
-    content: `[Reflection Prompt] ${promptData.prompt}\n\nSuggested questions:\n${promptData.suggestedQuestions.join('\n')}`,
-    mood: null,
-    tags: [milestoneType, 'milestone', 'prompt'],
+    userId,
+    reflectionText: `[Reflection Prompt] ${promptData.prompt}\n\nSuggested questions:\n${promptData.suggestedQuestions.join('\n')}`,
+    milestoneType,
   });
 
   log.info('wellbeing.reflection_prompt.created', {
