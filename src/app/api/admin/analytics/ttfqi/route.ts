@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
 
     log.info('ttfqi.calculated', {
       userId: user.userId,
-      median: result.median,
+      median: result.value,
       sampleSize: result.sampleSize,
       cohort,
     });
