@@ -2404,10 +2404,6 @@ export const verificationRequests = pgTable('verification_requests', {
   badgeId: uuid('badge_id'),
 });
 
-// Type exports for verification
-export type VerificationRequest = typeof verificationRequests.$inferSelect;
-export type InsertVerificationRequest = typeof verificationRequests.$inferInsert;
-
 // ====================================
 // Fairness Reporting System
 // ====================================
