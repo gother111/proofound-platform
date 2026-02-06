@@ -37,8 +37,7 @@ export async function GET(request: NextRequest) {
 
     log.info('pac.calculated', {
       userId: user.userId,
-      acceptanceLift: result.acceptanceLift,
-      contractLift: result.contractLift,
+      lift: result.lift,
       sampleSize: result.sampleSize,
     });
 
