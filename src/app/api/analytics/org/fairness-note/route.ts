@@ -100,6 +100,15 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    if (!latestNote) {
+      return NextResponse.json({
+        hasData: false,
+        message: 'No fairness note available',
+        lastGenerated: null,
+        isRealtime: false,
+      });
+    }
+
     // Return stored note
     return NextResponse.json({
       hasData: true,
