@@ -11,6 +11,13 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 - Unit tests: `npm run test` (source: package.json)
 - Build: `npm run build` (source: package.json)
 
+## Vercel Parity (When Deploy Might Break)
+
+- Ensure Node version matches `.nvmrc`/engines (source: .nvmrc, package.json)
+- Pull production project/env settings (creates `.vercel/`, which is gitignored): `npx vercel@latest pull --yes --environment=production` (source: .gitignore)
+- Run a prod-equivalent build locally: `npx vercel@latest build --prod`
+  - If CLI auth is missing, use `--token` with a valid `VERCEL_TOKEN` (do not print it).
+
 ## CI Gate Parity (When Appropriate)
 
 - CI also runs perf budgets and go/no-go gates after starting the app. (source: .github/workflows/ci.yml)

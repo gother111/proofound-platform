@@ -53,6 +53,7 @@ This guide covers setting up comprehensive monitoring and alerting for the Proof
 ```
 
 **Services Used:**
+
 - **Sentry:** Error tracking, performance monitoring
 - **Vercel:** Analytics, logs, deployment monitoring
 - **Supabase:** Database metrics, connection pooling
@@ -74,6 +75,7 @@ Sentry is already configured in the application. See `docs/sentry-setup.md` for 
 2. Configure critical alerts:
 
 **Alert 1: High Error Rate**
+
 - **Name:** Production Error Rate Spike
 - **Environment:** production
 - **Condition:** Errors > 10 in 1 minute
@@ -81,6 +83,7 @@ Sentry is already configured in the application. See `docs/sentry-setup.md` for 
 - **Priority:** High
 
 **Alert 2: New Issue**
+
 - **Name:** New Production Error
 - **Environment:** production
 - **Condition:** First seen event
@@ -89,12 +92,14 @@ Sentry is already configured in the application. See `docs/sentry-setup.md` for 
 - **Priority:** High
 
 **Alert 3: Regression**
+
 - **Name:** Error Regression Detected
 - **Condition:** Issue is marked resolved and occurs again
 - **Action:** Send email to responsible developer
 - **Priority:** Medium
 
 **Alert 4: Performance Degradation**
+
 - **Name:** Slow API Response
 - **Condition:** p95 response time > 2000ms for 5 minutes
 - **Transaction:** /api/core/matching/profile
@@ -139,9 +144,7 @@ path:src/db/* backend-team@proofound.com
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
   tracesSampleRate: 0.1, // 10% of transactions
-  integrations: [
-    Sentry.httpIntegration(),
-  ],
+  integrations: [Sentry.httpIntegration()],
   beforeSend(event, hint) {
     // Add custom context
     if (event.request) {
@@ -173,6 +176,7 @@ npm install -g @sentry/cli
 ```
 
 **Benefits:**
+
 - Track errors by release version
 - Compare error rates between releases
 - Automatic source map uploads
@@ -189,11 +193,25 @@ npm install -g @sentry/cli
 4. Deploy to start collecting data
 
 **No code changes required** - automatically tracks:
+
 - Page views
 - Core Web Vitals (LCP, FID, CLS)
 - Real user monitoring
 - Geographic distribution
 - Device/browser breakdown
+
+### Pre-commit Vercel Gate (Run Log)
+
+Use this section to record local parity checks run before committing changes that could affect deploy (build, env, or Vercel settings). Do not paste secrets.
+
+- 2026-02-06 22:50 CET (base commit at time of run: `ed6c95e3e27086fc9a028364b52e0fc6517fd3fb`, Node `v20.20.0`):
+  - `npm ci`: PASS
+  - `npm run lint`: PASS
+  - `npm run typecheck`: PASS
+  - `npm run test`: PASS
+  - `npm run build`: PASS
+  - `npx vercel@latest pull --yes --environment=production` (via `VERCEL_TOKEN`): PASS
+  - `npx vercel@latest build --prod` (via `VERCEL_TOKEN`): PASS
 
 ### Core Web Vitals Monitoring
 
@@ -201,6 +219,7 @@ npm install -g @sentry/cli
 Vercel → Project → Analytics → Web Vitals
 
 **Key Metrics:**
+
 - **LCP (Largest Contentful Paint):** Target < 2.5s
 - **FID (First Input Delay):** Target < 100ms
 - **CLS (Cumulative Layout Shift):** Target < 0.1
@@ -263,6 +282,7 @@ export default function RootLayout({ children }) {
 ```
 
 **Benefits:**
+
 - Real user performance monitoring
 - Route-specific performance data
 - Device and connection type breakdown
@@ -274,6 +294,7 @@ export default function RootLayout({ children }) {
 ### Accessing Vercel Logs
 
 **Via Dashboard:**
+
 1. Go to Vercel → Project → Logs
 2. Filter by:
    - Level (info, warn, error)
@@ -306,6 +327,7 @@ vercel logs > logs.json
 ### Log Aggregation with jq
 
 **Install jq:**
+
 ```bash
 brew install jq
 ```
@@ -371,7 +393,7 @@ async function monitorErrors() {
   const { stdout } = await execAsync('vercel logs --since 5m');
 
   const lines = stdout.split('\n');
-  const errors = lines.filter(line => {
+  const errors = lines.filter((line) => {
     try {
       const log = JSON.parse(line);
       return log.level === 'error';
@@ -521,18 +543,21 @@ Target: < 50 connections (90% of Supabase pooler limit).
 3. Add monitors:
 
 **Monitor 1: Homepage**
+
 - **Type:** HTTP(s)
 - **URL:** https://yourdomain.com
 - **Interval:** 5 minutes
 - **Alert:** Email when down for 5 minutes
 
 **Monitor 2: API Health Check**
+
 - **Type:** HTTP(s)
 - **URL:** https://yourdomain.com/api/health
 - **Interval:** 5 minutes
 - **Expected Status:** 200
 
 **Monitor 3: API Matching Endpoint**
+
 - **Type:** HTTP(s)
 - **URL:** https://yourdomain.com/api/core/matching/profile
 - **Interval:** 10 minutes
@@ -616,24 +641,28 @@ export async function GET() {
 ### Alert Priority Levels
 
 **P0 - Critical (Immediate Action Required):**
+
 - Site down (uptime monitor)
 - Database connection failures
 - Error rate > 50 per minute
 - Payment processing errors
 
 **P1 - High (Action Required Within 1 Hour):**
+
 - Error rate > 10 per minute
 - API response time p95 > 2s
 - Database connection pool > 80%
 - Cache unavailable
 
 **P2 - Medium (Action Required Within 4 Hours):**
+
 - Error rate > 5 per minute
 - API response time p95 > 1s
 - Slow database queries
 - New error type introduced
 
 **P3 - Low (Action Required Within 24 Hours):**
+
 - Warning logs spike
 - Cache hit rate < 50%
 - Scheduled job failures
@@ -642,10 +671,12 @@ export async function GET() {
 ### Alert Channels
 
 **Email:**
+
 - P0, P1: On-call engineer + team lead
 - P2, P3: Team email
 
 **Slack:**
+
 ```bash
 # Set up incoming webhook
 # https://api.slack.com/messaging/webhooks
@@ -663,6 +694,7 @@ Use services like Twilio or PagerDuty for critical alerts.
 ### Alert Fatigue Prevention
 
 **Best Practices:**
+
 1. Set appropriate thresholds (don't alert on every error)
 2. Use alert aggregation (1 alert for 10 errors, not 10 alerts)
 3. Implement alert snoozing for known issues
@@ -688,6 +720,7 @@ Use services like Twilio or PagerDuty for critical alerts.
 ### Vercel Dashboard
 
 **Key Metrics to Monitor:**
+
 - Deployment status
 - Build times
 - Core Web Vitals trends
@@ -756,31 +789,37 @@ export default function MonitoringPage() {
 ### Incident Response Process
 
 **1. Detection (Automated):**
+
 - Alert received via email/Slack/SMS
 - Severity level determined (P0-P3)
 
 **2. Acknowledgement:**
+
 - On-call engineer acknowledges alert within 5 minutes (P0/P1)
 - Update status page (if applicable)
 
 **3. Investigation:**
+
 - Check Sentry for errors
 - Review Vercel logs
 - Check database metrics
 - Review recent deployments
 
 **4. Mitigation:**
+
 - Rollback deployment (if recent deploy)
 - Apply hotfix
 - Scale resources (if capacity issue)
 - Disable feature flag (if feature-specific)
 
 **5. Resolution:**
+
 - Verify issue resolved
 - Update status page
 - Document incident
 
 **6. Post-Mortem (P0/P1 only):**
+
 - Write incident report
 - Identify root cause
 - Create action items
@@ -817,6 +856,7 @@ export default function MonitoringPage() {
 ### Communication Templates
 
 **Initial Incident Update:**
+
 ```
 [INCIDENT] Production Issue Detected
 Severity: P0
@@ -827,6 +867,7 @@ Next update: 10:45 UTC
 ```
 
 **Resolution Update:**
+
 ```
 [RESOLVED] Production Issue Resolved
 Severity: P0
@@ -845,6 +886,7 @@ Post-mortem: Scheduled for 2025-11-04
 ### Application Metrics
 
 **Error Metrics:**
+
 - Total errors per hour/day
 - Error rate (errors per request)
 - Error types (by category)
@@ -852,6 +894,7 @@ Post-mortem: Scheduled for 2025-11-04
 - Errors by user
 
 **Performance Metrics:**
+
 - API response time (p50, p95, p99)
 - Database query time
 - Cache hit rate
@@ -859,6 +902,7 @@ Post-mortem: Scheduled for 2025-11-04
 - Time to First Byte (TTFB)
 
 **Business Metrics:**
+
 - New user signups
 - Active users (DAU, MAU)
 - Matches computed
@@ -869,6 +913,7 @@ Post-mortem: Scheduled for 2025-11-04
 ### Infrastructure Metrics
 
 **Vercel:**
+
 - Function execution time
 - Function invocations
 - Build duration
@@ -876,6 +921,7 @@ Post-mortem: Scheduled for 2025-11-04
 - Bandwidth usage
 
 **Supabase:**
+
 - Database size
 - Connection count
 - Query performance
@@ -883,6 +929,7 @@ Post-mortem: Scheduled for 2025-11-04
 - Backup success rate
 
 **Vercel KV:**
+
 - Cache hit rate
 - Cache miss rate
 - Total keys
@@ -924,21 +971,21 @@ Post-mortem: Scheduled for 2025-11-04
 
 ### Essential Monitoring Tools
 
-| Tool | Purpose | Cost |
-|------|---------|------|
-| Sentry | Error tracking | Free tier (5k errors/mo) |
-| Vercel Analytics | Web vitals, usage | Included with Vercel |
-| Supabase | Database metrics | Included with Supabase |
-| UptimeRobot | Uptime monitoring | Free (50 monitors) |
-| Better Uptime | Uptime + status page | Free tier available |
+| Tool             | Purpose              | Cost                     |
+| ---------------- | -------------------- | ------------------------ |
+| Sentry           | Error tracking       | Free tier (5k errors/mo) |
+| Vercel Analytics | Web vitals, usage    | Included with Vercel     |
+| Supabase         | Database metrics     | Included with Supabase   |
+| UptimeRobot      | Uptime monitoring    | Free (50 monitors)       |
+| Better Uptime    | Uptime + status page | Free tier available      |
 
 ### Optional Advanced Tools
 
-| Tool | Purpose | Cost |
-|------|---------|------|
-| Datadog | Full observability | Paid ($15/host/mo) |
-| New Relic | APM monitoring | Paid ($49/mo) |
-| LogDNA | Log aggregation | Paid ($15/GB/mo) |
+| Tool      | Purpose             | Cost               |
+| --------- | ------------------- | ------------------ |
+| Datadog   | Full observability  | Paid ($15/host/mo) |
+| New Relic | APM monitoring      | Paid ($49/mo)      |
+| LogDNA    | Log aggregation     | Paid ($15/GB/mo)   |
 | PagerDuty | Incident management | Paid ($21/user/mo) |
 
 ---

@@ -84,12 +84,12 @@ export async function generateEvidencePackPDF(
 
       const chunks: Buffer[] = [];
 
-      doc.on('data', (chunk) => chunks.push(chunk));
+      doc.on('data', (chunk: Buffer) => chunks.push(chunk));
       doc.on('end', () => {
         const pdfBuffer = Buffer.concat(chunks);
         resolve(pdfBuffer);
       });
-      doc.on('error', (error) => reject(error));
+      doc.on('error', (error: unknown) => reject(error));
 
       // Generate PDF content
       addHeader(doc, assignment);

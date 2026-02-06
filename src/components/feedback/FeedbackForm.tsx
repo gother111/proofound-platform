@@ -131,7 +131,8 @@ export function FeedbackForm({
         {alreadySubmitted ? (
           <p className="text-sm text-emerald-700">You already submitted feedback for this side.</p>
         ) : (
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          // Use custom validation messaging instead of native HTML5 validation popups.
+          <form className="space-y-6" onSubmit={handleSubmit} noValidate>
             {orderedQuestions.map((question) => {
               const inputId = `feedback-${question.id}`;
               return (

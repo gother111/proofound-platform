@@ -8,6 +8,8 @@ Repo Truth items include citations like `(source: README.md)`. Everything else i
   - Plan to stage only files relevant to the task.
 - Confirm Node/tooling expectations:
   - Node version matches `.nvmrc` and `package.json` engines. (source: .nvmrc, package.json)
+- If you expect deploy impact (Next config, env validation, route handlers, build-time imports):
+  - Run the local Vercel pre-commit gate (install/lint/typecheck/test/build + `vercel build --prod`) before committing.
 - Confirm env var hygiene:
   - Use `.env.example` and `docs/ENV_VARIABLES.md`; never commit `.env.local` or `.env`. (source: .env.example, docs/ENV_VARIABLES.md, .gitignore)
 - Confirm hooks behavior:

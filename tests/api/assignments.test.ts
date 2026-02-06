@@ -61,6 +61,9 @@ vi.mock('@/db', () => ({
 }));
 
 vi.mock('@/lib/log', () => ({
+  logContext: {
+    run: (_ctx: any, fn: any) => fn(),
+  },
   log: {
     info: vi.fn(),
     error: vi.fn(),

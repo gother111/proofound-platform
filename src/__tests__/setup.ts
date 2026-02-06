@@ -27,5 +27,31 @@ if (isBrowser) {
 // Provide Vite SSR helper expected by Next.js transforms during Vitest
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (globalThis as any).__vite_ssr_exportName__ =
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (globalThis as any).__vite_ssr_exportName__ || ((_name: string, value: any) => value);
+  (globalThis as any).__vite_ssr_exportName__ ||
+  ((name: string, valueOrGetter: any) => {
+    const g = globalThis as any;
+    const exp = g.__vite_ssr_exports__;
+
+    // When running transformed SSR modules, Vite uses a per-module `__vite_ssr_exports__`
+    // object + `__vite_ssr_exportName__` helper to register named exports.
+    if (exp && typeof exp === 'object') {
+      if (typeof valueOrGetter === 'function') {
+        Object.defineProperty(exp, name, {
+          enumerable: true,
+          configurable: true,
+          get: valueOrGetter,
+        });
+        return undefined;
+      }
+
+      Object.defineProperty(exp, name, {
+        enumerable: true,
+        configurable: true,
+        value: valueOrGetter,
+      });
+      return undefined;
+    }
+
+    // Fallback: behave like an identity helper when used in expression form.
+    return valueOrGetter;
+  });

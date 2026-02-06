@@ -3,9 +3,10 @@ import { describe, it, expect, beforeEach } from 'vitest';
 describe('Rate Limiting', () => {
   beforeEach(() => {
     // Clear any rate limit state between tests
-    if (globalThis.__PROFOUND_RATE_LIMIT_STORE__) {
-      globalThis.__PROFOUND_RATE_LIMIT_STORE__.clear();
-    }
+    const store = (globalThis as any).__PROFOUND_RATE_LIMIT_STORE__ as
+      | Map<unknown, unknown>
+      | undefined;
+    store?.clear();
   });
 
   describe('Rate limit configuration', () => {

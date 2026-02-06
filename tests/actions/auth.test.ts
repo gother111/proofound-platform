@@ -104,6 +104,11 @@ describe('Auth Actions', () => {
     it('should return error for invalid input', async () => {
       const formData = new FormData();
       formData.append('email', 'invalid-email');
+      // Provide the other required fields so we specifically exercise the email validation path.
+      formData.append('password', 'password123');
+      formData.append('persona', 'individual');
+      formData.append('gdprConsent', 'true');
+      formData.append('marketingOptIn', 'false');
 
       const result = await signUp(undefined, formData);
 

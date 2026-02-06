@@ -7,6 +7,18 @@ This runbook captures the repo’s actual scripts and gates. Do not paste secret
 - Node version is pinned in `.nvmrc` and constrained by `package.json` engines. (source: .nvmrc, package.json)
 - The repo uses `npm` with `package-lock.json`. (source: package-lock.json)
 
+### Node Version (Practical)
+
+Use `nvm` to ensure you run the same Node version Vercel will use for this repo:
+
+```bash
+export NVM_DIR="$HOME/.nvm"
+. "$NVM_DIR/nvm.sh"
+nvm install 20.20.0
+nvm use 20.20.0
+node -v  # expect v20.20.0
+```
+
 ## Environment Variables (Repo Truth)
 
 - Start from `.env.example` and the reference guide in `docs/ENV_VARIABLES.md`. (source: .env.example, docs/ENV_VARIABLES.md)

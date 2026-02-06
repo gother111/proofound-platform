@@ -44,6 +44,6 @@ describe('createClient', () => {
 
     const { createClient } = await import('../server');
 
-    await expect(createClient()).rejects.toThrowError(/Missing required environment variables/);
+    await expect(createClient()).rejects.toThrowError(/Missing Supabase URL|ENV_MISCONFIG/);
   });
 });

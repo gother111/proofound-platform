@@ -19,6 +19,19 @@ This folder is the durable “project memory” surface for Proofound. It is mea
 
 - Bootstrap run: created `project/` and `agent/` markdown only (no application code changes).
 - This run: tightened repo-truth wording/citations after verifying against cited sources.
+- Vercel pre-commit gate run (2026-02-06 22:50 CET) @ `ed6c95e3e27086fc9a028364b52e0fc6517fd3fb` (Node `v20.20.0`, npm `10.8.2`):
+  - `npm ci`: PASS
+  - `npm run lint`: PASS
+  - `npm run typecheck`: PASS
+  - `npm run test`: PASS
+  - `npm run build`: PASS
+  - `npx vercel@latest pull --yes --environment=production` (via `VERCEL_TOKEN`): PASS
+  - `npx vercel@latest build --prod` (via `VERCEL_TOKEN`): PASS
+  - Fixes applied (this commit):
+    - Vitest: add SSR export shim so Vitest/vite-node can import project modules correctly: `vitest.config.ts`
+    - Tests: fix mocks/expectations: `tests/api/assignments.test.ts`, `tests/actions/auth.test.ts`, `src/lib/supabase/__tests__/server.test.ts`
+    - UI: prefer custom validation messaging for feedback form: `src/components/feedback/FeedbackForm.tsx`
+    - Typecheck/test stabilization: `src/types/pdfkit.d.ts`, `src/lib/portfolio/pdf.ts`, `src/lib/reports/evidence-pack-generator.ts`, `src/app/api/admin/__tests__/users-route.test.ts`, `src/lib/__tests__/rate-limit.test.ts`
 
 ## Curated Doc Index (Validated Paths)
 

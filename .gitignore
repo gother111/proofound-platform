@@ -34,6 +34,9 @@ debug_log.txt
 # vercel
 .vercel
 
+# supabase
+/supabase/.temp/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
@@ -46,3 +49,6 @@ next-env.d.ts
 /test-results/
 /playwright-report/
 /playwright/.cache/
+
+# supabase cli temp artifacts
+supabase/.temp/

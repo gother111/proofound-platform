@@ -64,42 +64,27 @@ describe('admin users route', () => {
       { id: 'u2', displayName: 'User Two', createdAt: new Date() },
     ];
 
-    vi.spyOn(dbModule, 'db', 'get').mockReturnValue({
-      select: () => ({
-        from: () => ({
-          where: () => ({
-            limit: () => ({
-              offset: () => ({
-                orderBy: () => mockUsers,
+    vi.spyOn(dbModule, 'db', 'get')
+      .mockReturnValueOnce({
+        select: () => ({
+          from: () => ({
+            where: () => ({
+              limit: () => ({
+                offset: () => ({
+                  orderBy: () => mockUsers,
+                }),
               }),
             }),
           }),
         }),
-      }),
-      select: vi.fn().mockReturnThis(),
-      from: vi.fn().mockReturnThis(),
-      where: vi.fn().mockReturnThis(),
-    } as any);
-
-    vi.spyOn(dbModule, 'db', 'get').mockReturnValueOnce({
-      select: () => ({
-        from: () => ({
-          where: () => ({
-            limit: () => ({
-              offset: () => ({
-                orderBy: () => mockUsers,
-              }),
-            }),
+      } as any)
+      .mockReturnValue({
+        select: () => ({
+          from: () => ({
+            where: () => [{ count: 2 }],
           }),
         }),
-      }),
-    } as any).mockReturnValue({
-      select: () => ({
-        from: () => ({
-          where: () => [{ count: 2 }],
-        }),
-      }),
-    } as any);
+      } as any);
 
     const req = buildRequest('https://example.com/api/admin/users?limit=2&page=1');
     const res = (await GET(req)) as Response;
@@ -109,4 +94,3 @@ describe('admin users route', () => {
     expect(body.users.length).toBe(2);
   });
 });
-
