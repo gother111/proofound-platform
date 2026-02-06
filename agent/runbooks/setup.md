@@ -24,6 +24,27 @@ node -v  # expect v20.20.0
 - Start from `.env.example` and the reference guide in `docs/ENV_VARIABLES.md`. (source: .env.example, docs/ENV_VARIABLES.md)
 - Do not commit secret env files; `.gitignore` excludes `.env` and `*.local` patterns. (source: .gitignore)
 
+## Video Providers (Zoom, Google Meet)
+
+The app stores video provider tokens in `user_video_integrations` (Supabase) and uses these routes for OAuth:
+
+- Connect:
+  - `GET /api/integrations/zoom/connect`
+  - `GET /api/integrations/google/connect`
+- Callback:
+  - `GET /api/integrations/zoom/callback`
+  - `GET /api/integrations/google/callback`
+
+Required env vars:
+
+- Zoom: `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`, `ZOOM_REDIRECT_URI`
+- Google: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`
+
+Notes:
+
+- `ZOOM_REDIRECT_URI` and `GOOGLE_REDIRECT_URI` must match the redirect URIs configured in the provider consoles.
+- Callbacks validate an httpOnly state cookie set during connect (`zoom_oauth_state`, `google_oauth_state`). If the cookie is missing (for example, using a different domain, or blocked cookies), the callback will fail.
+
 ## Install Dependencies
 
 - CI installs dependencies via `npm ci`. (source: .github/workflows/ci.yml)

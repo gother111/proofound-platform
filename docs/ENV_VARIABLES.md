@@ -327,14 +327,17 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 **Required Vars**:
 
 - `ZOOM_CLIENT_ID` and `ZOOM_CLIENT_SECRET` — Zoom OAuth app credentials.
-- `ZOOM_REDIRECT_URI` — Must match the redirect URL in your Zoom app (e.g., `https://yourdomain.com/api/integrations/video/zoom/callback`).
-- `NEXT_PUBLIC_APP_URL` — Base site URL used to build OAuth redirects (e.g., `https://yourdomain.com`).
-- `GOOGLE_CLIENT_ID` — Required if you enable the Google Meet branch.
+- `ZOOM_REDIRECT_URI` — Must match the redirect URL in your Zoom app (recommended: `https://yourdomain.com/api/integrations/zoom/callback`).
+- `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` — Required if you enable the Google Meet branch.
+- `GOOGLE_REDIRECT_URI` — Must match the redirect URL in your Google OAuth client (recommended: `https://yourdomain.com/api/integrations/google/callback`).
+- `NEXT_PUBLIC_URL` (optional) — Base URL override used to build redirect URIs. If unset, routes fall back to the request origin.
 
 **Used By**:
 
-- `src/app/api/integrations/video/[provider]/auth/route.ts`
-- `src/lib/integrations/zoom.ts` and `src/lib/video/zoom.ts`
+- `src/app/api/integrations/zoom/connect/route.ts`, `src/app/api/integrations/zoom/callback/route.ts`
+- `src/app/api/integrations/google/connect/route.ts`, `src/app/api/integrations/google/callback/route.ts`
+- `src/app/api/integrations/video/[provider]/auth/route.ts` (returns connect URLs)
+- `src/lib/integrations/zoom.ts`, `src/lib/integrations/google-meet.ts`
 
 **Without These**:
 
@@ -345,8 +348,8 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 
 1. Create a Zoom OAuth app and copy the client ID/secret.
 2. Set `ZOOM_REDIRECT_URI` to the callback route above and add the same URL in Zoom app settings.
-3. Set `NEXT_PUBLIC_APP_URL` to your deployed base URL (no trailing slash).
-4. (Optional) Set `GOOGLE_CLIENT_ID` if you plan to enable Google Meet.
+3. (Optional) Set `NEXT_PUBLIC_URL` if your deployment needs an explicit base URL override.
+4. (Optional) Set Google OAuth vars if you plan to enable Google Meet.
 
 ---
 

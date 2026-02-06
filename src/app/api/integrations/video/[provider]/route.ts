@@ -6,9 +6,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { db } from '@/db';
-import { userIntegrations } from '@/db/schema';
-import { eq, and } from 'drizzle-orm';
 
 export async function DELETE(
   req: NextRequest,
@@ -28,15 +25,20 @@ export async function DELETE(
     const { provider } = await params;
     const integrationType = provider === 'google' ? 'google_meet' : provider;
 
-    // Delete integration
-    await db
-      .delete(userIntegrations)
-      .where(
-        and(
-          eq(userIntegrations.userId, user.id),
-          eq(userIntegrations.provider, provider as 'zoom' | 'google' | 'linkedin')
-        )
-      );
+    if (!['zoom', 'google'].includes(provider)) {
+      return NextResponse.json({ error: 'Invalid provider' }, { status: 400 });
+    }
+
+    const { error: deleteError } = await supabase
+      .from('user_video_integrations')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('provider', integrationType);
+
+    if (deleteError) {
+      console.error('Disconnect integration error:', deleteError);
+      return NextResponse.json({ error: 'Failed to disconnect integration' }, { status: 500 });
+    }
 
     // Log analytics
     await supabase.from('analytics_events').insert({

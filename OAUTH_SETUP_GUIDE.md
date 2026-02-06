@@ -37,8 +37,9 @@ Complete guide for setting up Zoom and Google Meet OAuth integrations for video 
    - You'll add these to your `.env.local` file
 
 5. **Redirect URLs**
-   - Add: `https://yourdomain.com/api/auth/zoom/callback`
-   - For local dev: `http://localhost:3000/api/auth/zoom/callback`
+   - Recommended: `https://yourdomain.com/api/integrations/zoom/callback`
+   - For local dev: `http://localhost:3000/api/integrations/zoom/callback`
+   - Supported legacy callback: `/api/auth/zoom/callback` (only use if your Zoom app is already configured to it)
 
 6. **Scopes Required**
    - `meeting:write` - Create meetings
@@ -57,7 +58,7 @@ Add to your `.env.local`:
 # Zoom OAuth
 ZOOM_CLIENT_ID=your_zoom_client_id_here
 ZOOM_CLIENT_SECRET=your_zoom_client_secret_here
-ZOOM_REDIRECT_URI=https://yourdomain.com/api/auth/zoom/callback
+ZOOM_REDIRECT_URI=https://yourdomain.com/api/integrations/zoom/callback
 ```
 
 ### Step 3: Test OAuth Flow
@@ -125,8 +126,9 @@ ZOOM_REDIRECT_URI=https://yourdomain.com/api/auth/zoom/callback
    - Name: `Proofound Web Client`
 
 3. **Authorized Redirect URIs**
-   - Add: `https://yourdomain.com/api/auth/google/callback`
-   - For local dev: `http://localhost:3000/api/auth/google/callback`
+   - Recommended: `https://yourdomain.com/api/integrations/google/callback`
+   - For local dev: `http://localhost:3000/api/integrations/google/callback`
+   - Supported legacy callback: `/api/auth/google/callback` (only use if your Google OAuth client is already configured to it)
 
 4. **Create**
    - Click "Create"
@@ -140,7 +142,7 @@ Add to your `.env.local`:
 # Google OAuth
 GOOGLE_CLIENT_ID=your_google_client_id_here.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your_google_client_secret_here
-GOOGLE_REDIRECT_URI=https://yourdomain.com/api/auth/google/callback
+GOOGLE_REDIRECT_URI=https://yourdomain.com/api/integrations/google/callback
 ```
 
 ### Step 5: Test OAuth Flow
@@ -160,12 +162,12 @@ Complete `.env.local` file:
 # === Zoom OAuth ===
 ZOOM_CLIENT_ID=your_zoom_client_id
 ZOOM_CLIENT_SECRET=your_zoom_client_secret
-ZOOM_REDIRECT_URI=https://yourdomain.com/api/auth/zoom/callback
+ZOOM_REDIRECT_URI=https://yourdomain.com/api/integrations/zoom/callback
 
 # === Google OAuth ===
 GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your_google_client_secret
-GOOGLE_REDIRECT_URI=https://yourdomain.com/api/auth/google/callback
+GOOGLE_REDIRECT_URI=https://yourdomain.com/api/integrations/google/callback
 
 # === Other Required Env Vars ===
 # (Your existing Supabase, database, etc. variables)
@@ -175,35 +177,27 @@ GOOGLE_REDIRECT_URI=https://yourdomain.com/api/auth/google/callback
 
 ## Part 4: Code Implementation Checklist
 
-Once you have the credentials, uncomment and complete these files:
+Primary paths used by the app:
 
-### Backend - OAuth Callbacks
-
-- [ ] `src/app/api/auth/zoom/callback/route.ts` - Handle Zoom OAuth callback
-- [ ] `src/app/api/auth/google/callback/route.ts` - Handle Google OAuth callback
-
-### Backend - API Wrappers
-
-- [ ] `src/lib/video/zoom.ts` - Zoom API wrapper (create meetings)
-- [ ] `src/lib/video/google-meet.ts` - Google Meet API wrapper (create events)
-
-### Frontend - Integration Settings
-
-- [ ] `src/app/app/i/settings/integrations/page.tsx` - Connect/disconnect UI
-- [ ] `src/components/settings/ZoomIntegration.tsx` - Zoom connection card
-- [ ] `src/components/settings/GoogleIntegration.tsx` - Google connection card
-
-### Frontend - Interview Scheduling
-
-- [ ] `src/components/interviews/ScheduleInterviewModal.tsx` - Complete implementation
-- [ ] `src/components/interviews/TimezonePicker.tsx` - Timezone selection
-- [ ] `src/components/interviews/SlotPicker.tsx` - Time slot selection
+- OAuth connect and callback:
+  - `src/app/api/integrations/zoom/connect/route.ts`
+  - `src/app/api/integrations/zoom/callback/route.ts`
+  - `src/app/api/integrations/google/connect/route.ts`
+  - `src/app/api/integrations/google/callback/route.ts`
+- Token storage table:
+  - `user_video_integrations` (migration: `supabase/migrations/20251108_add_video_integrations.sql`)
+- Meeting creation:
+  - `src/lib/integrations/zoom.ts`
+  - `src/lib/integrations/google-meet.ts`
+- Interview scheduling:
+  - `src/app/api/interviews/schedule/route.ts`
 
 ---
 
 ## Part 5: Testing Checklist
 
 ### Zoom OAuth
+
 - [ ] Connect Zoom account
 - [ ] Create a test meeting via API
 - [ ] Verify meeting appears in Zoom account
@@ -211,6 +205,7 @@ Once you have the credentials, uncomment and complete these files:
 - [ ] Test token refresh
 
 ### Google OAuth
+
 - [ ] Connect Google account
 - [ ] Create a test calendar event
 - [ ] Verify event appears in Google Calendar
@@ -218,6 +213,7 @@ Once you have the credentials, uncomment and complete these files:
 - [ ] Test with multiple calendars
 
 ### Interview Scheduling
+
 - [ ] Schedule interview with Zoom
 - [ ] Schedule interview with Google Meet
 - [ ] Verify calendar invites sent
@@ -259,21 +255,25 @@ Once you have the credentials, uncomment and complete these files:
 ### Common Issues
 
 **Zoom: "Invalid redirect_uri"**
+
 - Double-check the redirect URI matches exactly
 - Include http:// or https://
 - No trailing slash
 
 **Google: "Access blocked: This app's request is invalid"**
+
 - OAuth consent screen not configured
 - Missing required scopes
 - Test user not added (in development)
 
 **Token Expired Errors**
+
 - Implement token refresh logic
 - Store refresh tokens securely
 - Handle 401 responses gracefully
 
 **Rate Limit Errors**
+
 - Zoom: 100 requests per day (free tier)
 - Google: 1,000,000 queries per day
 - Implement request queuing
@@ -283,11 +283,13 @@ Once you have the credentials, uncomment and complete these files:
 ## Part 8: Support Resources
 
 ### Zoom
+
 - Documentation: https://marketplace.zoom.us/docs/guides
 - API Reference: https://marketplace.zoom.us/docs/api-reference/zoom-api
 - Support: https://devsupport.zoom.us/
 
 ### Google
+
 - Documentation: https://developers.google.com/calendar
 - API Reference: https://developers.google.com/calendar/api/v3/reference
 - Support: https://support.google.com/code
@@ -306,9 +308,9 @@ Once you have the credentials, uncomment and complete these files:
 
 **Next Steps:** Once you have OAuth credentials, the code scaffolding is ready to use. Uncomment the implementation files and follow the TODO comments.
 
-**Estimated Time:** 
+**Estimated Time:**
+
 - Zoom setup: 15-20 minutes
 - Google setup: 20-30 minutes
 - Testing: 15 minutes
 - **Total: ~1 hour**
-
