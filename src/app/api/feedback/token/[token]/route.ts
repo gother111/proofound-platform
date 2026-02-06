@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
-export async function GET(_req: NextRequest, { params }: { params: { token: string } }) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   const admin = createAdminClient();
 
   try {
-    const tokenValue = params.token;
+    const { token: tokenValue } = await params;
 
     const { data: tokenRow, error: tokenError } = await admin
       .from('feedback_tokens')
