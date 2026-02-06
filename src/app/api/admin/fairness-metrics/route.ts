@@ -23,6 +23,8 @@ export async function GET(req: NextRequest) {
     const startDate = new Date();
     startDate.setDate(endDate.getDate() - days);
 
+    const supabase = await createClient();
+
     // Fetch match data for analysis
     const { data: matches } = await supabase
       .from('matches')
@@ -36,9 +38,10 @@ export async function GET(req: NextRequest) {
       {
         category: 'matching',
         metric: 'Average Match Quality (All Groups)',
-        value: matches && matches.length > 0
-          ? matches.reduce((sum, m) => sum + (m.total_score || 0), 0) / matches.length
-          : 0,
+        value:
+          matches && matches.length > 0
+            ? matches.reduce((sum, m) => sum + (m.total_score || 0), 0) / matches.length
+            : 0,
         benchmark: 75,
         status: 'good' as const,
         trend: 'stable' as const,
@@ -95,10 +98,6 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Fairness metrics error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-
