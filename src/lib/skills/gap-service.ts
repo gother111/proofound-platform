@@ -76,13 +76,14 @@ export async function computeSkillGaps({
   const client = supabase ?? (await createClient());
 
   // Fetch user skills (L4)
-  const { data: userSkills = [] } = await client
+  const { data: userSkills } = await client
     .from('skills')
     .select('skill_code, level, last_used_at, months_experience, recency_multiplier')
     .eq('profile_id', profileId);
 
+  const userSkillRows = userSkills ?? [];
   const userSkillMap = new Map(
-    userSkills
+    userSkillRows
       .filter((s) => s.skill_code)
       .map((s) => [
         s.skill_code as string,
@@ -137,15 +138,16 @@ export async function computeSkillGaps({
   }
 
   // Pull assignment metadata for filtering
-  const { data: assignmentMeta = [] } = await client
+  const { data: assignmentMeta } = await client
     .from('assignments')
     .select('id, role, status, updated_at')
     .in('id', assignmentIds);
 
+  const assignmentMetaRows = assignmentMeta ?? [];
   const timeframeCutoff = new Date();
   timeframeCutoff.setDate(timeframeCutoff.getDate() - timeframeDays);
 
-  const filteredAssignments = assignmentMeta
+  const filteredAssignments = assignmentMetaRows
     .filter((a) => {
       const updated = a.updated_at ? new Date(a.updated_at) : null;
       const withinTimeframe = updated ? updated >= timeframeCutoff : true;
@@ -166,7 +168,7 @@ export async function computeSkillGaps({
   }
 
   // Fetch required skills per assignment
-  const { data: requirements = [], error: reqError } = await client
+  const { data: requirements, error: reqError } = await client
     .from('assignment_expertise_matrix')
     .select('assignment_id, skill_code, min_level, weight, is_required')
     .in('assignment_id', filteredAssignmentIds);
@@ -175,6 +177,7 @@ export async function computeSkillGaps({
     logger.error('Failed to fetch expertise matrix', reqError);
   }
 
+  const requirementRows = requirements ?? [];
   const demandMap = new Map<
     string,
     {
@@ -190,7 +193,7 @@ export async function computeSkillGaps({
   const matrix: GapMatrixRow[] = [];
 
   filteredAssignments.forEach((assignment) => {
-    const reqsForAssignment = requirements.filter((req) => req.assignment_id === assignment.id);
+    const reqsForAssignment = requirementRows.filter((req) => req.assignment_id === assignment.id);
 
     const row: GapMatrixRow = {
       assignmentId: assignment.id,
@@ -215,7 +218,7 @@ export async function computeSkillGaps({
         targetLevel: targetLevel,
         totalWeight: 0,
         severity: 0,
-        assignments: [],
+        assignments: [] as Array<{ id: string; role?: string; weight: number }>,
       };
 
       const severity = gap * weight;
@@ -231,7 +234,7 @@ export async function computeSkillGaps({
     matrix.push(row);
   });
 
-  const requiredEntries = requirements.length;
+  const requiredEntries = requirementRows.length;
   const coverage = {
     totalRequired: requiredEntries,
     missing: missingCount,
@@ -244,16 +247,17 @@ export async function computeSkillGaps({
 
   // Fetch taxonomy for naming
   const codes = Array.from(demandMap.keys());
-  const { data: taxonomy = [] } = await client
+  const { data: taxonomy } = await client
     .from('skills_taxonomy')
     .select('code, name_i18n, cat_id, subcat_id, l3_id, tags')
     .in('code', codes);
 
+  const taxonomyRows = taxonomy ?? [];
   const taxonomyMap = new Map(
-    taxonomy.map((t) => [
+    taxonomyRows.map((t) => [
       t.code,
       {
-        name: firstI18nValue(t.name_i18n) ?? t.slug ?? t.code,
+        name: firstI18nValue(t.name_i18n) ?? t.code,
         catId: t.cat_id,
         subcatId: t.subcat_id,
         l3Id: t.l3_id,
@@ -300,4 +304,3 @@ export async function computeSkillGaps({
     coverage,
   };
 }
-
