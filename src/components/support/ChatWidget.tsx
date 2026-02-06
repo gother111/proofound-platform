@@ -40,11 +40,16 @@ export function ChatWidget() {
 
       // Set user data if authenticated
       if (user) {
+        const nickname =
+          (user.user_metadata && (user.user_metadata.displayName || user.user_metadata.full_name)) ||
+          user.email?.split('@')[0] ||
+          'User';
+
         window.$crisp.push(['set', 'user:email', [user.email]]);
-        window.$crisp.push(['set', 'user:nickname', [user.displayName || user.handle || 'User']]);
+        window.$crisp.push(['set', 'user:nickname', [nickname]]);
         window.$crisp.push(['set', 'session:data', [[
           ['user_id', user.id],
-          ['persona', user.persona],
+          ['persona', (user.user_metadata && user.user_metadata.persona) || 'unknown'],
         ]]]);
       }
 
@@ -86,4 +91,3 @@ export function ChatWidget() {
   // Widget is injected by Crisp, no UI needed here
   return null;
 }
-
