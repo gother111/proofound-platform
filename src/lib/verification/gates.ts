@@ -11,6 +11,7 @@
 import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
+import { getRows } from '@/lib/db/rows';
 
 // Re-export types from client-safe utils
 export type {
@@ -46,7 +47,8 @@ export async function checkVerificationGates(
       WHERE id = ${assignmentId}
     `);
 
-    if (!assignment.rows.length) {
+    const assignmentRows = getRows(assignment as any) as any[];
+    if (!assignmentRows.length) {
       return {
         passed: true,
         unmetGates: [],
@@ -55,7 +57,7 @@ export async function checkVerificationGates(
       };
     }
 
-    const gates = (assignment.rows[0] as any).verification_gates as VerificationGate[] | null;
+    const gates = (assignmentRows[0] as any).verification_gates as VerificationGate[] | null;
 
     if (!gates || gates.length === 0) {
       // No gates required
@@ -135,8 +137,9 @@ async function getUserVerifications(userId: string): Promise<VerificationStatus[
     WHERE user_id = ${userId}
   `);
 
-  if (profile.rows.length > 0) {
-    const row = profile.rows[0] as any;
+  const profileRows = getRows(profile as any) as any[];
+  if (profileRows.length > 0) {
+    const row = profileRows[0] as any;
 
     // Identity verification
     if (row.verification_status === 'verified') {
@@ -165,8 +168,9 @@ async function getUserVerifications(userId: string): Promise<VerificationStatus[
       AND status = 'verified'
   `);
 
-  if (attestations.rows.length > 0) {
-    const count = parseInt((attestations.rows[0] as any).count || '0');
+  const attestationRows = getRows(attestations as any) as any[];
+  if (attestationRows.length > 0) {
+    const count = parseInt((attestationRows[0] as any).count || '0');
     if (count > 0) {
       verifications.push({
         type: 'peer_attestation',
@@ -184,8 +188,9 @@ async function getUserVerifications(userId: string): Promise<VerificationStatus[
       AND jsonb_array_length(evidence_urls) > 0
   `);
 
-  if (skillProofs.rows.length > 0) {
-    const count = parseInt((skillProofs.rows[0] as any).count || '0');
+  const skillProofRows = getRows(skillProofs as any) as any[];
+  if (skillProofRows.length > 0) {
+    const count = parseInt((skillProofRows[0] as any).count || '0');
     if (count > 0) {
       verifications.push({
         type: 'skill_proof',
