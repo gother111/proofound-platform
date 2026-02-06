@@ -203,7 +203,8 @@ export async function validateProfileLinkToken(
   // TODO: Implement token validation logic
   // For now, we'll just check if token is non-empty
   // In production, you'd want to store tokens in the database with expiry
-  return token && token.length > 10;
+  void profileId;
+  return token.trim().length > 10;
 }
 
 /**
@@ -221,7 +222,7 @@ export async function isViewerMatchedWithProfile(
     .from('matching_results')
     .select('id')
     .eq('profile_id', profileId)
-    თთeq('status', 'active')
+    .eq('status', 'active')
     .limit(1);
 
   return (matches?.length ?? 0) > 0;
