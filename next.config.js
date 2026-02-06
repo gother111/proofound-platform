@@ -7,9 +7,8 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
-    // Temporarily ignore TypeScript errors during build
-    // TODO: Fix all TypeScript errors before production
-    ignoreBuildErrors: true,
+    // Fail builds on TypeScript errors (do not mask type safety issues)
+    ignoreBuildErrors: false,
   },
   experimental: {
     serverActions: {

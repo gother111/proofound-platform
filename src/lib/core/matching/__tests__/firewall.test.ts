@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { scrubDisallowedFields, containsDisallowedFields, DISALLOWED_FIELDS } from '../firewall';
+import * as firewall from '../firewall';
+
+const firewallApi = (firewall as any).default ?? firewall;
 
 describe('Attribute Firewall', () => {
   it('should remove disallowed fields from objects', () => {
@@ -10,7 +12,7 @@ describe('Attribute Firewall', () => {
       location: 'San Francisco',
     };
 
-    const result = scrubDisallowedFields(input);
+    const result = firewallApi.scrubDisallowedFields(input);
 
     expect(result).toEqual({
       skills: ['javascript', 'react'],
@@ -32,7 +34,7 @@ describe('Attribute Firewall', () => {
       },
     };
 
-    const result = scrubDisallowedFields(input);
+    const result = firewallApi.scrubDisallowedFields(input);
 
     expect(result.profile).not.toHaveProperty('name');
     expect(result.profile).not.toHaveProperty('age');
@@ -46,7 +48,7 @@ describe('Attribute Firewall', () => {
       { name: 'Person 2', skill: 'design' },
     ];
 
-    const result = scrubDisallowedFields(input);
+    const result = firewallApi.scrubDisallowedFields(input);
 
     expect(result).toHaveLength(2);
     expect(result[0]).not.toHaveProperty('name');
@@ -54,22 +56,22 @@ describe('Attribute Firewall', () => {
   });
 
   it('should return primitives unchanged', () => {
-    expect(scrubDisallowedFields('test')).toBe('test');
-    expect(scrubDisallowedFields(123)).toBe(123);
-    expect(scrubDisallowedFields(null)).toBe(null);
-    expect(scrubDisallowedFields(undefined)).toBe(undefined);
+    expect(firewallApi.scrubDisallowedFields('test')).toBe('test');
+    expect(firewallApi.scrubDisallowedFields(123)).toBe(123);
+    expect(firewallApi.scrubDisallowedFields(null)).toBe(null);
+    expect(firewallApi.scrubDisallowedFields(undefined)).toBe(undefined);
   });
 
   it('should detect disallowed fields', () => {
-    expect(containsDisallowedFields({ name: 'John' })).toBe(true);
-    expect(containsDisallowedFields({ email: 'test@example.com' })).toBe(true);
-    expect(containsDisallowedFields({ skills: ['coding'] })).toBe(false);
-    expect(containsDisallowedFields({ nested: { phone: '123' } })).toBe(true);
+    expect(firewallApi.containsDisallowedFields({ name: 'John' })).toBe(true);
+    expect(firewallApi.containsDisallowedFields({ email: 'test@example.com' })).toBe(true);
+    expect(firewallApi.containsDisallowedFields({ skills: ['coding'] })).toBe(false);
+    expect(firewallApi.containsDisallowedFields({ nested: { phone: '123' } })).toBe(true);
   });
 
   it('should not mutate original object', () => {
     const input = { name: 'John', skills: ['js'] };
-    const result = scrubDisallowedFields(input);
+    const result = firewallApi.scrubDisallowedFields(input);
 
     expect(input).toHaveProperty('name');
     expect(result).not.toHaveProperty('name');
@@ -79,15 +81,15 @@ describe('Attribute Firewall', () => {
     const input: Record<string, string> = {};
 
     // Add all disallowed fields
-    DISALLOWED_FIELDS.forEach((field) => {
+    firewallApi.DISALLOWED_FIELDS.forEach((field: string) => {
       input[field] = 'sensitive';
     });
 
     input.safe = 'this should remain';
 
-    const result = scrubDisallowedFields(input);
+    const result = firewallApi.scrubDisallowedFields(input);
 
     expect(result).toEqual({ safe: 'this should remain' });
-    expect(containsDisallowedFields(result)).toBe(false);
+    expect(firewallApi.containsDisallowedFields(result)).toBe(false);
   });
 });

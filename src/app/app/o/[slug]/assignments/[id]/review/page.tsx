@@ -5,13 +5,14 @@ export const dynamic = 'force-dynamic';
 
 async function fetchAssignmentServer(id: string) {
   // Build base URL for server-side fetch (works in dev/prod)
-  const hdrs = headers();
+  const hdrs = await headers();
   const host = hdrs.get('host') || 'localhost:3000';
   const proto = hdrs.get('x-forwarded-proto') || 'http';
   const base = process.env.NEXT_PUBLIC_SITE_URL || `${proto}://${host}`;
 
   // Forward cookies for authenticated fetch
-  const cookieHeader = cookies()
+  const cookieStore = await cookies();
+  const cookieHeader = cookieStore
     .getAll()
     .map((c) => `${c.name}=${c.value}`)
     .join('; ');
@@ -33,15 +34,10 @@ async function fetchAssignmentServer(id: string) {
 export default async function AssignmentReviewPage({
   params,
 }: {
-  params: { slug: string; id: string };
+  params: Promise<{ slug: string; id: string }>;
 }) {
-  const assignment = await fetchAssignmentServer(params.id);
+  const { slug, id } = await params;
+  const assignment = await fetchAssignmentServer(id);
 
-  return (
-    <AssignmentReviewClient
-      initialAssignment={assignment}
-      assignmentId={params.id}
-      slug={params.slug}
-    />
-  );
+  return <AssignmentReviewClient initialAssignment={assignment} assignmentId={id} slug={slug} />;
 }

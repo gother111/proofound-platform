@@ -8,88 +8,36 @@
 import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
+import { getRows } from '@/lib/db/rows';
+import { EventType as EventTypeConstants, type EventTypeValue } from '@/lib/analytics/constants';
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
-export const EVENT_TYPES = [
-  // Profile events
-  'profile_created',
-  'profile_activated',
-  'profile_updated',
-  'profile_viewed',
+export const EVENT_TYPES = Object.values(EventTypeConstants);
 
-  // Matching events
-  'match_generated',
-  'match_viewed',
-  'match_interested',
-  'match_introduced',
-  'match_snoozed',
-  'match_hidden',
-
-  // Interview events
-  'interview_scheduled',
-  'interview_rescheduled',
-  'interview_completed',
-  'interview_cancelled',
-
-  // Decision events
-  'decision_made',
-  'decision_reminder_sent',
-
-  // Contract events
-  'contract_offered',
-  'contract_signed',
-  'contract_declined',
-
-  // Well-being events
-  'wellbeing_checkin',
-  'wellbeing_reflection',
-  'wellbeing_opt_in',
-  'wellbeing_checkin_submitted',
-  'wellbeing_opt_in_changed',
-  'reflection_added',
-  'privacy_banner_acknowledged',
-
-  // Assignment & performance events
-  'assignment_published',
-  'performance_metric',
-
-  // Additional matching/skill events
-  'match_actioned',
-  'skill_proof_added',
-  'skill_proof_deleted',
-
-  // Privacy events
-  'visibility_changed',
-  'redact_mode_toggled',
-
-  // Verification events
-  'verification_started',
-  'verification_completed',
-  'attestation_requested',
-  'attestation_provided',
-
-  // System events
-  'first_match_shown',
-  'sus_survey_completed',
-  'tour_started',
-  'tour_completed',
-  'tour_skipped',
-] as const;
-
-export type EventType = (typeof EVENT_TYPES)[number];
+export type EventType = EventTypeValue;
 
 export interface AnalyticsEvent {
   eventType: EventType;
-  userId: string;
+  userId?: string;
   profileId?: string;
   organizationId?: string;
-  entityType?: 'match' | 'interview' | 'contract' | 'profile' | 'assignment';
+  entityType?:
+    | 'match'
+    | 'interview'
+    | 'contract'
+    | 'profile'
+    | 'assignment'
+    | 'page'
+    | 'api'
+    | 'web_vital'
+    | 'custom';
   entityId?: string;
   properties?: Record<string, any>;
   privacyPartition?: string; // For demographic segmentation (opt-in)
+  sessionId?: string; // For anonymous session stitching (non-PII)
 }
 
 export type WellbeingCheckinSubmittedProps = {
@@ -123,22 +71,27 @@ export async function emitAnalyticsEvent(event: AnalyticsEvent): Promise<void> {
         user_id,
         profile_id,
         organization_id,
+        org_id,
         entity_type,
         entity_id,
         properties,
         privacy_partition,
+        session_id,
         occurred_at
       ) VALUES (
         ${event.eventType},
-        ${event.userId},
+        ${event.userId || null},
         ${event.profileId || null},
+        ${event.organizationId || null},
         ${event.organizationId || null},
         ${event.entityType || null},
         ${event.entityId || null},
         ${JSON.stringify(event.properties || {})},
         ${event.privacyPartition || 'default'},
+        ${event.sessionId || null},
         NOW()
       )
+      ON CONFLICT DO NOTHING
     `);
 
     log.info('analytics.event.emitted', {
@@ -178,7 +131,8 @@ export function trackEvent(event: AnalyticsEvent): void {
 export async function emitAssignmentPublished(
   userId: string,
   assignmentId: string,
-  organizationId?: string
+  organizationId?: string,
+  properties?: Record<string, any>
 ): Promise<void> {
   await emitAnalyticsEvent({
     eventType: 'assignment_published',
@@ -186,6 +140,7 @@ export async function emitAssignmentPublished(
     organizationId,
     entityType: 'assignment',
     entityId: assignmentId,
+    properties,
   });
 }
 
@@ -196,23 +151,58 @@ export async function emitAssignmentPublished(
 export async function emitMatchActioned(
   userId: string,
   matchId: string,
-  action: 'accept' | 'decline' | 'snooze'
+  actionOrProperties:
+    | 'accept'
+    | 'decline'
+    | 'snooze'
+    | 'introduce'
+    | { action: string; [key: string]: any }
 ): Promise<void> {
+  const properties =
+    typeof actionOrProperties === 'string' ? { action: actionOrProperties } : actionOrProperties;
+
   await emitAnalyticsEvent({
     eventType: 'match_actioned',
     userId,
     entityType: 'match',
     entityId: matchId,
-    properties: { action },
+    properties,
   });
 }
 
-export async function emitFirstMatchShown(userId: string, matchId: string): Promise<void> {
+export async function emitFirstQualifiedIntro(
+  userId: string,
+  matchId: string,
+  assignmentId?: string
+): Promise<void> {
+  await emitAnalyticsEvent({
+    eventType: 'first_qualified_intro',
+    userId,
+    entityType: 'match',
+    entityId: matchId,
+    properties: assignmentId ? { assignment_id: assignmentId } : undefined,
+  });
+}
+
+export function emitFirstQualifiedIntroAsync(
+  userId: string,
+  matchId: string,
+  assignmentId?: string
+): void {
+  void emitFirstQualifiedIntro(userId, matchId, assignmentId);
+}
+
+export async function emitFirstMatchShown(
+  userId: string,
+  matchId: string,
+  properties?: Record<string, any>
+): Promise<void> {
   await emitAnalyticsEvent({
     eventType: 'first_match_shown',
     userId,
     entityType: 'match',
     entityId: matchId,
+    properties,
   });
 }
 
@@ -220,27 +210,113 @@ export async function emitFirstMatchShown(userId: string, matchId: string): Prom
 // SKILL PROOF EVENTS
 // ============================================================================
 
-export function emitSkillProofAddedAsync(userId: string, proofId: string, skillId?: string): void {
+export function emitSkillProofAddedAsync(
+  userId: string,
+  proofId: string,
+  skillId?: string,
+  properties?: Record<string, any>
+): void {
   emitAnalyticsEventAsync({
     eventType: 'skill_proof_added',
     userId,
     entityType: 'profile',
     entityId: proofId,
-    properties: { skill_id: skillId },
+    properties: { skill_id: skillId, ...properties },
   });
 }
 
 export function emitSkillProofDeletedAsync(
   userId: string,
   proofId: string,
-  skillId?: string
+  skillId?: string,
+  properties?: Record<string, any>
 ): void {
   emitAnalyticsEventAsync({
     eventType: 'skill_proof_deleted',
     userId,
     entityType: 'profile',
     entityId: proofId,
-    properties: { skill_id: skillId },
+    properties: { skill_id: skillId, ...properties },
+  });
+}
+
+export function emitSkillAddedAsync(
+  userId: string,
+  skillId: string,
+  properties?: Record<string, any>
+): void {
+  emitAnalyticsEventAsync({
+    eventType: 'l4_skill_added',
+    userId,
+    entityType: 'profile',
+    entityId: skillId,
+    properties,
+  });
+}
+
+export function emitSkillUpdatedAsync(
+  userId: string,
+  skillId: string,
+  properties?: Record<string, any>
+): void {
+  emitAnalyticsEventAsync({
+    eventType: 'profile_updated',
+    userId,
+    entityType: 'profile',
+    entityId: skillId,
+    properties: {
+      change: 'skill_updated',
+      ...properties,
+    },
+  });
+}
+
+export function emitSkillDeletedAsync(
+  userId: string,
+  skillId: string,
+  properties?: Record<string, any>
+): void {
+  emitAnalyticsEventAsync({
+    eventType: 'profile_updated',
+    userId,
+    entityType: 'profile',
+    entityId: skillId,
+    properties: {
+      change: 'skill_deleted',
+      ...properties,
+    },
+  });
+}
+
+// ============================================================================
+// VERIFICATION EVENTS
+// ============================================================================
+
+export function emitVerificationRequestedAsync(
+  userId: string,
+  requestId: string,
+  properties?: Record<string, any>
+): void {
+  emitAnalyticsEventAsync({
+    eventType: 'attestation_requested',
+    userId,
+    entityType: 'profile',
+    entityId: requestId,
+    properties,
+  });
+}
+
+export async function emitVerificationProvided(
+  userId: string,
+  requestId: string,
+  properties?: Record<string, any>
+): Promise<void> {
+  await emitAnalyticsEvent({
+    eventType: 'attestation_provided',
+    userId,
+    entityType: 'profile',
+    entityId: requestId,
+    properties,
   });
 }
 
@@ -248,13 +324,30 @@ export function emitSkillProofDeletedAsync(
 // SUS / FEEDBACK EVENTS
 // ============================================================================
 
-export function emitSUSSurveyCompletedAsync(userId: string, score: number): void {
+export function emitSUSSurveyCompletedAsync(
+  userId: string,
+  scoreOrProperties:
+    | number
+    | {
+        total_score: number;
+        individual_scores?: number[];
+        trigger_point?: string;
+      }
+): void {
+  const properties =
+    typeof scoreOrProperties === 'number'
+      ? { score: scoreOrProperties }
+      : {
+          score: scoreOrProperties.total_score,
+          ...scoreOrProperties,
+        };
+
   emitAnalyticsEventAsync({
     eventType: 'sus_survey_completed',
     userId,
     entityType: 'profile',
     entityId: userId,
-    properties: { score },
+    properties,
   });
 }
 
@@ -264,26 +357,26 @@ export function emitSUSSurveyCompletedAsync(userId: string, score: number): void
 
 export function emitVisibilityChanged(
   userId: string,
-  profileId: string,
+  field: string,
   visibility: 'public' | 'network' | 'private'
 ): void {
   emitAnalyticsEventAsync({
     eventType: 'visibility_changed',
     userId,
-    profileId,
+    profileId: userId,
     entityType: 'profile',
-    entityId: profileId,
-    properties: { visibility },
+    entityId: userId,
+    properties: { field, visibility },
   });
 }
 
-export function emitRedactModeToggled(userId: string, profileId: string, enabled: boolean): void {
+export function emitRedactModeToggled(userId: string, enabled: boolean): void {
   emitAnalyticsEventAsync({
     eventType: 'redact_mode_toggled',
     userId,
-    profileId,
+    profileId: userId,
     entityType: 'profile',
-    entityId: profileId,
+    entityId: userId,
     properties: { enabled },
   });
 }
@@ -337,12 +430,12 @@ export async function emitEvent(event: {
 }): Promise<string> {
   await emitAnalyticsEvent({
     eventType: event.eventType,
-    userId: event.userId || 'anonymous',
+    userId: event.userId,
     organizationId: event.orgId,
     entityType: event.entityType as any,
     entityId: event.entityId,
     properties: event.properties,
-    privacyPartition: event.sessionId,
+    sessionId: event.sessionId,
   });
   return 'ok';
 }
@@ -368,6 +461,24 @@ export async function emitProfileActivated(
   properties?: Record<string, any>
 ) {
   await emitAnalyticsEvent({
+    eventType: 'profile_activated',
+    userId,
+    profileId: userId,
+    entityType: 'profile',
+    entityId: userId,
+    properties: {
+      activation_duration_ms: activationDurationMs,
+      ...properties,
+    },
+  });
+}
+
+export function emitProfileActivatedAsync(
+  userId: string,
+  activationDurationMs: number,
+  properties?: Record<string, any>
+): void {
+  emitAnalyticsEventAsync({
     eventType: 'profile_activated',
     userId,
     profileId: userId,
@@ -452,7 +563,7 @@ export async function emitInterviewScheduled(
     assignment_id: string;
     match_id: string;
     duration_minutes: number;
-    platform: 'zoom' | 'google_meet';
+    platform: 'zoom' | 'google_meet' | 'manual';
     days_since_match: number; // For TTV calculation
   }
 ) {
@@ -473,7 +584,7 @@ export function emitInterviewScheduledAsync(
     assignment_id: string;
     match_id: string;
     duration_minutes: number;
-    platform: 'zoom' | 'google_meet';
+    platform: 'zoom' | 'google_meet' | 'manual';
     days_since_match: number;
   }
 ) {
@@ -531,10 +642,13 @@ export async function emitContractSigned(
   userId: string,
   contractId: string,
   properties: {
-    contract_id: string;
-    assignment_id: string;
-    match_id: string;
+    contract_id?: string;
+    assignment_id?: string;
+    match_id?: string;
     ttsc_days?: number; // Time to signed contract (from match)
+    contract_type?: string;
+    days_since_activation?: number;
+    days_since_first_intro?: number;
   }
 ) {
   await emitAnalyticsEvent({
@@ -671,7 +785,7 @@ export async function getUserEvents(
   query = sql`${query} ORDER BY occurred_at DESC`;
 
   const result = await db.execute(query);
-  return result.rows as any[];
+  return getRows(result) as any[];
 }
 
 /**
@@ -690,7 +804,7 @@ export async function getEventCount(
       AND occurred_at <= ${endDate.toISOString()}
   `);
 
-  return parseInt((result.rows[0] as any).count || '0');
+  return parseInt((getRows(result)[0] as any)?.count || '0');
 }
 
 /**
@@ -709,5 +823,5 @@ export async function getUniqueUsersWithEvent(
       AND occurred_at <= ${endDate.toISOString()}
   `);
 
-  return parseInt((result.rows[0] as any).count || '0');
+  return parseInt((getRows(result)[0] as any)?.count || '0');
 }

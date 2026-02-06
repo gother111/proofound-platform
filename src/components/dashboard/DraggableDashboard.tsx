@@ -92,6 +92,11 @@ export function DraggableDashboard({
 
   const loadStartRef = useRef<number>(typeof performance !== 'undefined' ? performance.now() : 0);
   const userLayoutRef = useRef<DashboardWidget[] | null>(initialLayout || null);
+  const onErrorRef = useRef(onError);
+
+  useEffect(() => {
+    onErrorRef.current = onError;
+  }, [onError]);
 
   useEffect(() => {
     // Fetch user's layout from API
@@ -112,7 +117,7 @@ export function DraggableDashboard({
         }
       } catch (error) {
         console.error('Failed to fetch dashboard layout:', error);
-        onError?.('Failed to load dashboard layout');
+        onErrorRef.current?.('Failed to load dashboard layout');
         setLayout(DEFAULT_LAYOUT);
       } finally {
         setLoading(false);
@@ -151,17 +156,30 @@ export function DraggableDashboard({
         });
       } catch (error) {
         console.error('Failed to log dashboard event', error);
-        onError?.('Failed to log dashboard event');
+        onErrorRef.current?.('Failed to log dashboard event');
       }
     },
-    [mockMode, onError]
+    [mockMode]
   );
 
   useEffect(() => {
     const handleMockToggle = (event: Event) => {
       const detail = (event as CustomEvent).detail as { enabled?: boolean } | undefined;
       if (typeof detail?.enabled === 'boolean') {
-        setMockMode(detail.enabled);
+        const enabled = detail.enabled;
+        setMockMode(enabled);
+
+        if (enabled) {
+          setLayout((currentLayout) => {
+            if (currentLayout.length) {
+              userLayoutRef.current = currentLayout;
+            }
+            return DEFAULT_LAYOUT;
+          });
+          setLoading(false);
+        } else {
+          setLayout(userLayoutRef.current || DEFAULT_LAYOUT);
+        }
       }
     };
 
@@ -169,16 +187,6 @@ export function DraggableDashboard({
     return () =>
       window.removeEventListener('dashboard-mock-mode', handleMockToggle as EventListener);
   }, []);
-
-  useEffect(() => {
-    if (mockMode) {
-      userLayoutRef.current = layout.length ? layout : userLayoutRef.current;
-      setLayout(DEFAULT_LAYOUT);
-      setLoading(false);
-    } else if (userLayoutRef.current) {
-      setLayout(userLayoutRef.current);
-    }
-  }, [mockMode]);
 
   useEffect(() => {
     if (!loading && !hasTrackedView) {

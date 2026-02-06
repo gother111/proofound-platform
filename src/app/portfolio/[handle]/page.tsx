@@ -17,16 +17,21 @@ import { ViewCounterClient } from './ViewCounterClient';
 type SkillRow = {
   id: string;
   level: number | null;
-  taxonomy?: {
-    name_i18n?: Record<string, string> | null;
-  } | null;
+  taxonomy?:
+    | {
+        name_i18n?: Record<string, string> | null;
+      }
+    | {
+        name_i18n?: Record<string, string> | null;
+      }[]
+    | null;
   skill_code?: string | null;
 };
 
 const FALLBACK_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
-export default async function PortfolioPage({ params }: { params: { handle: string } }) {
-  const handle = params.handle;
+export default async function PortfolioPage({ params }: { params: Promise<{ handle: string }> }) {
+  const { handle } = await params;
   const supabase = await createClient();
   const {
     data: { user },

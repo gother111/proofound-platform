@@ -1,0 +1,127 @@
+'use client';
+
+import type { Volunteering } from '@/types/profile';
+
+import { Card } from '@/components/ui/card';
+import { TabsContent } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { CheckCircle2, HandHeart, Plus, X } from 'lucide-react';
+
+export interface ServiceTabProps {
+  volunteering: Volunteering[];
+  onAddService: () => void;
+  onDeleteService: (id: string) => void;
+}
+
+export function ServiceTab({ volunteering, onAddService, onDeleteService }: ServiceTabProps) {
+  return (
+    <TabsContent value="service" className="space-y-6">
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm text-muted-foreground">
+          Community service connected to personal causes
+        </p>
+        {volunteering.length > 0 && (
+          <Button
+            size="sm"
+            className="rounded-full bg-[#7A9278] hover:bg-[#7A9278]/90"
+            onClick={onAddService}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Service
+          </Button>
+        )}
+      </div>
+
+      {volunteering.length === 0 ? (
+        <Card className="p-12 border-2 border-dashed border-muted-foreground/20">
+          <div className="text-center space-y-6">
+            <div className="flex justify-center">
+              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[#C67B5C]/10 to-[#7A9278]/10 flex items-center justify-center">
+                <HandHeart className="w-16 h-16 text-[#C67B5C]/60" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold">Share Your Service</h3>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                Highlight your volunteer work and community involvement. Explain why these causes
+                matter to you and what impact you&apos;ve created.
+              </p>
+            </div>
+            <Button
+              className="rounded-full bg-[#C67B5C] hover:bg-[#C67B5C]/90"
+              onClick={onAddService}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Volunteer Work
+            </Button>
+            <div className="pt-4 text-xs text-muted-foreground">
+              <p>
+                💡 Tip: Connect your service to your values and explain your personal motivation
+              </p>
+            </div>
+          </div>
+        </Card>
+      ) : (
+        volunteering.map((vol) => (
+          <Card
+            key={vol.id}
+            className="p-6 border-2 hover:border-[#C67B5C]/30 hover:shadow-md transition-all duration-300 group relative overflow-hidden"
+          >
+            <div className="absolute top-0 left-0 w-1 h-full bg-[#C67B5C] opacity-0 group-hover:opacity-100 transition-opacity" />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={() => {
+                if (confirm('Are you sure you want to delete this volunteer work?')) {
+                  onDeleteService(vol.id);
+                }
+              }}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-muted/30 flex items-center justify-center flex-shrink-0">
+                <HandHeart className="w-5 h-5 text-[#C67B5C]" />
+              </div>
+              <div className="flex-1 pr-8">
+                <div className="flex items-center gap-2 mb-2">
+                  <h4 className="text-lg font-display font-semibold">{vol.title}</h4>
+                  {vol.verified && <CheckCircle2 className="w-4 h-4 text-[#7A9278]" />}
+                </div>
+                <p className="text-sm text-muted-foreground mb-1">{vol.orgDescription}</p>
+                <p className="text-xs text-muted-foreground mb-4">{vol.duration}</p>
+                <div className="space-y-3">
+                  <div
+                    className="p-3 rounded-lg border"
+                    style={{
+                      backgroundColor: 'rgba(198, 123, 92, 0.05)',
+                      borderColor: 'rgba(198, 123, 92, 0.2)',
+                    }}
+                  >
+                    <h5 className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
+                      <HandHeart className="w-3 h-3 text-[#C67B5C]" />
+                      Personal Connection
+                    </h5>
+                    <p className="text-sm mb-2 font-medium">{vol.cause}</p>
+                    <p className="text-xs text-muted-foreground italic">{vol.personalWhy}</p>
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-medium text-muted-foreground mb-1">Impact Made</h5>
+                    <p className="text-sm">{vol.impact}</p>
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-medium text-muted-foreground mb-1">
+                      Skills Deployed
+                    </h5>
+                    <p className="text-sm">{vol.skillsDeployed}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        ))
+      )}
+    </TabsContent>
+  );
+}

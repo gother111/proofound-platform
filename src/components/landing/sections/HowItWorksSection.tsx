@@ -98,7 +98,7 @@ export function HowItWorksSection({ shouldReduceMotion }: HowItWorksSectionProps
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-20"
         >
-          <h2 className="text-5xl md:text-6xl font-serif text-[#2D3330] mb-6 tracking-tight">
+          <h2 className="text-5xl md:text-6xl font-display text-[#2D3330] mb-6 tracking-tight">
             How Proofound works
           </h2>
           <p className="text-xl md:text-2xl text-[#2D3330]/80 font-sans">
@@ -110,7 +110,11 @@ export function HowItWorksSection({ shouldReduceMotion }: HowItWorksSectionProps
         <div className="relative -mx-6 md:-mx-12">
           <div
             ref={scrollRef}
-            className="overflow-x-auto scrollbar-hide pb-12 px-6 md:px-12 snap-x snap-mandatory"
+            role="region"
+            aria-label="Proofound features carousel"
+            // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+            tabIndex={0}
+            className="overflow-x-auto scrollbar-hide pb-12 px-6 md:px-12 snap-x snap-mandatory focus:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F6F1]"
           >
             <div className="flex gap-8 min-w-max">
               {features.map((feature, idx) => (
@@ -123,7 +127,7 @@ export function HowItWorksSection({ shouldReduceMotion }: HowItWorksSectionProps
                 >
                   <div className="space-y-8">
                     <feature.icon className="w-12 h-12 text-[#2D3330] stroke-[1.5]" />
-                    <h3 className="text-3xl font-serif text-[#2D3330] leading-tight">
+                    <h3 className="text-3xl font-display text-[#2D3330] leading-tight">
                       {feature.title}
                     </h3>
                   </div>

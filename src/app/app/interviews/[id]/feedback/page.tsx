@@ -101,8 +101,13 @@ function ResponseList({
   );
 }
 
-export default async function InterviewFeedbackPage({ params }: { params: { id: string } }) {
-  const data = await loadFeedback(params.id);
+export default async function InterviewFeedbackPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const data = await loadFeedback(id);
 
   if (!data) {
     notFound();

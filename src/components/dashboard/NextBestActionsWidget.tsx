@@ -98,7 +98,7 @@ export function NextBestActionsWidget({ useMockData, onActionClick }: NextBestAc
     }
 
     fetchNextBestActions();
-  }, []);
+  }, [useMockData]);
 
   const getIcon = (action: NextBestAction) => {
     switch (action.category) {

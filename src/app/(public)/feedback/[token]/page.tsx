@@ -19,8 +19,13 @@ async function loadTokenData(token: string): Promise<TokenData | null> {
   return response.json();
 }
 
-export default async function FeedbackTokenPage({ params }: { params: { token: string } }) {
-  const tokenData = await loadTokenData(params.token);
+export default async function FeedbackTokenPage({
+  params,
+}: {
+  params: Promise<{ token: string }>;
+}) {
+  const { token } = await params;
+  const tokenData = await loadTokenData(token);
 
   if (!tokenData) {
     notFound();

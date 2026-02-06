@@ -2,37 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
-import {
-  assignments,
-  organizationMembers,
-  matchingProfiles,
-  skills,
-  matches,
-  organizations,
-} from '@/db/schema';
+import { assignments, organizationMembers, matches, organizations } from '@/db/schema';
 import { eq, and, inArray, sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
+import { jsonErrorWithRequest, withApiObservability } from '@/lib/api/observability';
 import { emitAssignmentPublished, emitAnalyticsEvent } from '@/lib/analytics/events';
 import { notifyAssignmentPublished } from '@/lib/notifications';
 import { triggerFirstAssignmentSurvey } from '@/lib/surveys/sus-triggers';
-import {
-  scoreValues,
-  scoreCauses,
-  scoreSkills,
-  scoreExperience,
-  scoreVerifications,
-  scoreAvailability,
-  scoreLocation,
-  scoreCompensation,
-  scoreLanguage,
-  composeWeighted,
-  compareMatches,
-  type Skill,
-  type DateWindow,
-  type Range,
-  type LocationMode,
-} from '@/lib/core/matching/scorers';
-import { getPreset } from '@/lib/core/matching/presets';
+import { generateMatchesForAssignment } from '@/lib/matching/generate-matches-for-assignment';
 
 export const dynamic = 'force-dynamic';
 
@@ -83,188 +60,6 @@ async function getUserOrgId(userId: string): Promise<string | null> {
 }
 
 /**
- * Generate matches for a newly created assignment
- * Finds all matching profiles and stores top matches in database
- */
-async function generateMatchesForAssignment(assignmentId: string): Promise<number> {
-  try {
-    const assignment = await db.query.assignments.findFirst({
-      where: eq(assignments.id, assignmentId),
-    });
-
-    if (!assignment) {
-      log.error('generate.matches.assignment.not.found', { assignmentId });
-      return 0;
-    }
-
-    // Fetch all matching profiles
-    // TODO: Add status field to matchingProfiles table and filter by active status
-    const allProfiles = await db.query.matchingProfiles.findMany();
-
-    if (allProfiles.length === 0) {
-      log.info('generate.matches.no.profiles', { assignmentId });
-      return 0;
-    }
-
-    // Use default weights for assignment matching
-    const weights = (assignment.weights as Record<string, number>) || getPreset('balanced');
-
-    const matchResults: Array<{
-      profileId: string;
-      score: number;
-      vector: Record<string, any>;
-    }> = [];
-
-    // Score each profile against the assignment
-    for (const profile of allProfiles) {
-      // Fetch profile's skills
-      const userSkills = await db.query.skills.findMany({
-        where: eq(skills.profileId, profile.profileId),
-      });
-
-      const skillsMap: Record<string, Skill> = {};
-      for (const skill of userSkills) {
-        skillsMap[skill.skillId] = {
-          id: skill.skillId,
-          level: skill.level,
-          months: skill.monthsExperience,
-        };
-      }
-
-      // Apply hard filters
-      const mustHaveSkills = (assignment.mustHaveSkills as Skill[]) || [];
-      const niceToHaveSkills = (assignment.niceToHaveSkills as Skill[]) || [];
-
-      const skillScore = scoreSkills(mustHaveSkills, niceToHaveSkills, skillsMap);
-
-      if (skillScore.hardFail) {
-        continue; // Skip profiles that don't meet must-haves
-      }
-
-      // Compute subscores
-      const subscores: Record<string, number> = {
-        values: scoreValues(profile.valuesTags || [], assignment.valuesRequired || []),
-        causes: scoreCauses(profile.causeTags || [], assignment.causeTags || []),
-        skills: skillScore.score,
-        experience: scoreExperience(
-          Object.values(skillsMap).reduce((sum, s) => sum + (s.months || 0), 0) /
-            Math.max(Object.keys(skillsMap).length, 1)
-        ),
-        verifications: scoreVerifications(
-          assignment.verificationGates || [],
-          (profile.verified as Record<string, boolean>) || {}
-        ),
-      };
-
-      // Availability
-      if (assignment.startEarliest && assignment.startLatest && profile.availabilityEarliest) {
-        subscores.availability = scoreAvailability(
-          {
-            earliest: new Date(assignment.startEarliest),
-            latest: new Date(assignment.startLatest),
-          } as DateWindow,
-          new Date(profile.availabilityEarliest),
-          {
-            min: assignment.hoursMin || 0,
-            max: assignment.hoursMax || 40,
-          } as Range,
-          {
-            min: profile.hoursMin || 0,
-            max: profile.hoursMax || 40,
-          } as Range
-        );
-      } else {
-        subscores.availability = 1.0;
-      }
-
-      // Location
-      if (assignment.locationMode && profile.workMode) {
-        subscores.location = scoreLocation(
-          assignment.locationMode as LocationMode,
-          profile.workMode as LocationMode,
-          assignment.country || undefined,
-          profile.country || undefined
-        );
-      } else {
-        subscores.location = 1.0;
-      }
-
-      // Compensation
-      if (assignment.compMin && assignment.compMax && profile.compMin && profile.compMax) {
-        subscores.compensation = scoreCompensation(
-          { min: assignment.compMin, max: assignment.compMax } as Range,
-          { min: profile.compMin, max: profile.compMax } as Range
-        );
-      } else {
-        subscores.compensation = 1.0;
-      }
-
-      // Language
-      if (assignment.minLanguage && profile.languages) {
-        const minLang = assignment.minLanguage as { code: string; level: string };
-        const candidateLangs = profile.languages as Array<{ code: string; level: string }>;
-        const matchingLang = candidateLangs.find((l) => l.code === minLang.code);
-
-        subscores.language = matchingLang ? scoreLanguage(minLang.level, matchingLang.level) : 0;
-      } else {
-        subscores.language = 1.0;
-      }
-
-      // Compose weighted score
-      const composed = composeWeighted(subscores, weights);
-
-      matchResults.push({
-        profileId: profile.profileId,
-        score: composed.total,
-        vector: {
-          subscores,
-          contributions: composed.contributions,
-          gaps: skillScore.gaps,
-          missing: skillScore.missing,
-        },
-      });
-    }
-
-    // Sort by score (descending)
-    matchResults.sort((a, b) =>
-      compareMatches(
-        { score: a.score, assignmentId, profileId: a.profileId },
-        { score: b.score, assignmentId, profileId: b.profileId }
-      )
-    );
-
-    // Store top 100 matches in database
-    const topMatches = matchResults.slice(0, 100);
-
-    if (topMatches.length > 0) {
-      const matchInserts = topMatches.map((match) => ({
-        assignmentId,
-        profileId: match.profileId,
-        score: match.score.toString(),
-        vector: match.vector,
-        weights,
-      }));
-
-      await db.insert(matches).values(matchInserts);
-
-      log.info('generate.matches.success', {
-        assignmentId,
-        totalCandidates: allProfiles.length,
-        matchesGenerated: topMatches.length,
-      });
-    }
-
-    return topMatches.length;
-  } catch (error) {
-    log.error('generate.matches.failed', {
-      assignmentId,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-    return 0;
-  }
-}
-
-/**
  * GET /api/assignments
  *
  * Returns assignments for the current user's organization with pagination.
@@ -273,131 +68,138 @@ async function generateMatchesForAssignment(assignmentId: string): Promise<numbe
  * - offset: Number of items to skip (default: 0)
  * - status: Filter by status (draft, active, paused, closed)
  */
-import * as fs from 'fs';
-import * as path from 'path';
-
-function debugLog(message: string) {
-  const logPath = path.join(process.cwd(), 'debug_log.txt');
-  fs.appendFileSync(logPath, `${new Date().toISOString()} - ${message}\n`);
-}
 
 export async function GET(request: NextRequest) {
-  debugLog('GET /api/assignments called');
-  try {
-    const user = await requireAuth();
-    debugLog(`User authenticated: ${user.id}`);
+  return withApiObservability(request, '/api/assignments', async (ctx) => {
+    try {
+      const user = await requireAuth();
 
-    // Check if user is a member of an organization
-    const orgId = await getUserOrgId(user.id);
-    debugLog(`User orgId: ${orgId}`);
+      // Check if user is a member of an organization
+      const orgId = await getUserOrgId(user.id);
 
-    if (!orgId) {
-      debugLog('No orgId found for user');
-      return NextResponse.json({ items: [], hasMore: false });
-    }
+      if (!orgId) {
+        log.info('assignments.list.no_org', { requestId: ctx.requestId, userId: user.id });
+        return NextResponse.json({ items: [], hasMore: false });
+      }
 
-    // Get pagination parameters
-    const searchParams = request.nextUrl.searchParams;
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
-    const offset = parseInt(searchParams.get('offset') || '0', 10);
-    const statusFilter = searchParams.get('status');
+      // Get pagination parameters
+      const searchParams = request.nextUrl.searchParams;
+      const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
+      const offset = parseInt(searchParams.get('offset') || '0', 10);
+      const statusFilter = searchParams.get('status');
 
-    // Build query
-    let query = db.select().from(assignments).where(eq(assignments.orgId, orgId)).$dynamic();
+      // Build query
+      let query = db.select().from(assignments).where(eq(assignments.orgId, orgId)).$dynamic();
 
-    // Add status filter if provided
-    if (statusFilter && ['draft', 'active', 'paused', 'closed'].includes(statusFilter)) {
-      query = query.where(
-        and(eq(assignments.orgId, orgId), eq(assignments.status, statusFilter as any))
-      );
-    }
+      // Add status filter if provided
+      if (statusFilter && ['draft', 'active', 'paused', 'closed'].includes(statusFilter)) {
+        query = query.where(
+          and(eq(assignments.orgId, orgId), eq(assignments.status, statusFilter as any))
+        );
+      }
 
-    // Fetch assignments with pagination (fetch one extra to check if there are more)
-    const orgAssignments = await query
-      .orderBy((t: any) => t.createdAt)
-      .limit(limit + 1)
-      .offset(offset);
+      // Fetch assignments with pagination (fetch one extra to check if there are more)
+      const orgAssignments = await query
+        .orderBy((t: any) => t.createdAt)
+        .limit(limit + 1)
+        .offset(offset);
 
-    debugLog(`Found ${orgAssignments.length} assignments`);
+      log.info('assignments.list.fetched', {
+        requestId: ctx.requestId,
+        userId: user.id,
+        orgId,
+        count: orgAssignments.length,
+        limit,
+        offset,
+        status: statusFilter,
+      });
 
-    // Check if there are more results
-    const hasMore = orgAssignments.length > limit;
-    const assignmentsToReturn = hasMore ? orgAssignments.slice(0, limit) : orgAssignments;
+      // Check if there are more results
+      const hasMore = orgAssignments.length > limit;
+      const assignmentsToReturn = hasMore ? orgAssignments.slice(0, limit) : orgAssignments;
 
-    // -----------------------------------------------------------------------
-    // PRD safeguard: TTFQI 72h warning if <5 matches after 72 hours
-    // -----------------------------------------------------------------------
-    const activeAssignments = assignmentsToReturn.filter((a: any) => a.status === 'active');
-    const assignmentIds = activeAssignments.map((a: any) => a.id);
+      // -----------------------------------------------------------------------
+      // PRD safeguard: TTFQI 72h warning if <5 matches after 72 hours
+      // -----------------------------------------------------------------------
+      const activeAssignments = assignmentsToReturn.filter((a: any) => a.status === 'active');
+      const assignmentIds = activeAssignments.map((a: any) => a.id);
 
-    let matchCounts: Record<string, number> = {};
+      let matchCounts: Record<string, number> = {};
 
-    if (assignmentIds.length > 0) {
-      const rows = await db
-        .select({
-          assignmentId: matches.assignmentId,
-          count: sql<number>`count(*)::int`,
-        })
-        .from(matches)
-        .where(inArray(matches.assignmentId, assignmentIds))
-        .groupBy(matches.assignmentId);
+      if (assignmentIds.length > 0) {
+        const rows = await db
+          .select({
+            assignmentId: matches.assignmentId,
+            count: sql<number>`count(*)::int`,
+          })
+          .from(matches)
+          .where(inArray(matches.assignmentId, assignmentIds))
+          .groupBy(matches.assignmentId);
 
-      matchCounts = rows.reduce((acc, row) => {
-        acc[row.assignmentId] = row.count;
-        return acc;
-      }, {} as Record<string, number>);
-    }
+        matchCounts = rows.reduce(
+          (acc, row) => {
+            acc[row.assignmentId] = row.count;
+            return acc;
+          },
+          {} as Record<string, number>
+        );
+      }
 
-    const now = Date.now();
-    const itemsWithWarnings = await Promise.all(
-      assignmentsToReturn.map(async (assignment: any) => {
-        const ageHours = (now - new Date(assignment.createdAt).getTime()) / (1000 * 60 * 60);
-        const count = matchCounts[assignment.id] ?? 0;
-        const warn =
-          assignment.status === 'active' && ageHours >= 72 && count < 5
-            ? {
-                code: 'ttfqi_warning',
-                message: 'Fewer than 5 matches after 72h. Broaden constraints or relax gates.',
-                matchesCount: count,
-                ageHours: Math.round(ageHours),
-              }
-            : null;
+      const now = Date.now();
+      const itemsWithWarnings = await Promise.all(
+        assignmentsToReturn.map(async (assignment: any) => {
+          const ageHours = (now - new Date(assignment.createdAt).getTime()) / (1000 * 60 * 60);
+          const count = matchCounts[assignment.id] ?? 0;
+          const warn =
+            assignment.status === 'active' && ageHours >= 72 && count < 5
+              ? {
+                  code: 'ttfqi_warning',
+                  message: 'Fewer than 5 matches after 72h. Broaden constraints or relax gates.',
+                  matchesCount: count,
+                  ageHours: Math.round(ageHours),
+                }
+              : null;
 
-        if (warn) {
-          try {
-            await emitAnalyticsEvent({
-              eventType: 'ttfqi_warning_emitted',
-              userId: user.id,
-              organizationId: assignment.orgId,
-              entityType: 'assignment',
-              entityId: assignment.id,
-              properties: warn,
-            });
-          } catch (e) {
-            debugLog(`Failed to emit ttfqi_warning for ${assignment.id}: ${e}`);
+          if (warn) {
+            try {
+              await emitAnalyticsEvent({
+                eventType: 'ttfqi_warning_emitted',
+                userId: user.id,
+                organizationId: assignment.orgId,
+                entityType: 'assignment',
+                entityId: assignment.id,
+                properties: warn,
+              });
+            } catch (e) {
+              log.warn('assignments.ttfqi_warning.emit_failed', {
+                requestId: ctx.requestId,
+                assignmentId: assignment.id,
+                error: e instanceof Error ? e.message : String(e),
+              });
+            }
           }
-        }
 
-        return {
-          ...assignment,
-          ttfqiWarning: warn,
-        };
-      })
-    );
+          return {
+            ...assignment,
+            ttfqiWarning: warn,
+          };
+        })
+      );
 
-    return NextResponse.json({
-      items: itemsWithWarnings,
-      hasMore,
-      nextOffset: hasMore ? offset + limit : null,
-    });
-  } catch (error) {
-    debugLog(`Error in GET: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    log.error('assignments.list.failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
+      return NextResponse.json({
+        items: itemsWithWarnings,
+        hasMore,
+        nextOffset: hasMore ? offset + limit : null,
+      });
+    } catch (error) {
+      log.error('assignments.list.failed', {
+        requestId: ctx.requestId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
 
-    return NextResponse.json({ error: 'Failed to fetch assignments' }, { status: 500 });
-  }
+      return jsonErrorWithRequest(ctx.requestId, 'Failed to fetch assignments', 500);
+    }
+  });
 }
 
 /**
@@ -406,178 +208,180 @@ export async function GET(request: NextRequest) {
  * Creates a new assignment for the current user's organization.
  */
 export async function POST(request: NextRequest) {
-  debugLog('POST /api/assignments called');
-  try {
-    const user = await requireAuth();
-    debugLog(`User authenticated: ${user.id}`);
-
-    // Check if user is a member of an organization
-    const orgId = await getUserOrgId(user.id);
-    debugLog(`User orgId: ${orgId}`);
-
-    if (!orgId) {
-      debugLog('No orgId found for user');
-      return NextResponse.json(
-        { error: 'You must be a member of an organization to create assignments' },
-        { status: 403 }
-      );
-    }
-
-    const body = await request.json();
-
-    // Validate input
-    const validatedData = AssignmentSchema.parse(body);
-
-    // Convert date strings to Date objects
-    const assignmentData = {
-      orgId,
-      ...validatedData,
-      startEarliest: validatedData.startEarliest,
-      startLatest: validatedData.startLatest,
-    };
-
-    // Insert assignment in a transaction (though this is a single operation,
-    // we wrap it for consistency and potential future multi-step operations)
-    const [newAssignment] = await db.insert(assignments).values(assignmentData).returning();
-
-    log.info('assignment.created', {
-      assignmentId: newAssignment.id,
-      orgId,
-      role: newAssignment.role,
-    });
-
-    // Check if this is the organization's first assignment and trigger SUS survey
+  return withApiObservability(request, '/api/assignments', async (ctx) => {
     try {
-      const existingAssignments = await db
-        .select({ id: assignments.id })
-        .from(assignments)
-        .where(eq(assignments.orgId, orgId))
-        .limit(2); // Just need to know if there are 1 or more
+      const user = await requireAuth();
 
-      if (existingAssignments.length === 1) {
-        // This is the first assignment - trigger SUS survey for the user who created it
-        await triggerFirstAssignmentSurvey(user.id);
+      // Check if user is a member of an organization
+      const orgId = await getUserOrgId(user.id);
+
+      if (!orgId) {
+        return jsonErrorWithRequest(
+          ctx.requestId,
+          'You must be a member of an organization to create assignments',
+          403
+        );
       }
-    } catch (error) {
-      log.error('sus_survey.first_assignment_check_failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        userId: user.id,
+
+      const body = await request.json();
+
+      // Validate input
+      const validatedData = AssignmentSchema.parse(body);
+
+      // Convert date strings to Date objects
+      const assignmentData = {
         orgId,
+        ...validatedData,
+        startEarliest: validatedData.startEarliest,
+        startLatest: validatedData.startLatest,
+      };
+
+      // Insert assignment in a transaction (though this is a single operation,
+      // we wrap it for consistency and potential future multi-step operations)
+      const [newAssignment] = await db.insert(assignments).values(assignmentData).returning();
+
+      log.info('assignment.created', {
+        assignmentId: newAssignment.id,
+        orgId,
+        role: newAssignment.role,
       });
-      // Don't let survey trigger failure break assignment creation
-    }
 
-    // Check if assignment was created with 'active' status and meets activation criteria
-    if (newAssignment.status === 'active') {
-      const hasCompleteDetails = !!newAssignment.role && !!newAssignment.description;
-      const mustHaveSkills = (newAssignment.mustHaveSkills as any[]) || [];
-      const hasMinimumSkills = mustHaveSkills.length >= 5;
-      const hasLocationAndComp =
-        (newAssignment.locationMode || newAssignment.country) &&
-        (newAssignment.compMin !== null || newAssignment.compMax !== null);
+      // Check if this is the organization's first assignment and trigger SUS survey
+      try {
+        const existingAssignments = await db
+          .select({ id: assignments.id })
+          .from(assignments)
+          .where(eq(assignments.orgId, orgId))
+          .limit(2); // Just need to know if there are 1 or more
 
-      if (hasCompleteDetails && hasMinimumSkills && hasLocationAndComp) {
-        const publishTimeMinutes = 0; // Created and published simultaneously
-        await emitAssignmentPublished(orgId, newAssignment.id, {
-          hasCompleteDetails,
-          hasMinimumSkills,
-          mustHaveSkillsCount: mustHaveSkills.length,
-          hasLocationAndComp,
-          publishTimeMinutes,
-          publishedWithinTimeTarget: true, // Immediate publish
+        if (existingAssignments.length === 1) {
+          // This is the first assignment - trigger SUS survey for the user who created it
+          await triggerFirstAssignmentSurvey(user.id);
+        }
+      } catch (error) {
+        log.error('sus_survey.first_assignment_check_failed', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          userId: user.id,
+          orgId,
         });
+        // Don't let survey trigger failure break assignment creation
+      }
 
-        // Generate matches for this assignment
-        const matchesGenerated = await generateMatchesForAssignment(newAssignment.id);
+      // Check if assignment was created with 'active' status and meets activation criteria
+      if (newAssignment.status === 'active') {
+        const hasCompleteDetails = !!newAssignment.role && !!newAssignment.description;
+        const mustHaveSkills = (newAssignment.mustHaveSkills as any[]) || [];
+        const hasMinimumSkills = mustHaveSkills.length >= 5;
+        const hasLocationAndComp =
+          (newAssignment.locationMode || newAssignment.country) &&
+          (newAssignment.compMin !== null || newAssignment.compMax !== null);
 
-        // Get organization name for notifications
-        const org = await db.query.organizations.findFirst({
-          where: eq(organizations.id, orgId),
-        });
-        const orgName = org?.displayName || 'An organization';
-
-        // Send notifications to top 10 matching candidates
-        if (matchesGenerated > 0) {
-          const topMatches = await db.query.matches.findMany({
-            where: eq(matches.assignmentId, newAssignment.id),
-            orderBy: (t: any, { desc }) => [desc(t.score)],
-            limit: 10,
+        if (hasCompleteDetails && hasMinimumSkills && hasLocationAndComp) {
+          const publishTimeMinutes = 0; // Created and published simultaneously
+          await emitAssignmentPublished(user.id, newAssignment.id, orgId, {
+            hasCompleteDetails,
+            hasMinimumSkills,
+            mustHaveSkillsCount: mustHaveSkills.length,
+            hasLocationAndComp,
+            publishTimeMinutes,
+            publishedWithinTimeTarget: true, // Immediate publish
           });
 
-          for (const match of topMatches) {
-            try {
-              await notifyAssignmentPublished(
-                match.profileId,
-                newAssignment.id,
-                newAssignment.role,
-                orgName
-              );
-            } catch (notifyError) {
-              log.error('assignment.notification.failed', {
-                profileId: match.profileId,
-                assignmentId: newAssignment.id,
-                error: notifyError instanceof Error ? notifyError.message : 'Unknown error',
-              });
-              // Continue with other notifications even if one fails
-            }
-          }
-
-          log.info('assignment.notifications.sent', {
+          // Generate matches for this assignment
+          const matchStartTime = Date.now();
+          const matchesGenerated = await generateMatchesForAssignment(newAssignment.id);
+          log.info('assignment.matches.generated', {
+            requestId: ctx.requestId,
             assignmentId: newAssignment.id,
-            notificationsSent: topMatches.length,
+            orgId,
+            matchesGenerated,
+            durationMs: Date.now() - matchStartTime,
           });
+
+          // Get organization name for notifications
+          const org = await db.query.organizations.findFirst({
+            where: eq(organizations.id, orgId),
+          });
+          const orgName = org?.displayName || 'An organization';
+
+          // Send notifications to top 10 matching candidates
+          if (matchesGenerated > 0) {
+            const topMatches = await db.query.matches.findMany({
+              where: eq(matches.assignmentId, newAssignment.id),
+              orderBy: (t: any, { desc }) => [desc(t.score)],
+              limit: 10,
+            });
+
+            for (const match of topMatches) {
+              try {
+                await notifyAssignmentPublished(
+                  match.profileId,
+                  newAssignment.id,
+                  newAssignment.role,
+                  orgName
+                );
+              } catch (notifyError) {
+                log.error('assignment.notification.failed', {
+                  profileId: match.profileId,
+                  assignmentId: newAssignment.id,
+                  error: notifyError instanceof Error ? notifyError.message : 'Unknown error',
+                });
+                // Continue with other notifications even if one fails
+              }
+            }
+
+            log.info('assignment.notifications.sent', {
+              assignmentId: newAssignment.id,
+              notificationsSent: topMatches.length,
+            });
+          }
         }
       }
-    }
 
-    return NextResponse.json({ assignment: newAssignment }, { status: 201 });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      log.error('assignment.validation.failed', {
-        errors: error.errors,
-      });
-      return NextResponse.json(
-        {
-          error: 'Invalid input',
+      return NextResponse.json({ assignment: newAssignment }, { status: 201 });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        log.error('assignment.validation.failed', {
+          errors: error.errors,
+        });
+        return jsonErrorWithRequest(ctx.requestId, 'Invalid input', 400, {
           details: error.errors,
           message:
             'Some required fields are missing or invalid. Please review your assignment details.',
-        },
-        { status: 400 }
-      );
-    }
+        });
+      }
 
-    // Database connection errors
-    if (
-      error instanceof Error &&
-      (error.message.includes('connect') ||
-        error.message.includes('ECONNREFUSED') ||
-        error.message.includes('timeout'))
-    ) {
-      log.error('assignment.db.connection.failed', {
-        error: error.message,
-        stack: error.stack,
+      // Database connection errors
+      if (
+        error instanceof Error &&
+        (error.message.includes('connect') ||
+          error.message.includes('ECONNREFUSED') ||
+          error.message.includes('timeout'))
+      ) {
+        log.error('assignment.db.connection.failed', {
+          error: error.message,
+          stack: error.stack,
+        });
+        return jsonErrorWithRequest(
+          ctx.requestId,
+          'Database connection failed',
+          503,
+          'Unable to save assignment. Please check your connection and try again.'
+        );
+      }
+
+      log.error('assignment.create.failed', {
+        requestId: ctx.requestId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
       });
-      return NextResponse.json(
-        {
-          error: 'Database connection failed',
-          message: 'Unable to save assignment. Please check your connection and try again.',
-        },
-        { status: 503 }
+
+      return jsonErrorWithRequest(
+        ctx.requestId,
+        'Failed to create assignment',
+        500,
+        error instanceof Error ? error.message : 'An unexpected error occurred.'
       );
     }
-
-    log.error('assignment.create.failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-    });
-
-    return NextResponse.json(
-      {
-        error: 'Failed to create assignment',
-        message: error instanceof Error ? error.message : 'An unexpected error occurred.',
-      },
-      { status: 500 }
-    );
-  }
+  });
 }
