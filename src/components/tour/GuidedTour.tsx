@@ -55,6 +55,7 @@ export function GuidedTour({ userId, persona, shouldRun, onComplete, onSkip }: G
     // Check if elements exist in DOM
     const allExist = criticalSelectors.every((selector) => {
       if (!selector) return true; // Skip undefined selectors
+      if (typeof selector !== 'string') return true; // HTMLElement targets are already resolved
       try {
         const element = document.querySelector(selector);
         return element !== null;
