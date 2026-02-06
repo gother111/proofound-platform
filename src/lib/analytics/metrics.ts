@@ -14,6 +14,7 @@
 import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
+import { getRows } from '@/lib/db/rows';
 
 // ============================================================================
 // TYPES
@@ -134,7 +135,7 @@ export async function calculateTTFQI(
       FROM ttfqi_values
     `);
 
-    const row = result.rows[0] as any;
+    const row = (getRows(result)[0] ?? {}) as any;
     const median = parseFloat(row.p50 || '0');
     const p75 = parseFloat(row.p75 || '0');
     const p90 = parseFloat(row.p90 || '0');
@@ -219,7 +220,7 @@ export async function calculateTTV(
       FROM ttv_values
     `);
 
-    const row = result.rows[0] as any;
+    const row = (getRows(result)[0] ?? {}) as any;
     const median = parseFloat(row.p50 || '0');
     const p75 = parseFloat(row.p75 || '0');
     const p90 = parseFloat(row.p90 || '0');
@@ -304,7 +305,7 @@ export async function calculateTTSC(
       FROM ttsc_values
     `);
 
-    const row = result.rows[0] as any;
+    const row = (getRows(result)[0] ?? {}) as any;
     const median = parseFloat(row.p50 || '0');
     const p75 = parseFloat(row.p75 || '0');
     const p90 = parseFloat(row.p90 || '0');
@@ -387,7 +388,7 @@ export async function calculatePACLift(startDate?: Date, endDate?: Date): Promis
       GROUP BY m.pac_bucket
     `);
 
-    const rows = result.rows as any[];
+    const rows = getRows(result) as any[];
     const highPAC = rows.find((r) => r.pac_bucket === 'high_pac');
     const lowPAC = rows.find((r) => r.pac_bucket === 'low_pac');
 
@@ -447,7 +448,7 @@ export async function calculateSUS(startDate?: Date, endDate?: Date): Promise<SU
         AND occurred_at <= ${end.toISOString()}
     `);
 
-    const row = result.rows[0] as any;
+    const row = (getRows(result)[0] ?? {}) as any;
     const avgScore = parseFloat(row.avg_score || '0');
     const responses = parseInt(row.responses || '0');
 
@@ -521,7 +522,7 @@ export async function calculateWellBeingDelta(
       FROM first_last
     `);
 
-    const row = result.rows[0] as any;
+    const row = (getRows(result)[0] ?? {}) as any;
     const avgDelta = parseFloat(row.avg_delta || '0');
     const sampleSize = parseInt(row.sample_size || '0');
     const improvedCount = parseInt(row.improved_count || '0');
