@@ -87,9 +87,10 @@ export async function POST(request: NextRequest) {
       const oldVisibility = (currentProfile.fieldVisibility as any) || {};
       Object.keys(fieldVisibility).forEach((field) => {
         if (oldVisibility[field] !== fieldVisibility[field]) {
-          // isVisible is true if new visibility is 'public' or more visible than before
-          const isVisible = fieldVisibility[field] === 'public';
-          emitVisibilityChanged(user.id, field, isVisible);
+          const visibility = fieldVisibility[field];
+          if (visibility === 'public' || visibility === 'network' || visibility === 'private') {
+            emitVisibilityChanged(user.id, field, visibility);
+          }
         }
       });
     }
