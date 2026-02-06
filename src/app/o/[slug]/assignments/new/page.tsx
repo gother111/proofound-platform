@@ -22,7 +22,7 @@ export default async function NewAssignmentPage({ params }: PageProps) {
     }
 
     // Verify permission (owner, admin, or member can create assignments)
-    if (!['owner', 'admin', 'member'].includes(org.role)) {
+    if (!['owner', 'admin', 'member'].includes(org.membership.role)) {
         redirect(`/app/o/${slug}/home`);
     }
 
@@ -37,7 +37,7 @@ export default async function NewAssignmentPage({ params }: PageProps) {
                 </p>
             </div>
 
-            <AssignmentBuilder orgId={org.orgId} orgSlug={slug} />
+            <AssignmentBuilder orgId={org.membership.orgId} orgSlug={slug} />
         </div>
     );
 }
