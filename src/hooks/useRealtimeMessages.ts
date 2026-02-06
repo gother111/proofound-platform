@@ -105,7 +105,7 @@ export function useRealtimeMessages({
         }
       )
       .on('presence', { event: 'sync' }, () => {
-        const state = realtimeChannel.presenceState<PresenceState>();
+        const state = realtimeChannel.presenceState() as Record<string, PresenceState[]>;
         const presentUsers = Object.keys(state);
 
         // Check if other user is typing
