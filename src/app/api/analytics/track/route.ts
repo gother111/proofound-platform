@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { emitEvent } from '@/lib/analytics/events';
+import { emitEvent, EVENT_TYPES, type EventType } from '@/lib/analytics/events';
 
 /**
  * POST /api/analytics/track
@@ -22,9 +22,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (!EVENT_TYPES.includes(eventType as EventType)) {
+      return NextResponse.json({ error: `Invalid eventType: ${eventType}` }, { status: 400 });
+    }
+
     // Emit the event
     const eventId = await emitEvent({
-      eventType,
+      eventType: eventType as EventType,
       userId,
       orgId,
       entityType,
