@@ -132,13 +132,13 @@ export function PrivacySettings({ userId, currentProfile }: PrivacySettingsProps
     {
       name: 'mission',
       label: 'Mission',
-      value: currentProfile.mission,
+      value: currentProfile.mission ?? null,
       visibility: fieldVisibility.mission,
     },
     {
       name: 'vision',
       label: 'Vision',
-      value: currentProfile.vision,
+      value: currentProfile.vision ?? null,
       visibility: fieldVisibility.vision,
     },
     {
@@ -162,13 +162,13 @@ export function PrivacySettings({ userId, currentProfile }: PrivacySettingsProps
     {
       name: 'tagline',
       label: 'Tagline',
-      value: currentProfile.tagline,
+      value: currentProfile.tagline ?? null,
       visibility: fieldVisibility.tagline,
     },
     {
       name: 'location',
       label: 'Location',
-      value: currentProfile.location,
+      value: currentProfile.location ?? null,
       visibility: fieldVisibility.location,
     },
     {
