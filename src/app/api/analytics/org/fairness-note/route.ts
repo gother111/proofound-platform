@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
         HAVING COUNT(*) >= 3
       `);
 
-      const cohorts = cohortData.rows as any[];
+      const cohorts = cohortData as unknown as any[];
 
       if (cohorts.length < 2) {
         return NextResponse.json({
