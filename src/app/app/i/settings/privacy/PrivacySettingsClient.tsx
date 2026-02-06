@@ -73,7 +73,7 @@ export function PrivacySettingsClient() {
 
         <div className="space-y-6">
           {/* Privacy Overview */}
-          <PrivacyOverview />
+          <PrivacyOverview userId="current" />
 
           {/* Data Breakdown */}
           <DataBreakdown />
@@ -95,4 +95,3 @@ export function PrivacySettingsClient() {
     </div>
   );
 }
-
