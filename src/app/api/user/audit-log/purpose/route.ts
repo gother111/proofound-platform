@@ -2,7 +2,7 @@
  * GET /api/user/audit-log/purpose
  *
  * Get user's purpose edit history
- * Returns timeline of changes to mission, vision, values, causes
+ * Returns timeline of changes to mission and vision.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -25,12 +25,8 @@ export async function GET(request: NextRequest) {
 
     // Get query parameters
     const { searchParams } = new URL(request.url);
-    const fieldName = searchParams.get('field') as
-      | 'mission'
-      | 'vision'
-      | 'values'
-      | 'causes'
-      | null;
+    const rawField = searchParams.get('field');
+    const fieldName = rawField === 'mission' || rawField === 'vision' ? rawField : null;
     const limit = parseInt(searchParams.get('limit') || '100', 10);
 
     // Get audit log history
