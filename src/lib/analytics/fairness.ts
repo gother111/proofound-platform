@@ -12,6 +12,7 @@
 import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
+import { getRows } from '@/lib/db/rows';
 import { generateFairnessNote as generateFairnessNoteByVersion } from './fairness-note-generator';
 
 // ============================================================================
@@ -209,9 +210,9 @@ async function getOverallMetrics(
       COUNT(DISTINCT CASE WHEN event_type = 'contract_signed' THEN entity_id END) as total_contracts
     FROM analytics_events
     WHERE occurred_at >= ${thirtyDaysAgo.toISOString()}
-  `);
+	  `);
 
-  const row = metrics.rows[0] as any;
+  const row = (getRows(metrics)[0] ?? {}) as any;
 
   return {
     totalMatches: parseInt(row.total_matches || '0'),
@@ -240,9 +241,9 @@ async function calculateSegmentGaps(
     FROM analytics_events e
     WHERE e.occurred_at >= ${thirtyDaysAgo.toISOString()}
       AND e.event_type IN ('match_generated', 'match_introduced')
-  `);
+	  `);
 
-  const baselineRow = baselineResult.rows[0] as any;
+  const baselineRow = (getRows(baselineResult)[0] ?? {}) as any;
   const baselineMatches = parseFloat(baselineRow.matches || '0');
   const baselineIntroductions = parseFloat(baselineRow.introductions || '0');
   const baseline = baselineMatches > 0 ? baselineIntroductions / baselineMatches : 0;
@@ -266,7 +267,7 @@ async function calculateSegmentGaps(
 
   const segments: FairnessSegment[] = [];
 
-  for (const row of segmentResults.rows as any[]) {
+  for (const row of getRows(segmentResults) as any[]) {
     const segmentValue = row.segment_value;
     const segmentMatches = parseFloat(row.matches || '0');
     const segmentIntroductions = parseFloat(row.introductions || '0');
