@@ -1,12 +1,4 @@
 -- ============================================================================
--- GENERATED FROM REMOTE supabase_migrations.schema_migrations
--- version: 99999999999999
--- name: seed_expertise_atlas_skills
---
--- This file exists to sync local migration history with the remote database.
--- Do not edit by hand. Source of truth is the remote DB migration table.
--- ============================================================================
--- ============================================================================
 -- EXPERTISE ATLAS: 20,000 Skill Taxonomy Seed Data
 -- ============================================================================
 -- Based on: Expertise_Atlas_Product_Documentation_v3.md
@@ -22,63 +14,6 @@
 -- D (Domain Knowledge): ~3,000 skills
 -- ============================================================================
 
--- Schema alignment for existing skills taxonomy tables
-CREATE EXTENSION IF NOT EXISTS pgcrypto
-
-DO $$
-BEGIN
-  IF EXISTS (
-    SELECT 1
-    FROM information_schema.tables
-    WHERE table_schema = 'public'
-      AND table_name = 'skills_l3'
-  ) THEN
-    ALTER TABLE skills_l3 ADD COLUMN IF NOT EXISTS id uuid;
-    ALTER TABLE skills_l3 ADD COLUMN IF NOT EXISTS l2_id uuid;
-    ALTER TABLE skills_l3 ADD COLUMN IF NOT EXISTS name text;
-    ALTER TABLE skills_l3 ADD COLUMN IF NOT EXISTS description text;
-    ALTER TABLE skills_l3 ADD COLUMN IF NOT EXISTS sort_order int;
-
-    UPDATE skills_l3 SET id = gen_random_uuid() WHERE id IS NULL;
-    ALTER TABLE skills_l3 ALTER COLUMN id SET DEFAULT gen_random_uuid();
-    ALTER TABLE skills_l3 ALTER COLUMN id SET NOT NULL;
-
-    IF EXISTS (
-      SELECT 1
-      FROM information_schema.columns
-      WHERE table_schema = 'public' AND table_name = 'skills_l3' AND column_name = 'name_i18n'
-    ) THEN
-      EXECUTE 'UPDATE skills_l3 SET name = COALESCE(name, name_i18n->>''en'') WHERE name IS NULL AND name_i18n ? ''en''';
-    END IF;
-
-    IF EXISTS (
-      SELECT 1
-      FROM information_schema.columns
-      WHERE table_schema = 'public' AND table_name = 'skills_l3' AND column_name = 'description_i18n'
-    ) THEN
-      EXECUTE 'UPDATE skills_l3 SET description = COALESCE(description, description_i18n->>''en'') WHERE description IS NULL AND description_i18n ? ''en''';
-    END IF;
-
-    IF EXISTS (
-      SELECT 1
-      FROM information_schema.columns
-      WHERE table_schema = 'public' AND table_name = 'skills_l3' AND column_name = 'display_order'
-    ) THEN
-      EXECUTE 'UPDATE skills_l3 SET sort_order = COALESCE(sort_order, display_order) WHERE sort_order IS NULL';
-    END IF;
-  END IF;
-END $$
-
--- Prevent duplicates before enforcing slug uniqueness
-DO $$
-BEGIN
-  IF EXISTS (
-    SELECT 1 FROM skills_l3 GROUP BY slug HAVING COUNT(*) > 1
-  ) THEN
-    RAISE EXCEPTION 'Duplicate skills_l3.slug values detected; resolve before seeding.';
-  END IF;
-END $$
-
 -- Create tables if they don't exist
 CREATE TABLE IF NOT EXISTS skills_l1 (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -88,7 +23,7 @@ CREATE TABLE IF NOT EXISTS skills_l1 (
   color TEXT,
   sort_order INT,
   created_at TIMESTAMPTZ DEFAULT NOW()
-)
+);
 
 CREATE TABLE IF NOT EXISTS skills_l2 (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -98,7 +33,7 @@ CREATE TABLE IF NOT EXISTS skills_l2 (
   description TEXT,
   sort_order INT,
   created_at TIMESTAMPTZ DEFAULT NOW()
-)
+);
 
 CREATE TABLE IF NOT EXISTS skills_l3 (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -108,7 +43,7 @@ CREATE TABLE IF NOT EXISTS skills_l3 (
   description TEXT,
   sort_order INT,
   created_at TIMESTAMPTZ DEFAULT NOW()
-)
+);
 
 CREATE TABLE IF NOT EXISTS skills_l4 (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -119,41 +54,13 @@ CREATE TABLE IF NOT EXISTS skills_l4 (
   created_by UUID REFERENCES auth.users(id),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(l3_id, name)
-)
+);
 
 -- Create indexes
-CREATE INDEX IF NOT EXISTS idx_skills_l2_l1 ON skills_l2(l1_id)
-
-CREATE INDEX IF NOT EXISTS idx_skills_l3_l2 ON skills_l3(l2_id)
-
-CREATE INDEX IF NOT EXISTS idx_skills_l4_l3 ON skills_l4(l3_id)
-
-CREATE INDEX IF NOT EXISTS idx_skills_l4_name ON skills_l4 USING gin(name gin_trgm_ops)
-
--- Uniqueness guarantees for UPSERTs
-CREATE UNIQUE INDEX IF NOT EXISTS idx_skills_l1_code_unique ON skills_l1(code)
-
-CREATE UNIQUE INDEX IF NOT EXISTS idx_skills_l2_code_unique ON skills_l2(code)
-
-CREATE UNIQUE INDEX IF NOT EXISTS idx_skills_l3_id_unique ON skills_l3(id)
-
-CREATE UNIQUE INDEX IF NOT EXISTS idx_skills_l3_slug_unique ON skills_l3(slug)
-
-CREATE UNIQUE INDEX IF NOT EXISTS idx_skills_l4_l3_name_unique ON skills_l4(l3_id, name)
-
-DO $$
-BEGIN
-  IF EXISTS (
-    SELECT 1 FROM information_schema.tables
-    WHERE table_schema = 'public' AND table_name = 'skills_l4'
-  ) AND NOT EXISTS (
-    SELECT 1 FROM pg_constraint WHERE conname = 'skills_l4_l3_id_fkey'
-  ) THEN
-    ALTER TABLE skills_l4
-      ADD CONSTRAINT skills_l4_l3_id_fkey
-      FOREIGN KEY (l3_id) REFERENCES skills_l3(id) ON DELETE CASCADE;
-  END IF;
-END $$
+CREATE INDEX IF NOT EXISTS idx_skills_l2_l1 ON skills_l2(l1_id);
+CREATE INDEX IF NOT EXISTS idx_skills_l3_l2 ON skills_l3(l2_id);
+CREATE INDEX IF NOT EXISTS idx_skills_l4_l3 ON skills_l4(l3_id);
+CREATE INDEX IF NOT EXISTS idx_skills_l4_name ON skills_l4 USING gin(name gin_trgm_ops);
 
 -- ============================================================================
 -- L1: UNIVERSAL CAPABILITIES (U) - Transferable skills
@@ -166,12 +73,7 @@ INSERT INTO skills_l1 (code, name, description, color, sort_order) VALUES
 ('T', 'Tools & Technologies', 'Specific tools, platforms, frameworks, and technologies', '#8B5CF6', 3),
 ('L', 'Languages & Culture', 'Natural languages and cultural competencies', '#F59E0B', 4),
 ('M', 'Methods & Practices', 'Methodologies, frameworks, and best practices', '#EF4444', 5),
-('D', 'Domain Knowledge', 'Industry and domain-specific expertise', '#EC4899', 6)
-ON CONFLICT (code) DO UPDATE SET
-  name = EXCLUDED.name,
-  description = EXCLUDED.description,
-  color = EXCLUDED.color,
-  sort_order = EXCLUDED.sort_order
+('D', 'Domain Knowledge', 'Industry and domain-specific expertise', '#EC4899', 6);
 
 -- Get L1 IDs for reference
 DO $$
@@ -199,21 +101,11 @@ BEGIN
   -- ============================================================================
   INSERT INTO skills_l2 (code, l1_id, name, description, sort_order)
   VALUES ('U01', l1_u, 'Critical Thinking & Problem Solving', 'Analytical reasoning, logic, and systematic problem resolution', 1)
-  ON CONFLICT (code) DO UPDATE SET
-    l1_id = EXCLUDED.l1_id,
-    name = EXCLUDED.name,
-    description = EXCLUDED.description,
-    sort_order = EXCLUDED.sort_order
   RETURNING id INTO l2_id;
 
   -- U01 - Analytical Reasoning
   INSERT INTO skills_l3 (slug, l2_id, name, description, sort_order)
   VALUES ('u01_analytical', l2_id, 'Analytical Reasoning', 'Breaking down complex problems into components', 1)
-  ON CONFLICT (slug) DO UPDATE SET
-    l2_id = EXCLUDED.l2_id,
-    name = EXCLUDED.name,
-    description = EXCLUDED.description,
-    sort_order = EXCLUDED.sort_order
   RETURNING id INTO l3_id;
 
   INSERT INTO skills_l4 (l3_id, name) VALUES
@@ -256,17 +148,11 @@ BEGIN
   (l3_id, 'Cluster Analysis'),
   (l3_id, 'Factor Analysis'),
   (l3_id, 'Principal Component Analysis'),
-  (l3_id, 'Discriminant Analysis')
-ON CONFLICT (l3_id, name) DO NOTHING;
+  (l3_id, 'Discriminant Analysis');
 
   -- U01 - Creative Problem Solving
   INSERT INTO skills_l3 (slug, l2_id, name, description, sort_order)
   VALUES ('u01_creative', l2_id, 'Creative Problem Solving', 'Innovative and lateral thinking approaches', 2)
-  ON CONFLICT (slug) DO UPDATE SET
-    l2_id = EXCLUDED.l2_id,
-    name = EXCLUDED.name,
-    description = EXCLUDED.description,
-    sort_order = EXCLUDED.sort_order
   RETURNING id INTO l3_id;
 
   INSERT INTO skills_l4 (l3_id, name) VALUES
@@ -299,15 +185,14 @@ ON CONFLICT (l3_id, name) DO NOTHING;
   (l3_id, 'Innovation Games'),
   (l3_id, 'Crazy 8s'),
   (l3_id, 'Rose Thorn Bud'),
-  (l3_id, 'How Might We Questions')
-ON CONFLICT (l3_id, name) DO NOTHING;
+  (l3_id, 'How Might We Questions');
 
   -- Continue with remaining Universal Capabilities subcategories...
   -- (This pattern continues for all skills)
 
   RAISE NOTICE '✅ Seeded % skills so far', (SELECT COUNT(*) FROM skills_l4);
 
-END $$
+END $$;
 
 -- ============================================================================
 -- SUMMARY
@@ -333,4 +218,4 @@ BEGIN
   RAISE NOTICE ' L3 Subcategories: %', total_l3;
   RAISE NOTICE ' L4 Skills: %', total_l4;
   RAISE NOTICE '============================================================================';
-END $$
+END $$;

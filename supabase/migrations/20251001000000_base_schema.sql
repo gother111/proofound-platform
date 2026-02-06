@@ -1,0 +1,9 @@
+-- ============================================================================
+-- GENERATED FROM REMOTE supabase_migrations.schema_migrations
+-- version: 20251001000000
+-- name: base_schema
+--
+-- This file exists to sync local migration history with the remote database.
+-- Do not edit by hand. Source of truth is the remote DB migration table.
+-- ============================================================================
+-- NOTE: statements were NULL in schema_migrations for this version.

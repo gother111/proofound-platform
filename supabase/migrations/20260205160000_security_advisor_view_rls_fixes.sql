@@ -1,0 +1,9 @@
+-- ============================================================================
+-- GENERATED FROM REMOTE supabase_migrations.schema_migrations
+-- version: 20260205160000
+-- name: security_advisor_view_rls_fixes
+--
+-- This file exists to sync local migration history with the remote database.
+-- Do not edit by hand. Source of truth is the remote DB migration table.
+-- ============================================================================
+-- NOTE: statements were NULL in schema_migrations for this version.
