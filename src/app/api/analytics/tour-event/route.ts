@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, event, stepIndex } = body;
+    const { userId, event } = body;
 
     if (!userId || !event) {
       return NextResponse.json({ error: 'Missing userId or event' }, { status: 400 });
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
         await emitTourCompleted(userId);
         break;
       case 'skipped':
-        await emitTourSkipped(userId, stepIndex || 0);
+        await emitTourSkipped(userId);
         break;
       default:
         return NextResponse.json({ error: 'Invalid event type' }, { status: 400 });
