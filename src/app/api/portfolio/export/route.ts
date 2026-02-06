@@ -38,14 +38,16 @@ export async function GET() {
     });
 
     // Use a Blob to satisfy NextResponse BodyInit typing across runtimes.
-    const blob = new Blob([buffer], { type: 'application/pdf' });
+    // `Uint8Array.from` copies into a new ArrayBuffer (avoids Buffer/SharedArrayBuffer typing issues).
+    const bytes = Uint8Array.from(buffer);
+    const blob = new Blob([bytes], { type: 'application/pdf' });
 
     return new NextResponse(blob, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': 'attachment; filename="proofound-trust.pdf"',
-        'Content-Length': buffer.byteLength.toString(),
+        'Content-Length': bytes.byteLength.toString(),
       },
     });
   } catch (error) {
