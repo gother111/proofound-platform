@@ -21,6 +21,9 @@ This folder is the durable “project memory” surface for Proofound. It is mea
 - Bootstrap run: created `project/` and `agent/` markdown only (no application code changes).
 - This run: tightened repo-truth wording/citations after verifying against cited sources.
 - This run: created `agent/scratchpad.md` session log (2026-02-07 09:49 CET).
+- Scratchpad why: keep a durable, append-only per-session work log.
+- Scratchpad verify: confirm `agent/scratchpad.md` exists and append a new entry at the end of each session.
+- Scratchpad open risks/TODO: none.
 - Vercel pre-commit gate run (2026-02-06 22:50 CET) @ `ed6c95e3e27086fc9a028364b52e0fc6517fd3fb` (Node `v20.20.0`, npm `10.8.2`):
   - `npm ci`: PASS
   - `npm run lint`: PASS
