@@ -56,6 +56,42 @@ Open TODOs / follow-ups:
 
 ---
 
+## 2026-02-07 15:09 CET
+
+Task summary:
+Fix Vercel build failure caused by a blocked vulnerable Next.js version (CVE-2025-66478) by upgrading to a patched release and preparing a PR.
+
+What worked:
+
+- Upgrading `next` and `eslint-config-next` together avoided tooling mismatch.
+- Running verification under Node `20.20.0` matched `package.json` engines expectations.
+
+What failed / wrong assumptions:
+
+- Default local Node was `v16.14.0`; needed to force Node `20.20.0` via `PATH=/opt/homebrew/opt/node@20/bin:$PATH`.
+
+User corrections:
+
+- Vercel build log showed the CVE gate, requiring an immediate Next.js upgrade.
+
+Improvements next time:
+
+- Avoid parallel shell execution for commands where ordering matters (branch switching).
+
+Commands run + outcomes:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm install next@15.5.12 eslint-config-next@15.5.12`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS
+
+Open TODOs / follow-ups:
+
+- Confirm Vercel preview deployment for the PR no longer fails the Next.js CVE gate.
+
+---
+
 ## 2026-02-07 10:38 CET
 
 Task summary:

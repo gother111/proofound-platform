@@ -110,6 +110,31 @@ Open risks/TODO:
 
 - Vercel environment variable changes require a new production deployment to take effect for the live site.
 
+## 2026-02-07: Fix Vercel Next.js CVE Block (CVE-2025-66478)
+
+What changed:
+
+- Bumped `next` to `^15.5.12` and aligned `eslint-config-next` to `^15.5.12` to satisfy Vercel's vulnerable Next.js build gate.
+
+Why:
+
+- Vercel blocked builds with `Error: Vulnerable version of Next.js detected` and required upgrading to a patched release.
+
+How to verify:
+
+- Local checks (Node `20.20.0`):
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`
+- Vercel parity build (optional, if linked and authenticated):
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vercel@latest pull --yes --environment=production`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vercel@latest build --prod`
+
+Open risks/TODO:
+
+- If Vercel project settings force Node 22+, confirm the project uses Node 20.x per `package.json` engines to avoid future drift.
+
 Environment + setup:
 
 - `.env.example`
