@@ -436,6 +436,7 @@ const mockSupabaseClient = {
           }
           return chain;
         },
+        or: () => chain,
         order: (col: string, opts?: any) => {
           return chain;
         },
