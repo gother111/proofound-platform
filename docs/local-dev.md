@@ -70,18 +70,18 @@ npm run dev
 If you want a local Postgres database (for example to support deterministic E2E with mock auth), start the included container:
 
 ```bash
-docker-compose up -d
+docker compose up -d
 export DATABASE_URL='postgresql://postgres:postgrespassword@127.0.0.1:5432/proofound'
 ```
 
 Then sync schema:
 
 ```bash
-npm run db:push
+npm run db:migrate
 ```
 
 Stop the DB:
 
 ```bash
-docker-compose down
+docker compose down
 ```
