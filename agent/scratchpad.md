@@ -56,6 +56,52 @@ Open TODOs / follow-ups:
 
 ---
 
+## 2026-02-07 18:05 CET
+
+Task summary:
+Back up the remaining local git stash as a pushed remote backup branch (no PR), run the full preflight gate including `vercel build --prod`, and drop the local stash entry after verification.
+
+What worked:
+
+- Removing stale `/private/tmp/proofound-build-*` worktrees immediately resolved the `ENOSPC` failure during `next build`.
+- Forcing Node `v20.20.0` via `PATH` kept local CI parity checks and Vercel parity commands consistent.
+
+What failed / wrong assumptions:
+
+- The machine disk filled up due to many temporary worktrees and build artifacts, causing `next build` to fail with `ENOSPC` until cleanup.
+
+User corrections:
+
+- None.
+
+Improvements next time:
+
+- After each stash salvage, remove temporary worktrees and large build outputs to avoid disk exhaustion.
+
+Assumptions taken without asking:
+
+- It was safe to delete detached and no-longer-needed `/private/tmp/proofound-*` git worktrees after their associated backup branches had already been pushed.
+
+What the user corrected afterward:
+
+- None.
+
+Commands run + outcomes:
+
+- `git worktree list`: PASS (identified stale worktrees).
+- `git worktree remove -f /private/tmp/proofound-build-*`: PASS (freed disk space).
+- `npm ci && npm run lint && npm run typecheck && npm run test && npm run build`: PASS (zoom stash branch).
+- `npx vercel@latest pull --yes --environment=production --scope pavlo-samoshkos-projects --token $VERCEL_TOKEN`: PASS.
+- `npx vercel@latest build --prod --yes --scope pavlo-samoshkos-projects --token $VERCEL_TOKEN`: PASS.
+- `git push -u origin codex/stash-zoom-next-bump-2026-02-07`: PASS.
+- `git stash drop stash@{0}`: PASS (stash list now empty).
+
+Open TODOs / follow-ups:
+
+- None.
+
+---
+
 ## 2026-02-07 15:09 CET
 
 Task summary:

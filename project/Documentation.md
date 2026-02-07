@@ -211,3 +211,34 @@ TODO (missing / validate; do not create here):
 
 - `ACCESSIBILITY_AUDIT_REPORT.md` (expected because `scripts/go-no-go-check.mjs` requires it) (source: scripts/go-no-go-check.mjs)
 - `playwright.a11y.config.ts` (expected because `npm run test:a11y` references it) (source: package.json)
+
+## 2026-02-07: Back Up Local Git Stashes to Remote Branches (No PRs)
+
+What changed:
+
+- Converted the remaining local-only git stashes into pushed backup branches on `origin` (no PRs).
+- Dropped all local stash entries after verifying push + green preflight gate per stash branch.
+
+Why:
+
+- Prevent losing local-only work by ensuring it exists on the remote as backup branches.
+
+How to verify:
+
+- Branch existence:
+  - `git ls-remote --heads origin codex/stash-refactor-quick-wins-0-2026-02-07`
+  - `git ls-remote --heads origin codex/stash-refactor-quick-wins-1-2026-02-07`
+  - `git ls-remote --heads origin codex/stash-master-2-2026-02-07`
+  - `git ls-remote --heads origin codex/stash-fix-userid-matching-profile-3-2026-02-07`
+  - `git ls-remote --heads origin codex/stash-zoom-next-bump-2026-02-07`
+- Stashes cleared:
+  - `git stash list` (should be empty)
+- Preflight gate (example commands used):
+  - `export PATH="$HOME/.nvm/versions/node/v20.20.0/bin:$PATH"`
+  - `npm ci && npm run lint && npm run typecheck && npm run test && npm run build`
+  - `npx vercel@latest pull --yes --environment=production --scope pavlo-samoshkos-projects --token "$VERCEL_TOKEN"`
+  - `npx vercel@latest build --prod --yes --scope pavlo-samoshkos-projects --token "$VERCEL_TOKEN"`
+
+Open risks/TODO:
+
+- These branches are backups, not reviewed PRs. Any salvage conflicts were resolved to pass preflight, but should be reviewed before merging anywhere.
