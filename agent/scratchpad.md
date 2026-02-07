@@ -56,6 +56,41 @@ Open TODOs / follow-ups:
 
 ---
 
+## 2026-02-07 12:32 CET
+
+Task summary:
+Split local-only work into focused branches and PRs, run Vercel-parity preflight checks per PR branch, and unblock Vercel production builds by ensuring required env vars exist in the Vercel project.
+
+What worked:
+
+- Creating focused PR branches off `origin/codex/auth-csp-e2e-fix` kept review scope tight.
+- Running the full parity gate (`npm ci`, lint, typecheck, test, build, `vercel build --prod`) before pushing each PR prevented surprise deploy failures.
+
+What failed / wrong assumptions:
+
+- `git` pre-commit hooks can touch `package-lock.json` even when only committing TS changes; had to restore it to keep PR diffs clean.
+
+User corrections:
+
+- None.
+
+Improvements next time:
+
+- Prefer stacking follow-up hygiene changes (deps and build warnings) as a single PR early, then keep functional PRs free of build noise.
+
+Commands run + outcomes:
+
+- `git log --oneline origin/codex/auth-csp-e2e-fix..origin/codex/qa-smoke-suite`: identified local-only changes to split.
+- `npm ci && npm run lint && npm run typecheck && npm run test && npm run build`: PASS (run per PR branch).
+- `npx vercel@latest pull --yes --environment=production --scope pavlo-samoshkos-projects --token $VERCEL_TOKEN`: PASS (run per PR branch).
+- `npx vercel@latest build --prod --yes --scope pavlo-samoshkos-projects --token $VERCEL_TOKEN`: PASS (run per PR branch).
+
+Open TODOs / follow-ups:
+
+- Merge order: land PR0 (build hygiene) early to eliminate warnings and vulnerabilities for subsequent PRs.
+
+---
+
 ## 2026-02-07 09:50 CET
 
 Task summary:

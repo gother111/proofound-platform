@@ -24,6 +24,7 @@ This folder is the durable “project memory” surface for Proofound. It is mea
 - Scratchpad why: keep a durable, append-only per-session work log.
 - Scratchpad verify: confirm `agent/scratchpad.md` exists and append a new entry at the end of each session.
 - Scratchpad open risks/TODO: none.
+- This run (2026-02-07): split local-only work into focused PRs (#119, #120, #121, #122, #123, #124) and ran the full Vercel parity gate per PR branch (Node `v20.20.0`, `npm ci` plus lint/typecheck/test/build, then `vercel pull` and `vercel build --prod` via `VERCEL_TOKEN`). Safety: pushed `codex/backup-local-only-2026-02-07`. Open risk: base branch keeps `npm audit` vulnerabilities and build warnings until PR0 merges.
 - Vercel pre-commit gate run (2026-02-06 22:50 CET) @ `ed6c95e3e27086fc9a028364b52e0fc6517fd3fb` (Node `v20.20.0`, npm `10.8.2`):
   - `npm ci`: PASS
   - `npm run lint`: PASS
