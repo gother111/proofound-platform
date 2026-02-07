@@ -52,7 +52,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_URL || request.nextUrl.origin;
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_URL || request.nextUrl.origin;
     const configuredRedirect = process.env.GOOGLE_REDIRECT_URI;
     const redirectUri = configuredRedirect
       ? configuredRedirect.startsWith('/')

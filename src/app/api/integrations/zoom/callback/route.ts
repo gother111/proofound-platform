@@ -43,7 +43,8 @@ function buildCallbackHtml(opts: { success?: string; error?: string; message?: s
 }
 
 function resolveRedirectUri(request: NextRequest): string {
-  const baseUrl = process.env.NEXT_PUBLIC_URL || request.nextUrl.origin;
+  const baseUrl =
+    process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_URL || request.nextUrl.origin;
   const configured = process.env.ZOOM_REDIRECT_URI;
   if (configured) {
     return configured.startsWith('/') ? `${baseUrl}${configured}` : configured;

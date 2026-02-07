@@ -7,7 +7,7 @@ Complete guide to all environment variables used in Proofound, including which f
 > Current production domain: **`https://proofound.io`**
 >
 > Update `NEXT_PUBLIC_SITE_URL` in Vercel environment variables to match your actual domain.
-> Examples in this guide use `proofound.com` for illustration purposes.
+> Examples in this guide may use `proofound.com` for illustration purposes.
 
 ## Quick Reference
 
@@ -19,7 +19,7 @@ DATABASE_URL=postgresql://user:pass@host:5432/db
 NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJxxx...
 SUPABASE_SERVICE_ROLE_KEY=eyJxxx...
-NEXT_PUBLIC_SITE_URL=https://proofound.com
+NEXT_PUBLIC_SITE_URL=https://proofound.io
 
 # ============================================================================
 # IMPORTANT - Required for specific features
@@ -29,9 +29,10 @@ EMAIL_FROM="Proofound <no-reply@proofound.com>"
 CRON_SECRET=your_secure_random_token_here
 ZOOM_CLIENT_ID=your_zoom_client_id
 ZOOM_CLIENT_SECRET=your_zoom_client_secret
-ZOOM_REDIRECT_URI=https://yourdomain.com/api/integrations/video/zoom/callback
-NEXT_PUBLIC_APP_URL=https://yourdomain.com
+ZOOM_REDIRECT_URI=https://yourdomain.com/api/integrations/zoom/callback
 GOOGLE_CLIENT_ID=your_google_oauth_client_id
+GOOGLE_CLIENT_SECRET=your_google_oauth_client_secret
+GOOGLE_REDIRECT_URI=https://yourdomain.com/api/integrations/google/callback
 DIRECT_URL=postgresql://user:pass@host:5432/db  # Optional; Drizzle uses this, otherwise falls back to DATABASE_URL
 
 # ============================================================================
