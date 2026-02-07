@@ -79,6 +79,37 @@ Start here:
 - `project/Implement.md`
 - `agent/runbooks/setup.md`
 
+## 2026-02-07: Zoom OAuth Production Hardening (proofound.io)
+
+What changed:
+
+- OAuth redirect base URL selection now prefers `NEXT_PUBLIC_SITE_URL` (fallback: `NEXT_PUBLIC_URL`, then request origin) for Zoom and Google connect and callback routes. This reduces configuration drift between the rest of the app (which already uses `NEXT_PUBLIC_SITE_URL`) and the video integration OAuth flow.
+- `docs/ENV_VARIABLES.md` quick reference now reflects the current production domain `https://proofound.io` and the recommended OAuth callback paths under `/api/integrations/*/callback`.
+
+Why:
+
+- Production `NEXT_PUBLIC_SITE_URL` was not aligned to `https://proofound.io`, which can cause provider redirect URI mismatch if the OAuth flow constructs redirect URIs from a different base URL.
+
+How to verify:
+
+- Local checks (Node `20.20.0`):
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`
+- Vercel parity build (uses linked project):
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vercel@latest pull --yes --environment=production`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vercel@latest build --prod`
+- Production smoke test:
+  - Visit `/app/i/settings/integrations`
+  - Click "Connect Zoom" and complete OAuth
+  - Confirm redirect back to `/app/i/settings/integrations?success=zoom_connected`
+  - Schedule an interview with `platform=zoom` and confirm `meeting_link` is populated.
+
+Open risks/TODO:
+
+- Vercel environment variable changes require a new production deployment to take effect for the live site.
+
 Environment + setup:
 
 - `.env.example`
