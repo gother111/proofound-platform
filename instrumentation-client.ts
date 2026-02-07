@@ -1,7 +1,10 @@
 import * as Sentry from '@sentry/nextjs';
 
 // Next.js loads this file on the client before application code.
-// Keep initialization side-effectful and export nothing.
+// Keep initialization side-effectful. Sentry's Next.js SDK may require
+// router transition instrumentation hooks to be exported from this module.
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
+
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
