@@ -17,6 +17,7 @@ import argparse
 import json
 import os
 import sys
+import subprocess
 import urllib.error
 import urllib.request
 
@@ -56,25 +57,33 @@ def _parse_env_file(path: str) -> dict[str, str]:
 
 
 def _http_json(method: str, url: str, token: str, payload: dict | None = None) -> dict | list | None:
-    data = None
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Accept": "application/json",
-    }
+    """
+    Use curl for HTTPS requests to avoid local Python SSL CA issues.
+    Never prints payload values.
+    """
+    cmd = [
+        "curl",
+        "-fsS",
+        "-X",
+        method,
+        "-H",
+        f"Authorization: Bearer {token}",
+        "-H",
+        "Accept: application/json",
+    ]
     if payload is not None:
-        data = json.dumps(payload).encode("utf-8")
-        headers["Content-Type"] = "application/json"
+        cmd += ["-H", "Content-Type: application/json", "--data-binary", json.dumps(payload)]
+    cmd.append(url)
 
-    req = urllib.request.Request(url, method=method, data=data, headers=headers)
-    try:
-        with urllib.request.urlopen(req) as resp:
-            body = resp.read()
-            if not body:
-                return None
-            return json.loads(body.decode("utf-8"))
-    except urllib.error.HTTPError as e:
-        body = e.read().decode("utf-8", errors="replace")
-        raise RuntimeError(f"HTTP {e.code} {method} {url}: {body}") from e
+    proc = subprocess.run(cmd, capture_output=True, text=True)
+    if proc.returncode != 0:
+        # stderr does not include secret values; payload is not echoed.
+        raise RuntimeError(f"curl failed: {method} {url}: {proc.stderr.strip()}")
+
+    body = (proc.stdout or "").strip()
+    if not body:
+        return None
+    return json.loads(body)
 
 
 def _infer_project_context(args: argparse.Namespace) -> tuple[str, str]:
@@ -254,4 +263,3 @@ if __name__ == "__main__":
         raise SystemExit(main())
     except KeyboardInterrupt:
         raise SystemExit(130)
-

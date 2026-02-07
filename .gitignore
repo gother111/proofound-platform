@@ -52,3 +52,7 @@ next-env.d.ts
 
 # supabase cli temp artifacts
 supabase/.temp/
+
+# python
+__pycache__/
+*.pyc
