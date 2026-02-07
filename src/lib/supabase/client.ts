@@ -75,6 +75,7 @@ const mockSupabaseClient = {
           return chain;
         },
         in: () => chain,
+        or: () => chain,
         single: async () => ({ data: null, error: null }),
         maybeSingle: async () => {
           if (table === 'profiles') {
