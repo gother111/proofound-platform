@@ -14,11 +14,13 @@ This folder is the durable “project memory” surface for Proofound. It is mea
 - Repo Truth claims must cite a concrete path as `(source: README.md)`.
 - Do not invent missing files. If a referenced file is absent, add a TODO with the expected location and why it is expected.
 - Do not copy secrets from local env files or setup docs into tracked markdown.
+- At the end of every session, append a new entry to `agent/scratchpad.md` (append-only).
 
 ## Last Run Summary
 
 - Bootstrap run: created `project/` and `agent/` markdown only (no application code changes).
 - This run: tightened repo-truth wording/citations after verifying against cited sources.
+- This run: created `agent/scratchpad.md` session log (2026-02-07 09:49 CET).
 - Vercel pre-commit gate run (2026-02-06 22:50 CET) @ `ed6c95e3e27086fc9a028364b52e0fc6517fd3fb` (Node `v20.20.0`, npm `10.8.2`):
   - `npm ci`: PASS
   - `npm run lint`: PASS
