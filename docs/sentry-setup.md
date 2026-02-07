@@ -8,7 +8,7 @@ Sentry error monitoring has been integrated into the Proofound application to tr
 
 ### Core Config Files
 
-1. **`sentry.client.config.ts`** - Client-side error tracking
+1. **`instrumentation-client.ts`** - Client-side error tracking
    - Captures browser errors and exceptions
    - Session replay for error debugging
    - Browser tracing for performance monitoring
