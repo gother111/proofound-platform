@@ -408,3 +408,35 @@ How to verify:
 Open risks/TODO:
 
 - E2E signup and full journey specs may still fail locally if the environment is not configured for email verification or seeded taxonomy data.
+
+---
+
+## 2026-02-08: Fix Account Deletion Flow (30-day Grace Period)
+
+What changed:
+
+- `DELETE /api/user/account` now schedules account deletion for `now + 30 days` (password + exact phrase confirmation), sends a DeletionScheduled email, and tracks analytics. (source: src/app/api/user/account/route.ts, src/lib/email.ts, src/lib/analytics.ts)
+- `POST /api/user/account/cancel-deletion` now tracks analytics on cancellation. (source: src/app/api/user/account/cancel-deletion/route.ts, src/lib/analytics.ts)
+- Privacy settings UI now uses a single deletion surface at `/app/i/settings/privacy#delete-account`, supports scheduling and cancelling, and signs the user out immediately after scheduling. (source: src/components/privacy/DeleteAccountSection.tsx, src/components/settings/PrivacyOverview.tsx)
+- Cron jobs now use the Supabase service role admin client, dedupe 7-day reminders per scheduled date, and delete the Supabase Auth user record after anonymizing app data. (source: src/app/api/cron/account-deletion-workflow/route.ts, src/app/api/cron/send-deletion-reminders/route.ts, src/app/api/cron/process-deletions/route.ts, src/lib/supabase/admin.ts)
+
+Why:
+
+- The account deletion UX, API, cron jobs, and email links were out of sync: UI sent the wrong payload, the API performed immediate deletion, cron used a non-admin client for admin operations, and emails linked to a non-existent settings URL.
+
+How to verify:
+
+- Local checks (Node `20.20.0`):
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck` (run after build if `.next/types` is missing)
+- Manual:
+- Visit `/app/i/settings/privacy#delete-account`.
+- Schedule deletion: enter password, type `DELETE MY ACCOUNT`, confirm you are redirected to `/` and signed out.
+- Sign back in: confirm scheduled state and Cancel button appear.
+- Cancel deletion: confirm state returns to active.
+
+Open risks/TODO:
+
+- If a user schedules deletion and then re-schedules later, reminder dedupe now keys on `properties.scheduledFor`, but older reminder events without that property (or with different formatting) may still affect behavior depending on the historical data shape.

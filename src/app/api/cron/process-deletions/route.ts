@@ -4,18 +4,19 @@ import { profiles } from '@/db/schema';
 import { sql, and, lte, eq } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { sendDeletionCompleteEmail } from '@/lib/email';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 /**
  * Vercel Cron Job: Process pending account deletions
- * 
+ *
  * Schedule: Daily at 2:00 AM UTC
- * 
+ *
  * This job finds accounts past their grace period and anonymizes them
  * using the database function. It sends a confirmation email before deletion.
- * 
+ *
  * Vercel cron config (vercel.json):
  * {
  *   "crons": [{
@@ -43,12 +44,7 @@ export async function GET(request: NextRequest) {
         deletionScheduledFor: profiles.deletionScheduledFor,
       })
       .from(profiles)
-      .where(
-        and(
-          lte(profiles.deletionScheduledFor, now),
-          eq(profiles.deleted, false)
-        )
-      );
+      .where(and(lte(profiles.deletionScheduledFor, now), eq(profiles.deleted, false)));
 
     log.info('cron.process_deletions.started', {
       count: accountsToDelete.length,
@@ -56,7 +52,7 @@ export async function GET(request: NextRequest) {
     });
 
     const results = [];
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     // Process each account
     for (const account of accountsToDelete) {
@@ -79,6 +75,22 @@ export async function GET(request: NextRequest) {
         // - Sets deleted = true
         // - Keeps some metadata for 90 days for legal compliance
         await db.execute(sql`SELECT anonymize_user_account(${account.id}::uuid)`);
+
+        // Delete Supabase Auth user record to complete GDPR erasure (best-effort).
+        try {
+          const { error: authDeleteError } = await supabase.auth.admin.deleteUser(account.id);
+          if (authDeleteError) {
+            log.error('cron.process_deletions.auth_delete_failed', {
+              userId: account.id,
+              error: authDeleteError.message,
+            });
+          }
+        } catch (authDeleteError) {
+          log.error('cron.process_deletions.auth_delete_failed', {
+            userId: account.id,
+            error: authDeleteError instanceof Error ? authDeleteError.message : 'Unknown error',
+          });
+        }
 
         // Send deletion complete email (if we have an email)
         if (userEmail) {
@@ -149,4 +161,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

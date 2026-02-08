@@ -477,3 +477,42 @@ Commands run + outcomes:
 Open TODOs / follow-ups:
 
 - If we want `npm run typecheck` to be order-independent, consider excluding `.next/types` from `tsconfig.json` and relying on `next build` type checking, or generate `.next/types` as part of the typecheck script.
+
+## 2026-02-08 20:32 CET
+
+Task summary:
+Fix account deletion to use a 30-day grace period end-to-end (API, UI, cron, email links) and add tests.
+
+What worked:
+
+- Aligning the UI payload to the API contract and centralizing the user flow under `/app/i/settings/privacy#delete-account`.
+- Switching cron to the service role admin client unblocked `auth.admin.getUserById` and `auth.admin.deleteUser` usage.
+- Added targeted unit tests for the user deletion scheduling/cancellation routes and the consolidated cron workflow.
+
+What failed / wrong assumptions:
+
+- Running `npm run typecheck` in parallel with build can fail due to `.next/types` generation timing. Re-running after build passed.
+
+User corrections:
+
+- None.
+
+Assumptions taken without asking:
+
+- Deletion reason is optional (collected when provided, but not required to schedule deletion).
+- Only one reminder is required (7 days before deletion), matching the current cron behavior.
+
+What the user corrected afterward:
+
+- None.
+
+Commands run + outcomes:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS (after build)
+
+Open TODOs / follow-ups:
+
+- Consider making `npm run typecheck` order-independent by removing `.next/types` from `tsconfig.json` includes, or by generating `.next/types` as part of the typecheck script.

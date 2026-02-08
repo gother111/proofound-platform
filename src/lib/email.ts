@@ -94,7 +94,7 @@ export async function sendDeletionScheduledEmail(
   userId: string,
   scheduledDate: Date
 ): Promise<void> {
-  const cancellationUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/settings?tab=privacy`;
+  const cancellationUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/app/i/settings/privacy#delete-account`;
 
   try {
     await resend.emails.send({
@@ -115,7 +115,7 @@ export async function sendDeletionReminderEmail(
   scheduledDate: Date,
   daysRemaining: number
 ): Promise<void> {
-  const cancellationUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/settings?tab=privacy`;
+  const cancellationUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/app/i/settings/privacy#delete-account`;
 
   try {
     await resend.emails.send({

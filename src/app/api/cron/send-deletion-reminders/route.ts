@@ -4,18 +4,19 @@ import { profiles, analyticsEvents } from '@/db/schema';
 import { sql, and, gte, lte, eq } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { sendDeletionReminderEmail } from '@/lib/email';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 /**
  * Vercel Cron Job: Send 7-day deletion reminder emails
- * 
+ *
  * Schedule: Daily at 1:00 AM UTC
- * 
+ *
  * This job finds accounts scheduled for deletion in 7 days and sends
  * reminder emails. It checks analytics_events to prevent duplicate reminders.
- * 
+ *
  * Vercel cron config (vercel.json):
  * {
  *   "crons": [{
@@ -66,11 +67,13 @@ export async function GET(request: NextRequest) {
     });
 
     const results = [];
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     // Process each account
     for (const account of accountsToRemind) {
       try {
+        const scheduledForIso = account.deletionScheduledFor!.toISOString();
+
         // Check if reminder already sent (look for analytics event)
         const existingReminder = await db
           .select()
@@ -78,7 +81,8 @@ export async function GET(request: NextRequest) {
           .where(
             and(
               eq(analyticsEvents.userId, account.id),
-              eq(analyticsEvents.eventType, 'account_deletion_reminder_sent')
+              eq(analyticsEvents.eventType, 'account_deletion_reminder_sent'),
+              sql`(${analyticsEvents.properties} ->> 'scheduledFor') = ${scheduledForIso}`
             )
           )
           .limit(1);
@@ -97,7 +101,7 @@ export async function GET(request: NextRequest) {
 
         // Get user email from Supabase auth
         const { data: authData } = await supabase.auth.admin.getUserById(account.id);
-        
+
         if (!authData.user?.email) {
           log.warn('cron.send_deletion_reminders.no_email', {
             userId: account.id,
@@ -128,7 +132,7 @@ export async function GET(request: NextRequest) {
           eventType: 'account_deletion_reminder_sent',
           userId: account.id,
           properties: {
-            scheduledFor: account.deletionScheduledFor!.toISOString(),
+            scheduledFor: scheduledForIso,
             daysRemaining,
           },
           ipHash: null, // System event, no IP
@@ -188,4 +192,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

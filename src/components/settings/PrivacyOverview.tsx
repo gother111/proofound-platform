@@ -3,13 +3,25 @@
 import { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Shield, Download, Upload, Eye, Trash2, FileText, Database, Activity, MessagesSquare, Target, Settings } from 'lucide-react';
+import {
+  Shield,
+  Download,
+  Upload,
+  Eye,
+  Trash2,
+  FileText,
+  Database,
+  Activity,
+  MessagesSquare,
+  Target,
+  Settings,
+} from 'lucide-react';
 import { DataBreakdown } from './DataBreakdown';
 import { AuditLogTable } from './AuditLogTable';
-import { DeleteAccount } from './DeleteAccount';
 import { DataImportButton } from './DataImportButton';
 import { EnhancedDataImportDialog } from './EnhancedDataImportDialog';
 import { VisibilitySettingsModal } from '../privacy/VisibilitySettingsModal';
+import { useRouter } from 'next/navigation';
 
 interface PrivacyOverviewProps {
   userId: string;
@@ -18,10 +30,10 @@ interface PrivacyOverviewProps {
 export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
   const [showDataBreakdown, setShowDataBreakdown] = useState(false);
   const [showAuditLog, setShowAuditLog] = useState(false);
-  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [showVisibilitySettings, setShowVisibilitySettings] = useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const router = useRouter();
 
   const handleExportData = async () => {
     setIsExporting(true);
@@ -30,7 +42,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
       if (!response.ok) {
         throw new Error('Export failed');
       }
-      
+
       // Get the filename from the response headers or create one
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
@@ -52,11 +64,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
   if (showDataBreakdown) {
     return (
       <div>
-        <Button
-          variant="outline"
-          onClick={() => setShowDataBreakdown(false)}
-          className="mb-4"
-        >
+        <Button variant="outline" onClick={() => setShowDataBreakdown(false)} className="mb-4">
           ← Back to Privacy Overview
         </Button>
         <DataBreakdown userId={userId} />
@@ -67,29 +75,10 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
   if (showAuditLog) {
     return (
       <div>
-        <Button
-          variant="outline"
-          onClick={() => setShowAuditLog(false)}
-          className="mb-4"
-        >
+        <Button variant="outline" onClick={() => setShowAuditLog(false)} className="mb-4">
           ← Back to Privacy Overview
         </Button>
         <AuditLogTable userId={userId} />
-      </div>
-    );
-  }
-
-  if (showDeleteAccount) {
-    return (
-      <div>
-        <Button
-          variant="outline"
-          onClick={() => setShowDeleteAccount(false)}
-          className="mb-4"
-        >
-          ← Back to Privacy Overview
-        </Button>
-        <DeleteAccount userId={userId} />
       </div>
     );
   }
@@ -108,7 +97,8 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
                 Your Privacy Controls
               </h2>
               <p className="text-proofound-charcoal/70 dark:text-muted-foreground mb-4">
-                Proofound is built with privacy at its core. Here&apos;s what data we collect and how you control it.
+                Proofound is built with privacy at its core. Here&apos;s what data we collect and
+                how you control it.
               </p>
               <div className="flex flex-wrap gap-3">
                 <Button
@@ -118,25 +108,15 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
                   <Settings className="h-4 w-4 mr-2" />
                   Privacy Settings
                 </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleExportData}
-                  disabled={isExporting}
-                >
+                <Button variant="outline" onClick={handleExportData} disabled={isExporting}>
                   <Download className="h-4 w-4 mr-2" />
                   {isExporting ? 'Exporting...' : 'Download My Data'}
                 </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowImportDialog(true)}
-                >
+                <Button variant="outline" onClick={() => setShowImportDialog(true)}>
                   <Upload className="h-4 w-4 mr-2" />
                   Import Data
                 </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowAuditLog(true)}
-                >
+                <Button variant="outline" onClick={() => setShowAuditLog(true)}>
                   <Eye className="h-4 w-4 mr-2" />
                   View Audit Log
                 </Button>
@@ -217,7 +197,9 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
                   <FileText className="h-5 w-5 text-amber-600 dark:text-amber-300" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg font-['Crimson_Pro']">Projects & Work History</CardTitle>
+                  <CardTitle className="text-lg font-['Crimson_Pro']">
+                    Projects & Work History
+                  </CardTitle>
                   <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground mt-0.5">
                     Tier 2 Sensitive
                   </p>
@@ -294,7 +276,8 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
           </p>
           <div className="bg-blue-50 dark:bg-slate-800 border border-blue-200 dark:border-blue-900 rounded-lg p-3 mt-4">
             <p className="text-xs text-blue-800 dark:text-blue-300">
-              ℹ️ All IP addresses and user agents are hashed (SHA-256) before storage, making them irreversible and GDPR-compliant under Article 4(5) - Pseudonymization.
+              ℹ️ All IP addresses and user agents are hashed (SHA-256) before storage, making them
+              irreversible and GDPR-compliant under Article 4(5) - Pseudonymization.
             </p>
           </div>
         </CardContent>
@@ -367,13 +350,11 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
         <Button
           variant="outline"
           className="h-auto py-4 flex-col items-start border-red-200 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-950"
-          onClick={() => setShowDeleteAccount(true)}
+          onClick={() => router.push('/app/i/settings/privacy#delete-account')}
         >
           <Trash2 className="h-5 w-5 mb-2 text-red-600 dark:text-red-400" />
           <span className="font-medium text-red-600 dark:text-red-400">Delete Account</span>
-          <span className="text-xs text-muted-foreground mt-1">
-            Permanently remove your data
-          </span>
+          <span className="text-xs text-muted-foreground mt-1">Permanently remove your data</span>
         </Button>
       </div>
 
@@ -384,9 +365,12 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
             Learn more about how we protect your privacy in our{' '}
             <a href="/privacy-policy" className="text-proofound-forest hover:underline">
               Privacy Policy
-            </a>
-            {' '}or contact us at{' '}
-            <a href="mailto:privacy@proofound.com" className="text-proofound-forest hover:underline">
+            </a>{' '}
+            or contact us at{' '}
+            <a
+              href="mailto:privacy@proofound.com"
+              className="text-proofound-forest hover:underline"
+            >
               privacy@proofound.com
             </a>
           </p>
@@ -400,11 +384,7 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
       />
 
       {/* Enhanced Data Import Dialog */}
-      <EnhancedDataImportDialog
-        open={showImportDialog}
-        onOpenChange={setShowImportDialog}
-      />
+      <EnhancedDataImportDialog open={showImportDialog} onOpenChange={setShowImportDialog} />
     </div>
   );
 }
-

@@ -1,27 +1,28 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { profiles } from '@/db/schema';
 import { requireAuth } from '@/lib/auth';
 import { log } from '@/lib/log';
 import { db } from '@/db';
+import { trackAccountDeletionCancelled } from '@/lib/analytics';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * POST /api/user/account/cancel-deletion
- * 
+ *
  * Cancel a pending account deletion request
- * 
+ *
  * Flow:
  * 1. Verify user is authenticated
  * 2. Check if deletion is scheduled
  * 3. Clear deletion_requested_at and deletion_scheduled_for
  * 4. Send confirmation email (optional)
  * 5. Return success confirmation
- * 
+ *
  * Can only be called during the 30-day grace period
  */
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
     const user = await requireAuth();
 
@@ -38,10 +39,7 @@ export async function POST() {
       .limit(1);
 
     if (!profile) {
-      return NextResponse.json(
-        { error: 'Profile not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
     // Check if account is already deleted
@@ -72,11 +70,16 @@ export async function POST() {
       return NextResponse.json(
         {
           error: 'Grace period expired',
-          message: 'The grace period for cancelling account deletion has expired. Your account may already be in the deletion process.',
+          message:
+            'The grace period for cancelling account deletion has expired. Your account may already be in the deletion process.',
         },
         { status: 410 } // 410 Gone
       );
     }
+
+    const daysRemaining = Math.ceil(
+      (profile.deletionScheduledFor.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)
+    );
 
     // Cancel deletion by clearing the fields
     await db
@@ -89,10 +92,13 @@ export async function POST() {
       })
       .where(eq(profiles.id, user.id));
 
+    // Track analytics (best-effort)
+    await trackAccountDeletionCancelled(user.id, daysRemaining, request);
+
     // Log cancellation
     log.info('privacy.account_deletion.cancelled', {
       userId: user.id,
-      daysRemaining: Math.ceil((profile.deletionScheduledFor.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)),
+      daysRemaining,
     });
 
     // TODO: Send cancellation confirmation email
@@ -122,10 +128,10 @@ export async function POST() {
     return NextResponse.json(
       {
         error: 'Failed to cancel account deletion',
-        message: 'An error occurred while cancelling your deletion request. Please contact support.',
+        message:
+          'An error occurred while cancelling your deletion request. Please contact support.',
       },
       { status: 500 }
     );
   }
 }
-

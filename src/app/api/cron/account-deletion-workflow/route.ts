@@ -4,7 +4,7 @@ import { profiles, analyticsEvents } from '@/db/schema';
 import { sql, and, gte, lte, eq } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { sendDeletionReminderEmail, sendDeletionCompleteEmail } from '@/lib/email';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { generateFairnessNote } from '@/lib/analytics/fairness-note-generator';
 
 export const runtime = 'nodejs';
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     }
 
     const now = new Date();
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     log.info('cron.account_deletion_workflow.started', {
       timestamp: now.toISOString(),
@@ -85,6 +85,8 @@ export async function GET(request: NextRequest) {
     // Process reminder emails
     for (const account of accountsToRemind) {
       try {
+        const scheduledForIso = account.deletionScheduledFor!.toISOString();
+
         // Check if reminder already sent
         const existingReminder = await db
           .select()
@@ -92,7 +94,8 @@ export async function GET(request: NextRequest) {
           .where(
             and(
               eq(analyticsEvents.userId, account.id),
-              eq(analyticsEvents.eventType, 'account_deletion_reminder_sent')
+              eq(analyticsEvents.eventType, 'account_deletion_reminder_sent'),
+              sql`(${analyticsEvents.properties} ->> 'scheduledFor') = ${scheduledForIso}`
             )
           )
           .limit(1);
@@ -142,7 +145,7 @@ export async function GET(request: NextRequest) {
           eventType: 'account_deletion_reminder_sent',
           userId: account.id,
           properties: {
-            scheduledFor: account.deletionScheduledFor!.toISOString(),
+            scheduledFor: scheduledForIso,
             daysRemaining,
           },
           ipHash: null,
@@ -219,6 +222,22 @@ export async function GET(request: NextRequest) {
         // Call the anonymize function (defined in migration)
         // This anonymizes profile data and related records
         await db.execute(sql`SELECT anonymize_user_account(${account.id}::uuid)`);
+
+        // Delete Supabase Auth user record to complete GDPR erasure (best-effort).
+        try {
+          const { error: authDeleteError } = await supabase.auth.admin.deleteUser(account.id);
+          if (authDeleteError) {
+            log.error('cron.account_deletion_workflow.auth_delete_failed', {
+              userId: account.id,
+              error: authDeleteError.message,
+            });
+          }
+        } catch (authDeleteError) {
+          log.error('cron.account_deletion_workflow.auth_delete_failed', {
+            userId: account.id,
+            error: authDeleteError instanceof Error ? authDeleteError.message : 'Unknown error',
+          });
+        }
 
         // Send deletion complete email (if we have an email)
         if (userEmail) {
