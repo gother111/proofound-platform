@@ -6,106 +6,63 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
-import { sql } from 'drizzle-orm';
+import { matchingProfiles } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 import { log } from '@/lib/log';
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+function defaultLegacyConstraints() {
+  return {
+    requireEmailVerified: true,
+    requirePhoneVerified: false,
+    requireProfileComplete: false,
+    requireMinSkillMatch: false,
+    minSkillMatchThreshold: 0.3,
+    requireLocationMatch: false,
+    requireAvailabilityMatch: false,
+  };
+}
+
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+    const user = await requireAuth();
     const { id } = await params;
 
-    // Get profile
-    const result = await db.execute(sql`
-      SELECT *
-      FROM matching_profiles
-      WHERE id = ${id}
-        AND user_id = ${user.id}
-    `);
-
-    if (!result.length) {
+    // Legacy API exposed multiple profiles; current schema supports exactly one per user.
+    if (id !== user.id) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    const profile = result[0] as any;
+    const profile = await db.query.matchingProfiles.findFirst({
+      where: eq(matchingProfiles.profileId, user.id),
+    });
+
+    if (!profile?.weights) {
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+    }
 
     return NextResponse.json({
       success: true,
       profile: {
-        id: profile.id,
-        name: profile.name,
+        id: user.id,
+        name: 'Default Profile',
         weights: profile.weights,
-        constraints: profile.constraints,
-        isActive: profile.is_active,
-        createdAt: profile.created_at,
-        updatedAt: profile.updated_at,
+        constraints: defaultLegacyConstraints(),
+        isActive: true,
+        updatedAt: profile.updatedAt,
       },
     });
   } catch (error) {
-    log.error('matching.profile.get.failed', {
+    log.error('matching.profile.legacy.get.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
     });
     return NextResponse.json({ error: 'Failed to get profile' }, { status: 500 });
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { id } = await params;
-
-    // Verify ownership
-    const existing = await db.execute(sql`
-      SELECT user_id
-      FROM matching_profiles
-      WHERE id = ${id}
-    `);
-
-    if (!existing.length) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
-    }
-
-    if ((existing[0] as any).user_id !== user.id) {
-      return NextResponse.json({ error: 'Unauthorized to delete this profile' }, { status: 403 });
-    }
-
-    // Delete profile
-    await db.execute(sql`
-      DELETE FROM matching_profiles
-      WHERE id = ${id}
-    `);
-
-    log.info('matching.profile.deleted', {
-      userId: user.id,
-      profileId: id,
-    });
-
-    return NextResponse.json({
-      success: true,
-    });
-  } catch (error) {
-    log.error('matching.profile.delete.failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-    });
-    return NextResponse.json({ error: 'Failed to delete profile' }, { status: 500 });
-  }
+export async function DELETE(_req: NextRequest, _ctx: { params: Promise<{ id: string }> }) {
+  // Do not delete the canonical matching profile through a legacy endpoint.
+  // This prevents accidental removal of matching setup used by /api/matching-profile and matching engine.
+  return NextResponse.json({ error: 'Not supported. Use /api/matching-profile.' }, { status: 405 });
 }

@@ -144,11 +144,15 @@ What changed:
 - Fixed broken Opportunities page API wiring by switching to canonical matching endpoints: `src/app/app/i/opportunities/page.tsx` now uses `POST /api/match/profile` for listing and `POST /api/match/interest`, `POST /api/match/hide`, `POST /api/match/snooze` for actions.
 - Fixed a missing skill-add endpoint reference by using the canonical skills API: `src/components/expertise/GapMap.tsx` now calls `POST /api/expertise/user-skills` instead of `/api/skills/add`.
 - Corrected API docs drift by removing the non-existent interview calendar `.ics` endpoint from `API_DOCUMENTATION_FINAL.md` (calendar downloads are generated client-side).
+- Converted legacy matching profile endpoints to compatibility wrappers so they do not crash against the current `matching_profiles` schema:
+  - `src/app/api/matching/profile/route.ts`
+  - `src/app/api/matching/profile/[id]/route.ts`
 
 Why:
 
 - Several UI surfaces referenced API routes that did not exist, making those pages or features non-functional.
 - API documentation referenced a calendar `.ics` route that is not implemented as an API route.
+- The legacy `/api/matching/profile*` routes referenced an old schema (`user_id`, `name`, `constraints`, `is_active`) and could 500 at runtime if ever invoked.
 
 How to verify:
 
@@ -162,6 +166,11 @@ How to verify:
 - `curl -i http://localhost:3000/api/csrf-token`
 - `curl -i http://localhost:3000/api/user/me` (expect `401`)
 - `curl -i http://localhost:3000/api/cron/decision-reminders` (expect `401` without `CRON_SECRET`)
+- Matching profile legacy compatibility (logged-in session required):
+- `GET /api/matching/profile` should return `200` with either an empty list or a single legacy-shaped profile.
+- `POST /api/matching/profile` with `{ "name": "...", "weights": { ... }, "constraints": { ... } }` should return `200` and persist weights to `matching_profiles.weights`.
+- `GET /api/matching/profile/<userId>` should return `200` for the authenticated user's id, `404` otherwise.
+- `DELETE /api/matching/profile/<userId>` should return `405`.
 - Production smoke:
 - `curl -i https://proofound.io/api/health`
 - `curl -i https://proofound.io/api/csrf-token`
@@ -169,6 +178,7 @@ How to verify:
 Open risks/TODO:
 
 - The new `/api/analytics/events` endpoint is intentionally auth-gated. If server-side (non-cookie) callers are introduced later, add an explicit server auth mechanism rather than weakening access control.
+- Legacy matching profile constraints are accepted and echoed but are not enforced by the matching engine. If constraints are needed, implement them in the canonical matching profile and scorers, not via the legacy endpoints.
 
 Environment + setup:
 
