@@ -65,10 +65,46 @@ export default function OpportunitiesPage() {
   const loadOpportunities = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/opportunities');
+      const response = await fetch('/api/match/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
       if (response.ok) {
         const data = await response.json();
-        setOpportunities(data.opportunities || []);
+        const items = Array.isArray(data?.items) ? data.items : [];
+
+        const mapped: Opportunity[] = items
+          .map((item: any) => {
+            const assignment = item?.assignment ?? {};
+            const rawScore = Number(item?.score ?? 0);
+            const matchScore = rawScore <= 1.5 ? Math.round(rawScore * 100) : Math.round(rawScore);
+
+            const compMin = assignment?.compMin ?? assignment?.comp_min ?? null;
+            const compMax = assignment?.compMax ?? assignment?.comp_max ?? null;
+
+            return {
+              id: String(item?.id ?? ''),
+              assignmentId: String(item?.assignmentId ?? ''),
+              assignmentTitle: String(assignment?.role ?? 'Assignment'),
+              organizationName: '',
+              organizationMasked: true,
+              matchScore: Math.max(0, Math.min(100, matchScore)),
+              location: assignment?.country
+                ? String(assignment.country)
+                : assignment?.locationMode
+                  ? String(assignment.locationMode)
+                  : undefined,
+              compensationMin: compMin != null ? Number(compMin) : undefined,
+              compensationMax: compMax != null ? Number(compMax) : undefined,
+              currency: assignment?.currency ? String(assignment.currency) : undefined,
+              workMode: assignment?.locationMode ? String(assignment.locationMode) : undefined,
+              status: 'new',
+            };
+          })
+          .filter((opp: Opportunity) => opp.id && opp.assignmentId);
+
+        setOpportunities(mapped);
       }
     } catch (error) {
       console.error('Failed to load opportunities:', error);
@@ -82,13 +118,30 @@ export default function OpportunitiesPage() {
     action: 'interested' | 'passed' | 'snoozed'
   ) => {
     try {
-      const response = await fetch(`/api/opportunities/${opportunityId}/action`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action }),
-      });
+      const opp = opportunities.find((o) => o.id === opportunityId);
 
-      if (response.ok) {
+      let response: Response | null = null;
+      if (action === 'interested') {
+        response = await fetch('/api/match/interest', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ assignmentId: opp?.assignmentId }),
+        });
+      } else if (action === 'passed') {
+        response = await fetch('/api/match/hide', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ matchId: opportunityId }),
+        });
+      } else if (action === 'snoozed') {
+        response = await fetch('/api/match/snooze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ matchId: opportunityId, weeks: 1 }),
+        });
+      }
+
+      if (response && response.ok) {
         setOpportunities((prev) =>
           prev.map((opp) => (opp.id === opportunityId ? { ...opp, status: action } : opp))
         );
