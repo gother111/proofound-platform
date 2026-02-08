@@ -54,50 +54,6 @@ Open TODOs / follow-ups:
 
 - None.
 
----
-
-## 2026-02-08 19:52 CET
-
-Task summary:
-Make legacy matching profile endpoints (`/api/matching/profile*`) compatible with the current `matching_profiles` schema to avoid runtime 500s.
-
-What worked:
-
-- Replaced raw SQL and old column assumptions with a compatibility wrapper backed by Drizzle and `matching_profiles.profile_id`.
-- Preserved older UI expectations by returning a legacy-shaped payload and persisting weights.
-
-What failed / wrong assumptions:
-
-- None.
-
-User corrections:
-
-- None.
-
-Improvements next time:
-
-- Add a deprecation note in `src/components/matching/MatchingProfileEditor.tsx` so it is obvious constraints are accepted but not enforced.
-
-Commands run + outcomes:
-
-- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS
-- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS
-- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm test`: PASS
-- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS
-
-Assumptions taken without asking:
-
-- It is acceptable to only persist legacy `weights` and to accept plus echo `constraints` without enforcing them.
-- It is safer to disallow legacy `DELETE` so it cannot remove the canonical matching profile used by the matching engine.
-
-What the user corrected afterward:
-
-- None.
-
-Open TODOs / follow-ups:
-
-- Consider updating `src/components/matching/MatchingProfileEditor.tsx` to either use `PUT /api/matching-profile` or to be removed if unused.
-
 ## 2026-02-08 19:29 CET
 
 Task summary:
@@ -435,3 +391,47 @@ Commands run + outcomes:
 Open TODOs / follow-ups:
 
 - None.
+
+---
+
+## 2026-02-08 19:52 CET
+
+Task summary:
+Make legacy matching profile endpoints (`/api/matching/profile*`) compatible with the current `matching_profiles` schema to avoid runtime 500s.
+
+What worked:
+
+- Replaced raw SQL and old column assumptions with a compatibility wrapper backed by Drizzle and `matching_profiles.profile_id`.
+- Preserved older UI expectations by returning a legacy-shaped payload and persisting weights.
+
+What failed / wrong assumptions:
+
+- None.
+
+User corrections:
+
+- None.
+
+Improvements next time:
+
+- Add a deprecation note in `src/components/matching/MatchingProfileEditor.tsx` so it is obvious constraints are accepted but not enforced.
+
+Commands run + outcomes:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm test`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS
+
+Assumptions taken without asking:
+
+- It is acceptable to only persist legacy `weights` and to accept plus echo `constraints` without enforcing them.
+- It is safer to disallow legacy `DELETE` so it cannot remove the canonical matching profile used by the matching engine.
+
+What the user corrected afterward:
+
+- None.
+
+Open TODOs / follow-ups:
+
+- Consider updating `src/components/matching/MatchingProfileEditor.tsx` to either use `PUT /api/matching-profile` or to be removed if unused.
