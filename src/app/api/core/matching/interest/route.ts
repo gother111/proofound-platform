@@ -2,8 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
-import { matchInterest, assignments, matches, profiles, conversations } from '@/db/schema';
-import { eq, and } from 'drizzle-orm';
+import {
+  matchInterest,
+  assignments,
+  matches,
+  profiles,
+  conversations,
+  organizationMembers,
+} from '@/db/schema';
+import { eq, and, isNull } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { emitMatchActioned } from '@/lib/analytics/events';
 import { notifyIntroAccepted } from '@/lib/notifications';
@@ -46,6 +53,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Assignment not found' }, { status: 404 });
     }
 
+    // Org -> candidate: only allow org members for the assignment org.
+    if (targetProfileId) {
+      const membership = await db.query.organizationMembers.findFirst({
+        where: and(
+          eq(organizationMembers.userId, user.id),
+          eq(organizationMembers.orgId, assignment.orgId),
+          eq(organizationMembers.status, 'active')
+        ),
+      });
+
+      if (!membership) {
+        return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+      }
+    }
+
     // Record interest and check mutual interest in a transaction
     const mutualInterest = await db.transaction(async (tx) => {
       const interestData = {
@@ -61,51 +83,81 @@ export async function POST(request: NextRequest) {
         // Likely duplicate - that's ok, continue to check mutual interest
       }
 
-      // Check for mutual interest
-      let isMutual = false;
-
+      // Check for mutual interest.
+      // Important: the individual's interest record is stored with targetProfileId = NULL, because
+      // the individual does not know which specific org member will respond.
       if (targetProfileId) {
-        // Org → Candidate: check if candidate expressed interest in this assignment
+        // Org → Candidate: check if candidate expressed interest in this assignment (targetProfileId NULL).
         const reciprocal = await tx.query.matchInterest.findFirst({
           where: and(
             eq(matchInterest.actorProfileId, targetProfileId),
             eq(matchInterest.assignmentId, assignmentId),
-            eq(matchInterest.targetProfileId, user.id)
+            isNull(matchInterest.targetProfileId)
           ),
         });
 
-        isMutual = !!reciprocal;
-      } else {
-        // Individual → Assignment: check if org expressed interest in this individual
-        const reciprocal = await tx.query.matchInterest.findFirst({
-          where: and(
-            eq(matchInterest.assignmentId, assignmentId),
-            eq(matchInterest.targetProfileId, user.id)
-          ),
-        });
-
-        isMutual = !!reciprocal;
+        return {
+          isMutual: !!reciprocal,
+          reciprocalOrgActorId: null,
+        };
       }
 
-      return isMutual;
+      // Individual → Assignment: check if any org member expressed interest in this individual.
+      const reciprocal = await tx.query.matchInterest.findFirst({
+        where: and(
+          eq(matchInterest.assignmentId, assignmentId),
+          eq(matchInterest.targetProfileId, user.id)
+        ),
+      });
+
+      // Ensure the reciprocal actor is actually a member of the org that owns this assignment.
+      if (reciprocal) {
+        const orgMembership = await tx.query.organizationMembers.findFirst({
+          where: and(
+            eq(organizationMembers.userId, reciprocal.actorProfileId),
+            eq(organizationMembers.orgId, assignment.orgId),
+            eq(organizationMembers.status, 'active')
+          ),
+        });
+
+        if (!orgMembership) {
+          return {
+            isMutual: false,
+            reciprocalOrgActorId: null,
+          };
+        }
+      }
+
+      return {
+        isMutual: !!reciprocal,
+        reciprocalOrgActorId: reciprocal?.actorProfileId ?? null,
+      };
     });
 
     log.info('match.interest.recorded', {
       userId: user.id,
       assignmentId,
       targetProfileId: targetProfileId || null,
-      mutualInterest,
+      mutualInterest: mutualInterest.isMutual,
     });
 
     // If mutual interest detected, emit match_actioned event for "introduce"
-    if (mutualInterest) {
+    if (mutualInterest.isMutual) {
       try {
+        const candidateId = targetProfileId ? targetProfileId : user.id;
+        const orgRepId = targetProfileId ? user.id : mutualInterest.reciprocalOrgActorId;
+
+        if (!orgRepId) {
+          // Should not happen when mutualInterest.isMutual is true, but keep defensive.
+          log.error('match.interest.mutual_missing_org_rep', { assignmentId, userId: user.id });
+          return NextResponse.json({ revealed: true });
+        }
+
         // Find the match to get score and PAC
-        const profileId = targetProfileId || user.id;
         const [match] = await db
           .select()
           .from(matches)
-          .where(and(eq(matches.assignmentId, assignmentId), eq(matches.profileId, profileId)))
+          .where(and(eq(matches.assignmentId, assignmentId), eq(matches.profileId, candidateId)))
           .limit(1);
 
         if (match) {
@@ -113,9 +165,6 @@ export async function POST(request: NextRequest) {
           const vector = match.vector as any;
           const subscores = vector?.subscores || {};
           const pacScore = subscores?.purpose_alignment || subscores?.pac || 0;
-          const skillsScore = subscores?.skills || 0;
-          const constraintsScore = subscores?.constraints || 0;
-          const verificationScore = subscores?.verification || 0;
           const score = parseFloat(match.score.toString());
 
           // Check if this is a Qualified Introduction
@@ -131,7 +180,7 @@ export async function POST(request: NextRequest) {
           });
 
           // Also emit for the other party if it's a mutual introduction
-          const otherUserId = targetProfileId ? targetProfileId : assignment.orgId;
+          const otherUserId = targetProfileId ? candidateId : orgRepId;
           if (otherUserId && otherUserId !== user.id) {
             await emitMatchActioned(otherUserId, match.id, {
               match_id: match.id,
@@ -154,11 +203,9 @@ export async function POST(request: NextRequest) {
               where: eq(profiles.id, user.id),
             });
 
-            const otherProfile = targetProfileId
-              ? await db.query.profiles.findFirst({
-                  where: eq(profiles.id, targetProfileId),
-                })
-              : null;
+            const otherProfile = await db.query.profiles.findFirst({
+              where: eq(profiles.id, otherUserId),
+            });
 
             const actorName = actorProfile?.displayName || actorProfile?.handle || 'Someone';
             const otherName = otherProfile?.displayName || otherProfile?.handle || 'Someone';
@@ -196,15 +243,14 @@ export async function POST(request: NextRequest) {
               });
             } else {
               // Determine participants:
-              // - participantOne: the individual (match.profileId)
-              // - participantTwo: the org representative (user.id if org, else find org owner)
-              const individualId = match.profileId;
-              const orgRepId = targetProfileId ? user.id : otherUserId;
+              // - participantOne: the individual (candidate)
+              // - participantTwo: the org representative (the org member who expressed interest)
+              const individualId = candidateId;
 
               // Get participant personas for masked handle generation
-              const [individualProfile, orgRepProfile] = await Promise.all([
+              await Promise.all([
                 db.query.profiles.findFirst({ where: eq(profiles.id, individualId) }),
-                orgRepId ? db.query.profiles.findFirst({ where: eq(profiles.id, orgRepId) }) : null,
+                db.query.profiles.findFirst({ where: eq(profiles.id, orgRepId) }),
               ]);
 
               // Generate masked handles
@@ -218,7 +264,7 @@ export async function POST(request: NextRequest) {
                   matchId: match.id,
                   assignmentId,
                   participantOneId: individualId,
-                  participantTwoId: orgRepId || user.id,
+                  participantTwoId: orgRepId,
                   stage: 'masked',
                   maskedHandleOne,
                   maskedHandleTwo,
@@ -233,7 +279,7 @@ export async function POST(request: NextRequest) {
                 matchId: match.id,
                 assignmentId,
                 individualId,
-                orgRepId: orgRepId || user.id,
+                orgRepId,
               });
             }
 
@@ -262,7 +308,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ revealed: mutualInterest });
+    return NextResponse.json({ revealed: mutualInterest.isMutual });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Invalid input', details: error.errors }, { status: 400 });
@@ -298,6 +344,19 @@ export async function GET(request: NextRequest) {
 
     if (!assignment) {
       return NextResponse.json({ error: 'Assignment not found' }, { status: 404 });
+    }
+
+    // Only org members for this assignment can list interests.
+    const membership = await db.query.organizationMembers.findFirst({
+      where: and(
+        eq(organizationMembers.userId, user.id),
+        eq(organizationMembers.orgId, assignment.orgId),
+        eq(organizationMembers.status, 'active')
+      ),
+    });
+
+    if (!membership) {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
     // Fetch all interests for this assignment

@@ -1,0 +1,7 @@
+-- Placeholder migration file for remote version 20251030163238 (enable_rls_policies_existing_tables).
+--
+-- This repo did not contain the original SQL for this version when synchronized.
+-- The canonical applied history lives in supabase_migrations.schema_migrations on the remote database.
+--
+-- If you need to recreate this migration precisely, recover it from the original source of migrations,
+-- or generate a baseline schema migration after the history is aligned.

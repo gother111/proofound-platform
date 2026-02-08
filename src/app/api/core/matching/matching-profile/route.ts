@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
 import { matchingProfiles, skills, individualProfiles } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { emitProfileActivated } from '@/lib/analytics/events';
 
@@ -32,12 +32,12 @@ async function checkAndEmitProfileActivation(userId: string): Promise<void> {
     const hasPurposeBlock = !!profile.mission && !!profile.vision;
     if (!hasPurposeBlock) return;
 
-    const skillsCount = await db
-      .select({ count: skills.id })
+    const skillsCountRows = await db
+      .select({ count: sql<number>`count(*)::int` })
       .from(skills)
       .where(eq(skills.profileId, userId));
 
-    const l4SkillsCount = skillsCount.length;
+    const l4SkillsCount = skillsCountRows[0]?.count ?? 0;
     const hasMinimumL4Count = l4SkillsCount >= 10;
     if (!hasMinimumL4Count) return;
 

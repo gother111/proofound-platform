@@ -1,13 +1,24 @@
 /**
  * Match Visible Fields API
  *
- * GET /api/match/visible-fields/[matchId] - Get fields that will be shared with org
+ * GET /api/match/visible-fields/[matchId]
+ *
+ * Returns the fields that would be shared with the organization if the user proceeds.
+ * This is used to power the consent dialog on the individual matching feed.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
-import { sql } from 'drizzle-orm';
+import {
+  assignments,
+  individualProfiles,
+  matches,
+  organizations,
+  profileFieldVisibility,
+  profiles,
+} from '@/db/schema';
+import { and, eq } from 'drizzle-orm';
 import { log } from '@/lib/log';
 
 interface VisibleField {
@@ -17,117 +28,140 @@ interface VisibleField {
   isRedacted: boolean;
 }
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ matchId: string }> }) {
+function isVisibleInMatch(level: unknown): boolean {
+  // profile_field_visibility uses: public / network_only / match_only / private
+  return level !== 'private';
+}
+
+function normalizeStringArray(input: unknown): string[] {
+  if (!Array.isArray(input)) return [];
+  return input.map((v) => (typeof v === 'string' ? v : null)).filter((v): v is string => !!v);
+}
+
+function normalizeValues(input: unknown): string[] {
+  if (!Array.isArray(input)) return [];
+  return input
+    .map((v) => {
+      if (typeof v === 'string') return v;
+      if (v && typeof v === 'object' && 'label' in v && typeof (v as any).label === 'string') {
+        return (v as any).label as string;
+      }
+      return null;
+    })
+    .filter((v): v is string => !!v);
+}
+
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ matchId: string }> }) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+    const user = await requireAuth();
     const { matchId } = await params;
 
-    // Get match details
-    const match = await db.execute(sql`
-      SELECT
-        m.*,
-        a.org_id as organization_id,
-        a.role
-      FROM matches m
-      INNER JOIN assignments a ON m.assignment_id = a.id
-      WHERE m.id = ${matchId}
-        AND m.profile_id = ${user.id}
-    `);
+    const rows = await db
+      .select({
+        match: matches,
+        assignment: assignments,
+        organization: organizations,
+      })
+      .from(matches)
+      .innerJoin(assignments, eq(matches.assignmentId, assignments.id))
+      .innerJoin(organizations, eq(assignments.orgId, organizations.id))
+      .where(and(eq(matches.id, matchId), eq(matches.profileId, user.id)))
+      .limit(1);
 
-    if (!match.length) {
+    if (rows.length === 0) {
       return NextResponse.json({ error: 'Match not found' }, { status: 404 });
     }
 
-    const matchData = match[0] as any;
-    const organizationId = matchData.organization_id;
+    const { assignment, organization } = rows[0];
 
-    // Get user profile (basic info from profiles table)
-    const userProfile = await db.execute(sql`
-      SELECT display_name, avatar_url
-      FROM profiles
-      WHERE id = ${user.id}
-    `);
+    const [userProfile, individualProfile, visibility] = await Promise.all([
+      db.query.profiles.findFirst({ where: eq(profiles.id, user.id) }),
+      db.query.individualProfiles.findFirst({ where: eq(individualProfiles.userId, user.id) }),
+      db.query.profileFieldVisibility.findFirst({
+        where: eq(profileFieldVisibility.profileId, user.id),
+      }),
+    ]);
 
-    // Get individual's profile (extended info)
-    const profile = await db.execute(sql`
-      SELECT headline, bio, skills, location, values, causes, linkedin_profile_url
-      FROM individual_profiles
-      WHERE user_id = ${user.id}
-    `);
+    const displayName = userProfile?.displayName || userProfile?.handle || '';
+    const headline = individualProfile?.headline || '';
+    const location = individualProfile?.location || '';
+    const mission = (individualProfile as any)?.mission || '';
+    const vision = (individualProfile as any)?.vision || '';
+    const skills = normalizeStringArray((individualProfile as any)?.skills);
+    const causes = normalizeStringArray((individualProfile as any)?.causes);
+    const values = normalizeValues((individualProfile as any)?.values);
 
-    const userData = userProfile.length > 0 ? (userProfile[0] as any) : {};
-    const profileData = profile.length > 0 ? (profile[0] as any) : {};
-
-    // Get field visibility settings
-    let visibilityMap = new Map<string, boolean>();
-    try {
-      const visibility = await db.execute(sql`
-        SELECT field_name, is_visible
-        FROM profile_field_visibility
-        WHERE user_id = ${user.id}
-      `);
-      visibilityMap = new Map(visibility.map((row: any) => [row.field_name, row.is_visible]));
-    } catch {
-      // Table might be empty - default all fields to visible
-      log.warn('match.visible_fields.no_visibility_settings', { userId: user.id });
-    }
-
-    // Define all profile fields with their labels using correct column names
-    const allFields = [
-      { field: 'name', label: 'Name', value: userData.display_name },
-      { field: 'email', label: 'Email', value: user.email },
-      { field: 'location', label: 'Location', value: profileData.location },
+    const allFields: Array<{
+      field: string;
+      label: string;
+      value: string | string[];
+      visibilityLevel: unknown;
+    }> = [
+      {
+        field: 'name',
+        label: 'Name',
+        value: displayName,
+        visibilityLevel: visibility?.displayName,
+      },
       {
         field: 'headline',
         label: 'Professional Headline',
-        value: profileData.headline,
+        value: headline,
+        visibilityLevel: visibility?.headline,
       },
-      { field: 'bio', label: 'Biography', value: profileData.bio },
-      { field: 'skills', label: 'Skills', value: profileData.skills || [] },
-      { field: 'values', label: 'Core Values', value: profileData.values || [] },
-      { field: 'causes', label: 'Causes', value: profileData.causes || [] },
       {
-        field: 'linkedin_url',
-        label: 'LinkedIn',
-        value: profileData.linkedin_profile_url || 'Not provided',
+        field: 'location',
+        label: 'Location',
+        value: location,
+        visibilityLevel: visibility?.location,
+      },
+      {
+        field: 'mission',
+        label: 'Mission',
+        value: mission,
+        visibilityLevel: visibility?.mission,
+      },
+      {
+        field: 'vision',
+        label: 'Vision',
+        value: vision,
+        visibilityLevel: visibility?.vision,
+      },
+      {
+        field: 'skills',
+        label: 'Skills',
+        value: skills,
+        visibilityLevel: visibility?.skills,
+      },
+      {
+        field: 'values',
+        label: 'Core Values',
+        value: values,
+        visibilityLevel: visibility?.values,
+      },
+      {
+        field: 'causes',
+        label: 'Causes',
+        value: causes,
+        visibilityLevel: visibility?.causes,
       },
     ];
 
-    // Filter out empty fields and apply visibility settings
     const visibleFields: VisibleField[] = allFields
       .filter((f) => {
-        // Filter out empty/null values
         if (!f.value) return false;
         if (Array.isArray(f.value) && f.value.length === 0) return false;
-        if (f.value === 'Not specified' || f.value === 'Not provided') return false;
         return true;
       })
       .map((f) => {
-        const isVisible = visibilityMap.get(f.field) ?? true; // Default visible
+        const isVisible = isVisibleInMatch(f.visibilityLevel);
         return {
           field: f.field,
           label: f.label,
-          value: f.value,
+          value: isVisible ? f.value : Array.isArray(f.value) ? [] : 'Hidden',
           isRedacted: !isVisible,
         };
       });
-
-    // Get organization details
-    const org = await db.execute(sql`
-      SELECT display_name
-      FROM organizations
-      WHERE id = ${organizationId}
-    `);
-
-    const organizationName = org.length > 0 ? (org[0] as any).display_name : 'the organization';
 
     log.info('match.visible_fields.retrieved', {
       userId: user.id,
@@ -138,8 +172,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ matc
 
     return NextResponse.json({
       matchId,
-      organizationName,
-      assignmentRole: matchData.role,
+      organizationName: organization.displayName,
+      assignmentRole: assignment.role,
       visibleFields,
     });
   } catch (error) {

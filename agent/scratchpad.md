@@ -56,6 +56,92 @@ Open TODOs / follow-ups:
 
 ---
 
+## 2026-02-08 19:15 Local
+
+Task summary:
+Unblock Supabase CLI migrations by syncing local `supabase/migrations/` with the remote `supabase_migrations.schema_migrations` history so `supabase db push --dry-run` works against the remote pooler.
+
+What worked:
+
+- Creating placeholder `.sql` files for missing remote versions made `supabase db push --dry-run` pass.
+- Moving repo-only, non-canonical migrations out of `supabase/migrations/` avoided `--include-all` prompts and prevented accidental re-application.
+
+What failed / wrong assumptions:
+
+- Initially expected `supabase db pull` to work before the local migration history matched the remote history.
+
+User corrections:
+
+- User confirmed Supabase should be canonical for migrations.
+
+Assumptions taken without asking:
+
+- Placeholder migrations are acceptable as a pragmatic way to align CLI expectations with the remote migration history table.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Use `nvm use $(cat .nvmrc)` before running repo scripts, since the default shell Node version can be too old for Next.js and Vitest.
+
+Commands run + outcomes (short):
+
+- `node agent/tools/supabase-sync-migration-history.mjs`: PASS (created placeholder migration files).
+- `supabase db push --db-url <pooler-safe> --dry-run`: PASS (remote database up to date).
+- `npm run lint` (Node 20.20.0): PASS.
+- `npm test` (Node 20.20.0): PASS.
+- `npm run build` (Node 20.20.0): PASS (warnings only).
+
+Open TODOs / follow-ups:
+
+- Consider documenting a clean-slate bootstrap strategy (baseline schema migration) if the project ever needs replay-from-scratch without relying on placeholder files.
+
+---
+
+## 2026-02-08 19:12 Local
+
+Task summary:
+Unblock Supabase CLI migrations by aligning local `supabase/migrations/` with the remote `supabase_migrations.schema_migrations` history so `supabase db push --dry-run` works.
+
+What worked:
+
+- Creating placeholder `.sql` files for remote migration versions fixed the Supabase CLI mismatch.
+- Moving repo-only SQL files into `supabase/migrations_legacy/` prevents accidental re-application on a migrated database.
+
+What failed / wrong assumptions:
+
+- None.
+
+User corrections:
+
+- User confirmed Supabase should be canonical for migrations.
+
+Assumptions taken without asking:
+
+- Placeholder migration files are acceptable for history alignment even though they do not reconstruct the original SQL.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Keep `supabase/config.toml` in the repo (if appropriate) to reduce implicit CLI behavior drift.
+
+Commands run + outcomes:
+
+- `supabase db push --dry-run`: FAIL initially (remote versions missing locally).
+- `node agent/tools/supabase-sync-migration-history.mjs`: PASS.
+- `supabase db push --dry-run`: PASS (remote database up to date).
+
+Open TODOs / follow-ups:
+
+- Decide whether to generate a baseline schema migration for fresh environment bootstrap, since placeholders only satisfy history checks.
+
+---
+
 ## 2026-02-07 18:05 CET
 
 Task summary:

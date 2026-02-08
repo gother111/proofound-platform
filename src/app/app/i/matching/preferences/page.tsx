@@ -7,7 +7,7 @@
 
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { MatchingProfileEditor } from '@/components/matching/MatchingProfileEditor';
+import { MatchingPreferencesClient } from './preferences-client';
 
 export const metadata = {
   title: 'Matching Preferences | Proofound',
@@ -34,7 +34,7 @@ export default async function MatchingPreferencesPage() {
         </p>
       </div>
 
-      <MatchingProfileEditor profileId={user.id} />
+      <MatchingPreferencesClient />
     </div>
   );
 }

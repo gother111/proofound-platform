@@ -242,3 +242,97 @@ How to verify:
 Open risks/TODO:
 
 - These branches are backups, not reviewed PRs. Any salvage conflicts were resolved to pass preflight, but should be reviewed before merging anywhere.
+
+---
+
+## 2026-02-08: Fix Supabase Migration History Mismatch (Push Dry Run)
+
+What changed:
+
+- Synced `supabase/migrations/` to contain placeholder `.sql` files for every remote entry in `supabase_migrations.schema_migrations` so Supabase CLI can validate history.
+- Moved the repo-only Supabase SQL migrations out of the active directory into `supabase/migrations_legacy/` to avoid re-applying them.
+- Added a helper tool to re-sync when needed: `agent/tools/supabase-sync-migration-history.mjs`.
+- Documented the workflow in `RUN_MIGRATIONS_GUIDE.md` and `APPLY_MIGRATIONS_MANUAL.md`.
+
+Why:
+
+- `supabase db push --dry-run` was failing with "Remote migration versions not found in local migrations directory."
+
+How to verify:
+
+- `node agent/tools/supabase-sync-migration-history.mjs --dry-run`
+- `supabase db push --db-url \"postgresql://...:6543/postgres?sslmode=require&statement_cache_capacity=0&prefer_simple_protocol=true&pgbouncer=true\" --dry-run`
+
+Open risks/TODO:
+
+- Placeholder migrations are enough to satisfy CLI history checks, but they are not a substitute for the original SQL if the project ever needs full replay-from-scratch migrations.
+
+---
+
+## 2026-02-08: Matching Engine Fixes (Profile Setup, Mutual Interest, Explainer)
+
+What changed:
+
+- Routed `/api/matching-profile` to the repo's Drizzle-backed implementation in `src/app/api/core/matching/matching-profile/route.ts`.
+- Fixed mutual interest logic so introductions work regardless of who clicks "Interested" first, and so conversations are created with a real org member participant.
+- Replaced the match explainer endpoint to be schema-aligned with `matches`, `assignments`, `matching_profiles`, and `skills`.
+- Updated `/app/i/matching/preferences` to use the matching profile setup flow (instead of the unused multi-profile API).
+- Made `next build` resilient when Sentry upload credentials are not configured (local build should not fail due to missing Sentry env vars).
+
+Why:
+
+- Matching profile setup was wired to an outdated `/api/matching-profile` implementation that did not match the actual `matching_profiles` schema used by the matching engine.
+- Mutual interest only worked when org interest happened first; candidate-first flows could not become mutual and conversation creation could fail due to using `assignment.orgId` where a user profile id is required.
+- The match explainer endpoint referenced old column names and score fields, causing "Why this match" to fail.
+
+How to verify:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`
+- Manual smoke:
+  - Individual: visit `/app/i/matching`, complete setup, confirm matches load.
+  - Org: visit `/app/o/<slug>/matching`, pick an assignment, confirm candidates load.
+  - Mutual interest:
+    - Candidate clicks Interested first, then org clicks Interested for the same candidate, confirm a conversation is created and the individual is routed to `/app/i/messages?conversation=<id>`.
+    - Org clicks Interested first, then candidate clicks Interested, confirm the same.
+  - Explainer: open "Why this match?" for a match card and confirm modal renders rank, skills, purpose, and constraints.
+
+Open risks/TODO:
+
+- `/api/matching/profile/*` (multi-profile preferences) is still present but is not used by the main matching flow; consider deprecating/removing it to reduce confusion.
+
+---
+
+## 2026-02-08: Matching Engine Org <-> Individual Flow Fixes
+
+What changed:
+
+- `src/app/api/matching-profile/route.ts`: route now re-exports the canonical handler backed by the Drizzle `matching_profiles` table.
+- `src/app/api/core/matching/interest/route.ts`: enforce org member authorization for org -> candidate interest, verify reciprocal org membership for mutual interest, and ensure mutual interest creates a conversation between the candidate and a real org member.
+- `src/app/api/match/explain/[matchId]/route.ts`: rewrite to use current DB schema (`matches.vector.subscores`, `assignments.mustHaveSkills`, `matching_profiles.values_tags/cause_tags`), fix authorization, and compute rank from stored matches.
+- `src/app/api/match/visible-fields/[matchId]/route.ts`: rewrite to use `profile_field_visibility` schema (column-based privacy controls) and return a consent-ready redacted field list.
+
+Why:
+
+- The repo had multiple "matching profile" implementations, and `/api/matching-profile` was not aligned with the schema actually used by the matching engine.
+- Mutual interest could be detected in only one ordering or create invalid conversations when using org IDs instead of user IDs.
+- The match explainer endpoint referenced legacy columns and could 500 on real data.
+- The consent preview endpoint queried `profile_field_visibility` using non-existent columns, so the UI could not reliably preview what would be shared.
+
+How to verify:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`
+- Manual flow:
+- Individual: visit `/app/i/matching`, complete the setup wizard, confirm matches load, and "Why this match?" opens without API errors.
+- Consent: click "Interested" on a match and confirm the consent dialog loads via `/api/match/visible-fields/<matchId>`.
+- Org -> candidate: as an org member, visit `/app/o/<slug>/matching`, click "Interested" on a candidate, then have the candidate also express interest and confirm the response returns `conversationId` and a conversation exists in `/app/i/messages`.
+
+Open risks/TODO:
+
+- Consent redaction currently treats `profile_field_visibility.* = 'private'` as hidden and everything else as visible. Confirm product intent for `network_only` vs `match_only`.
+- Consent preview intentionally omits email (not represented in `profile_field_visibility`). If email should ever be shared, add explicit privacy controls first.

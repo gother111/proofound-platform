@@ -37,6 +37,15 @@ If the Supabase CLI errors with prepared statement collisions, the DB URL is mis
 - `prefer_simple_protocol=true`
 - `pgbouncer=true`
 
+### "Remote migration versions not found in local migrations directory"
+
+If `supabase db push` fails because the remote `supabase_migrations.schema_migrations` contains versions that are missing as local files under `supabase/migrations/`, sync local placeholder files first:
+
+```bash
+node agent/tools/supabase-sync-migration-history.mjs
+supabase db push --db-url "postgresql://...:6543/postgres?sslmode=require&statement_cache_capacity=0&prefer_simple_protocol=true&pgbouncer=true" --dry-run
+```
+
 **If you get permission errors:**
 
 - Make sure you're logged in as the project owner

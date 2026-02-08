@@ -27,6 +27,19 @@ Some older migration scripts (for example staged messaging + verification privac
 
 The canonical migration history is the remote `supabase_migrations.schema_migrations` table.
 
+## If `supabase db push` Fails Due To Missing Remote Versions
+
+If `supabase db push` errors with:
+
+- "Remote migration versions not found in local migrations directory."
+
+Sync local placeholder migration files to match the remote history, then retry:
+
+```bash
+node agent/tools/supabase-sync-migration-history.mjs
+supabase db push --db-url "postgresql://...:6543/postgres?sslmode=require&statement_cache_capacity=0&prefer_simple_protocol=true&pgbouncer=true" --dry-run
+```
+
 ## Verify Success (Remote)
 
 Run this query to confirm tables were created:
