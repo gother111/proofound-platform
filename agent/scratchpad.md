@@ -435,3 +435,45 @@ What the user corrected afterward:
 Open TODOs / follow-ups:
 
 - Consider updating `src/components/matching/MatchingProfileEditor.tsx` to either use `PUT /api/matching-profile` or to be removed if unused.
+
+---
+
+## 2026-02-08 20:10 CET
+
+Task summary:
+Fix individual self profile (`/app/i/profile`) to render human-friendly names for custom Expertise Atlas skills (not raw `custom-...` identifiers).
+
+What worked:
+
+- Added a small shared helper for skill display name derivation and covered it with unit tests.
+- Kept the behavioral change scoped to profile rendering (no DB writes or API contract changes).
+
+What failed / wrong assumptions:
+
+- Ran `npm run typecheck` in parallel with `npm run build`; typecheck failed because `.next/types` was not generated yet. Re-running typecheck after build passed.
+
+User corrections:
+
+- None.
+
+Assumptions taken without asking:
+
+- Custom skills use `skills.skill_id` format `custom-<cat>-<subcat>-<l3>-<slug>` where `<slug>` is kebab-case.
+- Title Case conversion is acceptable for custom skill display.
+
+What the user corrected afterward:
+
+- None.
+
+Commands run + outcomes:
+
+- `date +"%Y-%m-%d %H:%M %Z"`: PASS (2026-02-08 20:10 CET)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: FAIL (missing `.next/types` when run before build)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm test`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS (after build)
+
+Open TODOs / follow-ups:
+
+- If we want `npm run typecheck` to be order-independent, consider excluding `.next/types` from `tsconfig.json` and relying on `next build` type checking, or generate `.next/types` as part of the typecheck script.

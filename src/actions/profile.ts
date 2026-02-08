@@ -30,6 +30,7 @@ import type {
   Volunteering as VolunteeringType,
   FieldVisibility,
 } from '@/types/profile';
+import { getSkillDisplayName } from '@/lib/skills/display-name';
 
 /**
  * Track if profile was already activated (to avoid duplicate events)
@@ -283,7 +284,11 @@ export async function getProfileData(): Promise<ProfileData> {
 
     const mappedSkills: Skill[] = skillRows.map((row: any) => {
       const nameI18n = row.nameI18n as Record<string, string> | null;
-      const skillName = nameI18n?.en || row.skillId || 'Unknown Skill';
+      const skillName = getSkillDisplayName({
+        nameI18n,
+        skillId: row.skillId,
+        skillCode: row.skillCode,
+      });
       return {
         id: row.id,
         name: skillName,

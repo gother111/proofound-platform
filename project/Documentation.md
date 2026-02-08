@@ -381,3 +381,30 @@ Open risks/TODO:
 
 - Consent redaction currently treats `profile_field_visibility.* = 'private'` as hidden and everything else as visible. Confirm product intent for `network_only` vs `match_only`.
 - Consent preview intentionally omits email (not represented in `profile_field_visibility`). If email should ever be shared, add explicit privacy controls first.
+
+---
+
+## 2026-02-08: Custom Skill Names on Self Profile (`/app/i/profile`)
+
+What changed:
+
+- Added a shared helper to derive human-friendly skill display names, including parsing custom `skill_id` values of the form `custom-<cat>-<subcat>-<l3>-<slug>`. (source: src/lib/skills/display-name.ts)
+- Updated profile data loading so `/app/i/profile` renders custom skills with readable names instead of raw `custom-...` identifiers. (source: src/actions/profile.ts)
+
+Why:
+
+- Custom skills do not have taxonomy name data, so the self profile was falling back to `skills.skill_id` and rendering internal identifiers.
+
+How to verify:
+
+- Local checks (Node `20.20.0`):
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm test`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`
+- Manual smoke (requires seeded taxonomy and a logged-in individual):
+- Add a taxonomy skill and a custom skill in `/app/i/expertise`, then confirm `/app/i/profile` shows readable names for both.
+
+Open risks/TODO:
+
+- E2E signup and full journey specs may still fail locally if the environment is not configured for email verification or seeded taxonomy data.
