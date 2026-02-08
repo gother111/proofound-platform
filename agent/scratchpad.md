@@ -54,6 +54,49 @@ Open TODOs / follow-ups:
 
 - None.
 
+## 2026-02-08 22:21 CET
+
+Task summary:
+Fix metrics and analytics reliability: store web vitals in `web_vitals_metrics`, accept INP/TTFB in performance tracking, harden admin-only reads, and stabilize CSRF bypass detection across Supabase project refs.
+
+What worked:
+
+- Aligning the `/api/analytics/web-vitals` write path with the canonical `web_vitals_metrics` schema removed the "POST succeeds but dashboard is empty" drift.
+- Generalizing Supabase auth cookie detection removed the hardcoded project ref failure mode.
+- Adding `inp` and `ttfb` support aligned the server with the current Web Vitals client (`metric.name.toLowerCase()`).
+
+What failed / wrong assumptions:
+
+- A previous commit message (`32907f7`) referenced "metrics and analytics" but the changes were messaging/notifications; metrics fixes needed a separate commit.
+
+User corrections:
+
+- None.
+
+Assumptions taken without asking:
+
+- Keep `/api/performance/track` rejecting cross-origin requests (403) rather than returning 200, to avoid silently accepting spam while still allowing same-origin beacons.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Prefer a dedicated branch name for metrics work to avoid mixing unrelated changes on the same branch.
+
+Commands run + outcomes:
+
+- `git status --porcelain`: PASS (confirmed uncommitted metrics changes)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS
+
+Open TODOs / follow-ups:
+
+- None.
+
 ## 2026-02-08 21:53 CET
 
 Task summary:

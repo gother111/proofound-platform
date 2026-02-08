@@ -297,3 +297,39 @@ How to verify:
 Open risks/TODO:
 
 - Vercel deployment deletion is destructive. If you need a historical preview again, you will need to redeploy from an existing commit/branch.
+
+---
+
+## 2026-02-08: Metrics and Analytics Reliability (Web Vitals, Performance Track, CSRF)
+
+What changed:
+
+- Web vitals ingestion now writes to `web_vitals_metrics` (canonical per `supabase/migrations/20251108_add_web_vitals_metrics.sql`), including for anonymous sessions (`user_id = null`). (source: `src/app/api/analytics/web-vitals/route.ts`)
+- Web vitals admin read endpoint is now truly admin-only via `requirePlatformAdminJson` (prevents non-admin access to aggregated vitals when DB access bypasses RLS). (source: `src/app/api/analytics/web-vitals/route.ts`, `src/lib/api/route-helpers.ts`)
+- Performance tracking endpoint now accepts `inp` and `ttfb` so Web Vitals v5 client emissions are not dropped. (source: `src/app/api/performance/track/route.ts`, `src/lib/performance/client-tracker.ts`)
+- CSRF session detection is now Supabase-project-agnostic by matching `sb-<projectRef>-auth-token(.N)?` cookies instead of hardcoding one project ref. (source: `src/lib/csrf.ts`)
+- CSRF allowlist now includes `/api/performance/track` so beacon-style posts are not blocked. (source: `src/middleware.ts`)
+- Admin performance dashboard mapping includes `INP` so it renders when stored. (source: `src/components/admin/PerformanceDashboard.tsx`)
+
+Why:
+
+- Fix empty performance dashboards and dropped metrics caused by table mismatch, missing INP support, and CSRF regressions when the Supabase project ref changes.
+- Tighten access control: aggregated vitals are sensitive operational data and should only be visible to platform admins.
+
+How to verify:
+
+- Repo checks (Node 20.20.0):
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`
+- Manual smoke:
+  - Run `npm run dev`.
+  - Navigate a few pages and confirm:
+    - `POST /api/analytics/web-vitals` returns `200`.
+    - `POST /api/performance/track` returns `200` (no `CSRF validation failed`).
+  - Open the admin Performance dashboard and confirm INP renders after a few navigations.
+
+Open risks/TODO:
+
+- `/api/performance/track` is CSRF-bypassed (required for beacons); keep origin checks and rate limiting coverage reviewed as the app grows.

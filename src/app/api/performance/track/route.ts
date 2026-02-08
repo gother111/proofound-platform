@@ -10,8 +10,49 @@ import { db } from '@/db';
 import { performanceMetrics } from '@/db/schema';
 import type { InsertPerformanceMetric } from '@/db/schema';
 
+function resolveAllowedOrigins(request: NextRequest): Set<string> {
+  const allowed = new Set<string>();
+  allowed.add(new URL(request.url).origin);
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  if (siteUrl) {
+    try {
+      allowed.add(new URL(siteUrl).origin);
+    } catch {
+      // ignore invalid env var
+    }
+  }
+
+  return allowed;
+}
+
+function isAllowedRequestOrigin(request: NextRequest): boolean {
+  const allowed = resolveAllowedOrigins(request);
+
+  const origin = request.headers.get('origin');
+  if (origin) return allowed.has(origin);
+
+  const referer = request.headers.get('referer');
+  if (referer) {
+    try {
+      return allowed.has(new URL(referer).origin);
+    } catch {
+      return false;
+    }
+  }
+
+  const secFetchSite = request.headers.get('sec-fetch-site');
+  if (secFetchSite === 'same-origin' || secFetchSite === 'same-site') return true;
+
+  return process.env.NODE_ENV !== 'production';
+}
+
 export async function POST(request: NextRequest) {
   try {
+    if (!isAllowedRequestOrigin(request)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const data = await request.json();
 
     const { metricType, pageRoute, valueMs, deviceType, userAgent, timestamp } = data;
@@ -25,7 +66,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate metric type
-    const validMetricTypes = ['page_load', 'api_latency', 'tti', 'fcp', 'lcp', 'cls', 'fid'];
+    const validMetricTypes = [
+      'page_load',
+      'api_latency',
+      'tti',
+      'fcp',
+      'lcp',
+      'cls',
+      'fid',
+      'inp',
+      'ttfb',
+    ];
     if (!validMetricTypes.includes(metricType)) {
       return NextResponse.json({ error: 'Invalid metric type' }, { status: 400 });
     }

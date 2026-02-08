@@ -85,10 +85,11 @@ export function csrfProtection(request: NextRequest): NextResponse | null {
     '/api/dashboard/',
   ];
 
-  const hasSupabaseSession =
-    request.cookies.has('sb-cjpfrgmsxwxhuomnvciq-auth-token') ||
-    request.cookies.has('sb-cjpfrgmsxwxhuomnvciq-auth-token.0') ||
-    request.cookies.has('sb-cjpfrgmsxwxhuomnvciq-auth-token.1');
+  // Supabase SSR session cookies are scoped to the project ref and can be chunked
+  // (for example: sb-<project-ref>-auth-token, sb-<project-ref>-auth-token.0, .1, ...).
+  // Do not hardcode a specific project ref here.
+  const cookies = typeof request.cookies.getAll === 'function' ? request.cookies.getAll() : [];
+  const hasSupabaseSession = cookies.some((c) => /^sb-[a-z0-9]+-auth-token(\.\d+)?$/i.test(c.name));
 
   if (hasSupabaseSession && internalAuthRoutes.some((route) => pathname.startsWith(route))) {
     return null;

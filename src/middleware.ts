@@ -152,7 +152,11 @@ export async function middleware(request: NextRequest) {
     // CSRF protection for API routes (allowlist some public endpoints)
     if (pathname.startsWith('/api')) {
       // Allow anonymous web-vitals posts without CSRF blocking
-      if (pathname.startsWith('/api/analytics/web-vitals')) {
+      // Also allow performance beacons which cannot attach x-csrf-token.
+      if (
+        pathname.startsWith('/api/analytics/web-vitals') ||
+        pathname.startsWith('/api/performance/track')
+      ) {
         const response = NextResponse.next();
         response.headers.set('x-request-id', requestId);
         attachRateLimitHeaders(response);

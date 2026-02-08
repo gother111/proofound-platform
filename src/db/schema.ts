@@ -2194,7 +2194,8 @@ export const fairnessNotes = pgTable('fairness_notes', {
 export const performanceMetrics = pgTable('performance_metrics', {
   id: uuid('id').defaultRandom().primaryKey(),
   metricType: text('metric_type', {
-    enum: ['page_load', 'api_latency', 'tti', 'fcp', 'lcp', 'cls', 'fid'],
+    // Keep this in sync with /api/performance/track accepted metric types.
+    enum: ['page_load', 'api_latency', 'tti', 'fcp', 'lcp', 'cls', 'fid', 'inp', 'ttfb'],
   }).notNull(),
   pageRoute: text('page_route'), // For page load metrics
   apiEndpoint: text('api_endpoint'), // For API latency metrics

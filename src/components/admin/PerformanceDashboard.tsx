@@ -42,6 +42,12 @@ const METRIC_INFO = {
     threshold: 2500,
     unit: 'ms',
   },
+  INP: {
+    name: 'Interaction to Next Paint',
+    description: 'Measures responsiveness (replaces FID)',
+    threshold: 200,
+    unit: 'ms',
+  },
   FID: {
     name: 'First Input Delay',
     description: 'Measures interactivity',
