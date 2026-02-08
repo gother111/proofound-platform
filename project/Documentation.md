@@ -440,3 +440,34 @@ How to verify:
 Open risks/TODO:
 
 - If a user schedules deletion and then re-schedules later, reminder dedupe now keys on `properties.scheduledFor`, but older reminder events without that property (or with different formatting) may still affect behavior depending on the historical data shape.
+
+---
+
+## 2026-02-08: Verify Local-Only Git Work Was Not Lost
+
+What changed:
+
+- Verified local repo state against GitHub `origin` and identified local-only commits not present on any `origin/*` ref.
+- Pushed five local-only branches to GitHub to preserve those commits as backups:
+  - `codex/api-coverage-health-messy`
+  - `codex/api-coverage-health-single`
+  - `codex/stash-zoom-next-bump-2026-02-07-legacy`
+  - `codex/stash-refactor-quick-wins-0-2026-02-07-legacy`
+  - `codex/stash-master-2-2026-02-07-legacy`
+
+Why:
+
+- Codex quitting unexpectedly can leave work only on the local machine (for example, in branches created from stashes or partial commits). Pushing these branches ensures the commit objects exist on GitHub even if they are not intended for merging.
+
+How to verify:
+
+- Working tree clean:
+  - `git status -sb`
+- No local commits missing from GitHub remotes:
+  - `git log --oneline --decorate --branches --not --remotes` (should be empty)
+- Branches exist on GitHub:
+  - `git ls-remote --heads origin codex/api-coverage-health-messy codex/api-coverage-health-single codex/stash-zoom-next-bump-2026-02-07-legacy codex/stash-refactor-quick-wins-0-2026-02-07-legacy codex/stash-master-2-2026-02-07-legacy`
+
+Open risks/TODO:
+
+- These branches are backups and may contain outdated or divergent history. Do not merge them without reviewing diffs and running verification gates.

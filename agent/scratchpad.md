@@ -516,3 +516,44 @@ Commands run + outcomes:
 Open TODOs / follow-ups:
 
 - Consider making `npm run typecheck` order-independent by removing `.next/types` from `tsconfig.json` includes, or by generating `.next/types` as part of the typecheck script.
+
+## 2026-02-08 20:41 CET
+
+Task summary:
+Verify whether any local work was not on GitHub, and push backup branches for local-only commits.
+
+What worked:
+
+- Using `git log --branches --not --remotes` to find commits not present on any remote ref.
+- Pushing backup branches to preserve commit objects without making merge decisions.
+
+What failed / wrong assumptions:
+
+- The initial blob-compare check against `HEAD` is not sufficient by itself to prove a local-only commit is "not needed"; commits can be old or superseded while still being worth preserving as backups.
+
+User corrections:
+
+- None.
+
+Assumptions taken without asking:
+
+- It is acceptable to push backup branches to `origin` when local-only commits exist, since the goal is to avoid losing work.
+
+What the user corrected afterward:
+
+- None.
+
+Commands run + outcomes:
+
+- `git status -sb`: PASS (clean)
+- `git remote -v`: PASS
+- `git fetch --all --prune`: PASS
+- `git log --oneline --decorate --branches --not --remotes`: Found local-only commits
+- `git push origin <branches>`: PASS (created remote backup branches)
+- `git fetch origin --prune`: PASS
+- `git log --oneline --decorate --branches --not --remotes`: PASS (empty)
+- `git ls-remote --heads origin <branches>`: PASS
+
+Open TODOs / follow-ups:
+
+- If desired, delete redundant local branches after confirming the backups are sufficient and no longer needed locally.
