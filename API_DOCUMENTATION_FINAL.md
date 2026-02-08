@@ -280,13 +280,14 @@ Schedule an interview with video platform integration.
     "scheduledAt": "2025-11-10T14:00:00Z",
     "meetingLink": "https://zoom.us/j/123456789",
     "meetingId": "123456789",
-    "platform": "zoom",
-    "calendar": {
-      "icsUrl": "/api/interviews/calendar/interview-uuid.ics"
-    }
+    "platform": "zoom"
   }
 }
 ```
+
+**Calendar Invites (.ics):**
+
+- The UI generates a downloadable `.ics` file client-side (no dedicated calendar download API endpoint is currently implemented).
 
 **Platform Options:**
 

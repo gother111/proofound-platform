@@ -54,6 +54,61 @@ Open TODOs / follow-ups:
 
 - None.
 
+---
+
+## 2026-02-08 19:29 CET
+
+Task summary:
+Verify API coverage and runtime health, implement missing API routes referenced by the UI, and run local plus production smoke checks.
+
+What worked:
+
+- Added compatibility endpoints where the UI expected them (`/api/analytics/events`, `/api/surveys/sus/eligibility`) and switched callers to canonical APIs where that was smaller (`GapMap`, Opportunities).
+- Running repo checks under Node `20.20.0` by prefixing `PATH=/opt/homebrew/opt/node@20/bin:$PATH` avoided Node 16 drift.
+- Local and production `/api/health` and `/api/csrf-token` smoke checks returned `200`.
+
+What failed / wrong assumptions:
+
+- Initially tried invoking Node 20's `npm` via absolute path, but it still executed under Node 16 in this shell until `PATH` was adjusted.
+- Mentioning an example calendar URL in docs caused the endpoint-extraction script to flag it as missing; rewrote the doc note to avoid a fake `/api/...` path.
+
+User corrections:
+
+- None.
+
+Improvements next time:
+
+- Avoid parallel runs that depend on intermediate `/tmp/*` artifacts; run extract then compare sequentially.
+- When verifying scripts, set the Node 20 `PATH` first in the session to avoid mixed toolchain output.
+
+Commands run + outcomes:
+
+- `date "+%Y-%m-%d %H:%M %Z"`: PASS (2026-02-08 19:29 CET)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm test`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run dev -- --port 3000`: PASS (smoke only)
+- `curl -i http://localhost:3000/api/health`: PASS (200)
+- `curl -i http://localhost:3000/api/csrf-token`: PASS (200)
+- `curl -i http://localhost:3000/api/user/me`: PASS (401 expected)
+- `curl -i http://localhost:3000/api/cron/decision-reminders`: PASS (401 expected)
+- `curl -i https://proofound.io/api/health`: PASS (200)
+- `curl -i https://proofound.io/api/csrf-token`: PASS (200)
+
+Assumptions taken without asking:
+
+- Opportunities "snooze" action maps to `weeks: 1`.
+- Opportunities listing uses `POST /api/match/profile` and treats org identity as masked at this stage.
+
+What the user corrected afterward:
+
+- None.
+
+Open TODOs / follow-ups:
+
+- If server-side (non-cookie) producers need to use `/api/analytics/events` later, add explicit server auth rather than relaxing access control.
+
 ## 2026-02-08 19:17 CET
 
 Task summary:
