@@ -254,3 +254,38 @@ Commands run + outcomes:
 Open TODOs / follow-ups:
 
 - None.
+
+## 2026-02-08 22:05 CET
+
+Task summary:
+Delete Vercel deployments created from the rolled back backup branches.
+
+What worked:
+
+- Using `npx vercel api -X DELETE /v13/deployments/<id> --dangerously-skip-permissions` to delete deployments in non-interactive mode.
+- Verifying via `/v6/deployments` and matching on `meta.githubCommitRef`.
+
+What failed / wrong assumptions:
+
+- Initial delete attempts failed because Vercel CLI requires confirmation without `--dangerously-skip-permissions`.
+
+User corrections:
+
+- Requested deletion of the Vercel deployments.
+
+Assumptions taken without asking:
+
+- It was acceptable to delete the listed preview deployments permanently.
+
+What the user corrected afterward:
+
+- None.
+
+Commands run + outcomes:
+
+- `npx vercel@latest api -X DELETE "/v13/deployments/<id>" --token "$VERCEL_TOKEN" --dangerously-skip-permissions`: PASS (5 deployments deleted)
+- `npx vercel@latest api "/v6/deployments?projectId=<projectId>&limit=200" --token "$VERCEL_TOKEN"`: PASS (no remaining hits)
+
+Open TODOs / follow-ups:
+
+- None.

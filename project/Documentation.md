@@ -270,3 +270,30 @@ How to verify:
 Open risks/TODO:
 
 - This removes only the branch pointers. The commit objects may still exist locally as dangling objects until git garbage collection runs. If those commits are needed again, recovery may be difficult after GC.
+
+---
+
+## 2026-02-08: Delete Vercel Deployments Created From Rolled Back Branches
+
+What changed:
+
+- Deleted the Vercel deployments whose git metadata referenced the rolled back branches:
+  - `codex/api-coverage-health-messy`
+  - `codex/api-coverage-health-single`
+  - `codex/stash-zoom-next-bump-2026-02-07-legacy`
+  - `codex/stash-refactor-quick-wins-0-2026-02-07-legacy`
+  - `codex/stash-master-2-2026-02-07-legacy`
+
+Why:
+
+- Branch deletion on GitHub does not remove existing Vercel preview deployments. User requested cleanup to avoid confusion.
+
+How to verify:
+
+- Fetch deployments for the linked project and confirm none reference the deleted branch names:
+  - `npx vercel@latest api "/v6/deployments?projectId=<projectId>&limit=200" --token "$VERCEL_TOKEN"`
+  - Inspect `deployments[].meta.githubCommitRef` and confirm it does not match any of the branches above.
+
+Open risks/TODO:
+
+- Vercel deployment deletion is destructive. If you need a historical preview again, you will need to redeploy from an existing commit/branch.
