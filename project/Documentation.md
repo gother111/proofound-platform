@@ -186,3 +186,87 @@ TODO (missing / validate; do not create here):
 
 - `ACCESSIBILITY_AUDIT_REPORT.md` (expected because `scripts/go-no-go-check.mjs` requires it) (source: scripts/go-no-go-check.mjs)
 - `playwright.a11y.config.ts` (expected because `npm run test:a11y` references it) (source: package.json)
+
+## 2026-02-08: Messaging, Identity Reveal Emails, and Persona-Agnostic Notification Links
+
+What changed:
+
+- Individual and org messages pages now render the staged messaging UI (`ConversationView`) backed by `GET/POST /api/conversations/[conversationId]/messages` (instead of `/api/messages` + realtime thread).
+- Conversation list masking is now driven by the conversations API. Stage 1 shows the stored masked handle and the UI no longer overrides it to a hardcoded label.
+- Staged messages API now marks unread messages as read on `GET`, updates `conversations.lastMessageAt` on `POST`, and creates `message_received` notifications.
+- Notifications now use persona-agnostic action URLs: `message_received` uses `/app/messages?conversation=<id>` and `intro_accepted` uses `/app/messages`.
+- New redirect entrypoints were added so email links and notification links work for both personas: `/app/messages`, `/app/notifications`, `/app/settings/notifications`.
+- Org notifications pages were added under `/app/o/[slug]/notifications` and `/app/o/[slug]/settings/notifications`.
+- Identity reveal emails now link to `/app/messages?conversation=<id>` and use `/portfolio/[handle]` for "View Their Profile" when a handle exists. Admin email lookup no longer uses `listUsers()` (uses `auth.admin.getUserById`).
+
+Why:
+
+- Make Stage 1 masking, PII warnings, and identity reveal behave consistently end to end by using the staged messaging system everywhere.
+- Prevent persona-specific routes from breaking email and notification deep links for org members.
+
+How to verify:
+
+Node `20.20.0`:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e -- e2e/workflows.spec.ts -g Messaging`
+
+Open risks/TODO:
+
+- Multi-org org members: `/app/messages` falls back to the first org membership if it cannot derive a slug from the conversation assignment.
+- Realtime updates: the messages pages now rely on the staged API via `ConversationView`; reintroducing realtime should happen on top of the staged endpoints.
+
+---
+
+## 2026-02-08: Roll Back Remote Backup Branches
+
+What changed:
+
+- Deleted these remote branches from `origin` (GitHub):
+  - `codex/api-coverage-health-messy`
+  - `codex/api-coverage-health-single`
+  - `codex/stash-zoom-next-bump-2026-02-07-legacy`
+  - `codex/stash-refactor-quick-wins-0-2026-02-07-legacy`
+  - `codex/stash-master-2-2026-02-07-legacy`
+
+Why:
+
+- User requested rollback: these branches were pushed as backups and should not remain on GitHub.
+
+How to verify:
+
+- Remote heads are gone:
+  - `git ls-remote --heads origin codex/api-coverage-health-messy codex/api-coverage-health-single codex/stash-zoom-next-bump-2026-02-07-legacy codex/stash-refactor-quick-wins-0-2026-02-07-legacy codex/stash-master-2-2026-02-07-legacy`
+
+Open risks/TODO:
+
+- Deleting remote backup branches does not delete the commits from this local clone. If those commits are still needed, keep local branches or re-push later under a clearer naming scheme.
+
+---
+
+## 2026-02-08: Delete Local Backup Branch Pointers
+
+What changed:
+
+- Deleted these local branches:
+  - `codex/api-coverage-health-messy`
+  - `codex/api-coverage-health-single`
+  - `codex/stash-zoom-next-bump-2026-02-07-legacy`
+  - `codex/stash-refactor-quick-wins-0-2026-02-07-legacy`
+  - `codex/stash-master-2-2026-02-07-legacy`
+
+Why:
+
+- User requested cleanup: remove local backup branches that could confuse day-to-day work.
+
+How to verify:
+
+- Local branches are gone:
+  - `git branch --list codex/api-coverage-health-messy codex/api-coverage-health-single codex/stash-zoom-next-bump-2026-02-07-legacy codex/stash-refactor-quick-wins-0-2026-02-07-legacy codex/stash-master-2-2026-02-07-legacy`
+
+Open risks/TODO:
+
+- This removes only the branch pointers. The commit objects may still exist locally as dangling objects until git garbage collection runs. If those commits are needed again, recovery may be difficult after GC.

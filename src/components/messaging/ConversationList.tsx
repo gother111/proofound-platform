@@ -67,10 +67,7 @@ export function ConversationList({
 
   // Get display name based on stage
   const getDisplayName = (conv: Conversation) => {
-    if (conv.stage === 'masked') {
-      return 'Candidate'; // Masked identity
-    }
-    return conv.otherPartyName;
+    return conv.otherPartyName || 'Unknown';
   };
 
   // Get avatar initials
@@ -146,8 +143,10 @@ export function ConversationList({
           <button
             key={conversation.id}
             onClick={() => onSelect(conversation.id)}
+            type="button"
+            data-conversation={conversation.id}
             className={cn(
-              'w-full p-4 text-left hover:bg-[#F7F6F1] transition-colors',
+              'conversation-item w-full p-4 text-left hover:bg-[#F7F6F1] transition-colors',
               selectedId === conversation.id && 'bg-[#EEF1EA] hover:bg-[#EEF1EA]'
             )}
           >

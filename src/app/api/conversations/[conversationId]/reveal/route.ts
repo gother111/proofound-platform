@@ -12,6 +12,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { db, conversations, profiles } from '@/db';
 import { eq } from 'drizzle-orm';
 import { log } from '@/lib/log';
@@ -209,6 +210,7 @@ async function sendIdentityRevealedEmails(
       where: eq(profiles.id, participantOneId),
       columns: {
         id: true,
+        handle: true,
         displayName: true,
       },
     });
@@ -217,18 +219,20 @@ async function sendIdentityRevealedEmails(
       where: eq(profiles.id, participantTwoId),
       columns: {
         id: true,
+        handle: true,
         displayName: true,
       },
     });
 
-    // Get emails from Supabase auth (RLS protected)
-    const supabase = await createClient();
+    // Fetch emails from Supabase Auth using service role
+    const supabaseAdmin = createAdminClient();
+    const [userOneAuth, userTwoAuth] = await Promise.all([
+      supabaseAdmin.auth.admin.getUserById(participantOneId),
+      supabaseAdmin.auth.admin.getUserById(participantTwoId),
+    ]);
 
-    // Use service role to fetch emails (admin access)
-    const { data: userData } = await supabase.auth.admin.listUsers();
-
-    const userOneEmail = userData?.users.find((u) => u.id === participantOneId)?.email;
-    const userTwoEmail = userData?.users.find((u) => u.id === participantTwoId)?.email;
+    const userOneEmail = userOneAuth.data?.user?.email;
+    const userTwoEmail = userTwoAuth.data?.user?.email;
 
     if (!userOneEmail || !userTwoEmail) {
       log.error('identity_revealed_email.missing_email', {
@@ -239,7 +243,17 @@ async function sendIdentityRevealedEmails(
       return;
     }
 
-    const conversationUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/app/i/messages/${conversationId}`;
+    const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').replace(
+      /\/$/,
+      ''
+    );
+    const conversationUrl = `${siteUrl}/app/messages?conversation=${conversationId}`;
+    const participantOneProfileUrl = participantOne?.handle
+      ? `${siteUrl}/portfolio/${participantOne.handle}`
+      : conversationUrl;
+    const participantTwoProfileUrl = participantTwo?.handle
+      ? `${siteUrl}/portfolio/${participantTwo.handle}`
+      : conversationUrl;
 
     // Send to participant one
     await resend.emails.send({
@@ -251,7 +265,7 @@ async function sendIdentityRevealedEmails(
         role: 'candidate',
         revealedName: participantTwo?.displayName || 'your match',
         viewConversationUrl: conversationUrl,
-        viewProfileUrl: conversationUrl,
+        viewProfileUrl: participantTwoProfileUrl,
       }),
     });
 
@@ -265,7 +279,7 @@ async function sendIdentityRevealedEmails(
         role: 'candidate',
         revealedName: participantOne?.displayName || 'your match',
         viewConversationUrl: conversationUrl,
-        viewProfileUrl: conversationUrl,
+        viewProfileUrl: participantOneProfileUrl,
       }),
     });
 

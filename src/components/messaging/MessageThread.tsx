@@ -41,7 +41,7 @@ interface MessageThreadProps {
   onSendMessage: (content: string) => void;
 }
 
-const MAX_MESSAGE_LENGTH = 500;
+const MAX_MESSAGE_LENGTH = 2000;
 
 export function MessageThread({
   conversationId,

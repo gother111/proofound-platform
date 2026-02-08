@@ -10,9 +10,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { db, conversations, messages, profiles } from '@/db';
-import { eq, and, desc, or, inArray } from 'drizzle-orm';
+import { eq, desc, inArray, sql } from 'drizzle-orm';
 import { detectPII, shouldBlockMessage } from '@/lib/privacy/pii-detection';
 import { log } from '@/lib/log';
+import { notifyMessageReceived } from '@/lib/notifications';
 
 interface RouteParams {
   params: Promise<{
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const { conversationId } = await params;
     const { searchParams } = new URL(request.url);
     const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
-    const beforeId = searchParams.get('before');
+    // const beforeId = searchParams.get('before'); // TODO: cursor pagination
 
     // Authenticate user
     const supabase = await createClient();
@@ -74,6 +75,16 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // TODO: Add pagination with beforeId if needed
 
     const messageList = await query;
+
+    // Mark unread messages as read for this viewer (messages from the other participant)
+    if (messageList.length > 0) {
+      await db
+        .update(messages)
+        .set({ readAt: new Date() })
+        .where(
+          sql`${messages.conversationId} = ${conversationId} AND ${messages.senderId} <> ${user.id} AND ${messages.readAt} IS NULL`
+        );
+    }
 
     // Fetch sender profiles
     const senderIds = [...new Set(messageList.map((m) => m.senderId))];
@@ -232,6 +243,42 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       })
       .returning();
 
+    // Update conversation last activity
+    await db
+      .update(conversations)
+      .set({ lastMessageAt: new Date(), updatedAt: new Date() })
+      .where(eq(conversations.id, conversationId));
+
+    // Notify recipient (respect masked stage to avoid identity leakage)
+    try {
+      const recipientId =
+        conversation.participantOneId === user.id
+          ? conversation.participantTwoId
+          : conversation.participantOneId;
+
+      let senderName = 'Someone';
+      if (conversation.stage === 'revealed') {
+        const senderProfile = await db.query.profiles.findFirst({
+          where: eq(profiles.id, user.id),
+          columns: { displayName: true, handle: true },
+        });
+        senderName = senderProfile?.displayName || senderProfile?.handle || senderName;
+      } else {
+        senderName =
+          conversation.participantOneId === user.id
+            ? conversation.maskedHandleOne || 'Candidate'
+            : conversation.maskedHandleTwo || 'Organization';
+      }
+
+      await notifyMessageReceived(recipientId, conversationId, senderName, trimmedContent);
+    } catch (notifError) {
+      log.error('message.notification.failed', {
+        error: notifError instanceof Error ? notifError.message : 'Unknown error',
+        conversationId,
+      });
+      // Do not fail message send if notification fails
+    }
+
     // Log message sent event (without content for privacy)
     log.info('message.sent', {
       messageId: newMessage.id,
@@ -241,6 +288,44 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       piiWarningShown,
       stage: conversation.stage,
     });
+
+    // Shape response to match GET payload consumed by ConversationView.
+    let senderInfo: {
+      id: string;
+      handle: string | null;
+      displayName: string | null;
+      avatarUrl: string | null;
+    } = {
+      id: user.id,
+      handle: null,
+      displayName: null,
+      avatarUrl: null,
+    };
+
+    if (conversation.stage === 'revealed') {
+      const sender = await db.query.profiles.findFirst({
+        where: eq(profiles.id, user.id),
+        columns: {
+          id: true,
+          handle: true,
+          displayName: true,
+          avatarUrl: true,
+        },
+      });
+      if (sender) {
+        senderInfo = sender;
+      }
+    } else {
+      senderInfo = {
+        id: user.id,
+        handle: null,
+        displayName:
+          conversation.participantOneId === user.id
+            ? conversation.maskedHandleOne
+            : conversation.maskedHandleTwo,
+        avatarUrl: null,
+      };
+    }
 
     // Return created message
     return NextResponse.json(
@@ -255,6 +340,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           containsEmail: newMessage.containsEmail,
           containsPhone: newMessage.containsPhone,
           containsUrl: newMessage.containsUrl,
+          sender: senderInfo,
           isOwnMessage: true,
         },
       },

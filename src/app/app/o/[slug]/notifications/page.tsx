@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import { Bell, Check, Settings, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -28,16 +28,19 @@ interface Notification {
   createdAt: string;
 }
 
-export default function NotificationsPage() {
+export default function OrgNotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
   const [hasMore, setHasMore] = useState(false);
   const [offset, setOffset] = useState(0);
   const router = useRouter();
+  const params = useParams();
+  const slug = params?.slug as string | undefined;
 
   useEffect(() => {
     fetchNotifications(0, filter);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
   const fetchNotifications = async (newOffset: number, filterType: 'all' | 'unread') => {
@@ -112,7 +115,14 @@ export default function NotificationsPage() {
             <h1 className="text-3xl font-bold text-[#2D3330]">Notifications</h1>
             <p className="text-[#6B6760] mt-1">Stay updated with your activity</p>
           </div>
-          <Button variant="outline" onClick={() => router.push('/app/settings/notifications')}>
+          <Button
+            variant="outline"
+            onClick={() =>
+              router.push(
+                slug ? `/app/o/${slug}/settings/notifications` : '/app/settings/notifications'
+              )
+            }
+          >
             <Settings className="h-4 w-4 mr-2" />
             Settings
           </Button>

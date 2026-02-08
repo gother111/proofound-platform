@@ -8,7 +8,7 @@ import { db } from '@/db';
 import { conversations, profiles } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { sendIdentityRevealedEmail } from '@/lib/email';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 /**
  * Trigger identity reveal for a conversation
@@ -47,34 +47,38 @@ export async function triggerIdentityReveal(conversationId: string): Promise<voi
       });
 
       // Get emails from Supabase auth
-      const supabase = await createClient();
-      const { data: auth1 } = await supabase.auth.admin.getUserById(conversation.participantOneId);
-      const { data: auth2 } = await supabase.auth.admin.getUserById(conversation.participantTwoId);
+      const supabaseAdmin = createAdminClient();
+      const [auth1, auth2] = await Promise.all([
+        supabaseAdmin.auth.admin.getUserById(conversation.participantOneId),
+        supabaseAdmin.auth.admin.getUserById(conversation.participantTwoId),
+      ]);
 
       // Send to participant 1 (reveal participant 2)
-      if (participant1Profile && auth1?.user?.email && participant2Profile) {
+      if (participant1Profile && auth1.data?.user?.email && participant2Profile) {
         await sendIdentityRevealedEmail(
-          auth1.user.email,
+          auth1.data.user.email,
           participant1Profile.displayName || 'User',
           'candidate', // Default role
           {
             revealedName: participant2Profile.displayName || 'User',
             conversationId,
             profileId: participant2Profile.id,
+            revealedHandle: participant2Profile.handle || undefined,
           }
         );
       }
 
       // Send to participant 2 (reveal participant 1)
-      if (participant2Profile && auth2?.user?.email && participant1Profile) {
+      if (participant2Profile && auth2.data?.user?.email && participant1Profile) {
         await sendIdentityRevealedEmail(
-          auth2.user.email,
+          auth2.data.user.email,
           participant2Profile.displayName || 'User',
           'candidate', // Default role
           {
             revealedName: participant1Profile.displayName || 'User',
             conversationId,
             profileId: participant1Profile.id,
+            revealedHandle: participant1Profile.handle || undefined,
           }
         );
       }

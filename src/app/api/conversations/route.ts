@@ -48,6 +48,8 @@ export async function GET(request: NextRequest) {
         participantOneId: conversations.participantOneId,
         participantTwoId: conversations.participantTwoId,
         stage: conversations.stage,
+        maskedHandleOne: conversations.maskedHandleOne,
+        maskedHandleTwo: conversations.maskedHandleTwo,
         lastMessageAt: conversations.lastMessageAt,
         createdAt: conversations.createdAt,
       })
@@ -122,8 +124,11 @@ export async function GET(request: NextRequest) {
             displayName = profile.displayName || 'Anonymous';
             displayAvatar = profile.avatarUrl;
           } else {
-            // Stage 1: Masked
-            displayName = profile.persona === 'individual' ? 'Candidate' : 'Organization';
+            // Stage 1: Masked (use stored masked handles)
+            const masked =
+              otherPartyId === conv.participantOneId ? conv.maskedHandleOne : conv.maskedHandleTwo;
+            displayName =
+              masked || (profile.persona === 'individual' ? 'Candidate' : 'Organization');
             displayAvatar = null; // Use generic avatar
           }
         }

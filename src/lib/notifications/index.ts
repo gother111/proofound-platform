@@ -127,7 +127,7 @@ export async function notifyIntroAccepted(
     type: 'intro_accepted',
     title: 'Intro Accepted!',
     message: `${matchedWithName} is interested in connecting with you`,
-    actionUrl: `/app/i/messages`,
+    actionUrl: `/app/messages`,
     entityType: 'match',
     entityId: matchId,
   });
@@ -147,7 +147,7 @@ export async function notifyMessageReceived(
     type: 'message_received',
     title: `New message from ${senderName}`,
     message: messagePreview.substring(0, 100),
-    actionUrl: `/app/i/messages?conversation=${conversationId}`,
+    actionUrl: `/app/messages?conversation=${conversationId}`,
     entityType: 'conversation',
     entityId: conversationId,
   });
@@ -238,11 +238,7 @@ export async function notifyInterviewScheduled(
 /**
  * Notify user of a signed contract
  */
-export async function notifyContractSigned(
-  userId: string,
-  contractId: string,
-  orgName: string
-) {
+export async function notifyContractSigned(userId: string, contractId: string, orgName: string) {
   return createNotification({
     userId,
     type: 'contract_signed',

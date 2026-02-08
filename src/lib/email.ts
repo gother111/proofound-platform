@@ -326,10 +326,14 @@ export async function sendIdentityRevealedEmail(
     organizationName?: string;
     conversationId: string;
     profileId: string;
+    revealedHandle?: string;
   }
 ): Promise<void> {
-  const viewConversationUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/app/i/messages/${identityData.conversationId}`;
-  const viewProfileUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/app/profile/${identityData.profileId}`;
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
+  const viewConversationUrl = `${siteUrl}/app/messages?conversation=${identityData.conversationId}`;
+  const viewProfileUrl = identityData.revealedHandle
+    ? `${siteUrl}/portfolio/${identityData.revealedHandle}`
+    : viewConversationUrl;
 
   try {
     await resend.emails.send({

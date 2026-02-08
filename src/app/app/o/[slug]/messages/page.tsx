@@ -12,8 +12,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ConversationList, type Conversation } from '@/components/messaging/ConversationList';
-import { RealtimeMessageThread } from '@/components/messaging/RealtimeMessageThread';
-import { type Message } from '@/components/messaging/MessageThread';
+import { ConversationView } from '@/components/messaging/ConversationView';
 import { MessageSquare } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -26,9 +25,7 @@ function OrganizationMessagesPageContent() {
   const { userId: currentUserId, isLoading: isAuthLoading } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversationId, setSelectedConversationId] = useState<string | undefined>();
-  const [messages, setMessages] = useState<Message[]>([]);
   const [isLoadingConversations, setIsLoadingConversations] = useState(true);
-  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [hasAutoSelected, setHasAutoSelected] = useState(false);
 
   // Load conversations on mount (after auth is ready)
@@ -49,13 +46,6 @@ function OrganizationMessagesPageContent() {
       }
     }
   }, [conversationParam, conversations, hasAutoSelected]);
-
-  // Load messages when conversation is selected
-  useEffect(() => {
-    if (selectedConversationId) {
-      loadMessages(selectedConversationId);
-    }
-  }, [selectedConversationId]);
 
   const loadConversations = async () => {
     setIsLoadingConversations(true);
@@ -84,54 +74,6 @@ function OrganizationMessagesPageContent() {
     }
   };
 
-  const loadMessages = async (conversationId: string) => {
-    setIsLoadingMessages(true);
-    try {
-      const response = await fetch(`/api/messages?conversationId=${conversationId}`);
-      if (response.ok) {
-        const data = await response.json();
-        // Transform messages to have Date objects for RealtimeMessageThread
-        const transformedMessages = (data.messages || []).map((msg: any) => ({
-          id: msg.id,
-          senderId: msg.senderId || msg.sender_id,
-          content: msg.content,
-          sentAt: new Date(msg.sentAt || msg.sent_at),
-          readAt: msg.readAt || msg.read_at ? new Date(msg.readAt || msg.read_at) : undefined,
-        }));
-        setMessages(transformedMessages);
-      }
-    } catch (error) {
-      console.error('Failed to load messages:', error);
-    } finally {
-      setIsLoadingMessages(false);
-    }
-  };
-
-  const handleSendMessage = async (content: string) => {
-    if (!selectedConversationId) return;
-
-    try {
-      const response = await fetch('/api/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          conversationId: selectedConversationId,
-          content,
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setMessages((prev) => [...prev, data.message]);
-      }
-    } catch (error) {
-      console.error('Failed to send message:', error);
-      throw error;
-    }
-  };
-
-  const selectedConversation = conversations.find((c) => c.id === selectedConversationId);
-
   // Show loading state if auth is not ready
   if (isAuthLoading || !currentUserId) {
     return (
@@ -154,25 +96,19 @@ function OrganizationMessagesPageContent() {
       </div>
 
       {/* Right: Message Thread or Empty State */}
-      <div className="flex-1 flex items-center justify-center bg-[#F7F6F1]">
-        {selectedConversation ? (
-          <RealtimeMessageThread
-            conversationId={selectedConversation.id}
-            initialMessages={messages}
-            currentUserId={currentUserId}
-            otherPartyName={selectedConversation.otherPartyName}
-            otherPartyAvatar={selectedConversation.otherPartyAvatar}
-            stage={selectedConversation.stage}
-            onSendMessage={handleSendMessage}
-          />
+      <div className="flex-1 bg-[#F7F6F1]">
+        {selectedConversationId ? (
+          <ConversationView conversationId={selectedConversationId} />
         ) : (
-          <div className="text-center space-y-4">
-            <MessageSquare className="h-16 w-16 mx-auto text-[#6B6760] opacity-50" />
-            <div className="space-y-2">
-              <p className="text-lg font-medium text-[#2D3330]">Select a conversation</p>
-              <p className="text-sm text-[#6B6760]">
-                Choose a conversation from the list to start messaging
-              </p>
+          <div className="h-full flex items-center justify-center">
+            <div className="text-center space-y-4">
+              <MessageSquare className="h-16 w-16 mx-auto text-[#6B6760] opacity-50" />
+              <div className="space-y-2">
+                <p className="text-lg font-medium text-[#2D3330]">Select a conversation</p>
+                <p className="text-sm text-[#6B6760]">
+                  Choose a conversation from the list to start messaging
+                </p>
+              </div>
             </div>
           </div>
         )}

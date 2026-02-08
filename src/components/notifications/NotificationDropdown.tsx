@@ -24,10 +24,7 @@ interface NotificationDropdownProps {
   onNotificationRead: () => void;
 }
 
-export function NotificationDropdown({
-  onClose,
-  onNotificationRead,
-}: NotificationDropdownProps) {
+export function NotificationDropdown({ onClose, onNotificationRead }: NotificationDropdownProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -120,7 +117,7 @@ export function NotificationDropdown({
             variant="ghost"
             size="icon"
             onClick={() => {
-              router.push('/app/i/settings/notifications');
+              router.push('/app/settings/notifications');
               onClose();
             }}
           >
@@ -189,7 +186,7 @@ export function NotificationDropdown({
             variant="ghost"
             size="sm"
             onClick={() => {
-              router.push('/app/i/notifications');
+              router.push('/app/notifications');
               onClose();
             }}
             className="text-xs text-blue-600 hover:text-blue-700"
