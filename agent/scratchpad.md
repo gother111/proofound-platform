@@ -54,6 +54,44 @@ Open TODOs / follow-ups:
 
 - None.
 
+## 2026-02-08 19:17 CET
+
+Task summary:
+Audit and verify the matching engine and the org <-> individual matching process (matching profile setup, mutual interest, conversation creation, consent preview, match explainer).
+
+What worked:
+
+- Traced the end-to-end flow across `/app/i/matching`, `/app/o/[slug]/matching`, and the `/api/match/*` routes.
+- Verified mutual interest logic uses `target_profile_id = NULL` for individual interest and creates a conversation between the candidate and the org member who clicked "Interested".
+
+What failed / wrong assumptions:
+
+- `rg` is not installed in this environment (used `grep/find` instead).
+- Local `node` defaulted to v16; repo requires Node 20.20.0. All verification commands were run with `PATH=/opt/homebrew/opt/node@20/bin:$PATH`.
+
+Assumptions taken without asking:
+
+- Consent preview treats `profile_field_visibility.* = 'private'` as hidden and everything else as visible in the match context.
+
+User corrections:
+
+- None.
+
+Improvements next time:
+
+- Add an integration test that exercises mutual interest in both orders and asserts `conversationId` is returned.
+
+Commands run + outcomes:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS
+
+Open TODOs / follow-ups:
+
+- Consider deprecating `/api/matching/profile/*` and `src/components/matching/MatchingProfileEditor.tsx` to avoid confusion with the canonical `matching_profiles` flow.
+
 ---
 
 ## 2026-02-08 19:15 Local
