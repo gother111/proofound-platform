@@ -324,61 +324,63 @@ export function ProofoundLanding({
         <StickyMiniCTA onGetStarted={handleGetStarted} shouldReduceMotion={shouldReduceMotion} />
       )}
 
-      {/* Section 1: Hero - The Promise */}
-      <HeroSection onGetStarted={handleGetStarted} shouldReduceMotion={shouldReduceMotion} />
+      <main>
+        {/* Section 1: Hero - The Promise */}
+        <HeroSection onGetStarted={handleGetStarted} shouldReduceMotion={shouldReduceMotion} />
 
-      <SectionSeparator direction="up" className="-mt-20 relative z-0" />
+        <SectionSeparator direction="up" className="-mt-20 relative z-0" />
 
-      {/* Section 2: The Problem - Pains we solve */}
-      <ProblemSection shouldReduceMotion={shouldReduceMotion} />
+        {/* Section 2: The Problem - Pains we solve */}
+        <ProblemSection shouldReduceMotion={shouldReduceMotion} />
 
-      <SectionSeparator
-        direction="down"
-        fill="hsl(var(--background))"
-        className="-mb-20 relative z-20"
-      />
+        <SectionSeparator
+          direction="down"
+          fill="hsl(var(--background))"
+          className="-mb-20 relative z-20"
+        />
 
-      {/* Section 3: How It Works - The Solution */}
-      <HowItWorksSection shouldReduceMotion={shouldReduceMotion} />
+        {/* Section 3: How It Works - The Solution */}
+        <HowItWorksSection shouldReduceMotion={shouldReduceMotion} />
 
-      {/* Section 4: Principles - Trustworthy Foundation */}
-      <PrinciplesSection shouldReduceMotion={shouldReduceMotion} />
+        {/* Section 4: Principles - Trustworthy Foundation */}
+        <PrinciplesSection shouldReduceMotion={shouldReduceMotion} />
 
-      <SectionSeparator direction="up" className="-mt-20 relative z-20" />
+        <SectionSeparator direction="up" className="-mt-20 relative z-20" />
 
-      {/* Section 5: Personas - Tailored Value */}
-      <PersonasSection
-        shouldReduceMotion={shouldReduceMotion}
-        onIndividualSignup={handleIndividualSignup}
-        onOrganizationSignup={handleOrganizationSignup}
-      />
+        {/* Section 5: Personas - Tailored Value */}
+        <PersonasSection
+          shouldReduceMotion={shouldReduceMotion}
+          onIndividualSignup={handleIndividualSignup}
+          onOrganizationSignup={handleOrganizationSignup}
+        />
 
-      {/* Section 6: Why Now - Urgency */}
-      <WhyNowSection shouldReduceMotion={shouldReduceMotion} />
+        {/* Section 6: Why Now - Urgency */}
+        <WhyNowSection shouldReduceMotion={shouldReduceMotion} />
 
-      {/* Section 7: Proof - Credibility */}
-      <ProofSection shouldReduceMotion={shouldReduceMotion} />
+        {/* Section 7: Proof - Credibility */}
+        <ProofSection shouldReduceMotion={shouldReduceMotion} />
 
-      <SectionSeparator direction="down" className="-mb-20 relative z-20" />
+        <SectionSeparator direction="down" className="-mb-20 relative z-20" />
 
-      {/* Section 8: Steward Ownership - Business Model */}
-      <StewardOwnershipSection shouldReduceMotion={shouldReduceMotion} />
+        {/* Section 8: Steward Ownership - Business Model */}
+        <StewardOwnershipSection shouldReduceMotion={shouldReduceMotion} />
 
-      {/* Section 9: Products & Pricing */}
-      <ProductsSection
-        shouldReduceMotion={shouldReduceMotion}
-        onIndividualSignup={handleIndividualSignup}
-        onOrganizationSignup={handleOrganizationSignup}
-      />
+        {/* Section 9: Products & Pricing */}
+        <ProductsSection
+          shouldReduceMotion={shouldReduceMotion}
+          onIndividualSignup={handleIndividualSignup}
+          onOrganizationSignup={handleOrganizationSignup}
+        />
 
-      {/* Section 10: Final CTA */}
-      <FinalCTASection onGetStarted={handleGetStarted} shouldReduceMotion={shouldReduceMotion} />
+        {/* Section 10: Final CTA */}
+        <FinalCTASection onGetStarted={handleGetStarted} shouldReduceMotion={shouldReduceMotion} />
 
-      {/* Section 11: Final Quote */}
-      <FinalQuoteSection shouldReduceMotion={shouldReduceMotion} />
+        {/* Section 11: Final Quote */}
+        <FinalQuoteSection shouldReduceMotion={shouldReduceMotion} />
 
-      {/* Section 12: Footer */}
-      <FooterSection shouldReduceMotion={shouldReduceMotion} />
+        {/* Section 12: Footer */}
+        <FooterSection shouldReduceMotion={shouldReduceMotion} />
+      </main>
     </div>
   );
 }

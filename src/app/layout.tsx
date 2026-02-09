@@ -32,6 +32,9 @@ export const metadata: Metadata = {
     template: '%s | Proofound',
   },
   description: 'Credibility engineering for impactful connections.',
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default async function RootLayout({

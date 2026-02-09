@@ -73,7 +73,8 @@ export function FooterSection({ shouldReduceMotion }: FooterSectionProps) {
                   title={social.label}
                   className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white hover:text-japandi-charcoal transition-colors transition-transform duration-300 hover:scale-110 group"
                 >
-                  <social.icon className="w-5 h-5" />
+                  <span className="sr-only">{social.label}</span>
+                  <social.icon className="w-5 h-5" aria-hidden="true" />
                 </a>
               ))}
             </div>
