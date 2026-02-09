@@ -102,7 +102,7 @@ export function FinalCTASection({ onGetStarted, shouldReduceMotion }: FinalCTASe
             )}
           >
             <span className="relative z-10 flex items-center gap-3">
-              Join as an Individual
+              Get Started
               <ArrowRight
                 className={cn(
                   'w-6 h-6',

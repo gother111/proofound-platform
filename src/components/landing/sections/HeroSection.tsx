@@ -8,11 +8,16 @@ import Image from 'next/image';
 // import Magnetic from '@/components/ui/Magnetic'; // This import is no longer needed based on the new code
 
 interface HeroSectionProps {
-  onGetStarted?: () => void;
+  onIndividualSignup?: () => void;
+  onOrganizationSignup?: () => void;
   shouldReduceMotion?: boolean | null;
 }
 
-export function HeroSection({ onGetStarted, shouldReduceMotion }: HeroSectionProps) {
+export function HeroSection({
+  onIndividualSignup,
+  onOrganizationSignup,
+  shouldReduceMotion,
+}: HeroSectionProps) {
   const reduceMotion = Boolean(shouldReduceMotion);
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
@@ -107,11 +112,19 @@ export function HeroSection({ onGetStarted, shouldReduceMotion }: HeroSectionPro
             className="flex flex-wrap gap-4"
           >
             <Button
-              onClick={onGetStarted}
+              onClick={onIndividualSignup}
               size="lg"
               className="rounded-full px-8 py-7 text-lg shadow-lg hover:shadow-xl font-sans"
             >
               Join as an Individual
+            </Button>
+            <Button
+              onClick={onOrganizationSignup}
+              size="lg"
+              variant="outline"
+              className="rounded-full px-8 py-7 text-lg shadow-lg hover:shadow-xl font-sans"
+            >
+              Join as an Organization
             </Button>
           </motion.div>
         </motion.div>

@@ -1,8 +1,6 @@
 import { ProofoundLanding } from '@/components/ProofoundLanding';
 import type { Metadata } from 'next';
 
-export const dynamic = 'force-dynamic';
-
 export const metadata: Metadata = {
   title: 'Credibility engineering for impactful connections',
   description:
@@ -33,7 +31,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function Home() {
+export default function Home() {
   // Auth check disabled for debugging/verification of landing page
   return <ProofoundLanding />;
 }

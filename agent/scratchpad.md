@@ -703,3 +703,44 @@ Open TODOs / follow-ups:
 
 - If `next build` PageNotFoundError recurs, investigate build caching and whether a clean build should be enforced in CI for this repo.
 - Consider optimizing `public/hero-shape.png` to keep the largest responsive variant under 100 KB (squirrel `images/image-file-size`).
+
+## 2026-02-09 11:54 CET
+
+Task summary:
+Balance landing conversion CTAs (Individual and Organization), route generic CTAs to `/signup`, fix footer logo link a11y, and update the landing Playwright spec to match current content.
+
+What worked:
+
+- Scoping hero CTA assertions to the hero section fixed Playwright strict-mode collisions with same-labeled CTAs elsewhere on the page.
+- Verification passed under Node 20 (lint, typecheck, unit, build, Playwright).
+
+What failed / wrong assumptions:
+
+- Initial landing Playwright hero selectors were too broad and matched multiple CTAs, triggering strict-mode failures.
+
+User corrections:
+
+- Keep the existing hero visual (no new hero image work).
+- Re-check the repo state because the landing changed again before implementing.
+
+Assumptions taken without asking:
+
+- It is acceptable for generic "Get Started" CTAs to route to `/signup` (type chooser) while keeping direct persona CTAs in the hero.
+- Removing `export const dynamic = 'force-dynamic'` from the homepage is acceptable if `npm run build` still passes.
+
+What the user corrected afterward:
+
+- None.
+
+Commands run + outcomes:
+
+- `npx --yes skills find antigravity tools`: no results (skill already installed locally).
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx playwright test e2e/landing-page.spec.ts --project=chromium --reporter=line`: PASS
+
+Open TODOs / follow-ups:
+
+- Consider hardening `/api/analytics/web-vitals` against aborted / empty request bodies to reduce dev server shutdown noise during Playwright runs.

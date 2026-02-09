@@ -29,7 +29,10 @@ import Lenis from 'lenis';
 // --- Shared Components ---
 
 const NetworkBackground = ({ shouldReduceMotion }: { shouldReduceMotion: boolean }) => (
-  <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+  <div
+    className="absolute inset-0 z-0 pointer-events-none overflow-hidden"
+    data-testid="landing-network-background"
+  >
     <div className="absolute inset-0 bg-background" />
     {/* Global Noise Texture */}
     <div
@@ -121,7 +124,7 @@ const StickyMiniCTA = ({
       onClick={onGetStarted}
       className="rounded-full px-8 py-6 shadow-xl hover:shadow-2xl flex items-center justify-center gap-2 backdrop-blur-sm"
     >
-      Join as an Individual <ArrowRight className="w-4 h-4" aria-hidden="true" />
+      Get Started <ArrowRight className="w-4 h-4" aria-hidden="true" />
     </Button>
   </motion.div>
 );
@@ -209,11 +212,10 @@ export function ProofoundLanding({
   };
 
   const handleGetStarted = () => {
-    // Default conversion is the individual path.
     if (onGetStarted) {
       onGetStarted();
     } else {
-      handleIndividualSignup();
+      router.push('/signup');
     }
   };
 
@@ -326,7 +328,11 @@ export function ProofoundLanding({
 
       <main>
         {/* Section 1: Hero - The Promise */}
-        <HeroSection onGetStarted={handleGetStarted} shouldReduceMotion={shouldReduceMotion} />
+        <HeroSection
+          shouldReduceMotion={shouldReduceMotion}
+          onIndividualSignup={handleIndividualSignup}
+          onOrganizationSignup={handleOrganizationSignup}
+        />
 
         <SectionSeparator direction="up" className="-mt-20 relative z-0" />
 

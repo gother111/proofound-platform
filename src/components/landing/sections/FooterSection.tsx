@@ -46,7 +46,7 @@ export function FooterSection({ shouldReduceMotion }: FooterSectionProps) {
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="grid md:grid-cols-12 gap-12 mb-24">
           <div className="md:col-span-5 space-y-8">
-            <Link href="/" className="inline-block">
+            <Link href="/" className="inline-block" aria-label="Proofound home">
               <Image
                 src="/logo.png"
                 alt="Proofound"

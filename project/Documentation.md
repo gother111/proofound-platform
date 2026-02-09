@@ -494,3 +494,38 @@ Open risks/TODO:
 
 - Vercel Preview deployment URLs are immutable per build; redeploying will likely produce a new preview URL even if the project is the same.
 - `squirrel audit` may report sitemap-domain mismatch in Preview because canonical/sitemap URLs intentionally point at `https://proofound.io`.
+
+## 2026-02-09: Landing Balanced CTAs and E2E Alignment
+
+What changed:
+
+- Balanced conversion CTAs on the landing:
+  - Hero now includes two first-class CTAs: "Join as an Individual" and "Join as an Organization".
+  - Generic CTAs (sticky CTA and final CTA) now use the neutral label "Get Started".
+  - Generic CTAs now route to `/signup` (type chooser) by default instead of forcing the individual path.
+- A11y: footer logo link now has an accessible name (`aria-label="Proofound home"`).
+- E2E: updated `e2e/landing-page.spec.ts` to match the current landing content and structure:
+  - Hero assertions updated for the dual CTAs.
+  - Background assertion now targets `data-testid="landing-network-background"`.
+  - Section count updated and scoped to `main` (`11` sections).
+  - Removed stale FAQ assertions and other outdated expectations.
+- Performance guard: removed `export const dynamic = 'force-dynamic'` from the homepage and made `Home()` sync (build verified).
+
+Why:
+
+- Avoid biasing the primary conversion path toward one persona while still offering direct persona CTAs.
+- Ensure E2E tests reflect the actual landing implementation and stop failing on stale assumptions.
+- Fix an accessibility gap where the logo was an image-only link without an accessible name.
+
+How to verify:
+
+- Node 20:
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx playwright test e2e/landing-page.spec.ts --project=chromium --reporter=line`
+
+Open risks/TODO:
+
+- Playwright webServer logs show occasional connection-aborted noise from web vitals beacon requests during shutdown. E2E still passes, but this can be a flake risk if the dev server ever terminates early.
