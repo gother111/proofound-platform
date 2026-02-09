@@ -10,7 +10,8 @@ interface SectionSeparatorProps {
 
 export default function SectionSeparator({
   className = '',
-  fill = '#F7F6F1',
+  // Default to semantic background so separators stay correct in dark mode.
+  fill = 'hsl(var(--background))',
   direction = 'up',
 }: SectionSeparatorProps) {
   return (

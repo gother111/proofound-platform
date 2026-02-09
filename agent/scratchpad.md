@@ -54,6 +54,43 @@ Open TODOs / follow-ups:
 
 - None.
 
+## 2026-02-09 09:12 CET
+
+Task summary:
+Validate Antigravity Tools local proxy and run a real chat completion using `gemini-3-pro`.
+
+What worked:
+
+- Proxy responded to `/healthz` and `/v1/models`.
+- `ag_proxy.py` successfully executed a `gemini-3-pro` chat request end-to-end.
+
+What failed / wrong assumptions:
+
+- None.
+
+User corrections:
+
+- Requested to "do something" using Gemini 3 Pro via Antigravity Tools.
+
+Assumptions taken without asking:
+
+- Using `Authorization: Bearer local-dev` is acceptable when proxy auth is not enforced.
+
+What the user corrected afterward:
+
+- None.
+
+Commands run + outcomes:
+
+- `curl -sS http://127.0.0.1:8045/healthz`: PASS (200, JSON status ok).
+- `curl -sS http://127.0.0.1:8045/v1/models`: PASS (models returned).
+- `python3 ~/.codex/skills/antigravity-tools/scripts/ag_proxy.py models`: PASS.
+- `python3 ~/.codex/skills/antigravity-tools/scripts/ag_proxy.py chat --model gemini-3-pro --message "<prompt>"`: PASS (received a valid completion).
+
+Open TODOs / follow-ups:
+
+- If auth is later enabled in Antigravity Manager, export `ANTIGRAVITY_API_KEY` for scripts and curl examples.
+
 ## 2026-02-08 23:12 CET
 
 Task summary:
@@ -530,3 +567,48 @@ Commands run + outcomes:
 Open TODOs / follow-ups:
 
 - None.
+
+## 2026-02-09 10:02 CET
+
+Task summary:
+Align the landing page implementation with the landing polish plan (tokens, reduced motion, accessible menu, CTA consistency, homepage metadata, and sitemap), and verify with unit, build, and a11y checks.
+
+What worked:
+
+- Radix Dialog based landing menu improved keyboard accessibility and focus management.
+- Semantic token migration improved dark mode consistency without re-architecting the landing.
+- `/sitemap.xml` implemented via `src/app/sitemap.ts` and verified locally.
+- `npm run test:a11y` caught contrast regressions early.
+
+What failed / wrong assumptions:
+
+- Initial CTA styling used terracotta with white text, which failed WCAG AA color contrast in `npm run test:a11y`.
+
+User corrections:
+
+- None.
+
+Assumptions taken without asking:
+
+- Prioritize passing a11y color contrast (WCAG AA) over keeping terracotta as the primary CTA background.
+- It is acceptable for the Vercel Preview "build url" slug to change on redeploy (deployment urls are immutable).
+
+What the user corrected afterward:
+
+- None.
+
+Commands run + outcomes:
+
+- `git status --porcelain`: confirmed existing edits and tracked progress.
+- `curl -sS -D - <preview> / /sitemap.xml /robots.txt`: confirmed preview metadata was old and `/sitemap.xml` was 404 before changes.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:a11y`: PASS (after contrast fixes)
+- `node scripts/next-dev-node20.mjs -p 3010` + `curl http://localhost:3010/`: confirmed homepage metadata fields render (title, description, OG/Twitter, canonical).
+- `curl -sS -D - http://localhost:3010/sitemap.xml`: confirmed XML response (200, `content-type: application/xml`).
+
+Open TODOs / follow-ups:
+
+- Redeploy via Git integration to generate a fresh Vercel Preview, then re-run the same `curl` metadata and `/sitemap.xml` checks against that preview url.

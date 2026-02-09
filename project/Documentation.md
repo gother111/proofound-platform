@@ -406,3 +406,80 @@ How to verify:
 Open risks/TODO:
 
 - Preview deployments are now public to anyone with the URL. If previews need to be protected again, restore `ssoProtection` in the Vercel project settings (Dashboard) or via API.
+
+---
+
+## 2026-02-09: Antigravity Tools Proxy Validation (Gemini 3 Pro)
+
+What changed:
+
+- No repo changes. This entry records verification that Antigravity Tools (OpenAI-compatible local proxy on `127.0.0.1:8045`) is working and can serve `gemini-3-pro`.
+
+Why:
+
+- Establish a known-good baseline for routing OpenAI-SDK-shaped calls through the local Antigravity proxy for Gemini and Claude models.
+
+How to verify:
+
+- Proxy health:
+  - `curl -sS http://127.0.0.1:8045/healthz`
+- List models:
+  - `curl -sS http://127.0.0.1:8045/v1/models`
+  - `python3 ~/.codex/skills/antigravity-tools/scripts/ag_proxy.py models`
+- Chat completion (example):
+  - `python3 ~/.codex/skills/antigravity-tools/scripts/ag_proxy.py chat --model gemini-3-pro --message "Reply with exactly: ok"`
+
+Open risks/TODO:
+
+- If Antigravity proxy auth is enabled, callers must set `ANTIGRAVITY_API_KEY` or requests may return `401` or `403`.
+
+---
+
+## 2026-02-09: Landing Page Modern Polish (Preview Alignment)
+
+What changed:
+
+- Modernized the landing page UI implementation and behavior:
+  - Reduced hardcoded colors in landing sections by switching to semantic tokens (`bg-background`, `bg-card`, `text-foreground`, `text-muted-foreground`, `border-border`), while keeping the Japandi direction.
+  - Replaced `transition-all` usage in landing components with explicit transitions (`transition-colors`, `transition-transform`, `transition-shadow`, `transition-opacity`).
+  - Added `scroll-mt-24` to anchor-target sections so hash navigation does not land under the fixed header.
+  - Improved reduced-motion handling:
+    - Lenis smooth scrolling is disabled when `prefers-reduced-motion` is enabled.
+    - Animated sections render with zero-duration transitions or static variants; long-running background animations are disabled in reduced motion.
+  - Made CTAs consistent and SPA friendly:
+    - Primary CTA routes to `/signup?type=individual`.
+    - Organization CTA routes to `/signup?type=organization`.
+    - Updated signup page to honor `type` query param by preselecting the account type.
+  - Replaced the custom menu overlay with a Radix Dialog based overlay (focus trapped, Escape closes), and ensured navigation items are real links.
+- Homepage SEO basics:
+  - Added homepage `metadata` in `src/app/page.tsx` including title, description, canonical, OpenGraph, and Twitter card fields.
+  - Updated root metadata template in `src/app/layout.tsx` to avoid overriding page metadata.
+  - Added `src/app/sitemap.ts` so `/sitemap.xml` exists and returns XML (used by `robots.txt`).
+- A11y improvements:
+  - Fixed contrast regressions discovered by `npm run test:a11y` (homepage and signup selection screen).
+  - Removed footer logo `priority` to avoid unnecessary above-fold image prioritization.
+
+Why:
+
+- Ensure the landing page is modern, consistent across light and dark themes, respects reduced motion, and has accessible navigation.
+- Ensure the landing CTAs match actual destinations and the signup flow respects the intended persona selection.
+- Ensure basic homepage metadata and sitemap are present for validation and SEO fundamentals.
+
+How to verify:
+
+- Local checks (Node 20):
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:a11y`
+- Manual landing checklist:
+  - Open the menu with keyboard, Tab cycles within, Escape closes, focus returns to the trigger.
+  - With reduced motion enabled, there is no smooth scrolling and no infinite background animations.
+  - Anchor links land below the fixed header.
+  - CTAs route to `/signup?type=individual` and `/signup?type=organization`.
+  - `/sitemap.xml` returns XML (not a 404 HTML page).
+
+Open risks/TODO:
+
+- Vercel Preview deployment URLs are immutable per build; redeploying will likely produce a new preview URL even if the project is the same.

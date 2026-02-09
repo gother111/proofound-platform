@@ -20,8 +20,10 @@ interface HowItWorksSectionProps {
 }
 
 export function HowItWorksSection({ shouldReduceMotion }: HowItWorksSectionProps) {
+  const reduceMotion = Boolean(shouldReduceMotion);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.2 });
+  const effectiveInView = reduceMotion ? true : isInView;
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const features = [
@@ -81,27 +83,27 @@ export function HowItWorksSection({ shouldReduceMotion }: HowItWorksSectionProps
     <section
       id="how-it-works"
       ref={ref}
-      className="py-32 px-6 md:px-12 relative overflow-hidden bg-[#F7F6F1]"
+      className="py-32 px-6 md:px-12 relative overflow-hidden bg-background scroll-mt-24"
     >
       {/* Organic Background Shapes - Matching Mockup */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Left Sage Green Blob */}
-        <div className="absolute top-[15%] left-[-15%] w-[60vw] h-[70vw] bg-[#94A89A] rounded-[40%] opacity-90 blur-2xl transform -rotate-12" />
+        <div className="absolute top-[15%] left-[-15%] w-[60vw] h-[70vw] bg-extended-sage rounded-[40%] opacity-30 blur-2xl transform -rotate-12" />
         {/* Right Terracotta Blob */}
-        <div className="absolute top-[5%] right-[-15%] w-[60vw] h-[80vw] bg-[#C17F59] rounded-[45%] opacity-90 blur-2xl transform rotate-12" />
+        <div className="absolute top-[5%] right-[-15%] w-[60vw] h-[80vw] bg-proofound-terracotta rounded-[45%] opacity-25 blur-2xl transform rotate-12" />
       </div>
 
       <div className="max-w-7xl mx-auto relative z-10">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          initial={reduceMotion ? false : { opacity: 0, y: 30 }}
+          animate={effectiveInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+          transition={reduceMotion ? { duration: 0 } : { duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-20"
         >
-          <h2 className="text-5xl md:text-6xl font-display text-[#2D3330] mb-6 tracking-tight">
+          <h2 className="text-5xl md:text-6xl font-display text-foreground mb-6 tracking-tight">
             How Proofound works
           </h2>
-          <p className="text-xl md:text-2xl text-[#2D3330]/80 font-sans">
+          <p className="text-xl md:text-2xl text-muted-foreground font-sans">
             A platform built on evidence, transparency, and dignity.
           </p>
         </motion.div>
@@ -114,24 +116,31 @@ export function HowItWorksSection({ shouldReduceMotion }: HowItWorksSectionProps
             aria-label="Proofound features carousel"
             // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
             tabIndex={0}
-            className="overflow-x-auto scrollbar-hide pb-12 px-6 md:px-12 snap-x snap-mandatory focus:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F6F1]"
+            className="overflow-x-auto scrollbar-hide pb-12 px-6 md:px-12 snap-x snap-mandatory focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             <div className="flex gap-8 min-w-max">
               {features.map((feature, idx) => (
                 <motion.div
                   key={idx}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-                  transition={{ duration: 0.8, delay: idx * 0.1, ease: [0.22, 1, 0.36, 1] }}
-                  className="snap-center w-[340px] h-[420px] bg-white/30 backdrop-blur-xl border border-white/40 rounded-[2rem] p-10 flex flex-col justify-between shadow-xl hover:shadow-2xl hover:-translate-y-2 hover:scale-[1.02] transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group"
+                  initial={reduceMotion ? false : { opacity: 0, y: 30 }}
+                  animate={effectiveInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+                  transition={
+                    reduceMotion
+                      ? { duration: 0 }
+                      : { duration: 0.8, delay: idx * 0.1, ease: [0.22, 1, 0.36, 1] }
+                  }
+                  className="snap-center w-[340px] h-[420px] bg-card/50 backdrop-blur-xl border border-border rounded-[2rem] p-10 flex flex-col justify-between shadow-xl hover:shadow-2xl hover:-translate-y-2 hover:scale-[1.02] transition-colors transition-shadow transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group"
                 >
                   <div className="space-y-8">
-                    <feature.icon className="w-12 h-12 text-[#2D3330] stroke-[1.5]" />
-                    <h3 className="text-3xl font-display text-[#2D3330] leading-tight">
+                    <feature.icon
+                      className="w-12 h-12 text-foreground stroke-[1.5]"
+                      aria-hidden="true"
+                    />
+                    <h3 className="text-3xl font-display text-foreground leading-tight">
                       {feature.title}
                     </h3>
                   </div>
-                  <p className="text-lg text-[#2D3330]/90 font-sans leading-relaxed">
+                  <p className="text-lg text-foreground/90 font-sans leading-relaxed">
                     {feature.desc}
                   </p>
                 </motion.div>
@@ -141,7 +150,7 @@ export function HowItWorksSection({ shouldReduceMotion }: HowItWorksSectionProps
         </div>
 
         <div className="flex justify-center mt-4">
-          <p className="text-[#2D3330]/60 flex items-center gap-2 font-medium">
+          <p className="text-muted-foreground flex items-center gap-2 font-medium">
             Scroll horizontally to explore all features <span className="text-xl">→</span>
           </p>
         </div>

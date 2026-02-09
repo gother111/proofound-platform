@@ -38,7 +38,7 @@ import { cn } from '@/lib/utils';
  */
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-base font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-base font-medium transition-colors transition-shadow transition-transform duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed',
   {
     variants: {
       variant: {
@@ -49,7 +49,8 @@ const buttonVariants = cva(
         outline:
           'border-2 border-proofound-forest bg-transparent text-proofound-forest hover:bg-proofound-forest/5 hover:-translate-y-0.5 active:translate-y-0 dark:border-[#D4C4A8] dark:text-[#D4C4A8] dark:hover:bg-[#D4C4A8]/10',
         secondary:
-          'bg-proofound-terracotta text-white hover:bg-proofound-terracotta/90 hover:-translate-y-0.5 active:translate-y-0 shadow-sm hover:shadow-md dark:bg-[#C86B4A] dark:hover:bg-[#D87B5A]',
+          // Use dark text on terracotta for WCAG AA contrast.
+          'bg-proofound-terracotta text-proofound-charcoal hover:bg-proofound-terracotta/90 hover:-translate-y-0.5 active:translate-y-0 shadow-sm hover:shadow-md dark:bg-proofound-terracotta dark:text-[#1A1D2E] dark:hover:bg-proofound-terracotta/90',
         ghost:
           'hover:bg-proofound-forest/5 hover:text-proofound-forest dark:hover:bg-[#D4C4A8]/10 dark:hover:text-[#D4C4A8]',
         link: 'text-proofound-forest underline-offset-4 hover:underline dark:text-[#D4C4A8]',

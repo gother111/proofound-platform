@@ -26,8 +26,12 @@ import { SkipToContentLink } from '@/components/a11y/SkipToContentLink';
  */
 
 export const metadata: Metadata = {
-  title: 'Proofound - Focus on what matters',
-  description: 'A credibility and connection platform built for authenticity, not algorithms.',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://proofound.io'),
+  title: {
+    default: 'Proofound',
+    template: '%s | Proofound',
+  },
+  description: 'Credibility engineering for impactful connections.',
 };
 
 export default async function RootLayout({

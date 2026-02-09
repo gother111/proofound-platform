@@ -4,8 +4,14 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Twitter, Linkedin, Github, Mail, ArrowUpRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-export function FooterSection() {
+interface FooterSectionProps {
+  shouldReduceMotion?: boolean | null;
+}
+
+export function FooterSection({ shouldReduceMotion }: FooterSectionProps) {
+  const reduceMotion = !!shouldReduceMotion;
   const currentYear = new Date().getFullYear();
 
   const links = {
@@ -47,7 +53,6 @@ export function FooterSection() {
                 width={120}
                 height={48}
                 className="h-12 w-auto brightness-0 invert opacity-90"
-                priority
               />
             </Link>
             <p className="text-white/60 leading-relaxed font-sans text-lg max-w-md">
@@ -66,7 +71,7 @@ export function FooterSection() {
                   href={social.href}
                   aria-label={social.label}
                   title={social.label}
-                  className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white hover:text-japandi-charcoal transition-all duration-300 hover:scale-110 group"
+                  className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white hover:text-japandi-charcoal transition-colors transition-transform duration-300 hover:scale-110 group"
                 >
                   <social.icon className="w-5 h-5" />
                 </a>
@@ -150,7 +155,12 @@ export function FooterSection() {
           </p>
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              <div
+                className={cn(
+                  'w-2 h-2 rounded-full bg-green-500',
+                  reduceMotion ? '' : 'animate-pulse'
+                )}
+              />
               <span className="text-white/40 text-sm font-sans">All Systems Operational</span>
             </div>
             <p className="text-white/30 text-sm flex items-center gap-2 font-sans">

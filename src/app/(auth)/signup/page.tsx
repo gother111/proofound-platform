@@ -8,6 +8,17 @@ export const metadata: Metadata = {
   description: 'Create your Proofound account.',
 };
 
-export default function SignupPage() {
-  return <SignupContent />;
+export default async function SignupPage({
+  searchParams,
+}: {
+  // Next.js App Router provides searchParams as a Promise in server components.
+  searchParams?: Promise<{ type?: string }>;
+}) {
+  const sp = searchParams ? await searchParams : undefined;
+  const typeParam = sp?.type;
+
+  const initialSignupType =
+    typeParam === 'individual' || typeParam === 'organization' ? typeParam : undefined;
+
+  return <SignupContent initialSignupType={initialSignupType} />;
 }

@@ -11,9 +11,9 @@ import { SignupForm } from '@/components/auth/SignupForm';
 
 type SignupType = 'choose' | 'individual' | 'organization';
 
-export function SignupContent() {
+export function SignupContent({ initialSignupType }: { initialSignupType?: SignupType }) {
   const router = useRouter();
-  const [signupType, setSignupType] = useState<SignupType>('choose');
+  const [signupType, setSignupType] = useState<SignupType>(initialSignupType ?? 'choose');
 
   if (signupType === 'individual' || signupType === 'organization') {
     return <SignupForm accountType={signupType} onBack={() => setSignupType('choose')} />;
@@ -36,7 +36,7 @@ export function SignupContent() {
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         onClick={() => router.push('/')}
-        className="absolute left-6 top-6 flex items-center gap-2 text-[#2D333099] transition-colors hover:text-[#2D3330]"
+        className="absolute left-6 top-6 flex items-center gap-2 text-proofound-charcoal/70 transition-colors hover:text-proofound-charcoal"
       >
         <ArrowLeft className="w-4 h-4" />
         <span className="text-sm">Back</span>
@@ -65,7 +65,7 @@ export function SignupContent() {
             <h1 className="font-display text-[32px] font-semibold leading-[40px] tracking-[-0.02em] text-[#2D3330]">
               Join Proofound
             </h1>
-            <p className="mx-auto mt-3 max-w-md text-[15px] leading-[22px] text-[#2D333099]">
+            <p className="mx-auto mt-3 max-w-md text-[15px] leading-[22px] text-proofound-charcoal/70">
               Choose the account type that fits how you&apos;ll use Proofound.
             </p>
           </div>
@@ -83,7 +83,7 @@ export function SignupContent() {
                 onClick={() => setSignupType('individual')}
                 className="group h-full w-full text-left"
               >
-                <Card className="h-full rounded-2xl border border-[#E8E6DD] p-8 transition-all duration-300 hover:-translate-y-1 hover:border-proofound-forest/40 hover:shadow-[0_14px_32px_-16px_rgba(28,77,58,0.3)]">
+                <Card className="h-full rounded-2xl border border-[#E8E6DD] p-8 transition-colors transition-shadow transition-transform duration-300 hover:-translate-y-1 hover:border-proofound-forest/40 hover:shadow-[0_14px_32px_-16px_rgba(28,77,58,0.3)]">
                   <div className="flex flex-col items-start gap-4">
                     <div className="rounded-xl bg-[#E8E6DD] p-4 transition-colors group-hover:bg-proofound-forest/10">
                       <User className="h-8 w-8 text-proofound-forest" />
@@ -92,7 +92,7 @@ export function SignupContent() {
                       <h3 className="mb-2 font-display text-xl font-semibold text-[#2D3330]">
                         Individual
                       </h3>
-                      <p className="text-sm leading-6 text-[#2D333099]">
+                      <p className="text-sm leading-6 text-proofound-charcoal/75">
                         For professionals looking to showcase expertise, get matched with
                         opportunities, and build verified credentials.
                       </p>
@@ -118,7 +118,7 @@ export function SignupContent() {
                 onClick={() => setSignupType('organization')}
                 className="group h-full w-full text-left"
               >
-                <Card className="h-full rounded-2xl border border-[#E8E6DD] p-8 transition-all duration-300 hover:-translate-y-1 hover:border-proofound-terracotta/40 hover:shadow-[0_14px_32px_-16px_rgba(199,107,74,0.32)]">
+                <Card className="h-full rounded-2xl border border-[#E8E6DD] p-8 transition-colors transition-shadow transition-transform duration-300 hover:-translate-y-1 hover:border-proofound-terracotta/40 hover:shadow-[0_14px_32px_-16px_rgba(199,107,74,0.32)]">
                   <div className="flex flex-col items-start gap-4">
                     <div className="rounded-xl bg-[#F0E4D8] p-4 transition-colors group-hover:bg-proofound-terracotta/15">
                       <Building2 className="h-8 w-8 text-proofound-terracotta" />
@@ -127,13 +127,13 @@ export function SignupContent() {
                       <h3 className="mb-2 font-display text-xl font-semibold text-[#2D3330]">
                         Organization
                       </h3>
-                      <p className="text-sm leading-6 text-[#2D333099]">
+                      <p className="text-sm leading-6 text-proofound-charcoal/75">
                         For organizations seeking verified experts, posting assignments, and
                         building trusted teams.
                       </p>
                     </div>
                     <div className="mt-auto">
-                      <span className="text-sm font-medium text-proofound-terracotta group-hover:underline">
+                      <span className="text-sm font-medium text-proofound-forest group-hover:underline">
                         Continue as Organization →
                       </span>
                     </div>
@@ -145,7 +145,7 @@ export function SignupContent() {
 
           {/* Sign In Link */}
           <div className="mt-10 text-center">
-            <p className="text-sm text-[#2D333099]">
+            <p className="text-sm text-proofound-charcoal/70">
               Already have an account?{' '}
               <button
                 type="button"
@@ -159,7 +159,7 @@ export function SignupContent() {
         </Card>
 
         {/* Footer */}
-        <p className="mt-6 text-center text-xs text-[#2D333099]">
+        <p className="mt-6 text-center text-xs text-proofound-charcoal/70">
           By creating an account, you agree to our{' '}
           <a
             href="/terms"

@@ -2,10 +2,12 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { motion, useScroll, useSpring, useReducedMotion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { Menu, X, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import * as Dialog from '@radix-ui/react-dialog';
 
 // Import all section components
 import { HeroSection } from './landing/sections/HeroSection';
@@ -26,9 +28,9 @@ import Lenis from 'lenis';
 
 // --- Shared Components ---
 
-const NetworkBackground = () => (
+const NetworkBackground = ({ shouldReduceMotion }: { shouldReduceMotion: boolean }) => (
   <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-    <div className="absolute inset-0 bg-[#F7F6F1] dark:bg-[#1A1D2E]" />
+    <div className="absolute inset-0 bg-background" />
     {/* Global Noise Texture */}
     <div
       className="absolute inset-0 opacity-[0.03] mix-blend-overlay"
@@ -39,148 +41,84 @@ const NetworkBackground = () => (
     <div
       className="absolute inset-0 opacity-[0.02] dark:opacity-[0.04]"
       style={{
-        backgroundImage: 'radial-gradient(#1C4D3A 1px, transparent 1px)',
+        backgroundImage: 'radial-gradient(var(--proofound-forest) 1px, transparent 1px)',
         backgroundSize: '40px 40px',
       }}
     />
     {/* Organic blobs - Animated with more fluid motion */}
     <motion.div
-      animate={{
-        x: [0, 50, -20, 0],
-        y: [0, -30, 40, 0],
-        scale: [1, 1.1, 0.9, 1],
-        rotate: [0, 10, -5, 0],
-      }}
-      transition={{
-        duration: 25,
-        repeat: Infinity,
-        ease: 'easeInOut',
-      }}
-      className="absolute top-[-10%] right-[-5%] w-[60vw] h-[60vw] bg-[#7A9278]/10 rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen"
+      animate={
+        shouldReduceMotion
+          ? undefined
+          : {
+              x: [0, 50, -20, 0],
+              y: [0, -30, 40, 0],
+              scale: [1, 1.1, 0.9, 1],
+              rotate: [0, 10, -5, 0],
+            }
+      }
+      transition={
+        shouldReduceMotion
+          ? undefined
+          : {
+              duration: 25,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }
+      }
+      className="absolute top-[-10%] right-[-5%] w-[60vw] h-[60vw] bg-extended-sage/10 rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen"
     />
     <motion.div
-      animate={{
-        x: [0, -40, 30, 0],
-        y: [0, 50, -20, 0],
-        scale: [1, 1.2, 0.95, 1],
-        rotate: [0, -15, 10, 0],
-      }}
-      transition={{
-        duration: 30,
-        repeat: Infinity,
-        ease: 'easeInOut',
-        delay: 2,
-      }}
-      className="absolute bottom-[-10%] left-[-5%] w-[50vw] h-[50vw] bg-[#C76B4A]/10 rounded-full blur-[100px] mix-blend-multiply dark:mix-blend-screen"
+      animate={
+        shouldReduceMotion
+          ? undefined
+          : {
+              x: [0, -40, 30, 0],
+              y: [0, 50, -20, 0],
+              scale: [1, 1.2, 0.95, 1],
+              rotate: [0, -15, 10, 0],
+            }
+      }
+      transition={
+        shouldReduceMotion
+          ? undefined
+          : {
+              duration: 30,
+              repeat: Infinity,
+              ease: 'easeInOut',
+              delay: 2,
+            }
+      }
+      className="absolute bottom-[-10%] left-[-5%] w-[50vw] h-[50vw] bg-proofound-terracotta/10 rounded-full blur-[100px] mix-blend-multiply dark:mix-blend-screen"
     />
   </div>
 );
 
-const MinimalHeader = ({
-  menuOpen,
-  setMenuOpen,
-}: {
-  menuOpen: boolean;
-  setMenuOpen: (open: boolean) => void;
-}) => (
-  <motion.header
-    initial={{ y: -100 }}
-    animate={{ y: 0 }}
-    transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-    className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-6 pointer-events-none"
-  >
-    <div className="pointer-events-auto">
-      <Image
-        src="/logo.png"
-        alt="Proofound"
-        width={120}
-        height={48}
-        className="h-12 w-auto"
-        priority
-      />
-    </div>
-
-    <div className="pointer-events-auto">
-      <button
-        onClick={() => setMenuOpen(!menuOpen)}
-        className="w-12 h-12 rounded-full bg-white/80 dark:bg-[#2D3330]/80 backdrop-blur-md flex items-center justify-center shadow-sm hover:scale-105 transition-transform duration-300 group"
-        aria-label="Menu"
-      >
-        {menuOpen ? (
-          <X className="w-5 h-5 text-[#1C4D3A] dark:text-[#D4C4A8]" />
-        ) : (
-          <Menu className="w-5 h-5 text-[#1C4D3A] dark:text-[#D4C4A8]" />
-        )}
-      </button>
-    </div>
-
-    {/* Fullscreen Menu Overlay */}
-    <motion.div
-      initial={{ opacity: 0, pointerEvents: 'none' }}
-      animate={{ opacity: menuOpen ? 1 : 0, pointerEvents: menuOpen ? 'auto' : 'none' }}
-      transition={{ duration: 0.3 }}
-      className="fixed inset-0 bg-[#F7F6F1]/95 dark:bg-[#1A1D2E]/95 backdrop-blur-xl z-40 flex items-center justify-center"
-      onClick={() => setMenuOpen(false)}
-    >
-      <nav className="text-center space-y-8">
-        {[
-          { label: 'Mission', href: '#the-problem' },
-          { label: 'How it Works', href: '#how-it-works' },
-          { label: 'Principles', href: '#principles' },
-          { label: 'Pricing', href: '#products' },
-          { label: 'Login', href: '/login' },
-        ].map((item) => (
-          <div key={item.label} className="overflow-hidden">
-            <motion.a
-              href={item.href}
-              className="block text-4xl md:text-5xl font-display text-[#1C4D3A] dark:text-[#D4C4A8] hover:text-[#C76B4A] transition-colors cursor-pointer"
-              onClick={(e) => {
-                e.preventDefault();
-                setMenuOpen(false);
-                if (item.href.startsWith('#')) {
-                  const element = document.querySelector(item.href);
-                  if (element) {
-                    element.scrollIntoView({ behavior: 'smooth' });
-                  }
-                } else {
-                  // Use window.location for external/full page navigation or router if passed
-                  // Since this component is inside ProofoundLanding which has router, we can't easily access it here without passing it down.
-                  // But we can just use window.location.href for Login to ensure full reload if needed, or just let the parent handle it if we refactor.
-                  // Actually, MinimalHeader is defined *outside* the main component, so it doesn't have access to `router`.
-                  // We should probably move MinimalHeader *inside* or pass a navigation handler.
-                  // For now, window.location.href is safe for Login.
-                  window.location.href = item.href;
-                }
-              }}
-            >
-              {item.label}
-            </motion.a>
-          </div>
-        ))}
-      </nav>
-    </motion.div>
-  </motion.header>
-);
-
 const ProgressIndicator = ({ scrollYProgress }: { scrollYProgress: any }) => (
   <motion.div
-    className="fixed top-0 left-0 right-0 h-1 bg-[#C76B4A] origin-left z-50"
+    className="fixed top-0 left-0 right-0 h-1 bg-proofound-terracotta origin-left z-50"
     style={{ scaleX: scrollYProgress }}
   />
 );
 
-const StickyMiniCTA = ({ onGetStarted }: { onGetStarted: () => void }) => (
+const StickyMiniCTA = ({
+  onGetStarted,
+  shouldReduceMotion,
+}: {
+  onGetStarted: () => void;
+  shouldReduceMotion: boolean;
+}) => (
   <motion.div
-    initial={{ y: 100, opacity: 0 }}
-    animate={{ y: 0, opacity: 1 }}
-    exit={{ y: 100, opacity: 0 }}
+    initial={shouldReduceMotion ? false : { y: 100, opacity: 0 }}
+    animate={shouldReduceMotion ? undefined : { y: 0, opacity: 1 }}
+    exit={shouldReduceMotion ? undefined : { y: 100, opacity: 0 }}
     className="fixed bottom-8 right-6 md:right-12 z-40 pointer-events-auto"
   >
     <Button
       onClick={onGetStarted}
-      className="rounded-full px-8 py-6 bg-[#1C4D3A] hover:bg-[#1C4D3A]/90 text-white shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2 backdrop-blur-sm"
+      className="rounded-full px-8 py-6 shadow-xl hover:shadow-2xl flex items-center justify-center gap-2 backdrop-blur-sm"
     >
-      Start Your Journey <ArrowRight className="w-4 h-4" />
+      Join as an Individual <ArrowRight className="w-4 h-4" aria-hidden="true" />
     </Button>
   </motion.div>
 );
@@ -202,7 +140,8 @@ export function ProofoundLanding({
   const [menuOpen, setMenuOpen] = useState(false);
   const [showStickyProgress, setShowStickyProgress] = useState(false);
   const router = useRouter();
-  const shouldReduceMotion = useReducedMotion();
+  const shouldReduceMotion = useReducedMotion() ?? false;
+  const menuContentId = 'landing-menu';
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -217,6 +156,8 @@ export function ProofoundLanding({
 
   // Initialize Lenis Smooth Scroll
   useEffect(() => {
+    if (shouldReduceMotion) return;
+
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -227,17 +168,19 @@ export function ProofoundLanding({
       touchMultiplier: 2,
     });
 
+    let rafId = 0;
     function raf(time: number) {
       lenis.raf(time);
-      requestAnimationFrame(raf);
+      rafId = requestAnimationFrame(raf);
     }
 
-    requestAnimationFrame(raf);
+    rafId = requestAnimationFrame(raf);
 
     return () => {
+      if (rafId) cancelAnimationFrame(rafId);
       lenis.destroy();
     };
-  }, []);
+  }, [shouldReduceMotion]);
 
   useEffect(() => {
     const unsubscribe = scrollYProgress.on('change', (v) => {
@@ -246,19 +189,11 @@ export function ProofoundLanding({
     return () => unsubscribe();
   }, [scrollYProgress]);
 
-  const handleGetStarted = () => {
-    if (onGetStarted) {
-      onGetStarted();
-    } else {
-      window.location.href = '/signup';
-    }
-  };
-
   const handleIndividualSignup = () => {
     if (onIndividualSignup) {
       onIndividualSignup();
     } else {
-      window.location.href = '/signup?type=individual';
+      router.push('/signup?type=individual');
     }
   };
 
@@ -266,26 +201,132 @@ export function ProofoundLanding({
     if (onOrganizationSignup) {
       onOrganizationSignup();
     } else {
-      window.location.href = '/signup?type=organization';
+      router.push('/signup?type=organization');
     }
+  };
+
+  const handleGetStarted = () => {
+    // Default conversion is the individual path.
+    if (onGetStarted) {
+      onGetStarted();
+    } else {
+      handleIndividualSignup();
+    }
+  };
+
+  const scrollToHash = (hash: string) => {
+    const target = document.querySelector(hash);
+    if (!target) return;
+    target.scrollIntoView({ behavior: shouldReduceMotion ? 'auto' : 'smooth' });
   };
 
   return (
     <div
       ref={containerRef}
-      className="relative bg-[#F7F6F1] dark:bg-[#1A1D2E] overflow-hidden min-h-screen"
+      className="relative bg-background text-foreground overflow-hidden min-h-screen"
     >
       {/* Network Background */}
-      <NetworkBackground />
+      <NetworkBackground shouldReduceMotion={shouldReduceMotion} />
 
-      {/* Minimal Header */}
-      <MinimalHeader menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
+      {/* Header with accessible menu */}
+      <motion.header
+        initial={shouldReduceMotion ? false : { y: -100 }}
+        animate={shouldReduceMotion ? undefined : { y: 0 }}
+        transition={
+          shouldReduceMotion ? { duration: 0 } : { duration: 0.6, ease: [0.22, 1, 0.36, 1] }
+        }
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-6 pointer-events-none"
+      >
+        <div className="pointer-events-auto">
+          <Link href="/" aria-label="Proofound home">
+            <Image
+              src="/logo.png"
+              alt="Proofound"
+              width={120}
+              height={48}
+              className="h-12 w-auto"
+              priority
+            />
+          </Link>
+        </div>
+
+        <div className="pointer-events-auto">
+          <Dialog.Root open={menuOpen} onOpenChange={setMenuOpen}>
+            <Dialog.Trigger asChild>
+              <button
+                type="button"
+                className="w-12 h-12 rounded-full bg-card/80 backdrop-blur-md flex items-center justify-center shadow-sm hover:scale-105 transition-transform duration-300 group"
+                aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+                aria-expanded={menuOpen}
+                aria-controls={menuContentId}
+              >
+                {menuOpen ? (
+                  <X
+                    className="w-5 h-5 text-proofound-forest dark:text-foreground"
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <Menu
+                    className="w-5 h-5 text-proofound-forest dark:text-foreground"
+                    aria-hidden="true"
+                  />
+                )}
+              </button>
+            </Dialog.Trigger>
+
+            <Dialog.Portal>
+              <Dialog.Overlay className="fixed inset-0 z-40 bg-background/95 backdrop-blur-xl" />
+              <Dialog.Content
+                id={menuContentId}
+                className="fixed inset-0 z-50 flex items-center justify-center"
+              >
+                <Dialog.Title className="sr-only">Navigation</Dialog.Title>
+                <nav className="text-center space-y-8">
+                  {[
+                    { label: 'Mission', href: '#the-problem' },
+                    { label: 'How it Works', href: '#how-it-works' },
+                    { label: 'Principles', href: '#principles' },
+                    { label: 'Pricing', href: '#products' },
+                    { label: 'Log in', href: '/login' },
+                  ].map((item) => (
+                    <div key={item.label} className="overflow-hidden">
+                      <Dialog.Close asChild>
+                        {item.href.startsWith('#') ? (
+                          <a
+                            href={item.href}
+                            className="block text-4xl md:text-5xl font-display text-proofound-forest dark:text-foreground hover:text-proofound-terracotta transition-colors cursor-pointer"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              scrollToHash(item.href);
+                            }}
+                          >
+                            {item.label}
+                          </a>
+                        ) : (
+                          <Link
+                            href={item.href}
+                            className="block text-4xl md:text-5xl font-display text-proofound-forest dark:text-foreground hover:text-proofound-terracotta transition-colors cursor-pointer"
+                          >
+                            {item.label}
+                          </Link>
+                        )}
+                      </Dialog.Close>
+                    </div>
+                  ))}
+                </nav>
+              </Dialog.Content>
+            </Dialog.Portal>
+          </Dialog.Root>
+        </div>
+      </motion.header>
 
       {/* Progress Indicator */}
       <ProgressIndicator scrollYProgress={smoothProgress} />
 
       {/* Sticky Mini CTA (appears on scroll) */}
-      {showStickyProgress && <StickyMiniCTA onGetStarted={handleGetStarted} />}
+      {showStickyProgress && (
+        <StickyMiniCTA onGetStarted={handleGetStarted} shouldReduceMotion={shouldReduceMotion} />
+      )}
 
       {/* Section 1: Hero - The Promise */}
       <HeroSection onGetStarted={handleGetStarted} shouldReduceMotion={shouldReduceMotion} />
@@ -295,7 +336,11 @@ export function ProofoundLanding({
       {/* Section 2: The Problem - Pains we solve */}
       <ProblemSection shouldReduceMotion={shouldReduceMotion} />
 
-      <SectionSeparator direction="down" fill="#F7F6F1" className="-mb-20 relative z-20" />
+      <SectionSeparator
+        direction="down"
+        fill="hsl(var(--background))"
+        className="-mb-20 relative z-20"
+      />
 
       {/* Section 3: How It Works - The Solution */}
       <HowItWorksSection shouldReduceMotion={shouldReduceMotion} />
@@ -331,13 +376,13 @@ export function ProofoundLanding({
       />
 
       {/* Section 10: Final CTA */}
-      <FinalCTASection onGetStarted={handleGetStarted} />
+      <FinalCTASection onGetStarted={handleGetStarted} shouldReduceMotion={shouldReduceMotion} />
 
       {/* Section 11: Final Quote */}
-      <FinalQuoteSection />
+      <FinalQuoteSection shouldReduceMotion={shouldReduceMotion} />
 
       {/* Section 12: Footer */}
-      <FooterSection />
+      <FooterSection shouldReduceMotion={shouldReduceMotion} />
     </div>
   );
 }
