@@ -1,0 +1,5 @@
+-- NOTE: Migration statements were not recorded in supabase_migrations.schema_migrations.
+-- version: 20260205170000
+-- name: fix_function_search_path_more
+--
+-- This file exists to keep local migration history aligned with the remote DB.

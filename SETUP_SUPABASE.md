@@ -1,126 +1,58 @@
-# ⚡ Quick Setup: Add Supabase MCP to Your Project
+# Supabase Setup (Local Dev)
 
-## What You Need to Do
+This repo uses Supabase for Auth and Postgres. Local secrets live in `.env.local` (gitignored). Do not commit keys.
 
-Since `.env.local` is gitignored (which is good for security!), you need to create it manually. Here's exactly what to do:
+## 1. Create `.env.local`
 
-### 🪄 Step 1: Create the `.env.local` file
+Recommended: copy the template and fill values.
 
-1. Open your terminal in the project folder
-2. Create a new file called `.env.local`:
-   ```bash
-   touch .env.local
-   ```
-3. Open the file in your text editor and paste this content:
-
-```env
-# Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=https://cjpfrgmsxwxhuomnvciq.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_K719ETKMPgWJeEZGBqnTmQ_8AWJr6ZK
-
-# Server-side URL (same as public)
-SUPABASE_URL=https://cjpfrgmsxwxhuomnvciq.supabase.co
-SUPABASE_ANON_KEY=sb_publishable_K719ETKMPgWJeEZGBqnTmQ_8AWJr6ZK
-
-# Database connection for Drizzle (pooled connection)
-DATABASE_URL=postgresql://postgres.cjpfrgmsxwxhuomnvciq:Gara1299442!@aws-1-eu-west-1.pooler.supabase.com:6543/postgres
-
-# Direct connection for migrations
-DIRECT_URL=postgresql://postgres:Gara1299442!@db.cjpfrgmsxwxhuomnvciq.supabase.co:5432/postgres
-
-# Service role key (IMPORTANT: Get this from Supabase Dashboard)
-SUPABASE_SERVICE_ROLE_KEY=
-
-# Site URL for authentication
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
-SITE_URL=http://localhost:3000
+```bash
+cp .env.example .env.local
 ```
 
-### 🪄 Step 2: Get Your Service Role Key
+Alternatively, you can run the helper (safe, no secrets):
 
-This key is required for MCP to work properly. Here's where to find it:
+```bash
+node update-env.cjs
+```
 
-1. Go to [Supabase Dashboard](https://supabase.com/dashboard/project/cjpfrgmsxwxhuomnvciq/settings/api)
-2. Scroll down to find **"service_role"** key (NOT the anon key)
-3. Copy the entire key (it's very long, starts with `eyJ...`)
-4. Paste it into `SUPABASE_SERVICE_ROLE_KEY=` in your `.env.local` file
+## 2. Fill Required Variables
 
-💡 **Why is this needed?** The service role key allows MCP to bypass Row Level Security (RLS) to perform administrative operations. This is safe because MCP only runs in your development environment and never in production.
+Edit `.env.local` and set at minimum:
 
-### Step 3: Restart Your Dev Server
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
+SUPABASE_SERVICE_ROLE_KEY=<service-role-key>
+DATABASE_URL=postgresql://postgres:<password>@db.<project-ref>.supabase.co:5432/postgres?sslmode=require
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+```
 
-After creating `.env.local`:
+Notes:
+
+- `SUPABASE_SERVICE_ROLE_KEY` is server-only. Never expose it in browser code.
+- If you use the Supabase pooler (`:6543`), add pooler-safe params when running the Supabase CLI:
+  - `statement_cache_capacity=0&prefer_simple_protocol=true&pgbouncer=true`
+- `DIRECT_URL` is optional. Drizzle will use it when set, otherwise it falls back to `DATABASE_URL`.
+
+## 3. Where To Get Values (Supabase Dashboard)
+
+- Project URL and keys: Supabase Dashboard -> Project Settings -> API
+  - Use the `anon` public key for `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+  - Use the `service_role` key for `SUPABASE_SERVICE_ROLE_KEY`
+- Database connection string: Supabase Dashboard -> Project Settings -> Database -> Connection string
+
+## 4. Verify
+
+Run the repo verifier:
+
+```bash
+npm run db:verify
+```
+
+Then start the app and check health:
 
 ```bash
 npm run dev
+curl http://localhost:3000/api/health
 ```
-
-### Step 4: Test the Connection
-
-Try asking me to:
-
-- "List all database tables"
-- "Check for security issues"
-- "Show migration status"
-
-I should be able to respond using Supabase MCP! 🎉
-
-## What's Already Configured
-
-✅ **MCP Configuration** - Your `mcp-config.json` is already set up with:
-
-- Figma MCP (for design tokens)
-- Supabase MCP (for database operations)
-
-✅ **Database Connection** - Successfully connected to project `cjpfrgmsxwxhuomnvciq`
-
-✅ **Tables Found** - Your database has 23 tables including:
-
-- `profiles` (4 rows)
-- `individual_profiles` (3 rows)
-- `organizations`
-- `skills`, `capabilities`, `evidence`
-- And 18 more tables!
-
-✅ **Migrations** - Found 15 migrations in your database
-
-## ⚠️ Security Note Found
-
-When I checked your database, I found:
-
-**Leaked Password Protection is Disabled**
-
-- **What it means:** Your Supabase Auth isn't checking against HaveIBeenPwned.org
-- **Why it matters:** Users might use passwords that have been leaked in data breaches
-- **How to fix:** [Enable leaked password protection](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection)
-
-## Using Drizzle vs Supabase MCP
-
-### Use Drizzle for:
-
-- Writing schema changes (`src/db/schema.ts`)
-- Running migrations (`npm run db:push`)
-- Type-safe queries in your code
-- IDE autocomplete
-
-### Use Supabase MCP for:
-
-- Checking security issues
-- Viewing database logs
-- Running ad-hoc queries
-- Monitoring performance
-
-## Next Steps
-
-After completing the steps above:
-
-1. ✅ Test MCP by asking me questions about your database
-2. ✅ Enable leaked password protection in Supabase Dashboard
-3. ✅ Read the full guide in `docs/SUPABASE_MCP_SETUP.md`
-4. ✅ Keep building your awesome platform! 🚀
-
-## Need Help?
-
-- **Can't find service role key?** It's under Settings → API → service_role
-- **Getting connection errors?** Make sure `.env.local` exists in project root
-- **Env variables not working?** Restart your dev server after creating `.env.local`

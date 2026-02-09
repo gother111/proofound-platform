@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { requirePlatformAdmin } from '@/lib/auth/admin';
 import { z } from 'zod';
 import { log } from '@/lib/log';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,8 +21,8 @@ const ModerationActionSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
     const admin = await requirePlatformAdmin();
+    const supabase = createAdminClient();
 
     // Validate request body
     const body = await request.json();
@@ -65,8 +65,6 @@ export async function POST(request: NextRequest) {
             status: 'resolved',
             reviewed_by: admin.userId,
             reviewed_at: new Date().toISOString(),
-            admin_note: note || null,
-            action_taken: 'no_action',
           })
           .eq('id', reportId);
         break;
@@ -79,8 +77,6 @@ export async function POST(request: NextRequest) {
             status: 'dismissed',
             reviewed_by: admin.userId,
             reviewed_at: new Date().toISOString(),
-            admin_note: note || null,
-            action_taken: 'dismissed',
           })
           .eq('id', reportId);
         break;
@@ -95,8 +91,6 @@ export async function POST(request: NextRequest) {
             status: 'resolved',
             reviewed_by: admin.userId,
             reviewed_at: new Date().toISOString(),
-            admin_note: note || null,
-            action_taken: 'content_deleted',
           })
           .eq('id', reportId);
 
@@ -107,8 +101,10 @@ export async function POST(request: NextRequest) {
         // Issue warning to user
         const warningResult = await issueWarning(
           supabase,
-          report.content_id,
+          report.content_owner_id,
           admin.userId,
+          reportId,
+          report.category,
           note || 'Content violation'
         );
 
@@ -118,8 +114,6 @@ export async function POST(request: NextRequest) {
             status: 'resolved',
             reviewed_by: admin.userId,
             reviewed_at: new Date().toISOString(),
-            admin_note: note || null,
-            action_taken: 'user_warned',
           })
           .eq('id', reportId);
 
@@ -130,8 +124,10 @@ export async function POST(request: NextRequest) {
         // Suspend user account
         const suspensionResult = await suspendUser(
           supabase,
-          report.content_id,
+          report.content_owner_id,
           admin.userId,
+          reportId,
+          report.category,
           duration || 7,
           note || 'Content policy violation'
         );
@@ -142,8 +138,6 @@ export async function POST(request: NextRequest) {
             status: 'resolved',
             reviewed_by: admin.userId,
             reviewed_at: new Date().toISOString(),
-            admin_note: note || null,
-            action_taken: 'user_suspended',
           })
           .eq('id', reportId);
 
@@ -206,27 +200,21 @@ async function deleteContent(
   try {
     switch (contentType) {
       case 'message':
-        // Soft delete message (set content to [deleted])
+        // Soft delete message (set status and replace content)
         await supabase
           .from('messages')
-          .update({ content: '[Message deleted by moderator]', deleted: true })
+          .update({ content: '[Message deleted by moderator]', status: 'deleted' })
           .eq('id', contentId);
         break;
 
       case 'assignment':
         // Set assignment to closed
-        await supabase
-          .from('assignments')
-          .update({ status: 'closed', moderation_status: 'removed' })
-          .eq('id', contentId);
+        await supabase.from('assignments').update({ status: 'closed' }).eq('id', contentId);
         break;
 
       case 'project':
         // Hide project
-        await supabase
-          .from('projects')
-          .update({ visibility: 'private', moderation_status: 'removed' })
-          .eq('id', contentId);
+        await supabase.from('projects').update({ visibility: 'private' }).eq('id', contentId);
         break;
 
       case 'skill_proof':
@@ -251,16 +239,20 @@ async function deleteContent(
 async function issueWarning(
   supabase: any,
   userId: string,
-  adminId: string,
+  _adminId: string,
+  reportId: string,
+  category: string,
   reason: string
 ): Promise<{ success: boolean; message: string }> {
   try {
-    // Create warning record
-    await supabase.from('user_warnings').insert({
+    // Create violation record
+    await supabase.from('user_violations').insert({
       user_id: userId,
-      issued_by: adminId,
-      reason,
-      issued_at: new Date().toISOString(),
+      report_id: reportId,
+      violation_type: category || 'other',
+      severity: 'medium',
+      action_taken: 'warning',
+      notes: reason,
     });
 
     // TODO: Send warning email to user
@@ -278,7 +270,9 @@ async function issueWarning(
 async function suspendUser(
   supabase: any,
   userId: string,
-  adminId: string,
+  _adminId: string,
+  reportId: string,
+  category: string,
   durationDays: number,
   reason: string
 ): Promise<{ success: boolean; message: string }> {
@@ -286,23 +280,25 @@ async function suspendUser(
     const suspendedUntil = new Date();
     suspendedUntil.setDate(suspendedUntil.getDate() + durationDays);
 
-    // Update user profile
+    // Suspend user by deactivating account access and matching.
     await supabase
       .from('profiles')
       .update({
-        account_status: 'suspended',
-        suspended_until: suspendedUntil.toISOString(),
-        suspension_reason: reason,
+        deleted: true,
+        matching_enabled: false,
+        updated_at: new Date().toISOString(),
       })
       .eq('id', userId);
 
-    // Create suspension record
-    await supabase.from('user_suspensions').insert({
+    // Create violation record
+    await supabase.from('user_violations').insert({
       user_id: userId,
-      suspended_by: adminId,
-      reason,
-      suspended_at: new Date().toISOString(),
-      suspended_until: suspendedUntil.toISOString(),
+      report_id: reportId,
+      violation_type: category || 'other',
+      severity: 'high',
+      action_taken: 'timed_suspension',
+      suspension_expires_at: suspendedUntil.toISOString(),
+      notes: reason,
     });
 
     // TODO: Send suspension email to user

@@ -66,10 +66,13 @@ Notes:
   - `src/db/schema.ts` (source: src/db/schema.ts)
 - Drizzle commands:
   - `npm run db:generate`, `npm run db:push`, `npm run db:migrate`, `npm run db:studio` (source: package.json)
+- Read-only DB verifier:
+  - `npm run db:verify` (checks required tables/views/functions/extensions and flags Supabase URL vs DB URL mismatch) (source: package.json, scripts/db-verify.mjs)
 - SQL runner:
   - `npm run db:migrate` runs `node run-migrations.mjs` which applies `migrations-to-run.sql`. (source: package.json, run-migrations.mjs, migrations-to-run.sql)
 - Manual migration docs:
   - `RUN_MIGRATIONS_GUIDE.md`, `APPLY_MIGRATIONS_MANUAL.md` (source: RUN_MIGRATIONS_GUIDE.md, APPLY_MIGRATIONS_MANUAL.md)
+  - Note: Supabase CLI pushes should use `--include-all` for this project due to a far-future remote migration (`99999999999999_seed_expertise_atlas_skills`). (source: RUN_MIGRATIONS_GUIDE.md)
 
 ## E2E / Accessibility (Repo Truth)
 
@@ -88,3 +91,19 @@ Notes:
 
 - Pre-commit hook runs `lint-staged` when present. (source: .husky/pre-commit)
 - `lint-staged` configuration lives in `package.json`. (source: package.json)
+
+## Vercel Preview Deployment Protection (401)
+
+Symptom:
+
+- A Preview `*.vercel.app` URL returns HTTP 401 and shows "Vercel Authentication" instead of the app.
+
+Fix options:
+
+- Dashboard: Project Settings -> Deployment Protection. Disable protection for Preview deployments.
+- API (requires `VERCEL_TOKEN`):
+  - Inspect current project setting:
+    - `curl -sS -H "Authorization: Bearer $VERCEL_TOKEN" "https://api.vercel.com/v9/projects/<projectName>" | jq '{ ssoProtection }'`
+  - Disable protection:
+    - `curl -sS -X PATCH -H "Authorization: Bearer $VERCEL_TOKEN" -H "Content-Type: application/json" "https://api.vercel.com/v9/projects/<projectName>" -d '{"ssoProtection": null}'`
+  - Rollback: set `ssoProtection` back to the previous value returned by the "inspect" step.

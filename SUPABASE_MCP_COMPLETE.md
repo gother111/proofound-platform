@@ -13,7 +13,7 @@ Created `.env.local` with all necessary variables:
 
 ### 2. MCP Connection Verified ✅
 
-Successfully connected to Supabase project `cjpfrgmsxwxhuomnvciq`:
+Successfully connected to Supabase project `<project-ref>`:
 
 - Listed 23 tables
 - Confirmed RLS is enabled on all tables
@@ -75,7 +75,7 @@ I'll use Supabase MCP to answer these queries directly from your database!
 ⚠️ **One Security Issue Found:**
 
 - Leaked password protection is disabled
-- **Fix**: [Enable it here](https://supabase.com/dashboard/project/cjpfrgmsxwxhuomnvciq/settings/auth)
+- **Fix**: Enable it in Supabase Auth settings (see Supabase docs on password security).
 
 ## Performance Notes
 
@@ -90,7 +90,6 @@ I'll use Supabase MCP to answer these queries directly from your database!
 ✅ Your Next.js dev server is running at:
 
 - **Local**: http://localhost:3000
-- **Network**: http://192.168.1.216:3000
 - **Environment**: .env.local is loaded
 
 ## What's Next?
@@ -133,6 +132,6 @@ They work together seamlessly! 🎉
 ---
 
 **Status**: ✅ Setup Complete
-**Last Updated**: October 26, 2024
-**Supabase Project**: cjpfrgmsxwxhuomnvciq
+**Last Updated**: 2026-02-08
+**Supabase Project**: <project-ref>
 **Dev Server**: http://localhost:3000

@@ -43,7 +43,7 @@ Your project uses **two complementary database systems**:
 **Connection:**
 
 - Configured in `mcp-config.json`
-- Connects to: `https://mcp.supabase.com/mcp?project_ref=cjpfrgmsxwxhuomnvciq`
+- Connects to: `https://mcp.supabase.com/mcp?project_ref=<project-ref>`
 
 ## Environment Variables Setup
 
@@ -55,18 +55,18 @@ Create a file named `.env.local` in your project root with these variables:
 
 ```bash
 # Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=https://cjpfrgmsxwxhuomnvciq.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_K719ETKMPgWJeEZGBqnTmQ_8AWJr6ZK
+NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
 
 # Server-side URL (same as public)
-SUPABASE_URL=https://cjpfrgmsxwxhuomnvciq.supabase.co
-SUPABASE_ANON_KEY=sb_publishable_K719ETKMPgWJeEZGBqnTmQ_8AWJr6ZK
+SUPABASE_URL=https://<project-ref>.supabase.co
+SUPABASE_ANON_KEY=<anon-key>
 
 # Database connection for Drizzle (pooled connection)
-DATABASE_URL=postgresql://postgres.cjpfrgmsxwxhuomnvciq:Gara1299442!@aws-1-eu-west-1.pooler.supabase.com:6543/postgres
+DATABASE_URL=postgresql://postgres.<project-ref>:<password>@aws-1-<region>.pooler.supabase.com:6543/postgres?sslmode=require&statement_cache_capacity=0&prefer_simple_protocol=true&pgbouncer=true
 
 # Direct connection for migrations
-DIRECT_URL=postgresql://postgres:Gara1299442!@db.cjpfrgmsxwxhuomnvciq.supabase.co:5432/postgres
+DIRECT_URL=postgresql://postgres:<password>@db.<project-ref>.supabase.co:5432/postgres?sslmode=require
 
 # Service role key (get from Supabase Dashboard → Settings → API)
 # This key bypasses RLS - keep it secure and never commit to git!
@@ -82,7 +82,7 @@ SITE_URL=http://localhost:3000
 🪄 **DO THIS MANUALLY:**
 
 1. Go to [Supabase Dashboard](https://supabase.com/dashboard)
-2. Select your project (`cjpfrgmsxwxhuomnvciq`)
+2. Select your project (`<project-ref>`)
 3. Navigate to **Settings** → **API**
 4. Find the **service_role** key (it starts with `eyJ...`)
 5. Copy it and paste into `SUPABASE_SERVICE_ROLE_KEY` in your `.env.local`
@@ -209,7 +209,7 @@ npm run db:seed
 {
   "mcpServers": {
     "SupabaseMCP": {
-      "url": "https://mcp.supabase.com/mcp?project_ref=cjpfrgmsxwxhuomnvciq"
+      "url": "https://mcp.supabase.com/mcp?project_ref=<project-ref>"
     }
   }
 }
@@ -224,7 +224,7 @@ npm run db:seed
 **Solution:** Use `DIRECT_URL` for migrations instead of `DATABASE_URL`:
 
 ```bash
-DIRECT_URL=postgresql://postgres:Gara1299442!@db.cjpfrgmsxwxhuomnvciq.supabase.co:5432/postgres
+DIRECT_URL=postgresql://postgres:<password>@db.<project-ref>.supabase.co:5432/postgres?sslmode=require
 ```
 
 ## Best Practices
@@ -237,7 +237,7 @@ DIRECT_URL=postgresql://postgres:Gara1299442!@db.cjpfrgmsxwxhuomnvciq.supabase.c
 
 ## Current Database Tables
 
-Your Supabase project (`cjpfrgmsxwxhuomnvciq`) currently has these tables:
+Your Supabase project (`<project-ref>`) currently has these tables:
 
 - `profiles` (4 rows) - User profiles
 - `individual_profiles` (3 rows) - Individual user data

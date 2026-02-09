@@ -5,8 +5,8 @@
 ### 1. MCP Configuration
 
 - **Status**: ✅ Already configured in `mcp-config.json`
-- **Connection**: Successfully connected to project `cjpfrgmsxwxhuomnvciq`
-- **URL**: `https://mcp.supabase.com/mcp?project_ref=cjpfrgmsxwxhuomnvciq`
+- **Connection**: Successfully connected to Supabase project `<project-ref>`
+- **URL**: `https://mcp.supabase.com/mcp?project_ref=<project-ref>`
 
 ### 2. Database Discovery
 
@@ -101,14 +101,14 @@ Then add this content:
 
 ```env
 # Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=https://cjpfrgmsxwxhuomnvciq.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_K719ETKMPgWJeEZGBqnTmQ_8AWJr6ZK
-SUPABASE_URL=https://cjpfrgmsxwxhuomnvciq.supabase.co
-SUPABASE_ANON_KEY=sb_publishable_K719ETKMPgWJeEZGBqnTmQ_8AWJr6ZK
+NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
+SUPABASE_URL=https://<project-ref>.supabase.co
+SUPABASE_ANON_KEY=<anon-key>
 
 # Database connections
-DATABASE_URL=postgresql://postgres.cjpfrgmsxwxhuomnvciq:Gara1299442!@aws-1-eu-west-1.pooler.supabase.com:6543/postgres
-DIRECT_URL=postgresql://postgres:Gara1299442!@db.cjpfrgmsxwxhuomnvciq.supabase.co:5432/postgres
+DATABASE_URL=postgresql://postgres.<project-ref>:<password>@aws-1-<region>.pooler.supabase.com:6543/postgres?sslmode=require&statement_cache_capacity=0&prefer_simple_protocol=true&pgbouncer=true
+DIRECT_URL=postgresql://postgres:<password>@db.<project-ref>.supabase.co:5432/postgres?sslmode=require
 
 # Get from Supabase Dashboard → Settings → API
 SUPABASE_SERVICE_ROLE_KEY=your-key-here
@@ -120,7 +120,7 @@ SITE_URL=http://localhost:3000
 
 ### Step 2: Get Service Role Key
 
-1. Go to: [Supabase API Settings](https://supabase.com/dashboard/project/cjpfrgmsxwxhuomnvciq/settings/api)
+1. Go to: Supabase Dashboard → Project Settings → API
 2. Find the **service_role** key (NOT the anon key)
 3. Copy the entire key
 4. Paste into `SUPABASE_SERVICE_ROLE_KEY=` in `.env.local`

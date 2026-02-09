@@ -14,7 +14,21 @@ if (!databaseUrl) {
     process.exit(1);
 }
 
-const sql = postgres(databaseUrl);
+let host = '';
+try {
+    host = new URL(databaseUrl).hostname;
+} catch {
+    // Ignore parse failures; we'll default to SSL require below.
+}
+
+const isLocal = host === 'localhost' || host === '127.0.0.1' || host === '[::1]' || databaseUrl.includes('localhost');
+
+const sql = postgres(databaseUrl, {
+    // Supabase pooler can break with prepared statements.
+    prepare: false,
+    ssl: isLocal ? false : 'require',
+    connect_timeout: 10,
+});
 
 async function verifyDatabaseState() {
     try {

@@ -73,11 +73,60 @@ This folder is the durable “project memory” surface for Proofound. It is mea
 Start here:
 
 - `README.md`
+- `docs/architecture/overview.md`
 - `project/Prompt.md`
 - `project/Architecture.md`
+- `docs/architecture/key-flows.md`
+- `docs/architecture/data-model.md`
 - `project/Plans.md`
 - `project/Implement.md`
 - `agent/runbooks/setup.md`
+- `agent/runbooks/architecture-diagrams.md`
+
+## 2026-02-08: System Design Docs and Diagrams (Onboarding + Evaluation)
+
+What changed:
+
+- Added newcomer-focused architecture docs with Mermaid diagrams: `docs/architecture/overview.md`, `docs/architecture/key-flows.md`, `docs/architecture/data-model.md`.
+- Added a maintenance runbook for diagrams and infographics: `agent/runbooks/architecture-diagrams.md`.
+- Added supplementary infographics (generated via `nano-banana-pro`): `docs/architecture/assets/system-overview.png`, `docs/architecture/assets/key-flows.png`, `docs/architecture/assets/data-model.png`, `docs/architecture/assets/architecture-diagram.png`, `docs/architecture/assets/stack.png`.
+- Linked the new "start here" doc from `README.md`.
+
+Why:
+
+- The repo has many docs, but newcomers benefit from one repo-truth, diagram-forward entrypoint that explains stack boundaries and the highest-signal flows.
+
+How to verify:
+
+- Open and render: `docs/architecture/overview.md`, `docs/architecture/key-flows.md`, `docs/architecture/data-model.md`.
+- Confirm images exist: `docs/architecture/assets/system-overview.png`, `docs/architecture/assets/key-flows.png`, `docs/architecture/assets/data-model.png`, `docs/architecture/assets/architecture-diagram.png`, `docs/architecture/assets/stack.png`.
+- Run: `npm run lint`, `npm run typecheck`, `npm run test`, `npm run build`.
+
+Open risks/TODO:
+
+- Keep Mermaid diagrams up to date when changing entrypoints, auth, or privacy semantics.
+
+## 2026-02-08: Remove Embedded Secrets From Supabase Setup Docs and MCP Config
+
+What changed:
+
+- Sanitized Supabase and DB connection examples to use placeholders instead of real values: `SETUP_SUPABASE.md`, `docs/SUPABASE_MCP_SETUP.md`, `MCP_STATUS.md`.
+- Removed the hardcoded Postgres connection string from `mcp-config.json` and replaced it with a wrapper that loads `DATABASE_URL` from `.env.local` or `.env.test`: `scripts/mcp-postgres.mjs`.
+- Added a read-only DB connectivity and schema verifier: `scripts/db-verify.mjs` and `package.json` script `db:verify`.
+- Updated DB helper scripts to be pooler-friendly and to avoid secrets in repo-tracked files: `scripts/verify-db-state.mjs`, `find-region.cjs`, `test-connection.cjs`, `test-connection-eu.cjs`, `test-connection-5432.cjs`, `update-env.cjs`.
+
+Why:
+
+- The repo policy is "no secrets in the repo". Setup docs and config must be safe to share and safe to commit.
+
+How to verify:
+
+- Confirm there are no repo-tracked Postgres URLs embedded in `mcp-config.json`: `rg -n \"postgresql://\" mcp-config.json` (expect no matches).
+- With a valid `.env.local`: `npm run db:verify`.
+
+Open risks/TODO:
+
+- `db:verify` is a best-effort safety net and may need updates when schema and migrations evolve.
 
 ## 2026-02-07: Zoom OAuth Production Hardening (proofound.io)
 
@@ -333,3 +382,27 @@ How to verify:
 Open risks/TODO:
 
 - `/api/performance/track` is CSRF-bypassed (required for beacons); keep origin checks and rate limiting coverage reviewed as the app grows.
+
+---
+
+## 2026-02-08: Make Vercel Preview Deployments Public (Disable Deployment Protection)
+
+What changed:
+
+- Updated the Vercel project `proofound-platform` Deployment Protection so Preview (`*.vercel.app`) URLs no longer require Vercel authentication.
+  - Specifically, `ssoProtection` was set from `{ "deploymentType": "all_except_custom_domains" }` to `null` via the Vercel REST API.
+
+Why:
+
+- The preview URL previously returned HTTP 401 and displayed Vercel's "Authentication Required" page. That UI mismatch looked like a landing page regression even when the app output matched production.
+
+How to verify:
+
+- Preview URL returns the app HTML (not a Vercel auth page):
+  - `curl -sSIL https://proofound-platform-irfnqi5zn-pavlo-samoshkos-projects.vercel.app/ | sed -n '1,15p'` (expect `HTTP/2 200` and `x-powered-by: Next.js`)
+- Spot check a non-root route is also public:
+  - `curl -sSIL https://proofound-platform-irfnqi5zn-pavlo-samoshkos-projects.vercel.app/login | sed -n '1,15p'` (expect `HTTP/2 200`)
+
+Open risks/TODO:
+
+- Preview deployments are now public to anyone with the URL. If previews need to be protected again, restore `ssoProtection` in the Vercel project settings (Dashboard) or via API.

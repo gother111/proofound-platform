@@ -1,0 +1,5 @@
+-- NOTE: Migration statements were not recorded in supabase_migrations.schema_migrations.
+-- version: 20260205160000
+-- name: security_advisor_view_rls_fixes
+--
+-- This file exists to keep local migration history aligned with the remote DB.

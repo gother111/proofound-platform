@@ -1,0 +1,5 @@
+-- NOTE: Migration statements were not recorded in supabase_migrations.schema_migrations.
+-- version: 20251001000000
+-- name: base_schema
+--
+-- This file exists to keep local migration history aligned with the remote DB.

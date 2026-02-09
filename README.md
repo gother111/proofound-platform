@@ -49,6 +49,7 @@ flowchart LR
 
 ## Documentation map
 
+- Architecture (start here): `docs/architecture/overview.md` (then `docs/architecture/key-flows.md`, `docs/architecture/data-model.md`).
 - Product/architecture: `PRD_TECHNICAL_REQUIREMENTS.md`, `SYSTEM_ARCHITECTURE_COMPREHENSIVE.md`, `SYSTEM_ARCHITECTURE_SUPPLEMENT.md`, `PRD_for_a_web_platform_MVP.md`.
 - APIs: `API_DOCUMENTATION_FINAL.md`, `API_DOCUMENTATION_NEW_ENDPOINTS.md` (legacy `API_DOCUMENTATION.md` lives in `docs/archive/legacy-platform/`).
 - Runbooks: `LAUNCH_RUNBOOK.md`, `PRODUCTION_CHECKLIST.md`, `APPLY_MIGRATIONS_MANUAL.md`, `RUN_MIGRATIONS_GUIDE.md`, `OAUTH_SETUP_GUIDE.md`, `SETUP_SUPABASE.md`.

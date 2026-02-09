@@ -54,6 +54,204 @@ Open TODOs / follow-ups:
 
 - None.
 
+## 2026-02-08 23:12 CET
+
+Task summary:
+Make Vercel Preview deployments public so the preview URL shows the actual Proofound landing page (not the Vercel "Authentication Required" gate), eliminating perceived UI mismatches vs production.
+
+What worked:
+
+- Used the Vercel REST API with `VERCEL_TOKEN` to disable SSO deployment protection (`ssoProtection`) for the project.
+- Verified the preview root and auth routes return HTTP 200 without any bypass cookie.
+
+What failed / wrong assumptions:
+
+- None.
+
+User corrections:
+
+- Requested public preview access (disable Deployment Protection).
+
+Assumptions taken without asking:
+
+- Disabling Preview deployment protection is acceptable for this project.
+
+What the user corrected afterward:
+
+- None.
+
+Commands run + outcomes:
+
+- `curl -sS -H "Authorization: Bearer $VERCEL_TOKEN" "https://api.vercel.com/v9/projects/proofound-platform" | jq '{ssoProtection}'`: PASS (confirmed protection enabled before change)
+- `curl -sS -X PATCH -H "Authorization: Bearer $VERCEL_TOKEN" -H "Content-Type: application/json" "https://api.vercel.com/v9/projects/proofound-platform" -d '{"ssoProtection": null}'`: PASS
+- `curl -sSIL https://proofound-platform-irfnqi5zn-pavlo-samoshkos-projects.vercel.app/ | sed -n '1,15p'`: PASS (`HTTP/2 200`)
+- `curl -sSIL https://proofound-platform-irfnqi5zn-pavlo-samoshkos-projects.vercel.app/login | sed -n '1,15p'`: PASS (`HTTP/2 200`)
+
+Open TODOs / follow-ups:
+
+- None.
+
+## 2026-02-08 23:06 CET
+
+Task summary:
+Finalize system design docs and infographics: fix one repo path reference, align the diagram regeneration runbook with the installed skill path, and document the security hygiene changes that removed embedded secrets.
+
+What worked:
+
+- A quick backtick-path existence scan caught a stale reference (`src/lib/analytics/events` -> `src/lib/analytics/events.ts`).
+- Re-running lint, typecheck, unit tests, and build under Node 20 confirmed the docs and tooling changes did not break CI-critical checks.
+
+What failed / wrong assumptions:
+
+- The initial runbook used the `~/.claude/skills/...` path; this repo's skills also exist under `~/.agents/skills/...`, so the runbook now documents the canonical path and the fallback.
+
+User corrections:
+
+- None.
+
+Assumptions taken without asking:
+
+- Keeping the "remove embedded secrets" edits is preferable to reverting, because they enforce the repo's "no secrets in tracked files" policy.
+
+What the user corrected afterward:
+
+- None.
+
+Commands run + outcomes:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS
+
+Open TODOs / follow-ups:
+
+- Consider compressing the 2K PNG infographics if repo size becomes a concern, or switch to SVG where feasible.
+
+## 2026-02-08 23:13 CET
+
+Task summary:
+Add a stack-focused infographic (frontend, edge, backend, data/external) and wire it into the architecture docs and diagram regeneration runbook.
+
+What worked:
+
+- Generating a layered stack view made the "what runs where" story clearer than only container diagrams.
+
+What failed / wrong assumptions:
+
+- None.
+
+User corrections:
+
+- Requested an explicit stack infographic.
+
+Assumptions taken without asking:
+
+- Keep a stable filename `docs/architecture/assets/stack.png` (not timestamped) to avoid asset sprawl.
+
+What the user corrected afterward:
+
+- None.
+
+Commands run + outcomes:
+
+- `uv run ~/.agents/skills/nano-banana-pro/scripts/generate_image.py ... --filename docs/architecture/assets/stack.png --resolution 2K`: PASS
+
+Open TODOs / follow-ups:
+
+- If we want to reduce the number of top-of-doc images, move the stack image into a dedicated "Stack" section and keep only one hero image at the top.
+
+## 2026-02-08 22:44 CET
+
+Task summary:
+Create newcomer-friendly system design documentation with Mermaid diagrams and generated infographics for onboarding and architecture evaluation.
+
+What worked:
+
+- Pulling entrypoints and entities from repo truth (`src/middleware.ts`, `src/lib/auth.ts`, `src/db/schema.ts`) produced diagrams that map to real code.
+- Generating supplemental PNG infographics via `nano-banana-pro` using `GEMINI_API_KEY` from `.env.local`.
+- Verification under Node `v20.20.0` matched repo expectations.
+
+What failed / wrong assumptions:
+
+- Default `node` on PATH was `v16.14.0`, so verification required a PATH override to Node 20.
+- `python` was not available directly, but `uv run` handled Python execution for image generation.
+
+User corrections:
+
+- None.
+
+Assumptions taken without asking:
+
+- Stable image filenames under `docs/architecture/assets/` are preferred over timestamped outputs.
+- `2K` resolution is sufficient for readability in GitHub and review contexts.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Check Node version earlier and standardize the PATH override in runbooks where needed.
+- Re-run the infographic generation prompts after major flow refactors to keep visuals aligned.
+
+Commands run + outcomes:
+
+- `mkdir -p docs/architecture/assets`: PASS
+- `uv run ~/.claude/skills/nano-banana-pro/scripts/generate_image.py ... --filename docs/architecture/assets/system-overview.png --resolution 2K`: PASS
+- `uv run ~/.claude/skills/nano-banana-pro/scripts/generate_image.py ... --filename docs/architecture/assets/key-flows.png --resolution 2K`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS
+
+Open TODOs / follow-ups:
+
+- Consider consolidating CSP sources (`next.config.js` and `src/middleware.ts`) to reduce drift risk.
+
+## 2026-02-08 23:01 CET
+
+Task summary:
+Generate additional architecture and data model infographics and embed them in the architecture docs.
+
+What worked:
+
+- `nano-banana-pro` produced consistent 2K PNGs that match the architecture docs.
+- Embedding images via relative paths kept docs portable inside the repo.
+
+What failed / wrong assumptions:
+
+- None.
+
+User corrections:
+
+- None.
+
+Assumptions taken without asking:
+
+- New images should be added as additional visuals rather than replacing the existing system overview and key flows images.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Consider compressing PNGs if repo size becomes a concern.
+
+Commands run + outcomes:
+
+- `uv run ~/.claude/skills/nano-banana-pro/scripts/generate_image.py ... --filename docs/architecture/assets/data-model.png --resolution 2K`: PASS
+- `uv run ~/.claude/skills/nano-banana-pro/scripts/generate_image.py ... --filename docs/architecture/assets/architecture-diagram.png --resolution 2K`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS
+
+Open TODOs / follow-ups:
+
+- Decide whether to commit a PNG compression step or switch to SVG for large diagrams.
+
 ## 2026-02-08 22:21 CET
 
 Task summary:

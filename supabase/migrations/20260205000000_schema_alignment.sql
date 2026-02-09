@@ -1,0 +1,5 @@
+-- NOTE: Migration statements were not recorded in supabase_migrations.schema_migrations.
+-- version: 20260205000000
+-- name: schema_alignment
+--
+-- This file exists to keep local migration history aligned with the remote DB.

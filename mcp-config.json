@@ -16,12 +16,8 @@
       "args": ["-y", "@robinson_ai_systems/vercel-mcp"]
     },
     "postgres": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-postgres",
-        "postgresql://postgres:Gara1299442!@db.cjpfrgmsxwxhuomnvciq.supabase.co:5432/postgres?sslmode=require&connect_timeout=10"
-      ]
+      "command": "node",
+      "args": ["scripts/mcp-postgres.mjs"]
     },
     "github-actions": {
       "command": "npx",

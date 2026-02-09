@@ -10,11 +10,13 @@ Because the remote DB is accessed via the Supabase pooler (`:6543`), the Supabas
 2. Build a CLI connection string where:
    - the password is percent-encoded
    - the URL includes: `sslmode=require&statement_cache_capacity=0&prefer_simple_protocol=true&pgbouncer=true`
-3. Run:
+3. Use `--include-all` for this project.
+   - Reason: the remote migration history contains a far-future version (`99999999999999_seed_expertise_atlas_skills`), so new timestamped migrations sort earlier and will not be pushed unless you include out-of-order versions.
+4. Run:
 
 ```bash
-supabase db push --db-url "postgresql://...:6543/postgres?sslmode=require&statement_cache_capacity=0&prefer_simple_protocol=true&pgbouncer=true" --dry-run
-supabase db push --db-url "postgresql://...:6543/postgres?sslmode=require&statement_cache_capacity=0&prefer_simple_protocol=true&pgbouncer=true" --yes
+supabase db push --include-all --db-url "postgresql://...:6543/postgres?sslmode=require&statement_cache_capacity=0&prefer_simple_protocol=true&pgbouncer=true" --dry-run
+supabase db push --include-all --db-url "postgresql://...:6543/postgres?sslmode=require&statement_cache_capacity=0&prefer_simple_protocol=true&pgbouncer=true" --yes
 ```
 
 ## Verification

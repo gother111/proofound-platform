@@ -13,14 +13,14 @@ We encountered a network connectivity issue (IPv6 EHOSTUNREACH error) when tryin
 ### Step-by-Step Instructions:
 
 1. **Open Your Browser**
-   - Go to: https://supabase.com/dashboard/project/cjpfrgmsxwxhuomnvciq
+   - Go to your Supabase project in the dashboard
 
 2. **Navigate to SQL Editor**
    - Click "SQL Editor" in the left sidebar
    - Click the "+ New query" button
 
 3. **Copy & Paste the Migration**
-   - Open this file: `/Users/yuriibakurov/proofound/migrations-to-run.sql`
+   - Open this file: `migrations-to-run.sql`
    - Select all (Cmd+A) and copy (Cmd+C)
    - Paste into the Supabase SQL Editor
 
@@ -39,17 +39,20 @@ That's it! ✨
 ## 📋 What Gets Created
 
 ### New Tables:
+
 - ✅ `self_assessments` - Mental health screenings (PHQ-2, GAD-2)
 - ✅ `work_schedules` - Weekly work hours tracking
 - ✅ `dashboard_layouts` - Customizable dashboard widgets
 
 ### Enhanced Tables:
+
 - ✅ `individual_profiles` - Privacy controls (field_visibility, redact_mode)
 - ✅ `matches` - Enhanced matching data (subscores, rank, snooze)
 - ✅ `interviews` - Meeting link integration
 - ✅ `dashboard_layouts` - Widget configuration
 
 ### Performance Indexes:
+
 - ✅ 5+ indexes for faster queries
 
 ---
@@ -61,9 +64,9 @@ That's it! ✨
 If you have PostgreSQL client installed:
 
 ```bash
-cd /Users/yuriibakurov/proofound
+cd .
 
-psql "postgresql://postgres:Gara1299442!@db.cjpfrgmsxwxhuomnvciq.supabase.co:5432/postgres?sslmode=require" \
+psql "postgresql://postgres:<password>@db.<project-ref>.supabase.co:5432/postgres?sslmode=require" \
   -f migrations-to-run.sql
 ```
 
@@ -82,8 +85,9 @@ If you prefer, you can create tables one by one through the Supabase Table Edito
 Once migrations are complete:
 
 1. **Test the Platform**
+
    ```bash
-   cd /Users/yuriibakurov/proofound
+   cd .
    npm run dev
    ```
 
@@ -109,6 +113,7 @@ Once migrations are complete:
 ## 📊 Migration Status
 
 ### ✅ Completed:
+
 - Database schema designed
 - Migration files generated (0004, 0005, 0006)
 - All components built (40+ components)
@@ -116,6 +121,7 @@ Once migrations are complete:
 - All features implemented (15/15 - 100%)
 
 ### ⏳ Pending:
+
 - Apply migrations to database (waiting for you!)
 - Test in browser
 - Deploy to production
@@ -125,17 +131,21 @@ Once migrations are complete:
 ## 🐛 Troubleshooting
 
 ### "relation already exists" error
+
 **This is SAFE!** The migration script handles this automatically.
 
 ### "column already exists" error
+
 **This is SAFE!** The script uses `IF NOT EXISTS` clauses.
 
 ### Can't access Supabase Dashboard
+
 1. Check your Supabase login at https://supabase.com
-2. Verify project ID: `cjpfrgmsxwxhuomnvciq`
+2. Verify project ID: `<project-ref>`
 3. Check your internet connection
 
 ### Network connectivity issues
+
 Use the Supabase Dashboard method (Option 1) - it always works!
 
 ---
@@ -143,11 +153,10 @@ Use the Supabase Dashboard method (Option 1) - it always works!
 ## 📞 Need Help?
 
 The migration file is ready at:
-📁 `/Users/yuriibakurov/proofound/migrations-to-run.sql`
+📁 `migrations-to-run.sql`
 
 Just copy it into Supabase SQL Editor and click Run! 🚀
 
 ---
 
 **Ready to go?** Open Supabase Dashboard and paste the SQL! 🎉
-
