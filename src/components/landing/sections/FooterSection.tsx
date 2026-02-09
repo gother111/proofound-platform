@@ -165,7 +165,8 @@ export function FooterSection({ shouldReduceMotion }: FooterSectionProps) {
               <span className="text-white/40 text-sm font-sans">All Systems Operational</span>
             </div>
             <p className="text-white/30 text-sm flex items-center gap-2 font-sans">
-              Designed with <span className="text-japandi-terracotta">♥</span> in San Francisco.
+              Designed with <span className="text-japandi-terracotta">♥</span> from San Francisco
+              to Stockholm.
             </p>
           </div>
         </div>

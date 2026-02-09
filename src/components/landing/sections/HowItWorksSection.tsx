@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
 import {
   Sparkles,
@@ -13,6 +13,8 @@ import {
   TrendingUp,
   Network,
   BookOpen,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 interface HowItWorksSectionProps {
@@ -25,6 +27,37 @@ export function HowItWorksSection({ shouldReduceMotion }: HowItWorksSectionProps
   const isInView = useInView(ref, { once: true, amount: 0.2 });
   const effectiveInView = reduceMotion ? true : isInView;
   const scrollRef = useRef<HTMLDivElement>(null);
+  const carouselDescId = useId();
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const update = () => {
+      const max = el.scrollWidth - el.clientWidth;
+      const left = el.scrollLeft;
+      const epsilon = 2;
+      setCanScrollLeft(left > epsilon);
+      setCanScrollRight(left < max - epsilon);
+    };
+
+    update();
+    el.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    return () => {
+      el.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+    };
+  }, []);
+
+  const scrollByCard = (dir: 'left' | 'right') => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const delta = dir === 'left' ? -360 : 360;
+    el.scrollBy({ left: delta, behavior: reduceMotion ? 'auto' : 'smooth' });
+  };
 
   const features = [
     {
@@ -110,10 +143,16 @@ export function HowItWorksSection({ shouldReduceMotion }: HowItWorksSectionProps
 
         {/* Horizontal Carousel */}
         <div className="relative -mx-6 md:-mx-12">
+          <p id={carouselDescId} className="sr-only">
+            Horizontally scrollable list of Proofound features. Use the left and right arrow
+            buttons, swipe, or trackpad horizontal scroll to explore.
+          </p>
+
           <div
             ref={scrollRef}
             role="region"
             aria-label="Proofound features carousel"
+            aria-describedby={carouselDescId}
             // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
             tabIndex={0}
             className="overflow-x-auto scrollbar-hide pb-12 px-6 md:px-12 snap-x snap-mandatory focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 focus-visible:ring-offset-background"
@@ -147,12 +186,63 @@ export function HowItWorksSection({ shouldReduceMotion }: HowItWorksSectionProps
               ))}
             </div>
           </div>
-        </div>
 
-        <div className="flex justify-center mt-4">
-          <p className="text-muted-foreground flex items-center gap-2 font-medium">
-            Scroll horizontally to explore all features <span className="text-xl">→</span>
-          </p>
+          {/* Edge fades to suggest overflow */}
+          <div
+            aria-hidden="true"
+            className={[
+              'pointer-events-none absolute inset-y-0 left-0 w-12 md:w-16',
+              'bg-gradient-to-r from-background via-background/80 to-transparent',
+              canScrollLeft ? 'opacity-100' : 'opacity-0',
+              'transition-opacity duration-300',
+            ].join(' ')}
+          />
+          <div
+            aria-hidden="true"
+            className={[
+              'pointer-events-none absolute inset-y-0 right-0 w-12 md:w-16',
+              'bg-gradient-to-l from-background via-background/80 to-transparent',
+              canScrollRight ? 'opacity-100' : 'opacity-0',
+              'transition-opacity duration-300',
+            ].join(' ')}
+          />
+
+          {/* Arrow controls (visual affordance, no written instruction) */}
+          {canScrollLeft ? (
+            <button
+              type="button"
+              aria-label="Scroll features left"
+              onClick={() => scrollByCard('left')}
+              className={[
+                'absolute left-3 md:left-6 top-1/2 -translate-y-1/2 z-20',
+                'w-11 h-11 rounded-full',
+                'bg-card/80 backdrop-blur-md border border-border shadow-lg',
+                'flex items-center justify-center',
+                'hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                reduceMotion ? '' : 'transition-transform duration-200 hover:scale-105',
+              ].join(' ')}
+            >
+              <ChevronLeft className="w-5 h-5 text-foreground" aria-hidden="true" />
+            </button>
+          ) : null}
+
+          {canScrollRight ? (
+            <button
+              type="button"
+              aria-label="Scroll features right"
+              onClick={() => scrollByCard('right')}
+              className={[
+                'absolute right-3 md:right-6 top-1/2 -translate-y-1/2 z-20',
+                'w-11 h-11 rounded-full',
+                'bg-card/80 backdrop-blur-md border border-border shadow-lg',
+                'flex items-center justify-center',
+                'hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                reduceMotion ? '' : 'transition-transform duration-200 hover:scale-105',
+              ].join(' ')}
+            >
+              <ChevronRight className="w-5 h-5 text-foreground" aria-hidden="true" />
+            </button>
+          ) : null}
         </div>
       </div>
     </section>

@@ -567,3 +567,35 @@ Open risks/TODO:
 - Supabase CLI: use `supabase db push --include-all` for new migrations because the remote history contains a far-future version (`99999999999999_seed_expertise_atlas_skills`). (source: `RUN_MIGRATIONS_GUIDE.md`)
 - Some remote migrations have no recorded SQL statements and are stubbed locally; they preserve history alignment but are not sufficient to recreate the DB from scratch. (source: `supabase/migrations/20251001000000_base_schema.sql`)
 - `db:verify` warns on duplicate migration names present in the remote history; treat this as informational unless pushes or drift checks start failing. (source: `scripts/db-verify.mjs`)
+
+---
+
+## 2026-02-09: Landing Carousel Scroll Affordance + Footer Copy
+
+What changed:
+
+- Removed the written “Scroll horizontally…” instruction under the “How Proofound works” carousel.
+- Added visual affordances for horizontal overflow:
+  - Left and right edge fades that appear only when more content exists in that direction.
+  - Left and right icon buttons that scroll the carousel by approximately one card width.
+  - Screen-reader-only description wired via `aria-describedby` (no visible instruction text).
+- Updated footer tagline to: “Designed with ♥ from San Francisco to Stockholm.”
+
+Why:
+
+- Make it obvious the features list is horizontally scrollable without relying on explicit instruction copy.
+- Match the requested footer wording.
+
+How to verify:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`
+- Manual:
+  - Load the landing page and confirm the carousel shows edge fades and arrow buttons instead of instruction text.
+  - Confirm the footer reads “Designed with ♥ from San Francisco to Stockholm.”
+
+Open risks/TODO:
+
+- On very narrow viewports, confirm arrow buttons do not obscure the first card’s title; adjust button placement if needed.

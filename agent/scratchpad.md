@@ -788,3 +788,45 @@ Commands run + outcomes:
 Open TODOs / follow-ups:
 
 - Keep `scripts/db-verify.mjs` inventories and expectations aligned as the schema evolves.
+
+## 2026-02-09 14:09 CET
+
+Task summary:
+Landing page polish: remove the written horizontal scroll instruction under “How Proofound works”, add clear visual horizontal scroll affordances, and update the footer tagline copy.
+
+What worked:
+
+- Edge fades plus left and right arrow controls made the horizontal carousel affordance obvious without adding instruction copy.
+- Conditional show and hide based on scroll position kept the UI uncluttered at the ends.
+
+What failed / wrong assumptions:
+
+- Added keyboard arrow-key scrolling initially, but it violated `jsx-a11y/no-noninteractive-element-interactions` for the scroll container; removed to keep lint clean. Arrow buttons remain keyboard accessible.
+
+User corrections:
+
+- None.
+
+Assumptions taken without asking:
+
+- “Remove that scroll horizontally” meant removing the visible instruction text, not removing horizontal scrolling behavior.
+- Footer wording should be “Designed with ♥ from San Francisco to Stockholm.”
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- If we want arrow-key scrolling for the carousel, add a small, explicit interactive wrapper element so `jsx-a11y` rules remain satisfied without disables.
+
+Commands run + outcomes:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS.
+
+Open TODOs / follow-ups:
+
+- Consider adding a lightweight Playwright visual smoke for the landing carousel to catch regressions in arrow placement on mobile breakpoints.
