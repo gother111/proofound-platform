@@ -214,12 +214,6 @@ export function ProofoundLanding({
     }
   };
 
-  const scrollToHash = (hash: string) => {
-    const target = document.querySelector(hash);
-    if (!target) return;
-    target.scrollIntoView({ behavior: shouldReduceMotion ? 'auto' : 'smooth' });
-  };
-
   return (
     <div
       ref={containerRef}
@@ -281,6 +275,7 @@ export function ProofoundLanding({
                 className="fixed inset-0 z-50 flex items-center justify-center"
               >
                 <Dialog.Title className="sr-only">Navigation</Dialog.Title>
+                <Dialog.Description className="sr-only">Site navigation links.</Dialog.Description>
                 <nav className="text-center space-y-8">
                   {[
                     { label: 'Mission', href: '#the-problem' },
@@ -295,10 +290,6 @@ export function ProofoundLanding({
                           <a
                             href={item.href}
                             className="block text-4xl md:text-5xl font-display text-proofound-forest dark:text-foreground hover:text-proofound-terracotta transition-colors cursor-pointer"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              scrollToHash(item.href);
-                            }}
                           >
                             {item.label}
                           </a>

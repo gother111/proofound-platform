@@ -451,12 +451,16 @@ What changed:
     - Organization CTA routes to `/signup?type=organization`.
     - Updated signup page to honor `type` query param by preselecting the account type.
   - Replaced the custom menu overlay with a Radix Dialog based overlay (focus trapped, Escape closes), and ensured navigation items are real links.
+  - Fixed menu anchor navigation behavior:
+    - Overlay now closes when selecting in-page hash links (and hash updates normally).
+    - Added a hidden Dialog description to avoid Radix console warnings and improve accessibility metadata.
 - Homepage SEO basics:
   - Added homepage `metadata` in `src/app/page.tsx` including title, description, canonical, OpenGraph, and Twitter card fields.
   - Updated root metadata template in `src/app/layout.tsx` to avoid overriding page metadata.
   - Added `src/app/sitemap.ts` so `/sitemap.xml` exists and returns XML (used by `robots.txt`).
 - A11y improvements:
   - Fixed contrast regressions discovered by `npm run test:a11y` (homepage and signup selection screen).
+  - Avoid animating opacity on the hero CTA text elements so contrast does not dip mid-transition during accessibility scans.
   - Removed footer logo `priority` to avoid unnecessary above-fold image prioritization.
 
 Why:

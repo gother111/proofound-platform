@@ -56,8 +56,9 @@ export function HeroSection({ onGetStarted, shouldReduceMotion }: HeroSectionPro
         >
           <div>
             <motion.h1
-              initial={reduceMotion ? false : { opacity: 0, y: 30 }}
-              animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+              // Avoid animating opacity on text so contrast does not drop below WCAG AA mid-transition.
+              initial={reduceMotion ? false : { y: 30 }}
+              animate={reduceMotion ? undefined : { y: 0 }}
               transition={
                 reduceMotion
                   ? { duration: 0 }
@@ -68,8 +69,8 @@ export function HeroSection({ onGetStarted, shouldReduceMotion }: HeroSectionPro
               Proofound
             </motion.h1>
             <motion.h2
-              initial={reduceMotion ? false : { opacity: 0, y: 30 }}
-              animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+              initial={reduceMotion ? false : { y: 30 }}
+              animate={reduceMotion ? undefined : { y: 0 }}
               transition={
                 reduceMotion
                   ? { duration: 0 }
@@ -82,8 +83,8 @@ export function HeroSection({ onGetStarted, shouldReduceMotion }: HeroSectionPro
           </div>
 
           <motion.p
-            initial={reduceMotion ? false : { opacity: 0, y: 20 }}
-            animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+            initial={reduceMotion ? false : { y: 20 }}
+            animate={reduceMotion ? undefined : { y: 0 }}
             transition={
               reduceMotion
                 ? { duration: 0 }
@@ -96,8 +97,8 @@ export function HeroSection({ onGetStarted, shouldReduceMotion }: HeroSectionPro
           </motion.p>
 
           <motion.div
-            initial={reduceMotion ? false : { opacity: 0, y: 20 }}
-            animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+            initial={reduceMotion ? false : { y: 20 }}
+            animate={reduceMotion ? undefined : { y: 0 }}
             transition={
               reduceMotion
                 ? { duration: 0 }

@@ -612,3 +612,43 @@ Commands run + outcomes:
 Open TODOs / follow-ups:
 
 - Redeploy via Git integration to generate a fresh Vercel Preview, then re-run the same `curl` metadata and `/sitemap.xml` checks against that preview url.
+
+## 2026-02-09 10:36 CET
+
+Task summary:
+Verify the Vercel preview landing against the polish plan, then fix remaining gaps (menu hash navigation close behavior and a11y stability).
+
+What worked:
+
+- Playwright smoke against the preview confirmed CTA routing and dialog focus trap behavior.
+- Small landing-only diffs fixed the remaining UX and a11y gaps without touching backend/auth logic.
+
+What failed / wrong assumptions:
+
+- Landing menu hash links prevented default navigation, so Radix `Dialog.Close` did not close the overlay.
+- Opacity-based entrance animations on hero CTA text caused `npm run test:a11y` to flag transient contrast violations.
+
+User corrections:
+
+- None.
+
+Assumptions taken without asking:
+
+- Hash navigation should update the URL hash and close the overlay (preferred over custom smooth scrolling here).
+- It is acceptable to avoid opacity animations on hero text in favor of stable WCAG contrast and test determinism.
+
+What the user corrected afterward:
+
+- None.
+
+Commands run + outcomes:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:a11y`: PASS
+
+Open TODOs / follow-ups:
+
+- Push changes and re-verify the latest Vercel Preview URL (menu hash links now close overlay, no Radix dialog description warning, CTAs still route correctly, `/sitemap.xml` still 200).
