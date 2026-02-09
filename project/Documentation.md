@@ -464,6 +464,9 @@ What changed:
     - Avoid animating opacity on the hero CTA text elements so contrast does not dip mid-transition during accessibility scans.
     - Removed footer logo `priority` to avoid unnecessary above-fold image prioritization.
   - Added `public/favicon.ico` so browsers do not request a missing favicon (removes console 404 noise in Preview).
+  - Wired the favicon into metadata so `link[rel="icon"]` is present in the homepage HTML.
+  - Added a `<main>` landmark on the homepage landing (accessibility semantics for crawlers and a11y tooling).
+  - Added `sr-only` text inside icon-only footer social links to avoid empty-anchor-text warnings in audits.
 
 Why:
 
@@ -490,3 +493,4 @@ How to verify:
 Open risks/TODO:
 
 - Vercel Preview deployment URLs are immutable per build; redeploying will likely produce a new preview URL even if the project is the same.
+- `squirrel audit` may report sitemap-domain mismatch in Preview because canonical/sitemap URLs intentionally point at `https://proofound.io`.

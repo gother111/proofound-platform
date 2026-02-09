@@ -652,3 +652,54 @@ Commands run + outcomes:
 Open TODOs / follow-ups:
 
 - Push changes and re-verify the latest Vercel Preview URL (menu hash links now close overlay, no Radix dialog description warning, CTAs still route correctly, `/sitemap.xml` still 200).
+
+## 2026-02-09 11:24 CET
+
+Task summary:
+Verify the Vercel Preview landing matches the polish plan, fix remaining audit gaps (favicon link tag, main landmark, footer icon link labels), redeploy, and re-audit.
+
+What worked:
+
+- Adding `icons` metadata emitted `link[rel=\"icon\"]` and removed favicon audit warnings.
+- Wrapping homepage landing content in a `<main>` landmark resolved missing-main warnings.
+- Adding `sr-only` text inside icon-only footer social links removed empty-anchor-text warnings in audits.
+- Playwright smoke confirmed: menu hash links update the hash and close the overlay, CTAs route to persona-specific signup, and reduced motion keeps the header menu button visible.
+
+What failed / wrong assumptions:
+
+- `next build` intermittently failed with `PageNotFoundError` for some marketing routes; clearing `.next` and rebuilding fixed it.
+- `npm run test:a11y` was flaky once (contrast scan), then passed on rerun.
+
+User corrections:
+
+- None.
+
+Assumptions taken without asking:
+
+- Preview canonical and sitemap URLs pointing to `https://proofound.io` is acceptable because Preview is `noindex`.
+- Adding hidden text inside icon-only links is acceptable for audit friendliness (without changing visuals).
+
+What the user corrected afterward:
+
+- None.
+
+Commands run + outcomes:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: FAIL (PageNotFoundError), then PASS after `rm -rf .next && PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:a11y`: FAIL once (contrast scan), then PASS on rerun
+- `git push origin codex/landing-polish-preview-6cfd37e`: PASS
+- Vercel deployment check (curl + jq): READY Preview at `https://proofound-platform-2ijfuryh7-pavlo-samoshkos-projects.vercel.app`
+- Preview checks:
+  - `curl -sSIL <preview>/favicon.ico`: 200
+  - `curl -sSIL <preview>/sitemap.xml`: 200
+  - `curl -fsSL <preview>/ | rg 'rel=\"icon\"'`: found `link rel=\"icon\" href=\"/favicon.ico\"`
+- `squirrel audit <preview> -C quick --format llm`: PASS (favicon and main-landmark warnings resolved; remaining sitemap-domain mismatch expected for Preview)
+- Playwright smoke (custom script): PASS
+
+Open TODOs / follow-ups:
+
+- If `next build` PageNotFoundError recurs, investigate build caching and whether a clean build should be enforced in CI for this repo.
+- Consider optimizing `public/hero-shape.png` to keep the largest responsive variant under 100 KB (squirrel `images/image-file-size`).
