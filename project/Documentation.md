@@ -446,6 +446,7 @@ What changed:
   - Improved reduced-motion handling:
     - Lenis smooth scrolling is disabled when `prefers-reduced-motion` is enabled.
     - Animated sections render with zero-duration transitions or static variants; long-running background animations are disabled in reduced motion.
+    - Fixed a reduced-motion hydration race where the header (and sticky CTA) could remain off-screen if `useReducedMotion()` resolved after first paint.
   - Made CTAs consistent and SPA friendly:
     - Primary CTA routes to `/signup?type=individual`.
     - Organization CTA routes to `/signup?type=organization`.
@@ -458,10 +459,11 @@ What changed:
   - Added homepage `metadata` in `src/app/page.tsx` including title, description, canonical, OpenGraph, and Twitter card fields.
   - Updated root metadata template in `src/app/layout.tsx` to avoid overriding page metadata.
   - Added `src/app/sitemap.ts` so `/sitemap.xml` exists and returns XML (used by `robots.txt`).
-- A11y improvements:
-  - Fixed contrast regressions discovered by `npm run test:a11y` (homepage and signup selection screen).
-  - Avoid animating opacity on the hero CTA text elements so contrast does not dip mid-transition during accessibility scans.
-  - Removed footer logo `priority` to avoid unnecessary above-fold image prioritization.
+  - A11y improvements:
+    - Fixed contrast regressions discovered by `npm run test:a11y` (homepage and signup selection screen).
+    - Avoid animating opacity on the hero CTA text elements so contrast does not dip mid-transition during accessibility scans.
+    - Removed footer logo `priority` to avoid unnecessary above-fold image prioritization.
+  - Added `public/favicon.ico` so browsers do not request a missing favicon (removes console 404 noise in Preview).
 
 Why:
 
@@ -479,10 +481,11 @@ How to verify:
   - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:a11y`
 - Manual landing checklist:
   - Open the menu with keyboard, Tab cycles within, Escape closes, focus returns to the trigger.
-  - With reduced motion enabled, there is no smooth scrolling and no infinite background animations.
+  - With reduced motion enabled, the header menu button stays visible/clickable, there is no smooth scrolling, and there are no infinite background animations.
   - Anchor links land below the fixed header.
   - CTAs route to `/signup?type=individual` and `/signup?type=organization`.
   - `/sitemap.xml` returns XML (not a 404 HTML page).
+  - `/favicon.ico` returns 200 (no favicon 404 in browser console).
 
 Open risks/TODO:
 

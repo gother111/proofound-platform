@@ -109,9 +109,12 @@ const StickyMiniCTA = ({
   shouldReduceMotion: boolean;
 }) => (
   <motion.div
-    initial={shouldReduceMotion ? false : { y: 100, opacity: 0 }}
-    animate={shouldReduceMotion ? undefined : { y: 0, opacity: 1 }}
-    exit={shouldReduceMotion ? undefined : { y: 100, opacity: 0 }}
+    // Keep stable visible state for reduced motion users. Avoid a hydration race where
+    // initial state is applied before `useReducedMotion()` resolves, leaving the element off-screen.
+    initial={shouldReduceMotion ? { y: 0, opacity: 1 } : { y: 100, opacity: 0 }}
+    animate={{ y: 0, opacity: 1 }}
+    exit={shouldReduceMotion ? { y: 0, opacity: 1 } : { y: 100, opacity: 0 }}
+    transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
     className="fixed bottom-8 right-6 md:right-12 z-40 pointer-events-auto"
   >
     <Button
@@ -224,8 +227,10 @@ export function ProofoundLanding({
 
       {/* Header with accessible menu */}
       <motion.header
-        initial={shouldReduceMotion ? false : { y: -100 }}
-        animate={shouldReduceMotion ? undefined : { y: 0 }}
+        // Always animate to the stable on-screen state. If reduced motion resolves after first paint,
+        // this prevents the header from getting stuck at the off-screen initial position.
+        initial={{ y: shouldReduceMotion ? 0 : -100 }}
+        animate={{ y: 0 }}
         transition={
           shouldReduceMotion ? { duration: 0 } : { duration: 0.6, ease: [0.22, 1, 0.36, 1] }
         }
