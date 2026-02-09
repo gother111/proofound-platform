@@ -11,6 +11,11 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 - Unit tests: `npm run test` (source: package.json)
 - Build: `npm run build` (source: package.json)
 
+## DB (When You Touched Supabase / Drizzle)
+
+- DB schema + connectivity + migration drift (Node `20.20.0`):
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:verify` (source: package.json, scripts/db-verify.mjs)
+
 ## Vercel Parity (When Deploy Might Break)
 
 - Ensure Node version matches `.nvmrc`/engines (source: .nvmrc, package.json)

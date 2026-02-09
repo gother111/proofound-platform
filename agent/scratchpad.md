@@ -744,3 +744,47 @@ Commands run + outcomes:
 Open TODOs / follow-ups:
 
 - Consider hardening `/api/analytics/web-vitals` against aborted / empty request bodies to reduce dev server shutdown noise during Playwright runs.
+
+## 2026-02-09 14:01 CET
+
+Task summary:
+Verify Supabase DB schema, migrations, and connectivity for the `.env.local` dev/staging DB, and confirm backend (DATABASE_URL) and frontend (NEXT_PUBLIC_SUPABASE_URL) are aligned and working.
+
+What worked:
+
+- `npm run db:verify` is a fast, deterministic check that the DB has the objects the code expects (extensions, tables/views/functions, migration drift).
+- Pooler-safe Postgres settings (`prepare: false`, SSL require when non-local) avoided pgbouncer prepared-statement collisions when connecting via `:6543`.
+- End-to-end smoke via `GET /api/health` confirmed the app is using the real DB (`database.connected=true`).
+
+What failed / wrong assumptions:
+
+- None in this run. Previous runs required `supabase db push --include-all` due to the far-future remote migration `99999999999999_seed_expertise_atlas_skills` (documented in the runbook).
+
+User corrections:
+
+- Asked to verify recent codebase changes too, not only DB schema.
+
+Assumptions taken without asking:
+
+- The DB pointed to by `.env.local` is dev/staging (non-production) and safe for verification checks.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- If the change touches RLS or privacy semantics, run `npm run test:privacy` (after confirming it is safe for the target DB).
+
+Commands run + outcomes:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:verify`: PASS (warnings only: duplicate migration names; platform_role triggers present).
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS.
+- `PORT=3100 PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run dev` and `curl http://localhost:3100/api/health`: PASS (status healthy, DB connected).
+
+Open TODOs / follow-ups:
+
+- Keep `scripts/db-verify.mjs` inventories and expectations aligned as the schema evolves.

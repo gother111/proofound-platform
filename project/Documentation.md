@@ -529,3 +529,41 @@ How to verify:
 Open risks/TODO:
 
 - Playwright webServer logs show occasional connection-aborted noise from web vitals beacon requests during shutdown. E2E still passes, but this can be a flake risk if the dev server ever terminates early.
+
+---
+
+## 2026-02-09: Verify Supabase DB Schema and Fix Drift (Dev/Staging)
+
+What changed:
+
+- Added a deterministic, read-only DB verifier: `npm run db:verify`. It checks required env vars, pooler-safe connectivity, required extensions, required tables/views/functions used by the code, basic RLS expectations, and migration drift vs `supabase_migrations.schema_migrations`. (source: `scripts/db-verify.mjs`, `package.json`)
+- Synced `supabase/migrations/` with the remote `supabase_migrations.schema_migrations` history so `supabase db push` works without "remote migration versions not found locally" errors. For remote entries where SQL statements were not recorded, stub files were added to preserve version/name alignment. (source: `supabase/migrations/`)
+- Added missing DB objects used by the app and admin UI:
+  - `public.attestations` table (RLS + policies). (source: `supabase/migrations/20260208234500_db_verify_missing_objects.sql`)
+  - Compatibility views: `public.skills_l1_categories`, `public.l4_skills`, `public.matching_results`. (source: `supabase/migrations/20260208234500_db_verify_missing_objects.sql`)
+  - RPC: `public.get_moderation_stats()`. (source: `supabase/migrations/20260208234500_db_verify_missing_objects.sql`)
+  - Server-only enforcement for `profiles.platform_role` via triggers. (source: `supabase/migrations/20260208235500_profiles_platform_role_protect.sql`)
+- Fixed `POST /api/admin/moderation/action` to use a service-role Supabase client and to write only to objects that exist in the current schema (for example, `user_violations`, `messages.status`). (source: `src/app/api/admin/moderation/action/route.ts`)
+
+Why:
+
+- The codebase referenced tables/views/functions that were missing in the staging/dev DB, and the local `supabase/migrations/` set previously drifted from the remote migration history.
+- `profiles.platform_role` is security-critical; broad UPDATE GRANTs combined with RLS scoping are not sufficient without server-side enforcement.
+
+How to verify:
+
+- DB schema and migration drift (Node `20.20.0`):
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:verify`
+- Repo checks (Node `20.20.0`):
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`
+- Smoke:
+  - Run `npm run dev` and confirm `GET /api/health` returns `status=healthy` and `database.connected=true`.
+
+Open risks/TODO:
+
+- Supabase CLI: use `supabase db push --include-all` for new migrations because the remote history contains a far-future version (`99999999999999_seed_expertise_atlas_skills`). (source: `RUN_MIGRATIONS_GUIDE.md`)
+- Some remote migrations have no recorded SQL statements and are stubbed locally; they preserve history alignment but are not sufficient to recreate the DB from scratch. (source: `supabase/migrations/20251001000000_base_schema.sql`)
+- `db:verify` warns on duplicate migration names present in the remote history; treat this as informational unless pushes or drift checks start failing. (source: `scripts/db-verify.mjs`)
