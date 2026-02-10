@@ -11,11 +11,12 @@ import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { userIntegrations } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
-import {
-  exchangeLinkedInCode,
-  fetchLinkedInProfile,
-  constructLinkedInProfileUrl,
-} from '@/lib/linkedin';
+import { exchangeLinkedInCode, fetchLinkedInProfile } from '@/lib/linkedin';
+
+function buildSettingsRedirect(request: NextRequest, params: Record<string, string>) {
+  const search = new URLSearchParams({ tab: 'integrations', ...params });
+  return NextResponse.redirect(new URL(`/app/i/settings?${search.toString()}`, request.url));
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -27,16 +28,17 @@ export async function GET(request: NextRequest) {
     // Check for OAuth errors
     if (error) {
       console.error('LinkedIn OAuth error:', error);
-      return NextResponse.redirect(
-        new URL(
-          `/settings?error=${encodeURIComponent('LinkedIn connection cancelled or failed')}`,
-          request.url
-        )
-      );
+      return buildSettingsRedirect(request, {
+        error: 'linkedin_auth_failed',
+        message: 'LinkedIn connection cancelled or failed',
+      });
     }
 
     if (!code || !state) {
-      return NextResponse.redirect(new URL('/settings?error=invalid_oauth_response', request.url));
+      return buildSettingsRedirect(request, {
+        error: 'linkedin_auth_failed',
+        message: 'Invalid OAuth response',
+      });
     }
 
     // Verify state parameter for CSRF protection
@@ -45,7 +47,10 @@ export async function GET(request: NextRequest) {
 
     if (!storedState || storedState !== state) {
       console.error('State mismatch in LinkedIn OAuth');
-      return NextResponse.redirect(new URL('/settings?error=invalid_state', request.url));
+      return buildSettingsRedirect(request, {
+        error: 'linkedin_auth_failed',
+        message: 'Invalid or expired OAuth state. Please try connecting again.',
+      });
     }
 
     // Verify user is still authenticated
@@ -56,14 +61,14 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (authError || !user || user.id !== storedUserId) {
-      return NextResponse.redirect(new URL('/signin?error=unauthorized', request.url));
+      return NextResponse.redirect(new URL('/login?error=unauthorized', request.url));
     }
 
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
+    const redirectUri = new URL('/api/auth/linkedin/callback', baseUrl).toString();
+
     // Exchange authorization code for access token
-    const tokenData = await exchangeLinkedInCode(
-      code,
-      `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/linkedin/callback`
-    );
+    const tokenData = await exchangeLinkedInCode(code, redirectUri);
 
     // Fetch LinkedIn profile data
     const profileData = await fetchLinkedInProfile(tokenData.access_token);
@@ -105,9 +110,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Clear OAuth cookies
-    const response = NextResponse.redirect(
-      new URL('/settings?success=linkedin_connected', request.url)
-    );
+    const response = buildSettingsRedirect(request, { success: 'linkedin_connected' });
 
     response.cookies.delete('linkedin_oauth_state');
     response.cookies.delete('linkedin_oauth_user');
@@ -117,14 +120,10 @@ export async function GET(request: NextRequest) {
     console.error('LinkedIn OAuth callback error:', error);
 
     // Clear OAuth cookies on error
-    const response = NextResponse.redirect(
-      new URL(
-        `/settings?error=${encodeURIComponent(
-          error instanceof Error ? error.message : 'LinkedIn connection failed'
-        )}`,
-        request.url
-      )
-    );
+    const response = buildSettingsRedirect(request, {
+      error: 'linkedin_auth_failed',
+      message: error instanceof Error ? error.message : 'LinkedIn connection failed',
+    });
 
     response.cookies.delete('linkedin_oauth_state');
     response.cookies.delete('linkedin_oauth_user');
