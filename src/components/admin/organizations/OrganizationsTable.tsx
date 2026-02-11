@@ -113,8 +113,6 @@ export function OrganizationsTable() {
   };
 
   const getVerificationBadge = (org: Organization) => {
-    // TODO: Add verification status to organization schema
-    /*
     if (org.verified) {
       return (
         <Badge className="bg-green-600 hover:bg-green-700 gap-1">
@@ -123,7 +121,7 @@ export function OrganizationsTable() {
         </Badge>
       );
     }
-    */
+
     return (
       <Badge variant="outline" className="gap-1">
         <XCircle className="h-3 w-3" />

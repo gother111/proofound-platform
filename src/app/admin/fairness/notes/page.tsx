@@ -31,6 +31,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AlertCircle, CheckCircle, Download, Info, TrendingUp } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface Finding {
   type: 'gap' | 'no_gap' | 'insufficient_data';
@@ -108,7 +109,7 @@ export default function FairnessNotesPage() {
     setError(null);
 
     try {
-      const response = await fetch('/api/admin/fairness/generate-note', {
+      const response = await apiFetch('/api/admin/fairness/generate-note', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ releaseVersion: newVersion }),
@@ -264,7 +265,7 @@ export default function FairnessNotesPage() {
                     Cohort Analysis
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {note.cohortData.map((cohort) => (
+                    {(Array.isArray(note.cohortData) ? note.cohortData : []).map((cohort) => (
                       <Card key={cohort.cohortName}>
                         <CardHeader className="pb-3">
                           <CardTitle className="text-sm font-medium">{cohort.cohortName}</CardTitle>
@@ -274,12 +275,20 @@ export default function FairnessNotesPage() {
                           <div className="flex justify-between text-sm">
                             <span className="text-muted-foreground">Introduction Rate:</span>
                             <span className="font-medium">
-                              {cohort.introductionRate.toFixed(1)}%
+                              {Number.isFinite(Number(cohort.introductionRate))
+                                ? Number(cohort.introductionRate).toFixed(1)
+                                : '0.0'}
+                              %
                             </span>
                           </div>
                           <div className="flex justify-between text-sm">
                             <span className="text-muted-foreground">Contract Rate:</span>
-                            <span className="font-medium">{cohort.contractRate.toFixed(1)}%</span>
+                            <span className="font-medium">
+                              {Number.isFinite(Number(cohort.contractRate))
+                                ? Number(cohort.contractRate).toFixed(1)
+                                : '0.0'}
+                              %
+                            </span>
                           </div>
                         </CardContent>
                       </Card>
@@ -291,7 +300,7 @@ export default function FairnessNotesPage() {
                 <div>
                   <h3 className="text-lg font-semibold mb-3">Findings</h3>
                   <div className="space-y-3">
-                    {note.findings.map((finding, idx) => (
+                    {(Array.isArray(note.findings) ? note.findings : []).map((finding, idx) => (
                       <Alert
                         key={idx}
                         variant={
@@ -311,7 +320,9 @@ export default function FairnessNotesPage() {
                           <div className="flex-1 space-y-1">
                             <div className="flex items-center gap-2">
                               <AlertTitle className="text-sm font-medium">
-                                {finding.metric.replace(/_/g, ' ').toUpperCase()}
+                                {String(finding.metric || 'unknown_metric')
+                                  .replace(/_/g, ' ')
+                                  .toUpperCase()}
                               </AlertTitle>
                               {finding.severity !== 'none' && (
                                 <Badge variant={getSeverityColor(finding.severity)}>
@@ -320,13 +331,14 @@ export default function FairnessNotesPage() {
                               )}
                             </div>
                             <AlertDescription className="text-sm">
-                              {finding.description}
+                              {finding.description || 'No description available.'}
                             </AlertDescription>
-                            {finding.pValue !== undefined && (
-                              <p className="text-xs text-muted-foreground">
-                                Statistical significance: p = {finding.pValue.toFixed(4)}
-                              </p>
-                            )}
+                            {typeof finding.pValue === 'number' &&
+                              Number.isFinite(finding.pValue) && (
+                                <p className="text-xs text-muted-foreground">
+                                  Statistical significance: p = {finding.pValue.toFixed(4)}
+                                </p>
+                              )}
                           </div>
                         </div>
                       </Alert>
@@ -335,7 +347,7 @@ export default function FairnessNotesPage() {
                 </div>
 
                 {/* Recommendations */}
-                {note.recommendations.length > 0 && (
+                {(Array.isArray(note.recommendations) ? note.recommendations : []).length > 0 && (
                   <div>
                     <h3 className="text-lg font-semibold mb-3">Recommendations</h3>
                     <Table>
@@ -348,40 +360,43 @@ export default function FairnessNotesPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {note.recommendations.map((rec, idx) => (
-                          <TableRow key={idx}>
-                            <TableCell>
-                              <Badge
-                                variant={
-                                  rec.priority === 'high'
-                                    ? 'destructive'
-                                    : rec.priority === 'medium'
-                                      ? 'default'
-                                      : 'secondary'
-                                }
-                              >
-                                {rec.priority}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="font-medium">{rec.action}</TableCell>
-                            <TableCell className="text-sm text-muted-foreground">
-                              {rec.rationale}
-                            </TableCell>
-                            <TableCell>
-                              {rec.targetCohorts.length > 0 ? (
-                                <div className="flex flex-wrap gap-1">
-                                  {rec.targetCohorts.map((cohort) => (
-                                    <Badge key={cohort} variant="outline">
-                                      {cohort}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              ) : (
-                                <span className="text-sm text-muted-foreground">All cohorts</span>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {(Array.isArray(note.recommendations) ? note.recommendations : []).map(
+                          (rec, idx) => (
+                            <TableRow key={idx}>
+                              <TableCell>
+                                <Badge
+                                  variant={
+                                    rec.priority === 'high'
+                                      ? 'destructive'
+                                      : rec.priority === 'medium'
+                                        ? 'default'
+                                        : 'secondary'
+                                  }
+                                >
+                                  {rec.priority}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="font-medium">{rec.action}</TableCell>
+                              <TableCell className="text-sm text-muted-foreground">
+                                {rec.rationale}
+                              </TableCell>
+                              <TableCell>
+                                {Array.isArray(rec.targetCohorts) &&
+                                rec.targetCohorts.length > 0 ? (
+                                  <div className="flex flex-wrap gap-1">
+                                    {rec.targetCohorts.map((cohort) => (
+                                      <Badge key={cohort} variant="outline">
+                                        {cohort}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <span className="text-sm text-muted-foreground">All cohorts</span>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          )
+                        )}
                       </TableBody>
                     </Table>
                   </div>

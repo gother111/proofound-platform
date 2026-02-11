@@ -8,7 +8,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { sendVerificationApprovedEmail, sendVerificationRejectedEmail } from '@/lib/email';
+import { requirePlatformAdminJson } from '@/lib/api/route-helpers';
 
 interface ReviewRequest {
   decision: 'approved' | 'rejected';
@@ -20,29 +22,11 @@ export async function POST(
   { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
+    const adminUser = await requirePlatformAdminJson();
+    if (adminUser instanceof NextResponse) return adminUser;
+
     const { userId } = await params;
-
-    // 1. Check if user is admin
     const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check admin role
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (!profile || profile.role !== 'admin') {
-      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
-    }
 
     // 2. Parse request body
     const body: ReviewRequest = await request.json();
@@ -74,7 +58,7 @@ export async function POST(
       adminNotes: notes || null,
       adminDecision: decision,
       reviewedAt: new Date().toISOString(),
-      reviewedBy: user.id,
+      reviewedBy: adminUser.userId,
     };
 
     // 5. Update profile with decision
@@ -104,28 +88,25 @@ export async function POST(
 
     // 6. Send notification email to user
     try {
-      // Get user profile for email
       const { data: userProfile } = await supabase
         .from('profiles')
-        .select('email, full_name')
+        .select('display_name')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
-      if (userProfile && userProfile.email) {
+      const adminClient = createAdminClient();
+      const { data: authData } = await adminClient.auth.admin.getUserById(userId);
+      const userEmail = authData?.user?.email;
+      const userName =
+        userProfile?.display_name ||
+        (authData?.user?.user_metadata?.full_name as string | undefined) ||
+        'User';
+
+      if (userEmail) {
         if (decision === 'approved') {
-          await sendVerificationApprovedEmail(
-            userProfile.email,
-            userProfile.full_name || 'User',
-            'linkedin',
-            userId
-          );
+          await sendVerificationApprovedEmail(userEmail, userName, 'linkedin', userId);
         } else {
-          await sendVerificationRejectedEmail(
-            userProfile.email,
-            userProfile.full_name || 'User',
-            'linkedin',
-            notes
-          );
+          await sendVerificationRejectedEmail(userEmail, userName, 'linkedin', notes);
         }
       }
     } catch (emailError) {
@@ -133,7 +114,9 @@ export async function POST(
       // Don't fail the request if email fails
     }
 
-    console.log(`LinkedIn verification ${decision} for user ${userId} by admin ${user.id}`);
+    console.log(
+      `LinkedIn verification ${decision} for user ${userId} by admin ${adminUser.userId}`
+    );
 
     return NextResponse.json({
       success: true,

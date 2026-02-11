@@ -382,3 +382,60 @@ Open TODOs / follow-ups:
 
 - Evaluate whether `tests/a11y/critical-flows.spec.ts` settle logic should include explicit reduced-motion mode for all routes.
 - Address perf budget TTI failures in a separate planned task.
+
+---
+
+## 2026-02-11 09:53 CET
+
+Task summary:
+
+- Implemented admin dashboard reliability hardening plan: auth/data-flow fixes, CSRF-safe client integration, schema-correct fairness metrics, deterministic admin test mode, and added admin route/UI/smoke tests.
+
+What worked:
+
+- Replaced broken admin role checks with platform admin guard in affected routes.
+- Fixed LinkedIn review path to use valid identity sources for notification email lookups.
+- Switched fairness-note generation mutation call to `apiFetch`, aligning with CSRF middleware requirements.
+- Corrected fairness-metrics query columns and added stable metrics/gap computation from returned rows.
+- Fixed runtime crash on `/admin/fairness/notes` by guarding optional/legacy note payload fields before calling `replace`, `toFixed`, and array operations.
+- Added focused route tests and UI tests that passed.
+- Added and executed deterministic admin smoke (`npm run test:e2e:admin`) successfully.
+- Full lint/typecheck/test/build gates passed after changes.
+
+What failed / wrong assumptions:
+
+- Running `node scripts/test-admin-dashboard-data.js` still failed endpoint checks locally because no active local admin session/server context was available during this run, though the ESM runtime mismatch itself was fixed.
+- First `npm run build` failed because exporting helper functions directly from a route file is disallowed by Next.js route type constraints; fixed by moving helper to `base-url.ts`.
+
+User corrections:
+
+- User requested direct implementation of the full approved admin hardening plan.
+
+Assumptions taken without asking:
+
+- Test-only admin mock role gating (`NODE_ENV=test` or `PLAYWRIGHT=true`) is acceptable for deterministic admin smoke coverage.
+- Keeping fairness-metrics response keys stable while improving internal computation is required for frontend compatibility.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add explicit network-error details in `scripts/test-admin-dashboard-data.js` summary output for easier local diagnosis.
+- Add one smoke assertion that each admin page loads without the generic error boundary copy ("Something went wrong") to catch runtime regressions earlier.
+
+Commands run + outcomes:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- src/app/api/admin`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- tests/ui/admin-fairness-notes-page.test.tsx tests/ui/organizations-table.test.tsx`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH node scripts/test-admin-dashboard-data.js`: FAIL (runtime fixed to ESM; endpoint checks failed without local app/auth context)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:admin`: FAIL first (runtime crash in `/admin/fairness/notes`), then PASS after defensive rendering fix
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS (after moving cron base URL helper out of route file)
+
+Open TODOs / follow-ups:
+
+- Consider richer fairness-metrics inputs (demographic dimensions) for deeper gap analysis while preserving existing response contract.

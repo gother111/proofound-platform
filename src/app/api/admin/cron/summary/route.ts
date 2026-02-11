@@ -3,6 +3,7 @@ import { db } from '@/db';
 import { fairnessNotes, fairnessReports } from '@/db/schema';
 import { requirePlatformAdminJson } from '@/lib/api/route-helpers';
 import { desc } from 'drizzle-orm';
+import { resolveCronSummaryBaseUrl } from './base-url';
 
 type HealthCheckResult = {
   status: string;
@@ -33,12 +34,7 @@ export async function GET(_request: NextRequest) {
 
   // Live health-check ping
   const healthResult: HealthCheckResult = { status: 'unknown', statusCode: 0 };
-  const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL?.startsWith('http')
-      ? process.env.VERCEL_URL
-      : process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : undefined;
+  const baseUrl = resolveCronSummaryBaseUrl();
 
   if (baseUrl) {
     try {
@@ -63,22 +59,21 @@ export async function GET(_request: NextRequest) {
     data: {
       fairnessNote: latestNote
         ? {
-          id: latestNote.id,
-          releaseVersion: latestNote.releaseVersion,
-          generatedAt: latestNote.generatedAt,
-          hasSignificantGaps: latestNote.hasSignificantGaps,
-          findings: Array.isArray(latestNote.findings) ? latestNote.findings.length : 0,
-        }
+            id: latestNote.id,
+            releaseVersion: latestNote.releaseVersion,
+            generatedAt: latestNote.generatedAt,
+            hasSignificantGaps: latestNote.hasSignificantGaps,
+            findings: Array.isArray(latestNote.findings) ? latestNote.findings.length : 0,
+          }
         : null,
       fairnessReport: latestReport
         ? {
-          id: latestReport.id,
-          releaseVersion: latestReport.releaseVersion,
-          createdAt: latestReport.createdAt,
-        }
+            id: latestReport.id,
+            releaseVersion: latestReport.releaseVersion,
+            createdAt: latestReport.createdAt,
+          }
         : null,
       health: healthResult,
     },
   });
 }
-

@@ -414,3 +414,61 @@ Open risks/TODO:
 
 - E2E org profile smoke currently skips when credential env vars are not present locally.
 - Playwright web server teardown still emits occasional `ECONNRESET` noise in logs after test completion.
+
+---
+
+## 2026-02-11: Admin Dashboard Reliability Hardening
+
+What changed:
+
+- Normalized admin authorization to platform-role guard in critical admin routes:
+  - `src/app/api/admin/verification/linkedin/[userId]/review/route.ts`
+  - `src/app/api/admin/fairness-report/route.ts`
+- Fixed LinkedIn review notification identity lookup:
+  - Replaced invalid `profiles(email, full_name)` query with valid `profiles(display_name)` + Supabase admin auth user lookup.
+- Fixed fairness metrics data flow to real match schema columns:
+  - `src/app/api/admin/fairness-metrics/route.ts` now queries `score, profile_id, assignment_id, created_at`, computes metrics from returned rows, and keeps response keys stable.
+- Fixed cron summary base URL precedence bug:
+  - Added `src/app/api/admin/cron/summary/base-url.ts` and used it from `src/app/api/admin/cron/summary/route.ts`.
+- Fixed CSRF-incompatible fairness note generation request:
+  - `src/app/admin/fairness/notes/page.tsx` now uses `apiFetch` for `POST /api/admin/fairness/generate-note`.
+- Hardened admin fairness notes rendering against incomplete/legacy payloads:
+  - `src/app/admin/fairness/notes/page.tsx` now guards optional fields before string/number operations (`replace`, `toFixed`, array maps), preventing runtime crashes in admin mock smoke runs.
+- Fixed organization verification badge rendering:
+  - `src/components/admin/organizations/OrganizationsTable.tsx` now reflects `org.verified`.
+- Converted admin dashboard test script to ESM:
+  - `scripts/test-admin-dashboard-data.js`
+- Added deterministic admin mock mode and smoke path:
+  - Test-only mock admin role gating in `src/lib/auth/admin.ts`, `src/lib/supabase/server.ts`, and `src/lib/supabase/client.ts`.
+  - Added `e2e/admin-dashboard-smoke.spec.ts`.
+  - Added script `test:e2e:admin` in `package.json`.
+- Added admin-focused route/UI tests:
+  - `src/app/api/admin/__tests__/verification-linkedin-review-route.test.ts`
+  - `src/app/api/admin/__tests__/fairness-report-route.test.ts`
+  - `src/app/api/admin/__tests__/fairness-metrics-route.test.ts`
+  - `src/app/api/admin/__tests__/cron-summary-route.test.ts`
+  - `tests/ui/admin-fairness-notes-page.test.tsx`
+  - `tests/ui/organizations-table.test.tsx`
+
+Why:
+
+- Several admin endpoints were checking non-existent/incorrect columns (`profiles.role`, `matches.total_score`, `matches.user_id`) and could block valid admin flows or return invalid metrics.
+- Fairness note generation used raw `fetch` for a CSRF-protected mutation route.
+- Organization verification state was not rendered accurately in admin UI.
+- Admin reliability lacked deterministic route/UI coverage and a repeatable smoke path.
+
+How to verify:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- src/app/api/admin` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- tests/ui/admin-fairness-notes-page.test.tsx tests/ui/organizations-table.test.tsx` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:admin` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH node scripts/test-admin-dashboard-data.js` (Runs under ESM; endpoint checks require running local app/auth and failed in this run due no active local admin session/server context.)
+
+Open risks/TODO:
+
+- `GET /api/admin/fairness-metrics` now computes deterministic metrics from available match columns, but demographic fairness depth is still limited by available columns in this endpoint.
+- Admin smoke currently validates core page availability and blocking errors; it does not yet assert per-widget data freshness/SLA timestamps.
