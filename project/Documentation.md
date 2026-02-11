@@ -16,6 +16,53 @@ This folder is the durable “project memory” surface for Proofound. It is mea
 - Do not copy secrets from local env files or setup docs into tracked markdown.
 - At the end of every session, append a new entry to `agent/scratchpad.md` (append-only).
 
+## 2026-02-11: Landing Regression Guardrail Policy
+
+What changed:
+
+- Set canonical landing visual baseline to commit `af705d4`.
+- Added dedicated landing visual contract test:
+  - `e2e/landing-visual.spec.ts`
+  - `e2e/landing-visual.spec.ts-snapshots/landing-home-af705d4-linux-chromium.png`
+- Added CI scope guard script:
+  - `scripts/check-landing-pr-scope.mjs`
+- Updated CI to run:
+  - `node ./scripts/check-landing-pr-scope.mjs` on pull requests
+  - `npm run test:e2e:landing:visual` as a blocking check
+
+Why:
+
+- Repeated landing regressions were caused by mixed PRs that included landing-sensitive files with unrelated work.
+
+Landing-sensitive paths:
+
+- `src/app/page.tsx`
+- `src/app/globals.css`
+- `src/app/layout.tsx`
+- `src/components/ProofoundLanding.tsx`
+- `src/components/landing/**`
+
+Merge policy:
+
+- Landing-sensitive changes must be isolated in a dedicated landing PR.
+- Allowed co-files in a landing PR:
+  - `e2e/landing-page.spec.ts`
+  - `e2e/landing-visual.spec.ts`
+  - `e2e/landing-visual.spec.ts-snapshots/**`
+  - `project/Documentation.md`
+  - `agent/scratchpad.md`
+
+How to verify:
+
+- `npm run test:e2e:landing`
+- `npm run test:e2e:landing:visual`
+- For PR scope check (local smoke):
+  - `node ./scripts/check-landing-pr-scope.mjs`
+
+Open risks/TODO:
+
+- Visual baseline is Chromium/Linux specific by design; if rendering stack changes materially, baseline image must be regenerated intentionally in a dedicated landing PR.
+
 ## Last Run Summary
 
 - Bootstrap run: created `project/` and `agent/` markdown only (no application code changes).

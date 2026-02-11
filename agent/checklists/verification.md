@@ -11,6 +11,22 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 - Unit tests: `npm run test` (source: package.json)
 - Build: `npm run build` (source: package.json)
 
+## Landing Guardrail (Required When Landing Files Change)
+
+- Canonical baseline is commit `af705d4`.
+- If a PR touches any landing-sensitive path, it must be a dedicated landing PR.
+- Landing-sensitive paths:
+  - `src/app/page.tsx`
+  - `src/app/globals.css`
+  - `src/app/layout.tsx`
+  - `src/components/ProofoundLanding.tsx`
+  - `src/components/landing/**`
+- Required checks for landing-touching PRs:
+  - `npm run test:e2e:landing`
+  - `npm run test:e2e:landing:visual`
+- CI enforces scope isolation for landing-sensitive changes through:
+  - `scripts/check-landing-pr-scope.mjs`
+
 ## Vercel Parity (When Deploy Might Break)
 
 - Ensure Node version matches `.nvmrc`/engines (source: .nvmrc, package.json)

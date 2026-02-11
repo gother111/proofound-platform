@@ -28,6 +28,10 @@ jobs:
           node-version-file: '.nvmrc'
           cache: 'npm'
 
+      - name: Enforce landing PR scope
+        if: github.event_name == 'pull_request'
+        run: node ./scripts/check-landing-pr-scope.mjs
+
       - name: Install dependencies
         run: npm ci
 
@@ -48,6 +52,9 @@ jobs:
 
       - name: Run landing page contract
         run: npm run test:e2e:landing
+
+      - name: Run landing visual baseline contract
+        run: npm run test:e2e:landing:visual
 
       - name: Rebuild application for production start
         run: npm run build
