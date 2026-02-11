@@ -901,3 +901,55 @@ Open TODOs / follow-ups:
 
 - Add a user-visible ambiguity hint for legacy auto-resolve when multiple high-confidence taxonomy matches exist.
 - Consider backfill script for existing assignments that still contain legacy non-taxonomy skill IDs.
+
+---
+
+## 2026-02-11 21:48 CET
+
+Task summary:
+
+- Implement landing hotfix to restore production visuals to the baseline associated with preview state `9f8e0a9`.
+- Keep assignment skills parity changes intact while reverting only landing route + typography files.
+- Run full verification sequence including landing E2E smoke.
+
+What worked:
+
+- Isolated hotfix branch from deployed commit `5278f55` using a clean worktree.
+- Restored `src/app/page.tsx` and `src/app/globals.css` directly from `9f8e0a9` blob versions.
+- Full validation passed: lint, typecheck, unit tests, build, and `test:e2e:landing`.
+
+What failed / wrong assumptions:
+
+- Initial clean worktree had no local dependencies and failed checks (`tsc`, `vitest` not found).
+- Verification resumed successfully after linking worktree `node_modules` to the main workspace install.
+
+User corrections:
+
+- Production must match the earlier landing visual baseline; performance-oriented simplified landing is not acceptable for this release.
+
+Assumptions taken without asking:
+
+- Exact parity requirement includes both route render path (`ProofoundLanding`) and typography stack (Inter + Crimson Pro import).
+- Minimal hotfix scope should include only landing route/typography plus required docs logs.
+
+What the user corrected afterward:
+
+- None after execution started.
+
+Improvements next time:
+
+- Keep a dedicated visual-regression check for `/` before promoting any branch to production.
+- Add a release checklist item to confirm homepage route implementation did not switch component families.
+
+Commands run + outcomes:
+
+- `npm run lint`: PASS
+- `npm run typecheck`: PASS
+- `npm run test`: PASS
+- `npm run build`: PASS
+- `npm run test:e2e:landing`: PASS (14/14)
+
+Open TODOs / follow-ups:
+
+- Validate hotfix preview screenshot side-by-side against the known-good `9f8e0a9` preview screenshot before production promote.
+- Promote hotfix deployment to production after visual confirmation.

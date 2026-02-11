@@ -913,3 +913,36 @@ Open risks/TODO:
 - Legacy auto-resolve uses best-effort matching and can still produce ambiguous picks for broad legacy IDs.
 - Historic assignments with already-saved unresolved IDs remain mixed until edited/resaved.
 - Follow-up enhancement can add stronger confidence scoring or explicit user-confirm resolution for ambiguous legacy entries.
+
+---
+
+## 2026-02-11: Landing Hotfix Restore to 9f8e0a9 Baseline
+
+What changed:
+
+- Restored homepage route rendering to the pre-regression baseline:
+  - `src/app/page.tsx` now renders `ProofoundLanding` again (instead of the simplified static shell introduced later).
+- Restored landing typography baseline:
+  - `src/app/globals.css` re-adds Google Fonts import for Inter + Crimson Pro.
+  - Reverts display/UI font-family declarations to the `9f8e0a9` baseline behavior.
+
+Why:
+
+- Production landing visual regression was caused by `src/app/page.tsx` being switched from `ProofoundLanding` to a simplified route shell after the preview state associated with `9f8e0a9`.
+- Typography had additional visual drift from fallback-only font changes in `globals.css`.
+
+How to verify:
+
+- `npm run lint`
+- `npm run typecheck`
+- `npm run test`
+- `npm run build`
+- `npm run test:e2e:landing`
+- Manual screenshot comparison:
+  - Compare latest hotfix preview `/` against the known-good `9f8e0a9` preview screenshot.
+  - Confirm hero layout and CTA styling match baseline.
+
+Open risks/TODO:
+
+- This hotfix intentionally prioritizes visual parity over the later landing performance simplifications.
+- Keep `test:e2e:landing` in the release verification checklist for future production promotions.
