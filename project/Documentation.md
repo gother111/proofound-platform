@@ -530,3 +530,55 @@ Open risks/TODO:
 - `npm run typecheck` can fail on this branch when `.next/types` is stale; running `npm run build` first regenerates route types.
 - `scripts/perf-budgets.mjs` still carries a local percentile helper by design; keep it synced with `src/lib/monitoring/api-latency.ts` if formula changes again.
 - Other modules still use mixed base URL env names (`NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_SITE_URL`, `SITE_URL`); full repo-wide URL/env standardization remains out of scope for this targeted refactor.
+
+---
+
+## 2026-02-11: Landing Baseline Sync + CI Drift Guard (Preview vs Production)
+
+What changed:
+
+- Synced landing implementation to production baseline (`origin/codex/mvp-critical-apis-supabase`) on both `master` and `admin-dashboard-polish`:
+  - `src/app/page.tsx`
+  - `src/components/ProofoundLanding.tsx`
+  - `src/components/landing/sections/HeroSection.tsx`
+  - `src/components/landing/sections/ProblemSection.tsx`
+  - `src/components/landing/sections/HowItWorksSection.tsx`
+  - `src/components/landing/sections/PrinciplesSection.tsx`
+  - `src/components/landing/sections/PersonasSection.tsx`
+  - `src/components/landing/sections/WhyNowSection.tsx`
+  - `src/components/landing/sections/ProofSection.tsx`
+  - `src/components/landing/sections/StewardOwnershipSection.tsx`
+  - `src/components/landing/sections/ProductsSection.tsx`
+  - `src/components/landing/sections/FinalCTASection.tsx`
+  - `src/components/landing/sections/FinalQuoteSection.tsx`
+  - `src/components/landing/sections/FooterSection.tsx`
+  - `e2e/landing-page.spec.ts`
+- Added strict landing drift guard:
+  - New script in `package.json`: `test:e2e:landing`
+  - CI now installs Chromium and runs `npm run test:e2e:landing` in `.github/workflows/ci.yml`
+- Vercel alignment:
+  - Verified target project is `proofound-platform` (not local linked `proofound` helper project).
+  - Set `proofound-platform` Node runtime to `20.x`.
+  - Verified Git link remains connected and production branch is `master`.
+
+Why:
+
+- Preview deployments were showing an older landing because branch baseline drifted from production landing branch content.
+- There was no mandatory CI contract test for landing behavior, so regressions could slip into branch previews.
+- Vercel runtime drift (`22.x`) could cause build/runtime differences from repo-pinned Node `20.20.0`.
+
+How to verify:
+
+- `npm run lint`
+- `npm run typecheck`
+- `npm run test`
+- `npm run build`
+- `npm run test:e2e:landing`
+- Confirm Vercel project settings (`proofound-platform`):
+  - Node version: `20.x`
+  - Git production branch: `master`
+
+Open risks/TODO:
+
+- Landing contract intentionally becomes stricter; intentional redesigns must update `e2e/landing-page.spec.ts` and pass CI.
+- CI runtime will increase due Chromium install and landing contract execution.

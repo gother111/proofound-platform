@@ -489,3 +489,63 @@ Commands run + outcomes:
 Open TODOs / follow-ups:
 
 - Optional follow-up: repo-wide base URL env normalization (`NEXT_PUBLIC_SITE_URL`/`SITE_URL`/`NEXT_PUBLIC_APP_URL`) to reduce future drift outside this targeted scope.
+
+---
+
+## 2026-02-11 11:17 CET
+
+Task summary:
+
+- Implemented landing parity fix so preview deploys default to the same landing baseline as production.
+- Synced landing files from `origin/codex/mvp-critical-apis-supabase` into `master` and current work branch path.
+- Added strict CI guard (`test:e2e:landing`) and aligned Vercel `proofound-platform` runtime to Node `20.x`.
+
+What worked:
+
+- Temporary `master` worktree allowed clean baseline sync commit without touching unrelated local edits.
+- Cherry-picking the same landing sync commit reproduced production landing content cleanly in the target branch path.
+- Landing contract guard was added with Chromium install and dedicated CI step.
+- Vercel API + CLI checks confirmed `proofound-platform` now has `nodeVersion: 20.x`, Git link intact, and `productionBranch: master`.
+
+What failed / wrong assumptions:
+
+- Initial Vercel API PATCH call with only `nodeVersion` temporarily nulled the `link` object in response shape.
+- Assumption that local `.vercel/project.json` mapped to the screenshot project was wrong; local project was `proofound`, while production screenshot project is `proofound-platform`.
+
+User corrections:
+
+- User explicitly requested full plan implementation including master sync, current-branch sync, CI guard, and Vercel alignment.
+
+Assumptions taken without asking:
+
+- Production-approved landing baseline is the state in `origin/codex/mvp-critical-apis-supabase`.
+- Enforcing a strict landing contract in CI is acceptable even with additional CI runtime cost.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Identify and verify the exact Vercel project (`proofound-platform` vs similarly named projects) before performing API mutations.
+- For Vercel project PATCH operations, verify field update semantics first to avoid temporary link metadata side effects.
+
+Commands run + outcomes:
+
+- `git worktree add ../proofound-master-sync master`: PASS
+- `git checkout origin/codex/mvp-critical-apis-supabase -- <landing files> e2e/landing-page.spec.ts` (master worktree): PASS
+- `git commit -m "fix(landing): sync production baseline from codex/mvp-critical-apis-supabase"` (master worktree): PASS
+- `git cherry-pick 6ee637d` (main workspace): PASS
+- `git commit -m "ci(landing): enforce landing page e2e contract"` (master worktree after package+ci changes): PASS
+- `git worktree add -b codex/admin-dashboard-polish-landing-sync ../proofound-admin-sync origin/admin-dashboard-polish`: PASS
+- `git cherry-pick 6ee637d 2e5349d` (clean admin sync worktree): PASS
+- `npx vercel project list --token $VERCEL_TOKEN`: PASS (identified `proofound-platform` Node `22.x` before alignment)
+- `npx vercel api /v9/projects/prj_BkeoHPoWm9L8MzM8mtcFQXG3KKgg -X PATCH -f nodeVersion=20.x --token $VERCEL_TOKEN`: PASS (set Node to 20.x)
+- `npx vercel git connect https://github.com/gother111/proofound-platform --token $VERCEL_TOKEN`: PASS (`already connected`)
+- `npx vercel api /v9/projects/prj_BkeoHPoWm9L8MzM8mtcFQXG3KKgg --token $VERCEL_TOKEN --raw | jq ...`: PASS (confirmed link + productionBranch + nodeVersion)
+
+Open TODOs / follow-ups:
+
+- Push updated `master` and `admin-dashboard-polish` branch commits to remote.
+- Trigger/observe fresh production deployment from synced `master` in `proofound-platform`.
+- Run full local verification suite on clean implementation branch workspace and record outcomes.
