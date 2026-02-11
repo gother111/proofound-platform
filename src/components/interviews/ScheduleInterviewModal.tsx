@@ -13,7 +13,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Calendar, Clock, Video } from 'lucide-react';
+import { Calendar, Clock, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -202,7 +202,7 @@ export function ScheduleInterviewModal({
           {/* Duration (Fixed at 30 min) */}
           <div className="space-y-2">
             <Label>Duration</Label>
-            <div className="px-3 py-2 border rounded-md bg-gray-50 text-gray-700">
+            <div className="rounded-md border border-border bg-muted/40 px-3 py-2 text-foreground">
               30 minutes (fixed)
             </div>
           </div>
@@ -226,14 +226,14 @@ export function ScheduleInterviewModal({
 
           {/* Error Message */}
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-700">
+            <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
               {error}
             </div>
           )}
 
           {/* Reschedule Warning */}
           {isReschedule && !canReschedule && (
-            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md text-sm text-yellow-800">
+            <div className="rounded-md border border-warning/40 bg-warning/15 p-3 text-sm text-proofound-charcoal">
               ⚠️ You have already rescheduled this interview once. No further reschedules allowed.
             </div>
           )}
@@ -247,7 +247,6 @@ export function ScheduleInterviewModal({
           <Button
             onClick={handleSubmit}
             disabled={isSubmitting || (isReschedule && !canReschedule)}
-            style={{ backgroundColor: '#1C4D3A', color: 'white' }}
           >
             {isSubmitting ? 'Scheduling...' : isReschedule ? 'Reschedule' : 'Schedule Interview'}
           </Button>
