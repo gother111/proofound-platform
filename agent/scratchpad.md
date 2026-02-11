@@ -549,3 +549,55 @@ Open TODOs / follow-ups:
 - Push updated `master` and `admin-dashboard-polish` branch commits to remote.
 - Trigger/observe fresh production deployment from synced `master` in `proofound-platform`.
 - Run full local verification suite on clean implementation branch workspace and record outcomes.
+
+---
+
+## 2026-02-11 11:28 CET
+
+Task summary:
+
+- Finalized landing baseline/guard rollout by pushing `master` and `admin-dashboard-polish` updates.
+- Completed Vercel parity checks for `proofound-platform` and confirmed runtime + branch alignment.
+
+What worked:
+
+- `master` advanced with landing baseline sync and CI landing contract guard commits.
+- `admin-dashboard-polish` advanced with landing sync, CI guard, and docs/scratchpad updates.
+- Vercel project `proofound-platform` now reports `nodeVersion: 20.x` and `productionBranch: master` with Git link connected.
+- Local verification suite passed with Node 20 and mock supabase flag for landing Playwright run.
+
+What failed / wrong assumptions:
+
+- First landing Playwright run without mock supabase env failed due missing public supabase env vars in local runtime.
+
+User corrections:
+
+- None.
+
+Assumptions taken without asking:
+
+- Running local landing Playwright check with `NEXT_PUBLIC_USE_MOCK_SUPABASE=true` is acceptable for deterministic local verification when env keys are absent.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Run landing e2e with explicit test env defaults from the start to avoid initial false negatives.
+
+Commands run + outcomes:
+
+- `git push origin master`: PASS (`9c376b7..2e5349d`)
+- `git push origin codex/admin-dashboard-polish-landing-sync:admin-dashboard-polish`: PASS (`5f4c54a..d3740ef`)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:landing`: FAIL first (missing env), PASS with `NEXT_PUBLIC_USE_MOCK_SUPABASE=true`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vercel pull --yes --environment=production --token $VERCEL_TOKEN`: PASS (`proofound-platform`)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx vercel build --prod --yes --token $VERCEL_TOKEN`: PASS (`proofound-platform`)
+
+Open TODOs / follow-ups:
+
+- Monitor queued production deployment `dpl_AaAx8hkQrje5M97WgJexeZFy3GcM` until it transitions from `Queued` to `Ready`.
