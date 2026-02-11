@@ -988,3 +988,30 @@ Open risks/TODO:
 - Legacy auto-resolve uses best-effort matching and can still produce ambiguous picks for broad legacy IDs.
 - Historic assignments with already-saved unresolved IDs remain mixed until edited/resaved.
 - Follow-up enhancement can add stronger confidence scoring or explicit user-confirm resolution for ambiguous legacy entries.
+
+---
+
+## 2026-02-11: Local Collaboration Alignment Cleanup (Accidental Files)
+
+What changed:
+
+- Removed accidental empty untracked files from repo root:
+  - `id`
+  - `name`
+  - `skillName`
+- Staged only intentional collaboration-safe changes.
+
+Why:
+
+- These files were local artifacts with no application behavior, tests, or documentation value.
+- Keeping the repository free of accidental files reduces branch noise and makes remote collaboration clearer for teammates working only from Git.
+
+How to verify:
+
+- `git status --short` should not list `id`, `name`, or `skillName`.
+- `git ls-files --others --exclude-standard` should no longer include those names.
+- `git diff --cached --name-status` should show only intended staged changes for this cleanup session.
+
+Open risks/TODO:
+
+- None for runtime behavior. This is a repository hygiene change only.
