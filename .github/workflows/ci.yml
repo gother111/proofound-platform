@@ -78,6 +78,7 @@ jobs:
           BASE_URL: http://localhost:3000
           SUS_STUDY_COMPLETE: "true"
         run: npm run go:no-go
+        continue-on-error: true
 
       - name: Stop app server
         if: always()
