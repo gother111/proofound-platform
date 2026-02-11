@@ -16,6 +16,31 @@ This folder is the durable “project memory” surface for Proofound. It is mea
 - Do not copy secrets from local env files or setup docs into tracked markdown.
 - At the end of every session, append a new entry to `agent/scratchpad.md` (append-only).
 
+## Plain-English Git Flow (Required)
+
+Use this order for every real code change:
+
+1. Create a branch from `master` (safe copy to work in).
+2. Edit files in that branch.
+3. Commit (save a checkpoint with a clear message).
+4. Push (upload the branch to GitHub).
+5. Open a PR (request review and merge into `master`).
+6. Wait for checks to pass (`a11y` and `ci`).
+7. Merge PR to `master`.
+8. Deploy from `master` only.
+
+Simple meaning of each action:
+
+- `commit`: save your change safely.
+- `push`: upload your saved change to GitHub.
+- `PR`: ask to merge that change into the main code.
+
+Important policy:
+
+- Do not push directly to `master`.
+- A Vercel preview from a branch is only a test copy, not production approval.
+- Production updates should come only from merged PRs into `master`.
+
 ## Last Run Summary
 
 - Bootstrap run: created `project/` and `agent/` markdown only (no application code changes).

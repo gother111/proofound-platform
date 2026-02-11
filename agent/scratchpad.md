@@ -619,3 +619,48 @@ Open TODOs / follow-ups:
 - First attempt to apply `20260211123000_cron_idempotency_guards.sql` failed due missing-relation/syntax assumptions in original SQL.
 - Patched migration to conditional `DO $$ ... $$` blocks and corrected JSON property quoting.
 - Re-applied migration successfully and verified both indexes exist in `pg_indexes`.
+
+---
+
+## 2026-02-11 19:59 CET
+
+Task summary:
+
+- Added plain-English Git workflow instructions so commit/push/PR order is explicit and easy to follow.
+- Added matching preflight checklist rules to keep `master` changes PR-based.
+
+What worked:
+
+- Added a concise required flow in `project/Documentation.md`.
+- Added explicit operational rules in `agent/checklists/preflight.md`.
+
+What failed / wrong assumptions:
+
+- None.
+
+User corrections:
+
+- User asked for plain-English explanation of branch, commit, push, PR, and when to use each.
+
+Assumptions taken without asking:
+
+- The best durable location for this guidance is both project docs and preflight checklist.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add a one-page click-by-click GitHub UI runbook if user asks.
+
+Commands run + outcomes:
+
+- `git fetch origin --prune`: PASS
+- `git worktree add -b codex/docs-git-flow-instructions /private/tmp/proofound-docs-gitflow origin/master`: PASS
+- `apply_patch` on `project/Documentation.md`: PASS
+- `apply_patch` on `agent/checklists/preflight.md`: PASS
+
+Open TODOs / follow-ups:
+
+- Commit, push, and open PR for this docs-only change set.
