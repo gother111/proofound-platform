@@ -30,6 +30,7 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 - E2E: `npm run test:e2e` (source: package.json)
 - A11y: `npm run test:a11y` (source: package.json)
   - TODO: Validate `playwright.a11y.config.ts` exists; do not create it as part of docs-only work. (source: package.json)
+- For credential-gated E2E smokes, document required env vars explicitly in `project/Documentation.md` and mark command outcome as PASS/SKIPPED with reason.
 
 ## Manual Smoke Checks (OAuth Integrations)
 
