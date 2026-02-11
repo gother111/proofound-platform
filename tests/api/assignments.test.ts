@@ -115,6 +115,66 @@ describe('Assignment API', () => {
       expect(db.insert).toHaveBeenCalled();
     });
 
+    it('should accept skill metadata fields and persist them in assignment payload', async () => {
+      (db.query.organizationMembers.findFirst as any).mockResolvedValue({ orgId: 'test-org-id' });
+
+      const valuesMock = vi.fn(() => ({
+        returning: vi.fn(() =>
+          Promise.resolve([{ id: 'new-assignment-id', role: 'Developer', status: 'draft' }])
+        ),
+      }));
+      (db.insert as any).mockReturnValue({ values: valuesMock });
+
+      const body = {
+        role: 'Senior Engineer',
+        status: 'draft',
+        mustHaveSkills: [
+          {
+            id: '03.01.01.001',
+            level: 4,
+            label: 'TypeScript',
+            catId: 3,
+            subcatId: 1,
+            l3Id: 1,
+            l1Label: 'Tools & Technologies',
+            l2Label: 'Programming',
+            l3Label: 'Typed Languages',
+            linkedToBV: true,
+            linkedToTO: false,
+          },
+        ],
+      };
+
+      const req = new NextRequest('http://localhost/api/assignments', {
+        method: 'POST',
+        body: JSON.stringify(body),
+      });
+
+      const res = await POST(req);
+      expect(res.status).toBe(201);
+
+      expect(valuesMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orgId: 'test-org-id',
+          mustHaveSkills: [
+            expect.objectContaining({
+              id: '03.01.01.001',
+              level: 4,
+              label: 'TypeScript',
+              catId: 3,
+              subcatId: 1,
+              l3Id: 1,
+              l1Label: 'Tools & Technologies',
+              l2Label: 'Programming',
+              l3Label: 'Typed Languages',
+              linkedToBV: true,
+              linkedToTO: false,
+            }),
+          ],
+        })
+      );
+    });
+
     it('should return 403 if user has no org', async () => {
       // Mock no org membership
       (db.query.organizationMembers.findFirst as any).mockResolvedValue(null);
