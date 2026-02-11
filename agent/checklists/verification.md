@@ -11,6 +11,40 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 - Unit tests: `npm run test` (source: package.json)
 - Build: `npm run build` (source: package.json)
 
+## Branch Governance (master)
+
+- Merge policy: use pull requests only, no direct pushes.
+- Required checks on `master`: `ci`, `a11y`.
+- Require branch to be up-to-date with `master` before merge.
+- Require at least 1 approval and dismiss stale approvals after new commits.
+- Require conversation resolution before merge.
+- Enforce for administrators, block force pushes, block branch deletion.
+- Merge strategy: squash only, with branch auto-delete on merge.
+
+## PR Scope Discipline
+
+- Keep default PR scope at `<=20` files unless explicitly declared as a large change.
+- Keep session/docs logs out of feature PRs when possible:
+  - `agent/scratchpad.md`
+  - `project/Documentation.md`
+- Use dedicated docs-only PRs for session logs and operational notes.
+
+## Landing Guardrail (Required When Landing Files Change)
+
+- Canonical baseline is commit `af705d4`.
+- If a PR touches any landing-sensitive path, it must be a dedicated landing PR.
+- Landing-sensitive paths:
+  - `src/app/page.tsx`
+  - `src/app/globals.css`
+  - `src/app/layout.tsx`
+  - `src/components/ProofoundLanding.tsx`
+  - `src/components/landing/**`
+- Required checks for landing-touching PRs:
+  - `npm run test:e2e:landing`
+  - `npm run test:e2e:landing:visual`
+- CI enforces scope isolation for landing-sensitive changes through:
+  - `scripts/check-landing-pr-scope.mjs`
+
 ## Vercel Parity (When Deploy Might Break)
 
 - Ensure Node version matches `.nvmrc`/engines (source: .nvmrc, package.json)
