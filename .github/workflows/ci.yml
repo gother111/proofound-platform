@@ -49,6 +49,9 @@ jobs:
       - name: Run landing page contract
         run: npm run test:e2e:landing
 
+      - name: Rebuild application for production start
+        run: npm run build
+
       - name: Start app server (background)
         run: |
           npm run start -- -p 3000 > /tmp/next.log 2>&1 &
