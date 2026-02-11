@@ -132,3 +132,50 @@ Commands run + outcomes:
 Open TODOs / follow-ups:
 
 - None.
+
+---
+
+## 2026-02-11 09:08 CET
+
+Task summary:
+
+- Finalize isolated LinkedIn OAuth hotfix branch and prepare clean deployment path.
+
+What worked:
+
+- Resolved docs merge conflicts by keeping isolated branch base content and appending a fresh session entry.
+- Kept commit scope focused on LinkedIn OAuth redirect and verification UX behavior.
+
+What failed / wrong assumptions:
+
+- Branch context switched unexpectedly during execution, which moved docs edits to a different branch and required stash-transfer recovery.
+
+User corrections:
+
+- User selected option `2` to keep `FairnessNoteCard` as-is while continuing.
+
+Assumptions taken without asking:
+
+- Unrelated modified files can stay uncommitted while LinkedIn-scope files are committed and pushed.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Before cross-branch stash apply, assert branch + status in a single guarded command and abort if unexpected modified files exist.
+
+Commands run + outcomes:
+
+- `git stash push -m "move-doc-updates-to-isolated-linkedin-hotfix" project/Documentation.md agent/scratchpad.md`: PASS
+- `git stash push -u -m "wip: park unrelated local changes before isolated linkedin hotfix finish"`: PASS
+- `git checkout codex/linkedin-oauth-hotfix-isolated`: PASS
+- `git stash apply stash@{1}`: CONFLICT in docs files
+- `git checkout --ours project/Documentation.md agent/scratchpad.md`: PASS
+- `git add project/Documentation.md agent/scratchpad.md`: PASS
+
+Open TODOs / follow-ups:
+
+- Run final verification on isolated branch and push.
+- Confirm Vercel deployment reaches READY and perform manual OAuth smoke on allowlisted domain.

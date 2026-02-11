@@ -186,3 +186,42 @@ TODO (missing / validate; do not create here):
 
 - `ACCESSIBILITY_AUDIT_REPORT.md` (expected because `scripts/go-no-go-check.mjs` requires it) (source: scripts/go-no-go-check.mjs)
 - `playwright.a11y.config.ts` (expected because `npm run test:a11y` references it) (source: package.json)
+
+---
+
+## 2026-02-11: Isolated LinkedIn OAuth Hotfix Release Candidate
+
+What changed:
+
+- Created isolated release branch `codex/linkedin-oauth-hotfix-isolated` from `origin/master`.
+- Cherry-picked LinkedIn OAuth and verification UX hotfix commit:
+  - `src/app/api/auth/linkedin/route.ts`
+  - `src/app/api/auth/linkedin/callback/route.ts`
+  - `src/components/settings/SettingsContent.tsx`
+  - `src/components/settings/LinkedInConnect.tsx`
+  - `src/components/settings/LinkedInVerification.tsx`
+  - `tests/api/linkedin-oauth-redirects.test.ts`
+  - `tests/ui/linkedin-verification.test.tsx`
+- Kept unrelated local edits out of commit scope.
+
+Why:
+
+- Previous working branches contained unrelated commits and local edits that increased release risk.
+- This branch isolates the LinkedIn 404 redirect fix and connect-first verification flow for safer deployment.
+
+How to verify:
+
+- Core checks (Node 20.20.0):
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`
+- Manual smoke (requires LinkedIn OAuth app setup):
+  - Open `/app/i/settings?tab=integrations`
+  - Click Connect LinkedIn and complete OAuth
+  - Confirm redirect to `/app/i/settings?tab=integrations&success=linkedin_connected`
+  - Confirm verification panel shows Connect step when disconnected and Start Verification Check when connected
+
+Open risks/TODO:
+
+- LinkedIn OAuth callback success still depends on allowlisting the exact domain in LinkedIn app settings.
