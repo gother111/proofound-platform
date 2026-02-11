@@ -673,3 +673,34 @@ Update (same run):
   - `analytics_events_deletion_reminder_once_idx`
   - `decision_reminders_interview_type_unique_idx`
 - Note: direct SQL execution does not register a new row in `supabase_migrations.schema_migrations`; migration ledger reconciliation remains required.
+
+---
+
+## 2026-02-11: External Skill Install from numman-ali/openskills
+
+What changed:
+
+- Installed `my-first-skill` to `~/.codex/skills/my-first-skill` using:
+  - `python3 ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py --repo numman-ali/openskills --path examples/my-first-skill`
+- Verified the installed skill contents:
+  - `~/.codex/skills/my-first-skill/SKILL.md`
+  - `~/.codex/skills/my-first-skill/references/`
+
+Why:
+
+- User requested installation of skills from `https://github.com/numman-ali/openskills`.
+- Repository scan found one Codex-compatible `SKILL.md` path: `examples/my-first-skill/SKILL.md`.
+
+How to verify:
+
+- Re-run install command above and confirm success message:
+  - `Installed my-first-skill to ~/.codex/skills/my-first-skill`
+- Check installed directory:
+  - `ls -la ~/.codex/skills/my-first-skill`
+- Confirm skill frontmatter:
+  - `sed -n '1,40p' ~/.codex/skills/my-first-skill/SKILL.md`
+
+Open risks/TODO:
+
+- `numman-ali/openskills` currently exposes one `SKILL.md` example path; if more skills are added later, install by explicit repo path(s).
+- Restart Codex to ensure newly installed skills are picked up in future sessions.

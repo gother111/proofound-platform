@@ -619,3 +619,54 @@ Open TODOs / follow-ups:
 - First attempt to apply `20260211123000_cron_idempotency_guards.sql` failed due missing-relation/syntax assumptions in original SQL.
 - Patched migration to conditional `DO $$ ... $$` blocks and corrected JSON property quoting.
 - Re-applied migration successfully and verified both indexes exist in `pg_indexes`.
+
+---
+
+## 2026-02-11 20:54 CET
+
+Task summary:
+
+- Installed available Codex-compatible skill(s) from `https://github.com/numman-ali/openskills` via the local `skill-installer` helper.
+- Documented install and verification details in project memory.
+
+What worked:
+
+- `skill-installer` helper script installed the discovered skill path without errors.
+- GitHub tree inspection identified the exact `SKILL.md` source path before install.
+- Post-install validation confirmed `SKILL.md` and bundled references exist locally.
+
+What failed / wrong assumptions:
+
+- Initial assumption that `openskills` might contain a top-level `skills/` folder was wrong (`/contents/skills` returned 404).
+- Repo currently exposes one `SKILL.md` example path, not a larger skill catalog.
+
+User corrections:
+
+- None.
+
+Assumptions taken without asking:
+
+- "Install the skills from here" means install all Codex-compatible `SKILL.md` directories in the provided repository.
+- Installing the single discovered path `examples/my-first-skill` satisfies this request for the current repo state.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Run a recursive tree query for `SKILL.md` first in all external skill repos to avoid trying non-existent conventional folders.
+- Offer optional follow-up install from a second repo when the provided repo is primarily a tool and not a skill catalog.
+
+Commands run + outcomes:
+
+- `curl -fsSL https://api.github.com/repos/numman-ali/openskills/contents`: PASS (repo structure fetched).
+- `curl -fsSL https://api.github.com/repos/numman-ali/openskills/contents/skills`: FAIL (404, folder absent).
+- `curl -fsSL 'https://api.github.com/repos/numman-ali/openskills/git/trees/main?recursive=1' | rg '"path": ".*SKILL.md"'`: PASS (found `examples/my-first-skill/SKILL.md`).
+- `python3 ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py --repo numman-ali/openskills --path examples/my-first-skill`: PASS.
+- `ls -la ~/.codex/skills/my-first-skill`: PASS.
+- `sed -n '1,200p' ~/.codex/skills/my-first-skill/SKILL.md`: PASS.
+
+Open TODOs / follow-ups:
+
+- Restart Codex so the new skill is available in the runtime skill list.
