@@ -25,11 +25,11 @@ interface Assignment {
   updatedAt: Date;
 }
 
-export default async function OpportunitiesPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+function getSkillDisplayLabel(skill: any) {
+  return skill?.label || skill?.name || skill?.skillName || skill?.id || 'Unknown skill';
+}
+
+export default async function OpportunitiesPage({ params }: { params: Promise<{ slug: string }> }) {
   const user = await requireAuth();
   const { slug } = await params;
   const result = await getActiveOrg(slug, user.id);
@@ -210,7 +210,7 @@ export default async function OpportunitiesPage({
                             key={index}
                             className="inline-flex items-center rounded-md bg-primary-50 px-2 py-1 text-xs font-medium text-primary-700"
                           >
-                            {skill.id} L{skill.level}
+                            {getSkillDisplayLabel(skill)} L{skill.level}
                           </span>
                         ))}
                         {mustHaveSkillsArray.length > 3 && (
@@ -224,9 +224,7 @@ export default async function OpportunitiesPage({
 
                   {/* Footer Info */}
                   <div className="mt-6 pt-6 border-t border-neutral-light-200 flex items-center justify-between text-sm text-neutral-dark-500">
-                    <div>
-                      Created {new Date(assignment.createdAt).toLocaleDateString()}
-                    </div>
+                    <div>Created {new Date(assignment.createdAt).toLocaleDateString()}</div>
                     {matchCount > 0 && (
                       <div className="font-medium text-primary-600">
                         {matchCount} candidate{matchCount !== 1 ? 's' : ''} matched
