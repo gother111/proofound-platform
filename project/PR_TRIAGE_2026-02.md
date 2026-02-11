@@ -177,3 +177,31 @@ Rows and columns: #142, #141, #137, #140, #138, #134, #136, #133, #132, #130, #1
   - Functional: `e2e/landing-page.spec.ts`
   - Visual: `e2e/landing-visual.spec.ts` snapshot `landing-home-af705d4-linux-chromium.png`
 - PR #141 marked superseded candidate pending final diff check after #142 merge decision.
+
+## Disposition Update (2026-02-11 23:02:16.749Z)
+
+### Closed as Superseded
+
+| PR   | Branch                               | State  | Notes                                                 |
+| ---- | ------------------------------------ | ------ | ----------------------------------------------------- |
+| #141 | `codex/landing-regression-hardening` | CLOSED | Superseded by #142 after zero-unique-file diff check. |
+
+### Closed as Archive-Stale
+
+| PR   | Branch                                                      | State  | Notes                                                          |
+| ---- | ----------------------------------------------------------- | ------ | -------------------------------------------------------------- |
+| #53  | `codex/rebuild-org-flow-end-to-end`                         | CLOSED | Deeply behind master; salvage only via fresh scoped slice PRs. |
+| #55  | `codex/fix-organization-and-individual-login-discrepancies` | CLOSED | Deeply behind master; salvage only via fresh scoped slice PRs. |
+| #59  | `feat/zen-hub-wireframe`                                    | CLOSED | Deeply behind master; salvage only via fresh scoped slice PRs. |
+| #61  | `codex/check-figma-elements-and-code-updates`               | CLOSED | Deeply behind master; salvage only via fresh scoped slice PRs. |
+| #71  | `feat/remove-matching-flag`                                 | CLOSED | Deeply behind master; salvage only via fresh scoped slice PRs. |
+| #93  | `2025-10-29-z16m-d7564`                                     | CLOSED | Deeply behind master; salvage only via fresh scoped slice PRs. |
+| #94  | `2025-10-30-layr-d7564`                                     | CLOSED | Deeply behind master; salvage only via fresh scoped slice PRs. |
+| #109 | `2025-11-05-vant-8b8ca`                                     | CLOSED | Deeply behind master; salvage only via fresh scoped slice PRs. |
+| #113 | `cursor/fix-admin-dashboard-data-load-error-eabc`           | CLOSED | Deeply behind master; salvage only via fresh scoped slice PRs. |
+
+### Active Blockers
+
+| PR   | Branch                         | Merge State | Blocker                                                                                                              |
+| ---- | ------------------------------ | ----------- | -------------------------------------------------------------------------------------------------------------------- |
+| #142 | `codex/ci-reliability-unblock` | BLOCKED     | Branch policy requires 1 approval from another write-access reviewer; self-approval and admin override are rejected. |
