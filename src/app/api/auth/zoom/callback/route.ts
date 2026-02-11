@@ -3,6 +3,7 @@ import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { exchangeZoomCode } from '@/lib/integrations/zoom';
+import { resolveOAuthRedirectUri } from '@/lib/integrations/oauth-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,14 +53,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const baseUrl =
-      process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_URL || request.nextUrl.origin;
-    const configuredRedirect = process.env.ZOOM_REDIRECT_URI;
-    const redirectUri = configuredRedirect
-      ? configuredRedirect.startsWith('/')
-        ? `${baseUrl}${configuredRedirect}`
-        : configuredRedirect
-      : `${baseUrl}${request.nextUrl.pathname}`;
+    const redirectUri = resolveOAuthRedirectUri(
+      request,
+      process.env.ZOOM_REDIRECT_URI,
+      request.nextUrl.pathname
+    );
 
     const tokens = await exchangeZoomCode(code, redirectUri);
     const tokenExpiry = new Date(Date.now() + tokens.expires_in * 1000);
