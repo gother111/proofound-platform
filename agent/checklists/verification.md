@@ -14,6 +14,8 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 ## Vercel Parity (When Deploy Might Break)
 
 - Ensure Node version matches `.nvmrc`/engines (source: .nvmrc, package.json)
+- Run `npm run vercel:preflight` to validate canonical Vercel linkage, production branch, and required env key presence.
+- Optional drift report between projects: `npm run vercel:env-parity`
 - Pull production project/env settings (creates `.vercel/`, which is gitignored): `npx vercel@latest pull --yes --environment=production` (source: .gitignore)
 - Run a prod-equivalent build locally: `npx vercel@latest build --prod`
   - If CLI auth is missing, use `--token` with a valid `VERCEL_TOKEN` (do not print it).
@@ -25,11 +27,19 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 - Go/no-go: `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go` (source: scripts/go-no-go-check.mjs)
   - TODO: Ensure required evidence files exist before relying on this gate; do not invent missing evidence. (source: scripts/go-no-go-check.mjs)
 
+## Migration and Data Safety (Before Production DDL)
+
+- Create a checkpoint: `npm run db:backup:checkpoint`
+- Reconcile migration ledger: `npm run db:audit:migrations`
+- Apply production schema changes through versioned SQL under `supabase/migrations/`.
+- Do not run `npm run db:push` against production.
+
 ## E2E / Accessibility (If You Touched Critical UX)
 
 - E2E: `npm run test:e2e` (source: package.json)
 - A11y: `npm run test:a11y` (source: package.json)
   - TODO: Validate `playwright.a11y.config.ts` exists; do not create it as part of docs-only work. (source: package.json)
+- For credential-gated E2E smokes, document required env vars explicitly in `project/Documentation.md` and mark command outcome as PASS/SKIPPED with reason.
 
 ## Manual Smoke Checks (OAuth Integrations)
 

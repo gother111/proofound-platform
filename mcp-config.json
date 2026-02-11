@@ -20,7 +20,7 @@
       "args": [
         "-y",
         "@modelcontextprotocol/server-postgres",
-        "postgresql://postgres:Gara1299442!@db.cjpfrgmsxwxhuomnvciq.supabase.co:5432/postgres?sslmode=require&connect_timeout=10"
+        "postgresql://postgres:[PASSWORD]@db.your-project-ref.supabase.co:5432/postgres?sslmode=require&connect_timeout=10"
       ]
     },
     "github-actions": {
