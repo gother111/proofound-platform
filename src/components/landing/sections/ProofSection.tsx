@@ -3,6 +3,7 @@
 import React, { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { ArrowRight, ShieldCheck, Lock, FileSearch, Fingerprint } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ProofSectionProps {
   shouldReduceMotion?: boolean | null;
@@ -11,6 +12,8 @@ interface ProofSectionProps {
 export function ProofSection({ shouldReduceMotion }: ProofSectionProps) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.2 });
+  const reduceMotion = !!shouldReduceMotion;
+  const effectiveInView = reduceMotion ? true : isInView;
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -33,32 +36,49 @@ export function ProofSection({ shouldReduceMotion }: ProofSectionProps) {
   };
 
   return (
-    <section ref={ref} className="py-32 px-6 md:px-12 relative overflow-hidden">
+    <section
+      ref={ref}
+      className="py-32 px-6 md:px-12 relative overflow-hidden bg-background scroll-mt-24"
+    >
       {/* Background Elements */}
       <div className="absolute inset-0 pointer-events-none">
         <motion.div
-          animate={{
-            scale: [1, 1.1, 1],
-            opacity: [0.3, 0.5, 0.3],
-          }}
-          transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+          animate={
+            reduceMotion
+              ? undefined
+              : {
+                  scale: [1, 1.1, 1],
+                  opacity: [0.3, 0.5, 0.3],
+                }
+          }
+          transition={
+            reduceMotion ? undefined : { duration: 10, repeat: Infinity, ease: 'easeInOut' }
+          }
           className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-japandi-stone/20 rounded-full blur-[100px]"
         />
         <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.2, 0.4, 0.2],
-          }}
-          transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+          animate={
+            reduceMotion
+              ? undefined
+              : {
+                  scale: [1, 1.2, 1],
+                  opacity: [0.2, 0.4, 0.2],
+                }
+          }
+          transition={
+            reduceMotion
+              ? undefined
+              : { duration: 15, repeat: Infinity, ease: 'easeInOut', delay: 2 }
+          }
           className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-japandi-sage/10 rounded-full blur-[80px]"
         />
       </div>
 
       <div className="max-w-7xl mx-auto relative z-10">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          initial={reduceMotion ? false : { opacity: 0, y: 30 }}
+          animate={effectiveInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+          transition={reduceMotion ? { duration: 0 } : { duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-20"
         >
           <h2 className="text-5xl md:text-6xl font-display text-japandi-charcoal mb-6">
@@ -72,16 +92,26 @@ export function ProofSection({ shouldReduceMotion }: ProofSectionProps) {
 
         <motion.div
           variants={containerVariants}
-          initial="hidden"
-          animate={isInView ? 'visible' : 'hidden'}
+          initial={reduceMotion ? false : 'hidden'}
+          animate={effectiveInView ? 'visible' : 'hidden'}
           className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8"
         >
           {/* Card 1: Verification (Large) */}
           <motion.div
             variants={itemVariants}
-            className="md:col-span-2 group relative overflow-hidden rounded-[2.5rem] bg-white/40 backdrop-blur-xl border border-white/20 p-10 md:p-14 hover:bg-white/50 transition-all duration-500 hover:shadow-lg hover:shadow-japandi-sage/5"
+            className={cn(
+              'md:col-span-2 group relative overflow-hidden rounded-[2.5rem] bg-card/60 backdrop-blur-xl border border-border p-10 md:p-14',
+              reduceMotion
+                ? ''
+                : 'hover:bg-card/80 transition-colors transition-shadow duration-500 hover:shadow-lg hover:shadow-japandi-sage/5'
+            )}
           >
-            <div className="absolute top-0 right-0 p-10 opacity-10 group-hover:opacity-20 transition-opacity duration-500">
+            <div
+              className={cn(
+                'absolute top-0 right-0 p-10 opacity-10',
+                reduceMotion ? '' : 'group-hover:opacity-20 transition-opacity duration-500'
+              )}
+            >
               <Fingerprint className="w-64 h-64 text-japandi-terracotta" />
             </div>
 
@@ -99,7 +129,15 @@ export function ProofSection({ shouldReduceMotion }: ProofSectionProps) {
                 </p>
               </div>
               <div className="mt-12">
-                <button className="text-japandi-terracotta font-medium flex items-center gap-2 hover:gap-4 transition-all duration-300 font-sans group-hover:translate-x-2">
+                <button
+                  type="button"
+                  className={cn(
+                    'text-japandi-terracotta font-medium flex items-center gap-2 font-sans',
+                    reduceMotion
+                      ? ''
+                      : 'hover:gap-4 transition-[gap,transform] duration-300 group-hover:translate-x-2'
+                  )}
+                >
                   Explore our protocol <ArrowRight className="w-5 h-5" />
                 </button>
               </div>
@@ -109,9 +147,17 @@ export function ProofSection({ shouldReduceMotion }: ProofSectionProps) {
           {/* Card 2: Privacy (Tall) */}
           <motion.div
             variants={itemVariants}
-            className="md:row-span-2 group relative overflow-hidden rounded-[2.5rem] bg-japandi-charcoal text-white p-10 md:p-12 flex flex-col justify-between hover:scale-[1.02] transition-transform duration-500"
+            className={cn(
+              'md:row-span-2 group relative overflow-hidden rounded-[2.5rem] bg-japandi-charcoal text-white p-10 md:p-12 flex flex-col justify-between',
+              reduceMotion ? '' : 'hover:scale-[1.02] transition-transform duration-500'
+            )}
           >
-            <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div
+              className={cn(
+                'absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0',
+                reduceMotion ? '' : 'group-hover:opacity-100 transition-opacity duration-500'
+              )}
+            />
 
             <div>
               <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center mb-8 text-white">
@@ -139,7 +185,10 @@ export function ProofSection({ shouldReduceMotion }: ProofSectionProps) {
           {/* Card 3: Audits (Standard) */}
           <motion.div
             variants={itemVariants}
-            className="group relative overflow-hidden rounded-[2.5rem] bg-white/60 backdrop-blur-xl border border-white/20 p-10 hover:bg-white/80 transition-all duration-500"
+            className={cn(
+              'group relative overflow-hidden rounded-[2.5rem] bg-card/70 backdrop-blur-xl border border-border p-10',
+              reduceMotion ? '' : 'hover:bg-card transition-colors duration-500'
+            )}
           >
             <div className="w-14 h-14 rounded-2xl bg-japandi-sage/10 flex items-center justify-center mb-6 text-japandi-sage">
               <FileSearch className="w-7 h-7" />
@@ -154,7 +203,10 @@ export function ProofSection({ shouldReduceMotion }: ProofSectionProps) {
           {/* Card 4: Open Source (Standard) */}
           <motion.div
             variants={itemVariants}
-            className="group relative overflow-hidden rounded-[2.5rem] bg-white/60 backdrop-blur-xl border border-white/20 p-10 hover:bg-white/80 transition-all duration-500"
+            className={cn(
+              'group relative overflow-hidden rounded-[2.5rem] bg-card/70 backdrop-blur-xl border border-border p-10',
+              reduceMotion ? '' : 'hover:bg-card transition-colors duration-500'
+            )}
           >
             <div className="w-14 h-14 rounded-2xl bg-japandi-stone/20 flex items-center justify-center mb-6 text-japandi-charcoal">
               <Fingerprint className="w-7 h-7" />
