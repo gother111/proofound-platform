@@ -5,6 +5,14 @@ import { profiles, organizations } from '@/db/schema';
 import { sql, gte } from 'drizzle-orm';
 import { logAnalyticsAccess } from '@/lib/audit/admin-logger';
 
+type GrowthGroupBy = 'day' | 'week' | 'month';
+
+const DATE_TRUNC_LITERAL: Record<GrowthGroupBy, ReturnType<typeof sql.raw>> = {
+  day: sql.raw("'day'"),
+  week: sql.raw("'week'"),
+  month: sql.raw("'month'"),
+};
+
 /**
  * GET /api/admin/analytics/growth
  *
@@ -19,7 +27,11 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const period = searchParams.get('period') || '30d';
-    const groupBy = searchParams.get('groupBy') || 'day';
+    const groupByParam = searchParams.get('groupBy');
+    const groupBy: GrowthGroupBy =
+      groupByParam === 'week' || groupByParam === 'month' || groupByParam === 'day'
+        ? groupByParam
+        : 'day';
 
     // Calculate date range
     const now = new Date();
@@ -40,41 +52,30 @@ export async function GET(request: NextRequest) {
         startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     }
 
-    // Determine SQL date truncation function
-    let dateTrunc: string;
-    switch (groupBy) {
-      case 'week':
-        dateTrunc = 'week';
-        break;
-      case 'month':
-        dateTrunc = 'month';
-        break;
-      case 'day':
-      default:
-        dateTrunc = 'day';
-    }
+    const userBucket = sql`DATE_TRUNC(${DATE_TRUNC_LITERAL[groupBy]}, ${profiles.createdAt})`;
+    const organizationBucket = sql`DATE_TRUNC(${DATE_TRUNC_LITERAL[groupBy]}, ${organizations.createdAt})`;
 
     // User signups over time
     const userGrowth = await db
       .select({
-        period: sql<string>`DATE_TRUNC(${dateTrunc}, created_at)::date`,
+        period: sql<string>`${userBucket}::date`,
         count: sql<number>`count(*)::int`,
       })
       .from(profiles)
       .where(gte(profiles.createdAt, startDate))
-      .groupBy(sql`DATE_TRUNC(${dateTrunc}, created_at)`)
-      .orderBy(sql`DATE_TRUNC(${dateTrunc}, created_at)`);
+      .groupBy(userBucket)
+      .orderBy(userBucket);
 
     // Organization growth over time
     const orgGrowth = await db
       .select({
-        period: sql<string>`DATE_TRUNC(${dateTrunc}, created_at)::date`,
+        period: sql<string>`${organizationBucket}::date`,
         count: sql<number>`count(*)::int`,
       })
       .from(organizations)
       .where(gte(organizations.createdAt, startDate))
-      .groupBy(sql`DATE_TRUNC(${dateTrunc}, created_at)`)
-      .orderBy(sql`DATE_TRUNC(${dateTrunc}, created_at)`);
+      .groupBy(organizationBucket)
+      .orderBy(organizationBucket);
 
     // Calculate cumulative totals
     let userCumulative = 0;
