@@ -708,12 +708,15 @@ What changed:
 - Updated `.github/workflows/accessibility.yml`:
   - Removed the `Build application` step from the accessibility workflow.
   - Fixed PR failure comment target from `context.repo.name` to `context.repo.repo`.
+- Updated `.github/workflows/ci.yml`:
+  - Added `NODE_OPTIONS=--max-old-space-size=6144` at job env level to prevent `next build` OOM in GitHub runner.
 
 Why:
 
 - The accessibility workflow was failing before tests ran due Node heap OOM during `npm run build`.
 - Accessibility checks already run in a dedicated Playwright flow (`npm run test:a11y`) and the main CI workflow still enforces build checks.
 - The PR comment step used an invalid repository name field, producing a 404 URL (`repos/<owner>//issues/...`).
+- CI builds in this PR were failing with `FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory`.
 
 How to verify:
 
@@ -722,6 +725,7 @@ How to verify:
 - Open PR checks:
   - Confirm `a11y` run no longer fails in the removed build step.
   - Confirm failure-comment step targets a valid repo slug if it executes.
+  - Confirm `ci` build step no longer fails with Node heap OOM.
 
 Open risks/TODO:
 

@@ -708,3 +708,45 @@ Commands run + outcomes:
 Open TODOs / follow-ups:
 
 - Push fix commit and confirm `a11y` check turns green on PR `#131`.
+
+---
+
+## 2026-02-11 20:22 CET
+
+Task summary:
+
+- Continued PR `#131` stabilization after `a11y` fix by resolving `ci` build OOM on GitHub runner.
+
+What worked:
+
+- Identified failing step from `ci` run logs (`Build application` in `.github/workflows/ci.yml`).
+- Added `NODE_OPTIONS=--max-old-space-size=6144` in CI job env to increase Node heap for `next build`.
+
+What failed / wrong assumptions:
+
+- After fixing accessibility workflow, CI still failed independently due memory pressure in build phase.
+
+User corrections:
+
+- User requested to fix the failing check.
+
+Assumptions taken without asking:
+
+- Increasing Node heap in CI is acceptable and lower risk than changing build output or disabling build checks.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Keep workflow memory settings explicit in CI to avoid intermittent build OOM regressions.
+
+Commands run + outcomes:
+
+- `gh run view 21919119115 --job 63294244226 --log-failed`: PASS (identified OOM root cause)
+- `apply_patch` on `.github/workflows/ci.yml`: PASS
+
+Open TODOs / follow-ups:
+
+- Push the CI memory patch and confirm `ci` turns green on PR `#131`.
