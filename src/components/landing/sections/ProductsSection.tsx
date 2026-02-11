@@ -4,6 +4,7 @@ import React, { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { Check, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface ProductsSectionProps {
   shouldReduceMotion?: boolean | null;
@@ -18,6 +19,8 @@ export function ProductsSection({
 }: ProductsSectionProps) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.2 });
+  const reduceMotion = !!shouldReduceMotion;
+  const effectiveInView = reduceMotion ? true : isInView;
 
   const plans = [
     {
@@ -31,7 +34,7 @@ export function ProductsSection({
         'Mental health & reflection tools',
         'Portable credentials',
       ],
-      cta: 'Join Now',
+      cta: 'Join as an Individual',
       onAction: onIndividualSignup,
       highlight: false,
     },
@@ -46,14 +49,18 @@ export function ProductsSection({
         'Team alignment analytics',
         'Dedicated support',
       ],
-      cta: 'Contact Sales',
+      cta: 'Join as an Organization',
       onAction: onOrganizationSignup,
       highlight: true,
     },
   ];
 
   return (
-    <section id="products" ref={ref} className="py-32 px-6 md:px-12 relative overflow-hidden">
+    <section
+      id="products"
+      ref={ref}
+      className="py-32 px-6 md:px-12 relative overflow-hidden bg-background scroll-mt-24"
+    >
       {/* Background Elements */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-japandi-stone/30 rounded-full blur-[120px] opacity-50" />
@@ -61,9 +68,9 @@ export function ProductsSection({
 
       <div className="max-w-6xl mx-auto relative z-10">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          initial={reduceMotion ? false : { opacity: 0, y: 30 }}
+          animate={effectiveInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+          transition={reduceMotion ? { duration: 0 } : { duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-20"
         >
           <h2 className="text-4xl md:text-6xl font-display text-japandi-charcoal mb-6">
@@ -78,17 +85,27 @@ export function ProductsSection({
           {plans.map((plan, idx) => (
             <motion.div
               key={idx}
-              initial={{ opacity: 0, y: 30 }}
-              animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-              transition={{ duration: 0.6, delay: idx * 0.15, ease: [0.22, 1, 0.36, 1] }}
-              className={`relative rounded-[2.5rem] p-10 md:p-12 transition-all duration-500 group ${
+              initial={reduceMotion ? false : { opacity: 0, y: 30 }}
+              animate={effectiveInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+              transition={
+                reduceMotion
+                  ? { duration: 0 }
+                  : { duration: 0.6, delay: idx * 0.15, ease: [0.22, 1, 0.36, 1] }
+              }
+              className={cn(
+                'relative rounded-[2.5rem] p-10 md:p-12 group',
                 plan.highlight
                   ? 'bg-japandi-charcoal text-white shadow-2xl shadow-japandi-charcoal/20 scale-105 z-10'
-                  : 'bg-white/60 backdrop-blur-xl border border-white/40 hover:bg-white/80 hover:shadow-lg'
-              }`}
+                  : 'bg-card/70 backdrop-blur-xl border border-border',
+                reduceMotion
+                  ? ''
+                  : plan.highlight
+                    ? 'transition-transform duration-500'
+                    : 'hover:bg-card transition-colors transition-shadow duration-500 hover:shadow-lg'
+              )}
             >
               {plan.highlight && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-japandi-terracotta to-[#D68C6D] text-white text-xs font-bold px-6 py-2 rounded-full shadow-lg flex items-center gap-2">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-proofound-terracotta to-extended-clay text-white text-xs font-bold px-6 py-2 rounded-full shadow-lg flex items-center gap-2">
                   <Sparkles className="w-3 h-3" /> POPULAR
                 </div>
               )}
@@ -145,11 +162,13 @@ export function ProductsSection({
 
               <Button
                 onClick={plan.onAction}
-                className={`w-full py-8 rounded-full text-lg font-medium transition-all duration-300 font-sans ${
+                className={cn(
+                  'w-full py-8 rounded-full text-lg font-medium font-sans transition-colors transition-shadow duration-300',
+                  reduceMotion ? '' : 'hover:shadow-xl',
                   plan.highlight
-                    ? 'bg-white text-japandi-charcoal hover:bg-white/90 hover:scale-[1.02] shadow-xl'
-                    : 'bg-japandi-charcoal text-white hover:bg-japandi-charcoal/90 hover:scale-[1.02] shadow-lg'
-                }`}
+                    ? 'bg-white text-japandi-charcoal hover:bg-white/90'
+                    : 'bg-japandi-charcoal text-white hover:bg-japandi-charcoal/90'
+                )}
               >
                 {plan.cta}
               </Button>

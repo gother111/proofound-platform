@@ -3,6 +3,7 @@
 import React, { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { Target, Users, Heart } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface StewardOwnershipSectionProps {
   shouldReduceMotion?: boolean | null;
@@ -11,6 +12,8 @@ interface StewardOwnershipSectionProps {
 export function StewardOwnershipSection({ shouldReduceMotion }: StewardOwnershipSectionProps) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.3 });
+  const reduceMotion = !!shouldReduceMotion;
+  const effectiveInView = reduceMotion ? true : isInView;
 
   const principles = [
     {
@@ -31,7 +34,11 @@ export function StewardOwnershipSection({ shouldReduceMotion }: StewardOwnership
   ];
 
   return (
-    <section id="steward-ownership" ref={ref} className="py-32 px-6 md:px-12 relative">
+    <section
+      id="steward-ownership"
+      ref={ref}
+      className="py-32 px-6 md:px-12 relative bg-background scroll-mt-24"
+    >
       {/* Background Decoration */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-japandi-sage/5 rounded-full blur-[120px]" />
@@ -39,9 +46,9 @@ export function StewardOwnershipSection({ shouldReduceMotion }: StewardOwnership
 
       <div className="max-w-6xl mx-auto relative z-10">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          initial={reduceMotion ? false : { opacity: 0, y: 30 }}
+          animate={effectiveInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+          transition={reduceMotion ? { duration: 0 } : { duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-20"
         >
           <h2 className="text-4xl md:text-6xl font-display text-japandi-charcoal mb-6">
@@ -58,18 +65,44 @@ export function StewardOwnershipSection({ shouldReduceMotion }: StewardOwnership
           {principles.map((principle, idx) => (
             <motion.div
               key={idx}
-              initial={{ opacity: 0, y: 30 }}
-              animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-              transition={{ duration: 0.6, delay: idx * 0.15, ease: [0.22, 1, 0.36, 1] }}
-              className="group relative rounded-[2rem] p-10 bg-white/60 backdrop-blur-2xl border border-white/40 hover:border-japandi-sage/30 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(28,77,58,0.1)]"
+              initial={reduceMotion ? false : { opacity: 0, y: 30 }}
+              animate={effectiveInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+              transition={
+                reduceMotion
+                  ? { duration: 0 }
+                  : { duration: 0.6, delay: idx * 0.15, ease: [0.22, 1, 0.36, 1] }
+              }
+              className={cn(
+                'group relative rounded-[2rem] p-10 bg-card/70 backdrop-blur-2xl border border-border',
+                reduceMotion
+                  ? ''
+                  : 'hover:border-japandi-sage/30 transition-colors transition-shadow transition-transform duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(28,77,58,0.1)]'
+              )}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-[2rem]" />
+              <div
+                className={cn(
+                  'absolute inset-0 bg-gradient-to-br from-white/30 to-transparent opacity-0 rounded-[2rem]',
+                  reduceMotion ? '' : 'group-hover:opacity-100 transition-opacity duration-500'
+                )}
+              />
 
               <div className="relative z-10 flex flex-col items-center text-center">
-                <div className="w-20 h-20 rounded-full bg-white shadow-sm flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-500 border border-japandi-sage/10">
+                <div
+                  className={cn(
+                    'w-20 h-20 rounded-full bg-background shadow-sm flex items-center justify-center mb-8 border border-japandi-sage/10',
+                    reduceMotion ? '' : 'group-hover:scale-110 transition-transform duration-500'
+                  )}
+                >
                   <principle.icon className="w-8 h-8 text-japandi-sage" />
                 </div>
-                <h3 className="text-2xl font-display text-japandi-charcoal mb-4 group-hover:text-japandi-sage transition-colors duration-300">
+                <h3
+                  className={cn(
+                    'text-2xl font-display text-japandi-charcoal mb-4',
+                    reduceMotion
+                      ? ''
+                      : 'group-hover:text-japandi-sage transition-colors duration-300'
+                  )}
+                >
                   {principle.title}
                 </h3>
                 <p className="text-japandi-charcoal/70 leading-relaxed font-sans text-lg">

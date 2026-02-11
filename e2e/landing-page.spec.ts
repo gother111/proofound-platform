@@ -14,57 +14,98 @@ test.describe('Landing Page', () => {
     // Hero heading should be visible
     const heading = page.getByRole('heading', { name: /Proofound/i, level: 1 });
     await expect(heading).toBeVisible();
+    const hero = page.locator('section', { has: heading });
+    await expect(hero).toBeVisible();
 
-    // Tagline should be visible
-    await expect(page.getByText(/Credibility you can trust/i)).toBeVisible();
+    // Subheading should be visible
+    await expect(
+      page.getByRole('heading', {
+        name: /A credibility engineering platform for impactful connections/i,
+        level: 2,
+      })
+    ).toBeVisible();
 
     // CTA buttons in hero
-    await expect(page.getByRole('link', { name: /Get Started/i }).first()).toBeVisible();
-    await expect(page.getByRole('link', { name: /Sign In/i }).first()).toBeVisible();
+    await expect(hero.getByRole('button', { name: /Join as an Individual/i })).toBeVisible();
+    await expect(hero.getByRole('button', { name: /Join as an Organization/i })).toBeVisible();
   });
 
-  test('renders individual and organization cards', async ({ page }) => {
-    // Individual card
-    await expect(page.getByRole('heading', { name: /For Individuals/i })).toBeVisible();
-    await expect(page.getByText(/Build a credible professional profile/i)).toBeVisible();
+	  test('header menu opens and closes via the X button', async ({ page }) => {
+	    const openButton = page.getByTestId('landing-menu-trigger');
+	    await expect(openButton).toBeVisible();
+	    await openButton.click();
 
-    // Organization card
-    await expect(page.getByRole('heading', { name: /For Organizations/i })).toBeVisible();
-    await expect(page.getByText(/Build trust and manage your team/i)).toBeVisible();
+	    const nav = page.getByTestId('landing-menu-nav');
+	    await expect(nav).toBeVisible();
 
-    // Both cards should have CTAs
-    const createButtons = page.getByRole('link', { name: /Create/i });
-    await expect(createButtons).toHaveCount(2);
+	    // Guard against the "empty overlay" regression where the menu is technically visible,
+	    // but rendered off-screen due to conflicting positioning classes.
+	    const viewport = page.viewportSize();
+	    expect(viewport).not.toBeNull();
+	    const navBox = await nav.boundingBox();
+	    expect(navBox).not.toBeNull();
+	    expect(navBox!.y).toBeGreaterThanOrEqual(0);
+	    expect(navBox!.y).toBeLessThan(viewport!.height);
+	    expect(navBox!.y + navBox!.height).toBeLessThanOrEqual(viewport!.height);
+
+	    // All expected menu items should render.
+	    await expect(nav.getByText('Mission', { exact: true })).toBeVisible();
+	    await expect(nav.getByText('How it Works', { exact: true })).toBeVisible();
+	    await expect(nav.getByText('Principles', { exact: true })).toBeVisible();
+	    await expect(nav.getByText('Pricing', { exact: true })).toBeVisible();
+	    await expect(nav.getByText('Log in', { exact: true })).toBeVisible();
+
+	    const closeButton = page.getByTestId('landing-menu-close');
+	    await expect(closeButton).toBeVisible();
+	    const closeBox = await closeButton.boundingBox();
+	    expect(closeBox).not.toBeNull();
+	    expect(closeBox!.y).toBeGreaterThanOrEqual(0);
+	    expect(closeBox!.y).toBeLessThan(viewport!.height);
+	    await closeButton.click();
+
+	    await expect(nav).toBeHidden();
+	    await expect(openButton).toBeVisible();
+	  });
+
+  test('renders personas section toggle and switches between individuals and organizations', async ({
+    page,
+  }) => {
+    const personas = page.locator('section#for-whom');
+    await expect(personas).toBeVisible();
+
+    await expect(personas.getByRole('heading', { name: /Built for you/i })).toBeVisible();
+
+    // Organizations tab should show org content
+    await personas.getByRole('button', { name: /Organizations/i }).click();
+    await expect(personas.getByRole('heading', { name: /For Organizations/i })).toBeVisible();
+
+    // Individuals tab should show individual content
+    await personas.getByRole('button', { name: /Individuals/i }).click();
+    await expect(personas.getByRole('heading', { name: /For Individuals/i })).toBeVisible();
   });
 
   test('renders principles section', async ({ page }) => {
-    // Section heading
-    await expect(page.getByRole('heading', { name: /Built on Trust/i })).toBeVisible();
+    const principles = page.locator('section#principles');
+    await expect(principles).toBeVisible();
 
-    // Three principle cards
-    await expect(page.getByRole('heading', { name: /Privacy First/i })).toBeVisible();
-    await expect(page.getByRole('heading', { name: /Community Owned/i })).toBeVisible();
-    await expect(page.getByRole('heading', { name: /Bias-Free/i })).toBeVisible();
-  });
+    await expect(
+      principles.getByRole('heading', { name: /What makes it trustworthy/i })
+    ).toBeVisible();
 
-  test('renders FAQ section', async ({ page }) => {
-    // Section heading
-    await expect(page.getByRole('heading', { name: /Frequently Asked Questions/i })).toBeVisible();
-
-    // FAQ questions
-    await expect(page.getByRole('heading', { name: /What is Proofound/i })).toBeVisible();
-    await expect(page.getByRole('heading', { name: /How do I get started/i })).toBeVisible();
-    await expect(page.getByRole('heading', { name: /Is Proofound free/i })).toBeVisible();
-    await expect(page.getByRole('heading', { name: /How is my data protected/i })).toBeVisible();
+    // Principle cards (subset)
+    await expect(
+      principles.getByRole('heading', { name: /Distributed systems mindset/i })
+    ).toBeVisible();
+    await expect(principles.getByRole('heading', { name: /Anti-bias guardrails/i })).toBeVisible();
   });
 
   test('renders CTA section', async ({ page }) => {
-    await expect(
-      page.getByRole('heading', { name: /Ready to build your credibility/i })
-    ).toBeVisible();
+    const ctaHeading = page.getByRole('heading', { name: /Ready to build trust that lasts/i });
+    await expect(ctaHeading).toBeVisible();
+    const ctaSection = page.locator('section', { has: ctaHeading });
 
-    // CTA button
-    const ctaButton = page.getByRole('link', { name: /Get Started Now/i });
+    // CTA button (scoped to section to avoid matching sticky CTA)
+    const ctaButton = ctaSection.getByRole('button', { name: /Get Started/i });
     await expect(ctaButton).toBeVisible();
   });
 
@@ -73,10 +114,11 @@ test.describe('Landing Page', () => {
     await expect(footer).toBeVisible();
 
     // Footer sections
-    await expect(footer.getByText(/Building trust through verified credentials/i)).toBeVisible();
+    await expect(
+      footer.getByText(/Credibility engineering for a world that needs trust more than ever/i)
+    ).toBeVisible();
 
     // Footer links
-    await expect(footer.getByRole('link', { name: /Sign Up/i })).toBeVisible();
     await expect(footer.getByRole('link', { name: /Privacy Policy/i })).toBeVisible();
 
     // Copyright
@@ -97,10 +139,8 @@ test.describe('Landing Page', () => {
     expect(errors).toHaveLength(0);
   });
 
-  test('renders network background canvas', async ({ page }) => {
-    // Network background should render
-    const canvas = page.locator('canvas');
-    await expect(canvas).toBeVisible();
+  test('renders network background', async ({ page }) => {
+    await expect(page.getByTestId('landing-network-background')).toBeVisible();
   });
 
   test('maintains responsive layout on mobile', async ({ page }) => {
@@ -108,19 +148,27 @@ test.describe('Landing Page', () => {
     await page.setViewportSize({ width: 375, height: 667 });
 
     // Hero should still be visible
-    await expect(page.getByRole('heading', { name: /Proofound/i, level: 1 })).toBeVisible();
+    const heading = page.getByRole('heading', { name: /Proofound/i, level: 1 });
+    await expect(heading).toBeVisible();
+    const hero = page.locator('section', { has: heading });
+    await expect(hero).toBeVisible();
 
-    // Cards should stack vertically (still visible)
-    await expect(page.getByRole('heading', { name: /For Individuals/i })).toBeVisible();
-    await expect(page.getByRole('heading', { name: /For Organizations/i })).toBeVisible();
+    // CTAs should still be visible
+    await expect(hero.getByRole('button', { name: /Join as an Individual/i })).toBeVisible();
+    await expect(hero.getByRole('button', { name: /Join as an Organization/i })).toBeVisible();
+
+    // Personas section should still render after scroll
+    const personas = page.locator('section#for-whom');
+    await personas.scrollIntoViewIfNeeded();
+    await expect(personas.getByRole('heading', { name: /Built for you/i })).toBeVisible();
   });
 
   test('all sections are in correct order', async ({ page }) => {
-    const sections = page.locator('section');
+    const sections = page.locator('main').locator('section');
     const count = await sections.count();
 
-    // Should have 5 sections (Hero, Cards, Principles, FAQ, CTA)
-    expect(count).toBe(5);
+    // Landing currently has 11 <section> blocks inside <main> (footer is a <footer>)
+    expect(count).toBe(11);
   });
 
   test('color tokens are applied', async ({ page }) => {
