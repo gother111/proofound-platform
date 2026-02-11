@@ -16,6 +16,31 @@ This folder is the durable “project memory” surface for Proofound. It is mea
 - Do not copy secrets from local env files or setup docs into tracked markdown.
 - At the end of every session, append a new entry to `agent/scratchpad.md` (append-only).
 
+## Plain-English Git Flow (Required)
+
+Use this order for every real code change:
+
+1. Create a branch from `master` (safe copy to work in).
+2. Edit files in that branch.
+3. Commit (save a checkpoint with a clear message).
+4. Push (upload the branch to GitHub).
+5. Open a PR (request review and merge into `master`).
+6. Wait for checks to pass (`a11y` and `ci`).
+7. Merge PR to `master`.
+8. Deploy from `master` only.
+
+Simple meaning of each action:
+
+- `commit`: save your change safely.
+- `push`: upload your saved change to GitHub.
+- `PR`: ask to merge that change into the main code.
+
+Important policy:
+
+- Do not push directly to `master`.
+- A Vercel preview from a branch is only a test copy, not production approval.
+- Production updates should come only from merged PRs into `master`.
+
 ## Last Run Summary
 
 - Bootstrap run: created `project/` and `agent/` markdown only (no application code changes).
@@ -67,6 +92,50 @@ This folder is the durable “project memory” surface for Proofound. It is mea
     - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`
     - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`
     - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`
+
+## 2026-02-11: Local Worktree Cleanup and Recovery Policy
+
+What changed:
+
+- Cleaned up sibling `proofound-*` folders in the home directory and kept `~/proofound` as the default working repo folder.
+- Created a full backup archive before cleanup:
+  - `~/proofound-worktrees-backup-20260211-213411.tar.gz`
+- Preserved non-committed leftovers in a small safety folder:
+  - `~/proofound-worktree-safety-20260211-214300/proofound-admin-sync.package-lock.diff`
+  - `~/proofound-worktree-safety-20260211-214300/proofound-wt-landing-menu.next-build.log`
+- Pruned stale git worktree metadata from the main repo.
+
+Why:
+
+- The user expected one local project folder and did not intentionally use separate sibling worktrees.
+- Single-folder workflow lowers the chance of edits in the wrong folder and makes local operations easier to reason about.
+- Archive-first cleanup keeps recovery possible if older snapshots are needed.
+
+How to verify:
+
+- Confirm home-directory Proofound folders:
+  - `ls -ld ~/proofound*`
+- Confirm current worktree registrations:
+  - `git -C ~/proofound worktree list --porcelain`
+- Confirm backup artifacts exist:
+  - `ls -lh ~/proofound-worktrees-backup-20260211-213411.tar.gz`
+  - `ls -lh ~/proofound-worktree-safety-20260211-214300`
+
+Recovery commands (run only if historical files are needed):
+
+- Restore all archived folders:
+  - `tar -xzf ~/proofound-worktrees-backup-20260211-213411.tar.gz -C ~/`
+- Restore one archived folder:
+  - `tar -xzf ~/proofound-worktrees-backup-20260211-213411.tar.gz -C ~/ proofound-admin-sync`
+- Inspect preserved diff/log snapshots:
+  - `cat ~/proofound-worktree-safety-20260211-214300/proofound-admin-sync.package-lock.diff`
+  - `cat ~/proofound-worktree-safety-20260211-214300/proofound-wt-landing-menu.next-build.log`
+
+Open risks/TODO:
+
+- Some temporary worktrees can still exist under `/private/tmp` and may appear in `git worktree list`; they are not home-directory folders.
+- Keep the archive until the user confirms no recovery is needed.
+- Future agents should not create sibling `~/proofound-*` worktrees unless explicitly requested.
 
 ## Curated Doc Index (Validated Paths)
 
@@ -673,3 +742,249 @@ Update (same run):
   - `analytics_events_deletion_reminder_once_idx`
   - `decision_reminders_interview_type_unique_idx`
 - Note: direct SQL execution does not register a new row in `supabase_migrations.schema_migrations`; migration ledger reconciliation remains required.
+
+---
+
+## 2026-02-11: External Skill Install from numman-ali/openskills
+
+What changed:
+
+- Installed `my-first-skill` to `~/.codex/skills/my-first-skill` using:
+  - `python3 ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py --repo numman-ali/openskills --path examples/my-first-skill`
+- Verified the installed skill contents:
+  - `~/.codex/skills/my-first-skill/SKILL.md`
+  - `~/.codex/skills/my-first-skill/references/`
+
+Why:
+
+- User requested installation of skills from `https://github.com/numman-ali/openskills`.
+- Repository scan found one Codex-compatible `SKILL.md` path: `examples/my-first-skill/SKILL.md`.
+
+How to verify:
+
+- Re-run install command above and confirm success message:
+  - `Installed my-first-skill to ~/.codex/skills/my-first-skill`
+- Check installed directory:
+  - `ls -la ~/.codex/skills/my-first-skill`
+- Confirm skill frontmatter:
+  - `sed -n '1,40p' ~/.codex/skills/my-first-skill/SKILL.md`
+
+Open risks/TODO:
+
+- `numman-ali/openskills` currently exposes one `SKILL.md` example path; if more skills are added later, install by explicit repo path(s).
+- Restart Codex to ensure newly installed skills are picked up in future sessions.
+
+---
+
+## 2026-02-11: Launch Gate v1 and Public Token Share Completion
+
+What changed:
+
+- Implemented public token share routes:
+  - `src/app/p/[token]/page.tsx`
+  - `src/app/p/[token]/embed/page.tsx`
+- Added strict public token resolver with expiry enforcement, field projection, and view tracking:
+  - `src/lib/profile/public-snippet-resolver.ts`
+- Added token-share renderer component:
+  - `src/components/profile/PublicSnippetCard.tsx`
+- Updated snippet URL generation to canonical source chain and locked production fallback:
+  - `src/lib/profile/snippet-generator.ts`
+  - Source order now: `NEXT_PUBLIC_SITE_URL` -> `SITE_URL` -> localhost fallback (non-production only) -> `https://proofound.io`.
+  - Removed use of `NEXT_PUBLIC_APP_URL` for profile snippet public links.
+- Removed localhost debug ingest fetches from login entrypoint:
+  - `src/app/(auth)/login/page.tsx`
+- Enabled iframe rendering specifically for token embed route by relaxing frame-ancestor headers only on `/p/{token}/embed`:
+  - `src/middleware.ts`
+- Added canonical metadata base alignment in app root metadata:
+  - `src/app/layout.tsx`
+- Added auth compatibility redirects to reduce stale route drift:
+  - `src/app/auth/signin/page.tsx` -> `/login`
+  - `src/app/auth/login/page.tsx` -> `/login`
+  - `src/app/auth/signup/page.tsx` -> `/signup`
+- Added tests for share URL builder and token resolver contracts:
+  - `tests/lib/snippet-generator.test.ts`
+  - `tests/lib/public-snippet-resolver.test.ts`
+- Added seeded critical E2E scaffold for token sharing:
+  - `playwright.critical.config.ts`
+  - `e2e/critical/token-share.spec.ts`
+  - `scripts/reset-e2e-seed.mjs`
+  - `package.json` scripts: `test:e2e:seed`, `test:e2e:reset`, `test:e2e:critical`
+- Added launch gate matrix baseline document:
+  - `docs/LAUNCH_GATE_MATRIX_V1.md`
+- Added explicit test env contract:
+  - `.env.test.example`
+
+Why:
+
+- Close blocker for `/p/{token}` share links returning 404.
+- Enforce strict server-side projection to avoid leaking unselected private fields.
+- Normalize public URL generation on the canonical domain `https://proofound.io`.
+- Remove localhost telemetry calls from auth entrypoints before launch.
+- Establish strict, reproducible launch-gate command matrix with explicit blockers.
+
+How to verify:
+
+- Core checks:
+  - `npm run lint`
+  - `npm run typecheck`
+  - `npm run test`
+  - `npm run build`
+  - `npm run test:a11y`
+- Targeted tests for this change set:
+  - `npm run test -- tests/lib/snippet-generator.test.ts tests/lib/public-snippet-resolver.test.ts`
+- Critical E2E scaffold listing:
+  - `npm run test:e2e:critical -- --list`
+- Full strict gate matrix:
+  - `docs/LAUNCH_GATE_MATRIX_V1.md`
+
+Open risks/TODO:
+
+- `test:privacy:all` remains blocked until `.env.test` is configured with test Supabase credentials.
+- Critical Chromium suite currently skips without seeded real-auth creds and must be treated as gate-fail.
+- Perf budgets and go/no-go currently fail when local server is not running during gate execution.
+- Migration ledger remains out of sync (`file_not_applied` and `applied_missing_file` non-zero).
+- Public snippet card uses `<img>` and triggers a non-blocking Next lint warning (`@next/next/no-img-element`).
+
+---
+
+## 2026-02-11: MVP Launch Closure (Remaining Blockers)
+
+What changed:
+
+- Closed runtime launch-gate perf blocker by reducing homepage critical-path client weight.
+- Added strict runtime orchestration stability and executed full runtime gates successfully.
+- Hardened privacy and critical E2E flows to run deterministically with `.env.test` + seeded credentials.
+- Reconciled migration ledger drift to zero and validated with migration audit.
+
+Key code and behavior updates:
+
+- Client/runtime perf and hydration reductions:
+  - `src/app/page.tsx`: switched `/` to a lightweight server-rendered MVP launch shell.
+  - `src/app/globals.css`: removed render-blocking Google Fonts `@import`; switched to local/system stacks.
+  - `src/components/landing/sections/HeroSection.tsx`: removed heavy hero image LCP path.
+  - `src/components/ProofoundLanding.tsx`: removed above-the-fold framer-motion dependency in the existing rich landing component.
+  - `src/components/ErrorBoundary.tsx`: lazy Sentry load in `componentDidCatch`.
+  - `src/app/global-error.tsx`: lazy Sentry load.
+  - `sentry.client.config.ts`: reduced client Sentry footprint with conditional dynamic init and no replay/tracing integrations.
+- Strict runtime gate reliability:
+  - `scripts/lib/strict-gates-runner.mjs`: early-exit detection and safer managed-process behavior.
+  - `scripts/run-strict-gates.mjs`: used as canonical orchestrator for perf + go/no-go.
+- Privacy and E2E contract completion:
+  - `vitest.supabase.config.ts`: SSR export shim + Supabase transform coverage fix.
+  - `playwright.critical.config.ts`: deterministic env loading for critical suite.
+  - `tests/lib/privacy-env-loader.test.ts`, `tests/scripts/strict-gates-runner.test.ts`: regression coverage.
+- RLS and migration parity:
+  - `supabase/migrations/20260211185000_tighten_verification_requests_rls.sql`.
+  - Migration reconciliation run to zero drift (local files and DB ledger parity).
+
+Why:
+
+- Remaining strict gate blocker was desktop TTI budget on `/` with a launch-blocking threshold of `<= 2500ms`.
+- Perf failures were real (not orchestration artifacts) and required reducing homepage critical-path JS + render delay.
+- Launch policy required privacy/E2E/migration parity to be hard blocking, with no skip-based bypass.
+
+How to verify:
+
+- Quality and launch gates executed in this run:
+  - `npm run lint` PASS
+  - `npm run typecheck` PASS
+  - `npm run test` PASS
+  - `npm run build` PASS
+  - `npm run test:a11y` PASS
+  - `npm run test:privacy:setup-check` PASS
+  - `npm run test:privacy:all` PASS
+  - `npm run test:e2e:critical` PASS (executed, no skip)
+  - `npm run gates:runtime` PASS
+    - `desktop TTI: 2107ms`
+    - `mobile TTI: 2104ms`
+    - `CLS: 0`
+    - `API p95: ~253ms`
+  - `set -a; source .env.test; set +a; npm run db:audit:migrations` PASS (`file_not_applied=0`, `applied_missing_file=0`)
+  - `npm run vercel:preflight` PASS
+
+Open risks/TODO:
+
+- `/` now uses a lightweight launch shell instead of the previous animated landing experience. If marketing requires the rich landing in production, reintroduce it behind a performance-safe route split and re-validate budgets.
+- `test:privacy:all` still includes an intentionally skipped extended suite file (`tests/privacy/rls-policies-extended.test.ts`); current strict gate passes, but extending parity coverage remains a follow-up.
+- Sentry client configuration is now minimal by design to protect launch performance budgets. Re-enable heavier client observability features only after budget-safe profiling.
+- Remaining manual production smoke on `https://proofound.io` still required for final go/no-go sign-off.
+
+---
+
+## 2026-02-11: External Skill Install from numman-ali/openskills
+
+What changed:
+
+- Installed `my-first-skill` to `~/.codex/skills/my-first-skill` using:
+  - `python3 ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py --repo numman-ali/openskills --path examples/my-first-skill`
+- Verified the installed skill contents:
+  - `~/.codex/skills/my-first-skill/SKILL.md`
+  - `~/.codex/skills/my-first-skill/references/`
+
+Why:
+
+- User requested installation of skills from `https://github.com/numman-ali/openskills`.
+- Repository scan found one Codex-compatible `SKILL.md` path: `examples/my-first-skill/SKILL.md`.
+
+How to verify:
+
+- Re-run install command above and confirm success message:
+  - `Installed my-first-skill to ~/.codex/skills/my-first-skill`
+- Check installed directory:
+  - `ls -la ~/.codex/skills/my-first-skill`
+- Confirm skill frontmatter:
+  - `sed -n '1,40p' ~/.codex/skills/my-first-skill/SKILL.md`
+
+Open risks/TODO:
+
+- `numman-ali/openskills` currently exposes one `SKILL.md` example path; if more skills are added later, install by explicit repo path(s).
+- Restart Codex to ensure newly installed skills are picked up in future sessions.
+
+---
+
+## 2026-02-11: Organization Assignment Skills Parity (L1-L4) and Match Integrity
+
+What changed:
+
+- Replaced Step 5 organization skill picker static source with taxonomy search parity:
+  - `src/components/matching/assignment-steps/Step5ExpertiseMapping.tsx`
+  - Uses debounced `GET /api/expertise/taxonomy?search=...` (min 2 chars, capped results, L1 > L2 > L3 breadcrumbs).
+  - Adds per-result actions for Must-have (default level 3) and Nice-to-have (default level 2).
+  - Prevents duplicate adds across both lists by canonical taxonomy `code`.
+- Added legacy prefilled skill auto-resolve in Step 5:
+  - Matching order: exact code, exact slug, exact name, then first result.
+  - Resolved entries are normalized to taxonomy code IDs and enriched with label/path metadata.
+  - Unresolved entries remain unchanged and render a non-blocking warning banner with unresolved IDs.
+- Extended assignment skill schemas to preserve display metadata and link flags:
+  - `src/app/api/assignments/route.ts`
+  - `src/actions/assignment.ts`
+  - Accepted optional fields: `label`, `catId`, `subcatId`, `l3Id`, `l1Label`, `l2Label`, `l3Label`, `linkedToBV`, `linkedToTO`.
+- Updated assignment display fallbacks to prefer readable labels:
+  - `src/components/assignments/AssignmentReviewClient.tsx`
+  - `src/app/app/o/[slug]/opportunities/page.tsx`
+  - `src/components/matching/MatchDetailPanel.tsx`
+  - Fallback order: `label -> name -> skillName -> id`.
+- Added and updated tests:
+  - New: `tests/ui/step5-expertise-mapping.test.tsx`
+  - Updated: `tests/api/assignments.test.ts`
+  - Covers taxonomy search/add path, duplicate prevention behavior, legacy auto-resolve, unresolved warning, and metadata acceptance in assignment POST.
+
+Why:
+
+- Organization assignments were constrained to a short static skill list and could persist non-taxonomy IDs.
+- Individual profiles already use L1-L4 taxonomy IDs, so mismatched assignment IDs caused matching integrity issues.
+- Persisting human-readable label/path metadata improves review and matching UI readability without changing core matching ID semantics.
+
+How to verify:
+
+- `npm run lint`
+- `npm run typecheck`
+- `npm run test`
+- Optional focused tests:
+  - `npm run test -- tests/ui/step5-expertise-mapping.test.tsx tests/api/assignments.test.ts`
+
+Open risks/TODO:
+
+- Legacy auto-resolve uses best-effort matching and can still produce ambiguous picks for broad legacy IDs.
+- Historic assignments with already-saved unresolved IDs remain mixed until edited/resaved.
+- Follow-up enhancement can add stronger confidence scoring or explicit user-confirm resolution for ambiguous legacy entries.
