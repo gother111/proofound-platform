@@ -2,33 +2,36 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [master, develop]
   pull_request:
-    branches: [main, develop]
+    branches: [master, develop]
 
 jobs:
   ci:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x]
+    env:
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      SITE_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_ENV: ci
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version-file: '.nvmrc'
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
       - name: Install Playwright Chromium
-        if: matrix.node-version == '20.x'
         run: npx playwright install --with-deps chromium
 
       - name: Run linter
@@ -42,37 +45,24 @@ jobs:
 
       - name: Build application
         run: npm run build
-        env:
-          NEXT_PUBLIC_SITE_URL: http://localhost:3000
-          NEXT_PUBLIC_APP_ENV: ci
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
 
       - name: Run landing page contract
-        if: matrix.node-version == '20.x'
         run: npm run test:e2e:landing
-        env:
-          BASE_URL: http://localhost:3000
-          NEXT_PUBLIC_SITE_URL: http://localhost:3000
-          NEXT_PUBLIC_APP_ENV: test
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: Start app server (background)
         run: |
           npm run start -- -p 3000 > /tmp/next.log 2>&1 &
           echo $! > /tmp/next_pid
-          # simple wait for health
+          # wait for health and active database connectivity
           for i in {1..30}; do
-            if curl -fsS http://localhost:3000/api/health >/dev/null; then
-              echo "App is up"
+            response="$(curl -fsS http://localhost:3000/api/health || true)"
+            if echo "$response" | grep -q '"status":"healthy"' && echo "$response" | grep -q '"connected":true'; then
+              echo "App is healthy and DB is connected"
               exit 0
             fi
             sleep 1
           done
-          echo "App did not become healthy" && cat /tmp/next.log && exit 1
+          echo "App did not become healthy with DB connectivity" && cat /tmp/next.log && exit 1
 
       - name: Run performance budgets (TTI/CLS/API p95)
         env:
@@ -103,7 +93,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version-file: '.nvmrc'
           cache: 'npm'
 
       - name: Install dependencies

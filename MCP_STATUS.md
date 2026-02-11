@@ -101,14 +101,14 @@ Then add this content:
 
 ```env
 # Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=https://cjpfrgmsxwxhuomnvciq.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_K719ETKMPgWJeEZGBqnTmQ_8AWJr6ZK
-SUPABASE_URL=https://cjpfrgmsxwxhuomnvciq.supabase.co
-SUPABASE_ANON_KEY=sb_publishable_K719ETKMPgWJeEZGBqnTmQ_8AWJr6ZK
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
 
 # Database connections
-DATABASE_URL=postgresql://postgres.cjpfrgmsxwxhuomnvciq:Gara1299442!@aws-1-eu-west-1.pooler.supabase.com:6543/postgres
-DIRECT_URL=postgresql://postgres:Gara1299442!@db.cjpfrgmsxwxhuomnvciq.supabase.co:5432/postgres
+DATABASE_URL=postgresql://postgres.your-project-ref:[PASSWORD]@aws-1-eu-west-1.pooler.supabase.com:6543/postgres
+DIRECT_URL=postgresql://postgres:[PASSWORD]@db.your-project-ref.supabase.co:5432/postgres
 
 # Get from Supabase Dashboard → Settings → API
 SUPABASE_SERVICE_ROLE_KEY=your-key-here

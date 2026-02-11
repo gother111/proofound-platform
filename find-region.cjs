@@ -1,7 +1,7 @@
 const postgres = require('postgres');
 
-const projectRef = 'cjpfrgmsxwxhuomnvciq';
-const password = 'Gara1299442!';
+const projectRef = process.env.SUPABASE_PROJECT_REF;
+const password = process.env.SUPABASE_DB_PASSWORD;
 const regions = [
     'us-east-1', 'us-east-2', 'us-west-1', 'us-west-2',
     'eu-west-1', 'eu-west-2', 'eu-west-3', 'eu-central-1', 'eu-central-2', 'eu-north-1', 'eu-south-1', 'eu-south-2',
@@ -48,6 +48,11 @@ async function checkRegion(region) {
 }
 
 async function findRegion() {
+    if (!projectRef || !password) {
+        console.error('Set SUPABASE_PROJECT_REF and SUPABASE_DB_PASSWORD before running this script.');
+        process.exit(1);
+    }
+
     for (const region of regions) {
         const result = await checkRegion(region);
         if (result) {

@@ -63,7 +63,7 @@ If you have PostgreSQL client installed:
 ```bash
 cd /Users/yuriibakurov/proofound
 
-psql "postgresql://postgres:Gara1299442!@db.cjpfrgmsxwxhuomnvciq.supabase.co:5432/postgres?sslmode=require" \
+psql "postgresql://postgres:[PASSWORD]@db.your-project-ref.supabase.co:5432/postgres?sslmode=require" \
   -f migrations-to-run.sql
 ```
 
@@ -150,4 +150,3 @@ Just copy it into Supabase SQL Editor and click Run! 🚀
 ---
 
 **Ready to go?** Open Supabase Dashboard and paste the SQL! 🎉
-

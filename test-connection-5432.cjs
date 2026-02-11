@@ -1,6 +1,11 @@
 const postgres = require('postgres');
 
-const connectionString = 'postgres://postgres.cjpfrgmsxwxhuomnvciq:Gara1299442!@aws-0-us-east-1.pooler.supabase.com:5432/postgres?sslmode=require';
+const connectionString = process.env.TEST_DATABASE_URL || process.env.DATABASE_URL;
+
+if (!connectionString) {
+    console.error('Set TEST_DATABASE_URL or DATABASE_URL before running this script.');
+    process.exit(1);
+}
 
 console.log('Testing connection to:', connectionString.replace(/:[^:@]+@/, ':****@'));
 

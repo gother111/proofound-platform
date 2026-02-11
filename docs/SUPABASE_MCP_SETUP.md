@@ -55,18 +55,18 @@ Create a file named `.env.local` in your project root with these variables:
 
 ```bash
 # Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=https://cjpfrgmsxwxhuomnvciq.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_K719ETKMPgWJeEZGBqnTmQ_8AWJr6ZK
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 
 # Server-side URL (same as public)
-SUPABASE_URL=https://cjpfrgmsxwxhuomnvciq.supabase.co
-SUPABASE_ANON_KEY=sb_publishable_K719ETKMPgWJeEZGBqnTmQ_8AWJr6ZK
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
 
 # Database connection for Drizzle (pooled connection)
-DATABASE_URL=postgresql://postgres.cjpfrgmsxwxhuomnvciq:Gara1299442!@aws-1-eu-west-1.pooler.supabase.com:6543/postgres
+DATABASE_URL=postgresql://postgres.your-project-ref:[PASSWORD]@aws-1-eu-west-1.pooler.supabase.com:6543/postgres
 
 # Direct connection for migrations
-DIRECT_URL=postgresql://postgres:Gara1299442!@db.cjpfrgmsxwxhuomnvciq.supabase.co:5432/postgres
+DIRECT_URL=postgresql://postgres:[PASSWORD]@db.your-project-ref.supabase.co:5432/postgres
 
 # Service role key (get from Supabase Dashboard → Settings → API)
 # This key bypasses RLS - keep it secure and never commit to git!
@@ -224,7 +224,7 @@ npm run db:seed
 **Solution:** Use `DIRECT_URL` for migrations instead of `DATABASE_URL`:
 
 ```bash
-DIRECT_URL=postgresql://postgres:Gara1299442!@db.cjpfrgmsxwxhuomnvciq.supabase.co:5432/postgres
+DIRECT_URL=postgresql://postgres:[PASSWORD]@db.your-project-ref.supabase.co:5432/postgres
 ```
 
 ## Best Practices

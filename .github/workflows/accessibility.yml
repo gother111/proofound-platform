@@ -2,9 +2,9 @@ name: Accessibility Audit
 
 on:
   push:
-    branches: [main, master, develop]
+    branches: [master, develop]
   pull_request:
-    branches: [main, master, develop]
+    branches: [master, develop]
 
 jobs:
   a11y:
@@ -17,7 +17,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version-file: '.nvmrc'
           cache: 'npm'
 
       - name: Install dependencies
@@ -59,4 +59,3 @@ jobs:
               repo: context.repo.name,
               body: '⚠️ Accessibility tests failed. Please review the test results and fix any WCAG violations before merging.'
             })
-

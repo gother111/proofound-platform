@@ -23,6 +23,7 @@ node -v  # expect v20.20.0
 
 - Start from `.env.example` and the reference guide in `docs/ENV_VARIABLES.md`. (source: .env.example, docs/ENV_VARIABLES.md)
 - Do not commit secret env files; `.gitignore` excludes `.env` and `*.local` patterns. (source: .gitignore)
+- Use `node update-env.cjs` only to generate a placeholder `.env.local` template. It intentionally does not include real credentials.
 
 ## Video Providers (Zoom, Google Meet)
 
@@ -70,6 +71,10 @@ Notes:
   - `npm run db:migrate` runs `node run-migrations.mjs` which applies `migrations-to-run.sql`. (source: package.json, run-migrations.mjs, migrations-to-run.sql)
 - Manual migration docs:
   - `RUN_MIGRATIONS_GUIDE.md`, `APPLY_MIGRATIONS_MANUAL.md` (source: RUN_MIGRATIONS_GUIDE.md, APPLY_MIGRATIONS_MANUAL.md)
+- Safety scripts:
+  - `npm run db:backup:checkpoint` creates schema and critical-table checkpoints before production DDL.
+  - `npm run db:audit:migrations` compares local `supabase/migrations` files against `supabase_migrations.schema_migrations`.
+- Policy: do not run `npm run db:push` against production. Use explicit SQL migration files.
 
 ## E2E / Accessibility (Repo Truth)
 
