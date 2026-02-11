@@ -794,3 +794,110 @@ Open TODOs / follow-ups:
 - Run full manual production smoke checklist on `https://proofound.io` and record outcomes.
 - Decide whether to keep lightweight `/` shell or reintroduce rich landing via performance-safe split.
 - Expand privacy extended suite replacements to reduce skipped legacy coverage.
+
+---
+
+## 2026-02-11 20:54 CET
+
+Task summary:
+
+- Installed available Codex-compatible skill(s) from `https://github.com/numman-ali/openskills` via the local `skill-installer` helper.
+- Documented install and verification details in project memory.
+
+What worked:
+
+- `skill-installer` helper script installed the discovered skill path without errors.
+- GitHub tree inspection identified the exact `SKILL.md` source path before install.
+- Post-install validation confirmed `SKILL.md` and bundled references exist locally.
+
+What failed / wrong assumptions:
+
+- Initial assumption that `openskills` might contain a top-level `skills/` folder was wrong (`/contents/skills` returned 404).
+- Repo currently exposes one `SKILL.md` example path, not a larger skill catalog.
+
+User corrections:
+
+- None.
+
+Assumptions taken without asking:
+
+- "Install the skills from here" means install all Codex-compatible `SKILL.md` directories in the provided repository.
+- Installing the single discovered path `examples/my-first-skill` satisfies this request for the current repo state.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Run a recursive tree query for `SKILL.md` first in all external skill repos to avoid trying non-existent conventional folders.
+- Offer optional follow-up install from a second repo when the provided repo is primarily a tool and not a skill catalog.
+
+Commands run + outcomes:
+
+- `curl -fsSL https://api.github.com/repos/numman-ali/openskills/contents`: PASS (repo structure fetched).
+- `curl -fsSL https://api.github.com/repos/numman-ali/openskills/contents/skills`: FAIL (404, folder absent).
+- `curl -fsSL 'https://api.github.com/repos/numman-ali/openskills/git/trees/main?recursive=1' | rg '"path": ".*SKILL.md"'`: PASS (found `examples/my-first-skill/SKILL.md`).
+- `python3 ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py --repo numman-ali/openskills --path examples/my-first-skill`: PASS.
+- `ls -la ~/.codex/skills/my-first-skill`: PASS.
+- `sed -n '1,200p' ~/.codex/skills/my-first-skill/SKILL.md`: PASS.
+
+Open TODOs / follow-ups:
+
+- Restart Codex so the new skill is available in the runtime skill list.
+
+---
+
+## 2026-02-11 21:10 CET
+
+Task summary:
+
+- Implemented organization assignment skill parity with individual L1-L4 taxonomy search in Step 5.
+- Added legacy skill ID auto-resolve with unresolved warnings, metadata persistence support, and display fallback consistency.
+- Added/updated tests and completed verification loop.
+
+What worked:
+
+- Taxonomy search integration (`/api/expertise/taxonomy`) with debounce and capped results worked in Step 5.
+- Legacy prefilled skill IDs resolved to canonical taxonomy codes in most deterministic cases.
+- Assignment schema updates accepted optional label/path metadata without breaking `{ id, level }` payload compatibility.
+- Full lint, typecheck, and test suite passed after test alignment and minor hook-dependency refactor.
+
+What failed / wrong assumptions:
+
+- Initial duplicate-prevention test assumed duplicate click should raise toast; actual UX disables duplicate action button after rerender.
+- Initial unresolved warning assertion used `getByText` for duplicated text and needed non-unique matcher handling.
+- Step 5 introduced hook dependency warnings due `watch(...) || []` fallback arrays; fixed by memoizing watched arrays.
+
+User corrections:
+
+- User requested direct implementation of the approved plan in repo, not additional planning.
+
+Assumptions taken without asking:
+
+- Canonical matching ID for assignment skills is taxonomy `code`, while metadata fields are optional display fields.
+- Duplicate prevention UX via disabled add actions is acceptable alongside state-level duplicate checks.
+- Legacy unresolved IDs should remain non-blocking and visible rather than hard-failing assignment creation.
+
+What the user corrected afterward:
+
+- None after implementation start.
+
+Improvements next time:
+
+- Add an explicit confidence threshold + telemetry for legacy auto-resolve decisions.
+- Add integration tests for assignment create and match generation path with mixed historical legacy IDs.
+- Consider shared taxonomy skill type module between individual and organization flows to reduce drift.
+
+Commands run + outcomes:
+
+- `npm run test -- tests/ui/step5-expertise-mapping.test.tsx tests/api/assignments.test.ts`: FAIL initially (2), then PASS after test fixes.
+- `npm run lint`: PASS (initial warnings fixed in follow-up patch, then clean).
+- `npm run typecheck`: PASS.
+- `npm run test`: PASS.
+- `npm run build`: PASS.
+
+Open TODOs / follow-ups:
+
+- Add a user-visible ambiguity hint for legacy auto-resolve when multiple high-confidence taxonomy matches exist.
+- Consider backfill script for existing assignments that still contain legacy non-taxonomy skill IDs.

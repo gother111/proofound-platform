@@ -833,3 +833,83 @@ Open risks/TODO:
 - `test:privacy:all` still includes an intentionally skipped extended suite file (`tests/privacy/rls-policies-extended.test.ts`); current strict gate passes, but extending parity coverage remains a follow-up.
 - Sentry client configuration is now minimal by design to protect launch performance budgets. Re-enable heavier client observability features only after budget-safe profiling.
 - Remaining manual production smoke on `https://proofound.io` still required for final go/no-go sign-off.
+
+---
+
+## 2026-02-11: External Skill Install from numman-ali/openskills
+
+What changed:
+
+- Installed `my-first-skill` to `~/.codex/skills/my-first-skill` using:
+  - `python3 ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py --repo numman-ali/openskills --path examples/my-first-skill`
+- Verified the installed skill contents:
+  - `~/.codex/skills/my-first-skill/SKILL.md`
+  - `~/.codex/skills/my-first-skill/references/`
+
+Why:
+
+- User requested installation of skills from `https://github.com/numman-ali/openskills`.
+- Repository scan found one Codex-compatible `SKILL.md` path: `examples/my-first-skill/SKILL.md`.
+
+How to verify:
+
+- Re-run install command above and confirm success message:
+  - `Installed my-first-skill to ~/.codex/skills/my-first-skill`
+- Check installed directory:
+  - `ls -la ~/.codex/skills/my-first-skill`
+- Confirm skill frontmatter:
+  - `sed -n '1,40p' ~/.codex/skills/my-first-skill/SKILL.md`
+
+Open risks/TODO:
+
+- `numman-ali/openskills` currently exposes one `SKILL.md` example path; if more skills are added later, install by explicit repo path(s).
+- Restart Codex to ensure newly installed skills are picked up in future sessions.
+
+---
+
+## 2026-02-11: Organization Assignment Skills Parity (L1-L4) and Match Integrity
+
+What changed:
+
+- Replaced Step 5 organization skill picker static source with taxonomy search parity:
+  - `src/components/matching/assignment-steps/Step5ExpertiseMapping.tsx`
+  - Uses debounced `GET /api/expertise/taxonomy?search=...` (min 2 chars, capped results, L1 > L2 > L3 breadcrumbs).
+  - Adds per-result actions for Must-have (default level 3) and Nice-to-have (default level 2).
+  - Prevents duplicate adds across both lists by canonical taxonomy `code`.
+- Added legacy prefilled skill auto-resolve in Step 5:
+  - Matching order: exact code, exact slug, exact name, then first result.
+  - Resolved entries are normalized to taxonomy code IDs and enriched with label/path metadata.
+  - Unresolved entries remain unchanged and render a non-blocking warning banner with unresolved IDs.
+- Extended assignment skill schemas to preserve display metadata and link flags:
+  - `src/app/api/assignments/route.ts`
+  - `src/actions/assignment.ts`
+  - Accepted optional fields: `label`, `catId`, `subcatId`, `l3Id`, `l1Label`, `l2Label`, `l3Label`, `linkedToBV`, `linkedToTO`.
+- Updated assignment display fallbacks to prefer readable labels:
+  - `src/components/assignments/AssignmentReviewClient.tsx`
+  - `src/app/app/o/[slug]/opportunities/page.tsx`
+  - `src/components/matching/MatchDetailPanel.tsx`
+  - Fallback order: `label -> name -> skillName -> id`.
+- Added and updated tests:
+  - New: `tests/ui/step5-expertise-mapping.test.tsx`
+  - Updated: `tests/api/assignments.test.ts`
+  - Covers taxonomy search/add path, duplicate prevention behavior, legacy auto-resolve, unresolved warning, and metadata acceptance in assignment POST.
+
+Why:
+
+- Organization assignments were constrained to a short static skill list and could persist non-taxonomy IDs.
+- Individual profiles already use L1-L4 taxonomy IDs, so mismatched assignment IDs caused matching integrity issues.
+- Persisting human-readable label/path metadata improves review and matching UI readability without changing core matching ID semantics.
+
+How to verify:
+
+- `npm run lint`
+- `npm run typecheck`
+- `npm run test`
+- Optional focused tests:
+  - `npm run test -- tests/ui/step5-expertise-mapping.test.tsx tests/api/assignments.test.ts`
+
+Open risks/TODO:
+
+- Legacy auto-resolve uses best-effort matching and can still produce ambiguous picks for broad legacy IDs.
+- Historic assignments with already-saved unresolved IDs remain mixed until edited/resaved.
+- Follow-up enhancement can add stronger confidence scoring or explicit user-confirm resolution for ambiguous legacy entries.
