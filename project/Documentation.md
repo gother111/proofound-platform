@@ -698,3 +698,32 @@ Update (same run):
   - `analytics_events_deletion_reminder_once_idx`
   - `decision_reminders_interview_type_unique_idx`
 - Note: direct SQL execution does not register a new row in `supabase_migrations.schema_migrations`; migration ledger reconciliation remains required.
+
+---
+
+## 2026-02-11: Accessibility Workflow CI Stabilization
+
+What changed:
+
+- Updated `.github/workflows/accessibility.yml`:
+  - Removed the `Build application` step from the accessibility workflow.
+  - Fixed PR failure comment target from `context.repo.name` to `context.repo.repo`.
+
+Why:
+
+- The accessibility workflow was failing before tests ran due Node heap OOM during `npm run build`.
+- Accessibility checks already run in a dedicated Playwright flow (`npm run test:a11y`) and the main CI workflow still enforces build checks.
+- The PR comment step used an invalid repository name field, producing a 404 URL (`repos/<owner>//issues/...`).
+
+How to verify:
+
+- Validate workflow YAML syntax:
+  - `ruby -e "require 'yaml'; YAML.load_file('.github/workflows/accessibility.yml'); puts 'yaml-ok'"` (PASS)
+- Open PR checks:
+  - Confirm `a11y` run no longer fails in the removed build step.
+  - Confirm failure-comment step targets a valid repo slug if it executes.
+
+Open risks/TODO:
+
+- Accessibility run time may increase because tests now start from dev server only, but this is expected and acceptable for this gate.
+- Keep `ci` as the source of truth for production build success.

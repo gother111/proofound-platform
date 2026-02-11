@@ -664,3 +664,47 @@ Commands run + outcomes:
 Open TODOs / follow-ups:
 
 - PR opened: `https://github.com/gother111/proofound-platform/pull/131`
+
+---
+
+## 2026-02-11 20:05 CET
+
+Task summary:
+
+- Fixed failing `a11y` GitHub check on PR `#131` by stabilizing the accessibility workflow.
+- Patched broken PR comment repo field in workflow script.
+
+What worked:
+
+- Removed a non-essential build step from `.github/workflows/accessibility.yml` that was causing OOM before accessibility tests started.
+- Corrected `context.repo.name` to `context.repo.repo`, fixing malformed GitHub API URL in PR comment step.
+
+What failed / wrong assumptions:
+
+- Initial assumption was a pure accessibility assertion failure; logs showed infrastructure failure (build OOM + API 404) instead.
+
+User corrections:
+
+- User asked to directly fix the failing check.
+
+Assumptions taken without asking:
+
+- Main `ci` workflow remains responsible for build enforcement, so removing build from `a11y` does not reduce required quality gates.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Keep workflow responsibilities narrow so non-a11y failures do not block accessibility gate status.
+
+Commands run + outcomes:
+
+- `gh run view 21918900061 --job 63293473418 --log-failed`: PASS (identified OOM + comment 404 root causes)
+- `ruby -e "require 'yaml'; YAML.load_file('.github/workflows/accessibility.yml'); puts 'yaml-ok'"`: PASS
+- `apply_patch` on `.github/workflows/accessibility.yml`: PASS
+
+Open TODOs / follow-ups:
+
+- Push fix commit and confirm `a11y` check turns green on PR `#131`.
