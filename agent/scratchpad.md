@@ -619,3 +619,117 @@ Open TODOs / follow-ups:
 - First attempt to apply `20260211123000_cron_idempotency_guards.sql` failed due missing-relation/syntax assumptions in original SQL.
 - Patched migration to conditional `DO $$ ... $$` blocks and corrected JSON property quoting.
 - Re-applied migration successfully and verified both indexes exist in `pg_indexes`.
+
+---
+
+## 2026-02-11 23:01 CET
+
+Task summary:
+
+- Implement landing regression hardening from baseline `af705d4`.
+- Isolate risky PRs, add CI scope guard, and add blocking landing visual contract.
+
+What worked:
+
+- Closed stacked/mixed PRs and opened a scoped replacement non-landing PR.
+- Added `e2e/landing-visual.spec.ts` with deterministic screenshot settings and committed baseline snapshot.
+- Added `scripts/check-landing-pr-scope.mjs` and wired it into CI pull request flow.
+- Added `test:e2e:landing:visual` script and documented policy/checklist updates.
+
+What failed / wrong assumptions:
+
+- Running `test:e2e:landing` and `test:e2e:landing:visual` in parallel caused Playwright webserver port collisions and invalid failures.
+
+User corrections:
+
+- Confirmed good landing baseline commit is `af705d4`.
+- Requested preserving non-landing work while keeping landing stable and isolated.
+
+Assumptions taken without asking:
+
+- Scope-check should compare against `origin/master` fallback when `GITHUB_BASE_REF` is unavailable locally.
+- Landing baseline contract should be Chromium-only to match CI determinism.
+
+What the user corrected afterward:
+
+- Reiterated that landing regressions were still occurring after earlier PRs, requiring baseline hardening and PR isolation guardrails.
+
+Improvements next time:
+
+- Do not run multiple Playwright suites in parallel when both start a local webserver on the same port.
+- Keep landing visual and scope checks in place for every landing-touching PR.
+
+Commands run + outcomes:
+
+- `gh pr view 139 --json ...`: CLOSED.
+- `gh pr view 135 --json ...`: CLOSED.
+- `gh pr view 140 --json ...`: OPEN.
+- `npm run lint`: PASS.
+- `npm run typecheck`: PASS.
+- `npm run test`: PASS.
+- `npm run build`: PASS.
+- `npm run test:e2e:landing:visual`: PASS.
+- `npm run test:e2e:landing`: PASS (when run sequentially).
+- `node ./scripts/check-landing-pr-scope.mjs`: PASS.
+
+Open TODOs / follow-ups:
+
+- Merge PR `#140` (non-landing UI preservation) after review.
+- Merge landing hardening PR and ensure CI required checks are enforced in branch protection.
+
+---
+
+## 2026-02-11 23:27 CET
+
+Task summary:
+
+- Implement stabilization hardening after repo visibility change to public.
+- Unblock CI reliability, enforce master governance settings, and create triage/salvage backlog ledger.
+
+What worked:
+
+- Added landing scope guard script with CI-safe base SHA diffing from pull request event payload.
+- Added landing visual baseline contract and scope-check execution into CI flow.
+- Increased workflow Node heap (`NODE_OPTIONS=--max-old-space-size=6144`) to reduce build OOM failures.
+- Removed broken accessibility PR-comment step that failed on malformed repo path.
+- Applied branch protection on `master` and repository merge settings via GitHub API.
+
+What failed / wrong assumptions:
+
+- Initial scope-check logic from prior branch assumed merge-base availability in shallow CI clones and failed on GitHub runner.
+
+User corrections:
+
+- Made repository public temporarily to enable branch protection/ruleset enforcement.
+
+Assumptions taken without asking:
+
+- Embedding landing visual/scope guardrail files from commit `1caf778` into this unblock branch is acceptable because they are part of reliability and governance hardening.
+- Removing the a11y failure-comment step is preferable to keeping a broken noisy failure path.
+
+What the user corrected afterward:
+
+- None during this run.
+
+Improvements next time:
+
+- Keep a dedicated CI reliability PR before feature PR merges when changing workflow gates.
+- Avoid carrying `agent/scratchpad.md` in feature PRs unless task policy explicitly requires it.
+
+Commands run + outcomes:
+
+- `npm run lint`: PASS.
+- `npm run typecheck`: PASS.
+- `npm run test`: PASS.
+- `npm run build`: PASS.
+- `npm run test:e2e:landing`: PASS.
+- `npm run test:e2e:landing:visual`: PASS.
+- `node ./scripts/check-landing-pr-scope.mjs`: PASS.
+- `gh api -X PUT repos/gother111/proofound-platform/branches/master/protection ...`: PASS.
+- `gh api -X PATCH repos/gother111/proofound-platform ...`: PASS.
+
+Open TODOs / follow-ups:
+
+- Merge the CI reliability unblock PR.
+- Re-run open PR queue in single-lane order (`#141`, `#137`, `#140`, `#138`, `#134`) after rebase on latest `master`.
+- Execute salvage workflow for mixed PR backlog using `project/PR_TRIAGE_2026-02.md`.

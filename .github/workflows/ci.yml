@@ -13,6 +13,7 @@ jobs:
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
       SITE_URL: http://localhost:3000
       NEXT_PUBLIC_APP_ENV: ci
+      NODE_OPTIONS: --max-old-space-size=6144
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -21,12 +22,18 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
+
+      - name: Enforce landing PR scope
+        if: github.event_name == 'pull_request'
+        run: node ./scripts/check-landing-pr-scope.mjs
 
       - name: Install dependencies
         run: npm ci
@@ -48,6 +55,9 @@ jobs:
 
       - name: Run landing page contract
         run: npm run test:e2e:landing
+
+      - name: Run landing visual baseline contract
+        run: npm run test:e2e:landing:visual
 
       - name: Rebuild application for production start
         run: npm run build
