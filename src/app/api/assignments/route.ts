@@ -17,6 +17,15 @@ export const dynamic = 'force-dynamic';
 const SkillRequirementSchema = z.object({
   id: z.string(),
   level: z.number().min(0).max(5),
+  label: z.string().optional(),
+  catId: z.number().optional(),
+  subcatId: z.number().optional(),
+  l3Id: z.number().optional(),
+  l1Label: z.string().optional(),
+  l2Label: z.string().optional(),
+  l3Label: z.string().optional(),
+  linkedToBV: z.boolean().optional(),
+  linkedToTO: z.boolean().optional(),
 });
 
 const LanguageRequirementSchema = z.object({
