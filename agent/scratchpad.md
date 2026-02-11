@@ -663,4 +663,4 @@ Commands run + outcomes:
 
 Open TODOs / follow-ups:
 
-- Commit, push, and open PR for this docs-only change set.
+- PR opened: `https://github.com/gother111/proofound-platform/pull/131`
