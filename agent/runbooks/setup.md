@@ -23,6 +23,7 @@ node -v  # expect v20.20.0
 
 - Start from `.env.example` and the reference guide in `docs/ENV_VARIABLES.md`. (source: .env.example, docs/ENV_VARIABLES.md)
 - Do not commit secret env files; `.gitignore` excludes `.env` and `*.local` patterns. (source: .gitignore)
+- Use `node update-env.cjs` only to generate a placeholder `.env.local` template. It intentionally does not include real credentials.
 
 ## Video Providers (Zoom, Google Meet)
 
@@ -70,6 +71,10 @@ Notes:
   - `npm run db:migrate` runs `node run-migrations.mjs` which applies `migrations-to-run.sql`. (source: package.json, run-migrations.mjs, migrations-to-run.sql)
 - Manual migration docs:
   - `RUN_MIGRATIONS_GUIDE.md`, `APPLY_MIGRATIONS_MANUAL.md` (source: RUN_MIGRATIONS_GUIDE.md, APPLY_MIGRATIONS_MANUAL.md)
+- Safety scripts:
+  - `npm run db:backup:checkpoint` creates schema and critical-table checkpoints before production DDL.
+  - `npm run db:audit:migrations` compares local `supabase/migrations` files against `supabase_migrations.schema_migrations`.
+- Policy: do not run `npm run db:push` against production. Use explicit SQL migration files.
 
 ## E2E / Accessibility (Repo Truth)
 
@@ -77,11 +82,26 @@ Notes:
 - A11y: `npm run test:a11y` (source: package.json)
   - TODO: Validate `playwright.a11y.config.ts` exists; do not create it as part of docs bootstrap. (source: package.json)
 
+## Seeded Real-Auth E2E (Launch Gate)
+
+- Canonical env contract file: `.env.test.example`.
+- Local setup:
+  1. Copy `.env.test.example` to `.env.test`.
+  2. Point all Supabase vars to a dedicated test Supabase project.
+  3. Fill seeded auth credentials: `E2E_INDIVIDUAL_EMAIL`, `E2E_INDIVIDUAL_PASSWORD`, `E2E_ORG_EMAIL`, `E2E_ORG_PASSWORD`.
+- Deterministic seed/reset commands:
+  - `npm run test:e2e:seed`
+  - `npm run test:e2e:reset`
+- Critical Chromium suite:
+  - `npm run test:e2e:critical`
+  - If creds are missing, the suite skips and must be treated as gate-fail for release readiness.
+
 ## CI Gates Beyond Tests (Repo Truth)
 
 - CI runs perf budgets and go/no-go after starting the app. (source: .github/workflows/ci.yml)
 - Perf budgets: `npm run perf:budgets` implemented in `scripts/perf-budgets.mjs`. (source: package.json, scripts/perf-budgets.mjs)
 - Go/no-go: `npm run go:no-go` implemented in `scripts/go-no-go-check.mjs` and requires evidence files. (source: package.json, scripts/go-no-go-check.mjs)
+- Local strict runner: `npm run gates:runtime` orchestrates server startup + health wait + `perf:budgets` + `go:no-go`.
   - TODO: Ensure required evidence files exist before relying on `go:no-go`. Do not invent missing evidence. (source: scripts/go-no-go-check.mjs)
 
 ## Hooks (Repo Truth)

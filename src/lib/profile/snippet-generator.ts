@@ -5,8 +5,9 @@
  * PRD Reference: Part 2 F2 - Data Portability & Public Sharing
  */
 
-import { log } from '@/lib/log';
 import { nanoid } from 'nanoid';
+
+const PRODUCTION_SITE_URL = 'https://proofound.io';
 
 export interface ProfileSnippet {
   id: string;
@@ -42,8 +43,38 @@ export function generateShareToken(): string {
  * Build public profile URL
  */
 export function buildPublicProfileURL(shareToken: string): string {
-  const baseURL = process.env.NEXT_PUBLIC_APP_URL || 'https://proofound.com';
+  const baseURL = resolvePublicProfileBaseURL();
   return `${baseURL}/p/${shareToken}`;
+}
+
+/**
+ * Resolve the canonical base URL for public profile sharing.
+ *
+ * Source order:
+ * 1) NEXT_PUBLIC_SITE_URL
+ * 2) SITE_URL
+ * 3) Localhost fallback (non-production only)
+ * 4) Locked production fallback
+ */
+export function resolvePublicProfileBaseURL(): string {
+  const candidate = process.env.NEXT_PUBLIC_SITE_URL?.trim() || process.env.SITE_URL?.trim();
+
+  if (candidate) {
+    try {
+      return new URL(candidate).origin.replace(/\/$/, '');
+    } catch {
+      // Invalid URL config should not break snippet generation in the client.
+    }
+  }
+
+  const isProduction =
+    process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
+
+  if (!isProduction) {
+    return 'http://localhost:3000';
+  }
+
+  return PRODUCTION_SITE_URL;
 }
 
 /**

@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Crimson+Pro:wght@400;500;600&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -140,16 +138,10 @@
     background-color: #f5f3ee;
     color: #2d3330;
     @apply bg-background text-foreground antialiased;
-    font-family:
-      'Inter',
-      -apple-system,
-      BlinkMacSystemFont,
-      'Segoe UI',
-      'Roboto',
-      sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   }
 
-  /* Display text uses Crimson Pro */
+  /* Display text uses local serif fallback to avoid render-blocking remote fonts. */
   h1,
   h2,
   h3,
@@ -159,10 +151,10 @@
   .font-display,
   [class*='display'],
   .crimson-pro {
-    font-family: 'Crimson Pro', 'Georgia', serif;
+    font-family: 'Georgia', serif;
   }
 
-  /* UI text uses Inter */
+  /* UI text uses system sans stack */
   button,
   input,
   textarea,
@@ -170,13 +162,7 @@
   label,
   .font-ui,
   .inter {
-    font-family:
-      'Inter',
-      -apple-system,
-      BlinkMacSystemFont,
-      'Segoe UI',
-      'Roboto',
-      sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   }
 
   /* Typography improvements */

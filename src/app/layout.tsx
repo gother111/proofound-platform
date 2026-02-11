@@ -1,17 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { Analytics } from '@vercel/analytics/react';
-import { SpeedInsights } from '@vercel/speed-insights/next';
-import { Toaster } from '@/components/ui/sonner';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { ChatWidget } from '@/components/support/ChatWidget';
-import { CookieBanner } from '@/components/CookieBanner';
-import { GlobalErrorHandler } from '@/components/GlobalErrorHandler';
-import { WebVitalsReporter } from '@/components/WebVitalsReporter';
-import { PerformanceTracker } from '@/components/PerformanceTracker';
-import { SUSPromptHost } from '@/components/surveys/SUSPromptHost';
 import { SkipToContentLink } from '@/components/a11y/SkipToContentLink';
 
 /**
@@ -26,8 +16,20 @@ import { SkipToContentLink } from '@/components/a11y/SkipToContentLink';
  */
 
 export const metadata: Metadata = {
+  metadataBase: (() => {
+    const candidate =
+      process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'https://proofound.io';
+    try {
+      return new URL(candidate);
+    } catch {
+      return new URL('https://proofound.io');
+    }
+  })(),
   title: 'Proofound - Focus on what matters',
   description: 'A credibility and connection platform built for authenticity, not algorithms.',
+  alternates: {
+    canonical: '/',
+  },
 };
 
 export default async function RootLayout({
@@ -49,23 +51,12 @@ export default async function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className="font-sans antialiased">
         <SkipToContentLink />
-        <ErrorBoundary>
-          <NextIntlClientProvider messages={messages}>
-            <GlobalErrorHandler />
-            <SUSPromptHost />
-            {/* Focus target for the skip link. Avoid wrapping in <main> to prevent nested main landmarks. */}
-            <div id="main-content" tabIndex={-1}>
-              {children}
-            </div>
-            <Toaster />
-            <ChatWidget />
-            <CookieBanner />
-            <PerformanceTracker />
-            <WebVitalsReporter />
-            <Analytics />
-            <SpeedInsights />
-          </NextIntlClientProvider>
-        </ErrorBoundary>
+        <NextIntlClientProvider messages={messages}>
+          {/* Focus target for the skip link. Avoid wrapping in <main> to prevent nested main landmarks. */}
+          <div id="main-content" tabIndex={-1}>
+            {children}
+          </div>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

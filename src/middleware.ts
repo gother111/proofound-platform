@@ -8,6 +8,8 @@ const applySecurityHeaders = (response: NextResponse, request: NextRequest) => {
   const host = request.headers.get('host') || '';
   const isProd = host.includes('proofound.io');
   const isDev = process.env.NODE_ENV !== 'production';
+  const isPublicSnippetEmbed =
+    request.nextUrl.pathname.startsWith('/p/') && request.nextUrl.pathname.endsWith('/embed');
 
   // Note: Next dev uses eval-like codepaths (React Refresh / Webpack runtime). If CSP blocks
   // unsafe-eval in development, the app may never hydrate, breaking interactive flows.
@@ -29,13 +31,13 @@ const applySecurityHeaders = (response: NextResponse, request: NextRequest) => {
     connectSrc,
     "frame-src 'self' https:",
     "object-src 'none'",
-    "frame-ancestors 'none'",
+    isPublicSnippetEmbed ? 'frame-ancestors *' : "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
   ].join('; ');
 
   response.headers.set('Content-Security-Policy', cspDirectives);
-  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-Frame-Options', isPublicSnippetEmbed ? 'ALLOWALL' : 'DENY');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   response.headers.set(
     'Permissions-Policy',
@@ -131,24 +133,6 @@ export async function middleware(request: NextRequest) {
       return response;
     };
 
-    // #region agent log
-    if (isDev) {
-      fetch('http://127.0.0.1:7242/ingest/381d9e33-65b3-4af0-9925-b21521306aaa', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: 'debug-session',
-          runId: 'pre-fix-1',
-          hypothesisId: 'H-edge',
-          location: 'middleware.ts:entry',
-          message: 'Middleware entry',
-          data: { path: pathname, method: request.method, isApi: pathname.startsWith('/api') },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-    }
-    // #endregion
-
     // CSRF protection for API routes (allowlist some public endpoints)
     if (pathname.startsWith('/api')) {
       // Allow anonymous web-vitals posts without CSRF blocking
@@ -174,24 +158,6 @@ export async function middleware(request: NextRequest) {
       setCSRFTokenCookie(response, csrfToken);
       attachRateLimitHeaders(response);
       applySecurityHeaders(response, request);
-
-      // #region agent log
-      if (isDev) {
-        fetch('http://127.0.0.1:7242/ingest/381d9e33-65b3-4af0-9925-b21521306aaa', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sessionId: 'debug-session',
-            runId: 'pre-fix-1',
-            hypothesisId: 'H-edge',
-            location: 'middleware.ts:api',
-            message: 'API middleware pass-through',
-            data: { path: pathname },
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {});
-      }
-      // #endregion
 
       return response;
     }

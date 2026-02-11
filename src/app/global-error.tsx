@@ -1,6 +1,4 @@
 'use client';
-
-import * as Sentry from '@sentry/nextjs';
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,8 +12,10 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Log error to Sentry
-    Sentry.captureException(error);
+    // Lazy-load Sentry to avoid loading it in initial homepage payload.
+    void import('@sentry/nextjs').then((Sentry) => {
+      Sentry.captureException(error);
+    });
   }, [error]);
 
   return (

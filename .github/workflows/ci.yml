@@ -2,30 +2,44 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [master, develop]
   pull_request:
-    branches: [main, develop]
+    branches: [master, develop]
 
 jobs:
   ci:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x]
+    env:
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      SITE_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_ENV: ci
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      E2E_INDIVIDUAL_EMAIL: ${{ secrets.E2E_INDIVIDUAL_EMAIL }}
+      E2E_INDIVIDUAL_PASSWORD: ${{ secrets.E2E_INDIVIDUAL_PASSWORD }}
+      E2E_ORG_EMAIL: ${{ secrets.E2E_ORG_EMAIL }}
+      E2E_ORG_PASSWORD: ${{ secrets.E2E_ORG_PASSWORD }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_PROJECT_NAME: proofound-platform
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version-file: '.nvmrc'
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
 
       - name: Run linter
         run: npm run lint
@@ -38,43 +52,35 @@ jobs:
 
       - name: Build application
         run: npm run build
-        env:
-          NEXT_PUBLIC_SITE_URL: http://localhost:3000
-          NEXT_PUBLIC_APP_ENV: ci
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
 
-      - name: Start app server (background)
-        run: |
-          npm run start -- -p 3000 > /tmp/next.log 2>&1 &
-          echo $! > /tmp/next_pid
-          # simple wait for health
-          for i in {1..30}; do
-            if curl -fsS http://localhost:3000/api/health >/dev/null; then
-              echo "App is up"
-              exit 0
-            fi
-            sleep 1
-          done
-          echo "App did not become healthy" && cat /tmp/next.log && exit 1
+      - name: Run accessibility tests
+        run: npm run test:a11y
 
-      - name: Run performance budgets (TTI/CLS/API p95)
+      - name: Privacy env setup check
+        run: npm run test:privacy:setup-check
+
+      - name: Run privacy tests (strict gate)
+        run: npm run test:privacy:all
+
+      - name: Seed deterministic E2E users
+        run: npm run test:e2e:seed
+
+      - name: Run critical Chromium E2E
+        run: npm run test:e2e:critical
+
+      - name: Run landing page contract
+        run: npm run test:e2e:landing
+
+      - name: Audit migration ledger
+        run: npm run db:audit:migrations
+
+      - name: Vercel preflight
+        run: npm run vercel:preflight
+
+      - name: Run runtime strict gates (perf + go/no-go)
         env:
           BASE_URL: http://localhost:3000
-        run: npm run perf:budgets
-
-      - name: Go / No-Go gates
-        env:
-          BASE_URL: http://localhost:3000
-          SUS_STUDY_COMPLETE: "true"
-        run: npm run go:no-go
-
-      - name: Stop app server
-        if: always()
-        run: |
-          if [ -f /tmp/next_pid ]; then
-            kill "$(cat /tmp/next_pid)" || true
-          fi
+        run: npm run gates:runtime
 
   e2e:
     runs-on: ubuntu-latest
@@ -87,7 +93,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version-file: '.nvmrc'
           cache: 'npm'
 
       - name: Install dependencies
@@ -114,4 +120,3 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
-
