@@ -25,6 +25,7 @@
     "test:e2e": "node ./scripts/playwright-node20.mjs test",
     "test:e2e:ui": "node ./scripts/playwright-node20.mjs test --ui",
     "test:e2e:landing": "node ./scripts/playwright-node20.mjs test e2e/landing-page.spec.ts --project=chromium --reporter=line",
+    "test:e2e:landing:visual": "node ./scripts/playwright-node20.mjs test e2e/landing-visual.spec.ts --project=chromium --reporter=line",
     "test:e2e:auth": "NEXT_PUBLIC_USE_MOCK_SUPABASE=true node ./scripts/playwright-node20.mjs test e2e/auth.spec.ts --project=chromium --reporter=line",
     "test:e2e:admin": "PLAYWRIGHT=true NEXT_PUBLIC_USE_MOCK_SUPABASE=true MOCK_ADMIN_MODE=true node ./scripts/playwright-node20.mjs test e2e/admin-dashboard-smoke.spec.ts --project=chromium --reporter=line",
     "test:a11y": "node ./scripts/playwright-node20.mjs test --config playwright.a11y.config.ts --project=chromium",
