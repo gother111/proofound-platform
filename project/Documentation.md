@@ -673,3 +673,36 @@ Update (same run):
   - `analytics_events_deletion_reminder_once_idx`
   - `decision_reminders_interview_type_unique_idx`
 - Note: direct SQL execution does not register a new row in `supabase_migrations.schema_migrations`; migration ledger reconciliation remains required.
+
+## 2026-02-11 20:35 CET: Match Interest Idempotency Fix (Organization Interested)
+
+What changed:
+
+- Updated `/api/match/interest` transaction logic to use conflict-safe inserts instead of `try/catch` around insert:
+  - File: `src/app/api/core/matching/interest/route.ts`
+  - Insert now uses `onConflictDoNothing().returning(...)` for `match_interest`.
+  - Added structured diagnostic field `interestInsertSkipped` to the `match.interest.recorded` log event.
+- Added API regression tests for interest route behavior:
+  - File: `tests/api/match-interest-route.test.ts`
+  - Covers fresh org interest, duplicate org interest idempotency, and mutual-interest response behavior.
+
+Why:
+
+- Duplicate `match_interest` inserts on `(actor_profile_id, assignment_id, target_profile_id)` were previously handled by catching insert errors inside a DB transaction.
+- In Postgres, a failed statement aborts the transaction context until rollback, so subsequent queries in that transaction can fail and return `Failed to record interest`.
+- Conflict-safe insert semantics avoid transaction abort while preserving existing API response behavior.
+
+How to verify:
+
+- Targeted regression test:
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- tests/api/match-interest-route.test.ts`
+- Full checklist:
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`
+
+Open risks/TODO:
+
+- This fix was implemented in the `proofound-pr-targeted` worktree.
+- If worktree metadata drifts again, verify that worktree `.git` pointers resolve to the shared `proofound/.git/worktrees/*` paths.

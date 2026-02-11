@@ -619,3 +619,55 @@ Open TODOs / follow-ups:
 - First attempt to apply `20260211123000_cron_idempotency_guards.sql` failed due missing-relation/syntax assumptions in original SQL.
 - Patched migration to conditional `DO $$ ... $$` blocks and corrected JSON property quoting.
 - Re-applied migration successfully and verified both indexes exist in `pg_indexes`.
+
+---
+
+## 2026-02-11 20:35 CET
+
+Task summary:
+
+- Fixed organization matching interest failure where clicking `Interested` could return `Failed to record interest`.
+- Implemented duplicate-safe insert handling in `/api/match/interest` and added route regression tests.
+
+What worked:
+
+- Replaced insert `try/catch` with `onConflictDoNothing()` to keep transaction state valid.
+- Added deterministic API tests for fresh, duplicate, and mutual-interest scenarios.
+- Verification commands passed with Node 20 runtime.
+
+What failed / wrong assumptions:
+
+- Initial command run used a shell Node runtime incompatible with current Vitest/Vite modules.
+- Initial workspace path `proofound` no longer had repository files, so execution moved to `proofound-pr-targeted`.
+
+User corrections:
+
+- User explicitly requested implementation of the approved plan as written.
+
+Assumptions taken without asking:
+
+- Implementing in `proofound-pr-targeted` is acceptable because `proofound` was not a usable clone at the start of the task.
+- Keeping API response shape unchanged while adding server-side diagnostics is the safest behavior-preserving fix.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Confirm active repo path and gitdir health before preflight checks.
+- Standardize all verification commands with explicit Node 20 path from the start.
+
+Commands run + outcomes:
+
+- `npm run test -- tests/api/match-interest-route.test.ts`: FAIL initially (wrong Node runtime)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- tests/api/match-interest-route.test.ts`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS
+
+Open TODOs / follow-ups:
+
+- Restore worktree git metadata (`proofound/.git/...`) if this issue recurs, to keep branch, commit, and push operations available.
+- Re-run this fix on the canonical repo path once git metadata is repaired if this clone is not the deploy source.

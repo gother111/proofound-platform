@@ -47,19 +47,21 @@ export async function POST(request: NextRequest) {
     }
 
     // Record interest and check mutual interest in a transaction
-    const mutualInterest = await db.transaction(async (tx) => {
+    const { mutualInterest, interestInsertSkipped } = await db.transaction(async (tx) => {
       const interestData = {
         actorProfileId: user.id,
         assignmentId,
         targetProfileId: targetProfileId || null,
       };
 
-      // Insert interest (ignore if already exists due to unique constraint)
-      try {
-        await tx.insert(matchInterest).values(interestData);
-      } catch (error) {
-        // Likely duplicate - that's ok, continue to check mutual interest
-      }
+      // Keep this idempotent. Duplicate interests should not fail the request.
+      const insertedInterest = await tx
+        .insert(matchInterest)
+        .values(interestData)
+        .onConflictDoNothing()
+        .returning({ id: matchInterest.id });
+
+      const interestInsertSkipped = insertedInterest.length === 0;
 
       // Check for mutual interest
       let isMutual = false;
@@ -87,7 +89,10 @@ export async function POST(request: NextRequest) {
         isMutual = !!reciprocal;
       }
 
-      return isMutual;
+      return {
+        mutualInterest: isMutual,
+        interestInsertSkipped,
+      };
     });
 
     log.info('match.interest.recorded', {
@@ -95,6 +100,7 @@ export async function POST(request: NextRequest) {
       assignmentId,
       targetProfileId: targetProfileId || null,
       mutualInterest,
+      interestInsertSkipped,
     });
 
     // If mutual interest detected, emit match_actioned event for "introduce"
