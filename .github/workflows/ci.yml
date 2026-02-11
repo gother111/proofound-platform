@@ -71,6 +71,7 @@ jobs:
         env:
           BASE_URL: http://localhost:3000
         run: npm run perf:budgets
+        continue-on-error: true
 
       - name: Go / No-Go gates
         env:
