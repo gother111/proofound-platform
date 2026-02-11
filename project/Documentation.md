@@ -756,3 +756,39 @@ Update (same run):
   - `analytics_events_deletion_reminder_once_idx`
   - `decision_reminders_interview_type_unique_idx`
 - Note: direct SQL execution does not register a new row in `supabase_migrations.schema_migrations`; migration ledger reconciliation remains required.
+
+## 2026-02-11: Recovery Execution Progress (Phase 0 + Partial Phase 3/4)
+
+What changed:
+
+- Added a timestamped forensic PR inventory and overlap matrix to `project/PR_TRIAGE_2026-02.md`.
+- Verified `#141` had no unique files versus `#142` and closed `#141` as superseded.
+- Closed archive-stale set with traceability comments:
+  - `#53`, `#55`, `#59`, `#61`, `#71`, `#93`, `#94`, `#109`, `#113`.
+- Extracted and opened scoped salvage PRs from mixed sources:
+  - `#143` from `#126`: Next.js dependency patch slice only.
+  - `#144` from `#133`: monitoring percentile/perf-status slice only.
+- Closed mixed source PRs after extraction/rejection decisions:
+  - `#126`, `#133`, `#136`, `#130`, `#128`, `#127`.
+- Updated triage ledger with current active queue and blocking condition.
+
+Why:
+
+- Reduce merge-risk noise from large stacked PRs.
+- Preserve only changes with clear current value in small verifiable slices.
+- Keep a single auditable source of truth for PR disposition.
+
+How to verify:
+
+- `gh pr list --state open --base master --limit 100`
+- `gh pr view 142 --json statusCheckRollup,reviewDecision,mergeStateStatus`
+- `gh pr view 143 --json files,statusCheckRollup`
+- `gh pr view 144 --json files,statusCheckRollup`
+- Review ledger updates in `project/PR_TRIAGE_2026-02.md`.
+
+Open risks/TODO:
+
+- Queue remains blocked on required-review policy when no second write-access reviewer is available.
+- `#142` required checks are passing but merge cannot proceed without an external approval.
+- `#137`, `#140`, `#138`, `#134` are queued but cannot be merged until reviewer approval flow is satisfied.
+- Deferred large PR `#132` still requires explicit slice-by-slice triage before any keep/reject decision.

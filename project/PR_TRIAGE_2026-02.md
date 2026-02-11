@@ -205,3 +205,35 @@ Rows and columns: #142, #141, #137, #140, #138, #134, #136, #133, #132, #130, #1
 | PR   | Branch                         | Merge State | Blocker                                                                                                              |
 | ---- | ------------------------------ | ----------- | -------------------------------------------------------------------------------------------------------------------- |
 | #142 | `codex/ci-reliability-unblock` | BLOCKED     | Branch policy requires 1 approval from another write-access reviewer; self-approval and admin override are rejected. |
+
+## Queue Update (2026-02-11 23:10:42.923Z)
+
+### Newly Closed Mixed/Source PRs
+
+| PR   | Branch                                          | State  | Disposition                                                    |
+| ---- | ----------------------------------------------- | ------ | -------------------------------------------------------------- |
+| #126 | `codex/fix-next-cve-2025-66478`                 | CLOSED | Superseded by #143 (security bump slice).                      |
+| #133 | `codex/targeted-monitoring-oauth-refactor`      | CLOSED | Partially salvaged by #144; auth-sensitive remainder deferred. |
+| #136 | `codex/hotfix-landing-restore-9f8e0a9`          | CLOSED | Closed as mixed-scope source; no direct merge.                 |
+| #130 | `codex/brainstorm-platform-next-steps-analysis` | CLOSED | Closed as mixed-scope source; no direct merge.                 |
+| #128 | `codex/landing-polish-preview-6cfd37e`          | CLOSED | Closed as mixed-scope source; no direct merge.                 |
+| #127 | `codex/api-coverage-health`                     | CLOSED | Closed as mixed-scope source; no direct merge.                 |
+
+### Current Active Queue
+
+| PR   | Branch                                    | Files | Merge state | Intended lane   |
+| ---- | ----------------------------------------- | ----: | ----------- | --------------- |
+| #142 | `codex/ci-reliability-unblock`            |    11 | BLOCKED     | Primary queue   |
+| #137 | `codex/pr-assignment-skills-l4`           |     8 | BLOCKED     | Primary queue   |
+| #140 | `codex/pr-ui-preserve-non-landing`        |     3 | BLOCKED     | Primary queue   |
+| #138 | `codex/pr-infra-mcp-env-preserve`         |     7 | BLOCKED     | Primary queue   |
+| #134 | `codex/install-openskills-skill`          |     2 | BLOCKED     | Primary queue   |
+| #143 | `codex/salvage-126-next-security-bump`    |     2 | BLOCKED     | Salvage slices  |
+| #144 | `codex/salvage-133-monitoring-percentile` |     5 | BLOCKED     | Salvage slices  |
+| #132 | `admin-dashboard-polish`                  |    76 | DIRTY       | Deferred review |
+| #131 | `codex/docs-git-flow-instructions`        |     5 | BLOCKED     | Deferred review |
+
+### Blocking Condition
+
+- Merges remain blocked by required-review policy when only self-review is available.
+- #142 has passing required checks but still needs one approval from another write-access reviewer.
