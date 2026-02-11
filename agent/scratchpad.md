@@ -439,3 +439,53 @@ Commands run + outcomes:
 Open TODOs / follow-ups:
 
 - Consider richer fairness-metrics inputs (demographic dimensions) for deeper gap analysis while preserving existing response contract.
+
+---
+
+## 2026-02-11 10:22 CET
+
+Task summary:
+
+- Implement targeted refactor for monitoring percentile consistency and OAuth helper consolidation.
+- Add focused tests for perf-status fallback behavior and new helper utilities.
+
+What worked:
+
+- Shared OAuth helper removed duplicate callback HTML and redirect URI resolution logic across Zoom/Google routes.
+- Monitoring percentile computation is now consistent between perf-status route and monitoring utility.
+- New targeted tests passed and caught no behavior drift in contracts.
+- Full lint/test/build/typecheck verification completed successfully.
+
+What failed / wrong assumptions:
+
+- `npm run typecheck` failed initially because `.next/types` was stale and referenced removed/generated route type files.
+
+User corrections:
+
+- User requested direct implementation of the approved targeted refactor plan.
+
+Assumptions taken without asking:
+
+- Keeping existing OAuth query keys/messages/cookie names exactly was mandatory for backward compatibility.
+- It was acceptable to keep `scripts/perf-budgets.mjs` percentile helper local with an explicit sync comment instead of importing TS runtime code.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Run `npm run build` before `npm run typecheck` on branches with recent route shape changes to avoid stale `.next/types` failures.
+- Add one route-level integration smoke for OAuth callback HTML responses in addition to helper unit tests.
+
+Commands run + outcomes:
+
+- `npx vitest run src/lib/monitoring/__tests__/api-latency-percentile.test.ts src/lib/integrations/__tests__/oauth-helpers.test.ts src/app/api/monitoring/__tests__/perf-status-route.test.ts`: PASS
+- `npm run lint`: PASS
+- `npm run typecheck`: FAIL first (stale `.next/types`), PASS after `npm run build`
+- `npm run test`: PASS
+- `npm run build`: PASS
+
+Open TODOs / follow-ups:
+
+- Optional follow-up: repo-wide base URL env normalization (`NEXT_PUBLIC_SITE_URL`/`SITE_URL`/`NEXT_PUBLIC_APP_URL`) to reduce future drift outside this targeted scope.

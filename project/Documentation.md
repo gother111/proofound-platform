@@ -472,3 +472,61 @@ Open risks/TODO:
 
 - `GET /api/admin/fairness-metrics` now computes deterministic metrics from available match columns, but demographic fairness depth is still limited by available columns in this endpoint.
 - Admin smoke currently validates core page availability and blocking errors; it does not yet assert per-widget data freshness/SLA timestamps.
+
+---
+
+## 2026-02-11: Targeted Monitoring Consistency + OAuth Helper Consolidation
+
+What changed:
+
+- Locked `/api/monitoring/perf-status` response contract and preserved keys:
+  - `status`, `sampleCount`, `windowHours`, `p95`, `budgetMs`, `ok`, `message`, `source`.
+  - `source` semantics remain `analytics_events | probe`.
+- Standardized monitoring percentile math to interpolation in app-side monitoring utility:
+  - `src/lib/monitoring/api-latency.ts`
+- Refactored perf-status route to consume shared percentile utility:
+  - `src/app/api/monitoring/perf-status/route.ts`
+- Added sync note to CI perf budget script percentile implementation:
+  - `scripts/perf-budgets.mjs`
+- Added shared OAuth helper module:
+  - `src/lib/integrations/oauth-helpers.ts`
+  - `buildOAuthCallbackHtml(...)` for popup/full-page callback response HTML
+  - `resolveOAuthRedirectUri(...)` with precedence:
+    - `NEXT_PUBLIC_SITE_URL`
+    - `NEXT_PUBLIC_URL`
+    - request origin
+- Reused OAuth helper in six routes without changing external paths or query contracts:
+  - `src/app/api/integrations/zoom/callback/route.ts`
+  - `src/app/api/integrations/google/callback/route.ts`
+  - `src/app/api/integrations/zoom/connect/route.ts`
+  - `src/app/api/integrations/google/connect/route.ts`
+  - `src/app/api/auth/zoom/callback/route.ts`
+  - `src/app/api/auth/google/callback/route.ts`
+- Preserved cookie names and behavior:
+  - `zoom_oauth_state` and `google_oauth_state` still set on connect and cleared on callback completion.
+- Added targeted tests:
+  - `src/lib/monitoring/__tests__/api-latency-percentile.test.ts`
+  - `src/app/api/monitoring/__tests__/perf-status-route.test.ts`
+  - `src/lib/integrations/__tests__/oauth-helpers.test.ts`
+
+Why:
+
+- Monitoring used multiple percentile formulas, which could produce inconsistent P95 values across route and utility code.
+- OAuth callback and redirect URI logic had duplicated implementations across providers/routes, increasing drift risk when patching.
+- Perf-status fallback probe path had no direct route-level coverage.
+
+How to verify:
+
+- Targeted tests:
+  - `npx vitest run src/lib/monitoring/__tests__/api-latency-percentile.test.ts src/lib/integrations/__tests__/oauth-helpers.test.ts src/app/api/monitoring/__tests__/perf-status-route.test.ts` (PASS)
+- Full checks:
+  - `npm run lint` (PASS)
+  - `npm run typecheck` (PASS after `npm run build` regenerated `.next/types`)
+  - `npm run test` (PASS)
+  - `npm run build` (PASS)
+
+Open risks/TODO:
+
+- `npm run typecheck` can fail on this branch when `.next/types` is stale; running `npm run build` first regenerates route types.
+- `scripts/perf-budgets.mjs` still carries a local percentile helper by design; keep it synced with `src/lib/monitoring/api-latency.ts` if formula changes again.
+- Other modules still use mixed base URL env names (`NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_SITE_URL`, `SITE_URL`); full repo-wide URL/env standardization remains out of scope for this targeted refactor.

@@ -10,20 +10,18 @@ import { requireAuth } from '@/lib/auth';
 import { getZoomAuthUrl } from '@/lib/integrations/zoom';
 import { log } from '@/lib/log';
 import { randomBytes } from 'crypto';
+import { resolveOAuthRedirectUri } from '@/lib/integrations/oauth-helpers';
 
 export async function GET(request: NextRequest) {
   try {
     const user = await requireAuth();
 
     // Get redirect URI
-    const baseUrl =
-      process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_URL || request.nextUrl.origin;
-    const configuredRedirect = process.env.ZOOM_REDIRECT_URI;
-    const redirectUri = configuredRedirect
-      ? configuredRedirect.startsWith('/')
-        ? `${baseUrl}${configuredRedirect}`
-        : configuredRedirect
-      : `${baseUrl}/api/integrations/zoom/callback`;
+    const redirectUri = resolveOAuthRedirectUri(
+      request,
+      process.env.ZOOM_REDIRECT_URI,
+      '/api/integrations/zoom/callback'
+    );
 
     // CSRF protection: tie `state` to an httpOnly cookie (10 min window)
     const state = randomBytes(32).toString('hex');
