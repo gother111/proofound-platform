@@ -3,38 +3,67 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { motion, useScroll, useSpring, useReducedMotion } from 'framer-motion';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { LayoutGrid, Menu, X, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import * as Dialog from '@radix-ui/react-dialog';
 
-// Import all section components
 import { HeroSection } from './landing/sections/HeroSection';
-import { ProblemSection } from './landing/sections/ProblemSection';
-import { HowItWorksSection } from './landing/sections/HowItWorksSection';
-import { PrinciplesSection } from './landing/sections/PrinciplesSection';
-import { PersonasSection } from './landing/sections/PersonasSection';
-import { WhyNowSection } from './landing/sections/WhyNowSection';
-import { ProofSection } from './landing/sections/ProofSection';
-import { StewardOwnershipSection } from './landing/sections/StewardOwnershipSection';
-import { ProductsSection } from './landing/sections/ProductsSection';
-import { FinalCTASection } from './landing/sections/FinalCTASection';
-import { FinalQuoteSection } from './landing/sections/FinalQuoteSection';
-import { FooterSection } from './landing/sections/FooterSection';
 import SectionSeparator from '@/components/ui/SectionSeparator';
 
-import Lenis from 'lenis';
+const ProblemSection = dynamic(
+  () => import('./landing/sections/ProblemSection').then((mod) => mod.ProblemSection),
+  { ssr: false }
+);
+const HowItWorksSection = dynamic(
+  () => import('./landing/sections/HowItWorksSection').then((mod) => mod.HowItWorksSection),
+  { ssr: false }
+);
+const PrinciplesSection = dynamic(
+  () => import('./landing/sections/PrinciplesSection').then((mod) => mod.PrinciplesSection),
+  { ssr: false }
+);
+const PersonasSection = dynamic(
+  () => import('./landing/sections/PersonasSection').then((mod) => mod.PersonasSection),
+  { ssr: false }
+);
+const WhyNowSection = dynamic(
+  () => import('./landing/sections/WhyNowSection').then((mod) => mod.WhyNowSection),
+  { ssr: false }
+);
+const ProofSection = dynamic(
+  () => import('./landing/sections/ProofSection').then((mod) => mod.ProofSection),
+  { ssr: false }
+);
+const StewardOwnershipSection = dynamic(
+  () =>
+    import('./landing/sections/StewardOwnershipSection').then((mod) => mod.StewardOwnershipSection),
+  { ssr: false }
+);
+const ProductsSection = dynamic(
+  () => import('./landing/sections/ProductsSection').then((mod) => mod.ProductsSection),
+  { ssr: false }
+);
+const FinalCTASection = dynamic(
+  () => import('./landing/sections/FinalCTASection').then((mod) => mod.FinalCTASection),
+  { ssr: false }
+);
+const FinalQuoteSection = dynamic(
+  () => import('./landing/sections/FinalQuoteSection').then((mod) => mod.FinalQuoteSection),
+  { ssr: false }
+);
+const FooterSection = dynamic(
+  () => import('./landing/sections/FooterSection').then((mod) => mod.FooterSection),
+  { ssr: false }
+);
 
-// --- Shared Components ---
-
-const NetworkBackground = ({ shouldReduceMotion }: { shouldReduceMotion: boolean }) => (
+const NetworkBackground = () => (
   <div
     className="absolute inset-0 z-0 pointer-events-none overflow-hidden"
     data-testid="landing-network-background"
   >
     <div className="absolute inset-0 bg-background" />
-    {/* Global Noise Texture */}
     <div
       className="absolute inset-0 opacity-[0.03] mix-blend-overlay"
       style={{
@@ -48,88 +77,28 @@ const NetworkBackground = ({ shouldReduceMotion }: { shouldReduceMotion: boolean
         backgroundSize: '40px 40px',
       }}
     />
-    {/* Organic blobs - Animated with more fluid motion */}
-    <motion.div
-      animate={
-        shouldReduceMotion
-          ? undefined
-          : {
-              x: [0, 50, -20, 0],
-              y: [0, -30, 40, 0],
-              scale: [1, 1.1, 0.9, 1],
-              rotate: [0, 10, -5, 0],
-            }
-      }
-      transition={
-        shouldReduceMotion
-          ? undefined
-          : {
-              duration: 25,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }
-      }
-      className="absolute top-[-10%] right-[-5%] w-[60vw] h-[60vw] bg-extended-sage/10 rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen"
-    />
-    <motion.div
-      animate={
-        shouldReduceMotion
-          ? undefined
-          : {
-              x: [0, -40, 30, 0],
-              y: [0, 50, -20, 0],
-              scale: [1, 1.2, 0.95, 1],
-              rotate: [0, -15, 10, 0],
-            }
-      }
-      transition={
-        shouldReduceMotion
-          ? undefined
-          : {
-              duration: 30,
-              repeat: Infinity,
-              ease: 'easeInOut',
-              delay: 2,
-            }
-      }
-      className="absolute bottom-[-10%] left-[-5%] w-[50vw] h-[50vw] bg-proofound-terracotta/10 rounded-full blur-[100px] mix-blend-multiply dark:mix-blend-screen"
-    />
+    <div className="absolute top-[-10%] right-[-5%] w-[60vw] h-[60vw] bg-extended-sage/10 rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen" />
+    <div className="absolute bottom-[-10%] left-[-5%] w-[50vw] h-[50vw] bg-proofound-terracotta/10 rounded-full blur-[100px] mix-blend-multiply dark:mix-blend-screen" />
   </div>
 );
 
-const ProgressIndicator = ({ scrollYProgress }: { scrollYProgress: any }) => (
-  <motion.div
-    className="fixed top-0 left-0 right-0 h-1 bg-proofound-terracotta origin-left z-50"
-    style={{ scaleX: scrollYProgress }}
+const ProgressIndicator = ({ progress }: { progress: number }) => (
+  <div
+    className="fixed top-0 left-0 right-0 h-1 bg-proofound-terracotta origin-left z-50 transition-transform duration-150"
+    style={{ transform: `scaleX(${progress})` }}
   />
 );
 
-const StickyMiniCTA = ({
-  onGetStarted,
-  shouldReduceMotion,
-}: {
-  onGetStarted: () => void;
-  shouldReduceMotion: boolean;
-}) => (
-  <motion.div
-    // Keep stable visible state for reduced motion users. Avoid a hydration race where
-    // initial state is applied before `useReducedMotion()` resolves, leaving the element off-screen.
-    initial={shouldReduceMotion ? { y: 0, opacity: 1 } : { y: 100, opacity: 0 }}
-    animate={{ y: 0, opacity: 1 }}
-    exit={shouldReduceMotion ? { y: 0, opacity: 1 } : { y: 100, opacity: 0 }}
-    transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-    className="fixed bottom-8 right-6 md:right-12 z-40 pointer-events-auto"
-  >
+const StickyMiniCTA = ({ onGetStarted }: { onGetStarted: () => void }) => (
+  <div className="fixed bottom-8 right-6 md:right-12 z-40 pointer-events-auto">
     <Button
       onClick={onGetStarted}
       className="rounded-full px-8 py-6 shadow-xl hover:shadow-2xl flex items-center justify-center gap-2 backdrop-blur-sm"
     >
       Get Started <ArrowRight className="w-4 h-4" aria-hidden="true" />
     </Button>
-  </motion.div>
+  </div>
 );
-
-// --- Main Component ---
 
 interface ProofoundLandingProps {
   onGetStarted?: () => void;
@@ -145,55 +114,35 @@ export function ProofoundLanding({
   const containerRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showStickyProgress, setShowStickyProgress] = useState(false);
+  const [showDeferredSections, setShowDeferredSections] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
   const router = useRouter();
-  const shouldReduceMotion = useReducedMotion() ?? false;
   const menuContentId = 'landing-menu';
 
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ['start start', 'end end'],
-  });
-
-  const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-    restDelta: 0.001,
-  });
-
-  // Initialize Lenis Smooth Scroll
   useEffect(() => {
-    if (shouldReduceMotion) return;
+    const updateProgress = () => {
+      const doc = document.documentElement;
+      const scrollTop = window.scrollY;
+      const scrollHeight = Math.max(doc.scrollHeight - window.innerHeight, 1);
+      const nextProgress = Math.min(1, Math.max(0, scrollTop / scrollHeight));
 
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      orientation: 'vertical',
-      gestureOrientation: 'vertical',
-      smoothWheel: true,
-      wheelMultiplier: 1,
-      touchMultiplier: 2,
-    });
+      setScrollProgress(nextProgress);
+      setShowStickyProgress(nextProgress > 0.1 && nextProgress < 0.9);
 
-    let rafId = 0;
-    function raf(time: number) {
-      lenis.raf(time);
-      rafId = requestAnimationFrame(raf);
-    }
+      if (!showDeferredSections && scrollTop > Math.max(120, window.innerHeight * 0.4)) {
+        setShowDeferredSections(true);
+      }
+    };
 
-    rafId = requestAnimationFrame(raf);
+    updateProgress();
+    window.addEventListener('scroll', updateProgress, { passive: true });
+    window.addEventListener('resize', updateProgress);
 
     return () => {
-      if (rafId) cancelAnimationFrame(rafId);
-      lenis.destroy();
+      window.removeEventListener('scroll', updateProgress);
+      window.removeEventListener('resize', updateProgress);
     };
-  }, [shouldReduceMotion]);
-
-  useEffect(() => {
-    const unsubscribe = scrollYProgress.on('change', (v) => {
-      setShowStickyProgress(v > 0.1 && v < 0.9);
-    });
-    return () => unsubscribe();
-  }, [scrollYProgress]);
+  }, [showDeferredSections]);
 
   const handleIndividualSignup = () => {
     if (onIndividualSignup) {
@@ -224,20 +173,9 @@ export function ProofoundLanding({
       ref={containerRef}
       className="relative bg-background text-foreground overflow-hidden min-h-screen"
     >
-      {/* Network Background */}
-      <NetworkBackground shouldReduceMotion={shouldReduceMotion} />
+      <NetworkBackground />
 
-      {/* Header with accessible menu */}
-      <motion.header
-        // Always animate to the stable on-screen state. If reduced motion resolves after first paint,
-        // this prevents the header from getting stuck at the off-screen initial position.
-        initial={{ y: shouldReduceMotion ? 0 : -100 }}
-        animate={{ y: 0 }}
-        transition={
-          shouldReduceMotion ? { duration: 0 } : { duration: 0.6, ease: [0.22, 1, 0.36, 1] }
-        }
-        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-6"
-      >
+      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-6">
         <div className="pointer-events-auto">
           <Link href="/" aria-label="Proofound home">
             <Image
@@ -246,7 +184,6 @@ export function ProofoundLanding({
               width={120}
               height={48}
               className="h-12 w-auto"
-              priority
             />
           </Link>
         </div>
@@ -270,150 +207,136 @@ export function ProofoundLanding({
             </Dialog.Trigger>
 
             <Dialog.Portal>
-              {/* Use arbitrary z-index values so Tailwind generates these classes even if z-60/z-70 are not in the scale. */}
               <Dialog.Overlay
                 className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-xl"
                 data-testid="landing-menu-overlay"
                 onClick={() => setMenuOpen(false)}
               />
-	              <Dialog.Content
-	                id={menuContentId}
-	                className="fixed inset-0 z-[110] pointer-events-none"
-	              >
-	                {/* `Dialog.Content` must remain `fixed` for a true full-screen overlay.
-	                    Do not add `relative` to this same element, since Tailwind generates
-	                    conflicting position utilities that can push the menu off-screen. */}
-	                <div className="relative w-full h-full flex items-center justify-center">
-	                  <Dialog.Title className="sr-only">Navigation</Dialog.Title>
-	                  <Dialog.Description className="sr-only">Site navigation links.</Dialog.Description>
+              <Dialog.Content
+                id={menuContentId}
+                className="fixed inset-0 z-[110] pointer-events-none"
+              >
+                <div className="relative w-full h-full flex items-center justify-center">
+                  <Dialog.Title className="sr-only">Navigation</Dialog.Title>
+                  <Dialog.Description className="sr-only">
+                    Site navigation links.
+                  </Dialog.Description>
 
-	                  <div className="absolute top-6 left-6 pointer-events-none">
-	                    <LayoutGrid className="w-5 h-5 text-proofound-forest" aria-hidden="true" />
-	                  </div>
-	                  <div className="absolute top-6 right-6 pointer-events-auto">
-	                    <Dialog.Close asChild>
-	                      <button
-	                        type="button"
-	                        className="w-12 h-12 rounded-full bg-card/80 backdrop-blur-md flex items-center justify-center shadow-sm hover:scale-105 transition-transform duration-300 group"
-	                        aria-label="Close menu"
-	                        data-testid="landing-menu-close"
-	                        onClick={() => setMenuOpen(false)}
-	                      >
-	                        <X
-	                          className="w-5 h-5 text-proofound-forest dark:text-foreground"
-	                          aria-hidden="true"
-	                        />
-	                      </button>
-	                    </Dialog.Close>
-	                  </div>
+                  <div className="absolute top-6 left-6 pointer-events-none">
+                    <LayoutGrid className="w-5 h-5 text-proofound-forest" aria-hidden="true" />
+                  </div>
+                  <div className="absolute top-6 right-6 pointer-events-auto">
+                    <Dialog.Close asChild>
+                      <button
+                        type="button"
+                        className="w-12 h-12 rounded-full bg-card/80 backdrop-blur-md flex items-center justify-center shadow-sm hover:scale-105 transition-transform duration-300 group"
+                        aria-label="Close menu"
+                        data-testid="landing-menu-close"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        <X
+                          className="w-5 h-5 text-proofound-forest dark:text-foreground"
+                          aria-hidden="true"
+                        />
+                      </button>
+                    </Dialog.Close>
+                  </div>
 
-	                  <nav
-	                    className="text-center space-y-8 pointer-events-auto"
-	                    data-testid="landing-menu-nav"
-	                  >
-	                    {[
-	                      { label: 'Mission', href: '#the-problem' },
-	                      { label: 'How it Works', href: '#how-it-works' },
-	                      { label: 'Principles', href: '#principles' },
-	                      { label: 'Pricing', href: '#products' },
-	                      { label: 'Log in', href: '/login' },
-	                    ].map((item) => (
-	                      <div key={item.label} className="overflow-hidden">
-	                        <Dialog.Close asChild>
-	                          {item.href.startsWith('#') ? (
-	                            <a
-	                              href={item.href}
-	                              className="block text-4xl md:text-5xl font-display text-proofound-forest dark:text-foreground hover:text-proofound-terracotta transition-colors cursor-pointer"
-	                            >
-	                              {item.label}
-	                            </a>
-	                          ) : (
-	                            <Link
-	                              href={item.href}
-	                              className="block text-4xl md:text-5xl font-display text-proofound-forest dark:text-foreground hover:text-proofound-terracotta transition-colors cursor-pointer"
-	                            >
-	                              {item.label}
-	                            </Link>
-	                          )}
-	                        </Dialog.Close>
-	                      </div>
-	                    ))}
-	                  </nav>
-	                </div>
-	              </Dialog.Content>
+                  <nav
+                    className="text-center space-y-8 pointer-events-auto"
+                    data-testid="landing-menu-nav"
+                  >
+                    {[
+                      { label: 'Mission', href: '#the-problem' },
+                      { label: 'How it Works', href: '#how-it-works' },
+                      { label: 'Principles', href: '#principles' },
+                      { label: 'Pricing', href: '#products' },
+                      { label: 'Log in', href: '/login' },
+                    ].map((item) => (
+                      <div key={item.label} className="overflow-hidden">
+                        <Dialog.Close asChild>
+                          {item.href.startsWith('#') ? (
+                            <a
+                              href={item.href}
+                              className="block text-4xl md:text-5xl font-display text-proofound-forest dark:text-foreground hover:text-proofound-terracotta transition-colors cursor-pointer"
+                            >
+                              {item.label}
+                            </a>
+                          ) : (
+                            <Link
+                              href={item.href}
+                              className="block text-4xl md:text-5xl font-display text-proofound-forest dark:text-foreground hover:text-proofound-terracotta transition-colors cursor-pointer"
+                            >
+                              {item.label}
+                            </Link>
+                          )}
+                        </Dialog.Close>
+                      </div>
+                    ))}
+                  </nav>
+                </div>
+              </Dialog.Content>
             </Dialog.Portal>
           </Dialog.Root>
         </div>
-      </motion.header>
+      </header>
 
-      {/* Progress Indicator */}
-      <ProgressIndicator scrollYProgress={smoothProgress} />
+      <ProgressIndicator progress={scrollProgress} />
 
-      {/* Sticky Mini CTA (appears on scroll) */}
-      {showStickyProgress && (
-        <StickyMiniCTA onGetStarted={handleGetStarted} shouldReduceMotion={shouldReduceMotion} />
-      )}
+      {showStickyProgress && <StickyMiniCTA onGetStarted={handleGetStarted} />}
 
       <main>
-        {/* Section 1: Hero - The Promise */}
         <HeroSection
-          shouldReduceMotion={shouldReduceMotion}
+          shouldReduceMotion={false}
           onIndividualSignup={handleIndividualSignup}
           onOrganizationSignup={handleOrganizationSignup}
         />
 
-        <SectionSeparator direction="up" className="-mt-20 relative z-0" />
+        {showDeferredSections && (
+          <>
+            <SectionSeparator direction="up" className="-mt-20 relative z-0" />
 
-        {/* Section 2: The Problem - Pains we solve */}
-        <ProblemSection shouldReduceMotion={shouldReduceMotion} />
+            <ProblemSection shouldReduceMotion={false} />
 
-        <SectionSeparator
-          direction="down"
-          fill="hsl(var(--background))"
-          className="-mb-20 relative z-20"
-        />
+            <SectionSeparator
+              direction="down"
+              fill="hsl(var(--background))"
+              className="-mb-20 relative z-20"
+            />
 
-        {/* Section 3: How It Works - The Solution */}
-        <HowItWorksSection shouldReduceMotion={shouldReduceMotion} />
+            <HowItWorksSection shouldReduceMotion={false} />
 
-        {/* Section 4: Principles - Trustworthy Foundation */}
-        <PrinciplesSection shouldReduceMotion={shouldReduceMotion} />
+            <PrinciplesSection shouldReduceMotion={false} />
 
-        <SectionSeparator direction="up" className="-mt-20 relative z-20" />
+            <SectionSeparator direction="up" className="-mt-20 relative z-20" />
 
-        {/* Section 5: Personas - Tailored Value */}
-        <PersonasSection
-          shouldReduceMotion={shouldReduceMotion}
-          onIndividualSignup={handleIndividualSignup}
-          onOrganizationSignup={handleOrganizationSignup}
-        />
+            <PersonasSection
+              shouldReduceMotion={false}
+              onIndividualSignup={handleIndividualSignup}
+              onOrganizationSignup={handleOrganizationSignup}
+            />
 
-        {/* Section 6: Why Now - Urgency */}
-        <WhyNowSection shouldReduceMotion={shouldReduceMotion} />
+            <WhyNowSection shouldReduceMotion={false} />
 
-        {/* Section 7: Proof - Credibility */}
-        <ProofSection shouldReduceMotion={shouldReduceMotion} />
+            <ProofSection shouldReduceMotion={false} />
 
-        <SectionSeparator direction="down" className="-mb-20 relative z-20" />
+            <SectionSeparator direction="down" className="-mb-20 relative z-20" />
 
-        {/* Section 8: Steward Ownership - Business Model */}
-        <StewardOwnershipSection shouldReduceMotion={shouldReduceMotion} />
+            <StewardOwnershipSection shouldReduceMotion={false} />
 
-        {/* Section 9: Products & Pricing */}
-        <ProductsSection
-          shouldReduceMotion={shouldReduceMotion}
-          onIndividualSignup={handleIndividualSignup}
-          onOrganizationSignup={handleOrganizationSignup}
-        />
+            <ProductsSection
+              shouldReduceMotion={false}
+              onIndividualSignup={handleIndividualSignup}
+              onOrganizationSignup={handleOrganizationSignup}
+            />
 
-        {/* Section 10: Final CTA */}
-        <FinalCTASection onGetStarted={handleGetStarted} shouldReduceMotion={shouldReduceMotion} />
+            <FinalCTASection onGetStarted={handleGetStarted} shouldReduceMotion={false} />
 
-        {/* Section 11: Final Quote */}
-        <FinalQuoteSection shouldReduceMotion={shouldReduceMotion} />
+            <FinalQuoteSection shouldReduceMotion={false} />
 
-        {/* Section 12: Footer */}
-        <FooterSection shouldReduceMotion={shouldReduceMotion} />
+            <FooterSection shouldReduceMotion={false} />
+          </>
+        )}
       </main>
     </div>
   );
