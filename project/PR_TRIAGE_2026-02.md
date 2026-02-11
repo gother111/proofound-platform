@@ -116,3 +116,64 @@ gh pr list --state open --base master --limit 200 --json number,title,headRefNam
 
 - Large mixed PRs can hide regressions and should not be merged directly.
 - Landing-sensitive files remain under dedicated landing-scope guardrail enforcement.
+
+## Forensic Snapshot (2026-02-11 22:49:28.537Z)
+
+Captured from GitHub PR API and compare API before additional queue actions.
+
+### Open PR Inventory (tracked set)
+
+| PR   | Class          | Branch                                                      | Files | Ahead | Behind | Merge state | Required checks          | Updated    |
+| ---- | -------------- | ----------------------------------------------------------- | ----: | ----: | -----: | ----------- | ------------------------ | ---------- |
+| #142 | ready          | `codex/ci-reliability-unblock`                              |    11 |     2 |      0 | BLOCKED     | ci=pass, a11y=pass       | 2026-02-11 |
+| #141 | superseded     | `codex/landing-regression-hardening`                        |     9 |     1 |      0 | BLOCKED     | ci=failure, a11y=failure | 2026-02-11 |
+| #137 | ready          | `codex/pr-assignment-skills-l4`                             |     8 |     1 |      0 | BLOCKED     | ci=failure, a11y=failure | 2026-02-11 |
+| #140 | ready          | `codex/pr-ui-preserve-non-landing`                          |     3 |     1 |      0 | BLOCKED     | ci=failure, a11y=failure | 2026-02-11 |
+| #138 | ready          | `codex/pr-infra-mcp-env-preserve`                           |     7 |     1 |      0 | BLOCKED     | ci=failure, a11y=failure | 2026-02-11 |
+| #134 | ready          | `codex/install-openskills-skill`                            |     2 |     1 |      0 | BLOCKED     | ci=failure, a11y=failure | 2026-02-11 |
+| #136 | salvage-source | `codex/hotfix-landing-restore-9f8e0a9`                      |   206 |    12 |      3 | DIRTY       | ci=n/a, a11y=n/a         | 2026-02-11 |
+| #133 | salvage-source | `codex/targeted-monitoring-oauth-refactor`                  |    17 |     2 |      0 | BLOCKED     | ci=failure, a11y=failure | 2026-02-11 |
+| #132 | salvage-source | `admin-dashboard-polish`                                    |    76 |    10 |      3 | DIRTY       | ci=n/a, a11y=n/a         | 2026-02-11 |
+| #130 | salvage-source | `codex/brainstorm-platform-next-steps-analysis`             |   199 |     9 |      3 | DIRTY       | ci=n/a, a11y=n/a         | 2026-02-11 |
+| #128 | salvage-source | `codex/landing-polish-preview-6cfd37e`                      |   183 |    12 |      3 | DIRTY       | ci=n/a, a11y=failure     | 2026-02-09 |
+| #127 | salvage-source | `codex/api-coverage-health`                                 |   150 |    14 |      3 | DIRTY       | ci=n/a, a11y=failure     | 2026-02-08 |
+| #126 | salvage-source | `codex/fix-next-cve-2025-66478`                             |     4 |     2 |      3 | BEHIND      | ci=n/a, a11y=failure     | 2026-02-07 |
+| #53  | archive-stale  | `codex/rebuild-org-flow-end-to-end`                         |    39 |    10 |    522 | DIRTY       | ci=n/a, a11y=n/a         | 2025-12-09 |
+| #55  | archive-stale  | `codex/fix-organization-and-individual-login-discrepancies` |     5 |     1 |    522 | DIRTY       | ci=n/a, a11y=n/a         | 2025-12-09 |
+| #59  | archive-stale  | `feat/zen-hub-wireframe`                                    |    46 |     1 |    569 | DIRTY       | ci=n/a, a11y=n/a         | 2025-12-09 |
+| #61  | archive-stale  | `codex/check-figma-elements-and-code-updates`               |     4 |     1 |    516 | DIRTY       | ci=n/a, a11y=n/a         | 2025-12-09 |
+| #71  | archive-stale  | `feat/remove-matching-flag`                                 |     1 |     1 |    501 | DIRTY       | ci=n/a, a11y=n/a         | 2025-12-09 |
+| #93  | archive-stale  | `2025-10-29-z16m-d7564`                                     |    33 |     1 |    438 | DIRTY       | ci=n/a, a11y=n/a         | 2025-12-09 |
+| #94  | archive-stale  | `2025-10-30-layr-d7564`                                     |    45 |     2 |    438 | DIRTY       | ci=n/a, a11y=n/a         | 2025-12-09 |
+| #109 | archive-stale  | `2025-11-05-vant-8b8ca`                                     |    21 |     3 |    304 | DIRTY       | ci=n/a, a11y=n/a         | 2025-12-09 |
+| #113 | archive-stale  | `cursor/fix-admin-dashboard-data-load-error-eabc`           |     2 |     2 |    258 | DIRTY       | ci=n/a, a11y=failure     | 2025-11-08 |
+
+### Active PR Overlap Matrix (file-path overlap count)
+
+Rows and columns: #142, #141, #137, #140, #138, #134, #136, #133, #132, #130, #128, #127, #126
+
+| PR   | #142 | #141 | #137 | #140 | #138 | #134 | #136 | #133 | #132 | #130 | #128 | #127 | #126 |
+| ---- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| #142 |    x |    9 |    0 |    0 |    2 |    2 |    5 |    2 |    5 |    5 |    4 |    3 |    3 |
+| #141 |    9 |    x |    0 |    0 |    2 |    2 |    5 |    2 |    5 |    5 |    4 |    3 |    3 |
+| #137 |    0 |    0 |    x |    0 |    0 |    0 |    6 |    0 |    0 |    0 |    0 |    0 |    0 |
+| #140 |    0 |    0 |    0 |    x |    0 |    0 |    0 |    0 |    0 |    0 |    0 |    0 |    0 |
+| #138 |    2 |    2 |    0 |    0 |    x |    2 |    3 |    2 |    2 |    3 |    4 |    2 |    2 |
+| #134 |    2 |    2 |    0 |    0 |    2 |    x |    2 |    2 |    2 |    2 |    2 |    2 |    2 |
+| #136 |    5 |    5 |    6 |    0 |    3 |    2 |    x |   14 |   64 |   94 |   22 |    3 |    3 |
+| #133 |    2 |    2 |    0 |    0 |    2 |    2 |   14 |    x |   15 |   15 |    2 |    3 |    2 |
+| #132 |    5 |    5 |    0 |    0 |    2 |    2 |   64 |   15 |    x |   67 |   20 |    3 |    3 |
+| #130 |    5 |    5 |    0 |    0 |    3 |    2 |   94 |   15 |   67 |    x |   22 |    3 |    3 |
+| #128 |    4 |    4 |    0 |    0 |    4 |    2 |   22 |    2 |   20 |   22 |    x |   32 |    3 |
+| #127 |    3 |    3 |    0 |    0 |    2 |    2 |    3 |    3 |    3 |    3 |   32 |    x |    4 |
+| #126 |    3 |    3 |    0 |    0 |    2 |    2 |    3 |    2 |    3 |    3 |    3 |    4 |    x |
+
+### Disposition Intent (this run)
+
+- No-freeze policy remains active.
+- Single-lane queue policy remains active.
+- Keep-rule remains: prove current value now with passing verification.
+- Landing baselines remain:
+  - Functional: `e2e/landing-page.spec.ts`
+  - Visual: `e2e/landing-visual.spec.ts` snapshot `landing-home-af705d4-linux-chromium.png`
+- PR #141 marked superseded candidate pending final diff check after #142 merge decision.
