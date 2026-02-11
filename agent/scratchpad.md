@@ -622,6 +622,57 @@ Open TODOs / follow-ups:
 
 ---
 
+## 2026-02-11 20:54 CET
+
+Task summary:
+
+- Installed available Codex-compatible skill(s) from `https://github.com/numman-ali/openskills` via the local `skill-installer` helper.
+- Documented install and verification details in project memory.
+
+What worked:
+
+- `skill-installer` helper script installed the discovered skill path without errors.
+- GitHub tree inspection identified the exact `SKILL.md` source path before install.
+- Post-install validation confirmed `SKILL.md` and bundled references exist locally.
+
+What failed / wrong assumptions:
+
+- Initial assumption that `openskills` might contain a top-level `skills/` folder was wrong (`/contents/skills` returned 404).
+- Repo currently exposes one `SKILL.md` example path, not a larger skill catalog.
+
+User corrections:
+
+- None.
+
+Assumptions taken without asking:
+
+- "Install the skills from here" means install all Codex-compatible `SKILL.md` directories in the provided repository.
+- Installing the single discovered path `examples/my-first-skill` satisfies this request for the current repo state.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Run a recursive tree query for `SKILL.md` first in all external skill repos to avoid trying non-existent conventional folders.
+- Offer optional follow-up install from a second repo when the provided repo is primarily a tool and not a skill catalog.
+
+Commands run + outcomes:
+
+- `curl -fsSL https://api.github.com/repos/numman-ali/openskills/contents`: PASS (repo structure fetched).
+- `curl -fsSL https://api.github.com/repos/numman-ali/openskills/contents/skills`: FAIL (404, folder absent).
+- `curl -fsSL 'https://api.github.com/repos/numman-ali/openskills/git/trees/main?recursive=1' | rg '"path": ".*SKILL.md"'`: PASS (found `examples/my-first-skill/SKILL.md`).
+- `python3 ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py --repo numman-ali/openskills --path examples/my-first-skill`: PASS.
+- `ls -la ~/.codex/skills/my-first-skill`: PASS.
+- `sed -n '1,200p' ~/.codex/skills/my-first-skill/SKILL.md`: PASS.
+
+Open TODOs / follow-ups:
+
+- Restart Codex so the new skill is available in the runtime skill list.
+
+---
+
 ## 2026-02-11 16:28 CET
 
 Task summary:
@@ -901,3 +952,56 @@ Open TODOs / follow-ups:
 
 - Add a user-visible ambiguity hint for legacy auto-resolve when multiple high-confidence taxonomy matches exist.
 - Consider backfill script for existing assignments that still contain legacy non-taxonomy skill IDs.
+
+---
+
+## 2026-02-11 21:45 CET
+
+Task summary:
+
+- Cleaned up home-directory sibling Proofound worktree folders after creating a full backup archive.
+- Documented future-agent recovery and workspace policy so agents know where archived data lives and how to restore it.
+
+What worked:
+
+- Full archive backup completed before deletions.
+- Non-committed leftovers were preserved into a separate safety folder.
+- Main repo `~/proofound` remained intact and active after cleanup.
+- Documentation updates captured exact restore and verification commands.
+
+What failed / wrong assumptions:
+
+- `git worktree remove` failed for `proofound-admin-sync` because `node_modules` made the directory non-empty; manual removal was required after metadata cleanup.
+
+User corrections:
+
+- User asked to explicitly document what future agents should do if they need to refer to cleaned folders/files.
+
+Assumptions taken without asking:
+
+- User prefers one main local repo folder workflow unless they explicitly request parallel worktrees.
+- Backup archive should be kept for recovery rather than immediately deleted.
+- Docs-only update is sufficient to satisfy future-agent guidance requirement.
+
+What the user corrected afterward:
+
+- User clarified concern about future agent access to archived information and requested explicit repo documentation.
+
+Improvements next time:
+
+- Check for hidden heavy directories (`node_modules`, build artifacts) before `git worktree remove` to avoid non-empty directory errors.
+- Add recovery policy docs immediately after cleanup to reduce user uncertainty.
+
+Commands run + outcomes:
+
+- `tar -czf ~/proofound-worktrees-backup-20260211-213411.tar.gz ...`: PASS (full archive created).
+- `git -C ~/proofound worktree remove ... --force`: PARTIAL (one path failed due non-empty directory).
+- `rm -rf ~/proofound-admin-sync`: PASS.
+- `git -C ~/proofound worktree prune`: PASS.
+- `ls -ld ~/proofound*`: PASS.
+- `git -C ~/proofound worktree list --porcelain`: PASS.
+
+Open TODOs / follow-ups:
+
+- Keep `~/proofound-worktrees-backup-20260211-213411.tar.gz` until user confirms no restore is needed.
+- If desired later, prune `/private/tmp` worktrees after confirming they are not needed.

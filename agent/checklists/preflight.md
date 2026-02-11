@@ -6,9 +6,12 @@ Repo Truth items include citations like `(source: README.md)`. Everything else i
 - Confirm git state:
   - Run `git status` and ensure you understand what is already modified/uncommitted.
   - Plan to stage only files relevant to the task.
+  - For real changes, follow this sequence: branch -> commit -> push -> PR -> checks green -> merge.
+  - Never push directly to `master`; use PRs to merge.
 - Confirm Node/tooling expectations:
   - Node version matches `.nvmrc` and `package.json` engines. (source: .nvmrc, package.json)
 - If you expect deploy impact (Next config, env validation, route handlers, build-time imports):
+  - Run `npm run vercel:preflight` to validate local Vercel linkage, expected production branch, and required env key presence.
   - Run the local Vercel pre-commit gate (install/lint/typecheck/test/build + `vercel build --prod`) before committing.
 - Confirm env var hygiene:
   - Use `.env.example` and `docs/ENV_VARIABLES.md`; never commit `.env.local` or `.env`. (source: .env.example, docs/ENV_VARIABLES.md, .gitignore)
@@ -17,3 +20,4 @@ Repo Truth items include citations like `(source: README.md)`. Everything else i
 - Safety (policy):
   - Do not attempt dependency installs for docs-only work.
   - Do not paste secrets into tracked files.
+  - Never use `npm run db:push` against production. Use SQL migrations under `supabase/migrations/` only.

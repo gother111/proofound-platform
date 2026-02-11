@@ -25,6 +25,32 @@ node -v  # expect v20.20.0
 - Do not commit secret env files; `.gitignore` excludes `.env` and `*.local` patterns. (source: .gitignore)
 - Use `node update-env.cjs` only to generate a placeholder `.env.local` template. It intentionally does not include real credentials.
 
+## Local Workspace Topology and Archive Recovery
+
+- Default local workflow: use a single main repo folder at `~/proofound`.
+- Do not create sibling `~/proofound-*` worktrees unless the user explicitly asks for parallel branch folders.
+- If historical sibling worktree data is needed, recover from:
+  - `~/proofound-worktrees-backup-20260211-213411.tar.gz`
+- Small preserved non-committed snapshots are stored in:
+  - `~/proofound-worktree-safety-20260211-214300`
+
+Recovery commands:
+
+```bash
+# Restore all archived folders
+tar -xzf ~/proofound-worktrees-backup-20260211-213411.tar.gz -C ~/
+
+# Restore a single archived folder
+tar -xzf ~/proofound-worktrees-backup-20260211-213411.tar.gz -C ~/ proofound-admin-sync
+```
+
+Verification commands:
+
+```bash
+ls -ld ~/proofound*
+git -C ~/proofound worktree list --porcelain
+```
+
 ## Video Providers (Zoom, Google Meet)
 
 The app stores video provider tokens in `user_video_integrations` (Supabase) and uses these routes for OAuth:
