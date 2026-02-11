@@ -35,6 +35,13 @@ jobs:
         if: github.event_name == 'pull_request'
         run: node ./scripts/check-landing-pr-scope.mjs
 
+      - name: Detect landing-sensitive changes
+        id: landing_changes
+        if: github.event_name == 'pull_request'
+        run: |
+          touched="$(node ./scripts/check-landing-pr-scope.mjs --print-landing-touched)"
+          echo "touched=${touched}" >> "$GITHUB_OUTPUT"
+
       - name: Install dependencies
         run: npm ci
 
@@ -57,6 +64,7 @@ jobs:
         run: npm run test:e2e:landing
 
       - name: Run landing visual baseline contract
+        if: github.event_name == 'pull_request' && steps.landing_changes.outputs.touched == 'true'
         run: npm run test:e2e:landing:visual
 
       - name: Rebuild application for production start

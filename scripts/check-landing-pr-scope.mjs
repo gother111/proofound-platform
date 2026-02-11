@@ -2,6 +2,7 @@
 
 import { execSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
+import process from 'node:process';
 
 const LANDING_SENSITIVE_EXACT = new Set([
   'src/app/page.tsx',
@@ -157,6 +158,12 @@ function getChangedFiles() {
 function main() {
   const changed = getChangedFiles();
   const landingTouched = changed.some(isLandingSensitive);
+  const mode = process.argv[2] || '';
+
+  if (mode === '--print-landing-touched') {
+    console.log(landingTouched ? 'true' : 'false');
+    return;
+  }
 
   if (!landingTouched) {
     console.log('Landing scope check: pass (no landing-sensitive files changed).');
