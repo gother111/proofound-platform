@@ -14,21 +14,44 @@ async function waitForUiToSettle(page: import('@playwright/test').Page) {
   // Many screens use Framer Motion fade-ins. Axe can misreport contrast if run mid-animation.
   await page.waitForFunction(
     () => {
-      const form = document.querySelector('form[aria-label]');
-      if (!form) return true;
-
-      let el: HTMLElement | null = form as HTMLElement;
-      while (el && el !== document.body) {
-        // Framer Motion sets opacity inline during animation.
-        if (el.style && el.style.opacity) {
-          return getComputedStyle(el).opacity === '1';
+      const hasStableOpacity = (node: HTMLElement | null) => {
+        let el: HTMLElement | null = node;
+        while (el && el !== document.body) {
+          // Framer Motion sets opacity inline during animation.
+          if (el.style && el.style.opacity && getComputedStyle(el).opacity !== '1') {
+            return false;
+          }
+          el = el.parentElement;
         }
-        el = el.parentElement;
+        return true;
+      };
+
+      const isVisible = (node: HTMLElement | null) => {
+        if (!node) return false;
+        const style = getComputedStyle(node);
+        return style.display !== 'none' && style.visibility !== 'hidden';
+      };
+
+      if (window.location.pathname === '/signup') {
+        const nodes = Array.from(document.querySelectorAll<HTMLElement>('h3, span, button, a, p'));
+        const individualHeading =
+          nodes.find((node) => node.textContent?.trim() === 'Individual') ?? null;
+        const individualCta =
+          nodes.find((node) => node.textContent?.includes('Continue as Individual')) ?? null;
+
+        return (
+          isVisible(individualHeading) &&
+          isVisible(individualCta) &&
+          hasStableOpacity(individualHeading) &&
+          hasStableOpacity(individualCta)
+        );
       }
 
-      return true;
+      const form = document.querySelector('form[aria-label]') as HTMLElement | null;
+      if (!form) return true;
+      return hasStableOpacity(form);
     },
-    { timeout: 5000 }
+    { timeout: 7000 }
   );
 }
 
