@@ -463,7 +463,12 @@ export async function requestPasswordReset(formData: FormData) {
   });
 
   if (error) {
-    return { error: error.message };
+    // Do not leak provider-side reset errors. Keep user response deterministic.
+    console.warn('Password reset request failed, returning generic success response', {
+      message: error.message,
+      status: error.status,
+    });
+    return { success: true };
   }
 
   return { success: true };

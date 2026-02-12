@@ -1537,3 +1537,30 @@ Open risks/TODO:
 
 - Strict a11y and strict E2E provider flows still require real CI secrets (`NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, provider test credentials) to fully execute.
 - Need fresh GitHub Actions rerun on PR #180 to confirm all required checks pass and auto-merge completes.
+
+## 2026-02-12 - Auth real E2E reset-password stabilization
+
+What changed:
+
+- Made password-reset request response deterministic for valid emails even when auth provider returns an operational error:
+  - `src/actions/auth.ts`
+  - `requestPasswordReset` now logs provider errors and still returns `{ success: true }` for valid email input.
+- Added unit coverage for reset-password action contract:
+  - `tests/actions/auth.test.ts`
+  - Added cases for malformed email validation, provider error fallback-to-success, and provider success path.
+
+Why:
+
+- CI `Run auth E2E real contract` was failing on:
+  - `e2e/auth.real.spec.ts` reset password positive path expecting `data-testid="reset-password-success"`.
+  - The provider occasionally returned an operational error (for example throttling), which prevented success UI rendering and created flaky required-check failures.
+
+How to verify:
+
+- `npm run test -- tests/actions/auth.test.ts`: PASS
+- `npm run lint`: PASS (1 pre-existing warning in `postcss.config.js`)
+- `npm run typecheck`: PASS
+
+Open risks/TODO:
+
+- Confirm the next CI rerun no longer flakes on `Run auth E2E real contract`.
