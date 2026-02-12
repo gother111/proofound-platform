@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -12,9 +12,25 @@ import { SignupForm } from '@/components/auth/SignupForm';
 
 type SignupType = 'choose' | 'individual' | 'organization';
 
+function resolveSignupTypeFromQueryParam(value: string | null): SignupType {
+  if (!value) return 'choose';
+
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === 'individual') return 'individual';
+  if (normalized === 'organization' || normalized === 'org' || normalized === 'org_member') {
+    return 'organization';
+  }
+
+  return 'choose';
+}
+
 export function SignupContent() {
   const router = useRouter();
-  const [signupType, setSignupType] = useState<SignupType>('choose');
+  const searchParams = useSearchParams();
+  const [signupType, setSignupType] = useState<SignupType>(() =>
+    resolveSignupTypeFromQueryParam(searchParams.get('type'))
+  );
 
   if (signupType === 'individual' || signupType === 'organization') {
     return <SignupForm accountType={signupType} onBack={() => setSignupType('choose')} />;
