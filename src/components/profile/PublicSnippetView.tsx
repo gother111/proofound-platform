@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Globe, GraduationCap, MapPin, Sparkles, Briefcase, Target } from 'lucide-react';
@@ -97,9 +98,13 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
                   </div>
                 </div>
                 {viewModel.avatarImage ? (
-                  <img
+                  <Image
                     src={viewModel.avatarImage}
                     alt={`${viewModel.title} avatar`}
+                    width={64}
+                    height={64}
+                    sizes="64px"
+                    unoptimized
                     className="h-16 w-16 rounded-xl object-cover border border-slate-200"
                   />
                 ) : null}

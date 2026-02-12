@@ -83,6 +83,17 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 - Meeting creation:
   - Schedule an interview with `platform=zoom` and confirm the record has `meeting_link` populated.
 
+## Manual Smoke Checks (Profile Sharing)
+
+- Health endpoint:
+  - `curl -sS https://proofound.io/api/health`
+  - Expect `status=healthy` and current deployed commit in response version.
+- Public snippet route fallback:
+  - Open `/p/<invalid-token>` and confirm invalid/expired fallback renders without 500 errors.
+  - Open `/p/<invalid-token>/embed` and confirm response succeeds and includes embed-friendly framing policy (`frame-ancestors *`).
+- Auth/CSRF enforcement:
+  - `POST /api/profile/snippet` without auth/CSRF should fail (`403` expected for missing CSRF).
+
 ## Husky / lint-staged Policy
 
 - If hooks fail, fix only what affects the intended change set.

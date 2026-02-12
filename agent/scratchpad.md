@@ -1010,3 +1010,56 @@ Open TODOs / follow-ups:
 
 - Push `codex/profile-sharing-clean-merge` and merge via PR.
 - Apply production deployment if not already on latest commit and re-check snippet links from profile dialogs.
+
+---
+
+## 2026-02-12 14:42 CET
+
+Task summary:
+
+- Completed optional follow-ups after profile sharing merge.
+- Removed the remaining `PublicSnippetView` lint warning by switching avatar rendering to `next/image`.
+- Ran production smoke checks for profile-sharing related public endpoints and guard behavior.
+
+What worked:
+
+- Minimal UI-only change in `src/components/profile/PublicSnippetView.tsx` cleared the warning without behavior drift.
+- Full local verification (`lint`, `typecheck`, `test`, `build`) passed after the change.
+- Production smoke checks on `proofound.io` confirmed health, CSRF enforcement, invalid token fallback, and embed framing policy.
+
+What failed / wrong assumptions:
+
+- None in this run.
+
+User corrections:
+
+- User requested execution of optional follow-ups after recovery lane completion.
+
+Assumptions taken without asking:
+
+- Production smoke scope can be limited to publicly reachable and unauthenticated checks (`/api/health`, invalid token routes, no-auth POST guard).
+- Keeping `next/image` with `unoptimized` is preferred short-term to avoid remote image optimization/domain regressions.
+
+What the user corrected afterward:
+
+- None in this run.
+
+Improvements next time:
+
+- Add a dedicated CI smoke target for public snippet endpoints to avoid manual `curl` checks.
+
+Commands run + outcomes:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm ci`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS
+- `curl https://proofound.io/api/health`: PASS (`200`, healthy)
+- `curl -X POST https://proofound.io/api/profile/snippet` (no auth/CSRF): PASS (`403`, expected)
+- `curl https://proofound.io/p/invalidtoken`: PASS (`200`, fallback content)
+- `curl -I https://proofound.io/p/invalidtoken/embed`: PASS (`200`, `frame-ancestors *`)
+
+Open TODOs / follow-ups:
+
+- Optional: replace `unoptimized` with a configured optimized remote image path once `images.remotePatterns` is explicitly locked for snippet avatar/logo sources.
