@@ -1229,3 +1229,105 @@ Open risks/TODO:
   - decline analytics cookies and confirm no non-essential telemetry network calls,
   - verify cross-user and anonymous isolation for verification/analytics in live app flows,
   - run moderation action -> statement-of-reasons -> appeal lifecycle end to end.
+
+## 2026-02-12: Supabase Pending Migration Reconciliation
+
+What changed:
+
+- Ran migration ledger audit and confirmed pending local Supabase migration files before apply (`file_not_applied: 8`).
+- Attempted standard path `supabase db push --db-url ... --dry-run --include-all`; it failed because remote migration history has many legacy versions that are not present in local files.
+- Created a DB checkpoint before DDL reconciliation:
+  - `node scripts/db-backup-checkpoint.mjs`
+- Reconciled pending `supabase/migrations/*` by checking target DB state per file, executing SQL only when state was missing, and stamping missing versions in `supabase_migrations.schema_migrations`.
+- Migration reconciliation result:
+  - SQL executed: `supabase/migrations/20251125_fix_function_search_path.sql`
+  - Stamp-only (already present objects):
+    - `supabase/migrations/20251104_add_profile_field_visibility.sql`
+    - `supabase/migrations/20251105_add_skills_search_indexes.sql`
+    - `supabase/migrations/20251107_verification_privacy.sql`
+    - `supabase/migrations/20251125_enable_rls_admin_tables.sql`
+    - `supabase/migrations/20251125_enable_rls_user_tables.sql`
+    - `supabase/migrations/20251208_add_profile_deletion_columns.sql`
+    - `supabase/migrations/20260212183000_eu_launch_readiness_hardening.sql`
+- New/updated migration versions now present in remote ledger:
+  - `20251104`, `20251105`, `20251107`, `20251125`, `20251208`, `20260212183000`
+
+Why:
+
+- User requested to apply pending migrations.
+- Standard Supabase CLI push path was blocked by historical remote/local migration drift, so targeted reconciliation was required to safely align local migration files with remote migration ledger.
+
+How to verify:
+
+- `node scripts/audit-migration-ledger.mjs`
+  - Expect: `File present but not applied: 0`
+- Verify stamped versions:
+  - Query `supabase_migrations.schema_migrations` for versions `20251104, 20251105, 20251107, 20251125, 20251208, 20260212183000`
+- Verify function hardening state from executed SQL:
+  - Check `pg_proc.proconfig` includes `search_path=public, pg_catalog` for `auto_populate_field_visibility` and `search_skills_smart`
+
+Open risks/TODO:
+
+- `node scripts/audit-migration-ledger.mjs` still exits non-zero due `applied_missing_file` drift (`101` remote versions missing from local files). Pending-file reconciliation is complete, but full historical ledger reconciliation remains open.
+- Local `supabase/migrations` uses duplicate version prefix `20251125` across three files; this collapses to a single ledger row key in `supabase_migrations.schema_migrations`.
+- If strict CLI parity is required later (`supabase db push` without manual reconciliation), complete the remote/local migration history reconciliation first.
+
+## 2026-02-12: Expertise Atlas Taxonomy Recovery and Add-Skill Reliability
+
+What changed:
+
+- Added taxonomy recovery and backfill scripts:
+  - `scripts/repair-expertise-taxonomy.ts`
+  - `scripts/backfill-skill-codes.ts`
+- Updated taxonomy verification script:
+  - `scripts/check-skills-data.ts` now uses direct DB `ILIKE` for the python smoke check (no first-1000 truncation false negatives)
+- Hardened taxonomy seeding logic in `scripts/seed-expertise-taxonomy.ts`:
+  - taxonomy markdown fallback path to `docs/archive/legacy-platform/Expertise_Atlas_Taxonomy_L1_L2_L3_Expanded.md`
+  - idempotent upserts with stable L2/L3 ID reuse
+  - L4 upsert on `code`
+  - deterministic summary output
+  - paginated full-table reads to avoid Supabase 1000-row truncation
+  - summarized missing-lookup diagnostics (no per-row log flood)
+- Updated repair flow to run full taxonomy reconciliation (L2-L4) after L1-L3 SQL seed and to snapshot full tables (paginated).
+- Updated add-skill/dashboard UI behavior for taxonomy outages and live state:
+  - `src/app/app/i/expertise/page.tsx`
+  - `src/app/app/i/expertise/ExpertiseAtlasClient.tsx`
+  - `src/app/app/i/expertise/components/add-skill/AddSkillDrawer.tsx`
+  - `src/app/app/i/expertise/components/add-skill/AddSkillDrawerView.tsx`
+  - `src/app/app/i/expertise/components/add-skill/SearchModePanel.tsx`
+  - `src/app/app/i/expertise/components/add-skill/types.ts`
+- Improved taxonomy API search reliability in `src/app/api/expertise/taxonomy/route.ts`:
+  - fallback now runs when smart RPC errors or returns zero rows
+  - fallback uses direct `ILIKE` query for skill names
+
+Why:
+
+- Expertise Atlas regressions were caused by partial taxonomy state and search behavior that could return empty results despite valid L4 data.
+- Add Skill UX needed explicit taxonomy-unavailable feedback instead of silent empty results.
+- Recovery scripts required full-table pagination and robust idempotency for safe repeated operations.
+
+How to verify:
+
+- Recovery precheck:
+  - `npx tsx scripts/repair-expertise-taxonomy.ts --dry-run` (PASS)
+- Recovery apply:
+  - `npx tsx scripts/repair-expertise-taxonomy.ts --apply` (PASS)
+  - Post counts observed: `L1=6`, `L2=177`, `L3=1424`, `L4=18708`
+- Backfill dry-run/apply:
+  - `npx tsx scripts/backfill-skill-codes.ts --dry-run` (PASS)
+  - `npx tsx scripts/backfill-skill-codes.ts --apply` (PASS, 0 confident matches, 0 updates)
+- Taxonomy data check:
+  - `set -a; source .env.local >/dev/null 2>&1; set +a; npx tsx scripts/check-skills-data.ts` (PASS, `18708` rows)
+- API checks (local dev server):
+  - `GET /api/expertise/taxonomy?l1=U` -> non-empty `l2_categories` (PASS)
+  - `GET /api/expertise/taxonomy?search=python` -> non-empty `l4_skills` (PASS)
+- Repo gates:
+  - `npm run lint` (PASS, one existing warning in `postcss.config.js`)
+  - `npm run typecheck` (PASS)
+  - `npm run test` (PASS)
+
+Open risks/TODO:
+
+- Backfill intentionally skipped all 10 current custom skills due low-confidence/ambiguous mapping. They remain custom and visible.
+- Search fallback currently uses name-only `ILIKE`; if needed later, extend fallback to include slug and description matching with ranked ordering.
+- Snapshot files under `output/` are operational artifacts and should be retained for rollback until recovery is fully accepted.

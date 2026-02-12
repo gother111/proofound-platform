@@ -1331,3 +1331,119 @@ Open TODOs / follow-ups:
 - Investigate and reduce landing/homepage TTI to pass perf budget gate.
 - Run manual EU scenarios for consent decline telemetry suppression and moderation rights flow E2E.
 - Capture legal counsel signoff artifact for policy text before release.
+
+---
+
+## 2026-02-12 22:03 CET
+
+Task summary:
+
+- Applied pending Supabase migration files to the configured DB and reconciled migration ledger state.
+- Handled blocked `supabase db push` path caused by remote/local migration history drift.
+
+What worked:
+
+- `node scripts/audit-migration-ledger.mjs` identified exact pending files quickly.
+- DB checkpoint creation succeeded before reconciliation.
+- Per-file state checks allowed safe reconcile without re-running already-present DDL.
+- Pending local migration status is now fully clear (`file_not_applied: 0`).
+
+What failed / wrong assumptions:
+
+- Assumed `supabase db push --db-url ... --include-all` would apply pending files, but CLI blocked on historical remote versions missing locally.
+- Assumed direct SQL replay would run immediately; initial attempt failed because session `search_path` was unset.
+
+User corrections:
+
+- User explicitly requested immediate migration apply.
+
+Assumptions taken without asking:
+
+- It is acceptable to reconcile pending migration versions by stamping `supabase_migrations.schema_migrations` when target objects are already present.
+- Using the DB configured in local `.env.local` is the intended migration target.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add a dedicated repo script for safe Supabase migration reconciliation (state-check + apply + stamp) to avoid ad hoc inline commands.
+- Add a pre-check in migration tooling for duplicate version prefixes in `supabase/migrations`.
+
+Commands run + outcomes:
+
+- `supabase db push --dry-run --yes`: FAIL (`Cannot find project ref`, repo not linked).
+- `node <<...>> supabase db push --db-url "$DATABASE_URL" --dry-run --include-all --yes`: FAIL (remote/local history drift block).
+- `npm run db:backup:checkpoint`: FAIL (script missing in `package.json`).
+- `node scripts/db-backup-checkpoint.mjs`: PASS.
+- Inline Node apply attempt #1: FAIL (`no schema has been selected to create in`).
+- Inline Node reconcile/apply attempt #2: PASS (SQL executed for `20251125_fix_function_search_path.sql`, other pending files stamped as already present).
+- `node scripts/audit-migration-ledger.mjs`: PARTIAL PASS (`file_not_applied: 0`, exits non-zero due `applied_missing_file: 101`).
+- Inline verification query for stamped versions and function `search_path`: PASS.
+
+Open TODOs / follow-ups:
+
+- Reconcile full historical migration drift (`applied_missing_file`) so `supabase db push` can be used without manual reconcile.
+- Normalize duplicate version prefix use in local `supabase/migrations` (`20251125_*`) to reduce ledger ambiguity.
+
+## 2026-02-12 22:42 CET
+
+Task summary:
+
+- Executed the Expertise Atlas recovery plan end-to-end for taxonomy/dashboard/add-skill regressions.
+- Restored L4 taxonomy coverage, hardened recovery/backfill scripts, and fixed taxonomy search fallback behavior.
+- Updated expertise UI to show explicit taxonomy-unavailable state and use live skill state for dashboard rendering.
+
+What worked:
+
+- `scripts/repair-expertise-taxonomy.ts --apply` restored taxonomy counts to full dataset (`L4=18708`) with pre-write snapshots.
+- Pagination fixes in scripts resolved silent 1000-row truncation from Supabase `select()` defaults.
+- Taxonomy API fallback now returns results for `search=python` when smart search returns empty.
+- Full local verification gates passed (`lint`, `typecheck`, `test`).
+
+What failed / wrong assumptions:
+
+- Initial analysis assumed missing L3 rows in DB; actual issue was truncated fetches from non-paginated queries.
+- `scripts/repair-expertise-taxonomy.ts --dry-run` initially failed due static import order with env loading; fixed via dynamic import.
+- `scripts/check-skills-data.ts` initially failed without exported env vars in shell.
+
+User corrections:
+
+- User provided and locked the implementation plan and requested direct execution.
+
+Assumptions taken without asking:
+
+- Safe to run controlled DB writes against the currently configured environment in `.env.local`.
+- Acceptable to keep unmatched custom skills unchanged (no forced mapping) when confidence is low.
+- API fallback can prioritize name-based matching as immediate reliability fix.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add shared pagination helper utilities for all operational scripts touching large tables.
+- Add a regression test for taxonomy API search fallback when RPC returns empty.
+- Consider extending fallback search ranking beyond name-only `ILIKE`.
+
+Commands run + outcomes:
+
+- `npx tsx scripts/repair-expertise-taxonomy.ts --dry-run`: PASS.
+- `npx tsx scripts/repair-expertise-taxonomy.ts --apply`: PASS, snapshots written, post-counts `L1=6 L2=177 L3=1424 L4=18708`.
+- `npx tsx scripts/backfill-skill-codes.ts --dry-run`: PASS (`matched=0 ambiguous=0 unmatched=10`).
+- `npx tsx scripts/backfill-skill-codes.ts --apply`: PASS (`applied=0`).
+- `set -a; source .env.local >/dev/null 2>&1; set +a; npx tsx scripts/check-skills-data.ts`: PASS.
+- Local API smoke with dev server:
+  - `/api/expertise/taxonomy?l1=U`: PASS (non-empty L2)
+  - `/api/expertise/taxonomy?search=python`: PASS (non-empty L4)
+- `npm run lint`: PASS (existing warning in `postcss.config.js`).
+- `npm run typecheck`: PASS.
+- `npm run test`: PASS.
+
+Open TODOs / follow-ups:
+
+- Confirm Add Skill flow manually in authenticated UI session for first-skill add and immediate dashboard visibility.
+- Decide whether to broaden search fallback to include slug/description ranking.
+- Archive or move large `output/` recovery artifacts after operational signoff.
