@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -58,9 +59,14 @@ export function SignupContent() {
               transition={{ delay: 0.2 }}
               className="mb-4"
             >
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-proofound-forest shadow-[0_8px_18px_rgba(28,77,58,0.28)]">
-                <span className="text-2xl font-display font-semibold text-white">P</span>
-              </div>
+              <Image
+                src="/logo.png"
+                alt="Proofound"
+                width={120}
+                height={48}
+                className="mx-auto h-12 w-auto"
+                priority
+              />
             </motion.div>
             <h1 className="font-display text-[32px] font-semibold leading-[40px] tracking-[-0.02em] text-[#2D3330]">
               Join Proofound

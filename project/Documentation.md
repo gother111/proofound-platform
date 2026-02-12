@@ -838,3 +838,33 @@ Open risks/TODO:
 - Remaining salvage PRs are currently blocked only by required check queue time (`ci`/`a11y` pending).
 - Source PRs `#132`, `#138`, `#119`, `#124`, `#134`, `#131`, `#117` still need final close-out after replacement slices merge.
 - `master` branch protection approvals are still temporarily `0` and must be restored to `1` after this recovery lane completes.
+
+## 2026-02-12: Auth Logo Consistency (Login + Signup Chooser)
+
+What changed:
+
+- Replaced the custom `P` badge on the login card header with the same landing-style logo asset and sizing.
+  - `src/components/auth/SignIn.tsx`
+- Replaced the custom `P` badge on the signup account-type chooser header with the same landing-style logo asset and sizing.
+  - `src/app/(auth)/signup/SignupContent.tsx`
+- Kept signup form persona icons and signup success-state icon unchanged as scoped.
+
+Why:
+
+- Ensure visual consistency with the landing page header logo while preserving all auth behavior and flow logic.
+
+How to verify:
+
+- `npm run lint` (PASS)
+- `npm run typecheck` (PASS)
+- `npm run test` (PASS)
+- `npm run build` (PASS)
+- `npm run test:e2e:auth` (PASS)
+- Runtime marker smoke (PASS):
+  - Start dev server and check `/login` contains `logo.png` and `Welcome back`.
+  - Start dev server and check `/signup` contains `logo.png` and `Join Proofound`.
+
+Open risks/TODO:
+
+- No functional auth risk identified. This is a visual-only change.
+- Existing non-blocking warning remains unrelated to this task: `<img>` usage in `src/components/profile/PublicSnippetView.tsx`.

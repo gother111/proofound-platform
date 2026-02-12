@@ -848,3 +848,56 @@ Open TODOs / follow-ups:
 - Finish merging `#146`, `#148`, `#149`, `#150`, `#151` after `ci` and `a11y` pass.
 - Close source PRs `#132`, `#138`, `#119`, `#124`, `#131`, `#134`, `#117` after replacement mapping is fully merged.
 - Restore `master` required approvals from `0` back to `1` once merge lane is complete.
+
+---
+
+## 2026-02-12 11:42 CET
+
+Task summary:
+
+- Implement approved auth-logo unification plan for login and signup chooser only.
+- Replace the custom `P` badge with landing-style `/logo.png` on the two scoped screens.
+
+What worked:
+
+- Scoped UI-only edits in two files without changing auth flow logic.
+- Full repo verification set passed, including auth E2E suite.
+- Runtime page marker checks confirmed `/login` and `/signup` now include `logo.png`.
+
+What failed / wrong assumptions:
+
+- First runtime smoke check attempted `npm run start` after auth E2E, but `.next` lacked `BUILD_ID` because dev-mode artifacts had replaced production build output.
+- Switched to `npm run dev` for marker verification and the check passed.
+
+User corrections:
+
+- Scope confirmed as `Only shown screens` from plan context: login and signup chooser only.
+
+Assumptions taken without asking:
+
+- Landing-style parity means using the same asset (`/logo.png`) and visual sizing (`h-12 w-auto`) rather than reproducing header container/link structure.
+- Keeping signup persona icons and success-state icon unchanged is required to preserve selected scope.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Run runtime marker smoke with `npm run dev` directly when a prior command may have replaced production build artifacts.
+- Prefer compact `rg -o` marker checks on HTML responses to avoid huge minified output in logs.
+
+Commands run + outcomes:
+
+- `git status --short`: PASS (clean before changes).
+- `npm run lint`: PASS (existing unrelated warning in `src/components/profile/PublicSnippetView.tsx`).
+- `npm run typecheck`: PASS.
+- `npm run test`: PASS.
+- `npm run build`: PASS.
+- `npm run test:e2e:auth`: PASS (18/18).
+- Runtime smoke attempt with `npm run start` + `curl`: FAIL (`Could not find a production build in the '.next' directory`).
+- Runtime marker smoke with `npm run dev` + `curl` + `rg -o`: PASS (`logo.png` present on `/login` and `/signup`).
+
+Open TODOs / follow-ups:
+
+- Optional: convert `<img>` to `next/image` in `src/components/profile/PublicSnippetView.tsx` to clear the existing lint warning.
