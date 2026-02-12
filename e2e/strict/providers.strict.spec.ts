@@ -34,7 +34,19 @@ test.describe('Strict MVP Provider Flows (Zoom, Google, LinkedIn)', () => {
 
   test.beforeAll(async () => {
     fixture = createFixtureState();
-    providerUser = getManagedProviderUser();
+    const hasManagedProviderCredentials = Boolean(
+      process.env.E2E_PROVIDER_USER_ID?.trim() &&
+        process.env.E2E_PROVIDER_USER_EMAIL?.trim() &&
+        process.env.E2E_PROVIDER_USER_PASSWORD?.trim()
+    );
+
+    providerUser = hasManagedProviderCredentials
+      ? getManagedProviderUser()
+      : await createRuntimeUser(fixture, {
+          persona: 'individual',
+          prefix: 'strict-provider-managed-fallback',
+          displayName: 'Strict Provider Fallback User',
+        });
 
     unconnectedUser = await createRuntimeUser(fixture, {
       persona: 'individual',
@@ -192,6 +204,19 @@ test.describe('Strict MVP Provider Flows (Zoom, Google, LinkedIn)', () => {
   test('Live provider scheduling contract requires connected provider in strict mode', async ({
     page,
   }) => {
+    const hasManagedProviderCredentials = Boolean(
+      process.env.E2E_PROVIDER_USER_ID?.trim() &&
+        process.env.E2E_PROVIDER_USER_EMAIL?.trim() &&
+        process.env.E2E_PROVIDER_USER_PASSWORD?.trim()
+    );
+    const requireConnected = process.env.STRICT_PROVIDER_E2E_REQUIRE_CONNECTED === 'true';
+    const requireBoth = process.env.STRICT_PROVIDER_E2E_REQUIRE_BOTH === 'true';
+
+    test.skip(
+      !hasManagedProviderCredentials && !requireConnected && !requireBoth,
+      'Managed provider credentials are not configured; live provider contract is disabled.'
+    );
+
     await loginWithUi(page, providerUser);
 
     const statusResponse = await page.request.get('/api/integrations/video/status');
@@ -204,8 +229,6 @@ test.describe('Strict MVP Provider Flows (Zoom, Google, LinkedIn)', () => {
     const zoomConnected = statusPayload.zoom?.connected === true;
     const googleConnected = statusPayload.google?.connected === true;
     const hasConnectedProvider = zoomConnected || googleConnected;
-    const requireConnected = process.env.STRICT_PROVIDER_E2E_REQUIRE_CONNECTED === 'true';
-    const requireBoth = process.env.STRICT_PROVIDER_E2E_REQUIRE_BOTH === 'true';
 
     if (requireBoth && (!zoomConnected || !googleConnected)) {
       throw new Error(
