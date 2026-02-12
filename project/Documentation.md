@@ -1498,3 +1498,40 @@ Open risks/TODO:
 - Strict Playwright gates remain blocked until required Supabase and provider env vars are present.
 - Existing data may still contain old duplicate candidate interest rows from pre-fix behavior; API logic now avoids creating new duplicates for candidate-side interest flow.
 - Legacy matching profile compatibility routes preserve behavior but do not persist old `constraints` shape in dedicated columns because current schema does not include those columns.
+
+## 2026-02-12 - PR #180 merge-unblock fixes
+
+What changed:
+
+- Fixed non-strict accessibility contract to avoid hard dependency on strict Supabase fixture env:
+  - `tests/a11y/critical-flows.spec.ts`
+  - Authenticated a11y tests now only provision runtime fixture users when required Supabase env vars are present.
+  - In mock/no-env mode, authenticated tests are skipped while public a11y checks still run.
+- Fixed dashboard loading text contrast regression flagged by strict a11y:
+  - `src/app/app/i/home/DashboardClient.tsx`
+  - Changed loading label from `text-gray-500` to `text-gray-600` to satisfy WCAG AA contrast on parchment background.
+- Fixed Playwright E2E startup port mismatch that caused CI `webServer` timeout:
+  - `playwright.config.ts`
+  - Web server port now derives from `BASE_URL` port when provided, instead of always forcing `PLAYWRIGHT_PORT`.
+
+Why:
+
+- GitHub required checks for PR #180 were blocked by:
+  - `a11y` workflow failure due missing strict fixture env assumptions in non-strict suite.
+  - `ci` strict a11y failure from dashboard loading text contrast.
+  - `e2e` workflow failure from `BASE_URL=http://localhost:3000` while Playwright started dev server on port `33100`.
+
+How to verify:
+
+- `npm run test:a11y`: PASS (`15 passed`, `3 skipped` authenticated tests when strict fixture env missing)
+- `npm run lint`: PASS (1 pre-existing warning in `postcss.config.js`)
+- `npm run typecheck`: PASS
+- `npm run test`: PASS
+- `BASE_URL=http://localhost:3000 npm run test:e2e -- --project=chromium --grep "__no_match__"`:
+  - Confirms Playwright now boots web server on `localhost:3000` and no longer times out waiting for wrong port.
+  - Command exits non-zero with `No tests found` as expected for the empty grep filter.
+
+Open risks/TODO:
+
+- Strict a11y and strict E2E provider flows still require real CI secrets (`NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, provider test credentials) to fully execute.
+- Need fresh GitHub Actions rerun on PR #180 to confirm all required checks pass and auto-merge completes.
