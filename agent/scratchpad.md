@@ -1107,3 +1107,62 @@ Commands run + outcomes:
 Open TODOs / follow-ups:
 
 - Stabilize or update mocked login redirect expectation in `e2e/auth.spec.ts` for reliable auth E2E runs.
+
+---
+
+## 2026-02-12 15:14 CET
+
+Task summary:
+
+- Continued implementation of the approved architecture hardening plan on branch `codex/architecture-hardening-2026-02-12`.
+- Finished canonical privacy extended suite migration and completed full verification matrix.
+- Updated durable docs for migration governance, auth boundary, RLS, and CI gate changes.
+
+What worked:
+
+- Canonical schema alignment in `tests/privacy/rls-policies-extended.test.ts` fixed 10 failing cases to 22/22 passing.
+- Sequential privacy suite execution passed for both `test:privacy` and `test:privacy:extended`.
+- Full verification matrix passed: lint, typecheck, unit tests, privacy tests, build, migration drift check.
+- Architecture hardening changes already in branch remained type-safe and build-safe after extended test updates.
+
+What failed / wrong assumptions:
+
+- Running `test:privacy` and `test:privacy:extended` in parallel produced one transient failure and websocket port contention.
+- Temporary DB introspection helper file was created during investigation and then removed.
+
+User corrections:
+
+- User instructed to continue implementation after branch-state interruption.
+
+Assumptions taken without asking:
+
+- Canonical schema contract for the failing privacy tests should follow live DB columns (`months_experience`, `assignments.org_id/role/status`, `conversations.stage` text).
+- Assignment privacy tests should reflect org-scoped RLS semantics rather than legacy profile-owned assignment columns.
+- Sequential execution is the correct default for privacy suites in verification.
+
+What the user corrected afterward:
+
+- None after continuation approval.
+
+Improvements next time:
+
+- Avoid parallel execution for privacy suites that share Supabase test infrastructure.
+- Keep a small reusable SQL introspection snippet ready to quickly validate live schema and policies before rewriting RLS tests.
+- Keep test fixtures self-contained to reduce cross-test coupling in privacy suites.
+
+Commands run + outcomes:
+
+- `git status --short --branch`: PASS (confirmed branch and in-progress architecture hardening files).
+- `npm run test:privacy:extended`: FAIL (10 failures before canonicalization), then PASS (22/22) after patch.
+- `npm run lint`: PASS (one existing non-blocking warning).
+- `npm run typecheck`: PASS.
+- `npm run test`: PASS.
+- `npm run test:privacy`: PASS (sequential run).
+- `npm run test:privacy:extended`: PASS (sequential run).
+- `npm run db:drift-check`: PASS.
+- `npm run build`: PASS.
+
+Open TODOs / follow-ups:
+
+- Follow through with repository-level migration source cleanup/deprecation beyond runtime runner unification.
+- Monitor internal API secret rollout in deployed environments.

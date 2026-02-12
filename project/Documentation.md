@@ -1024,3 +1024,64 @@ Open risks/TODO:
 
 - Auth E2E `should allow user to login with valid credentials` timed out waiting for `/app/i/home` in `e2e/auth.spec.ts` under `NEXT_PUBLIC_USE_MOCK_SUPABASE=true`; investigate mock login redirect stability separately.
 - Existing non-blocking lint warning remains unrelated: `<img>` usage in `src/components/profile/PublicSnippetView.tsx`.
+
+## 2026-02-12: Architecture Hardening Rollout (Migrations, RLS, Auth Boundaries, CI Gates)
+
+What changed:
+
+- Migration governance was unified around `src/db/migrations`:
+  - Reworked `run-migrations.mjs` to run ordered SQL files and record state in `app_migration_ledger`.
+  - Added supplemental ledgered execution for `src/db/policies.sql` and `src/db/triggers.sql`.
+  - Added CI drift guard script `scripts/check-migration-drift.mjs` and `npm run db:drift-check`.
+- CI gates were hardened in `.github/workflows/ci.yml`:
+  - Added blocking migration drift check.
+  - Removed `continue-on-error` from perf and go/no-go gate steps.
+- API auth boundary normalization:
+  - Added JSON-safe API auth helpers in `src/lib/api/auth.ts`.
+  - Updated critical routes to avoid redirect-style auth in API handlers and to enforce org membership checks:
+    - `src/app/api/decisions/route.ts`
+    - `src/app/api/decisions/window/[interviewId]/route.ts`
+    - `src/app/api/interviews/schedule/route.ts`
+    - `src/app/api/org/[id]/coverage/route.ts`
+    - `src/app/api/match/explain/[matchId]/route.ts`
+  - Replaced service-role-as-route-auth usage with internal secret boundary:
+    - `src/app/api/core/matching/profile/route.ts`
+    - `src/app/api/cron/refresh-matches/route.ts`
+    - Added `INTERNAL_API_SECRET` support in `.env.example`.
+- Analytics identity hardening:
+  - `src/app/api/analytics/track/route.ts` now binds identity server-side and validates org membership.
+  - `src/lib/analytics/events.ts` keeps canonical-first insert path with bounded compatibility fallback.
+- Immediate SQL injection remediation:
+  - `src/app/api/portfolio/view/route.ts` removed unsafe interpolated raw SQL path and uses parameterized insertion.
+  - Added regression tests:
+    - `tests/api/analytics-track-route.test.ts`
+    - `tests/api/portfolio-view-route.test.ts`
+- RLS hardening migration added:
+  - `src/db/migrations/20260212160000_rls_hardening_helpers.sql`
+  - Adds helper functions, explicit RLS enablement, force-RLS on sensitive tables, and policy normalization for sensitive domains.
+- Privacy test harness and extended policy suite stabilization:
+  - `vitest.supabase.config.ts` now includes SSR export-name shim compatibility for Supabase modules.
+  - `tests/privacy/rls-policies-extended.test.ts` was rewritten for canonical schema and current RLS semantics (org-scoped assignments, `months_experience`, staged conversation flow).
+
+Why:
+
+- The repository had migration and policy drift risk, mixed API auth contracts, and route-level schema assumptions that no longer matched canonical tables.
+- Security posture needed to be secure-by-default and verifiable in CI.
+- Privacy regression suite needed to run reliably against the real RLS model.
+
+How to verify:
+
+- `npm run lint` (PASS, one existing non-blocking warning in `src/components/profile/PublicSnippetView.tsx`)
+- `npm run typecheck` (PASS)
+- `npm run test` (PASS)
+- `npm run test:privacy` (PASS when run sequentially)
+- `npm run test:privacy:extended` (PASS)
+- `npm run db:drift-check` (PASS)
+- `npm run build` (PASS)
+
+Open risks/TODO:
+
+- Existing SQL sources under `migrations/`, `supabase/migrations/`, and `drizzle/` still exist physically. Runtime now uses canonical runner path, but repository cleanup/deprecation should continue in a follow-up.
+- Apply the new RLS migration in production only with backup/checkpoint procedures.
+- Set `INTERNAL_API_SECRET` in deployed environments before relying on internal route calls.
+- Privacy suites should be executed sequentially in CI/local runs to avoid intermittent cross-run interference.

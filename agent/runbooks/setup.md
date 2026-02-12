@@ -68,7 +68,8 @@ Notes:
 - Drizzle commands:
   - `npm run db:generate`, `npm run db:push`, `npm run db:migrate`, `npm run db:studio` (source: package.json)
 - SQL runner:
-  - `npm run db:migrate` runs `node run-migrations.mjs` which applies `migrations-to-run.sql`. (source: package.json, run-migrations.mjs, migrations-to-run.sql)
+  - `npm run db:migrate` runs `node run-migrations.mjs` which applies ordered `src/db/migrations/*.sql` plus ledgered `src/db/policies.sql` and `src/db/triggers.sql`. (source: package.json, run-migrations.mjs, src/db/migrations/, src/db/policies.sql, src/db/triggers.sql)
+  - `npm run db:drift-check` validates migration-path discipline in CI. (source: package.json, scripts/check-migration-drift.mjs)
 - Manual migration docs:
   - `RUN_MIGRATIONS_GUIDE.md`, `APPLY_MIGRATIONS_MANUAL.md` (source: RUN_MIGRATIONS_GUIDE.md, APPLY_MIGRATIONS_MANUAL.md)
 - Safety scripts:

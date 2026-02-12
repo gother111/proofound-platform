@@ -36,6 +36,149 @@ export interface DecisionWindow {
   remindersSent: number;
 }
 
+type InterviewReminderCandidate = {
+  interview_id: string;
+  assignment_id: string;
+  candidate_id: string;
+  organization_id: string;
+  completed_at: string;
+  hours_remaining: string;
+};
+
+function isUndefinedColumnError(error: unknown): boolean {
+  return Boolean(
+    error && typeof error === 'object' && (error as { code?: string }).code === '42703'
+  );
+}
+
+async function getInterviewCompletionTime(interviewId: string): Promise<Date> {
+  try {
+    const canonical = await db.execute(sql`
+      SELECT COALESCE(i.updated_at, i.scheduled_at) AS completed_at
+      FROM interviews i
+      WHERE i.id = ${interviewId}
+    `);
+
+    const canonicalRows = getRows(canonical) as Array<{ completed_at: string | null }>;
+    if (canonicalRows.length > 0 && canonicalRows[0].completed_at) {
+      return new Date(canonicalRows[0].completed_at);
+    }
+  } catch (error) {
+    if (!isUndefinedColumnError(error)) {
+      throw error;
+    }
+  }
+
+  const legacy = await db.execute(sql`
+    SELECT completed_at
+    FROM interviews
+    WHERE id = ${interviewId}
+  `);
+
+  const legacyRows = getRows(legacy) as Array<{ completed_at: string | null }>;
+  if (!legacyRows.length || !legacyRows[0].completed_at) {
+    throw new Error('Interview not found or completion time unavailable');
+  }
+
+  return new Date(legacyRows[0].completed_at);
+}
+
+async function getInterviewReminderRows(): Promise<InterviewReminderCandidate[]> {
+  try {
+    const canonical = await db.execute(sql`
+      SELECT
+        i.id AS interview_id,
+        m.assignment_id,
+        m.profile_id AS candidate_id,
+        a.org_id AS organization_id,
+        COALESCE(i.updated_at, i.scheduled_at) AS completed_at,
+        EXTRACT(EPOCH FROM ((COALESCE(i.updated_at, i.scheduled_at) + INTERVAL '48 hours') - NOW())) / 3600 AS hours_remaining
+      FROM interviews i
+      INNER JOIN matches m ON i.match_id = m.id
+      INNER JOIN assignments a ON m.assignment_id = a.id
+      LEFT JOIN decisions d ON i.id = d.interview_id
+      WHERE i.status = 'completed'
+        AND d.id IS NULL
+        AND COALESCE(i.updated_at, i.scheduled_at) < NOW()
+      ORDER BY COALESCE(i.updated_at, i.scheduled_at) ASC
+    `);
+
+    return getRows(canonical) as InterviewReminderCandidate[];
+  } catch (error) {
+    if (!isUndefinedColumnError(error)) {
+      throw error;
+    }
+  }
+
+  const legacy = await db.execute(sql`
+    SELECT
+      i.id AS interview_id,
+      i.assignment_id,
+      i.participant_user_ids[1] AS candidate_id,
+      a.org_id AS organization_id,
+      i.completed_at,
+      EXTRACT(EPOCH FROM (i.completed_at + INTERVAL '48 hours' - NOW())) / 3600 AS hours_remaining
+    FROM interviews i
+    INNER JOIN assignments a ON i.assignment_id = a.id
+    LEFT JOIN decisions d ON i.id = d.interview_id
+    WHERE i.status = 'completed'
+      AND d.id IS NULL
+      AND i.completed_at < NOW()
+    ORDER BY i.completed_at ASC
+  `);
+
+  return getRows(legacy) as InterviewReminderCandidate[];
+}
+
+async function getInterviewForReminder(interviewId: string) {
+  try {
+    const canonical = await db.execute(sql`
+      SELECT
+        i.id,
+        i.status,
+        a.role,
+        a.org_id AS organization_id
+      FROM interviews i
+      INNER JOIN matches m ON i.match_id = m.id
+      INNER JOIN assignments a ON m.assignment_id = a.id
+      WHERE i.id = ${interviewId}
+    `);
+
+    const rows = getRows(canonical) as Array<{
+      id: string;
+      status: string;
+      role: string;
+      organization_id: string;
+    }>;
+    if (rows.length > 0) {
+      return rows[0];
+    }
+  } catch (error) {
+    if (!isUndefinedColumnError(error)) {
+      throw error;
+    }
+  }
+
+  const legacy = await db.execute(sql`
+    SELECT
+      i.id,
+      i.status,
+      a.role,
+      a.org_id AS organization_id
+    FROM interviews i
+    INNER JOIN assignments a ON i.assignment_id = a.id
+    WHERE i.id = ${interviewId}
+  `);
+
+  const legacyRows = getRows(legacy) as Array<{
+    id: string;
+    status: string;
+    role: string;
+    organization_id: string;
+  }>;
+  return legacyRows[0] ?? null;
+}
+
 // ============================================================================
 // DECISION TRACKING
 // ============================================================================
@@ -50,19 +193,7 @@ export async function recordDecision(
   feedback?: string
 ): Promise<Decision> {
   try {
-    // Get interview completion time
-    const interview = await db.execute(sql`
-      SELECT completed_at
-      FROM interviews
-      WHERE id = ${interviewId}
-    `);
-
-    const interviewRows = getRows(interview) as any[];
-    if (!interviewRows.length) {
-      throw new Error('Interview not found');
-    }
-
-    const completedAt = new Date(interviewRows[0].completed_at);
+    const completedAt = await getInterviewCompletionTime(interviewId);
     const now = new Date();
     const hoursSinceInterview = (now.getTime() - completedAt.getTime()) / (1000 * 60 * 60);
     const withinSLA = hoursSinceInterview <= 48;
@@ -129,19 +260,7 @@ export async function recordDecision(
  */
 export async function getDecisionWindow(interviewId: string): Promise<DecisionWindow | null> {
   try {
-    const interview = await db.execute(sql`
-      SELECT completed_at
-      FROM interviews
-      WHERE id = ${interviewId}
-        AND status = 'completed'
-    `);
-
-    const interviewRows = getRows(interview) as any[];
-    if (!interviewRows.length) {
-      return null;
-    }
-
-    const completedAt = new Date(interviewRows[0].completed_at);
+    const completedAt = await getInterviewCompletionTime(interviewId);
     const deadline = new Date(completedAt.getTime() + 48 * 60 * 60 * 1000); // 48 hours
     const now = new Date();
     const hoursRemaining = (deadline.getTime() - now.getTime()) / (1000 * 60 * 60);
@@ -154,7 +273,7 @@ export async function getDecisionWindow(interviewId: string): Promise<DecisionWi
       WHERE interview_id = ${interviewId}
     `);
 
-    const remindersSent = parseInt(((getRows(reminders)[0] as any)?.count ?? '0') as string);
+    const remindersSent = parseInt(((getRows(reminders)[0] as any)?.count ?? '0') as string, 10);
 
     return {
       interviewId,
@@ -188,32 +307,20 @@ export async function getInterviewsAwaitingDecision(): Promise<
   }>
 > {
   try {
-    const result = await db.execute(sql`
-      SELECT
-        i.id as interview_id,
-        i.assignment_id,
-        i.participant_user_ids[1] as candidate_id,
-        a.org_id as organization_id,
-        i.completed_at,
-        EXTRACT(EPOCH FROM (i.completed_at + INTERVAL '48 hours' - NOW())) / 3600 as hours_remaining
-      FROM interviews i
-      INNER JOIN assignments a ON i.assignment_id = a.id
-      LEFT JOIN decisions d ON i.id = d.interview_id
-      WHERE i.status = 'completed'
-        AND d.id IS NULL
-        AND i.completed_at < NOW()
-      ORDER BY i.completed_at ASC
-    `);
+    const rows = await getInterviewReminderRows();
 
-    return (getRows(result) as any[]).map((row: any) => ({
-      interviewId: row.interview_id,
-      assignmentId: row.assignment_id,
-      candidateId: row.candidate_id,
-      organizationId: row.organization_id,
-      completedAt: new Date(row.completed_at),
-      hoursRemaining: parseFloat(row.hours_remaining),
-      isOverdue: parseFloat(row.hours_remaining) < 0,
-    }));
+    return rows.map((row) => {
+      const hoursRemaining = parseFloat(row.hours_remaining);
+      return {
+        interviewId: row.interview_id,
+        assignmentId: row.assignment_id,
+        candidateId: row.candidate_id,
+        organizationId: row.organization_id,
+        completedAt: new Date(row.completed_at),
+        hoursRemaining,
+        isOverdue: hoursRemaining < 0,
+      };
+    });
   } catch (error) {
     log.error('decision.awaiting.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -236,24 +343,12 @@ export async function sendDecisionReminder(
   reminderType: '24h' | '40h' | '48h_deadline' | '54h_overdue'
 ): Promise<boolean> {
   try {
-    // Get interview details
-    const interview = await db.execute(sql`
-      SELECT
-        i.*,
-        a.role,
-        a.org_id as organization_id
-      FROM interviews i
-      INNER JOIN assignments a ON i.assignment_id = a.id
-      WHERE i.id = ${interviewId}
-    `);
+    const interviewData = await getInterviewForReminder(interviewId);
 
-    const interviewRows = getRows(interview) as any[];
-    if (!interviewRows.length) {
+    if (!interviewData) {
       log.warn('decision.reminder.no_interview', { interviewId });
       return false;
     }
-
-    const interviewData = interviewRows[0] as any;
 
     // Check if decision already made
     const decision = await db.execute(sql`
@@ -294,11 +389,11 @@ export async function sendDecisionReminder(
       INSERT INTO analytics_events (
         event_type,
         user_id,
-        organization_id,
+        org_id,
         entity_type,
         entity_id,
         properties,
-        occurred_at
+        created_at
       ) VALUES (
         'decision_reminder_sent',
         ${organizationId},
@@ -347,7 +442,9 @@ export async function processDecisionReminders(): Promise<{
         WHERE interview_id = ${interview.interviewId}
       `);
 
-      const sentTypes = new Set((getRows(existingReminders) as any[]).map((r: any) => r.reminder_type));
+      const sentTypes = new Set(
+        (getRows(existingReminders) as any[]).map((r: any) => r.reminder_type)
+      );
 
       // Determine which reminder to send based on hours elapsed
       let reminderType: '24h' | '40h' | '48h_deadline' | '54h_overdue' | null = null;

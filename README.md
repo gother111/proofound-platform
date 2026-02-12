@@ -148,18 +148,15 @@ npm run db:generate
 # Push schema to Supabase
 npm run db:push
 
-# Manually run RLS policies and triggers in Supabase SQL Editor
-# Copy contents from:
-# - src/db/policies.sql
-# - src/db/triggers.sql
+# Apply ordered SQL migrations + policy/trigger supplements
+npm run db:migrate
 ```
-
-**Important**: Run the SQL files manually in your Supabase SQL Editor to enable RLS and triggers.
 
 **Quick guide to DB scripts:**
 
 - `npm run db:generate` — Create a new migration from schema changes.
-- `npm run db:migrate` — Apply generated migrations locally/CI.
+- `npm run db:migrate` — Apply ordered `src/db/migrations/*.sql` plus ledgered policy/trigger SQL.
+- `npm run db:drift-check` — Enforce canonical migration-path discipline in CI.
 - `npm run db:push` — Push the current schema directly to the database (bypasses migration files).
 - `npm run db:seed` — Seed feature flags (and demo data when enabled).
 - `npm run db:seed-taxonomy` — Seed the expertise taxonomy slice used by matching.
@@ -245,7 +242,8 @@ npm run typecheck        # TypeScript type checking
 
 # Database
 npm run db:generate      # Generate Drizzle migrations
-npm run db:migrate       # Run migrations
+npm run db:migrate       # Run ordered SQL migrations + policy/trigger supplements
+npm run db:drift-check   # Check migration path drift
 npm run db:push          # Push schema to database
 npm run db:studio        # Open Drizzle Studio
 npm run db:seed          # Seed database

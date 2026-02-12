@@ -10,6 +10,8 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 - Typecheck: `npm run typecheck` (source: package.json)
 - Unit tests: `npm run test` (source: package.json)
 - Build: `npm run build` (source: package.json)
+- If changes touch auth, RLS, policies, migrations, or privacy-sensitive API contracts:
+  - Run `npm run test:privacy` and `npm run test:privacy:extended` sequentially (not in parallel) to avoid shared test-infra contention.
 
 ## Branch Governance (master)
 

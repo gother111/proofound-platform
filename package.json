@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit --incremental false",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node run-migrations.mjs",
+    "db:drift-check": "node ./scripts/check-migration-drift.mjs",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx src/db/seed.ts",
