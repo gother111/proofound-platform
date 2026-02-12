@@ -1,3 +1,7 @@
+> Doc Class: `governance`
+> Sync Pair: `Documentation.md`
+> Last Verified: `2026-02-12`
+
 # Documentation (Status + Index)
 
 ## Status
@@ -216,9 +220,7 @@ Architecture + privacy:
 
 API docs:
 
-- `API_DOCUMENTATION_FINAL.md`
-- `API_DOCUMENTATION_NEW_ENDPOINTS.md`
-- `docs/api-documentation.md`
+- `docs/API_REFERENCE.md`
 
 DB + migrations:
 
@@ -973,7 +975,7 @@ What changed:
 
 - Enforced canonical share URL base for snippets in `src/lib/profile/snippet-generator.ts`:
   - Uses `NEXT_PUBLIC_SITE_URL` only for share links.
-  - Normalizes host and rewrites legacy `proofound.com` and `www.proofound.com` to `proofound.io`.
+  - Normalizes host and rewrites legacy `proofound.io` and `www.proofound.io` to `proofound.io`.
   - Added `buildPublicEmbedURLFromProfileURL` and `generateEmbedCodeFromUrl`.
 - Extended snippet API for organization sharing in `src/app/api/profile/snippet/route.ts`:
   - Supports `profileType: 'individual' | 'organization'` and `orgId`.
@@ -1001,7 +1003,7 @@ What changed:
 
 Why:
 
-- Share links were still generated as `proofound.com` in some paths and public snippet routes were missing or incomplete for end-to-end sharing.
+- Share links were still generated as `proofound.io` in some paths and public snippet routes were missing or incomplete for end-to-end sharing.
 - Organization profile sharing required the same token flow with membership checks and privacy enforcement.
 - Embed behavior needed a route-specific framing exception without loosening the rest of the app.
 
@@ -1014,7 +1016,7 @@ How to verify:
 
 Open risks/TODO:
 
-- Existing already-shared `proofound.com` links outside the app cannot be redirected by this codebase alone.
+- Existing already-shared `proofound.io` links outside the app cannot be redirected by this codebase alone.
 - `frame-ancestors *` is intentionally limited to `/p/<token>/embed`; keep this route-scoped and do not broaden it.
 - Optional hardening follow-up: replace `<img>` with `next/image` in `src/components/profile/PublicSnippetView.tsx` if layout permits.
 
@@ -1229,3 +1231,48 @@ Open risks/TODO:
   - decline analytics cookies and confirm no non-essential telemetry network calls,
   - verify cross-user and anonymous isolation for verification/analytics in live app flows,
   - run moderation action -> statement-of-reasons -> appeal lifecycle end to end.
+
+## 2026-02-12: Repository-Wide Documentation Freshness Remediation
+
+What changed:
+
+- Created canonical API reference: `docs/API_REFERENCE.md`.
+- Archived legacy API docs and replaced them with redirect stubs:
+  - `API_DOCUMENTATION_FINAL.md`
+  - `API_DOCUMENTATION_NEW_ENDPOINTS.md`
+  - `docs/api-documentation.md`
+- Archived historical non-governance status docs and replaced originals with redirect stubs.
+- Added documentation registry: `docs/DOCS_REGISTRY.md`.
+- Added docs freshness guardrail script: `scripts/docs-freshness-check.mjs`.
+- Added npm command: `npm run docs:freshness` in `package.json`.
+- Added non-blocking CI step in `.github/workflows/ci.yml` for docs freshness warning mode.
+- Kept all root governance docs in place and synchronized them with project and agent governance docs:
+  - `Prompt.md`, `Plans.md`, `Architecture.md`, `Implement.md`, `setup.md`, `preflight.md`, `verification.md`, `metrics.md`, `Documentation.md`.
+- Added governance metadata headers (`Doc Class`, `Sync Pair`, `Last Verified`) across root/project/agent governance docs.
+- Normalized active docs from legacy domains to `.io` and removed active absolute local paths.
+- Fixed known broken links in `README.md` and `SPRINT_1_PLAN.md`.
+
+Why:
+
+- Active documentation had significant drift and mixed historical snapshots with operational guidance.
+- Duplicate governance surfaces were contradictory.
+- API docs were fragmented across three overlapping files.
+- There was no automated drift signal in CI.
+
+How to verify:
+
+- `npm run docs:freshness` should pass with no findings.
+- `curl -sS https://proofound.io/api/health` should return healthy status and connected database.
+- `npx -y vercel@latest ls proofound-platform --token "$VERCEL_TOKEN"` should show ready production deployments.
+- `npx -y vercel@latest env ls production --token "$VERCEL_TOKEN"` should show required production env keys.
+- Baseline local checks run for this change set:
+  - `npm run lint` (pass with one unrelated warning in `postcss.config.js`)
+  - `npm run typecheck` (pass)
+  - `npm run test` (pass)
+  - `npm run build` (pass)
+
+Open risks/TODO:
+
+- The historical archive migration may break external bookmarks to old content locations outside the repository.
+- `docs:freshness` currently runs in warning mode in CI; strict mode is available through `STRICT_DOCS_FRESHNESS=true` and can be enabled later.
+- Local verification ran under Node `v25.4.0` in this environment while repo engines target `>=20.20.0 <21`; commands passed, but Node 20 remains the canonical runtime.

@@ -1,3 +1,7 @@
+> Doc Class: `governance`
+> Sync Pair: `Implement.md`
+> Last Verified: `2026-02-12`
+
 # Implementation Operating Contract
 
 This file defines the standard working procedure to follow for all future tasks in this repo.

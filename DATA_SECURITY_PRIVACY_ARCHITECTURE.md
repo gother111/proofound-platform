@@ -36,16 +36,16 @@ Proofound is built on **Privacy by Design** principles where data security, priv
 
 ### Security Posture
 
-| Metric | Status | Industry Standard | Proofound Target |
-|--------|--------|------------------|------------------|
-| **Encryption at rest** | ✅ AES-256 | AES-256 | ✅ Exceeds |
-| **Encryption in transit** | ✅ TLS 1.3 | TLS 1.2+ | ✅ Exceeds |
-| **Authentication** | ✅ JWT + MFA | JWT or OAuth | ✅ Meets |
-| **Row-Level Security** | ✅ Postgres RLS | Often missing | ✅ Exceeds |
-| **GDPR Compliance** | ✅ Ready | Required (EU) | ✅ Meets |
-| **CCPA Compliance** | ✅ Ready | Required (CA) | ✅ Meets |
-| **Audit Logging** | ✅ Implemented | Often missing | ✅ Exceeds |
-| **Data Export** | ✅ <48h SLA | 30 days | ✅ Exceeds |
+| Metric                    | Status          | Industry Standard | Proofound Target |
+| ------------------------- | --------------- | ----------------- | ---------------- |
+| **Encryption at rest**    | ✅ AES-256      | AES-256           | ✅ Exceeds       |
+| **Encryption in transit** | ✅ TLS 1.3      | TLS 1.2+          | ✅ Exceeds       |
+| **Authentication**        | ✅ JWT + MFA    | JWT or OAuth      | ✅ Meets         |
+| **Row-Level Security**    | ✅ Postgres RLS | Often missing     | ✅ Exceeds       |
+| **GDPR Compliance**       | ✅ Ready        | Required (EU)     | ✅ Meets         |
+| **CCPA Compliance**       | ✅ Ready        | Required (CA)     | ✅ Meets         |
+| **Audit Logging**         | ✅ Implemented  | Often missing     | ✅ Exceeds       |
+| **Data Export**           | ✅ <48h SLA     | 30 days           | ✅ Exceeds       |
 
 **Overall Grade**: **A+ (98/100)** - Industry-leading privacy architecture
 
@@ -54,6 +54,7 @@ Proofound is built on **Privacy by Design** principles where data security, priv
 ## TABLE OF CONTENTS
 
 ### Part 1: Privacy Architecture
+
 1. [Privacy by Design Principles](#1-privacy-by-design-principles)
 2. [Data Classification System](#2-data-classification-system)
 3. [Five-Layer Security Model](#3-five-layer-security-model)
@@ -61,29 +62,34 @@ Proofound is built on **Privacy by Design** principles where data security, priv
 5. [Access Control Model](#5-access-control-model)
 
 ### Part 2: Database Security
+
 6. [Row-Level Security (RLS) Policies](#6-row-level-security-rls-policies)
 7. [Data Isolation by Persona](#7-data-isolation-by-persona)
 8. [Anonymization for Analytics & ML](#8-anonymization-for-analytics--ml)
 
 ### Part 3: Application Privacy
+
 9. [Privacy Controls in User Flows](#9-privacy-controls-in-user-flows)
 10. [Staged Identity Reveal (Messaging)](#10-staged-identity-reveal-messaging)
 11. [Verification Privacy](#11-verification-privacy)
 12. [Consent Management](#12-consent-management)
 
 ### Part 4: Transparency
+
 13. [Privacy Dashboard](#13-privacy-dashboard)
 14. [Audit Logging](#14-audit-logging)
 15. [Data Portability & Export](#15-data-portability--export)
 16. [Right to Deletion](#16-right-to-deletion)
 
 ### Part 5: Compliance
+
 17. [GDPR Compliance](#17-gdpr-compliance)
 18. [CCPA Compliance](#18-ccpa-compliance)
 19. [SOC 2 Readiness](#19-soc-2-readiness)
 20. [Security Incident Response](#20-security-incident-response)
 
 ### Part 6: Implementation
+
 21. [Privacy-by-Default Settings](#21-privacy-by-default-settings)
 22. [Security Checklist for Each Feature](#22-security-checklist-for-each-feature)
 23. [Privacy Review for All 40 Flows](#23-privacy-review-for-all-40-flows)
@@ -97,35 +103,42 @@ Proofound is built on **Privacy by Design** principles where data security, priv
 ### 1.1 Seven Foundational Principles
 
 **Principle 1: Proactive not Reactive; Preventative not Remedial**
+
 - Privacy controls built into architecture from day one
 - Security reviews before any feature ships
 - Threat modeling for every new data flow
 
 **Principle 2: Privacy as the Default Setting**
+
 - All profiles default to "network" visibility (not public)
 - Opt-in for data sharing with third parties
 - Minimal data collection by default
 
 **Principle 3: Privacy Embedded into Design**
+
 - RLS policies enforce privacy at database level
 - API endpoints check permissions before returning data
 - UI shows only data user is authorized to see
 
 **Principle 4: Full Functionality (Positive-Sum)**
+
 - Privacy doesn't reduce functionality
 - Example: Staged identity reveal enables safe messaging without sacrificing user experience
 
 **Principle 5: End-to-End Security**
+
 - Encrypted at rest (database)
 - Encrypted in transit (TLS 1.3)
 - Encrypted in backups
 
 **Principle 6: Visibility and Transparency**
+
 - Users see what data is collected
 - Users see who accessed their data
 - Users see how data is used (ML training opt-in/out)
 
 **Principle 7: Respect for User Privacy**
+
 - Users control their data
 - Easy data export (GDPR Art. 15)
 - Easy data deletion (GDPR Art. 17)
@@ -134,15 +147,15 @@ Proofound is built on **Privacy by Design** principles where data security, priv
 
 ### 1.2 Privacy-First Architecture Decisions
 
-| Decision | Privacy Impact | Implementation |
-|----------|---------------|----------------|
-| **Supabase RLS** | Database enforces privacy rules | Every table has RLS policies |
-| **JWT Tokens** | Stateless auth, no central session store | Supabase Auth |
-| **Staged Messaging** | Users control identity reveal | Stage 1: masked, Stage 2: revealed |
-| **Verification Privacy** | Verifier/verifiee relationship protected | Private tokens, expiring links |
-| **Minimal Data Collection** | Less data = less risk | Progressive profiling |
-| **Anonymized ML** | ML training on anonymized data | Hash user IDs, strip PII |
-| **Edge Functions** | Process sensitive data at edge (closer to user) | Supabase Edge Functions |
+| Decision                    | Privacy Impact                                  | Implementation                     |
+| --------------------------- | ----------------------------------------------- | ---------------------------------- |
+| **Supabase RLS**            | Database enforces privacy rules                 | Every table has RLS policies       |
+| **JWT Tokens**              | Stateless auth, no central session store        | Supabase Auth                      |
+| **Staged Messaging**        | Users control identity reveal                   | Stage 1: masked, Stage 2: revealed |
+| **Verification Privacy**    | Verifier/verifiee relationship protected        | Private tokens, expiring links     |
+| **Minimal Data Collection** | Less data = less risk                           | Progressive profiling              |
+| **Anonymized ML**           | ML training on anonymized data                  | Hash user IDs, strip PII           |
+| **Edge Functions**          | Process sensitive data at edge (closer to user) | Supabase Edge Functions            |
 
 ---
 
@@ -152,12 +165,12 @@ Proofound is built on **Privacy by Design** principles where data security, priv
 
 All data in Proofound is classified into one of four tiers:
 
-| Tier | Classification | Examples | Protection Level | Access |
-|------|---------------|----------|------------------|--------|
-| **Tier 1** | 🔴 **PII (Personally Identifiable Information)** | Email, phone, IP address, payment info | Highest | User only, admins with audit |
-| **Tier 2** | 🟠 **Sensitive Professional** | Compensation preferences, verifier relationships | High | User + explicitly shared orgs |
-| **Tier 3** | 🟡 **Semi-Public** | Skills, experience, proofs (user-controlled) | Medium | Public or network (user chooses) |
-| **Tier 4** | 🟢 **Public** | Org profiles, public assignments | Low | Anyone |
+| Tier       | Classification                                   | Examples                                         | Protection Level | Access                           |
+| ---------- | ------------------------------------------------ | ------------------------------------------------ | ---------------- | -------------------------------- |
+| **Tier 1** | 🔴 **PII (Personally Identifiable Information)** | Email, phone, IP address, payment info           | Highest          | User only, admins with audit     |
+| **Tier 2** | 🟠 **Sensitive Professional**                    | Compensation preferences, verifier relationships | High             | User + explicitly shared orgs    |
+| **Tier 3** | 🟡 **Semi-Public**                               | Skills, experience, proofs (user-controlled)     | Medium           | Public or network (user chooses) |
+| **Tier 4** | 🟢 **Public**                                    | Org profiles, public assignments                 | Low              | Anyone                           |
 
 ---
 
@@ -166,6 +179,7 @@ All data in Proofound is classified into one of four tiers:
 #### Tier 1: PII (🔴 Highest Protection)
 
 **`profiles` table**:
+
 ```sql
 -- PII fields (Tier 1)
 email TEXT                    -- 🔴 PII: Never public
@@ -179,6 +193,7 @@ CREATE POLICY "Users can only read own PII"
 ```
 
 **`verification_requests` table**:
+
 ```sql
 -- Verifier PII (Tier 1)
 verifier_email TEXT           -- 🔴 PII: Only visible to requester
@@ -195,6 +210,7 @@ CREATE POLICY "Users can only see verifications they requested or received"
 ```
 
 **`payment_info` table** (if implemented):
+
 ```sql
 -- Payment PII (Tier 1)
 bank_account_last4 TEXT       -- 🔴 PII: Only last 4 digits stored
@@ -208,6 +224,7 @@ stripe_customer_id TEXT       -- 🔴 PII: Encrypted at rest
 #### Tier 2: Sensitive Professional (🟠 High Protection)
 
 **`matching_profiles` table**:
+
 ```sql
 -- Compensation (Tier 2)
 hourly_rate_min NUMERIC       -- 🟠 Sensitive: User controls visibility
@@ -230,6 +247,7 @@ CREATE POLICY "Matching profiles visible to matched orgs only"
 ```
 
 **`conversations` table** (Tier 2 before reveal, Tier 3 after):
+
 ```sql
 -- Stage 1: Masked (Tier 2)
 stage TEXT CHECK (stage IN ('masked', 'revealed'))
@@ -255,6 +273,7 @@ CREATE POLICY "Users can only read conversations they're in"
 #### Tier 3: Semi-Public (🟡 Medium Protection, User-Controlled)
 
 **`individual_profiles` table**:
+
 ```sql
 -- User-controlled visibility (Tier 3)
 bio TEXT                      -- 🟡 Visibility controlled by user
@@ -277,6 +296,7 @@ CREATE POLICY "Profile visibility based on user settings"
 ```
 
 **`proofs` table**:
+
 ```sql
 -- Proof visibility (Tier 3)
 visibility TEXT DEFAULT 'private' -- 'public', 'connections', 'private'
@@ -303,6 +323,7 @@ CREATE POLICY "Proof visibility controlled by owner"
 #### Tier 4: Public (🟢 Low Protection)
 
 **`organizations` table**:
+
 ```sql
 -- Public org info (Tier 4)
 display_name TEXT             -- 🟢 Public
@@ -316,6 +337,7 @@ CREATE POLICY "Public orgs visible to all authenticated users"
 ```
 
 **`assignments` table** (when published):
+
 ```sql
 -- Public assignments (Tier 4)
 title TEXT                    -- 🟢 Public
@@ -339,18 +361,18 @@ CREATE POLICY "Published assignments visible to all"
 
 ### 2.3 Data Classification Matrix
 
-| Table | Tier 1 (PII) | Tier 2 (Sensitive) | Tier 3 (Semi-Public) | Tier 4 (Public) |
-|-------|-------------|-------------------|---------------------|----------------|
-| **profiles** | email, phone, ip | - | - | - |
-| **individual_profiles** | - | - | bio, skills, experience | - |
-| **matching_profiles** | - | comp preferences | availability, location | - |
-| **organizations** | - | - | - | name, mission, logo |
-| **assignments** | - | - | - | published assignments |
-| **verification_requests** | verifier email/name, token | - | - | - |
-| **conversations** | - | masked (Stage 1) | revealed (Stage 2) | - |
-| **proofs** | - | - | urls, files (user-controlled) | - |
-| **applications** | - | gating answers | - | - |
-| **messages** | - | content (private) | - | - |
+| Table                     | Tier 1 (PII)               | Tier 2 (Sensitive) | Tier 3 (Semi-Public)          | Tier 4 (Public)       |
+| ------------------------- | -------------------------- | ------------------ | ----------------------------- | --------------------- |
+| **profiles**              | email, phone, ip           | -                  | -                             | -                     |
+| **individual_profiles**   | -                          | -                  | bio, skills, experience       | -                     |
+| **matching_profiles**     | -                          | comp preferences   | availability, location        | -                     |
+| **organizations**         | -                          | -                  | -                             | name, mission, logo   |
+| **assignments**           | -                          | -                  | -                             | published assignments |
+| **verification_requests** | verifier email/name, token | -                  | -                             | -                     |
+| **conversations**         | -                          | masked (Stage 1)   | revealed (Stage 2)            | -                     |
+| **proofs**                | -                          | -                  | urls, files (user-controlled) | -                     |
+| **applications**          | -                          | gating answers     | -                             | -                     |
+| **messages**              | -                          | content (private)  | -                             | -                     |
 
 ---
 
@@ -359,22 +381,26 @@ CREATE POLICY "Published assignments visible to all"
 ### Layer 1: Database Security (Postgres + Supabase)
 
 **Encryption at Rest**:
+
 - ✅ All data encrypted with AES-256
 - ✅ Supabase managed keys (default)
 - ⚠️ Option: Customer-managed keys (BYOK) for enterprise
 
 **Row-Level Security (RLS)**:
+
 - ✅ Every table has RLS policies
 - ✅ Policies enforce "users can only see their data"
 - ✅ Policies checked BEFORE SQL query executes
 - ✅ Impossible to bypass (database-level enforcement)
 
 **Audit Logging**:
+
 - ✅ Postgres logs all queries (pg_stat_statements)
 - ✅ Supabase logs all API calls
 - ✅ Retention: 90 days (operational), 7 years (compliance)
 
 **Backup Security**:
+
 - ✅ Daily encrypted backups
 - ✅ 30-day retention (configurable)
 - ✅ Point-in-time recovery (PITR)
@@ -384,14 +410,18 @@ CREATE POLICY "Published assignments visible to all"
 ### Layer 2: API Security (Next.js API Routes)
 
 **Authentication**:
+
 ```typescript
 // Every API endpoint checks auth
 async function requireAuth(request: NextRequest) {
   const supabase = await createClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
 
   if (error || !user) {
-    throw new Error("Unauthorized");
+    throw new Error('Unauthorized');
   }
 
   return user;
@@ -406,6 +436,7 @@ export async function GET(request: NextRequest) {
 ```
 
 **Authorization** (Check user has permission):
+
 ```typescript
 // Check if user can access resource
 async function requirePermission(userId: string, resourceId: string, action: string) {
@@ -415,19 +446,16 @@ async function requirePermission(userId: string, resourceId: string, action: str
   });
 
   if (!assignment) {
-    throw new Error("Not found");
+    throw new Error('Not found');
   }
 
   // Check if user is org member with edit permission
   const orgMember = await db.query.orgMembers.findFirst({
-    where: and(
-      eq(orgMembers.userId, userId),
-      eq(orgMembers.orgId, assignment.orgId)
-    ),
+    where: and(eq(orgMembers.userId, userId), eq(orgMembers.orgId, assignment.orgId)),
   });
 
   if (!orgMember || !['owner', 'steward', 'recruiter'].includes(orgMember.role)) {
-    throw new Error("Forbidden");
+    throw new Error('Forbidden');
   }
 
   return assignment;
@@ -435,25 +463,26 @@ async function requirePermission(userId: string, resourceId: string, action: str
 ```
 
 **Rate Limiting**:
+
 ```typescript
 // Prevent abuse
 const rateLimit = await checkRateLimit(ip, 'api');
 if (!rateLimit.allowed) {
-  return NextResponse.json(
-    { error: "Too many requests" },
-    { status: 429 }
-  );
+  return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
 }
 ```
 
 **Input Validation** (Prevent injection attacks):
+
 ```typescript
 // Validate all user input
-const validated = z.object({
-  email: z.string().email(),
-  name: z.string().min(2).max(100),
-  bio: z.string().max(500),
-}).parse(request.body);
+const validated = z
+  .object({
+    email: z.string().email(),
+    name: z.string().min(2).max(100),
+    bio: z.string().max(500),
+  })
+  .parse(request.body);
 
 // Sanitize HTML
 import DOMPurify from 'dompurify';
@@ -461,16 +490,14 @@ const cleanBio = DOMPurify.sanitize(validated.bio);
 ```
 
 **CORS** (Cross-Origin Resource Sharing):
+
 ```typescript
 // Only allow requests from own domain
 export async function middleware(request: NextRequest) {
   const origin = request.headers.get('origin');
 
-  if (origin && !origin.includes('proofound.com')) {
-    return NextResponse.json(
-      { error: "Forbidden" },
-      { status: 403 }
-    );
+  if (origin && !origin.includes('proofound.io')) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   return NextResponse.next();
@@ -482,6 +509,7 @@ export async function middleware(request: NextRequest) {
 ### Layer 3: Application Security (React + Next.js)
 
 **Client-Side Privacy Controls**:
+
 ```typescript
 // Show/hide data based on user settings
 function ProfileView({ profile, viewer }) {
@@ -510,28 +538,30 @@ function ProfileView({ profile, viewer }) {
 ```
 
 **Sensitive Data Never in Client State**:
+
 ```typescript
 // ❌ BAD: PII in client state
 const [user, setUser] = useState({
-  email: "user@example.com",      // PII exposed
-  ssn: "123-45-6789",             // Extreme PII exposed
+  email: 'user@example.com', // PII exposed
+  ssn: '123-45-6789', // Extreme PII exposed
 });
 
 // ✅ GOOD: PII stays on server
 const [user, setUser] = useState({
-  id: "abc123",
-  displayName: "Jane Smith",
-  avatarUrl: "...",
+  id: 'abc123',
+  displayName: 'Jane Smith',
+  avatarUrl: '...',
 });
 
 // Fetch sensitive data only when needed, don't cache
 async function viewEmail() {
-  const { email } = await fetch('/api/profile/email').then(r => r.json());
+  const { email } = await fetch('/api/profile/email').then((r) => r.json());
   // Show in modal, don't save to state
 }
 ```
 
 **XSS Prevention** (Cross-Site Scripting):
+
 ```typescript
 // React automatically escapes output
 <p>{user.bio}</p> {/* Safe, React escapes HTML */}
@@ -547,17 +577,20 @@ async function viewEmail() {
 ### Layer 4: Transparency Layer (User-Facing)
 
 **Privacy Dashboard** (see Section 13):
+
 - Users see all data collected
 - Users see who accessed their data (audit log)
 - Users control visibility settings
 - Users export or delete data
 
 **Consent Management** (see Section 12):
+
 - Clear consent forms before data collection
 - Granular consent (analytics, ML, marketing)
 - Easy opt-out
 
 **Audit Logs** (see Section 14):
+
 - Users see who viewed their profile
 - Users see all logins (device, location, time)
 - Users get alerts for suspicious activity
@@ -567,18 +600,21 @@ async function viewEmail() {
 ### Layer 5: Compliance Layer (Legal/Regulatory)
 
 **GDPR Compliance** (see Section 17):
+
 - Right to access (Art. 15)
 - Right to deletion (Art. 17)
 - Right to portability (Art. 20)
 - Data processing agreements
 
 **CCPA Compliance** (see Section 18):
+
 - Right to know
 - Right to delete
 - Right to opt-out
 - Do Not Sell My Data
 
 **SOC 2 Readiness** (see Section 19):
+
 - Security controls documented
 - Access logs maintained
 - Incident response plan
@@ -590,6 +626,7 @@ async function viewEmail() {
 ### 4.1 Encryption at Rest
 
 **Database Encryption** (Supabase Postgres):
+
 ```
 ┌─────────────────────────────────────┐
 │      Application (Next.js)          │
@@ -610,11 +647,13 @@ async function viewEmail() {
 ```
 
 **File Storage Encryption** (Supabase Storage):
+
 - ✅ All files encrypted at rest (AES-256)
 - ✅ Per-file encryption keys
 - ✅ Private buckets: Only accessible with signed URLs
 
 **Backup Encryption**:
+
 - ✅ All backups encrypted (AES-256)
 - ✅ Stored in separate region (disaster recovery)
 
@@ -623,6 +662,7 @@ async function viewEmail() {
 ### 4.2 Encryption in Transit
 
 **TLS 1.3** (all connections):
+
 ```
 Client (Browser) ←→ Vercel Edge (TLS 1.3) ←→ Supabase (TLS 1.3)
      ↑                                            ↑
@@ -630,27 +670,29 @@ Client (Browser) ←→ Vercel Edge (TLS 1.3) ←→ Supabase (TLS 1.3)
 ```
 
 **Certificate Management**:
+
 - ✅ Auto-renewed by Vercel (Let's Encrypt)
 - ✅ TLS 1.3 enforced (no downgrade attacks)
 - ✅ HSTS headers (HTTP Strict Transport Security)
 
 **API Security Headers**:
+
 ```typescript
 // next.config.js
 headers: [
   {
     key: 'Strict-Transport-Security',
-    value: 'max-age=63072000; includeSubDomains; preload'
+    value: 'max-age=63072000; includeSubDomains; preload',
   },
   {
     key: 'X-Content-Type-Options',
-    value: 'nosniff'
+    value: 'nosniff',
   },
   {
     key: 'X-Frame-Options',
-    value: 'DENY'
+    value: 'DENY',
   },
-]
+];
 ```
 
 ---
@@ -658,23 +700,26 @@ headers: [
 ### 4.3 Token Security (JWT)
 
 **JWT Structure**:
+
 ```json
 {
-  "sub": "user-id-abc123",           // Subject (user ID)
+  "sub": "user-id-abc123", // Subject (user ID)
   "email": "user@example.com",
   "role": "authenticated",
-  "iat": 1699564800,                 // Issued at
-  "exp": 1699651200                  // Expires in 24h
+  "iat": 1699564800, // Issued at
+  "exp": 1699651200 // Expires in 24h
 }
 ```
 
 **Token Security Measures**:
+
 - ✅ **Short-lived**: Expires in 24 hours (configurable)
 - ✅ **Refresh tokens**: Longer-lived (7 days), used to get new access tokens
 - ✅ **Secure storage**: httpOnly cookies (not accessible via JavaScript)
 - ✅ **CSRF protection**: SameSite=Strict cookie attribute
 
 **Token Revocation**:
+
 ```typescript
 // Logout = delete refresh token
 async function logout() {
@@ -696,41 +741,43 @@ async function forceLogout(userId: string) {
 ### 5.1 Role-Based Access Control (RBAC)
 
 **User Roles**:
+
 ```typescript
 type UserRole =
-  | 'individual'        // Can create profile, apply to assignments
-  | 'org_member'        // Can view org dashboard
-  | 'admin';            // Platform admin (support, moderation)
+  | 'individual' // Can create profile, apply to assignments
+  | 'org_member' // Can view org dashboard
+  | 'admin'; // Platform admin (support, moderation)
 
 type OrgRole =
-  | 'owner'             // Full control (billing, delete org)
-  | 'steward'           // Manage team, assignments, candidates
-  | 'recruiter'         // Manage assignments, candidates (no team mgmt)
-  | 'viewer';           // Read-only access
+  | 'owner' // Full control (billing, delete org)
+  | 'steward' // Manage team, assignments, candidates
+  | 'recruiter' // Manage assignments, candidates (no team mgmt)
+  | 'viewer'; // Read-only access
 ```
 
 **Permission Matrix**:
 
-| Action | Individual | Org Member | Owner | Steward | Recruiter | Viewer | Admin |
-|--------|-----------|-----------|-------|---------|-----------|--------|-------|
-| **View own profile** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Edit own profile** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-| **View org dashboard** | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Create assignment** | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| **Edit assignment** | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| **View candidates** | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ | ❌ |
-| **Message candidates** | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| **Invite team members** | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **Manage billing** | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **Delete org** | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **View any profile** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| **Moderate content** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Action                  | Individual | Org Member | Owner | Steward | Recruiter | Viewer | Admin |
+| ----------------------- | ---------- | ---------- | ----- | ------- | --------- | ------ | ----- |
+| **View own profile**    | ✅         | ✅         | ✅    | ✅      | ✅        | ✅     | ✅    |
+| **Edit own profile**    | ✅         | ✅         | ✅    | ✅      | ✅        | ✅     | ❌    |
+| **View org dashboard**  | ❌         | ✅         | ✅    | ✅      | ✅        | ✅     | ✅    |
+| **Create assignment**   | ❌         | ❌         | ✅    | ✅      | ✅        | ❌     | ❌    |
+| **Edit assignment**     | ❌         | ❌         | ✅    | ✅      | ✅        | ❌     | ❌    |
+| **View candidates**     | ❌         | ❌         | ✅    | ✅      | ✅        | ✅     | ❌    |
+| **Message candidates**  | ❌         | ❌         | ✅    | ✅      | ✅        | ❌     | ❌    |
+| **Invite team members** | ❌         | ❌         | ✅    | ✅      | ❌        | ❌     | ❌    |
+| **Manage billing**      | ❌         | ❌         | ✅    | ❌      | ❌        | ❌     | ❌    |
+| **Delete org**          | ❌         | ❌         | ✅    | ❌      | ❌        | ❌     | ❌    |
+| **View any profile**    | ❌         | ❌         | ❌    | ❌      | ❌        | ❌     | ✅    |
+| **Moderate content**    | ❌         | ❌         | ❌    | ❌      | ❌        | ❌     | ✅    |
 
 ---
 
 ### 5.2 Attribute-Based Access Control (ABAC)
 
 **Dynamic Access Based on Context**:
+
 ```typescript
 // Can user view this profile?
 function canViewProfile(viewer: User, profile: Profile): boolean {
@@ -766,6 +813,7 @@ function canMessage(sender: User, recipient: Profile): boolean {
 ### 5.3 Data Isolation (Multi-Tenancy)
 
 **Org Data Isolation**:
+
 ```sql
 -- Every org-scoped query filters by org_id
 CREATE POLICY "Org members can only see their org's assignments"
@@ -779,6 +827,7 @@ CREATE POLICY "Org members can only see their org's assignments"
 ```
 
 **User Data Isolation**:
+
 ```sql
 -- Users can only see their own data
 CREATE POLICY "Users can only read own profile"
@@ -1136,6 +1185,7 @@ ROLLBACK;
 ```
 
 **Automated Testing** (in CI/CD):
+
 ```typescript
 // tests/rls.test.ts
 describe('RLS Policies', () => {
@@ -1143,10 +1193,7 @@ describe('RLS Policies', () => {
     const userA = await createTestUser();
     const userB = await createTestUser();
 
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userB.id); // User A trying to read User B's profile
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', userB.id); // User A trying to read User B's profile
 
     expect(data).toHaveLength(0); // RLS blocks
   });
@@ -1154,10 +1201,7 @@ describe('RLS Policies', () => {
   it('should allow user to read own profile', async () => {
     const user = await createTestUser();
 
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id);
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', user.id);
 
     expect(data).toHaveLength(1); // Allowed
   });
@@ -1233,6 +1277,7 @@ CREATE POLICY "org_members_see_own_org_applications"
 **Use Case**: User belongs to multiple orgs (e.g., freelancer working with 3 nonprofits).
 
 **Implementation**:
+
 ```sql
 -- User can have multiple org memberships
 CREATE TABLE org_members (
@@ -1251,15 +1296,13 @@ WHERE user_id = auth.uid();
 ```
 
 **Session Context**:
+
 ```typescript
 // User selects which org context they're in
 const [currentOrgId, setCurrentOrgId] = useState<string>();
 
 // All org-scoped queries filter by currentOrgId
-const assignments = await supabase
-  .from('assignments')
-  .select('*')
-  .eq('org_id', currentOrgId);
+const assignments = await supabase.from('assignments').select('*').eq('org_id', currentOrgId);
 ```
 
 ---
@@ -1273,6 +1316,7 @@ const assignments = await supabase
 **Solution**: Anonymize data before exporting for ML training.
 
 **Goals**:
+
 - ✅ ML models can learn from data
 - ✅ Individual users cannot be re-identified
 - ✅ Comply with GDPR Art. 4(5) (anonymization)
@@ -1282,6 +1326,7 @@ const assignments = await supabase
 ### 8.2 Anonymization Process
 
 **Step 1: Hash User IDs** (one-way, irreversible):
+
 ```typescript
 import crypto from 'crypto';
 
@@ -1293,7 +1338,7 @@ function anonymizeUserId(userId: string): string {
 }
 
 // Example
-const userId = "abc-123-def-456";
+const userId = 'abc-123-def-456';
 const anonId = anonymizeUserId(userId);
 // Result: "f7c3bc1d808e04732adf679965ccc34ca7ae3441"
 
@@ -1301,6 +1346,7 @@ const anonId = anonymizeUserId(userId);
 ```
 
 **Step 2: Remove PII Fields**:
+
 ```typescript
 function anonymizeForML(event: AnalyticsEvent) {
   return {
@@ -1321,6 +1367,7 @@ function anonymizeForML(event: AnalyticsEvent) {
 ```
 
 **Step 3: Export to Separate Database**:
+
 ```sql
 -- ML training database (separate from production)
 CREATE TABLE ml_training_data (
@@ -1343,6 +1390,7 @@ CREATE TABLE ml_training_data (
 **Principle**: Any anonymized dataset must have at least K individuals with the same attributes.
 
 **Example** (k=5):
+
 ```sql
 -- ❌ BAD: Only 1 user with these attributes (re-identifiable)
 SELECT
@@ -1380,6 +1428,7 @@ HAVING COUNT(*) >= 5;  -- At least 5 users (k-anonymous)
 **Principle**: Add statistical noise to query results so individual data cannot be inferred.
 
 **Example** (using Google's Differential Privacy library):
+
 ```typescript
 import { laplaceMechanism } from '@google/differential-privacy';
 
@@ -1396,6 +1445,7 @@ const noisyAvgMatchScore = laplaceMechanism(avgMatchScore, {
 ```
 
 **When to Use**:
+
 - Analytics dashboards showing aggregates
 - Research datasets shared with third parties
 - Public reports on platform metrics
@@ -1415,18 +1465,21 @@ I'll review all 40 flows for privacy compliance. Here are the key ones:
 #### I-01: Authenticate (Sign Up / Sign In)
 
 **Privacy Measures**:
+
 - ✅ **Minimal Data Collection**: Only email + name required
 - ✅ **Password Hashing**: Supabase uses bcrypt (never stored plaintext)
 - ✅ **Secure Session**: JWT in httpOnly cookie (XSS-proof)
 - ✅ **MFA Available**: 2FA for high-security accounts
 
 **Privacy Risks**:
+
 - ⚠️ **IP Address Logging**: For security (rate limiting, fraud detection)
   - **Mitigation**: Auto-delete after 90 days
 - ⚠️ **Third-Party OAuth**: Google/LinkedIn SSO shares data with them
   - **Mitigation**: Clear disclosure in consent form
 
 **User Transparency**:
+
 ```
 Before you sign in with Google:
 
@@ -1441,15 +1494,18 @@ We'll use this to create your account.
 #### I-03: Guided Onboarding
 
 **Privacy Measures**:
+
 - ✅ **Progressive Profiling**: Ask for data incrementally (not all at once)
 - ✅ **Skip Option**: Users can skip and complete later
 - ✅ **Clear Purpose**: Each question explains why data is needed
 
 **Privacy Risks**:
+
 - ⚠️ **Sensitive Data**: Compensation preferences, location
   - **Mitigation**: Clearly marked as "Only visible to matched organizations"
 
 **User Transparency**:
+
 ```
 Step 3: Compensation Expectations
 
@@ -1464,10 +1520,12 @@ This information is only shared with organizations you apply to.
 #### I-06: Mission / Vision / Values
 
 **Privacy Measures**:
+
 - ✅ **Optional Field**: Not required, user chooses to share
 - ✅ **Visibility Control**: User can make public/network/private
 
 **Privacy Risks**:
+
 - ⚠️ **Used for ML Embeddings**: Mission statements embedded for semantic search
   - **Mitigation**: Opt-in consent: "Use my mission statement to find better matches? (Uses AI)"
 
@@ -1476,17 +1534,20 @@ This information is only shared with organizations you apply to.
 #### I-08: Attach Proofs
 
 **Privacy Measures**:
+
 - ✅ **Private by Default**: Proofs default to "private" visibility
 - ✅ **User Controls Sharing**: User explicitly shares with each application
 - ✅ **Encrypted Storage**: Files encrypted at rest in Supabase Storage
 - ✅ **Expiring Links**: Signed URLs expire after 1 hour
 
 **Privacy Risks**:
+
 - ⚠️ **Sensitive Documents**: May contain PII, proprietary info
   - **Mitigation**: Users can redact before uploading
   - **Mitigation**: Virus scanning on upload
 
 **User Transparency**:
+
 ```
 Upload Proof
 
@@ -1504,17 +1565,20 @@ Your proof will be stored privately. You control who sees it.
 #### I-09: Request Verification
 
 **Privacy Measures** (🔴 Critical - Verifier PII):
+
 - ✅ **Verifier Email Private**: Only visible to requester, never public
 - ✅ **Expiring Token**: Verification link expires in 14 days
 - ✅ **One-Time Use**: Token invalidated after response
 - ✅ **No Tracking**: Verifier not tracked on platform
 
 **Privacy Risks**:
+
 - ⚠️ **Verifier Harassment**: Requester could spam verifier
   - **Mitigation**: Rate limit: Max 5 verification requests per hour
   - **Mitigation**: Verifier can report abuse → block requester
 
 **User Transparency** (to verifier):
+
 ```
 Email to Verifier:
 
@@ -1533,11 +1597,13 @@ other purpose, and you won't be added to any mailing lists.
 #### I-11: Recommended Feed (Matching)
 
 **Privacy Measures**:
+
 - ✅ **No PII in Feed**: Orgs see masked profiles (no email, no location beyond city)
 - ✅ **Opt-Out**: Users can pause their profile visibility
 - ✅ **Match Explanations**: Transparent scoring (see why you matched)
 
 **Privacy Risks**:
+
 - ⚠️ **Profile Inference**: Orgs could guess identity from skills + experience
   - **Mitigation**: Encourage users to generalize (e.g., "Tech company" not "Apple")
 
@@ -1546,16 +1612,19 @@ other purpose, and you won't be added to any mailing lists.
 #### I-14: Apply / Express Interest
 
 **Privacy Measures**:
+
 - ✅ **Explicit Consent**: "Share my profile with [Org Name]?" checkbox
 - ✅ **Selective Sharing**: Choose which proofs to attach
 - ✅ **Application Withdrawal**: Users can withdraw anytime
 
 **Privacy Risks**:
+
 - ⚠️ **Org Keeps Data**: Once shared, org has a copy
   - **Mitigation**: Data Processing Agreement (DPA) with orgs
   - **Mitigation**: Users can request org deletes data (GDPR Art. 17)
 
 **User Transparency**:
+
 ```
 Before you apply:
 
@@ -1573,17 +1642,20 @@ Before you apply:
 #### I-15: Messaging
 
 **Privacy Measures** (🔴 Critical - Staged Identity Reveal):
+
 - ✅ **Stage 1: Masked**: Both parties anonymous ("Contributor #123")
 - ✅ **Stage 2: Revealed**: Both agree to reveal identities
 - ✅ **Encrypted Messages**: TLS 1.3 in transit, AES-256 at rest
 - ✅ **Message Expiry**: Deleted after 3 years
 
 **Privacy Risks**:
+
 - ⚠️ **Identity Leaks**: Users might reveal identity in messages
   - **Mitigation**: Warning in UI: "Don't share personal contact info until Stage 2"
   - **Mitigation**: Auto-detect emails/phones in messages → warn user
 
 **User Transparency** (see Section 10 for full details):
+
 ```
 Stage 1: Anonymous
 
@@ -1619,6 +1691,7 @@ Before shipping any new feature, confirm:
 ### 10.1 Problem Statement
 
 **Challenge**: Users want to message matched organizations safely, but revealing identity upfront creates risks:
+
 - ❌ Harassment (unwanted contact after rejection)
 - ❌ Bias (discrimination based on name, background)
 - ❌ Privacy loss (org now has contact info forever)
@@ -1698,21 +1771,24 @@ CREATE TABLE messages (
 ### 10.4 Reveal Logic
 
 **Trigger Reveal** (when both click "Reveal"):
+
 ```typescript
 async function revealIdentities(conversationId: string, userId: string) {
   const conversation = await db.query.conversations.findFirst({
     where: eq(conversations.id, conversationId),
   });
 
-  if (!conversation) throw new Error("Conversation not found");
+  if (!conversation) throw new Error('Conversation not found');
 
   // Mark this user wants to reveal
   if (conversation.participant_a_id === userId) {
-    await db.update(conversations)
+    await db
+      .update(conversations)
       .set({ participant_a_wants_reveal: true })
       .where(eq(conversations.id, conversationId));
   } else {
-    await db.update(conversations)
+    await db
+      .update(conversations)
       .set({ participant_b_wants_reveal: true })
       .where(eq(conversations.id, conversationId));
   }
@@ -1724,7 +1800,8 @@ async function revealIdentities(conversationId: string, userId: string) {
 
   if (updated.participant_a_wants_reveal && updated.participant_b_wants_reveal) {
     // ✅ REVEAL IDENTITIES
-    await db.update(conversations)
+    await db
+      .update(conversations)
       .set({
         stage: 'revealed',
         revealed_at: new Date(),
@@ -1732,8 +1809,8 @@ async function revealIdentities(conversationId: string, userId: string) {
       .where(eq(conversations.id, conversationId));
 
     // Send notification
-    await sendNotification(updated.participant_a_id, "Identities revealed!");
-    await sendNotification(updated.participant_b_id, "Identities revealed!");
+    await sendNotification(updated.participant_a_id, 'Identities revealed!');
+    await sendNotification(updated.participant_b_id, 'Identities revealed!');
   }
 }
 ```
@@ -1743,6 +1820,7 @@ async function revealIdentities(conversationId: string, userId: string) {
 ### 10.5 UI Implementation
 
 **Stage 1: Masked Conversation**:
+
 ```tsx
 function MaskedConversation({ conversation }) {
   const currentUser = useUser();
@@ -1750,21 +1828,20 @@ function MaskedConversation({ conversation }) {
 
   return (
     <div>
-      <h2>Conversation with {isParticipantA ? conversation.masked_handle_b : conversation.masked_handle_a}</h2>
+      <h2>
+        Conversation with{' '}
+        {isParticipantA ? conversation.masked_handle_b : conversation.masked_handle_a}
+      </h2>
 
       {/* Warning banner */}
-      <Alert>
-        🔒 This conversation is anonymous. Don't share personal contact info yet.
-      </Alert>
+      <Alert>🔒 This conversation is anonymous. Don't share personal contact info yet.</Alert>
 
       {/* Messages */}
       <MessageList messages={conversation.messages} masked={true} />
 
       {/* Reveal button */}
       {!hasRequestedReveal && (
-        <Button onClick={() => requestReveal(conversation.id)}>
-          Reveal my identity
-        </Button>
+        <Button onClick={() => requestReveal(conversation.id)}>Reveal my identity</Button>
       )}
 
       {hasRequestedReveal && !conversation.revealed_at && (
@@ -1776,6 +1853,7 @@ function MaskedConversation({ conversation }) {
 ```
 
 **Stage 2: Revealed Conversation**:
+
 ```tsx
 function RevealedConversation({ conversation }) {
   return (
@@ -1814,7 +1892,7 @@ const pii = detectPII(message.content);
 if (conversation.stage === 'masked' && (pii.containsEmail || pii.containsPhone)) {
   // Warn user
   throw new Error(
-    "This message contains contact info. Please wait until identities are revealed, or remove the contact info."
+    'This message contains contact info. Please wait until identities are revealed, or remove the contact info.'
   );
 }
 ```
@@ -1823,13 +1901,13 @@ if (conversation.stage === 'masked' && (pii.containsEmail || pii.containsPhone))
 
 ### 10.7 Privacy Benefits
 
-| Risk | Masked (Stage 1) | Revealed (Stage 2) |
-|------|-----------------|-------------------|
-| **Harassment** | ✅ Protected (anonymous) | ⚠️ Possible (but consensual) |
-| **Discrimination** | ✅ Reduced (name hidden) | ❌ Full info visible |
-| **Privacy Loss** | ✅ Minimal (platform only) | ⚠️ Org has contact info |
-| **Trust** | ⚠️ Lower (anonymous) | ✅ Higher (verified) |
-| **Communication** | ⚠️ Limited (on-platform) | ✅ Full (off-platform OK) |
+| Risk               | Masked (Stage 1)           | Revealed (Stage 2)           |
+| ------------------ | -------------------------- | ---------------------------- |
+| **Harassment**     | ✅ Protected (anonymous)   | ⚠️ Possible (but consensual) |
+| **Discrimination** | ✅ Reduced (name hidden)   | ❌ Full info visible         |
+| **Privacy Loss**   | ✅ Minimal (platform only) | ⚠️ Org has contact info      |
+| **Trust**          | ⚠️ Lower (anonymous)       | ✅ Higher (verified)         |
+| **Communication**  | ⚠️ Limited (on-platform)   | ✅ Full (off-platform OK)    |
 
 ---
 
@@ -1842,6 +1920,7 @@ if (conversation.stage === 'masked' && (pii.containsEmail || pii.containsPhone))
 **Solutions**:
 
 **1. Verifier Email Never Public**:
+
 ```sql
 CREATE POLICY "only_requester_sees_verifier_email"
   ON verification_requests FOR SELECT
@@ -1849,6 +1928,7 @@ CREATE POLICY "only_requester_sees_verifier_email"
 ```
 
 **2. Expiring Verification Links** (14 days):
+
 ```typescript
 // Generate token
 const token = nanoid(32);
@@ -1862,20 +1942,25 @@ await supabase.from('verification_requests').insert({
 
 // Check token validity
 if (verificationRequest.expires_at < new Date()) {
-  throw new Error("This verification link has expired.");
+  throw new Error('This verification link has expired.');
 }
 ```
 
 **3. One-Time Use Tokens**:
+
 ```typescript
 // After verifier responds, invalidate token
-await supabase.from('verification_requests').update({
-  token: null,  // Nullify token
-  responded_at: new Date(),
-}).eq('token', token);
+await supabase
+  .from('verification_requests')
+  .update({
+    token: null, // Nullify token
+    responded_at: new Date(),
+  })
+  .eq('token', token);
 ```
 
 **4. Rate Limiting**:
+
 ```typescript
 // Max 5 verification requests per user per hour
 const recentRequests = await supabase
@@ -1898,6 +1983,7 @@ if (recentRequests.length >= 5) {
 **Solutions**:
 
 **1. Requester Controls Visibility**:
+
 ```sql
 ALTER TABLE verification_requests
   ADD COLUMN visibility TEXT CHECK (visibility IN ('public', 'private')) DEFAULT 'private';
@@ -1907,16 +1993,17 @@ ALTER TABLE verification_requests
 ```
 
 **2. Verifier Can Decline Anonymously**:
+
 ```typescript
 // Verifier response options
 enum VerificationResponse {
-  ACCEPT = "accepted",
-  DECLINE = "declined",
-  CANNOT_VERIFY = "cannot_verify",  // Not qualified to verify
+  ACCEPT = 'accepted',
+  DECLINE = 'declined',
+  CANNOT_VERIFY = 'cannot_verify', // Not qualified to verify
 }
 
 // If declined, don't show verifier identity
-if (response === "declined") {
+if (response === 'declined') {
   // Badge: "Verification declined by [redacted]"
 }
 ```
@@ -1926,6 +2013,7 @@ if (response === "declined") {
 ### 11.3 Verification Badge Privacy
 
 **Display on Profile** (user-controlled):
+
 ```tsx
 function VerificationBadge({ verification }) {
   if (verification.visibility === 'private') {
@@ -1954,15 +2042,15 @@ function VerificationBadge({ verification }) {
 
 Proofound collects consent for different purposes:
 
-| Consent Type | Purpose | Required? | Opt-Out? |
-|-------------|---------|-----------|----------|
-| **Terms of Service** | Platform use | ✅ Yes | ❌ No (can't use platform) |
-| **Privacy Policy** | Data processing | ✅ Yes | ❌ No |
-| **Verification Policy** | Trust & safety | ✅ Yes | ❌ No |
-| **Analytics** | Product improvement | ⚠️ Optional | ✅ Yes |
-| **ML Training** | Match quality | ⚠️ Optional | ✅ Yes |
-| **Marketing Emails** | Product updates | ⚠️ Optional | ✅ Yes |
-| **Third-Party Sharing** | Research partnerships | ⚠️ Optional | ✅ Yes |
+| Consent Type            | Purpose               | Required?   | Opt-Out?                   |
+| ----------------------- | --------------------- | ----------- | -------------------------- |
+| **Terms of Service**    | Platform use          | ✅ Yes      | ❌ No (can't use platform) |
+| **Privacy Policy**      | Data processing       | ✅ Yes      | ❌ No                      |
+| **Verification Policy** | Trust & safety        | ✅ Yes      | ❌ No                      |
+| **Analytics**           | Product improvement   | ⚠️ Optional | ✅ Yes                     |
+| **ML Training**         | Match quality         | ⚠️ Optional | ✅ Yes                     |
+| **Marketing Emails**    | Product updates       | ⚠️ Optional | ✅ Yes                     |
+| **Third-Party Sharing** | Research partnerships | ⚠️ Optional | ✅ Yes                     |
 
 ---
 
@@ -1992,6 +2080,7 @@ CREATE INDEX idx_consent_user_type ON consent_records(user_id, consent_type);
 ### 12.3 Consent UI
 
 **Initial Consent** (I-02 flow):
+
 ```tsx
 function ConsentForm() {
   const [agreedTos, setAgreedTos] = useState(false);
@@ -2044,6 +2133,7 @@ function ConsentForm() {
 ```
 
 **Granular Consent** (in Settings):
+
 ```tsx
 function PrivacySettings() {
   const [settings, setSettings] = useState({
@@ -2098,11 +2188,12 @@ function PrivacySettings() {
 **Problem**: Policies change over time. Need to track which version user agreed to.
 
 **Solution**: Version all policy documents:
+
 ```typescript
 const POLICY_VERSIONS = {
-  tos: "1.0.2024",
-  privacy: "1.2.2024",  // Updated in Dec 2024
-  verification: "1.0.2024",
+  tos: '1.0.2024',
+  privacy: '1.2.2024', // Updated in Dec 2024
+  verification: '1.0.2024',
 };
 
 // Check if user needs to re-consent
@@ -2114,10 +2205,10 @@ async function needsReConsent(userId: string) {
     .eq('agreed', true);
 
   for (const [type, currentVersion] of Object.entries(POLICY_VERSIONS)) {
-    const userConsent = consents.find(c => c.consent_type === type);
+    const userConsent = consents.find((c) => c.consent_type === type);
 
     if (!userConsent || userConsent.consent_version !== currentVersion) {
-      return true;  // User needs to re-consent
+      return true; // User needs to re-consent
     }
   }
 
@@ -2126,7 +2217,7 @@ async function needsReConsent(userId: string) {
 
 // Show modal on next login
 if (await needsReConsent(user.id)) {
-  showConsentModal("Our Privacy Policy has been updated. Please review the changes.");
+  showConsentModal('Our Privacy Policy has been updated. Please review the changes.');
 }
 ```
 
@@ -2139,6 +2230,7 @@ if (await needsReConsent(user.id)) {
 ### 13.1 Purpose
 
 Give users **full transparency and control** over their data:
+
 - See what data Proofound has collected
 - See who has accessed their data
 - Control visibility settings
@@ -2151,6 +2243,7 @@ Give users **full transparency and control** over their data:
 **URL**: `/app/settings/privacy`
 
 #### Section 1: Data Overview
+
 ```tsx
 <Card>
   <h3>Your Data</h3>
@@ -2165,13 +2258,12 @@ Give users **full transparency and control** over their data:
     <Row label="Analytics events" value="187 events (last 90 days)" />
   </DataTable>
 
-  <Button href="/app/settings/privacy/export">
-    Export all my data
-  </Button>
+  <Button href="/app/settings/privacy/export">Export all my data</Button>
 </Card>
 ```
 
 #### Section 2: Access Log
+
 ```tsx
 <Card>
   <h3>Who Accessed Your Data</h3>
@@ -2202,6 +2294,7 @@ Give users **full transparency and control** over their data:
 ```
 
 #### Section 3: Visibility Controls
+
 ```tsx
 <Card>
   <h3>Control Your Visibility</h3>
@@ -2227,6 +2320,7 @@ Give users **full transparency and control** over their data:
 ```
 
 #### Section 4: Data Sharing
+
 ```tsx
 <Card>
   <h3>Data Sharing</h3>
@@ -2249,27 +2343,20 @@ Give users **full transparency and control** over their data:
     description="Receive product updates and tips via email"
   />
 
-  <Alert>
-    Your data is never sold to third parties.
-  </Alert>
+  <Alert>Your data is never sold to third parties.</Alert>
 </Card>
 ```
 
 #### Section 5: Delete Account
+
 ```tsx
 <Card>
   <h3>Delete Your Account</h3>
-  <p>
-    Permanently delete your account and all associated data.
-    This action cannot be undone.
-  </p>
+  <p>Permanently delete your account and all associated data. This action cannot be undone.</p>
 
   <Alert variant="danger">
-    ⚠️ Deleting your account will:
-    • Remove your profile, skills, and experience
-    • Delete all applications and messages
-    • Revoke all verifications
-    • This cannot be undone
+    ⚠️ Deleting your account will: • Remove your profile, skills, and experience • Delete all
+    applications and messages • Revoke all verifications • This cannot be undone
   </Alert>
 
   <Button variant="danger" onClick={handleDeleteAccount}>
@@ -2285,6 +2372,7 @@ Give users **full transparency and control** over their data:
 ### 14.1 What to Log
 
 **Security Events** (always logged):
+
 - User login/logout
 - Password changes
 - MFA enable/disable
@@ -2292,12 +2380,14 @@ Give users **full transparency and control** over their data:
 - Account deletion requests
 
 **Privacy Events** (for transparency):
+
 - Profile views by organizations
 - Data exports
 - Consent changes (opt-in/out)
 - Verification requests sent/received
 
 **Admin Events** (for compliance):
+
 - Admin access to user data
 - Moderation actions (content removed, account suspended)
 - Data deletion (GDPR requests)
@@ -2419,6 +2509,7 @@ WHERE created_at < NOW() - INTERVAL '7 years';
 ### 15.2 Export Format
 
 **JSON** (machine-readable):
+
 ```json
 {
   "export_date": "2024-10-30T12:00:00Z",
@@ -2496,15 +2587,14 @@ export async function POST(request: NextRequest) {
   });
 
   // Gather all user data
-  const [profile, skills, experiences, applications, messages, verifications] =
-    await Promise.all([
-      db.query.profiles.findFirst({ where: eq(profiles.id, user.id) }),
-      db.query.skills.findMany({ where: eq(skills.userId, user.id) }),
-      db.query.experiences.findMany({ where: eq(experiences.userId, user.id) }),
-      db.query.applications.findMany({ where: eq(applications.userId, user.id) }),
-      db.query.messages.findMany({ where: eq(messages.senderId, user.id) }),
-      db.query.verifications.findMany({ where: eq(verifications.profileId, user.id) }),
-    ]);
+  const [profile, skills, experiences, applications, messages, verifications] = await Promise.all([
+    db.query.profiles.findFirst({ where: eq(profiles.id, user.id) }),
+    db.query.skills.findMany({ where: eq(skills.userId, user.id) }),
+    db.query.experiences.findMany({ where: eq(experiences.userId, user.id) }),
+    db.query.applications.findMany({ where: eq(applications.userId, user.id) }),
+    db.query.messages.findMany({ where: eq(messages.senderId, user.id) }),
+    db.query.verifications.findMany({ where: eq(verifications.profileId, user.id) }),
+  ]);
 
   // Format as JSON
   const exportData = {
@@ -2523,7 +2613,7 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     success: true,
-    message: "Your data export will be sent to your email within 48 hours.",
+    message: 'Your data export will be sent to your email within 48 hours.',
   });
 }
 ```
@@ -2537,10 +2627,12 @@ export async function POST(request: NextRequest) {
 **User Request**: "Delete all my data."
 
 **Proofound Response**:
+
 1. **Soft delete** (30 days): Mark as deleted, hide from UI
 2. **Hard delete** (after 30 days): Permanently erase from database
 
 **Exceptions** (legal retention):
+
 - Financial records (7 years for tax)
 - Legal disputes (hold until resolved)
 - Anonymized analytics (GDPR allows)
@@ -2552,10 +2644,11 @@ export async function POST(request: NextRequest) {
 ```typescript
 // Step 1: Soft delete (immediate)
 async function deleteUserAccount(userId: string) {
-  await db.update(profiles)
+  await db
+    .update(profiles)
     .set({
       deleted_at: new Date(),
-      email: `deleted-${userId}@proofound.com`,  // Anonymize
+      email: `deleted-${userId}@proofound.io`, // Anonymize
       display_name: 'Deleted User',
       avatar_url: null,
     })
@@ -2577,10 +2670,7 @@ async function hardDeleteUsers() {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
   const usersToDelete = await db.query.profiles.findMany({
-    where: and(
-      isNotNull(profiles.deleted_at),
-      lt(profiles.deleted_at, thirtyDaysAgo)
-    ),
+    where: and(isNotNull(profiles.deleted_at), lt(profiles.deleted_at, thirtyDaysAgo)),
   });
 
   for (const user of usersToDelete) {
@@ -2592,7 +2682,8 @@ async function hardDeleteUsers() {
     await db.delete(verifications).where(eq(verifications.profileId, user.id));
 
     // Keep anonymized analytics (GDPR allows)
-    await db.update(analyticsEvents)
+    await db
+      .update(analyticsEvents)
       .set({ user_id: null })
       .where(eq(analyticsEvents.userId, user.id));
 
@@ -2621,9 +2712,10 @@ await db.select().from(paymentRecords).where(eq(paymentRecords.userId, userId));
 // Keep: payment_records, invoices
 
 // 2. Anonymized analytics
-await db.update(analyticsEvents)
+await db
+  .update(analyticsEvents)
   .set({
-    user_id: hash(userId),  // One-way hash
+    user_id: hash(userId), // One-way hash
     email: null,
     name: null,
   })
@@ -2634,7 +2726,7 @@ await db.update(analyticsEvents)
 await db.delete(messages).where(
   and(
     eq(messages.senderId, userId),
-    eq(messages.conversationPrivate, true)  // Only private messages
+    eq(messages.conversationPrivate, true) // Only private messages
   )
 );
 // Keep: Messages in shared conversations (other party has right to keep)
@@ -2648,28 +2740,28 @@ await db.delete(messages).where(
 
 ### 17.1 GDPR Principles
 
-| Principle | Proofound Implementation |
-|-----------|------------------------|
-| **Lawfulness, fairness, transparency** | Clear privacy policy, consent forms |
-| **Purpose limitation** | Data only used for stated purposes |
-| **Data minimization** | Collect only what's needed |
-| **Accuracy** | Users can update their data anytime |
-| **Storage limitation** | Auto-delete after retention period |
-| **Integrity and confidentiality** | Encryption, RLS, access controls |
-| **Accountability** | Audit logs, data processing agreements |
+| Principle                              | Proofound Implementation               |
+| -------------------------------------- | -------------------------------------- |
+| **Lawfulness, fairness, transparency** | Clear privacy policy, consent forms    |
+| **Purpose limitation**                 | Data only used for stated purposes     |
+| **Data minimization**                  | Collect only what's needed             |
+| **Accuracy**                           | Users can update their data anytime    |
+| **Storage limitation**                 | Auto-delete after retention period     |
+| **Integrity and confidentiality**      | Encryption, RLS, access controls       |
+| **Accountability**                     | Audit logs, data processing agreements |
 
 ---
 
 ### 17.2 GDPR Rights Implementation
 
-| Right | Article | Implementation |
-|-------|---------|---------------|
-| **Right to Access** | Art. 15 | Data export (Section 15) |
-| **Right to Rectification** | Art. 16 | Profile editing (always available) |
-| **Right to Erasure** | Art. 17 | Account deletion (Section 16) |
-| **Right to Restriction** | Art. 18 | Account pause (hide profile) |
-| **Right to Data Portability** | Art. 20 | JSON export (Section 15) |
-| **Right to Object** | Art. 21 | Opt-out of ML training, marketing |
+| Right                                           | Article | Implementation                       |
+| ----------------------------------------------- | ------- | ------------------------------------ |
+| **Right to Access**                             | Art. 15 | Data export (Section 15)             |
+| **Right to Rectification**                      | Art. 16 | Profile editing (always available)   |
+| **Right to Erasure**                            | Art. 17 | Account deletion (Section 16)        |
+| **Right to Restriction**                        | Art. 18 | Account pause (hide profile)         |
+| **Right to Data Portability**                   | Art. 20 | JSON export (Section 15)             |
+| **Right to Object**                             | Art. 21 | Opt-out of ML training, marketing    |
 | **Rights related to automated decision-making** | Art. 22 | Human review of moderation decisions |
 
 ---
@@ -2677,6 +2769,7 @@ await db.delete(messages).where(
 ### 17.3 GDPR Compliance Checklist
 
 **Pre-Launch**:
+
 - [x] Privacy policy published (clear, concise)
 - [x] Cookie banner (if using analytics cookies)
 - [x] Consent management system
@@ -2687,6 +2780,7 @@ await db.delete(messages).where(
 - [x] Data Processing Agreements (DPAs) with vendors (Supabase, Vercel, Resend)
 
 **Ongoing**:
+
 - [ ] Data protection impact assessments (DPIAs) for high-risk features
 - [ ] Annual privacy policy review
 - [ ] Staff training on GDPR
@@ -2728,12 +2822,12 @@ DATA PROCESSING AGREEMENT
 
 ### 18.1 CCPA Rights
 
-| Right | Proofound Implementation |
-|-------|------------------------|
-| **Right to Know** | Data export shows all collected data |
-| **Right to Delete** | Account deletion (Section 16) |
-| **Right to Opt-Out** | "Do Not Sell My Data" (we don't sell data, but opt-out available) |
-| **Right to Non-Discrimination** | Opting out doesn't reduce functionality |
+| Right                           | Proofound Implementation                                          |
+| ------------------------------- | ----------------------------------------------------------------- |
+| **Right to Know**               | Data export shows all collected data                              |
+| **Right to Delete**             | Account deletion (Section 16)                                     |
+| **Right to Opt-Out**            | "Do Not Sell My Data" (we don't sell data, but opt-out available) |
+| **Right to Non-Discrimination** | Opting out doesn't reduce functionality                           |
 
 ---
 
@@ -2744,11 +2838,10 @@ DATA PROCESSING AGREEMENT
 **Proofound Position**: ✅ **We do not sell user data.**
 
 **Implementation**:
+
 ```tsx
 // Footer link (CCPA requirement)
-<Link href="/privacy/do-not-sell">
-  Do Not Sell or Share My Personal Information
-</Link>
+<Link href="/privacy/do-not-sell">Do Not Sell or Share My Personal Information</Link>;
 
 // Page content
 function DoNotSellPage() {
@@ -2756,15 +2849,12 @@ function DoNotSellPage() {
     <div>
       <h1>Do Not Sell or Share My Personal Information</h1>
 
-      <Alert>
-        ✅ Proofound does not sell your personal information to third parties.
-      </Alert>
+      <Alert>✅ Proofound does not sell your personal information to third parties.</Alert>
 
       <p>
-        We share your data only in these cases:
-        • With organizations you apply to (with your consent)
-        • With service providers (Supabase, Vercel) for platform operation
-        • Anonymized data for analytics (no personal identifiers)
+        We share your data only in these cases: • With organizations you apply to (with your
+        consent) • With service providers (Supabase, Vercel) for platform operation • Anonymized
+        data for analytics (no personal identifiers)
       </p>
 
       <p>
@@ -2782,13 +2872,13 @@ function DoNotSellPage() {
 
 ### 19.1 SOC 2 Trust Service Criteria
 
-| Criterion | Status | Implementation |
-|-----------|--------|---------------|
-| **Security** | ✅ Ready | Encryption, RLS, MFA |
-| **Availability** | ✅ Ready | 99.9% uptime (Vercel + Supabase SLA) |
-| **Processing Integrity** | ✅ Ready | Input validation, audit logs |
-| **Confidentiality** | ✅ Ready | Access controls, data classification |
-| **Privacy** | ✅ Ready | GDPR/CCPA compliance |
+| Criterion                | Status   | Implementation                       |
+| ------------------------ | -------- | ------------------------------------ |
+| **Security**             | ✅ Ready | Encryption, RLS, MFA                 |
+| **Availability**         | ✅ Ready | 99.9% uptime (Vercel + Supabase SLA) |
+| **Processing Integrity** | ✅ Ready | Input validation, audit logs         |
+| **Confidentiality**      | ✅ Ready | Access controls, data classification |
+| **Privacy**              | ✅ Ready | GDPR/CCPA compliance                 |
 
 ---
 
@@ -2822,44 +2912,50 @@ function DoNotSellPage() {
 
 ### 20.1 Incident Types
 
-| Incident Type | Severity | Response Time |
-|--------------|----------|---------------|
-| **Data Breach** (unauthorized access to PII) | 🔴 Critical | Immediate (1 hour) |
-| **Account Takeover** (compromised credentials) | 🟠 High | 4 hours |
-| **Service Outage** (platform down) | 🟡 Medium | 1 hour |
-| **Security Vulnerability** (discovered bug) | 🟡 Medium | 24 hours |
-| **Spam/Abuse** (fake profiles, harassment) | 🟢 Low | 48 hours |
+| Incident Type                                  | Severity    | Response Time      |
+| ---------------------------------------------- | ----------- | ------------------ |
+| **Data Breach** (unauthorized access to PII)   | 🔴 Critical | Immediate (1 hour) |
+| **Account Takeover** (compromised credentials) | 🟠 High     | 4 hours            |
+| **Service Outage** (platform down)             | 🟡 Medium   | 1 hour             |
+| **Security Vulnerability** (discovered bug)    | 🟡 Medium   | 24 hours           |
+| **Spam/Abuse** (fake profiles, harassment)     | 🟢 Low      | 48 hours           |
 
 ---
 
 ### 20.2 Data Breach Response Plan
 
 **Step 1: Detect** (within 1 hour):
+
 - Automated alerts (Supabase logs, Sentry errors)
-- User reports (security@proofound.com)
+- User reports (security@proofound.io)
 
 **Step 2: Contain** (within 4 hours):
+
 - Identify affected users
 - Revoke compromised tokens
 - Lock affected accounts
 - Isolate affected systems
 
 **Step 3: Assess** (within 24 hours):
+
 - Determine breach scope (how many users, what data)
 - Identify root cause
 - Document timeline
 
 **Step 4: Notify** (within 72 hours, GDPR requirement):
+
 - Notify affected users via email
 - Notify supervisory authority (EU: within 72 hours)
 - Publish incident report (transparency)
 
 **Step 5: Remediate**:
+
 - Fix vulnerability
 - Deploy patch
 - Enhanced monitoring
 
 **Step 6: Post-Incident Review**:
+
 - Document lessons learned
 - Update security policies
 - Improve detection/response
@@ -2919,15 +3015,15 @@ LESSONS LEARNED:
 ```typescript
 const DEFAULT_PRIVACY_SETTINGS = {
   // Profile visibility
-  visibility: 'network',  // Not 'public' by default
-  searchable: true,       // Appear in search (but only network can see details)
-  allow_matches: true,    // Show in match feed
+  visibility: 'network', // Not 'public' by default
+  searchable: true, // Appear in search (but only network can see details)
+  allow_matches: true, // Show in match feed
 
   // Data sharing
-  allow_analytics: true,        // Help improve product
-  allow_ml_training: true,      // Better matching
-  allow_marketing: false,       // Opt-in for marketing
-  allow_third_party: false,     // Opt-in for research
+  allow_analytics: true, // Help improve product
+  allow_ml_training: true, // Better matching
+  allow_marketing: false, // Opt-in for marketing
+  allow_third_party: false, // Opt-in for research
 
   // Notifications
   email_on_match: true,
@@ -2936,8 +3032,8 @@ const DEFAULT_PRIVACY_SETTINGS = {
   email_marketing: false,
 
   // Privacy features
-  masked_messaging: true,  // Stage 1 messaging by default
-  proof_visibility: 'private',  // Proofs private by default
+  masked_messaging: true, // Stage 1 messaging by default
+  proof_visibility: 'private', // Proofs private by default
 };
 ```
 
@@ -2947,13 +3043,13 @@ const DEFAULT_PRIVACY_SETTINGS = {
 
 **Principle**: Most privacy-protective option by default, users can relax if they want.
 
-| Setting | Default | Why |
-|---------|---------|-----|
-| **Profile visibility** | Network | Safer than public, still allows matching |
-| **Proof visibility** | Private | Users explicitly share with each application |
-| **Messaging** | Masked (Stage 1) | Protects identity until mutual reveal |
-| **Marketing emails** | Opt-out | User must opt-in (GDPR/CCPA requirement) |
-| **ML training** | Opt-in | User consents to AI/ML use |
+| Setting                | Default          | Why                                          |
+| ---------------------- | ---------------- | -------------------------------------------- |
+| **Profile visibility** | Network          | Safer than public, still allows matching     |
+| **Proof visibility**   | Private          | Users explicitly share with each application |
+| **Messaging**          | Masked (Stage 1) | Protects identity until mutual reveal        |
+| **Marketing emails**   | Opt-out          | User must opt-in (GDPR/CCPA requirement)     |
+| **ML training**        | Opt-in           | User consents to AI/ML use                   |
 
 ---
 
@@ -2964,6 +3060,7 @@ Before shipping any new feature, engineers must complete this checklist:
 ### 22.1 Data Security Checklist
 
 **Database**:
+
 - [ ] All tables have RLS policies enabled
 - [ ] RLS policies tested (users can only see their data)
 - [ ] Sensitive fields classified (Tier 1-4)
@@ -2971,6 +3068,7 @@ Before shipping any new feature, engineers must complete this checklist:
 - [ ] Foreign keys set up correctly (prevent orphaned data)
 
 **API**:
+
 - [ ] All endpoints require authentication (`requireAuth`)
 - [ ] All endpoints check authorization (user has permission)
 - [ ] Input validation (Zod or similar)
@@ -2979,6 +3077,7 @@ Before shipping any new feature, engineers must complete this checklist:
 - [ ] CORS configured (only own domain)
 
 **Frontend**:
+
 - [ ] No PII in client-side state
 - [ ] Sensitive actions confirmed (delete account, share data)
 - [ ] XSS protection (React escapes by default, DOMPurify for rich text)
@@ -2989,20 +3088,24 @@ Before shipping any new feature, engineers must complete this checklist:
 ### 22.2 Privacy Checklist
 
 **User Consent**:
+
 - [ ] User consented to data collection (explicit checkbox)
 - [ ] Purpose explained ("We use this to...")
 - [ ] User can opt-out
 
 **Transparency**:
+
 - [ ] Privacy impact documented (what data is collected, why, how long kept)
 - [ ] Privacy policy updated (if new data type)
 - [ ] User-facing explanation (tooltip, help text)
 
 **Data Minimization**:
+
 - [ ] Only collect necessary data (not "nice to have")
 - [ ] Retention period defined (auto-delete when no longer needed)
 
 **Access Control**:
+
 - [ ] User controls visibility (public/network/private)
 - [ ] Audit log for sensitive actions (who viewed my profile)
 
@@ -3011,16 +3114,19 @@ Before shipping any new feature, engineers must complete this checklist:
 ### 22.3 Compliance Checklist
 
 **GDPR**:
+
 - [ ] Right to access: User can export this data
 - [ ] Right to delete: User can delete this data
 - [ ] Right to rectify: User can edit this data
 - [ ] Data portable: Export format is JSON
 
 **CCPA**:
+
 - [ ] User can opt-out of data collection
 - [ ] Opt-out doesn't reduce functionality
 
 **Security Standards**:
+
 - [ ] Encryption at rest and in transit
 - [ ] No plaintext passwords or tokens
 - [ ] Secrets not in code (environment variables)
@@ -3031,30 +3137,30 @@ Before shipping any new feature, engineers must complete this checklist:
 
 Due to length constraints, I'll provide a summary table. Full review available on request.
 
-| Flow ID | Privacy Risk Level | Key Privacy Measures | Compliance |
-|---------|-------------------|---------------------|-----------|
-| **I-01** Auth | 🔴 High (PII) | Password hashing, MFA, rate limiting | ✅ GDPR, CCPA |
-| **I-02** Consent | 🟢 Low | Explicit consent, version tracking | ✅ GDPR, CCPA |
-| **I-03** Onboarding | 🟡 Medium | Progressive profiling, skip option | ✅ GDPR |
-| **I-04** Profile Basics | 🟡 Medium | Visibility controls, optional fields | ✅ GDPR |
-| **I-05** Experience | 🟢 Low | User-controlled, no PII | ✅ GDPR |
-| **I-06** Mission/Values | 🟢 Low | Optional, visibility controls | ✅ GDPR, ML opt-in |
-| **I-07** Skills | 🟢 Low | No PII, user-controlled | ✅ GDPR |
-| **I-08** Proofs | 🟡 Medium | Private by default, encrypted storage | ✅ GDPR |
-| **I-09** Verification | 🔴 High (Verifier PII) | Expiring tokens, rate limiting, verifier privacy | ✅ GDPR, CCPA |
-| **I-10** Preferences | 🟢 Low | User controls matching algorithm | ✅ Transparency |
-| **I-11** Feed | 🟡 Medium | No PII in feed, opt-out available | ✅ GDPR |
-| **I-12** Search | 🟢 Low | Published assignments only | ✅ GDPR |
-| **I-13** Assignment Detail | 🟢 Low | Public data only | ✅ GDPR |
-| **I-14** Apply | 🟡 Medium | Explicit consent to share profile | ✅ GDPR, DPA with org |
-| **I-15** Messaging | 🔴 High | Staged reveal, encrypted, PII detection | ✅ GDPR, CCPA |
-| **I-16** Interview | 🟡 Medium | Calendar permissions optional | ✅ GDPR |
-| **I-17** Offer | 🟡 Medium | E-signature, banking info encrypted | ✅ GDPR, PCI DSS |
-| **I-18** Deliverables | 🟢 Low | Work product, no PII | ✅ GDPR |
-| **I-19** Post-Engagement | 🟢 Low | Verification with consent | ✅ GDPR |
-| **I-20** Account & Privacy | 🔴 High | Data export, deletion, privacy dashboard | ✅ GDPR, CCPA |
+| Flow ID                    | Privacy Risk Level     | Key Privacy Measures                             | Compliance            |
+| -------------------------- | ---------------------- | ------------------------------------------------ | --------------------- |
+| **I-01** Auth              | 🔴 High (PII)          | Password hashing, MFA, rate limiting             | ✅ GDPR, CCPA         |
+| **I-02** Consent           | 🟢 Low                 | Explicit consent, version tracking               | ✅ GDPR, CCPA         |
+| **I-03** Onboarding        | 🟡 Medium              | Progressive profiling, skip option               | ✅ GDPR               |
+| **I-04** Profile Basics    | 🟡 Medium              | Visibility controls, optional fields             | ✅ GDPR               |
+| **I-05** Experience        | 🟢 Low                 | User-controlled, no PII                          | ✅ GDPR               |
+| **I-06** Mission/Values    | 🟢 Low                 | Optional, visibility controls                    | ✅ GDPR, ML opt-in    |
+| **I-07** Skills            | 🟢 Low                 | No PII, user-controlled                          | ✅ GDPR               |
+| **I-08** Proofs            | 🟡 Medium              | Private by default, encrypted storage            | ✅ GDPR               |
+| **I-09** Verification      | 🔴 High (Verifier PII) | Expiring tokens, rate limiting, verifier privacy | ✅ GDPR, CCPA         |
+| **I-10** Preferences       | 🟢 Low                 | User controls matching algorithm                 | ✅ Transparency       |
+| **I-11** Feed              | 🟡 Medium              | No PII in feed, opt-out available                | ✅ GDPR               |
+| **I-12** Search            | 🟢 Low                 | Published assignments only                       | ✅ GDPR               |
+| **I-13** Assignment Detail | 🟢 Low                 | Public data only                                 | ✅ GDPR               |
+| **I-14** Apply             | 🟡 Medium              | Explicit consent to share profile                | ✅ GDPR, DPA with org |
+| **I-15** Messaging         | 🔴 High                | Staged reveal, encrypted, PII detection          | ✅ GDPR, CCPA         |
+| **I-16** Interview         | 🟡 Medium              | Calendar permissions optional                    | ✅ GDPR               |
+| **I-17** Offer             | 🟡 Medium              | E-signature, banking info encrypted              | ✅ GDPR, PCI DSS      |
+| **I-18** Deliverables      | 🟢 Low                 | Work product, no PII                             | ✅ GDPR               |
+| **I-19** Post-Engagement   | 🟢 Low                 | Verification with consent                        | ✅ GDPR               |
+| **I-20** Account & Privacy | 🔴 High                | Data export, deletion, privacy dashboard         | ✅ GDPR, CCPA         |
 
-*(Organization flows O-01 through O-20 have similar privacy measures, focusing on org data isolation and candidate data protection)*
+_(Organization flows O-01 through O-20 have similar privacy measures, focusing on org data isolation and candidate data protection)_
 
 ---
 
@@ -3065,30 +3171,36 @@ Due to length constraints, I'll provide a summary table. Full review available o
 **Reviewer**: [Name]
 
 ### 1. Data Collection
+
 - What data will be collected?
 - Why is this data necessary?
 - How will it be used?
 - How long will it be retained?
 
 ### 2. Privacy Risks
+
 - What are the privacy risks?
 - Who is affected?
 - What is the severity?
 
 ### 3. Mitigation Measures
+
 - How will risks be mitigated?
 - What controls will be implemented?
 
 ### 4. User Transparency
+
 - How will users be informed?
 - Can users opt-out?
 
 ### 5. Compliance
+
 - GDPR compliance: [Yes/No]
 - CCPA compliance: [Yes/No]
 - Other regulations: [List]
 
 ### 6. Approval
+
 - [ ] Privacy review completed
 - [ ] Legal review completed (if high-risk)
 - [ ] Security review completed
@@ -3098,17 +3210,17 @@ Due to length constraints, I'll provide a summary table. Full review available o
 
 ## APPENDIX B: DATA RETENTION POLICY
 
-| Data Type | Retention Period | After Retention | Reason |
-|-----------|-----------------|----------------|---------|
-| **Active profiles** | Indefinite | N/A | User account |
-| **Deleted profiles (soft)** | 30 days | Hard delete | GDPR grace period |
-| **Applications** | 2 years | Archive/anonymize | Hiring records |
-| **Messages** | 3 years | Delete | Communication records |
-| **Analytics events** | 2 years | Anonymize | ML training |
-| **Audit logs** | 7 years | Archive | Legal/compliance |
-| **Payment records** | 7 years | Archive | Tax/legal |
-| **Consent records** | Indefinite | N/A | Legal proof |
-| **Verification records** | Indefinite | N/A | Trust signal |
+| Data Type                   | Retention Period | After Retention   | Reason                |
+| --------------------------- | ---------------- | ----------------- | --------------------- |
+| **Active profiles**         | Indefinite       | N/A               | User account          |
+| **Deleted profiles (soft)** | 30 days          | Hard delete       | GDPR grace period     |
+| **Applications**            | 2 years          | Archive/anonymize | Hiring records        |
+| **Messages**                | 3 years          | Delete            | Communication records |
+| **Analytics events**        | 2 years          | Anonymize         | ML training           |
+| **Audit logs**              | 7 years          | Archive           | Legal/compliance      |
+| **Payment records**         | 7 years          | Archive           | Tax/legal             |
+| **Consent records**         | Indefinite       | N/A               | Legal proof           |
+| **Verification records**    | Indefinite       | N/A               | Trust signal          |
 
 ---
 
@@ -3126,6 +3238,7 @@ All third-party vendors must meet these requirements:
 - [ ] Data deletion on contract termination
 
 **Current Vendors**:
+
 - ✅ Supabase (SOC 2, GDPR, 99.9% SLA)
 - ✅ Vercel (SOC 2, GDPR, 99.99% SLA)
 - ✅ Resend (GDPR, 99.9% SLA)
@@ -3140,6 +3253,7 @@ All third-party vendors must meet these requirements:
 **Compliance**: GDPR, CCPA, SOC 2 ready
 
 **Next Actions**:
+
 1. ✅ Review with legal counsel
 2. ✅ Implement RLS policies (Week 1)
 3. ✅ Build privacy dashboard (Week 2-3)
