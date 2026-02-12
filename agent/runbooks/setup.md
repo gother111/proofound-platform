@@ -1,3 +1,7 @@
+> Doc Class: `governance`
+> Sync Pair: `setup.md`
+> Last Verified: `2026-02-12`
+
 # Setup Runbook (Local Dev + CI Parity)
 
 This runbook captures the repo’s actual scripts and gates. Do not paste secrets into tracked files.
@@ -25,6 +29,23 @@ node -v  # expect v20.20.0
 - Do not commit secret env files; `.gitignore` excludes `.env` and `*.local` patterns. (source: .gitignore)
 - Use `node update-env.cjs` only to generate a placeholder `.env.local` template. It intentionally does not include real credentials.
 - Strict E2E suites load `.env.local` by default; set `STRICT_ENV_FILE` to override the env file path when needed.
+
+## Vercel Deploy Retry Automation
+
+Use this when production can lag behind `master` because Vercel deploy quota is temporarily exhausted.
+
+- Workflow:
+  - `.github/workflows/retry-vercel-deploy.yml`
+- Behavior:
+  - Runs on push to `master`, every 30 minutes, and manual dispatch.
+  - Reads live SHA from `https://proofound.io/api/health` (`version`).
+  - Triggers Vercel deploy hook only when live SHA differs from repo SHA.
+- Required one-time setup:
+  - In Vercel (`proofound-platform`), create a production deploy hook.
+  - In GitHub repo secrets, add `VERCEL_DEPLOY_HOOK_URL` with that hook URL.
+- Operational check:
+  - `gh workflow run "Retry Vercel Deploy Until Synced" --ref master`
+  - `gh run list --workflow "Retry Vercel Deploy Until Synced" --limit 1`
 
 ## Video Providers (Zoom, Google Meet)
 
@@ -85,7 +106,8 @@ Strict provider E2E deterministic account:
 - Drizzle commands:
   - `npm run db:generate`, `npm run db:push`, `npm run db:migrate`, `npm run db:studio` (source: package.json)
 - SQL runner:
-  - `npm run db:migrate` runs `node run-migrations.mjs` which applies `migrations-to-run.sql`. (source: package.json, run-migrations.mjs, migrations-to-run.sql)
+  - `npm run db:migrate` runs `node run-migrations.mjs` which applies ordered `src/db/migrations/*.sql` plus ledgered `src/db/policies.sql` and `src/db/triggers.sql`. (source: package.json, run-migrations.mjs, src/db/migrations/, src/db/policies.sql, src/db/triggers.sql)
+  - `npm run db:drift-check` validates migration-path discipline in CI. (source: package.json, scripts/check-migration-drift.mjs)
 - Manual migration docs:
   - `RUN_MIGRATIONS_GUIDE.md`, `APPLY_MIGRATIONS_MANUAL.md` (source: RUN_MIGRATIONS_GUIDE.md, APPLY_MIGRATIONS_MANUAL.md)
 - Safety scripts:

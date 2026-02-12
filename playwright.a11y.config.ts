@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const PLAYWRIGHT_BASE_URL = process.env.BASE_URL || 'http://localhost:39123';
+const playwrightPort = Number.parseInt(process.env.PLAYWRIGHT_PORT || '33101', 10);
+const baseURL = process.env.BASE_URL || `http://127.0.0.1:${playwrightPort}`;
 
 // Separate config for accessibility tests.
 // Keeps CI stable by running against a mock Supabase environment for public pages.
@@ -13,11 +14,10 @@ export default defineConfig({
   // Avoid hanging locally on failures (HTML reporter can keep a server open).
   reporter: [['html', { open: 'never' }], ['line']],
   use: {
-    baseURL: PLAYWRIGHT_BASE_URL,
+    baseURL,
     trace: 'on-first-retry',
     actionTimeout: 30000,
     navigationTimeout: 30000,
-    reducedMotion: 'reduce',
   },
   timeout: 120000,
   expect: { timeout: 10000 },
@@ -29,10 +29,9 @@ export default defineConfig({
   ],
   webServer: {
     // Avoid requiring real Supabase credentials for a11y tests.
-    command:
-      'PII_HASH_SALT=${PII_HASH_SALT:-playwright-test-salt} PORT=39123 NEXT_PUBLIC_USE_MOCK_SUPABASE=true npm run dev',
-    url: PLAYWRIGHT_BASE_URL,
-    reuseExistingServer: false,
+    command: `NEXT_PUBLIC_USE_MOCK_SUPABASE=true npm run dev -- -p ${playwrightPort}`,
+    url: baseURL,
+    reuseExistingServer: !process.env.CI,
     timeout: 120000,
   },
 });

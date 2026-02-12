@@ -1,3 +1,7 @@
+> Doc Class: `governance`
+> Sync Pair: `verification.md`
+> Last Verified: `2026-02-12`
+
 # Verification Checklist (Before Merging)
 
 Repo Truth items include citations like `(source: README.md)`. Anything else is guidance/policy.
@@ -10,6 +14,9 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 - Typecheck: `npm run typecheck` (source: package.json)
 - Unit tests: `npm run test` (source: package.json)
 - Build: `npm run build` (source: package.json)
+- If changes touch auth, RLS, policies, migrations, or privacy-sensitive API contracts:
+  - Run `npm run db:migrate` first when there are unapplied SQL migrations so privacy tests validate current policy/trigger state.
+  - Run `npm run test:privacy` and `npm run test:privacy:extended` sequentially (not in parallel) to avoid shared test-infra contention.
 
 ## Branch Governance (master)
 
@@ -53,6 +60,20 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 - Pull production project/env settings (creates `.vercel/`, which is gitignored): `npx vercel@latest pull --yes --environment=production` (source: .gitignore)
 - Run a prod-equivalent build locally: `npx vercel@latest build --prod`
   - If CLI auth is missing, use `--token` with a valid `VERCEL_TOKEN` (do not print it).
+
+## Production Sync Guard (Vercel Quota Recovery)
+
+- Auto-retry workflow location:
+  - `.github/workflows/retry-vercel-deploy.yml`
+- Required GitHub secret:
+  - `VERCEL_DEPLOY_HOOK_URL` (production deploy hook URL for `proofound-platform`)
+- Validate live commit after pushing to `master`:
+  - `curl -sS https://proofound.io/api/health`
+  - Expect `version` in response to match the latest `master` commit SHA.
+- If production is behind, trigger manual retry once:
+  - `gh workflow run "Retry Vercel Deploy Until Synced" --ref master`
+- Confirm latest workflow run:
+  - `gh run list --workflow "Retry Vercel Deploy Until Synced" --limit 1`
 
 ## CI Gate Parity (When Appropriate)
 

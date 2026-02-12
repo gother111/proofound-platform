@@ -40,6 +40,12 @@ export interface AnalyticsEvent {
   sessionId?: string; // For anonymous session stitching (non-PII)
 }
 
+function isUndefinedColumnError(error: unknown): boolean {
+  return Boolean(
+    error && typeof error === 'object' && (error as { code?: string }).code === '42703'
+  );
+}
+
 export type WellbeingCheckinSubmittedProps = {
   checkin_id: string;
   scores: { stress: number; control: number };
@@ -65,34 +71,63 @@ export type ReflectionAddedProps = {
  */
 export async function emitAnalyticsEvent(event: AnalyticsEvent): Promise<void> {
   try {
-    await db.execute(sql`
-      INSERT INTO analytics_events (
-        event_type,
-        user_id,
-        profile_id,
-        organization_id,
-        org_id,
-        entity_type,
-        entity_id,
-        properties,
-        privacy_partition,
-        session_id,
-        occurred_at
-      ) VALUES (
-        ${event.eventType},
-        ${event.userId || null},
-        ${event.profileId || null},
-        ${event.organizationId || null},
-        ${event.organizationId || null},
-        ${event.entityType || null},
-        ${event.entityId || null},
-        ${JSON.stringify(event.properties || {})},
-        ${event.privacyPartition || 'default'},
-        ${event.sessionId || null},
-        NOW()
-      )
-      ON CONFLICT DO NOTHING
-    `);
+    try {
+      await db.execute(sql`
+        INSERT INTO analytics_events (
+          event_type,
+          user_id,
+          org_id,
+          entity_type,
+          entity_id,
+          properties,
+          session_id,
+          created_at
+        ) VALUES (
+          ${event.eventType},
+          ${event.userId || event.profileId || null},
+          ${event.organizationId || null},
+          ${event.entityType || null},
+          ${event.entityId || null},
+          ${JSON.stringify(event.properties || {})},
+          ${event.sessionId || null},
+          NOW()
+        )
+        ON CONFLICT DO NOTHING
+      `);
+    } catch (error) {
+      if (!isUndefinedColumnError(error)) {
+        throw error;
+      }
+
+      await db.execute(sql`
+        INSERT INTO analytics_events (
+          event_type,
+          user_id,
+          profile_id,
+          organization_id,
+          org_id,
+          entity_type,
+          entity_id,
+          properties,
+          privacy_partition,
+          session_id,
+          occurred_at
+        ) VALUES (
+          ${event.eventType},
+          ${event.userId || null},
+          ${event.profileId || null},
+          ${event.organizationId || null},
+          ${event.organizationId || null},
+          ${event.entityType || null},
+          ${event.entityId || null},
+          ${JSON.stringify(event.properties || {})},
+          ${event.privacyPartition || 'default'},
+          ${event.sessionId || null},
+          NOW()
+        )
+        ON CONFLICT DO NOTHING
+      `);
+    }
 
     log.info('analytics.event.emitted', {
       eventType: event.eventType,

@@ -150,7 +150,7 @@ export function ResetPasswordForm() {
             <div className="text-center">
               <Link
                 href="/login"
-                className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground hover:text-proofound-forest dark:hover:text-primary transition-colors"
+                className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground hover:text-proofound-forest dark:hover:text-primary transition-colors inline-flex min-h-[44px] items-center px-2 -mx-2"
               >
                 ← Back to login
               </Link>

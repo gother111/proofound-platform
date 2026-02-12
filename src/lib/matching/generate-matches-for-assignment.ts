@@ -28,8 +28,12 @@ import { getPreset } from '@/lib/core/matching/presets';
  * - This function is designed to be safe to run multiple times (idempotent upsert).
  * - It batches skill fetches to avoid N+1 queries.
  */
-export async function generateMatchesForAssignment(assignmentId: string): Promise<number> {
+export async function generateMatchesForAssignment(
+  assignmentId: string,
+  options: { replaceExisting?: boolean } = {}
+): Promise<number> {
   const startTime = Date.now();
+  const { replaceExisting = false } = options;
 
   try {
     const assignment = await db.query.assignments.findFirst({
@@ -39,6 +43,10 @@ export async function generateMatchesForAssignment(assignmentId: string): Promis
     if (!assignment) {
       log.error('generate.matches.assignment.not.found', { assignmentId });
       return 0;
+    }
+
+    if (replaceExisting) {
+      await db.delete(matches).where(eq(matches.assignmentId, assignmentId));
     }
 
     // Fetch all matching profiles

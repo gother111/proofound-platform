@@ -14,11 +14,13 @@ This document outlines the alert configuration for production monitoring of the 
 ## Alert Channels
 
 ### Primary Channels
-1. **Email**: team@proofound.com
+
+1. **Email**: team@proofound.io
 2. **Slack**: #proofound-alerts channel
 3. **PagerDuty**: For critical/urgent alerts (optional)
 
 ### Alert Severity Levels
+
 - **Critical** (P0): Immediate action required, system down
 - **High** (P1): Significant impact, needs attention within 1 hour
 - **Medium** (P2): Moderate impact, address within 4 hours
@@ -31,6 +33,7 @@ This document outlines the alert configuration for production monitoring of the 
 ### 1. Error Rate Alerts
 
 **Alert Name**: High Error Rate
+
 - **Condition**: Error rate > 1% over 5 minutes
 - **Severity**: High
 - **Action**: Notify via Email + Slack
@@ -42,6 +45,7 @@ This document outlines the alert configuration for production monitoring of the 
   ```
 
 **Alert Name**: Critical Error Spike
+
 - **Condition**: 50+ errors in 1 minute
 - **Severity**: Critical
 - **Action**: Notify via Email + Slack + PagerDuty
@@ -54,6 +58,7 @@ This document outlines the alert configuration for production monitoring of the 
 ### 2. Performance Alerts
 
 **Alert Name**: Slow Response Time
+
 - **Condition**: P95 latency > 1000ms for 10 minutes
 - **Severity**: Medium
 - **Action**: Notify via Slack
@@ -64,6 +69,7 @@ This document outlines the alert configuration for production monitoring of the 
   ```
 
 **Alert Name**: Very Slow API
+
 - **Condition**: P99 latency > 3000ms
 - **Severity**: High
 - **Action**: Notify via Email + Slack
@@ -76,6 +82,7 @@ This document outlines the alert configuration for production monitoring of the 
 ### 3. New Error Type
 
 **Alert Name**: New Unhandled Error
+
 - **Condition**: New error fingerprint detected
 - **Severity**: Medium
 - **Action**: Notify via Slack
@@ -90,6 +97,7 @@ This document outlines the alert configuration for production monitoring of the 
 ## Health Check Alerts
 
 The `/api/cron/health-check` endpoint runs every 5 minutes and checks:
+
 - Database connectivity
 - Database query performance
 - Metrics calculation health (TTSC, TTFQI, PAC)
@@ -97,6 +105,7 @@ The `/api/cron/health-check` endpoint runs every 5 minutes and checks:
 ### Alert Integration
 
 **Option A: Vercel Cron Monitoring**
+
 ```javascript
 // vercel.json
 {
@@ -106,10 +115,12 @@ The `/api/cron/health-check` endpoint runs every 5 minutes and checks:
   }]
 }
 ```
+
 Vercel automatically monitors cron job failures and sends alerts.
 
 **Option B: External Uptime Monitor**
 Use BetterUptime, Pingdom, or UptimeRobot to call health check endpoint:
+
 - **URL**: `https://your-domain.com/api/cron/health-check`
 - **Interval**: Every 5 minutes
 - **Timeout**: 30 seconds
@@ -122,12 +133,14 @@ Use BetterUptime, Pingdom, or UptimeRobot to call health check endpoint:
 ### TTSC (Time to Signed Contract)
 
 **Alert Name**: TTSC Exceeds Target
+
 - **Condition**: Median TTSC > 35 days for 7 consecutive days
 - **Severity**: Medium
 - **Trigger**: Health check detects metric degradation
 - **Action**: Review matching quality and contractor pipeline
 
 **Implementation**:
+
 ```typescript
 // In /api/cron/health-check/route.ts (already implemented)
 if (metrics.ttsc && metrics.ttsc.median > 35) {
@@ -141,6 +154,7 @@ if (metrics.ttsc && metrics.ttsc.median > 35) {
 ### TTFQI (Time to First Qualified Introduction)
 
 **Alert Name**: TTFQI Exceeds Target
+
 - **Condition**: Median TTFQI > 96 hours for 3 consecutive days
 - **Severity**: Medium
 - **Trigger**: Health check detects metric degradation
@@ -149,6 +163,7 @@ if (metrics.ttsc && metrics.ttsc.median > 35) {
 ### PAC (Purpose-Alignment Contribution)
 
 **Alert Name**: Low PAC Lift
+
 - **Condition**: PAC acceptance lift < 15% for 7 consecutive days
 - **Severity**: Medium
 - **Trigger**: Health check detects metric degradation
@@ -161,11 +176,13 @@ if (metrics.ttsc && metrics.ttsc.median > 35) {
 ### Database Alerts
 
 **Alert Name**: Database Connection Failure
+
 - **Condition**: Health check fails database connectivity test
 - **Severity**: Critical
 - **Action**: Immediate investigation, notify DevOps
 
 **Alert Name**: Slow Database Queries
+
 - **Condition**: Query duration > 1000ms
 - **Severity**: High
 - **Action**: Investigate slow queries, consider optimization
@@ -173,6 +190,7 @@ if (metrics.ttsc && metrics.ttsc.median > 35) {
 ### Cache Alerts
 
 **Alert Name**: Low Cache Hit Rate
+
 - **Condition**: Cache hit rate < 60% over 1 hour
 - **Severity**: Low
 - **Action**: Review caching strategy
@@ -180,6 +198,7 @@ if (metrics.ttsc && metrics.ttsc.median > 35) {
 ### Rate Limit Alerts
 
 **Alert Name**: High Rate Limit Hits
+
 - **Condition**: >100 rate limit rejections (429 responses) per hour
 - **Severity**: Medium
 - **Action**: Investigate potential abuse or need to adjust limits
@@ -238,11 +257,13 @@ Health Check: https://your-domain.com/api/cron/health-check
 ### 1. High Error Rate
 
 **Symptoms**:
+
 - Error rate > 1%
 - Increased 5xx responses
 - User reports of issues
 
 **Investigation Steps**:
+
 1. Check Sentry for recent errors
 2. Review recent deployments (last 2 hours)
 3. Check database connectivity
@@ -250,6 +271,7 @@ Health Check: https://your-domain.com/api/cron/health-check
 5. Review server logs for patterns
 
 **Resolution**:
+
 - If deployment-related: Rollback to previous version
 - If database-related: Check connection pool, optimize queries
 - If external service: Wait for resolution, add fallback
@@ -257,11 +279,13 @@ Health Check: https://your-domain.com/api/cron/health-check
 ### 2. Slow Response Times
 
 **Symptoms**:
+
 - P95 latency > 1000ms
 - User complaints about slowness
 - Increased server load
 
 **Investigation Steps**:
+
 1. Check Sentry performance metrics
 2. Identify slow endpoints
 3. Review database query performance
@@ -269,6 +293,7 @@ Health Check: https://your-domain.com/api/cron/health-check
 5. Verify external API response times
 
 **Resolution**:
+
 - Add caching for frequently accessed data
 - Optimize database queries
 - Scale resources if needed
@@ -277,17 +302,20 @@ Health Check: https://your-domain.com/api/cron/health-check
 ### 3. Database Connection Failure
 
 **Symptoms**:
+
 - Health check returns 503
 - "Cannot connect to database" errors
 - All API requests failing
 
 **Investigation Steps**:
+
 1. Check Supabase dashboard status
 2. Verify database connection string
 3. Check connection pool limits
 4. Review database logs
 
 **Resolution**:
+
 - Wait for Supabase to resolve (if service issue)
 - Restart application (if connection pool exhausted)
 - Scale database (if resource constraints)
@@ -299,6 +327,7 @@ Health Check: https://your-domain.com/api/cron/health-check
 ### Test Procedure
 
 1. **Trigger Test Alert**:
+
    ```bash
    # Simulate error spike
    curl -X POST https://your-domain.com/api/test/trigger-error
@@ -316,6 +345,7 @@ Health Check: https://your-domain.com/api/cron/health-check
 ### Monthly Alert Drill
 
 Conduct monthly alert testing:
+
 - Trigger each alert type
 - Verify notification delivery
 - Test on-call escalation
@@ -326,17 +356,20 @@ Conduct monthly alert testing:
 ## Alert Maintenance
 
 ### Weekly Tasks
+
 - Review alert noise (false positives)
 - Adjust thresholds if needed
 - Update contact information
 
 ### Monthly Tasks
+
 - Review alert effectiveness
 - Analyze resolution times
 - Update runbooks based on learnings
 - Test alert channels
 
 ### Quarterly Tasks
+
 - Full alert system audit
 - Review and update severity levels
 - Optimize alert rules

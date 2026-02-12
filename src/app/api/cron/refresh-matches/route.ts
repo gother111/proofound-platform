@@ -1,21 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { log } from '@/lib/log';
+import { getInternalApiSecret } from '@/lib/api/auth';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5 minutes
 
 /**
- * Cron job to refresh matches for all active users
- * Run daily to ensure fresh matches
- *
+ * Cron job to refresh matches for all active users.
  * Vercel Cron: 0 2 * * * (daily at 2am UTC)
  */
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
 
   try {
-    // Verify cron secret for Vercel Cron
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
 
@@ -26,10 +24,17 @@ export async function GET(request: NextRequest) {
 
     log.info('cron.refresh-matches.started');
 
-    // Get matching profiles to refresh
-    // Process in batches to avoid timeouts
+    const internalApiSecret = getInternalApiSecret();
+    if (!internalApiSecret) {
+      log.error('cron.refresh-matches.missing_internal_secret');
+      return NextResponse.json(
+        { error: 'Missing INTERNAL_API_SECRET/CRON_SECRET configuration' },
+        { status: 500 }
+      );
+    }
+
     const profilesToRefresh = await db.query.matchingProfiles.findMany({
-      limit: 100, // Process 100 profiles per run
+      limit: 100,
     });
 
     log.info('cron.refresh-matches.profiles-found', {
@@ -47,32 +52,30 @@ export async function GET(request: NextRequest) {
     let successCount = 0;
     let errorCount = 0;
 
-    // Process each profile
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    if (!baseUrl) {
+      return NextResponse.json(
+        { error: 'NEXT_PUBLIC_SITE_URL is not configured' },
+        { status: 500 }
+      );
+    }
+
     for (const profile of profilesToRefresh) {
       try {
-        // Call the matching endpoint for this user
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_SITE_URL}/api/core/matching/profile`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              // Use service role to bypass auth
-              Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-            },
-            body: JSON.stringify({
-              userId: profile.profileId,
-              k: 20, // Top 20 matches
-            }),
-          }
-        );
+        const response = await fetch(`${baseUrl}/api/core/matching/profile`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-internal-api-key': internalApiSecret,
+          },
+          body: JSON.stringify({
+            userId: profile.profileId,
+            k: 20,
+          }),
+        });
 
         if (response.ok) {
           const matchData = await response.json();
-
-          // Match results are cached in the matches table by the matching endpoint
-          // No need to update a timestamp since we process all profiles in rotation
-
           successCount++;
 
           log.info('cron.refresh-matches.profile-refreshed', {

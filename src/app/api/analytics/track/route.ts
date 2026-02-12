@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { emitEvent, EVENT_TYPES, type EventType } from '@/lib/analytics/events';
+import { isActiveOrgMember, isTrustedInternalRequest, requireApiAuth } from '@/lib/api/auth';
 
 /**
  * POST /api/analytics/track
  *
- * Track analytics events from client-side code
- * This endpoint acts as a bridge to allow client components to emit
- * analytics events without importing server-side database code
+ * Track analytics events from client-side code.
+ * Identity is resolved server-side unless request is explicitly trusted-internal.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -14,7 +14,6 @@ export async function POST(req: NextRequest) {
 
     const { eventType, userId, orgId, entityType, entityId, properties, sessionId } = body;
 
-    // Validate required fields
     if (!eventType || typeof eventType !== 'string') {
       return NextResponse.json(
         { error: 'eventType is required and must be a string' },
@@ -26,11 +25,43 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Invalid eventType: ${eventType}` }, { status: 400 });
     }
 
-    // Emit the event
+    const trustedInternalCall = isTrustedInternalRequest(req);
+    const authResult = await requireApiAuth();
+    if (!trustedInternalCall && authResult instanceof NextResponse) {
+      return authResult;
+    }
+    const authContext = authResult instanceof NextResponse ? null : authResult;
+
+    const resolvedUserId = trustedInternalCall
+      ? typeof userId === 'string'
+        ? userId
+        : undefined
+      : authContext!.user.id;
+
+    let resolvedOrgId: string | undefined;
+    if (typeof orgId === 'string' && orgId.trim().length > 0) {
+      if (trustedInternalCall) {
+        resolvedOrgId = orgId;
+      } else if (
+        await isActiveOrgMember(authContext!.supabase, authContext!.user.id, orgId, [
+          'owner',
+          'admin',
+          'member',
+        ])
+      ) {
+        resolvedOrgId = orgId;
+      } else {
+        return NextResponse.json(
+          { error: 'Forbidden: orgId is not accessible for current user' },
+          { status: 403 }
+        );
+      }
+    }
+
     const eventId = await emitEvent({
       eventType: eventType as EventType,
-      userId,
-      orgId,
+      userId: resolvedUserId,
+      orgId: resolvedOrgId,
       entityType,
       entityId,
       properties,

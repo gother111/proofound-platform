@@ -1,9 +1,9 @@
 /**
  * 🔐 Extended RLS Privacy Policies Test Suite
- * 
+ *
  * This test suite provides extended coverage for Row-Level Security policies
  * beyond the 5 core scenarios. It tests privacy controls for:
- * 
+ *
  * - Skills & Experience (users can only edit their own)
  * - Assignment Privacy (draft assignments not visible to others)
  * - Organization Member Data (only org members see internal data)
@@ -22,48 +22,46 @@ import {
 import {
   createTestProfile,
   cleanupTestData,
+  createTestConversation,
 } from './helpers/test-data-factory';
-import {
-  expectAuthorized,
-  expectUnauthorized,
-  expectEmpty,
-} from './helpers/rls-test-utils';
+import { expectAuthorized, expectUnauthorized, expectEmpty } from './helpers/rls-test-utils';
 
 let alice: TestUser;
 let bob: TestUser;
 let carol: TestUser;
 
-describe.skip('Extended RLS Privacy Policies', () => {
+describe('Extended RLS Privacy Policies', () => {
   // ============================================================================
   // SETUP & TEARDOWN
   // ============================================================================
 
   beforeAll(async () => {
     console.log('🔧 Setting up extended test users...');
+    const ts = Date.now();
 
-    alice = await createTestUser('alice_extended@test.com', 'password123', {
+    alice = await createTestUser(`alice_extended+${ts}@test.com`, 'password123', {
       display_name: 'Alice Extended',
     });
-    bob = await createTestUser('bob_extended@test.com', 'password123', {
+    bob = await createTestUser(`bob_extended+${ts}@test.com`, 'password123', {
       display_name: 'Bob Extended',
     });
-    carol = await createTestUser('carol_extended@test.com', 'password123', {
+    carol = await createTestUser(`carol_extended+${ts}@test.com`, 'password123', {
       display_name: 'Carol Extended',
     });
 
     await createTestProfile(alice.id, {
       displayName: 'Alice Extended',
-      handle: 'alice_ext',
+      handle: `alice_ext_${ts}`,
       persona: 'individual',
     });
     await createTestProfile(bob.id, {
       displayName: 'Bob Extended',
-      handle: 'bob_ext',
+      handle: `bob_ext_${ts}`,
       persona: 'individual',
     });
     await createTestProfile(carol.id, {
       displayName: 'Carol Extended',
-      handle: 'carol_ext',
+      handle: `carol_ext_${ts}`,
       persona: 'individual',
     });
 
@@ -95,7 +93,7 @@ describe.skip('Extended RLS Privacy Policies', () => {
           profile_id: alice.id,
           skill_id: 'typescript',
           level: 4,
-          years_experience: 5,
+          months_experience: 60,
         })
         .select()
         .single();
@@ -115,7 +113,7 @@ describe.skip('Extended RLS Privacy Policies', () => {
           profile_id: alice.id,
           skill_id: 'python',
           level: 5,
-          years_experience: 10,
+          months_experience: 120,
         })
         .select()
         .single();
@@ -176,10 +174,7 @@ describe.skip('Extended RLS Privacy Policies', () => {
       const bobClient = await createAuthenticatedClient(bob.email, bob.password);
 
       // Query all skills - RLS should filter appropriately
-      const { data, error } = await bobClient
-        .from('skills')
-        .select('*')
-        .limit(10);
+      const { data, error } = await bobClient.from('skills').select('*').limit(10);
 
       expectAuthorized(data, error, 'Query should succeed');
       // Skills visibility depends on profile visibility settings
@@ -191,64 +186,101 @@ describe.skip('Extended RLS Privacy Policies', () => {
   // ============================================================================
 
   describe('7. Assignment Privacy', () => {
-    test('✅ Users can create their own assignments', async () => {
+    const createOrgForUser = async (userId: string) => {
+      const serviceClient = createServiceRoleClient();
+      const suffix = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      const { data: org, error: orgError } = await serviceClient
+        .from('organizations')
+        .insert({
+          slug: `test-org-assignment-${suffix}`,
+          display_name: `Assignment Org ${suffix}`,
+          legal_name: `Assignment Org ${suffix} LLC`,
+          type: 'company',
+          created_by: userId,
+        })
+        .select('id')
+        .single();
+
+      expectAuthorized(org, orgError, 'Setup should create an organization');
+
+      const { error: membershipError } = await serviceClient.from('organization_members').insert({
+        org_id: org!.id,
+        user_id: userId,
+        role: 'owner',
+        status: 'active',
+      });
+
+      expect(membershipError).toBeNull();
+      return org!.id as string;
+    };
+
+    test('✅ Users can create assignments in their organization', async () => {
       const aliceClient = await createAuthenticatedClient(alice.email, alice.password);
+      const orgId = await createOrgForUser(alice.id);
 
       const { data, error } = await aliceClient
         .from('assignments')
         .insert({
-          poster_profile_id: alice.id,
-          title: 'Test Assignment',
+          org_id: orgId,
+          role: 'Test Assignment',
           description: 'This is a test assignment',
           status: 'draft',
-          visibility: 'public',
         })
         .select()
         .single();
 
-      expectAuthorized(data, error, 'Alice should be able to create assignments');
-      expect(data?.poster_profile_id).toBe(alice.id);
+      expectAuthorized(
+        data,
+        error,
+        'Alice should be able to create assignments for her organization'
+      );
+      expect(data?.org_id).toBe(orgId);
     });
 
-    test('✅ Published assignments are visible to authenticated users', async () => {
+    test('✅ Active assignments are visible to authenticated users', async () => {
       const serviceClient = createServiceRoleClient();
+      const orgId = await createOrgForUser(alice.id);
 
-      // Create a published assignment for Alice
-      await serviceClient
+      // Create an active assignment for Alice's org
+      const { data: activeAssignment, error: createError } = await serviceClient
         .from('assignments')
         .insert({
-          poster_profile_id: alice.id,
-          title: 'Public Assignment',
+          org_id: orgId,
+          role: 'Public Assignment',
           description: 'This is public',
-          status: 'published',
-          visibility: 'public',
-        });
+          status: 'active',
+        })
+        .select('id')
+        .single();
 
-      // Bob should be able to see published assignments
+      expectAuthorized(activeAssignment, createError, 'Setup should create an active assignment');
+
+      // Bob should be able to see active assignments
       const bobClient = await createAuthenticatedClient(bob.email, bob.password);
 
       const { data, error } = await bobClient
         .from('assignments')
-        .select('*')
-        .eq('status', 'published')
-        .eq('visibility', 'public');
+        .select('id, status')
+        .eq('id', activeAssignment!.id)
+        .maybeSingle();
 
-      expectAuthorized(data, error, 'Bob should see published assignments');
-      expect(data?.length).toBeGreaterThan(0);
+      expectAuthorized(data, error, 'Bob should see active assignments');
+      expect(data?.id).toBe(activeAssignment!.id);
+      expect(data?.status).toBe('active');
     });
 
     test('❌ Draft assignments are not visible to other users', async () => {
       const serviceClient = createServiceRoleClient();
+      const orgId = await createOrgForUser(alice.id);
 
       // Create a draft assignment for Alice
       const { data: draftAssignment } = await serviceClient
         .from('assignments')
         .insert({
-          poster_profile_id: alice.id,
-          title: 'Draft Assignment',
+          org_id: orgId,
+          role: 'Draft Assignment',
           description: 'This is a draft',
           status: 'draft',
-          visibility: 'public',
         })
         .select()
         .single();
@@ -259,56 +291,65 @@ describe.skip('Extended RLS Privacy Policies', () => {
       const { data, error } = await bobClient
         .from('assignments')
         .select('*')
-        .eq('id', draftAssignment!.id)
-        .single();
+        .eq('id', draftAssignment!.id);
 
       expectUnauthorized(data, error, "Bob should not see Alice's draft assignment");
     });
 
-    test('✅ Users can update their own assignments', async () => {
+    test('✅ Users can update assignments in their own organization', async () => {
       const aliceClient = await createAuthenticatedClient(alice.email, alice.password);
+      const serviceClient = createServiceRoleClient();
+      const orgId = await createOrgForUser(alice.id);
 
-      // Get one of Alice's assignments
-      const { data: assignment } = await aliceClient
+      const { data: assignment, error: assignmentError } = await serviceClient
         .from('assignments')
-        .select('*')
-        .eq('poster_profile_id', alice.id)
-        .limit(1)
+        .insert({
+          org_id: orgId,
+          role: 'Mutable Assignment',
+          description: 'Before update',
+          status: 'draft',
+        })
+        .select('id')
         .single();
 
-      expect(assignment).toBeDefined();
+      expectAuthorized(assignment, assignmentError, 'Setup should create assignment to update');
 
       // Update the assignment
       const { data: updated, error } = await aliceClient
         .from('assignments')
-        .update({ title: 'Updated Title' })
+        .update({ role: 'Updated Assignment Role' })
         .eq('id', assignment!.id)
         .select()
         .single();
 
       expectAuthorized(updated, error, 'Alice should be able to update her assignment');
-      expect(updated?.title).toBe('Updated Title');
+      expect(updated?.role).toBe('Updated Assignment Role');
     });
 
     test("❌ Users cannot update other users' assignments", async () => {
       const serviceClient = createServiceRoleClient();
+      const orgId = await createOrgForUser(alice.id);
 
-      // Get Alice's assignment
-      const { data: aliceAssignment } = await serviceClient
+      // Create Alice's assignment
+      const { data: aliceAssignment, error: assignmentError } = await serviceClient
         .from('assignments')
+        .insert({
+          org_id: orgId,
+          role: 'Protected Assignment',
+          description: 'Bob should not update this',
+          status: 'draft',
+        })
         .select('id')
-        .eq('poster_profile_id', alice.id)
-        .limit(1)
         .single();
 
-      expect(aliceAssignment).toBeDefined();
+      expectAuthorized(aliceAssignment, assignmentError, 'Setup should create assignment');
 
       // Bob tries to update Alice's assignment
       const bobClient = await createAuthenticatedClient(bob.email, bob.password);
 
       const { data, error } = await bobClient
         .from('assignments')
-        .update({ title: 'Hacked!' })
+        .update({ role: 'Hacked!' })
         .eq('id', aliceAssignment!.id)
         .select();
 
@@ -325,12 +366,13 @@ describe.skip('Extended RLS Privacy Policies', () => {
 
     test('✅ Users can create organizations', async () => {
       const aliceClient = await createAuthenticatedClient(alice.email, alice.password);
+      const suffix = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
       const { data, error } = await aliceClient
         .from('organizations')
         .insert({
-          slug: 'test-org-privacy',
-          display_name: 'Test Org for Privacy',
+          slug: `test-org-privacy-${suffix}`,
+          display_name: `Test Org for Privacy ${suffix}`,
           legal_name: 'Test Organization LLC',
           type: 'ngo',
           created_by: alice.id,
@@ -339,32 +381,38 @@ describe.skip('Extended RLS Privacy Policies', () => {
         .single();
 
       expectAuthorized(data, error, 'Alice should be able to create an organization');
-      expect(data?.slug).toBe('test-org-privacy');
       orgId = data!.id;
+      expect(data?.slug.startsWith('test-org-privacy-')).toBe(true);
 
       // Add Alice as owner
-      await aliceClient
+      const { data: ownerMembership, error: ownerMembershipError } = await aliceClient
         .from('organization_members')
         .insert({
           org_id: orgId,
           user_id: alice.id,
           role: 'owner',
           status: 'active',
-        });
+        })
+        .select()
+        .single();
+
+      expectAuthorized(
+        ownerMembership,
+        ownerMembershipError,
+        'Alice should be able to add herself as org owner'
+      );
     });
 
     test('✅ Organization members can see other members', async () => {
       const serviceClient = createServiceRoleClient();
 
       // Add Bob as a member
-      await serviceClient
-        .from('organization_members')
-        .insert({
-          org_id: orgId,
-          user_id: bob.id,
-          role: 'member',
-          status: 'active',
-        });
+      await serviceClient.from('organization_members').insert({
+        org_id: orgId,
+        user_id: bob.id,
+        role: 'member',
+        status: 'active',
+      });
 
       // Alice (owner) should see Bob in members list
       const aliceClient = await createAuthenticatedClient(alice.email, alice.password);
@@ -421,7 +469,11 @@ describe.skip('Extended RLS Privacy Policies', () => {
         .eq('user_id', alice.id)
         .select();
 
-      expectUnauthorized(data, error, 'Bob should not be able to remove Alice from the organization');
+      expectUnauthorized(
+        data,
+        error,
+        'Bob should not be able to remove Alice from the organization'
+      );
     });
   });
 
@@ -501,85 +553,13 @@ describe.skip('Extended RLS Privacy Policies', () => {
     };
 
     const ensureConversationForAliceBob = async () => {
-      const serviceClient = createServiceRoleClient();
-
-      // Try to find an existing conversation between Alice and Bob
-      const { data: existing, error: existingError } = await serviceClient
-        .from('conversations')
-        .select('*')
-        .eq('participant_one_id', alice.id)
-        .eq('participant_two_id', bob.id)
-        .maybeSingle();
-
-      if (existingError) {
-        throw new Error(`Failed to load conversation for Alice/Bob: ${existingError.message}`);
-      }
-
-      if (existing) {
-        // Normalize stage to 1 for baseline
-        const { data: normalized, error: normError } = await serviceClient
-          .from('conversations')
-          .update({ stage: 1 })
-          .eq('id', existing.id)
-          .select()
-          .single();
-
-        return assertPresent(
-          normalized,
-          'Expected conversation normalization to succeed for Alice/Bob'
-        );
-      }
-
-      // Create assignment and match for Alice-Bob conversation
-      const { data: assignment, error: assignmentError } = await serviceClient
-        .from('assignments')
-        .insert({
-          poster_profile_id: alice.id,
-          title: 'Test Stage Assignment',
-          description: 'Testing conversation stages',
-          status: 'published',
-          visibility: 'public',
-        })
-        .select()
-        .single();
-
-      expectAuthorized(assignment, assignmentError, 'Assignment should be created for conversation');
-
-      const { data: match, error: matchError } = await serviceClient
-        .from('matches')
-        .insert({
-          assignment_id: assignment!.id,
-          seeker_profile_id: bob.id,
-          poster_profile_id: alice.id,
-          status: 'accepted',
-          score: 0.9,
-          ranking: 1,
-        })
-        .select()
-        .single();
-
-      expectAuthorized(match, matchError, 'Match should be created for conversation');
-
-      const { data: conversation, error: convError } = await serviceClient
-        .from('conversations')
-        .insert({
-          match_id: match!.id,
-          assignment_id: assignment!.id,
-          participant_one_id: alice.id,
-          participant_two_id: bob.id,
-          stage: 1, // Stage 1 = masked
-          status: 'active',
-        })
-        .select()
-        .single();
-
-      expectAuthorized(conversation, convError, 'Conversation should be created at Stage 1');
+      const { conversation } = await createTestConversation(alice.id, bob.id, 'masked');
       return assertPresent(conversation, 'Conversation creation failed for Alice/Bob');
     };
 
     test('✅ Conversations start at Stage 1 (masked)', async () => {
       const conversation = await ensureConversationForAliceBob();
-      expect(conversation?.stage).toBe(1);
+      expect(conversation?.stage).toBe('masked');
     });
 
     test('✅ Participants can advance conversation to Stage 2 (revealed)', async () => {
@@ -590,13 +570,16 @@ describe.skip('Extended RLS Privacy Policies', () => {
 
       const { data: updated, error } = await aliceClient
         .from('conversations')
-        .update({ stage: 2 }) // Stage 2 = revealed
+        .update({
+          stage: 'revealed',
+          revealed_at: new Date().toISOString(),
+        })
         .eq('id', conversation.id)
         .select()
         .single();
 
       expectAuthorized(updated, error, 'Alice should be able to advance conversation stage');
-      expect(updated?.stage).toBe(2);
+      expect(updated?.stage).toBe('revealed');
     });
 
     test('❌ Non-participants cannot modify conversation stage', async () => {
@@ -607,7 +590,10 @@ describe.skip('Extended RLS Privacy Policies', () => {
 
       const { data, error } = await carolClient
         .from('conversations')
-        .update({ stage: 1 })
+        .update({
+          stage: 'revealed',
+          revealed_at: new Date().toISOString(),
+        })
         .eq('id', conversation.id)
         .select();
 
@@ -615,4 +601,3 @@ describe.skip('Extended RLS Privacy Policies', () => {
     });
   });
 });
-

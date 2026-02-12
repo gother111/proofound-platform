@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { DraggableDashboard } from '@/components/dashboard/DraggableDashboard';
 import { DashboardWidget } from '@/lib/dashboard/layout';
 
@@ -38,21 +38,18 @@ class DashboardErrorBoundary extends React.Component<
 }
 
 export function DashboardClient({ initialLayout }: DashboardClientProps) {
-  const [mounted, setMounted] = useState(false);
+  const [isDashboardLoading, setIsDashboardLoading] = useState(true);
   const [hasRenderError, setHasRenderError] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const handleErrorFallback = (message: string) => {
+  const handleErrorFallback = (_message: string) => {
     setHasRenderError(true);
+    setIsDashboardLoading(false);
   };
 
   return (
     <div className="space-y-2">
-      {mounted ? (
-        <div className="text-xs text-gray-600 dark:text-gray-300" aria-live="polite">
+      {isDashboardLoading && !hasRenderError ? (
+        <div className="text-xs text-gray-500" aria-live="polite">
           Dashboard loading…
         </div>
       ) : null}
@@ -65,6 +62,7 @@ export function DashboardClient({ initialLayout }: DashboardClientProps) {
           <DraggableDashboard
             initialLayout={initialLayout}
             onError={(message: string) => handleErrorFallback(message)}
+            onLoadingChange={(isLoading: boolean) => setIsDashboardLoading(isLoading)}
           />
         )}
       </DashboardErrorBoundary>

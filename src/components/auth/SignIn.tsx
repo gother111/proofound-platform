@@ -110,7 +110,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
           initial={{ opacity: 0, x: -24 }}
           animate={{ opacity: 1, x: 0 }}
           onClick={onBack}
-          className="absolute left-4 sm:left-6 top-4 sm:top-6 flex items-center gap-2 text-neutral-dark-500 transition-colors hover:text-proofound-charcoal z-20"
+          className="absolute left-4 sm:left-6 top-4 sm:top-6 min-h-[44px] px-2 -mx-2 flex items-center gap-2 text-neutral-dark-500 transition-colors hover:text-proofound-charcoal z-20"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           <span className="text-sm font-medium">Back</span>
@@ -249,7 +249,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-proofound-charcoal focus:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest rounded"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground transition-colors hover:text-proofound-charcoal focus:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest rounded"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? (
@@ -264,7 +264,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
             <div className="flex items-center justify-between pt-2">
               <label
                 htmlFor="remember"
-                className="flex cursor-pointer items-center gap-2 text-[14px] text-[#2D3330]"
+                className="flex cursor-pointer items-center gap-2 text-[14px] text-[#2D3330] min-h-[44px] py-1"
               >
                 <Checkbox
                   id="remember"
@@ -275,7 +275,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
               </label>
               <Link
                 href="/reset-password"
-                className="text-[14px] font-medium text-proofound-forest transition-colors hover:text-[#2D5D4A]"
+                className="text-[14px] font-medium text-proofound-forest transition-colors hover:text-[#2D5D4A] inline-flex min-h-[44px] items-center px-2 -mx-2"
               >
                 Forgot password?
               </Link>
@@ -306,7 +306,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
                   onCreateAccount();
                 }
               }}
-              className="font-medium text-proofound-forest transition-colors hover:text-[#2D5D4A]"
+              className="font-medium text-proofound-forest transition-colors hover:text-[#2D5D4A] inline-flex min-h-[44px] items-center px-2 -mx-2"
             >
               Create account
             </Link>

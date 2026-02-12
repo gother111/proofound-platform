@@ -11,6 +11,7 @@ import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { getRows } from '@/lib/db/rows';
+import { anonymizeUserAgent } from '@/lib/utils/privacy';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,10 +53,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, skipped: 'anonymous' });
     }
 
-    // Check if web_vitals_metrics table exists before trying to insert
-    // If table doesn't exist, just return success to avoid breaking the app
+    let userAgentHash: string | null = null;
     try {
-      // Store metric in analytics_events instead (which definitely exists)
+      const rawUserAgent = req.headers.get('user-agent') || '';
+      userAgentHash = rawUserAgent ? anonymizeUserAgent(rawUserAgent) : null;
+    } catch {
+      userAgentHash = null;
+    }
+
+    // Check if web_vitals_metrics table exists before trying to insert
+    // If table doesn't exist, just return success to avoid breaking the app.
+    try {
+      // Store metric in analytics_events instead (which definitely exists).
       await db.execute(sql`
         INSERT INTO analytics_events (
           event_type,
@@ -63,6 +72,7 @@ export async function POST(req: NextRequest) {
           entity_type,
           entity_id,
           properties,
+          user_agent_hash,
           created_at
         ) VALUES (
           'performance_metric',
@@ -77,9 +87,9 @@ export async function POST(req: NextRequest) {
             metric_id: metric.id,
             navigation_type: metric.navigationType,
             page_path: metric.pagePath,
-            user_agent: req.headers.get('user-agent'),
             is_anonymous: false,
           })},
+          ${userAgentHash},
           NOW()
         )
       `);

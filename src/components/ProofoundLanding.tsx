@@ -199,7 +199,7 @@ export function ProofoundLanding({
     if (onIndividualSignup) {
       onIndividualSignup();
     } else {
-      router.push('/signup?type=individual');
+      router.push('/signup/individual');
     }
   };
 
@@ -207,7 +207,7 @@ export function ProofoundLanding({
     if (onOrganizationSignup) {
       onOrganizationSignup();
     } else {
-      router.push('/signup?type=organization');
+      router.push('/signup/organization');
     }
   };
 
@@ -276,71 +276,73 @@ export function ProofoundLanding({
                 data-testid="landing-menu-overlay"
                 onClick={() => setMenuOpen(false)}
               />
-	              <Dialog.Content
-	                id={menuContentId}
-	                className="fixed inset-0 z-[110] pointer-events-none"
-	              >
-	                {/* `Dialog.Content` must remain `fixed` for a true full-screen overlay.
+              <Dialog.Content
+                id={menuContentId}
+                className="fixed inset-0 z-[110] pointer-events-none"
+              >
+                {/* `Dialog.Content` must remain `fixed` for a true full-screen overlay.
 	                    Do not add `relative` to this same element, since Tailwind generates
 	                    conflicting position utilities that can push the menu off-screen. */}
-	                <div className="relative w-full h-full flex items-center justify-center">
-	                  <Dialog.Title className="sr-only">Navigation</Dialog.Title>
-	                  <Dialog.Description className="sr-only">Site navigation links.</Dialog.Description>
+                <div className="relative w-full h-full flex items-center justify-center">
+                  <Dialog.Title className="sr-only">Navigation</Dialog.Title>
+                  <Dialog.Description className="sr-only">
+                    Site navigation links.
+                  </Dialog.Description>
 
-	                  <div className="absolute top-6 left-6 pointer-events-none">
-	                    <LayoutGrid className="w-5 h-5 text-proofound-forest" aria-hidden="true" />
-	                  </div>
-	                  <div className="absolute top-6 right-6 pointer-events-auto">
-	                    <Dialog.Close asChild>
-	                      <button
-	                        type="button"
-	                        className="w-12 h-12 rounded-full bg-card/80 backdrop-blur-md flex items-center justify-center shadow-sm hover:scale-105 transition-transform duration-300 group"
-	                        aria-label="Close menu"
-	                        data-testid="landing-menu-close"
-	                        onClick={() => setMenuOpen(false)}
-	                      >
-	                        <X
-	                          className="w-5 h-5 text-proofound-forest dark:text-foreground"
-	                          aria-hidden="true"
-	                        />
-	                      </button>
-	                    </Dialog.Close>
-	                  </div>
+                  <div className="absolute top-6 left-6 pointer-events-none">
+                    <LayoutGrid className="w-5 h-5 text-proofound-forest" aria-hidden="true" />
+                  </div>
+                  <div className="absolute top-6 right-6 pointer-events-auto">
+                    <Dialog.Close asChild>
+                      <button
+                        type="button"
+                        className="w-12 h-12 rounded-full bg-card/80 backdrop-blur-md flex items-center justify-center shadow-sm hover:scale-105 transition-transform duration-300 group"
+                        aria-label="Close menu"
+                        data-testid="landing-menu-close"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        <X
+                          className="w-5 h-5 text-proofound-forest dark:text-foreground"
+                          aria-hidden="true"
+                        />
+                      </button>
+                    </Dialog.Close>
+                  </div>
 
-	                  <nav
-	                    className="text-center space-y-8 pointer-events-auto"
-	                    data-testid="landing-menu-nav"
-	                  >
-	                    {[
-	                      { label: 'Mission', href: '#the-problem' },
-	                      { label: 'How it Works', href: '#how-it-works' },
-	                      { label: 'Principles', href: '#principles' },
-	                      { label: 'Pricing', href: '#products' },
-	                      { label: 'Log in', href: '/login' },
-	                    ].map((item) => (
-	                      <div key={item.label} className="overflow-hidden">
-	                        <Dialog.Close asChild>
-	                          {item.href.startsWith('#') ? (
-	                            <a
-	                              href={item.href}
-	                              className="block text-4xl md:text-5xl font-display text-proofound-forest dark:text-foreground hover:text-proofound-terracotta transition-colors cursor-pointer"
-	                            >
-	                              {item.label}
-	                            </a>
-	                          ) : (
-	                            <Link
-	                              href={item.href}
-	                              className="block text-4xl md:text-5xl font-display text-proofound-forest dark:text-foreground hover:text-proofound-terracotta transition-colors cursor-pointer"
-	                            >
-	                              {item.label}
-	                            </Link>
-	                          )}
-	                        </Dialog.Close>
-	                      </div>
-	                    ))}
-	                  </nav>
-	                </div>
-	              </Dialog.Content>
+                  <nav
+                    className="text-center space-y-8 pointer-events-auto"
+                    data-testid="landing-menu-nav"
+                  >
+                    {[
+                      { label: 'Mission', href: '#the-problem' },
+                      { label: 'How it Works', href: '#how-it-works' },
+                      { label: 'Principles', href: '#principles' },
+                      { label: 'Pricing', href: '#products' },
+                      { label: 'Log in', href: '/login' },
+                    ].map((item) => (
+                      <div key={item.label} className="overflow-hidden">
+                        <Dialog.Close asChild>
+                          {item.href.startsWith('#') ? (
+                            <a
+                              href={item.href}
+                              className="block text-4xl md:text-5xl font-display text-proofound-forest dark:text-foreground hover:text-proofound-terracotta transition-colors cursor-pointer"
+                            >
+                              {item.label}
+                            </a>
+                          ) : (
+                            <Link
+                              href={item.href}
+                              className="block text-4xl md:text-5xl font-display text-proofound-forest dark:text-foreground hover:text-proofound-terracotta transition-colors cursor-pointer"
+                            >
+                              {item.label}
+                            </Link>
+                          )}
+                        </Dialog.Close>
+                      </div>
+                    ))}
+                  </nav>
+                </div>
+              </Dialog.Content>
             </Dialog.Portal>
           </Dialog.Root>
         </div>

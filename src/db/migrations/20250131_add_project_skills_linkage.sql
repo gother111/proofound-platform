@@ -227,11 +227,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_update_skills_on_project_change ON projects;
 CREATE TRIGGER trigger_update_skills_on_project_change
     AFTER INSERT OR UPDATE ON projects
     FOR EACH ROW
     EXECUTE FUNCTION update_skill_computed_fields();
 
+DROP TRIGGER IF EXISTS trigger_update_skills_on_project_skill_change ON project_skills;
 CREATE TRIGGER trigger_update_skills_on_project_skill_change
     AFTER INSERT OR UPDATE OR DELETE ON project_skills
     FOR EACH ROW
@@ -278,22 +280,27 @@ ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE project_skills ENABLE ROW LEVEL SECURITY;
 
 -- Users can view their own projects
+DROP POLICY IF EXISTS "Users can view their own projects" ON projects;
 CREATE POLICY "Users can view their own projects" ON projects
     FOR SELECT USING (auth.uid() = user_id);
 
 -- Users can view public projects
+DROP POLICY IF EXISTS "Public projects are visible" ON projects;
 CREATE POLICY "Public projects are visible" ON projects
     FOR SELECT USING (visibility = 'public');
 
 -- Users can view network projects if logged in
+DROP POLICY IF EXISTS "Network projects visible to logged-in users" ON projects;
 CREATE POLICY "Network projects visible to logged-in users" ON projects
     FOR SELECT USING (visibility = 'network' AND auth.uid() IS NOT NULL);
 
 -- Users can create/update/delete their own projects
+DROP POLICY IF EXISTS "Users can manage their own projects" ON projects;
 CREATE POLICY "Users can manage their own projects" ON projects
     FOR ALL USING (auth.uid() = user_id);
 
 -- Project skills inherit project visibility
+DROP POLICY IF EXISTS "Project skills visible via project" ON project_skills;
 CREATE POLICY "Project skills visible via project" ON project_skills
     FOR SELECT USING (
         EXISTS (
@@ -303,6 +310,7 @@ CREATE POLICY "Project skills visible via project" ON project_skills
         )
     );
 
+DROP POLICY IF EXISTS "Users can manage project skills" ON project_skills;
 CREATE POLICY "Users can manage project skills" ON project_skills
     FOR ALL USING (
         EXISTS (

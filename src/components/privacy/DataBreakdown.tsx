@@ -2,10 +2,10 @@
 
 /**
  * DataBreakdown Component
- * 
+ *
  * Shows detailed breakdown of user data stored in the system.
  * Organized by data category with expandable accordions.
- * 
+ *
  * Reference: DATA_SECURITY_PRIVACY_ARCHITECTURE.md Section 13.2
  */
 
@@ -84,11 +84,7 @@ export function DataBreakdown() {
           icon: <MessageSquare className="h-5 w-5" />,
           count: 0,
           tier: 'Sensitive',
-          items: [
-            'Conversation threads',
-            'Message content',
-            'Identity reveal history',
-          ],
+          items: ['Conversation threads', 'Message content', 'Identity reveal history'],
         },
         {
           id: 'analytics',
@@ -111,11 +107,7 @@ export function DataBreakdown() {
           icon: <Shield className="h-5 w-5" />,
           count: 0,
           tier: 'Public',
-          items: [
-            'Verification requests',
-            'Verified claims',
-            'Trust badges',
-          ],
+          items: ['Verification requests', 'Verified claims', 'Trust badges'],
         },
       ];
 
@@ -182,9 +174,7 @@ export function DataBreakdown() {
         <div className="flex items-center justify-between">
           <div>
             <CardTitle>Your Data Breakdown</CardTitle>
-            <CardDescription>
-              Detailed view of all data we store about you
-            </CardDescription>
+            <CardDescription>Detailed view of all data we store about you</CardDescription>
           </div>
           <Button onClick={handleExportData} disabled={exporting}>
             <Download className="mr-2 h-4 w-4" />
@@ -232,7 +222,8 @@ export function DataBreakdown() {
                         Personally Identifiable Information (PII)
                       </p>
                       <p className="text-red-800 dark:text-red-200">
-                        This data can directly identify you. We protect it with the highest security measures.
+                        This data can directly identify you. We protect it with the highest security
+                        measures.
                       </p>
                     </div>
                   )}
@@ -248,11 +239,12 @@ export function DataBreakdown() {
             <li>• Profile data: Retained while account is active</li>
             <li>• Messages: Retained for 3 years, then archived</li>
             <li>• Analytics: Anonymized after 90 days</li>
-            <li>• Deleted accounts: Hard-deleted after 30-day grace period</li>
+            <li>
+              • Deleted accounts: Processed immediately with deletion/anonymization safeguards
+            </li>
           </ul>
         </div>
       </CardContent>
     </Card>
   );
 }
-

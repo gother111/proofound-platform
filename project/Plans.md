@@ -1,6 +1,10 @@
+> Doc Class: `governance`
+> Sync Pair: `Plans.md`
+> Last Verified: `2026-02-12`
+
 # MVP Milestones (Proposal)
 
-Context: This repo already contains substantial implementation. Use this file as a stable milestone framing plus validation checklists. For an implementation status snapshot (dated November 3, 2025) and a launch readiness checklist, start with `IMPLEMENTATION_STATUS_CURRENT.md` and `PRODUCTION_CHECKLIST.md`. (source: IMPLEMENTATION_STATUS_CURRENT.md, PRODUCTION_CHECKLIST.md)
+Context: This repo already contains substantial implementation. Use this file as a stable milestone framing plus validation checklists. Historical status snapshots are archived; use `docs/archive/status-reports/root-historical/IMPLEMENTATION_STATUS_CURRENT.md` for point-in-time history and `PRODUCTION_CHECKLIST.md` for current launch readiness checks. (source: docs/archive/status-reports/root-historical/IMPLEMENTATION_STATUS_CURRENT.md, PRODUCTION_CHECKLIST.md)
 
 ## Milestone 1: Foundations (Local Dev + CI Parity Baseline)
 

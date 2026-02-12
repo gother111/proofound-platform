@@ -1,5 +1,8 @@
 # Proofound Platform MVP
 
+> Doc Class: `active`
+> Last Verified: `2026-02-12`
+
 Production-ready scaffold for a credibility and connection platform with Individual and Organization personas.
 
 ## Overview
@@ -50,7 +53,7 @@ flowchart LR
 ## Documentation map
 
 - Product/architecture: `PRD_TECHNICAL_REQUIREMENTS.md`, `SYSTEM_ARCHITECTURE_COMPREHENSIVE.md`, `SYSTEM_ARCHITECTURE_SUPPLEMENT.md`, `PRD_for_a_web_platform_MVP.md`.
-- APIs: `API_DOCUMENTATION_FINAL.md`, `API_DOCUMENTATION_NEW_ENDPOINTS.md` (legacy `API_DOCUMENTATION.md` lives in `docs/archive/legacy-platform/`).
+- APIs: `docs/API_REFERENCE.md` (historical API specs are archived under `docs/archive/legacy-platform/api-reference-history/`).
 - Runbooks: `LAUNCH_RUNBOOK.md`, `PRODUCTION_CHECKLIST.md`, `APPLY_MIGRATIONS_MANUAL.md`, `RUN_MIGRATIONS_GUIDE.md`, `OAUTH_SETUP_GUIDE.md`, `SETUP_SUPABASE.md`.
 - Archives: historical docs are grouped under `docs/archive/legacy-platform/`, status reports under `docs/archive/status-reports/`, demo artifacts under `docs/archive/demos/`.
 
@@ -119,7 +122,7 @@ DATABASE_URL=postgresql://postgres:[PASSWORD]@db.your-project.supabase.co:5432/p
 
 # Resend
 RESEND_API_KEY=re_your_key
-EMAIL_FROM="Proofound <no-reply@proofound.com>"
+EMAIL_FROM="Proofound <no-reply@proofound.io>"
 
 # Rate Limiting
 RATE_LIMIT_WINDOW_SECONDS=60
@@ -148,18 +151,15 @@ npm run db:generate
 # Push schema to Supabase
 npm run db:push
 
-# Manually run RLS policies and triggers in Supabase SQL Editor
-# Copy contents from:
-# - src/db/policies.sql
-# - src/db/triggers.sql
+# Apply ordered SQL migrations + policy/trigger supplements
+npm run db:migrate
 ```
-
-**Important**: Run the SQL files manually in your Supabase SQL Editor to enable RLS and triggers.
 
 **Quick guide to DB scripts:**
 
 - `npm run db:generate` — Create a new migration from schema changes.
-- `npm run db:migrate` — Apply generated migrations locally/CI.
+- `npm run db:migrate` — Apply ordered `src/db/migrations/*.sql` plus ledgered policy/trigger SQL.
+- `npm run db:drift-check` — Enforce canonical migration-path discipline in CI.
 - `npm run db:push` — Push the current schema directly to the database (bypasses migration files).
 - `npm run db:seed` — Seed feature flags (and demo data when enabled).
 - `npm run db:seed-taxonomy` — Seed the expertise taxonomy slice used by matching.
@@ -245,7 +245,8 @@ npm run typecheck        # TypeScript type checking
 
 # Database
 npm run db:generate      # Generate Drizzle migrations
-npm run db:migrate       # Run migrations
+npm run db:migrate       # Run ordered SQL migrations + policy/trigger supplements
+npm run db:drift-check   # Check migration path drift
 npm run db:push          # Push schema to database
 npm run db:studio        # Open Drizzle Studio
 npm run db:seed          # Seed database
@@ -567,7 +568,7 @@ MIT License - see LICENSE file for details
 - **Review Documentation:**
   - [`PRODUCTION_CHECKLIST.md`](PRODUCTION_CHECKLIST.md) - Deployment checklist
   - [`LAUNCH_RUNBOOK.md`](LAUNCH_RUNBOOK.md) - Operational procedures
-  - [`API_DOCUMENTATION.md`](API_DOCUMENTATION.md) - Admin and metrics APIs
+  - [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md) - API contracts and endpoint families
   - [`EMAIL_SUPPORT_SETUP.md`](EMAIL_SUPPORT_SETUP.md) - Email support configuration
 - **Third-Party Docs:** Supabase, Resend, Vercel documentation
 

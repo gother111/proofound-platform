@@ -11,11 +11,13 @@
  */
 
 import { logError } from '@/lib/error-handler';
+import { POLICY_VERSIONS } from '@/lib/privacy/policy-version-config';
 
 // Storage keys
-const CONSENT_KEY = 'proofound-cookie-consent';
-const PREFERENCES_KEY = 'proofound-cookie-preferences';
-export const CONSENT_VERSION = 'v1.0.2025-11-06';
+export const CONSENT_KEY = 'proofound-cookie-consent';
+export const PREFERENCES_KEY = 'proofound-cookie-preferences';
+export const COOKIE_PREFERENCES_CHANGED_EVENT = 'proofound:cookie-preferences-changed';
+export const CONSENT_VERSION = POLICY_VERSIONS.cookie;
 
 // Cookie category types
 export type CookieCategory = 'essential' | 'analytics' | 'marketing';
@@ -38,6 +40,15 @@ export const DEFAULT_PREFERENCES: CookiePreferences = {
   timestamp: new Date().toISOString(),
 };
 
+function emitCookiePreferencesChanged(preferences: CookiePreferences): void {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(
+    new CustomEvent(COOKIE_PREFERENCES_CHANGED_EVENT, {
+      detail: preferences,
+    })
+  );
+}
+
 /**
  * Check if user has given any consent (either via banner or settings)
  * This determines whether to show the cookie banner
@@ -45,34 +56,14 @@ export const DEFAULT_PREFERENCES: CookiePreferences = {
 export function hasGivenConsent(): boolean {
   if (typeof window === 'undefined') return false;
 
-  // Check new granular preferences
-  const preferences = localStorage.getItem(PREFERENCES_KEY);
-  if (preferences) {
-    try {
-      const parsed = JSON.parse(preferences) as CookiePreferences;
-      return parsed.version.startsWith(CONSENT_VERSION);
-    } catch {
-      return false;
-    }
+  const hasNewPreferences = localStorage.getItem(PREFERENCES_KEY) !== null;
+  const hasLegacyConsent = localStorage.getItem(CONSENT_KEY) !== null;
+  if (!hasNewPreferences && !hasLegacyConsent) {
+    return false;
   }
 
-  // Check old simple consent (for backwards compatibility)
-  const oldConsent = localStorage.getItem(CONSENT_KEY);
-  if (oldConsent && oldConsent.startsWith(CONSENT_VERSION)) {
-    // Migrate to new structure
-    const wasAccepted = !oldConsent.includes('-declined');
-    const migratedPreferences: CookiePreferences = {
-      version: CONSENT_VERSION,
-      essential: true,
-      analytics: wasAccepted,
-      marketing: false,
-      timestamp: new Date().toISOString(),
-    };
-    localStorage.setItem(PREFERENCES_KEY, JSON.stringify(migratedPreferences));
-    return true;
-  }
-
-  return false;
+  const currentPreferences = getCookiePreferences();
+  return currentPreferences.version.startsWith(CONSENT_VERSION);
 }
 
 /**
@@ -91,11 +82,29 @@ export function getCookiePreferences(): CookiePreferences {
         return parsed;
       }
     }
+
+    // Migrate legacy single-value consent key if present
+    const oldConsent = localStorage.getItem(CONSENT_KEY);
+    if (oldConsent && oldConsent.startsWith(CONSENT_VERSION)) {
+      const migratedPreferences: CookiePreferences = {
+        version: CONSENT_VERSION,
+        essential: true,
+        analytics: !oldConsent.includes('-declined'),
+        marketing: false,
+        timestamp: new Date().toISOString(),
+      };
+      localStorage.setItem(PREFERENCES_KEY, JSON.stringify(migratedPreferences));
+      return migratedPreferences;
+    }
   } catch (error) {
     logError('getCookiePreferences', error);
   }
 
   return DEFAULT_PREFERENCES;
+}
+
+export function hasAnalyticsConsent(): boolean {
+  return getCookiePreferences().analytics;
 }
 
 /**
@@ -124,6 +133,7 @@ export async function saveCookiePreferences(
   // Also update old consent key for backwards compatibility
   const consentValue = fullPreferences.analytics ? CONSENT_VERSION : `${CONSENT_VERSION}-declined`;
   localStorage.setItem(CONSENT_KEY, consentValue);
+  emitCookiePreferencesChanged(fullPreferences);
 
   // Sync to database if requested
   if (syncToDatabase) {
@@ -141,28 +151,21 @@ export async function saveCookiePreferences(
  * Stores in user_consents table with audit trail
  */
 async function syncPreferencesToDatabase(preferences: CookiePreferences): Promise<void> {
-  // Build consent records array
-  const consents = [];
-
-  if (preferences.analytics) {
-    consents.push({
-      type: 'analytics_tracking',
-      consented: true,
-    });
-  }
-
-  // Note: Marketing consent not yet implemented in schema, but ready for future
-
-  if (consents.length === 0) return; // Nothing to sync
-
   // Call consent API
   const response = await fetch('/api/user/consent', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      consentType: 'analytics_tracking',
-      consented: preferences.analytics,
-      version: preferences.version,
+      consents: [
+        {
+          type: 'analytics_tracking',
+          consented: preferences.analytics,
+        },
+        {
+          type: 'marketing_emails',
+          consented: preferences.marketing,
+        },
+      ],
     }),
   });
 
@@ -187,4 +190,5 @@ export function clearCookiePreferences(): void {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(PREFERENCES_KEY);
   localStorage.removeItem(CONSENT_KEY);
+  emitCookiePreferencesChanged(DEFAULT_PREFERENCES);
 }

@@ -36,6 +36,7 @@ interface ContentReport {
   id: string;
   content_type: string;
   content_id: string;
+  category: 'spam' | 'harassment' | 'misinformation' | 'inappropriate' | 'political' | 'other';
   reason: string;
   details: string | null;
   status: string;
@@ -60,9 +61,9 @@ const priorityColors = {
 const reasonLabels: Record<string, string> = {
   spam: 'Spam',
   harassment: 'Harassment',
-  inappropriate_content: 'Inappropriate Content',
-  false_information: 'False Information',
-  impersonation: 'Impersonation',
+  inappropriate: 'Inappropriate Content',
+  misinformation: 'Misinformation',
+  political: 'Political Content',
   other: 'Other',
 };
 
@@ -199,8 +200,8 @@ export function ModerationQueue() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="in_review">In Review</SelectItem>
-                <SelectItem value="resolved">Resolved</SelectItem>
+                <SelectItem value="reviewing">In Review</SelectItem>
+                <SelectItem value="actioned">Resolved</SelectItem>
                 <SelectItem value="dismissed">Dismissed</SelectItem>
               </SelectContent>
             </Select>
@@ -233,7 +234,9 @@ export function ModerationQueue() {
                             {report.priority.toUpperCase()}
                           </Badge>
                           <Badge variant="outline">{report.content_type}</Badge>
-                          <Badge variant="outline">{reasonLabels[report.reason]}</Badge>
+                          <Badge variant="outline">
+                            {reasonLabels[report.category] || report.category}
+                          </Badge>
                         </div>
 
                         <p className="text-sm text-muted-foreground mb-2">
@@ -241,7 +244,7 @@ export function ModerationQueue() {
                           {format(new Date(report.created_at), 'MMM d, yyyy HH:mm')}
                         </p>
 
-                        {report.details && <p className="text-sm">{report.details}</p>}
+                        <p className="text-sm">{report.reason}</p>
                       </div>
 
                       <Button variant="outline" size="sm">
@@ -275,7 +278,11 @@ export function ModerationQueue() {
                   <Badge variant="outline">{selectedReport.content_type}</Badge>
                 </div>
                 <p>
-                  <strong>Reason:</strong> {reasonLabels[selectedReport.reason]}
+                  <strong>Reason category:</strong>{' '}
+                  {reasonLabels[selectedReport.category] || selectedReport.category}
+                </p>
+                <p>
+                  <strong>Reason details:</strong> {selectedReport.reason}
                 </p>
                 {selectedReport.details && (
                   <p>

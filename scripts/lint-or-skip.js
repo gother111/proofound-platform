@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
 import { spawnSync } from 'child_process';
-import { existsSync } from 'fs';
-import { resolve } from 'path';
+import { createRequire } from 'module';
 
-function hasNextCli() {
+const require = createRequire(import.meta.url);
+
+function hasDependency(modulePath) {
   try {
-    // Try to resolve Next.js CLI entry
-    resolve('next/dist/cli/next');
+    require.resolve(modulePath);
     return true;
   } catch {
     return false;
@@ -16,17 +16,15 @@ function hasNextCli() {
 
 // Allow forcing lint even in restricted envs
 if (process.env.FORCE_LINT === 'true') {
-  console.log('FORCE_LINT=true — attempting to run `next lint`.');
-} else if (!hasNextCli()) {
-  console.warn('⚠️  Skipping lint: Next.js CLI/dependencies not found in this environment.');
-  console.warn(
-    '    To enforce lint here, ensure dependencies are installed or set FORCE_LINT=true.'
-  );
+  console.log('FORCE_LINT=true - attempting to run eslint.');
+} else if (!hasDependency('eslint/package.json')) {
+  console.warn('Skipping lint: eslint is not installed in this environment.');
+  console.warn('To enforce lint here, ensure dependencies are installed or set FORCE_LINT=true.');
   process.exit(0);
 }
 
 const cmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
-const args = ['next', 'lint'];
+const args = ['eslint', '.', '--ext', '.js,.jsx,.ts,.tsx'];
 
 const res = spawnSync(cmd, args, { stdio: 'inherit' });
 

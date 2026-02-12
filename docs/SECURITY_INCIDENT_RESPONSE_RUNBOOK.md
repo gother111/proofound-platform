@@ -3,7 +3,7 @@
 **Version**: 1.0  
 **Last Updated**: November 6, 2025  
 **Owner**: Security Team  
-**Contact**: security@proofound.com
+**Contact**: security@proofound.io
 
 ---
 
@@ -15,12 +15,12 @@ This runbook provides step-by-step procedures for detecting, responding to, and 
 
 ## Incident Severity Classification
 
-| Severity | Definition | Examples | Response Time |
-|----------|------------|----------|---------------|
-| **CRITICAL** | Confirmed data breach with PII exposure | Database breach, mass account takeover | Immediate (< 1 hour) |
-| **HIGH** | Potential breach or significant vulnerability | RLS policy bypass, authentication bypass | < 4 hours |
-| **MEDIUM** | Security issue without confirmed data exposure | DDoS attack, brute force attempts | < 24 hours |
-| **LOW** | Minor security concerns | Suspicious login patterns, scanning attempts | < 48 hours |
+| Severity     | Definition                                     | Examples                                     | Response Time        |
+| ------------ | ---------------------------------------------- | -------------------------------------------- | -------------------- |
+| **CRITICAL** | Confirmed data breach with PII exposure        | Database breach, mass account takeover       | Immediate (< 1 hour) |
+| **HIGH**     | Potential breach or significant vulnerability  | RLS policy bypass, authentication bypass     | < 4 hours            |
+| **MEDIUM**   | Security issue without confirmed data exposure | DDoS attack, brute force attempts            | < 24 hours           |
+| **LOW**      | Minor security concerns                        | Suspicious login patterns, scanning attempts | < 48 hours           |
 
 ---
 
@@ -41,13 +41,14 @@ Security incidents are detected through:
    - Unauthorized API access attempts
 
 3. **Manual Reports**
-   - User reports to security@proofound.com
+   - User reports to security@proofound.io
    - Internal team discovery
    - Third-party security researcher disclosure
 
 ### Detection Checklist
 
 When an alert fires:
+
 - [ ] Verify the alert is not a false positive
 - [ ] Determine incident severity using table above
 - [ ] Document initial observations
@@ -65,28 +66,31 @@ When an alert fires:
    - Include: Severity, timestamp, initial assessment
 
 2. **Contain the Breach**
-   
+
    For database breaches:
+
    ```bash
    # Revoke compromised API keys immediately
    # Run in Supabase Dashboard > Settings > API
-   
+
    # Force logout all users (if needed)
    # Run in Supabase SQL Editor:
    UPDATE auth.refresh_tokens SET revoked = true WHERE revoked = false;
    ```
-   
+
    For authentication bypass:
+
    ```bash
    # Rotate JWT secrets (Supabase dashboard)
    # Enable MFA requirement temporarily
    ```
-   
+
    For RLS policy bypass:
+
    ```sql
    -- Disable affected table temporarily
    ALTER TABLE [affected_table] FORCE ROW LEVEL SECURITY;
-   
+
    -- Review and fix RLS policies
    -- Re-enable after verification
    ```
@@ -177,16 +181,19 @@ NEXT STEPS:
 If Tier 1 PII was exposed:
 
 **Hour 0-24: Internal Assessment**
+
 - Complete breach scope analysis
 - Document all findings
 - Prepare notification materials
 
 **Hour 24-48: Regulatory Notification**
+
 - Notify supervisory authority (if EU users affected)
 - Provide initial breach report
 - Follow local data protection authority procedures
 
 **Hour 48-72: User Notification**
+
 - Send breach notification emails
 - Update status page
 - Prepare FAQ for support team
@@ -198,11 +205,11 @@ Subject: Security Incident Notification - Proofound
 
 Dear [User Name],
 
-We are writing to inform you of a security incident that may have 
+We are writing to inform you of a security incident that may have
 affected your Proofound account.
 
 WHAT HAPPENED:
-On [date], we discovered that [brief description]. We immediately 
+On [date], we discovered that [brief description]. We immediately
 took action to [containment actions].
 
 WHAT INFORMATION WAS INVOLVED:
@@ -217,10 +224,10 @@ WHAT YOU SHOULD DO:
 - Change your password immediately: [link]
 - Enable two-factor authentication: [link]
 - Monitor your account for suspicious activity
-- Report any concerns to security@proofound.com
+- Report any concerns to security@proofound.io
 
-We sincerely apologize for this incident and are committed to 
-protecting your data. For questions, contact security@proofound.com.
+We sincerely apologize for this incident and are committed to
+protecting your data. For questions, contact security@proofound.io.
 
 Sincerely,
 Proofound Security Team
@@ -281,12 +288,14 @@ Proofound Security Team
 ### Review Meeting (Within 1 week)
 
 Attendees:
+
 - Engineering leads
 - Security team
 - Product owner
 - Legal counsel (if needed)
 
 Agenda:
+
 1. Timeline review
 2. Root cause analysis
 3. Response effectiveness
@@ -340,9 +349,9 @@ RECOMMENDATIONS:
 
 ### Primary Contacts
 
-**Security Email**: security@proofound.com  
+**Security Email**: security@proofound.io  
 **Emergency Phone**: [To be configured]  
-**Status Page**: https://status.proofound.com (future)
+**Status Page**: https://status.proofound.io (future)
 
 ### Escalation Path
 
@@ -361,10 +370,12 @@ RECOMMENDATIONS:
 ### External Resources
 
 **Data Protection Authorities**:
+
 - EU GDPR: https://edpb.europa.eu/about-edpb/board/members_en
 - California (CCPA): https://oag.ca.gov/privacy/ccpa
 
 **Incident Response Vendors** (if needed):
+
 - Cloud forensics provider
 - Legal counsel specializing in data breaches
 - PR firm for crisis communications
@@ -376,6 +387,7 @@ RECOMMENDATIONS:
 ### Required Access
 
 Incident responders need:
+
 - [ ] Supabase dashboard admin access
 - [ ] Vercel deployment access
 - [ ] Sentry project access
@@ -386,8 +398,9 @@ Incident responders need:
 ### Useful Commands
 
 **Check recent RLS violations** (Supabase SQL Editor):
+
 ```sql
-SELECT 
+SELECT
   timestamp,
   user_id,
   query,
@@ -399,8 +412,9 @@ ORDER BY timestamp DESC;
 ```
 
 **Audit failed login attempts**:
+
 ```sql
-SELECT 
+SELECT
   created_at,
   email,
   ip_address_hash,
@@ -413,8 +427,9 @@ HAVING COUNT(*) > 5;
 ```
 
 **Check recent data exports** (potential exfiltration):
+
 ```sql
-SELECT 
+SELECT
   user_id,
   created_at,
   properties->>'tables' as exported_tables
@@ -431,6 +446,7 @@ ORDER BY created_at DESC;
 ### Required Training
 
 All engineering team members complete:
+
 - [ ] Security incident response overview (annual)
 - [ ] GDPR compliance training (annual)
 - [ ] Phishing awareness training (quarterly)
@@ -439,12 +455,14 @@ All engineering team members complete:
 ### Incident Response Drills
 
 **Quarterly Drill Schedule**:
+
 - Q1: Database breach simulation
 - Q2: Authentication bypass scenario
 - Q3: DDoS attack response
 - Q4: Insider threat scenario
 
 **Drill Format**:
+
 1. Scenario introduction (30 min)
 2. Simulated incident response (2 hours)
 3. Debrief and feedback (30 min)
@@ -457,6 +475,7 @@ All engineering team members complete:
 ### Appendix A: Breach Notification Templates
 
 Email templates stored in: `emails/` directory
+
 - SecurityIncidentNotification.tsx
 - PasswordResetForced.tsx
 - AccountSuspended.tsx
@@ -464,15 +483,18 @@ Email templates stored in: `emails/` directory
 ### Appendix B: Legal Requirements
 
 **GDPR Article 33**: Breach notification to supervisory authority
+
 - Required within 72 hours
 - Must include nature of breach, affected data, contact point, likely consequences, measures taken
 
 **GDPR Article 34**: Breach notification to data subjects
+
 - Required if "high risk to rights and freedoms"
 - Clear and plain language
 - Recommendations for individuals to mitigate
 
 **CCPA Requirements**:
+
 - No specific breach notification timeline
 - Follow California Civil Code Section 1798.82
 
@@ -489,6 +511,7 @@ Format: `YYYY-MM-DD-incident-brief-description.md`
 **Review Schedule**: Quarterly  
 **Next Review**: February 2026  
 **Version History**:
+
 - v1.0 (2025-11-06): Initial creation
 - [Future updates]
 
@@ -508,5 +531,4 @@ Format: `YYYY-MM-DD-incident-brief-description.md`
 6. 🔧 Remediate: Fix root cause, rotate credentials
 7. 📊 Review: Post-incident meeting within 1 week
 
-**Emergency Contacts**: security@proofound.com
-
+**Emergency Contacts**: security@proofound.io

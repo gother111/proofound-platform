@@ -1,7 +1,7 @@
 /**
  * Self-Assessment API
  *
- * POST /api/wellbeing/self-assessment - Save PHQ-2 or GAD-2 assessment results
+ * POST /api/wellbeing/self-assessment - Save private non-diagnostic check-in results
  * GET /api/wellbeing/self-assessment - Retrieve assessment history
  */
 
@@ -24,55 +24,48 @@ export async function POST(req: NextRequest) {
     const { assessmentType, score, severity, responses } = body;
 
     if (!assessmentType || score === undefined || !severity || !responses) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     if (!['phq2', 'gad2'].includes(assessmentType)) {
-      return NextResponse.json(
-        { error: 'Invalid assessment type' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid assessment type' }, { status: 400 });
     }
 
     // Save to database
-    const { data, error } = await supabase.from('self_assessments').insert({
-      user_id: user.id,
-      assessment_type: assessmentType,
-      score,
-      severity,
-      responses,
-      created_at: new Date().toISOString(),
-    }).select().single();
+    const { data, error } = await supabase
+      .from('self_assessments')
+      .insert({
+        user_id: user.id,
+        assessment_type: assessmentType,
+        score,
+        severity,
+        responses,
+        created_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
 
     if (error) {
       console.error('Database error:', error);
-      return NextResponse.json(
-        { error: 'Failed to save assessment' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to save assessment' }, { status: 500 });
     }
 
-    // Log analytics event
+    // Log analytics event without storing raw PII in payload
     await supabase.from('analytics_events').insert({
       user_id: user.id,
       event_type: 'self_assessment_completed',
-      event_data: {
+      properties: {
         assessmentType,
         score,
         severity,
+        privacy_partition: 'wellbeing',
       },
     });
 
     return NextResponse.json({ success: true, assessment: data });
   } catch (error) {
     console.error('Self-assessment error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -107,19 +100,12 @@ export async function GET(req: NextRequest) {
 
     if (error) {
       console.error('Database error:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch assessments' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to fetch assessments' }, { status: 500 });
     }
 
     return NextResponse.json({ assessments: assessments || [] });
   } catch (error) {
     console.error('Fetch assessments error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

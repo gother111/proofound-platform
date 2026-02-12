@@ -217,7 +217,7 @@ vercel --prod
 
 Once deployed, Vercel provides a URL:
 
-**Production**: `https://proofound.com` or `https://your-project.vercel.app`
+**Production**: `https://proofound.io` or `https://your-project.vercel.app`
 
 Test the URL:
 

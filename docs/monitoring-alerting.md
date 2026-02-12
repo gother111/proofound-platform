@@ -115,15 +115,15 @@ Sentry is already configured in the application. See `docs/sentry-setup.md` for 
 
 ```
 # API routes
-path:src/app/api/core/matching/* backend-team@proofound.com
-path:src/app/api/messages/* backend-team@proofound.com
+path:src/app/api/core/matching/* backend-team@proofound.io
+path:src/app/api/messages/* backend-team@proofound.io
 
 # Frontend components
-path:src/app/app/i/* frontend-team@proofound.com
-path:src/components/* frontend-team@proofound.com
+path:src/app/app/i/* frontend-team@proofound.io
+path:src/components/* frontend-team@proofound.io
 
 # Database layer
-path:src/db/* backend-team@proofound.com
+path:src/db/* backend-team@proofound.io
 ```
 
 ### Sentry Performance Monitoring
@@ -564,7 +564,7 @@ Target: < 50 connections (90% of Supabase pooler limit).
 - **Custom Headers:** Authorization: Bearer [test-token]
 
 4. Configure alerts:
-   - Email alerts to team@proofound.com
+   - Email alerts to team@proofound.io
    - SMS alerts to on-call phone
 
 ### Option 2: Better Uptime (Recommended)

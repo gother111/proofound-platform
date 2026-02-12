@@ -1,3 +1,7 @@
+> Doc Class: `governance`
+> Sync Pair: `Architecture.md`
+> Last Verified: `2026-02-12`
+
 # Architecture Snapshot
 
 This document records a lightweight, repo-grounded architecture view. Statements marked **Repo Truth** are cited like `(source: README.md)`. Anything else is labeled **Inference**, **Proposal**, or **TODO**.

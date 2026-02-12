@@ -72,7 +72,10 @@ export default async function OrganizationHomePage({
           matchCount: sql<number>`count(${matches.id})::int`,
         })
         .from(assignments)
-        .leftJoin(matches, and(eq(matches.assignmentId, assignments.id), eq(assignments.status, 'active')))
+        .leftJoin(
+          matches,
+          and(eq(matches.assignmentId, assignments.id), eq(assignments.status, 'active'))
+        )
         .where(eq(assignments.orgId, org.id)),
       db
         .select({
@@ -143,10 +146,7 @@ export default async function OrganizationHomePage({
                   ))}
                 </div>
                 <Link href={`/app/o/${slug}/assignments/new`}>
-                  <Button
-                    size="sm"
-                    className="text-sm mt-1 bg-white text-[#1C4D3A] hover:bg-[#F7F6F1]"
-                  >
+                  <Button className="text-sm mt-1 bg-white text-[#1C4D3A] hover:bg-[#F7F6F1] min-h-[44px]">
                     {metrics.activeAssignments > 0
                       ? 'Create new assignment'
                       : 'Create first assignment'}
@@ -172,7 +172,7 @@ export default async function OrganizationHomePage({
               </p>
               <Link
                 href={`/app/o/${slug}/assignments`}
-                className="mt-3 inline-flex text-xs font-medium"
+                className="mt-3 inline-flex min-h-[44px] items-center px-3 -mx-3 rounded-md text-xs font-medium"
                 style={{ color: '#1C4D3A' }}
               >
                 View all <ArrowRight className="w-3 h-3 ml-1" />
@@ -192,7 +192,7 @@ export default async function OrganizationHomePage({
               </p>
               <Link
                 href={`/app/o/${slug}/matching`}
-                className="mt-3 inline-flex text-xs font-medium"
+                className="mt-3 inline-flex min-h-[44px] items-center px-3 -mx-3 rounded-md text-xs font-medium"
                 style={{ color: '#1C4D3A' }}
               >
                 Review candidates <ArrowRight className="w-3 h-3 ml-1" />
@@ -212,7 +212,7 @@ export default async function OrganizationHomePage({
               </p>
               <Link
                 href={`/app/o/${slug}/shortlist`}
-                className="mt-3 inline-flex text-xs font-medium"
+                className="mt-3 inline-flex min-h-[44px] items-center px-3 -mx-3 rounded-md text-xs font-medium"
                 style={{ color: '#1C4D3A' }}
               >
                 Review shortlist <ArrowRight className="w-3 h-3 ml-1" />

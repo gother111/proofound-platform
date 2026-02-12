@@ -6,60 +6,78 @@ import { db } from '@/db';
 import { userConsents } from '@/db/schema';
 import { anonymizeIP, anonymizeUserAgent } from '@/lib/utils/privacy';
 import { log } from '@/lib/log';
+import {
+  CONSENT_TYPES,
+  getPolicyVersionForConsentType,
+  type ConsentTypeValue,
+} from '@/lib/privacy/consent-contract';
 
 export const dynamic = 'force-dynamic';
 
-// Validation schema for consent request
+const ConsentTypeSchema = z.enum([
+  CONSENT_TYPES.TOS,
+  CONSENT_TYPES.PRIVACY,
+  CONSENT_TYPES.MARKETING,
+  CONSENT_TYPES.ANALYTICS,
+  CONSENT_TYPES.ML_MATCHING,
+]);
+
 const ConsentRecordSchema = z.object({
-  type: z.enum([
-    'gdpr_terms_of_service',
-    'gdpr_privacy_policy',
-    'marketing_emails',
-    'analytics_tracking',
-    'ml_matching',
-  ]),
+  type: ConsentTypeSchema,
   consented: z.boolean(),
 });
 
-const ConsentRequestSchema = z.object({
-  userId: z.string().uuid(),
+const CanonicalConsentRequestSchema = z.object({
+  userId: z.string().uuid().optional(),
   consents: z.array(ConsentRecordSchema).min(1),
 });
 
+const LegacyConsentRequestSchema = z.object({
+  userId: z.string().uuid().optional(),
+  consentType: ConsentTypeSchema,
+  consented: z.boolean(),
+  version: z.string().optional(),
+});
+
+const AnyConsentRequestSchema = z.union([
+  CanonicalConsentRequestSchema,
+  LegacyConsentRequestSchema,
+]);
+
+type NormalizedConsentRequest = {
+  userId?: string;
+  consents: Array<{ type: ConsentTypeValue; consented: boolean }>;
+};
+
+function normalizeConsentRequest(
+  body: z.infer<typeof AnyConsentRequestSchema>
+): NormalizedConsentRequest {
+  if ('consents' in body) {
+    return {
+      userId: body.userId,
+      consents: body.consents,
+    };
+  }
+
+  return {
+    userId: body.userId,
+    consents: [{ type: body.consentType, consented: body.consented }],
+  };
+}
+
 /**
  * POST /api/user/consent
- * 
- * Store user consent records with audit trail
- * 
- * GDPR Article 7 - Conditions for consent
- * GDPR Article 4(5) - Pseudonymisation (hashed IPs)
- * 
- * This endpoint:
- * 1. Validates user authentication
- * 2. Accepts array of consent records
- * 3. Hashes IP and User Agent for privacy
- * 4. Stores consent with timestamp and version
- * 
- * Required headers:
- * - Authorization: Bearer <access_token> (from Supabase auth)
- * - x-forwarded-for: <ip_address> (for audit trail)
- * - user-agent: <user_agent> (for audit trail)
- * 
- * Request body:
- * {
- *   userId: string (UUID),
- *   consents: [
- *     { type: 'gdpr_privacy_policy', consented: true },
- *     { type: 'gdpr_terms_of_service', consented: true },
- *     { type: 'marketing_emails', consented: false }
- *   ]
- * }
+ *
+ * Store user consent records with audit trail.
+ * Backward-compatible with legacy payload shape.
  */
 export async function POST(request: NextRequest) {
   try {
-    // Validate authentication
     const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
       return NextResponse.json(
@@ -68,9 +86,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Parse and validate request body
     const body = await request.json();
-    const parsed = ConsentRequestSchema.safeParse(body);
+    const parsed = AnyConsentRequestSchema.safeParse(body);
 
     if (!parsed.success) {
       return NextResponse.json(
@@ -82,10 +99,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify user can only store consent for themselves
-    if (parsed.data.userId !== user.id) {
+    const normalized = normalizeConsentRequest(parsed.data);
+
+    if (normalized.userId && normalized.userId !== user.id) {
       log.warn('privacy.consent.unauthorized_attempt', {
-        requestedUserId: parsed.data.userId,
+        requestedUserId: normalized.userId,
         actualUserId: user.id,
       });
 
@@ -95,50 +113,44 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Extract IP and User Agent for audit trail
-    const ip = request.headers.get('x-forwarded-for') || 
-                request.headers.get('x-real-ip') || 
-                'unknown';
+    const ip =
+      request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
     const userAgent = request.headers.get('user-agent') || 'unknown';
 
-    // Hash PII before storage (GDPR compliance)
     const ipHash = anonymizeIP(ip);
     const userAgentHash = anonymizeUserAgent(userAgent);
 
-    // Current policy version (update when policies change)
-    const policyVersion = 'v1.0.2025-10-30';
-
-    // Prepare consent records for insertion
-    const consentRecords = parsed.data.consents.map((consent) => ({
+    const consentRecords = normalized.consents.map((consent) => ({
       profileId: user.id,
       consentType: consent.type,
       consented: consent.consented,
       consentedAt: new Date(),
       ipHash,
       userAgentHash,
-      version: policyVersion,
+      version: getPolicyVersionForConsentType(consent.type),
       createdAt: new Date(),
       updatedAt: new Date(),
     }));
 
-    // Store consent records in database
     await db.insert(userConsents).values(consentRecords);
 
-    // Log successful consent storage
     log.info('privacy.consent.stored', {
       userId: user.id,
-      consentTypes: parsed.data.consents.map(c => c.type),
-      version: policyVersion,
+      consentTypes: consentRecords.map((record) => record.consentType),
+      versions: consentRecords.map((record) => record.version),
     });
 
     return NextResponse.json({
       success: true,
       message: 'Consent records stored successfully',
       stored: consentRecords.length,
-      version: policyVersion,
+      consents: consentRecords.map((record) => ({
+        type: record.consentType,
+        consented: record.consented,
+        version: record.version,
+      })),
     });
   } catch (error) {
-    // Handle Zod validation errors
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         {
@@ -149,7 +161,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Log unexpected errors
     log.error('privacy.consent.storage_failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
@@ -167,24 +178,21 @@ export async function POST(request: NextRequest) {
 
 /**
  * GET /api/user/consent
- * 
- * Retrieve user's consent history
- * 
- * GDPR Article 15 - Right of access
+ *
+ * Retrieve user's consent history.
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Query user's consent records from database
     const consents = await db
       .select({
         id: userConsents.id,
@@ -198,9 +206,9 @@ export async function GET(request: NextRequest) {
       .orderBy(desc(userConsents.consentedAt));
 
     return NextResponse.json({
-      consents: consents.map(c => ({
-        ...c,
-        consentedAt: c.consentedAt.toISOString(),
+      consents: consents.map((consent) => ({
+        ...consent,
+        consentedAt: consent.consentedAt.toISOString(),
       })),
       total: consents.length,
     });
@@ -209,10 +217,6 @@ export async function GET(request: NextRequest) {
       error: error instanceof Error ? error.message : 'Unknown error',
     });
 
-    return NextResponse.json(
-      { error: 'Failed to retrieve consent records' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to retrieve consent records' }, { status: 500 });
   }
 }
-
