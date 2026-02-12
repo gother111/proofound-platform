@@ -14,7 +14,16 @@ export NEXT_PUBLIC_APP_URL=http://localhost:3000
 node scripts/test-admin-dashboard-data.js
 ```
 
+### Deterministic Admin Smoke (Mock Mode)
+
+Run an admin route smoke test in deterministic mock-admin mode:
+
+```bash
+npm run test:e2e:admin
+```
+
 **Note**: The test script requires authentication. You'll need to:
+
 1. Be logged in as an admin user in your browser
 2. Copy your session cookies to the test script, OR
 3. Run the tests while your dev server is running and you're authenticated
@@ -22,6 +31,7 @@ node scripts/test-admin-dashboard-data.js
 ### Manual Testing Checklist
 
 #### 1. Overview Stats
+
 - [ ] Navigate to `/admin`
 - [ ] Verify "Total Users" card displays a number
 - [ ] Verify "Organizations" card displays a number
@@ -33,6 +43,7 @@ node scripts/test-admin-dashboard-data.js
 - [ ] Verify "Conversion Rate" calculates correctly (no division by zero errors)
 
 #### 2. Platform Metrics Dashboard
+
 - [ ] Verify TTFQI metric displays with value, target, and status
 - [ ] Verify TTV metric displays correctly
 - [ ] Verify TTSC metric displays correctly
@@ -43,6 +54,7 @@ node scripts/test-admin-dashboard-data.js
 - [ ] Test refresh button - metrics should reload
 
 #### 3. Growth Chart
+
 - [ ] Verify chart renders with data
 - [ ] Test period selector (7d, 30d, 90d) - chart should update
 - [ ] Test metric selector (Users/Organizations) - chart should switch
@@ -50,6 +62,7 @@ node scripts/test-admin-dashboard-data.js
 - [ ] Check that empty data shows appropriate message
 
 #### 4. Fairness Dashboard (Super Admin Only)
+
 - [ ] Verify fairness note displays (if super_admin)
 - [ ] Test date range selector (30d, 90d, 180d)
 - [ ] Verify cohort metrics display correctly
@@ -58,6 +71,7 @@ node scripts/test-admin-dashboard-data.js
 - [ ] Test refresh button
 
 #### 5. Error Handling
+
 - [ ] Test with non-admin user - should show 403 or redirect
 - [ ] Test network failure - should show error message
 - [ ] Test with empty database - should show "0" values, not errors
@@ -67,18 +81,21 @@ node scripts/test-admin-dashboard-data.js
 ## What Was Tested
 
 ### API Endpoints
+
 1. ✅ `/api/admin/analytics/overview` - Overview statistics
 2. ✅ `/api/metrics/all?days=30` - All platform metrics
 3. ✅ `/api/admin/analytics/growth?period=30d&groupBy=day` - Growth data
 4. ✅ `/api/analytics/fairness` - Fairness metrics
 
 ### Components
+
 1. ✅ `AdminDashboard` - Main dashboard with overview stats
 2. ✅ `MetricsDashboard` - Platform metrics display
 3. ✅ `AdminGrowthChart` - Growth visualization
 4. ✅ `FairnessNoteDashboard` - Fairness monitoring
 
 ### Data Validation
+
 - ✅ All numeric values use safe formatting utilities
 - ✅ Division by zero handled correctly
 - ✅ NaN, null, undefined values prevented from displaying
@@ -87,18 +104,22 @@ node scripts/test-admin-dashboard-data.js
 ## Improvements Made
 
 ### 1. Data Validation Utilities
+
 Created `src/lib/utils/data-validation.ts` with:
+
 - `safeNumber()` - Handles NaN, null, undefined
 - `safeToLocaleString()` - Safe number formatting
 - `safeToFixed()` - Safe decimal formatting
 - `safePercentage()` - Safe percentage calculation
 
 ### 2. Component Updates
+
 - Updated `AdminDashboard.tsx` to use validation utilities
 - All numeric displays now use safe formatting
 - Conversion rate calculation uses `safePercentage()` to prevent division by zero
 
 ### 3. Test Script
+
 - Created comprehensive test script at `scripts/test-admin-dashboard-data.js`
 - Tests all API endpoints
 - Validates response structures
@@ -108,22 +129,29 @@ Created `src/lib/utils/data-validation.ts` with:
 ## Common Issues and Solutions
 
 ### Issue: "Failed to load overview data"
+
 **Solution**: Check authentication - ensure you're logged in as admin
 
 ### Issue: Metrics show "NaN" or "undefined"
+
 **Solution**: This should be fixed with the validation utilities. If you see this, check:
+
 1. API endpoint is returning valid data
 2. Component is using validation utilities
 3. Database has data for the metric
 
 ### Issue: Growth chart shows no data
-**Solution**: 
+
+**Solution**:
+
 1. Check if there are users/organizations created in the date range
 2. Verify the period filter is set correctly
 3. Check browser console for API errors
 
 ### Issue: Fairness dashboard not showing
-**Solution**: 
+
+**Solution**:
+
 1. Ensure you're logged in as `super_admin` (not just `platform_admin`)
 2. Check if fairness data exists for the selected date range
 3. Verify the API endpoint `/api/analytics/fairness` is accessible
@@ -150,7 +178,6 @@ Created `src/lib/utils/data-validation.ts` with:
 ✅ Loading states work properly  
 ✅ Error handling functions correctly  
 ✅ No console errors in browser  
-✅ All data cards show expected information  
+✅ All data cards show expected information
 
 **Status**: ✅ **ALL TESTS PASSED**
-
