@@ -8,6 +8,8 @@ const applySecurityHeaders = (response: NextResponse, request: NextRequest) => {
   const host = request.headers.get('host') || '';
   const isProd = host.includes('proofound.io');
   const isDev = process.env.NODE_ENV !== 'production';
+  const pathname = request.nextUrl.pathname;
+  const isSnippetEmbedRoute = /^\/p\/[^/]+\/embed\/?$/.test(pathname);
 
   // Note: Next dev uses eval-like codepaths (React Refresh / Webpack runtime). If CSP blocks
   // unsafe-eval in development, the app may never hydrate, breaking interactive flows.
@@ -29,13 +31,17 @@ const applySecurityHeaders = (response: NextResponse, request: NextRequest) => {
     connectSrc,
     "frame-src 'self' https:",
     "object-src 'none'",
-    "frame-ancestors 'none'",
+    isSnippetEmbedRoute ? 'frame-ancestors *' : "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
   ].join('; ');
 
   response.headers.set('Content-Security-Policy', cspDirectives);
-  response.headers.set('X-Frame-Options', 'DENY');
+  if (isSnippetEmbedRoute) {
+    response.headers.delete('X-Frame-Options');
+  } else {
+    response.headers.set('X-Frame-Options', 'DENY');
+  }
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   response.headers.set(
     'Permissions-Policy',

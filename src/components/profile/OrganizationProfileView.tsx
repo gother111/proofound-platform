@@ -11,6 +11,7 @@ import { ImpactDashboard } from '@/components/organization/ImpactDashboard';
 import { PartnershipsManager } from '@/components/organization/PartnershipsManager';
 import { GoalsManager } from '@/components/organization/GoalsManager';
 import { OrganizationVisibilitySettings } from '@/components/organization/OrganizationVisibilitySettings';
+import { OrganizationShareControl } from '@/components/profile/OrganizationShareControl';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,6 +39,7 @@ type OrganizationProfile = {
 interface OrganizationProfileViewProps {
   org: OrganizationProfile;
   canEdit: boolean;
+  canShare?: boolean;
   isEmptyProfile?: boolean;
   profileCompletion?: number;
 }
@@ -45,6 +47,7 @@ interface OrganizationProfileViewProps {
 export function OrganizationProfileView({
   org,
   canEdit,
+  canShare = true,
   isEmptyProfile = false,
   profileCompletion = 0,
 }: OrganizationProfileViewProps) {
@@ -114,24 +117,32 @@ export function OrganizationProfileView({
           culture={org.workCulture}
         />
 
-        {/* Edit Basic Info Toggle (Temporary placement until full edit mode is designed) */}
-        {canEdit && (
-          <div className="mb-8 flex justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                if (isEditingBasicInfo) {
-                  setIsEditingBasicInfo(false);
-                  return;
-                }
-                openBasicInfoEditor();
-              }}
-              className="gap-2"
-            >
-              {isEditingBasicInfo ? <X className="w-4 h-4" /> : <Edit3 className="w-4 h-4" />}
-              {isEditingBasicInfo ? 'Close Editor' : 'Edit Basic Info'}
-            </Button>
+        {(canEdit || canShare) && (
+          <div className="mb-8 flex flex-wrap justify-end gap-2">
+            {canShare && (
+              <OrganizationShareControl
+                orgId={org.id}
+                organizationName={org.displayName}
+                organizationTagline={org.tagline}
+              />
+            )}
+            {canEdit && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  if (isEditingBasicInfo) {
+                    setIsEditingBasicInfo(false);
+                    return;
+                  }
+                  openBasicInfoEditor();
+                }}
+                className="gap-2"
+              >
+                {isEditingBasicInfo ? <X className="w-4 h-4" /> : <Edit3 className="w-4 h-4" />}
+                {isEditingBasicInfo ? 'Close Editor' : 'Edit Basic Info'}
+              </Button>
+            )}
           </div>
         )}
 
