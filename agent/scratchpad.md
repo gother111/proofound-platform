@@ -1614,3 +1614,55 @@ Open TODOs / follow-ups:
 - Confirm Add Skill flow manually in authenticated UI session for first-skill add and immediate dashboard visibility.
 - Decide whether to broaden search fallback to include slug/description ranking.
 - Archive or move large `output/` recovery artifacts after operational signoff.
+
+## 2026-02-12 23:16 CET
+
+Task summary:
+
+- Unblocked PR `#179` merge by fixing failing required checks (`a11y`, `ci`, `e2e`).
+- Applied minimal code and workflow patches, then re-ran local verification gates.
+
+What worked:
+
+- Workflow-level env parity fix in `.github/workflows/accessibility.yml` addressed missing Supabase vars used by strict fixtures.
+- Darkening dashboard loading text in `DashboardClient` resolved strict color-contrast failure.
+- Increasing Playwright webServer timeout in `playwright.config.ts` addressed CI startup timeout risk.
+
+What failed / wrong assumptions:
+
+- Initial expectation that merge could proceed via re-run only was wrong because failures were deterministic, not flaky.
+
+User corrections:
+
+- User asked to push and merge into `master` directly.
+
+Assumptions taken without asking:
+
+- Reusing existing CI secret pattern in accessibility workflow is acceptable.
+- Startup timeout increase to `240000` ms is an acceptable CI reliability tradeoff.
+- Changing loading text tone from `gray-500` to `gray-600` is acceptable UX and required for WCAG compliance.
+
+What the user corrected afterward:
+
+- None yet.
+
+Improvements next time:
+
+- Keep accessibility and CI workflows aligned on required env variables to prevent drift.
+- Add a small CI guard to fail fast with actionable messaging when required Supabase vars are missing.
+
+Commands run + outcomes:
+
+- `gh pr checks 179`: FAIL (`a11y`, `ci`, `e2e`).
+- `gh run view ... --log-failed` for failing jobs: PASS (collected root causes).
+- `npm run lint`: PASS (existing warning in `postcss.config.js`).
+- `npm run typecheck`: PASS.
+- `npx vitest run tests/ui/dashboard-client.test.tsx`: PASS.
+- `NEXT_PUBLIC_USE_MOCK_SUPABASE=false node ./scripts/playwright-node20.mjs test --config playwright.a11y.strict.config.ts --project=chromium -g "Dashboard should be accessible"`: PASS.
+- `npm run test:e2e:landing`: PASS.
+- `npm run test`: PASS.
+
+Open TODOs / follow-ups:
+
+- Push fix commit and monitor PR check reruns to completion.
+- Confirm PR `#179` auto-merges after required checks pass.

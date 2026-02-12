@@ -1464,3 +1464,32 @@ Open risks/TODO:
 - Backfill intentionally skipped all 10 current custom skills due low-confidence/ambiguous mapping. They remain custom and visible.
 - Search fallback currently uses name-only `ILIKE`; if needed later, extend fallback to include slug and description matching with ranked ordering.
 - Snapshot files under `output/` are operational artifacts and should be retained for rollback until recovery is fully accepted.
+
+## 2026-02-12: PR #179 Merge Unblock (A11y + E2E CI)
+
+What changed:
+
+- Fixed dashboard loading text contrast in `src/app/app/i/home/DashboardClient.tsx` by changing `text-gray-500` to `text-gray-600`.
+- Updated accessibility workflow envs in `.github/workflows/accessibility.yml` to include Supabase runtime variables required by `tests/a11y/critical-flows.spec.ts` strict fixtures.
+- Increased Playwright web server startup timeout in `playwright.config.ts` from `120000` to `240000` ms to reduce CI startup timeout failures in the `e2e` job.
+
+Why:
+
+- PR `#179` could not merge because required checks failed:
+  - `a11y` failed with missing `NEXT_PUBLIC_SUPABASE_URL`.
+  - `ci` strict a11y failed on dashboard loading text color contrast (`4.46` vs required `4.5`).
+  - `e2e` failed on `config.webServer` startup timeout at `120000` ms.
+
+How to verify:
+
+- `npm run lint` (PASS, one existing warning in `postcss.config.js`)
+- `npm run typecheck` (PASS)
+- `npx vitest run tests/ui/dashboard-client.test.tsx` (PASS)
+- `NEXT_PUBLIC_USE_MOCK_SUPABASE=false node ./scripts/playwright-node20.mjs test --config playwright.a11y.strict.config.ts --project=chromium -g "Dashboard should be accessible"` (PASS)
+- `npm run test:e2e:landing` (PASS)
+- `npm run test` (PASS)
+
+Open risks/TODO:
+
+- Workflow env reliance assumes repository secrets remain configured for accessibility runs.
+- Full `npm run test:e2e` still runs a broad cross-browser matrix and can remain slow; timeout increase reduces startup flake but does not shorten suite duration.

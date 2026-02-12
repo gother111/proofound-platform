@@ -44,6 +44,6 @@ export default defineConfig({
     command: `npm run dev -- -p ${playwrightPort}`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
-    timeout: 120000, // Allow more time for server startup
+    timeout: 240000, // CI startup can exceed 120s on cold runners
   },
 });
