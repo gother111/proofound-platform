@@ -1164,3 +1164,55 @@ Open TODOs / follow-ups:
 
 - Merge this isolated signup-routing patch PR after CI checks and required review complete.
 - Resolve unrelated API-route/typecheck work separately in its own branch/PR.
+
+---
+
+## 2026-02-12 15:01 CET
+
+Task summary:
+
+- Implemented the individual dashboard loading-state fix so `Dashboard loading…` only appears during real dashboard load.
+- Added callback-based loading state propagation from `DraggableDashboard` to `DashboardClient`.
+- Added a regression UI test suite for loading completion and error fallback behavior.
+
+What worked:
+
+- Root cause was isolated quickly to mount-state misuse in `DashboardClient`.
+- Optional `onLoadingChange` callback kept compatibility while enabling correct state ownership in the parent.
+- New UI tests passed and prevented recurrence for this behavior.
+- Full verification command set passed after installing dependencies.
+
+What failed / wrong assumptions:
+
+- Initial targeted test command failed because `vitest` binary was missing in this worktree before `npm ci`.
+
+User corrections:
+
+- User provided a complete implementation plan and explicitly requested exact execution of that plan.
+
+Assumptions taken without asking:
+
+- Keep existing loading copy text (`Dashboard loading…`) and only change visibility logic.
+- Treat `onLoadingChange` as optional to avoid breaking other `DraggableDashboard` call sites.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Run a quick dependency availability check before the first verification command in fresh worktrees.
+- Add a lightweight route-level E2E assertion for `/app/i/home` loading text lifecycle.
+
+Commands run + outcomes:
+
+- `npm run test -- tests/ui/dashboard-client.test.tsx`: FAIL initially (`vitest: command not found`), then PASS after install.
+- `npm ci`: PASS (with expected engine warning on local Node version mismatch).
+- `npm run lint`: PASS.
+- `npm run typecheck`: PASS.
+- `npm run test`: PASS.
+- `npm run build`: PASS.
+
+Open TODOs / follow-ups:
+
+- Optional: add an E2E assertion to ensure `Dashboard loading…` disappears after the individual dashboard becomes interactive.

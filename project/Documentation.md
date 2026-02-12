@@ -1064,3 +1064,38 @@ Open risks/TODO:
 
 - Local full typecheck cannot pass until unrelated in-progress API-route changes are resolved in this worktree.
 - Existing non-blocking lint warning remains unrelated: `<img>` usage in `src/components/profile/PublicSnippetView.tsx`.
+
+---
+
+## 2026-02-12: Individual Dashboard Loading Message Reliability Fix
+
+What changed:
+
+- Updated `src/app/app/i/home/DashboardClient.tsx` to stop using mount state as loading state.
+- Added explicit dashboard loading state in the client and only render `Dashboard loading…` while real dashboard loading is active.
+- Added error-path handling so loading text is hidden when dashboard error fallback is shown.
+- Extended `src/components/dashboard/DraggableDashboard.tsx` with optional `onLoadingChange?: (isLoading: boolean) => void`.
+- Emitted loading transitions from `DraggableDashboard` via `useEffect` so parent UI reflects true load status.
+- Added regression test coverage in `tests/ui/dashboard-client.test.tsx`:
+  - loading text appears during loading
+  - loading text disappears when loading completes
+  - error fallback hides loading text
+
+Why:
+
+- The individual dashboard page showed `Dashboard loading…` permanently after mount because it was keyed to mount status instead of real dashboard fetch/loading state.
+- This caused misleading UX even when widgets had already loaded.
+
+How to verify:
+
+- `npm ci` (PASS; required in this worktree because `vitest` was initially missing)
+- `npm run test -- tests/ui/dashboard-client.test.tsx` (PASS)
+- `npm run lint` (PASS)
+- `npm run typecheck` (PASS)
+- `npm run test` (PASS)
+- `npm run build` (PASS)
+
+Open risks/TODO:
+
+- `onLoadingChange` is optional and callback-driven. If future dashboard implementations skip emitting loading transitions, parent loading text may drift again.
+- Current coverage is component-level. A future E2E assertion on `/app/i/home` could harden this behavior end-to-end.
