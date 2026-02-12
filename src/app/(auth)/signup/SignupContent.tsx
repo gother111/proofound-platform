@@ -33,10 +33,10 @@ export function SignupContent() {
       {/* Back to Home */}
       <motion.button
         type="button"
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
+        initial={{ x: -20 }}
+        animate={{ x: 0 }}
         onClick={() => router.push('/')}
-        className="absolute left-6 top-6 flex items-center gap-2 text-[#2D333099] transition-colors hover:text-[#2D3330]"
+        className="absolute left-6 top-6 flex items-center gap-2 text-[#44504B] transition-colors hover:text-[#2D3330]"
       >
         <ArrowLeft className="w-4 h-4" />
         <span className="text-sm">Back</span>
@@ -44,8 +44,8 @@ export function SignupContent() {
 
       {/* Account Type Selection */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ y: 20 }}
+        animate={{ y: 0 }}
         transition={{ duration: 0.5 }}
         className="relative z-10 w-full max-w-[960px] px-4"
       >
@@ -53,8 +53,8 @@ export function SignupContent() {
           {/* Header */}
           <div className="text-center mb-12">
             <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
               transition={{ delay: 0.2 }}
               className="mb-4"
             >
@@ -65,7 +65,7 @@ export function SignupContent() {
             <h1 className="font-display text-[32px] font-semibold leading-[40px] tracking-[-0.02em] text-[#2D3330]">
               Join Proofound
             </h1>
-            <p className="mx-auto mt-3 max-w-md text-[15px] leading-[22px] text-[#2D333099]">
+            <p className="mx-auto mt-3 max-w-md text-[15px] leading-[22px] text-[#44504B]">
               Choose the account type that fits how you&apos;ll use Proofound.
             </p>
           </div>
@@ -73,11 +73,7 @@ export function SignupContent() {
           {/* Account Type Cards */}
           <div className="mx-auto grid max-w-3xl gap-6 md:grid-cols-2">
             {/* Individual Card */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-            >
+            <motion.div initial={{ x: -20 }} animate={{ x: 0 }} transition={{ delay: 0.3 }}>
               <button
                 type="button"
                 onClick={() => setSignupType('individual')}
@@ -92,13 +88,13 @@ export function SignupContent() {
                       <h3 className="mb-2 font-display text-xl font-semibold text-[#2D3330]">
                         Individual
                       </h3>
-                      <p className="text-sm leading-6 text-[#2D333099]">
+                      <p className="text-sm leading-6 text-[#44504B]">
                         For professionals looking to showcase expertise, get matched with
                         opportunities, and build verified credentials.
                       </p>
                     </div>
                     <div className="mt-auto">
-                      <span className="text-sm font-medium text-proofound-forest group-hover:underline">
+                      <span className="text-sm font-medium text-[#1C4D3A] group-hover:underline">
                         Continue as Individual →
                       </span>
                     </div>
@@ -108,11 +104,7 @@ export function SignupContent() {
             </motion.div>
 
             {/* Organization Card */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-            >
+            <motion.div initial={{ x: 20 }} animate={{ x: 0 }} transition={{ delay: 0.4 }}>
               <button
                 type="button"
                 onClick={() => setSignupType('organization')}
@@ -127,13 +119,13 @@ export function SignupContent() {
                       <h3 className="mb-2 font-display text-xl font-semibold text-[#2D3330]">
                         Organization
                       </h3>
-                      <p className="text-sm leading-6 text-[#2D333099]">
+                      <p className="text-sm leading-6 text-[#44504B]">
                         For organizations seeking verified experts, posting assignments, and
                         building trusted teams.
                       </p>
                     </div>
                     <div className="mt-auto">
-                      <span className="text-sm font-medium text-proofound-terracotta group-hover:underline">
+                      <span className="text-sm font-medium text-[#9A4F33] group-hover:underline">
                         Continue as Organization →
                       </span>
                     </div>
@@ -145,12 +137,12 @@ export function SignupContent() {
 
           {/* Sign In Link */}
           <div className="mt-10 text-center">
-            <p className="text-sm text-[#2D333099]">
+            <p className="text-sm text-[#44504B]">
               Already have an account?{' '}
               <button
                 type="button"
                 onClick={() => router.push('/login')}
-                className="font-medium text-proofound-forest hover:text-[#2D5D4A] hover:underline"
+                className="font-medium text-[#1C4D3A] hover:text-[#2D5D4A] hover:underline"
               >
                 Sign in
               </button>
@@ -159,18 +151,18 @@ export function SignupContent() {
         </Card>
 
         {/* Footer */}
-        <p className="mt-6 text-center text-xs text-[#2D333099]">
+        <p className="mt-6 text-center text-xs text-[#44504B]">
           By creating an account, you agree to our{' '}
           <a
             href="/terms"
-            className="font-medium text-proofound-forest underline underline-offset-2 hover:text-[#2D5D4A]"
+            className="font-medium text-[#1C4D3A] underline underline-offset-2 hover:text-[#2D5D4A]"
           >
             Terms of Service
           </a>{' '}
           and{' '}
           <a
             href="/privacy"
-            className="font-medium text-proofound-forest underline underline-offset-2 hover:text-[#2D5D4A]"
+            className="font-medium text-[#1C4D3A] underline underline-offset-2 hover:text-[#2D5D4A]"
           >
             Privacy Policy
           </a>
