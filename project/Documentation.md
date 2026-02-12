@@ -1493,3 +1493,26 @@ Open risks/TODO:
 
 - Workflow env reliance assumes repository secrets remain configured for accessibility runs.
 - Full `npm run test:e2e` still runs a broad cross-browser matrix and can remain slow; timeout increase reduces startup flake but does not shorten suite duration.
+
+## 2026-02-12: Playwright BASE_URL and WebServer Port Alignment
+
+What changed:
+
+- Updated `playwright.config.ts` to derive `webServer` port from `BASE_URL` when a port is provided.
+- Kept fallback behavior to `PLAYWRIGHT_PORT` (default `33100`) when `BASE_URL` is unset.
+
+Why:
+
+- CI `e2e` workflow sets `BASE_URL=http://localhost:3000`.
+- Previous config started dev server on `33100` but waited on `3000`, which caused deterministic `config.webServer` timeout failures.
+
+How to verify:
+
+- `BASE_URL=http://localhost:3000 node ./scripts/playwright-node20.mjs test e2e/landing-page.spec.ts --project=chromium --reporter=line` (PASS)
+- `npm run typecheck` (PASS)
+- `npm run lint` (PASS with one existing warning in `postcss.config.js`)
+
+Open risks/TODO:
+
+- If `BASE_URL` is set to a host without an explicit port, config falls back to `PLAYWRIGHT_PORT`.
+- For runs against remote deployed URLs, consider a future `PLAYWRIGHT_SKIP_WEBSERVER` switch to avoid starting local dev server.

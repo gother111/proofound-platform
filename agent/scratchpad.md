@@ -1666,3 +1666,46 @@ Open TODOs / follow-ups:
 
 - Push fix commit and monitor PR check reruns to completion.
 - Confirm PR `#179` auto-merges after required checks pass.
+
+## 2026-02-12 23:28 CET
+
+Task summary:
+
+- Fixed remaining CI `e2e` timeout blocker by aligning Playwright web server port with `BASE_URL`.
+
+What worked:
+
+- Root cause from raw Actions log showed deterministic mismatch: server started on `33100` while Playwright waited on `3000`.
+- Updating `playwright.config.ts` to parse port from `BASE_URL` resolved local reproduction path.
+
+What failed / wrong assumptions:
+
+- Initial timeout-only mitigation was insufficient because the failure was configuration mismatch, not startup latency.
+
+User corrections:
+
+- None.
+
+Assumptions taken without asking:
+
+- `BASE_URL` with explicit port in CI should control both wait URL and web server port.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add a Playwright config unit/smoke check for `BASE_URL` and `webServer` port consistency.
+
+Commands run + outcomes:
+
+- `gh api repos/gother111/proofound-platform/actions/jobs/63457296578/logs`: PASS (captured failure log).
+- `rg -n "Timed out waiting" /tmp/e2e-job-63457296578.zip`: PASS (confirmed deterministic timeout).
+- `BASE_URL=http://localhost:3000 node ./scripts/playwright-node20.mjs test e2e/landing-page.spec.ts --project=chromium --reporter=line`: PASS.
+- `npm run typecheck`: PASS.
+- `npm run lint`: PASS (existing warning only).
+
+Open TODOs / follow-ups:
+
+- Push latest commit and wait for fresh CI rerun to complete, then confirm PR auto-merge.

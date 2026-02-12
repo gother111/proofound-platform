@@ -1,7 +1,11 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const playwrightPort = Number.parseInt(process.env.PLAYWRIGHT_PORT || '33100', 10);
-const baseURL = process.env.BASE_URL || `http://127.0.0.1:${playwrightPort}`;
+const configuredPort = Number.parseInt(process.env.PLAYWRIGHT_PORT || '33100', 10);
+const configuredBaseURL = process.env.BASE_URL?.trim();
+const parsedBaseURL = configuredBaseURL ? new URL(configuredBaseURL) : null;
+const baseURLPort = parsedBaseURL?.port ? Number.parseInt(parsedBaseURL.port, 10) : NaN;
+const webServerPort = Number.isFinite(baseURLPort) ? baseURLPort : configuredPort;
+const baseURL = configuredBaseURL || `http://127.0.0.1:${webServerPort}`;
 
 export default defineConfig({
   testDir: './e2e',
@@ -41,7 +45,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `npm run dev -- -p ${playwrightPort}`,
+    command: `npm run dev -- -p ${webServerPort}`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 240000, // CI startup can exceed 120s on cold runners
