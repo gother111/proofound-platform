@@ -55,8 +55,12 @@ export function calculatePercentile(values: number[], percentile: number): numbe
   if (values.length === 0) return 0;
 
   const sorted = [...values].sort((a, b) => a - b);
-  const index = Math.ceil((percentile / 100) * sorted.length) - 1;
-  return sorted[Math.max(0, index)];
+  const rank = (percentile / 100) * (sorted.length - 1);
+  const lower = Math.floor(rank);
+  const upper = Math.ceil(rank);
+  if (lower === upper) return sorted[lower];
+  const weight = rank - lower;
+  return sorted[lower] * (1 - weight) + sorted[upper] * weight;
 }
 
 /**
