@@ -838,3 +838,44 @@ Open risks/TODO:
 - Remaining salvage PRs are currently blocked only by required check queue time (`ci`/`a11y` pending).
 - Source PRs `#132`, `#138`, `#119`, `#124`, `#134`, `#131`, `#117` still need final close-out after replacement slices merge.
 - `master` branch protection approvals are still temporarily `0` and must be restored to `1` after this recovery lane completes.
+
+---
+
+## 2026-02-12: Left-Out Recovery Slices (A-F) and Docs Disposition Update
+
+What changed:
+
+- Opened scoped left-out recovery PRs:
+  - `#153` auth and supabase leftovers from `#132`.
+  - `#154` organization profile UI leftovers from `#132`.
+  - `#155` signup accessibility leftovers from `#132`.
+  - `#156` admin smoke tooling/docs leftovers from `#132`.
+  - `#157` preflight process leftovers from `#138/#131`.
+  - `#158` non-landing leftovers from `#119`.
+- Preserved only non-landing and currently valuable leftovers.
+- Rejected stale workflow carryovers and historical bulk-doc pastes from `#131` and `#134`.
+- Kept landing lock by excluding legacy `src/components/landing/sections/HowItWorksSection.tsx` drift from salvage.
+
+Why:
+
+- Recover proven value without reintroducing mixed-branch regressions.
+- Keep each salvage behavior independently mergeable and revertable.
+- Preserve landing stability while retaining non-landing work.
+
+How to verify:
+
+- PR queue:
+  - `gh pr list --state open --base master --limit 100`
+- Checks run during slice preparation:
+  - `npm run lint`
+  - `npm run typecheck`
+  - `npm run test`
+  - `npm run build`
+  - `npm run test:a11y` (for signup a11y slice)
+  - `npx vitest run tests/ui/organizations-table.test.tsx tests/ui/organization-basic-info-editor.test.tsx tests/api/organizations-route.test.ts tests/lib/normalize-organization-website.test.ts` (for org UI slice)
+
+Open risks/TODO:
+
+- Admin smoke e2e in `#156` is expected to depend on merged auth/supabase mock-role path and can fail before `#153` lands.
+- Left-out matrix branch `codex/salvage-leftout-recovery-matrix` should be merged (or equivalent section replayed) so the matrix is canonical on `master`.
+- Parallel profile-sharing work is active in another process; those files were intentionally excluded from this salvage lane.

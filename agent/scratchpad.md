@@ -848,3 +848,57 @@ Open TODOs / follow-ups:
 - Finish merging `#146`, `#148`, `#149`, `#150`, `#151` after `ci` and `a11y` pass.
 - Close source PRs `#132`, `#138`, `#119`, `#124`, `#131`, `#134`, `#117` after replacement mapping is fully merged.
 - Restore `master` required approvals from `0` back to `1` once merge lane is complete.
+
+---
+
+## 2026-02-12 10:40 CET
+
+Task summary:
+
+- Continued unified left-out salvage implementation and opened scoped PRs `#153` to `#158`.
+- Preserved left-out runtime/a11y/tooling/docs slices while keeping landing-sensitive changes excluded.
+- Recorded docs disposition decisions for `#131` and `#134`.
+
+What worked:
+
+- Selective staging allowed committing salvage files without pulling in unrelated local work.
+- Slice-level verification was stable on lint/typecheck/test/build and targeted tests.
+- Created a clean secondary worktree to continue docs-ledger updates without touching parallel profile-sharing changes.
+
+What failed / wrong assumptions:
+
+- Admin smoke e2e (`e2e/admin-dashboard-smoke.spec.ts`) fails before mock-role/auth salvage is merged, so this check is currently expected to be red in isolation.
+- One slice (`#119`) had to be committed while unrelated profile-sharing changes were present in the main worktree.
+
+User corrections:
+
+- Instructed to continue without touching non-slice profile-sharing files or taking actions on them.
+
+Assumptions taken without asking:
+
+- It is acceptable to keep parallel non-slice local changes unmodified and proceed with selective staged commits only.
+- Using a separate git worktree is acceptable as a non-invasive continuation path.
+
+What the user corrected afterward:
+
+- Explicitly selected continuation mode: preserve non-slice files untouched and keep progressing on salvage work.
+
+Improvements next time:
+
+- Start salvage lanes in a dedicated clean worktree from the beginning when concurrent local processes are active.
+- Open the recovery matrix PR immediately after creating the matrix to avoid divergence from `master`.
+
+Commands run + outcomes:
+
+- `npm run lint`: PASS across slices.
+- `npm run typecheck`: PASS across slices.
+- `npm run test`: PASS across slices.
+- `npm run build`: PASS across slices.
+- `npm run test:a11y`: PASS for signup a11y slice.
+- `PLAYWRIGHT=true NEXT_PUBLIC_USE_MOCK_SUPABASE=true MOCK_ADMIN_MODE=true node ./scripts/playwright-node20.mjs test e2e/admin-dashboard-smoke.spec.ts --project=chromium --reporter=line`: FAIL (expected pre-merge dependency on auth/admin mock path).
+
+Open TODOs / follow-ups:
+
+- Merge left-out recovery PRs `#153` to `#158` in single-lane order with required checks green.
+- Complete Slice G docs-only PR and finalize close-out mapping for source PRs `#131` and `#134`.
+- Keep landing lock unchanged unless a dedicated landing-only PR is opened.
