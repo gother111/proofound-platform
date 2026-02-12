@@ -1362,3 +1362,51 @@ Open risks/TODO:
 
 - No production deployment for commit `35bf00e` can be created until quota window resets or plan limits are increased.
 - After quota reset, trigger a production deployment for `proofound-platform` and verify `proofound.io` points to deployment built from `35bf00e`.
+
+---
+
+## 2026-02-12: Organization profile settings completion and settings route fixes
+
+What changed:
+
+- Completed organization core profile settings editing in `src/components/organization/OrganizationBasicInfoEditor.tsx` with fields for `tagline`, `industry`, `organizationSize`, `impactArea`, `legalForm`, and `foundedDate`.
+- Added shared profile enum options in `src/lib/organizations/profile-options.ts` and reused them in API validation and UI.
+- Added owner/admin-gated settings subpages:
+  - `src/app/app/o/[slug]/settings/profile/page.tsx`
+  - `src/app/app/o/[slug]/settings/team/page.tsx`
+  - `src/app/app/o/[slug]/settings/goals/page.tsx`
+- Upgraded `src/app/app/o/[slug]/settings/page.tsx` into a settings hub linking profile, team, goals, audit log, and danger zone.
+- Fixed dashboard settings links and role-based CTA behavior:
+  - `src/app/app/o/[slug]/home/OrgDashboardClient.tsx`
+  - `src/components/dashboard/OrgGoalsCard.tsx`
+  - `src/components/dashboard/TeamRolesCard.tsx`
+- Fixed visibility API contract mismatch by normalizing responses to camelCase and accepting camelCase or snake_case input in `src/app/api/organizations/[orgId]/visibility/route.ts`.
+- Added defensive client normalization in `src/components/organization/OrganizationVisibilitySettings.tsx`.
+- Hardened org update API enum validation in `src/app/api/organizations/[orgId]/route.ts` for `organizationSize` and `legalForm`.
+- Added and updated tests:
+  - `tests/ui/organization-basic-info-editor.test.tsx`
+  - `tests/api/organizations-route.test.ts`
+  - `tests/api/organization-visibility-route.test.ts` (new)
+  - `tests/e2e/prd-flows-organization.spec.ts`
+
+Why:
+
+- Profile completion logic required fields that were not editable in the core organization editor.
+- Dashboard cards linked to settings routes that did not exist.
+- Visibility settings saved in DB snake_case did not reliably hydrate in UI that expected camelCase.
+- Enum fields in organization update API were not strictly validated.
+
+How to verify:
+
+- `npm run test -- tests/ui/organization-basic-info-editor.test.tsx tests/api/organizations-route.test.ts tests/api/organization-visibility-route.test.ts` (PASS)
+- `npm run lint` (PASS, one unrelated warning in `postcss.config.js`)
+- `npm run typecheck` (PASS)
+- `npm run test` (PASS)
+- `npm run build` (PASS)
+- `node ./scripts/playwright-node20.mjs test tests/e2e/prd-flows-organization.spec.ts --config=playwright.config.ts --project=chromium --reporter=line` (FAIL, no tests found because Playwright config `testDir` is `./e2e`)
+
+Open risks/TODO:
+
+- `tests/e2e/prd-flows-organization.spec.ts` is outside Playwright `testDir`, so this regression is not currently in the active e2e run path.
+- Any hidden consumer expecting snake_case visibility response keys may require migration to the camelCase contract.
+- Settings subpages are owner/admin-only; if role resolution changes upstream, access behavior must be revalidated.

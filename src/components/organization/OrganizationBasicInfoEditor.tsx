@@ -9,14 +9,28 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api/fetch';
 import { normalizeOrganizationWebsite } from '@/lib/organizations/normalizeWebsite';
+import {
+  LEGAL_FORM_OPTIONS,
+  type LegalFormValue,
+  LEGAL_FORM_VALUES,
+  type OrganizationSizeValue,
+  ORGANIZATION_SIZE_OPTIONS,
+  ORGANIZATION_SIZE_VALUES,
+} from '@/lib/organizations/profile-options';
 
 interface OrganizationBasicInfoEditorProps {
   org: {
     id: string;
     displayName: string;
     legalName: string | null;
+    tagline: string | null;
     mission: string | null;
     vision: string | null;
+    industry: string | null;
+    organizationSize: string | null;
+    impactArea: string | null;
+    legalForm: string | null;
+    foundedDate: string | null;
     website: string | null;
   };
   canEdit: boolean;
@@ -32,6 +46,11 @@ export function OrganizationBasicInfoEditor({
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
 
+  const isOrganizationSizeValue = (value: string): value is OrganizationSizeValue =>
+    ORGANIZATION_SIZE_VALUES.some((option) => option === value);
+  const isLegalFormValue = (value: string): value is LegalFormValue =>
+    LEGAL_FORM_VALUES.some((option) => option === value);
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -42,8 +61,14 @@ export function OrganizationBasicInfoEditor({
     const formData = new FormData(event.currentTarget);
     const displayName = String(formData.get('displayName') ?? '').trim();
     const legalName = String(formData.get('legalName') ?? '').trim();
+    const tagline = String(formData.get('tagline') ?? '').trim();
     const mission = String(formData.get('mission') ?? '').trim();
     const vision = String(formData.get('vision') ?? '').trim();
+    const industry = String(formData.get('industry') ?? '').trim();
+    const organizationSizeRaw = String(formData.get('organizationSize') ?? '').trim();
+    const impactArea = String(formData.get('impactArea') ?? '').trim();
+    const legalFormRaw = String(formData.get('legalForm') ?? '').trim();
+    const foundedDateRaw = String(formData.get('foundedDate') ?? '').trim();
     const websiteInput = String(formData.get('website') ?? '');
 
     if (!displayName) {
@@ -54,6 +79,13 @@ export function OrganizationBasicInfoEditor({
       });
       return;
     }
+
+    const organizationSize =
+      organizationSizeRaw && isOrganizationSizeValue(organizationSizeRaw)
+        ? organizationSizeRaw
+        : null;
+    const legalForm = legalFormRaw && isLegalFormValue(legalFormRaw) ? legalFormRaw : null;
+    const foundedDate = foundedDateRaw || null;
 
     const normalizedWebsite = normalizeOrganizationWebsite(websiteInput);
     if (normalizedWebsite.error) {
@@ -73,8 +105,14 @@ export function OrganizationBasicInfoEditor({
         body: JSON.stringify({
           displayName,
           legalName: legalName || null,
+          tagline: tagline || null,
           mission: mission || null,
           vision: vision || null,
+          industry: industry || null,
+          organizationSize,
+          impactArea: impactArea || null,
+          legalForm,
+          foundedDate,
           website: normalizedWebsite.value,
         }),
       });
@@ -155,6 +193,20 @@ export function OrganizationBasicInfoEditor({
           </div>
 
           <div>
+            <Label htmlFor="tagline" className="text-proofound-charcoal dark:text-foreground">
+              Tagline
+            </Label>
+            <Input
+              id="tagline"
+              name="tagline"
+              defaultValue={org.tagline || ''}
+              placeholder="A concise statement of your organization purpose"
+              className="border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
+              maxLength={200}
+            />
+          </div>
+
+          <div>
             <Label htmlFor="vision" className="text-proofound-charcoal dark:text-foreground">
               Vision Statement
             </Label>
@@ -181,6 +233,86 @@ export function OrganizationBasicInfoEditor({
               type="url"
               defaultValue={org.website || ''}
               placeholder="https://your-organization.com"
+              className="border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="industry" className="text-proofound-charcoal dark:text-foreground">
+              Industry
+            </Label>
+            <Input
+              id="industry"
+              name="industry"
+              defaultValue={org.industry || ''}
+              placeholder="Primary industry or sector"
+              className="border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
+            />
+          </div>
+
+          <div>
+            <Label
+              htmlFor="organizationSize"
+              className="text-proofound-charcoal dark:text-foreground"
+            >
+              Organization Size
+            </Label>
+            <select
+              id="organizationSize"
+              name="organizationSize"
+              defaultValue={org.organizationSize || ''}
+              className="flex h-11 w-full rounded-lg border border-proofound-stone dark:border-border bg-white dark:bg-background px-4 py-2 text-base text-proofound-charcoal dark:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest"
+            >
+              <option value="">Select size</option>
+              {ORGANIZATION_SIZE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <Label htmlFor="impactArea" className="text-proofound-charcoal dark:text-foreground">
+              Impact Area
+            </Label>
+            <Input
+              id="impactArea"
+              name="impactArea"
+              defaultValue={org.impactArea || ''}
+              placeholder="Primary area of impact"
+              className="border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="legalForm" className="text-proofound-charcoal dark:text-foreground">
+              Legal Form
+            </Label>
+            <select
+              id="legalForm"
+              name="legalForm"
+              defaultValue={org.legalForm || ''}
+              className="flex h-11 w-full rounded-lg border border-proofound-stone dark:border-border bg-white dark:bg-background px-4 py-2 text-base text-proofound-charcoal dark:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest"
+            >
+              <option value="">Select legal form</option>
+              {LEGAL_FORM_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <Label htmlFor="foundedDate" className="text-proofound-charcoal dark:text-foreground">
+              Founded Date
+            </Label>
+            <Input
+              id="foundedDate"
+              name="foundedDate"
+              type="date"
+              defaultValue={org.foundedDate || ''}
               className="border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
             />
           </div>

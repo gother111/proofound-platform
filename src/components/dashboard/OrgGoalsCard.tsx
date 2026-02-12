@@ -38,6 +38,7 @@ import Link from 'next/link';
 interface OrgGoalsCardProps {
   orgSlug: string;
   orgId: string;
+  canManageSettings?: boolean;
 }
 
 // Type definitions for organization goal data
@@ -72,7 +73,7 @@ const statusConfig = {
   abandoned: { label: 'Abandoned', icon: AlertCircle, color: '#DC2626', bg: '#FEE2E2' },
 };
 
-export function OrgGoalsCard({ orgSlug, orgId }: OrgGoalsCardProps) {
+export function OrgGoalsCard({ orgSlug, orgId, canManageSettings = false }: OrgGoalsCardProps) {
   const [goals, setGoals] = useState<OrgGoal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -164,22 +165,35 @@ export function OrgGoalsCard({ orgSlug, orgId }: OrgGoalsCardProps) {
           <p className="text-xs mb-3" style={{ color: '#6B6760' }}>
             Set organizational goals to track your progress and showcase your commitment.
           </p>
-          <Link href={`/app/o/${orgSlug}/settings/goals`}>
-            <Button
-              size="sm"
-              className="h-7 text-xs"
-              style={{
-                backgroundColor: isHovered ? '#2D5F4A' : '#1C4D3A',
-                color: '#F7F6F1',
-                transition: 'background-color 200ms',
-              }}
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={() => setIsHovered(false)}
-            >
-              <Plus className="w-3 h-3 mr-1" />
-              Add Goal
-            </Button>
-          </Link>
+          {canManageSettings ? (
+            <Link href={`/app/o/${orgSlug}/settings/goals`}>
+              <Button
+                size="sm"
+                className="h-7 text-xs"
+                style={{
+                  backgroundColor: isHovered ? '#2D5F4A' : '#1C4D3A',
+                  color: '#F7F6F1',
+                  transition: 'background-color 200ms',
+                }}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+              >
+                <Plus className="w-3 h-3 mr-1" />
+                Add Goal
+              </Button>
+            </Link>
+          ) : (
+            <Link href={`/app/o/${orgSlug}/profile`}>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs border-[#D8D2C8]"
+                style={{ color: '#1C4D3A' }}
+              >
+                View Profile
+              </Button>
+            </Link>
+          )}
         </div>
       </Card>
     );
@@ -204,11 +218,13 @@ export function OrgGoalsCard({ orgSlug, orgId }: OrgGoalsCardProps) {
           )}
         </div>
         <Link
-          href={`/app/o/${orgSlug}/settings/goals`}
+          href={
+            canManageSettings ? `/app/o/${orgSlug}/settings/goals` : `/app/o/${orgSlug}/profile`
+          }
           className="text-xs hover:underline"
           style={{ color: '#1C4D3A' }}
         >
-          View all
+          {canManageSettings ? 'Manage' : 'View'}
         </Link>
       </div>
 
@@ -280,17 +296,19 @@ export function OrgGoalsCard({ orgSlug, orgId }: OrgGoalsCardProps) {
             {stats.achieved} achieved
           </span>
         </div>
-        <Link href={`/app/o/${orgSlug}/settings/goals/new`}>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-6 px-2 text-xs"
-            style={{ color: '#1C4D3A' }}
-          >
-            <Plus className="w-3 h-3 mr-1" />
-            New
-          </Button>
-        </Link>
+        {canManageSettings && (
+          <Link href={`/app/o/${orgSlug}/settings/goals`}>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 px-2 text-xs"
+              style={{ color: '#1C4D3A' }}
+            >
+              <Plus className="w-3 h-3 mr-1" />
+              New
+            </Button>
+          </Link>
+        )}
       </div>
     </Card>
   );

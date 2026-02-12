@@ -35,6 +35,7 @@ import Link from 'next/link';
 interface TeamRolesCardProps {
   orgSlug?: string;
   orgId?: string;
+  canManageSettings?: boolean;
 }
 
 // Type definitions
@@ -75,7 +76,7 @@ function getInitials(name: string | null | undefined): string {
     .toUpperCase();
 }
 
-export function TeamRolesCard({ orgSlug, orgId }: TeamRolesCardProps) {
+export function TeamRolesCard({ orgSlug, orgId, canManageSettings = false }: TeamRolesCardProps) {
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [stats, setStats] = useState<TeamStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -195,7 +196,9 @@ export function TeamRolesCard({ orgSlug, orgId }: TeamRolesCardProps) {
           <p className="text-xs mb-3" style={{ color: '#6B6760' }}>
             Add team members to collaborate on your organization.
           </p>
-          <Link href={`/app/o/${orgSlug}/settings/team`}>
+          <Link
+            href={canManageSettings ? `/app/o/${orgSlug}/settings/team` : `/app/o/${orgSlug}/team`}
+          >
             <Button
               size="sm"
               className="h-7 text-xs"
@@ -208,7 +211,7 @@ export function TeamRolesCard({ orgSlug, orgId }: TeamRolesCardProps) {
               onMouseLeave={() => setIsHovered(false)}
             >
               <UserPlus className="w-3 h-3 mr-1" />
-              Invite members
+              {canManageSettings ? 'Invite members' : 'View team'}
             </Button>
           </Link>
         </div>
@@ -235,11 +238,11 @@ export function TeamRolesCard({ orgSlug, orgId }: TeamRolesCardProps) {
           )}
         </div>
         <Link
-          href={`/app/o/${orgSlug}/settings/team`}
+          href={canManageSettings ? `/app/o/${orgSlug}/settings/team` : `/app/o/${orgSlug}/team`}
           className="text-xs hover:underline"
           style={{ color: '#1C4D3A' }}
         >
-          Manage
+          {canManageSettings ? 'Manage' : 'View'}
         </Link>
       </div>
 
@@ -291,17 +294,19 @@ export function TeamRolesCard({ orgSlug, orgId }: TeamRolesCardProps) {
               </span>
             )}
           </div>
-          <Link href={`/app/o/${orgSlug}/settings/team/invite`}>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-6 px-2 text-xs"
-              style={{ color: '#1C4D3A' }}
-            >
-              <UserPlus className="w-3 h-3 mr-1" />
-              Invite
-            </Button>
-          </Link>
+          {canManageSettings && (
+            <Link href={`/app/o/${orgSlug}/settings/team`}>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 px-2 text-xs"
+                style={{ color: '#1C4D3A' }}
+              >
+                <UserPlus className="w-3 h-3 mr-1" />
+                Invite
+              </Button>
+            </Link>
+          )}
         </div>
       )}
     </Card>

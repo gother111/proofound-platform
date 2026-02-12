@@ -50,8 +50,14 @@ const org = {
   id: 'org-1',
   displayName: 'Proofound',
   legalName: 'Proofound LLC',
+  tagline: null,
   mission: 'Trust first',
   vision: 'Better matching',
+  industry: null,
+  organizationSize: null,
+  impactArea: null,
+  legalForm: null,
+  foundedDate: null,
   website: null,
 };
 
@@ -90,6 +96,12 @@ describe('OrganizationBasicInfoEditor', () => {
 
     render(<OrganizationBasicInfoEditor org={org} canEdit={true} onSaved={onSaved} />);
 
+    fireEvent.change(screen.getByLabelText(/Tagline/i), { target: { value: 'Trust-led hiring' } });
+    fireEvent.change(screen.getByLabelText(/Industry/i), { target: { value: 'Technology' } });
+    fireEvent.change(screen.getByLabelText(/Organization Size/i), { target: { value: '11-50' } });
+    fireEvent.change(screen.getByLabelText(/Impact Area/i), { target: { value: 'Education' } });
+    fireEvent.change(screen.getByLabelText(/Legal Form/i), { target: { value: 'llc' } });
+    fireEvent.change(screen.getByLabelText(/Founded Date/i), { target: { value: '2024-01-15' } });
     fireEvent.change(screen.getByLabelText(/Website/i), { target: { value: 'example.com' } });
     fireEvent.submit(screen.getByRole('button', { name: /save changes/i }).closest('form')!);
 
@@ -99,6 +111,12 @@ describe('OrganizationBasicInfoEditor', () => {
     const payload = JSON.parse(requestInit.body);
 
     expect(payload.website).toBe('https://example.com/');
+    expect(payload.tagline).toBe('Trust-led hiring');
+    expect(payload.industry).toBe('Technology');
+    expect(payload.organizationSize).toBe('11-50');
+    expect(payload.impactArea).toBe('Education');
+    expect(payload.legalForm).toBe('llc');
+    expect(payload.foundedDate).toBe('2024-01-15');
     expect(refreshMock).toHaveBeenCalledTimes(1);
     expect(onSaved).toHaveBeenCalledTimes(1);
     expect(toastMock).toHaveBeenCalledWith(

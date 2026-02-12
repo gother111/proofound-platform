@@ -1,8 +1,10 @@
-import { requireAuth, getActiveOrg, assertOrgRole } from '@/lib/auth';
+import { requireAuth, getActiveOrg } from '@/lib/auth';
 import { notFound, redirect } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { formatDate } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/server';
+import Link from 'next/link';
+import { ArrowRight, Target, UserCircle, Users } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,6 +48,58 @@ export default async function OrganizationSettingsPage({
           Manage settings and view activity for {org.displayName}
         </p>
       </div>
+
+      <Card className="border-proofound-stone dark:border-border rounded-2xl">
+        <CardHeader>
+          <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
+            Settings Hub
+          </CardTitle>
+          <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
+            Open a settings section to manage profile, team, and goals.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Link
+            href={`/app/o/${slug}/settings/profile`}
+            className="rounded-xl border border-proofound-stone dark:border-border p-4 bg-white/60 dark:bg-background/50 hover:border-proofound-forest/50 transition-colors"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <UserCircle className="w-5 h-5 text-proofound-forest" />
+              <ArrowRight className="w-4 h-4 text-proofound-charcoal/50" />
+            </div>
+            <p className="mt-3 font-medium text-proofound-charcoal dark:text-foreground">Profile</p>
+            <p className="text-xs mt-1 text-proofound-charcoal/70 dark:text-muted-foreground">
+              Edit core organization profile information.
+            </p>
+          </Link>
+          <Link
+            href={`/app/o/${slug}/settings/team`}
+            className="rounded-xl border border-proofound-stone dark:border-border p-4 bg-white/60 dark:bg-background/50 hover:border-proofound-forest/50 transition-colors"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <Users className="w-5 h-5 text-proofound-forest" />
+              <ArrowRight className="w-4 h-4 text-proofound-charcoal/50" />
+            </div>
+            <p className="mt-3 font-medium text-proofound-charcoal dark:text-foreground">Team</p>
+            <p className="text-xs mt-1 text-proofound-charcoal/70 dark:text-muted-foreground">
+              Manage team members, invitations, and roles.
+            </p>
+          </Link>
+          <Link
+            href={`/app/o/${slug}/settings/goals`}
+            className="rounded-xl border border-proofound-stone dark:border-border p-4 bg-white/60 dark:bg-background/50 hover:border-proofound-forest/50 transition-colors"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <Target className="w-5 h-5 text-proofound-forest" />
+              <ArrowRight className="w-4 h-4 text-proofound-charcoal/50" />
+            </div>
+            <p className="mt-3 font-medium text-proofound-charcoal dark:text-foreground">Goals</p>
+            <p className="text-xs mt-1 text-proofound-charcoal/70 dark:text-muted-foreground">
+              Define and track organizational goals and progress.
+            </p>
+          </Link>
+        </CardContent>
+      </Card>
 
       <Card className="border-proofound-stone dark:border-border rounded-2xl">
         <CardHeader>

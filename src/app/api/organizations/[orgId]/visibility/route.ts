@@ -1,10 +1,112 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+type VisibilityLevel = 'public' | 'post_match' | 'post_conversation_start' | 'internal_only';
+
+type VisibilitySettings = {
+  displayName: VisibilityLevel;
+  mission: VisibilityLevel;
+  vision: VisibilityLevel;
+  causes: VisibilityLevel;
+  workCulture: VisibilityLevel;
+  structure: VisibilityLevel;
+  projects: VisibilityLevel;
+  partnerships: VisibilityLevel;
+  goals: VisibilityLevel;
+  impact: VisibilityLevel;
+};
+
+const DEFAULT_VISIBILITY_SETTINGS: VisibilitySettings = {
+  displayName: 'public',
+  mission: 'public',
+  vision: 'public',
+  causes: 'public',
+  workCulture: 'post_match',
+  structure: 'post_match',
+  projects: 'post_match',
+  partnerships: 'post_match',
+  goals: 'post_match',
+  impact: 'post_match',
+};
+
+const VALID_LEVELS: ReadonlySet<string> = new Set([
+  'public',
+  'post_match',
+  'post_conversation_start',
+  'internal_only',
+]);
+
+const FIELD_MAP: Array<{ client: keyof VisibilitySettings; db: string }> = [
+  { client: 'displayName', db: 'display_name' },
+  { client: 'mission', db: 'mission' },
+  { client: 'vision', db: 'vision' },
+  { client: 'causes', db: 'causes' },
+  { client: 'workCulture', db: 'work_culture' },
+  { client: 'structure', db: 'structure' },
+  { client: 'projects', db: 'projects' },
+  { client: 'partnerships', db: 'partnerships' },
+  { client: 'goals', db: 'goals' },
+  { client: 'impact', db: 'impact' },
+];
+
+function mapRowToClientVisibility(
+  row: Record<string, unknown> | null | undefined
+): VisibilitySettings {
+  if (!row) {
+    return { ...DEFAULT_VISIBILITY_SETTINGS };
+  }
+
+  const mapped = { ...DEFAULT_VISIBILITY_SETTINGS };
+
+  for (const field of FIELD_MAP) {
+    const raw = row[field.client] ?? row[field.db];
+    if (typeof raw === 'string' && VALID_LEVELS.has(raw)) {
+      mapped[field.client] = raw as VisibilityLevel;
+    }
+  }
+
+  return mapped;
+}
+
+function parseIncomingVisibility(input: Record<string, unknown>): {
+  partial: Partial<VisibilitySettings>;
+  invalidField: string | null;
+} {
+  const partial: Partial<VisibilitySettings> = {};
+
+  for (const field of FIELD_MAP) {
+    const raw = input[field.client] ?? input[field.db];
+    if (raw === undefined) {
+      continue;
+    }
+    if (typeof raw !== 'string' || !VALID_LEVELS.has(raw)) {
+      return { partial: {}, invalidField: field.client };
+    }
+    partial[field.client] = raw as VisibilityLevel;
+  }
+
+  return { partial, invalidField: null };
+}
+
+function mapClientToDbVisibility(settings: VisibilitySettings): Record<string, string> {
+  return {
+    display_name: settings.displayName,
+    mission: settings.mission,
+    vision: settings.vision,
+    causes: settings.causes,
+    work_culture: settings.workCulture,
+    structure: settings.structure,
+    projects: settings.projects,
+    partnerships: settings.partnerships,
+    goals: settings.goals,
+    impact: settings.impact,
+  };
+}
+
 /**
  * GET /api/organizations/[orgId]/visibility
- * 
- * Fetch visibility settings for an organization
+ *
+ * Fetch visibility settings for an organization.
  */
 export async function GET(
   request: NextRequest,
@@ -14,7 +116,6 @@ export async function GET(
     const { orgId } = await params;
     const supabase = await createClient();
 
-    // Verify user has access
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -23,7 +124,6 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check membership
     const { data: membership } = await supabase
       .from('organization_members')
       .select('role')
@@ -35,37 +135,20 @@ export async function GET(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Fetch visibility settings
     const { data: visibility, error } = await supabase
       .from('organization_field_visibility')
       .select('*')
       .eq('org_id', orgId)
       .single();
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows
+    if (error && error.code !== 'PGRST116') {
       console.error('Error fetching visibility settings:', error);
       return NextResponse.json({ error: 'Failed to fetch visibility settings' }, { status: 500 });
     }
 
-    // Return defaults if no settings exist yet
-    if (!visibility) {
-      return NextResponse.json({
-        visibility: {
-          displayName: 'public',
-          mission: 'public',
-          vision: 'public',
-          causes: 'public',
-          workCulture: 'post_match',
-          structure: 'post_match',
-          projects: 'post_match',
-          partnerships: 'post_match',
-          goals: 'post_match',
-          impact: 'post_match',
-        },
-      });
-    }
-
-    return NextResponse.json({ visibility });
+    return NextResponse.json({
+      visibility: mapRowToClientVisibility(visibility as Record<string, unknown> | null),
+    });
   } catch (error) {
     console.error('Error in visibility GET:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -74,8 +157,8 @@ export async function GET(
 
 /**
  * PUT /api/organizations/[orgId]/visibility
- * 
- * Update visibility settings for an organization
+ *
+ * Update visibility settings for an organization.
  */
 export async function PUT(
   request: NextRequest,
@@ -85,7 +168,6 @@ export async function PUT(
     const { orgId } = await params;
     const supabase = await createClient();
 
-    // Verify user has permissions
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -94,7 +176,6 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check membership (owner or admin can modify)
     const { data: membership } = await supabase
       .from('organization_members')
       .select('role')
@@ -106,56 +187,37 @@ export async function PUT(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Parse request body
-    const settings = await request.json();
+    const body = await request.json();
+    const input =
+      typeof body === 'object' && body !== null ? (body as Record<string, unknown>) : {};
+    const { partial, invalidField } = parseIncomingVisibility(input);
 
-    // Validate visibility levels
-    const validLevels = ['public', 'post_match', 'post_conversation_start', 'internal_only'];
-    const requiredFields = [
-      'displayName',
-      'mission',
-      'vision',
-      'causes',
-      'workCulture',
-      'structure',
-      'projects',
-      'partnerships',
-      'goals',
-      'impact',
-    ];
-
-    for (const field of requiredFields) {
-      if (settings[field] && !validLevels.includes(settings[field])) {
-        return NextResponse.json(
-          { error: `Invalid visibility level for ${field}` },
-          { status: 400 }
-        );
-      }
+    if (invalidField) {
+      return NextResponse.json(
+        { error: `Invalid visibility level for ${invalidField}` },
+        { status: 400 }
+      );
     }
 
-    // Check if settings exist
     const { data: existing } = await supabase
       .from('organization_field_visibility')
-      .select('id')
+      .select('*')
       .eq('org_id', orgId)
       .single();
 
-    let result;
+    const current = mapRowToClientVisibility(existing as Record<string, unknown> | null);
+    const merged: VisibilitySettings = {
+      ...current,
+      ...partial,
+    };
+
+    const dbPayload = mapClientToDbVisibility(merged);
+
     if (existing) {
-      // Update existing
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('organization_field_visibility')
         .update({
-          display_name: settings.displayName,
-          mission: settings.mission,
-          vision: settings.vision,
-          causes: settings.causes,
-          work_culture: settings.workCulture,
-          structure: settings.structure,
-          projects: settings.projects,
-          partnerships: settings.partnerships,
-          goals: settings.goals,
-          impact: settings.impact,
+          ...dbPayload,
           updated_at: new Date().toISOString(),
         })
         .eq('org_id', orgId)
@@ -164,42 +226,33 @@ export async function PUT(
 
       if (error) {
         console.error('Error updating visibility settings:', error);
-        return NextResponse.json({ error: 'Failed to update visibility settings' }, { status: 500 });
+        return NextResponse.json(
+          { error: 'Failed to update visibility settings' },
+          { status: 500 }
+        );
       }
-
-      result = data;
     } else {
-      // Create new
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('organization_field_visibility')
         .insert({
           org_id: orgId,
-          display_name: settings.displayName,
-          mission: settings.mission,
-          vision: settings.vision,
-          causes: settings.causes,
-          work_culture: settings.workCulture,
-          structure: settings.structure,
-          projects: settings.projects,
-          partnerships: settings.partnerships,
-          goals: settings.goals,
-          impact: settings.impact,
+          ...dbPayload,
         })
         .select()
         .single();
 
       if (error) {
         console.error('Error creating visibility settings:', error);
-        return NextResponse.json({ error: 'Failed to create visibility settings' }, { status: 500 });
+        return NextResponse.json(
+          { error: 'Failed to create visibility settings' },
+          { status: 500 }
+        );
       }
-
-      result = data;
     }
 
-    return NextResponse.json({ visibility: result });
+    return NextResponse.json({ visibility: merged });
   } catch (error) {
     console.error('Error in visibility PUT:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

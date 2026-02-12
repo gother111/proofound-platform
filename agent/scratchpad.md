@@ -1500,3 +1500,56 @@ Open TODOs / follow-ups:
 
 - Re-run production deploy after quota reset window and verify new deployment includes `35bf00e`.
 - If quota blocks continue, increase plan limits or reduce deployment frequency.
+
+---
+
+## 2026-02-12 22:01 CET
+
+Task summary:
+
+- Implemented the approved organization settings completion plan end-to-end across UI, routes, API normalization, and tests.
+- Added real settings subpages for profile, team, and goals with owner/admin guards.
+- Fixed organization visibility payload contract mismatch between API and UI state shape.
+
+What worked:
+
+- Core profile form extension and patch submit behavior remained stable after adding new fields.
+- Visibility API normalization to camelCase resolved UI hydration behavior while preserving snake_case DB writes.
+- Unit and API test coverage updates passed with full suite checks and production build.
+
+What failed / wrong assumptions:
+
+- Planned targeted e2e command for `tests/e2e/prd-flows-organization.spec.ts` does not execute under current Playwright config because `testDir` is `./e2e`.
+
+User corrections:
+
+- User required direct execution of the provided implementation plan, not another planning pass.
+
+Assumptions taken without asking:
+
+- Owner/admin-only access should apply to all new `/settings/*` organization subpages.
+- Non-admin dashboard users should not see settings-management CTA links.
+- Existing `tests/e2e/prd-flows-organization.spec.ts` location should be kept as requested even though current Playwright config targets `./e2e`.
+
+What the user corrected afterward:
+
+- None in this session after implementation started.
+
+Improvements next time:
+
+- Align Playwright config and e2e file location strategy before adding regression tests to avoid non-executable coverage.
+- Add a dedicated CI check that verifies all intended e2e specs are in active Playwright discovery scope.
+
+Commands run + outcomes:
+
+- `npm run test -- tests/ui/organization-basic-info-editor.test.tsx tests/api/organizations-route.test.ts tests/api/organization-visibility-route.test.ts`: PASS
+- `npm run lint`: PASS (one unrelated warning)
+- `npm run typecheck`: PASS
+- `npm run test`: PASS
+- `npm run build`: PASS
+- `node ./scripts/playwright-node20.mjs test tests/e2e/prd-flows-organization.spec.ts --config=playwright.config.ts --project=chromium --reporter=line`: FAIL (`No tests found`, outside configured `testDir`)
+
+Open TODOs / follow-ups:
+
+- Decide whether to move `tests/e2e/prd-flows-organization.spec.ts` under `e2e/` or add a second Playwright config for `tests/e2e`.
+- Re-run targeted organization settings route regression once discovery path is aligned.
