@@ -955,3 +955,58 @@ Commands run + outcomes:
 Open TODOs / follow-ups:
 
 - Optional: convert `<img>` to `next/image` in `src/components/profile/PublicSnippetView.tsx` to clear the existing lint warning.
+
+---
+
+## 2026-02-12 12:54 CET
+
+Task summary:
+
+- Completed clean cherry-pick conflict resolution for the profile-sharing feature branch onto `master` base.
+- Finalized individual and organization public sharing flow, canonical `proofound.io` URL behavior, and embed route support.
+- Ran full verification and prepared branch for push/merge.
+
+What worked:
+
+- Resolved cherry-pick conflicts without dropping the newer organization profile architecture.
+- Kept canonical snippet URL generation and organization sharing API updates intact.
+- Added org share control into `OrganizationProfileView` so active members can generate links from org profile UI.
+- Full verification suite passed on Node 20 path.
+
+What failed / wrong assumptions:
+
+- Initial conflict inspection command failed because zsh expanded bracketed route paths; resolved by quoting paths.
+- Cherry-pick introduced lint-staged formatting updates during commit, so final file counts differed from initial expectations.
+
+User corrections:
+
+- Selected option `2` to proceed with the clean merge-path execution.
+
+Assumptions taken without asking:
+
+- Keeping master-side docs content during conflict resolution was preferable, then appending a fresh current-session entry.
+- Existing non-blocking lint warning in `PublicSnippetView` is acceptable for this merge since checks pass and behavior is correct.
+
+What the user corrected afterward:
+
+- None in this run segment.
+
+Improvements next time:
+
+- Always quote bracketed route paths (`[slug]`) in shell commands from the start.
+- Print a pre-continue conflict resolution map before `git cherry-pick --continue` for easier audit traceability.
+
+Commands run + outcomes:
+
+- `git checkout -b codex/profile-sharing-clean-merge`: PASS
+- `git cherry-pick 6df4632`: CONFLICT
+- Conflict resolution + `git cherry-pick --continue`: PASS (commit `61dbb7d`)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS (one warning)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS
+
+Open TODOs / follow-ups:
+
+- Push `codex/profile-sharing-clean-merge` and merge via PR.
+- Apply production deployment if not already on latest commit and re-check snippet links from profile dialogs.
