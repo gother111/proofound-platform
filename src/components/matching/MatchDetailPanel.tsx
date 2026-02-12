@@ -176,6 +176,14 @@ export function MatchDetailPanel({ match, assignment, profile }: MatchDetailPane
   );
 }
 
+function getSkillDisplayLabel(skill: any): string {
+  return skill?.label || skill?.name || skill?.skillName || skill?.id || 'Unknown skill';
+}
+
+function normalizeSkillKey(value: string): string {
+  return value.trim().toLowerCase();
+}
+
 /**
  * Score Breakdown Component
  */
@@ -289,9 +297,23 @@ function SkillsMatchDetail({
   niceToHaveSkills: any[];
   score: number;
 }) {
-  const profileSkillNames = profileSkills.map((s) => s.name);
-  const matchedMustHave = mustHaveSkills.filter((s) => profileSkillNames.includes(s.name));
-  const matchedNiceToHave = niceToHaveSkills.filter((s) => profileSkillNames.includes(s.name));
+  const profileSkillKeys = new Set(
+    profileSkills
+      .flatMap((skill) => [skill?.name, skill?.label, skill?.skillName, skill?.id])
+      .filter(Boolean)
+      .map((value) => normalizeSkillKey(String(value)))
+  );
+
+  const isMatched = (skill: any) => {
+    const keys = [skill?.label, skill?.name, skill?.skillName, skill?.id]
+      .filter(Boolean)
+      .map((value) => normalizeSkillKey(String(value)));
+
+    return keys.some((key) => profileSkillKeys.has(key));
+  };
+
+  const matchedMustHave = mustHaveSkills.filter((skill) => isMatched(skill));
+  const matchedNiceToHave = niceToHaveSkills.filter((skill) => isMatched(skill));
 
   return (
     <div className="space-y-4">
@@ -306,7 +328,7 @@ function SkillsMatchDetail({
         <div className="space-y-1">
           {mustHaveSkills.map((skill, i) => (
             <div key={i} className="flex items-center gap-2 text-sm">
-              {profileSkillNames.includes(skill.name) ? (
+              {isMatched(skill) ? (
                 <Badge variant="default" className="text-xs">
                   ✓
                 </Badge>
@@ -315,7 +337,7 @@ function SkillsMatchDetail({
                   ✗
                 </Badge>
               )}
-              <span>{skill.name}</span>
+              <span>{getSkillDisplayLabel(skill)}</span>
             </div>
           ))}
         </div>
@@ -328,7 +350,7 @@ function SkillsMatchDetail({
         <div className="space-y-1">
           {niceToHaveSkills.map((skill, i) => (
             <div key={i} className="flex items-center gap-2 text-sm">
-              {profileSkillNames.includes(skill.name) ? (
+              {isMatched(skill) ? (
                 <Badge variant="default" className="text-xs">
                   ✓
                 </Badge>
@@ -337,7 +359,7 @@ function SkillsMatchDetail({
                   ✗
                 </Badge>
               )}
-              <span>{skill.name}</span>
+              <span>{getSkillDisplayLabel(skill)}</span>
             </div>
           ))}
         </div>
@@ -362,13 +384,24 @@ function generateImprovementTips(match: any, profile: any, assignment: any): str
 
   // Skills tips
   if (match.subscores.skills < 80) {
+    const profileSkillKeys = new Set(
+      (profile.skills || [])
+        .flatMap((skill: any) => [skill?.name, skill?.label, skill?.skillName, skill?.id])
+        .filter(Boolean)
+        .map((value: any) => normalizeSkillKey(String(value)))
+    );
+
     const missingMustHave = assignment.mustHaveSkills.filter(
-      (s: any) => !profile.skills.map((ps: any) => ps.name).includes(s.name)
+      (skill: any) =>
+        ![skill?.name, skill?.label, skill?.skillName, skill?.id]
+          .filter(Boolean)
+          .map((value: any) => normalizeSkillKey(String(value)))
+          .some((key: string) => profileSkillKeys.has(key))
     );
     if (missingMustHave.length > 0) {
       tips.push(
         `Add these must-have skills: ${missingMustHave
-          .map((s: any) => s.name)
+          .map((skill: any) => getSkillDisplayLabel(skill))
           .slice(0, 3)
           .join(', ')}`
       );

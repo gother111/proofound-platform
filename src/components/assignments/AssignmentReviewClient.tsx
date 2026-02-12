@@ -25,6 +25,10 @@ interface Assignment {
   status: string;
 }
 
+function getSkillDisplayLabel(skill: any) {
+  return skill?.label || skill?.name || skill?.skillName || skill?.id || 'Unknown skill';
+}
+
 const VERIFICATION_GATE_LABELS: Record<string, string> = {
   identity: 'Identity Verification',
   work_email: 'Work Email Verification',
@@ -121,10 +125,7 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
             <p className="text-[#6B6760]">Review all details before publishing</p>
           </div>
           <div className="flex gap-3">
-            <Button
-              variant="outline"
-              onClick={() => router.push(`/app/o/${slug}/assignments/new`)}
-            >
+            <Button variant="outline" onClick={() => router.push(`/app/o/${slug}/assignments/new`)}>
               <Edit className="h-4 w-4 mr-2" />
               Edit
             </Button>
@@ -270,7 +271,7 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
               <div className="flex flex-wrap gap-2">
                 {assignment.requiredSkills.map((skill: any, index: number) => (
                   <Badge key={index} variant="outline" className="border-[#7A9278] text-[#1C4D3A]">
-                    {skill.label || skill.id} (Level {skill.level}/5)
+                    {getSkillDisplayLabel(skill)} (Level {skill.level}/5)
                   </Badge>
                 ))}
               </div>
@@ -283,4 +284,3 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
     </div>
   );
 }
-

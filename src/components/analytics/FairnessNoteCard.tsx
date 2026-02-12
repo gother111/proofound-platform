@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { AlertTriangle, CheckCircle2, Info, Scale } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 
 interface FairnessMetric {
   cohort: string;
@@ -30,7 +31,7 @@ interface FairnessNoteCardProps {
 }
 
 export function FairnessNoteCard({
-  assignmentId,
+  assignmentId: _assignmentId,
   metrics,
   totalApplicants,
   totalSelected,
@@ -40,29 +41,23 @@ export function FairnessNoteCard({
   const significantGaps = metrics.filter((m) => Math.abs(m.representationGap) > 10);
 
   const hasWarnings = significantGaps.some((m) => m.representationGap < -10);
-  const hasPositiveGaps = significantGaps.some((m) => m.representationGap > 10);
 
   return (
-    <Card className="border-[#E8E6DD]">
+    <Card className="border-proofound-stone/90">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
             <div
-              className="p-2 rounded-lg"
-              style={{
-                backgroundColor: hasWarnings ? '#FEF2F2' : '#F0FDF4',
-              }}
+              className={cn(
+                'rounded-lg p-2',
+                hasWarnings ? 'bg-destructive/10 text-destructive' : 'bg-success/15 text-success'
+              )}
             >
-              <Scale
-                className="h-5 w-5"
-                style={{
-                  color: hasWarnings ? '#DC2626' : '#16A34A',
-                }}
-              />
+              <Scale className="h-5 w-5" />
             </div>
             <div>
               <CardTitle className="text-lg">Fairness Note</CardTitle>
-              <p className="text-xs text-[#6B6760] mt-1">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Generated {new Date(generatedAt).toLocaleDateString()}
               </p>
             </div>
@@ -71,7 +66,7 @@ export function FairnessNoteCard({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <button className="text-[#6B6760] hover:text-[#2D3330]">
+                <button className="text-muted-foreground transition-colors hover:text-foreground">
                   <Info className="h-4 w-4" />
                 </button>
               </TooltipTrigger>
@@ -89,15 +84,15 @@ export function FairnessNoteCard({
 
       <CardContent className="space-y-4">
         {/* Summary */}
-        <div className="p-3 bg-[#F7F6F1] rounded-lg">
+        <div className="rounded-lg bg-muted/40 p-3">
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <p className="text-xs text-[#6B6760] mb-1">Total Applicants</p>
-              <p className="font-semibold text-[#2D3330]">{totalApplicants}</p>
+              <p className="mb-1 text-xs text-muted-foreground">Total Applicants</p>
+              <p className="font-semibold text-foreground">{totalApplicants}</p>
             </div>
             <div>
-              <p className="text-xs text-[#6B6760] mb-1">Selected</p>
-              <p className="font-semibold text-[#2D3330]">{totalSelected}</p>
+              <p className="mb-1 text-xs text-muted-foreground">Selected</p>
+              <p className="font-semibold text-foreground">{totalSelected}</p>
             </div>
           </div>
         </div>
@@ -123,7 +118,7 @@ export function FairnessNoteCard({
 
         {/* Metrics Table */}
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-[#2D3330]">Cohort Representation</h4>
+          <h4 className="text-sm font-medium text-foreground">Cohort Representation</h4>
 
           {metrics.map((metric) => {
             const isUnderrepresented = metric.representationGap < -10;
@@ -131,14 +126,17 @@ export function FairnessNoteCard({
             const isBalanced = Math.abs(metric.representationGap) <= 10;
 
             return (
-              <div key={metric.cohort} className="p-3 rounded-lg border border-[#E8E6DD] space-y-2">
+              <div
+                key={metric.cohort}
+                className="space-y-2 rounded-lg border border-proofound-stone/90 p-3"
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-[#2D3330]">{metric.cohort}</span>
+                    <span className="text-sm font-medium text-foreground">{metric.cohort}</span>
                     {isBalanced && (
                       <Badge
                         variant="secondary"
-                        className="text-xs bg-green-100 text-green-800 border-green-200"
+                        className="border-success/20 bg-success/15 text-xs text-success"
                       >
                         <CheckCircle2 className="w-3 h-3 mr-1" />
                         Balanced
@@ -147,26 +145,28 @@ export function FairnessNoteCard({
                     {isUnderrepresented && (
                       <Badge
                         variant="secondary"
-                        className="text-xs bg-red-100 text-red-800 border-red-200"
+                        className="border-destructive/20 bg-destructive/10 text-xs text-destructive"
                       >
                         <AlertTriangle className="w-3 h-3 mr-1" />
                         Gap
                       </Badge>
                     )}
                   </div>
-                  <span className="text-xs text-[#6B6760]">n={metric.sampleSize}</span>
+                  <span className="text-xs text-muted-foreground">n={metric.sampleSize}</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 text-xs">
                   <div>
-                    <p className="text-[#6B6760] mb-1">Application Rate</p>
-                    <p className="font-medium text-[#2D3330]">
+                    <p className="mb-1 text-muted-foreground">Application Rate</p>
+                    <p className="font-medium text-foreground">
                       {metric.applicationRate.toFixed(1)}%
                     </p>
                   </div>
                   <div>
-                    <p className="text-[#6B6760] mb-1">Selection Rate</p>
-                    <p className="font-medium text-[#2D3330]">{metric.selectionRate.toFixed(1)}%</p>
+                    <p className="mb-1 text-muted-foreground">Selection Rate</p>
+                    <p className="font-medium text-foreground">
+                      {metric.selectionRate.toFixed(1)}%
+                    </p>
                   </div>
                 </div>
 
@@ -174,16 +174,16 @@ export function FairnessNoteCard({
                 {Math.abs(metric.representationGap) > 1 && (
                   <div>
                     <div className="flex items-center justify-between text-xs mb-1">
-                      <span className="text-[#6B6760]">Representation Gap</span>
+                      <span className="text-muted-foreground">Representation Gap</span>
                       <span
-                        className="font-medium"
-                        style={{
-                          color: isUnderrepresented
-                            ? '#DC2626'
+                        className={cn(
+                          'font-medium',
+                          isUnderrepresented
+                            ? 'text-destructive'
                             : isOverrepresented
-                              ? '#F59E0B'
-                              : '#16A34A',
-                        }}
+                              ? 'text-warning'
+                              : 'text-success'
+                        )}
                       >
                         {metric.representationGap > 0 ? '+' : ''}
                         {metric.representationGap.toFixed(1)}%
@@ -192,9 +192,13 @@ export function FairnessNoteCard({
                     <Progress
                       value={50 + metric.representationGap}
                       className="h-1.5"
-                      style={{
-                        backgroundColor: '#E8E6DD',
-                      }}
+                      indicatorClassName={cn(
+                        isUnderrepresented
+                          ? 'bg-destructive'
+                          : isOverrepresented
+                            ? 'bg-warning'
+                            : 'bg-success'
+                      )}
                     />
                   </div>
                 )}
@@ -204,7 +208,7 @@ export function FairnessNoteCard({
         </div>
 
         {/* Footer Note */}
-        <div className="text-xs text-[#6B6760] pt-3 border-t border-[#E8E6DD]">
+        <div className="border-t border-proofound-stone/90 pt-3 text-xs text-muted-foreground">
           <p>
             <strong>Note:</strong> Metrics based on anonymized opt-in demographic data. Small sample
             sizes (n{'<'}30) may show statistical noise. Use as one input among many in your
