@@ -170,17 +170,21 @@ ALTER TABLE assignment_benefits_offered ENABLE ROW LEVEL SECURITY;
 ALTER TABLE currency_exchange_rates ENABLE ROW LEVEL SECURITY;
 
 -- Benefits taxonomy is public read-only
+DROP POLICY IF EXISTS "Public read access to benefits taxonomy" ON benefits_taxonomy;
 CREATE POLICY "Public read access to benefits taxonomy" ON benefits_taxonomy
     FOR SELECT USING (true);
 
 -- Users can manage their own benefit preferences
+DROP POLICY IF EXISTS "Users can view their own benefits prefs" ON profile_benefits_prefs;
 CREATE POLICY "Users can view their own benefits prefs" ON profile_benefits_prefs
     FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can manage their own benefits prefs" ON profile_benefits_prefs;
 CREATE POLICY "Users can manage their own benefits prefs" ON profile_benefits_prefs
     FOR ALL USING (auth.uid() = user_id);
 
 -- Assignment benefits visible via assignment access
+DROP POLICY IF EXISTS "Public read access to assignment benefits" ON assignment_benefits_offered;
 CREATE POLICY "Public read access to assignment benefits" ON assignment_benefits_offered
     FOR SELECT USING (
         EXISTS (
@@ -189,6 +193,7 @@ CREATE POLICY "Public read access to assignment benefits" ON assignment_benefits
         )
     );
 
+DROP POLICY IF EXISTS "Org members can manage assignment benefits" ON assignment_benefits_offered;
 CREATE POLICY "Org members can manage assignment benefits" ON assignment_benefits_offered
     FOR ALL USING (
         EXISTS (
@@ -201,6 +206,7 @@ CREATE POLICY "Org members can manage assignment benefits" ON assignment_benefit
     );
 
 -- Currency rates are public read-only
+DROP POLICY IF EXISTS "Public read access to currency rates" ON currency_exchange_rates;
 CREATE POLICY "Public read access to currency rates" ON currency_exchange_rates
     FOR SELECT USING (true);
 

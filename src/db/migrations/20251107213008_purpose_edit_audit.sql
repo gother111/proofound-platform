@@ -28,6 +28,16 @@ CREATE TABLE IF NOT EXISTS purpose_edit_log (
   ) STORED
 );
 
+-- Backward compatibility when table pre-exists without generated columns.
+ALTER TABLE purpose_edit_log
+  ADD COLUMN IF NOT EXISTS old_char_count INTEGER GENERATED ALWAYS AS (LENGTH(old_value)) STORED,
+  ADD COLUMN IF NOT EXISTS new_char_count INTEGER GENERATED ALWAYS AS (LENGTH(new_value)) STORED,
+  ADD COLUMN IF NOT EXISTS is_major_change BOOLEAN GENERATED ALWAYS AS (
+    ABS(LENGTH(old_value) - LENGTH(new_value)) > 50 OR
+    old_value IS NULL OR
+    new_value IS NULL
+  ) STORED;
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_purpose_edit_log_user_id ON purpose_edit_log(user_id);
 CREATE INDEX IF NOT EXISTS idx_purpose_edit_log_field_name ON purpose_edit_log(field_name);
@@ -38,4 +48,3 @@ CREATE INDEX IF NOT EXISTS idx_purpose_edit_log_user_field ON purpose_edit_log(u
 COMMENT ON TABLE purpose_edit_log IS 'Append-only audit trail of mission and vision changes';
 COMMENT ON COLUMN purpose_edit_log.field_name IS 'Which purpose field was edited: mission or vision';
 COMMENT ON COLUMN purpose_edit_log.is_major_change IS 'Automatically calculated: true if change is >50 chars or null→value or value→null';
-

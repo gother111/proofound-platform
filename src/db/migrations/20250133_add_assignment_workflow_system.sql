@@ -237,6 +237,7 @@ ALTER TABLE assignment_field_visibility ENABLE ROW LEVEL SECURITY;
 ALTER TABLE assignment_field_visibility_defaults ENABLE ROW LEVEL SECURITY;
 
 -- Outcomes visible via assignment access
+DROP POLICY IF EXISTS "Public read for published assignment outcomes" ON assignment_outcomes;
 CREATE POLICY "Public read for published assignment outcomes" ON assignment_outcomes
     FOR SELECT USING (
         EXISTS (
@@ -247,6 +248,7 @@ CREATE POLICY "Public read for published assignment outcomes" ON assignment_outc
         )
     );
 
+DROP POLICY IF EXISTS "Org members can manage assignment outcomes" ON assignment_outcomes;
 CREATE POLICY "Org members can manage assignment outcomes" ON assignment_outcomes
     FOR ALL USING (
         EXISTS (
@@ -259,6 +261,7 @@ CREATE POLICY "Org members can manage assignment outcomes" ON assignment_outcome
     );
 
 -- Expertise matrix visible via assignment access
+DROP POLICY IF EXISTS "Public read for published expertise matrix" ON assignment_expertise_matrix;
 CREATE POLICY "Public read for published expertise matrix" ON assignment_expertise_matrix
     FOR SELECT USING (
         EXISTS (
@@ -269,6 +272,7 @@ CREATE POLICY "Public read for published expertise matrix" ON assignment_experti
         )
     );
 
+DROP POLICY IF EXISTS "Org members can manage expertise matrix" ON assignment_expertise_matrix;
 CREATE POLICY "Org members can manage expertise matrix" ON assignment_expertise_matrix
     FOR ALL USING (
         EXISTS (
@@ -281,6 +285,7 @@ CREATE POLICY "Org members can manage expertise matrix" ON assignment_expertise_
     );
 
 -- Pipeline visible to org members and assigned stakeholders
+DROP POLICY IF EXISTS "Org members and stakeholders can view pipeline" ON assignment_creation_pipeline;
 CREATE POLICY "Org members and stakeholders can view pipeline" ON assignment_creation_pipeline
     FOR SELECT USING (
         auth.uid() = stakeholder_user_id
@@ -293,6 +298,7 @@ CREATE POLICY "Org members and stakeholders can view pipeline" ON assignment_cre
         )
     );
 
+DROP POLICY IF EXISTS "Stakeholders can update their pipeline steps" ON assignment_creation_pipeline;
 CREATE POLICY "Stakeholders can update their pipeline steps" ON assignment_creation_pipeline
     FOR UPDATE USING (
         auth.uid() = stakeholder_user_id
@@ -306,6 +312,7 @@ CREATE POLICY "Stakeholders can update their pipeline steps" ON assignment_creat
     );
 
 -- Field visibility: org members only
+DROP POLICY IF EXISTS "Org members can manage field visibility" ON assignment_field_visibility;
 CREATE POLICY "Org members can manage field visibility" ON assignment_field_visibility
     FOR ALL USING (
         EXISTS (
@@ -318,6 +325,7 @@ CREATE POLICY "Org members can manage field visibility" ON assignment_field_visi
     );
 
 -- Defaults are public read-only
+DROP POLICY IF EXISTS "Public read access to visibility defaults" ON assignment_field_visibility_defaults;
 CREATE POLICY "Public read access to visibility defaults" ON assignment_field_visibility_defaults
     FOR SELECT USING (true);
 
@@ -389,6 +397,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_auto_populate_field_visibility ON assignments;
 CREATE TRIGGER trigger_auto_populate_field_visibility
     AFTER INSERT ON assignments
     FOR EACH ROW
@@ -429,6 +438,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_update_assignment_creation_status ON assignment_creation_pipeline;
 CREATE TRIGGER trigger_update_assignment_creation_status
     AFTER UPDATE OF status ON assignment_creation_pipeline
     FOR EACH ROW

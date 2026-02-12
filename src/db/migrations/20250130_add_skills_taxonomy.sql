@@ -130,7 +130,18 @@ CREATE INDEX IF NOT EXISTS idx_skills_taxonomy_cat_subcat ON skills_taxonomy(cat
 CREATE INDEX IF NOT EXISTS idx_skills_taxonomy_cat_subcat_l3 ON skills_taxonomy(cat_id, subcat_id, l3_id);
 CREATE INDEX IF NOT EXISTS idx_skills_taxonomy_status ON skills_taxonomy(status);
 CREATE INDEX IF NOT EXISTS idx_skills_taxonomy_tags ON skills_taxonomy USING GIN(tags);
-CREATE INDEX IF NOT EXISTS idx_skills_taxonomy_embedding ON skills_taxonomy USING ivfflat(embedding vector_cosine_ops) WITH (lists = 100);
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'skills_taxonomy'
+          AND column_name = 'embedding'
+    ) THEN
+        EXECUTE 'CREATE INDEX IF NOT EXISTS idx_skills_taxonomy_embedding ON skills_taxonomy USING ivfflat(embedding vector_cosine_ops) WITH (lists = 100)';
+    END IF;
+END $$;
 
 -- Adjacency graph indexes
 CREATE INDEX IF NOT EXISTS idx_skill_adjacency_from ON skill_adjacency(from_code);
@@ -150,6 +161,12 @@ ALTER TABLE skills_taxonomy ENABLE ROW LEVEL SECURITY;
 ALTER TABLE skill_adjacency ENABLE ROW LEVEL SECURITY;
 
 -- Public read access for all taxonomy tables
+DROP POLICY IF EXISTS "Public read access to skills categories" ON skills_categories;
+DROP POLICY IF EXISTS "Public read access to skills subcategories" ON skills_subcategories;
+DROP POLICY IF EXISTS "Public read access to skills L3" ON skills_l3;
+DROP POLICY IF EXISTS "Public read access to skills taxonomy" ON skills_taxonomy;
+DROP POLICY IF EXISTS "Public read access to skill adjacency" ON skill_adjacency;
+
 CREATE POLICY "Public read access to skills categories" ON skills_categories
     FOR SELECT USING (true);
 
@@ -166,6 +183,12 @@ CREATE POLICY "Public read access to skill adjacency" ON skill_adjacency
     FOR SELECT USING (true);
 
 -- Admin-only write access (service role)
+DROP POLICY IF EXISTS "Service role full access to categories" ON skills_categories;
+DROP POLICY IF EXISTS "Service role full access to subcategories" ON skills_subcategories;
+DROP POLICY IF EXISTS "Service role full access to L3" ON skills_l3;
+DROP POLICY IF EXISTS "Service role full access to taxonomy" ON skills_taxonomy;
+DROP POLICY IF EXISTS "Service role full access to adjacency" ON skill_adjacency;
+
 CREATE POLICY "Service role full access to categories" ON skills_categories
     USING (true);
 
@@ -265,6 +288,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_update_competency_label ON skills;
+
 CREATE TRIGGER trigger_update_competency_label
     BEFORE INSERT OR UPDATE OF level ON skills
     FOR EACH ROW
@@ -326,7 +351,18 @@ COMMENT ON TABLE skills_taxonomy IS 'L4: Granular skills/tools/frameworks (10,00
 COMMENT ON TABLE skill_adjacency IS 'Graph of skill relationships for "nearby skills" matching with distance-based decay';
 
 COMMENT ON COLUMN skills_taxonomy.code IS 'Unique code format: "01.03.01.142" (L1.L2.L3.L4, zero-padded)';
-COMMENT ON COLUMN skills_taxonomy.embedding IS 'Vector(768) multilingual sentence embedding for semantic search (pgvector)';
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'skills_taxonomy'
+          AND column_name = 'embedding'
+    ) THEN
+        EXECUTE 'COMMENT ON COLUMN skills_taxonomy.embedding IS ''Vector(768) multilingual sentence embedding for semantic search (pgvector)''';
+    END IF;
+END $$;
 COMMENT ON COLUMN skills_taxonomy.status IS 'active: current skill | deprecated: use alias_of | merged: combined into merged_into';
 COMMENT ON COLUMN skill_adjacency.distance IS '1=same L3, 2=same L2, 3=same L1; used in exp(-λ*distance) decay';
 COMMENT ON COLUMN skill_adjacency.strength IS 'Manual override for adjacency strength (0-1); default 1.0';

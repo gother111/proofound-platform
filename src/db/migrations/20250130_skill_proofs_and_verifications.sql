@@ -36,18 +36,18 @@ CREATE TABLE IF NOT EXISTS skill_verification_requests (
 );
 
 -- Indexes for performance
-CREATE INDEX idx_skill_proofs_skill_id ON skill_proofs(skill_id);
-CREATE INDEX idx_skill_proofs_profile_id ON skill_proofs(profile_id);
-CREATE INDEX idx_skill_proofs_type ON skill_proofs(proof_type);
-CREATE INDEX idx_skill_proofs_created_at ON skill_proofs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_skill_proofs_skill_id ON skill_proofs(skill_id);
+CREATE INDEX IF NOT EXISTS idx_skill_proofs_profile_id ON skill_proofs(profile_id);
+CREATE INDEX IF NOT EXISTS idx_skill_proofs_type ON skill_proofs(proof_type);
+CREATE INDEX IF NOT EXISTS idx_skill_proofs_created_at ON skill_proofs(created_at DESC);
 
-CREATE INDEX idx_skill_verification_skill_id ON skill_verification_requests(skill_id);
-CREATE INDEX idx_skill_verification_requester ON skill_verification_requests(requester_profile_id);
-CREATE INDEX idx_skill_verification_verifier_email ON skill_verification_requests(verifier_email);
-CREATE INDEX idx_skill_verification_verifier_profile ON skill_verification_requests(verifier_profile_id);
-CREATE INDEX idx_skill_verification_status ON skill_verification_requests(status);
-CREATE INDEX idx_skill_verification_created_at ON skill_verification_requests(created_at DESC);
-CREATE INDEX idx_skill_verification_expires_at ON skill_verification_requests(expires_at);
+CREATE INDEX IF NOT EXISTS idx_skill_verification_skill_id ON skill_verification_requests(skill_id);
+CREATE INDEX IF NOT EXISTS idx_skill_verification_requester ON skill_verification_requests(requester_profile_id);
+CREATE INDEX IF NOT EXISTS idx_skill_verification_verifier_email ON skill_verification_requests(verifier_email);
+CREATE INDEX IF NOT EXISTS idx_skill_verification_verifier_profile ON skill_verification_requests(verifier_profile_id);
+CREATE INDEX IF NOT EXISTS idx_skill_verification_status ON skill_verification_requests(status);
+CREATE INDEX IF NOT EXISTS idx_skill_verification_created_at ON skill_verification_requests(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_skill_verification_expires_at ON skill_verification_requests(expires_at);
 
 -- Row-Level Security (RLS) Policies
 
@@ -57,11 +57,13 @@ ALTER TABLE skill_verification_requests ENABLE ROW LEVEL SECURITY;
 
 -- skill_proofs policies
 -- Users can view their own proofs
+DROP POLICY IF EXISTS "Users can view their own skill proofs" ON skill_proofs;
 CREATE POLICY "Users can view their own skill proofs"
   ON skill_proofs FOR SELECT
   USING (auth.uid() = profile_id);
 
 -- Users can insert proofs for their own skills
+DROP POLICY IF EXISTS "Users can add proofs to their own skills" ON skill_proofs;
 CREATE POLICY "Users can add proofs to their own skills"
   ON skill_proofs FOR INSERT
   WITH CHECK (
@@ -74,22 +76,26 @@ CREATE POLICY "Users can add proofs to their own skills"
   );
 
 -- Users can update their own proofs
+DROP POLICY IF EXISTS "Users can update their own proofs" ON skill_proofs;
 CREATE POLICY "Users can update their own proofs"
   ON skill_proofs FOR UPDATE
   USING (auth.uid() = profile_id);
 
 -- Users can delete their own proofs
+DROP POLICY IF EXISTS "Users can delete their own proofs" ON skill_proofs;
 CREATE POLICY "Users can delete their own proofs"
   ON skill_proofs FOR DELETE
   USING (auth.uid() = profile_id);
 
 -- skill_verification_requests policies
 -- Users can view verification requests they sent
+DROP POLICY IF EXISTS "Users can view verification requests they sent" ON skill_verification_requests;
 CREATE POLICY "Users can view verification requests they sent"
   ON skill_verification_requests FOR SELECT
   USING (auth.uid() = requester_profile_id);
 
 -- Users can view verification requests sent to them (by email or profile)
+DROP POLICY IF EXISTS "Users can view verification requests sent to them" ON skill_verification_requests;
 CREATE POLICY "Users can view verification requests sent to them"
   ON skill_verification_requests FOR SELECT
   USING (
@@ -98,6 +104,7 @@ CREATE POLICY "Users can view verification requests sent to them"
   );
 
 -- Users can create verification requests for their own skills
+DROP POLICY IF EXISTS "Users can request verification for their own skills" ON skill_verification_requests;
 CREATE POLICY "Users can request verification for their own skills"
   ON skill_verification_requests FOR INSERT
   WITH CHECK (
@@ -110,6 +117,7 @@ CREATE POLICY "Users can request verification for their own skills"
   );
 
 -- Verifiers can update verification requests (respond to them)
+DROP POLICY IF EXISTS "Verifiers can respond to verification requests" ON skill_verification_requests;
 CREATE POLICY "Verifiers can respond to verification requests"
   ON skill_verification_requests FOR UPDATE
   USING (
@@ -127,6 +135,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger to automatically update updated_at
+DROP TRIGGER IF EXISTS skill_proofs_updated_at ON skill_proofs;
 CREATE TRIGGER skill_proofs_updated_at
   BEFORE UPDATE ON skill_proofs
   FOR EACH ROW
@@ -151,5 +160,4 @@ COMMENT ON COLUMN skill_proofs.verified IS 'Whether this proof has been verified
 COMMENT ON COLUMN skill_verification_requests.verifier_source IS 'Source of verifier: peer, manager, external';
 COMMENT ON COLUMN skill_verification_requests.status IS 'Status: pending, accepted, declined, expired';
 COMMENT ON COLUMN skill_verification_requests.expires_at IS 'Verification requests expire after 30 days';
-
 
