@@ -52,7 +52,7 @@ export function DashboardClient({ initialLayout }: DashboardClientProps) {
   return (
     <div className="space-y-2">
       {mounted ? (
-        <div className="text-xs text-gray-500" aria-live="polite">
+        <div className="text-xs text-gray-600 dark:text-gray-300" aria-live="polite">
           Dashboard loading…
         </div>
       ) : null}

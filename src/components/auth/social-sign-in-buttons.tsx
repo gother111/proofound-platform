@@ -52,9 +52,9 @@ type OAuthProviderFormProps = {
 
 function OAuthProviderForm({ provider, label, action, children }: OAuthProviderFormProps) {
   return (
-    <form action={action} className="w-full">
+    <form action={action} className="w-full" data-testid={`oauth-${provider}-form`}>
       <input type="hidden" name="provider" value={provider} />
-      <OAuthSubmitButton>
+      <OAuthSubmitButton provider={provider}>
         <span className="mr-2">{children}</span>
         {label}
       </OAuthSubmitButton>
@@ -64,9 +64,10 @@ function OAuthProviderForm({ provider, label, action, children }: OAuthProviderF
 
 type OAuthSubmitButtonProps = {
   children: ReactNode;
+  provider: Provider;
 };
 
-function OAuthSubmitButton({ children }: OAuthSubmitButtonProps) {
+function OAuthSubmitButton({ children, provider }: OAuthSubmitButtonProps) {
   const { pending } = useFormStatus();
 
   return (
@@ -75,6 +76,7 @@ function OAuthSubmitButton({ children }: OAuthSubmitButtonProps) {
       variant="outline"
       className="w-full flex items-center gap-2 border-proofound-stone dark:border-border hover:bg-proofound-stone/10 dark:hover:bg-muted"
       disabled={pending}
+      data-testid={`oauth-${provider.replace('_oidc', '')}-submit`}
     >
       {pending ? <span className="flex-1 text-center">Redirecting...</span> : children}
     </Button>

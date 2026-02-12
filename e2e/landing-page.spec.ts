@@ -14,7 +14,7 @@ test.describe('Landing Page', () => {
     // Hero heading should be visible
     const heading = page.getByRole('heading', { name: /Proofound/i, level: 1 });
     await expect(heading).toBeVisible();
-    const hero = page.locator('section', { has: heading });
+    const hero = page.getByTestId('landing-hero-section');
     await expect(hero).toBeVisible();
 
     // Subheading should be visible
@@ -30,62 +30,62 @@ test.describe('Landing Page', () => {
     await expect(hero.getByRole('button', { name: /Join as an Organization/i })).toBeVisible();
   });
 
-	  test('header menu opens and closes via the X button', async ({ page }) => {
-	    const openButton = page.getByTestId('landing-menu-trigger');
-	    await expect(openButton).toBeVisible();
-	    await openButton.click();
+  test('header menu opens and closes via the X button', async ({ page }) => {
+    const openButton = page.getByTestId('landing-menu-trigger');
+    await expect(openButton).toBeVisible();
+    await openButton.click();
 
-	    const nav = page.getByTestId('landing-menu-nav');
-	    await expect(nav).toBeVisible();
+    const nav = page.getByTestId('landing-menu-nav');
+    await expect(nav).toBeVisible();
 
-	    // Guard against the "empty overlay" regression where the menu is technically visible,
-	    // but rendered off-screen due to conflicting positioning classes.
-	    const viewport = page.viewportSize();
-	    expect(viewport).not.toBeNull();
-	    const navBox = await nav.boundingBox();
-	    expect(navBox).not.toBeNull();
-	    expect(navBox!.y).toBeGreaterThanOrEqual(0);
-	    expect(navBox!.y).toBeLessThan(viewport!.height);
-	    expect(navBox!.y + navBox!.height).toBeLessThanOrEqual(viewport!.height);
+    // Guard against the "empty overlay" regression where the menu is technically visible,
+    // but rendered off-screen due to conflicting positioning classes.
+    const viewport = page.viewportSize();
+    expect(viewport).not.toBeNull();
+    const navBox = await nav.boundingBox();
+    expect(navBox).not.toBeNull();
+    expect(navBox!.y).toBeGreaterThanOrEqual(0);
+    expect(navBox!.y).toBeLessThan(viewport!.height);
+    expect(navBox!.y + navBox!.height).toBeLessThanOrEqual(viewport!.height);
 
-	    // All expected menu items should render.
-	    await expect(nav.getByText('Mission', { exact: true })).toBeVisible();
-	    await expect(nav.getByText('How it Works', { exact: true })).toBeVisible();
-	    await expect(nav.getByText('Principles', { exact: true })).toBeVisible();
-	    await expect(nav.getByText('Pricing', { exact: true })).toBeVisible();
-	    await expect(nav.getByText('Log in', { exact: true })).toBeVisible();
+    // All expected menu items should render.
+    await expect(nav.getByText('Mission', { exact: true })).toBeVisible();
+    await expect(nav.getByText('How it Works', { exact: true })).toBeVisible();
+    await expect(nav.getByText('Principles', { exact: true })).toBeVisible();
+    await expect(nav.getByText('Pricing', { exact: true })).toBeVisible();
+    await expect(nav.getByText('Log in', { exact: true })).toBeVisible();
 
-	    const closeButton = page.getByTestId('landing-menu-close');
-	    await expect(closeButton).toBeVisible();
-	    const closeBox = await closeButton.boundingBox();
-	    expect(closeBox).not.toBeNull();
-	    expect(closeBox!.y).toBeGreaterThanOrEqual(0);
-	    expect(closeBox!.y).toBeLessThan(viewport!.height);
-	    await closeButton.click();
+    const closeButton = page.getByTestId('landing-menu-close');
+    await expect(closeButton).toBeVisible();
+    const closeBox = await closeButton.boundingBox();
+    expect(closeBox).not.toBeNull();
+    expect(closeBox!.y).toBeGreaterThanOrEqual(0);
+    expect(closeBox!.y).toBeLessThan(viewport!.height);
+    await closeButton.click();
 
-	    await expect(nav).toBeHidden();
-	    await expect(openButton).toBeVisible();
-	  });
+    await expect(nav).toBeHidden();
+    await expect(openButton).toBeVisible();
+  });
 
   test('renders personas section toggle and switches between individuals and organizations', async ({
     page,
   }) => {
-    const personas = page.locator('section#for-whom');
+    const personas = page.getByTestId('landing-personas-section');
     await expect(personas).toBeVisible();
 
     await expect(personas.getByRole('heading', { name: /Built for you/i })).toBeVisible();
 
     // Organizations tab should show org content
-    await personas.getByRole('button', { name: /Organizations/i }).click();
-    await expect(personas.getByRole('heading', { name: /For Organizations/i })).toBeVisible();
+    await page.getByTestId('landing-personas-toggle-organization').click();
+    await expect(page.getByTestId('landing-persona-title')).toHaveText(/For Organizations/i);
 
     // Individuals tab should show individual content
-    await personas.getByRole('button', { name: /Individuals/i }).click();
-    await expect(personas.getByRole('heading', { name: /For Individuals/i })).toBeVisible();
+    await page.getByTestId('landing-personas-toggle-individual').click();
+    await expect(page.getByTestId('landing-persona-title')).toHaveText(/For Individuals/i);
   });
 
   test('renders principles section', async ({ page }) => {
-    const principles = page.locator('section#principles');
+    const principles = page.getByTestId('landing-principles-section');
     await expect(principles).toBeVisible();
 
     await expect(
@@ -102,7 +102,7 @@ test.describe('Landing Page', () => {
   test('renders CTA section', async ({ page }) => {
     const ctaHeading = page.getByRole('heading', { name: /Ready to build trust that lasts/i });
     await expect(ctaHeading).toBeVisible();
-    const ctaSection = page.locator('section', { has: ctaHeading });
+    const ctaSection = page.getByTestId('landing-final-cta-section');
 
     // CTA button (scoped to section to avoid matching sticky CTA)
     const ctaButton = ctaSection.getByRole('button', { name: /Get Started/i });
@@ -110,7 +110,7 @@ test.describe('Landing Page', () => {
   });
 
   test('renders footer', async ({ page }) => {
-    const footer = page.locator('footer');
+    const footer = page.getByTestId('landing-footer-section');
     await expect(footer).toBeVisible();
 
     // Footer sections
@@ -150,7 +150,7 @@ test.describe('Landing Page', () => {
     // Hero should still be visible
     const heading = page.getByRole('heading', { name: /Proofound/i, level: 1 });
     await expect(heading).toBeVisible();
-    const hero = page.locator('section', { has: heading });
+    const hero = page.getByTestId('landing-hero-section');
     await expect(hero).toBeVisible();
 
     // CTAs should still be visible
@@ -158,7 +158,7 @@ test.describe('Landing Page', () => {
     await expect(hero.getByRole('button', { name: /Join as an Organization/i })).toBeVisible();
 
     // Personas section should still render after scroll
-    const personas = page.locator('section#for-whom');
+    const personas = page.getByTestId('landing-personas-section');
     await personas.scrollIntoViewIfNeeded();
     await expect(personas.getByRole('heading', { name: /Built for you/i })).toBeVisible();
   });
@@ -175,13 +175,17 @@ test.describe('Landing Page', () => {
     // Check that brand colors are applied
     const heroHeading = page.getByRole('heading', { name: /Proofound/i, level: 1 });
 
-    // Get computed style
-    const color = await heroHeading.evaluate((el) => {
-      return window.getComputedStyle(el).color;
+    const styles = await heroHeading.evaluate((el) => {
+      const headingColor = window.getComputedStyle(el).color;
+      const bodyColor = window.getComputedStyle(document.body).color;
+      const bgColor = window.getComputedStyle(document.body).backgroundColor;
+      return { headingColor, bodyColor, bgColor };
     });
 
-    // Color should not be black (default) - should be brand color
-    expect(color).not.toBe('rgb(0, 0, 0)');
+    expect(styles.headingColor).toMatch(/^rgb/);
+    expect(styles.bgColor).toMatch(/^rgb/);
+    expect(styles.headingColor).not.toBe('rgba(0, 0, 0, 0)');
+    expect(styles.headingColor).not.toBe(styles.bgColor);
   });
 });
 

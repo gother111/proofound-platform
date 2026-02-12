@@ -54,21 +54,21 @@ export async function GET(request: NextRequest) {
         host_user_id,
         participant_user_ids,
         created_at,
-        matches!inner (
+        matches:matches!interviews_match_id_fkey (
           id,
           profile_id,
           assignment_id,
           created_at,
-          assignments!inner (
+          assignments:assignments!matches_assignment_id_fkey (
             id,
             role,
             org_id,
-            organizations!inner (
+            organizations:organizations!assignments_org_id_fkey (
               id,
               display_name
             )
           ),
-          profiles!inner (
+          profiles:profiles!matches_profile_id_fkey (
             id,
             display_name
           )
@@ -147,12 +147,23 @@ export async function POST(request: NextRequest) {
     // 1. Verify match exists and user has access
     const { data: match, error: matchError } = await supabase
       .from('matches')
-      .select('*, assignments(*)')
+      .select('id, assignment_id, created_at')
       .eq('id', data.matchId)
       .single();
 
     if (matchError || !match) {
       return NextResponse.json({ error: 'Match not found' }, { status: 404 });
+    }
+
+    let assignmentRole = 'Proofound Match';
+    if (data.platform !== 'manual') {
+      const { data: assignment } = await supabase
+        .from('assignments')
+        .select('role')
+        .eq('id', match.assignment_id)
+        .maybeSingle();
+
+      assignmentRole = assignment?.role || assignmentRole;
     }
 
     // 2. Check if interview already exists for this match (PRD: only 1 per match)
@@ -252,7 +263,7 @@ export async function POST(request: NextRequest) {
       if (data.platform === 'zoom') {
         const { createZoomMeeting } = await import('@/lib/integrations/zoom');
         const meeting = await createZoomMeeting(accessToken, {
-          topic: `Interview - ${match.assignments.role || 'Proofound Match'}`,
+          topic: `Interview - ${assignmentRole}`,
           start_time: data.scheduledAt,
           duration: 30,
           timezone: data.timezone,
@@ -273,7 +284,7 @@ export async function POST(request: NextRequest) {
         }
 
         const meeting = await createGoogleMeet(accessToken, {
-          summary: `Interview - ${match.assignments.role || 'Proofound Match'}`,
+          summary: `Interview - ${assignmentRole}`,
           start_time: data.scheduledAt,
           duration: 30,
           timezone: data.timezone,
@@ -319,7 +330,7 @@ export async function POST(request: NextRequest) {
 
       emitInterviewScheduledAsync(user.id, interview.id, {
         interview_id: interview.id,
-        assignment_id: match.assignments.id,
+        assignment_id: match.assignment_id,
         match_id: data.matchId,
         duration_minutes: 30,
         platform: data.platform,

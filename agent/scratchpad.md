@@ -1063,3 +1063,332 @@ Commands run + outcomes:
 Open TODOs / follow-ups:
 
 - Optional: replace `unoptimized` with a configured optimized remote image path once `images.remotePatterns` is explicitly locked for snippet avatar/logo sources.
+
+---
+
+## 2026-02-12 15:45 CET
+
+Task summary:
+
+- Executed MVP readiness recovery on test contracts and CI gates.
+- Replaced fragile auth/landing assertions with stable selector-based checks and added a per-flow I-01..I-20 / O-01..O-20 readiness matrix.
+- Re-ran required gates and documented local production-like blockers.
+
+What worked:
+
+- Auth contract suite now passes consistently after adding stable test IDs and deterministic `PII_HASH_SALT` handling.
+- Landing and a11y contracts pass with updated selectors and animation-settle handling.
+- CI gate enforcement is now stricter: auth E2E and a11y are explicit required steps, perf/go-no-go are blocking, and label-gated E2E shortcut is removed.
+
+What failed / wrong assumptions:
+
+- Running Playwright suites in parallel caused deterministic port collisions on `39123`.
+- Initial perf/go-no-go results were invalid because an unrelated pre-existing `next start` process was already bound to `:3000`.
+- Attempted Dockerized Postgres parity run failed because Docker daemon was not running.
+
+User corrections:
+
+- None in this session.
+
+Assumptions taken without asking:
+
+- It is acceptable to classify flow status from executable repo evidence (routes + current test assertions) even when some flows are env-gated.
+- Local verification can use mock Supabase mode for landing/auth/a11y contract checks when required runtime secrets are unavailable.
+- CI should include a deterministic fallback `PII_HASH_SALT` for test stability.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add a dedicated script to run required gate set sequentially with explicit env and preflight port cleanup.
+- Isolate non-contract E2E suites from required MVP gates to reduce noise from placeholder tests.
+- Add a local helper to assert no existing process is bound to required test ports before running contracts.
+
+Commands run + outcomes:
+
+- `npm run test:e2e:landing`: FAIL without runtime env, PASS with `NEXT_PUBLIC_USE_MOCK_SUPABASE=true`.
+- `npm run test:e2e:auth`: FAIL before salt fix, PASS after deterministic `PII_HASH_SALT` handling.
+- `npm run test:a11y`: PASS after Playwright stabilization.
+- `npm run lint`: PASS.
+- `npm run typecheck`: PASS.
+- `npm run test`: PASS (42 files, 239 tests).
+- `npm run build`: PASS.
+- `npm run test:privacy`: FAIL (missing Supabase test env vars).
+- `npm run perf:budgets` + `npm run go:no-go`: FAIL in strict local production-like run without `DATABASE_URL`.
+
+Open TODOs / follow-ups:
+
+- Provide production-like DB/env parity (`DATABASE_URL`, Supabase keys) for deterministic local `next start` gate runs.
+- Convert high-value non-auth flows from `implemented+unverified` to `implemented+verified` by replacing URL/boolean placeholder tests.
+- Decide whether to promote privacy/RLS tests into default MVP required gates.
+
+---
+
+## 2026-02-12 16:40 CET
+
+Task summary:
+
+- Implemented MVP Readiness Recovery Plan (Large change), with Option 2 first.
+- Added strict no-mock auth and a11y launch gates, updated CI required checks, and added strict local parity runner.
+- Rebaselined perf budgets and published final strict-evidence flow matrix for I-01..I-20 and O-01..O-20.
+
+What worked:
+
+- Strict auth suite (`e2e/auth.real.spec.ts`) passed with real Supabase-backed outcomes for signup/login/reset/verify positive and negative paths.
+- Strict a11y suite passed for public pages, and placeholder authenticated checks are now explicit `test.skip` instead of false pass placeholders.
+- Full strict gate bundle passed end to end with explicit env file loading and no-mock enforcement.
+- CI gate wiring now points to strict auth and strict a11y commands.
+
+What failed / wrong assumptions:
+
+- A direct isolated landing run without env file produced console errors from missing Supabase env; strict runner with env parity resolved this.
+- Previous assumption that landing gate was still failing in strict mode was stale; rerun showed pass.
+
+User corrections:
+
+- User corrected the execution choice from option 1 to option 2 before implementation proceeded.
+
+Assumptions taken without asking:
+
+- It is acceptable to keep mock auth/a11y suites as non-blocking developer feedback while requiring strict no-mock suites for launch gates.
+- Existing strict flow statuses can remain conservative (`implemented+unverified`) when only partial unit/API evidence exists in required gates.
+- Env parity for strict local runs can use `<path-to-env.local>` as provided by user context.
+
+What the user corrected afterward:
+
+- The requested option order was corrected to "option 2 first".
+
+Improvements next time:
+
+- Promote authenticated a11y coverage from `skip` to deterministic strict fixtures.
+- Move selected privacy/RLS contracts into strict launch gates once deterministic test isolation is in place.
+- Replace remaining URL-only and `expect(true)` placeholders in PRD flow suites with behavior assertions.
+
+Commands run + outcomes:
+
+- `node ./scripts/playwright-node20.mjs test e2e/landing-page.spec.ts --project=chromium --grep "has no console errors" --reporter=line`: FAIL (missing runtime env in isolated run).
+- `npm run gates:mvp:strict -- --env-file <path-to-env.local> --port 40123`: PASS.
+- `set -a; source <path-to-env.local>; set +a; NEXT_PUBLIC_USE_MOCK_SUPABASE=false npm run test:e2e:auth:real`: PASS (10 passed).
+- `set -a; source <path-to-env.local>; set +a; NEXT_PUBLIC_USE_MOCK_SUPABASE=false npm run test:a11y:strict`: PASS (15 passed, 3 skipped).
+- Strict run included and passed: `lint`, `typecheck`, `test`, `build`, `test:e2e:landing`, `test:e2e:auth:real`, `test:a11y:strict`, `perf:budgets`, `go:no-go`.
+
+Open TODOs / follow-ups:
+
+- Convert high-priority individual and organization flows from `implemented+unverified` to `implemented+verified` by adding strict canonical E2E contracts.
+- Define and implement authenticated strict a11y fixtures.
+- Decide when to make privacy/RLS suite part of default strict launch gates.
+
+---
+
+## 2026-02-12 18:24 CET
+
+Task summary:
+
+- Executed MVP strict-readiness continuation for all 40 flow families with real-provider launch policy enabled.
+- Promoted strict individual/org/privacy/providers suites to required CI steps and refreshed flow matrix to strict evidence.
+- Re-ran strict suites and gates to identify remaining launch blocker.
+
+What worked:
+
+- Strict suites pass for landing, auth real, a11y strict, individual strict, org strict, and privacy strict.
+- Perf and go/no-go gates pass in production-like local start mode.
+- Strict quality guard blocks placeholder patterns in required suites.
+
+What failed / wrong assumptions:
+
+- After enabling real-provider enforcement by default, `test:e2e:providers:strict` fails because no connected Zoom/Google provider exists for runtime test users.
+- Full `gates:mvp:strict` now fails at provider strict gate by design until provider connectivity is provisioned.
+
+User corrections:
+
+- Earlier in this workstream, user corrected requested execution path from option 1 to option 2 and required strict no-mock route.
+
+Assumptions taken without asking:
+
+- Real-provider strict enforcement should be default-on in CI and strict local gate runner.
+- Flow matrix statuses should be derived from strict executable evidence, even if that downgrades launch readiness.
+
+What the user corrected afterward:
+
+- None in this session.
+
+Improvements next time:
+
+- Add deterministic provider bootstrap/teardown helper so provider strict test setup does not depend on manual connected-state preparation.
+- Add log-signal filtering for expected analytics JSON parse noise during Playwright shutdown.
+
+Commands run + outcomes:
+
+- `npm run lint`: PASS.
+- `npm run typecheck`: PASS.
+- `npm run test:strict:quality`: PASS.
+- `set -a; source <path-to-env.local>; set +a; npm run test:e2e:landing`: PASS.
+- `set -a; source <path-to-env.local>; set +a; npm run test:e2e:auth:real`: PASS.
+- `set -a; source <path-to-env.local>; set +a; npm run test:a11y:strict`: PASS.
+- `set -a; source <path-to-env.local>; set +a; npm run test:e2e:individual:strict`: PASS.
+- `set -a; source <path-to-env.local>; set +a; npm run test:e2e:org:strict`: PASS.
+- `set -a; source <path-to-env.local>; set +a; npm run test:e2e:privacy:strict`: PASS.
+- `set -a; source <path-to-env.local>; set +a; npm run test:e2e:providers:strict`: FAIL (strict provider connected requirement unmet).
+- `npm run gates:mvp:strict -- --env-file <path-to-env.local> --port 40123`: FAIL at provider strict gate.
+- `BASE_URL=http://localhost:40123 npm run perf:budgets`: PASS.
+- `BASE_URL=http://localhost:40123 SUS_STUDY_COMPLETE=true npm run go:no-go`: PASS.
+
+Open TODOs / follow-ups:
+
+- Provide staging provider credentials and callback config for Zoom/Google/LinkedIn in runtime env.
+- Connect deterministic provider-backed test account(s) before running strict provider suite.
+- Re-run full `gates:mvp:strict` and update matrix status from `broken` to `implemented+verified` for `I-16` and `O-12`.
+
+---
+
+## 2026-02-12 20:02 CET
+
+Task summary:
+
+- Verified Zoom, Google, and LinkedIn credential behavior from local env without exposing secrets.
+- Fixed malformed Google OAuth env values in local `.env.local` and re-ran provider verification.
+- Re-ran strict provider suite to confirm remaining blocker status.
+
+What worked:
+
+- Zoom token probe returned expected invalid-code response (`invalid_grant`), indicating accepted client auth.
+- LinkedIn token probe returned expected invalid-code response (`invalid_request`), indicating accepted client auth.
+- Google probe moved from `invalid_client` to `invalid_grant` after env fix, confirming accepted client auth.
+
+What failed / wrong assumptions:
+
+- Prior assumption that current Google env values were fully correct was false.
+- Strict provider suite still fails because no runtime test user has an active connected provider account.
+
+User corrections:
+
+- User stated provider credentials were correct and asked to fix Google directly.
+
+Assumptions taken without asking:
+
+- `https://proofound.io/api/integrations/google/callback` is the intended Google redirect URI for app integration flow.
+- Updating local env formatting was acceptable without rotating secrets.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add a preflight script to validate provider env formatting (`client_id` shape and callback path) before running strict suites.
+
+Commands run + outcomes:
+
+- Provider env presence check (`ZOOM_*`, `GOOGLE_*`, `LINKEDIN_*`): PASS.
+- Google token probe (before fix): FAIL (`401 invalid_client`, OAuth client not found).
+- Google auth page probe (before fix): FAIL (`Error 401 invalid_client`).
+- Google token probe (after fix): PASS (`400 invalid_grant`, malformed auth code).
+- `npm run test:e2e:providers:strict`: FAIL only at connected-provider requirement test; other provider contract tests PASS.
+
+Open TODOs / follow-ups:
+
+- Connect deterministic staging test account to Zoom or Google for strict providers gate.
+- Ensure provider console callback URIs match env values exactly.
+
+---
+
+## 2026-02-12 20:32 CET
+
+Task summary:
+
+- Implement MVP provider enablement plan for strict Google/LinkedIn/Zoom contracts.
+- Enforce deterministic managed provider-user contract and dual-provider scheduling in strict gate path.
+
+What worked:
+
+- Added strict env auto-loader (`.env.local`) for strict E2E modules.
+- Updated strict provider suite to require both Zoom and Google scheduling when strict flags are enabled.
+- Added social auth initiation contract assertions for Google and LinkedIn in real auth suite.
+- Updated CI and strict runner env contracts to include provider and deterministic-user requirements.
+- Lint/typecheck/unit/build and strict quality guard passed after changes.
+
+What failed / wrong assumptions:
+
+- Initial parallel Playwright run caused `EADDRINUSE` on shared port `39123`.
+- Strict auth/provider E2E cannot run in this worktree yet because `.env.local` is missing required runtime values.
+
+User corrections:
+
+- Lock provider policy to real providers and require both Zoom and Google connectivity in strict success criteria.
+
+Assumptions taken without asking:
+
+- Existing branch-local unrelated modified files should remain untouched while implementing only provider-plan scope.
+- `STRICT_PROVIDER_E2E_REQUIRE_BOTH` should default to `true` for strict launch gates.
+
+What the user corrected afterward:
+
+- User explicitly required both LinkedIn social login coverage and LinkedIn integration callback coverage in MVP strict scope.
+
+Improvements next time:
+
+- Avoid parallel Playwright gate runs when specs share one configured webServer port.
+- Run strict E2E with explicit `STRICT_ENV_FILE` at first attempt to avoid early env-missing failures.
+
+Commands run + outcomes:
+
+- `npm run test:strict:quality` -> PASS.
+- `npm run typecheck` -> PASS.
+- `npm run lint` -> FAIL under Node 16 runtime.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint` -> PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:auth:real` -> FAIL (missing `NEXT_PUBLIC_SUPABASE_URL`).
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:providers:strict` -> FAIL (missing `E2E_PROVIDER_USER_ID` and Supabase env vars).
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test` -> PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build` -> PASS.
+
+Open TODOs / follow-ups:
+
+- Populate `.env.local` with strict required Supabase/provider/deterministic-user vars.
+- Add matching GitHub Actions secrets for provider strict gates.
+- Re-run strict provider and auth E2E, then full strict gate bundle.
+
+---
+
+## 2026-02-12 20:42 CET
+
+Task summary:
+
+- Linked worktree `.env.local` to existing local env and reran strict auth/provider E2E as requested.
+
+What worked:
+
+- Worktree env linkage allowed strict auth suite to use real provider/Supabase credentials.
+- `test:e2e:auth:real` now passes after LinkedIn redirect matcher update.
+
+What failed / wrong assumptions:
+
+- Provider strict suite still fails because deterministic strict-provider user env vars are not present in `.env.local`.
+
+User corrections:
+
+- User confirmed credentials are in `.env.local` and requested to execute link/copy + rerun immediately.
+
+Assumptions taken without asking:
+
+- Symlink approach for `.env.local` is acceptable to keep one source of truth for local secrets.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Validate deterministic strict-provider vars early before running full provider strict suite.
+
+Commands run + outcomes:
+
+- `ln -s /Users/yuriibakurov/proofound/.env.local .env.local` -> PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:auth:real` -> PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:providers:strict` -> FAIL (`E2E_PROVIDER_USER_ID` missing).
+
+Open TODOs / follow-ups:
+
+- Add `E2E_PROVIDER_USER_ID`, `E2E_PROVIDER_USER_EMAIL`, `E2E_PROVIDER_USER_PASSWORD` to `.env.local`.
+- Re-run provider strict suite and then full strict gate bundle.

@@ -35,7 +35,10 @@ export function FooterSection({ shouldReduceMotion }: FooterSectionProps) {
   };
 
   return (
-    <footer className="bg-japandi-charcoal text-white pt-32 pb-12 px-6 md:px-12 border-t border-white/5 relative overflow-hidden">
+    <footer
+      className="bg-japandi-charcoal text-white pt-32 pb-12 px-6 md:px-12 border-t border-white/5 relative overflow-hidden"
+      data-testid="landing-footer-section"
+    >
       {/* Watermark */}
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[20%] pointer-events-none select-none opacity-[0.02] whitespace-nowrap">
         <span className="text-[30vw] font-display font-bold text-white leading-none tracking-tighter">

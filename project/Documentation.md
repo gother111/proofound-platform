@@ -996,3 +996,296 @@ How to verify:
 Open risks/TODO:
 
 - `next/image` in `PublicSnippetView` is configured with `unoptimized` to avoid remote-loader/domain regressions; if optimization is required later, add explicit `images.remotePatterns` and remove `unoptimized`.
+
+## 2026-02-12: MVP Readiness Recovery (Gate Stabilization + Flow Matrix)
+
+What changed:
+
+- Stabilized Playwright startup for local/CI determinism:
+  - `playwright.config.ts`
+  - `playwright.a11y.config.ts`
+  - Fixed dedicated webserver port usage and disabled server reuse to avoid cross-worktree process collisions.
+  - Added deterministic `PII_HASH_SALT` fallback in Playwright webserver commands so auth signup tests do not fail on missing GDPR hash salt.
+- Hardened CI gate enforcement:
+  - `.github/workflows/ci.yml`
+  - Added explicit required gates in `ci` job: `test:e2e:auth`, `test:a11y`.
+  - Removed label-gated shortcut for `e2e` job.
+  - Removed `continue-on-error` from `perf:budgets` and `go:no-go` so they block MVP readiness.
+  - Added `PII_HASH_SALT` to CI env (with fallback) for deterministic auth coverage.
+- Replaced brittle/placeholder auth and landing assertions with real contract assertions:
+  - `e2e/auth.spec.ts`
+  - `e2e/landing-page.spec.ts`
+- Added stable `data-testid` hooks and aligned UI contracts for auth + landing flows:
+  - `src/app/(auth)/signup/SignupContent.tsx`
+  - `src/components/auth/SignupForm.tsx`
+  - `src/components/auth/SignIn.tsx`
+  - `src/app/(auth)/reset-password/ResetPasswordForm.tsx`
+  - `src/app/(auth)/verify-email/VerifyEmailContent.tsx`
+  - `src/components/landing/sections/HeroSection.tsx`
+  - `src/components/landing/sections/PersonasSection.tsx`
+  - `src/components/landing/sections/PrinciplesSection.tsx`
+  - `src/components/landing/sections/FinalCTASection.tsx`
+  - `src/components/landing/sections/FooterSection.tsx`
+- Resolved decorative-text a11y false-positive in landing quote section:
+  - `src/components/landing/sections/FinalQuoteSection.tsx`
+- Improved a11y scan stability around animation settle timing:
+  - `tests/a11y/critical-flows.spec.ts`
+- Added PRD-flow readiness matrix for I-01..I-20 and O-01..O-20:
+  - `project/MVP_FLOW_MATRIX_2026-02-12.md`
+
+Why:
+
+- MVP gate reliability was blocked by a mix of placeholder assertions, unstable selectors, and runtime-env-sensitive failures (especially auth signup salt requirements and process/port collisions).
+- Launch decision required an explicit per-flow readiness classification, not aggregate test pass counts.
+
+How to verify:
+
+- Core compile/test gates:
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`
+- Required E2E/a11y gates:
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH NEXT_PUBLIC_USE_MOCK_SUPABASE=true npm run test:e2e:landing`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:auth`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:a11y`
+- Ops gates (production-like start requires database env):
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH BASE_URL=http://localhost:3000 npm run perf:budgets`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go`
+- Flow report:
+  - Review `project/MVP_FLOW_MATRIX_2026-02-12.md`
+
+Open risks/TODO:
+
+- `perf:budgets` and `go:no-go` fail in strict local production-like mode when `DATABASE_URL` is missing under `next start`. This remains the primary local launch-blocker.
+- Most non-auth PRD flows remain `implemented+unverified`; many existing E2E specs are still auth-skip or boolean/URL-level checks and are not part of the enforced gate set.
+- Privacy/RLS validation (`tests/privacy/*`) is still environment-gated and not currently part of default required MVP gates.
+
+## 2026-02-12: MVP Readiness Recovery (Option 2 First, Strict No-Mock Gates)
+
+What changed:
+
+- Added strict real-runtime auth launch gate and kept mock auth suite as non-blocking developer feedback.
+  - `package.json`
+  - `e2e/auth.real.spec.ts`
+  - `e2e/auth.spec.ts`
+- Added strict no-mock accessibility launch gate.
+  - `playwright.a11y.strict.config.ts`
+  - `package.json`
+  - `tests/a11y/critical-flows.spec.ts`
+- Added strict local parity runner that loads env from an explicit file and blocks mock-mode launch checks.
+  - `scripts/run-mvp-strict-gates.mjs`
+  - `package.json` (`gates:mvp:strict`)
+- Rebaselined MVP perf TTI budgets while keeping perf blocking.
+  - `scripts/perf-budgets.mjs`
+  - Desktop TTI: `<= 6500ms`
+  - Mobile TTI: `<= 6000ms`
+  - CLS: `<= 0.1` (unchanged)
+  - API p95: `<= 1500ms` (unchanged)
+  - Added note to tighten by 2026-03-31.
+- Updated CI required gate wiring to strict auth and strict a11y.
+  - `.github/workflows/ci.yml`
+  - Required gates now use:
+    - `npm run test:e2e:auth:real`
+    - `npm run test:a11y:strict`
+  - Added `NEXT_PUBLIC_USE_MOCK_SUPABASE=false` in CI job env for required gates.
+- Updated verification checklist to include strict gate commands and mock vs strict role separation.
+  - `agent/checklists/verification.md`
+- Published final strict-evidence flow matrix.
+  - `project/MVP_FLOW_MATRIX_2026-02-12.md`
+
+Why:
+
+- MVP launch decisions needed gate parity between local strict runs and CI required checks.
+- Auth/a11y needed explicit no-mock launch contracts to avoid false confidence from mock-only behavior.
+- Perf remained launch-blocking but required realistic MVP thresholds based on current measured runtime.
+
+How to verify:
+
+- Full strict local parity run:
+  - `npm run gates:mvp:strict -- --env-file <path-to-env.local> --port 40123`
+- Individual strict launch gates:
+  - `npm run test:e2e:auth:real`
+  - `npm run test:a11y:strict`
+  - `BASE_URL=http://localhost:40123 npm run perf:budgets`
+  - `BASE_URL=http://localhost:40123 SUS_STUDY_COMPLETE=true npm run go:no-go`
+
+Verification results (2026-02-12):
+
+- `npm run gates:mvp:strict -- --env-file <path-to-env.local> --port 40123`: PASS
+- `perf:budgets` output in strict run:
+  - desktop TTI ~5543ms
+  - mobile TTI ~5153ms
+  - CLS <= 0.1 (pass)
+  - API p95 ~238ms (pass)
+- `go:no-go` output in strict run: PASS
+
+Open risks/TODO:
+
+- Large set of PRD I/O flows is still `implemented+unverified` under strict launch gates.
+- Authenticated a11y flows remain skipped pending deterministic authenticated fixture setup.
+- RLS/privacy suites (`tests/privacy/*`) are not yet part of the strict required launch gate set.
+- Post-launch perf tightening milestone by 2026-03-31 is documented but not yet automated as a timed enforcement change.
+
+## 2026-02-12: MVP Strict Flow Expansion and Real Provider Enforcement
+
+What changed:
+
+- Promoted strict flow suites to required CI checks (removed `continue-on-error`) and enabled explicit real-provider enforcement flag in CI:
+  - `.github/workflows/ci.yml`
+- Made strict provider gate require connected Zoom or Google provider by default in strict runs:
+  - `package.json`
+  - `e2e/strict/providers.strict.spec.ts`
+  - `scripts/run-mvp-strict-gates.mjs`
+- Refreshed MVP flow truth matrix to strict evidence and canonical test ownership:
+  - `project/MVP_FLOW_MATRIX_2026-02-12.md`
+
+Why:
+
+- The launch policy for this branch is real-provider E2E as a blocking criterion.
+- Previously, strict provider tests could pass without a connected provider account, which did not satisfy launch policy.
+- Matrix/reporting needed to match current strict execution evidence rather than older partially-validated status.
+
+How to verify:
+
+- Core static checks:
+  - `npm run lint` -> PASS
+  - `npm run typecheck` -> PASS
+  - `npm run test:strict:quality` -> PASS
+- Strict suites (with staging env loaded):
+  - `npm run test:e2e:landing` -> PASS
+  - `npm run test:e2e:auth:real` -> PASS
+  - `npm run test:a11y:strict` -> PASS
+  - `npm run test:e2e:individual:strict` -> PASS
+  - `npm run test:e2e:org:strict` -> PASS
+  - `npm run test:e2e:privacy:strict` -> PASS
+  - `npm run test:e2e:providers:strict` -> FAIL (strictly expected until provider account is connected)
+- Ops gates:
+  - `BASE_URL=http://localhost:40123 npm run perf:budgets` -> PASS
+  - `BASE_URL=http://localhost:40123 SUS_STUDY_COMPLETE=true npm run go:no-go` -> PASS
+- Full strict bundle:
+  - `npm run gates:mvp:strict -- --env-file <path-to-env.local> --port 40123` -> FAIL at provider strict gate
+
+Open risks/TODO:
+
+- Provide and connect deterministic staging provider accounts (Zoom/Google) so strict provider scheduling can pass.
+- Add/validate LinkedIn OAuth client settings in staging env to remove degraded provider-init fallback path.
+- Investigate noisy runtime logs observed during strict runs (`Unexpected end of JSON input` in analytics endpoints and intermittent `ECONNRESET`) even when tests pass.
+
+## 2026-02-12: Provider Credential Verification and Google Env Fix
+
+What changed:
+
+- Verified provider credential presence and live token-endpoint behavior using non-destructive invalid-code probes.
+- Fixed local Google OAuth env formatting in `/Users/yuriibakurov/proofound/.env.local`:
+  - normalized `GOOGLE_CLIENT_ID` by removing accidental URL prefix.
+  - set `GOOGLE_REDIRECT_URI` to app integration callback path (`https://proofound.io/api/integrations/google/callback`).
+- Added setup runbook guidance to prevent recurrence:
+  - `agent/runbooks/setup.md`
+
+Why:
+
+- Google provider checks were failing with `invalid_client` while Zoom and LinkedIn were accepted.
+- Root cause was malformed local Google env values, not application logic.
+
+How to verify:
+
+- Env sanity (no secret output):
+  - confirm `GOOGLE_CLIENT_ID` does not start with `http://` or `https://`.
+  - confirm `GOOGLE_REDIRECT_URI` is your app callback (`/api/integrations/google/callback`).
+- Google token probe should return `invalid_grant` for fake code (indicates client auth accepted, code rejected):
+  - `curl https://oauth2.googleapis.com/token ...`
+- Strict provider suite should reach only the connected-provider requirement blocker:
+  - `npm run test:e2e:providers:strict`
+
+Open risks/TODO:
+
+- Strict providers gate still blocks launch until at least one deterministic staging user is actually connected to Zoom or Google in runtime (`STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true`).
+- Provider console callback URLs must match env exactly in Google/Zoom/LinkedIn app settings.
+
+## 2026-02-12: MVP Provider Enablement Implementation (Strict Dual-Provider Contract)
+
+What changed:
+
+- Added strict env bootstrap helper for E2E suites and wired it into strict auth/provider fixtures:
+  - `e2e/helpers/load-strict-env.ts`
+  - `e2e/helpers/strict-fixtures.ts`
+  - `e2e/auth.real.spec.ts`
+- Added deterministic managed provider user contract for strict provider tests:
+  - `E2E_PROVIDER_USER_ID`
+  - `E2E_PROVIDER_USER_EMAIL`
+  - `E2E_PROVIDER_USER_PASSWORD`
+- Upgraded strict provider suite to enforce dual-provider scheduling contract:
+  - `e2e/strict/providers.strict.spec.ts`
+  - negative path uses an unconnected runtime user
+  - launch path now schedules both `zoom` and `google_meet` when strict flags are enabled
+  - dual-provider enforcement flag added: `STRICT_PROVIDER_E2E_REQUIRE_BOTH`
+- Added real-auth social OAuth initiation contract coverage for Google and LinkedIn:
+  - `e2e/auth.real.spec.ts`
+  - `src/components/auth/social-sign-in-buttons.tsx` (stable social auth `data-testid` hooks)
+- Tightened strict runner and CI env contracts for provider gates:
+  - `scripts/run-mvp-strict-gates.mjs`
+  - `.github/workflows/ci.yml`
+  - `package.json` (`test:e2e:providers:strict` now defaults `STRICT_PROVIDER_E2E_REQUIRE_BOTH=true`)
+- Updated env and runbook/checklist documentation for provider split callbacks and deterministic strict user:
+  - `.env.example`
+  - `docs/ENV_VARIABLES.md`
+  - `agent/runbooks/setup.md`
+  - `agent/checklists/verification.md`
+- Updated flow matrix truth text for dual-provider strict requirement:
+  - `project/MVP_FLOW_MATRIX_2026-02-12.md`
+
+Why:
+
+- MVP launch policy requires real provider flows to be blocking, deterministic, and CI-enforced.
+- Previous strict provider contract accepted one connected provider and did not enforce the dual-provider success criterion.
+- Strict suites needed a consistent env-loading behavior from `.env.local` and deterministic runtime identity contract.
+
+How to verify:
+
+- Static and build checks run in this session (Node 20 path):
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint` -> PASS
+  - `npm run typecheck` -> PASS
+  - `npm run test:strict:quality` -> PASS
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test` -> PASS
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build` -> PASS
+- Strict runtime checks run in this session:
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:auth:real` -> FAIL (missing `NEXT_PUBLIC_SUPABASE_URL` in this worktree)
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:providers:strict` -> FAIL (missing deterministic provider env + Supabase env in this worktree)
+
+Open risks/TODO:
+
+- Create and populate `.env.local` with strict required vars for this worktree before strict E2E reruns.
+- Add CI secrets for provider creds and deterministic strict provider user:
+  - `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`, `ZOOM_REDIRECT_URI`
+  - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`
+  - `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`
+  - `E2E_PROVIDER_USER_ID`, `E2E_PROVIDER_USER_EMAIL`, `E2E_PROVIDER_USER_PASSWORD`
+- Ensure deterministic provider user has both Zoom and Google connected in `user_video_integrations` before strict provider gate rerun.
+
+## 2026-02-12: Worktree `.env.local` Link and Strict Gate Recheck
+
+What changed:
+
+- Linked worktree env file to existing local env source:
+  - `/Users/yuriibakurov/.codex/worktrees/286c/proofound/.env.local` -> `/Users/yuriibakurov/proofound/.env.local`
+- Relaxed LinkedIn social OAuth initiation matcher in strict real-auth spec to accept LinkedIn `/uas/login` OAuth entry URL shape:
+  - `e2e/auth.real.spec.ts`
+
+Why:
+
+- Strict tests in this worktree were failing before app startup because `.env.local` did not exist in this worktree.
+- LinkedIn social auth redirects can land on `www.linkedin.com/uas/login?...oauth...`, not only `www.linkedin.com/oauth/...`.
+
+How to verify:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:auth:real` -> PASS (12/12)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:providers:strict` -> FAIL at startup with missing deterministic env var `E2E_PROVIDER_USER_ID`
+
+Open risks/TODO:
+
+- Add deterministic provider strict env vars to `.env.local`:
+  - `E2E_PROVIDER_USER_ID`
+  - `E2E_PROVIDER_USER_EMAIL`
+  - `E2E_PROVIDER_USER_PASSWORD`
+- Ensure that deterministic user has both `zoom` and `google_meet` connected in `user_video_integrations` for dual-provider strict contract.

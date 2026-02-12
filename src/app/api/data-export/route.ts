@@ -46,7 +46,24 @@ export async function GET(request: NextRequest) {
       userId: user.id,
     });
 
-    // Fetch all user data from various tables
+    const safeQuery = async <T>(
+      segment: string,
+      run: () => Promise<T>,
+      fallback: T
+    ): Promise<T> => {
+      try {
+        return await run();
+      } catch (error) {
+        log.warn('data.export.partial_query_failed', {
+          userId: user.id,
+          segment,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+        return fallback;
+      }
+    };
+
+    // Fetch all user data from various tables (best-effort: one failing segment must not fail export)
     const [
       userProfile,
       individualProfile,
@@ -74,99 +91,219 @@ export async function GET(request: NextRequest) {
       userMessages,
     ] = await Promise.all([
       // Core profile data
-      db.query.profiles.findFirst({
-        where: eq(profiles.id, user.id),
-      }),
-      db.query.individualProfiles.findFirst({
-        where: eq(individualProfiles.userId, user.id),
-      }),
-      db.query.matchingProfiles.findFirst({
-        where: eq(matchingProfiles.profileId, user.id),
-      }),
+      safeQuery(
+        'profiles',
+        () =>
+          db.query.profiles.findFirst({
+            where: eq(profiles.id, user.id),
+          }),
+        null
+      ),
+      safeQuery(
+        'individual_profiles',
+        () =>
+          db.query.individualProfiles.findFirst({
+            where: eq(individualProfiles.userId, user.id),
+          }),
+        null
+      ),
+      safeQuery(
+        'matching_profiles',
+        () =>
+          db.query.matchingProfiles.findFirst({
+            where: eq(matchingProfiles.profileId, user.id),
+          }),
+        null
+      ),
 
       // Skills and capabilities
-      db.query.skills.findMany({
-        where: eq(skills.profileId, user.id),
-      }),
-      db.query.skillProofs.findMany({
-        where: eq(skillProofs.profileId, user.id),
-      }),
+      safeQuery(
+        'skills',
+        () =>
+          db.query.skills.findMany({
+            where: eq(skills.profileId, user.id),
+          }),
+        []
+      ),
+      safeQuery(
+        'skill_proofs',
+        () =>
+          db.query.skillProofs.findMany({
+            where: eq(skillProofs.profileId, user.id),
+          }),
+        []
+      ),
 
       // Work and experience
-      db.query.projects.findMany({
-        where: eq(projects.userId, user.id),
-      }),
-      db.query.impactStories.findMany({
-        where: eq(impactStories.userId, user.id),
-      }),
-      db.query.experiences.findMany({
-        where: eq(experiences.userId, user.id),
-      }),
-      db.query.education.findMany({
-        where: eq(education.userId, user.id),
-      }),
-      db.query.volunteering.findMany({
-        where: eq(volunteering.userId, user.id),
-      }),
+      safeQuery(
+        'projects',
+        () =>
+          db.query.projects.findMany({
+            where: eq(projects.userId, user.id),
+          }),
+        []
+      ),
+      safeQuery(
+        'impact_stories',
+        () =>
+          db.query.impactStories.findMany({
+            where: eq(impactStories.userId, user.id),
+          }),
+        []
+      ),
+      safeQuery(
+        'experiences',
+        () =>
+          db.query.experiences.findMany({
+            where: eq(experiences.userId, user.id),
+          }),
+        []
+      ),
+      safeQuery(
+        'education',
+        () =>
+          db.query.education.findMany({
+            where: eq(education.userId, user.id),
+          }),
+        []
+      ),
+      safeQuery(
+        'volunteering',
+        () =>
+          db.query.volunteering.findMany({
+            where: eq(volunteering.userId, user.id),
+          }),
+        []
+      ),
 
       // Preferences and matching
-      db.query.profileBenefitsPrefs.findMany({
-        where: eq(profileBenefitsPrefs.profileId, user.id),
-      }),
-      db.query.matches.findMany({
-        where: eq(matches.profileId, user.id),
-      }),
-      db.query.matchInterest.findMany({
-        where: eq(matchInterest.actorProfileId, user.id),
-      }),
+      safeQuery(
+        'profile_benefits_prefs',
+        () =>
+          db.query.profileBenefitsPrefs.findMany({
+            where: eq(profileBenefitsPrefs.profileId, user.id),
+          }),
+        []
+      ),
+      safeQuery(
+        'matches',
+        () =>
+          db.query.matches.findMany({
+            where: eq(matches.profileId, user.id),
+          }),
+        []
+      ),
+      safeQuery(
+        'match_interest',
+        () =>
+          db.query.matchInterest.findMany({
+            where: eq(matchInterest.actorProfileId, user.id),
+          }),
+        []
+      ),
 
       // Contracts
-      db.query.contracts.findMany({
-        where: eq(contracts.userId, user.id),
-      }),
+      safeQuery(
+        'contracts',
+        () =>
+          db.query.contracts.findMany({
+            where: eq(contracts.userId, user.id),
+          }),
+        []
+      ),
 
       // Analytics and tracking
-      db.query.analyticsEvents.findMany({
-        where: eq(analyticsEvents.userId, user.id),
-      }),
+      safeQuery(
+        'analytics_events',
+        () =>
+          db.query.analyticsEvents.findMany({
+            where: eq(analyticsEvents.userId, user.id),
+          }),
+        []
+      ),
 
       // Wellbeing
-      db.query.wellbeingCheckins.findMany({
-        where: eq(wellbeingCheckins.userId, user.id),
-      }),
-      db.query.wellbeingReflections.findMany({
-        where: eq(wellbeingReflections.userId, user.id),
-      }),
-      db.query.wellbeingOptIns.findMany({
-        where: eq(wellbeingOptIns.userId, user.id),
-      }),
+      safeQuery(
+        'wellbeing_checkins',
+        () =>
+          db.query.wellbeingCheckins.findMany({
+            where: eq(wellbeingCheckins.userId, user.id),
+          }),
+        []
+      ),
+      safeQuery(
+        'wellbeing_reflections',
+        () =>
+          db.query.wellbeingReflections.findMany({
+            where: eq(wellbeingReflections.userId, user.id),
+          }),
+        []
+      ),
+      safeQuery(
+        'wellbeing_opt_ins',
+        () =>
+          db.query.wellbeingOptIns.findMany({
+            where: eq(wellbeingOptIns.userId, user.id),
+          }),
+        []
+      ),
 
       // Notifications and preferences
-      db.query.notifications.findMany({
-        where: eq(notifications.userId, user.id),
-      }),
-      db.query.notificationPreferences.findMany({
-        where: eq(notificationPreferences.userId, user.id),
-      }),
+      safeQuery(
+        'notifications',
+        () =>
+          db.query.notifications.findMany({
+            where: eq(notifications.userId, user.id),
+          }),
+        []
+      ),
+      safeQuery(
+        'notification_preferences',
+        () =>
+          db.query.notificationPreferences.findMany({
+            where: eq(notificationPreferences.userId, user.id),
+          }),
+        []
+      ),
 
       // Consents and integrations
-      db.query.userConsents.findMany({
-        where: eq(userConsents.profileId, user.id),
-      }),
-      db.query.userIntegrations.findMany({
-        where: eq(userIntegrations.userId, user.id),
-      }),
+      safeQuery(
+        'user_consents',
+        () =>
+          db.query.userConsents.findMany({
+            where: eq(userConsents.profileId, user.id),
+          }),
+        []
+      ),
+      safeQuery(
+        'user_integrations',
+        () =>
+          db.query.userIntegrations.findMany({
+            where: eq(userIntegrations.userId, user.id),
+          }),
+        []
+      ),
 
       // Communications
-      db.query.conversations.findMany({
-        where: or(
-          eq(conversations.participantOneId, user.id),
-          eq(conversations.participantTwoId, user.id)
-        ),
-      }),
-      db.query.messages.findMany({
-        where: eq(messages.senderId, user.id),
-      }),
+      safeQuery(
+        'conversations',
+        () =>
+          db.query.conversations.findMany({
+            where: or(
+              eq(conversations.participantOneId, user.id),
+              eq(conversations.participantTwoId, user.id)
+            ),
+          }),
+        []
+      ),
+      safeQuery(
+        'messages',
+        () =>
+          db.query.messages.findMany({
+            where: eq(messages.senderId, user.id),
+          }),
+        []
+      ),
     ]);
 
     // Compile all data into a structured export
