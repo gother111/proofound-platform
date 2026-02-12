@@ -21,6 +21,7 @@ export function FinalCTASection({ onGetStarted, shouldReduceMotion }: FinalCTASe
     <section
       ref={ref}
       className="py-40 px-6 md:px-12 relative bg-japandi-charcoal text-white overflow-hidden flex items-center justify-center min-h-[80vh] scroll-mt-24"
+      data-testid="landing-final-cta-section"
     >
       {/* Background Decoration */}
       <div className="absolute inset-0 opacity-20 pointer-events-none">

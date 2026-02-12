@@ -6,7 +6,7 @@ Proofound takes security seriously. We appreciate your efforts to responsibly di
 
 ### How to Report
 
-**Email**: security@proofound.com
+**Email**: security@proofound.io
 
 Please include the following information in your report:
 
@@ -22,7 +22,7 @@ Please include the following information in your report:
 
 2. **Assessment**: We will investigate and assess the vulnerability within 5 business days.
 
-3. **Resolution Timeline**: 
+3. **Resolution Timeline**:
    - Critical vulnerabilities: Fixed within 7 days
    - High severity: Fixed within 14 days
    - Medium severity: Fixed within 30 days
@@ -36,8 +36,8 @@ Please include the following information in your report:
 
 The following are **in scope** for security reports:
 
-- **Web Application**: https://proofound.com
-- **API Endpoints**: https://proofound.com/api/*
+- **Web Application**: https://proofound.io
+- **API Endpoints**: https://proofound.io/api/*
 - **Authentication System**: Login, signup, password reset
 - **Data Privacy**: Unauthorized access to user data
 - **Database Security**: SQL injection, RLS policy bypasses
@@ -77,6 +77,7 @@ We currently do not have a paid bug bounty program. However, we will:
 We maintain a Hall of Fame for security researchers who have helped us improve our security:
 
 **2025**:
+
 - (No reports yet)
 
 ### Security Best Practices
@@ -103,7 +104,7 @@ Proofound complies with:
 
 ### Security Contact
 
-**Email**: security@proofound.com  
+**Email**: security@proofound.io  
 **Emergency**: For critical vulnerabilities affecting live systems  
 **Response Time**: 24 hours acknowledgment, 5 days assessment
 
@@ -115,4 +116,3 @@ Proofound complies with:
 ---
 
 Thank you for helping keep Proofound and our users safe!
-

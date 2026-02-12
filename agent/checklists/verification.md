@@ -1,3 +1,7 @@
+> Doc Class: `governance`
+> Sync Pair: `verification.md`
+> Last Verified: `2026-02-12`
+
 # Verification Checklist (Before Merging)
 
 Repo Truth items include citations like `(source: README.md)`. Anything else is guidance/policy.
@@ -57,8 +61,38 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 - Run a prod-equivalent build locally: `npx vercel@latest build --prod`
   - If CLI auth is missing, use `--token` with a valid `VERCEL_TOKEN` (do not print it).
 
+## Production Sync Guard (Vercel Quota Recovery)
+
+- Auto-retry workflow location:
+  - `.github/workflows/retry-vercel-deploy.yml`
+- Required GitHub secret:
+  - `VERCEL_DEPLOY_HOOK_URL` (production deploy hook URL for `proofound-platform`)
+- Validate live commit after pushing to `master`:
+  - `curl -sS https://proofound.io/api/health`
+  - Expect `version` in response to match the latest `master` commit SHA.
+- If production is behind, trigger manual retry once:
+  - `gh workflow run "Retry Vercel Deploy Until Synced" --ref master`
+- Confirm latest workflow run:
+  - `gh run list --workflow "Retry Vercel Deploy Until Synced" --limit 1`
+
 ## CI Gate Parity (When Appropriate)
 
+- Strict MVP gate bundle (local parity): `npm run gates:mvp:strict`
+- Current strict required gate stack:
+  - `npm run lint`
+  - `npm run typecheck`
+  - `npm run test`
+  - `npm run build`
+  - `npm run test:e2e:landing`
+  - `npm run test:e2e:auth:real`
+  - `npm run test:a11y:strict`
+  - `npm run test:strict:quality`
+  - `npm run test:e2e:individual:strict`
+  - `npm run test:e2e:org:strict`
+  - `npm run test:e2e:privacy:strict`
+  - `npm run test:e2e:providers:strict`
+  - `BASE_URL=http://localhost:3000 npm run perf:budgets`
+  - `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go`
 - CI also runs perf budgets and go/no-go gates after starting the app. (source: .github/workflows/ci.yml)
 - Perf budgets: `BASE_URL=http://localhost:3000 npm run perf:budgets` (source: scripts/perf-budgets.mjs)
 - Go/no-go: `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go` (source: scripts/go-no-go-check.mjs)
@@ -74,8 +108,22 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 ## E2E / Accessibility (If You Touched Critical UX)
 
 - E2E: `npm run test:e2e` (source: package.json)
-- A11y: `npm run test:a11y` (source: package.json)
-  - TODO: Validate `playwright.a11y.config.ts` exists; do not create it as part of docs-only work. (source: package.json)
+- Auth real contract (launch gate): `npm run test:e2e:auth:real` (source: package.json)
+- Auth mock contract (non-blocking local feedback): `npm run test:e2e:auth:mock` (source: package.json)
+- A11y strict contract (launch gate): `npm run test:a11y:strict` (source: package.json)
+- A11y mock contract (non-blocking local feedback): `npm run test:a11y` (source: package.json)
+- Individual strict flow contract: `npm run test:e2e:individual:strict` (source: package.json)
+- Organization strict flow contract: `npm run test:e2e:org:strict` (source: package.json)
+- Privacy strict flow contract: `npm run test:e2e:privacy:strict` (source: package.json)
+- Provider strict flow contract: `npm run test:e2e:providers:strict` (source: package.json)
+- Playwright env hygiene (practical):
+  - Strict suites load `.env.local` by default (override with `STRICT_ENV_FILE=<path>` when needed).
+  - Set `PII_HASH_SALT` when running auth/signup flows to avoid GDPR hashing runtime failures.
+  - Run Playwright suites sequentially when they share the same `webServer` port to avoid `EADDRINUSE` startup failures.
+  - Strict launch-gate runs must keep `NEXT_PUBLIC_USE_MOCK_SUPABASE=false`.
+  - Provider strict gate defaults to `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true` and `STRICT_PROVIDER_E2E_REQUIRE_BOTH=true`.
+  - Provider strict gate requires deterministic provider user env vars: `E2E_PROVIDER_USER_ID`, `E2E_PROVIDER_USER_EMAIL`, `E2E_PROVIDER_USER_PASSWORD`.
+  - Deterministic provider user must have both Zoom and Google connected for launch-gate runs.
 - For credential-gated E2E smokes, document required env vars explicitly in `project/Documentation.md` and mark command outcome as PASS/SKIPPED with reason.
 
 ## Manual Smoke Checks (OAuth Integrations)

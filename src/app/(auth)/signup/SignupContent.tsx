@@ -38,7 +38,10 @@ export function SignupContent() {
 
   // Account type selection screen
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#F7F6F1] px-6 py-16 text-[#2D3330]">
+    <div
+      className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#F7F6F1] px-6 py-16 text-[#2D3330]"
+      data-testid="signup-choice-screen"
+    >
       {/* Proofound network background */}
       <div className="pointer-events-none absolute inset-0 opacity-60">
         <NetworkBackground />
@@ -53,7 +56,7 @@ export function SignupContent() {
         initial={{ x: -20 }}
         animate={{ x: 0 }}
         onClick={() => router.push('/')}
-        className="absolute left-6 top-6 flex items-center gap-2 text-[#44504B] transition-colors hover:text-[#2D3330]"
+        className="absolute left-6 top-6 flex min-h-[44px] items-center gap-2 px-2 -mx-2 text-[#44504B] transition-colors hover:text-[#2D3330]"
       >
         <ArrowLeft className="w-4 h-4" />
         <span className="text-sm">Back</span>
@@ -100,6 +103,7 @@ export function SignupContent() {
                 type="button"
                 onClick={() => setSignupType('individual')}
                 className="group h-full w-full text-left"
+                data-testid="signup-choice-individual"
               >
                 <Card className="h-full rounded-2xl border border-[#E8E6DD] p-8 transition-all duration-300 hover:-translate-y-1 hover:border-proofound-forest/40 hover:shadow-[0_14px_32px_-16px_rgba(28,77,58,0.3)]">
                   <div className="flex flex-col items-start gap-4">
@@ -131,6 +135,7 @@ export function SignupContent() {
                 type="button"
                 onClick={() => setSignupType('organization')}
                 className="group h-full w-full text-left"
+                data-testid="signup-choice-organization"
               >
                 <Card className="h-full rounded-2xl border border-[#E8E6DD] p-8 transition-all duration-300 hover:-translate-y-1 hover:border-proofound-terracotta/40 hover:shadow-[0_14px_32px_-16px_rgba(199,107,74,0.32)]">
                   <div className="flex flex-col items-start gap-4">
@@ -164,7 +169,7 @@ export function SignupContent() {
               <button
                 type="button"
                 onClick={() => router.push('/login')}
-                className="font-medium text-[#1C4D3A] hover:text-[#2D5D4A] hover:underline"
+                className="font-medium text-[#1C4D3A] hover:text-[#2D5D4A] hover:underline inline-flex min-h-[44px] items-center px-2 -mx-2"
               >
                 Sign in
               </button>

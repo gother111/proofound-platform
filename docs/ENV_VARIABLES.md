@@ -7,7 +7,7 @@ Complete guide to all environment variables used in Proofound, including which f
 > Current production domain: **`https://proofound.io`**
 >
 > Update `NEXT_PUBLIC_SITE_URL` in Vercel environment variables to match your actual domain.
-> `proofound.com` is legacy/parked and should not be used for app URLs.
+> `proofound.io` is legacy/parked and should not be used for app URLs.
 
 ## Quick Reference
 
@@ -25,7 +25,7 @@ NEXT_PUBLIC_SITE_URL=https://proofound.io
 # IMPORTANT - Required for specific features
 # ============================================================================
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxxx
-EMAIL_FROM="Proofound <no-reply@proofound.com>"
+EMAIL_FROM="Proofound <no-reply@proofound.io>"
 CRON_SECRET=your_secure_random_token_here
 ZOOM_CLIENT_ID=your_zoom_client_id
 ZOOM_CLIENT_SECRET=your_zoom_client_secret
@@ -33,6 +33,13 @@ ZOOM_REDIRECT_URI=https://yourdomain.com/api/integrations/zoom/callback
 GOOGLE_CLIENT_ID=your_google_oauth_client_id
 GOOGLE_CLIENT_SECRET=your_google_oauth_client_secret
 GOOGLE_REDIRECT_URI=https://yourdomain.com/api/integrations/google/callback
+LINKEDIN_CLIENT_ID=your_linkedin_client_id
+LINKEDIN_CLIENT_SECRET=your_linkedin_client_secret
+E2E_PROVIDER_USER_ID=deterministic_user_uuid
+E2E_PROVIDER_USER_EMAIL=provider-e2e@test.proofound.com
+E2E_PROVIDER_USER_PASSWORD=your_deterministic_test_password
+STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true
+STRICT_PROVIDER_E2E_REQUIRE_BOTH=true
 DIRECT_URL=postgresql://user:pass@host:5432/db  # Optional; Drizzle uses this, otherwise falls back to DATABASE_URL
 
 # ============================================================================
@@ -207,7 +214,7 @@ NEXT_PUBLIC_SITE_URL=https://proofound.io
 **Important**:
 
 - ✅ Canonical domain: `https://proofound.io`
-- ❌ Legacy/parked domain: `https://proofound.com`
+- ❌ Legacy/parked domain: `https://proofound.io`
 - ✅ No trailing slash: `https://proofound.io`
 - ❌ No trailing slash: `https://proofound.io/`
 - ✅ Include protocol (http/https)
@@ -261,7 +268,7 @@ RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxxx
 **Format**:
 
 ```env
-EMAIL_FROM="Proofound <no-reply@proofound.com>"
+EMAIL_FROM="Proofound <no-reply@proofound.io>"
 ```
 
 **Format Rules**:
@@ -273,7 +280,7 @@ EMAIL_FROM="Proofound <no-reply@proofound.com>"
 **Default Value**:
 
 ```typescript
-const fromEmail = process.env.EMAIL_FROM || 'Proofound <no-reply@proofound.com>';
+const fromEmail = process.env.EMAIL_FROM || 'Proofound <no-reply@proofound.io>';
 ```
 
 **Important**:
@@ -331,9 +338,18 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 
 - `ZOOM_CLIENT_ID` and `ZOOM_CLIENT_SECRET` — Zoom OAuth app credentials.
 - `ZOOM_REDIRECT_URI` — Must match the redirect URL in your Zoom app (recommended: `https://yourdomain.com/api/integrations/zoom/callback`).
-- `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` — Required if you enable the Google Meet branch.
-- `GOOGLE_REDIRECT_URI` — Must match the redirect URL in your Google OAuth client (recommended: `https://yourdomain.com/api/integrations/google/callback`).
-- `NEXT_PUBLIC_URL` (optional) — Base URL override used to build redirect URIs. If unset, routes fall back to the request origin.
+- `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` — Required for Google Meet integration and Google social login through Supabase.
+- `GOOGLE_REDIRECT_URI` — Must match the app integration callback (recommended: `https://yourdomain.com/api/integrations/google/callback`).
+- `LINKEDIN_CLIENT_ID` and `LINKEDIN_CLIENT_SECRET` — Required for LinkedIn settings integration callback and LinkedIn social login through Supabase.
+- `NEXT_PUBLIC_SITE_URL` — Canonical app base URL used for OAuth callback construction (`NEXT_PUBLIC_URL` is legacy fallback only).
+
+**Provider callback split (important)**:
+
+- Google integration callback (app route): `https://yourdomain.com/api/integrations/google/callback`
+- Google social auth callback (Supabase): `https://<supabase-project>.supabase.co/auth/v1/callback`
+- LinkedIn integration callback (app route): `https://yourdomain.com/api/auth/linkedin/callback`
+- LinkedIn social auth callback (Supabase): `https://<supabase-project>.supabase.co/auth/v1/callback`
+- Zoom integration callback (app route): `https://yourdomain.com/api/integrations/zoom/callback`
 
 **Used By**:
 
@@ -345,14 +361,40 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 **Without These**:
 
 - ❌ OAuth URL generation fails for Zoom/Google.
+- ❌ LinkedIn integration callback cannot exchange OAuth codes.
 - ❌ Users cannot connect their video provider for interviews.
+- ❌ Social login through Google and LinkedIn cannot be initiated reliably.
 
 **Setup**:
 
 1. Create a Zoom OAuth app and copy the client ID/secret.
 2. Set `ZOOM_REDIRECT_URI` to the callback route above and add the same URL in Zoom app settings.
-3. (Optional) Set `NEXT_PUBLIC_URL` if your deployment needs an explicit base URL override.
-4. (Optional) Set Google OAuth vars if you plan to enable Google Meet.
+3. Configure one Google OAuth client with both callback URIs:
+   - `https://yourdomain.com/api/integrations/google/callback`
+   - `https://<supabase-project>.supabase.co/auth/v1/callback`
+4. Configure LinkedIn app callback URIs:
+   - `https://yourdomain.com/api/auth/linkedin/callback`
+   - `https://<supabase-project>.supabase.co/auth/v1/callback`
+5. Set `NEXT_PUBLIC_SITE_URL` to your canonical domain (for example `https://proofound.io`).
+
+---
+
+### Strict Provider E2E (Deterministic User)
+
+**Purpose**: Make provider flows launch-blocking with real tokens in strict suites.
+
+**Required Vars**:
+
+- `E2E_PROVIDER_USER_ID`
+- `E2E_PROVIDER_USER_EMAIL`
+- `E2E_PROVIDER_USER_PASSWORD`
+- `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true`
+- `STRICT_PROVIDER_E2E_REQUIRE_BOTH=true`
+
+**Requirement**:
+
+- The deterministic user must already have both `zoom` and `google_meet` rows in `user_video_integrations`.
+- Strict provider suite enforces both Zoom and Google scheduling when `STRICT_PROVIDER_E2E_REQUIRE_BOTH=true`.
 
 ---
 
@@ -530,7 +572,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 SUPABASE_SERVICE_ROLE_KEY=eyJ...
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 RESEND_API_KEY=re_...
-EMAIL_FROM="Proofound <no-reply@proofound.com>"
+EMAIL_FROM="Proofound <no-reply@proofound.io>"
 CRON_SECRET=your_local_secret
 ```
 

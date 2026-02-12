@@ -39,7 +39,7 @@ npm run lint
 npm run test:e2e
 
 # Run Lighthouse audit
-npx lighthouse https://proofound.app --view
+npx lighthouse https://proofound.io --view
 ```
 
 ## Manual Testing
@@ -278,7 +278,7 @@ None identified yet.
 
 5. **Lighthouse Audit**
    ```bash
-   npx lighthouse https://proofound.app --view
+   npx lighthouse https://proofound.io --view
    ```
    Target: Accessibility score ≥90
 
@@ -307,8 +307,8 @@ None identified yet.
 
 For accessibility concerns or issues, please contact:
 
-- **Email**: accessibility@proofound.app
-- **Support**: support@proofound.app
+- **Email**: accessibility@proofound.io
+- **Support**: support@proofound.io
 
 ## Commitment
 

@@ -74,6 +74,7 @@ export function PrinciplesSection({ shouldReduceMotion }: PrinciplesSectionProps
       id="principles"
       ref={ref}
       className="py-32 px-6 md:px-12 relative bg-background overflow-hidden scroll-mt-24"
+      data-testid="landing-principles-section"
     >
       {/* Background Decor */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">

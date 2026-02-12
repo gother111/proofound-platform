@@ -18,6 +18,21 @@ jobs:
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      PII_HASH_SALT: ${{ secrets.PII_HASH_SALT || 'ci-playwright-test-salt' }}
+      ZOOM_CLIENT_ID: ${{ secrets.ZOOM_CLIENT_ID }}
+      ZOOM_CLIENT_SECRET: ${{ secrets.ZOOM_CLIENT_SECRET }}
+      ZOOM_REDIRECT_URI: ${{ secrets.ZOOM_REDIRECT_URI }}
+      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+      GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
+      LINKEDIN_CLIENT_ID: ${{ secrets.LINKEDIN_CLIENT_ID }}
+      LINKEDIN_CLIENT_SECRET: ${{ secrets.LINKEDIN_CLIENT_SECRET }}
+      E2E_PROVIDER_USER_ID: ${{ secrets.E2E_PROVIDER_USER_ID }}
+      E2E_PROVIDER_USER_EMAIL: ${{ secrets.E2E_PROVIDER_USER_EMAIL }}
+      E2E_PROVIDER_USER_PASSWORD: ${{ secrets.E2E_PROVIDER_USER_PASSWORD }}
+      NEXT_PUBLIC_USE_MOCK_SUPABASE: "false"
+      STRICT_PROVIDER_E2E_REQUIRE_CONNECTED: "true"
+      STRICT_PROVIDER_E2E_REQUIRE_BOTH: "true"
 
     steps:
       - name: Checkout code
@@ -48,6 +63,10 @@ jobs:
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
+      - name: Docs freshness (warning mode)
+        run: npm run docs:freshness
+        continue-on-error: true
+
       - name: Run linter
         run: npm run lint
 
@@ -59,6 +78,27 @@ jobs:
 
       - name: Run unit tests
         run: npm run test
+
+      - name: Run auth E2E real contract
+        run: npm run test:e2e:auth:real
+
+      - name: Run accessibility strict contract
+        run: npm run test:a11y:strict
+
+      - name: Enforce strict E2E quality guard
+        run: npm run test:strict:quality
+
+      - name: Run individual strict flow suite (required)
+        run: npm run test:e2e:individual:strict
+
+      - name: Run organization strict flow suite (required)
+        run: npm run test:e2e:org:strict
+
+      - name: Run privacy strict flow suite (required)
+        run: npm run test:e2e:privacy:strict
+
+      - name: Run providers strict flow suite (required, real-provider)
+        run: npm run test:e2e:providers:strict
 
       - name: Build application
         run: npm run build
@@ -108,7 +148,6 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'run-e2e')
 
     steps:
       - name: Checkout code
@@ -136,6 +175,20 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          PII_HASH_SALT: ${{ secrets.PII_HASH_SALT || 'ci-playwright-test-salt' }}
+          ZOOM_CLIENT_ID: ${{ secrets.ZOOM_CLIENT_ID }}
+          ZOOM_CLIENT_SECRET: ${{ secrets.ZOOM_CLIENT_SECRET }}
+          ZOOM_REDIRECT_URI: ${{ secrets.ZOOM_REDIRECT_URI }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
+          LINKEDIN_CLIENT_ID: ${{ secrets.LINKEDIN_CLIENT_ID }}
+          LINKEDIN_CLIENT_SECRET: ${{ secrets.LINKEDIN_CLIENT_SECRET }}
+          E2E_PROVIDER_USER_ID: ${{ secrets.E2E_PROVIDER_USER_ID }}
+          E2E_PROVIDER_USER_EMAIL: ${{ secrets.E2E_PROVIDER_USER_EMAIL }}
+          E2E_PROVIDER_USER_PASSWORD: ${{ secrets.E2E_PROVIDER_USER_PASSWORD }}
+          STRICT_PROVIDER_E2E_REQUIRE_CONNECTED: "true"
+          STRICT_PROVIDER_E2E_REQUIRE_BOTH: "true"
 
       - name: Upload test results
         if: always()

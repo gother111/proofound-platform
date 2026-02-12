@@ -269,4 +269,8 @@
   .glass-card-dark {
     @apply dark:bg-black/40 dark:backdrop-blur-md dark:border-white/10 dark:shadow-sm;
   }
+
+  .safe-area-inset-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }

@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const playwrightPort = Number.parseInt(process.env.PLAYWRIGHT_PORT || '33100', 10);
+const baseURL = process.env.BASE_URL || `http://127.0.0.1:${playwrightPort}`;
+
 export default defineConfig({
   testDir: './e2e',
   // Use stable snapshot paths so visual baselines are explicit and reviewable.
@@ -11,7 +14,7 @@ export default defineConfig({
   // Avoid hanging locally on failures (HTML reporter can keep a server open).
   reporter: [['html', { open: 'never' }], ['line']],
   use: {
-    baseURL: process.env.BASE_URL || 'http://localhost:3000',
+    baseURL,
     trace: 'on-first-retry',
     // Increase timeout for async flows like matching generation
     actionTimeout: 30000,
@@ -38,8 +41,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
+    command: `npm run dev -- -p ${playwrightPort}`,
+    url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120000, // Allow more time for server startup
   },

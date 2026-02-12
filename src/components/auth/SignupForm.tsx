@@ -26,6 +26,7 @@ function SignupSubmitButton({ children }: { children: React.ReactNode }) {
 
   return (
     <Button
+      data-testid="signup-submit"
       type="submit"
       className="w-full rounded-xl bg-proofound-forest py-[14px] text-[15px] font-semibold tracking-[0.01em] text-white shadow-sm transition-all hover:-translate-y-[1px] hover:bg-[#2D5D4A] hover:shadow-md disabled:bg-[#E8E6DD] disabled:text-[#2D3330]/40"
       size="lg"
@@ -117,6 +118,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           className="relative z-10 w-full max-w-md px-4"
+          data-testid="signup-success"
         >
           <Card className="mx-auto rounded-[24px] border border-[#E8E6DD] bg-white/95 p-10 text-center shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
             <motion.div
@@ -179,7 +181,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           onClick={onBack}
-          className="absolute left-6 top-6 flex items-center gap-2 text-muted-foreground transition-colors hover:text-proofound-charcoal"
+          className="absolute left-6 top-6 flex min-h-[44px] items-center gap-2 px-2 -mx-2 text-muted-foreground transition-colors hover:text-proofound-charcoal"
         >
           <ArrowLeft className="w-4 h-4" />
           <span className="text-sm">Back</span>
@@ -192,6 +194,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="relative z-10 w-full max-w-md px-4"
+        data-testid="signup-form-shell"
       >
         <Card className="mx-auto rounded-[24px] border border-[#E8E6DD] bg-white/95 p-10 shadow-[0_4px_24px_rgba(29,51,48,0.08)] backdrop-blur">
           {/* Logo/Title */}
@@ -230,6 +233,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               className="mb-6 rounded-2xl border border-[#B5542D]/25 bg-[#B5542D]/10 px-4 py-3"
+              data-testid="signup-error"
             >
               <p className="text-sm font-medium text-[#8A3F21]" role="alert" aria-live="polite">
                 {errorMessage}
@@ -238,7 +242,13 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
           )}
 
           {/* Signup Form */}
-          <form action={formAction} onSubmit={handleSubmit} className="space-y-6" noValidate>
+          <form
+            action={formAction}
+            onSubmit={handleSubmit}
+            className="space-y-6"
+            noValidate
+            data-testid="signup-form"
+          >
             <input type="hidden" name="persona" value={personaValue} />
             <input type="hidden" name="gdprConsent" value={gdprConsent.toString()} />
             <input type="hidden" name="marketingOptIn" value={marketingOptIn.toString()} />
@@ -261,6 +271,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                   id="email"
                   name="email"
                   type="email"
+                  data-testid="signup-email"
                   placeholder="you@example.com"
                   autoComplete="email"
                   disabled={false}
@@ -291,6 +302,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                   id="password"
                   name="password"
                   type={showPassword ? 'text' : 'password'}
+                  data-testid="signup-password"
                   placeholder="At least 8 characters"
                   autoComplete="new-password"
                   disabled={false}
@@ -307,8 +319,8 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-proofound-charcoal"
-                  tabIndex={-1}
+                  className="absolute right-1 top-1/2 -translate-y-1/2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-proofound-charcoal focus:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -329,6 +341,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                 id="confirm-password"
                 name="confirmPassword"
                 type={showPassword ? 'text' : 'password'}
+                data-testid="signup-confirm-password"
                 placeholder="Re-enter your password"
                 autoComplete="new-password"
                 disabled={false}
@@ -347,14 +360,14 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
             {/* GDPR Consent Checkboxes */}
             <div className="space-y-4 pt-2">
               {/* Required: Privacy Policy & Terms of Service */}
-              <label className="flex items-start gap-3 cursor-pointer group">
+              <label className="flex items-start gap-3 cursor-pointer group min-h-[44px] py-1">
                 <input
                   type="checkbox"
                   data-testid="gdpr-consent"
                   checked={gdprConsent}
                   onChange={(e) => setGdprConsent(e.target.checked)}
                   required
-                  className={`mt-0.5 h-4 w-4 cursor-pointer rounded border-[#E8E6DD] transition-colors ${
+                  className={`mt-0.5 h-5 w-5 cursor-pointer rounded border-[#E8E6DD] transition-colors ${
                     accountType === 'organization'
                       ? 'text-proofound-terracotta focus:ring-proofound-terracotta/20'
                       : 'text-proofound-forest focus:ring-proofound-forest/20'
@@ -366,7 +379,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                     href="/privacy"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`font-medium underline underline-offset-2 transition-colors ${
+                    className={`font-medium underline underline-offset-2 transition-colors inline-flex min-h-[44px] items-center ${
                       accountType === 'organization'
                         ? 'text-proofound-terracotta hover:text-[#B5673F]'
                         : 'text-proofound-forest hover:text-[#2D5D4A]'
@@ -379,7 +392,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                     href="/terms"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`font-medium underline underline-offset-2 transition-colors ${
+                    className={`font-medium underline underline-offset-2 transition-colors inline-flex min-h-[44px] items-center ${
                       accountType === 'organization'
                         ? 'text-proofound-terracotta hover:text-[#B5673F]'
                         : 'text-proofound-forest hover:text-[#2D5D4A]'
@@ -392,13 +405,13 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
               </label>
 
               {/* Optional: Marketing emails */}
-              <label className="flex items-start gap-3 cursor-pointer group">
+              <label className="flex items-start gap-3 cursor-pointer group min-h-[44px] py-1">
                 <input
                   type="checkbox"
                   data-testid="marketing-opt-in"
                   checked={marketingOptIn}
                   onChange={(e) => setMarketingOptIn(e.target.checked)}
-                  className={`mt-0.5 h-4 w-4 cursor-pointer rounded border-[#E8E6DD] transition-colors ${
+                  className={`mt-0.5 h-5 w-5 cursor-pointer rounded border-[#E8E6DD] transition-colors ${
                     accountType === 'organization'
                       ? 'text-proofound-terracotta focus:ring-proofound-terracotta/20'
                       : 'text-proofound-forest focus:ring-proofound-forest/20'

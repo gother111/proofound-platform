@@ -32,6 +32,7 @@ export function HeroSection({
     <section
       ref={containerRef}
       className="relative min-h-[90vh] flex items-center justify-center overflow-hidden px-6 md:px-12 pt-20 scroll-mt-24"
+      data-testid="landing-hero-section"
     >
       {/* Background Elements */}
       <div className="absolute inset-0 pointer-events-none">

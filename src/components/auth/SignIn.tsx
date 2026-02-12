@@ -30,6 +30,7 @@ function SignInSubmitButton() {
 
   return (
     <Button
+      data-testid="login-submit"
       type="submit"
       size="lg"
       disabled={pending}
@@ -109,7 +110,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
           initial={{ opacity: 0, x: -24 }}
           animate={{ opacity: 1, x: 0 }}
           onClick={onBack}
-          className="absolute left-4 sm:left-6 top-4 sm:top-6 flex items-center gap-2 text-neutral-dark-500 transition-colors hover:text-proofound-charcoal z-20"
+          className="absolute left-4 sm:left-6 top-4 sm:top-6 min-h-[44px] px-2 -mx-2 flex items-center gap-2 text-neutral-dark-500 transition-colors hover:text-proofound-charcoal z-20"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           <span className="text-sm font-medium">Back</span>
@@ -123,6 +124,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.55, ease: 'easeOut' }}
         className="relative z-10 w-full max-w-[480px] px-2 sm:px-4"
+        data-testid="login-form-shell"
       >
         <Card className="mx-auto overflow-hidden rounded-[24px] border border-[#E8E6DD] bg-white/95 p-6 sm:p-10 md:p-12 shadow-[0_4px_24px_rgba(29,51,48,0.08)] backdrop-blur">
           {/* Brand mark and welcoming copy */}
@@ -158,6 +160,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
               className="mb-6 rounded-2xl border border-[#B5542D]/25 bg-[#B5542D]/10 px-4 py-3"
               role="alert"
               aria-live="assertive"
+              data-testid="login-error"
             >
               <p id="signin-error" className="text-sm font-medium text-[#8A3F21]">
                 {error}
@@ -172,6 +175,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
             className="space-y-6"
             aria-label="Sign in form"
             noValidate
+            data-testid="login-form"
           >
             <div className="space-y-2">
               <Label
@@ -196,6 +200,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
                   id="email"
                   name="email"
                   type="email"
+                  data-testid="login-email"
                   placeholder="you@example.com"
                   autoComplete="email"
                   disabled={false}
@@ -231,6 +236,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
                   id="password"
                   name="password"
                   type={showPassword ? 'text' : 'password'}
+                  data-testid="login-password"
                   placeholder="Enter your password"
                   autoComplete="current-password"
                   disabled={false}
@@ -243,7 +249,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-proofound-charcoal focus:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest rounded"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground transition-colors hover:text-proofound-charcoal focus:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest rounded"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? (
@@ -258,7 +264,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
             <div className="flex items-center justify-between pt-2">
               <label
                 htmlFor="remember"
-                className="flex cursor-pointer items-center gap-2 text-[14px] text-[#2D3330]"
+                className="flex cursor-pointer items-center gap-2 text-[14px] text-[#2D3330] min-h-[44px] py-1"
               >
                 <Checkbox
                   id="remember"
@@ -269,7 +275,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
               </label>
               <Link
                 href="/reset-password"
-                className="text-[14px] font-medium text-proofound-forest transition-colors hover:text-[#2D5D4A]"
+                className="text-[14px] font-medium text-proofound-forest transition-colors hover:text-[#2D5D4A] inline-flex min-h-[44px] items-center px-2 -mx-2"
               >
                 Forgot password?
               </Link>
@@ -300,7 +306,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
                   onCreateAccount();
                 }
               }}
-              className="font-medium text-proofound-forest transition-colors hover:text-[#2D5D4A]"
+              className="font-medium text-proofound-forest transition-colors hover:text-[#2D5D4A] inline-flex min-h-[44px] items-center px-2 -mx-2"
             >
               Create account
             </Link>

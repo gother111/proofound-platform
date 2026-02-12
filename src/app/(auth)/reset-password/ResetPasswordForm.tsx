@@ -54,7 +54,10 @@ export function ResetPasswordForm() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-proofound-parchment dark:bg-background px-4">
+      <div
+        className="min-h-screen flex items-center justify-center bg-proofound-parchment dark:bg-background px-4"
+        data-testid="reset-password-success"
+      >
         <Card className="max-w-md w-full border-proofound-stone dark:border-border rounded-2xl">
           <CardHeader className="text-center">
             <div className="mx-auto w-12 h-12 rounded-full bg-proofound-forest/10 flex items-center justify-center mb-4">
@@ -88,7 +91,10 @@ export function ResetPasswordForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-proofound-parchment dark:bg-background px-4">
+    <div
+      className="min-h-screen flex items-center justify-center bg-proofound-parchment dark:bg-background px-4"
+      data-testid="reset-password-shell"
+    >
       <Card className="max-w-md w-full border-proofound-stone dark:border-border rounded-2xl">
         <CardHeader>
           <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
@@ -99,7 +105,12 @@ export function ResetPasswordForm() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6"
+            noValidate
+            data-testid="reset-password-form"
+          >
             <div>
               <Label htmlFor="email" className="text-proofound-charcoal dark:text-foreground">
                 Email
@@ -108,6 +119,7 @@ export function ResetPasswordForm() {
                 id="email"
                 name="email"
                 type="email"
+                data-testid="reset-password-email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
@@ -118,13 +130,17 @@ export function ResetPasswordForm() {
             </div>
 
             {error && (
-              <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-xl text-destructive text-sm">
+              <div
+                className="p-4 bg-destructive/10 border border-destructive/30 rounded-xl text-destructive text-sm"
+                data-testid="reset-password-error"
+              >
                 {error}
               </div>
             )}
 
             <Button
               type="submit"
+              data-testid="reset-password-submit"
               className="w-full bg-proofound-forest hover:bg-proofound-forest/90 text-white"
               disabled={isLoading}
             >
@@ -134,7 +150,7 @@ export function ResetPasswordForm() {
             <div className="text-center">
               <Link
                 href="/login"
-                className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground hover:text-proofound-forest dark:hover:text-primary transition-colors"
+                className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground hover:text-proofound-forest dark:hover:text-primary transition-colors inline-flex min-h-[44px] items-center px-2 -mx-2"
               >
                 ← Back to login
               </Link>

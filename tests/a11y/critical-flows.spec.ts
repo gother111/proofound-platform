@@ -9,6 +9,14 @@
 
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import {
+  cleanupFixtureData,
+  createFixtureState,
+  createRuntimeUser,
+  loginWithUi,
+  type StrictFixtureState,
+  type StrictRuntimeUser,
+} from '../../e2e/helpers/strict-fixtures';
 
 async function waitForUiToSettle(page: import('@playwright/test').Page) {
   // Many screens use Framer Motion fade-ins. Axe can misreport contrast if run mid-animation.
@@ -18,7 +26,21 @@ async function waitForUiToSettle(page: import('@playwright/test').Page) {
         let el: HTMLElement | null = node;
         while (el && el !== document.body) {
           // Framer Motion sets opacity inline during animation.
-          if (el.style && el.style.opacity && getComputedStyle(el).opacity !== '1') {
+          if (el.style && el.style.opacity) {
+            const currentOpacity = Number.parseFloat(getComputedStyle(el).opacity || '1');
+            if (!Number.isNaN(currentOpacity) && currentOpacity < 0.99) {
+              return false;
+            }
+          }
+          if (el.style && el.style.transform && getComputedStyle(el).transform.includes('matrix')) {
+            // Let transform animations settle enough for stable scanning.
+            // We do not need perfect identity matrix to run axe reliably.
+          }
+          if (
+            el.style &&
+            el.style.opacity &&
+            Number.isNaN(Number.parseFloat(getComputedStyle(el).opacity))
+          ) {
             return false;
           }
           el = el.parentElement;
@@ -51,14 +73,31 @@ async function waitForUiToSettle(page: import('@playwright/test').Page) {
       if (!form) return true;
       return hasStableOpacity(form);
     },
-    { timeout: 7000 }
+    { timeout: 15000 }
   );
 }
 
 test.describe('Accessibility - Critical Flows', () => {
+  let fixture: StrictFixtureState;
+  let authenticatedUser: StrictRuntimeUser;
+
+  test.beforeAll(async () => {
+    fixture = createFixtureState();
+    authenticatedUser = await createRuntimeUser(fixture, {
+      persona: 'individual',
+      prefix: 'strict-a11y',
+      displayName: 'Strict A11y User',
+    });
+  });
+
+  test.afterAll(async () => {
+    await cleanupFixtureData(fixture);
+  });
+
   test.beforeEach(async ({ page }) => {
-    // Set up any authentication if needed
-    // For now, we'll test public pages
+    await page.addInitScript(() => {
+      localStorage.setItem('proofound-cookie-consent', 'v1.0.2025-11-06-accepted');
+    });
   });
 
   test('Homepage should be accessible', async ({ page }) => {
@@ -95,29 +134,38 @@ test.describe('Accessibility - Critical Flows', () => {
   });
 
   test('Profile page should be accessible (authenticated)', async ({ page }) => {
-    // TODO: Add authentication setup
-    // await page.goto('/app/i/profile');
-    // const accessibilityScanResults = await new AxeBuilder({ page })
-    //   .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-    //   .analyze();
-    // expect(accessibilityScanResults.violations).toEqual([]);
+    await loginWithUi(page, authenticatedUser);
+    await page.goto('/app/i/profile');
+    await waitForUiToSettle(page);
+
+    const accessibilityScanResults = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze();
+
+    expect(accessibilityScanResults.violations).toEqual([]);
   });
 
   test('Expertise hub should be accessible (authenticated)', async ({ page }) => {
-    // TODO: Add authentication setup
-    // await page.goto('/app/i/expertise');
-    // const accessibilityScanResults = await new AxeBuilder({ page })
-    //   .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-    //   .analyze();
-    // expect(accessibilityScanResults.violations).toEqual([]);
+    await loginWithUi(page, authenticatedUser);
+    await page.goto('/app/i/expertise');
+    await waitForUiToSettle(page);
+
+    const accessibilityScanResults = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze();
+
+    expect(accessibilityScanResults.violations).toEqual([]);
   });
 
   test('Dashboard should be accessible (authenticated)', async ({ page }) => {
-    // TODO: Add authentication setup
-    // await page.goto('/app/i/dashboard');
-    // const accessibilityScanResults = await new AxeBuilder({ page })
-    //   .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-    //   .analyze();
-    // expect(accessibilityScanResults.violations).toEqual([]);
+    await loginWithUi(page, authenticatedUser);
+    await page.goto('/app/i/home');
+    await waitForUiToSettle(page);
+
+    const accessibilityScanResults = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze();
+
+    expect(accessibilityScanResults.violations).toEqual([]);
   });
 });

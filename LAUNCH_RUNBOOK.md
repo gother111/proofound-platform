@@ -27,8 +27,10 @@
 ### Core Team
 
 #### **Pavlo Samoshko** - CEO & Product Owner
+
 **Role:** Product strategy, user feedback, product decisions  
 **Responsibilities:**
+
 - Product vision and roadmap
 - User interviews and feedback analysis
 - Fairness metric reviews
@@ -37,6 +39,7 @@
 - Final approval on all product changes
 
 **Contact:**
+
 - Email: pavlo@proofound.io
 - Timezone: [TBD]
 - Availability: [TBD]
@@ -47,8 +50,10 @@
 ---
 
 #### **Yurii Bakurov** - Technical Lead
+
 **Role:** Engineering, infrastructure, technical operations  
 **Responsibilities:**
+
 - Code development and deployment
 - Infrastructure management (Vercel, Supabase)
 - Technical support and bug fixes
@@ -57,6 +62,7 @@
 - Technical documentation
 
 **Contact:**
+
 - Email: yurii@proofound.io
 - Timezone: [TBD]
 - Availability: [TBD]
@@ -69,12 +75,14 @@
 ### On-Call Rotation
 
 **Beta Phase (Nov 15 - Feb 1):**
+
 - **Primary On-Call:** Yurii (technical issues)
 - **Secondary On-Call:** Pavlo (product/user issues)
 - **Hours:** Mon-Fri 9 AM - 6 PM UTC (business hours)
 - **After-Hours:** Emergency only (site down, data breach)
 
 **Response Time SLAs:**
+
 - **P0 (Critical):** 15 minutes
 - **P1 (High):** 2 hours
 - **P2 (Medium):** 24 hours (next business day)
@@ -85,12 +93,14 @@
 ### Communication Channels
 
 **Internal Team:**
+
 - Primary: Slack/Discord channel `#proofound-alerts`
 - Urgent: Text message/phone call
 - Status updates: Slack `#proofound-general`
 - Planning: Weekly meeting (Mondays 10 AM UTC)
 
 **User-Facing:**
+
 - Support email: hello@proofound.io
 - In-app chat: Crisp widget (Mon-Fri 9 AM - 6 PM UTC)
 - Status page: [TBD - create simple status page]
@@ -103,6 +113,7 @@
 ### Two Weeks Before Private Beta (Nov 1-15)
 
 **Technical Setup (Yurii):**
+
 - [ ] All P0 critical gaps resolved (see PRD_IMPLEMENTATION_AUDIT_2025-11-05.md)
 - [ ] Vercel Analytics configured and verified
 - [ ] Database migrations applied to production
@@ -115,6 +126,7 @@
 - [ ] API keys rotated (OpenAI, Resend, Veriff if used)
 
 **Data & Security (Yurii):**
+
 - [ ] Supabase production database backed up
 - [ ] Test database restore procedure once
 - [ ] RLS policies verified for all tables
@@ -124,6 +136,7 @@
 - [ ] Terms of service published
 
 **Support Setup (Pavlo + Yurii):**
+
 - [ ] hello@proofound.io email configured
 - [ ] Auto-responder set up (see section 6.2)
 - [ ] Email templates created for common issues
@@ -132,6 +145,7 @@
 - [ ] FAQ page created (initial 10-15 questions)
 
 **Monitoring & Analytics (Yurii):**
+
 - [ ] Vercel Analytics Real User Monitoring enabled
 - [ ] Core Web Vitals tracking confirmed
 - [ ] Analytics events firing correctly (see METRICS_INSTRUMENTATION_COMPLETE.md)
@@ -140,6 +154,7 @@
 - [ ] Weekly metrics review meeting scheduled (Mondays 10 AM UTC)
 
 **Content & Documentation (Pavlo + Yurii):**
+
 - [ ] Landing page copy finalized and deployed
 - [ ] Help Center / FAQ page published
 - [ ] Onboarding flow tested end-to-end
@@ -148,6 +163,7 @@
 - [ ] Changelog page created (for weekly updates)
 
 **Testing & QA (Pavlo + Yurii):**
+
 - [ ] All critical user flows smoke tested:
   - [ ] Signup → Email verification → Login
   - [ ] Onboarding (5 steps) → Profile activation
@@ -162,6 +178,7 @@
 - [ ] Error messages user-friendly and actionable
 
 **Compliance & Legal (Pavlo):**
+
 - [ ] Privacy policy reviewed by legal (if applicable)
 - [ ] Terms of service finalized
 - [ ] GDPR consent flows tested (EU users)
@@ -170,6 +187,7 @@
 - [ ] Account deletion tested (GDPR Right to Erasure)
 
 **Launch Materials (Pavlo):**
+
 - [ ] Private beta invitation email drafted
 - [ ] Welcome email sequence created (Day 0, 3, 7)
 - [ ] Mid-beta survey prepared (2 weeks in)
@@ -181,6 +199,7 @@
 ### Final 24 Hours Before Launch (Nov 14)
 
 **Final Smoke Tests (Yurii):**
+
 - [ ] Production database connection verified
 - [ ] All API endpoints returning 200 OK
 - [ ] Authentication working (signup, login, logout)
@@ -190,6 +209,7 @@
 - [ ] Payment processing disabled (not in MVP scope)
 
 **Team Readiness (Pavlo + Yurii):**
+
 - [ ] On-call schedule confirmed for first week
 - [ ] Emergency contact numbers shared
 - [ ] Runbook reviewed together
@@ -199,6 +219,7 @@
 - [ ] Go/no-go decision made (Pavlo final approval)
 
 **Communication (Pavlo):**
+
 - [ ] Beta users notified of launch timing
 - [ ] Team Slack/Discord channel active
 - [ ] Status page updated: "All systems operational"
@@ -212,23 +233,27 @@
 **Goal:** Validate all critical paths work before real users arrive
 
 **Participants:**
+
 - Core team: Pavlo, Yurii
 - Friends & family: 10 people
 - Total: 12 users
 
 **Activities:**
+
 - **Daily smoke tests** (Yurii)
 - **Bug triage and fixes** (Yurii, with Pavlo prioritization)
 - **Performance optimization** (Yurii)
 - **Content finalization** (Pavlo)
 
 **Success Criteria:**
+
 - 0 P0 (critical) bugs
 - All core flows functional
 - Performance targets met (TTI <3.5s)
 - Database backups verified
 
 **Timeline:**
+
 - Week 1 (Nov 5-11): Bug fixes and optimization
 - Week 2 (Nov 12-15): Final polish and testing
 
@@ -243,6 +268,7 @@
 **Duration:** 30 days
 
 **Participants:**
+
 - 50 invite-only users from waitlist
 - Selection criteria:
   - Diverse roles (job seekers, career switchers, students)
@@ -251,11 +277,13 @@
   - Active on social media (for potential word-of-mouth)
 
 **Invitation Strategy:**
+
 - **Staggered invitations:** 10 users/day for first 5 days
 - **Email template:** See MVP_LAUNCH_DECISIONS.md Decision 4
 - **Expiry:** Invite links expire in 7 days (create urgency)
 
 **Key Metrics to Track:**
+
 - **TTFQI (Time to First Qualified Introduction):** Target ≤72 hours
 - **7-day retention:** Target ≥50%
 - **SUS score:** Target ≥70 (Good usability)
@@ -265,6 +293,7 @@
 **Weekly Activities:**
 
 **Week 1 (Nov 15-22):**
+
 - **Mon Nov 15:** Launch! Send first 10 invitations at 9 AM UTC
 - **Tue-Fri Nov 16-19:** Send 10 invitations/day
 - **Daily:** Monitor signups, errors, support emails
@@ -272,18 +301,21 @@
 - **Fri Nov 19:** Week 1 retro (Pavlo + Yurii)
 
 **Week 2 (Nov 23-30):**
+
 - **Mon Nov 23:** Weekly metrics review
 - **Wed Nov 25:** Mid-beta survey sent to all users (NPS + qualitative)
 - **Thu Nov 26:** Analyze survey results, prioritize top 3 issues
 - **Fri Nov 27:** Week 2 retro
 
 **Week 3 (Dec 1-8):**
+
 - **Mon Dec 1:** Weekly metrics review
 - **Tue-Thu Dec 2-4:** Implement fixes for top 3 issues
 - **Fri Dec 5:** Deploy fixes to production
 - **Fri Dec 5:** Week 3 retro
 
 **Week 4 (Dec 9-15):**
+
 - **Mon Dec 9:** Weekly metrics review
 - **Tue Dec 10:** SUS survey push (email all users)
 - **Thu Dec 12:** Calculate aggregate SUS score
@@ -291,6 +323,7 @@
 - **Sun Dec 15:** If approved, open Public Beta waitlist
 
 **Success Criteria (Exit to Public Beta):**
+
 - ✅ SUS score ≥70
 - ✅ TTFQI ≤72 hours for ≥50% of users
 - ✅ 7-day retention ≥50%
@@ -300,6 +333,7 @@
 - ✅ Pavlo approval
 
 **Risk Mitigation:**
+
 - If SUS <70: Extend Private Beta by 2 weeks, fix top UX issues
 - If TTFQI >72h: Investigate matching algorithm, improve assignment quality
 - If retention <50%: Conduct exit interviews, improve onboarding
@@ -314,17 +348,20 @@
 **Duration:** 45 days (6.5 weeks)
 
 **Participants:**
+
 - Target: 500 users
 - Access: Open waitlist → approval → invitation
 - No selection criteria (accept all qualified signups)
 
 **Invitation Strategy:**
+
 - **Week 1-2 (Dec 15-29):** 50 users/week (throttle to manage load)
 - **Week 3-4 (Dec 30-Jan 12):** 100 users/week (ramp up)
 - **Week 5-6 (Jan 13-26):** 150 users/week (full ramp)
 - **Week 7 (Jan 27-31):** 50 users/week (stabilize for GA)
 
 **Key Metrics to Track:**
+
 - **TTFQI:** Target ≤72 hours (median)
 - **TTSC (Time to Signed Contract):** Target ≤30 days (median)
 - **30-day retention:** Target ≥50%
@@ -335,30 +372,35 @@
 **Weekly Activities:**
 
 **Week 1-2 (Dec 15-29):**
+
 - Open waitlist with social media announcement
 - Monitor infrastructure (database size, API limits)
 - Daily metrics check: TTFQI, signups, errors
 - Weekly retro: Fridays at 4 PM UTC
 
 **Week 3-4 (Dec 30-Jan 12):**
+
 - Ramp invitations to 100/week
 - First Product Update email (changelog, new features)
 - Community building: Consider Discord/Slack channel
 - Weekly metrics review: Mondays at 10 AM UTC
 
 **Week 5-6 (Jan 13-26):**
+
 - Ramp to 150/week
 - Prepare GA launch materials (Product Hunt, HN posts)
 - Fix remaining P1 issues
 - Weekly retro continues
 
 **Week 7 (Jan 27-31):**
+
 - Stabilize at 50/week
 - Final polish and bug fixes
 - GA launch announcement drafted
 - Go/no-go decision for GA (Jan 30)
 
 **Success Criteria (Exit to GA):**
+
 - ✅ TTFQI ≤72 hours (median)
 - ✅ 30-day retention ≥50%
 - ✅ SUS ≥75
@@ -369,6 +411,7 @@
 - ✅ Pavlo + Yurii approval
 
 **Risk Mitigation:**
+
 - If infrastructure struggles: Upgrade Supabase tier early (Pro → Team)
 - If metrics miss targets: Extend Public Beta to Feb 28
 - If critical bugs emerge: Pause invitations, fix, resume
@@ -387,6 +430,7 @@
 **Launch Activities:**
 
 **Launch Week (Feb 1-7):**
+
 - **Sat Feb 1, 6 AM PST:** Product Hunt launch (aim for top 5 of day)
 - **Sun Feb 2, 8 AM PST:** Hacker News "Show HN" post
 - **Mon Feb 3:** Email announcement to entire waitlist (remaining users)
@@ -396,6 +440,7 @@
 - **Fri Feb 7:** Week 1 retro and metrics review
 
 **Month 1 (Feb 1-28):**
+
 - Target: 1,000 users
 - Daily monitoring of metrics
 - Weekly product updates (changelog, new features)
@@ -403,6 +448,7 @@
 - PR and content marketing push
 
 **Ongoing Operations:**
+
 - Monitor metrics daily (Yurii)
 - Monthly fairness audits (Pavlo + Yurii)
 - Quarterly feature releases
@@ -410,6 +456,7 @@
 - Continuous user feedback loop
 
 **Success Criteria (Month 1):**
+
 - ✅ 1,000 users by Feb 28
 - ✅ TTFQI ≤72 hours
 - ✅ TTSC ≤30 days (median)
@@ -419,6 +466,7 @@
 - ✅ Positive press coverage
 
 **Growth Targets:**
+
 - Month 1 (Feb): 1,000 users
 - Month 2 (Mar): 2,500 users
 - Month 3 (Apr): 5,000 users
@@ -431,35 +479,39 @@
 
 ### 4.1 Severity Levels
 
-| Severity | Impact | Examples | Response Time | Owner |
-|----------|--------|----------|---------------|-------|
-| **P0 - Critical** | Site down, data loss, security breach | Database unavailable, XSS vulnerability, user data leaked | 15 minutes | Yurii |
-| **P1 - High** | Core feature broken, major UX issue | Signup broken, matching not working, payment processing failed | 2 hours | Yurii |
-| **P2 - Medium** | Non-critical bug, performance degradation | Profile image upload slow, email delayed, minor UI bug | 24 hours | Yurii or Pavlo |
-| **P3 - Low** | Minor UX issue, feature request, cosmetic bug | Button misaligned, typo, color inconsistency | 1 week | Pavlo |
+| Severity          | Impact                                        | Examples                                                       | Response Time | Owner          |
+| ----------------- | --------------------------------------------- | -------------------------------------------------------------- | ------------- | -------------- |
+| **P0 - Critical** | Site down, data loss, security breach         | Database unavailable, XSS vulnerability, user data leaked      | 15 minutes    | Yurii          |
+| **P1 - High**     | Core feature broken, major UX issue           | Signup broken, matching not working, payment processing failed | 2 hours       | Yurii          |
+| **P2 - Medium**   | Non-critical bug, performance degradation     | Profile image upload slow, email delayed, minor UI bug         | 24 hours      | Yurii or Pavlo |
+| **P3 - Low**      | Minor UX issue, feature request, cosmetic bug | Button misaligned, typo, color inconsistency                   | 1 week        | Pavlo          |
 
 ---
 
 ### 4.2 Incident Response Workflow
 
 **1. Detection**
+
 - Monitoring alert (Vercel, Sentry)
 - User report (email, chat, social media)
 - Internal testing/discovery
 
 **2. Triage (5 minutes)**
+
 - Assess severity (P0-P3)
 - Assign owner (Yurii for technical, Pavlo for product)
 - Create Linear issue with `[INCIDENT]` label
 - Notify team in Slack `#proofound-alerts`
 
 **3. Communicate (10 minutes)**
+
 - **P0/P1:** Update status page immediately
 - **P0/P1:** Email affected users if identifiable
 - **P2/P3:** In-app notification or next changelog
 - **Template:** "We're investigating [issue]. Updates in [timeframe]."
 
 **4. Fix (varies)**
+
 - **Immediate workaround:** Disable feature, rollback deployment
 - **Root cause analysis:** Investigate logs, reproduce bug
 - **Implement fix:** Code change, database migration, config update
@@ -467,12 +519,14 @@
 - **Document:** Add to post-mortem (see section 4.5)
 
 **5. Deploy (varies)**
+
 - **Hotfix:** Direct to production (critical only)
 - **Regular:** Via normal deployment process
 - **Verify:** Smoke test after deployment
 - **Monitor:** Watch metrics for 1 hour post-deploy
 
 **6. Post-Mortem (within 24 hours for P0/P1)**
+
 - Document: What happened, why, how fixed, prevention plan
 - Store in `/docs/incidents/YYYY-MM-DD-incident-name.md`
 - Review in next weekly meeting
@@ -487,6 +541,7 @@
 **Severity:** P0 - Critical
 
 **Response:**
+
 1. Check Vercel deployment status: https://vercel.com/proofound/deployments
 2. Check Supabase status: https://status.supabase.com
 3. If Vercel issue: Rollback to last working deployment
@@ -495,6 +550,7 @@
 6. Update status page: "Service restored"
 
 **Rollback Command:**
+
 ```bash
 # In Vercel dashboard: Deployments → Select previous → Promote to Production
 # Or via CLI:
@@ -502,6 +558,7 @@ vercel rollback proofound-prod
 ```
 
 **Communication Template:**
+
 ```
 Subject: [RESOLVED] Proofound service restored
 
@@ -525,6 +582,7 @@ We apologize for the inconvenience. If you experienced any data loss, please con
 **Severity:** P0 - Critical
 
 **Response:**
+
 1. Check Supabase dashboard: https://supabase.com/dashboard/project/proofound/settings
 2. Verify connection string in Vercel environment variables
 3. Check database connection pool limits (Supabase settings)
@@ -533,6 +591,7 @@ We apologize for the inconvenience. If you experienced any data loss, please con
 6. Test connection: Run health check endpoint `/api/health`
 
 **Prevention:**
+
 - Monitor database connection pool usage (add to daily checks)
 - Set up alerting for connection pool >80% utilization
 - Document connection limit (Supabase Free: 60, Pro: 200, Team: 500)
@@ -544,6 +603,7 @@ We apologize for the inconvenience. If you experienced any data loss, please con
 **Severity:** P1 - High
 
 **Response:**
+
 1. Reproduce issue locally: Try signup flow
 2. Check Vercel logs for errors: `/api/auth/signup`
 3. Check Supabase Auth logs: Supabase dashboard → Auth → Logs
@@ -563,6 +623,7 @@ We apologize for the inconvenience. If you experienced any data loss, please con
 **Severity:** P1 - High
 
 **Response:**
+
 1. Check `/api/core/matching/profile` endpoint logs
 2. Verify matching algorithm running: Check cron job logs
 3. Check database: Are there active assignments? Are profiles activated?
@@ -581,6 +642,7 @@ We apologize for the inconvenience. If you experienced any data loss, please con
 **Severity:** P2 - Medium
 
 **Response:**
+
 1. Check Vercel Analytics: Identify slow pages
 2. Check database query performance: Supabase dashboard → Performance
 3. Common causes:
@@ -594,6 +656,7 @@ We apologize for the inconvenience. If you experienced any data loss, please con
 7. Monitor for 24 hours post-fix
 
 **Query Performance Check:**
+
 ```sql
 -- Run in Supabase SQL editor
 EXPLAIN ANALYZE SELECT * FROM profiles WHERE email = 'user@example.com';
@@ -605,6 +668,7 @@ EXPLAIN ANALYZE SELECT * FROM profiles WHERE email = 'user@example.com';
 ### 4.4 Rollback Plan
 
 **When to Rollback:**
+
 - Critical bug in new deployment
 - Performance regression >50%
 - Data loss or corruption risk
@@ -613,12 +677,14 @@ EXPLAIN ANALYZE SELECT * FROM profiles WHERE email = 'user@example.com';
 **How to Rollback:**
 
 **Option 1: Vercel Dashboard (Fastest)**
+
 1. Go to https://vercel.com/proofound/deployments
 2. Find previous working deployment
 3. Click "Promote to Production"
 4. Verify rollback successful (check site)
 
 **Option 2: Vercel CLI**
+
 ```bash
 # List recent deployments
 vercel list
@@ -628,6 +694,7 @@ vercel rollback <deployment-url>
 ```
 
 **Option 3: Git Revert**
+
 ```bash
 # Revert last commit
 git revert HEAD
@@ -637,6 +704,7 @@ git push origin main
 ```
 
 **Database Rollback:**
+
 - Database migrations are reversible via Drizzle
 - If migration caused issue: Run reverse migration
 - If data corrupted: Restore from backup (see section 7.2)
@@ -665,9 +733,11 @@ psql $DATABASE_URL < migrations/reverse/YYYY-MM-DD.sql
 **Affected Users:** [Number or "All users"]
 
 ## Summary
+
 [1-2 sentence summary of what happened]
 
 ## Timeline (all times UTC)
+
 - HH:MM - Incident detected via [monitoring/user report]
 - HH:MM - Severity assessed as P0, team notified
 - HH:MM - Status page updated, users notified
@@ -676,27 +746,34 @@ psql $DATABASE_URL < migrations/reverse/YYYY-MM-DD.sql
 - HH:MM - Incident resolved, verified
 
 ## Root Cause
+
 [Detailed explanation of what caused the incident]
 
 ## Impact
+
 - Users affected: [number]
 - Revenue impact: $[amount] (if applicable)
 - Data loss: [Yes/No - describe if yes]
 - Reputation: [Describe user sentiment]
 
 ## Resolution
+
 [Detailed explanation of how the issue was fixed]
 
 ## Prevention
+
 [Action items to prevent recurrence]
+
 - [ ] [Action item 1] - Owner: [Name] - Deadline: [Date]
 - [ ] [Action item 2] - Owner: [Name] - Deadline: [Date]
 
 ## Lessons Learned
+
 - **What went well:** [Positive aspects of response]
 - **What could improve:** [Areas for improvement]
 
 ## Follow-up
+
 - [ ] Share post-mortem with team
 - [ ] Implement prevention measures
 - [ ] Update runbook with learnings
@@ -709,6 +786,7 @@ psql $DATABASE_URL < migrations/reverse/YYYY-MM-DD.sql
 ### 5.1 Monitoring Tools
 
 **Vercel Analytics (Free Tier):**
+
 - **Enabled:** Real User Monitoring (RUM)
 - **Metrics tracked:**
   - Core Web Vitals (LCP, FID, CLS)
@@ -719,11 +797,13 @@ psql $DATABASE_URL < migrations/reverse/YYYY-MM-DD.sql
 - **Limitation:** No custom alerts (manual daily checks required)
 
 **Vercel Logs:**
+
 - **Access:** https://vercel.com/proofound/logs
 - **Filter:** By function, status code, time range
 - **Use:** Debug errors, investigate incidents
 
 **Supabase Dashboard:**
+
 - **Metrics:** Database size, query performance, API requests
 - **Dashboard:** https://supabase.com/dashboard/project/proofound
 - **Auth logs:** Monitor signup/login failures
@@ -733,16 +813,16 @@ psql $DATABASE_URL < migrations/reverse/YYYY-MM-DD.sql
 
 ### 5.2 Key Metrics to Monitor
 
-| Metric | Target | Check Frequency | Alert Threshold | Action |
-|--------|--------|----------------|-----------------|--------|
-| **Uptime** | 99.5% monthly | Daily | <99% in 24h | Investigate immediately |
-| **API Latency (P95)** | ≤1.5s | Daily | >2.5s | Optimize slow endpoints |
-| **Page TTI (P95 Mobile)** | ≤3.5s | Daily | >5s | Optimize slow pages |
-| **Error Rate** | <1% | Daily | >2% | Review error logs, fix |
-| **Database Size** | Monitor growth | Weekly | >80% of limit | Upgrade tier or cleanup |
-| **TTFQI (Time to First Intro)** | ≤72h median | Daily | >100h | Investigate matching |
-| **7-day Retention** | ≥50% | Weekly | <40% | Improve onboarding/UX |
-| **SUS Score** | ≥75 | Weekly | <70 | Fix top UX issues |
+| Metric                          | Target         | Check Frequency | Alert Threshold | Action                  |
+| ------------------------------- | -------------- | --------------- | --------------- | ----------------------- |
+| **Uptime**                      | 99.5% monthly  | Daily           | <99% in 24h     | Investigate immediately |
+| **API Latency (P95)**           | ≤1.5s          | Daily           | >2.5s           | Optimize slow endpoints |
+| **Page TTI (P95 Mobile)**       | ≤3.5s          | Daily           | >5s             | Optimize slow pages     |
+| **Error Rate**                  | <1%            | Daily           | >2%             | Review error logs, fix  |
+| **Database Size**               | Monitor growth | Weekly          | >80% of limit   | Upgrade tier or cleanup |
+| **TTFQI (Time to First Intro)** | ≤72h median    | Daily           | >100h           | Investigate matching    |
+| **7-day Retention**             | ≥50%           | Weekly          | <40%            | Improve onboarding/UX   |
+| **SUS Score**                   | ≥75            | Weekly          | <70             | Fix top UX issues       |
 
 ---
 
@@ -790,6 +870,7 @@ psql $DATABASE_URL < migrations/reverse/YYYY-MM-DD.sql
    - [ ] Escalate technical issues to Linear
 
 **Log Results:** Maintain daily log in spreadsheet:
+
 ```
 Date       | Errors | TTI P95 | Signups | Onboarding % | Support Tickets | Notes
 -----------|--------|---------|---------|--------------|-----------------|------
@@ -844,6 +925,7 @@ Date       | Errors | TTI P95 | Signups | Onboarding % | Support Tickets | Notes
 **Purpose:** Real-time view of key platform metrics
 
 **Metrics Displayed:**
+
 - TTSC (Time to Signed Contract)
 - TTFQI (Time to First Qualified Introduction)
 - TTV (Time to Value)
@@ -854,7 +936,7 @@ Date       | Errors | TTI P95 | Signups | Onboarding % | Support Tickets | Notes
 
 **Refresh:** Auto-refresh every 60 seconds (SWR)
 
-**See:** API_DOCUMENTATION.md for API details
+**See:** `docs/API_REFERENCE.md` for API details
 
 ---
 
@@ -872,12 +954,14 @@ Date       | Errors | TTI P95 | Signups | Onboarding % | Support Tickets | Notes
 ### 6.2 Email Support (hello@proofound.io)
 
 **Response SLA:**
+
 - **P0 (Critical):** 1 hour (site down, data loss)
 - **P1 (High):** 4 hours (feature broken, login issue)
 - **P2 (Medium):** 24 hours (general questions)
 - **P3 (Low):** 1 week (feature requests)
 
 **Auto-Responder:**
+
 ```
 Subject: We received your message
 
@@ -896,6 +980,7 @@ The Proofound Team
 **Email Templates:**
 
 **Template 1: Password Reset Help**
+
 ```
 Subject: Re: Password reset help
 
@@ -921,6 +1006,7 @@ Proofound Team
 ```
 
 **Template 2: Profile Completion Guidance**
+
 ```
 Subject: Re: How to complete my profile?
 
@@ -944,6 +1030,7 @@ Proofound Team
 ```
 
 **Template 3: Bug Report Acknowledgment**
+
 ```
 Subject: Re: [Bug Description]
 
@@ -967,6 +1054,7 @@ Proofound Team
 ```
 
 **Template 4: Feature Request Acknowledgment**
+
 ```
 Subject: Re: Feature request - [Feature Name]
 
@@ -992,6 +1080,7 @@ Proofound Team
 **Widget Location:** Bottom-right corner of all authenticated pages  
 **Hours:** Mon-Fri 9 AM - 6 PM UTC  
 **After-Hours Message:**
+
 ```
 Thanks for reaching out! Our support team is available Mon-Fri 9 AM - 6 PM UTC.
 
@@ -999,6 +1088,7 @@ For urgent issues, email hello@proofound.io and we'll respond as soon as possibl
 ```
 
 **Response Guidelines:**
+
 - Respond within 5 minutes during business hours
 - Keep messages concise and friendly
 - Use emojis sparingly (professional tone)
@@ -1007,6 +1097,7 @@ For urgent issues, email hello@proofound.io and we'll respond as soon as possibl
 - For escalation: "Let me check with the team and get back to you"
 
 **Crisp Settings:**
+
 - Auto-away after 5 minutes of inactivity
 - Show user email and name (if logged in)
 - Save conversation history (for context)
@@ -1019,6 +1110,7 @@ For urgent issues, email hello@proofound.io and we'll respond as soon as possibl
 **Tool:** Spreadsheet (Google Sheets) or Linear board
 
 **Columns:**
+
 - **Date:** When request was received
 - **User:** Email or name
 - **Channel:** Email / Chat / Twitter
@@ -1032,6 +1124,7 @@ For urgent issues, email hello@proofound.io and we'll respond as soon as possibl
 **Review:** Weekly during metrics review (Mondays 10 AM UTC)
 
 **Metrics to Track:**
+
 - Average response time
 - Average time to resolution
 - Most common issues (for FAQ)
@@ -1044,18 +1137,21 @@ For urgent issues, email hello@proofound.io and we'll respond as soon as possibl
 ### 7.1 Backup Strategy
 
 **Automated Backups (Supabase):**
+
 - **Frequency:** Daily (automatic)
 - **Retention:** 7 days (Free tier), 30 days (Pro tier)
 - **Backup Type:** Full database snapshot
 - **Storage:** Supabase-managed (AWS S3)
 
 **Manual Backups:**
+
 - **Frequency:** Weekly (every Sunday at 2 AM UTC)
 - **Tool:** `pg_dump` command
 - **Storage:** Separate S3 bucket (owned by team)
 - **Retention:** 90 days
 
 **Backup Command:**
+
 ```bash
 # Export database to SQL file
 pg_dump $DATABASE_URL > backups/proofound-$(date +%Y-%m-%d).sql
@@ -1071,6 +1167,7 @@ rm backups/proofound-$(date +%Y-%m-%d).sql.gz
 ```
 
 **Verification:**
+
 - **Test restore:** Once before beta launch (Nov 14)
 - **Recurring tests:** Monthly (first Sunday of each month)
 - **Document:** Record test results in Linear
@@ -1085,6 +1182,7 @@ rm backups/proofound-$(date +%Y-%m-%d).sql.gz
 **Recovery Point Objective (RPO):** 24 hours (last backup)
 
 **Steps:**
+
 1. Identify scope of corruption (which tables, how many rows)
 2. Pause all writes to affected tables (disable features if needed)
 3. Access Supabase backups: Dashboard → Database → Backups
@@ -1098,6 +1196,7 @@ rm backups/proofound-$(date +%Y-%m-%d).sql.gz
 11. Notify affected users (if any)
 
 **Communication Template:**
+
 ```
 Subject: Data issue resolved
 
@@ -1125,6 +1224,7 @@ We apologize for the inconvenience.
 **RPO:** 24 hours
 
 **Steps:**
+
 1. **Immediate:** Notify team, update status page: "Service down"
 2. **Assess:** Is Supabase down or is it our database specifically?
 3. **If Supabase issue:** Wait for Supabase to resolve, monitor status.supabase.com
@@ -1154,6 +1254,7 @@ We apologize for the inconvenience.
 **RPO:** Up to 24 hours (last backup)
 
 **Steps:**
+
 1. **Immediate:** Stop the action (if still in progress)
 2. **Assess scope:** How many rows deleted? Which tables?
 3. **If <1 hour ago:** Check Supabase transaction logs, may be able to rollback
@@ -1176,6 +1277,7 @@ We apologize for the inconvenience.
 - [ ] Delete test project after verification
 
 **Tables to Verify:**
+
 - `profiles` (user count)
 - `individual_profiles` (should match profiles count)
 - `organizations` (org count)
@@ -1194,6 +1296,7 @@ We apologize for the inconvenience.
 **Typical Duration:** 2-3 minutes
 
 **Process:**
+
 1. Push code to GitHub: `git push origin main`
 2. Vercel detects push, starts build
 3. Build runs: `npm install && npm run build`
@@ -1202,6 +1305,7 @@ We apologize for the inconvenience.
 6. Deployment URL: https://proofound.io
 
 **Monitoring Post-Deploy:**
+
 - Check Vercel dashboard for build logs
 - Verify deployment status: "Ready"
 - Run smoke test (see section 8.3)
@@ -1216,6 +1320,7 @@ We apologize for the inconvenience.
 **Process:**
 
 **1. Create Migration:**
+
 ```bash
 # Generate migration from schema changes
 npm run db:generate
@@ -1224,6 +1329,7 @@ npm run db:generate
 ```
 
 **2. Review Migration:**
+
 ```bash
 # Review generated SQL
 cat drizzle/migrations/NNNN_migration_name.sql
@@ -1235,6 +1341,7 @@ cat drizzle/migrations/NNNN_migration_name.sql
 ```
 
 **3. Test Migration (Staging):**
+
 ```bash
 # Apply to staging database
 DATABASE_URL=$STAGING_DATABASE_URL npm run db:migrate
@@ -1244,6 +1351,7 @@ DATABASE_URL=$STAGING_DATABASE_URL npm run db:migrate
 ```
 
 **4. Apply to Production:**
+
 ```bash
 # Apply to production database
 npm run db:migrate
@@ -1253,6 +1361,7 @@ npm run db:migrate
 ```
 
 **5. Verify:**
+
 ```bash
 # Check tables exist
 # Check data integrity
@@ -1260,6 +1369,7 @@ npm run db:migrate
 ```
 
 **Rollback (if needed):**
+
 ```bash
 # Drizzle doesn't support automatic rollbacks
 # Must write reverse migration manually
@@ -1286,6 +1396,7 @@ npm run db:migrate
 - [ ] **Admin dashboard loads:** `/app/admin/metrics` (admin only)
 
 **If any smoke test fails:**
+
 1. Assess severity (P0 if critical path broken)
 2. Decide: Rollback or hotfix
 3. If rollback: See section 4.4
@@ -1301,6 +1412,7 @@ npm run db:migrate
 **Process:**
 
 **1. Create Hotfix Branch:**
+
 ```bash
 # Create branch from main
 git checkout main
@@ -1309,6 +1421,7 @@ git checkout -b hotfix/fix-critical-bug
 ```
 
 **2. Implement Fix:**
+
 ```bash
 # Make minimal changes (only fix the bug)
 # Avoid scope creep
@@ -1316,6 +1429,7 @@ git checkout -b hotfix/fix-critical-bug
 ```
 
 **3. Test Locally:**
+
 ```bash
 # Test the fix works
 npm run dev
@@ -1323,6 +1437,7 @@ npm run dev
 ```
 
 **4. Deploy Directly to Production:**
+
 ```bash
 # Push to main (skip PR for hotfixes)
 git add .
@@ -1336,12 +1451,14 @@ git push origin main
 ```
 
 **5. Monitor:**
+
 - Watch Vercel deployment
 - Run smoke test
 - Monitor error rate for 30 minutes
 - Notify team in Slack
 
 **6. Post-Hotfix:**
+
 - Create Linear issue documenting the bug
 - Write post-mortem (if P0)
 - Backport fix to any open feature branches
@@ -1355,6 +1472,7 @@ git push origin main
 **Use Case:** Gradual rollout, A/B testing, kill switch
 
 **Implementation Plan:**
+
 - Use environment variables for simple flags
 - Consider tools: LaunchDarkly, Flagsmith, PostHog
 - Add flag checking in code: `if (featureFlags.newMatching) { ... }`
@@ -1366,12 +1484,14 @@ git push origin main
 ### Team Contacts
 
 **Pavlo Samoshko** - CEO & Product Owner
+
 - Email: pavlo@proofound.io
 - Phone: [TBD]
 - Timezone: [TBD]
 - Availability: [TBD]
 
 **Yurii Bakurov** - Technical Lead
+
 - Email: yurii@proofound.io
 - Phone: [TBD]
 - Timezone: [TBD]
@@ -1382,29 +1502,34 @@ git push origin main
 ### Service Provider Contacts
 
 **Vercel (Hosting & Deployment)**
+
 - Status: https://www.vercel-status.com
 - Support: https://vercel.com/support
 - Dashboard: https://vercel.com/proofound
 - Tier: Free (upgrade to Pro if needed)
 
 **Supabase (Database & Auth)**
+
 - Status: https://status.supabase.com
 - Support: https://supabase.com/dashboard/support
 - Dashboard: https://supabase.com/dashboard/project/proofound
 - Tier: Free (upgrade to Pro if needed)
 
 **Resend (Email Delivery)**
+
 - Status: https://status.resend.com
 - Support: support@resend.com
 - Dashboard: https://resend.com/dashboard
 - Tier: Free (100 emails/day)
 
 **Crisp (In-App Chat)**
+
 - Support: support@crisp.chat
 - Dashboard: https://app.crisp.chat
 - Tier: Free
 
 **Cloudflare (DNS, if used)**
+
 - Status: https://www.cloudflarestatus.com
 - Support: https://dash.cloudflare.com/support
 
@@ -1432,6 +1557,7 @@ git push origin main
 **Duration:** 15 minutes
 
 **Agenda:**
+
 1. What went well today?
 2. What didn't go well?
 3. Any surprises?
@@ -1446,6 +1572,7 @@ git push origin main
 **Duration:** 30 minutes
 
 **Agenda:**
+
 1. **Review metrics:** Signups, retention, SUS, TTFQI
 2. **Review feedback:** Support emails, chat, surveys
 3. **Review incidents:** Any P0/P1 bugs this week?
@@ -1465,6 +1592,7 @@ git push origin main
 **Duration:** 1-2 hours
 
 **Agenda:**
+
 1. **Review success criteria:** Did we meet targets?
 2. **Review metrics:** Aggregate data for entire phase
 3. **Review feedback:** Themes from users
@@ -1475,6 +1603,7 @@ git push origin main
 **Document:** Create review doc in Linear or Google Docs
 
 **Example: Private Beta → Public Beta Review (Dec 13, 2025)**
+
 - **Success Criteria:**
   - ✅ SUS ≥70: Actual = 72
   - ✅ TTFQI ≤72h: Actual = 54 hours
@@ -1498,6 +1627,7 @@ git push origin main
 **Duration:** 1 hour
 
 **Agenda:**
+
 1. **Growth:** User count, revenue (future), retention
 2. **Product:** Features shipped, roadmap updates
 3. **Operations:** Incidents, support volume, infrastructure
@@ -1588,12 +1718,14 @@ git log --oneline --graph
 **Simple status page:** Create at `/status` or use external service (e.g., status.io, statuspage.io)
 
 **Statuses:**
+
 - ✅ **All Systems Operational**
 - ⚠️ **Performance Degraded**
 - ❌ **Partial Outage**
 - 🔴 **Major Outage**
 
 **Components:**
+
 - Web Application (proofound.io)
 - API (api.proofound.io)
 - Database (Supabase)
@@ -1602,6 +1734,7 @@ git log --oneline --graph
 - Authentication (Supabase Auth)
 
 **Incident Update Template:**
+
 ```markdown
 ## [TITLE] - [STATUS]
 
@@ -1610,15 +1743,19 @@ git log --oneline --graph
 **Affected:** [COMPONENTS]
 
 ### Current Status
+
 [DESCRIPTION OF CURRENT STATE]
 
 ### Impact
+
 [WHO IS AFFECTED, WHAT DOESN'T WORK]
 
 ### Next Update
+
 [WHEN TO EXPECT NEXT UPDATE]
 
 ### Updates
+
 - [TIME] UTC: [UPDATE DESCRIPTION]
 - [TIME] UTC: [UPDATE DESCRIPTION]
 ```
@@ -1627,9 +1764,9 @@ git log --oneline --graph
 
 ## Document Revision History
 
-| Date | Version | Changes | Author |
-|------|---------|---------|--------|
-| Nov 5, 2025 | 1.0 | Initial runbook created | Yurii Bakurov |
+| Date        | Version | Changes                 | Author        |
+| ----------- | ------- | ----------------------- | ------------- |
+| Nov 5, 2025 | 1.0     | Initial runbook created | Yurii Bakurov |
 
 ---
 
@@ -1641,4 +1778,3 @@ git log --oneline --graph
 
 **Questions or Updates?**  
 Contact: yurii@proofound.io or pavlo@proofound.io
-

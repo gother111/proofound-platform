@@ -1,3 +1,7 @@
+> Doc Class: `governance`
+> Sync Pair: `Documentation.md`
+> Last Verified: `2026-02-12`
+
 # Documentation (Status + Index)
 
 ## Status
@@ -216,9 +220,7 @@ Architecture + privacy:
 
 API docs:
 
-- `API_DOCUMENTATION_FINAL.md`
-- `API_DOCUMENTATION_NEW_ENDPOINTS.md`
-- `docs/api-documentation.md`
+- `docs/API_REFERENCE.md`
 
 DB + migrations:
 
@@ -973,7 +975,7 @@ What changed:
 
 - Enforced canonical share URL base for snippets in `src/lib/profile/snippet-generator.ts`:
   - Uses `NEXT_PUBLIC_SITE_URL` only for share links.
-  - Normalizes host and rewrites legacy `proofound.com` and `www.proofound.com` to `proofound.io`.
+  - Normalizes host and rewrites legacy `proofound.io` and `www.proofound.io` to `proofound.io`.
   - Added `buildPublicEmbedURLFromProfileURL` and `generateEmbedCodeFromUrl`.
 - Extended snippet API for organization sharing in `src/app/api/profile/snippet/route.ts`:
   - Supports `profileType: 'individual' | 'organization'` and `orgId`.
@@ -1001,7 +1003,7 @@ What changed:
 
 Why:
 
-- Share links were still generated as `proofound.com` in some paths and public snippet routes were missing or incomplete for end-to-end sharing.
+- Share links were still generated as `proofound.io` in some paths and public snippet routes were missing or incomplete for end-to-end sharing.
 - Organization profile sharing required the same token flow with membership checks and privacy enforcement.
 - Embed behavior needed a route-specific framing exception without loosening the rest of the app.
 
@@ -1014,7 +1016,7 @@ How to verify:
 
 Open risks/TODO:
 
-- Existing already-shared `proofound.com` links outside the app cannot be redirected by this codebase alone.
+- Existing already-shared `proofound.io` links outside the app cannot be redirected by this codebase alone.
 - `frame-ancestors *` is intentionally limited to `/p/<token>/embed`; keep this route-scoped and do not broaden it.
 - Optional hardening follow-up: replace `<img>` with `next/image` in `src/components/profile/PublicSnippetView.tsx` if layout permits.
 
@@ -1229,6 +1231,137 @@ Open risks/TODO:
   - decline analytics cookies and confirm no non-essential telemetry network calls,
   - verify cross-user and anonymous isolation for verification/analytics in live app flows,
   - run moderation action -> statement-of-reasons -> appeal lifecycle end to end.
+
+## 2026-02-12: Repository-Wide Documentation Freshness Remediation
+
+What changed:
+
+- Created canonical API reference: `docs/API_REFERENCE.md`.
+- Archived legacy API docs and replaced them with redirect stubs:
+  - `API_DOCUMENTATION_FINAL.md`
+  - `API_DOCUMENTATION_NEW_ENDPOINTS.md`
+  - `docs/api-documentation.md`
+- Archived historical non-governance status docs and replaced originals with redirect stubs.
+- Added documentation registry: `docs/DOCS_REGISTRY.md`.
+- Added docs freshness guardrail script: `scripts/docs-freshness-check.mjs`.
+- Added npm command: `npm run docs:freshness` in `package.json`.
+- Added non-blocking CI step in `.github/workflows/ci.yml` for docs freshness warning mode.
+- Kept all root governance docs in place and synchronized them with project and agent governance docs:
+  - `Prompt.md`, `Plans.md`, `Architecture.md`, `Implement.md`, `setup.md`, `preflight.md`, `verification.md`, `metrics.md`, `Documentation.md`.
+- Added governance metadata headers (`Doc Class`, `Sync Pair`, `Last Verified`) across root/project/agent governance docs.
+- Normalized active docs from legacy domains to `.io` and removed active absolute local paths.
+- Fixed known broken links in `README.md` and `SPRINT_1_PLAN.md`.
+
+Why:
+
+- Active documentation had significant drift and mixed historical snapshots with operational guidance.
+- Duplicate governance surfaces were contradictory.
+- API docs were fragmented across three overlapping files.
+- There was no automated drift signal in CI.
+
+How to verify:
+
+- `npm run docs:freshness` should pass with no findings.
+- `curl -sS https://proofound.io/api/health` should return healthy status and connected database.
+- `npx -y vercel@latest ls proofound-platform --token "$VERCEL_TOKEN"` should show ready production deployments.
+- `npx -y vercel@latest env ls production --token "$VERCEL_TOKEN"` should show required production env keys.
+- Baseline local checks run for this change set:
+  - `npm run lint` (pass with one unrelated warning in `postcss.config.js`)
+  - `npm run typecheck` (pass)
+  - `npm run test` (pass)
+  - `npm run build` (pass)
+
+Open risks/TODO:
+
+- The historical archive migration may break external bookmarks to old content locations outside the repository.
+- `docs:freshness` currently runs in warning mode in CI; strict mode is available through `STRICT_DOCS_FRESHNESS=true` and can be enabled later.
+- Local verification ran under Node `v25.4.0` in this environment while repo engines target `>=20.20.0 <21`; commands passed, but Node 20 remains the canonical runtime.
+
+---
+
+## 2026-02-12: Smartphone UI and UX Validation, Remediation, and Verification
+
+What changed:
+
+- Implemented mobile touch-target remediation (strict 44x44 policy) across auth, app, organization, admin, and consent surfaces:
+  - `src/components/app/TopBar.tsx`
+  - `src/components/auth/SignIn.tsx`
+  - `src/components/auth/SignupForm.tsx`
+  - `src/app/(auth)/signup/SignupContent.tsx`
+  - `src/app/(auth)/reset-password/ResetPasswordForm.tsx`
+  - `src/components/CookieBanner.tsx`
+  - `src/components/admin/AdminHeader.tsx`
+  - `src/components/admin/AdminSidebar.tsx`
+  - `src/app/app/o/[slug]/home/page.tsx`
+- Added mobile shell spacing and safe-area behavior to prevent occlusion and overlap:
+  - `src/app/app/o/[slug]/layout.tsx` (`pb-20 md:pb-0`, `min-w-0`)
+  - `src/app/globals.css` (`.safe-area-inset-bottom`)
+  - `src/components/admin/AdminLayoutClient.tsx` (mobile padding tuning)
+- Added non-breaking touch-size API support in shared button component:
+  - `src/components/ui/button.tsx` (`size: "touch"`)
+- Fixed accessibility regression and stabilized a11y timing behavior:
+  - `src/components/landing/sections/FinalQuoteSection.tsx` (contrast-safe decorative treatment)
+  - `tests/a11y/critical-flows.spec.ts` (deterministic settle strategy)
+- Stabilized auth E2E behavior in mock mode:
+  - `src/actions/auth.ts` (mock-safe GDPR consent and reset-password behavior)
+- Added isolated, repeatable smartphone regression checks and deterministic Playwright ports:
+  - `playwright.config.ts`
+  - `playwright.a11y.config.ts`
+  - `e2e/mobile-smartphone.spec.ts`
+  - `package.json` (`test:e2e:mobile`)
+
+Why:
+
+- Mobile screenshots and route audits showed several smartphone UX defects: undersized tap targets, missing safe-area behavior, mobile header alignment problems, and content occlusion near fixed bottom navigation.
+- Two required test suites were failing (`test:a11y`, `test:e2e:auth`) and needed stabilization aligned to current UI behavior.
+- Smartphone regression guardrails were required to make failures repeatable and prevent reintroduction.
+
+How to verify:
+
+- Required automated gates (Node 20):
+  - `env -u NODE -u npm_node_execpath PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:a11y` (PASS, 18 passed)
+  - `env -u NODE -u npm_node_execpath PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:auth` (PASS, 18 passed)
+  - `env -u NODE -u npm_node_execpath PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:mobile` (PASS, 4 passed)
+- Manual smartphone smoke (captured on isolated dev port):
+  - `/login`, `/signup`, `/reset-password`, `/verify-email?...`, `/app/i/home`, `/app/o/test-org/home`, `/admin`
+  - Confirm no horizontal overflow, final content actions remain tappable with bottom nav, and icon-only actions have explicit labels.
+
+Open risks/TODO:
+
+- Test/dev logs still emit non-blocking mock database warnings (`DATABASE_URL` missing, mock `db.select`/`db.execute` warnings). Required suites pass, but log noise remains.
+- `src/components/auth/SignupForm.tsx` consent text link tap areas were enlarged to satisfy strict touch policy; visual line wrapping should be monitored in future polish passes.
+- Playwright/dev logs include non-blocking warnings (`baseline-browser-mapping` staleness and `metadataBase` notices).
+
+---
+
+## 2026-02-12: Vercel Production Visibility Triage (master commit missing in UI)
+
+What changed:
+
+- Verified Git state and Vercel state for `master` deployment visibility.
+- Confirmed `origin/master` is at commit `35bf00e9924c516062b1812a7d3c39c5ac228d80`.
+- Queried Vercel project and deployment metadata for `proofound-platform`.
+- Confirmed latest production deployment on Vercel is still commit `eba9e428d4f6f38d3ae44f77daea697e26b82404` (older than `35bf00e`).
+- Attempted manual production deploy via Vercel CLI with token and hit quota block:
+  - `api-deployments-free-per-day` (more than 100 deployments/day), message: try again in 1 hour.
+- Re-linked local `.vercel/project.json` back to `proofound-platform` after a temporary CLI auto-link drift to `proofound`.
+
+Why:
+
+- User reported that merge to `master` was not visible in Vercel.
+- Root cause is not Git state. Root cause is deployment exhaustion on Vercel free-tier daily limit, so no deployment for commit `35bf00e` was created.
+
+How to verify:
+
+- `git rev-parse origin/master` -> `35bf00e9924c516062b1812a7d3c39c5ac228d80`
+- `npx vercel project inspect proofound-platform --token "$VERCEL_TOKEN"` -> linked GitHub repo `gother111/proofound-platform`, production branch `master`
+- `npx vercel inspect https://proofound-platform-glks17i3y-pavlo-samoshkos-projects.vercel.app --token "$VERCEL_TOKEN"` -> current production alias `proofound.io`, commit `eba9e42...`
+- `npx vercel deploy --prod --yes --token "$VERCEL_TOKEN"` -> fails with `api-deployments-free-per-day`
+
+Open risks/TODO:
+
+- No production deployment for commit `35bf00e` can be created until quota window resets or plan limits are increased.
+- After quota reset, trigger a production deployment for `proofound-platform` and verify `proofound.io` points to deployment built from `35bf00e`.
 
 ## 2026-02-12: Supabase Pending Migration Reconciliation
 
