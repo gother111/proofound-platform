@@ -30,6 +30,7 @@ function SignInSubmitButton() {
 
   return (
     <Button
+      data-testid="login-submit"
       type="submit"
       size="lg"
       disabled={pending}
@@ -123,6 +124,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.55, ease: 'easeOut' }}
         className="relative z-10 w-full max-w-[480px] px-2 sm:px-4"
+        data-testid="login-form-shell"
       >
         <Card className="mx-auto overflow-hidden rounded-[24px] border border-[#E8E6DD] bg-white/95 p-6 sm:p-10 md:p-12 shadow-[0_4px_24px_rgba(29,51,48,0.08)] backdrop-blur">
           {/* Brand mark and welcoming copy */}
@@ -158,6 +160,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
               className="mb-6 rounded-2xl border border-[#B5542D]/25 bg-[#B5542D]/10 px-4 py-3"
               role="alert"
               aria-live="assertive"
+              data-testid="login-error"
             >
               <p id="signin-error" className="text-sm font-medium text-[#8A3F21]">
                 {error}
@@ -172,6 +175,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
             className="space-y-6"
             aria-label="Sign in form"
             noValidate
+            data-testid="login-form"
           >
             <div className="space-y-2">
               <Label
@@ -196,6 +200,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
                   id="email"
                   name="email"
                   type="email"
+                  data-testid="login-email"
                   placeholder="you@example.com"
                   autoComplete="email"
                   disabled={false}
@@ -231,6 +236,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
                   id="password"
                   name="password"
                   type={showPassword ? 'text' : 'password'}
+                  data-testid="login-password"
                   placeholder="Enter your password"
                   autoComplete="current-password"
                   disabled={false}

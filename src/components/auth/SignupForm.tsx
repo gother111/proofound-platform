@@ -26,6 +26,7 @@ function SignupSubmitButton({ children }: { children: React.ReactNode }) {
 
   return (
     <Button
+      data-testid="signup-submit"
       type="submit"
       className="w-full rounded-xl bg-proofound-forest py-[14px] text-[15px] font-semibold tracking-[0.01em] text-white shadow-sm transition-all hover:-translate-y-[1px] hover:bg-[#2D5D4A] hover:shadow-md disabled:bg-[#E8E6DD] disabled:text-[#2D3330]/40"
       size="lg"
@@ -117,6 +118,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           className="relative z-10 w-full max-w-md px-4"
+          data-testid="signup-success"
         >
           <Card className="mx-auto rounded-[24px] border border-[#E8E6DD] bg-white/95 p-10 text-center shadow-[0_4px_24px_rgba(29,51,48,0.08)]">
             <motion.div
@@ -192,6 +194,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="relative z-10 w-full max-w-md px-4"
+        data-testid="signup-form-shell"
       >
         <Card className="mx-auto rounded-[24px] border border-[#E8E6DD] bg-white/95 p-10 shadow-[0_4px_24px_rgba(29,51,48,0.08)] backdrop-blur">
           {/* Logo/Title */}
@@ -230,6 +233,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               className="mb-6 rounded-2xl border border-[#B5542D]/25 bg-[#B5542D]/10 px-4 py-3"
+              data-testid="signup-error"
             >
               <p className="text-sm font-medium text-[#8A3F21]" role="alert" aria-live="polite">
                 {errorMessage}
@@ -238,7 +242,13 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
           )}
 
           {/* Signup Form */}
-          <form action={formAction} onSubmit={handleSubmit} className="space-y-6" noValidate>
+          <form
+            action={formAction}
+            onSubmit={handleSubmit}
+            className="space-y-6"
+            noValidate
+            data-testid="signup-form"
+          >
             <input type="hidden" name="persona" value={personaValue} />
             <input type="hidden" name="gdprConsent" value={gdprConsent.toString()} />
             <input type="hidden" name="marketingOptIn" value={marketingOptIn.toString()} />
@@ -261,6 +271,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                   id="email"
                   name="email"
                   type="email"
+                  data-testid="signup-email"
                   placeholder="you@example.com"
                   autoComplete="email"
                   disabled={false}
@@ -291,6 +302,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                   id="password"
                   name="password"
                   type={showPassword ? 'text' : 'password'}
+                  data-testid="signup-password"
                   placeholder="At least 8 characters"
                   autoComplete="new-password"
                   disabled={false}
@@ -329,6 +341,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
                 id="confirm-password"
                 name="confirmPassword"
                 type={showPassword ? 'text' : 'password'}
+                data-testid="signup-confirm-password"
                 placeholder="Re-enter your password"
                 autoComplete="new-password"
                 disabled={false}

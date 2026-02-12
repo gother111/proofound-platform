@@ -46,7 +46,10 @@ export function VerifyEmailContent() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-proofound-parchment dark:bg-background px-4">
+      <div
+        className="min-h-screen flex items-center justify-center bg-proofound-parchment dark:bg-background px-4"
+        data-testid="verify-email-loading"
+      >
         <Card className="max-w-md w-full border-proofound-stone dark:border-border rounded-2xl">
           <CardHeader className="text-center">
             <div className="mx-auto w-12 h-12 rounded-full bg-proofound-forest/10 flex items-center justify-center mb-4">
@@ -66,7 +69,10 @@ export function VerifyEmailContent() {
 
   if (status === 'error') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-proofound-parchment dark:bg-background px-4">
+      <div
+        className="min-h-screen flex items-center justify-center bg-proofound-parchment dark:bg-background px-4"
+        data-testid="verify-email-error"
+      >
         <Card className="max-w-md w-full border-proofound-stone dark:border-border rounded-2xl">
           <CardHeader className="text-center">
             <div className="mx-auto w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
@@ -106,7 +112,10 @@ export function VerifyEmailContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-proofound-parchment dark:bg-background px-4">
+    <div
+      className="min-h-screen flex items-center justify-center bg-proofound-parchment dark:bg-background px-4"
+      data-testid="verify-email-success"
+    >
       <Card className="max-w-md w-full border-proofound-stone dark:border-border rounded-2xl">
         <CardHeader className="text-center">
           <div className="mx-auto w-12 h-12 rounded-full bg-proofound-forest/10 flex items-center justify-center mb-4">

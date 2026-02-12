@@ -68,7 +68,7 @@ export default async function IndividualHomePage() {
           ? 'Keep proofs fresh to climb higher.'
           : 'Add proofs to unlock stronger matches.',
       Icon: Users,
-      changeColor: '#7A9278',
+      changeColor: '#5F745D',
     },
     {
       title: 'Pending Verifications',
@@ -88,7 +88,7 @@ export default async function IndividualHomePage() {
           ? 'Follow up to stay top of mind.'
           : 'Explore opportunities to get started.',
       Icon: Briefcase,
-      changeColor: '#C76B4A',
+      changeColor: '#9F563B',
     },
   ];
 

@@ -38,7 +38,10 @@ export function SignupContent() {
 
   // Account type selection screen
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#F7F6F1] px-6 py-16 text-[#2D3330]">
+    <div
+      className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#F7F6F1] px-6 py-16 text-[#2D3330]"
+      data-testid="signup-choice-screen"
+    >
       {/* Proofound network background */}
       <div className="pointer-events-none absolute inset-0 opacity-60">
         <NetworkBackground />
@@ -100,6 +103,7 @@ export function SignupContent() {
                 type="button"
                 onClick={() => setSignupType('individual')}
                 className="group h-full w-full text-left"
+                data-testid="signup-choice-individual"
               >
                 <Card className="h-full rounded-2xl border border-[#E8E6DD] p-8 transition-all duration-300 hover:-translate-y-1 hover:border-proofound-forest/40 hover:shadow-[0_14px_32px_-16px_rgba(28,77,58,0.3)]">
                   <div className="flex flex-col items-start gap-4">
@@ -131,6 +135,7 @@ export function SignupContent() {
                 type="button"
                 onClick={() => setSignupType('organization')}
                 className="group h-full w-full text-left"
+                data-testid="signup-choice-organization"
               >
                 <Card className="h-full rounded-2xl border border-[#E8E6DD] p-8 transition-all duration-300 hover:-translate-y-1 hover:border-proofound-terracotta/40 hover:shadow-[0_14px_32px_-16px_rgba(199,107,74,0.32)]">
                   <div className="flex flex-col items-start gap-4">
