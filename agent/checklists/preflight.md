@@ -17,6 +17,10 @@ Repo Truth items include citations like `(source: README.md)`. Everything else i
 - If you expect deploy impact (Next config, env validation, route handlers, build-time imports):
   - Run `npm run vercel:preflight` to validate local Vercel linkage, expected production branch, and required env key presence.
   - Run the local Vercel pre-commit gate (install/lint/typecheck/test/build + `vercel build --prod`) before committing.
+  - Confirm deploy-retry automation is configured:
+    - Workflow exists: `.github/workflows/retry-vercel-deploy.yml`
+    - GitHub secret exists: `VERCEL_DEPLOY_HOOK_URL`
+    - Health URL in workflow matches the production domain (`https://proofound.io/api/health` unless intentionally changed).
 - Confirm env var hygiene:
   - Use `.env.example` and `docs/ENV_VARIABLES.md`; never commit `.env.local` or `.env`. (source: .env.example, docs/ENV_VARIABLES.md, .gitignore)
 - Confirm hooks behavior:

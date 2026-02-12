@@ -111,6 +111,7 @@ Gap:      9,886 skills + hierarchical structure + adjacency graph
   - Cons: Misses semantic similarity ("React" vs "React.js")
 
 - **Post-MVP** (Week 12+): Add pgvector
+
   ```sql
   CREATE EXTENSION vector;
   ALTER TABLE matching_profiles ADD COLUMN mission_embedding vector(384);
@@ -154,6 +155,7 @@ Gap:      9,886 skills + hierarchical structure + adjacency graph
   - Cons: Higher latency, more server requests
 
 - **Post-MVP** (Week 10+): Supabase Realtime
+
   ```typescript
   const channel = supabase
     .channel('messages')
