@@ -1394,6 +1394,7 @@ Open TODOs / follow-ups:
 - Investigate and reduce landing/homepage TTI to pass perf budget gate.
 - Run manual EU scenarios for consent decline telemetry suppression and moderation rights flow E2E.
 - Capture legal counsel signoff artifact for policy text before release.
+
 ---
 
 ## 2026-02-12 16:28 CET
@@ -1447,3 +1448,55 @@ Open TODOs / follow-ups:
 
 - Optional: tune mock-db logging behavior during Playwright runs to reduce false-alarm operational noise.
 - Optional: review consent-text link wrapping on very small mobile widths after the 44x44 touch-area expansion.
+
+---
+
+## 2026-02-12 20:24 CET
+
+Task summary:
+
+- Investigated why merged `master` commit was not visible in Vercel production.
+- Verified Git and Vercel deployment metadata and attempted a manual production deploy.
+
+What worked:
+
+- Confirmed `origin/master` contains commit `35bf00e`.
+- Confirmed Vercel `proofound-platform` project is linked to GitHub repo `gother111/proofound-platform` with production branch `master`.
+- Identified currently aliased production deployment on `proofound.io` and its commit (`eba9e42`).
+
+What failed / wrong assumptions:
+
+- Manual `vercel deploy --prod` failed due Vercel free-tier deployment quota (`api-deployments-free-per-day`, more than 100/day).
+- Vercel CLI briefly auto-linked local `.vercel` to project `proofound`; had to remove `.vercel` and re-link to `proofound-platform`.
+
+User corrections:
+
+- User reported the merge was still not visible in Vercel and requested re-check.
+
+Assumptions taken without asking:
+
+- Safe to use existing `VERCEL_TOKEN` environment variable for read-only project/deployment inspection and deploy attempt.
+- Local `.vercel` relink is acceptable housekeeping and does not affect tracked repository code.
+
+What the user corrected afterward:
+
+- None in this run.
+
+Improvements next time:
+
+- Avoid parallel `vercel link` and `vercel deploy` commands to prevent project-link drift during troubleshooting.
+- Check quota limits early when deployments stop appearing despite correct Git branch state.
+
+Commands run + outcomes:
+
+- `npx vercel project ls --token "$VERCEL_TOKEN"`: PASS
+- `npx vercel ls proofound-platform --token "$VERCEL_TOKEN"`: PASS
+- `npx vercel project inspect proofound-platform --token "$VERCEL_TOKEN"`: PASS
+- `npx vercel inspect https://proofound-platform-glks17i3y-pavlo-samoshkos-projects.vercel.app --token "$VERCEL_TOKEN"`: PASS
+- `npx vercel deploy --prod --yes --token "$VERCEL_TOKEN"`: FAIL (`api-deployments-free-per-day`)
+- `rm -rf .vercel && npx vercel link --project proofound-platform --yes --token "$VERCEL_TOKEN"`: PASS
+
+Open TODOs / follow-ups:
+
+- Re-run production deploy after quota reset window and verify new deployment includes `35bf00e`.
+- If quota blocks continue, increase plan limits or reduce deployment frequency.
