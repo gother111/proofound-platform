@@ -962,3 +962,36 @@ Open risks/TODO:
 - Existing already-shared `proofound.com` links outside the app cannot be redirected by this codebase alone.
 - `frame-ancestors *` is intentionally limited to `/p/<token>/embed`; keep this route-scoped and do not broaden it.
 - Optional hardening follow-up: replace `<img>` with `next/image` in `src/components/profile/PublicSnippetView.tsx` if layout permits.
+
+## 2026-02-12: Signup Persona Redirects via Auth Routes
+
+What changed:
+
+- Added dedicated persona signup pages:
+  - `src/app/(auth)/signup/individual/page.tsx`
+  - `src/app/(auth)/signup/organization/page.tsx`
+- Updated `src/app/(auth)/signup/page.tsx` to normalize `searchParams.type` and redirect server-side:
+  - `?type=individual` -> `/signup/individual`
+  - `?type=organization|org|org_member` -> `/signup/organization`
+  - unknown values remain on chooser (`/signup`)
+- Updated `src/app/(auth)/signup/SignupContent.tsx` with query-based client fallback initialization for parity.
+
+Why:
+
+- Ensure persona-specific signup entry links open the dedicated signup flow directly.
+- Preserve compatibility for existing links using `/signup?type=...`.
+- Keep landing-sensitive files untouched so landing scope CI policy remains satisfied.
+
+How to verify:
+
+- `npm run lint` (PASS, one existing unrelated warning in `src/components/profile/PublicSnippetView.tsx`)
+- `npm run typecheck` (BLOCKED by unrelated pre-existing local API edits referencing missing `@/lib/api/auth`)
+- Runtime checks (PASS):
+  - `curl -sI /signup?type=individual` -> `307` + `location: /signup/individual`
+  - `curl -sI /signup?type=organization` -> `307` + `location: /signup/organization`
+  - `curl -sI /signup?type=unknown` -> `200`
+
+Open risks/TODO:
+
+- Local full typecheck cannot pass until unrelated in-progress API-route changes are resolved in this worktree.
+- Existing non-blocking lint warning remains unrelated: `<img>` usage in `src/components/profile/PublicSnippetView.tsx`.

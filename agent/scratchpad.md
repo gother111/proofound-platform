@@ -1010,3 +1010,52 @@ Open TODOs / follow-ups:
 
 - Push `codex/profile-sharing-clean-merge` and merge via PR.
 - Apply production deployment if not already on latest commit and re-check snippet links from profile dialogs.
+
+---
+
+## 2026-02-12 14:46 CET
+
+Task summary:
+
+- Complete persona signup routing as a minor merge from `codex/clean-post-merge-work-v2` while ignoring unrelated local edits.
+- Implement dedicated signup pages plus `/signup?type=...` redirect compatibility.
+
+What worked:
+
+- Added dedicated routes for individual and organization signup forms.
+- Added server-side redirect handling in `/signup` and client-side query fallback in chooser client.
+- Runtime redirect checks confirmed expected status/location behavior.
+
+What failed / wrong assumptions:
+
+- Full `npm run typecheck` is blocked by unrelated in-progress API route edits in working tree that reference missing `@/lib/api/auth`.
+
+User corrections:
+
+- User chose option `2`: continue merge flow from current branch context.
+- User then chose option `1`: isolate only signup-related files and ignore unrelated workspace changes.
+
+Assumptions taken without asking:
+
+- Keeping landing CTA source unchanged is acceptable because auth-route redirecting preserves the direct persona destination behavior.
+- Client fallback in `SignupContent` is helpful even with server redirects for resilience.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Start by checking current branch alias/worktree before first commit to avoid branch drift confusion.
+- Run landing-scope guard script before pushing any PR touching signup-plus-landing surfaces.
+
+Commands run + outcomes:
+
+- `npm run lint`: PASS (existing unrelated warning in `src/components/profile/PublicSnippetView.tsx`).
+- `npm run typecheck`: FAIL due unrelated local API edits (`@/lib/api/auth` missing in multiple route files).
+- Runtime redirect checks via `curl -sI`: PASS for individual/organization redirects and unknown fallback.
+
+Open TODOs / follow-ups:
+
+- Merge this isolated signup-routing patch PR after CI checks and required review complete.
+- Resolve unrelated API-route/typecheck work separately in its own branch/PR.
