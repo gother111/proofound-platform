@@ -1276,6 +1276,7 @@ Open risks/TODO:
 - The historical archive migration may break external bookmarks to old content locations outside the repository.
 - `docs:freshness` currently runs in warning mode in CI; strict mode is available through `STRICT_DOCS_FRESHNESS=true` and can be enabled later.
 - Local verification ran under Node `v25.4.0` in this environment while repo engines target `>=20.20.0 <21`; commands passed, but Node 20 remains the canonical runtime.
+
 ---
 
 ## 2026-02-12: Smartphone UI and UX Validation, Remediation, and Verification
@@ -1330,3 +1331,34 @@ Open risks/TODO:
 - Test/dev logs still emit non-blocking mock database warnings (`DATABASE_URL` missing, mock `db.select`/`db.execute` warnings). Required suites pass, but log noise remains.
 - `src/components/auth/SignupForm.tsx` consent text link tap areas were enlarged to satisfy strict touch policy; visual line wrapping should be monitored in future polish passes.
 - Playwright/dev logs include non-blocking warnings (`baseline-browser-mapping` staleness and `metadataBase` notices).
+
+---
+
+## 2026-02-12: Vercel Production Visibility Triage (master commit missing in UI)
+
+What changed:
+
+- Verified Git state and Vercel state for `master` deployment visibility.
+- Confirmed `origin/master` is at commit `35bf00e9924c516062b1812a7d3c39c5ac228d80`.
+- Queried Vercel project and deployment metadata for `proofound-platform`.
+- Confirmed latest production deployment on Vercel is still commit `eba9e428d4f6f38d3ae44f77daea697e26b82404` (older than `35bf00e`).
+- Attempted manual production deploy via Vercel CLI with token and hit quota block:
+  - `api-deployments-free-per-day` (more than 100 deployments/day), message: try again in 1 hour.
+- Re-linked local `.vercel/project.json` back to `proofound-platform` after a temporary CLI auto-link drift to `proofound`.
+
+Why:
+
+- User reported that merge to `master` was not visible in Vercel.
+- Root cause is not Git state. Root cause is deployment exhaustion on Vercel free-tier daily limit, so no deployment for commit `35bf00e` was created.
+
+How to verify:
+
+- `git rev-parse origin/master` -> `35bf00e9924c516062b1812a7d3c39c5ac228d80`
+- `npx vercel project inspect proofound-platform --token "$VERCEL_TOKEN"` -> linked GitHub repo `gother111/proofound-platform`, production branch `master`
+- `npx vercel inspect https://proofound-platform-glks17i3y-pavlo-samoshkos-projects.vercel.app --token "$VERCEL_TOKEN"` -> current production alias `proofound.io`, commit `eba9e42...`
+- `npx vercel deploy --prod --yes --token "$VERCEL_TOKEN"` -> fails with `api-deployments-free-per-day`
+
+Open risks/TODO:
+
+- No production deployment for commit `35bf00e` can be created until quota window resets or plan limits are increased.
+- After quota reset, trigger a production deployment for `proofound-platform` and verify `proofound.io` points to deployment built from `35bf00e`.
