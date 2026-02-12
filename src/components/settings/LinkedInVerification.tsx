@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card } from '@/components/ui/card';
@@ -44,9 +44,35 @@ interface AutomatedCheckResult {
 }
 
 export function LinkedInVerification({ onSuccess }: LinkedInVerificationProps) {
+  const [connected, setConnected] = useState<boolean | null>(null);
+  const [checkingConnection, setCheckingConnection] = useState(true);
   const [loading, setLoading] = useState(false);
   const [checkResult, setCheckResult] = useState<AutomatedCheckResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchConnectionStatus() {
+      setCheckingConnection(true);
+      try {
+        const res = await fetch('/api/expertise/linkedin-status');
+        const data = res.ok ? await res.json() : null;
+        if (!cancelled) setConnected(Boolean(data?.connected));
+      } catch (err) {
+        console.error('Failed to fetch LinkedIn connection status:', err);
+        if (!cancelled) setConnected(false);
+      } finally {
+        if (!cancelled) setCheckingConnection(false);
+      }
+    }
+
+    fetchConnectionStatus();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleConnectLinkedIn = () => {
     // Redirect to LinkedIn OAuth
@@ -266,11 +292,16 @@ export function LinkedInVerification({ onSuccess }: LinkedInVerificationProps) {
             )}
 
             <Button
-              onClick={handleInitiateVerification}
-              disabled={loading}
+              onClick={connected ? handleInitiateVerification : handleConnectLinkedIn}
+              disabled={loading || checkingConnection}
               className="w-full bg-[#0A66C2] hover:bg-[#004182]"
             >
-              {loading ? (
+              {checkingConnection ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Checking LinkedIn connection...
+                </>
+              ) : loading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Analyzing LinkedIn Profile...
@@ -278,14 +309,15 @@ export function LinkedInVerification({ onSuccess }: LinkedInVerificationProps) {
               ) : (
                 <>
                   <Linkedin className="w-4 h-4 mr-2" />
-                  Start Verification Check
+                  {connected ? 'Start Verification Check' : 'Connect LinkedIn'}
                 </>
               )}
             </Button>
 
             <p className="text-xs text-center text-muted-foreground mt-3">
-              This will connect to your LinkedIn account via OAuth. We only read public profile
-              information.
+              {connected
+                ? 'We will use your connected LinkedIn account to fetch your public profile and run a quick verification check.'
+                : 'Connect your LinkedIn account via OAuth. We only read public profile information.'}
             </p>
           </div>
         </div>
