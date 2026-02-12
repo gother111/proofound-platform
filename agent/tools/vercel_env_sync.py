@@ -174,11 +174,13 @@ def main() -> int:
         "SUPABASE_SERVICE_ROLE_KEY",
         "NEXT_PUBLIC_SITE_URL",
         "CRON_SECRET",
+        "RESEND_API_KEY",
     ]
     optional = [
         "DIRECT_URL",
         "NEXT_PUBLIC_APP_ENV",
         "NEXT_PUBLIC_URL",
+        "EMAIL_FROM",
         "ZOOM_CLIENT_ID",
         "ZOOM_CLIENT_SECRET",
         "ZOOM_REDIRECT_URI",
@@ -194,6 +196,7 @@ def main() -> int:
         "DATABASE_URL",
         "SUPABASE_SERVICE_ROLE_KEY",
         "CRON_SECRET",
+        "RESEND_API_KEY",
         "ZOOM_CLIENT_SECRET",
         "GOOGLE_CLIENT_SECRET",
         "SENTRY_AUTH_TOKEN",
