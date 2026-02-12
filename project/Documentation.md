@@ -962,3 +962,65 @@ Open risks/TODO:
 - Existing already-shared `proofound.com` links outside the app cannot be redirected by this codebase alone.
 - `frame-ancestors *` is intentionally limited to `/p/<token>/embed`; keep this route-scoped and do not broaden it.
 - Optional hardening follow-up: replace `<img>` with `next/image` in `src/components/profile/PublicSnippetView.tsx` if layout permits.
+
+## 2026-02-12: Landing Persona CTAs to Dedicated Signup Routes
+
+What changed:
+
+- Updated landing CTA routing in `src/components/ProofoundLanding.tsx`:
+  - `Join as an Individual` now routes to `/signup/individual`.
+  - `Join as an Organization` now routes to `/signup/organization`.
+- Added dedicated signup pages:
+  - `src/app/(auth)/signup/individual/page.tsx`
+  - `src/app/(auth)/signup/organization/page.tsx`
+- Kept `/signup` chooser behavior unchanged in `src/app/(auth)/signup/SignupContent.tsx`.
+
+Why:
+
+- Landing persona-specific CTAs should open the matching signup experience directly instead of taking users to the account-type chooser first.
+
+How to verify:
+
+- `npm run lint` (PASS)
+- `npm run typecheck` (PASS)
+- `npm run test:e2e:landing` (PASS)
+- `npm run test:e2e:landing:visual` (PASS)
+- Browser smoke on running app (PASS):
+  - Click hero `Join as an Individual` on `/` and confirm URL becomes `/signup/individual`.
+  - Click hero `Join as an Organization` on `/` and confirm URL becomes `/signup/organization`.
+
+Open risks/TODO:
+
+- Existing `/signup?type=...` URLs are no longer used by landing CTAs. If any external campaigns rely on those query URLs, add compatibility parsing in `SignupContent` as a follow-up.
+- Existing non-blocking lint warning remains unrelated: `<img>` usage in `src/components/profile/PublicSnippetView.tsx`.
+
+## 2026-02-12: Legacy Signup Query Compatibility
+
+What changed:
+
+- Updated `/signup` chooser client to honor legacy query param routing in `src/app/(auth)/signup/SignupContent.tsx`.
+- Added `resolveSignupTypeFromQueryParam` helper with safe normalization:
+  - `?type=individual` -> opens individual signup form directly.
+  - `?type=organization` -> opens organization signup form directly.
+  - Also accepts `org` and `org_member` for organization.
+  - Unknown values fall back to chooser.
+
+Why:
+
+- Some old or external links may still point to `/signup?type=...` after landing CTAs moved to dedicated routes.
+- This keeps backward compatibility without changing the current dedicated-route behavior.
+
+How to verify:
+
+- `npm run lint` (PASS)
+- `npm run typecheck` (PASS)
+- Browser runtime smoke (PASS):
+  - `/signup?type=individual` shows heading `Create your individual account`.
+  - `/signup?type=organization` shows heading `Create your organization account`.
+  - `/signup?type=unknown` falls back to chooser (`Join Proofound`).
+- `npm run test:e2e:auth` (PARTIAL: 17 passed, 1 failed in login flow under mock auth)
+
+Open risks/TODO:
+
+- Auth E2E `should allow user to login with valid credentials` timed out waiting for `/app/i/home` in `e2e/auth.spec.ts` under `NEXT_PUBLIC_USE_MOCK_SUPABASE=true`; investigate mock login redirect stability separately.
+- Existing non-blocking lint warning remains unrelated: `<img>` usage in `src/components/profile/PublicSnippetView.tsx`.
