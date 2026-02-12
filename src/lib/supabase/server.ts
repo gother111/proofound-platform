@@ -15,6 +15,18 @@ const ORG_ID = '99999999-9999-4999-9999-999999999999';
 
 // Determine if mock should return org_member persona (for testing org features)
 const getMockPersona = () => (process.env.MOCK_ORG_MODE === 'true' ? 'org_member' : 'individual');
+const isMockAdminTestContext = () =>
+  process.env.NODE_ENV === 'test' || process.env.PLAYWRIGHT === 'true';
+const getMockPlatformRole = (): 'platform_admin' | 'super_admin' | null => {
+  if (!isMockAdminTestContext()) return null;
+
+  const explicitRole = process.env.MOCK_PLATFORM_ROLE?.trim();
+  if (explicitRole === 'platform_admin' || explicitRole === 'super_admin') {
+    return explicitRole;
+  }
+
+  return process.env.MOCK_ADMIN_MODE === 'true' ? 'platform_admin' : null;
+};
 
 const mockSupabaseClient = {
   auth: {
@@ -446,7 +458,7 @@ const mockSupabaseClient = {
             return {
               data: {
                 id: MOCK_USER_ID,
-                platform_role: null,
+                platform_role: getMockPlatformRole(),
                 tour_completed: true,
                 persona: getMockPersona(),
               },
@@ -496,7 +508,7 @@ const mockSupabaseClient = {
             return {
               data: {
                 id: MOCK_USER_ID,
-                platform_role: null,
+                platform_role: getMockPlatformRole(),
                 tour_completed: true,
                 persona: getMockPersona(),
               },
