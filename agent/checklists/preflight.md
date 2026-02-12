@@ -6,6 +6,8 @@ Repo Truth items include citations like `(source: README.md)`. Everything else i
 - Confirm git state:
   - Run `git status` and ensure you understand what is already modified/uncommitted.
   - Plan to stage only files relevant to the task.
+  - For real changes, follow this sequence: branch -> commit -> push -> PR -> checks green -> merge.
+  - Never push directly to `master`; use PRs to merge.
 - Confirm Node/tooling expectations:
   - Node version matches `.nvmrc` and `package.json` engines. (source: .nvmrc, package.json)
 - If you expect deploy impact (Next config, env validation, route handlers, build-time imports):
