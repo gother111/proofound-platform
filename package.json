@@ -26,6 +26,7 @@
     "test:e2e:landing": "node ./scripts/playwright-node20.mjs test e2e/landing-page.spec.ts --project=chromium --reporter=line",
     "test:e2e:landing:visual": "node ./scripts/playwright-node20.mjs test e2e/landing-visual.spec.ts --project=chromium --reporter=line",
     "test:e2e:auth": "NEXT_PUBLIC_USE_MOCK_SUPABASE=true node ./scripts/playwright-node20.mjs test e2e/auth.spec.ts --project=chromium --reporter=line",
+    "test:e2e:mobile": "NEXT_PUBLIC_USE_MOCK_SUPABASE=true MOCK_ORG_MODE=true MOCK_ADMIN_MODE=true PLAYWRIGHT=true node ./scripts/playwright-node20.mjs test e2e/mobile-smartphone.spec.ts --project=chromium --workers=1 --reporter=line",
     "test:a11y": "node ./scripts/playwright-node20.mjs test --config playwright.a11y.config.ts --project=chromium",
     "test:privacy": "vitest run --config vitest.supabase.config.ts tests/privacy/rls-policies.test.ts",
     "test:privacy:all": "vitest run --config vitest.supabase.config.ts tests/privacy",

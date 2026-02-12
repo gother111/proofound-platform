@@ -53,7 +53,7 @@ export function SignupContent() {
         initial={{ x: -20 }}
         animate={{ x: 0 }}
         onClick={() => router.push('/')}
-        className="absolute left-6 top-6 flex items-center gap-2 text-[#44504B] transition-colors hover:text-[#2D3330]"
+        className="absolute left-6 top-6 flex min-h-[44px] items-center gap-2 px-2 -mx-2 text-[#44504B] transition-colors hover:text-[#2D3330]"
       >
         <ArrowLeft className="w-4 h-4" />
         <span className="text-sm">Back</span>
@@ -164,7 +164,7 @@ export function SignupContent() {
               <button
                 type="button"
                 onClick={() => router.push('/login')}
-                className="font-medium text-[#1C4D3A] hover:text-[#2D5D4A] hover:underline"
+                className="font-medium text-[#1C4D3A] hover:text-[#2D5D4A] hover:underline inline-flex min-h-[44px] items-center px-2 -mx-2"
               >
                 Sign in
               </button>

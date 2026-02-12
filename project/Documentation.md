@@ -1276,3 +1276,57 @@ Open risks/TODO:
 - The historical archive migration may break external bookmarks to old content locations outside the repository.
 - `docs:freshness` currently runs in warning mode in CI; strict mode is available through `STRICT_DOCS_FRESHNESS=true` and can be enabled later.
 - Local verification ran under Node `v25.4.0` in this environment while repo engines target `>=20.20.0 <21`; commands passed, but Node 20 remains the canonical runtime.
+---
+
+## 2026-02-12: Smartphone UI and UX Validation, Remediation, and Verification
+
+What changed:
+
+- Implemented mobile touch-target remediation (strict 44x44 policy) across auth, app, organization, admin, and consent surfaces:
+  - `src/components/app/TopBar.tsx`
+  - `src/components/auth/SignIn.tsx`
+  - `src/components/auth/SignupForm.tsx`
+  - `src/app/(auth)/signup/SignupContent.tsx`
+  - `src/app/(auth)/reset-password/ResetPasswordForm.tsx`
+  - `src/components/CookieBanner.tsx`
+  - `src/components/admin/AdminHeader.tsx`
+  - `src/components/admin/AdminSidebar.tsx`
+  - `src/app/app/o/[slug]/home/page.tsx`
+- Added mobile shell spacing and safe-area behavior to prevent occlusion and overlap:
+  - `src/app/app/o/[slug]/layout.tsx` (`pb-20 md:pb-0`, `min-w-0`)
+  - `src/app/globals.css` (`.safe-area-inset-bottom`)
+  - `src/components/admin/AdminLayoutClient.tsx` (mobile padding tuning)
+- Added non-breaking touch-size API support in shared button component:
+  - `src/components/ui/button.tsx` (`size: "touch"`)
+- Fixed accessibility regression and stabilized a11y timing behavior:
+  - `src/components/landing/sections/FinalQuoteSection.tsx` (contrast-safe decorative treatment)
+  - `tests/a11y/critical-flows.spec.ts` (deterministic settle strategy)
+- Stabilized auth E2E behavior in mock mode:
+  - `src/actions/auth.ts` (mock-safe GDPR consent and reset-password behavior)
+- Added isolated, repeatable smartphone regression checks and deterministic Playwright ports:
+  - `playwright.config.ts`
+  - `playwright.a11y.config.ts`
+  - `e2e/mobile-smartphone.spec.ts`
+  - `package.json` (`test:e2e:mobile`)
+
+Why:
+
+- Mobile screenshots and route audits showed several smartphone UX defects: undersized tap targets, missing safe-area behavior, mobile header alignment problems, and content occlusion near fixed bottom navigation.
+- Two required test suites were failing (`test:a11y`, `test:e2e:auth`) and needed stabilization aligned to current UI behavior.
+- Smartphone regression guardrails were required to make failures repeatable and prevent reintroduction.
+
+How to verify:
+
+- Required automated gates (Node 20):
+  - `env -u NODE -u npm_node_execpath PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:a11y` (PASS, 18 passed)
+  - `env -u NODE -u npm_node_execpath PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:auth` (PASS, 18 passed)
+  - `env -u NODE -u npm_node_execpath PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:mobile` (PASS, 4 passed)
+- Manual smartphone smoke (captured on isolated dev port):
+  - `/login`, `/signup`, `/reset-password`, `/verify-email?...`, `/app/i/home`, `/app/o/test-org/home`, `/admin`
+  - Confirm no horizontal overflow, final content actions remain tappable with bottom nav, and icon-only actions have explicit labels.
+
+Open risks/TODO:
+
+- Test/dev logs still emit non-blocking mock database warnings (`DATABASE_URL` missing, mock `db.select`/`db.execute` warnings). Required suites pass, but log noise remains.
+- `src/components/auth/SignupForm.tsx` consent text link tap areas were enlarged to satisfy strict touch policy; visual line wrapping should be monitored in future polish passes.
+- Playwright/dev logs include non-blocking warnings (`baseline-browser-mapping` staleness and `metadataBase` notices).

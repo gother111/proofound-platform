@@ -11,48 +11,28 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 async function waitForUiToSettle(page: import('@playwright/test').Page) {
-  // Many screens use Framer Motion fade-ins. Axe can misreport contrast if run mid-animation.
+  await page.waitForLoadState('domcontentloaded');
+
   await page.waitForFunction(
     () => {
-      const hasStableOpacity = (node: HTMLElement | null) => {
-        let el: HTMLElement | null = node;
-        while (el && el !== document.body) {
-          // Framer Motion sets opacity inline during animation.
-          if (el.style && el.style.opacity && getComputedStyle(el).opacity !== '1') {
-            return false;
-          }
-          el = el.parentElement;
-        }
-        return true;
-      };
-
-      const isVisible = (node: HTMLElement | null) => {
-        if (!node) return false;
-        const style = getComputedStyle(node);
-        return style.display !== 'none' && style.visibility !== 'hidden';
-      };
-
-      if (window.location.pathname === '/signup') {
-        const nodes = Array.from(document.querySelectorAll<HTMLElement>('h3, span, button, a, p'));
-        const individualHeading =
-          nodes.find((node) => node.textContent?.trim() === 'Individual') ?? null;
-        const individualCta =
-          nodes.find((node) => node.textContent?.includes('Continue as Individual')) ?? null;
-
-        return (
-          isVisible(individualHeading) &&
-          isVisible(individualCta) &&
-          hasStableOpacity(individualHeading) &&
-          hasStableOpacity(individualCta)
-        );
-      }
-
-      const form = document.querySelector('form[aria-label]') as HTMLElement | null;
-      if (!form) return true;
-      return hasStableOpacity(form);
+      if (!('fonts' in document) || !document.fonts) return true;
+      return document.fonts.status === 'loaded';
     },
-    { timeout: 7000 }
+    { timeout: 15000 }
   );
+
+  const path = page.url();
+  if (path.includes('/login')) {
+    await expect(page.getByRole('heading', { name: /welcome back/i })).toBeVisible({
+      timeout: 15000,
+    });
+  }
+
+  if (path.includes('/signup')) {
+    await expect(page.getByRole('heading', { name: /join proofound/i })).toBeVisible({
+      timeout: 15000,
+    });
+  }
 }
 
 test.describe('Accessibility - Critical Flows', () => {

@@ -127,7 +127,7 @@ export function AdminSidebar({
               key={item.href}
               href={item.href}
               className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200 group',
+                'flex items-center gap-3 rounded-lg px-3 py-2.5 min-h-11 transition-all duration-200 group',
                 active
                   ? 'bg-[#1C4D3A] text-white shadow-sm'
                   : 'text-white/70 hover:bg-white/10 hover:text-white'
@@ -172,7 +172,7 @@ export function AdminSidebar({
             </div>
             <Link
               href="/app/i/home"
-              className="flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors"
+              className="flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors min-h-11"
             >
               <LogOut className="h-4 w-4" />
               Back to App

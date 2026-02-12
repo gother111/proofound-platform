@@ -110,7 +110,7 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
               <button
                 type="button"
                 aria-label="Open profile menu"
-                className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+                className="rounded-full min-h-[44px] min-w-[44px] flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
               >
                 <Avatar className="w-7 h-7">
                   <AvatarFallback className="text-xs font-medium bg-proofound-forest text-proofound-parchment">
