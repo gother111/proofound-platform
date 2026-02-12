@@ -7,31 +7,15 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { requirePlatformAdminJson } from '@/lib/api/route-helpers';
 
 export async function POST(req: NextRequest) {
   try {
+    const adminUser = await requirePlatformAdminJson();
+    if (adminUser instanceof NextResponse) return adminUser;
+
     const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if user is admin
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (profile?.role !== 'admin') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    const body = await req.json();
+    const body = await req.json().catch(() => ({}));
     const { dateRange } = body;
 
     // Generate report data
@@ -70,7 +54,7 @@ export async function POST(req: NextRequest) {
 
     // Log analytics
     await supabase.from('analytics_events').insert({
-      user_id: user.id,
+      user_id: adminUser.userId,
       event_type: 'fairness_report_generated',
       event_data: { dateRange },
     });
@@ -83,10 +67,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error('Fairness report generation error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-
