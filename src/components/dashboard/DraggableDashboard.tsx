@@ -76,12 +76,15 @@ try {
 
 interface DraggableDashboardProps {
   initialLayout?: DashboardWidget[];
+  onError?: (message: string) => void;
+  onLoadingChange?: (isLoading: boolean) => void;
 }
 
 export function DraggableDashboard({
   initialLayout,
   onError,
-}: DraggableDashboardProps & { onError?: (message: string) => void }) {
+  onLoadingChange,
+}: DraggableDashboardProps) {
   const [layout, setLayout] = useState<DashboardWidget[]>(initialLayout || []);
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -93,10 +96,19 @@ export function DraggableDashboard({
   const loadStartRef = useRef<number>(typeof performance !== 'undefined' ? performance.now() : 0);
   const userLayoutRef = useRef<DashboardWidget[] | null>(initialLayout || null);
   const onErrorRef = useRef(onError);
+  const onLoadingChangeRef = useRef(onLoadingChange);
 
   useEffect(() => {
     onErrorRef.current = onError;
   }, [onError]);
+
+  useEffect(() => {
+    onLoadingChangeRef.current = onLoadingChange;
+  }, [onLoadingChange]);
+
+  useEffect(() => {
+    onLoadingChangeRef.current?.(loading);
+  }, [loading]);
 
   useEffect(() => {
     // Fetch user's layout from API
