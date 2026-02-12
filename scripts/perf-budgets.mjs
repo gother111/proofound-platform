@@ -14,7 +14,7 @@
  */
 
 import lighthouse from 'lighthouse';
-import chromeLauncher from 'chrome-launcher';
+import { launch } from 'chrome-launcher';
 import { performance } from 'node:perf_hooks';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
@@ -30,7 +30,7 @@ const BUDGETS = {
 };
 
 async function runLighthouse(url, formFactor) {
-  const chrome = await chromeLauncher.launch({ chromeFlags: ['--headless', '--no-sandbox'] });
+  const chrome = await launch({ chromeFlags: ['--headless', '--no-sandbox'] });
   try {
     const config = {
       extends: 'lighthouse:default',
@@ -73,6 +73,7 @@ async function runLighthouse(url, formFactor) {
 }
 
 function percentile(values, p) {
+  // Keep this interpolation logic in sync with src/lib/monitoring/api-latency.ts.
   if (!values.length) return 0;
   const sorted = [...values].sort((a, b) => a - b);
   const rank = (p / 100) * (sorted.length - 1);
@@ -117,11 +118,10 @@ async function main() {
   console.log(`🔍 Running perf budgets against ${TARGET_PAGE}`);
   await waitForHealthy(`${BASE_URL}/api/health`);
 
-  const [desktop, mobile, api] = await Promise.all([
-    runLighthouse(TARGET_PAGE, 'desktop'),
-    runLighthouse(TARGET_PAGE, 'mobile'),
-    measureApiLatency(`${BASE_URL}/api/health`),
-  ]);
+  // Lighthouse uses process-level performance marks internally, so run audits serially.
+  const desktop = await runLighthouse(TARGET_PAGE, 'desktop');
+  const mobile = await runLighthouse(TARGET_PAGE, 'mobile');
+  const api = await measureApiLatency(`${BASE_URL}/api/health`);
 
   const failures = [...desktop.failures, ...mobile.failures, ...api.failures];
 
@@ -152,4 +152,3 @@ main().catch((err) => {
   console.error('Perf budgets script failed:', err);
   process.exit(1);
 });
-
