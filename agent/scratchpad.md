@@ -1013,6 +1013,60 @@ Open TODOs / follow-ups:
 
 ---
 
+## 2026-02-12 14:49 CET
+
+Task summary:
+
+- Implement trusted internal PR auto-enable for GitHub auto-merge.
+- Open and arm PR with auto-merge for the workflow change.
+
+What worked:
+
+- Added dedicated workflow file with draft/fork/association guardrails.
+- Opened PR `#168` from clean branch and enabled auto-merge on that PR.
+- Closed superseded conflicting PR `#167`.
+
+What failed / wrong assumptions:
+
+- First PR branch conflicted with latest `master`; replaced with clean branch `codex/auto-enable-automerge-workflow-v2`.
+- `--force-with-lease` push is blocked by policy in this environment, so branch replacement was done via new branch + new PR.
+
+User corrections:
+
+- User asked for actual enablement, not only explanation of pending steps.
+
+Assumptions taken without asking:
+
+- Trusted PR scope should be internal contributors only (`OWNER`, `MEMBER`, `COLLABORATOR`).
+- Existing branch protection requirements should remain unchanged.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Open clean branch from latest `origin/master` before creating PR when docs files are high-churn.
+- Prefer creating a fresh replacement PR over history rewrite if force push is disallowed.
+
+Commands run + outcomes:
+
+- `git worktree add -b codex/auto-enable-automerge-workflow /tmp/proofound-automerge origin/master`: PASS
+- `gh pr create ...` (first attempt): PASS (`#167`) but mergeable state was `CONFLICTING`
+- `git fetch origin master && git rebase origin/master`: CONFLICT in docs files
+- `git push --force-with-lease ...`: BLOCKED by policy
+- `git checkout -B codex/auto-enable-automerge-workflow-v2 origin/master && git cherry-pick 8172c45`: PASS
+- `git push -u origin codex/auto-enable-automerge-workflow-v2`: PASS
+- `gh pr create ...`: PASS (`#168`)
+- `gh pr merge 168 --auto --squash`: PASS (auto-merge request enabled)
+- `gh pr close 167 --comment \"Superseded by #168 (clean branch without conflicts).\"`: PASS
+
+Open TODOs / follow-ups:
+
+- Wait for PR `#168` checks and required review, then it will merge automatically.
+
+---
+
 ## 2026-02-12 14:42 CET
 
 Task summary:

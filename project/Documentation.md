@@ -965,6 +965,41 @@ Open risks/TODO:
 
 ---
 
+## 2026-02-12: Trusted PR Auto-Enable Auto-Merge
+
+What changed:
+
+- Added workflow `.github/workflows/auto-enable-automerge.yml`.
+- Workflow triggers on `pull_request_target` for:
+  - `opened`
+  - `reopened`
+  - `synchronize`
+  - `ready_for_review`
+- Workflow enables PR auto-merge using squash mode:
+  - `gh pr merge <number> --auto --squash`
+- Guardrails:
+  - only non-draft PRs
+  - only same-repo head and base
+  - only trusted author associations (`OWNER`, `MEMBER`, `COLLABORATOR`)
+
+Why:
+
+- Remove manual clicking of "Enable auto-merge" on trusted internal PRs.
+- Keep merge policy aligned with squash-only configuration and existing branch protection.
+
+How to verify:
+
+- `ruby -ryaml -e "YAML.load_file('.github/workflows/auto-enable-automerge.yml'); puts 'YAML_OK'"`
+- Open a trusted non-draft internal PR and verify auto-merge is enabled automatically.
+- Confirm merge still waits for required checks (`ci`, `a11y`) and required review.
+
+Open risks/TODO:
+
+- Workflow must be merged to `master` before it is active.
+- If GitHub token permissions or org policy changes, workflow may fail and need permission updates.
+
+---
+
 ## 2026-02-12: Profile Sharing Follow-up (Lint Hardening + Production Smoke)
 
 What changed:
