@@ -12,7 +12,7 @@ if (!env.DATABASE_URL) missing.push('DATABASE_URL');
 
 if (missing.length) {
   console.warn('⚠️ Deploy readiness check: missing env vars:\n - ' + missing.join('\n - '));
-  console.warn('See DEPLOYMENT_GUIDE.md for setup steps.');
+  console.warn('See docs/deployment-guide.md for setup steps.');
   if (process.env.FORCE_STRICT_DEPLOY_CHECK === 'true') process.exit(1);
 } else {
   console.log('✅ Deploy readiness: all required env vars present.');

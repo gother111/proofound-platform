@@ -43,7 +43,7 @@ if (!connectionString) {
     throw new Error(
       'DATABASE_URL is required in production. ' +
         'Please set this environment variable in your deployment settings. ' +
-        'See PRODUCTION_ENV_CHECK.md for instructions.'
+        'See docs/ENV_VARIABLES.md for instructions.'
     );
   }
 
@@ -65,7 +65,7 @@ if (!connectionString) {
   console.error('  3. For Vercel: Go to Settings → Environment Variables');
   console.error('  4. For local dev: Add to .env.local file');
   console.error('');
-  console.error('📚 See PRODUCTION_ENV_CHECK.md for detailed instructions');
+  console.error('📚 See docs/ENV_VARIABLES.md for detailed instructions');
   console.error('═════════════════════════════════════════════════════════════════════');
   console.error('');
 }
