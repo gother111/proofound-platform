@@ -6,7 +6,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -27,28 +27,65 @@ import {
   Copy,
   CheckCircle2,
   Code,
+  ExternalLink,
   Link as LinkIcon,
   Twitter,
-  Linkedin,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { generateEmbedCode, generateShareText } from '@/lib/profile/snippet-generator';
+import { generateEmbedCodeFromUrl, generateShareText } from '@/lib/profile/snippet-generator';
 import { apiFetch } from '@/lib/api/fetch';
 
-interface ShareProfileDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  userName: string;
-  userHeadline?: string;
-}
+type ProfileType = 'individual' | 'organization';
 
-export function ShareProfileDialog({
-  isOpen,
-  onClose,
-  userName,
-  userHeadline,
-}: ShareProfileDialogProps) {
-  const [fields, setFields] = useState({
+const INDIVIDUAL_FIELD_LABELS: Record<string, string> = {
+  name: 'Name',
+  headline: 'Headline',
+  bio: 'Biography',
+  skills: 'Skills',
+  experience: 'Experience',
+  education: 'Education',
+  location: 'Location',
+  profileImage: 'Profile Image',
+  values: 'Values',
+  causes: 'Causes',
+};
+
+const ORGANIZATION_FIELD_LABELS: Record<string, string> = {
+  displayName: 'Organization Name',
+  tagline: 'Tagline',
+  mission: 'Mission',
+  vision: 'Vision',
+  website: 'Website',
+  locations: 'Locations',
+  logo: 'Logo',
+  coverImage: 'Cover Image',
+  causes: 'Causes',
+  workCulture: 'Work Culture',
+  impact: 'Impact',
+  foundedDate: 'Founded Date',
+  type: 'Organization Type',
+};
+
+function getDefaultFields(profileType: ProfileType) {
+  if (profileType === 'organization') {
+    return {
+      displayName: true,
+      tagline: true,
+      mission: true,
+      vision: true,
+      website: true,
+      locations: true,
+      logo: true,
+      coverImage: false,
+      causes: true,
+      workCulture: false,
+      impact: false,
+      foundedDate: true,
+      type: true,
+    } as Record<string, boolean | number>;
+  }
+
+  return {
     name: true,
     headline: true,
     bio: true,
@@ -60,7 +97,29 @@ export function ShareProfileDialog({
     profileImage: true,
     values: true,
     causes: true,
-  });
+  } as Record<string, boolean | number>;
+}
+
+interface ShareProfileDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  userName: string;
+  userHeadline?: string;
+  profileType?: ProfileType;
+  orgId?: string;
+}
+
+export function ShareProfileDialog({
+  isOpen,
+  onClose,
+  userName,
+  userHeadline,
+  profileType = 'individual',
+  orgId,
+}: ShareProfileDialogProps) {
+  const [fields, setFields] = useState<Record<string, boolean | number>>(
+    getDefaultFields(profileType)
+  );
 
   const [theme, setTheme] = useState<'light' | 'dark' | 'auto'>('auto');
   const [format, setFormat] = useState<'card' | 'mini' | 'full'>('card');
@@ -73,14 +132,27 @@ export function ShareProfileDialog({
   const [copied, setCopied] = useState<string | null>(null);
 
   const { toast } = useToast();
+  const fieldLabels = useMemo(
+    () => (profileType === 'organization' ? ORGANIZATION_FIELD_LABELS : INDIVIDUAL_FIELD_LABELS),
+    [profileType]
+  );
 
   const handleFieldToggle = (field: string) => {
-    setFields((prev) => ({ ...prev, [field]: !prev[field as keyof typeof prev] }));
+    setFields((prev) => {
+      if (typeof prev[field] !== 'boolean') {
+        return prev;
+      }
+      return { ...prev, [field]: !prev[field] };
+    });
   };
 
   const handleGenerate = async () => {
     try {
       setIsGenerating(true);
+
+      if (profileType === 'organization' && !orgId) {
+        throw new Error('Organization context is required to generate a share link');
+      }
 
       const response = await apiFetch('/api/profile/snippet', {
         method: 'POST',
@@ -92,6 +164,8 @@ export function ShareProfileDialog({
           theme,
           format,
           expiresInDays,
+          profileType,
+          orgId: profileType === 'organization' ? orgId : undefined,
         }),
       });
 
@@ -141,7 +215,7 @@ export function ShareProfileDialog({
   };
 
   const shareTexts = generateShareText({ name: userName, headline: userHeadline });
-  const embedCode = generatedSnippet ? generateEmbedCode(generatedSnippet.shareToken, format) : '';
+  const embedCode = generatedSnippet ? generateEmbedCodeFromUrl(generatedSnippet.url, format) : '';
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -149,10 +223,11 @@ export function ShareProfileDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Share2 className="h-5 w-5" />
-            Share Your Profile
+            Share Your {profileType === 'organization' ? 'Organization' : 'Profile'}
           </DialogTitle>
           <DialogDescription>
-            Create a shareable link or embed code for your profile
+            Create a shareable link or embed code for your{' '}
+            {profileType === 'organization' ? 'organization profile' : 'profile'}
           </DialogDescription>
         </DialogHeader>
 
@@ -162,22 +237,11 @@ export function ShareProfileDialog({
             <div>
               <Label className="text-base font-semibold mb-3 block">What to Share</Label>
               <div className="grid grid-cols-2 gap-3">
-                {Object.entries({
-                  name: 'Name',
-                  headline: 'Headline',
-                  bio: 'Biography',
-                  skills: 'Skills',
-                  experience: 'Experience',
-                  education: 'Education',
-                  location: 'Location',
-                  profileImage: 'Profile Image',
-                  values: 'Values',
-                  causes: 'Causes',
-                }).map(([key, label]) => (
+                {Object.entries(fieldLabels).map(([key, label]) => (
                   <div key={key} className="flex items-center space-x-2">
                     <Switch
                       id={key}
-                      checked={fields[key as keyof typeof fields] as boolean}
+                      checked={Boolean(fields[key])}
                       onCheckedChange={() => handleFieldToggle(key)}
                     />
                     <Label htmlFor={key} className="cursor-pointer">
@@ -285,6 +349,14 @@ export function ShareProfileDialog({
                     )}
                   </Button>
                 </div>
+                <Button
+                  className="mt-2 w-full"
+                  variant="outline"
+                  onClick={() => window.open(generatedSnippet.url, '_blank', 'noopener,noreferrer')}
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Open Link
+                </Button>
               </div>
             </TabsContent>
 

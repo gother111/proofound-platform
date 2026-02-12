@@ -7,7 +7,7 @@ Complete guide to all environment variables used in Proofound, including which f
 > Current production domain: **`https://proofound.io`**
 >
 > Update `NEXT_PUBLIC_SITE_URL` in Vercel environment variables to match your actual domain.
-> Examples in this guide may use `proofound.com` for illustration purposes.
+> `proofound.com` is legacy/parked and should not be used for app URLs.
 
 ## Quick Reference
 
@@ -187,7 +187,7 @@ SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 **Format**:
 
 ```env
-NEXT_PUBLIC_SITE_URL=https://proofound.com
+NEXT_PUBLIC_SITE_URL=https://proofound.io
 ```
 
 **Used By**:
@@ -199,15 +199,17 @@ NEXT_PUBLIC_SITE_URL=https://proofound.com
 
 **Examples**:
 
-- Production: `https://proofound.com`
-- Staging: `https://staging.proofound.com`
+- Production: `https://proofound.io`
+- Staging: `https://staging.proofound.io`
 - Vercel Preview: `https://proofound-git-branch.vercel.app`
 - Local: `http://localhost:3000`
 
 **Important**:
 
-- ❌ No trailing slash: `https://proofound.com` ✅
-- ❌ No trailing slash: `https://proofound.com/` ❌
+- ✅ Canonical domain: `https://proofound.io`
+- ❌ Legacy/parked domain: `https://proofound.com`
+- ✅ No trailing slash: `https://proofound.io`
+- ❌ No trailing slash: `https://proofound.io/`
 - ✅ Include protocol (http/https)
 
 ---

@@ -911,3 +911,54 @@ Open risks/TODO:
 
 - No functional auth risk identified. This is a visual-only change.
 - Existing non-blocking warning remains unrelated to this task: `<img>` usage in `src/components/profile/PublicSnippetView.tsx`.
+
+## 2026-02-12: Public Profile Sharing Fix (Individual + Organization)
+
+What changed:
+
+- Enforced canonical share URL base for snippets in `src/lib/profile/snippet-generator.ts`:
+  - Uses `NEXT_PUBLIC_SITE_URL` only for share links.
+  - Normalizes host and rewrites legacy `proofound.com` and `www.proofound.com` to `proofound.io`.
+  - Added `buildPublicEmbedURLFromProfileURL` and `generateEmbedCodeFromUrl`.
+- Extended snippet API for organization sharing in `src/app/api/profile/snippet/route.ts`:
+  - Supports `profileType: 'individual' | 'organization'` and `orgId`.
+  - Verifies active organization membership before creating org snippets.
+  - Returns `profileType` and `orgId` in API responses.
+- Added public snippet rendering routes:
+  - `src/app/p/[token]/page.tsx`
+  - `src/app/p/[token]/embed/page.tsx`
+- Added shared public snippet data/model layer in `src/lib/profile/public-snippet.ts`.
+- Added shared UI renderer in `src/components/profile/PublicSnippetView.tsx`.
+- Added organization sharing UI wiring:
+  - `src/components/profile/OrganizationShareControl.tsx`
+  - `src/components/profile/OrganizationProfileView.tsx` now shows org share control.
+  - `src/components/profile/ShareProfileDialog.tsx` now supports both personas and uses server returned `url` as the single source for link and embed.
+- Added embed-only route behavior updates:
+  - `next.config.js`: removed conflicting global `X-Frame-Options` and CSP header emission.
+  - `src/middleware.ts`: keeps anti-iframe defaults and allows framing only for `/p/<token>/embed`.
+- Added migration:
+  - `supabase/migrations/20260212110000_extend_profile_snippets_for_org.sql`
+  - Adds `profile_type`, `org_id`, constraints, and indexes.
+- Added tests:
+  - `tests/lib/profile-snippet-url.test.ts`
+  - `tests/api/profile-snippet-route.test.ts`
+  - `tests/ui/share-profile-dialog.test.tsx`
+
+Why:
+
+- Share links were still generated as `proofound.com` in some paths and public snippet routes were missing or incomplete for end-to-end sharing.
+- Organization profile sharing required the same token flow with membership checks and privacy enforcement.
+- Embed behavior needed a route-specific framing exception without loosening the rest of the app.
+
+How to verify:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint` (PASS, one existing non-blocking warning for `<img>` in `PublicSnippetView`)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build` (PASS)
+
+Open risks/TODO:
+
+- Existing already-shared `proofound.com` links outside the app cannot be redirected by this codebase alone.
+- `frame-ancestors *` is intentionally limited to `/p/<token>/embed`; keep this route-scoped and do not broaden it.
+- Optional hardening follow-up: replace `<img>` with `next/image` in `src/components/profile/PublicSnippetView.tsx` if layout permits.

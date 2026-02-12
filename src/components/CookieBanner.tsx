@@ -14,7 +14,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { X, Cookie } from 'lucide-react';
 import Link from 'next/link';
-import { logError, getUserErrorMessage } from '@/lib/error-handler';
+import { logError } from '@/lib/error-handler';
+import { usePathname } from 'next/navigation';
 
 const CONSENT_KEY = 'proofound-cookie-consent';
 const CONSENT_VERSION = 'v1.0.2025-11-06';
@@ -22,8 +23,15 @@ const CONSENT_VERSION = 'v1.0.2025-11-06';
 export function CookieBanner() {
   const [show, setShow] = useState(false);
   const [saving, setSaving] = useState(false);
+  const pathname = usePathname();
+  const isSnippetEmbedRoute = /^\/p\/[^/]+\/embed\/?$/.test(pathname ?? '');
 
   useEffect(() => {
+    if (isSnippetEmbedRoute) {
+      setShow(false);
+      return;
+    }
+
     // Check if user already consented
     const storedConsent = localStorage.getItem(CONSENT_KEY);
     // Accept both "v1.0.2025-11-06" (Accept All) and "v1.0.2025-11-06-declined" (Essential Only)
@@ -32,7 +40,7 @@ export function CookieBanner() {
       const timer = setTimeout(() => setShow(true), 1000);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [isSnippetEmbedRoute]);
 
   const handleAccept = async () => {
     try {
@@ -69,7 +77,7 @@ export function CookieBanner() {
     setShow(false);
   };
 
-  if (!show) return null;
+  if (isSnippetEmbedRoute || !show) return null;
 
   return (
     <div
