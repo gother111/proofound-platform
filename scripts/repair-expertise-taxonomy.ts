@@ -236,7 +236,11 @@ async function main() {
     process.exit(1);
   }
 
-  if (dryRun && !shouldApply) {
+  if (explicitDryRun && shouldApply) {
+    console.log('ℹ️  Both --apply and --dry-run were provided. Running in dry-run mode only.');
+  }
+
+  if (dryRun) {
     await sql.end();
     return;
   }
