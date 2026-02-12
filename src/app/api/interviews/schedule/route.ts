@@ -14,6 +14,71 @@ import { isActiveOrgMember } from '@/lib/api/auth';
 
 export const dynamic = 'force-dynamic';
 
+type InterviewSchemaColumns = {
+  durationColumn: 'duration' | 'duration_minutes' | null;
+  meetingLinkColumn: 'meeting_url' | 'meeting_link' | null;
+  hasTimezone: boolean;
+  hasHostUserId: boolean;
+  hasParticipantUserIds: boolean;
+};
+
+let interviewSchemaColumnsCache: InterviewSchemaColumns | null = null;
+
+function resolveInterviewSchemaColumns(columns: Set<string>): InterviewSchemaColumns {
+  const durationColumn = columns.has('duration')
+    ? 'duration'
+    : columns.has('duration_minutes')
+      ? 'duration_minutes'
+      : null;
+
+  const meetingLinkColumn = columns.has('meeting_url')
+    ? 'meeting_url'
+    : columns.has('meeting_link')
+      ? 'meeting_link'
+      : null;
+
+  return {
+    durationColumn,
+    meetingLinkColumn,
+    hasTimezone: columns.has('timezone'),
+    hasHostUserId: columns.has('host_user_id'),
+    hasParticipantUserIds: columns.has('participant_user_ids'),
+  };
+}
+
+async function getInterviewSchemaColumns(): Promise<InterviewSchemaColumns> {
+  if (interviewSchemaColumnsCache) {
+    return interviewSchemaColumnsCache;
+  }
+
+  try {
+    const result = await db.execute(sql`
+      SELECT column_name
+      FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = 'interviews'
+    `);
+
+    const rows = getRows(result) as Array<{ column_name?: string | null }>;
+    const columns = new Set(
+      rows.map((row) => row.column_name?.trim()).filter((value): value is string => Boolean(value))
+    );
+
+    interviewSchemaColumnsCache = resolveInterviewSchemaColumns(columns);
+  } catch (error) {
+    // Prefer modern-schema defaults when introspection fails.
+    interviewSchemaColumnsCache = {
+      durationColumn: 'duration',
+      meetingLinkColumn: 'meeting_url',
+      hasTimezone: true,
+      hasHostUserId: false,
+      hasParticipantUserIds: false,
+    };
+  }
+
+  return interviewSchemaColumnsCache;
+}
+
 /**
  * GET /api/interviews/schedule
  * Returns scheduled interviews where the current user is candidate or org member.
@@ -57,14 +122,22 @@ export async function GET(request: NextRequest) {
 
     const whereClause = filters.length > 0 ? sql.join(filters, sql` AND `) : sql`TRUE`;
 
+    const schemaColumns = await getInterviewSchemaColumns();
+    const durationExpression = schemaColumns.durationColumn
+      ? sql.raw(`i.${schemaColumns.durationColumn}`)
+      : sql`30::integer`;
+    const meetingLinkExpression = schemaColumns.meetingLinkColumn
+      ? sql.raw(`i.${schemaColumns.meetingLinkColumn}`)
+      : sql`NULL::text`;
+
     const result = await db.execute(sql`
       SELECT
         i.id,
         i.match_id,
         i.scheduled_at,
-        i.duration,
+        ${durationExpression} AS duration,
         i.platform,
-        i.meeting_url,
+        ${meetingLinkExpression} AS meeting_link,
         i.status,
         i.created_at,
         m.created_at AS match_created_at,
@@ -86,7 +159,7 @@ export async function GET(request: NextRequest) {
       scheduled_at: string;
       duration: number;
       platform: string;
-      meeting_url: string;
+      meeting_link: string | null;
       status: string;
       match_created_at: string | null;
       candidate_name: string | null;
@@ -100,7 +173,7 @@ export async function GET(request: NextRequest) {
       scheduledAt: interview.scheduled_at,
       duration: interview.duration,
       platform: interview.platform,
-      meetingUrl: interview.meeting_url || 'pending',
+      meetingUrl: interview.meeting_link || 'pending',
       status: interview.status,
       matchAgreedAt: interview.match_created_at,
       candidateName: interview.candidate_name || 'Candidate',
@@ -210,6 +283,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const participantUserIds = Array.from(
+      new Set<string>([match.profile_id, user.id, ...data.participantUserIds])
+    );
+
     // 4. Handle meeting link based on platform.
     let meetingLink = '';
     let meetingId = '';
@@ -287,14 +364,9 @@ export async function POST(request: NextRequest) {
       } else {
         const { createGoogleMeet } = await import('@/lib/integrations/google-meet');
 
-        const participantSet = new Set<string>([
-          match.profile_id,
-          user.id,
-          ...data.participantUserIds,
-        ]);
         const participantEmails: string[] = [];
 
-        for (const participantId of participantSet) {
+        for (const participantId of participantUserIds) {
           const { data: profile } = await supabase.auth.admin.getUserById(participantId);
           if (profile.user?.email) {
             participantEmails.push(profile.user.email);
@@ -317,18 +389,38 @@ export async function POST(request: NextRequest) {
     // 5. Create interview record.
     const persistedPlatform = data.platform;
 
+    const schemaColumns = await getInterviewSchemaColumns();
+    const interviewInsert: Record<string, unknown> = {
+      match_id: data.matchId,
+      scheduled_at: data.scheduledAt,
+      platform: persistedPlatform,
+      meeting_id: meetingId,
+      status: 'scheduled',
+    };
+
+    if (schemaColumns.durationColumn) {
+      interviewInsert[schemaColumns.durationColumn] = 30;
+    }
+
+    if (schemaColumns.meetingLinkColumn) {
+      interviewInsert[schemaColumns.meetingLinkColumn] = meetingLink;
+    }
+
+    if (schemaColumns.hasTimezone) {
+      interviewInsert.timezone = data.timezone;
+    }
+
+    if (schemaColumns.hasHostUserId) {
+      interviewInsert.host_user_id = user.id;
+    }
+
+    if (schemaColumns.hasParticipantUserIds) {
+      interviewInsert.participant_user_ids = participantUserIds;
+    }
+
     const { data: interview, error: insertError } = await supabase
       .from('interviews')
-      .insert({
-        match_id: data.matchId,
-        scheduled_at: data.scheduledAt,
-        duration: 30,
-        platform: persistedPlatform,
-        meeting_url: meetingLink,
-        meeting_id: meetingId,
-        timezone: data.timezone,
-        status: 'scheduled',
-      })
+      .insert(interviewInsert as any)
       .select()
       .single();
 

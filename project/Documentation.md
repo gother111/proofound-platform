@@ -1538,3 +1538,34 @@ How to verify:
 Open risks/TODO:
 
 - Generic fallback label is compliant but not context-rich. Over time, pass contextual labels for key progress bars in critical flows.
+
+## 2026-02-12: CI Strict Interview Scheduling Compatibility Fix
+
+What changed:
+
+- Updated `src/app/api/interviews/schedule/route.ts` to introspect `public.interviews` columns and support both schema variants:
+  - duration: `duration` or `duration_minutes`
+  - meeting link: `meeting_url` or `meeting_link`
+  - optional fields: `timezone`, `host_user_id`, `participant_user_ids`
+- Updated GET query mapping to return stable response shape (`duration`, `meetingUrl`) regardless of underlying DB column names.
+- Updated POST insert mapping to write the correct available column set dynamically instead of assuming one fixed schema.
+- Increased strict UI login wait in `e2e/helpers/strict-fixtures.ts` from `20000` to `45000` ms to reduce CI redirect timeout flake under load.
+
+Why:
+
+- `ci` failed in strict individual suite with:
+  - `PGRST204` for missing `interviews.duration`
+  - then missing `interviews.meeting_url`
+  - intermittent login redirect timeout at 20s (`loginWithUi`)
+- The connected DB schema currently uses `duration_minutes` and `meeting_link`, plus additional required interview fields (`host_user_id`, `participant_user_ids`).
+
+How to verify:
+
+- `npm run typecheck` (PASS)
+- `npm run lint` (PASS with existing warning in `postcss.config.js`)
+- `NEXT_PUBLIC_USE_MOCK_SUPABASE=false node ./scripts/playwright-node20.mjs test e2e/strict/individual.strict.spec.ts --project=chromium -g "I-03 guided onboarding|I-15..I-17 messaging, interview scheduling, and offer attestation work" --reporter=line --workers=1` (PASS)
+
+Open risks/TODO:
+
+- Dynamic schema introspection in route handlers adds runtime branching; long term, normalize DB schema via migrations and remove compatibility path.
+- CI logs still show non-blocking JSON parse warnings in analytics endpoints from empty request bodies; cleanup can be handled separately.

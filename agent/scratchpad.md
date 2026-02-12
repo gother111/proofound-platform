@@ -1752,3 +1752,49 @@ Commands run + outcomes:
 Open TODOs / follow-ups:
 
 - Push latest a11y fix commit and verify PR checks rerun green.
+
+## 2026-02-12 23:59 CET
+
+Task summary:
+
+- Fixed `ci` strict individual flow regressions by making interview scheduling API resilient to live schema differences and by reducing strict login timing flake.
+
+What worked:
+
+- Direct DB column introspection (`information_schema.columns`) confirmed runtime schema mismatch (`duration_minutes`, `meeting_link`, `host_user_id`, `participant_user_ids`).
+- Dynamic insert/select mapping in `/api/interviews/schedule` resolved strict interview scheduling failures.
+- Increasing `loginWithUi` URL wait timeout from 20s to 45s stabilized onboarding redirect step under CI load.
+
+What failed / wrong assumptions:
+
+- Initial compatibility patch covered only `duration`; a second mismatch (`meeting_url` vs `meeting_link`) still caused 500s.
+
+User corrections:
+
+- User asked to continue until merge is complete.
+
+Assumptions taken without asking:
+
+- Supporting both interview schema variants in one route is acceptable until migrations are normalized.
+- Extending strict login timeout does not alter product behavior and is test-stability-only.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add a schema-compatibility guard test for critical API routes that hit historically drifting tables.
+- Add CI assertion that `interviews` schema matches expected migration target before strict suites run.
+
+Commands run + outcomes:
+
+- `gh api repos/gother111/proofound-platform/actions/jobs/63459205836/logs`: PASS (captured `ci` failure details).
+- `psql "$DATABASE_URL" -c "SELECT column_name ... FROM information_schema.columns ... interviews"`: PASS (identified actual interview columns).
+- `npm run typecheck`: PASS.
+- `npm run lint`: PASS (existing warning only).
+- `NEXT_PUBLIC_USE_MOCK_SUPABASE=false node ./scripts/playwright-node20.mjs test e2e/strict/individual.strict.spec.ts --project=chromium -g "I-03 guided onboarding|I-15..I-17 messaging, interview scheduling, and offer attestation work" --reporter=line --workers=1`: PASS.
+
+Open TODOs / follow-ups:
+
+- Push schema-compatibility fix commit and monitor fresh PR checks to green/auto-merge.

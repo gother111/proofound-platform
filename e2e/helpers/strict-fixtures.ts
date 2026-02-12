@@ -420,7 +420,7 @@ export async function loginWithUi(page: Page, user: StrictRuntimeUser): Promise<
   await page.getByTestId('login-email').fill(user.email);
   await page.getByTestId('login-password').fill(user.password);
   await page.getByTestId('login-submit').click();
-  await page.waitForURL(/\/(app|onboarding)(\/|$)/, { timeout: 20000 });
+  await page.waitForURL(/\/(app|onboarding)(\/|$)/, { timeout: 45000 });
 }
 
 export async function getCsrfToken(request: APIRequestContext): Promise<string> {
