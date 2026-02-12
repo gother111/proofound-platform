@@ -1553,3 +1553,65 @@ Open TODOs / follow-ups:
 
 - Decide whether to move `tests/e2e/prd-flows-organization.spec.ts` under `e2e/` or add a second Playwright config for `tests/e2e`.
 - Re-run targeted organization settings route regression once discovery path is aligned.
+
+## 2026-02-12 22:55:03 CET
+
+Task summary (1-3 lines):
+
+- Implemented a large reliability pass for matching, mutual interest, assignment creation/review/publish, shortlist semantics, and verification gate enforcement.
+- Consolidated matching profile contracts and added missing assignment publish API.
+- Added/updated targeted tests and ran core verification commands.
+
+What worked:
+
+- Canonical wrapper conversion for `/api/matching-profile` immediately aligned setup payload and route contract.
+- Rewriting interest flow with explicit reciprocal checks and org membership validation fixed actor-order and participant integrity issues.
+- Assignment API slug scoping plus publish endpoint integrated cleanly with existing UI after client updates.
+- New targeted Vitest coverage caught regressions quickly during iteration.
+
+What failed / wrong assumptions:
+
+- Strict Playwright suites could not run because required env vars were unavailable locally.
+- Initial `tests/api/assignments.test.ts` mocks assumed old org lookup (`findFirst`) and failed after strict org-context changes.
+
+User corrections:
+
+- User explicitly requested full implementation of the previously proposed large plan, not partial verification.
+
+Assumptions taken without asking:
+
+- Kept core matching routes canonical and retained legacy matching profile endpoints as compatibility adapters.
+- Enforced strict org disambiguation only when multi-org context exists and slug is missing.
+- Used `creationStatus=ready_to_publish` with `status=draft` for review-ready assignment state, then dedicated publish endpoint sets `active/published`.
+
+What the user corrected afterward:
+
+- No further corrections after implementation request.
+
+Improvements next time:
+
+- Add environment precheck at the beginning of strict E2E validation to fail fast with a concise required-vars list.
+- Expand automated tests for shortlist deduping from historical pre-fix data.
+- Add route-level tests for legacy matching profile compatibility endpoints.
+
+Commands run + outcomes (short):
+
+- `git status --short`: PASS (clean start)
+- `npm ci`: PASS
+- `npm run typecheck`: PASS
+- `npm run lint`: PASS (1 pre-existing warning)
+- `npm run test -- tests/api/assignments.test.ts`: FAIL initially, then PASS after mock updates
+- `npm run test -- tests/api/assignments.test.ts tests/api/match-interest-route.test.ts tests/api/assignments-publish-route.test.ts tests/lib/verification-gates.test.ts`: PASS
+- `npm run test`: PASS
+- `npm run build`: PASS
+- `npm run test:e2e:individual:strict`: FAIL (missing env)
+- `npm run test:e2e:org:strict`: FAIL (missing env)
+- `npm run test:e2e:privacy:strict`: FAIL (missing env)
+- `npm run test:e2e:providers:strict`: FAIL (missing env)
+- `npm run gates:mvp:strict`: FAIL (missing `.env.local` and required env vars)
+
+Open TODOs / follow-ups:
+
+- Provide required Supabase/provider strict env vars and rerun strict E2E suites.
+- Run `npm run gates:mvp:strict -- --env-file <valid-env> --port <free-port>` once env is available.
+- Validate end-to-end persona smoke in a real connected environment.

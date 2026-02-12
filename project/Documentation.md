@@ -1410,3 +1410,91 @@ Open risks/TODO:
 - `tests/e2e/prd-flows-organization.spec.ts` is outside Playwright `testDir`, so this regression is not currently in the active e2e run path.
 - Any hidden consumer expecting snake_case visibility response keys may require migration to the camelCase contract.
 - Settings subpages are owner/admin-only; if role resolution changes upstream, access behavior must be revalidated.
+
+## 2026-02-12: Matching and Assignment Reliability Hardening (Full MVP Flow Focus)
+
+What changed:
+
+- Consolidated matching profile API contracts:
+  - Replaced `src/app/api/matching-profile/route.ts` with thin re-export wrappers to canonical core route:
+    - `src/app/api/core/matching/matching-profile/route.ts`
+  - Replaced stale legacy SQL handlers with compatibility adapters using current schema:
+    - `src/app/api/matching/profile/route.ts`
+    - `src/app/api/matching/profile/[id]/route.ts`
+- Fixed mutual interest and conversation creation flow:
+  - Reworked `src/app/api/core/matching/interest/route.ts` to:
+    - support both actor orders (candidate first or org first),
+    - enforce org membership for org-side interest,
+    - avoid using organization id as a conversation participant,
+    - create/find conversations idempotently by participants + assignment,
+    - preserve response contract with `revealed`, optional `conversationId`, optional `matchId`.
+- Hardened assignment APIs for strict org context and review workflow payloads:
+  - Updated `src/app/api/assignments/route.ts`:
+    - added `orgSlug` query support on GET,
+    - added `organizationSlug` body support on POST,
+    - added explicit multi-org ambiguity handling (`409`) when slug is missing,
+    - accepted review workflow fields (`businessValue`, `expectedImpact`, `creationStatus`),
+    - kept single-org fallback behavior when unambiguous.
+  - Added assignment publish endpoint:
+    - `src/app/api/assignments/[id]/publish/route.ts`
+    - publishes by setting `status=active`, `creationStatus=published`, with org access checks.
+  - Updated assignment detail API:
+    - `src/app/api/assignments/[id]/route.ts`
+    - now normalizes outcomes from `assignment_outcomes` for review UI.
+- Fixed org assignment builder and review flow clients:
+  - `src/app/app/o/[slug]/assignments/new/page.tsx`
+    - replaced broken autosave hook usage,
+    - autosave now updates existing draft (PUT) instead of creating duplicate drafts,
+    - final submit now uses `creationStatus=ready_to_publish` with valid assignment status,
+    - outcomes and expertise writes target the same persisted assignment id.
+  - `src/components/assignments/AssignmentReviewClient.tsx`
+    - now calls real publish route and surfaces API errors with toasts.
+- Updated org matching page context propagation:
+  - `src/app/app/o/[slug]/matching/page.tsx`
+    - now requests assignments with `orgSlug` context.
+  - `src/components/matching/AssignmentBuilderV2.tsx`
+    - now supports and forwards `organizationSlug`.
+- Corrected shortlist semantics to candidate-origin interest only:
+  - `src/app/api/org/[id]/shortlist/route.ts`
+  - `src/app/api/org/[id]/dashboard/route.ts`
+- Fixed verification gate enforcement for schema reality (`text[]` gates):
+  - `src/lib/verification/gates.ts`
+    - normalizes string arrays and object arrays into required gate objects before evaluation.
+
+Tests added/updated:
+
+- Updated `tests/api/assignments.test.ts` for new org resolution behavior and ambiguity case.
+- Added `tests/api/match-interest-route.test.ts`.
+- Added `tests/api/assignments-publish-route.test.ts`.
+- Added `tests/lib/verification-gates.test.ts`.
+
+Why:
+
+- Matching profile setup and legacy route shape drift caused failing saves and runtime fragility.
+- Mutual interest behavior was order-sensitive and could fail to create usable conversations.
+- Assignment review and publish flow had a missing endpoint and invalid status submission.
+- Multi-org users needed deterministic org scoping to avoid cross-org reads/writes.
+- Verification gates were effectively bypassed when stored as `text[]`.
+
+How to verify:
+
+- `npm ci`: PASS
+- `npm run typecheck`: PASS
+- `npm run lint`: PASS (pre-existing warning in `postcss.config.js`)
+- `npm run test -- tests/api/assignments.test.ts tests/api/match-interest-route.test.ts tests/api/assignments-publish-route.test.ts tests/lib/verification-gates.test.ts`: PASS
+- `npm run test`: PASS
+- `npm run build`: PASS
+
+Strict E2E and strict gate runs (attempted, blocked by missing env):
+
+- `npm run test:e2e:individual:strict`: FAIL (missing `NEXT_PUBLIC_SUPABASE_URL`)
+- `npm run test:e2e:org:strict`: FAIL (missing `NEXT_PUBLIC_SUPABASE_URL`)
+- `npm run test:e2e:privacy:strict`: FAIL (missing `NEXT_PUBLIC_SUPABASE_URL`)
+- `npm run test:e2e:providers:strict`: FAIL (missing provider strict env such as `E2E_PROVIDER_USER_ID` and also Supabase env)
+- `npm run gates:mvp:strict`: FAIL (missing `.env.local` and required strict env vars)
+
+Open risks/TODO:
+
+- Strict Playwright gates remain blocked until required Supabase and provider env vars are present.
+- Existing data may still contain old duplicate candidate interest rows from pre-fix behavior; API logic now avoids creating new duplicates for candidate-side interest flow.
+- Legacy matching profile compatibility routes preserve behavior but do not persist old `constraints` shape in dedicated columns because current schema does not include those columns.

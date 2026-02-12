@@ -1,110 +1,92 @@
 /**
- * Matching Profile Detail API
- *
- * GET /api/matching/profile/[id] - Get specific matching profile
- * DELETE /api/matching/profile/[id] - Delete matching profile
+ * Legacy compatibility route for matching profile detail.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { eq } from 'drizzle-orm';
+
 import { db } from '@/db';
-import { sql } from 'drizzle-orm';
+import { matchingProfiles } from '@/db/schema';
+import { requireAuth } from '@/lib/auth';
 import { log } from '@/lib/log';
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+const DEFAULT_WEIGHTS = {
+  skills: 0.3,
+  experience: 0.15,
+  values: 0.25,
+  causes: 0.15,
+  location: 0.05,
+  compensation: 0.05,
+  availability: 0.03,
+  language: 0.02,
+};
+
+const DEFAULT_CONSTRAINTS = {
+  requireEmailVerified: true,
+  requirePhoneVerified: false,
+  requireProfileComplete: false,
+  requireMinSkillMatch: false,
+  minSkillMatchThreshold: 0.3,
+  requireLocationMatch: false,
+  requireAvailabilityMatch: false,
+};
+
+function toCompatProfile(profile: typeof matchingProfiles.$inferSelect) {
+  return {
+    id: profile.profileId,
+    name: 'Default Profile',
+    weights: (profile.weights as Record<string, number> | null) ?? DEFAULT_WEIGHTS,
+    constraints: DEFAULT_CONSTRAINTS,
+    isActive: true,
+    createdAt: profile.createdAt,
+    updatedAt: profile.updatedAt,
+  };
+}
+
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+    const user = await requireAuth();
     const { id } = await params;
 
-    // Get profile
-    const result = await db.execute(sql`
-      SELECT *
-      FROM matching_profiles
-      WHERE id = ${id}
-        AND user_id = ${user.id}
-    `);
+    if (id !== user.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
 
-    if (!result.length) {
+    const profile = await db.query.matchingProfiles.findFirst({
+      where: eq(matchingProfiles.profileId, user.id),
+    });
+
+    if (!profile) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    const profile = result[0] as any;
-
     return NextResponse.json({
       success: true,
-      profile: {
-        id: profile.id,
-        name: profile.name,
-        weights: profile.weights,
-        constraints: profile.constraints,
-        isActive: profile.is_active,
-        createdAt: profile.created_at,
-        updatedAt: profile.updated_at,
-      },
+      profile: toCompatProfile(profile),
     });
   } catch (error) {
-    log.error('matching.profile.get.failed', {
+    log.error('matching.profile.compat.get.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
     });
     return NextResponse.json({ error: 'Failed to get profile' }, { status: 500 });
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+    const user = await requireAuth();
     const { id } = await params;
 
-    // Verify ownership
-    const existing = await db.execute(sql`
-      SELECT user_id
-      FROM matching_profiles
-      WHERE id = ${id}
-    `);
-
-    if (!existing.length) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
-    }
-
-    if ((existing[0] as any).user_id !== user.id) {
+    if (id !== user.id) {
       return NextResponse.json({ error: 'Unauthorized to delete this profile' }, { status: 403 });
     }
 
-    // Delete profile
-    await db.execute(sql`
-      DELETE FROM matching_profiles
-      WHERE id = ${id}
-    `);
+    await db.delete(matchingProfiles).where(eq(matchingProfiles.profileId, user.id));
 
-    log.info('matching.profile.deleted', {
-      userId: user.id,
-      profileId: id,
-    });
-
-    return NextResponse.json({
-      success: true,
-    });
+    return NextResponse.json({ success: true });
   } catch (error) {
-    log.error('matching.profile.delete.failed', {
+    log.error('matching.profile.compat.delete.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
     });
     return NextResponse.json({ error: 'Failed to delete profile' }, { status: 500 });
   }
