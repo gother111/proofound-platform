@@ -1067,3 +1067,39 @@ Open risks/TODO:
 
 - If `https://proofound.io/api/health` response shape changes (missing `version`), the workflow will keep treating production as out-of-sync and may trigger repeated deploy attempts.
 - If `VERCEL_DEPLOY_HOOK_URL` is not set, the workflow fails by design to surface the missing configuration.
+
+---
+
+## 2026-02-12: Persisted Deploy-Retry Instructions for Agents
+
+What changed:
+
+- Added deploy-retry automation checks to always-read agent docs:
+  - `agent/checklists/preflight.md`
+  - `agent/checklists/verification.md`
+  - `agent/runbooks/setup.md`
+- Documented persistent requirements:
+  - workflow path: `.github/workflows/retry-vercel-deploy.yml`
+  - required secret: `VERCEL_DEPLOY_HOOK_URL`
+  - canonical health/version check endpoint: `https://proofound.io/api/health`
+- Added manual fallback commands in verification/setup docs to trigger and inspect the retry workflow.
+
+Why:
+
+- Ensure future agent runs consistently account for Vercel quota-related deploy lag without requiring ad-hoc memory from session logs.
+- Move this from one-off conversation context into standard preflight/setup/verification surfaces read every task.
+
+How to verify:
+
+- Inspect updated docs:
+  - `agent/checklists/preflight.md`
+  - `agent/checklists/verification.md`
+  - `agent/runbooks/setup.md`
+- Confirm no conflict markers were introduced in updated docs.
+- Optional workflow sanity check (YAML parse):
+  - `ruby -ryaml -e "YAML.load_file('.github/workflows/retry-vercel-deploy.yml'); puts 'YAML_OK'"`
+
+Open risks/TODO:
+
+- If production domain or health payload contract changes, docs and workflow must be updated together.
+- If `VERCEL_DEPLOY_HOOK_URL` is missing in repo secrets, retry workflow will fail by design until configured.

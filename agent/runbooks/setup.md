@@ -25,6 +25,23 @@ node -v  # expect v20.20.0
 - Do not commit secret env files; `.gitignore` excludes `.env` and `*.local` patterns. (source: .gitignore)
 - Use `node update-env.cjs` only to generate a placeholder `.env.local` template. It intentionally does not include real credentials.
 
+## Vercel Deploy Retry Automation
+
+Use this when production can lag behind `master` because Vercel deploy quota is temporarily exhausted.
+
+- Workflow:
+  - `.github/workflows/retry-vercel-deploy.yml`
+- Behavior:
+  - Runs on push to `master`, every 30 minutes, and manual dispatch.
+  - Reads live SHA from `https://proofound.io/api/health` (`version`).
+  - Triggers Vercel deploy hook only when live SHA differs from repo SHA.
+- Required one-time setup:
+  - In Vercel (`proofound-platform`), create a production deploy hook.
+  - In GitHub repo secrets, add `VERCEL_DEPLOY_HOOK_URL` with that hook URL.
+- Operational check:
+  - `gh workflow run "Retry Vercel Deploy Until Synced" --ref master`
+  - `gh run list --workflow "Retry Vercel Deploy Until Synced" --limit 1`
+
 ## Video Providers (Zoom, Google Meet)
 
 The app stores video provider tokens in `user_video_integrations` (Supabase) and uses these routes for OAuth:

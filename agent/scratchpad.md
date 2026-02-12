@@ -1164,3 +1164,51 @@ Open TODOs / follow-ups:
 
 - Add GitHub secret `VERCEL_DEPLOY_HOOK_URL` if not present.
 - Create production deploy hook in Vercel project `proofound-platform` and attach the generated URL to that secret.
+
+---
+
+## 2026-02-12 15:18 CET
+
+Task summary:
+
+- Added permanent documentation so agents consistently apply deploy-retry behavior after Vercel quota windows.
+- Updated preflight, verification, and setup docs with workflow/secret/health-check requirements.
+- Logged the doc hardening in project memory for future runs.
+
+What worked:
+
+- The needed guidance mapped cleanly into always-read docs (`agent/checklists/*`, `agent/runbooks/setup.md`).
+- Existing retry workflow details were already available and reused directly.
+
+What failed / wrong assumptions:
+
+- None.
+
+User corrections:
+
+- User requested that this be persisted in documentation so agents know every time.
+
+Assumptions taken without asking:
+
+- The most durable place is agent preflight + verification + setup docs instead of only `project/Documentation.md`.
+- `https://proofound.io/api/health` remains the canonical deploy-sync endpoint for this project.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add a short docs index pointer in `project/Implement.md` for deploy-retry runbook location.
+- Add a workflow alert policy if retry attempts continue failing for more than one schedule window.
+
+Commands run + outcomes:
+
+- `sed -n ...` on agent docs: PASS (context gathered).
+- `date '+%Y-%m-%d %H:%M %Z'`: PASS.
+- Docs updates via patch/append: PASS.
+
+Open TODOs / follow-ups:
+
+- Ensure `VERCEL_DEPLOY_HOOK_URL` remains configured in GitHub secrets after repo admin changes.
+- Keep retry workflow health URL aligned with production domain changes.

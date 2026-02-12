@@ -54,6 +54,20 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 - Run a prod-equivalent build locally: `npx vercel@latest build --prod`
   - If CLI auth is missing, use `--token` with a valid `VERCEL_TOKEN` (do not print it).
 
+## Production Sync Guard (Vercel Quota Recovery)
+
+- Auto-retry workflow location:
+  - `.github/workflows/retry-vercel-deploy.yml`
+- Required GitHub secret:
+  - `VERCEL_DEPLOY_HOOK_URL` (production deploy hook URL for `proofound-platform`)
+- Validate live commit after pushing to `master`:
+  - `curl -sS https://proofound.io/api/health`
+  - Expect `version` in response to match the latest `master` commit SHA.
+- If production is behind, trigger manual retry once:
+  - `gh workflow run "Retry Vercel Deploy Until Synced" --ref master`
+- Confirm latest workflow run:
+  - `gh run list --workflow "Retry Vercel Deploy Until Synced" --limit 1`
+
 ## CI Gate Parity (When Appropriate)
 
 - CI also runs perf budgets and go/no-go gates after starting the app. (source: .github/workflows/ci.yml)
