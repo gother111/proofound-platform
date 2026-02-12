@@ -1,3 +1,7 @@
+> Doc Class: `governance`
+> Sync Pair: `verification.md`
+> Last Verified: `2026-02-12`
+
 # Verification Checklist (Before Merging)
 
 Repo Truth items include citations like `(source: README.md)`. Anything else is guidance/policy.

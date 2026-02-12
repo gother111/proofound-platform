@@ -7,7 +7,7 @@ Complete guide to all environment variables used in Proofound, including which f
 > Current production domain: **`https://proofound.io`**
 >
 > Update `NEXT_PUBLIC_SITE_URL` in Vercel environment variables to match your actual domain.
-> `proofound.com` is legacy/parked and should not be used for app URLs.
+> `proofound.io` is legacy/parked and should not be used for app URLs.
 
 ## Quick Reference
 
@@ -25,7 +25,7 @@ NEXT_PUBLIC_SITE_URL=https://proofound.io
 # IMPORTANT - Required for specific features
 # ============================================================================
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxxx
-EMAIL_FROM="Proofound <no-reply@proofound.com>"
+EMAIL_FROM="Proofound <no-reply@proofound.io>"
 CRON_SECRET=your_secure_random_token_here
 ZOOM_CLIENT_ID=your_zoom_client_id
 ZOOM_CLIENT_SECRET=your_zoom_client_secret
@@ -207,7 +207,7 @@ NEXT_PUBLIC_SITE_URL=https://proofound.io
 **Important**:
 
 - ✅ Canonical domain: `https://proofound.io`
-- ❌ Legacy/parked domain: `https://proofound.com`
+- ❌ Legacy/parked domain: `https://proofound.io`
 - ✅ No trailing slash: `https://proofound.io`
 - ❌ No trailing slash: `https://proofound.io/`
 - ✅ Include protocol (http/https)
@@ -261,7 +261,7 @@ RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxxx
 **Format**:
 
 ```env
-EMAIL_FROM="Proofound <no-reply@proofound.com>"
+EMAIL_FROM="Proofound <no-reply@proofound.io>"
 ```
 
 **Format Rules**:
@@ -273,7 +273,7 @@ EMAIL_FROM="Proofound <no-reply@proofound.com>"
 **Default Value**:
 
 ```typescript
-const fromEmail = process.env.EMAIL_FROM || 'Proofound <no-reply@proofound.com>';
+const fromEmail = process.env.EMAIL_FROM || 'Proofound <no-reply@proofound.io>';
 ```
 
 **Important**:
@@ -530,7 +530,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 SUPABASE_SERVICE_ROLE_KEY=eyJ...
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 RESEND_API_KEY=re_...
-EMAIL_FROM="Proofound <no-reply@proofound.com>"
+EMAIL_FROM="Proofound <no-reply@proofound.io>"
 CRON_SECRET=your_local_secret
 ```
 

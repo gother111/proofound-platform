@@ -48,6 +48,10 @@ jobs:
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
+      - name: Docs freshness (warning mode)
+        run: npm run docs:freshness
+        continue-on-error: true
+
       - name: Run linter
         run: npm run lint
 

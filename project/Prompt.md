@@ -1,3 +1,7 @@
+> Doc Class: `governance`
+> Sync Pair: `Prompt.md`
+> Last Verified: `2026-02-12`
+
 # Proofound: Project Prompt
 
 ## What This Product Is

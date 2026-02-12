@@ -1,5 +1,8 @@
 # Accessibility Audit Report
 
+> Doc Class: `active`
+> Last Verified: `2026-02-12`
+
 Date: 2026-02-11
 Scope: Automated Playwright + Axe critical-flow checks and keyboard navigation checks.
 
