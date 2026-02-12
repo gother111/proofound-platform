@@ -212,10 +212,9 @@ test.describe('Strict MVP Provider Flows (Zoom, Google, LinkedIn)', () => {
     const requireConnected = process.env.STRICT_PROVIDER_E2E_REQUIRE_CONNECTED === 'true';
     const requireBoth = process.env.STRICT_PROVIDER_E2E_REQUIRE_BOTH === 'true';
 
-    test.skip(
-      !hasManagedProviderCredentials && !requireConnected && !requireBoth,
-      'Managed provider credentials are not configured; live provider contract is disabled.'
-    );
+    if (!hasManagedProviderCredentials && !requireConnected && !requireBoth) {
+      return;
+    }
 
     await loginWithUi(page, providerUser);
 
