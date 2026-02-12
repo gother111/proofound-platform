@@ -282,3 +282,33 @@ Rows and columns: #142, #141, #137, #140, #138, #134, #136, #133, #132, #130, #1
 | #134 | OPEN   | Close after docs-ledger consolidation PR merges.                               |
 | #131 | OPEN   | Close after docs-ledger consolidation PR merges.                               |
 | #117 | OPEN   | Close after admin users-route cleanup preservation in `#148` merges.           |
+
+## Left-Out Docs Disposition (2026-02-12 09:30 UTC)
+
+### Source PR `#131` (`codex/docs-git-flow-instructions`)
+
+| File | Disposition | Notes |
+| ---- | ----------- | ----- |
+| `.github/workflows/ci.yml` | `reject_superseded` | Current CI reliability and landing scope guardrails are already stabilized on `master`. |
+| `.github/workflows/accessibility.yml` | `reject_superseded` | Current workflow removes previously broken PR-comment path and has stable memory settings. |
+| `agent/checklists/preflight.md` | `preserve_now` | Preserved as scoped docs PR `#157` (branch-to-PR merge sequence and no direct push to `master`). |
+| `agent/scratchpad.md` | `reject_superseded` | Historical bulk log content rejected in favor of concise canonical append entries. |
+| `project/Documentation.md` | `reject_superseded` | Historical overwrite rejected; preserved changes are recorded as focused deltas only. |
+
+### Source PR `#134` (`codex/install-openskills-skill`)
+
+| File | Disposition | Notes |
+| ---- | ----------- | ----- |
+| `agent/scratchpad.md` | `reject_superseded` | External install/session dump not required for product/runtime preservation lane. |
+| `project/Documentation.md` | `reject_superseded` | External install/session dump not required for product/runtime preservation lane. |
+
+### Active Left-Out Recovery Slice PRs (current)
+
+| PR | Branch | Scope |
+| --- | ------ | ----- |
+| #153 | `codex/salvage-leftout-132-auth-supabase-v2` | Auth and Supabase mock-admin hardening leftovers from `#132`. |
+| #154 | `codex/salvage-leftout-132-org-ui-v2` | Organization profile UI leftovers and org verified badge test from `#132`. |
+| #155 | `codex/salvage-leftout-132-signup-a11y-v2` | Signup a11y leftovers from `#132`. |
+| #156 | `codex/salvage-leftout-132-admin-smoke-v2` | Admin smoke tooling/docs leftovers from `#132`. |
+| #157 | `codex/salvage-leftout-138-doc-process-v2` | Preflight process guardrail leftovers from `#138/#131`. |
+| #158 | `codex/salvage-leftout-119-mixed-v2` | Non-landing leftovers from `#119` (GuidedBreathing + doc path corrections). |
