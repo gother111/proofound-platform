@@ -1063,3 +1063,57 @@ Commands run + outcomes:
 Open TODOs / follow-ups:
 
 - Optional: replace `unoptimized` with a configured optimized remote image path once `images.remotePatterns` is explicitly locked for snippet avatar/logo sources.
+
+---
+
+## 2026-02-12 16:28 CET
+
+Task summary:
+
+- Completed smartphone UI and UX remediation execution wrap-up.
+- Re-verified locked suites and smartphone regression suite after code changes.
+- Updated project memory docs for this task scope and verification outcomes.
+
+What worked:
+
+- Required gates are now green with the updated mobile fixes and test harness:
+  - `npm run test:a11y`
+  - `npm run test:e2e:auth`
+  - `npm run test:e2e:mobile`
+- Mobile tap-target remediations and shell spacing changes hold under iPhone viewport checks.
+- Isolated Playwright port setup improved repeatability for auth, a11y, and mobile checks.
+
+What failed / wrong assumptions:
+
+- Assumed runtime logs would be cleaner after test stabilization, but mock-mode DB warnings remain noisy even with passing suites.
+
+User corrections:
+
+- User explicitly required full implementation of the provided large smartphone plan, including suite stabilization and documentation updates.
+
+Assumptions taken without asking:
+
+- Proceeded with strict 44x44 target interpretation on all scoped mobile interactive controls.
+- Proceeded with mock-safe behavior in auth server actions for deterministic test flow where production behavior is unchanged outside mock mode.
+- Treated logging noise in mock-mode as non-blocking since locked gate criteria are suite pass/fail.
+
+What the user corrected afterward:
+
+- None after execution began in this session.
+
+Improvements next time:
+
+- Add a lightweight mock-db warning suppression strategy for Playwright runs to reduce audit noise in CI and local reports.
+- Add one dedicated visual snapshot check for signup consent row wrapping to catch future spacing regressions.
+
+Commands run + outcomes:
+
+- `env -u NODE -u npm_node_execpath PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:a11y`: PASS (18 passed)
+- `env -u NODE -u npm_node_execpath PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:auth`: PASS (18 passed)
+- `env -u NODE -u npm_node_execpath PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:mobile`: PASS (4 passed)
+- `date '+%Y-%m-%d %H:%M %Z'`: PASS (`2026-02-12 16:28 CET`)
+
+Open TODOs / follow-ups:
+
+- Optional: tune mock-db logging behavior during Playwright runs to reduce false-alarm operational noise.
+- Optional: review consent-text link wrapping on very small mobile widths after the 44x44 touch-area expansion.
