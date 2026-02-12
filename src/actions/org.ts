@@ -22,7 +22,11 @@ const inviteMemberSchema = z.object({
   role: z.enum(['admin', 'member', 'viewer']),
 });
 
+/** @deprecated Use PUT /api/organizations/[orgId] via apiFetch. */
 export async function updateOrganization(orgId: string, formData: FormData) {
+  console.warn(
+    'Deprecated: updateOrganization server action is legacy. Use PUT /api/organizations/[orgId] via apiFetch instead.'
+  );
   const user = await requireAuth();
   await assertOrgRole(orgId, user.id, ['owner', 'admin']);
 
