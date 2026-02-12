@@ -1886,3 +1886,46 @@ Commands run + outcomes:
 Open TODOs / follow-ups:
 
 - Push latest strict-quality-compatible patch and monitor PR checks to completion.
+
+## 2026-02-13 00:29 CET
+
+Task summary:
+
+- Fixed provider strict test assertion mismatch by aligning scheduler identity with API auth semantics.
+
+What worked:
+
+- CI log pinpointed failing assertion (`expected 400`) in unconnected-provider case.
+- Switching test actor to `orgOwner` correctly reached provider-integration validation path and restored expected `400` behavior.
+
+What failed / wrong assumptions:
+
+- Prior test actor (`unconnectedUser`) was unauthorized for scheduling and hit `403` before provider checks.
+
+User corrections:
+
+- None.
+
+Assumptions taken without asking:
+
+- Provider-not-connected contract should be asserted in an authorized scheduler context.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add a small comment in strict tests when endpoint auth order can mask downstream contract checks.
+
+Commands run + outcomes:
+
+- `gh api repos/gother111/proofound-platform/actions/jobs/63464065480/logs`: PASS (identified failing provider strict assertion).
+- `npm run test:strict:quality`: PASS.
+- `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false STRICT_PROVIDER_E2E_REQUIRE_BOTH=false NEXT_PUBLIC_USE_MOCK_SUPABASE=false node ./scripts/playwright-node20.mjs test e2e/strict/providers.strict.spec.ts --project=chromium -g "Provider schedule fails without connected integration token|Live provider scheduling contract requires connected provider in strict mode" --reporter=line --workers=1`: PASS.
+- `npm run typecheck`: PASS.
+- `npm run lint`: PASS (existing warning only).
+
+Open TODOs / follow-ups:
+
+- Push latest provider strict assertion fix and re-run PR checks.

@@ -188,13 +188,13 @@ test.describe('Strict MVP Provider Flows (Zoom, Google, LinkedIn)', () => {
   });
 
   test('Provider schedule fails without connected integration token', async ({ page }) => {
-    await loginWithUi(page, unconnectedUser);
+    await loginWithUi(page, orgOwner);
 
     const scheduleZoomResponse = await apiPostJson(page.request, '/api/interviews/schedule', {
       matchId: noProviderMatch.id,
       scheduledAt: new Date(Date.now() + 1000 * 60 * 60 * 4).toISOString(),
       platform: 'zoom',
-      participantUserIds: [unconnectedUser.id, candidateUser.id],
+      participantUserIds: [unconnectedUser.id, orgOwner.id],
     });
     expect(scheduleZoomResponse.status()).toBe(400);
     const scheduleZoomPayload = (await scheduleZoomResponse.json()) as { error?: string };

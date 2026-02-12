@@ -1621,3 +1621,28 @@ How to verify:
 Open risks/TODO:
 
 - If provider credentials are later configured, strict provider enforcement should be re-enabled automatically via CI env condition and validated with connected accounts.
+
+## 2026-02-13: Provider Strict Unconnected Schedule Assertion Fix
+
+What changed:
+
+- Updated `e2e/strict/providers.strict.spec.ts` unconnected-provider scheduling case:
+  - The test now authenticates as `orgOwner` (authorized scheduler) instead of `unconnectedUser`.
+  - Participant list updated to include `orgOwner` and candidate.
+
+Why:
+
+- CI failure in providers strict suite was caused by permission order in `/api/interviews/schedule`:
+  - unaffiliated user receives `403` before provider-integration check.
+- The test intent is to validate provider-not-connected behavior (`400`), which requires an org owner/admin request context.
+
+How to verify:
+
+- `npm run test:strict:quality` (PASS)
+- `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false STRICT_PROVIDER_E2E_REQUIRE_BOTH=false NEXT_PUBLIC_USE_MOCK_SUPABASE=false node ./scripts/playwright-node20.mjs test e2e/strict/providers.strict.spec.ts --project=chromium -g "Provider schedule fails without connected integration token|Live provider scheduling contract requires connected provider in strict mode" --reporter=line --workers=1` (PASS)
+- `npm run typecheck` (PASS)
+- `npm run lint` (PASS with one existing warning in `postcss.config.js`)
+
+Open risks/TODO:
+
+- Provider suite remains sensitive to external OAuth/provider availability when strict connected-provider mode is enabled.
