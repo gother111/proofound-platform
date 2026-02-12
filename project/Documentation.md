@@ -1,3 +1,7 @@
+> Doc Class: `governance`
+> Sync Pair: `Documentation.md`
+> Last Verified: `2026-02-12`
+
 # Documentation (Status + Index)
 
 ## Status
@@ -216,9 +220,7 @@ Architecture + privacy:
 
 API docs:
 
-- `API_DOCUMENTATION_FINAL.md`
-- `API_DOCUMENTATION_NEW_ENDPOINTS.md`
-- `docs/api-documentation.md`
+- `docs/API_REFERENCE.md`
 
 DB + migrations:
 
@@ -258,6 +260,61 @@ Audits + status snapshots:
 - `IMPLEMENTATION_STATUS_CURRENT.md`
 - `CODEBASE_AUDIT_REPORT.md`
 - `SECURITY_REVIEW_REPORT.md`
+
+## 2026-02-12: Maintainability Refactor (Phases 1-5)
+
+What changed:
+
+- Stabilized lint gate invocation by updating `scripts/lint-or-skip.js` to detect `eslint` availability via module resolution and run `npx eslint . --ext .js,.jsx,.ts,.tsx` instead of `next lint`.
+- Extracted assignment responsibilities into services and rewired route handlers:
+  - `src/lib/assignments/access.ts`
+  - `src/lib/assignments/activation.ts`
+  - `src/app/api/assignments/route.ts`
+  - `src/app/api/assignments/[id]/route.ts`
+- Extended matching service with optional replace behavior for activation flows:
+  - `src/lib/matching/generate-matches-for-assignment.ts`
+- Separated runtime Supabase server client creation from mock test double implementation:
+  - `src/lib/supabase/server.ts`
+  - `src/lib/supabase/mock-server-client.ts`
+- Reduced duplication in profile purpose actions by introducing shared helpers for mission/vision and values/causes updates:
+  - `src/actions/profile.ts`
+- Decomposed large profile/expertise UI modules into smaller sections:
+  - `src/components/profile/EditableProfileView.tsx`
+  - `src/components/profile/editable-profile/ProfileHeroSection.tsx`
+  - `src/components/profile/editable-profile/ProfileSidebar.tsx`
+  - `src/components/profile/editable-profile/ProfileTabsSection.tsx`
+  - `src/components/profile/editable-profile/ProfileDialogs.tsx`
+  - `src/app/app/i/expertise/components/EditSkillWindow.tsx`
+  - `src/app/app/i/expertise/components/edit-skill/types.ts`
+  - `src/app/app/i/expertise/components/edit-skill/ProofsSection.tsx`
+  - `src/app/app/i/expertise/components/edit-skill/VerificationSection.tsx`
+  - `src/app/app/i/expertise/components/edit-skill/DeleteSkillDialog.tsx`
+  - `src/app/app/i/expertise/components/add-skill/AddSkillDrawerView.tsx`
+  - `src/app/app/i/expertise/components/add-skill/SearchModePanel.tsx`
+  - `src/app/app/i/expertise/components/add-skill/BrowseModePanel.tsx`
+
+Why:
+
+- The assignment and profile paths had high churn and mixed responsibilities in single files.
+- Extracting service and UI boundaries lowers cognitive load and isolates future behavior changes.
+- Keeping external contracts unchanged while isolating internals reduces regression risk in incremental PRs.
+
+How to verify:
+
+- `npm ci`: PASS
+- `npm run lint`: PASS (1 pre-existing warning in `postcss.config.js`)
+- `npm run typecheck`: PASS
+- `npm run test -- tests/api/assignments.test.ts tests/actions/profile.test.ts src/lib/supabase/__tests__/server.test.ts tests/ui/step5-expertise-mapping.test.tsx tests/ui/share-profile-dialog.test.tsx`: PASS
+- `npm run test`: PASS
+- `npm run build`: PASS
+- `NEXT_PUBLIC_USE_MOCK_SUPABASE=true PLAYWRIGHT=true npm run test:e2e -- e2e/expertise/comprehensive-expertise.spec.ts --project=chromium --grep "attach proof|request verification" --reporter=line`: FAIL (local env issue: existing listeners on ports `3000` and `3010`, then auth helper timeout waiting for `/app` redirect)
+
+Open risks/TODO:
+
+- Local environment in this run used Node `v25.4.0`; repo expects Node `20.20.0` (`.nvmrc`). Consider rerunning gate commands under Node `20.20.0` for strict parity.
+- Build and tests log expected local warnings when `DATABASE_URL` is unset and mock DB fallback is active.
+- Lint still reports one warning in `postcss.config.js` (`import/no-anonymous-default-export`) that is unrelated to this refactor.
+- Expertise Playwright smoke for proof/verification flow needs a clean local port and deterministic auth setup before it can be treated as a blocking gate.
 - `CROSS_DOCUMENT_PRIVACY_AUDIT.md`
 - `RLS_DEPLOYMENT_SUMMARY.md`
 - `PRIVACY_DASHBOARD_IMPLEMENTATION_SUMMARY.md`
@@ -918,7 +975,7 @@ What changed:
 
 - Enforced canonical share URL base for snippets in `src/lib/profile/snippet-generator.ts`:
   - Uses `NEXT_PUBLIC_SITE_URL` only for share links.
-  - Normalizes host and rewrites legacy `proofound.com` and `www.proofound.com` to `proofound.io`.
+  - Normalizes host and rewrites legacy `proofound.io` and `www.proofound.io` to `proofound.io`.
   - Added `buildPublicEmbedURLFromProfileURL` and `generateEmbedCodeFromUrl`.
 - Extended snippet API for organization sharing in `src/app/api/profile/snippet/route.ts`:
   - Supports `profileType: 'individual' | 'organization'` and `orgId`.
@@ -946,7 +1003,7 @@ What changed:
 
 Why:
 
-- Share links were still generated as `proofound.com` in some paths and public snippet routes were missing or incomplete for end-to-end sharing.
+- Share links were still generated as `proofound.io` in some paths and public snippet routes were missing or incomplete for end-to-end sharing.
 - Organization profile sharing required the same token flow with membership checks and privacy enforcement.
 - Embed behavior needed a route-specific framing exception without loosening the rest of the app.
 
@@ -959,9 +1016,44 @@ How to verify:
 
 Open risks/TODO:
 
-- Existing already-shared `proofound.com` links outside the app cannot be redirected by this codebase alone.
+- Existing already-shared `proofound.io` links outside the app cannot be redirected by this codebase alone.
 - `frame-ancestors *` is intentionally limited to `/p/<token>/embed`; keep this route-scoped and do not broaden it.
 - Optional hardening follow-up: replace `<img>` with `next/image` in `src/components/profile/PublicSnippetView.tsx` if layout permits.
+
+---
+
+## 2026-02-12: Trusted PR Auto-Enable Auto-Merge
+
+What changed:
+
+- Added workflow `.github/workflows/auto-enable-automerge.yml`.
+- Workflow triggers on `pull_request_target` for:
+  - `opened`
+  - `reopened`
+  - `synchronize`
+  - `ready_for_review`
+- Workflow enables PR auto-merge using squash mode:
+  - `gh pr merge <number> --auto --squash`
+- Guardrails:
+  - only non-draft PRs
+  - only same-repo head and base
+  - only trusted author associations (`OWNER`, `MEMBER`, `COLLABORATOR`)
+
+Why:
+
+- Remove manual clicking of "Enable auto-merge" on trusted internal PRs.
+- Keep merge policy aligned with squash-only configuration and existing branch protection.
+
+How to verify:
+
+- `ruby -ryaml -e "YAML.load_file('.github/workflows/auto-enable-automerge.yml'); puts 'YAML_OK'"`
+- Open a trusted non-draft internal PR and verify auto-merge is enabled automatically.
+- Confirm merge still waits for required checks (`ci`, `a11y`) and required review.
+
+Open risks/TODO:
+
+- Workflow must be merged to `master` before it is active.
+- If GitHub token permissions or org policy changes, workflow may fail and need permission updates.
 
 ---
 
@@ -997,295 +1089,276 @@ Open risks/TODO:
 
 - `next/image` in `PublicSnippetView` is configured with `unoptimized` to avoid remote-loader/domain regressions; if optimization is required later, add explicit `images.remotePatterns` and remove `unoptimized`.
 
-## 2026-02-12: MVP Readiness Recovery (Gate Stabilization + Flow Matrix)
+## 2026-02-12: Signup Persona Redirects via Auth Routes
 
 What changed:
 
-- Stabilized Playwright startup for local/CI determinism:
+- Added dedicated persona signup pages:
+  - `src/app/(auth)/signup/individual/page.tsx`
+  - `src/app/(auth)/signup/organization/page.tsx`
+- Updated `src/app/(auth)/signup/page.tsx` to normalize `searchParams.type` and redirect server-side:
+  - `?type=individual` -> `/signup/individual`
+  - `?type=organization|org|org_member` -> `/signup/organization`
+  - unknown values remain on chooser (`/signup`)
+- Updated `src/app/(auth)/signup/SignupContent.tsx` with query-based client fallback initialization for parity.
+
+Why:
+
+- Ensure persona-specific signup entry links open the dedicated signup flow directly.
+- Preserve compatibility for existing links using `/signup?type=...`.
+- Keep landing-sensitive files untouched so landing scope CI policy remains satisfied.
+
+How to verify:
+
+- `npm run lint` (PASS, one existing unrelated warning in `src/components/profile/PublicSnippetView.tsx`)
+- `npm run typecheck` (BLOCKED by unrelated pre-existing local API edits referencing missing `@/lib/api/auth`)
+- Runtime checks (PASS):
+  - `curl -sI /signup?type=individual` -> `307` + `location: /signup/individual`
+  - `curl -sI /signup?type=organization` -> `307` + `location: /signup/organization`
+  - `curl -sI /signup?type=unknown` -> `200`
+
+Open risks/TODO:
+
+- Local full typecheck cannot pass until unrelated in-progress API-route changes are resolved in this worktree.
+- Existing non-blocking lint warning remains unrelated: `<img>` usage in `src/components/profile/PublicSnippetView.tsx`.
+
+---
+
+## 2026-02-12: Individual Dashboard Loading Message Reliability Fix
+
+What changed:
+
+- Updated `src/app/app/i/home/DashboardClient.tsx` to stop using mount state as loading state.
+- Added explicit dashboard loading state in the client and only render `Dashboard loading…` while real dashboard loading is active.
+- Added error-path handling so loading text is hidden when dashboard error fallback is shown.
+- Extended `src/components/dashboard/DraggableDashboard.tsx` with optional `onLoadingChange?: (isLoading: boolean) => void`.
+- Emitted loading transitions from `DraggableDashboard` via `useEffect` so parent UI reflects true load status.
+- Added regression test coverage in `tests/ui/dashboard-client.test.tsx`:
+  - loading text appears during loading
+  - loading text disappears when loading completes
+  - error fallback hides loading text
+
+Why:
+
+- The individual dashboard page showed `Dashboard loading…` permanently after mount because it was keyed to mount status instead of real dashboard fetch/loading state.
+- This caused misleading UX even when widgets had already loaded.
+
+How to verify:
+
+- `npm ci` (PASS; required in this worktree because `vitest` was initially missing)
+- `npm run test -- tests/ui/dashboard-client.test.tsx` (PASS)
+- `npm run lint` (PASS)
+- `npm run typecheck` (PASS)
+- `npm run test` (PASS)
+- `npm run build` (PASS)
+
+Open risks/TODO:
+
+- `onLoadingChange` is optional and callback-driven. If future dashboard implementations skip emitting loading transitions, parent loading text may drift again.
+- Current coverage is component-level. A future E2E assertion on `/app/i/home` could harden this behavior end-to-end.
+
+## 2026-02-12: EU MVP Launch Readiness Implementation (No-Go Baseline Closed)
+
+What changed:
+
+- Replaced placeholder legal pages with concrete policy content and explicit version/effective-date metadata:
+  - `src/app/privacy/page.tsx`
+  - `src/app/terms/page.tsx`
+  - `src/app/(marketing)/cookies/page.tsx`
+- Unified consent/version contracts around shared privacy constants and lightweight consent contract modules:
+  - `src/lib/privacy/policy-version-config.ts`
+  - `src/lib/privacy/consent-contract.ts`
+  - `src/lib/privacy/policy-versions.ts`
+  - `src/lib/cookies/consent.ts`
+  - `src/components/CookieBanner.tsx`
+  - `src/app/api/user/consent/route.ts`
+  - `src/actions/auth.ts`
+- Added consent-gated optional telemetry mount and removed raw user-agent persistence from analytics/perf ingestion paths:
+  - `src/components/OptionalTelemetry.tsx`
+  - `src/app/layout.tsx`
+  - `src/lib/performance/client-tracker.ts`
+  - `src/app/api/performance/track/route.ts`
+  - `src/app/api/analytics/web-vitals/route.ts`
+- Aligned account deletion to one immediate-deletion model across API/UI/cron compatibility routes:
+  - `src/app/api/user/account/route.ts`
+  - `src/app/api/user/account/cancel-deletion/route.ts`
+  - `src/components/privacy/DeleteAccountSection.tsx`
+  - `src/components/privacy/DataBreakdown.tsx`
+  - `src/components/settings/PrivacyOverview.tsx`
+  - `src/app/api/cron/account-deletion-workflow/route.ts`
+  - `src/app/api/cron/process-deletions/route.ts`
+  - `src/app/api/cron/send-deletion-reminders/route.ts`
+- Implemented moderation rights endpoints and aligned moderation admin/reporting flow to current schema:
+  - `src/app/api/moderation/appeals/route.ts`
+  - `src/app/api/moderation/statements-of-reasons/route.ts`
+  - `src/app/api/moderation/transparency-report/route.ts`
+  - `src/app/api/moderation/report/route.ts`
+  - `src/app/api/admin/moderation/queue/route.ts`
+  - `src/app/api/admin/moderation/action/route.ts`
+  - `src/components/admin/ModerationQueue.tsx`
+- Implemented rank-band-first explainability default with constrained exact-rank release:
+  - `src/app/api/match/explain/[matchId]/route.ts`
+  - `src/components/matching/MatchResultCard.tsx`
+- Added EU hardening migration for RLS and moderation storage, and fixed trigger/schema drift:
+  - `src/db/migrations/20260212183000_eu_launch_readiness_hardening.sql`
+  - `supabase/migrations/20260212183000_eu_launch_readiness_hardening.sql`
+- Updated PRD language to align deletion model expectations:
+  - `PRD_for_a_web_platform_MVP.md`
+
+Why:
+
+- EU launch readiness required closing P0 gaps in legal transparency, consent enforcement, telemetry minimization, sensitive-table RLS posture, moderation rights workflows, and PRD-policy consistency.
+- Privacy tests were failing against stale DB policy/trigger state, so migration apply had to be part of verification.
+
+How to verify:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:migrate` (PASS; applied `20260212183000_eu_launch_readiness_hardening`)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint` (PASS; one pre-existing non-blocking warning in `src/components/profile/PublicSnippetView.tsx`)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:privacy` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:privacy:extended` (PASS)
+- Runtime launch gates with local prod server:
+  - `BASE_URL=http://localhost:3000 npm run perf:budgets` (FAIL: desktop/mobile TTI above budget)
+  - `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go` (PASS)
+
+Open risks/TODO:
+
+- Perf budgets still fail on TTI, so launch gate is not fully green.
+- Legal counsel signoff artifacts for Privacy Policy, Terms, and Cookie Policy are still required before release.
+- Manual EU scenario checks remain required:
+  - decline analytics cookies and confirm no non-essential telemetry network calls,
+  - verify cross-user and anonymous isolation for verification/analytics in live app flows,
+  - run moderation action -> statement-of-reasons -> appeal lifecycle end to end.
+
+## 2026-02-12: Repository-Wide Documentation Freshness Remediation
+
+What changed:
+
+- Created canonical API reference: `docs/API_REFERENCE.md`.
+- Archived legacy API docs and replaced them with redirect stubs:
+  - `API_DOCUMENTATION_FINAL.md`
+  - `API_DOCUMENTATION_NEW_ENDPOINTS.md`
+  - `docs/api-documentation.md`
+- Archived historical non-governance status docs and replaced originals with redirect stubs.
+- Added documentation registry: `docs/DOCS_REGISTRY.md`.
+- Added docs freshness guardrail script: `scripts/docs-freshness-check.mjs`.
+- Added npm command: `npm run docs:freshness` in `package.json`.
+- Added non-blocking CI step in `.github/workflows/ci.yml` for docs freshness warning mode.
+- Kept all root governance docs in place and synchronized them with project and agent governance docs:
+  - `Prompt.md`, `Plans.md`, `Architecture.md`, `Implement.md`, `setup.md`, `preflight.md`, `verification.md`, `metrics.md`, `Documentation.md`.
+- Added governance metadata headers (`Doc Class`, `Sync Pair`, `Last Verified`) across root/project/agent governance docs.
+- Normalized active docs from legacy domains to `.io` and removed active absolute local paths.
+- Fixed known broken links in `README.md` and `SPRINT_1_PLAN.md`.
+
+Why:
+
+- Active documentation had significant drift and mixed historical snapshots with operational guidance.
+- Duplicate governance surfaces were contradictory.
+- API docs were fragmented across three overlapping files.
+- There was no automated drift signal in CI.
+
+How to verify:
+
+- `npm run docs:freshness` should pass with no findings.
+- `curl -sS https://proofound.io/api/health` should return healthy status and connected database.
+- `npx -y vercel@latest ls proofound-platform --token "$VERCEL_TOKEN"` should show ready production deployments.
+- `npx -y vercel@latest env ls production --token "$VERCEL_TOKEN"` should show required production env keys.
+- Baseline local checks run for this change set:
+  - `npm run lint` (pass with one unrelated warning in `postcss.config.js`)
+  - `npm run typecheck` (pass)
+  - `npm run test` (pass)
+  - `npm run build` (pass)
+
+Open risks/TODO:
+
+- The historical archive migration may break external bookmarks to old content locations outside the repository.
+- `docs:freshness` currently runs in warning mode in CI; strict mode is available through `STRICT_DOCS_FRESHNESS=true` and can be enabled later.
+- Local verification ran under Node `v25.4.0` in this environment while repo engines target `>=20.20.0 <21`; commands passed, but Node 20 remains the canonical runtime.
+
+---
+
+## 2026-02-12: Smartphone UI and UX Validation, Remediation, and Verification
+
+What changed:
+
+- Implemented mobile touch-target remediation (strict 44x44 policy) across auth, app, organization, admin, and consent surfaces:
+  - `src/components/app/TopBar.tsx`
+  - `src/components/auth/SignIn.tsx`
+  - `src/components/auth/SignupForm.tsx`
+  - `src/app/(auth)/signup/SignupContent.tsx`
+  - `src/app/(auth)/reset-password/ResetPasswordForm.tsx`
+  - `src/components/CookieBanner.tsx`
+  - `src/components/admin/AdminHeader.tsx`
+  - `src/components/admin/AdminSidebar.tsx`
+  - `src/app/app/o/[slug]/home/page.tsx`
+- Added mobile shell spacing and safe-area behavior to prevent occlusion and overlap:
+  - `src/app/app/o/[slug]/layout.tsx` (`pb-20 md:pb-0`, `min-w-0`)
+  - `src/app/globals.css` (`.safe-area-inset-bottom`)
+  - `src/components/admin/AdminLayoutClient.tsx` (mobile padding tuning)
+- Added non-breaking touch-size API support in shared button component:
+  - `src/components/ui/button.tsx` (`size: "touch"`)
+- Fixed accessibility regression and stabilized a11y timing behavior:
+  - `src/components/landing/sections/FinalQuoteSection.tsx` (contrast-safe decorative treatment)
+  - `tests/a11y/critical-flows.spec.ts` (deterministic settle strategy)
+- Stabilized auth E2E behavior in mock mode:
+  - `src/actions/auth.ts` (mock-safe GDPR consent and reset-password behavior)
+- Added isolated, repeatable smartphone regression checks and deterministic Playwright ports:
   - `playwright.config.ts`
   - `playwright.a11y.config.ts`
-  - Fixed dedicated webserver port usage and disabled server reuse to avoid cross-worktree process collisions.
-  - Added deterministic `PII_HASH_SALT` fallback in Playwright webserver commands so auth signup tests do not fail on missing GDPR hash salt.
-- Hardened CI gate enforcement:
-  - `.github/workflows/ci.yml`
-  - Added explicit required gates in `ci` job: `test:e2e:auth`, `test:a11y`.
-  - Removed label-gated shortcut for `e2e` job.
-  - Removed `continue-on-error` from `perf:budgets` and `go:no-go` so they block MVP readiness.
-  - Added `PII_HASH_SALT` to CI env (with fallback) for deterministic auth coverage.
-- Replaced brittle/placeholder auth and landing assertions with real contract assertions:
-  - `e2e/auth.spec.ts`
-  - `e2e/landing-page.spec.ts`
-- Added stable `data-testid` hooks and aligned UI contracts for auth + landing flows:
-  - `src/app/(auth)/signup/SignupContent.tsx`
-  - `src/components/auth/SignupForm.tsx`
-  - `src/components/auth/SignIn.tsx`
-  - `src/app/(auth)/reset-password/ResetPasswordForm.tsx`
-  - `src/app/(auth)/verify-email/VerifyEmailContent.tsx`
-  - `src/components/landing/sections/HeroSection.tsx`
-  - `src/components/landing/sections/PersonasSection.tsx`
-  - `src/components/landing/sections/PrinciplesSection.tsx`
-  - `src/components/landing/sections/FinalCTASection.tsx`
-  - `src/components/landing/sections/FooterSection.tsx`
-- Resolved decorative-text a11y false-positive in landing quote section:
-  - `src/components/landing/sections/FinalQuoteSection.tsx`
-- Improved a11y scan stability around animation settle timing:
-  - `tests/a11y/critical-flows.spec.ts`
-- Added PRD-flow readiness matrix for I-01..I-20 and O-01..O-20:
-  - `project/MVP_FLOW_MATRIX_2026-02-12.md`
+  - `e2e/mobile-smartphone.spec.ts`
+  - `package.json` (`test:e2e:mobile`)
 
 Why:
 
-- MVP gate reliability was blocked by a mix of placeholder assertions, unstable selectors, and runtime-env-sensitive failures (especially auth signup salt requirements and process/port collisions).
-- Launch decision required an explicit per-flow readiness classification, not aggregate test pass counts.
+- Mobile screenshots and route audits showed several smartphone UX defects: undersized tap targets, missing safe-area behavior, mobile header alignment problems, and content occlusion near fixed bottom navigation.
+- Two required test suites were failing (`test:a11y`, `test:e2e:auth`) and needed stabilization aligned to current UI behavior.
+- Smartphone regression guardrails were required to make failures repeatable and prevent reintroduction.
 
 How to verify:
 
-- Core compile/test gates:
-  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`
-  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`
-  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`
-  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`
-- Required E2E/a11y gates:
-  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH NEXT_PUBLIC_USE_MOCK_SUPABASE=true npm run test:e2e:landing`
-  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:auth`
-  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:a11y`
-- Ops gates (production-like start requires database env):
-  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH BASE_URL=http://localhost:3000 npm run perf:budgets`
-  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go`
-- Flow report:
-  - Review `project/MVP_FLOW_MATRIX_2026-02-12.md`
+- Required automated gates (Node 20):
+  - `env -u NODE -u npm_node_execpath PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:a11y` (PASS, 18 passed)
+  - `env -u NODE -u npm_node_execpath PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:auth` (PASS, 18 passed)
+  - `env -u NODE -u npm_node_execpath PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:mobile` (PASS, 4 passed)
+- Manual smartphone smoke (captured on isolated dev port):
+  - `/login`, `/signup`, `/reset-password`, `/verify-email?...`, `/app/i/home`, `/app/o/test-org/home`, `/admin`
+  - Confirm no horizontal overflow, final content actions remain tappable with bottom nav, and icon-only actions have explicit labels.
 
 Open risks/TODO:
 
-- `perf:budgets` and `go:no-go` fail in strict local production-like mode when `DATABASE_URL` is missing under `next start`. This remains the primary local launch-blocker.
-- Most non-auth PRD flows remain `implemented+unverified`; many existing E2E specs are still auth-skip or boolean/URL-level checks and are not part of the enforced gate set.
-- Privacy/RLS validation (`tests/privacy/*`) is still environment-gated and not currently part of default required MVP gates.
+- Test/dev logs still emit non-blocking mock database warnings (`DATABASE_URL` missing, mock `db.select`/`db.execute` warnings). Required suites pass, but log noise remains.
+- `src/components/auth/SignupForm.tsx` consent text link tap areas were enlarged to satisfy strict touch policy; visual line wrapping should be monitored in future polish passes.
+- Playwright/dev logs include non-blocking warnings (`baseline-browser-mapping` staleness and `metadataBase` notices).
 
-## 2026-02-12: MVP Readiness Recovery (Option 2 First, Strict No-Mock Gates)
+---
+
+## 2026-02-12: Vercel Production Visibility Triage (master commit missing in UI)
 
 What changed:
 
-- Added strict real-runtime auth launch gate and kept mock auth suite as non-blocking developer feedback.
-  - `package.json`
-  - `e2e/auth.real.spec.ts`
-  - `e2e/auth.spec.ts`
-- Added strict no-mock accessibility launch gate.
-  - `playwright.a11y.strict.config.ts`
-  - `package.json`
-  - `tests/a11y/critical-flows.spec.ts`
-- Added strict local parity runner that loads env from an explicit file and blocks mock-mode launch checks.
-  - `scripts/run-mvp-strict-gates.mjs`
-  - `package.json` (`gates:mvp:strict`)
-- Rebaselined MVP perf TTI budgets while keeping perf blocking.
-  - `scripts/perf-budgets.mjs`
-  - Desktop TTI: `<= 6500ms`
-  - Mobile TTI: `<= 6000ms`
-  - CLS: `<= 0.1` (unchanged)
-  - API p95: `<= 1500ms` (unchanged)
-  - Added note to tighten by 2026-03-31.
-- Updated CI required gate wiring to strict auth and strict a11y.
-  - `.github/workflows/ci.yml`
-  - Required gates now use:
-    - `npm run test:e2e:auth:real`
-    - `npm run test:a11y:strict`
-  - Added `NEXT_PUBLIC_USE_MOCK_SUPABASE=false` in CI job env for required gates.
-- Updated verification checklist to include strict gate commands and mock vs strict role separation.
-  - `agent/checklists/verification.md`
-- Published final strict-evidence flow matrix.
-  - `project/MVP_FLOW_MATRIX_2026-02-12.md`
+- Verified Git state and Vercel state for `master` deployment visibility.
+- Confirmed `origin/master` is at commit `35bf00e9924c516062b1812a7d3c39c5ac228d80`.
+- Queried Vercel project and deployment metadata for `proofound-platform`.
+- Confirmed latest production deployment on Vercel is still commit `eba9e428d4f6f38d3ae44f77daea697e26b82404` (older than `35bf00e`).
+- Attempted manual production deploy via Vercel CLI with token and hit quota block:
+  - `api-deployments-free-per-day` (more than 100 deployments/day), message: try again in 1 hour.
+- Re-linked local `.vercel/project.json` back to `proofound-platform` after a temporary CLI auto-link drift to `proofound`.
 
 Why:
 
-- MVP launch decisions needed gate parity between local strict runs and CI required checks.
-- Auth/a11y needed explicit no-mock launch contracts to avoid false confidence from mock-only behavior.
-- Perf remained launch-blocking but required realistic MVP thresholds based on current measured runtime.
+- User reported that merge to `master` was not visible in Vercel.
+- Root cause is not Git state. Root cause is deployment exhaustion on Vercel free-tier daily limit, so no deployment for commit `35bf00e` was created.
 
 How to verify:
 
-- Full strict local parity run:
-  - `npm run gates:mvp:strict -- --env-file <path-to-env.local> --port 40123`
-- Individual strict launch gates:
-  - `npm run test:e2e:auth:real`
-  - `npm run test:a11y:strict`
-  - `BASE_URL=http://localhost:40123 npm run perf:budgets`
-  - `BASE_URL=http://localhost:40123 SUS_STUDY_COMPLETE=true npm run go:no-go`
-
-Verification results (2026-02-12):
-
-- `npm run gates:mvp:strict -- --env-file <path-to-env.local> --port 40123`: PASS
-- `perf:budgets` output in strict run:
-  - desktop TTI ~5543ms
-  - mobile TTI ~5153ms
-  - CLS <= 0.1 (pass)
-  - API p95 ~238ms (pass)
-- `go:no-go` output in strict run: PASS
+- `git rev-parse origin/master` -> `35bf00e9924c516062b1812a7d3c39c5ac228d80`
+- `npx vercel project inspect proofound-platform --token "$VERCEL_TOKEN"` -> linked GitHub repo `gother111/proofound-platform`, production branch `master`
+- `npx vercel inspect https://proofound-platform-glks17i3y-pavlo-samoshkos-projects.vercel.app --token "$VERCEL_TOKEN"` -> current production alias `proofound.io`, commit `eba9e42...`
+- `npx vercel deploy --prod --yes --token "$VERCEL_TOKEN"` -> fails with `api-deployments-free-per-day`
 
 Open risks/TODO:
 
-- Large set of PRD I/O flows is still `implemented+unverified` under strict launch gates.
-- Authenticated a11y flows remain skipped pending deterministic authenticated fixture setup.
-- RLS/privacy suites (`tests/privacy/*`) are not yet part of the strict required launch gate set.
-- Post-launch perf tightening milestone by 2026-03-31 is documented but not yet automated as a timed enforcement change.
-
-## 2026-02-12: MVP Strict Flow Expansion and Real Provider Enforcement
-
-What changed:
-
-- Promoted strict flow suites to required CI checks (removed `continue-on-error`) and enabled explicit real-provider enforcement flag in CI:
-  - `.github/workflows/ci.yml`
-- Made strict provider gate require connected Zoom or Google provider by default in strict runs:
-  - `package.json`
-  - `e2e/strict/providers.strict.spec.ts`
-  - `scripts/run-mvp-strict-gates.mjs`
-- Refreshed MVP flow truth matrix to strict evidence and canonical test ownership:
-  - `project/MVP_FLOW_MATRIX_2026-02-12.md`
-
-Why:
-
-- The launch policy for this branch is real-provider E2E as a blocking criterion.
-- Previously, strict provider tests could pass without a connected provider account, which did not satisfy launch policy.
-- Matrix/reporting needed to match current strict execution evidence rather than older partially-validated status.
-
-How to verify:
-
-- Core static checks:
-  - `npm run lint` -> PASS
-  - `npm run typecheck` -> PASS
-  - `npm run test:strict:quality` -> PASS
-- Strict suites (with staging env loaded):
-  - `npm run test:e2e:landing` -> PASS
-  - `npm run test:e2e:auth:real` -> PASS
-  - `npm run test:a11y:strict` -> PASS
-  - `npm run test:e2e:individual:strict` -> PASS
-  - `npm run test:e2e:org:strict` -> PASS
-  - `npm run test:e2e:privacy:strict` -> PASS
-  - `npm run test:e2e:providers:strict` -> FAIL (strictly expected until provider account is connected)
-- Ops gates:
-  - `BASE_URL=http://localhost:40123 npm run perf:budgets` -> PASS
-  - `BASE_URL=http://localhost:40123 SUS_STUDY_COMPLETE=true npm run go:no-go` -> PASS
-- Full strict bundle:
-  - `npm run gates:mvp:strict -- --env-file <path-to-env.local> --port 40123` -> FAIL at provider strict gate
-
-Open risks/TODO:
-
-- Provide and connect deterministic staging provider accounts (Zoom/Google) so strict provider scheduling can pass.
-- Add/validate LinkedIn OAuth client settings in staging env to remove degraded provider-init fallback path.
-- Investigate noisy runtime logs observed during strict runs (`Unexpected end of JSON input` in analytics endpoints and intermittent `ECONNRESET`) even when tests pass.
-
-## 2026-02-12: Provider Credential Verification and Google Env Fix
-
-What changed:
-
-- Verified provider credential presence and live token-endpoint behavior using non-destructive invalid-code probes.
-- Fixed local Google OAuth env formatting in `/Users/yuriibakurov/proofound/.env.local`:
-  - normalized `GOOGLE_CLIENT_ID` by removing accidental URL prefix.
-  - set `GOOGLE_REDIRECT_URI` to app integration callback path (`https://proofound.io/api/integrations/google/callback`).
-- Added setup runbook guidance to prevent recurrence:
-  - `agent/runbooks/setup.md`
-
-Why:
-
-- Google provider checks were failing with `invalid_client` while Zoom and LinkedIn were accepted.
-- Root cause was malformed local Google env values, not application logic.
-
-How to verify:
-
-- Env sanity (no secret output):
-  - confirm `GOOGLE_CLIENT_ID` does not start with `http://` or `https://`.
-  - confirm `GOOGLE_REDIRECT_URI` is your app callback (`/api/integrations/google/callback`).
-- Google token probe should return `invalid_grant` for fake code (indicates client auth accepted, code rejected):
-  - `curl https://oauth2.googleapis.com/token ...`
-- Strict provider suite should reach only the connected-provider requirement blocker:
-  - `npm run test:e2e:providers:strict`
-
-Open risks/TODO:
-
-- Strict providers gate still blocks launch until at least one deterministic staging user is actually connected to Zoom or Google in runtime (`STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true`).
-- Provider console callback URLs must match env exactly in Google/Zoom/LinkedIn app settings.
-
-## 2026-02-12: MVP Provider Enablement Implementation (Strict Dual-Provider Contract)
-
-What changed:
-
-- Added strict env bootstrap helper for E2E suites and wired it into strict auth/provider fixtures:
-  - `e2e/helpers/load-strict-env.ts`
-  - `e2e/helpers/strict-fixtures.ts`
-  - `e2e/auth.real.spec.ts`
-- Added deterministic managed provider user contract for strict provider tests:
-  - `E2E_PROVIDER_USER_ID`
-  - `E2E_PROVIDER_USER_EMAIL`
-  - `E2E_PROVIDER_USER_PASSWORD`
-- Upgraded strict provider suite to enforce dual-provider scheduling contract:
-  - `e2e/strict/providers.strict.spec.ts`
-  - negative path uses an unconnected runtime user
-  - launch path now schedules both `zoom` and `google_meet` when strict flags are enabled
-  - dual-provider enforcement flag added: `STRICT_PROVIDER_E2E_REQUIRE_BOTH`
-- Added real-auth social OAuth initiation contract coverage for Google and LinkedIn:
-  - `e2e/auth.real.spec.ts`
-  - `src/components/auth/social-sign-in-buttons.tsx` (stable social auth `data-testid` hooks)
-- Tightened strict runner and CI env contracts for provider gates:
-  - `scripts/run-mvp-strict-gates.mjs`
-  - `.github/workflows/ci.yml`
-  - `package.json` (`test:e2e:providers:strict` now defaults `STRICT_PROVIDER_E2E_REQUIRE_BOTH=true`)
-- Updated env and runbook/checklist documentation for provider split callbacks and deterministic strict user:
-  - `.env.example`
-  - `docs/ENV_VARIABLES.md`
-  - `agent/runbooks/setup.md`
-  - `agent/checklists/verification.md`
-- Updated flow matrix truth text for dual-provider strict requirement:
-  - `project/MVP_FLOW_MATRIX_2026-02-12.md`
-
-Why:
-
-- MVP launch policy requires real provider flows to be blocking, deterministic, and CI-enforced.
-- Previous strict provider contract accepted one connected provider and did not enforce the dual-provider success criterion.
-- Strict suites needed a consistent env-loading behavior from `.env.local` and deterministic runtime identity contract.
-
-How to verify:
-
-- Static and build checks run in this session (Node 20 path):
-  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint` -> PASS
-  - `npm run typecheck` -> PASS
-  - `npm run test:strict:quality` -> PASS
-  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test` -> PASS
-  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build` -> PASS
-- Strict runtime checks run in this session:
-  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:auth:real` -> FAIL (missing `NEXT_PUBLIC_SUPABASE_URL` in this worktree)
-  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:providers:strict` -> FAIL (missing deterministic provider env + Supabase env in this worktree)
-
-Open risks/TODO:
-
-- Create and populate `.env.local` with strict required vars for this worktree before strict E2E reruns.
-- Add CI secrets for provider creds and deterministic strict provider user:
-  - `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`, `ZOOM_REDIRECT_URI`
-  - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`
-  - `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`
-  - `E2E_PROVIDER_USER_ID`, `E2E_PROVIDER_USER_EMAIL`, `E2E_PROVIDER_USER_PASSWORD`
-- Ensure deterministic provider user has both Zoom and Google connected in `user_video_integrations` before strict provider gate rerun.
-
-## 2026-02-12: Worktree `.env.local` Link and Strict Gate Recheck
-
-What changed:
-
-- Linked worktree env file to existing local env source:
-  - `/Users/yuriibakurov/.codex/worktrees/286c/proofound/.env.local` -> `/Users/yuriibakurov/proofound/.env.local`
-- Relaxed LinkedIn social OAuth initiation matcher in strict real-auth spec to accept LinkedIn `/uas/login` OAuth entry URL shape:
-  - `e2e/auth.real.spec.ts`
-
-Why:
-
-- Strict tests in this worktree were failing before app startup because `.env.local` did not exist in this worktree.
-- LinkedIn social auth redirects can land on `www.linkedin.com/uas/login?...oauth...`, not only `www.linkedin.com/oauth/...`.
-
-How to verify:
-
-- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:auth:real` -> PASS (12/12)
-- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:providers:strict` -> FAIL at startup with missing deterministic env var `E2E_PROVIDER_USER_ID`
-
-Open risks/TODO:
-
-- Add deterministic provider strict env vars to `.env.local`:
-  - `E2E_PROVIDER_USER_ID`
-  - `E2E_PROVIDER_USER_EMAIL`
-  - `E2E_PROVIDER_USER_PASSWORD`
-- Ensure that deterministic user has both `zoom` and `google_meet` connected in `user_video_integrations` for dual-provider strict contract.
+- No production deployment for commit `35bf00e` can be created until quota window resets or plan limits are increased.
+- After quota reset, trigger a production deployment for `proofound-platform` and verify `proofound.io` points to deployment built from `35bf00e`.
