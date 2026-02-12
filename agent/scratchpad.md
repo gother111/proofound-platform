@@ -1655,3 +1655,55 @@ Open TODOs / follow-ups:
 
 - Push follow-up commit and rerun GitHub required checks on PR #178.
 - Merge once `a11y` and `ci` required checks turn green.
+
+---
+
+## 2026-02-13 00:56 CET
+
+Task summary:
+
+- Investigated post-push CI failure after LinkedIn OAuth redirect fix and identified a strict E2E blocker in interview scheduling.
+- Added compatibility fallback for `interviews.duration` missing-column schemas in `/api/interviews/schedule`.
+
+What worked:
+
+- `gh run view --log-failed` clearly isolated the failing step and root cause (`PGRST204` on `interviews.duration`).
+- Retry-on-missing-column logic in both `POST` and `GET` schedule routes preserved API behavior while unblocking strict flow expectations.
+- Lint/typecheck and LinkedIn regression tests remained green after patch.
+
+What failed / wrong assumptions:
+
+- Initial assumption that fixing `a11y` and contrast would be enough to merge was incorrect; strict interview scheduling failed next.
+- Long-running `gh pr checks --watch` consumed time and eventually timed out locally while checks were still pending.
+
+User corrections:
+
+- User requested completion through push and merge to `master`, so CI blockers had to be resolved end-to-end.
+
+Assumptions taken without asking:
+
+- Backward-compatible support for environments missing `interviews.duration` is acceptable and safer than forcing immediate migration rollout.
+- Returning default `duration: 30` in compatibility paths preserves product contract expectations.
+
+What the user corrected afterward:
+
+- None after this follow-up started.
+
+Improvements next time:
+
+- Pull failed logs immediately after first red check instead of waiting with long polling.
+- Add dedicated API tests for interview scheduling compatibility around missing-column Supabase errors.
+
+Commands run + outcomes:
+
+- `gh pr checks 178`: FAIL (showed `ci` and `e2e` red, `a11y` green)
+- `gh run view 21967368774 --job 63460534787 --log-failed`: PASS (root cause found)
+- `gh run view 21967368774 --job 63460534788 --log-failed`: PASS (separate e2e webServer timeout)
+- `npm run lint`: PASS (existing warning in `postcss.config.js`)
+- `npm run typecheck`: PASS
+- `npm run test -- tests/api/linkedin-oauth-redirects.test.ts src/lib/integrations/__tests__/oauth-helpers.test.ts tests/ui/linkedin-verification.test.tsx`: PASS
+
+Open TODOs / follow-ups:
+
+- Push compatibility patch and rerun PR checks.
+- Merge PR #178 after required checks pass.

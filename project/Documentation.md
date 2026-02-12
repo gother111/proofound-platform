@@ -1477,3 +1477,34 @@ Open risks/TODO:
 
 - Strict a11y and strict e2e commands still require CI-provided secrets locally (`NEXT_PUBLIC_SUPABASE_URL`, related Supabase credentials).
 - PR merge remains gated by GitHub required checks until rerun completes on updated commit.
+
+---
+
+## 2026-02-13: Interview schedule API compatibility for CI strict schema
+
+What changed:
+
+- Updated `src/app/api/interviews/schedule/route.ts` to support databases where `interviews.duration` does not exist yet:
+  - Added a shared detector for missing `interviews.duration` column errors (`PGRST204` and `42703` variants).
+  - `POST /api/interviews/schedule` now retries insert without `duration` if the first insert fails due missing column.
+  - `GET /api/interviews/schedule` now retries with a SQL literal duration (`30`) when selecting `i.duration` fails.
+  - Response payloads now normalize interview duration with a default of 30 minutes.
+
+Why:
+
+- Required `ci` workflow failed in strict individual flow during interview scheduling with:
+  - `Could not find the 'duration' column of 'interviews' in the schema cache`
+- This made interview scheduling return HTTP 500 and blocked merge of the LinkedIn redirect fix.
+
+How to verify:
+
+- `npm run lint` (PASS, one existing warning in `postcss.config.js`)
+- `npm run typecheck` (PASS)
+- `npm run test -- tests/api/linkedin-oauth-redirects.test.ts src/lib/integrations/__tests__/oauth-helpers.test.ts tests/ui/linkedin-verification.test.tsx` (PASS)
+- Re-run PR #178 GitHub checks and confirm:
+  - `ci` no longer fails at `Run individual strict flow suite` with missing `interviews.duration`.
+
+Open risks/TODO:
+
+- The e2e workflow job (`npm run test:e2e`) still failed in the observed run due webServer timeout, which appears unrelated to this route patch.
+- This compatibility path should be removed once all environments are guaranteed to include the `interviews.duration` column.

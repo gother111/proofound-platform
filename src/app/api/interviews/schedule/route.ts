@@ -14,6 +14,32 @@ import { isActiveOrgMember } from '@/lib/api/auth';
 
 export const dynamic = 'force-dynamic';
 
+const DEFAULT_INTERVIEW_DURATION_MINUTES = 30;
+
+function isMissingInterviewsDurationError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  const candidate = error as { code?: string; message?: string; details?: string };
+  const combinedMessage = `${candidate.message ?? ''} ${candidate.details ?? ''}`.toLowerCase();
+  const mentionsDurationColumn =
+    combinedMessage.includes('duration') && combinedMessage.includes('interviews');
+
+  return (
+    (candidate.code === 'PGRST204' && mentionsDurationColumn) ||
+    (candidate.code === '42703' && mentionsDurationColumn)
+  );
+}
+
+function normalizeInterviewDuration(duration: unknown): number {
+  const parsed = Number(duration);
+  if (Number.isFinite(parsed) && parsed > 0) {
+    return parsed;
+  }
+  return DEFAULT_INTERVIEW_DURATION_MINUTES;
+}
+
 /**
  * GET /api/interviews/schedule
  * Returns scheduled interviews where the current user is candidate or org member.
@@ -57,28 +83,58 @@ export async function GET(request: NextRequest) {
 
     const whereClause = filters.length > 0 ? sql.join(filters, sql` AND `) : sql`TRUE`;
 
-    const result = await db.execute(sql`
-      SELECT
-        i.id,
-        i.match_id,
-        i.scheduled_at,
-        i.duration,
-        i.platform,
-        i.meeting_url,
-        i.status,
-        i.created_at,
-        m.created_at AS match_created_at,
-        p.display_name AS candidate_name,
-        a.role AS assignment_title,
-        o.display_name AS organization_name
-      FROM interviews i
-      INNER JOIN matches m ON m.id = i.match_id
-      INNER JOIN assignments a ON a.id = m.assignment_id
-      INNER JOIN organizations o ON o.id = a.org_id
-      LEFT JOIN profiles p ON p.id = m.profile_id
-      WHERE ${whereClause}
-      ORDER BY i.scheduled_at ASC
-    `);
+    let result;
+    try {
+      result = await db.execute(sql`
+        SELECT
+          i.id,
+          i.match_id,
+          i.scheduled_at,
+          i.duration,
+          i.platform,
+          i.meeting_url,
+          i.status,
+          i.created_at,
+          m.created_at AS match_created_at,
+          p.display_name AS candidate_name,
+          a.role AS assignment_title,
+          o.display_name AS organization_name
+        FROM interviews i
+        INNER JOIN matches m ON m.id = i.match_id
+        INNER JOIN assignments a ON a.id = m.assignment_id
+        INNER JOIN organizations o ON o.id = a.org_id
+        LEFT JOIN profiles p ON p.id = m.profile_id
+        WHERE ${whereClause}
+        ORDER BY i.scheduled_at ASC
+      `);
+    } catch (queryError) {
+      if (!isMissingInterviewsDurationError(queryError)) {
+        throw queryError;
+      }
+
+      result = await db.execute(sql`
+        SELECT
+          i.id,
+          i.match_id,
+          i.scheduled_at,
+          ${DEFAULT_INTERVIEW_DURATION_MINUTES} AS duration,
+          i.platform,
+          i.meeting_url,
+          i.status,
+          i.created_at,
+          m.created_at AS match_created_at,
+          p.display_name AS candidate_name,
+          a.role AS assignment_title,
+          o.display_name AS organization_name
+        FROM interviews i
+        INNER JOIN matches m ON m.id = i.match_id
+        INNER JOIN assignments a ON a.id = m.assignment_id
+        INNER JOIN organizations o ON o.id = a.org_id
+        LEFT JOIN profiles p ON p.id = m.profile_id
+        WHERE ${whereClause}
+        ORDER BY i.scheduled_at ASC
+      `);
+    }
 
     const interviews = getRows(result) as Array<{
       id: string;
@@ -98,7 +154,7 @@ export async function GET(request: NextRequest) {
       id: interview.id,
       matchId: interview.match_id,
       scheduledAt: interview.scheduled_at,
-      duration: interview.duration,
+      duration: normalizeInterviewDuration(interview.duration),
       platform: interview.platform,
       meetingUrl: interview.meeting_url || 'pending',
       status: interview.status,
@@ -317,24 +373,55 @@ export async function POST(request: NextRequest) {
     // 5. Create interview record.
     const persistedPlatform = data.platform;
 
-    const { data: interview, error: insertError } = await supabase
+    const interviewInsertBase = {
+      match_id: data.matchId,
+      scheduled_at: data.scheduledAt,
+      platform: persistedPlatform,
+      meeting_url: meetingLink,
+      meeting_id: meetingId,
+      timezone: data.timezone,
+      status: 'scheduled',
+    };
+
+    let interview: any = null;
+
+    const { data: interviewWithDuration, error: insertErrorWithDuration } = await supabase
       .from('interviews')
       .insert({
-        match_id: data.matchId,
-        scheduled_at: data.scheduledAt,
-        duration: 30,
-        platform: persistedPlatform,
-        meeting_url: meetingLink,
-        meeting_id: meetingId,
-        timezone: data.timezone,
-        status: 'scheduled',
+        ...interviewInsertBase,
+        duration: DEFAULT_INTERVIEW_DURATION_MINUTES,
       })
       .select()
       .single();
 
-    if (insertError) {
-      throw insertError;
+    if (insertErrorWithDuration) {
+      if (!isMissingInterviewsDurationError(insertErrorWithDuration)) {
+        throw insertErrorWithDuration;
+      }
+
+      const { data: interviewWithoutDuration, error: insertErrorWithoutDuration } = await supabase
+        .from('interviews')
+        .insert(interviewInsertBase)
+        .select()
+        .single();
+
+      if (insertErrorWithoutDuration) {
+        throw insertErrorWithoutDuration;
+      }
+
+      interview = interviewWithoutDuration;
+    } else {
+      interview = interviewWithDuration;
     }
+
+    if (!interview?.id || typeof interview.id !== 'string') {
+      throw new Error('Interview insert returned no id');
+    }
+
+    const normalizedInterview = {
+      ...interview,
+      duration: normalizeInterviewDuration(interview.duration),
+    };
 
     try {
       const { emitInterviewScheduledAsync } = await import('@/lib/analytics/events');
@@ -345,11 +432,11 @@ export async function POST(request: NextRequest) {
         (interviewDate.getTime() - matchDate.getTime()) / (1000 * 60 * 60 * 24)
       );
 
-      emitInterviewScheduledAsync(user.id, interview.id, {
-        interview_id: interview.id,
+      emitInterviewScheduledAsync(user.id, normalizedInterview.id, {
+        interview_id: normalizedInterview.id,
         assignment_id: match.assignment_id,
         match_id: data.matchId,
-        duration_minutes: 30,
+        duration_minutes: DEFAULT_INTERVIEW_DURATION_MINUTES,
         platform: persistedPlatform,
         days_since_match: daysSinceMatch,
       });
@@ -359,7 +446,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      interview,
+      interview: normalizedInterview,
       message: 'Interview scheduled successfully',
     });
   } catch (error: any) {
