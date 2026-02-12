@@ -838,3 +838,62 @@ Open risks/TODO:
 - Remaining salvage PRs are currently blocked only by required check queue time (`ci`/`a11y` pending).
 - Source PRs `#132`, `#138`, `#119`, `#124`, `#134`, `#131`, `#117` still need final close-out after replacement slices merge.
 - `master` branch protection approvals are still temporarily `0` and must be restored to `1` after this recovery lane completes.
+
+## 2026-02-12: Public Profile Sharing Fix (Individual + Organization)
+
+What changed:
+
+- Canonicalized snippet share URLs to `https://proofound.io` and removed snippet reliance on `NEXT_PUBLIC_APP_URL`:
+  - `src/lib/profile/snippet-generator.ts`
+- Extended profile snippets schema for dual persona support:
+  - `supabase/migrations/20260212110000_extend_profile_snippets_for_org.sql`
+  - Added `profile_type` (`individual|organization`) and `org_id` with consistency checks.
+- Updated snippet API to support organization snippets and active-membership authorization:
+  - `src/app/api/profile/snippet/route.ts`
+- Added public shared profile rendering routes:
+  - `src/app/p/[token]/page.tsx`
+  - `src/app/p/[token]/embed/page.tsx`
+  - Shared data/visibility/view tracking helper: `src/lib/profile/public-snippet.ts`
+  - Shared renderer: `src/components/profile/PublicSnippetView.tsx`
+- Added organization share UI control and wired it into org profile page:
+  - `src/components/profile/OrganizationShareControl.tsx`
+  - `src/app/app/o/[slug]/profile/page.tsx`
+  - Also updated org profile/hero components for consistency:
+    - `src/components/profile/OrganizationProfileView.tsx`
+    - `src/components/organization/OrganizationHero.tsx`
+- Updated security headers so only `/p/<token>/embed` is frameable, while all other routes stay anti-iframe:
+  - `next.config.js`
+  - `src/middleware.ts`
+- Suppressed global chrome/widgets on embed route to keep iframe output minimal:
+  - `src/components/support/ChatWidget.tsx`
+  - `src/components/CookieBanner.tsx`
+  - `src/components/surveys/SUSPromptHost.tsx`
+- Added focused tests:
+  - `tests/lib/profile-snippet-url.test.ts`
+  - `tests/api/profile-snippet-route.test.ts`
+  - `tests/ui/share-profile-dialog.test.tsx`
+
+Why:
+
+- Share links were generated to legacy `proofound.com` and opened to missing/blank public pages.
+- Public route `/p/<token>` was not implemented in this branch.
+- Organization profile sharing was not available.
+- Embed needed a strict route-only framing carve-out.
+
+How to verify:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`
+- Focused tests:
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- tests/lib/profile-snippet-url.test.ts tests/api/profile-snippet-route.test.ts tests/ui/share-profile-dialog.test.tsx`
+
+Open risks/TODO:
+
+- Build emits a non-blocking Next.js lint warning for `<img>` in `src/components/profile/PublicSnippetView.tsx`; convert to `next/image` in a follow-up if desired.
+- Manual browser smoke in preview/prod is still required to validate end-to-end generation from authenticated profile pages and external iframe embedding behavior.
+- Local runtime requires applying migration `supabase/migrations/20260212110000_extend_profile_snippets_for_org.sql`; without it, `/p/<token>` currently fails with `column "profile_type" does not exist`.
+- As of 2026-02-12, live `https://proofound.io/p/<token>` checks still return 404 because deployment has not yet picked up this branch.
+- Ensure production env var is set to canonical domain:
+  - `NEXT_PUBLIC_SITE_URL=https://proofound.io`

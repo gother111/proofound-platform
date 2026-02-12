@@ -16,9 +16,21 @@ import {
   generateShareToken,
   buildPublicProfileURL,
   validateSnippetConfig,
+  type SnippetFields,
 } from '@/lib/profile/snippet-generator';
 
 export const dynamic = 'force-dynamic';
+type ProfileType = 'individual' | 'organization';
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function isSnippetFields(value: unknown): value is SnippetFields {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function normalizeProfileType(value: unknown): ProfileType {
+  return value === 'organization' ? 'organization' : 'individual';
+}
 
 /**
  * POST - Create new snippet
@@ -37,6 +49,13 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { fields, theme, format, expiresInDays } = body;
 
+    if (!isSnippetFields(fields)) {
+      return NextResponse.json({ error: 'Invalid fields payload' }, { status: 400 });
+    }
+
+    const profileType = normalizeProfileType(body.profileType);
+    const orgId = typeof body.orgId === 'string' ? body.orgId.trim() : null;
+
     // Validate configuration
     const validation = validateSnippetConfig(fields);
     if (!validation.valid) {
@@ -44,6 +63,28 @@ export async function POST(req: NextRequest) {
         { error: 'Invalid configuration', details: validation.errors },
         { status: 400 }
       );
+    }
+
+    if (profileType === 'organization') {
+      if (!orgId || !UUID_REGEX.test(orgId)) {
+        return NextResponse.json({ error: 'Valid orgId is required' }, { status: 400 });
+      }
+
+      const membershipCheck = await db.execute(sql`
+        SELECT 1
+        FROM organization_members
+        WHERE org_id = ${orgId}
+          AND user_id = ${user.id}
+          AND status = 'active'
+        LIMIT 1
+      `);
+
+      if (getRows(membershipCheck as any).length === 0) {
+        return NextResponse.json(
+          { error: 'You must be an active member to share this organization profile' },
+          { status: 403 }
+        );
+      }
     }
 
     // Generate share token
@@ -62,6 +103,8 @@ export async function POST(req: NextRequest) {
         fields,
         theme,
         format,
+        profile_type,
+        org_id,
         expires_at,
         created_at
       ) VALUES (
@@ -70,6 +113,8 @@ export async function POST(req: NextRequest) {
         ${JSON.stringify(fields)}::jsonb,
         ${theme || 'auto'},
         ${format || 'card'},
+        ${profileType},
+        ${profileType === 'organization' ? orgId : null},
         ${expiresAt?.toISOString() || null},
         NOW()
       )
@@ -83,6 +128,8 @@ export async function POST(req: NextRequest) {
       snippetId: snippet.id,
       shareToken,
       format,
+      profileType,
+      orgId: profileType === 'organization' ? orgId : null,
     });
 
     return NextResponse.json({
@@ -94,6 +141,8 @@ export async function POST(req: NextRequest) {
         fields: snippet.fields,
         theme: snippet.theme,
         format: snippet.format,
+        profileType: snippet.profile_type,
+        orgId: snippet.org_id,
         expiresAt: snippet.expires_at,
         createdAt: snippet.created_at,
       },
@@ -141,6 +190,8 @@ export async function GET(req: NextRequest) {
       fields: row.fields,
       theme: row.theme,
       format: row.format,
+      profileType: row.profile_type || 'individual',
+      orgId: row.org_id || null,
       expiresAt: row.expires_at,
       createdAt: row.created_at,
       viewCount: parseInt(row.view_count || '0'),

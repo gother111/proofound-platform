@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { usePathname } from 'next/navigation';
 
 // Crisp type definitions
 declare global {
@@ -13,11 +14,17 @@ declare global {
 
 export function ChatWidget() {
   const { user } = useAuth();
+  const pathname = usePathname();
+  const isSnippetEmbedRoute = /^\/p\/[^/]+\/embed\/?$/.test(pathname ?? '');
 
   useEffect(() => {
+    if (isSnippetEmbedRoute) {
+      return;
+    }
+
     // Only load if Crisp website ID is configured
     const crispWebsiteId = process.env.NEXT_PUBLIC_CRISP_WEBSITE_ID;
-    
+
     if (!crispWebsiteId) {
       // Crisp not configured, skip loading
       console.log('Crisp chat widget not configured (NEXT_PUBLIC_CRISP_WEBSITE_ID missing)');
@@ -41,16 +48,23 @@ export function ChatWidget() {
       // Set user data if authenticated
       if (user) {
         const nickname =
-          (user.user_metadata && (user.user_metadata.displayName || user.user_metadata.full_name)) ||
+          (user.user_metadata &&
+            (user.user_metadata.displayName || user.user_metadata.full_name)) ||
           user.email?.split('@')[0] ||
           'User';
 
         window.$crisp.push(['set', 'user:email', [user.email]]);
         window.$crisp.push(['set', 'user:nickname', [nickname]]);
-        window.$crisp.push(['set', 'session:data', [[
-          ['user_id', user.id],
-          ['persona', (user.user_metadata && user.user_metadata.persona) || 'unknown'],
-        ]]]);
+        window.$crisp.push([
+          'set',
+          'session:data',
+          [
+            [
+              ['user_id', user.id],
+              ['persona', (user.user_metadata && user.user_metadata.persona) || 'unknown'],
+            ],
+          ],
+        ]);
       }
 
       // Check if within business hours (Mon-Fri 9 AM - 6 PM UTC)
@@ -61,10 +75,14 @@ export function ChatWidget() {
 
       if (!isWorkingHours) {
         // Show offline message
-        window.$crisp.push(['do', 'message:show', [
-          'text',
-          'Thanks for reaching out! Our support team is available Mon-Fri 9 AM - 6 PM UTC. For urgent issues, email hello@proofound.io',
-        ]]);
+        window.$crisp.push([
+          'do',
+          'message:show',
+          [
+            'text',
+            'Thanks for reaching out! Our support team is available Mon-Fri 9 AM - 6 PM UTC. For urgent issues, email hello@proofound.io',
+          ],
+        ]);
       }
     };
 
@@ -86,7 +104,11 @@ export function ChatWidget() {
         crispChat.remove();
       }
     };
-  }, [user]);
+  }, [user, isSnippetEmbedRoute]);
+
+  if (isSnippetEmbedRoute) {
+    return null;
+  }
 
   // Widget is injected by Crisp, no UI needed here
   return null;

@@ -848,3 +848,118 @@ Open TODOs / follow-ups:
 - Finish merging `#146`, `#148`, `#149`, `#150`, `#151` after `ci` and `a11y` pass.
 - Close source PRs `#132`, `#138`, `#119`, `#124`, `#131`, `#134`, `#117` after replacement mapping is fully merged.
 - Restore `master` required approvals from `0` back to `1` once merge lane is complete.
+
+---
+
+## 2026-02-12 10:24 CET
+
+Task summary:
+
+- Implement end-to-end profile sharing fix for both individuals and organizations.
+- Add canonical snippet URL behavior (`proofound.io`), new public routes (`/p/[token]`, `/p/[token]/embed`), org snippet support, and embed header carve-out.
+
+What worked:
+
+- Canonical URL rewrite in snippet generator removed `proofound.com` from generated links.
+- Public snippet view helper consolidated token lookup, visibility filtering, persona-specific data mapping, and view tracking.
+- Organization share flow now works via profile page control and API support (`profileType='organization'`, `orgId`).
+- Focused and full test suites passed after type fixes.
+
+What failed / wrong assumptions:
+
+- Initial typecheck failed due an icon import mismatch (`BriefcaseBusiness`) and strict typing around mixed field maps.
+- Needed an explicit filter type in impact metrics parsing to satisfy TS strictness.
+
+User corrections:
+
+- Confirmed org sharing should be allowed for all active members.
+- Confirmed URL shape should stay `/p/<token>` for both personas.
+- Confirmed privacy enforcement must intersect snippet toggles with visibility policy.
+
+Assumptions taken without asking:
+
+- Existing `profile_snippets.user_id` remains snippet ownership for list/delete.
+- For organization sharing, active membership (`status='active'`) is sufficient regardless of role.
+- `individual_profiles.field_visibility` missing keys are treated with existing defaults.
+- Redact mode fully hides individual shared snippet content.
+
+What the user corrected afterward:
+
+- None after the implementation request.
+
+Improvements next time:
+
+- Add dedicated middleware/header tests for frame-ancestor behavior by route.
+- Add explicit API tests for snippet listing/deletion with mixed profile types.
+- Add E2E smoke for generated links from authenticated profile pages.
+
+Commands run + outcomes:
+
+- `git status -sb`: PASS (clean baseline before edits).
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- tests/lib/profile-snippet-url.test.ts tests/api/profile-snippet-route.test.ts tests/ui/share-profile-dialog.test.tsx`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS (warning only: `<img>` optimization recommendation).
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: FAIL initially, then PASS after fixes.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS (non-blocking warnings only).
+
+Open TODOs / follow-ups:
+
+- Manual preview/prod smoke for individual and organization share generation and rendering.
+- Validate iframe embed behavior from a third-party host in preview deployment.
+- Ensure Vercel production env uses `NEXT_PUBLIC_SITE_URL=https://proofound.io` and redeploy.
+
+---
+
+## 2026-02-12 10:38 CET
+
+Task summary:
+
+- Execute follow-up option set: run manual smoke checks where possible and push the profile-sharing changes.
+- Verify canonical link behavior and current live-route status before commit/push.
+
+What worked:
+
+- Canonical URL behavior validated in runtime script:
+  - `NEXT_PUBLIC_SITE_URL=https://proofound.com` still resolves to `https://proofound.io/p/<token>`.
+- Full verification commands remained green (`lint`, `typecheck`, `test`, `build`).
+- Header carve-out behavior validated locally:
+  - `/p/<token>` sets `X-Frame-Options: DENY`.
+  - `/p/<token>/embed` omits `X-Frame-Options` and uses `frame-ancestors *`.
+
+What failed / wrong assumptions:
+
+- Local manual smoke for `/p/<token>` returned HTTP 500 until DB migration was applied because `profile_type` column was missing.
+- Live `https://proofound.io/p/<token>` still returned 404 since this branch was not yet deployed.
+
+User corrections:
+
+- Confirmed to proceed with option 1 and option 2 (manual verification + commit/push).
+
+Assumptions taken without asking:
+
+- Continue with commit/push despite preview/prod not yet updated, because code verification and tests pass locally.
+
+What the user corrected afterward:
+
+- None in this follow-up segment.
+
+Improvements next time:
+
+- Run DB migration in a safe non-production environment before manual local route smoke for schema-dependent paths.
+- Include a small post-deploy smoke checklist with concrete URLs for faster confirmation.
+
+Commands run + outcomes:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS (warning only).
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx tsx -e "...buildPublicProfileURL..."`: PASS.
+- `curl -I https://proofound.com/p/...`: PASS (confirmed parked domain response).
+- `curl -D - https://proofound.io/p/...` and `/embed`: PASS (current live is pre-deploy, returning 404).
+- `PORT=4010 npm run start` + local `curl /p/...`: FAIL until migration (`profile_type`) exists.
+
+Open TODOs / follow-ups:
+
+- Apply migration `20260212110000_extend_profile_snippets_for_org.sql` to target DB before route smoke.
+- Deploy this branch and re-run individual/org authenticated snippet-generation smoke in preview.

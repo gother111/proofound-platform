@@ -13,6 +13,7 @@ import { ImpactDashboard } from '@/components/organization/ImpactDashboard';
 import { PartnershipsManager } from '@/components/organization/PartnershipsManager';
 import { GoalsManager } from '@/components/organization/GoalsManager';
 import { OrganizationVisibilitySettings } from '@/components/organization/OrganizationVisibilitySettings';
+import { OrganizationShareControl } from '@/components/profile/OrganizationShareControl';
 
 export const dynamic = 'force-dynamic';
 
@@ -74,13 +75,20 @@ export default async function OrganizationProfilePage({
 
   return (
     <div className="max-w-3xl mx-auto space-y-8 min-h-screen bg-proofound-parchment dark:bg-background p-6">
-      <div>
-        <h1 className="text-4xl font-['Crimson_Pro'] font-semibold text-proofound-forest dark:text-primary mb-2">
-          Organization Profile
-        </h1>
-        <p className="text-proofound-charcoal/70 dark:text-muted-foreground">
-          {canEdit ? 'Update your organization information' : 'View organization information'}
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-4xl font-['Crimson_Pro'] font-semibold text-proofound-forest dark:text-primary mb-2">
+            Organization Profile
+          </h1>
+          <p className="text-proofound-charcoal/70 dark:text-muted-foreground">
+            {canEdit ? 'Update your organization information' : 'View organization information'}
+          </p>
+        </div>
+        <OrganizationShareControl
+          orgId={org.id}
+          organizationName={org.displayName}
+          organizationTagline={org.tagline}
+        />
       </div>
 
       <Card className="border-proofound-stone dark:border-border rounded-2xl">
@@ -211,11 +219,7 @@ export default async function OrganizationProfilePage({
 
       {/* Work Culture Section */}
       <div className="space-y-4">
-        <CultureEditor
-          orgId={org.id}
-          initialCulture={org.workCulture as any}
-          canEdit={canEdit}
-        />
+        <CultureEditor orgId={org.id} initialCulture={org.workCulture as any} canEdit={canEdit} />
       </div>
 
       {/* Causes Section */}
@@ -229,36 +233,23 @@ export default async function OrganizationProfilePage({
 
       {/* Impact Section */}
       <div className="space-y-4">
-        <ImpactDashboard
-          orgId={org.id}
-          orgName={org.displayName}
-          canEdit={canEdit}
-        />
+        <ImpactDashboard orgId={org.id} orgName={org.displayName} canEdit={canEdit} />
       </div>
 
       {/* Partnerships Section */}
       <div className="space-y-4">
-        <PartnershipsManager
-          orgId={org.id}
-          canEdit={canEdit}
-        />
+        <PartnershipsManager orgId={org.id} canEdit={canEdit} />
       </div>
 
       {/* Goals Section */}
       <div className="space-y-4">
-        <GoalsManager
-          orgId={org.id}
-          canEdit={canEdit}
-        />
+        <GoalsManager orgId={org.id} canEdit={canEdit} />
       </div>
 
       {/* Visibility Settings Section */}
       {canEdit && (
         <div className="space-y-4">
-          <OrganizationVisibilitySettings
-            orgId={org.id}
-            canEdit={canEdit}
-          />
+          <OrganizationVisibilitySettings orgId={org.id} canEdit={canEdit} />
         </div>
       )}
     </div>

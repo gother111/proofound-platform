@@ -11,6 +11,7 @@ import { useEffect, useState } from 'react';
 import { SUSDialog } from '@/components/surveys/SUSDialog';
 import { createClient } from '@/lib/supabase/client';
 import { apiFetch } from '@/lib/api/fetch';
+import { usePathname } from 'next/navigation';
 
 type Prompt = {
   id: string;
@@ -21,9 +22,18 @@ export function SUSPromptHost() {
   const [userId, setUserId] = useState<string | null>(null);
   const [prompt, setPrompt] = useState<Prompt | null>(null);
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const isSnippetEmbedRoute = /^\/p\/[^/]+\/embed\/?$/.test(pathname ?? '');
 
   // Fetch authenticated user id
   useEffect(() => {
+    if (isSnippetEmbedRoute) {
+      setUserId(null);
+      setPrompt(null);
+      setOpen(false);
+      return;
+    }
+
     const fetchUser = async () => {
       try {
         const supabase = createClient();
@@ -36,11 +46,11 @@ export function SUSPromptHost() {
       }
     };
     fetchUser();
-  }, []);
+  }, [isSnippetEmbedRoute]);
 
   // Fetch pending SUS prompt
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || isSnippetEmbedRoute) return;
     const fetchPrompt = async () => {
       try {
         const res = await apiFetch('/api/surveys/sus/prompt');
@@ -55,7 +65,7 @@ export function SUSPromptHost() {
       }
     };
     fetchPrompt();
-  }, [userId]);
+  }, [userId, isSnippetEmbedRoute]);
 
   const handleSkip = async () => {
     if (!prompt) {
@@ -81,7 +91,7 @@ export function SUSPromptHost() {
     setPrompt(null);
   };
 
-  if (!userId || !prompt) return null;
+  if (isSnippetEmbedRoute || !userId || !prompt) return null;
 
   return (
     <SUSDialog
@@ -94,4 +104,3 @@ export function SUSPromptHost() {
     />
   );
 }
-
