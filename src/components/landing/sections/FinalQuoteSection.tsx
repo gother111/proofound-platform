@@ -29,14 +29,22 @@ export function FinalQuoteSection({ shouldReduceMotion }: FinalQuoteSectionProps
       ref={ref}
       className="py-40 px-6 md:px-12 bg-background flex items-center justify-center relative overflow-hidden min-h-[60vh] scroll-mt-24"
     >
-      {/* Parallax Watermark */}
+      {/* Parallax decorative watermark (non-text to avoid decorative contrast violations) */}
       {reduceMotion ? (
-        <div className="absolute top-1/2 left-1/2 h-[55vw] w-[55vw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-proofound-forest/10 blur-3xl pointer-events-none" />
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none"
+          aria-hidden="true"
+        >
+          <div className="h-[26vw] w-[72vw] max-w-[1200px] rounded-full bg-japandi-charcoal/5 blur-2xl" />
+        </div>
       ) : (
         <motion.div
-          style={{ y, opacity }}
-          className="absolute top-1/2 left-1/2 h-[55vw] w-[55vw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-proofound-forest/10 blur-3xl pointer-events-none"
-        />
+          style={{ y, opacity: 0.05 }}
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none"
+          aria-hidden="true"
+        >
+          <div className="h-[26vw] w-[72vw] max-w-[1200px] rounded-full bg-japandi-charcoal blur-2xl" />
+        </motion.div>
       )}
 
       <div className="max-w-6xl mx-auto text-center relative z-10">

@@ -121,17 +121,22 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     // Check if both participants now want to reveal
     const bothAgree = updated.participantOneWantsReveal && updated.participantTwoWantsReveal;
 
-    if (bothAgree && updated.stage === 'masked') {
-      // Transition to revealed stage
-      const [revealedConversation] = await db
-        .update(conversations)
-        .set({
-          stage: 'revealed',
-          revealedAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .where(eq(conversations.id, conversationId))
-        .returning();
+    if (bothAgree) {
+      // Some environments apply reveal transition via DB trigger.
+      // If trigger already flipped stage, use that row; otherwise perform explicit transition.
+      let revealedConversation = updated;
+      if (updated.stage !== 'revealed') {
+        const [explicitlyRevealedConversation] = await db
+          .update(conversations)
+          .set({
+            stage: 'revealed',
+            revealedAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .where(eq(conversations.id, conversationId))
+          .returning();
+        revealedConversation = explicitlyRevealedConversation;
+      }
 
       // Log reveal event
       log.info('conversation.revealed', {

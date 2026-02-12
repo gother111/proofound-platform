@@ -54,6 +54,7 @@ export function PersonasSection({
       id="for-whom"
       ref={ref}
       className="py-32 px-6 md:px-12 relative bg-background overflow-hidden scroll-mt-24"
+      data-testid="landing-personas-section"
     >
       {/* Background Decoration */}
       <div className="absolute top-0 right-0 w-[60%] h-full bg-muted/30 -skew-x-12 translate-x-1/4 pointer-events-none blur-3xl" />
@@ -76,6 +77,7 @@ export function PersonasSection({
           <div className="inline-flex bg-card/50 backdrop-blur-sm rounded-full p-2 border border-border shadow-sm">
             <button
               onClick={() => setActivePersona('individual')}
+              data-testid="landing-personas-toggle-individual"
               className={`px-10 py-4 rounded-full text-base font-medium transition-colors transition-shadow duration-300 ${
                 activePersona === 'individual'
                   ? 'bg-proofound-charcoal text-white shadow-md'
@@ -86,6 +88,7 @@ export function PersonasSection({
             </button>
             <button
               onClick={() => setActivePersona('organization')}
+              data-testid="landing-personas-toggle-organization"
               className={`px-10 py-4 rounded-full text-base font-medium transition-colors transition-shadow duration-300 ${
                 activePersona === 'organization'
                   ? 'bg-proofound-charcoal text-white shadow-md'
@@ -109,7 +112,12 @@ export function PersonasSection({
             className="bg-card/60 backdrop-blur-xl rounded-[3rem] p-8 md:p-16 border border-border shadow-2xl flex flex-col md:flex-row gap-16 items-center"
           >
             <div className="flex-1 space-y-10">
-              <h3 className="text-4xl md:text-5xl font-serif text-foreground">{current.title}</h3>
+              <h3
+                className="text-4xl md:text-5xl font-serif text-foreground"
+                data-testid="landing-persona-title"
+              >
+                {current.title}
+              </h3>
 
               <div className="space-y-6">
                 {current.outcomes.map((outcome, idx) => (

@@ -28,6 +28,7 @@ node -v  # expect v20.20.0
 - Start from `.env.example` and the reference guide in `docs/ENV_VARIABLES.md`. (source: .env.example, docs/ENV_VARIABLES.md)
 - Do not commit secret env files; `.gitignore` excludes `.env` and `*.local` patterns. (source: .gitignore)
 - Use `node update-env.cjs` only to generate a placeholder `.env.local` template. It intentionally does not include real credentials.
+- Strict E2E suites load `.env.local` by default; set `STRICT_ENV_FILE` to override the env file path when needed.
 
 ## Vercel Deploy Retry Automation
 
@@ -61,11 +62,27 @@ Required env vars:
 
 - Zoom: `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`, `ZOOM_REDIRECT_URI`
 - Google: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`
+- LinkedIn: `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`
+
+Supabase social auth callback requirements (same Google and LinkedIn client IDs):
+
+- Google Supabase callback: `https://<supabase-project>.supabase.co/auth/v1/callback`
+- LinkedIn Supabase callback: `https://<supabase-project>.supabase.co/auth/v1/callback`
 
 Notes:
 
 - `ZOOM_REDIRECT_URI` and `GOOGLE_REDIRECT_URI` must match the redirect URIs configured in the provider consoles.
+- `GOOGLE_CLIENT_ID` must be the raw OAuth client id (for example `...apps.googleusercontent.com`) and must not include `http://` or `https://`.
+- For app-managed Google Meet integration, prefer `GOOGLE_REDIRECT_URI=https://<site-domain>/api/integrations/google/callback`.
+- For LinkedIn settings integration, callback must include `https://<site-domain>/api/auth/linkedin/callback`.
 - Callbacks validate an httpOnly state cookie set during connect (`zoom_oauth_state`, `google_oauth_state`). If the cookie is missing (for example, using a different domain, or blocked cookies), the callback will fail.
+
+Strict provider E2E deterministic account:
+
+- `E2E_PROVIDER_USER_ID`, `E2E_PROVIDER_USER_EMAIL`, `E2E_PROVIDER_USER_PASSWORD`
+- `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true`
+- `STRICT_PROVIDER_E2E_REQUIRE_BOTH=true`
+- Deterministic user must have both Zoom and Google connected before strict gates.
 
 ## Install Dependencies
 
