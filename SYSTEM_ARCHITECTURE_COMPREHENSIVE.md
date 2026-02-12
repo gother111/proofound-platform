@@ -39,6 +39,7 @@
 ### 1.3 MVP Scope (Current Status)
 
 **Live Features:**
+
 - ✅ Authentication (Email/Password, Google, LinkedIn OAuth)
 - ✅ Dual-persona routing (individual vs org_member)
 - ✅ Profile system (individual profiles with proof structure)
@@ -48,6 +49,7 @@
 - ✅ Expertise Atlas (skills + capabilities + evidence)
 
 **Schema Complete, Implementation Pending:**
+
 - 🟡 Verification workflow (tables exist, API/UI pending)
 - 🟡 Post-match messaging (tables exist, API/UI pending)
 - 🟡 Content moderation (tables exist, API/UI pending)
@@ -120,24 +122,28 @@
 The platform separates individuals and organizations at the routing level:
 
 **Individual Routes** (`/app/i/*`):
+
 - `/app/i/home` - Individual dashboard
 - `/app/i/profile` - Profile management
 - `/app/i/matches` - Match suggestions
 - `/app/i/expertise` - Expertise Atlas management
 
 **Organization Routes** (`/app/o/[slug]/*`):
+
 - `/app/o/[slug]/home` - Organization dashboard
 - `/app/o/[slug]/assignments` - Job/project postings
 - `/app/o/[slug]/matches` - Candidate matches
 - `/app/o/[slug]/settings` - Org settings & team management
 
 **Shared Routes**:
+
 - `/onboarding` - Initial account setup & persona selection
 - `/settings` - Global user settings (persona toggle)
 
 ### 2.3 Technology Stack Details
 
 #### Frontend Stack
+
 ```json
 {
   "framework": "Next.js 15.5.4",
@@ -152,6 +158,7 @@ The platform separates individuals and organizations at the routing level:
 ```
 
 #### Backend Stack
+
 ```json
 {
   "database": "Supabase (PostgreSQL 15)",
@@ -164,6 +171,7 @@ The platform separates individuals and organizations at the routing level:
 ```
 
 #### Infrastructure
+
 ```json
 {
   "hosting": "Vercel",
@@ -177,22 +185,26 @@ The platform separates individuals and organizations at the routing level:
 ### 2.4 Security Architecture
 
 **Authentication**: Supabase Auth with JWT sessions
+
 - Email/password with bcrypt hashing
 - OAuth (Google, LinkedIn)
 - Session cookies with HttpOnly, Secure flags
 
 **Authorization**: Row-Level Security (RLS)
+
 - Every table has RLS policies
 - Policies check `auth.uid()` against ownership/membership
 - Service role bypasses RLS for admin operations
 
 **Data Protection**:
+
 - Encrypted at rest (PostgreSQL)
 - TLS 1.3 in transit
 - Rate limiting (60 req/min IP, 120 req/min user)
 - OWASP Top-10 compliance
 
 **Privacy by Design**:
+
 - Masked data in Stage 1 messaging
 - Granular visibility controls (public/network/private)
 - GDPR-aligned data retention (180d logs, 2y audit logs)
@@ -206,20 +218,21 @@ The platform separates individuals and organizations at the routing level:
 
 The database consists of **30+ tables** organized into 8 functional domains:
 
-| Domain | Tables | Purpose |
-|--------|--------|---------|
-| **Core Profiles** | 10 tables | User profiles, organizations, members |
-| **Matching System** | 5 tables | Match preferences, assignments, results |
-| **Expertise System** | 5 tables | Skills, capabilities, evidence, endorsements |
-| **Verification System** | 4 tables | Verification workflow, appeals, org verification |
-| **Messaging System** | 3 tables | Conversations, messages, blocks |
-| **Moderation System** | 3 tables | Reports, actions, violations |
-| **Analytics** | 4 tables | Events, editorial matches, suggestions, ties |
-| **Platform** | 3 tables | Audit logs, feature flags, rate limits |
+| Domain                  | Tables    | Purpose                                          |
+| ----------------------- | --------- | ------------------------------------------------ |
+| **Core Profiles**       | 10 tables | User profiles, organizations, members            |
+| **Matching System**     | 5 tables  | Match preferences, assignments, results          |
+| **Expertise System**    | 5 tables  | Skills, capabilities, evidence, endorsements     |
+| **Verification System** | 4 tables  | Verification workflow, appeals, org verification |
+| **Messaging System**    | 3 tables  | Conversations, messages, blocks                  |
+| **Moderation System**   | 3 tables  | Reports, actions, violations                     |
+| **Analytics**           | 4 tables  | Events, editorial matches, suggestions, ties     |
+| **Platform**            | 3 tables  | Audit logs, feature flags, rate limits           |
 
 ### 3.2 Core Profile Tables
 
 #### `profiles` (Base Table)
+
 Extends Supabase `auth.users` with platform-specific fields.
 
 ```typescript
@@ -236,11 +249,13 @@ Extends Supabase `auth.users` with platform-specific fields.
 ```
 
 **Key Relationships**:
+
 - One-to-one with `individual_profiles`
 - One-to-many with `organization_members`
 - One-to-many with `skills`, `capabilities`, `matches`
 
 #### `individual_profiles`
+
 Extended profile data for individuals.
 
 ```typescript
@@ -262,6 +277,7 @@ Extended profile data for individuals.
 ```
 
 #### `organizations`
+
 Organization entities (companies, NGOs, government, etc.).
 
 ```typescript
@@ -281,6 +297,7 @@ Organization entities (companies, NGOs, government, etc.).
 ```
 
 #### `organization_members` (Join Table)
+
 Links users to organizations with roles.
 
 ```typescript
@@ -294,6 +311,7 @@ Links users to organizations with roles.
 ```
 
 #### Proof Tables (4 tables)
+
 All proof tables follow similar structure:
 
 **`impact_stories`**: Verified projects with real outcomes
@@ -302,6 +320,7 @@ All proof tables follow similar structure:
 **`volunteering`**: Service work with personal connection
 
 Common fields across all proof tables:
+
 ```typescript
 {
   id: uuid (PK)
@@ -319,6 +338,7 @@ Common fields across all proof tables:
 ### 3.3 Matching System Tables
 
 #### `matching_profiles`
+
 One-to-one with profiles; stores matching preferences.
 
 ```typescript
@@ -346,6 +366,7 @@ One-to-one with profiles; stores matching preferences.
 ```
 
 #### `skills`
+
 Many-to-one with profiles; structured skill records.
 
 ```typescript
@@ -363,6 +384,7 @@ Many-to-one with profiles; structured skill records.
 ```
 
 #### `assignments`
+
 Job/project postings from organizations.
 
 ```typescript
@@ -396,6 +418,7 @@ Job/project postings from organizations.
 ```
 
 #### `matches` (Cached Results)
+
 Stores computed match scores.
 
 ```typescript
@@ -413,6 +436,7 @@ Stores computed match scores.
 ```
 
 #### `match_interest`
+
 Tracks "Interested" actions for mutual reveal.
 
 ```typescript
@@ -430,6 +454,7 @@ Tracks "Interested" actions for mutual reveal.
 ### 3.4 Expertise System Tables
 
 #### `capabilities`
+
 Skill wrappers with privacy and verification.
 
 ```typescript
@@ -451,6 +476,7 @@ Skill wrappers with privacy and verification.
 ```
 
 #### `evidence`
+
 Proofs for capabilities.
 
 ```typescript
@@ -472,6 +498,7 @@ Proofs for capabilities.
 ```
 
 #### `skill_endorsements`
+
 Peer validation for capabilities.
 
 ```typescript
@@ -490,6 +517,7 @@ Peer validation for capabilities.
 ```
 
 #### `growth_plans`
+
 Development goals for skills.
 
 ```typescript
@@ -512,6 +540,7 @@ Development goals for skills.
 ### 3.5 Verification System Tables
 
 #### `verification_requests`
+
 Workflow for proof verification.
 
 ```typescript
@@ -534,11 +563,13 @@ Workflow for proof verification.
 ```
 
 **SLA Targets** (from PRD):
+
 - Target response: 72 hours
 - Auto-nudge: 48 hours & 7 days
 - Expiry: 14 days
 
 #### `verification_responses`
+
 Referee's response to verification request.
 
 ```typescript
@@ -556,6 +587,7 @@ Referee's response to verification request.
 ```
 
 #### `verification_appeals`
+
 User contests a declined verification.
 
 ```typescript
@@ -575,6 +607,7 @@ User contests a declined verification.
 **Human Review SLA**: ≤72 hours
 
 #### `org_verification`
+
 Organization domain and entity checks.
 
 ```typescript
@@ -598,6 +631,7 @@ Organization domain and entity checks.
 ### 3.6 Messaging System Tables
 
 #### `conversations`
+
 Chat threads between matched users.
 
 ```typescript
@@ -615,10 +649,12 @@ Chat threads between matched users.
 ```
 
 **Staged Identity Reveal**:
+
 - **Stage 1** (Initial): Masked names, generic titles, basic info
 - **Stage 2** (After mutual accept): Full names, organization, contact details
 
 #### `messages`
+
 Individual messages in conversations.
 
 ```typescript
@@ -638,6 +674,7 @@ Individual messages in conversations.
 **Attachment Rules** (PRD): Links + PDF ≤5 MB only
 
 #### `blocked_users`
+
 Prevent unwanted communication.
 
 ```typescript
@@ -654,6 +691,7 @@ Prevent unwanted communication.
 ### 3.7 Moderation & Safety Tables
 
 #### `content_reports`
+
 User and AI-flagged content.
 
 ```typescript
@@ -675,10 +713,12 @@ User and AI-flagged content.
 ```
 
 **Political Content Policy** (PRD):
+
 - ✅ Allowed: Factual role descriptions (e.g., "Policy analyst at Ministry X")
 - ❌ Disallowed: Advocacy, proselytizing, "Vote for X", promotional campaign content
 
 #### `moderation_actions`
+
 Actions taken on reported content.
 
 ```typescript
@@ -695,6 +735,7 @@ Actions taken on reported content.
 ```
 
 #### `user_violations`
+
 Violation history per user.
 
 ```typescript
@@ -712,6 +753,7 @@ Violation history per user.
 ```
 
 **Violation Escalation** (PRD):
+
 1. First violation → **Warning**
 2. Second critical violation → **Timed suspension**
 3. Repeated critical violations → **Permanent ban**
@@ -719,6 +761,7 @@ Violation history per user.
 ### 3.8 Analytics & Supporting Tables
 
 #### `analytics_events`
+
 Track key user actions.
 
 ```typescript
@@ -738,6 +781,7 @@ Track key user actions.
 ```
 
 **Core Events** (from PRD):
+
 - `signed_up`, `created_profile`, `profile_ready_for_match`
 - `org_verified`, `assignment_published`
 - `match_suggested`, `match_viewed`, `match_accepted`, `match_declined(reason)`
@@ -746,6 +790,7 @@ Track key user actions.
 - `content_reported`
 
 #### `editorial_matches`
+
 Curated matches for cold-start.
 
 ```typescript
@@ -763,6 +808,7 @@ Curated matches for cold-start.
 ```
 
 #### `match_suggestions`
+
 Improvement tips for users.
 
 ```typescript
@@ -782,6 +828,7 @@ Improvement tips for users.
 **Example** (from PRD): "Add proof X to increase score by ~8-12%"
 
 #### `active_ties`
+
 Cluster snapshot for algorithms (private).
 
 ```typescript
@@ -803,46 +850,50 @@ Cluster snapshot for algorithms (private).
 ### 3.9 Platform Tables
 
 #### `audit_logs`
+
 Tracks all significant actions.
 
 ```typescript
 {
-  id: bigserial (PK)
-  actorId: uuid (nullable) // null for system actions
-  orgId: uuid (nullable) // null for non-org actions
-  action: text
-  targetType: text (nullable)
-  targetId: text (nullable)
-  meta: jsonb
-  createdAt: timestamp
+  id: bigserial(PK);
+  actorId: uuid(nullable); // null for system actions
+  orgId: uuid(nullable); // null for non-org actions
+  action: text;
+  targetType: text(nullable);
+  targetId: text(nullable);
+  meta: jsonb;
+  createdAt: timestamp;
 }
 ```
 
 **Retention** (PRD): 2 years
 
 #### `feature_flags`
+
 Toggle features for gradual rollout.
 
 ```typescript
 {
-  key: text (PK)
-  enabled: boolean
-  audience: jsonb // Rules for targeting (e.g., {userIds: [...], orgs: [...]})
+  key: text(PK);
+  enabled: boolean;
+  audience: jsonb; // Rules for targeting (e.g., {userIds: [...], orgs: [...]})
 }
 ```
 
 #### `rate_limits`
+
 Track rate limiting per IP/route.
 
 ```typescript
 {
-  id: text (PK) // Composite of IP + route
-  attempts: bigserial
-  resetAt: timestamp
+  id: text(PK); // Composite of IP + route
+  attempts: bigserial;
+  resetAt: timestamp;
 }
 ```
 
 **Limits** (PRD):
+
 - 60 req/min per IP
 - 120 req/min per user token (burst 2×)
 - Stricter for auth/verification endpoints
@@ -854,11 +905,13 @@ Track rate limiting per IP/route.
 ### 4.1 Authentication Flow
 
 **Supported Methods**:
+
 1. Email/Password (Supabase Auth)
 2. OAuth (Google, LinkedIn)
 3. Future: Apple, GitHub, Facebook, MFA, SSO (SAML/OIDC)
 
 **Sign-Up Flow**:
+
 ```
 1. User enters email/password or clicks OAuth button
 2. Supabase Auth creates auth.users record
@@ -870,6 +923,7 @@ Track rate limiting per IP/route.
 ```
 
 **Sign-In Flow**:
+
 ```
 1. User authenticates via Supabase Auth
 2. Server queries profiles table for persona
@@ -880,12 +934,13 @@ Track rate limiting per IP/route.
 5. If persona = 'unknown' → redirect to /onboarding
 ```
 
-**Implementation**: `/Users/yuriibakurov/proofound/src/components/auth/SignIn.tsx:41-76`
+**Implementation**: `./src/components/auth/SignIn.tsx:41-76`
 
 ### 4.2 Authorization Model
 
 **Row-Level Security (RLS)**:
 Every table has RLS policies that check:
+
 - `auth.uid()` - Current authenticated user ID
 - Ownership (e.g., `profile_id = auth.uid()`)
 - Membership (via JOIN with `organization_members`)
@@ -928,13 +983,14 @@ USING (
 
 The `persona` field on `profiles` table determines routing and UI:
 
-| Persona | Routes | Capabilities |
-|---------|--------|-------------|
-| `individual` | `/app/i/*` | Create profile, get matched, message after mutual accept |
-| `org_member` | `/app/o/[slug]/*` | Create assignments, review matches, invite team |
-| `unknown` | `/onboarding` | Must select persona before accessing platform |
+| Persona      | Routes            | Capabilities                                             |
+| ------------ | ----------------- | -------------------------------------------------------- |
+| `individual` | `/app/i/*`        | Create profile, get matched, message after mutual accept |
+| `org_member` | `/app/o/[slug]/*` | Create assignments, review matches, invite team          |
+| `unknown`    | `/onboarding`     | Must select persona before accessing platform            |
 
 **Persona Assignment**:
+
 - Set during onboarding flow (`/onboarding`)
 - Can be toggled in settings (`/settings`)
 - One user can have BOTH personas (individual + org_member) via multiple profiles/memberships
@@ -943,12 +999,12 @@ The `persona` field on `profiles` table determines routing and UI:
 
 Within organizations, users have one of four roles:
 
-| Role | Permissions |
-|------|-------------|
-| `owner` | Full control: delete org, transfer ownership, manage all |
-| `admin` | Manage members, assignments, settings (cannot delete org) |
-| `member` | Create assignments, view matches, message candidates |
-| `viewer` | Read-only access to org dashboard |
+| Role     | Permissions                                               |
+| -------- | --------------------------------------------------------- |
+| `owner`  | Full control: delete org, transfer ownership, manage all  |
+| `admin`  | Manage members, assignments, settings (cannot delete org) |
+| `member` | Create assignments, view matches, message candidates      |
+| `viewer` | Read-only access to org dashboard                         |
 
 **Implementation**: `organization_members.role` enum
 
@@ -956,15 +1012,16 @@ Within organizations, users have one of four roles:
 
 Individual profile data has granular visibility controls:
 
-| Level | Visible To |
-|-------|-----------|
-| `public` | Everyone (search engines, non-logged-in users) |
-| `network` | Logged-in users on platform (default) |
-| `private` | Only the user |
+| Level     | Visible To                                     |
+| --------- | ---------------------------------------------- |
+| `public`  | Everyone (search engines, non-logged-in users) |
+| `network` | Logged-in users on platform (default)          |
+| `private` | Only the user                                  |
 
 **Implementation**: `individual_profiles.visibility` enum
 
 Capabilities have separate privacy levels:
+
 - `only_me` - Private development tracking
 - `team` - Share with org members
 - `organization` - Visible to entire organization
@@ -977,6 +1034,7 @@ Capabilities have separate privacy levels:
 ### 5.1 Individual User Journey
 
 #### A. Onboarding Flow
+
 ```
 1. Sign up (email/password or OAuth)
    ├─> Create auth.users record
@@ -1001,6 +1059,7 @@ Capabilities have separate privacy levels:
 ```
 
 #### B. Matching Flow
+
 ```
 1. User toggles "Available for Match" on dashboard
    └─> Update matching_profiles with preferences
@@ -1032,6 +1091,7 @@ Capabilities have separate privacy levels:
 ```
 
 #### C. Verification Flow (Individual Requests Verification)
+
 ```
 1. User adds experience/education/volunteering
    └─> Record created with verified: false
@@ -1070,15 +1130,17 @@ Capabilities have separate privacy levels:
 ```
 
 **Auto-Nudge System**:
+
 - **48 hours**: First reminder email if status = 'pending'
 - **7 days**: Second reminder email if status = 'pending'
 - **14 days**: Expire request if status = 'pending'
 
-**Implementation Guide**: `/Users/yuriibakurov/proofound/IMPLEMENTATION_GUIDE_MVP_SYSTEMS.md:1-200`
+**Implementation Guide**: `./IMPLEMENTATION_GUIDE_MVP_SYSTEMS.md:1-200`
 
 ### 5.2 Organization User Journey
 
 #### A. Onboarding Flow
+
 ```
 1. Sign up (email/password or OAuth)
    └─> Same as individual (auth.users + profiles created)
@@ -1111,6 +1173,7 @@ Capabilities have separate privacy levels:
 ```
 
 #### B. Assignment Creation Flow
+
 ```
 1. User navigates to /app/o/{slug}/assignments/new
    └─> See assignment creation form
@@ -1143,6 +1206,7 @@ Capabilities have separate privacy levels:
 ```
 
 **Default Matching Weights** (PRD):
+
 - Mission/Values: **30%**
 - Core Expertise: **40%**
 - Tools: **10%**
@@ -1152,6 +1216,7 @@ Capabilities have separate privacy levels:
 Adjustable ±15pp by organization.
 
 #### C. Reviewing Matches Flow
+
 ```
 1. Navigate to /app/o/{slug}/assignments/[id]/matches
    └─> See top 5-10 matches (configurable)
@@ -1180,6 +1245,7 @@ Adjustable ±15pp by organization.
 ### 5.3 Messaging Flow (Post-Match)
 
 #### Stage 1: Masked Basics
+
 ```
 Participant One sees:          Participant Two sees:
 - "Experienced Developer"      - "Senior Growth Lead at Mid-size NGO"
@@ -1189,17 +1255,20 @@ Participant One sees:          Participant Two sees:
 ```
 
 Both can:
+
 - Send text messages
 - Share links
 - Attach PDFs (≤5 MB)
 
 Neither sees:
+
 - Full names
 - Organization names
 - Email addresses
 - Phone numbers
 
 #### Stage 2: Full Reveal
+
 ```
 Triggered by: Mutual decision to advance conversation
 
@@ -1215,6 +1284,7 @@ Participant One sees:          Participant Two sees:
 ### 5.4 Moderation Flow
 
 #### User Reports Content
+
 ```
 1. User sees inappropriate content
    └─> Clicks "Report" button
@@ -1237,6 +1307,7 @@ Participant One sees:          Participant Two sees:
 ```
 
 #### Moderator Reviews Report
+
 ```
 1. Moderator logs into moderation queue
    └─> /admin/moderation (admin-only route)
@@ -1261,6 +1332,7 @@ Participant One sees:          Participant Two sees:
 ```
 
 **Violation Escalation** (PRD):
+
 1. First violation → **Warning**
 2. Second critical violation → **Timed suspension** (e.g., 7 days)
 3. Repeated critical violations → **Permanent ban**
@@ -1269,25 +1341,26 @@ Participant One sees:          Participant Two sees:
 
 **Key Events to Track** (PRD):
 
-| Event | Trigger | Properties |
-|-------|---------|-----------|
-| `signed_up` | User completes registration | {persona, method: 'email' \| 'oauth'} |
-| `created_profile` | Profile created | {persona, profileId} |
-| `profile_ready_for_match` | Profile meets matching criteria | {profileId, completionScore} |
-| `org_verified` | Organization verification approved | {orgId, verificationType} |
-| `assignment_published` | Assignment status → 'active' | {assignmentId, orgId} |
-| `match_suggested` | Match computed and shown | {matchId, score} |
-| `match_viewed` | User views match details | {matchId} |
-| `match_accepted` | User expresses interest | {matchId, actorType: 'individual' \| 'org'} |
-| `match_declined` | User declines match | {matchId, reason} |
-| `message_sent` | Message sent in conversation | {conversationId, stage} |
-| `verification_requested` | User requests verification | {claimType, claimId} |
-| `verification_completed` | Verifier responds | {requestId, status: 'accepted' \| 'declined' \| 'cannot_verify'} |
-| `content_reported` | User reports content | {contentType, category} |
+| Event                     | Trigger                            | Properties                                                       |
+| ------------------------- | ---------------------------------- | ---------------------------------------------------------------- |
+| `signed_up`               | User completes registration        | {persona, method: 'email' \| 'oauth'}                            |
+| `created_profile`         | Profile created                    | {persona, profileId}                                             |
+| `profile_ready_for_match` | Profile meets matching criteria    | {profileId, completionScore}                                     |
+| `org_verified`            | Organization verification approved | {orgId, verificationType}                                        |
+| `assignment_published`    | Assignment status → 'active'       | {assignmentId, orgId}                                            |
+| `match_suggested`         | Match computed and shown           | {matchId, score}                                                 |
+| `match_viewed`            | User views match details           | {matchId}                                                        |
+| `match_accepted`          | User expresses interest            | {matchId, actorType: 'individual' \| 'org'}                      |
+| `match_declined`          | User declines match                | {matchId, reason}                                                |
+| `message_sent`            | Message sent in conversation       | {conversationId, stage}                                          |
+| `verification_requested`  | User requests verification         | {claimType, claimId}                                             |
+| `verification_completed`  | Verifier responds                  | {requestId, status: 'accepted' \| 'declined' \| 'cannot_verify'} |
+| `content_reported`        | User reports content               | {contentType, category}                                          |
 
 **Storage**: All events stored in `analytics_events` table.
 
 **Targets** (90-day goals, PRD):
+
 - Profile completion ≥60% within D+1
 - First suggestion <24h
 - Match acceptance ≥20%
@@ -1302,7 +1375,7 @@ Participant One sees:          Participant Two sees:
 ### 6.1 Directory Overview
 
 ```
-/Users/yuriibakurov/proofound/
+./
 ├── src/
 │   ├── actions/           # Server Actions (mutations)
 │   ├── app/               # Next.js App Router (pages + API)
@@ -1319,6 +1392,7 @@ Participant One sees:          Participant Two sees:
 ### 6.2 `/src/app` - Routes & Pages
 
 #### Authentication Routes
+
 ```
 /src/app/
 ├── page.tsx                    # Landing page (marketing)
@@ -1335,6 +1409,7 @@ Participant One sees:          Participant Two sees:
 ```
 
 #### Individual Routes (`/app/i/*`)
+
 ```
 /src/app/i/
 ├── home/
@@ -1354,6 +1429,7 @@ Participant One sees:          Participant Two sees:
 ```
 
 #### Organization Routes (`/app/o/[slug]/*`)
+
 ```
 /src/app/o/[slug]/
 ├── home/
@@ -1379,6 +1455,7 @@ Participant One sees:          Participant Two sees:
 ```
 
 #### Shared Routes
+
 ```
 /src/app/
 ├── settings/
@@ -1529,137 +1606,137 @@ Participant One sees:          Participant Two sees:
 
 ### 7.1 Authentication & Accounts [MVP]
 
-| Feature | Schema | API | UI | Status |
-|---------|--------|-----|----|---------|
-| Email/password auth | ✅ | ✅ | ✅ | **Complete** |
-| Google OAuth | ✅ | ✅ | ✅ | **Complete** |
-| LinkedIn OAuth | ✅ | ✅ | ✅ | **Complete** |
-| Sign-out | ✅ | ✅ | ✅ | **Complete** |
-| Password reset | ✅ | ✅ | ✅ | **Complete** |
-| Session management | ✅ | ✅ | ✅ | **Complete** |
-| Device recognition | ✅ | ⚠️ | ❌ | Partial |
-| Apple OAuth | ❌ | ❌ | ❌ | Post-MVP |
-| GitHub OAuth | ❌ | ❌ | ❌ | Post-MVP |
-| MFA | ❌ | ❌ | ❌ | Post-MVP |
-| SSO (SAML/OIDC) | ❌ | ❌ | ❌ | Post-MVP |
+| Feature             | Schema | API | UI  | Status       |
+| ------------------- | ------ | --- | --- | ------------ |
+| Email/password auth | ✅     | ✅  | ✅  | **Complete** |
+| Google OAuth        | ✅     | ✅  | ✅  | **Complete** |
+| LinkedIn OAuth      | ✅     | ✅  | ✅  | **Complete** |
+| Sign-out            | ✅     | ✅  | ✅  | **Complete** |
+| Password reset      | ✅     | ✅  | ✅  | **Complete** |
+| Session management  | ✅     | ✅  | ✅  | **Complete** |
+| Device recognition  | ✅     | ⚠️  | ❌  | Partial      |
+| Apple OAuth         | ❌     | ❌  | ❌  | Post-MVP     |
+| GitHub OAuth        | ❌     | ❌  | ❌  | Post-MVP     |
+| MFA                 | ❌     | ❌  | ❌  | Post-MVP     |
+| SSO (SAML/OIDC)     | ❌     | ❌  | ❌  | Post-MVP     |
 
 ### 7.2 Profiles (Individual) [MVP]
 
-| Feature | Schema | API | UI | Status |
-|---------|--------|-----|----|---------|
-| Basic profile fields | ✅ | ✅ | ✅ | **Complete** |
-| Mission/Vision/Values | ✅ | ✅ | ✅ | **Complete** |
-| Causes | ✅ | ✅ | ✅ | **Complete** |
-| Expertise Atlas (skills) | ✅ | ✅ | ✅ | **Complete** |
-| Impact Stories | ✅ | ✅ | ⚠️ | Partial |
-| Experiences | ✅ | ✅ | ⚠️ | Partial |
-| Education | ✅ | ✅ | ⚠️ | Partial |
-| Volunteering | ✅ | ✅ | ⚠️ | Partial |
-| Avatar upload | ✅ | ✅ | ✅ | **Complete** |
-| Privacy controls | ✅ | ⚠️ | ⚠️ | Partial |
-| Profile preview (WYSIWYG) | ❌ | ❌ | ⚠️ | Partial |
-| Rich portfolios | ❌ | ❌ | ❌ | Post-MVP |
+| Feature                   | Schema | API | UI  | Status       |
+| ------------------------- | ------ | --- | --- | ------------ |
+| Basic profile fields      | ✅     | ✅  | ✅  | **Complete** |
+| Mission/Vision/Values     | ✅     | ✅  | ✅  | **Complete** |
+| Causes                    | ✅     | ✅  | ✅  | **Complete** |
+| Expertise Atlas (skills)  | ✅     | ✅  | ✅  | **Complete** |
+| Impact Stories            | ✅     | ✅  | ⚠️  | Partial      |
+| Experiences               | ✅     | ✅  | ⚠️  | Partial      |
+| Education                 | ✅     | ✅  | ⚠️  | Partial      |
+| Volunteering              | ✅     | ✅  | ⚠️  | Partial      |
+| Avatar upload             | ✅     | ✅  | ✅  | **Complete** |
+| Privacy controls          | ✅     | ⚠️  | ⚠️  | Partial      |
+| Profile preview (WYSIWYG) | ❌     | ❌  | ⚠️  | Partial      |
+| Rich portfolios           | ❌     | ❌  | ❌  | Post-MVP     |
 
 ### 7.3 Organizations & Assignments [MVP]
 
-| Feature | Schema | API | UI | Status |
-|---------|--------|-----|----|---------|
-| Create organization | ✅ | ✅ | ✅ | **Complete** |
-| Invite team members | ✅ | ✅ | ✅ | **Complete** |
-| Role management | ✅ | ✅ | ✅ | **Complete** |
-| Create assignments | ✅ | ✅ | ✅ | **Complete** |
-| Draft/Publish/Close | ✅ | ✅ | ✅ | **Complete** |
-| Masked budgets | ✅ | ✅ | ✅ | **Complete** |
-| Proof requirements | ✅ | ⚠️ | ⚠️ | Partial |
-| Edit history | ✅ | ❌ | ❌ | Not Started |
-| Audit log | ✅ | ⚠️ | ❌ | Partial |
-| Contracts/milestones | ❌ | ❌ | ❌ | Post-MVP |
+| Feature              | Schema | API | UI  | Status       |
+| -------------------- | ------ | --- | --- | ------------ |
+| Create organization  | ✅     | ✅  | ✅  | **Complete** |
+| Invite team members  | ✅     | ✅  | ✅  | **Complete** |
+| Role management      | ✅     | ✅  | ✅  | **Complete** |
+| Create assignments   | ✅     | ✅  | ✅  | **Complete** |
+| Draft/Publish/Close  | ✅     | ✅  | ✅  | **Complete** |
+| Masked budgets       | ✅     | ✅  | ✅  | **Complete** |
+| Proof requirements   | ✅     | ⚠️  | ⚠️  | Partial      |
+| Edit history         | ✅     | ❌  | ❌  | Not Started  |
+| Audit log            | ✅     | ⚠️  | ❌  | Partial      |
+| Contracts/milestones | ❌     | ❌  | ❌  | Post-MVP     |
 
 ### 7.4 Matching & Recommendations [MVP]
 
-| Feature | Schema | API | UI | Status |
-|---------|--------|-----|----|---------|
-| Matching algorithm | ✅ | ✅ | ⚠️ | **Mostly Complete** |
-| Multi-factor scoring | ✅ | ✅ | ✅ | **Complete** |
-| Explainability | ✅ | ✅ | ✅ | **Complete** |
-| Improvement suggestions | ✅ | ⚠️ | ⚠️ | Partial |
-| Weight adjustments | ✅ | ✅ | ✅ | **Complete** |
-| Weight guardrails (±15pp) | ✅ | ✅ | ⚠️ | Partial |
-| Top 5-10 results | ✅ | ✅ | ✅ | **Complete** |
-| Editorial matches | ✅ | ❌ | ❌ | Not Started |
-| Near matches | ✅ | ❌ | ❌ | Not Started |
-| Refresh schedules | ❌ | ❌ | ❌ | Not Started |
-| Adaptive weights | ❌ | ❌ | ❌ | Post-MVP |
-| Team/role matching | ❌ | ❌ | ❌ | Post-MVP |
+| Feature                   | Schema | API | UI  | Status              |
+| ------------------------- | ------ | --- | --- | ------------------- |
+| Matching algorithm        | ✅     | ✅  | ⚠️  | **Mostly Complete** |
+| Multi-factor scoring      | ✅     | ✅  | ✅  | **Complete**        |
+| Explainability            | ✅     | ✅  | ✅  | **Complete**        |
+| Improvement suggestions   | ✅     | ⚠️  | ⚠️  | Partial             |
+| Weight adjustments        | ✅     | ✅  | ✅  | **Complete**        |
+| Weight guardrails (±15pp) | ✅     | ✅  | ⚠️  | Partial             |
+| Top 5-10 results          | ✅     | ✅  | ✅  | **Complete**        |
+| Editorial matches         | ✅     | ❌  | ❌  | Not Started         |
+| Near matches              | ✅     | ❌  | ❌  | Not Started         |
+| Refresh schedules         | ❌     | ❌  | ❌  | Not Started         |
+| Adaptive weights          | ❌     | ❌  | ❌  | Post-MVP            |
+| Team/role matching        | ❌     | ❌  | ❌  | Post-MVP            |
 
 ### 7.5 Verification v1.0 [MVP]
 
-| Feature | Schema | API | UI | Status |
-|---------|--------|-----|----|---------|
-| Verification requests | ✅ | ❌ | ❌ | **Schema Only** |
-| Email workflow | ✅ | ❌ | ❌ | Not Started |
-| Verifier landing page | ✅ | ❌ | ❌ | Not Started |
-| Accept/Decline/Cannot Verify | ✅ | ❌ | ❌ | Not Started |
-| Auto-nudge (48h, 7d) | ✅ | ❌ | ❌ | Not Started |
-| Expiry (14d) | ✅ | ❌ | ❌ | Not Started |
-| Appeals | ✅ | ❌ | ❌ | Not Started |
-| Domain verification (orgs) | ✅ | ❌ | ⚠️ | Partial |
-| Seniority weighting | ✅ | ❌ | ❌ | Not Started |
-| Multi-ref trees | ❌ | ❌ | ❌ | Post-MVP |
-| Registry lookups | ❌ | ❌ | ❌ | Post-MVP |
+| Feature                      | Schema | API | UI  | Status          |
+| ---------------------------- | ------ | --- | --- | --------------- |
+| Verification requests        | ✅     | ❌  | ❌  | **Schema Only** |
+| Email workflow               | ✅     | ❌  | ❌  | Not Started     |
+| Verifier landing page        | ✅     | ❌  | ❌  | Not Started     |
+| Accept/Decline/Cannot Verify | ✅     | ❌  | ❌  | Not Started     |
+| Auto-nudge (48h, 7d)         | ✅     | ❌  | ❌  | Not Started     |
+| Expiry (14d)                 | ✅     | ❌  | ❌  | Not Started     |
+| Appeals                      | ✅     | ❌  | ❌  | Not Started     |
+| Domain verification (orgs)   | ✅     | ❌  | ⚠️  | Partial         |
+| Seniority weighting          | ✅     | ❌  | ❌  | Not Started     |
+| Multi-ref trees              | ❌     | ❌  | ❌  | Post-MVP        |
+| Registry lookups             | ❌     | ❌  | ❌  | Post-MVP        |
 
 ### 7.6 Cluster Snapshot v1.0 [MVP]
 
-| Feature | Schema | API | UI | Status |
-|---------|--------|-----|----|---------|
-| Active ties tracking | ✅ | ❌ | ❌ | **Schema Only** |
-| Legacy ties (>60d) | ✅ | ❌ | ❌ | Not Started |
-| Algorithm use | ❌ | ❌ | ❌ | Not Started |
-| Personal UI | ❌ | ❌ | ❌ | Post-MVP |
-| Graph analytics | ❌ | ❌ | ❌ | Post-MVP |
+| Feature              | Schema | API | UI  | Status          |
+| -------------------- | ------ | --- | --- | --------------- |
+| Active ties tracking | ✅     | ❌  | ❌  | **Schema Only** |
+| Legacy ties (>60d)   | ✅     | ❌  | ❌  | Not Started     |
+| Algorithm use        | ❌     | ❌  | ❌  | Not Started     |
+| Personal UI          | ❌     | ❌  | ❌  | Post-MVP        |
+| Graph analytics      | ❌     | ❌  | ❌  | Post-MVP        |
 
 ### 7.7 Messaging (Post-Match) [MVP]
 
-| Feature | Schema | API | UI | Status |
-|---------|--------|-----|----|---------|
-| Conversations | ✅ | ❌ | ❌ | **Schema Only** |
-| Messages | ✅ | ❌ | ❌ | Not Started |
-| Stage 1 (masked) | ✅ | ❌ | ❌ | Not Started |
-| Stage 2 (reveal) | ✅ | ❌ | ❌ | Not Started |
-| Link attachments | ✅ | ❌ | ❌ | Not Started |
-| PDF attachments (≤5MB) | ✅ | ❌ | ❌ | Not Started |
-| Block users | ✅ | ❌ | ❌ | Not Started |
-| Report messages | ✅ | ❌ | ❌ | Not Started |
-| Voice/video | ❌ | ❌ | ❌ | Post-MVP |
-| Scheduling | ❌ | ❌ | ❌ | Post-MVP |
+| Feature                | Schema | API | UI  | Status          |
+| ---------------------- | ------ | --- | --- | --------------- |
+| Conversations          | ✅     | ❌  | ❌  | **Schema Only** |
+| Messages               | ✅     | ❌  | ❌  | Not Started     |
+| Stage 1 (masked)       | ✅     | ❌  | ❌  | Not Started     |
+| Stage 2 (reveal)       | ✅     | ❌  | ❌  | Not Started     |
+| Link attachments       | ✅     | ❌  | ❌  | Not Started     |
+| PDF attachments (≤5MB) | ✅     | ❌  | ❌  | Not Started     |
+| Block users            | ✅     | ❌  | ❌  | Not Started     |
+| Report messages        | ✅     | ❌  | ❌  | Not Started     |
+| Voice/video            | ❌     | ❌  | ❌  | Post-MVP        |
+| Scheduling             | ❌     | ❌  | ❌  | Post-MVP        |
 
 ### 7.8 Admin & Moderation [MVP]
 
-| Feature | Schema | API | UI | Status |
-|---------|--------|-----|----|---------|
-| Content reports | ✅ | ❌ | ❌ | **Schema Only** |
-| User reports | ✅ | ❌ | ❌ | Not Started |
-| AI flagging | ✅ | ❌ | ❌ | Not Started |
-| Moderation queue | ✅ | ❌ | ❌ | Not Started |
-| Moderation actions | ✅ | ❌ | ❌ | Not Started |
-| Violation history | ✅ | ❌ | ❌ | Not Started |
-| Warning system | ✅ | ❌ | ❌ | Not Started |
-| Suspensions | ✅ | ❌ | ❌ | Not Started |
-| Political content policy | ✅ | ❌ | ❌ | Not Started |
-| Appeals portal | ❌ | ❌ | ❌ | Post-MVP |
-| Transparency reports | ❌ | ❌ | ❌ | Post-MVP |
+| Feature                  | Schema | API | UI  | Status          |
+| ------------------------ | ------ | --- | --- | --------------- |
+| Content reports          | ✅     | ❌  | ❌  | **Schema Only** |
+| User reports             | ✅     | ❌  | ❌  | Not Started     |
+| AI flagging              | ✅     | ❌  | ❌  | Not Started     |
+| Moderation queue         | ✅     | ❌  | ❌  | Not Started     |
+| Moderation actions       | ✅     | ❌  | ❌  | Not Started     |
+| Violation history        | ✅     | ❌  | ❌  | Not Started     |
+| Warning system           | ✅     | ❌  | ❌  | Not Started     |
+| Suspensions              | ✅     | ❌  | ❌  | Not Started     |
+| Political content policy | ✅     | ❌  | ❌  | Not Started     |
+| Appeals portal           | ❌     | ❌  | ❌  | Post-MVP        |
+| Transparency reports     | ❌     | ❌  | ❌  | Post-MVP        |
 
 ### 7.9 Analytics & Metrics [MVP]
 
-| Feature | Schema | API | UI | Status |
-|---------|--------|-----|----|---------|
-| Event tracking table | ✅ | ❌ | ❌ | **Schema Only** |
-| Core events | ✅ | ⚠️ | ❌ | Partial |
-| Admin dashboard | ❌ | ❌ | ❌ | Not Started |
-| North Star metrics | ❌ | ❌ | ❌ | Not Started |
-| Time-to-first-match | ❌ | ❌ | ❌ | Not Started |
-| Profile readiness | ❌ | ❌ | ❌ | Not Started |
-| Match acceptance rate | ❌ | ❌ | ❌ | Not Started |
+| Feature               | Schema | API | UI  | Status          |
+| --------------------- | ------ | --- | --- | --------------- |
+| Event tracking table  | ✅     | ❌  | ❌  | **Schema Only** |
+| Core events           | ✅     | ⚠️  | ❌  | Partial         |
+| Admin dashboard       | ❌     | ❌  | ❌  | Not Started     |
+| North Star metrics    | ❌     | ❌  | ❌  | Not Started     |
+| Time-to-first-match   | ❌     | ❌  | ❌  | Not Started     |
+| Profile readiness     | ❌     | ❌  | ❌  | Not Started     |
+| Match acceptance rate | ❌     | ❌  | ❌  | Not Started     |
 
 ---
 
@@ -1668,11 +1745,13 @@ Participant One sees:          Participant Two sees:
 ### 8.1 Supabase Integration
 
 **Services Used**:
+
 - **Auth**: Email/password, OAuth (Google, LinkedIn)
 - **Database**: PostgreSQL 15 with RLS
 - **Storage**: (Future) File uploads for evidence/avatars
 
 **Configuration**: `.env.local`
+
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
@@ -1680,6 +1759,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
 
 **Client Factory**: `/src/lib/supabase/client.ts`
+
 ```typescript
 import { createBrowserClient } from '@supabase/ssr';
 
@@ -1692,6 +1772,7 @@ export function createClient() {
 ```
 
 **Server Client**: `/src/lib/supabase/server.ts`
+
 ```typescript
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
@@ -1717,12 +1798,14 @@ export async function createServerSupabaseClient() {
 **Purpose**: Transactional emails (verification requests, notifications)
 
 **Configuration**: `.env.local`
+
 ```bash
 RESEND_API_KEY=re_your_api_key
-RESEND_FROM_EMAIL=noreply@proofound.com
+RESEND_FROM_EMAIL=noreply@proofound.io
 ```
 
 **Usage**: `/src/lib/verification/email.ts`
+
 ```typescript
 import { Resend } from 'resend';
 
@@ -1763,12 +1846,14 @@ export async function sendVerificationEmail({
 **Configuration**: Automatic (via Vercel deployment)
 
 **Metrics Tracked**:
+
 - LCP (Largest Contentful Paint)
 - INP (Interaction to Next Paint)
 - CLS (Cumulative Layout Shift)
 - TTFB (Time to First Byte)
 
 **Targets** (PRD):
+
 - LCP < 2.5s (P75)
 - INP < 200ms (P75)
 - CLS < 0.1
@@ -1778,6 +1863,7 @@ export async function sendVerificationEmail({
 **Purpose**: Type-safe database queries
 
 **Configuration**: `/drizzle.config.ts`
+
 ```typescript
 import type { Config } from 'drizzle-kit';
 
@@ -1792,16 +1878,19 @@ export default {
 ```
 
 **Generate Migration**:
+
 ```bash
 npx drizzle-kit generate:pg
 ```
 
 **Apply Migration**:
+
 ```bash
 npx drizzle-kit push:pg
 ```
 
 **Query Example**:
+
 ```typescript
 import { db } from '@/db';
 import { profiles, individualProfiles } from '@/db/schema';
@@ -1818,14 +1907,14 @@ const profile = await db
 
 ### 8.5 Future Integrations (Post-MVP)
 
-| Service | Purpose | Status |
-|---------|---------|--------|
-| Stripe | Payment processing | Planned |
-| Twilio/Vonage | SMS notifications | Planned |
-| Daily/Vonage | Video calls | Planned |
-| Unleash/Flipt | Feature flags | Planned |
-| Sentry | Error tracking | Planned |
-| LogRocket | Session replay | Planned |
+| Service       | Purpose            | Status  |
+| ------------- | ------------------ | ------- |
+| Stripe        | Payment processing | Planned |
+| Twilio/Vonage | SMS notifications  | Planned |
+| Daily/Vonage  | Video calls        | Planned |
+| Unleash/Flipt | Feature flags      | Planned |
+| Sentry        | Error tracking     | Planned |
+| LogRocket     | Session replay     | Planned |
 
 ---
 
@@ -1836,6 +1925,7 @@ const profile = await db
 **Location**: `/src/lib/matching/algorithm.ts`
 
 **High-Level Flow**:
+
 ```
 1. Query active assignments (status: 'active')
 2. Query matching_profiles (availabilityEarliest ≤ assignment.startLatest)
@@ -1851,15 +1941,16 @@ const profile = await db
 
 **Scoring Components**:
 
-| Component | Weight (Default) | Description |
-|-----------|------------------|-------------|
-| Mission/Values | **30%** | Alignment with org mission + personal values |
-| Core Expertise | **40%** | Must-have skills + proficiency levels |
-| Tools | **10%** | Nice-to-have skills |
-| Logistics | **10%** | Location, timezone, hours, compensation |
-| Recency | **10%** | Profile freshness, recent activity |
+| Component      | Weight (Default) | Description                                  |
+| -------------- | ---------------- | -------------------------------------------- |
+| Mission/Values | **30%**          | Alignment with org mission + personal values |
+| Core Expertise | **40%**          | Must-have skills + proficiency levels        |
+| Tools          | **10%**          | Nice-to-have skills                          |
+| Logistics      | **10%**          | Location, timezone, hours, compensation      |
+| Recency        | **10%**          | Profile freshness, recent activity           |
 
 **Weight Guardrails** (PRD):
+
 - Adjustable ±15pp from defaults
 - Sum must = 100%
 - Enforced at API level
@@ -1868,35 +1959,33 @@ const profile = await db
 
 ```typescript
 // Values alignment (0-100)
-function scoreValues(
-  profileValues: string[],
-  assignmentValues: string[]
-): number {
-  const overlap = profileValues.filter(v => assignmentValues.includes(v));
+function scoreValues(profileValues: string[], assignmentValues: string[]): number {
+  const overlap = profileValues.filter((v) => assignmentValues.includes(v));
   return (overlap.length / assignmentValues.length) * 100;
 }
 
 // Skills alignment (0-100)
 function scoreSkills(
   profileSkills: Skill[],
-  requiredSkills: {id: string, level: number}[]
+  requiredSkills: { id: string; level: number }[]
 ): number {
   let total = 0;
   for (const req of requiredSkills) {
-    const profile = profileSkills.find(s => s.skillId === req.id);
+    const profile = profileSkills.find((s) => s.skillId === req.id);
     if (!profile) continue; // Hard filter should catch this
 
     const levelDiff = profile.level - req.level;
-    if (levelDiff >= 0) total += 100; // Meets/exceeds requirement
-    else total += Math.max(0, 100 + (levelDiff * 20)); // Penalize deficit
+    if (levelDiff >= 0)
+      total += 100; // Meets/exceeds requirement
+    else total += Math.max(0, 100 + levelDiff * 20); // Penalize deficit
   }
   return total / requiredSkills.length;
 }
 
 // Location alignment (0-100)
 function scoreLocation(
-  profileLocation: {country: string, city: string, workMode: string, radiusKm: number},
-  assignmentLocation: {country: string, city: string, locationMode: string, radiusKm: number}
+  profileLocation: { country: string; city: string; workMode: string; radiusKm: number },
+  assignmentLocation: { country: string; city: string; locationMode: string; radiusKm: number }
 ): number {
   if (assignmentLocation.locationMode === 'remote') return 100;
   if (profileLocation.country !== assignmentLocation.country) return 0;
@@ -1911,16 +2000,18 @@ function scoreLocation(
 ```
 
 **Final Score Calculation**:
+
 ```typescript
 const score =
-  (scoreValues * weights.values) +
-  (scoreSkills * weights.coreExpertise) +
-  (scoreTools * weights.tools) +
-  (scoreLocation * weights.logistics) +
-  (scoreRecency * weights.recency);
+  scoreValues * weights.values +
+  scoreSkills * weights.coreExpertise +
+  scoreTools * weights.tools +
+  scoreLocation * weights.logistics +
+  scoreRecency * weights.recency;
 ```
 
 **Explainability**:
+
 ```typescript
 const vector = {
   values: scoreValues,
@@ -1937,19 +2028,23 @@ const vector = {
 ### 9.2 Verification Workflow Technical Details
 
 **Email Verification Request**:
+
 ```typescript
 // 1. Create verification request
-const request = await db.insert(verificationRequests).values({
-  claimType: 'experience',
-  claimId: experienceId,
-  profileId: userId,
-  verifierEmail: 'referee@company.com',
-  verifierName: 'Jane Doe',
-  verifierOrg: 'Acme Corp',
-  token: generateSecureToken(), // crypto.randomBytes(32).toString('hex')
-  sentAt: new Date(),
-  expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days
-}).returning();
+const request = await db
+  .insert(verificationRequests)
+  .values({
+    claimType: 'experience',
+    claimId: experienceId,
+    profileId: userId,
+    verifierEmail: 'referee@company.com',
+    verifierName: 'Jane Doe',
+    verifierOrg: 'Acme Corp',
+    token: generateSecureToken(), // crypto.randomBytes(32).toString('hex')
+    sentAt: new Date(),
+    expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days
+  })
+  .returning();
 
 // 2. Send email
 await sendVerificationEmail({
@@ -1965,6 +2060,7 @@ await scheduleNudge(request.id, 7 * 24 * 60 * 60 * 1000); // 7 days
 ```
 
 **Verifier Landing Page** (`/verify?token=...`):
+
 ```typescript
 // 1. Validate token
 const request = await db
@@ -1999,6 +2095,7 @@ return (
 ```
 
 **Verifier Response**:
+
 ```typescript
 async function handleVerificationResponse({
   requestId,
@@ -2049,6 +2146,7 @@ async function handleVerificationResponse({
 ### 9.3 Database Migration Process
 
 **Creating a Migration**:
+
 ```bash
 # 1. Update schema in src/db/schema.ts
 # 2. Generate migration SQL
@@ -2067,6 +2165,7 @@ git commit -m "feat: add verification system tables"
 ```
 
 **Manual Migration** (for complex changes):
+
 ```bash
 # 1. Create migration file manually
 touch src/db/migrations/20250129_add_verification_messaging_moderation.sql
@@ -2077,6 +2176,7 @@ touch src/db/migrations/20250129_add_verification_messaging_moderation.sql
 ```
 
 **Rollback Strategy**:
+
 ```sql
 -- Always include DROP statements at top of migration
 -- for easy rollback
@@ -2094,6 +2194,7 @@ CREATE TABLE verification_requests (...);
 ### 9.4 Deployment Process
 
 **Continuous Deployment** (via Vercel):
+
 ```
 1. Developer pushes to GitHub branch
 2. Vercel detects push
@@ -2103,10 +2204,11 @@ CREATE TABLE verification_requests (...);
 4. Vercel deploys to preview URL
 5. Developer reviews preview
 6. Developer merges to master
-7. Vercel deploys to production (proofound.com)
+7. Vercel deploys to production (proofound.io)
 ```
 
 **Environment Variables** (Vercel Dashboard):
+
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
@@ -2124,11 +2226,13 @@ CREATE TABLE verification_requests (...);
 **Strategy**: Token bucket algorithm
 
 **Limits** (PRD):
+
 - 60 req/min per IP
 - 120 req/min per user token (burst 2×)
 - Stricter for auth endpoints (10 req/min)
 
 **Implementation** (Middleware):
+
 ```typescript
 // /src/middleware.ts
 import { NextResponse } from 'next/server';
@@ -2171,25 +2275,24 @@ async function checkRateLimit(key: string): Promise<{
   const now = Date.now();
 
   // Query rate_limits table
-  const limit = await db
-    .select()
-    .from(rateLimits)
-    .where(eq(rateLimits.id, key))
-    .limit(1);
+  const limit = await db.select().from(rateLimits).where(eq(rateLimits.id, key)).limit(1);
 
   if (!limit || now > limit.resetAt.getTime()) {
     // First request or window expired → reset
-    await db.insert(rateLimits).values({
-      id: key,
-      attempts: 1,
-      resetAt: new Date(now + RATE_LIMIT_WINDOW),
-    }).onConflictDoUpdate({
-      target: rateLimits.id,
-      set: {
+    await db
+      .insert(rateLimits)
+      .values({
+        id: key,
         attempts: 1,
         resetAt: new Date(now + RATE_LIMIT_WINDOW),
-      },
-    });
+      })
+      .onConflictDoUpdate({
+        target: rateLimits.id,
+        set: {
+          attempts: 1,
+          resetAt: new Date(now + RATE_LIMIT_WINDOW),
+        },
+      });
 
     return {
       allowed: true,
@@ -2228,11 +2331,13 @@ async function checkRateLimit(key: string): Promise<{
 ### 10.1 Code Style & Conventions
 
 **TypeScript**:
+
 - Strict mode enabled (`"strict": true` in tsconfig.json)
 - Explicit return types for functions
 - Avoid `any` type (use `unknown` + type guards)
 
 **Naming Conventions**:
+
 - Components: PascalCase (e.g., `ProfileCard.tsx`)
 - Functions: camelCase (e.g., `calculateScore`)
 - Constants: UPPER_SNAKE_CASE (e.g., `RATE_LIMIT_MAX`)
@@ -2240,6 +2345,7 @@ async function checkRateLimit(key: string): Promise<{
 - API routes: kebab-case (e.g., `/api/matching/suggest`)
 
 **Component Structure**:
+
 ```typescript
 'use client'; // Only if client component
 
@@ -2266,6 +2372,7 @@ export function ProfileCard({ profile, onEdit }: ProfileCardProps) {
 ```
 
 **Server Actions**:
+
 ```typescript
 'use server';
 
@@ -2279,10 +2386,7 @@ export async function updateProfile(
   data: UpdateProfileInput
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await db
-      .update(profiles)
-      .set(data)
-      .where(eq(profiles.id, userId));
+    await db.update(profiles).set(data).where(eq(profiles.id, userId));
 
     revalidatePath('/app/i/profile');
     return { success: true };
@@ -2298,12 +2402,14 @@ export async function updateProfile(
 **Current State**: Minimal tests (MVP focus)
 
 **Future Testing Stack**:
+
 - Unit tests: Vitest
 - Integration tests: Playwright
 - E2E tests: Playwright
 - Component tests: React Testing Library
 
 **Priority Test Coverage**:
+
 1. **Matching algorithm** - Critical business logic
 2. **Verification workflow** - Complex state machine
 3. **Auth flows** - Security-critical
@@ -2312,6 +2418,7 @@ export async function updateProfile(
 ### 10.3 Error Handling
 
 **Server-Side**:
+
 ```typescript
 try {
   const result = await riskyOperation();
@@ -2330,6 +2437,7 @@ try {
 ```
 
 **Client-Side**:
+
 ```typescript
 const [error, setError] = useState<string | null>(null);
 
@@ -2353,18 +2461,21 @@ const handleSubmit = async () => {
 ### 10.4 Performance Best Practices
 
 **Next.js Optimizations**:
+
 - Use Server Components by default
 - Add `'use client'` only when needed (interactivity, hooks)
 - Use `loading.tsx` for Suspense boundaries
 - Leverage route segment caching
 
 **Database Queries**:
+
 - Use indexes (see migration SQL for index definitions)
 - Avoid N+1 queries (use JOINs)
 - Limit result sets (`.limit()` clause)
 - Use select-specific columns (not `SELECT *`)
 
 **Example: Optimized Query**:
+
 ```typescript
 // ❌ Bad: N+1 query
 const profiles = await db.select().from(profiles);
@@ -2384,6 +2495,7 @@ const profilesWithSkills = await db
 ```
 
 **Image Optimization**:
+
 - Use Next.js `<Image>` component
 - Provide `width` and `height` attributes
 - Use WebP format where possible
@@ -2392,27 +2504,32 @@ const profilesWithSkills = await db
 ### 10.5 Accessibility Guidelines
 
 **Semantic HTML**:
+
 - Use `<button>` for clickable elements (not `<div onClick>`)
 - Use `<label>` for form inputs
 - Use heading hierarchy (`<h1>` → `<h2>` → `<h3>`)
 
 **ARIA Attributes**:
+
 - `aria-label` for icon-only buttons
 - `aria-describedby` for error messages
 - `aria-live` for dynamic updates
 
 **Keyboard Navigation**:
+
 - All interactive elements must be keyboard-accessible
 - Focus visible (`:focus-visible` styles)
 - Logical tab order
 
 **Color Contrast**:
+
 - WCAG AA minimum (4.5:1 for normal text, 3:1 for large text)
 - Don't rely on color alone to convey information
 
 ### 10.6 Security Checklist
 
 **Every Feature Must**:
+
 - [ ] Use RLS policies (never bypass with service role unless necessary)
 - [ ] Validate all user input (Zod schemas)
 - [ ] Sanitize user-generated content (DOMPurify for rich text)
@@ -2423,6 +2540,7 @@ const profilesWithSkills = await db
 - [ ] Implement CSRF protection (Next.js built-in)
 
 **Sensitive Data Handling**:
+
 - Never log passwords, tokens, or PII
 - Mask sensitive data in UI (e.g., compensation ranges)
 - Use environment variables for secrets (never commit to Git)
@@ -2431,12 +2549,14 @@ const profilesWithSkills = await db
 ### 10.7 Git Workflow
 
 **Branch Naming**:
+
 - Features: `feat/description` (e.g., `feat/messaging-system`)
 - Bugs: `fix/description` (e.g., `fix/auth-redirect`)
 - Refactoring: `refactor/description`
 - Documentation: `docs/description`
 
 **Commit Messages** (Conventional Commits):
+
 ```
 <type>(<scope>): <subject>
 
@@ -2446,6 +2566,7 @@ const profilesWithSkills = await db
 ```
 
 Examples:
+
 ```
 feat(verification): implement email workflow
 
@@ -2467,6 +2588,7 @@ Fixes #124
 ```
 
 **Pull Requests**:
+
 - Title: Same format as commit message
 - Description: What, why, how
 - Screenshots for UI changes
@@ -2475,12 +2597,14 @@ Fixes #124
 ### 10.8 Documentation
 
 **When to Document**:
+
 - New features (add to this file)
 - API changes (update API reference)
 - Database schema changes (update Section 3)
 - Configuration changes (update .env.example)
 
 **Where to Document**:
+
 - System architecture: This file (`SYSTEM_ARCHITECTURE_COMPREHENSIVE.md`)
 - Implementation guides: `IMPLEMENTATION_GUIDE_MVP_SYSTEMS.md`
 - PRD: `Proofound_PRD_MVP.md`
@@ -2492,61 +2616,65 @@ Fixes #124
 
 ### A. Related Documents
 
-- **PRD**: `/Users/yuriibakurov/proofound/Proofound_PRD_MVP.md`
-- **Implementation Guide**: `/Users/yuriibakurov/proofound/IMPLEMENTATION_GUIDE_MVP_SYSTEMS.md`
-- **Migration SQL**: `/Users/yuriibakurov/proofound/src/db/migrations/20250129_add_verification_messaging_moderation.sql`
-- **Schema**: `/Users/yuriibakurov/proofound/src/db/schema.ts`
+- **PRD**: `./Proofound_PRD_MVP.md`
+- **Implementation Guide**: `./IMPLEMENTATION_GUIDE_MVP_SYSTEMS.md`
+- **Migration SQL**: `./src/db/migrations/20250129_add_verification_messaging_moderation.sql`
+- **Schema**: `./src/db/schema.ts`
 
 ### B. Quick Reference Links
 
-| Resource | Location |
-|----------|----------|
-| **Database Schema** | `src/db/schema.ts:1-846` |
-| **Sign-In Component** | `src/components/auth/SignIn.tsx:40-256` |
-| **Matching Algorithm** | `src/lib/matching/algorithm.ts` (pending) |
-| **Verification Workflow** | `IMPLEMENTATION_GUIDE_MVP_SYSTEMS.md:1-200` |
-| **PRD Section 4.4 (Matching)** | `Proofound_PRD_MVP.md:84-93` |
-| **PRD Section 4.5 (Verification)** | `Proofound_PRD_MVP.md:95-102` |
+| Resource                           | Location                                    |
+| ---------------------------------- | ------------------------------------------- |
+| **Database Schema**                | `src/db/schema.ts:1-846`                    |
+| **Sign-In Component**              | `src/components/auth/SignIn.tsx:40-256`     |
+| **Matching Algorithm**             | `src/lib/matching/algorithm.ts` (pending)   |
+| **Verification Workflow**          | `IMPLEMENTATION_GUIDE_MVP_SYSTEMS.md:1-200` |
+| **PRD Section 4.4 (Matching)**     | `Proofound_PRD_MVP.md:84-93`                |
+| **PRD Section 4.5 (Verification)** | `Proofound_PRD_MVP.md:95-102`               |
 
 ### C. Glossary
 
-| Term | Definition |
-|------|------------|
-| **Persona** | User type: `individual`, `org_member`, or `unknown` |
-| **Proof** | Evidence for a claim (experience, education, volunteering, impact story) |
-| **Claim** | Statement requiring verification (e.g., "Worked at Acme Corp 2019-2022") |
-| **Match** | Computed alignment between individual and assignment (0-100 score) |
-| **Assignment** | Job/project posting from organization |
-| **Expertise Atlas** | Structured skills system with levels, evidence, endorsements |
-| **Capability** | Skill wrapper with privacy controls and verification status |
-| **Evidence** | Proof for a capability (document, link, assessment, credential) |
-| **Stage 1** | Initial messaging phase with masked identities |
-| **Stage 2** | Post-mutual-accept messaging with full identity reveal |
-| **RLS** | Row-Level Security (PostgreSQL access control) |
-| **Cluster Snapshot** | Private graph of active ties (private, algorithm use only) |
-| **Editorial Match** | Manually curated match for cold-start problem |
-| **North Star** | Primary success metric: Time-to-First-Accepted Match |
+| Term                 | Definition                                                               |
+| -------------------- | ------------------------------------------------------------------------ |
+| **Persona**          | User type: `individual`, `org_member`, or `unknown`                      |
+| **Proof**            | Evidence for a claim (experience, education, volunteering, impact story) |
+| **Claim**            | Statement requiring verification (e.g., "Worked at Acme Corp 2019-2022") |
+| **Match**            | Computed alignment between individual and assignment (0-100 score)       |
+| **Assignment**       | Job/project posting from organization                                    |
+| **Expertise Atlas**  | Structured skills system with levels, evidence, endorsements             |
+| **Capability**       | Skill wrapper with privacy controls and verification status              |
+| **Evidence**         | Proof for a capability (document, link, assessment, credential)          |
+| **Stage 1**          | Initial messaging phase with masked identities                           |
+| **Stage 2**          | Post-mutual-accept messaging with full identity reveal                   |
+| **RLS**              | Row-Level Security (PostgreSQL access control)                           |
+| **Cluster Snapshot** | Private graph of active ties (private, algorithm use only)               |
+| **Editorial Match**  | Manually curated match for cold-start problem                            |
+| **North Star**       | Primary success metric: Time-to-First-Accepted Match                     |
 
 ### D. Common Tasks Quick Reference
 
 **Add a new database table**:
+
 1. Add table definition to `src/db/schema.ts`
 2. Run `npx drizzle-kit generate:pg`
 3. Review generated migration in `src/db/migrations/`
 4. Apply: `npx drizzle-kit push:pg`
 
 **Create a new API endpoint**:
+
 1. Create file in `/src/app/api/[route]/route.ts`
 2. Export `GET`, `POST`, `PATCH`, `DELETE` functions
 3. Use `createServerSupabaseClient()` for auth
 4. Return `NextResponse.json()` with data
 
 **Add a new page**:
+
 1. Create `page.tsx` in appropriate route folder
 2. Add to appropriate section (`/app/i/*` or `/app/o/[slug]/*`)
 3. Update navigation if needed
 
 **Debug auth issues**:
+
 1. Check Supabase dashboard → Authentication → Users
 2. Inspect cookies in browser DevTools (supabase-auth-token)
 3. Check RLS policies in Supabase → Database → Policies

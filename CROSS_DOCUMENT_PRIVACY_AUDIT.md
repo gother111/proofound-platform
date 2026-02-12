@@ -12,68 +12,58 @@
 
 This audit reviews all architecture documentation and codebase artifacts against the comprehensive privacy and security requirements established in `DATA_SECURITY_PRIVACY_ARCHITECTURE.md`.
 
-**Key Finding**: The project demonstrates **strong privacy-by-design principles in documentation** and **critical RLS policies have been successfully deployed** (2025-10-30). 
+**Key Finding**: The project demonstrates **strong privacy-by-design principles in documentation** and **critical RLS policies have been successfully deployed** (2025-10-30).
 
 **🎉 Major Update**: Row-Level Security (RLS) policies deployed to all 20 existing database tables with 100% coverage (124 total policies). See Section 1.2 for deployment details.
 
 ### Audit Results at a Glance
 
-| Document | Privacy Grade | Status | Critical Gaps |
-|----------|--------------|--------|---------------|
-| DATA_SECURITY_PRIVACY_ARCHITECTURE.md | A+ (98/100) | Reference | N/A - This is the standard |
-| CODEBASE_AUDIT_REPORT.md | B (82/100) | ⚠️ Needs Update | Missing RLS policy implementation status |
-| MVP_IMPLEMENTATION_PLAN.md | A- (90/100) | ✅ Good | Needs explicit privacy testing phase |
-| FULL_PRODUCT_ARCHITECTURE_PLAN.md | A (93/100) | ✅ Good | Privacy dashboard deferred to Phase 2 (acceptable) |
-| CRITICAL_GAPS_IMPLEMENTATION_GUIDE.md | B+ (87/100) | ⚠️ Needs Update | Missing RLS implementation guide |
-| TECHNOLOGY_STACK_AUDIT.md | A- (91/100) | ✅ Good | Security stack analysis comprehensive |
-| USER_FLOWS_TECHNICAL_SPECIFICATIONS.md | B+ (86/100) | ⚠️ Needs Update | Privacy controls missing in 8 flows |
-| DATA_REQUIREMENTS_AND_AI_STRATEGY.md | A (94/100) | ✅ Excellent | Anonymization strategy solid |
-| **Database Schema** (src/db/schema.ts) | **A- (90/100)** | **✅ Deployed** | **RLS: 20/20 tables (100% coverage)** |
+| Document                               | Privacy Grade   | Status          | Critical Gaps                                      |
+| -------------------------------------- | --------------- | --------------- | -------------------------------------------------- |
+| DATA_SECURITY_PRIVACY_ARCHITECTURE.md  | A+ (98/100)     | Reference       | N/A - This is the standard                         |
+| CODEBASE_AUDIT_REPORT.md               | B (82/100)      | ⚠️ Needs Update | Missing RLS policy implementation status           |
+| MVP_IMPLEMENTATION_PLAN.md             | A- (90/100)     | ✅ Good         | Needs explicit privacy testing phase               |
+| FULL_PRODUCT_ARCHITECTURE_PLAN.md      | A (93/100)      | ✅ Good         | Privacy dashboard deferred to Phase 2 (acceptable) |
+| CRITICAL_GAPS_IMPLEMENTATION_GUIDE.md  | B+ (87/100)     | ⚠️ Needs Update | Missing RLS implementation guide                   |
+| TECHNOLOGY_STACK_AUDIT.md              | A- (91/100)     | ✅ Good         | Security stack analysis comprehensive              |
+| USER_FLOWS_TECHNICAL_SPECIFICATIONS.md | B+ (86/100)     | ⚠️ Needs Update | Privacy controls missing in 8 flows                |
+| DATA_REQUIREMENTS_AND_AI_STRATEGY.md   | A (94/100)      | ✅ Excellent    | Anonymization strategy solid                       |
+| **Database Schema** (src/db/schema.ts) | **A- (90/100)** | **✅ Deployed** | **RLS: 20/20 tables (100% coverage)**              |
 
 ### Critical Privacy Gaps Identified
 
 ✅ **RESOLVED** (2025-10-30):
+
 1. ~~**No RLS policies implemented**~~ → **✅ 20/20 existing tables protected with 124 RLS policies deployed**
 
-🟡 **PENDING - Blocked by Schema Migration**:
-2. **Verification system** not implemented (verifier email exposure risk) - Table not yet created
-3. **Staged messaging** not implemented (identity reveal risk) - Conversations/messages tables not yet created
-4. **Analytics PII collection** without anonymization (ipAddress in analyticsEvents table) - Table not yet created
+🟡 **PENDING - Blocked by Schema Migration**: 2. **Verification system** not implemented (verifier email exposure risk) - Table not yet created 3. **Staged messaging** not implemented (identity reveal risk) - Conversations/messages tables not yet created 4. **Analytics PII collection** without anonymization (ipAddress in analyticsEvents table) - Table not yet created
 
-🟠 **HIGH PRIORITY - Fix in MVP Phase**:
-5. Privacy dashboard missing from MVP scope
-6. Data export/deletion flows not specified in USER_FLOWS
-7. Audit logging system not implemented
-8. Rate limiting for verification requests not implemented
+🟠 **HIGH PRIORITY - Fix in MVP Phase**: 5. Privacy dashboard missing from MVP scope 6. Data export/deletion flows not specified in USER_FLOWS 7. Audit logging system not implemented 8. Rate limiting for verification requests not implemented
 
-🟡 **MEDIUM PRIORITY - Address Post-MVP**:
-9. GDPR consent management UI not specified
-10. Privacy policy acceptance flow missing
-11. Email notification privacy controls incomplete
-12. Third-party data processor agreements not documented
+🟡 **MEDIUM PRIORITY - Address Post-MVP**: 9. GDPR consent management UI not specified 10. Privacy policy acceptance flow missing 11. Email notification privacy controls incomplete 12. Third-party data processor agreements not documented
 
 ---
 
 ## 1. Database Schema Privacy Audit
 
-**File Audited**: `/Users/yuriibakurov/proofound/src/db/schema.ts` (1,482 lines)
+**File Audited**: `./src/db/schema.ts` (1,482 lines)
 **Audit Grade**: A- (90/100) ✅ **IMPROVED from C+ after RLS deployment**
 **Status**: ✅ RLS policies deployed for all existing tables (2025-10-30)
 
 ### 1.1 Tables with PII/Sensitive Data (Tier 1 & 2)
 
-| Table | PII Fields | Tier | RLS Policy Status | Risk Level |
-|-------|-----------|------|-------------------|------------|
-| `profiles` | displayName, avatarUrl, locale | Tier 2 | ✅ DEPLOYED (2025-10-30) | ✅ PROTECTED |
-| `verification_requests` | verifierEmail, verifierName | Tier 1 | ⚠️ TABLE NOT EXISTS | 🟡 PENDING MIGRATION |
-| `matching_profiles` | compMin, compMax | Tier 2 | ✅ DEPLOYED (2025-10-30) | ✅ PROTECTED |
-| `individual_profiles` | firstName, lastName, pronouns, location | Tier 1 | ✅ DEPLOYED (2025-10-30) | ✅ PROTECTED |
-| `org_member_profiles` | title, bio, linkedinUrl | Tier 2 | ⚠️ TABLE NOT EXISTS | 🟡 PENDING MIGRATION |
-| `messages` | body (may contain PII) | Tier 2 | ⚠️ TABLE NOT EXISTS | 🟡 PENDING MIGRATION |
-| `conversations` | stage (privacy control field) | Tier 3 | ⚠️ TABLE NOT EXISTS | 🟡 PENDING MIGRATION |
-| `analytics_events` | ipAddress, userAgent, sessionId | Tier 1 | ⚠️ TABLE NOT EXISTS | 🟡 PENDING MIGRATION |
-| `assignments` | compMin, compMax, compBudget | Tier 2 | ✅ DEPLOYED (2025-10-30) | ✅ PROTECTED |
-| `matches` | score, ranking | Tier 3 | ✅ DEPLOYED (2025-10-30) | ✅ PROTECTED |
+| Table                   | PII Fields                              | Tier   | RLS Policy Status        | Risk Level           |
+| ----------------------- | --------------------------------------- | ------ | ------------------------ | -------------------- |
+| `profiles`              | displayName, avatarUrl, locale          | Tier 2 | ✅ DEPLOYED (2025-10-30) | ✅ PROTECTED         |
+| `verification_requests` | verifierEmail, verifierName             | Tier 1 | ⚠️ TABLE NOT EXISTS      | 🟡 PENDING MIGRATION |
+| `matching_profiles`     | compMin, compMax                        | Tier 2 | ✅ DEPLOYED (2025-10-30) | ✅ PROTECTED         |
+| `individual_profiles`   | firstName, lastName, pronouns, location | Tier 1 | ✅ DEPLOYED (2025-10-30) | ✅ PROTECTED         |
+| `org_member_profiles`   | title, bio, linkedinUrl                 | Tier 2 | ⚠️ TABLE NOT EXISTS      | 🟡 PENDING MIGRATION |
+| `messages`              | body (may contain PII)                  | Tier 2 | ⚠️ TABLE NOT EXISTS      | 🟡 PENDING MIGRATION |
+| `conversations`         | stage (privacy control field)           | Tier 3 | ⚠️ TABLE NOT EXISTS      | 🟡 PENDING MIGRATION |
+| `analytics_events`      | ipAddress, userAgent, sessionId         | Tier 1 | ⚠️ TABLE NOT EXISTS      | 🟡 PENDING MIGRATION |
+| `assignments`           | compMin, compMax, compBudget            | Tier 2 | ✅ DEPLOYED (2025-10-30) | ✅ PROTECTED         |
+| `matches`               | score, ranking                          | Tier 3 | ✅ DEPLOYED (2025-10-30) | ✅ PROTECTED         |
 
 **Total Tables with Sensitive Data**: 28 planned (20 exist in current schema)
 **Tables with RLS Implemented**: 20/20 existing tables (100% coverage) ✅
@@ -86,6 +76,7 @@ This audit reviews all architecture documentation and codebase artifacts against
 **Coverage**: 20 tables / 124 total policies / 6.2 avg policies per table
 
 **Verification Results**:
+
 - ✅ All 20 existing tables have RLS enabled
 - ✅ 124 policies deployed across all tables
 - ✅ Critical tables protected (profiles, matching_profiles, assignments, etc.)
@@ -105,6 +96,7 @@ export const verificationRequests = pgTable('verification_requests', {
 ```
 
 **Reference Standard** (from DATA_SECURITY_PRIVACY_ARCHITECTURE.md Section 6.2):
+
 ```sql
 -- Required RLS policy for verification_requests
 CREATE POLICY "only_requester_sees_verifier_email"
@@ -113,6 +105,7 @@ CREATE POLICY "only_requester_sees_verifier_email"
 ```
 
 **GAP**: RLS policies are documented in DATA_SECURITY_PRIVACY_ARCHITECTURE.md but **not implemented** in:
+
 - ❌ Database schema migrations
 - ❌ Supabase dashboard
 - ❌ SQL initialization scripts
@@ -122,6 +115,7 @@ CREATE POLICY "only_requester_sees_verifier_email"
 **Positive Findings**:
 
 1. **Staged Messaging Support**:
+
 ```typescript
 // conversations table (line 1163)
 export const conversations = pgTable('conversations', {
@@ -131,6 +125,7 @@ export const conversations = pgTable('conversations', {
 ```
 
 2. **Visibility Controls**:
+
 ```typescript
 // organizationProfiles table (line 175)
 export const organizationProfiles = pgTable('organization_profiles', {
@@ -142,6 +137,7 @@ export const organizationProfiles = pgTable('organization_profiles', {
 ```
 
 3. **Soft Deletes** (implied by audit pattern):
+
 ```typescript
 // Most tables have timestamps for audit trails
 createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -164,6 +160,7 @@ export const analyticsEvents = pgTable('analytics_events', {
 ```
 
 **Required Fix** (from DATA_SECURITY_PRIVACY_ARCHITECTURE.md Section 13.3):
+
 ```typescript
 // Should store HASHED IP, not raw
 export const analyticsEvents = pgTable('analytics_events', {
@@ -205,26 +202,31 @@ compMax: integer('comp_max'), // @privacy Tier-2: Sensitive compensation data
 **Audit Date**: Earlier in conversation
 
 #### Strengths ✅
+
 - Identified 0% implementation for verification and messaging (privacy-critical systems)
 - Documented database schema with 30+ tables
 - Noted existing `conversations.stage` field for masked messaging
 
 #### Privacy Gaps ⚠️
+
 1. **No RLS policy assessment**: Document doesn't mention that RLS policies are missing
 2. **No PII field identification**: Doesn't classify which fields contain Tier 1/2 data
 3. **No privacy testing criteria**: Missing from health score metrics
 
 #### Recommended Updates
+
 ```markdown
 ## Add new section:
 
 ### Privacy & Security Audit
+
 **RLS Policy Implementation**: 100% for existing tables (20/20 deployed, 124 total policies) ✅
 **Note**: 8 additional tables from original plan not yet created in database schema
 **PII Field Classification**: Not implemented
 **Privacy Testing**: Not started
 
 **CRITICAL GAPS**:
+
 - ❌ No RLS policies in database
 - ❌ Analytics collects raw IP addresses
 - ❌ Verification system exposes verifier emails without access controls
@@ -238,11 +240,13 @@ compMax: integer('comp_max'), // @privacy Tier-2: Sensitive compensation data
 **Audit Date**: Earlier in conversation
 
 #### Strengths ✅
+
 - Week 3 includes "Verification System + Privacy Controls"
 - Week 4 addresses "Staged Messaging (Stage 1: Masked)"
 - Security hardening in Week 6
 
 #### Privacy Gaps ⚠️
+
 1. **No explicit RLS deployment week**: RLS policies should be Week 0 (infrastructure)
 2. **Privacy testing not scheduled**: Should be in Week 7 before launch
 3. **GDPR consent flow missing**: No week allocated for consent management UI
@@ -250,8 +254,10 @@ compMax: integer('comp_max'), // @privacy Tier-2: Sensitive compensation data
 #### Recommended Updates
 
 **Insert into Week 0** (Infrastructure Setup):
+
 ```markdown
 ### Week 0: Infrastructure + Security Foundation
+
 - [ ] Deploy all 28 RLS policies to Supabase
 - [ ] Enable Supabase Row Level Security on all tables
 - [ ] Test RLS policies with test users
@@ -259,8 +265,10 @@ compMax: integer('comp_max'), // @privacy Tier-2: Sensitive compensation data
 ```
 
 **Add to Week 7** (Testing & Launch Prep):
+
 ```markdown
 ### Week 7: Privacy & Security Testing
+
 - [ ] Privacy audit: Verify no raw PII exposed in API responses
 - [ ] Test RLS policies: Attempt unauthorized data access
 - [ ] GDPR compliance check: Test data export/deletion
@@ -276,12 +284,14 @@ compMax: integer('comp_max'), // @privacy Tier-2: Sensitive compensation data
 **Audit Date**: Earlier in conversation
 
 #### Strengths ✅
+
 - Privacy Dashboard planned for Phase 2 (Month 12-18)
 - Multi-Factor Authentication in Phase 1 (Month 6)
 - Audit logging in Phase 2
 - Data anonymization for ML clearly documented
 
 #### Privacy Gaps ⚠️
+
 1. **Privacy Dashboard deferred too long**: Should be in Phase 1 for GDPR compliance
 2. **Data retention policies not mentioned**: GDPR requires automated deletion
 3. **Third-party data processors not listed**: Must document all subprocessors
@@ -289,10 +299,12 @@ compMax: integer('comp_max'), // @privacy Tier-2: Sensitive compensation data
 #### Recommended Updates
 
 **Move to Phase 1** (Month 0-6):
+
 ```markdown
 ## Phase 1 - MVP Foundation (UPDATED)
 
 ### Month 4-6: GDPR Compliance Foundation
+
 - **Privacy Dashboard (Basic)**:
   - View collected data
   - Export data (JSON format)
@@ -316,11 +328,13 @@ compMax: integer('comp_max'), // @privacy Tier-2: Sensitive compensation data
 **Audit Date**: Earlier in conversation
 
 #### Strengths ✅
+
 - Includes rate limiting implementation (prevents abuse)
 - Security hardening section covers CORS, CSP, input validation
 - File storage includes signed URLs (privacy-preserving)
 
 #### Privacy Gaps ⚠️
+
 1. **No RLS implementation guide**: Document addresses other gaps but not the most critical one
 2. **Verification privacy not covered**: Missing implementation details for verifier email protection
 3. **Analytics anonymization missing**: No code for IP hashing
@@ -329,7 +343,7 @@ compMax: integer('comp_max'), // @privacy Tier-2: Sensitive compensation data
 
 **Add new section**:
 
-```markdown
+````markdown
 ## 1. ROW-LEVEL SECURITY (RLS) POLICIES - CRITICAL PRIORITY
 
 **Why This Is Critical**: Without RLS, users can query other users' private data directly via Supabase client.
@@ -354,6 +368,7 @@ ALTER TABLE assignments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE analytics_events ENABLE ROW LEVEL SECURITY;
 -- ... (enable for all 28 tables)
 ```
+````
 
 ### Step 2: Deploy RLS Policies
 
@@ -446,19 +461,16 @@ import { createClient } from '@supabase/supabase-js';
 describe('RLS Policy Tests', () => {
   test('User cannot read other user profiles', async () => {
     const user1Client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: { persistSession: false }
+      auth: { persistSession: false },
     });
 
     await user1Client.auth.signInWithPassword({
       email: 'user1@test.com',
-      password: 'password123'
+      password: 'password123',
     });
 
     // Attempt to read user2's profile
-    const { data, error } = await user1Client
-      .from('profiles')
-      .select('*')
-      .eq('id', USER2_ID);
+    const { data, error } = await user1Client.from('profiles').select('*').eq('id', USER2_ID);
 
     expect(data).toBeNull();
     expect(error).toBeDefined(); // RLS blocks this
@@ -467,9 +479,7 @@ describe('RLS Policy Tests', () => {
   test('Verifier email hidden from public', async () => {
     const publicClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const { data } = await publicClient
-      .from('verification_requests')
-      .select('verifier_email');
+    const { data } = await publicClient.from('verification_requests').select('verifier_email');
 
     expect(data).toBeNull(); // RLS blocks unauthenticated access
   });
@@ -482,7 +492,8 @@ describe('RLS Policy Tests', () => {
 2. Verify all 28 tables show "RLS Enabled" badge
 3. Check each table has 2-4 policies listed
 4. Test with "RLS Playground" using different user IDs
-```
+
+````
 
 **Add another section**:
 
@@ -508,7 +519,7 @@ export const analyticsEvents = pgTable('analytics_events', {
   userAgentHash: text('user_agent_hash'), // ✅ CHANGED: Hash user agent too
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
-```
+````
 
 ### Step 2: Create Hashing Utility
 
@@ -557,9 +568,8 @@ export async function trackEvent(
   properties: Record<string, any>,
   request: Request
 ) {
-  const ip = request.headers.get('x-forwarded-for') ||
-             request.headers.get('x-real-ip') ||
-             'unknown';
+  const ip =
+    request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
   const userAgent = request.headers.get('user-agent') || 'unknown';
 
   await db.insert(analyticsEvents).values({
@@ -583,7 +593,8 @@ PII_HASH_SALT=<your-64-character-hex-salt>
 ```
 
 **Security Note**: NEVER commit `PII_HASH_SALT` to git. Store in Vercel environment variables.
-```
+
+````
 
 ---
 
@@ -641,7 +652,7 @@ PII_HASH_SALT=<your-64-character-hex-salt>
 - Select Supabase EU region (eu-west-1) for production
 - Configure Vercel edge functions to respect data residency
 - Document data flows in Privacy Policy
-```
+````
 
 ---
 
@@ -652,6 +663,7 @@ PII_HASH_SALT=<your-64-character-hex-salt>
 **Audit Date**: Earlier in conversation
 
 #### Strengths ✅
+
 - Detailed specs for all 40 user flows
 - Field-level validation includes privacy checks in some flows
 - API contracts specify auth requirements
@@ -674,12 +686,13 @@ PII_HASH_SALT=<your-64-character-hex-salt>
 
 **Update I-01 (Sign Up)**:
 
-```markdown
+````markdown
 ### I-01: Sign Up
 
 #### Screen 2: Profile Setup (UPDATED)
 
 **Fields** (add):
+
 - [ ] GDPR Consent Checkbox (required)
   - Label: "I agree to the Privacy Policy and Terms of Service"
   - Validation: Must be checked to proceed
@@ -691,8 +704,9 @@ PII_HASH_SALT=<your-64-character-hex-salt>
   - Note: Can be changed later in Settings
 
 **API Contract** (update):
+
 ```typescript
-POST /api/auth/signup
+POST / api / auth / signup;
 {
   email: string;
   password: string;
@@ -701,10 +715,11 @@ POST /api/auth/signup
   consentTimestamp: Date; // ✅ NEW: Audit trail
 }
 ```
+````
 
 **Update I-07 (Settings)**:
 
-```markdown
+````markdown
 ### I-07: Settings
 
 #### Tab 4: Privacy & Data (NEW)
@@ -736,6 +751,7 @@ POST /api/auth/signup
    - [ ] Learn more: Link → opens Privacy Policy
 
 **API Contracts**:
+
 ```typescript
 // Export user data (GDPR Right to Access)
 GET /api/user/export
@@ -760,10 +776,11 @@ Response: {
   scheduledDeletionDate: Date // 30-day grace period
 }
 ```
+````
 
 **Add New Flow: I-41 (Privacy Dashboard)**:
 
-```markdown
+````markdown
 ### I-41: Privacy Dashboard (NEW FLOW)
 
 **Trigger**: User clicks "Privacy" in Settings tab
@@ -772,6 +789,7 @@ Response: {
 #### Screen 1: Privacy Overview
 
 **Layout**:
+
 - Hero: "Your Privacy Controls"
 - Subtitle: "Proofound is built with privacy at its core. Here's what data we collect and how you control it."
 
@@ -797,6 +815,7 @@ Response: {
    - [View full audit log] → Screen 3
 
 **CTAs**:
+
 - [Download My Data] → Generates export
 - [Manage Privacy Settings] → I-07 Settings (Privacy tab)
 
@@ -847,6 +866,7 @@ Response: {
 **Export**: [Download full audit log (CSV)]
 
 **API Contract**:
+
 ```typescript
 GET /api/user/audit-log?limit=50&offset=0
 Response: {
@@ -863,9 +883,11 @@ Response: {
   total: number
 }
 ```
+````
 
 **OKR**: I-41 audit-log-views ≥ 5% of active users view monthly
-```
+
+````
 
 ---
 
@@ -910,9 +932,10 @@ Response: {
   mlMatchingOptIn: boolean; // Default: true
   mlMatchingExplanation: "We use AI to improve match quality. You can opt out and use rules-based matching instead."
 }
-```
+````
 
 2. **Match Explanation UI** (add to match detail page):
+
 ```typescript
 // When viewing a match
 {
@@ -937,14 +960,17 @@ Response: {
 #### ML Training Data Retention
 
 **Policy**:
+
 - Training datasets retained for 12 months after model deployment
 - After 12 months: Archive aggregated metrics only, delete raw training data
 - Users who delete accounts: Remove from all future training datasets within 30 days
 
 **Compliance Mapping**:
+
 - GDPR Article 17 (Right to Erasure): ✅ Data deleted from training sets
 - GDPR Article 5(e) (Storage Limitation): ✅ 12-month retention policy
-```
+
+````
 
 ---
 
@@ -1179,7 +1205,7 @@ FROM pg_tables
 WHERE schemaname = 'public'
   AND rowsecurity = true;
 -- Should return 28+ rows
-```
+````
 
 ### 5.2 Deploy Critical RLS Policies (Run Second)
 
@@ -1548,9 +1574,8 @@ export async function trackEvent(
   request: Request
 ) {
   // Extract IP and User Agent
-  const ip = request.headers.get('x-forwarded-for') ||
-             request.headers.get('x-real-ip') ||
-             'unknown';
+  const ip =
+    request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
   const userAgent = request.headers.get('user-agent') || 'unknown';
 
   // Hash before storage (GDPR compliant)
@@ -1571,6 +1596,7 @@ export async function trackEvent(
 ```
 
 **Environment Variable** (add to `.env.local` and Vercel):
+
 ```bash
 # Generate with: openssl rand -hex 32
 PII_HASH_SALT=your-64-character-hex-string-here
@@ -1708,12 +1734,17 @@ import crypto from 'crypto';
 
 function hashPII(value: string): string {
   const salt = process.env.PII_HASH_SALT!;
-  return crypto.createHash('sha256').update(value + salt).digest('hex');
+  return crypto
+    .createHash('sha256')
+    .update(value + salt)
+    .digest('hex');
 }
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -1765,7 +1796,7 @@ describe('RLS Privacy Tests', () => {
     // Sign in as User A
     await supabase.auth.signInWithPassword({
       email: 'usera@test.com',
-      password: 'password123'
+      password: 'password123',
     });
 
     // Attempt to read User B's profile
@@ -1784,7 +1815,7 @@ describe('RLS Privacy Tests', () => {
     // Sign in as requester
     await supabase.auth.signInWithPassword({
       email: 'requester@test.com',
-      password: 'password123'
+      password: 'password123',
     });
 
     // Read own verification request
@@ -1814,7 +1845,7 @@ describe('RLS Privacy Tests', () => {
     // Sign in as User A
     await supabase.auth.signInWithPassword({
       email: 'usera@test.com',
-      password: 'password123'
+      password: 'password123',
     });
 
     // Attempt to read messages from User B & C conversation
@@ -1831,16 +1862,14 @@ describe('RLS Privacy Tests', () => {
     // Sign in as User A
     await supabase.auth.signInWithPassword({
       email: 'usera@test.com',
-      password: 'password123'
+      password: 'password123',
     });
 
     // Query analytics events
-    const { data } = await supabase
-      .from('analytics_events')
-      .select('*');
+    const { data } = await supabase.from('analytics_events').select('*');
 
     // Should only return User A's events
-    expect(data?.every(event => event.user_id === USER_A_ID)).toBe(true);
+    expect(data?.every((event) => event.user_id === USER_A_ID)).toBe(true);
   });
 });
 ```
@@ -1956,31 +1985,32 @@ describe('Privacy Flow Tests', () => {
 
 ### 8.1 GDPR Article-by-Article Compliance
 
-| Article | Requirement | Status | Evidence |
-|---------|-------------|--------|----------|
-| Art. 4(1) | PII Definition | ✅ | Analytics uses hashed IPs, not raw |
-| Art. 5(a) | Lawful Processing | ✅ | User consent collected at signup |
-| Art. 5(c) | Data Minimization | ✅ | Only essential data collected |
-| Art. 5(e) | Storage Limitation | 🟡 | Retention policies planned (Post-MVP) |
-| Art. 6(1)(a) | Lawful Basis (Consent) | ✅ | GDPR consent checkbox implemented |
-| Art. 7 | Conditions for Consent | ✅ | Opt-in checkboxes, granular controls |
-| Art. 13 | Information to Data Subject | ✅ | Privacy Policy linked at signup |
-| Art. 15 | Right of Access | ✅ | Privacy Dashboard + data export |
-| Art. 16 | Right to Rectification | ✅ | Users can edit all profile fields |
-| Art. 17 | Right to Erasure | ✅ | Account deletion flow implemented |
-| Art. 18 | Right to Restriction | 🟡 | Not implemented (Low priority) |
-| Art. 20 | Right to Portability | ✅ | JSON export from Privacy Dashboard |
-| Art. 21 | Right to Object | ✅ | Marketing opt-out in settings |
-| Art. 22 | Automated Decision-Making | 🟡 | ML explainability planned (Phase 2) |
-| Art. 25 | Data Protection by Design | ✅ | RLS, hashing, staged messaging |
-| Art. 28 | Processor Requirements | ⚠️ | DPAs needed for all subprocessors |
-| Art. 32 | Security of Processing | ✅ | RLS, encryption, hashing, audit logs |
-| Art. 33 | Breach Notification | ❌ | Incident response plan not documented |
-| Art. 35 | DPIA | 🟡 | Required if ML profiling implemented |
+| Article      | Requirement                 | Status | Evidence                              |
+| ------------ | --------------------------- | ------ | ------------------------------------- |
+| Art. 4(1)    | PII Definition              | ✅     | Analytics uses hashed IPs, not raw    |
+| Art. 5(a)    | Lawful Processing           | ✅     | User consent collected at signup      |
+| Art. 5(c)    | Data Minimization           | ✅     | Only essential data collected         |
+| Art. 5(e)    | Storage Limitation          | 🟡     | Retention policies planned (Post-MVP) |
+| Art. 6(1)(a) | Lawful Basis (Consent)      | ✅     | GDPR consent checkbox implemented     |
+| Art. 7       | Conditions for Consent      | ✅     | Opt-in checkboxes, granular controls  |
+| Art. 13      | Information to Data Subject | ✅     | Privacy Policy linked at signup       |
+| Art. 15      | Right of Access             | ✅     | Privacy Dashboard + data export       |
+| Art. 16      | Right to Rectification      | ✅     | Users can edit all profile fields     |
+| Art. 17      | Right to Erasure            | ✅     | Account deletion flow implemented     |
+| Art. 18      | Right to Restriction        | 🟡     | Not implemented (Low priority)        |
+| Art. 20      | Right to Portability        | ✅     | JSON export from Privacy Dashboard    |
+| Art. 21      | Right to Object             | ✅     | Marketing opt-out in settings         |
+| Art. 22      | Automated Decision-Making   | 🟡     | ML explainability planned (Phase 2)   |
+| Art. 25      | Data Protection by Design   | ✅     | RLS, hashing, staged messaging        |
+| Art. 28      | Processor Requirements      | ⚠️     | DPAs needed for all subprocessors     |
+| Art. 32      | Security of Processing      | ✅     | RLS, encryption, hashing, audit logs  |
+| Art. 33      | Breach Notification         | ❌     | Incident response plan not documented |
+| Art. 35      | DPIA                        | 🟡     | Required if ML profiling implemented  |
 
 **Overall GDPR Compliance**: 85% (18/22 fully implemented)
 
 **Blockers before EU launch**:
+
 1. ⚠️ Sign DPAs with Supabase, Vercel, Resend, OpenAI
 2. ❌ Document incident response plan (data breach notification process)
 3. 🟡 Complete DPIA if implementing ML matching
@@ -1989,13 +2019,13 @@ describe('Privacy Flow Tests', () => {
 
 ### 8.2 CCPA Compliance
 
-| Requirement | Status | Evidence |
-|-------------|--------|----------|
-| Right to Know | ✅ | Privacy Dashboard shows collected data |
-| Right to Delete | ✅ | Account deletion flow |
-| Right to Opt-Out | ✅ | Marketing opt-out in settings |
-| Do Not Sell | ✅ | No data selling (document in Privacy Policy) |
-| Non-Discrimination | ✅ | No service degradation for opt-outs |
+| Requirement        | Status | Evidence                                     |
+| ------------------ | ------ | -------------------------------------------- |
+| Right to Know      | ✅     | Privacy Dashboard shows collected data       |
+| Right to Delete    | ✅     | Account deletion flow                        |
+| Right to Opt-Out   | ✅     | Marketing opt-out in settings                |
+| Do Not Sell        | ✅     | No data selling (document in Privacy Policy) |
+| Non-Discrimination | ✅     | No service degradation for opt-outs          |
 
 **Overall CCPA Compliance**: 100% (5/5 implemented)
 
@@ -2096,33 +2126,39 @@ All documents need minor updates to reflect RLS implementation priority:
 ### 10.3 Architectural Strengths (Keep Doing)
 
 ✅ **Excellent privacy-by-design thinking**:
+
 - Staged messaging for identity protection
 - Verification system that protects verifier emails
 - Data classification (Tier 1-4) well-documented
 - Anonymization strategy for ML clearly defined
 
 ✅ **Strong security foundation**:
+
 - Five-layer security model (Database → API → App → Transparency → Compliance)
 - RLS policies comprehensively documented
 - Encryption standards specified (AES-256, TLS 1.3)
 
 ✅ **Compliance-forward approach**:
+
 - GDPR and CCPA requirements proactively addressed
 - User rights (access, erasure, portability) designed into architecture
 
 ### 10.4 Architectural Weaknesses (Fix Urgently)
 
 ❌ **Critical gap: Documentation ≠ Implementation**:
+
 - RLS policies beautifully documented in DATA_SECURITY_PRIVACY_ARCHITECTURE.md
 - **But not implemented in database** (0 of 28 policies deployed)
 - This is the #1 privacy risk
 
 ⚠️ **Privacy dashboard deferred too long**:
+
 - GDPR Right to Access is not optional
 - Should be in MVP, not Phase 2 (Month 12)
 - Recommendation: Move to Week 5 of MVP
 
 ⚠️ **Analytics collecting raw PII**:
+
 - Storing raw IP addresses violates GDPR Article 4(1)
 - Fix by hashing IPs before storage (1-day task)
 
@@ -2131,27 +2167,27 @@ All documents need minor updates to reflect RLS implementation priority:
 **Can launch MVP without these fixes?**
 
 🔴 **NO - These are blockers**:
+
 1. RLS policies must be deployed (CRITICAL security vulnerability)
 2. Analytics must hash IPs (GDPR violation as-is)
 3. GDPR consent must be collected at signup (legal requirement)
 4. Data export and deletion must work (GDPR Articles 15 & 17)
 
-🟡 **YES, but fix soon**:
-5. Data retention automation can wait until Month 4
-6. Third-party security audit can happen pre-public-launch (Month 6)
-7. ML explainability only needed when ML is implemented (Phase 2)
+🟡 **YES, but fix soon**: 5. Data retention automation can wait until Month 4 6. Third-party security audit can happen pre-public-launch (Month 6) 7. ML explainability only needed when ML is implemented (Phase 2)
 
 ### 10.6 Overall Privacy Architecture Grade
 
 **Final Grade: B+ (88/100)**
 
 **Breakdown**:
+
 - Documentation Quality: A+ (98/100) - Excellent
 - Implementation Completeness: C+ (76/100) - Critical gaps
 - Compliance Readiness: A- (90/100) - Strong foundation
 - User Experience: A (93/100) - Privacy-preserving by design
 
 **Path to A+ (95+)**:
+
 1. Deploy all RLS policies (+8 points)
 2. Implement privacy dashboard in MVP (+4 points)
 3. Fix analytics PII collection (+3 points)
@@ -2162,22 +2198,22 @@ All documents need minor updates to reflect RLS implementation priority:
 
 ### All Privacy Requirements → Implementation Status
 
-| Requirement | Document Source | Implementation Status | Fix Timeline |
-|-------------|----------------|----------------------|--------------|
-| RLS on all tables | DATA_SECURITY_PRIVACY_ARCHITECTURE.md § 6.2 | ❌ Not implemented | Week 0 |
-| Hashed IPs in analytics | DATA_SECURITY_PRIVACY_ARCHITECTURE.md § 13.3 | ❌ Not implemented | Week 0 |
-| GDPR consent at signup | DATA_SECURITY_PRIVACY_ARCHITECTURE.md § 14.2 | ❌ Not implemented | Week 1 |
-| Privacy dashboard | DATA_SECURITY_PRIVACY_ARCHITECTURE.md § 14.3 | ❌ Not implemented | Week 5 |
-| Staged messaging | DATA_SECURITY_PRIVACY_ARCHITECTURE.md § 8 | ❌ Not implemented | Week 4 |
-| Verification privacy | DATA_SECURITY_PRIVACY_ARCHITECTURE.md § 9 | ❌ Not implemented | Week 3 |
-| Data export API | DATA_SECURITY_PRIVACY_ARCHITECTURE.md § 14.3 | ❌ Not implemented | Week 5 |
-| Account deletion | DATA_SECURITY_PRIVACY_ARCHITECTURE.md § 14.4 | ❌ Not implemented | Week 5 |
-| Audit logging | DATA_SECURITY_PRIVACY_ARCHITECTURE.md § 11 | 🟡 Partial (analytics events exist) | Week 6 |
-| Data retention policies | DATA_SECURITY_PRIVACY_ARCHITECTURE.md § 15.6 | ❌ Not implemented | Month 4 |
-| Encryption at rest | TECHNOLOGY_STACK_AUDIT.md § 10.4 | ✅ Supabase default (AES-256) | Done |
-| TLS 1.3 in transit | TECHNOLOGY_STACK_AUDIT.md § 10.4 | ✅ Vercel enforces TLS 1.3 | Done |
-| JWT token security | TECHNOLOGY_STACK_AUDIT.md § 10.4 | ✅ httpOnly cookies, 24h expiry | Done |
-| ML anonymization | DATA_REQUIREMENTS_AND_AI_STRATEGY.md § 13 | 🟡 Documented, not yet needed | Month 12 (Phase 2) |
+| Requirement             | Document Source                              | Implementation Status               | Fix Timeline       |
+| ----------------------- | -------------------------------------------- | ----------------------------------- | ------------------ |
+| RLS on all tables       | DATA_SECURITY_PRIVACY_ARCHITECTURE.md § 6.2  | ❌ Not implemented                  | Week 0             |
+| Hashed IPs in analytics | DATA_SECURITY_PRIVACY_ARCHITECTURE.md § 13.3 | ❌ Not implemented                  | Week 0             |
+| GDPR consent at signup  | DATA_SECURITY_PRIVACY_ARCHITECTURE.md § 14.2 | ❌ Not implemented                  | Week 1             |
+| Privacy dashboard       | DATA_SECURITY_PRIVACY_ARCHITECTURE.md § 14.3 | ❌ Not implemented                  | Week 5             |
+| Staged messaging        | DATA_SECURITY_PRIVACY_ARCHITECTURE.md § 8    | ❌ Not implemented                  | Week 4             |
+| Verification privacy    | DATA_SECURITY_PRIVACY_ARCHITECTURE.md § 9    | ❌ Not implemented                  | Week 3             |
+| Data export API         | DATA_SECURITY_PRIVACY_ARCHITECTURE.md § 14.3 | ❌ Not implemented                  | Week 5             |
+| Account deletion        | DATA_SECURITY_PRIVACY_ARCHITECTURE.md § 14.4 | ❌ Not implemented                  | Week 5             |
+| Audit logging           | DATA_SECURITY_PRIVACY_ARCHITECTURE.md § 11   | 🟡 Partial (analytics events exist) | Week 6             |
+| Data retention policies | DATA_SECURITY_PRIVACY_ARCHITECTURE.md § 15.6 | ❌ Not implemented                  | Month 4            |
+| Encryption at rest      | TECHNOLOGY_STACK_AUDIT.md § 10.4             | ✅ Supabase default (AES-256)       | Done               |
+| TLS 1.3 in transit      | TECHNOLOGY_STACK_AUDIT.md § 10.4             | ✅ Vercel enforces TLS 1.3          | Done               |
+| JWT token security      | TECHNOLOGY_STACK_AUDIT.md § 10.4             | ✅ httpOnly cookies, 24h expiry     | Done               |
+| ML anonymization        | DATA_REQUIREMENTS_AND_AI_STRATEGY.md § 13    | 🟡 Documented, not yet needed       | Month 12 (Phase 2) |
 
 **Implementation Progress**: 3/14 requirements complete (21%)
 

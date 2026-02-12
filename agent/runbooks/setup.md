@@ -1,3 +1,7 @@
+> Doc Class: `governance`
+> Sync Pair: `setup.md`
+> Last Verified: `2026-02-12`
+
 # Setup Runbook (Local Dev + CI Parity)
 
 This runbook captures the repo’s actual scripts and gates. Do not paste secrets into tracked files.

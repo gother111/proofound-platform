@@ -36,6 +36,7 @@
     "prepare": "husky install",
     "perf:budgets": "node ./scripts/perf-budgets.mjs",
     "go:no-go": "node ./scripts/go-no-go-check.mjs",
+    "docs:freshness": "node ./scripts/docs-freshness-check.mjs",
     "test:smoke:gap-service": "tsx scripts/smoke-skill-gaps.ts",
     "test:smoke:learning": "tsx scripts/smoke-learning-provider.ts"
   },

@@ -1277,6 +1277,69 @@ Open TODOs / follow-ups:
 - Consider splitting this refactor into staged commits before PR creation (gates, backend services, runtime mock separation, profile actions, UI decomposition).
 - Re-run expertise Playwright smoke after freeing local ports and using a deterministic auth fixture path.
 
+---
+
+## 2026-02-12 16:41 CET
+
+Task summary:
+
+- Implement repository-wide documentation freshness remediation with corrected governance requirement: keep root governance docs and synchronize them with `project/` and `agent/` docs.
+- Archive historical non-governance docs with redirect stubs, consolidate API docs into `docs/API_REFERENCE.md`, and add a CI warning guardrail for docs drift.
+
+What worked:
+
+- Historical doc migration with redirect stubs preserved compatibility while reducing active-surface drift.
+- `docs/API_REFERENCE.md` consolidation removed multi-source API documentation conflicts.
+- `docs/DOCS_REGISTRY.md` and `docs:freshness` guardrail gave a deterministic docs quality check.
+- Broken links and domain/path hygiene checks were resolved (`TOTAL=0` broken links; no active legacy domains or absolute local paths).
+- Live verification succeeded against production health and Vercel deployment/env visibility.
+
+What failed / wrong assumptions:
+
+- First normalization loop used zsh-unfriendly word splitting and failed by passing a long concatenated filename list.
+- Fixed by re-running replacements with a safe line-by-line iterator.
+
+User corrections:
+
+- Root governance docs must remain in place and be reviewed, not archived.
+- Governance model should be dual canonical sync across root and `project/` + `agent/`.
+
+Assumptions taken without asking:
+
+- Selected historical non-governance status docs are safe to archive when redirect stubs remain at original paths.
+- Freshness metadata enforcement can focus on protected/canonical active docs plus key references rather than every active markdown file.
+- API reference consolidation can use endpoint-family documentation rather than line-by-line migration of all historical examples.
+
+What the user corrected afterward:
+
+- Corrected earlier plan to keep `Prompt.md`, `Plans.md`, `Architecture.md`, `Implement.md`, `setup.md`, `preflight.md`, `verification.md`, `metrics.md`, and `Documentation.md` at root.
+
+Improvements next time:
+
+- Use shell-safe file iteration from the first pass when running repository-wide text substitutions.
+- Stage archive-migration maps in a dedicated manifest file earlier to reduce manual tracking overhead.
+- Introduce docs-freshness in warning mode before large content migration so pre-existing noise is measured up front.
+
+Commands run + outcomes:
+
+- `npm run docs:freshness`: PASS after guardrail tuning.
+- `curl -sS https://proofound.io/api/health`: PASS (`healthy`, database connected, version `eba9e428d4f6f38d3ae44f77daea697e26b82404`).
+- `npx -y vercel@latest ls proofound-platform --token "$VERCEL_TOKEN"`: PASS (recent production deployments `Ready`).
+- `npx -y vercel@latest env ls production --token "$VERCEL_TOKEN"`: PASS (required env keys present by name).
+- `npm ci`: PASS (with engine warning due Node `v25.4.0` vs required `20.x`).
+- `npm run lint`: PASS (1 warning only).
+- `npm run typecheck`: PASS.
+- `npm run test`: PASS.
+- `npm run build`: PASS.
+
+Open TODOs / follow-ups:
+
+- Consider enabling strict docs freshness mode in CI once team confirms tolerance level.
+- Review whether additional active docs should adopt metadata headers for deeper governance tracking.
+- Evaluate whether to pin local verification environment to Node `20.20.0` in future sessions for full engine parity.
+
+---
+
 ## 2026-02-12 17:34 CET
 
 Task summary:

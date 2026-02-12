@@ -47,7 +47,7 @@ Before deploying, ensure all required environment variables are set in Vercel:
 
 - [ ] **`EMAIL_FROM`** (if using email verification)
   - What: Email sender address
-  - Example: `"Proofound <no-reply@proofound.com>"`
+  - Example: `"Proofound <no-reply@proofound.io>"`
 
 ### Optional Variables (Monitoring & Support)
 
@@ -93,7 +93,7 @@ Before deploying, ensure all required environment variables are set in Vercel:
 
 - [ ] **Environment variables scoped correctly**
   - Public variables start with `NEXT_PUBLIC_`
-  - Sensitive keys (SERVICE_ROLE_KEY) do NOT have `NEXT_PUBLIC_` prefix
+  - Sensitive keys (SERVICE*ROLE_KEY) do NOT have `NEXT_PUBLIC*` prefix
   - Service role key is only used in server-side code
 
 - [ ] **RLS policies tested**
@@ -182,6 +182,7 @@ Before deploying, ensure all required environment variables are set in Vercel:
 **Cause**: Missing DATABASE_URL or database connection issue
 
 **Solution**:
+
 1. Check `/api/health` endpoint
 2. Verify DATABASE_URL is set in Vercel
 3. Verify DATABASE_URL uses pooled connection (port 6543)
@@ -192,6 +193,7 @@ Before deploying, ensure all required environment variables are set in Vercel:
 **Cause**: JavaScript errors or API failures
 
 **Solution**:
+
 1. Open browser console (F12)
 2. Look for red error messages
 3. Check Network tab for failed API calls
@@ -203,6 +205,7 @@ Before deploying, ensure all required environment variables are set in Vercel:
 **Cause**: Incorrect Site URL or Redirect URLs in Supabase
 
 **Solution**:
+
 1. Go to Supabase Dashboard → Authentication → URL Configuration
 2. Verify Site URL matches your production domain exactly
 3. Add all redirect URLs listed above
@@ -213,6 +216,7 @@ Before deploying, ensure all required environment variables are set in Vercel:
 **Cause**: Migrations not applied or RLS policies missing
 
 **Solution**:
+
 1. Run migrations: `npm run db:push`
 2. Apply RLS policies manually in Supabase SQL Editor
 3. Verify tables exist in Supabase Dashboard
@@ -222,6 +226,7 @@ Before deploying, ensure all required environment variables are set in Vercel:
 **Cause**: Missing RESEND_API_KEY or incorrect configuration
 
 **Solution**:
+
 1. Verify RESEND_API_KEY is set in Vercel
 2. Check Resend dashboard for API errors
 3. Verify domain is verified in Resend
@@ -270,7 +275,7 @@ If you encounter issues after deployment:
 
 - **`MVP_LAUNCH_DECISIONS.md`** - Critical decisions for launch readiness
 - **`LAUNCH_RUNBOOK.md`** - Complete operational playbook
-- **`API_DOCUMENTATION.md`** - Metrics and admin endpoint documentation
+- **`docs/API_REFERENCE.md`** - Metrics and admin endpoint documentation
 - **`EMAIL_SUPPORT_SETUP.md`** - Email support configuration and templates
 - **`SUPPORT.md`** - User-facing support documentation
 
@@ -297,12 +302,14 @@ Once all items are checked:
 Before launching Private Beta (Nov 15, 2025), complete these additional checks:
 
 ### Pre-Launch Documentation
+
 - [ ] Review `MVP_LAUNCH_DECISIONS.md` - All 5 decisions finalized
 - [ ] Review `LAUNCH_RUNBOOK.md` - Team is familiar with procedures
 - [ ] Confirm on-call schedule (Yurii: Technical, Pavlo: Product)
 - [ ] Test incident response workflow (Section 4 of runbook)
 
 ### Support Setup
+
 - [ ] Email support configured (hello@proofound.io)
 - [ ] Auto-responder active (see `EMAIL_SUPPORT_SETUP.md`)
 - [ ] Email templates ready (password reset, bug acknowledgment, etc.)
@@ -310,6 +317,7 @@ Before launching Private Beta (Nov 15, 2025), complete these additional checks:
 - [ ] In-app chat widget tested (if `NEXT_PUBLIC_CRISP_WEBSITE_ID` set)
 
 ### Monitoring & Metrics
+
 - [ ] Vercel Analytics Real User Monitoring enabled
 - [ ] Admin metrics dashboard accessible (`/app/admin/metrics`)
 - [ ] Test metrics API endpoint (`/api/metrics?metric=all`)
@@ -317,11 +325,13 @@ Before launching Private Beta (Nov 15, 2025), complete these additional checks:
 - [ ] Weekly metrics review meeting scheduled (Mondays 10 AM UTC)
 
 ### Backups & Recovery
+
 - [ ] Database backup tested (restore from backup once)
 - [ ] Rollback procedure documented and tested
 - [ ] Recovery time objectives confirmed (RTO: 8 hours, RPO: 24 hours)
 
 ### Team Readiness
+
 - [ ] Pavlo and Yurii have access to all systems (Vercel, Supabase, email)
 - [ ] Emergency contact numbers shared
 - [ ] Go/no-go decision made (Nov 15, 9 AM UTC)
@@ -332,4 +342,3 @@ Before launching Private Beta (Nov 15, 2025), complete these additional checks:
 
 **Last Updated**: November 5, 2025
 **Version**: 1.1
-

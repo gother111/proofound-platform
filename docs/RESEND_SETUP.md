@@ -60,7 +60,7 @@ For early-stage production, the free tier should be sufficient for hundreds of a
 
 1. In the Resend dashboard, go to **"Domains"**
 2. Click **"Add Domain"**
-3. Enter your domain (e.g., `proofound.com`)
+3. Enter your domain (e.g., `proofound.io`)
 4. Click **"Add"**
 
 ### Configure DNS Records

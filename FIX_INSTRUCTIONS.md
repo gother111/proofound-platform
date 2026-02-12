@@ -20,7 +20,7 @@ Added a `cleanupDemoData()` function that:
 ## Run This Command
 
 ```bash
-cd /Users/yuriibakurov/proofound
+cd .
 node scripts/seed-demo-users.mjs --yes
 ```
 

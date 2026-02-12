@@ -42,7 +42,7 @@ This checklist ensures all critical steps are completed before releasing a new v
 
    ```bash
    # Via API (recommended)
-   curl -X POST https://proofound.app/api/admin/fairness/generate-note \
+   curl -X POST https://proofound.io/api/admin/fairness/generate-note \
      -H "Authorization: Bearer $ADMIN_TOKEN" \
      -H "Content-Type: application/json" \
      -d '{"releaseVersion": "v1.x.x"}'
