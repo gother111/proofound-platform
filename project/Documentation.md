@@ -1594,3 +1594,39 @@ How to verify:
 Open risks/TODO:
 
 - Full strict E2E confirmation still depends on CI secrets and live provider integrations.
+
+## 2026-02-13 - PR #180 unresolved review-thread fixes for merge
+
+What changed:
+
+- Fixed reciprocal interest resolution and idempotent insert semantics:
+  - `src/app/api/core/matching/interest/route.ts`
+  - Interest insert now uses `onConflictDoNothing` for duplicate-safe retries/double-clicks.
+  - Candidate-side reciprocal lookup now evaluates all org-origin interest rows and only accepts reciprocal actors with active `organization_members` status, avoiding row-order false negatives.
+- Fixed publish activation prerequisites for assignment-builder review flow:
+  - `src/lib/assignments/activation.ts`
+  - Activation criteria now accept narrative context from any of `description`, `businessValue`, or `expectedImpact`, so publish side effects run for builder-created assignments that omit `description`.
+- Fixed legacy matching profile compatibility persistence:
+  - `src/app/api/matching/profile/route.ts`
+  - `src/app/api/matching/profile/[id]/route.ts`
+  - `name` and `constraints` are now persisted/reloaded via compatibility metadata in `matching_profiles.verified.__compat_profile` instead of being dropped on save.
+- Added regression tests:
+  - `tests/api/match-interest-route.test.ts`
+  - `tests/api/matching-profile-compat-route.test.ts`
+  - `tests/lib/assignments-activation.test.ts`
+
+Why:
+
+- PR #180 had unresolved required review threads blocking merge.
+- The flagged issues could cause blocked mutual reveal, 500s on concurrent interest retries, silent no-op publish side effects, and legacy profile edits reverting on reload.
+
+How to verify:
+
+- `npm run test -- tests/api/match-interest-route.test.ts tests/lib/assignments-activation.test.ts tests/api/matching-profile-compat-route.test.ts tests/api/assignments-publish-route.test.ts`: PASS
+- `npm run lint`: PASS (1 pre-existing warning in `postcss.config.js`)
+- `npm run typecheck`: PASS
+
+Open risks/TODO:
+
+- Compatibility metadata for legacy matching profile fields is now stored in `matching_profiles.verified.__compat_profile`; if other code overwrites `verified` wholesale without merge semantics, legacy `name`/`constraints` may be cleared.
+- Full merge remains gated by GitHub required checks (`ci`, `a11y`) and conversation-resolution rules.

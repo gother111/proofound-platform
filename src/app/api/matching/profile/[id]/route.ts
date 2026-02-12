@@ -31,12 +31,27 @@ const DEFAULT_CONSTRAINTS = {
   requireAvailabilityMatch: false,
 };
 
+const COMPAT_META_KEY = '__compat_profile';
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 function toCompatProfile(profile: typeof matchingProfiles.$inferSelect) {
+  const verified = isRecord(profile.verified) ? (profile.verified as Record<string, unknown>) : {};
+  const rawMeta = verified[COMPAT_META_KEY];
+  const meta = isRecord(rawMeta) ? rawMeta : {};
+
+  const name = typeof meta.name === 'string' ? meta.name : 'Default Profile';
+  const constraints = isRecord(meta.constraints)
+    ? (meta.constraints as Record<string, unknown>)
+    : undefined;
+
   return {
     id: profile.profileId,
-    name: 'Default Profile',
+    name,
     weights: (profile.weights as Record<string, number> | null) ?? DEFAULT_WEIGHTS,
-    constraints: DEFAULT_CONSTRAINTS,
+    constraints: { ...DEFAULT_CONSTRAINTS, ...(constraints ?? {}) },
     isActive: true,
     createdAt: profile.createdAt,
     updatedAt: profile.updatedAt,

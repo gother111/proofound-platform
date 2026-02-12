@@ -40,15 +40,56 @@ const CompatProfileSchema = z.object({
   constraints: z.record(z.any()).optional(),
 });
 
-function toCompatProfile(
-  profile: typeof matchingProfiles.$inferSelect,
-  overrides?: { name?: string; constraints?: Record<string, unknown> }
+const COMPAT_META_KEY = '__compat_profile';
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function extractCompatMeta(profile: typeof matchingProfiles.$inferSelect) {
+  const verified = isRecord(profile.verified) ? (profile.verified as Record<string, unknown>) : {};
+  const rawMeta = verified[COMPAT_META_KEY];
+
+  if (!isRecord(rawMeta)) {
+    return {};
+  }
+
+  const name = typeof rawMeta.name === 'string' ? rawMeta.name : undefined;
+  const constraints = isRecord(rawMeta.constraints)
+    ? (rawMeta.constraints as Record<string, unknown>)
+    : undefined;
+
+  return { name, constraints };
+}
+
+function mergeCompatMeta(
+  existingVerified: unknown,
+  payload: { name?: string; constraints?: Record<string, unknown> }
 ) {
+  const verified = isRecord(existingVerified) ? { ...existingVerified } : {};
+  const existingMeta = isRecord(verified[COMPAT_META_KEY])
+    ? { ...(verified[COMPAT_META_KEY] as Record<string, unknown>) }
+    : {};
+
+  if (payload.name !== undefined) {
+    existingMeta.name = payload.name;
+  }
+  if (payload.constraints !== undefined) {
+    existingMeta.constraints = payload.constraints;
+  }
+
+  verified[COMPAT_META_KEY] = existingMeta;
+  return verified;
+}
+
+function toCompatProfile(profile: typeof matchingProfiles.$inferSelect) {
+  const meta = extractCompatMeta(profile);
+
   return {
     id: profile.profileId,
-    name: overrides?.name ?? 'Default Profile',
+    name: meta.name ?? 'Default Profile',
     weights: (profile.weights as Record<string, number> | null) ?? DEFAULT_WEIGHTS,
-    constraints: overrides?.constraints ?? DEFAULT_CONSTRAINTS,
+    constraints: { ...DEFAULT_CONSTRAINTS, ...(meta.constraints ?? {}) },
     isActive: true,
     createdAt: profile.createdAt,
     updatedAt: profile.updatedAt,
@@ -57,17 +98,32 @@ function toCompatProfile(
 
 async function upsertCompatProfile(userId: string, data: z.infer<typeof CompatProfileSchema>) {
   const now = new Date();
+  const shouldUpdateCompatMeta = data.name !== undefined || data.constraints !== undefined;
+
+  let compatVerified: Record<string, unknown> | undefined;
+  if (shouldUpdateCompatMeta) {
+    const existingProfile = await db.query.matchingProfiles.findFirst({
+      where: eq(matchingProfiles.profileId, userId),
+    });
+
+    compatVerified = mergeCompatMeta(existingProfile?.verified, {
+      name: data.name,
+      constraints: data.constraints as Record<string, unknown> | undefined,
+    });
+  }
 
   await db
     .insert(matchingProfiles)
     .values({
       profileId: userId,
       ...(data.weights ? { weights: data.weights } : {}),
+      ...(compatVerified ? { verified: compatVerified } : {}),
     })
     .onConflictDoUpdate({
       target: matchingProfiles.profileId,
       set: {
         ...(data.weights ? { weights: data.weights } : {}),
+        ...(compatVerified ? { verified: compatVerified } : {}),
         updatedAt: now,
       },
     });
@@ -99,10 +155,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      profile: toCompatProfile(profile, {
-        name: parsed.data.name,
-        constraints: parsed.data.constraints as Record<string, unknown> | undefined,
-      }),
+      profile: toCompatProfile(profile),
     });
   } catch (error) {
     log.error('matching.profile.compat.create.failed', {
@@ -132,10 +185,7 @@ export async function PUT(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      profile: toCompatProfile(profile, {
-        name: parsed.data.name,
-        constraints: parsed.data.constraints as Record<string, unknown> | undefined,
-      }),
+      profile: toCompatProfile(profile),
     });
   } catch (error) {
     log.error('matching.profile.compat.update.failed', {

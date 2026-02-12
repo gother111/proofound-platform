@@ -1800,3 +1800,53 @@ Commands run + outcomes (short):
 Open TODOs / follow-ups:
 
 - Push schema-compatibility fix and re-evaluate PR checks.
+
+## 2026-02-13 01:00:00 CET
+
+Task summary (1-3 lines):
+
+- Resolved remaining PR #180 blocking review threads so merge protections can pass.
+- Fixed matching interest reciprocal selection/idempotency, publish activation criteria, and legacy matching-profile compatibility persistence.
+- Added focused regression tests for these contracts.
+
+What worked:
+
+- `onConflictDoNothing` removed duplicate-interest race failures without changing response contract.
+- Reciprocal org-side interest lookup became deterministic by filtering against active org memberships.
+- Storing legacy compat metadata under `matching_profiles.verified.__compat_profile` allowed persistence without schema migration.
+- Targeted Vitest suite quickly validated the patched contracts.
+
+What failed / wrong assumptions:
+
+- First patch on interest route briefly regressed conversation lookup (`and(assignmentId, ...)`), caught immediately in diff review and corrected.
+
+User corrections:
+
+- User requested direct action: push and merge with master (not just status reporting).
+
+Assumptions taken without asking:
+
+- No schema migration is acceptable for legacy `name`/`constraints` compatibility persistence.
+- Keeping compat metadata in `verified` with a reserved key will not interfere with verification gate evaluation.
+- Assignment publish flow should treat `businessValue`/`expectedImpact` as valid narrative completion when `description` is empty.
+
+What the user corrected afterward:
+
+- None after this patch set started.
+
+Improvements next time:
+
+- Add a dedicated unit test for conversation lookup predicate to catch accidental query predicate regressions faster.
+- Add a narrow helper for compatibility metadata encode/decode to avoid duplicated logic between `/api/matching/profile` and `/api/matching/profile/[id]`.
+
+Commands run + outcomes (short):
+
+- `gh pr checks 180`: pending at start
+- `npm run test -- tests/api/match-interest-route.test.ts tests/lib/assignments-activation.test.ts tests/api/matching-profile-compat-route.test.ts tests/api/assignments-publish-route.test.ts`: PASS
+- `npm run lint`: PASS (1 pre-existing warning)
+- `npm run typecheck`: PASS
+
+Open TODOs / follow-ups:
+
+- Commit/push this patch set.
+- Recheck PR #180 checks, resolve remaining conversations, and merge once required checks are green.

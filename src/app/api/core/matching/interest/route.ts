@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { and, eq, isNull, or } from 'drizzle-orm';
+import { and, eq, inArray, isNull, or } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
 import { requireAuth } from '@/lib/auth';
@@ -66,27 +66,20 @@ export async function POST(request: NextRequest) {
     }
 
     const interestResult = await db.transaction(async (tx) => {
-      const existingInterest = await tx.query.matchInterest.findFirst({
-        where: isOrgAction
-          ? and(
-              eq(matchInterest.actorProfileId, user.id),
-              eq(matchInterest.assignmentId, assignmentId),
-              eq(matchInterest.targetProfileId, targetProfileId!)
-            )
-          : and(
-              eq(matchInterest.actorProfileId, user.id),
-              eq(matchInterest.assignmentId, assignmentId),
-              isNull(matchInterest.targetProfileId)
-            ),
-      });
-
-      if (!existingInterest) {
-        await tx.insert(matchInterest).values({
+      await tx
+        .insert(matchInterest)
+        .values({
           actorProfileId: user.id,
           assignmentId,
           targetProfileId: targetProfileId || null,
+        })
+        .onConflictDoNothing({
+          target: [
+            matchInterest.actorProfileId,
+            matchInterest.assignmentId,
+            matchInterest.targetProfileId,
+          ],
         });
-      }
 
       if (isOrgAction) {
         const reciprocal = await tx.query.matchInterest.findFirst({
@@ -103,12 +96,39 @@ export async function POST(request: NextRequest) {
         };
       }
 
-      const reciprocal = await tx.query.matchInterest.findFirst({
+      const reciprocalInterests = await tx.query.matchInterest.findMany({
         where: and(
           eq(matchInterest.assignmentId, assignmentId),
           eq(matchInterest.targetProfileId, user.id)
         ),
       });
+
+      if (reciprocalInterests.length === 0) {
+        return {
+          mutual: false,
+          reciprocalActorProfileId: null,
+        };
+      }
+
+      const reciprocalActorIds = Array.from(
+        new Set(reciprocalInterests.map((interest) => interest.actorProfileId))
+      );
+
+      const activeOrgMembers =
+        reciprocalActorIds.length > 0
+          ? await tx.query.organizationMembers.findMany({
+              where: and(
+                inArray(organizationMembers.userId, reciprocalActorIds),
+                eq(organizationMembers.orgId, assignment.orgId),
+                eq(organizationMembers.status, 'active')
+              ),
+            })
+          : [];
+
+      const activeOrgActorIds = new Set(activeOrgMembers.map((member) => member.userId));
+      const reciprocal = reciprocalInterests.find((interest) =>
+        activeOrgActorIds.has(interest.actorProfileId)
+      );
 
       if (!reciprocal) {
         return {
@@ -117,17 +137,9 @@ export async function POST(request: NextRequest) {
         };
       }
 
-      const reciprocalActorIsOrgMember = await tx.query.organizationMembers.findFirst({
-        where: and(
-          eq(organizationMembers.userId, reciprocal.actorProfileId),
-          eq(organizationMembers.orgId, assignment.orgId),
-          eq(organizationMembers.status, 'active')
-        ),
-      });
-
       return {
-        mutual: !!reciprocalActorIsOrgMember,
-        reciprocalActorProfileId: reciprocalActorIsOrgMember ? reciprocal.actorProfileId : null,
+        mutual: true,
+        reciprocalActorProfileId: reciprocal.actorProfileId,
       };
     });
 

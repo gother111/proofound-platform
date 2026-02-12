@@ -13,7 +13,7 @@ vi.mock('@/db', () => ({
   db: {
     query: {
       assignments: { findFirst: vi.fn() },
-      organizationMembers: { findFirst: vi.fn() },
+      organizationMembers: { findFirst: vi.fn(), findMany: vi.fn() },
       conversations: { findFirst: vi.fn() },
       profiles: { findFirst: vi.fn() },
     },
@@ -72,19 +72,22 @@ describe('match interest route', () => {
     (db.query.assignments.findFirst as any).mockResolvedValue({ id: assignmentId, orgId });
     (db.query.conversations.findFirst as any).mockResolvedValue(null);
 
-    const txInsertValues = vi.fn().mockResolvedValue(undefined);
+    const txOnConflictDoNothing = vi.fn().mockResolvedValue(undefined);
+    const txInsertValues = vi.fn().mockReturnValue({ onConflictDoNothing: txOnConflictDoNothing });
     const txInsert = vi.fn().mockReturnValue({ values: txInsertValues });
     const txMatchInterestFind = vi
       .fn()
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({ actorProfileId: orgRepId });
-    const txOrgMembershipFind = vi.fn().mockResolvedValue({ userId: orgRepId });
+      .mockResolvedValueOnce([
+        { actorProfileId: 'cccccccc-cccc-cccc-cccc-cccccccccccc' },
+        { actorProfileId: orgRepId },
+      ]);
+    const txOrgMembershipFindMany = vi.fn().mockResolvedValue([{ userId: orgRepId }]);
 
     (db.transaction as any).mockImplementation(async (callback: any) =>
       callback({
         query: {
-          matchInterest: { findFirst: txMatchInterestFind },
-          organizationMembers: { findFirst: txOrgMembershipFind },
+          matchInterest: { findMany: txMatchInterestFind },
+          organizationMembers: { findMany: txOrgMembershipFindMany },
         },
         insert: txInsert,
       })
@@ -110,6 +113,13 @@ describe('match interest route', () => {
     expect(res.status).toBe(200);
     expect(payload.revealed).toBe(true);
     expect(payload.conversationId).toBe('conv-1');
-    expect(txInsertValues).toHaveBeenCalled();
+    expect(txInsertValues).toHaveBeenCalledWith({
+      actorProfileId: candidateId,
+      assignmentId,
+      targetProfileId: null,
+    });
+    expect(txOnConflictDoNothing).toHaveBeenCalledWith(
+      expect.objectContaining({ target: expect.any(Array) })
+    );
   });
 });
