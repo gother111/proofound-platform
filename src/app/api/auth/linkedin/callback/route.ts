@@ -12,6 +12,7 @@ import { db } from '@/db';
 import { userIntegrations } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { exchangeLinkedInCode, fetchLinkedInProfile } from '@/lib/linkedin';
+import { resolveOAuthRedirectUri } from '@/lib/integrations/oauth-helpers';
 
 function buildSettingsRedirect(request: NextRequest, params: Record<string, string>) {
   const search = new URLSearchParams({ tab: 'integrations', ...params });
@@ -64,8 +65,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/login?error=unauthorized', request.url));
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
-    const redirectUri = new URL('/api/auth/linkedin/callback', baseUrl).toString();
+    const redirectUri = resolveOAuthRedirectUri(
+      request,
+      process.env.LINKEDIN_REDIRECT_URI,
+      '/api/auth/linkedin/callback',
+      { preferRequestOrigin: true }
+    );
 
     // Exchange authorization code for access token
     const tokenData = await exchangeLinkedInCode(code, redirectUri);

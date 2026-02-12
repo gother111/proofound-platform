@@ -1553,3 +1553,54 @@ Open TODOs / follow-ups:
 
 - Decide whether to move `tests/e2e/prd-flows-organization.spec.ts` under `e2e/` or add a second Playwright config for `tests/e2e`.
 - Re-run targeted organization settings route regression once discovery path is aligned.
+
+---
+
+## 2026-02-12 22:24 CET
+
+Task summary:
+
+- Implement LinkedIn OAuth redirect hardening for individual verification to prevent `redirect_uri` mismatches across production and demo domains.
+- Add optional `LINKEDIN_REDIRECT_URI` contract, route/helper wiring, regression tests, and required docs/runbook updates.
+
+What worked:
+
+- Reused shared OAuth redirect helper and added opt-in request-origin-first behavior without changing Zoom/Google defaults.
+- Added LinkedIn route tests covering fallback, absolute override, relative override, and callback token-exchange URI consistency.
+- Verification commands passed with Node `20.20.0` after installing dependencies.
+
+What failed / wrong assumptions:
+
+- Initial test mock using async `vi.mock` + `vi.importActual` triggered ESLint parser error in this repo config.
+- Default shell Node version was `v25.4.0`; repo requires Node `20.20.0`, so verification needed explicit PATH pinning.
+
+User corrections:
+
+- User approved implementing the full decision-complete plan with prod + demo domain support and optional redirect override.
+
+Assumptions taken without asking:
+
+- LinkedIn callback should default to request-origin-first when no explicit override is configured.
+- Existing LinkedIn developer app can register multiple callback URLs for active domains.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Start verification commands with pinned Node path first to avoid toolchain drift.
+- Prefer static `vi.mock` factories in this repo when ESLint/parser compatibility is uncertain.
+
+Commands run + outcomes:
+
+- `npm ci`: PASS (installed deps; noted engine warning under Node 25).
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS (existing warning in `postcss.config.js`).
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- tests/api/linkedin-oauth-redirects.test.ts src/lib/integrations/__tests__/oauth-helpers.test.ts tests/ui/linkedin-verification.test.tsx`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`: PASS.
+
+Open TODOs / follow-ups:
+
+- Ensure LinkedIn app allowlist includes all active domain callbacks (`https://<domain>/api/auth/linkedin/callback`).
+- If environment wants a single pinned callback, set `LINKEDIN_REDIRECT_URI` accordingly in deployment envs.

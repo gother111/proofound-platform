@@ -20,6 +20,44 @@ This folder is the durable “project memory” surface for Proofound. It is mea
 - Do not copy secrets from local env files or setup docs into tracked markdown.
 - At the end of every session, append a new entry to `agent/scratchpad.md` (append-only).
 
+## 2026-02-12: LinkedIn OAuth Redirect URI Hardening (Multi-domain)
+
+What changed:
+
+- LinkedIn OAuth initiation and callback now resolve callback URI using shared helper logic with request-origin-first fallback for multi-domain support.
+  - `src/app/api/auth/linkedin/route.ts`
+  - `src/app/api/auth/linkedin/callback/route.ts`
+  - `src/lib/integrations/oauth-helpers.ts`
+- Added optional `LINKEDIN_REDIRECT_URI` to env contract:
+  - `.env.example`
+  - `docs/ENV_VARIABLES.md`
+  - `docs/LINKEDIN_VERIFICATION_SETUP.md`
+  - `agent/runbooks/setup.md`
+- Expanded regression tests for redirect URI resolution and callback token-exchange URI consistency:
+  - `tests/api/linkedin-oauth-redirects.test.ts`
+  - `src/lib/integrations/__tests__/oauth-helpers.test.ts`
+
+Why:
+
+- LinkedIn OAuth could fail with `redirect_uri does not match the registered value` when the app handled requests on a demo/staging domain while callback URI was built from a different base URL.
+
+How to verify:
+
+- `npm run lint`
+- `npm run typecheck`
+- `npm run test -- tests/api/linkedin-oauth-redirects.test.ts src/lib/integrations/__tests__/oauth-helpers.test.ts tests/ui/linkedin-verification.test.tsx`
+- `npm run test`
+- Manual smoke (authenticated individual user):
+  - Open `/app/i/settings?tab=account`
+  - Start LinkedIn verification connection
+  - Confirm LinkedIn authorize page loads without redirect URI mismatch
+  - Confirm callback returns to `/app/i/settings?tab=integrations`
+
+Open risks/TODO:
+
+- LinkedIn app callback allowlist must include every active domain callback (`https://<domain>/api/auth/linkedin/callback`) used by production/demo/testing environments.
+- If `LINKEDIN_REDIRECT_URI` is set to a different top-level domain than the active app domain, OAuth state cookies can fail to round-trip in callback flow.
+
 ## 2026-02-11: Landing Regression Guardrail Policy
 
 What changed:
