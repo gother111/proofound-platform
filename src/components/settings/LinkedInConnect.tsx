@@ -39,11 +39,13 @@ export function LinkedInConnect({ onConnectionChange }: LinkedInConnectProps) {
       setConnected(true);
       toast.success('LinkedIn connected successfully!');
       // Clean up URL
-      window.history.replaceState({}, '', window.location.pathname);
+      window.history.replaceState({}, '', `${window.location.pathname}?tab=integrations`);
     }
-    if (urlParams.get('error') && urlParams.toString().includes('linkedin')) {
-      toast.error(`Failed to connect LinkedIn: ${urlParams.get('error')}`);
-      window.history.replaceState({}, '', window.location.pathname);
+    const error = urlParams.get('error');
+    const message = urlParams.get('message');
+    if (error === 'linkedin_auth_failed' || (error && error.toLowerCase().includes('linkedin'))) {
+      toast.error(`Failed to connect LinkedIn: ${message || error}`);
+      window.history.replaceState({}, '', `${window.location.pathname}?tab=integrations`);
     }
   }, [checkConnection]);
 
@@ -134,10 +136,7 @@ export function LinkedInConnect({ onConnectionChange }: LinkedInConnectProps) {
             )}
           </Button>
         ) : (
-          <Button
-            onClick={handleConnect}
-            className="bg-[#0A66C2] hover:bg-[#004182] text-white"
-          >
+          <Button onClick={handleConnect} className="bg-[#0A66C2] hover:bg-[#004182] text-white">
             <Linkedin className="h-4 w-4 mr-2" />
             Connect LinkedIn
           </Button>
@@ -146,4 +145,3 @@ export function LinkedInConnect({ onConnectionChange }: LinkedInConnectProps) {
     </div>
   );
 }
-
