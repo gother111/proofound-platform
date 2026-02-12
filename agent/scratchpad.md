@@ -1010,3 +1010,100 @@ Open TODOs / follow-ups:
 
 - Push `codex/profile-sharing-clean-merge` and merge via PR.
 - Apply production deployment if not already on latest commit and re-check snippet links from profile dialogs.
+
+---
+
+## 2026-02-12 14:15 CET
+
+Task summary:
+
+- Implement landing CTA behavior so persona-specific join buttons open dedicated signup pages directly.
+- Add dedicated routes for individual and organization signup while keeping `/signup` chooser available.
+
+What worked:
+
+- Small scoped routing update in `src/components/ProofoundLanding.tsx`.
+- Dedicated pages in `src/app/(auth)/signup/individual/page.tsx` and `src/app/(auth)/signup/organization/page.tsx` rendered `SignupForm` directly with correct account type.
+- Landing guardrail verification commands passed.
+
+What failed / wrong assumptions:
+
+- Initial Playwright smoke check used a non-scoped selector and failed strict mode because multiple `Join as an Individual` buttons exist on the landing page.
+- Re-ran with hero-scoped selectors and verified both routes successfully.
+
+User corrections:
+
+- Requested direct navigation to dedicated signup page from landing persona buttons instead of chooser-step routing.
+
+Assumptions taken without asking:
+
+- `/signup` chooser should remain unchanged for generic entry points like `Get Started` and existing auth links.
+- Dedicated persona pages do not need an explicit in-page back button because browser back navigation remains available.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add a small landing CTA navigation Playwright test to assert URL targets and prevent routing regressions.
+- Use scoped locators first when CTA labels repeat in multiple sections.
+
+Commands run + outcomes:
+
+- `npm run lint`: PASS (one pre-existing warning in `src/components/profile/PublicSnippetView.tsx`).
+- `npm run typecheck`: PASS.
+- `npm run test:e2e:landing`: PASS.
+- `npm run test:e2e:landing:visual`: PASS.
+- `node` Playwright smoke script for hero CTA URLs: first run FAIL (strict-mode selector conflict), second run PASS (`/signup/individual`, `/signup/organization`).
+
+Open TODOs / follow-ups:
+
+- Optional: add compatibility parsing for legacy `/signup?type=...` query links in `src/app/(auth)/signup/SignupContent.tsx` if marketing or external docs still use query URLs.
+
+---
+
+## 2026-02-12 14:18 CET
+
+Task summary:
+
+- Add backward compatibility for legacy `/signup?type=...` links.
+- Keep dedicated signup routes and chooser behavior intact.
+
+What worked:
+
+- `SignupContent` now initializes from query param and routes directly to the matching form for `individual` and `organization`.
+- Runtime browser checks confirmed expected behavior for valid and invalid query values.
+
+What failed / wrong assumptions:
+
+- Full auth E2E suite has one failing login redirect test under mocked auth (`NEXT_PUBLIC_USE_MOCK_SUPABASE=true`), unrelated to this signup-query patch but surfaced during verification.
+
+User corrections:
+
+- User requested implementing optional legacy query compatibility immediately.
+
+Assumptions taken without asking:
+
+- Supporting `type` is the primary compatibility requirement, with `org` and `org_member` as safe organization aliases.
+- Unknown query values should not hard fail and should show chooser.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add focused automated coverage for signup query-param initialization to avoid relying on manual runtime smoke.
+- Investigate auth mock login redirect timing in `e2e/auth.spec.ts` to reduce unrelated suite noise.
+
+Commands run + outcomes:
+
+- `npm run lint`: PASS (existing unrelated warning in `src/components/profile/PublicSnippetView.tsx`).
+- `npm run typecheck`: PASS.
+- Playwright runtime smoke script for `/signup?type=...`: PASS.
+- `npm run test:e2e:auth`: PARTIAL (17 passed, 1 failed: login redirect timeout).
+
+Open TODOs / follow-ups:
+
+- Stabilize or update mocked login redirect expectation in `e2e/auth.spec.ts` for reliable auth E2E runs.
