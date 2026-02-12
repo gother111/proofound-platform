@@ -35,6 +35,16 @@ vi.mock('../../src/components/ui/badge', () => ({
 
 describe('LinkedInVerification', () => {
   beforeEach(async () => {
+    // The component probes connection status on mount. In JSDOM, fetch requires an absolute URL,
+    // so we mock it explicitly to avoid URL parsing errors.
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({ connected: true }),
+      }))
+    );
+
     const { apiFetch } = await import('@/lib/api/fetch');
     (apiFetch as any).mockResolvedValue({
       ok: true,
@@ -59,7 +69,8 @@ describe('LinkedInVerification', () => {
 
     render(<LinkedInVerification />);
 
-    fireEvent.click(screen.getByRole('button', { name: /start verification check/i }));
+    const button = await screen.findByRole('button', { name: /start verification check/i });
+    fireEvent.click(button);
 
     await waitFor(() => expect(apiFetch).toHaveBeenCalled());
 
