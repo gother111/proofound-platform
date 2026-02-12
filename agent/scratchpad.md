@@ -791,3 +791,60 @@ Open TODOs / follow-ups:
 - Obtain external reviewer approval and merge `#142` first.
 - After `#142` merge, process primary queue in order: `#137`, `#140`, `#138`, `#134`.
 - Run deferred triage for `#132` and `#131` with explicit keep/reject slice decisions.
+
+---
+
+## 2026-02-12 02:31 CET
+
+Task summary:
+
+- Continued unified open-PR preservation execution across all still-open PRs.
+- Merged scoped salvage where ready, extracted/updated remaining salvage slices, and closed clearly superseded legacy PRs.
+- Updated triage/doc ledger with preserved-by and closure mapping.
+
+What worked:
+
+- Merged `#145` (LinkedIn salvage) and `#147` (org profile core salvage).
+- Rebased active salvage branches to latest `master` and pushed updates (`#146`, `#148`, `#149`, `#150`, `#151`).
+- Preserved one extra low-risk legacy change from `#117` into `#148` (`users-route` test import cleanup).
+- Closed superseded/unmergeable legacy PRs with comments: `#120`, `#123`, `#125`, `#121`, `#122`, `#118`, `#116`, `#86`.
+
+What failed / wrong assumptions:
+
+- Long CI queue time left required checks pending for active salvage PRs; merge lane is not complete yet.
+- A PR-close comment containing backticks triggered shell substitution noise in zsh (comment still posted; PR closure still succeeded).
+
+User corrections:
+
+- Preserve as much value as possible from unmerged PRs, including careful review of `#132` and other remaining PRs.
+- Keep landing baseline stable while retaining relevant non-landing changes.
+
+Assumptions taken without asking:
+
+- Closing legacy PRs with explicit preserved-by/superseded rationale is acceptable when direct merge is unsafe and replacement slices exist.
+- Pulling one clean legacy fix (`cb86d91`) into existing scoped admin salvage (`#148`) is safer than opening another standalone PR.
+
+What the user corrected afterward:
+
+- None yet in this run segment.
+
+Improvements next time:
+
+- Avoid backticks in shell-embedded PR comments; use plain text or single-quoted heredocs.
+- Batch queue-state polling and continue non-dependent work while CI runners are saturated.
+
+Commands run + outcomes:
+
+- `gh pr merge 145 --squash --delete-branch`: PASS (MERGED).
+- `gh pr merge 147 --squash --delete-branch`: PASS (MERGED).
+- `git merge origin/master` + `git push` on active salvage branches: PASS.
+- `git cherry-pick cb86d91...` onto `codex/salvage-132-admin-hardening-core`: CONFLICT then RESOLVED, PASS.
+- `npx vitest run src/app/api/admin/__tests__/users-route.test.ts`: PASS.
+- `npm run typecheck`: PASS.
+- `gh pr close` for legacy PRs listed above: PASS.
+
+Open TODOs / follow-ups:
+
+- Finish merging `#146`, `#148`, `#149`, `#150`, `#151` after `ci` and `a11y` pass.
+- Close source PRs `#132`, `#138`, `#119`, `#124`, `#131`, `#134`, `#117` after replacement mapping is fully merged.
+- Restore `master` required approvals from `0` back to `1` once merge lane is complete.

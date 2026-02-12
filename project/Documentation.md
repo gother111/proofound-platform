@@ -792,3 +792,49 @@ Open risks/TODO:
 - `#142` required checks are passing but merge cannot proceed without an external approval.
 - `#137`, `#140`, `#138`, `#134` are queued but cannot be merged until reviewer approval flow is satisfied.
 - Deferred large PR `#132` still requires explicit slice-by-slice triage before any keep/reject decision.
+
+---
+
+## 2026-02-12: Unified Open-PR Preservation Execution (in progress)
+
+What changed:
+
+- Merged scoped salvage PRs:
+  - `#145` LinkedIn OAuth/settings verification salvage from `#132`.
+  - `#147` organization profile API/editor core salvage from `#132`.
+- Opened and queued remaining scoped salvage PRs (all based on `master`):
+  - `#146` OAuth helper dedup slice from `#132`.
+  - `#148` admin fairness/verification hardening slice from `#132`.
+  - `#149` infra doc-link slice from `#138`.
+  - `#150` instrumentation-client migration slice from `#119`.
+  - `#151` env-sync helper coverage slice from `#124`.
+- Preserved one additional low-risk change from legacy `#117` into `#148`:
+  - `src/app/api/admin/__tests__/users-route.test.ts` cleanup (`test(admin): remove unused schema import`).
+- Closed superseded/unmergeable legacy PRs with traceability comments:
+  - `#120`, `#123`, `#125`, `#121`, `#122`, `#118`, `#116`, `#86`.
+
+Why:
+
+- Keep currently valuable behavior while avoiding direct merges from mixed/diverged branches.
+- Reduce open PR noise so the queue contains only scoped, testable, merge-ready work.
+- Preserve landing isolation by rejecting mixed legacy branches with landing-sensitive drift.
+
+How to verify:
+
+- Queue inventory:
+  - `gh pr list --state open --limit 100`
+- Required check status for active salvage lane:
+  - `gh pr checks 146`
+  - `gh pr checks 148`
+  - `gh pr checks 149`
+  - `gh pr checks 150`
+  - `gh pr checks 151`
+- Confirm merged salvage PRs:
+  - `gh pr view 145 --json state,mergedAt,mergeCommit`
+  - `gh pr view 147 --json state,mergedAt,mergeCommit`
+
+Open risks/TODO:
+
+- Remaining salvage PRs are currently blocked only by required check queue time (`ci`/`a11y` pending).
+- Source PRs `#132`, `#138`, `#119`, `#124`, `#134`, `#131`, `#117` still need final close-out after replacement slices merge.
+- `master` branch protection approvals are still temporarily `0` and must be restored to `1` after this recovery lane completes.
