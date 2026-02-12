@@ -41,6 +41,7 @@ Core Web Vitals are Google's metrics for measuring user experience. Target value
 5. Review results and recommendations
 
 **Target Scores:**
+
 - Performance: > 90
 - Accessibility: > 90
 - Best Practices: > 90
@@ -89,6 +90,7 @@ https://chrome.google.com/webstore/detail/web-vitals/ahfhijdlegdabablpippeagghig
 ```
 
 **Usage:**
+
 1. Install extension
 2. Navigate to your site
 3. Click extension icon to see current page vitals
@@ -132,6 +134,7 @@ ANALYZE=true npm run build
 ```
 
 **What to Look For:**
+
 - Large dependencies (> 100KB)
 - Duplicated modules
 - Unnecessary imports
@@ -159,6 +162,7 @@ npm run build
 ```
 
 **Bundle Size Budget:**
+
 - First Load JS per route: < 150 KB (gzipped)
 - Individual route JS: < 50 KB (gzipped)
 - Shared chunks: < 100 KB (gzipped)
@@ -257,6 +261,7 @@ Percentage of requests served within a certain time (ms)
 ```
 
 **What to Look For:**
+
 - No failed requests
 - P50 < 500ms
 - P95 < 1000ms
@@ -309,10 +314,10 @@ import { check, sleep } from 'k6';
 export const options = {
   stages: [
     { duration: '30s', target: 10 }, // Ramp up to 10 users
-    { duration: '1m', target: 10 },  // Stay at 10 users
+    { duration: '1m', target: 10 }, // Stay at 10 users
     { duration: '30s', target: 20 }, // Ramp up to 20 users
-    { duration: '1m', target: 20 },  // Stay at 20 users
-    { duration: '30s', target: 0 },  // Ramp down to 0 users
+    { duration: '1m', target: 20 }, // Stay at 20 users
+    { duration: '30s', target: 0 }, // Ramp down to 0 users
   ],
   thresholds: {
     http_req_duration: ['p(95)<2000'],
@@ -327,7 +332,7 @@ export default function () {
   const params = {
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${TOKEN}`,
+      Authorization: `Bearer ${TOKEN}`,
     },
   };
 
@@ -337,11 +342,7 @@ export default function () {
     k: 20,
   });
 
-  const res = http.post(
-    `${BASE_URL}/api/core/matching/profile`,
-    matchPayload,
-    params
-  );
+  const res = http.post(`${BASE_URL}/api/core/matching/profile`, matchPayload, params);
 
   check(res, {
     'status is 200': (r) => r.status === 200,
@@ -396,6 +397,7 @@ LIMIT 20;
 ```
 
 **What to Look For:**
+
 - **Seq Scan** → Add index
 - **Execution time > 100ms** → Optimize query or add index
 - **Rows >> actual rows** → Update table statistics
@@ -546,6 +548,7 @@ Summary report @ 14:23:45(+0000)
 ```
 
 **What to Look For:**
+
 - Scenario completion rate > 99%
 - P95 response time < 1000ms
 - P99 response time < 2000ms
@@ -620,6 +623,7 @@ export async function GET() {
 ```
 
 **Target Metrics:**
+
 - Cache hit rate: > 70%
 - Average cache retrieval time: < 10ms
 
@@ -694,13 +698,13 @@ Set performance budgets to prevent regressions:
 
 ### API Performance Budgets
 
-| Endpoint | P50 | P95 | P99 |
-|----------|-----|-----|-----|
-| `/api/expertise/taxonomy` (cached) | < 50ms | < 100ms | < 200ms |
-| `/api/core/matching/profile` | < 500ms | < 1000ms | < 2000ms |
-| `/api/messages` | < 200ms | < 400ms | < 800ms |
-| `/api/conversations` | < 200ms | < 400ms | < 800ms |
-| `/api/assignments` | < 300ms | < 600ms | < 1200ms |
+| Endpoint                           | P50     | P95      | P99      |
+| ---------------------------------- | ------- | -------- | -------- |
+| `/api/expertise/taxonomy` (cached) | < 50ms  | < 100ms  | < 200ms  |
+| `/api/core/matching/profile`       | < 500ms | < 1000ms | < 2000ms |
+| `/api/messages`                    | < 200ms | < 400ms  | < 800ms  |
+| `/api/conversations`               | < 200ms | < 400ms  | < 800ms  |
+| `/api/assignments`                 | < 300ms | < 600ms  | < 1200ms |
 
 ---
 
@@ -715,6 +719,7 @@ Set performance budgets to prevent regressions:
 3. Deploys automatically start collecting metrics
 
 **Metrics Tracked:**
+
 - Page views
 - Core Web Vitals (LCP, FID, CLS)
 - Real user monitoring
@@ -722,6 +727,7 @@ Set performance budgets to prevent regressions:
 - Device breakdown
 
 **Review Regularly:**
+
 - Check Web Vitals trends
 - Identify slow pages
 - Monitor regressions after deployments
@@ -731,26 +737,23 @@ Set performance budgets to prevent regressions:
 **Enable Performance Monitoring:**
 
 ```typescript
-// sentry.client.config.ts
+// instrumentation-client.ts
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
   tracesSampleRate: 0.1, // 10% of transactions
-  integrations: [
-    Sentry.browserTracingIntegration(),
-  ],
+  integrations: [Sentry.browserTracingIntegration()],
 });
 
 // sentry.server.config.ts
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
   tracesSampleRate: 0.1,
-  integrations: [
-    Sentry.httpIntegration(),
-  ],
+  integrations: [Sentry.httpIntegration()],
 });
 ```
 
 **Monitor in Sentry Dashboard:**
+
 - Transaction performance
 - Slow database queries
 - API response times
@@ -791,30 +794,35 @@ if (duration > 2000) {
 Before deploying to production, verify:
 
 ### Core Web Vitals
+
 - [ ] LCP < 2.5s on all critical pages
 - [ ] FID < 100ms
 - [ ] CLS < 0.1
 - [ ] Lighthouse Performance score > 90
 
 ### Bundle Size
+
 - [ ] First Load JS < 150 KB per route
 - [ ] No duplicate dependencies in bundle
 - [ ] Tree shaking working correctly
 - [ ] Code splitting for large components
 
 ### API Performance
+
 - [ ] All API endpoints P95 < 1s
 - [ ] Cache hit rate > 70%
 - [ ] No N+1 query patterns
 - [ ] Database queries < 100ms
 
 ### Load Testing
+
 - [ ] Site handles 20 concurrent users without errors
 - [ ] Response times stable under load
 - [ ] No memory leaks during extended testing
 - [ ] Database connections properly pooled
 
 ### Monitoring
+
 - [ ] Vercel Analytics enabled
 - [ ] Sentry performance monitoring configured
 - [ ] Performance logging in place
@@ -827,11 +835,13 @@ Before deploying to production, verify:
 ### Slow Page Loads
 
 **Diagnose:**
+
 1. Run Lighthouse to identify bottleneck
 2. Check Network tab for slow resources
 3. Review bundle size analysis
 
 **Common Fixes:**
+
 - Lazy load images: Use Next.js `<Image>` component
 - Code split large components: Use `dynamic()` import
 - Reduce JavaScript bundle: Remove unused dependencies
@@ -840,11 +850,13 @@ Before deploying to production, verify:
 ### Slow API Responses
 
 **Diagnose:**
+
 1. Check Sentry for slow transactions
 2. Review database query performance
 3. Check cache hit rate
 
 **Common Fixes:**
+
 - Add database indexes
 - Implement caching for expensive operations
 - Optimize database queries (reduce joins)
@@ -853,6 +865,7 @@ Before deploying to production, verify:
 ### High Memory Usage
 
 **Diagnose:**
+
 ```typescript
 // Add memory monitoring
 const used = process.memoryUsage();
@@ -864,6 +877,7 @@ log.info('memory.usage', {
 ```
 
 **Common Fixes:**
+
 - Close database connections properly
 - Clear caches periodically
 - Avoid storing large objects in memory
