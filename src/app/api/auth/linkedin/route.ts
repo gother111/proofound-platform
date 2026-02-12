@@ -1,6 +1,6 @@
 /**
  * LinkedIn OAuth Initiation
- * 
+ *
  * GET /api/auth/linkedin
  * Initiates LinkedIn OAuth flow and redirects to LinkedIn authorization
  */
@@ -20,21 +20,17 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.redirect(
-        new URL('/signin?error=unauthorized', request.url)
-      );
+      return NextResponse.redirect(new URL('/login?error=unauthorized', request.url));
     }
 
     // Generate state parameter for CSRF protection
     const state = randomBytes(32).toString('hex');
 
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
+    const redirectUri = new URL('/api/auth/linkedin/callback', baseUrl).toString();
+
     // Store state in cookie for verification on callback
-    const response = NextResponse.redirect(
-      generateLinkedInAuthUrl(
-        state,
-        `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/linkedin/callback`
-      )
-    );
+    const response = NextResponse.redirect(generateLinkedInAuthUrl(state, redirectUri));
 
     response.cookies.set('linkedin_oauth_state', state, {
       httpOnly: true,
@@ -58,7 +54,9 @@ export async function GET(request: NextRequest) {
     console.error('LinkedIn OAuth initiation error:', error);
     return NextResponse.redirect(
       new URL(
-        `/settings?error=${encodeURIComponent('Failed to initiate LinkedIn connection')}`,
+        `/app/i/settings?tab=integrations&error=linkedin_auth_failed&message=${encodeURIComponent(
+          'Failed to initiate LinkedIn connection'
+        )}`,
         request.url
       )
     );

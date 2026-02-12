@@ -10,7 +10,7 @@ import { LinkedInConnect } from './LinkedInConnect';
 import { EmailManager } from './EmailManager';
 import { PasswordChangeForm } from './PasswordChangeForm';
 import { resetTour } from '@/actions/tour';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { RotateCcw, Loader2 } from 'lucide-react';
 import { CustomizableDashboard } from '../dashboard/CustomizableDashboard';
@@ -19,12 +19,16 @@ interface SettingsContentProps {
   userId: string;
 }
 
+const ALLOWED_TABS = ['account', 'dashboard', 'integrations', 'notifications', 'privacy'] as const;
+type AllowedTab = (typeof ALLOWED_TABS)[number];
+
 export function SettingsContent({ userId }: SettingsContentProps) {
   const [activeTab, setActiveTab] = useState('account');
   const [isResettingTour, setIsResettingTour] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [isLoadingEmail, setIsLoadingEmail] = useState(true);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // Fetch user email on mount
   useEffect(() => {
@@ -43,6 +47,14 @@ export function SettingsContent({ userId }: SettingsContentProps) {
     }
     fetchUserEmail();
   }, []);
+
+  // Sync active tab with ?tab= query param (for OAuth callbacks and deep links).
+  useEffect(() => {
+    const requestedTab = searchParams?.get('tab') as AllowedTab | null;
+    if (requestedTab && ALLOWED_TABS.includes(requestedTab)) {
+      setActiveTab(requestedTab);
+    }
+  }, [searchParams]);
 
   const handleRestartTour = async () => {
     setIsResettingTour(true);
