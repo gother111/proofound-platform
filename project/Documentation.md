@@ -1362,3 +1362,41 @@ Open risks/TODO:
 
 - No production deployment for commit `35bf00e` can be created until quota window resets or plan limits are increased.
 - After quota reset, trigger a production deployment for `proofound-platform` and verify `proofound.io` points to deployment built from `35bf00e`.
+
+---
+
+## 2026-02-12: Strict E2E Harness Salvage from Mixed PR #175
+
+What changed:
+
+- Preserved strict-gate test harness assets from mixed PR `#175` into a scoped slice:
+  - `e2e/auth.real.spec.ts`
+  - `e2e/helpers/load-strict-env.ts`
+  - `e2e/helpers/strict-fixtures.ts`
+  - `e2e/strict/individual.strict.spec.ts`
+  - `e2e/strict/organization.strict.spec.ts`
+  - `e2e/strict/privacy.strict.spec.ts`
+  - `e2e/strict/providers.strict.spec.ts`
+  - `playwright.a11y.strict.config.ts`
+  - `scripts/check-strict-e2e-quality.mjs`
+  - `scripts/run-mvp-strict-gates.mjs`
+  - `project/MVP_FLOW_MATRIX_2026-02-12.md`
+- Added package scripts for strict suites and strict gate orchestration without replacing existing default test commands.
+
+Why:
+
+- `#175` mixed landing, auth, API, migration, and test changes in one conflicting branch.
+- Preserving strict verification assets in isolation keeps landing locked and avoids merging high-risk runtime/database deltas blindly.
+
+How to verify:
+
+- `npm run lint`
+- `npm run typecheck`
+- `npm run test`
+- `npm run build`
+- `npm run test:strict:quality`
+
+Open risks/TODO:
+
+- Runtime/API/migration deltas from `#175` are intentionally excluded from this slice and must be reviewed in dedicated risk-scoped PRs.
+- Landing-touching files from `#175` remain excluded until a dedicated landing PR with visual guardrails is approved.

@@ -1500,3 +1500,54 @@ Open TODOs / follow-ups:
 
 - Re-run production deploy after quota reset window and verify new deployment includes `35bf00e`.
 - If quota blocks continue, increase plan limits or reduce deployment frequency.
+
+---
+
+## 2026-02-12 21:42 CET
+
+Task summary:
+
+- Continued open-PR recovery after branch protection removal.
+- Processed open mixed PR queue and preserved strict E2E/gate assets from `#175` in a scoped salvage branch.
+
+What worked:
+
+- Full verification passed for strict-harness salvage (`lint`, `typecheck`, `test`, `build`, `test:strict:quality`).
+- Kept landing/runtime/migration risk out of the salvage slice.
+- Verified `#170` state and treated it as already merged/superseded.
+
+What failed / wrong assumptions:
+
+- Initial cherry-pick attempt from old branch conflicted immediately on docs logs due branch drift.
+- Switched to direct file-level extraction from source branch instead of commit replay.
+
+User corrections:
+
+- User asked to continue and complete open tasks after branch protection removal.
+
+Assumptions taken without asking:
+
+- Best safe interpretation of “complete open tasks” is closing mixed risk by salvage-by-slice rather than direct merge of conflicting branches.
+- Landing lock remains higher priority than replaying legacy landing edits in mixed PRs.
+
+What the user corrected afterward:
+
+- None in this run segment.
+
+Improvements next time:
+
+- Check PR open list again immediately after long-running operations because queue changed during execution.
+- Prefer two-dot (`master..branch`) and direct (`master branch`) diff views early to separate unique value from stale divergence.
+
+Commands run + outcomes:
+
+- `gh pr list --state open ...`: PASS (identified `#169`, `#170`, then later `#175`).
+- `gh pr view/diff ...`: PASS (file scope and mergeability triage).
+- `npm run lint && npm run typecheck && npm run test && npm run build`: PASS on salvage branch.
+- `npm run test:strict:quality`: PASS.
+
+Open TODOs / follow-ups:
+
+- Open and merge scoped salvage PR for strict harness branch.
+- Close mixed source PR `#175` after linking preserved-by PR.
+- If runtime/API/migration deltas from `#175` are still needed, extract them into dedicated risk-scoped PRs with targeted tests.
