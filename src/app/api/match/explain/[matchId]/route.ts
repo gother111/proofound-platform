@@ -2,27 +2,39 @@
  * Match Explanation API
  *
  * GET /api/match/explain/[matchId]
- * Returns detailed breakdown of match scoring for transparency
- *
- * Implements PRD Flow I-18: Rank Transparency & Assignment Detail
+ * Returns detailed breakdown of match scoring for transparency.
  */
 
-import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/db';
+import { sql } from 'drizzle-orm';
+import { getRows } from '@/lib/db/rows';
+import { isActiveOrgMember, requireApiAuth } from '@/lib/api/auth';
+
+type SkillRequirement = {
+  id?: string;
+  skillCode?: string;
+  skill_id?: string;
+  minLevel?: number;
+  desiredLevel?: number;
+};
+
+function asArray<T>(value: unknown): T[] {
+  return Array.isArray(value) ? (value as T[]) : [];
+}
+
+function toSkillKey(skill: SkillRequirement): string {
+  return skill.id || skill.skillCode || skill.skill_id || '';
+}
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ matchId: string }> }
 ) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const authResult = await requireApiAuth();
+    if (authResult instanceof NextResponse) {
+      return authResult;
     }
 
     const { matchId } = await params;
@@ -31,92 +43,143 @@ export async function GET(
       return NextResponse.json({ error: 'Match ID required' }, { status: 400 });
     }
 
-    // Fetch the match record with detailed scoring data
-    const { data: match, error: matchError } = await supabase
-      .from('matches')
-      .select(
-        `
-        *,
-        assignment:assignments!inner(
-          id,
-          role,
-          requiredSkills,
-          niceSkills,
-          valuesRequired,
-          valuesTags,
-          causeTags,
-          locationMode,
-          country,
-          workMode,
-          compMin,
-          compMax,
-          currency,
-          hoursMin,
-          hoursMax
-        ),
-        individual_profile:individual_profiles!inner(
-          userId,
-          values,
-          causes
-        )
-      `
-      )
-      .eq('id', matchId)
-      .single();
+    const matchResult = await db.execute(sql`
+      SELECT
+        m.id,
+        m.assignment_id,
+        m.profile_id,
+        m.score,
+        m.vector,
+        m.weights,
+        a.role,
+        a.values_required,
+        a.cause_tags,
+        a.must_have_skills,
+        a.nice_to_have_skills,
+        a.location_mode,
+        a.country,
+        a.comp_min,
+        a.comp_max,
+        a.currency,
+        a.hours_min,
+        a.hours_max,
+        a.org_id,
+        ip.values AS profile_values,
+        ip.causes AS profile_causes
+      FROM matches m
+      INNER JOIN assignments a ON a.id = m.assignment_id
+      LEFT JOIN individual_profiles ip ON ip.user_id = m.profile_id
+      WHERE m.id = ${matchId}
+      LIMIT 1
+    `);
 
-    if (matchError || !match) {
-      console.error('Failed to fetch match:', matchError);
+    const matchRows = getRows(matchResult) as Array<{
+      id: string;
+      assignment_id: string;
+      profile_id: string;
+      score: string | number;
+      vector: unknown;
+      weights: unknown;
+      role: string | null;
+      values_required: unknown;
+      cause_tags: unknown;
+      must_have_skills: unknown;
+      nice_to_have_skills: unknown;
+      location_mode: string | null;
+      country: string | null;
+      comp_min: number | null;
+      comp_max: number | null;
+      currency: string | null;
+      hours_min: number | null;
+      hours_max: number | null;
+      org_id: string;
+      profile_values: unknown;
+      profile_causes: unknown;
+    }>;
+
+    const match = matchRows[0];
+
+    if (!match) {
       return NextResponse.json({ error: 'Match not found' }, { status: 404 });
     }
 
-    // Ensure user is authorized to view this match
-    if (match.profileId !== user.id && match.assignment.organizationId !== user.id) {
+    const canViewAsOrgMember = await isActiveOrgMember(
+      authResult.supabase,
+      authResult.user.id,
+      match.org_id,
+      ['owner', 'admin', 'member', 'viewer']
+    );
+
+    if (match.profile_id !== authResult.user.id && !canViewAsOrgMember) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    // Fetch user's skills for comparison
-    const { data: userSkills, error: skillsError } = await supabase
-      .from('skills')
-      .select('skillCode, level, monthsExperience, evidenceStrength')
-      .eq('userId', match.profileId);
+    const userSkillsResult = await db.execute(sql`
+      SELECT skill_code, skill_id, level, months_experience, evidence_strength
+      FROM skills
+      WHERE profile_id = ${match.profile_id}
+    `);
 
-    if (skillsError) {
-      console.error('Failed to fetch user skills:', skillsError);
+    const userSkills = getRows(userSkillsResult) as Array<{
+      skill_code: string | null;
+      skill_id: string | null;
+      level: number;
+      months_experience: number;
+      evidence_strength: string | number | null;
+    }>;
+
+    const requiredSkills = asArray<SkillRequirement>(match.must_have_skills);
+    const niceSkills = asArray<SkillRequirement>(match.nice_to_have_skills);
+
+    const skillCodes = new Set<string>();
+    for (const skill of requiredSkills) {
+      const key = toSkillKey(skill);
+      if (key) skillCodes.add(key);
+    }
+    for (const skill of niceSkills) {
+      const key = toSkillKey(skill);
+      if (key) skillCodes.add(key);
+    }
+    for (const skill of userSkills) {
+      if (skill.skill_code) skillCodes.add(skill.skill_code);
+      else if (skill.skill_id) skillCodes.add(skill.skill_id);
     }
 
-    // Get skill labels from taxonomy
-    const skillCodes = userSkills?.map((s) => s.skillCode) || [];
-    const { data: skillLabels } = await supabase
-      .from('l4_skills')
-      .select('code, name')
-      .in('code', skillCodes);
+    const taxonomyRows =
+      skillCodes.size > 0
+        ? (getRows(
+            await db.execute(sql`
+              SELECT code, COALESCE(name_i18n ->> 'en', slug, code) AS name
+              FROM skills_taxonomy
+              WHERE code = ANY(${Array.from(skillCodes)})
+            `)
+          ) as Array<{ code: string; name: string }>)
+        : [];
 
-    const skillMap = new Map(skillLabels?.map((s) => [s.code, s.name]) || []);
-
-    // Calculate skill matches
-    const requiredSkills = (match.assignment.requiredSkills || []) as Array<{
-      skillCode: string;
-      minLevel: number;
-    }>;
-    const niceSkills = (match.assignment.niceSkills || []) as Array<{
-      skillCode: string;
-      desiredLevel?: number;
-    }>;
+    const skillMap = new Map(taxonomyRows.map((row) => [row.code, row.name]));
 
     const skillsMatch = {
       required: requiredSkills.map((required) => {
-        const userSkill = userSkills?.find((s) => s.skillCode === required.skillCode);
+        const requiredKey = toSkillKey(required);
+        const userSkill = userSkills.find(
+          (skill) => (skill.skill_code || skill.skill_id) === requiredKey
+        );
+
         return {
-          skillName: skillMap.get(required.skillCode) || required.skillCode,
-          requiredLevel: required.minLevel,
+          skillName: skillMap.get(requiredKey) || requiredKey,
+          requiredLevel: required.minLevel ?? 0,
           yourLevel: userSkill?.level || 0,
-          met: (userSkill?.level || 0) >= required.minLevel,
+          met: (userSkill?.level || 0) >= (required.minLevel ?? 0),
         };
       }),
       nice: niceSkills.map((nice) => {
-        const userSkill = userSkills?.find((s) => s.skillCode === nice.skillCode);
+        const niceKey = toSkillKey(nice);
+        const userSkill = userSkills.find(
+          (skill) => (skill.skill_code || skill.skill_id) === niceKey
+        );
+
         return {
-          skillName: skillMap.get(nice.skillCode) || nice.skillCode,
+          skillName: skillMap.get(niceKey) || niceKey,
           desiredLevel: nice.desiredLevel,
           yourLevel: userSkill?.level || 0,
           met: userSkill !== undefined,
@@ -124,19 +187,16 @@ export async function GET(
       }),
     };
 
-    // Calculate PAC (Purpose-Alignment Contribution)
-    const userValues = (match.individual_profile?.values || []) as string[];
-    const userCauses = (match.individual_profile?.causes || []) as string[];
-    const assignmentValues = (match.assignment.valuesTags || []) as string[];
-    const assignmentCauses = (match.assignment.causeTags || []) as string[];
+    const userValues = asArray<string>(match.profile_values);
+    const userCauses = asArray<string>(match.profile_causes);
+    const assignmentValues = asArray<string>(match.values_required);
+    const assignmentCauses = asArray<string>(match.cause_tags);
 
-    // Jaccard similarity for values
-    const sharedValues = userValues.filter((v) => assignmentValues.includes(v));
+    const sharedValues = userValues.filter((value) => assignmentValues.includes(value));
     const totalUniqueValues = new Set([...userValues, ...assignmentValues]).size;
     const valuesOverlap = totalUniqueValues > 0 ? sharedValues.length / totalUniqueValues : 0;
 
-    // Jaccard similarity for causes
-    const sharedCauses = userCauses.filter((c) => assignmentCauses.includes(c));
+    const sharedCauses = userCauses.filter((cause) => assignmentCauses.includes(cause));
     const totalUniqueCauses = new Set([...userCauses, ...assignmentCauses]).size;
     const causesOverlap = totalUniqueCauses > 0 ? sharedCauses.length / totalUniqueCauses : 0;
 
@@ -149,60 +209,76 @@ export async function GET(
       totalCauses: totalUniqueCauses,
     };
 
-    // Calculate constraints match
     const constraints = {
       location: {
-        match: match.assignment.locationMode === 'remote' || true, // Simplified
-        details: `${match.assignment.locationMode || 'Not specified'}`,
+        match: true,
+        details: `${match.location_mode || 'Not specified'}`,
       },
       salary: {
-        match: true, // Would need matching profile salary range
-        details: match.assignment.compMin
-          ? `${match.assignment.currency} ${match.assignment.compMin}-${match.assignment.compMax}`
-          : 'Not specified',
+        match: true,
+        details:
+          match.comp_min != null
+            ? `${match.currency || 'USD'} ${match.comp_min}-${match.comp_max ?? match.comp_min}`
+            : 'Not specified',
       },
       hours: {
         match: true,
-        details: match.assignment.hoursMin
-          ? `${match.assignment.hoursMin}-${match.assignment.hoursMax} hours/week`
-          : 'Not specified',
+        details:
+          match.hours_min != null
+            ? `${match.hours_min}-${match.hours_max ?? match.hours_min} hours/week`
+            : 'Not specified',
       },
       workMode: {
         match: true,
-        details: match.assignment.workMode || 'Not specified',
+        details: match.location_mode || 'Not specified',
       },
     };
 
-    // Get rank (if available)
-    // This would require querying all matches for this assignment sorted by score
-    const { data: allMatches } = await supabase
-      .from('matches')
-      .select('id, totalScore')
-      .eq('assignmentId', match.assignmentId)
-      .order('totalScore', { ascending: false });
+    const allMatchesResult = await db.execute(sql`
+      SELECT id, score
+      FROM matches
+      WHERE assignment_id = ${match.assignment_id}
+      ORDER BY score DESC
+    `);
 
-    const rank = allMatches ? allMatches.findIndex((m) => m.id === matchId) + 1 : 0;
-    const totalCandidates = allMatches?.length || 0;
+    const allMatches = getRows(allMatchesResult) as Array<{ id: string; score: string | number }>;
+    const rank = allMatches.findIndex((candidate) => candidate.id === matchId) + 1;
+    const totalCandidates = allMatches.length;
 
-    // Determine rank band
     let rankBand: string | undefined;
-    if (rank <= 5) rankBand = 'Top 5';
+    if (rank > 0 && rank <= 5) rankBand = 'Top 5';
     else if (rank <= 10) rankBand = 'Top 10';
     else if (rank <= 20) rankBand = 'Top 20';
+    else if (rank > 0 && totalCandidates > 0) {
+      const percentile = Math.ceil((rank / totalCandidates) * 100);
+      if (percentile <= 30) rankBand = 'Top 30%';
+      else if (percentile <= 50) rankBand = 'Top 50%';
+      else rankBand = 'Competitive';
+    } else {
+      rankBand = 'Competitive';
+    }
 
-    // Build response
+    const requestedRankMode = request.nextUrl.searchParams.get('rankMode');
+    const exactRankAllowed =
+      requestedRankMode === 'exact' && canViewAsOrgMember && totalCandidates >= 30;
+
+    const vector = (match.vector as Record<string, any> | null) || {};
+    const vectorSubscores = (vector.subscores as Record<string, number> | undefined) || {};
+
     const explanation = {
       matchId: match.id,
-      compositeScore: match.totalScore || 0,
-      rank,
+      compositeScore: Number(match.score) || 0,
+      rank: exactRankAllowed ? rank : undefined,
       totalCandidates,
       rankBand,
+      rankMode: exactRankAllowed ? 'exact' : 'band',
+      exactRankAvailable: canViewAsOrgMember && totalCandidates >= 30,
       subscores: {
-        skills: match.skillScore || 0,
-        pac: match.pacScore || 0,
-        constraints: match.constraintScore || 0,
-        recency: match.recencyScore || 0,
-        evidence: match.evidenceScore || 0,
+        skills: Number(vectorSubscores.skills ?? vector.skills ?? 0),
+        pac: Number(vectorSubscores.pac ?? vector.pac ?? 0),
+        constraints: Number(vectorSubscores.constraints ?? vector.constraints ?? 0),
+        recency: Number(vectorSubscores.recency ?? vector.recency ?? 0),
+        evidence: Number(vectorSubscores.evidence ?? vector.evidence ?? 0),
       },
       skillsMatch,
       pac,

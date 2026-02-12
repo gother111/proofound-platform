@@ -341,8 +341,8 @@ CREATE POLICY "Users can delete own skills"
 
 -- Restrictive safeguard: matching profiles only visible to owner
 CREATE POLICY "Matching profiles - owner only (restrictive)"
-  AS RESTRICTIVE
   ON public.matching_profiles
+  AS RESTRICTIVE
   FOR SELECT
   USING (profile_id = auth.uid());
 
@@ -621,4 +621,3 @@ CREATE POLICY "Messages - participants can delete own"
         )
     )
   );
-

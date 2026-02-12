@@ -1,19 +1,21 @@
-# Metrics
+# Metrics Governance (Mirror)
 
-## Analytics Data Plumbing (Repo Truth)
+> Doc Class: `governance`
+> Sync Pair: `project/Documentation.md`
+> Last Verified: `2026-02-12`
 
-- Event ingestion and SQL utilities rely on a consistent “rows extraction” helper (`getRows`). (`/Users/yuriibakurov/proofound/src/lib/db/rows.ts:3`)
+## Principles
 
-## Build-Time vs Runtime Guards
+- Analytics events and metrics contracts must stay aligned with API and schema changes.
+- Changes to metrics behavior must be recorded in project documentation.
 
-Metrics/admin routes may be imported during `next build` for compilation. Any analytics/metrics code that depends on runtime secrets should be initialized lazily (same pattern as Resend in identity reveal). (`/Users/yuriibakurov/proofound/src/app/api/conversations/[conversationId]/reveal/route.ts:21`)
+## Operational Expectations
 
-## Open Items
+- Keep monitoring and alerting docs current.
+- Verify health and performance gates before launch decisions.
 
-- Document canonical analytics event schema expectations (columns, uniqueness constraints) and how to verify them against `supabase_migrations.schema_migrations`.
+## Canonical References
 
-## Pre-Commit Gate Logs
-
-- Local Vercel parity runs (install/lint/typecheck/test/build + `vercel build --prod`) are logged in:
-  - `project/Documentation.md`
-  - `docs/monitoring-alerting.md` (section: “Pre-commit Vercel Gate (Run Log)”)
+- `project/Documentation.md`
+- `docs/monitoring-alerting.md`
+- `docs/API_REFERENCE.md`

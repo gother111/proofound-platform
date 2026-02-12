@@ -139,11 +139,13 @@ ALTER TABLE organization_statute ENABLE ROW LEVEL SECURITY;
 ALTER TABLE organization_goals ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policy: Allow authenticated users to read public organization data
+DROP POLICY IF EXISTS "Public organization ownership is viewable by all authenticated users" ON organization_ownership;
 CREATE POLICY "Public organization ownership is viewable by all authenticated users"
   ON organization_ownership FOR SELECT
   USING (auth.role() = 'authenticated' AND is_public = true);
 
 -- RLS Policy: Allow org members to read all ownership data
+DROP POLICY IF EXISTS "Organization members can view ownership data" ON organization_ownership;
 CREATE POLICY "Organization members can view ownership data"
   ON organization_ownership FOR SELECT
   USING (
@@ -155,6 +157,7 @@ CREATE POLICY "Organization members can view ownership data"
   );
 
 -- RLS Policy: Allow org admins/owners to manage ownership data
+DROP POLICY IF EXISTS "Organization admins can manage ownership" ON organization_ownership;
 CREATE POLICY "Organization admins can manage ownership"
   ON organization_ownership FOR ALL
   USING (
@@ -177,6 +180,9 @@ BEGIN
                         'organization_structure', 'organization_statute', 'organization_goals'])
   LOOP
     EXECUTE format('
+      DROP POLICY IF EXISTS "%s_public_read" ON %s;
+      DROP POLICY IF EXISTS "%s_members_manage" ON %s;
+
       CREATE POLICY "%s_public_read"
         ON %s FOR SELECT
         USING (auth.role() = ''authenticated'');
@@ -191,7 +197,7 @@ BEGIN
             AND status = ''active''
           )
         );
-    ', table_name, table_name, table_name, table_name, table_name);
+    ', table_name, table_name, table_name, table_name, table_name, table_name, table_name, table_name, table_name);
   END LOOP;
 END $$;
 
@@ -215,11 +221,12 @@ BEGIN
                         'organization_partnerships', 'organization_structure', 'organization_statute', 'organization_goals'])
   LOOP
     EXECUTE format('
+      DROP TRIGGER IF EXISTS update_%s_updated_at ON %s;
       CREATE TRIGGER update_%s_updated_at
       BEFORE UPDATE ON %s
       FOR EACH ROW
       EXECUTE FUNCTION update_updated_at_column();
-    ', table_name, table_name);
+    ', table_name, table_name, table_name, table_name);
   END LOOP;
 END $$;
 
@@ -237,4 +244,3 @@ COMMENT ON COLUMN organizations.organization_number IS 'Official registration nu
 COMMENT ON COLUMN organizations.locations IS 'Array of office locations';
 COMMENT ON COLUMN organizations.values IS 'Core organizational values as JSON array';
 COMMENT ON COLUMN organizations.work_culture IS 'Description of work culture aspects as JSON object';
-

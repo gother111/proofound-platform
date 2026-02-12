@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
 import { assignments, matchingProfiles, skills, matches } from '@/db/schema';
 import { eq, and, gte } from 'drizzle-orm';
@@ -32,6 +31,7 @@ import {
 } from '@/lib/core/matching/scorers';
 import { getPreset, normalizeWeights, type PresetKey } from '@/lib/core/matching/presets';
 import { batchGetMissionVisionScoresForProfile } from '@/lib/matching/semantic';
+import { isTrustedInternalRequest, requireApiAuth } from '@/lib/api/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -76,12 +76,8 @@ export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
   try {
-    // Allow service-role cron calls to compute matches for a specific userId
-    const authHeader = request.headers.get('authorization');
-    const isServiceRoleCall =
-      authHeader && process.env.SUPABASE_SERVICE_ROLE_KEY
-        ? authHeader === `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`
-        : false;
+    // Allow internal cron calls to compute matches for a specific userId.
+    const isInternalCall = isTrustedInternalRequest(request);
 
     const body = await request.json();
 
@@ -90,14 +86,17 @@ export async function POST(request: NextRequest) {
       | z.infer<typeof ServiceMatchRequestSchema>;
     let user: { id: string };
 
-    if (isServiceRoleCall) {
+    if (isInternalCall) {
       const serviceValidated = ServiceMatchRequestSchema.parse(body);
       validatedData = serviceValidated;
       user = { id: serviceValidated.userId };
     } else {
       validatedData = MatchRequestSchema.parse(body);
-      const authedUser = await requireAuth();
-      user = { id: authedUser.id };
+      const authResult = await requireApiAuth();
+      if (authResult instanceof NextResponse) {
+        return authResult;
+      }
+      user = { id: authResult.user.id };
     }
 
     const { mode, k = 20, useSemanticMatching = false } = validatedData;

@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit --incremental false",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node run-migrations.mjs",
+    "db:drift-check": "node ./scripts/check-migration-drift.mjs",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx src/db/seed.ts",
@@ -35,6 +36,7 @@
     "prepare": "husky install",
     "perf:budgets": "node ./scripts/perf-budgets.mjs",
     "go:no-go": "node ./scripts/go-no-go-check.mjs",
+    "docs:freshness": "node ./scripts/docs-freshness-check.mjs",
     "test:smoke:gap-service": "tsx scripts/smoke-skill-gaps.ts",
     "test:smoke:learning": "tsx scripts/smoke-learning-provider.ts"
   },

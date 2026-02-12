@@ -1,5 +1,10 @@
 -- Seed Expertise Atlas Taxonomy
 
+-- Backward compatibility for DBs created before taxonomy status column existed.
+ALTER TABLE skills_categories
+ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'active'
+CHECK (status IN ('active', 'deprecated', 'merged'));
+
 -- Insert L1 domains
 INSERT INTO skills_categories (cat_id, slug, name_i18n, description_i18n, icon, display_order, version, status, created_at, updated_at)
 VALUES (1, 'u', '{"en": "Universal Capabilities"}', '{"en": "Universal Capabilities domain"}', 'Briefcase', 1, 1, 'active', NOW(), NOW())
@@ -6430,4 +6435,3 @@ ON CONFLICT (cat_id, subcat_id, l3_id) DO NOTHING;
 INSERT INTO skills_l3 (cat_id, subcat_id, l3_id, slug, name_i18n, description_i18n, display_order, version, created_at, updated_at)
 VALUES (6, 177, 1424, 'd-hum-cultural-studies', '{"en": "Cultural studies"}', '{"en": "Cultural studies related skills"}', 1424, 1, NOW(), NOW())
 ON CONFLICT (cat_id, subcat_id, l3_id) DO NOTHING;
-

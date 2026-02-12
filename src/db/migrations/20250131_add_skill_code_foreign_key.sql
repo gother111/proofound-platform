@@ -7,13 +7,23 @@
 -- ADD FOREIGN KEY CONSTRAINT
 -- ============================================================================
 
--- Add foreign key constraint for skill_code
+-- Add foreign key constraint for skill_code (idempotent)
 -- This enables the query syntax: taxonomy:skill_code (...fields...)
-ALTER TABLE skills 
-ADD CONSTRAINT fk_skills_skill_code 
-FOREIGN KEY (skill_code) 
-REFERENCES skills_taxonomy(code) 
-ON DELETE SET NULL;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'fk_skills_skill_code'
+          AND conrelid = 'public.skills'::regclass
+    ) THEN
+        ALTER TABLE skills
+        ADD CONSTRAINT fk_skills_skill_code
+        FOREIGN KEY (skill_code)
+        REFERENCES skills_taxonomy(code)
+        ON DELETE SET NULL;
+    END IF;
+END $$;
 
 -- ============================================================================
 -- ADD INDEX FOR PERFORMANCE
@@ -27,6 +37,15 @@ CREATE INDEX IF NOT EXISTS idx_skills_skill_code ON skills(skill_code);
 -- ============================================================================
 
 -- Add comment for documentation
-COMMENT ON CONSTRAINT fk_skills_skill_code ON skills IS 
-'Foreign key to skills_taxonomy.code for L4 skill reference. Enables relationship-based queries in Supabase.';
-
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'fk_skills_skill_code'
+          AND conrelid = 'public.skills'::regclass
+    ) THEN
+        COMMENT ON CONSTRAINT fk_skills_skill_code ON skills IS
+        'Foreign key to skills_taxonomy.code for L4 skill reference. Enables relationship-based queries in Supabase.';
+    END IF;
+END $$;

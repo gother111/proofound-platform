@@ -1,3 +1,7 @@
+> Doc Class: `governance`
+> Sync Pair: `Documentation.md`
+> Last Verified: `2026-02-12`
+
 # Documentation (Status + Index)
 
 ## Status
@@ -216,9 +220,7 @@ Architecture + privacy:
 
 API docs:
 
-- `API_DOCUMENTATION_FINAL.md`
-- `API_DOCUMENTATION_NEW_ENDPOINTS.md`
-- `docs/api-documentation.md`
+- `docs/API_REFERENCE.md`
 
 DB + migrations:
 
@@ -258,6 +260,61 @@ Audits + status snapshots:
 - `IMPLEMENTATION_STATUS_CURRENT.md`
 - `CODEBASE_AUDIT_REPORT.md`
 - `SECURITY_REVIEW_REPORT.md`
+
+## 2026-02-12: Maintainability Refactor (Phases 1-5)
+
+What changed:
+
+- Stabilized lint gate invocation by updating `scripts/lint-or-skip.js` to detect `eslint` availability via module resolution and run `npx eslint . --ext .js,.jsx,.ts,.tsx` instead of `next lint`.
+- Extracted assignment responsibilities into services and rewired route handlers:
+  - `src/lib/assignments/access.ts`
+  - `src/lib/assignments/activation.ts`
+  - `src/app/api/assignments/route.ts`
+  - `src/app/api/assignments/[id]/route.ts`
+- Extended matching service with optional replace behavior for activation flows:
+  - `src/lib/matching/generate-matches-for-assignment.ts`
+- Separated runtime Supabase server client creation from mock test double implementation:
+  - `src/lib/supabase/server.ts`
+  - `src/lib/supabase/mock-server-client.ts`
+- Reduced duplication in profile purpose actions by introducing shared helpers for mission/vision and values/causes updates:
+  - `src/actions/profile.ts`
+- Decomposed large profile/expertise UI modules into smaller sections:
+  - `src/components/profile/EditableProfileView.tsx`
+  - `src/components/profile/editable-profile/ProfileHeroSection.tsx`
+  - `src/components/profile/editable-profile/ProfileSidebar.tsx`
+  - `src/components/profile/editable-profile/ProfileTabsSection.tsx`
+  - `src/components/profile/editable-profile/ProfileDialogs.tsx`
+  - `src/app/app/i/expertise/components/EditSkillWindow.tsx`
+  - `src/app/app/i/expertise/components/edit-skill/types.ts`
+  - `src/app/app/i/expertise/components/edit-skill/ProofsSection.tsx`
+  - `src/app/app/i/expertise/components/edit-skill/VerificationSection.tsx`
+  - `src/app/app/i/expertise/components/edit-skill/DeleteSkillDialog.tsx`
+  - `src/app/app/i/expertise/components/add-skill/AddSkillDrawerView.tsx`
+  - `src/app/app/i/expertise/components/add-skill/SearchModePanel.tsx`
+  - `src/app/app/i/expertise/components/add-skill/BrowseModePanel.tsx`
+
+Why:
+
+- The assignment and profile paths had high churn and mixed responsibilities in single files.
+- Extracting service and UI boundaries lowers cognitive load and isolates future behavior changes.
+- Keeping external contracts unchanged while isolating internals reduces regression risk in incremental PRs.
+
+How to verify:
+
+- `npm ci`: PASS
+- `npm run lint`: PASS (1 pre-existing warning in `postcss.config.js`)
+- `npm run typecheck`: PASS
+- `npm run test -- tests/api/assignments.test.ts tests/actions/profile.test.ts src/lib/supabase/__tests__/server.test.ts tests/ui/step5-expertise-mapping.test.tsx tests/ui/share-profile-dialog.test.tsx`: PASS
+- `npm run test`: PASS
+- `npm run build`: PASS
+- `NEXT_PUBLIC_USE_MOCK_SUPABASE=true PLAYWRIGHT=true npm run test:e2e -- e2e/expertise/comprehensive-expertise.spec.ts --project=chromium --grep "attach proof|request verification" --reporter=line`: FAIL (local env issue: existing listeners on ports `3000` and `3010`, then auth helper timeout waiting for `/app` redirect)
+
+Open risks/TODO:
+
+- Local environment in this run used Node `v25.4.0`; repo expects Node `20.20.0` (`.nvmrc`). Consider rerunning gate commands under Node `20.20.0` for strict parity.
+- Build and tests log expected local warnings when `DATABASE_URL` is unset and mock DB fallback is active.
+- Lint still reports one warning in `postcss.config.js` (`import/no-anonymous-default-export`) that is unrelated to this refactor.
+- Expertise Playwright smoke for proof/verification flow needs a clean local port and deterministic auth setup before it can be treated as a blocking gate.
 - `CROSS_DOCUMENT_PRIVACY_AUDIT.md`
 - `RLS_DEPLOYMENT_SUMMARY.md`
 - `PRIVACY_DASHBOARD_IMPLEMENTATION_SUMMARY.md`
@@ -918,7 +975,7 @@ What changed:
 
 - Enforced canonical share URL base for snippets in `src/lib/profile/snippet-generator.ts`:
   - Uses `NEXT_PUBLIC_SITE_URL` only for share links.
-  - Normalizes host and rewrites legacy `proofound.com` and `www.proofound.com` to `proofound.io`.
+  - Normalizes host and rewrites legacy `proofound.io` and `www.proofound.io` to `proofound.io`.
   - Added `buildPublicEmbedURLFromProfileURL` and `generateEmbedCodeFromUrl`.
 - Extended snippet API for organization sharing in `src/app/api/profile/snippet/route.ts`:
   - Supports `profileType: 'individual' | 'organization'` and `orgId`.
@@ -946,7 +1003,7 @@ What changed:
 
 Why:
 
-- Share links were still generated as `proofound.com` in some paths and public snippet routes were missing or incomplete for end-to-end sharing.
+- Share links were still generated as `proofound.io` in some paths and public snippet routes were missing or incomplete for end-to-end sharing.
 - Organization profile sharing required the same token flow with membership checks and privacy enforcement.
 - Embed behavior needed a route-specific framing exception without loosening the rest of the app.
 
@@ -959,9 +1016,44 @@ How to verify:
 
 Open risks/TODO:
 
-- Existing already-shared `proofound.com` links outside the app cannot be redirected by this codebase alone.
+- Existing already-shared `proofound.io` links outside the app cannot be redirected by this codebase alone.
 - `frame-ancestors *` is intentionally limited to `/p/<token>/embed`; keep this route-scoped and do not broaden it.
 - Optional hardening follow-up: replace `<img>` with `next/image` in `src/components/profile/PublicSnippetView.tsx` if layout permits.
+
+---
+
+## 2026-02-12: Trusted PR Auto-Enable Auto-Merge
+
+What changed:
+
+- Added workflow `.github/workflows/auto-enable-automerge.yml`.
+- Workflow triggers on `pull_request_target` for:
+  - `opened`
+  - `reopened`
+  - `synchronize`
+  - `ready_for_review`
+- Workflow enables PR auto-merge using squash mode:
+  - `gh pr merge <number> --auto --squash`
+- Guardrails:
+  - only non-draft PRs
+  - only same-repo head and base
+  - only trusted author associations (`OWNER`, `MEMBER`, `COLLABORATOR`)
+
+Why:
+
+- Remove manual clicking of "Enable auto-merge" on trusted internal PRs.
+- Keep merge policy aligned with squash-only configuration and existing branch protection.
+
+How to verify:
+
+- `ruby -ryaml -e "YAML.load_file('.github/workflows/auto-enable-automerge.yml'); puts 'YAML_OK'"`
+- Open a trusted non-draft internal PR and verify auto-merge is enabled automatically.
+- Confirm merge still waits for required checks (`ci`, `a11y`) and required review.
+
+Open risks/TODO:
+
+- Workflow must be merged to `master` before it is active.
+- If GitHub token permissions or org policy changes, workflow may fail and need permission updates.
 
 ---
 
@@ -996,6 +1088,39 @@ How to verify:
 Open risks/TODO:
 
 - `next/image` in `PublicSnippetView` is configured with `unoptimized` to avoid remote-loader/domain regressions; if optimization is required later, add explicit `images.remotePatterns` and remove `unoptimized`.
+
+## 2026-02-12: Signup Persona Redirects via Auth Routes
+
+What changed:
+
+- Added dedicated persona signup pages:
+  - `src/app/(auth)/signup/individual/page.tsx`
+  - `src/app/(auth)/signup/organization/page.tsx`
+- Updated `src/app/(auth)/signup/page.tsx` to normalize `searchParams.type` and redirect server-side:
+  - `?type=individual` -> `/signup/individual`
+  - `?type=organization|org|org_member` -> `/signup/organization`
+  - unknown values remain on chooser (`/signup`)
+- Updated `src/app/(auth)/signup/SignupContent.tsx` with query-based client fallback initialization for parity.
+
+Why:
+
+- Ensure persona-specific signup entry links open the dedicated signup flow directly.
+- Preserve compatibility for existing links using `/signup?type=...`.
+- Keep landing-sensitive files untouched so landing scope CI policy remains satisfied.
+
+How to verify:
+
+- `npm run lint` (PASS, one existing unrelated warning in `src/components/profile/PublicSnippetView.tsx`)
+- `npm run typecheck` (BLOCKED by unrelated pre-existing local API edits referencing missing `@/lib/api/auth`)
+- Runtime checks (PASS):
+  - `curl -sI /signup?type=individual` -> `307` + `location: /signup/individual`
+  - `curl -sI /signup?type=organization` -> `307` + `location: /signup/organization`
+  - `curl -sI /signup?type=unknown` -> `200`
+
+Open risks/TODO:
+
+- Local full typecheck cannot pass until unrelated in-progress API-route changes are resolved in this worktree.
+- Existing non-blocking lint warning remains unrelated: `<img>` usage in `src/components/profile/PublicSnippetView.tsx`.
 
 ---
 
@@ -1032,101 +1157,122 @@ Open risks/TODO:
 - `onLoadingChange` is optional and callback-driven. If future dashboard implementations skip emitting loading transitions, parent loading text may drift again.
 - Current coverage is component-level. A future E2E assertion on `/app/i/home` could harden this behavior end-to-end.
 
----
-
-## 2026-02-12: Auto-Retry Production Deploy After Vercel Quota Reset
+## 2026-02-12: EU MVP Launch Readiness Implementation (No-Go Baseline Closed)
 
 What changed:
 
-- Added a new workflow at `.github/workflows/retry-vercel-deploy.yml`.
-- Workflow triggers on:
-  - `push` to `master`
-  - `schedule` every 30 minutes
-  - manual `workflow_dispatch`
-- Workflow compares:
-  - repo HEAD SHA (`git rev-parse HEAD`)
-  - live production SHA from `https://proofound.io/api/health` (`version`)
-- When SHAs differ, the workflow triggers Vercel production deploy via `VERCEL_DEPLOY_HOOK_URL` secret.
+- Replaced placeholder legal pages with concrete policy content and explicit version/effective-date metadata:
+  - `src/app/privacy/page.tsx`
+  - `src/app/terms/page.tsx`
+  - `src/app/(marketing)/cookies/page.tsx`
+- Unified consent/version contracts around shared privacy constants and lightweight consent contract modules:
+  - `src/lib/privacy/policy-version-config.ts`
+  - `src/lib/privacy/consent-contract.ts`
+  - `src/lib/privacy/policy-versions.ts`
+  - `src/lib/cookies/consent.ts`
+  - `src/components/CookieBanner.tsx`
+  - `src/app/api/user/consent/route.ts`
+  - `src/actions/auth.ts`
+- Added consent-gated optional telemetry mount and removed raw user-agent persistence from analytics/perf ingestion paths:
+  - `src/components/OptionalTelemetry.tsx`
+  - `src/app/layout.tsx`
+  - `src/lib/performance/client-tracker.ts`
+  - `src/app/api/performance/track/route.ts`
+  - `src/app/api/analytics/web-vitals/route.ts`
+- Aligned account deletion to one immediate-deletion model across API/UI/cron compatibility routes:
+  - `src/app/api/user/account/route.ts`
+  - `src/app/api/user/account/cancel-deletion/route.ts`
+  - `src/components/privacy/DeleteAccountSection.tsx`
+  - `src/components/privacy/DataBreakdown.tsx`
+  - `src/components/settings/PrivacyOverview.tsx`
+  - `src/app/api/cron/account-deletion-workflow/route.ts`
+  - `src/app/api/cron/process-deletions/route.ts`
+  - `src/app/api/cron/send-deletion-reminders/route.ts`
+- Implemented moderation rights endpoints and aligned moderation admin/reporting flow to current schema:
+  - `src/app/api/moderation/appeals/route.ts`
+  - `src/app/api/moderation/statements-of-reasons/route.ts`
+  - `src/app/api/moderation/transparency-report/route.ts`
+  - `src/app/api/moderation/report/route.ts`
+  - `src/app/api/admin/moderation/queue/route.ts`
+  - `src/app/api/admin/moderation/action/route.ts`
+  - `src/components/admin/ModerationQueue.tsx`
+- Implemented rank-band-first explainability default with constrained exact-rank release:
+  - `src/app/api/match/explain/[matchId]/route.ts`
+  - `src/components/matching/MatchResultCard.tsx`
+- Added EU hardening migration for RLS and moderation storage, and fixed trigger/schema drift:
+  - `src/db/migrations/20260212183000_eu_launch_readiness_hardening.sql`
+  - `supabase/migrations/20260212183000_eu_launch_readiness_hardening.sql`
+- Updated PRD language to align deletion model expectations:
+  - `PRD_for_a_web_platform_MVP.md`
 
 Why:
 
-- If Vercel deploy quota temporarily blocks deploys, pushes can succeed while production remains on an older commit.
-- This workflow keeps retrying deploy until production catches up after quota is restored.
+- EU launch readiness required closing P0 gaps in legal transparency, consent enforcement, telemetry minimization, sensitive-table RLS posture, moderation rights workflows, and PRD-policy consistency.
+- Privacy tests were failing against stale DB policy/trigger state, so migration apply had to be part of verification.
 
 How to verify:
 
-- YAML validation:
-  - `ruby -ryaml -e "YAML.load_file('.github/workflows/retry-vercel-deploy.yml'); puts 'YAML_OK'"` (PASS)
-- Required setup in GitHub repository secrets:
-  - `VERCEL_DEPLOY_HOOK_URL` must be set to a production deploy hook URL from Vercel.
-- Runtime verification:
-  - Trigger the workflow manually (`workflow_dispatch`) and confirm logs print `Repo SHA` and `Live SHA`.
-  - If SHA mismatch exists, confirm the deploy hook step runs and a new production deployment appears in Vercel.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:migrate` (PASS; applied `20260212183000_eu_launch_readiness_hardening`)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint` (PASS; one pre-existing non-blocking warning in `src/components/profile/PublicSnippetView.tsx`)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:privacy` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:privacy:extended` (PASS)
+- Runtime launch gates with local prod server:
+  - `BASE_URL=http://localhost:3000 npm run perf:budgets` (FAIL: desktop/mobile TTI above budget)
+  - `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go` (PASS)
 
 Open risks/TODO:
 
-- If `https://proofound.io/api/health` response shape changes (missing `version`), the workflow will keep treating production as out-of-sync and may trigger repeated deploy attempts.
-- If `VERCEL_DEPLOY_HOOK_URL` is not set, the workflow fails by design to surface the missing configuration.
+- Perf budgets still fail on TTI, so launch gate is not fully green.
+- Legal counsel signoff artifacts for Privacy Policy, Terms, and Cookie Policy are still required before release.
+- Manual EU scenario checks remain required:
+  - decline analytics cookies and confirm no non-essential telemetry network calls,
+  - verify cross-user and anonymous isolation for verification/analytics in live app flows,
+  - run moderation action -> statement-of-reasons -> appeal lifecycle end to end.
 
----
-
-## 2026-02-12: Persisted Deploy-Retry Instructions for Agents
+## 2026-02-12: Repository-Wide Documentation Freshness Remediation
 
 What changed:
 
-- Added deploy-retry automation checks to always-read agent docs:
-  - `agent/checklists/preflight.md`
-  - `agent/checklists/verification.md`
-  - `agent/runbooks/setup.md`
-- Documented persistent requirements:
-  - workflow path: `.github/workflows/retry-vercel-deploy.yml`
-  - required secret: `VERCEL_DEPLOY_HOOK_URL`
-  - canonical health/version check endpoint: `https://proofound.io/api/health`
-- Added manual fallback commands in verification/setup docs to trigger and inspect the retry workflow.
+- Created canonical API reference: `docs/API_REFERENCE.md`.
+- Archived legacy API docs and replaced them with redirect stubs:
+  - `API_DOCUMENTATION_FINAL.md`
+  - `API_DOCUMENTATION_NEW_ENDPOINTS.md`
+  - `docs/api-documentation.md`
+- Archived historical non-governance status docs and replaced originals with redirect stubs.
+- Added documentation registry: `docs/DOCS_REGISTRY.md`.
+- Added docs freshness guardrail script: `scripts/docs-freshness-check.mjs`.
+- Added npm command: `npm run docs:freshness` in `package.json`.
+- Added non-blocking CI step in `.github/workflows/ci.yml` for docs freshness warning mode.
+- Kept all root governance docs in place and synchronized them with project and agent governance docs:
+  - `Prompt.md`, `Plans.md`, `Architecture.md`, `Implement.md`, `setup.md`, `preflight.md`, `verification.md`, `metrics.md`, `Documentation.md`.
+- Added governance metadata headers (`Doc Class`, `Sync Pair`, `Last Verified`) across root/project/agent governance docs.
+- Normalized active docs from legacy domains to `.io` and removed active absolute local paths.
+- Fixed known broken links in `README.md` and `SPRINT_1_PLAN.md`.
 
 Why:
 
-- Ensure future agent runs consistently account for Vercel quota-related deploy lag without requiring ad-hoc memory from session logs.
-- Move this from one-off conversation context into standard preflight/setup/verification surfaces read every task.
+- Active documentation had significant drift and mixed historical snapshots with operational guidance.
+- Duplicate governance surfaces were contradictory.
+- API docs were fragmented across three overlapping files.
+- There was no automated drift signal in CI.
 
 How to verify:
 
-- Inspect updated docs:
-  - `agent/checklists/preflight.md`
-  - `agent/checklists/verification.md`
-  - `agent/runbooks/setup.md`
-- Confirm no conflict markers were introduced in updated docs.
-- Optional workflow sanity check (YAML parse):
-  - `ruby -ryaml -e "YAML.load_file('.github/workflows/retry-vercel-deploy.yml'); puts 'YAML_OK'"`
+- `npm run docs:freshness` should pass with no findings.
+- `curl -sS https://proofound.io/api/health` should return healthy status and connected database.
+- `npx -y vercel@latest ls proofound-platform --token "$VERCEL_TOKEN"` should show ready production deployments.
+- `npx -y vercel@latest env ls production --token "$VERCEL_TOKEN"` should show required production env keys.
+- Baseline local checks run for this change set:
+  - `npm run lint` (pass with one unrelated warning in `postcss.config.js`)
+  - `npm run typecheck` (pass)
+  - `npm run test` (pass)
+  - `npm run build` (pass)
 
 Open risks/TODO:
 
-- If production domain or health payload contract changes, docs and workflow must be updated together.
-- If `VERCEL_DEPLOY_HOOK_URL` is missing in repo secrets, retry workflow will fail by design until configured.
-
----
-
-## 2026-02-12: PR Preview Retrigger Attempt During Vercel Rate Limit
-
-What changed:
-
-- Triggered a fresh PR preview attempt by pushing an empty commit to branch `codex/dashboard-loading-indicator-fix`.
-- New commit pushed: `b6be5fa` (`chore: retrigger vercel preview deploy`).
-- Confirmed PR `#170` head updated to `b6be5fa`.
-
-Why:
-
-- User could not see a Vercel deployment for the PR and requested another push/retry.
-
-How to verify:
-
-- `gh pr view 170 --json headRefOid,statusCheckRollup`
-  - Expect `headRefOid` to be `b6be5fa...`.
-  - Current Vercel status context remains `FAILURE` with build-rate-limit URL.
-- `curl -sS -H "Authorization: Bearer $VERCEL_TOKEN" "https://api.vercel.com/v6/deployments?projectId=prj_BkeoHPoWm9L8MzM8mtcFQXG3KKgg&meta-githubCommitSha=b6be5fa...&limit=20"`
-  - Current result is empty deployments while rate limit is active.
-
-Open risks/TODO:
-
-- No preview deployment can be created until Vercel build-rate-limit quota resets.
-- After quota reset, push another trivial commit (or re-run from Vercel UI) to trigger preview deployment creation.
+- The historical archive migration may break external bookmarks to old content locations outside the repository.
+- `docs:freshness` currently runs in warning mode in CI; strict mode is available through `STRICT_DOCS_FRESHNESS=true` and can be enabled later.
+- Local verification ran under Node `v25.4.0` in this environment while repo engines target `>=20.20.0 <21`; commands passed, but Node 20 remains the canonical runtime.

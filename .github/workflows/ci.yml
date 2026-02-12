@@ -48,11 +48,18 @@ jobs:
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
+      - name: Docs freshness (warning mode)
+        run: npm run docs:freshness
+        continue-on-error: true
+
       - name: Run linter
         run: npm run lint
 
       - name: Run type check
         run: npm run typecheck
+
+      - name: Check migration drift
+        run: npm run db:drift-check
 
       - name: Run unit tests
         run: npm run test
@@ -89,14 +96,12 @@ jobs:
         env:
           BASE_URL: http://localhost:3000
         run: npm run perf:budgets
-        continue-on-error: true
 
       - name: Go / No-Go gates
         env:
           BASE_URL: http://localhost:3000
           SUS_STUDY_COMPLETE: "true"
         run: npm run go:no-go
-        continue-on-error: true
 
       - name: Stop app server
         if: always()

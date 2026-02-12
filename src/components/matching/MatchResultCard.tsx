@@ -221,6 +221,11 @@ export function MatchResultCard({
                       />
                     </div>
                   )}
+                  {!matchExplanation.rank && matchExplanation.rankBand && !isOrgView && (
+                    <div className="mt-2 text-xs font-medium text-[#1C4D3A]">
+                      Ranking band: {matchExplanation.rankBand}
+                    </div>
+                  )}
                 </>
               ) : (
                 <Button

@@ -1,10 +1,8 @@
 /**
- * Self-Assessment Questionnaires Dialog
+ * Well-being Check-in Dialog
  *
- * Implements PHQ-2 (depression screening) and GAD-2 (anxiety screening)
- * These are validated, widely-used 2-question screeners
- * 
- * PRD Requirement: Evidence-based mental health screening with disclaimers
+ * Uses short 2-question reflections to help users self-track mood and worry.
+ * This is non-diagnostic and private-by-default.
  */
 
 'use client';
@@ -74,11 +72,11 @@ export function SelfAssessmentDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const questions = type === 'phq2' ? PHQ2_QUESTIONS : GAD2_QUESTIONS;
-  const title = type === 'phq2' ? 'Depression Screening (PHQ-2)' : 'Anxiety Screening (GAD-2)';
+  const title = type === 'phq2' ? 'Mood Check-in (2 Questions)' : 'Worry Check-in (2 Questions)';
   const description =
     type === 'phq2'
-      ? 'A brief screening for symptoms of depression'
-      : 'A brief screening for symptoms of generalized anxiety';
+      ? 'A short self-reflection on your recent mood.'
+      : 'A short self-reflection on recent worry and tension.';
 
   const handleResponse = (questionId: string, value: number) => {
     setResponses((prev) => ({ ...prev, [questionId]: value }));
@@ -91,20 +89,20 @@ export function SelfAssessmentDialog({
   const getSeverity = (score: number): { level: string; color: string; icon: any } => {
     if (score <= 2) {
       return {
-        level: 'Minimal',
+        level: 'Low Strain',
         color: 'bg-green-100 text-green-800 border-green-300',
         icon: CheckCircle2,
       };
     }
     if (score <= 4) {
       return {
-        level: 'Mild',
+        level: 'Elevated Strain',
         color: 'bg-yellow-100 text-yellow-800 border-yellow-300',
         icon: Info,
       };
     }
     return {
-      level: 'Moderate to Severe',
+      level: 'High Strain',
       color: 'bg-red-100 text-red-800 border-red-300',
       icon: AlertTriangle,
     };
@@ -177,9 +175,7 @@ export function SelfAssessmentDialog({
                     </Badge>
                     <div className="flex items-center gap-2 justify-end">
                       <SeverityIcon className="w-5 h-5" />
-                      <span className="text-sm font-medium">
-                        {type === 'phq2' ? 'Depression' : 'Anxiety'} Symptoms
-                      </span>
+                      <span className="text-sm font-medium">Personal Check-in Signal</span>
                     </div>
                   </div>
                 </div>
@@ -190,50 +186,45 @@ export function SelfAssessmentDialog({
             <div className="space-y-4">
               <h3 className="font-semibold text-lg">What does this mean?</h3>
 
-              {severity.level === 'Minimal' && (
+              {severity.level === 'Low Strain' && (
                 <Alert className="border-green-300 bg-green-50">
                   <CheckCircle2 className="h-4 w-4 text-green-600" />
                   <AlertDescription>
-                    <strong>Low concern:</strong> Your responses suggest minimal{' '}
-                    {type === 'phq2' ? 'depression' : 'anxiety'} symptoms. Continue your current
-                    well-being practices and check in regularly.
+                    <strong>Low strain:</strong> Your recent responses look stable. Keep your
+                    routine and continue quick check-ins.
                   </AlertDescription>
                 </Alert>
               )}
 
-              {severity.level === 'Mild' && (
+              {severity.level === 'Elevated Strain' && (
                 <Alert className="border-yellow-300 bg-yellow-50">
                   <Info className="h-4 w-4 text-yellow-600" />
                   <AlertDescription>
-                    <strong>Mild symptoms:</strong> You may be experiencing some{' '}
-                    {type === 'phq2' ? 'depressive' : 'anxiety'} symptoms. Consider using the Zen
-                    Hub toolkit regularly and tracking your progress. If symptoms persist or worsen,
-                    consider reaching out to a mental health professional.
+                    <strong>Elevated strain:</strong> You may be carrying extra pressure recently.
+                    Consider using Zen Hub practices and checking in again within a few days.
                   </AlertDescription>
                 </Alert>
               )}
 
-              {severity.level === 'Moderate to Severe' && (
+              {severity.level === 'High Strain' && (
                 <Alert className="border-red-300 bg-red-50">
                   <AlertTriangle className="h-4 w-4 text-red-600" />
                   <AlertDescription>
-                    <strong>Significant symptoms detected:</strong> Your responses suggest you may
-                    be experiencing moderate to severe {type === 'phq2' ? 'depression' : 'anxiety'}.
-                    We strongly recommend speaking with a mental health professional who can provide
-                    proper evaluation and support.
+                    <strong>High strain detected:</strong> You may benefit from additional support
+                    right now. If this persists or worsens, consider contacting a qualified
+                    professional.
                   </AlertDescription>
                 </Alert>
               )}
             </div>
 
-            {/* Clinical Disclaimer */}
+            {/* Safety Disclaimer */}
             <Alert className="border-blue-300 bg-blue-50">
               <Info className="h-4 w-4 text-blue-600" />
               <AlertDescription className="text-sm">
-                <strong>Important:</strong> This screening is not a diagnosis. It&apos;s a brief
-                tool to help you assess your symptoms. Only a qualified mental health professional
-                can diagnose and treat {type === 'phq2' ? 'depression' : 'anxiety'}. If you&apos;re
-                in crisis, please contact a crisis helpline immediately (988 in the US).
+                <strong>Important:</strong> This check-in is non-diagnostic and not medical advice.
+                If you are in immediate danger or crisis, contact local emergency services or a
+                crisis line immediately (988 in the US).
               </AlertDescription>
             </Alert>
 
@@ -246,7 +237,7 @@ export function SelfAssessmentDialog({
                     1
                   </div>
                   <p className="text-sm">
-                    Continue regular well-being check-ins to monitor your symptoms over time
+                    Continue regular check-ins to monitor your trend over time
                   </p>
                 </div>
                 <div className="flex items-start gap-2">
@@ -257,14 +248,13 @@ export function SelfAssessmentDialog({
                     Practice grounding techniques and mindfulness exercises from the Zen Hub toolkit
                   </p>
                 </div>
-                {severity.level !== 'Minimal' && (
+                {severity.level !== 'Low Strain' && (
                   <div className="flex items-start gap-2">
                     <div className="w-6 h-6 rounded-full bg-[#1C4D3A] text-white flex items-center justify-center text-sm flex-shrink-0">
                       3
                     </div>
                     <p className="text-sm">
-                      Consider scheduling an appointment with a licensed mental health professional
-                      for a comprehensive evaluation
+                      Reach out to a trusted person or qualified professional if support would help
                     </p>
                   </div>
                 )}
@@ -291,13 +281,13 @@ export function SelfAssessmentDialog({
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Clinical Context */}
+          {/* Context */}
           <Alert className="border-blue-300 bg-blue-50">
             <Info className="h-4 w-4 text-blue-600" />
             <AlertDescription className="text-sm">
-              <strong>About this screening:</strong> The {type === 'phq2' ? 'PHQ-2' : 'GAD-2'} is a
-              validated screening tool used by healthcare professionals. It takes about 1 minute to
-              complete. Your responses are private and saved for your own tracking.
+              <strong>About this check-in:</strong> This takes about one minute and helps you track
+              your own well-being trend over time. Responses are private and never used in matching
+              rankings.
             </AlertDescription>
           </Alert>
 
@@ -325,7 +315,10 @@ export function SelfAssessmentDialog({
                           key={option.value}
                           className="flex items-center space-x-2 p-3 rounded-lg border border-[#E8E6DD] dark:border-border hover:bg-[#F7F6F1] dark:hover:bg-background/50 cursor-pointer"
                         >
-                          <RadioGroupItem value={option.value.toString()} id={`${question.id}_${option.value}`} />
+                          <RadioGroupItem
+                            value={option.value.toString()}
+                            id={`${question.id}_${option.value}`}
+                          />
                           <Label
                             htmlFor={`${question.id}_${option.value}`}
                             className="flex-1 cursor-pointer"
@@ -362,11 +355,10 @@ export function SelfAssessmentDialog({
             disabled={!allQuestionsAnswered || isSubmitting}
             className="bg-[#1C4D3A] text-white"
           >
-            {isSubmitting ? 'Submitting...' : 'Submit Assessment'}
+            {isSubmitting ? 'Submitting...' : 'Save Check-in'}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
-

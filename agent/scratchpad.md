@@ -1013,6 +1013,60 @@ Open TODOs / follow-ups:
 
 ---
 
+## 2026-02-12 14:49 CET
+
+Task summary:
+
+- Implement trusted internal PR auto-enable for GitHub auto-merge.
+- Open and arm PR with auto-merge for the workflow change.
+
+What worked:
+
+- Added dedicated workflow file with draft/fork/association guardrails.
+- Opened PR `#168` from clean branch and enabled auto-merge on that PR.
+- Closed superseded conflicting PR `#167`.
+
+What failed / wrong assumptions:
+
+- First PR branch conflicted with latest `master`; replaced with clean branch `codex/auto-enable-automerge-workflow-v2`.
+- `--force-with-lease` push is blocked by policy in this environment, so branch replacement was done via new branch + new PR.
+
+User corrections:
+
+- User asked for actual enablement, not only explanation of pending steps.
+
+Assumptions taken without asking:
+
+- Trusted PR scope should be internal contributors only (`OWNER`, `MEMBER`, `COLLABORATOR`).
+- Existing branch protection requirements should remain unchanged.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Open clean branch from latest `origin/master` before creating PR when docs files are high-churn.
+- Prefer creating a fresh replacement PR over history rewrite if force push is disallowed.
+
+Commands run + outcomes:
+
+- `git worktree add -b codex/auto-enable-automerge-workflow /tmp/proofound-automerge origin/master`: PASS
+- `gh pr create ...` (first attempt): PASS (`#167`) but mergeable state was `CONFLICTING`
+- `git fetch origin master && git rebase origin/master`: CONFLICT in docs files
+- `git push --force-with-lease ...`: BLOCKED by policy
+- `git checkout -B codex/auto-enable-automerge-workflow-v2 origin/master && git cherry-pick 8172c45`: PASS
+- `git push -u origin codex/auto-enable-automerge-workflow-v2`: PASS
+- `gh pr create ...`: PASS (`#168`)
+- `gh pr merge 168 --auto --squash`: PASS (auto-merge request enabled)
+- `gh pr close 167 --comment \"Superseded by #168 (clean branch without conflicts).\"`: PASS
+
+Open TODOs / follow-ups:
+
+- Wait for PR `#168` checks and required review, then it will merge automatically.
+
+---
+
 ## 2026-02-12 14:42 CET
 
 Task summary:
@@ -1063,6 +1117,53 @@ Commands run + outcomes:
 Open TODOs / follow-ups:
 
 - Optional: replace `unoptimized` with a configured optimized remote image path once `images.remotePatterns` is explicitly locked for snippet avatar/logo sources.
+
+## 2026-02-12 14:46 CET
+
+Task summary:
+
+- Complete persona signup routing as a minor merge from `codex/clean-post-merge-work-v2` while ignoring unrelated local edits.
+- Implement dedicated signup pages plus `/signup?type=...` redirect compatibility.
+
+What worked:
+
+- Added dedicated routes for individual and organization signup forms.
+- Added server-side redirect handling in `/signup` and client-side query fallback in chooser client.
+- Runtime redirect checks confirmed expected status/location behavior.
+
+What failed / wrong assumptions:
+
+- Full `npm run typecheck` is blocked by unrelated in-progress API route edits in working tree that reference missing `@/lib/api/auth`.
+
+User corrections:
+
+- User chose option `2`: continue merge flow from current branch context.
+- User then chose option `1`: isolate only signup-related files and ignore unrelated workspace changes.
+
+Assumptions taken without asking:
+
+- Keeping landing CTA source unchanged is acceptable because auth-route redirecting preserves the direct persona destination behavior.
+- Client fallback in `SignupContent` is helpful even with server redirects for resilience.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Start by checking current branch alias/worktree before first commit to avoid branch drift confusion.
+- Run landing-scope guard script before pushing any PR touching signup-plus-landing surfaces.
+
+Commands run + outcomes:
+
+- `npm run lint`: PASS (existing unrelated warning in `src/components/profile/PublicSnippetView.tsx`).
+- `npm run typecheck`: FAIL due unrelated local API edits (`@/lib/api/auth` missing in multiple route files).
+- Runtime redirect checks via `curl -sI`: PASS for individual/organization redirects and unknown fallback.
+
+Open TODOs / follow-ups:
+
+- Merge this isolated signup-routing patch PR after CI checks and required review complete.
+- Resolve unrelated API-route/typecheck work separately in its own branch/PR.
 
 ---
 
@@ -1118,147 +1219,178 @@ Open TODOs / follow-ups:
 
 ---
 
-## 2026-02-12 15:13 CET
+## 2026-02-12 15:27 CET
 
 Task summary:
 
-- Added a GitHub Actions workflow to auto-retry production deploys after temporary Vercel quota limits.
-- Wired retry logic to compare `master` head SHA against live production SHA from `/api/health`.
-- Triggered deployment retries through Vercel deploy hook secret when production is behind.
+- Implemented the approved maintainability refactor plan across lint gate stability, assignment backend boundaries, Supabase runtime/mock separation, profile action deduplication, and profile/expertise UI decomposition.
+- Kept API contracts and user-visible behavior unchanged while splitting large files into services and feature sections.
 
 What worked:
 
-- Existing workflow layout in `.github/workflows/` allowed a clean additive workflow without changing CI jobs.
-- YAML parsed cleanly with repository-standard validation command.
-- The retry mechanism is idempotent for synced states because deploy hook runs only on SHA mismatch.
+- Service extraction for assignment access and activation reduced route complexity without breaking tests.
+- Supabase server client cleanup succeeded with mock logic moved into a dedicated module.
+- Profile mission/vision/value/cause actions were consolidated with shared helper functions and retained analytics/audit behavior.
+- Expertise and profile UI decomposition compiled and passed both targeted and full test suites.
 
 What failed / wrong assumptions:
 
-- None.
+- `checkAndEmitAssignmentActivation` evaluation helper initially returned a non-boolean `hasLocationAndComp` type and failed `tsc`.
+- New add-skill panel files were initially created but not wired into `AddSkillDrawerView`; this required a follow-up rewrite of that view.
+- Targeted expertise Playwright smoke could not validate proof/verification flow in this environment due local port contention (`3000` and `3010` already in use) and login redirect timeout in `e2e/helpers/auth.ts`.
 
 User corrections:
 
-- User requested enabling automatic deploy retry after quota reset, not manual redeploy.
+- User explicitly requested direct implementation of the full refactor plan rather than review-only discussion.
 
 Assumptions taken without asking:
 
-- Using `VERCEL_DEPLOY_HOOK_URL` as the GitHub secret name is acceptable.
-- `https://proofound.io/api/health` remains publicly reachable and keeps returning `version` SHA.
-- A 30-minute retry cadence is acceptable for this repository.
+- Existing warning-only lint issue in `postcss.config.js` is unrelated and can remain untouched in this refactor.
+- Assignment activation semantics remain unchanged when extracted, including in-process de-duplication and notification fan-out behavior.
+- Node version mismatch in this local environment (v25) is acceptable for this run as long as gate commands pass and the mismatch is documented.
 
 What the user corrected afterward:
 
-- None.
+- None during execution.
 
 Improvements next time:
 
-- Add a guard for repeated unknown-health responses to reduce unnecessary deploy-hook calls during extended outages.
-- Optionally route the health URL through a workflow env secret for easier environment changes.
+- Run `nvm use` to enforce `.nvmrc` before `npm ci` so parity is guaranteed from the first verification pass.
+- Wire decomposed view modules immediately after extraction to avoid a second cleanup pass.
 
 Commands run + outcomes:
 
-- `git status -sb`: PASS (clean baseline before edits).
-- `ruby -ryaml -e "YAML.load_file('.github/workflows/retry-vercel-deploy.yml'); puts 'YAML_OK'"`: PASS.
+- `ls -la`: PASS
+- `git status --short`: PASS
+- `sed -n ...` on `project/*`, `agent/*`, `README.md`, `package.json`, `.github/workflows/ci.yml`: PASS
+- `npm ci`: PASS
+- `npm run lint`: PASS (warning-only, unrelated existing warning in `postcss.config.js`)
+- `npm run typecheck`: FAIL then PASS after fixing boolean typing in `src/lib/assignments/activation.ts`
+- `npm run test -- tests/api/assignments.test.ts tests/actions/profile.test.ts src/lib/supabase/__tests__/server.test.ts tests/ui/step5-expertise-mapping.test.tsx tests/ui/share-profile-dialog.test.tsx`: PASS
+- `npm run test`: PASS
+- `npm run build`: PASS
+- `NEXT_PUBLIC_USE_MOCK_SUPABASE=true PLAYWRIGHT=true npm run test:e2e -- e2e/expertise/comprehensive-expertise.spec.ts --project=chromium --grep "attach proof|request verification" --reporter=line`: FAIL (web server port conflict + auth redirect timeout)
 
 Open TODOs / follow-ups:
 
-- Add GitHub secret `VERCEL_DEPLOY_HOOK_URL` if not present.
-- Create production deploy hook in Vercel project `proofound-platform` and attach the generated URL to that secret.
+- Re-run lint/typecheck/test/build under Node `20.20.0` for strict engine parity.
+- Consider splitting this refactor into staged commits before PR creation (gates, backend services, runtime mock separation, profile actions, UI decomposition).
+- Re-run expertise Playwright smoke after freeing local ports and using a deterministic auth fixture path.
 
 ---
 
-## 2026-02-12 15:18 CET
+## 2026-02-12 16:41 CET
 
 Task summary:
 
-- Added permanent documentation so agents consistently apply deploy-retry behavior after Vercel quota windows.
-- Updated preflight, verification, and setup docs with workflow/secret/health-check requirements.
-- Logged the doc hardening in project memory for future runs.
+- Implement repository-wide documentation freshness remediation with corrected governance requirement: keep root governance docs and synchronize them with `project/` and `agent/` docs.
+- Archive historical non-governance docs with redirect stubs, consolidate API docs into `docs/API_REFERENCE.md`, and add a CI warning guardrail for docs drift.
 
 What worked:
 
-- The needed guidance mapped cleanly into always-read docs (`agent/checklists/*`, `agent/runbooks/setup.md`).
-- Existing retry workflow details were already available and reused directly.
+- Historical doc migration with redirect stubs preserved compatibility while reducing active-surface drift.
+- `docs/API_REFERENCE.md` consolidation removed multi-source API documentation conflicts.
+- `docs/DOCS_REGISTRY.md` and `docs:freshness` guardrail gave a deterministic docs quality check.
+- Broken links and domain/path hygiene checks were resolved (`TOTAL=0` broken links; no active legacy domains or absolute local paths).
+- Live verification succeeded against production health and Vercel deployment/env visibility.
 
 What failed / wrong assumptions:
 
-- None.
+- First normalization loop used zsh-unfriendly word splitting and failed by passing a long concatenated filename list.
+- Fixed by re-running replacements with a safe line-by-line iterator.
 
 User corrections:
 
-- User requested that this be persisted in documentation so agents know every time.
+- Root governance docs must remain in place and be reviewed, not archived.
+- Governance model should be dual canonical sync across root and `project/` + `agent/`.
 
 Assumptions taken without asking:
 
-- The most durable place is agent preflight + verification + setup docs instead of only `project/Documentation.md`.
-- `https://proofound.io/api/health` remains the canonical deploy-sync endpoint for this project.
+- Selected historical non-governance status docs are safe to archive when redirect stubs remain at original paths.
+- Freshness metadata enforcement can focus on protected/canonical active docs plus key references rather than every active markdown file.
+- API reference consolidation can use endpoint-family documentation rather than line-by-line migration of all historical examples.
 
 What the user corrected afterward:
 
-- None.
+- Corrected earlier plan to keep `Prompt.md`, `Plans.md`, `Architecture.md`, `Implement.md`, `setup.md`, `preflight.md`, `verification.md`, `metrics.md`, and `Documentation.md` at root.
 
 Improvements next time:
 
-- Add a short docs index pointer in `project/Implement.md` for deploy-retry runbook location.
-- Add a workflow alert policy if retry attempts continue failing for more than one schedule window.
+- Use shell-safe file iteration from the first pass when running repository-wide text substitutions.
+- Stage archive-migration maps in a dedicated manifest file earlier to reduce manual tracking overhead.
+- Introduce docs-freshness in warning mode before large content migration so pre-existing noise is measured up front.
 
 Commands run + outcomes:
 
-- `sed -n ...` on agent docs: PASS (context gathered).
-- `date '+%Y-%m-%d %H:%M %Z'`: PASS.
-- Docs updates via patch/append: PASS.
+- `npm run docs:freshness`: PASS after guardrail tuning.
+- `curl -sS https://proofound.io/api/health`: PASS (`healthy`, database connected, version `eba9e428d4f6f38d3ae44f77daea697e26b82404`).
+- `npx -y vercel@latest ls proofound-platform --token "$VERCEL_TOKEN"`: PASS (recent production deployments `Ready`).
+- `npx -y vercel@latest env ls production --token "$VERCEL_TOKEN"`: PASS (required env keys present by name).
+- `npm ci`: PASS (with engine warning due Node `v25.4.0` vs required `20.x`).
+- `npm run lint`: PASS (1 warning only).
+- `npm run typecheck`: PASS.
+- `npm run test`: PASS.
+- `npm run build`: PASS.
 
 Open TODOs / follow-ups:
 
-- Ensure `VERCEL_DEPLOY_HOOK_URL` remains configured in GitHub secrets after repo admin changes.
-- Keep retry workflow health URL aligned with production domain changes.
+- Consider enabling strict docs freshness mode in CI once team confirms tolerance level.
+- Review whether additional active docs should adopt metadata headers for deeper governance tracking.
+- Evaluate whether to pin local verification environment to Node `20.20.0` in future sessions for full engine parity.
 
 ---
 
-## 2026-02-12 20:22 CET
+## 2026-02-12 17:34 CET
 
 Task summary:
 
-- Re-pushed the PR branch to retrigger Vercel preview deployment visibility.
-- Verified PR head updated and checked Vercel deployment API for the new SHA.
-- Confirmed Vercel still blocks preview creation due build rate limits.
+- Implement EU MVP launch readiness hardening plan across legal pages, consent/telemetry, RLS/migrations, moderation rights APIs, deletion-model alignment, and PRD consistency.
+- Close privacy-suite blockers by applying the pending EU hardening migration to the target Supabase database.
 
 What worked:
 
-- Empty commit retriggered PR activity immediately.
-- PR `#170` head updated to `b6be5fa` as expected.
+- `20260212183000_eu_launch_readiness_hardening` migration applied cleanly through `npm run db:migrate`.
+- Privacy suites passed immediately after migration apply.
+- Full core verification matrix (lint/typecheck/test/build) passed on Node `20.20.0`.
+- `go:no-go` gate passed with local production server.
 
 What failed / wrong assumptions:
 
-- A retrigger push cannot bypass Vercel build-rate-limit quotas.
-- Vercel status context can show failure without creating a new deployment record for that SHA.
+- Assumed privacy suite failures were code-level; root cause was unapplied DB migration/policy state.
+- Launch perf budget gate still fails due TTI above configured thresholds.
 
 User corrections:
 
-- User asked to push again and ensure PR appears in Vercel.
+- Clarified target document name: `PRD_for_a_web_platform_MVP.md`.
 
 Assumptions taken without asking:
 
-- Using an empty commit is acceptable to retrigger PR-based deploy integrations.
-- Checking Vercel API by commit SHA/ref is sufficient proof of preview deployment creation state.
+- Applying migrations via `npm run db:migrate` against the configured shared Supabase project was acceptable to align runtime and privacy test state.
+- Existing non-blocking lint warning in `src/components/profile/PublicSnippetView.tsx` remains out of scope for this EU compliance pass.
 
 What the user corrected afterward:
 
-- User reported not seeing deployment in Vercel after prior push.
+- Only the PRD filename clarification above in this session.
 
 Improvements next time:
 
-- Add a dedicated retry workflow for PR preview deployments if this pattern repeats.
-- Record a short runbook note about Vercel status context failure without deployment object creation.
+- Before running privacy suites, check and apply pending migrations when policy/trigger files changed.
+- Keep a small DB-policy evidence query script ready to validate sensitive-table RLS posture post-migration.
 
 Commands run + outcomes:
 
-- `git commit --allow-empty -m "chore: retrigger vercel preview deploy"`: PASS.
-- `git push origin codex/dashboard-loading-indicator-fix`: PASS.
-- `gh pr view 170 --json ...`: PASS (`headRefOid` updated, Vercel status still failure due rate limit).
-- `curl .../v6/deployments?meta-githubCommitSha=b6be5fa...`: PASS (request OK, no deployments returned).
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:privacy`: FAIL before migration, PASS after migration.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:migrate`: PASS (applied EU hardening migration).
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:privacy:extended`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS (warning only).
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`: PASS.
+- `BASE_URL=http://localhost:3000 npm run perf:budgets`: FAIL (TTI budget).
+- `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go`: PASS.
 
 Open TODOs / follow-ups:
 
-- Retry after Vercel build quota reset.
-- Optionally add PR-preview deploy retry automation if needed.
+- Investigate and reduce landing/homepage TTI to pass perf budget gate.
+- Run manual EU scenarios for consent decline telemetry suppression and moderation rights flow E2E.
+- Capture legal counsel signoff artifact for policy text before release.

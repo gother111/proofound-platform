@@ -1,3 +1,7 @@
+> Doc Class: `governance`
+> Sync Pair: `preflight.md`
+> Last Verified: `2026-02-12`
+
 # Preflight Checklist (Before Making Changes)
 
 Repo Truth items include citations like `(source: README.md)`. Everything else is policy.

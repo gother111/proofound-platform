@@ -18,24 +18,22 @@ export async function POST(request: Request) {
     const profileId = await getProfileByHandle(handle);
     if (!profileId) return NextResponse.json({ error: 'profile not found' }, { status: 404 });
 
+    const properties = { handle };
+
     await db.execute(sql`
       INSERT INTO analytics_events (
         event_type,
         user_id,
-        profile_id,
         entity_type,
         entity_id,
         properties,
-        privacy_partition,
-        occurred_at
+        created_at
       ) VALUES (
         'profile_viewed',
         ${profileId},
-        ${profileId},
         'profile',
         ${profileId},
-        ${sql.raw(`'{"handle":"${handle}"}'`)},
-        'default',
+        ${JSON.stringify(properties)}::jsonb,
         NOW()
       )
     `);
@@ -60,10 +58,12 @@ export async function GET(request: Request) {
       SELECT COUNT(*) as count
       FROM analytics_events
       WHERE event_type = 'profile_viewed'
-        AND profile_id = ${profileId}
+        AND entity_type = 'profile'
+        AND entity_id = ${profileId}
     `);
 
-    const count = parseInt((result[0] as any)?.count || '0');
+    const rows = Array.isArray(result) ? result : (result as { rows?: any[] }).rows || [];
+    const count = parseInt((rows[0] as any)?.count || '0', 10);
     return NextResponse.json({ count });
   } catch (error) {
     console.error('view count failed', error);

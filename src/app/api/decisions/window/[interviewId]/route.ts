@@ -8,9 +8,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getDecisionWindow } from '@/lib/decisions/automation';
 import { log } from '@/lib/log';
+import { isActiveOrgMember } from '@/lib/api/auth';
 
 export async function GET(
-  req: NextRequest,
+  _req: NextRequest,
   { params }: { params: Promise<{ interviewId: string }> }
 ) {
   try {
@@ -29,10 +30,20 @@ export async function GET(
       return NextResponse.json({ error: 'interviewId is required' }, { status: 400 });
     }
 
-    // Verify user has permission for this interview
     const { data: interview, error: interviewError } = await supabase
       .from('interviews')
-      .select('id, assignment_id, assignments(organization_id)')
+      .select(
+        `
+          id,
+          match_id,
+          matches!inner(
+            assignment_id,
+            assignments!inner(
+              org_id
+            )
+          )
+        `
+      )
       .eq('id', interviewId)
       .single();
 
@@ -40,15 +51,27 @@ export async function GET(
       return NextResponse.json({ error: 'Interview not found' }, { status: 404 });
     }
 
-    const assignment = (interview as any).assignments;
-    if (assignment.organization_id !== user.id) {
+    const interviewMatch = Array.isArray((interview as any).matches)
+      ? (interview as any).matches[0]
+      : (interview as any).matches;
+    const interviewAssignment = Array.isArray(interviewMatch?.assignments)
+      ? interviewMatch.assignments[0]
+      : interviewMatch?.assignments;
+    const orgId = interviewAssignment?.org_id as string | undefined;
+
+    if (!orgId) {
+      return NextResponse.json({ error: 'Interview assignment not found' }, { status: 404 });
+    }
+
+    const canViewWindow = await isActiveOrgMember(supabase, user.id, orgId, ['owner', 'admin']);
+
+    if (!canViewWindow) {
       return NextResponse.json(
         { error: 'Unauthorized to view decision window for this interview' },
         { status: 403 }
       );
     }
 
-    // Get decision window status
     const decisionWindow = await getDecisionWindow(interviewId);
 
     if (!decisionWindow) {

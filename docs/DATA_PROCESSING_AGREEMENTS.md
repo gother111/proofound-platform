@@ -2,7 +2,7 @@
 
 **Last Updated**: November 6, 2025  
 **Owner**: Privacy & Legal Team  
-**Contact**: privacy@proofound.com
+**Contact**: privacy@proofound.io
 
 ---
 
@@ -46,6 +46,7 @@ This document outlines Proofound's Data Processing Agreements (DPAs) with third-
 ### Sub-Processors
 
 Supabase uses AWS (Amazon Web Services) as infrastructure provider:
+
 - **AWS**: SOC 2, ISO 27001, GDPR-compliant
 - **Data Center**: us-east-1 (Virginia, USA)
 
@@ -394,29 +395,29 @@ If a vendor experiences a data breach:
 
 ### Proofound Privacy Team
 
-- **Email**: privacy@proofound.com
-- **DPA Requests**: Send to privacy@proofound.com with subject "DPA Request"
-- **Security Concerns**: security@proofound.com
+- **Email**: privacy@proofound.io
+- **DPA Requests**: Send to privacy@proofound.io with subject "DPA Request"
+- **Security Concerns**: security@proofound.io
 
 ### Vendor DPA Contacts
 
-| Vendor | DPA Contact | Email |
-|--------|-------------|-------|
+| Vendor   | DPA Contact          | Email                |
+| -------- | -------------------- | -------------------- |
 | Supabase | privacy@supabase.com | privacy@supabase.com |
-| Vercel | privacy@vercel.com | privacy@vercel.com |
-| Resend | privacy@resend.com | privacy@resend.com |
-| OpenAI | privacy@openai.com | privacy@openai.com |
-| Sentry | privacy@sentry.io | privacy@sentry.io |
-| Veriff | gdpr@veriff.com | gdpr@veriff.com |
+| Vercel   | privacy@vercel.com   | privacy@vercel.com   |
+| Resend   | privacy@resend.com   | privacy@resend.com   |
+| OpenAI   | privacy@openai.com   | privacy@openai.com   |
+| Sentry   | privacy@sentry.io    | privacy@sentry.io    |
+| Veriff   | gdpr@veriff.com      | gdpr@veriff.com      |
 
 ---
 
 ## Document Version History
 
-| Version | Date | Changes |
-|---------|------|---------|
-| 1.0 | 2025-11-06 | Initial DPA documentation |
-| (Future) | TBD | Updates as vendors change |
+| Version  | Date       | Changes                   |
+| -------- | ---------- | ------------------------- |
+| 1.0      | 2025-11-06 | Initial DPA documentation |
+| (Future) | TBD        | Updates as vendors change |
 
 ---
 
@@ -440,4 +441,3 @@ When evaluating new vendors, ensure:
 **Next Review Date**: November 2026  
 **Document Owner**: Privacy & Legal Team  
 **Approval**: Yurii Bakurov (Platform Owner)
-

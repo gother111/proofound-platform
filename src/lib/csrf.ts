@@ -68,27 +68,22 @@ export function csrfProtection(request: NextRequest): NextResponse | null {
 
   // Skip CSRF for internal authenticated API routes
   // These routes are called from authenticated pages and protected by session cookies
-  // The Supabase session cookie with SameSite=Lax provides CSRF protection
+  // The Supabase session cookie with SameSite=Lax provides CSRF protection.
   const internalAuthRoutes = [
     '/api/match/',
-    '/api/matching-profile',
+    '/api/core/matching/',
     '/api/assignments',
     '/api/interviews/',
     '/api/analytics/',
-    '/api/expertise/',
-    '/api/profile/',
-    '/api/taxonomy/',
     '/api/messages/',
-    '/api/wellbeing/',
-    '/api/notifications/',
-    '/api/feedback/',
-    '/api/dashboard/',
+    '/api/goals/',
+    '/api/skill-gaps/',
+    '/api/dashboard/layout',
   ];
 
-  const hasSupabaseSession =
-    request.cookies.has('sb-cjpfrgmsxwxhuomnvciq-auth-token') ||
-    request.cookies.has('sb-cjpfrgmsxwxhuomnvciq-auth-token.0') ||
-    request.cookies.has('sb-cjpfrgmsxwxhuomnvciq-auth-token.1');
+  const hasSupabaseSession = request.cookies
+    .getAll()
+    .some(({ name }) => /^sb-[a-z0-9]+-auth-token(?:\.\d+)?$/i.test(name));
 
   if (hasSupabaseSession && internalAuthRoutes.some((route) => pathname.startsWith(route))) {
     return null;

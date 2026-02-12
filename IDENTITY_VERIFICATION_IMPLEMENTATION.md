@@ -24,6 +24,7 @@ Either method grants the **"Verified" badge** that displays on profiles to organ
 **Migration:** `drizzle/0028_add_identity_verification.sql` ✅ **APPLIED**
 
 Added the following fields to `individual_profiles`:
+
 - `verification_method` - 'veriff' | 'work_email' | null
 - `verification_status` - 'unverified' | 'pending' | 'verified' | 'failed'
 - `veriff_session_id` - Veriff session tracking
@@ -35,6 +36,7 @@ Added the following fields to `individual_profiles`:
 - `work_email_token_expires` - Token expiry timestamp
 
 **Indexes created:**
+
 - `idx_individual_profiles_work_email` - Fast work email lookups
 - `idx_individual_profiles_verification_status` - Status queries
 - `idx_individual_profiles_work_email_token` - Token validation
@@ -46,12 +48,16 @@ Added the following fields to `individual_profiles`:
 ### 2. Frontend Components
 
 #### Settings Page Integration
+
 **File:** `src/components/settings/SettingsContent.tsx` ✅
+
 - Added "Identity Verification" card to Account tab
 - Integrated VerificationStatus component
 
 #### Verification Status Component
+
 **File:** `src/components/settings/VerificationStatus.tsx` ✅
+
 - Shows current verification status
 - Displays verified badge with method and date
 - Offers both verification options (Veriff and Work Email)
@@ -59,7 +65,9 @@ Added the following fields to `individual_profiles`:
 - Auto-refreshes status
 
 #### Work Email Form
+
 **File:** `src/components/settings/WorkEmailVerificationForm.tsx` ✅
+
 - Email input with validation
 - Blocks free email providers (Gmail, Yahoo, etc.)
 - Organization selection dropdown
@@ -67,7 +75,9 @@ Added the following fields to `individual_profiles`:
 - Clear workflow explanation
 
 #### Veriff Integration
+
 **File:** `src/components/settings/VeriffVerification.tsx` ✅
+
 - Loads Veriff SDK dynamically
 - Creates verification session
 - Opens Veriff iframe flow
@@ -79,19 +89,25 @@ Added the following fields to `individual_profiles`:
 ### 3. Backend API Routes
 
 #### 1. Get Verification Status
+
 **Route:** `GET /api/verification/status` ✅
+
 - Returns current verification state for logged-in user
 - Includes method, status, verified date, and work email
 
 #### 2. Create Veriff Session
+
 **Route:** `POST /api/verification/veriff/session` ✅
+
 - Creates Veriff verification session via API
 - Stores session ID in database
 - Returns session URL and credentials for frontend
 - Updates status to 'pending'
 
 #### 3. Veriff Webhook Handler
+
 **Route:** `POST /api/verification/veriff/webhook` ✅
+
 - Receives verification decisions from Veriff
 - Validates webhook signature
 - Updates profile with verification result
@@ -99,7 +115,9 @@ Added the following fields to `individual_profiles`:
 - Handles status codes: approved, declined, resubmission
 
 #### 4. Send Work Email Verification
+
 **Route:** `POST /api/verification/work-email/send` ✅
+
 - Validates email format
 - Checks for duplicate verified emails
 - Generates secure verification token
@@ -108,14 +126,18 @@ Added the following fields to `individual_profiles`:
 - Optional organization linking
 
 #### 5. Verify Work Email Token
+
 **Route:** `GET /api/verification/work-email/verify?token=xxx` ✅
+
 - Validates token and expiry
 - Updates profile: `verified = true`, `work_email_verified = true`
 - Sets verification method and timestamp
 - Clears token after use
 
 #### 6. List Organizations
+
 **Route:** `GET /api/organizations` ✅
+
 - Returns all organizations for dropdown
 - Sorted by display name
 - Used in work email form
@@ -125,7 +147,9 @@ Added the following fields to `individual_profiles`:
 ### 4. Email System
 
 #### Work Email Verification Template
+
 **File:** `emails/WorkEmailVerification.tsx` ✅
+
 - Beautiful React Email template
 - Branded with Proofound colors
 - Clear verification button
@@ -133,7 +157,9 @@ Added the following fields to `individual_profiles`:
 - Privacy information
 
 #### Email Library Function
+
 **File:** `src/lib/email.ts` ✅
+
 - Added `sendWorkEmailVerification()` function
 - Imported WorkEmailVerification template
 - Integrated with Resend API
@@ -143,6 +169,7 @@ Added the following fields to `individual_profiles`:
 ### 5. Verification Success Page
 
 **File:** `src/app/verify-work-email/page.tsx` ✅
+
 - Handles verification link clicks
 - Shows loading, success, or error states
 - Lists verification benefits
@@ -166,7 +193,7 @@ VERIFF_WEBHOOK_SECRET=your_webhook_secret
 
 # Email service (already configured)
 RESEND_API_KEY=your_resend_key
-EMAIL_FROM=Proofound <no-reply@proofound.com>
+EMAIL_FROM=Proofound <no-reply@proofound.io>
 
 # Site URL (already configured)
 NEXT_PUBLIC_SITE_URL=https://proofound.io
@@ -229,17 +256,20 @@ NEXT_PUBLIC_SITE_URL=https://proofound.io
 ## 🎨 User Experience
 
 ### Unverified State
+
 - Shows both verification options
 - Clear explanation of benefits
 - Visual cards with icons
 - "Why verify?" info box
 
 ### Pending State
+
 - Shows loading spinner
 - "Verification in progress" message
 - Refresh button to check status
 
 ### Verified State
+
 - Green success message with checkmark
 - Shows verification method used
 - Displays verification date
@@ -247,6 +277,7 @@ NEXT_PUBLIC_SITE_URL=https://proofound.io
 - Badge visible on profile
 
 ### Failed State
+
 - Error message with details
 - Retry buttons for both methods
 - Helpful troubleshooting tips
@@ -293,12 +324,14 @@ NEXT_PUBLIC_SITE_URL=https://proofound.io
 The verified badge is **already implemented** in `ProfileView.tsx`:
 
 ```tsx
-{profile.verified && (
-  <Badge variant="outline" className="gap-1">
-    <CheckCircle2 className="w-3 h-3" />
-    Verified
-  </Badge>
-)}
+{
+  profile.verified && (
+    <Badge variant="outline" className="gap-1">
+      <CheckCircle2 className="w-3 h-3" />
+      Verified
+    </Badge>
+  );
+}
 ```
 
 **No changes needed!** The badge automatically appears when `verified = true`.
@@ -310,6 +343,7 @@ Organizations viewing individual profiles will see the badge immediately after v
 ## 📝 API Integration Examples
 
 ### Check Verification Status
+
 ```typescript
 const response = await fetch('/api/verification/status');
 const data = await response.json();
@@ -317,18 +351,20 @@ const data = await response.json();
 ```
 
 ### Send Work Email Verification
+
 ```typescript
 const response = await fetch('/api/verification/work-email/send', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
     workEmail: 'john@company.com',
-    orgId: 'uuid-of-organization' // optional
-  })
+    orgId: 'uuid-of-organization', // optional
+  }),
 });
 ```
 
 ### Verify Token
+
 ```typescript
 const response = await fetch(`/api/verification/work-email/verify?token=${token}`);
 const data = await response.json();
@@ -372,9 +408,8 @@ const data = await response.json();
 ✅ **Settings Integration:** Seamlessly integrated  
 ✅ **Profile Display:** Badge already working  
 ✅ **Security:** Token-based, signature-validated  
-✅ **Testing:** Ready for both flows  
+✅ **Testing:** Ready for both flows
 
 **The identity verification system is fully implemented and ready for testing!** 🎉
 
 Individual users can now verify their identity through either Veriff or work email, and the verified badge will display on their profiles for organizations to see.
-
