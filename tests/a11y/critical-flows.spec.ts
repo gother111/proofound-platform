@@ -78,10 +78,23 @@ async function waitForUiToSettle(page: import('@playwright/test').Page) {
 }
 
 test.describe('Accessibility - Critical Flows', () => {
-  let fixture: StrictFixtureState;
+  const useMockSupabase = process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE !== 'false';
+  let fixture: StrictFixtureState | null = null;
   let authenticatedUser: StrictRuntimeUser;
 
   test.beforeAll(async () => {
+    if (useMockSupabase) {
+      authenticatedUser = {
+        id: '88888888-8888-4888-8888-888888888888',
+        email: 'strict-a11y-mock@proofound.test',
+        password: 'MockA11yPassword123!',
+        persona: 'individual',
+        displayName: 'Strict A11y Mock User',
+        handle: null,
+      };
+      return;
+    }
+
     fixture = createFixtureState();
     authenticatedUser = await createRuntimeUser(fixture, {
       persona: 'individual',
@@ -91,7 +104,9 @@ test.describe('Accessibility - Critical Flows', () => {
   });
 
   test.afterAll(async () => {
-    await cleanupFixtureData(fixture);
+    if (fixture) {
+      await cleanupFixtureData(fixture);
+    }
   });
 
   test.beforeEach(async ({ page }) => {

@@ -1448,3 +1448,32 @@ Open risks/TODO:
 - `tests/e2e/prd-flows-organization.spec.ts` is outside Playwright `testDir`, so this regression is not currently in the active e2e run path.
 - Any hidden consumer expecting snake_case visibility response keys may require migration to the camelCase contract.
 - Settings subpages are owner/admin-only; if role resolution changes upstream, access behavior must be revalidated.
+
+---
+
+## 2026-02-12: CI unblocks for LinkedIn verification PR merge
+
+What changed:
+
+- Patched `tests/a11y/critical-flows.spec.ts` to support both accessibility runners:
+  - mock mode now defaults when `NEXT_PUBLIC_USE_MOCK_SUPABASE` is unset (`!== 'false'`)
+  - strict-fixture setup/cleanup is executed only when strict mode is active
+- Improved dashboard loading-state contrast in `src/app/app/i/home/DashboardClient.tsx` by changing the status text class from `text-gray-500` to `text-gray-600`.
+
+Why:
+
+- The required `a11y` workflow runs with `npm run test:a11y` where `NEXT_PUBLIC_USE_MOCK_SUPABASE` was unset, causing strict fixture initialization and immediate env failures.
+- The required `ci` workflow reported a strict accessibility contrast failure on dashboard loading text (4.46:1 vs 4.5:1 threshold).
+
+How to verify:
+
+- `npm run lint` (PASS, one existing warning in `postcss.config.js`)
+- `npm run typecheck` (PASS)
+- `npm run test -- tests/api/linkedin-oauth-redirects.test.ts src/lib/integrations/__tests__/oauth-helpers.test.ts tests/ui/linkedin-verification.test.tsx` (PASS)
+- `npm run test:a11y -- tests/a11y/critical-flows.spec.ts --reporter=line` (PASS)
+- `npm run test:a11y:strict -- tests/a11y/critical-flows.spec.ts --reporter=line` (local FAIL due missing `NEXT_PUBLIC_SUPABASE_URL`; expected in this workspace without strict env secrets)
+
+Open risks/TODO:
+
+- Strict a11y and strict e2e commands still require CI-provided secrets locally (`NEXT_PUBLIC_SUPABASE_URL`, related Supabase credentials).
+- PR merge remains gated by GitHub required checks until rerun completes on updated commit.

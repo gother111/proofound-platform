@@ -1604,3 +1604,54 @@ Open TODOs / follow-ups:
 
 - Ensure LinkedIn app allowlist includes all active domain callbacks (`https://<domain>/api/auth/linkedin/callback`).
 - If environment wants a single pinned callback, set `LINKEDIN_REDIRECT_URI` accordingly in deployment envs.
+
+---
+
+## 2026-02-12 23:51 CET
+
+Task summary:
+
+- Unblocked remaining required checks for the LinkedIn OAuth redirect PR after GitHub reported failing `a11y` and `ci` jobs.
+- Fixed a11y fixture mode detection for mock accessibility runs and tightened dashboard loading text contrast.
+
+What worked:
+
+- Defaulting `NEXT_PUBLIC_USE_MOCK_SUPABASE` handling to mock mode when unset fixed `test:a11y` startup failures.
+- Contrast class update (`text-gray-600`) aligned dashboard loading state with WCAG AA threshold expectations.
+- Regression checks for LinkedIn OAuth helper/routes remained green after follow-up patch.
+
+What failed / wrong assumptions:
+
+- Initial `useMockSupabase === 'true'` check assumed the env var is always set in `test:a11y`; in this repo it is unset for the non-strict runner.
+- Local strict a11y command cannot fully validate without Supabase env secrets.
+
+User corrections:
+
+- User asked to proceed immediately with implementation and merge, then confirmed to continue with the pending check-fix follow-up.
+
+Assumptions taken without asking:
+
+- Treating unset `NEXT_PUBLIC_USE_MOCK_SUPABASE` as mock mode is safe for non-strict accessibility config and does not alter strict config behavior.
+- Dashboard loading text color update is acceptable as a non-breaking visual change.
+
+What the user corrected afterward:
+
+- None after this follow-up execution began.
+
+Improvements next time:
+
+- Verify exact workflow env shape before writing runner-mode guards in Playwright specs.
+- Re-run workflow-equivalent checks immediately after merge-readiness changes to shorten feedback loops.
+
+Commands run + outcomes:
+
+- `npm run lint`: PASS (existing warning in `postcss.config.js`)
+- `npm run typecheck`: PASS
+- `npm run test -- tests/api/linkedin-oauth-redirects.test.ts src/lib/integrations/__tests__/oauth-helpers.test.ts tests/ui/linkedin-verification.test.tsx`: PASS
+- `npm run test:a11y -- tests/a11y/critical-flows.spec.ts --reporter=line`: FAIL initially (missing `NEXT_PUBLIC_SUPABASE_URL`), PASS after env-mode guard fix
+- `npm run test:a11y:strict -- tests/a11y/critical-flows.spec.ts --reporter=line`: FAIL locally (missing strict Supabase env vars)
+
+Open TODOs / follow-ups:
+
+- Push follow-up commit and rerun GitHub required checks on PR #178.
+- Merge once `a11y` and `ci` required checks turn green.
