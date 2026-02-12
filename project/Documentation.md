@@ -1103,3 +1103,30 @@ Open risks/TODO:
 
 - If production domain or health payload contract changes, docs and workflow must be updated together.
 - If `VERCEL_DEPLOY_HOOK_URL` is missing in repo secrets, retry workflow will fail by design until configured.
+
+---
+
+## 2026-02-12: PR Preview Retrigger Attempt During Vercel Rate Limit
+
+What changed:
+
+- Triggered a fresh PR preview attempt by pushing an empty commit to branch `codex/dashboard-loading-indicator-fix`.
+- New commit pushed: `b6be5fa` (`chore: retrigger vercel preview deploy`).
+- Confirmed PR `#170` head updated to `b6be5fa`.
+
+Why:
+
+- User could not see a Vercel deployment for the PR and requested another push/retry.
+
+How to verify:
+
+- `gh pr view 170 --json headRefOid,statusCheckRollup`
+  - Expect `headRefOid` to be `b6be5fa...`.
+  - Current Vercel status context remains `FAILURE` with build-rate-limit URL.
+- `curl -sS -H "Authorization: Bearer $VERCEL_TOKEN" "https://api.vercel.com/v6/deployments?projectId=prj_BkeoHPoWm9L8MzM8mtcFQXG3KKgg&meta-githubCommitSha=b6be5fa...&limit=20"`
+  - Current result is empty deployments while rate limit is active.
+
+Open risks/TODO:
+
+- No preview deployment can be created until Vercel build-rate-limit quota resets.
+- After quota reset, push another trivial commit (or re-run from Vercel UI) to trigger preview deployment creation.

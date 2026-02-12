@@ -1212,3 +1212,53 @@ Open TODOs / follow-ups:
 
 - Ensure `VERCEL_DEPLOY_HOOK_URL` remains configured in GitHub secrets after repo admin changes.
 - Keep retry workflow health URL aligned with production domain changes.
+
+---
+
+## 2026-02-12 20:22 CET
+
+Task summary:
+
+- Re-pushed the PR branch to retrigger Vercel preview deployment visibility.
+- Verified PR head updated and checked Vercel deployment API for the new SHA.
+- Confirmed Vercel still blocks preview creation due build rate limits.
+
+What worked:
+
+- Empty commit retriggered PR activity immediately.
+- PR `#170` head updated to `b6be5fa` as expected.
+
+What failed / wrong assumptions:
+
+- A retrigger push cannot bypass Vercel build-rate-limit quotas.
+- Vercel status context can show failure without creating a new deployment record for that SHA.
+
+User corrections:
+
+- User asked to push again and ensure PR appears in Vercel.
+
+Assumptions taken without asking:
+
+- Using an empty commit is acceptable to retrigger PR-based deploy integrations.
+- Checking Vercel API by commit SHA/ref is sufficient proof of preview deployment creation state.
+
+What the user corrected afterward:
+
+- User reported not seeing deployment in Vercel after prior push.
+
+Improvements next time:
+
+- Add a dedicated retry workflow for PR preview deployments if this pattern repeats.
+- Record a short runbook note about Vercel status context failure without deployment object creation.
+
+Commands run + outcomes:
+
+- `git commit --allow-empty -m "chore: retrigger vercel preview deploy"`: PASS.
+- `git push origin codex/dashboard-loading-indicator-fix`: PASS.
+- `gh pr view 170 --json ...`: PASS (`headRefOid` updated, Vercel status still failure due rate limit).
+- `curl .../v6/deployments?meta-githubCommitSha=b6be5fa...`: PASS (request OK, no deployments returned).
+
+Open TODOs / follow-ups:
+
+- Retry after Vercel build quota reset.
+- Optionally add PR-preview deploy retry automation if needed.
