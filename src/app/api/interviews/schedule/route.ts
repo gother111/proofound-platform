@@ -34,75 +34,34 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const matchId = searchParams.get('matchId');
 
-    const filters = [
-      sql`(
-        m.profile_id = ${user.id}
-        OR EXISTS (
-          SELECT 1
-          FROM organization_members om
-          WHERE om.org_id = a.org_id
-            AND om.user_id = ${user.id}
-            AND om.status = 'active'
-        )
-      )`,
-    ];
+    let query = supabase
+      .from('interviews')
+      .select('*')
+      .or(`host_user_id.eq.${user.id},participant_user_ids.cs.{${user.id}}`)
+      .order('scheduled_at', { ascending: true });
 
     if (status) {
-      filters.push(sql`i.status = ${status}`);
+      query = query.eq('status', status);
     }
 
     if (matchId) {
-      filters.push(sql`i.match_id = ${matchId}`);
+      query = query.eq('match_id', matchId);
     }
 
-    const whereClause = filters.length > 0 ? sql.join(filters, sql` AND `) : sql`TRUE`;
+    const { data: interviews, error: interviewsError } = await query;
+    if (interviewsError) {
+      throw interviewsError;
+    }
 
-    const result = await db.execute(sql`
-      SELECT
-        i.id,
-        i.match_id,
-        i.scheduled_at,
-        i.duration,
-        i.platform,
-        i.meeting_url,
-        i.status,
-        i.created_at,
-        m.created_at AS match_created_at,
-        p.display_name AS candidate_name,
-        a.role AS assignment_title,
-        o.display_name AS organization_name
-      FROM interviews i
-      INNER JOIN matches m ON m.id = i.match_id
-      INNER JOIN assignments a ON a.id = m.assignment_id
-      INNER JOIN organizations o ON o.id = a.org_id
-      LEFT JOIN profiles p ON p.id = m.profile_id
-      WHERE ${whereClause}
-      ORDER BY i.scheduled_at ASC
-    `);
-
-    const interviews = getRows(result) as Array<{
-      id: string;
-      match_id: string;
-      scheduled_at: string;
-      duration: number;
-      platform: string;
-      meeting_url: string;
-      status: string;
-      match_created_at: string | null;
-      candidate_name: string | null;
-      assignment_title: string | null;
-      organization_name: string | null;
-    }>;
-
-    const transformedInterviews = interviews.map((interview) => ({
+    const transformedInterviews = (interviews ?? []).map((interview: any) => ({
       id: interview.id,
       matchId: interview.match_id,
       scheduledAt: interview.scheduled_at,
-      duration: interview.duration,
+      duration: interview.duration_minutes ?? interview.duration ?? 30,
       platform: interview.platform,
-      meetingUrl: interview.meeting_url || 'pending',
+      meetingUrl: interview.meeting_link ?? interview.meeting_url ?? 'pending',
       status: interview.status,
-      matchAgreedAt: interview.match_created_at,
+      matchAgreedAt: interview.match_agreed_at ?? null,
       candidateName: interview.candidate_name || 'Candidate',
       assignmentTitle: interview.assignment_title || 'Assignment',
       organizationName: interview.organization_name || 'Organization',
@@ -126,6 +85,10 @@ const ScheduleInterviewSchema = z.object({
   timezone: z.string().optional().default('UTC'),
   manualMeetingLink: z.string().url().optional(),
 });
+
+function isMissingColumnError(error: { code?: string; message?: string } | null, column: string) {
+  return Boolean(error?.code === 'PGRST204' && error?.message?.includes(`'${column}'`));
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -317,23 +280,59 @@ export async function POST(request: NextRequest) {
     // 5. Create interview record.
     const persistedPlatform = data.platform;
 
-    const { data: interview, error: insertError } = await supabase
+    const participantUserIds = Array.from(
+      new Set<string>([match.profile_id, user.id, ...data.participantUserIds])
+    );
+
+    const baseInterviewInsert = {
+      match_id: data.matchId,
+      scheduled_at: data.scheduledAt,
+      platform: persistedPlatform,
+      meeting_id: meetingId,
+      timezone: data.timezone,
+      status: 'scheduled',
+      host_user_id: user.id,
+      participant_user_ids: participantUserIds,
+    };
+
+    let interview: any = null;
+
+    const modernInsert = await supabase
       .from('interviews')
       .insert({
-        match_id: data.matchId,
-        scheduled_at: data.scheduledAt,
-        duration: 30,
-        platform: persistedPlatform,
-        meeting_url: meetingLink,
-        meeting_id: meetingId,
-        timezone: data.timezone,
-        status: 'scheduled',
+        ...baseInterviewInsert,
+        duration_minutes: 30,
+        meeting_link: meetingLink,
       })
       .select()
       .single();
 
-    if (insertError) {
-      throw insertError;
+    if (modernInsert.error) {
+      const shouldFallbackToLegacyShape =
+        isMissingColumnError(modernInsert.error, 'duration_minutes') ||
+        isMissingColumnError(modernInsert.error, 'meeting_link');
+
+      if (!shouldFallbackToLegacyShape) {
+        throw modernInsert.error;
+      }
+
+      const legacyInsert = await supabase
+        .from('interviews')
+        .insert({
+          ...baseInterviewInsert,
+          duration: 30,
+          meeting_url: meetingLink,
+        })
+        .select()
+        .single();
+
+      if (legacyInsert.error) {
+        throw legacyInsert.error;
+      }
+
+      interview = legacyInsert.data;
+    } else {
+      interview = modernInsert.data;
     }
 
     try {

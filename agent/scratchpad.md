@@ -1756,3 +1756,47 @@ Commands run + outcomes (short):
 Open TODOs / follow-ups:
 
 - Push this fix and monitor new PR checks until merge completes.
+
+## 2026-02-13 00:51:00 CET
+
+Task summary (1-3 lines):
+
+- Investigated new strict-individual CI failure in interview scheduling.
+- Implemented schema-compatible insert/read behavior in `/api/interviews/schedule` to handle modern and legacy interview column names.
+
+What worked:
+
+- Direct grep on CI job logs immediately surfaced concrete DB schema-cache error (`PGRST204` on `duration` column).
+- Fallback insert strategy and normalized read mapping reduced environment-specific breakage without requiring a migration in this hotfix.
+
+What failed / wrong assumptions:
+
+- Earlier assumption that interviews schema matched local Drizzle model (`duration`, `meeting_url`) was wrong for CI runtime.
+
+User corrections:
+
+- None.
+
+Assumptions taken without asking:
+
+- Preserving API compatibility across mixed interview schemas is preferable to blocking MVP flow on migration sequencing.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add an interview scheduling contract test that mocks both schema variants (`duration` vs `duration_minutes`) to prevent regressions.
+- Align Drizzle schema and Supabase runtime schema documentation in a single source.
+
+Commands run + outcomes (short):
+
+- `gh api /repos/gother111/proofound-platform/actions/jobs/63463882377/logs`: PASS (retrieved strict-individual failure details)
+- `npm run lint`: PASS (1 pre-existing warning)
+- `npm run typecheck`: PASS
+- `npm run test -- tests/actions/auth.test.ts`: PASS
+
+Open TODOs / follow-ups:
+
+- Push schema-compatibility fix and re-evaluate PR checks.

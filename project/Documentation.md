@@ -1564,3 +1564,33 @@ How to verify:
 Open risks/TODO:
 
 - Confirm the next CI rerun no longer flakes on `Run auth E2E real contract`.
+
+## 2026-02-12 - Interview schedule schema-compatibility fix
+
+What changed:
+
+- Hardened interview scheduling API against schema-shape drift between environments:
+  - `src/app/api/interviews/schedule/route.ts`
+  - `GET` now reads interviews via Supabase `select('*')` and normalizes both column variants:
+    - `duration_minutes` or `duration`
+    - `meeting_link` or `meeting_url`
+  - `POST` now inserts with modern interview columns first (`duration_minutes`, `meeting_link`) and falls back to legacy shape (`duration`, `meeting_url`) only when PostgREST reports missing-column schema-cache errors.
+  - `POST` now persists `host_user_id` and `participant_user_ids` explicitly to satisfy RLS/ownership semantics consistently.
+
+Why:
+
+- Strict individual CI flow failed interview scheduling with:
+  - `PGRST204: Could not find the 'duration' column of 'interviews' in the schema cache`
+  - This caused `POST /api/interviews/schedule` to return 500 and blocked `I-15..I-17` strict flow.
+
+How to verify:
+
+- `npm run lint`: PASS (1 pre-existing warning in `postcss.config.js`)
+- `npm run typecheck`: PASS
+- `npm run test -- tests/actions/auth.test.ts`: PASS
+- Re-run CI strict individual flow:
+  - `npm run test:e2e:individual:strict` (in CI/strict env) should no longer fail on `duration` column mismatch.
+
+Open risks/TODO:
+
+- Full strict E2E confirmation still depends on CI secrets and live provider integrations.
