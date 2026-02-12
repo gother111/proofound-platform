@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useActionState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useFormStatus } from 'react-dom';
 import { motion } from 'framer-motion';
@@ -130,9 +131,16 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.15, duration: 0.45, ease: 'easeOut' }}
-              className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-proofound-forest shadow-[0_8px_18px_rgba(28,77,58,0.28)]"
+              className="mb-4"
             >
-              <span className="text-2xl font-display font-semibold text-white">P</span>
+              <Image
+                src="/logo.png"
+                alt="Proofound"
+                width={120}
+                height={48}
+                className="mx-auto h-12 w-auto"
+                priority
+              />
             </motion.div>
             <h1 className="font-display text-[28px] font-semibold leading-9 tracking-[-0.01em] text-[#2D3330]">
               Welcome back
