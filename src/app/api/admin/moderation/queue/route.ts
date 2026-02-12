@@ -1,156 +1,221 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { log } from '@/lib/log';
 import { adminListGuard } from '../../_utils';
-import { jsonError } from '@/lib/api/route-helpers';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
+
+type ModerationPriority = 'low' | 'medium' | 'high' | 'critical';
+
+function mapStatusFilter(status: string) {
+  switch (status) {
+    case 'in_review':
+      return 'reviewing';
+    case 'resolved':
+      return 'actioned';
+    default:
+      return status;
+  }
+}
+
+function getPriorityFromCategory(category: string): ModerationPriority {
+  switch (category) {
+    case 'harassment':
+      return 'critical';
+    case 'misinformation':
+    case 'inappropriate':
+      return 'high';
+    case 'spam':
+      return 'medium';
+    default:
+      return 'low';
+  }
+}
+
+async function enrichContent(adminClient: ReturnType<typeof createAdminClient>, report: any) {
+  try {
+    switch (report.content_type) {
+      case 'profile': {
+        const { data } = await adminClient
+          .from('profiles')
+          .select('id, display_name, handle, avatar_url')
+          .eq('id', report.content_id)
+          .maybeSingle();
+        return data;
+      }
+      case 'message': {
+        const { data } = await adminClient
+          .from('messages')
+          .select('id, content, sent_at, sender_id')
+          .eq('id', report.content_id)
+          .maybeSingle();
+        return data;
+      }
+      case 'assignment': {
+        const { data } = await adminClient
+          .from('assignments')
+          .select('id, role, description, status')
+          .eq('id', report.content_id)
+          .maybeSingle();
+        return data;
+      }
+      case 'impact_story': {
+        const { data } = await adminClient
+          .from('impact_stories')
+          .select('id, title, impact, business_value')
+          .eq('id', report.content_id)
+          .maybeSingle();
+        return data;
+      }
+      case 'experience': {
+        const { data } = await adminClient
+          .from('experiences')
+          .select('id, title, org_description')
+          .eq('id', report.content_id)
+          .maybeSingle();
+        return data;
+      }
+      case 'education': {
+        const { data } = await adminClient
+          .from('education')
+          .select('id, institution, degree')
+          .eq('id', report.content_id)
+          .maybeSingle();
+        return data;
+      }
+      case 'volunteering': {
+        const { data } = await adminClient
+          .from('volunteering')
+          .select('id, title, org_description')
+          .eq('id', report.content_id)
+          .maybeSingle();
+        return data;
+      }
+      default:
+        return null;
+    }
+  } catch {
+    return null;
+  }
+}
 
 /**
  * GET /api/admin/moderation/queue
  *
- * Fetch moderation queue for admin review
- * Requires platform_admin or super_admin role
+ * Fetch moderation queue for admin review.
  */
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
     const guardResult = await adminListGuard(request);
     if (guardResult instanceof NextResponse) return guardResult;
-    const user = guardResult.adminUser;
 
-    // Parse query parameters
+    const user = guardResult.adminUser;
+    const adminClient = createAdminClient();
+
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status') || 'pending';
-    const priority = searchParams.get('priority');
+    const statusFilter = mapStatusFilter(searchParams.get('status') || 'pending');
     const contentType = searchParams.get('contentType');
-    const limitRaw = parseInt(searchParams.get('limit') || '50');
-    const offsetRaw = parseInt(searchParams.get('offset') || '0');
+    const category = searchParams.get('category');
+
+    const limitRaw = parseInt(searchParams.get('limit') || '50', 10);
+    const offsetRaw = parseInt(searchParams.get('offset') || '0', 10);
     const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), 100) : 50;
     const offset = Number.isFinite(offsetRaw) ? Math.max(offsetRaw, 0) : 0;
 
-    // Build query
-    let query = supabase
+    let query = adminClient
       .from('content_reports')
-      .select(
-        `
-        *,
-        reporter:profiles!reporter_id (
-          id,
-          display_name,
-          handle,
-          avatar_url
-        )
-      `
-      )
-      .order('priority', { ascending: false })
+      .select('*')
       .order('created_at', { ascending: true })
       .range(offset, offset + limit - 1);
 
-    if (status) {
-      query = query.eq('status', status);
-    }
-
-    if (priority) {
-      query = query.eq('priority', priority);
+    if (statusFilter && statusFilter !== 'all') {
+      query = query.eq('status', statusFilter);
     }
 
     if (contentType) {
       query = query.eq('content_type', contentType);
     }
 
+    if (category) {
+      query = query.eq('category', category);
+    }
+
     const { data: reports, error: reportsError } = await query;
 
     if (reportsError) {
-      console.error('Error fetching reports:', reportsError);
       return NextResponse.json({ error: 'Failed to fetch reports' }, { status: 500 });
     }
 
-    // Get counts by status and priority
-    const { data: stats } = await supabase.rpc('get_moderation_stats');
+    const reporterIds = Array.from(
+      new Set((reports || []).map((r: any) => r.reporter_id).filter(Boolean))
+    );
+    const reporterMap = new Map<string, any>();
 
-    // Enrich reports with content data
+    if (reporterIds.length > 0) {
+      const { data: reporters } = await adminClient
+        .from('profiles')
+        .select('id, display_name, handle, avatar_url')
+        .in('id', reporterIds);
+
+      for (const reporter of reporters || []) {
+        reporterMap.set(reporter.id, reporter);
+      }
+    }
+
     const enrichedReports = await Promise.all(
-      (reports || []).map(async (report) => {
-        let contentData = null;
-
-        try {
-          switch (report.content_type) {
-            case 'profile':
-              const { data: profile } = await supabase
-                .from('profiles')
-                .select('id, display_name, handle, avatar_url')
-                .eq('id', report.content_id)
-                .single();
-              contentData = profile;
-              break;
-
-            case 'message':
-              const { data: message } = await supabase
-                .from('messages')
-                .select('id, content, sent_at, sender_id')
-                .eq('id', report.content_id)
-                .single();
-              contentData = message;
-              break;
-
-            case 'assignment':
-              const { data: assignment } = await supabase
-                .from('assignments')
-                .select('id, role, description, status')
-                .eq('id', report.content_id)
-                .single();
-              contentData = assignment;
-              break;
-
-            case 'project':
-              const { data: project } = await supabase
-                .from('projects')
-                .select('id, name, description')
-                .eq('id', report.content_id)
-                .single();
-              contentData = project;
-              break;
-
-            case 'skill_proof':
-              const { data: proof } = await supabase
-                .from('skill_proofs')
-                .select('id, proof_type, proof_link, description')
-                .eq('id', report.content_id)
-                .single();
-              contentData = proof;
-              break;
-          }
-        } catch (error) {
-          console.error(`Error fetching ${report.content_type} data:`, error);
-        }
+      (reports || []).map(async (report: any) => {
+        const content = await enrichContent(adminClient, report);
+        const priority = getPriorityFromCategory(report.category);
 
         return {
           ...report,
-          content: contentData,
+          reporter: reporterMap.get(report.reporter_id) || null,
+          content,
+          priority,
+          details: null,
         };
       })
     );
 
+    const statusCounts = (reports || []).reduce(
+      (acc: Record<string, number>, report: any) => {
+        const key = report.status || 'pending';
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+
+    const priorityCounts = enrichedReports.reduce(
+      (acc: Record<ModerationPriority, number>, report: any) => {
+        const key = (report.priority || 'low') as ModerationPriority;
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+      },
+      {} as Record<ModerationPriority, number>
+    );
+
+    const stats = {
+      pending: statusCounts.pending || 0,
+      in_review: statusCounts.reviewing || 0,
+      resolved: statusCounts.actioned || 0,
+      dismissed: statusCounts.dismissed || 0,
+      critical: priorityCounts.critical || 0,
+      high: priorityCounts.high || 0,
+      medium: priorityCounts.medium || 0,
+      low: priorityCounts.low || 0,
+    };
+
     log.info('moderation.queue.fetched', {
       adminId: user.userId,
       reportCount: enrichedReports.length,
-      status,
-      priority,
+      status: statusFilter,
+      category,
     });
 
     return NextResponse.json({
       reports: enrichedReports,
-      stats: stats || {
-        pending: 0,
-        in_review: 0,
-        resolved: 0,
-        dismissed: 0,
-        critical: 0,
-        high: 0,
-        medium: 0,
-        low: 0,
-      },
+      stats,
       meta: {
         total: enrichedReports.length,
         offset,
@@ -158,12 +223,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    // Check if it's an unauthorized error from requirePlatformAdmin
-    if (error instanceof Error && error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized. Admin access required.' }, { status: 403 });
-    }
-
-    console.error('Error in moderation queue:', error);
     log.error('moderation.queue.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
     });

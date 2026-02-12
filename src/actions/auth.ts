@@ -10,6 +10,7 @@ import type { AuthError } from '@supabase/supabase-js';
 import { resolveUserHomePath } from '@/lib/auth';
 import { z } from 'zod';
 import { mapSignUpValidationError, signUpSchema } from './auth.schema';
+import { CONSENT_TYPES, getPolicyVersionForConsentType } from '@/lib/privacy/consent-contract';
 
 const signInSchema = signUpSchema.pick({ email: true }).extend({
   password: z.string(),
@@ -199,41 +200,38 @@ export async function signUp(
         const ipHash = anonymizeIP(ip);
         const userAgentHash = anonymizeUserAgent(headersList.get('user-agent') || 'unknown');
 
-        // Current policy version
-        const policyVersion = 'v1.0.2025-10-30';
-
         // Prepare consent records
         const consentRecords = [
           {
             profile_id: signUpResult.user.id,
-            consent_type: 'gdpr_privacy_policy',
+            consent_type: CONSENT_TYPES.PRIVACY,
             consented: true,
             consented_at: new Date().toISOString(),
             ip_hash: ipHash,
             user_agent_hash: userAgentHash,
-            version: policyVersion,
+            version: getPolicyVersionForConsentType(CONSENT_TYPES.PRIVACY),
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           },
           {
             profile_id: signUpResult.user.id,
-            consent_type: 'gdpr_terms_of_service',
+            consent_type: CONSENT_TYPES.TOS,
             consented: true,
             consented_at: new Date().toISOString(),
             ip_hash: ipHash,
             user_agent_hash: userAgentHash,
-            version: policyVersion,
+            version: getPolicyVersionForConsentType(CONSENT_TYPES.TOS),
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           },
           {
             profile_id: signUpResult.user.id,
-            consent_type: 'marketing_emails',
+            consent_type: CONSENT_TYPES.MARKETING,
             consented: result.data.marketingOptIn ?? false,
             consented_at: new Date().toISOString(),
             ip_hash: ipHash,
             user_agent_hash: userAgentHash,
-            version: policyVersion,
+            version: getPolicyVersionForConsentType(CONSENT_TYPES.MARKETING),
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           },

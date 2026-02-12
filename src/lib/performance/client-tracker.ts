@@ -18,7 +18,6 @@ interface PerformanceData {
   pageRoute: string;
   valueMs: number;
   deviceType: 'desktop' | 'mobile' | 'tablet';
-  userAgent: string;
   timestamp: string;
 }
 
@@ -88,7 +87,6 @@ const handleMetric = (metric: Metric): void => {
     pageRoute: window.location.pathname,
     valueMs: metric.value,
     deviceType: getDeviceType(),
-    userAgent: navigator.userAgent,
     timestamp: new Date().toISOString(),
   };
 
@@ -138,7 +136,6 @@ const trackTTI = (): void => {
                 pageRoute: window.location.pathname,
                 valueMs: tti,
                 deviceType: getDeviceType(),
-                userAgent: navigator.userAgent,
                 timestamp: new Date().toISOString(),
               };
 
@@ -177,7 +174,6 @@ const trackPageLoad = (): void => {
             pageRoute: window.location.pathname,
             valueMs: loadTime,
             deviceType: getDeviceType(),
-            userAgent: navigator.userAgent,
             timestamp: new Date().toISOString(),
           };
 
@@ -220,7 +216,6 @@ export const trackCustomMetric = (name: string, durationMs: number): void => {
     pageRoute: window.location.pathname,
     valueMs: durationMs,
     deviceType: getDeviceType(),
-    userAgent: navigator.userAgent,
     timestamp: new Date().toISOString(),
   };
 

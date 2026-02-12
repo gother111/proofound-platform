@@ -1,86 +1,70 @@
 /**
  * Privacy Policy Version Tracking
- * 
+ *
  * Tracks versions of Terms of Service and Privacy Policy.
  * Ensures users re-consent when policies are updated.
- * 
- * Reference: DATA_SECURITY_PRIVACY_ARCHITECTURE.md Section 12
  */
 
 import { db, userConsents } from '@/db';
 import { eq, and, desc } from 'drizzle-orm';
+import { POLICY_VERSIONS, POLICY_EFFECTIVE_DATES } from '@/lib/privacy/policy-version-config';
+import {
+  CONSENT_TYPES,
+  getPolicyVersionForConsentType,
+  type ConsentTypeValue,
+} from '@/lib/privacy/consent-contract';
+
+export { CONSENT_TYPES, getPolicyVersionForConsentType };
+export type { ConsentTypeValue };
 
 /**
- * Current policy versions
- * Update these when policies change to trigger re-consent
- */
-export const POLICY_VERSIONS = {
-  tos: 'v1.0.2025-11-06',
-  privacy: 'v1.2.2025-11-06',
-  cookie: 'v1.0.2025-11-06',
-  verification: 'v1.0.2024',
-} as const;
-
-/**
- * Policy changelog - document what changed
+ * Policy changelog for in-product transparency.
  */
 export const POLICY_CHANGELOG = {
   tos: [
     {
+      version: 'v1.1.2026-02-12',
+      date: '2026-02-12',
+      changes: [
+        'Added EU launch compliance clarifications for moderation and transparency.',
+        'Clarified account termination and immediate deletion behavior.',
+        'Aligned acceptable use and appeal rights language with current moderation flows.',
+      ],
+    },
+    {
       version: 'v1.0.2025-11-06',
       date: '2025-11-06',
-      changes: [
-        'Initial Terms of Service',
-        'Added platform usage guidelines',
-        'Defined user responsibilities',
-        'Added dispute resolution process',
-      ],
+      changes: ['Initial Terms of Service.'],
     },
   ],
   privacy: [
     {
+      version: 'v1.3.2026-02-12',
+      date: '2026-02-12',
+      changes: [
+        'Aligned cookie and analytics consent controls with runtime telemetry gating.',
+        'Clarified non-diagnostic wellbeing data handling and matching exclusions.',
+        'Updated retention and deletion language to immediate account deletion workflow.',
+      ],
+    },
+    {
       version: 'v1.2.2025-11-06',
       date: '2025-11-06',
       changes: [
-        'Added staged identity reveal messaging privacy controls',
-        'Enhanced verification privacy protections',
-        'Added 30-day account deletion grace period',
-        'Clarified data retention policies',
+        'Added staged identity reveal messaging privacy controls.',
+        'Enhanced verification privacy protections.',
       ],
     },
     {
       version: 'v1.1.2025-01-30',
       date: '2025-01-30',
-      changes: [
-        'Added CCPA compliance section',
-        'Enhanced data portability rights',
-        'Added cookie policy reference',
-      ],
-    },
-    {
-      version: 'v1.0.2024',
-      date: '2024',
-      changes: ['Initial Privacy Policy', 'GDPR compliance framework', 'Data classification system'],
+      changes: ['Added CCPA compliance section.', 'Enhanced data portability rights.'],
     },
   ],
 } as const;
 
 /**
- * Consent types that require tracking
- */
-export const CONSENT_TYPES = {
-  TOS: 'gdpr_terms_of_service',
-  PRIVACY: 'gdpr_privacy_policy',
-  MARKETING: 'marketing_emails',
-  ANALYTICS: 'analytics_tracking',
-  ML_MATCHING: 'ml_matching',
-} as const;
-
-/**
- * Check if user has consented to latest policy versions
- * 
- * @param userId - User ID to check
- * @returns Object with consent status for each policy
+ * Check if user has consented to latest policy versions.
  */
 export async function checkPolicyConsent(userId: string): Promise<{
   needsConsent: boolean;
@@ -89,18 +73,15 @@ export async function checkPolicyConsent(userId: string): Promise<{
   missingConsents: string[];
 }> {
   try {
-    // Fetch user's latest consents
     const consents = await db
       .select()
       .from(userConsents)
       .where(eq(userConsents.profileId, userId))
       .orderBy(desc(userConsents.createdAt));
 
-    // Check TOS consent
     const tosConsent = consents.find((c) => c.consentType === CONSENT_TYPES.TOS);
     const tosUpToDate = tosConsent?.version === POLICY_VERSIONS.tos && tosConsent.consented;
 
-    // Check Privacy Policy consent
     const privacyConsent = consents.find((c) => c.consentType === CONSENT_TYPES.PRIVACY);
     const privacyUpToDate =
       privacyConsent?.version === POLICY_VERSIONS.privacy && privacyConsent.consented;
@@ -117,7 +98,6 @@ export async function checkPolicyConsent(userId: string): Promise<{
     };
   } catch (error) {
     console.error('Failed to check policy consent:', error);
-    // Fail closed - require re-consent if check fails
     return {
       needsConsent: true,
       tosUpToDate: false,
@@ -128,14 +108,7 @@ export async function checkPolicyConsent(userId: string): Promise<{
 }
 
 /**
- * Record user consent for a policy
- * 
- * @param userId - User ID
- * @param consentType - Type of consent
- * @param consented - Whether user consented
- * @param ipAddress - User's IP address (will be hashed)
- * @param userAgent - User's user agent (will be hashed)
- * @returns Created consent record
+ * Record user consent for a policy.
  */
 export async function recordPolicyConsent(
   userId: string,
@@ -144,14 +117,9 @@ export async function recordPolicyConsent(
   ipAddress?: string,
   userAgent?: string
 ): Promise<any> {
-  const version =
-    consentType === 'TOS'
-      ? POLICY_VERSIONS.tos
-      : consentType === 'PRIVACY'
-        ? POLICY_VERSIONS.privacy
-        : POLICY_VERSIONS.cookie;
+  const resolvedConsentType = CONSENT_TYPES[consentType];
+  const version = getPolicyVersionForConsentType(resolvedConsentType);
 
-  // Hash IP and user agent for privacy
   const ipHash = ipAddress ? await hashString(ipAddress) : null;
   const userAgentHash = userAgent ? await hashString(userAgent) : null;
 
@@ -159,7 +127,7 @@ export async function recordPolicyConsent(
     .insert(userConsents)
     .values({
       profileId: userId,
-      consentType: CONSENT_TYPES[consentType],
+      consentType: resolvedConsentType,
       consented,
       version,
       ipHash,
@@ -171,11 +139,7 @@ export async function recordPolicyConsent(
 }
 
 /**
- * Get consent history for a user
- * 
- * @param userId - User ID
- * @param consentType - Optional: filter by consent type
- * @returns Array of consent records
+ * Get consent history for a user.
  */
 export async function getConsentHistory(
   userId: string,
@@ -203,26 +167,14 @@ export async function getConsentHistory(
   return await query;
 }
 
-/**
- * Hash a string using Web Crypto API
- * Used for IP addresses and user agents
- */
 async function hashString(input: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(input);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-  return hashHex;
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-/**
- * Get what changed in a policy version
- * 
- * @param policyType - 'tos' or 'privacy'
- * @param version - Version to get changes for
- * @returns Changelog entry or null
- */
 export function getPolicyChangelog(
   policyType: 'tos' | 'privacy',
   version: string
@@ -231,13 +183,6 @@ export function getPolicyChangelog(
   return changelog.find((entry) => entry.version === version) || null;
 }
 
-/**
- * Get all versions for a policy type
- * 
- * @param policyType - 'tos' or 'privacy'
- * @returns Array of changelog entries
- */
 export function getAllPolicyVersions(policyType: 'tos' | 'privacy') {
   return POLICY_CHANGELOG[policyType];
 }
-

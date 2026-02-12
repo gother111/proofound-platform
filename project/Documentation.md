@@ -1085,3 +1085,78 @@ Open risks/TODO:
 - Apply the new RLS migration in production only with backup/checkpoint procedures.
 - Set `INTERNAL_API_SECRET` in deployed environments before relying on internal route calls.
 - Privacy suites should be executed sequentially in CI/local runs to avoid intermittent cross-run interference.
+
+## 2026-02-12: EU MVP Launch Readiness Implementation (No-Go Baseline Closed)
+
+What changed:
+
+- Replaced placeholder legal pages with concrete policy content and explicit version/effective-date metadata:
+  - `src/app/privacy/page.tsx`
+  - `src/app/terms/page.tsx`
+  - `src/app/(marketing)/cookies/page.tsx`
+- Unified consent/version contracts around shared privacy constants and lightweight consent contract modules:
+  - `src/lib/privacy/policy-version-config.ts`
+  - `src/lib/privacy/consent-contract.ts`
+  - `src/lib/privacy/policy-versions.ts`
+  - `src/lib/cookies/consent.ts`
+  - `src/components/CookieBanner.tsx`
+  - `src/app/api/user/consent/route.ts`
+  - `src/actions/auth.ts`
+- Added consent-gated optional telemetry mount and removed raw user-agent persistence from analytics/perf ingestion paths:
+  - `src/components/OptionalTelemetry.tsx`
+  - `src/app/layout.tsx`
+  - `src/lib/performance/client-tracker.ts`
+  - `src/app/api/performance/track/route.ts`
+  - `src/app/api/analytics/web-vitals/route.ts`
+- Aligned account deletion to one immediate-deletion model across API/UI/cron compatibility routes:
+  - `src/app/api/user/account/route.ts`
+  - `src/app/api/user/account/cancel-deletion/route.ts`
+  - `src/components/privacy/DeleteAccountSection.tsx`
+  - `src/components/privacy/DataBreakdown.tsx`
+  - `src/components/settings/PrivacyOverview.tsx`
+  - `src/app/api/cron/account-deletion-workflow/route.ts`
+  - `src/app/api/cron/process-deletions/route.ts`
+  - `src/app/api/cron/send-deletion-reminders/route.ts`
+- Implemented moderation rights endpoints and aligned moderation admin/reporting flow to current schema:
+  - `src/app/api/moderation/appeals/route.ts`
+  - `src/app/api/moderation/statements-of-reasons/route.ts`
+  - `src/app/api/moderation/transparency-report/route.ts`
+  - `src/app/api/moderation/report/route.ts`
+  - `src/app/api/admin/moderation/queue/route.ts`
+  - `src/app/api/admin/moderation/action/route.ts`
+  - `src/components/admin/ModerationQueue.tsx`
+- Implemented rank-band-first explainability default with constrained exact-rank release:
+  - `src/app/api/match/explain/[matchId]/route.ts`
+  - `src/components/matching/MatchResultCard.tsx`
+- Added EU hardening migration for RLS and moderation storage, and fixed trigger/schema drift:
+  - `src/db/migrations/20260212183000_eu_launch_readiness_hardening.sql`
+  - `supabase/migrations/20260212183000_eu_launch_readiness_hardening.sql`
+- Updated PRD language to align deletion model expectations:
+  - `PRD_for_a_web_platform_MVP.md`
+
+Why:
+
+- EU launch readiness required closing P0 gaps in legal transparency, consent enforcement, telemetry minimization, sensitive-table RLS posture, moderation rights workflows, and PRD-policy consistency.
+- Privacy tests were failing against stale DB policy/trigger state, so migration apply had to be part of verification.
+
+How to verify:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:migrate` (PASS; applied `20260212183000_eu_launch_readiness_hardening`)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint` (PASS; one pre-existing non-blocking warning in `src/components/profile/PublicSnippetView.tsx`)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:privacy` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:privacy:extended` (PASS)
+- Runtime launch gates with local prod server:
+  - `BASE_URL=http://localhost:3000 npm run perf:budgets` (FAIL: desktop/mobile TTI above budget)
+  - `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go` (PASS)
+
+Open risks/TODO:
+
+- Perf budgets still fail on TTI, so launch gate is not fully green.
+- Legal counsel signoff artifacts for Privacy Policy, Terms, and Cookie Policy are still required before release.
+- Manual EU scenario checks remain required:
+  - decline analytics cookies and confirm no non-essential telemetry network calls,
+  - verify cross-user and anonymous isolation for verification/analytics in live app flows,
+  - run moderation action -> statement-of-reasons -> appeal lifecycle end to end.

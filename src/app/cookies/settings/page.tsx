@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { ArrowLeft, Cookie } from 'lucide-react';
-import { CookiePreferences } from '@/components/cookies/CookiePreferences';
 import { CookieSettingsClient } from '@/components/cookies/CookieSettingsClient';
 
 /**

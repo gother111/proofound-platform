@@ -28,7 +28,7 @@ function toSkillKey(skill: SkillRequirement): string {
 }
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ matchId: string }> }
 ) {
   try {
@@ -249,6 +249,18 @@ export async function GET(
     if (rank > 0 && rank <= 5) rankBand = 'Top 5';
     else if (rank <= 10) rankBand = 'Top 10';
     else if (rank <= 20) rankBand = 'Top 20';
+    else if (rank > 0 && totalCandidates > 0) {
+      const percentile = Math.ceil((rank / totalCandidates) * 100);
+      if (percentile <= 30) rankBand = 'Top 30%';
+      else if (percentile <= 50) rankBand = 'Top 50%';
+      else rankBand = 'Competitive';
+    } else {
+      rankBand = 'Competitive';
+    }
+
+    const requestedRankMode = request.nextUrl.searchParams.get('rankMode');
+    const exactRankAllowed =
+      requestedRankMode === 'exact' && canViewAsOrgMember && totalCandidates >= 30;
 
     const vector = (match.vector as Record<string, any> | null) || {};
     const vectorSubscores = (vector.subscores as Record<string, number> | undefined) || {};
@@ -256,9 +268,11 @@ export async function GET(
     const explanation = {
       matchId: match.id,
       compositeScore: Number(match.score) || 0,
-      rank,
+      rank: exactRankAllowed ? rank : undefined,
       totalCandidates,
       rankBand,
+      rankMode: exactRankAllowed ? 'exact' : 'band',
+      exactRankAvailable: canViewAsOrgMember && totalCandidates >= 30,
       subscores: {
         skills: Number(vectorSubscores.skills ?? vector.skills ?? 0),
         pac: Number(vectorSubscores.pac ?? vector.pac ?? 0),

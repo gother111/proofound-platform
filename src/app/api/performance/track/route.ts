@@ -9,12 +9,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { performanceMetrics } from '@/db/schema';
 import type { InsertPerformanceMetric } from '@/db/schema';
+import { anonymizeUserAgent } from '@/lib/utils/privacy';
 
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
 
-    const { metricType, pageRoute, valueMs, deviceType, userAgent, timestamp } = data;
+    const { metricType, pageRoute, valueMs, deviceType, timestamp } = data;
 
     // Validate required fields
     if (!metricType || !pageRoute || valueMs === undefined) {
@@ -36,6 +37,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid device type' }, { status: 400 });
     }
 
+    const rawUserAgent = request.headers.get('user-agent') || '';
+    let userAgentHash: string | null = null;
+    if (rawUserAgent) {
+      try {
+        userAgentHash = anonymizeUserAgent(rawUserAgent);
+      } catch {
+        userAgentHash = null;
+      }
+    }
+
     // Create metric record
     const metric: InsertPerformanceMetric = {
       metricType,
@@ -43,7 +54,7 @@ export async function POST(request: NextRequest) {
       apiEndpoint: null,
       valueMs: String(valueMs),
       deviceType: deviceType || null,
-      userAgent: userAgent || null,
+      userAgent: userAgentHash,
       timestamp: timestamp ? new Date(timestamp) : new Date(),
       sampleCount: 1,
       p50: null,

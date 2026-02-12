@@ -16,9 +16,7 @@ import { X, Cookie } from 'lucide-react';
 import Link from 'next/link';
 import { logError } from '@/lib/error-handler';
 import { usePathname } from 'next/navigation';
-
-const CONSENT_KEY = 'proofound-cookie-consent';
-const CONSENT_VERSION = 'v1.0.2025-11-06';
+import { hasGivenConsent, saveCookiePreferences } from '@/lib/cookies/consent';
 
 export function CookieBanner() {
   const [show, setShow] = useState(false);
@@ -32,10 +30,7 @@ export function CookieBanner() {
       return;
     }
 
-    // Check if user already consented
-    const storedConsent = localStorage.getItem(CONSENT_KEY);
-    // Accept both "v1.0.2025-11-06" (Accept All) and "v1.0.2025-11-06-declined" (Essential Only)
-    if (!storedConsent || !storedConsent.startsWith(CONSENT_VERSION)) {
+    if (!hasGivenConsent()) {
       // Show banner after short delay for better UX
       const timer = setTimeout(() => setShow(true), 1000);
       return () => clearTimeout(timer);
@@ -46,35 +41,41 @@ export function CookieBanner() {
     try {
       setSaving(true);
 
-      // Store in localStorage
-      localStorage.setItem(CONSENT_KEY, CONSENT_VERSION);
-
-      // Store in database if user is authenticated
-      try {
-        await fetch('/api/user/consent', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            consentType: 'analytics_tracking',
-            consented: true,
-            version: CONSENT_VERSION,
-          }),
-        });
-      } catch (error) {
-        // Silently fail if not authenticated - localStorage is sufficient
-        logError('CookieBanner.handleAccept', error);
-      }
+      await saveCookiePreferences(
+        {
+          essential: true,
+          analytics: true,
+          marketing: false,
+        },
+        true
+      );
 
       setShow(false);
+    } catch (error) {
+      logError('CookieBanner.handleAccept', error);
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDecline = () => {
-    // Store decline in localStorage
-    localStorage.setItem(CONSENT_KEY, `${CONSENT_VERSION}-declined`);
-    setShow(false);
+  const handleDecline = async () => {
+    try {
+      setSaving(true);
+      await saveCookiePreferences(
+        {
+          essential: true,
+          analytics: false,
+          marketing: false,
+        },
+        true
+      );
+      setShow(false);
+    } catch (error) {
+      logError('CookieBanner.handleDecline', error);
+      setShow(false);
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (isSnippetEmbedRoute || !show) return null;

@@ -2208,7 +2208,7 @@ Each flow includes:
 
 ## Data Retention & Deletion
 
-- **Profiles:** Soft delete for 30 days, then hard delete; replace references in analytics with hashed ids.
+- **Profiles:** Immediate irreversible deletion request handling; related records are deleted or anonymized according to legal and technical requirements.
 - **Assignments/Applications:** Retain 24 months by default; allow org‑level purge on request.
 - **Artifacts:** Retain while linked to active Profile/Assignment; orphan cleanup after 90 days.
 - **Messages:** Retain 36 months; subject to legal holds.
@@ -2235,7 +2235,7 @@ Each flow includes:
 ## Facts & Decisions
 
 - **Facts:** Matches are materialized to accelerate UX; values/causes (PAC) are first‑class in scoring but never used to penalize protected groups.
-- **Decisions:** Keep ER monolithic for MVP; adopt soft‑delete + re‑keying in analytics; expand with vector search entities post‑MVP if needed.
+- **Decisions:** Keep ER monolithic for MVP; adopt immediate deletion handling + analytics re-keying/anonymization safeguards; expand with vector search entities post‑MVP if needed.
 
 # Part 10 — Integrations (MVP)
 
@@ -2312,7 +2312,7 @@ Each flow includes:
 ## Compliance & Data Handling
 
 - **Regimes:** GDPR/CCPA principles—consent, access, deletion, opt‑out of analytics/ML, data minimization.
-- **Retention:** See Part 9; honor verified deletion requests within 30 days.
+- **Retention:** See Part 9; process verified deletion requests immediately, with legal exceptions documented by policy.
 - **Cookies:** Use strictly necessary cookies by default; analytics cookies behind consent.
 
 ## Team & Timeline Constraints

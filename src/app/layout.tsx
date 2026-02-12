@@ -1,7 +1,5 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { Analytics } from '@vercel/analytics/react';
-import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Toaster } from '@/components/ui/sonner';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
@@ -9,8 +7,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ChatWidget } from '@/components/support/ChatWidget';
 import { CookieBanner } from '@/components/CookieBanner';
 import { GlobalErrorHandler } from '@/components/GlobalErrorHandler';
-import { WebVitalsReporter } from '@/components/WebVitalsReporter';
-import { PerformanceTracker } from '@/components/PerformanceTracker';
+import { OptionalTelemetry } from '@/components/OptionalTelemetry';
 import { SUSPromptHost } from '@/components/surveys/SUSPromptHost';
 import { SkipToContentLink } from '@/components/a11y/SkipToContentLink';
 
@@ -60,10 +57,7 @@ export default async function RootLayout({
             <Toaster />
             <ChatWidget />
             <CookieBanner />
-            <PerformanceTracker />
-            <WebVitalsReporter />
-            <Analytics />
-            <SpeedInsights />
+            <OptionalTelemetry />
           </NextIntlClientProvider>
         </ErrorBoundary>
       </body>

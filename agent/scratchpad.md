@@ -1166,3 +1166,60 @@ Open TODOs / follow-ups:
 
 - Follow through with repository-level migration source cleanup/deprecation beyond runtime runner unification.
 - Monitor internal API secret rollout in deployed environments.
+
+---
+
+## 2026-02-12 17:34 CET
+
+Task summary:
+
+- Implement EU MVP launch readiness hardening plan across legal pages, consent/telemetry, RLS/migrations, moderation rights APIs, deletion-model alignment, and PRD consistency.
+- Close privacy-suite blockers by applying the pending EU hardening migration to the target Supabase database.
+
+What worked:
+
+- `20260212183000_eu_launch_readiness_hardening` migration applied cleanly through `npm run db:migrate`.
+- Privacy suites passed immediately after migration apply.
+- Full core verification matrix (lint/typecheck/test/build) passed on Node `20.20.0`.
+- `go:no-go` gate passed with local production server.
+
+What failed / wrong assumptions:
+
+- Assumed privacy suite failures were code-level; root cause was unapplied DB migration/policy state.
+- Launch perf budget gate still fails due TTI above configured thresholds.
+
+User corrections:
+
+- Clarified target document name: `PRD_for_a_web_platform_MVP.md`.
+
+Assumptions taken without asking:
+
+- Applying migrations via `npm run db:migrate` against the configured shared Supabase project was acceptable to align runtime and privacy test state.
+- Existing non-blocking lint warning in `src/components/profile/PublicSnippetView.tsx` remains out of scope for this EU compliance pass.
+
+What the user corrected afterward:
+
+- Only the PRD filename clarification above in this session.
+
+Improvements next time:
+
+- Before running privacy suites, check and apply pending migrations when policy/trigger files changed.
+- Keep a small DB-policy evidence query script ready to validate sensitive-table RLS posture post-migration.
+
+Commands run + outcomes:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:privacy`: FAIL before migration, PASS after migration.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:migrate`: PASS (applied EU hardening migration).
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:privacy:extended`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS (warning only).
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`: PASS.
+- `BASE_URL=http://localhost:3000 npm run perf:budgets`: FAIL (TTI budget).
+- `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go`: PASS.
+
+Open TODOs / follow-ups:
+
+- Investigate and reduce landing/homepage TTI to pass perf budget gate.
+- Run manual EU scenarios for consent decline telemetry suppression and moderation rights flow E2E.
+- Capture legal counsel signoff artifact for policy text before release.

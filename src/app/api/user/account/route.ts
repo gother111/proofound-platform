@@ -23,42 +23,34 @@ const AccountDeletionSchema = z.object({
 
 /**
  * DELETE /api/user/account
- * 
+ *
  * GDPR Article 17 (Right to Erasure)
- * 
+ *
  * PRD I-25: Immediate, irreversible deletion (no grace period).
  */
 export async function DELETE(request: NextRequest) {
   try {
     const user = await requireAuth();
-    
+
     // Parse and validate request body
     const body = await request.json();
     const parsed = AccountDeletionSchema.parse(body);
 
     // Get user profile to access email for password verification
-    const [profile] = await db
-      .select()
-      .from(profiles)
-      .where(eq(profiles.id, user.id))
-      .limit(1);
+    const [profile] = await db.select().from(profiles).where(eq(profiles.id, user.id)).limit(1);
 
     if (!profile) {
-      return NextResponse.json(
-        { error: 'Profile not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
     // Get the user's email from Supabase auth (not from profile)
     const supabase = await createClient();
-    const { data: { user: authUser } } = await supabase.auth.getUser();
-    
+    const {
+      data: { user: authUser },
+    } = await supabase.auth.getUser();
+
     if (!authUser?.email) {
-      return NextResponse.json(
-        { error: 'User email not found' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'User email not found' }, { status: 400 });
     }
 
     // Verify password by attempting to sign in with the correct email
@@ -75,9 +67,9 @@ export async function DELETE(request: NextRequest) {
       });
 
       return NextResponse.json(
-        { 
+        {
           error: 'Invalid password',
-          message: 'The password you entered is incorrect. Please try again.'
+          message: 'The password you entered is incorrect. Please try again.',
         },
         { status: 401 }
       );
@@ -123,7 +115,10 @@ export async function DELETE(request: NextRequest) {
         error: anonymizeError instanceof Error ? anonymizeError.message : 'Unknown error',
       });
       return NextResponse.json(
-        { error: 'Failed to delete account', message: 'An error occurred while deleting your account.' },
+        {
+          error: 'Failed to delete account',
+          message: 'An error occurred while deleting your account.',
+        },
         { status: 500 }
       );
     }
@@ -167,8 +162,9 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json(
       {
-        error: 'Failed to schedule account deletion',
-        message: 'An error occurred while processing your deletion request. Please try again later.',
+        error: 'Failed to delete account',
+        message:
+          'An error occurred while processing your deletion request. Please try again later.',
       },
       { status: 500 }
     );
@@ -177,7 +173,7 @@ export async function DELETE(request: NextRequest) {
 
 /**
  * GET /api/user/account
- * 
+ *
  * Get current account status including deletion status
  */
 export async function GET() {
@@ -188,7 +184,6 @@ export async function GET() {
       .select({
         id: profiles.id,
         deletionRequestedAt: profiles.deletionRequestedAt,
-        deletionScheduledFor: profiles.deletionScheduledFor,
         deleted: profiles.deleted,
       })
       .from(profiles)
@@ -196,26 +191,15 @@ export async function GET() {
       .limit(1);
 
     if (!profile) {
-      return NextResponse.json(
-        { error: 'Profile not found' },
-        { status: 404 }
-      );
-    }
-
-    // Calculate days remaining if deletion is scheduled
-    let daysRemaining = null;
-    if (profile.deletionScheduledFor) {
-      const now = new Date();
-      const diff = profile.deletionScheduledFor.getTime() - now.getTime();
-      daysRemaining = Math.ceil(diff / (24 * 60 * 60 * 1000));
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
     return NextResponse.json({
-      accountStatus: profile.deleted ? 'deleted' : (profile.deletionScheduledFor ? 'deletion_scheduled' : 'active'),
+      accountStatus: profile.deleted ? 'deleted' : 'active',
       deletionRequestedAt: profile.deletionRequestedAt?.toISOString() || null,
-      deletionScheduledFor: profile.deletionScheduledFor?.toISOString() || null,
-      daysRemaining,
-      canCancelDeletion: profile.deletionScheduledFor && !profile.deleted,
+      deletionScheduledFor: null,
+      daysRemaining: null,
+      canCancelDeletion: false,
     });
   } catch (error) {
     log.error('privacy.account_status.failed', {
@@ -230,4 +214,3 @@ export async function GET() {
     );
   }
 }
-
