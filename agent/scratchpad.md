@@ -1010,3 +1010,52 @@ Open TODOs / follow-ups:
 
 - Push `codex/profile-sharing-clean-merge` and merge via PR.
 - Apply production deployment if not already on latest commit and re-check snippet links from profile dialogs.
+
+---
+
+## 2026-02-12 14:47 CET
+
+Task summary:
+
+- Complete "enable automerge" request end-to-end by adding trusted PR auto-enable automation.
+- Keep merge policy aligned with repository squash-only strategy and protection checks.
+
+What worked:
+
+- Isolated changes in a clean worktree from `origin/master` to avoid unrelated local modifications.
+- Added `.github/workflows/auto-enable-automerge.yml` with non-fork + trust-association guardrails.
+- Confirmed YAML validity and repo settings (`allow_auto_merge=true`).
+
+What failed / wrong assumptions:
+
+- No runtime workflow execution available locally; behavior must be confirmed on the next trusted PR event.
+
+User corrections:
+
+- User asked to actually enable it, not only describe remaining steps.
+
+Assumptions taken without asking:
+
+- "Trusted PRs" means `OWNER`, `MEMBER`, `COLLABORATOR` and same-repo branches only.
+- Keep existing branch protection requirements unchanged.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Immediately open the implementation PR after workflow creation to reduce back-and-forth.
+- Include explicit skipped-case logging step in workflow if observability is needed.
+
+Commands run + outcomes:
+
+- `git fetch origin master --prune`: PASS
+- `git worktree add -b codex/auto-enable-automerge-workflow /tmp/proofound-automerge origin/master`: PASS
+- `ruby -ryaml -e "YAML.load_file('.github/workflows/auto-enable-automerge.yml'); puts 'YAML_OK'"`: PASS
+- `gh api repos/gother111/proofound-platform --jq '{allow_auto_merge,allow_squash_merge,default_branch}'`: PASS (`allow_auto_merge=true`)
+- `gh api repos/gother111/proofound-platform/branches/master/protection --jq '{required_status_checks:.required_status_checks.contexts, required_approving_review_count:.required_pull_request_reviews.required_approving_review_count}'`: PASS (`ci`,`a11y`, `1`)
+
+Open TODOs / follow-ups:
+
+- Commit, push, and merge this workflow branch so automation is active on `master`.

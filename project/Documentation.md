@@ -962,3 +962,35 @@ Open risks/TODO:
 - Existing already-shared `proofound.com` links outside the app cannot be redirected by this codebase alone.
 - `frame-ancestors *` is intentionally limited to `/p/<token>/embed`; keep this route-scoped and do not broaden it.
 - Optional hardening follow-up: replace `<img>` with `next/image` in `src/components/profile/PublicSnippetView.tsx` if layout permits.
+
+---
+
+## 2026-02-12: Repository Auto-Merge Enablement Completed
+
+What changed:
+
+- Verified repository-level auto-merge is enabled for `gother111/proofound-platform`.
+- Added trusted PR automation workflow:
+  - `.github/workflows/auto-enable-automerge.yml`
+- Workflow behavior:
+  - triggers on `pull_request_target` (`opened`, `reopened`, `synchronize`, `ready_for_review`)
+  - skips drafts
+  - skips fork PRs
+  - only runs for `OWNER`, `MEMBER`, `COLLABORATOR` author associations
+  - enables auto-merge with squash mode via `gh pr merge <number> --auto --squash`
+
+Why:
+
+- Remove manual "Enable auto-merge" clicks for trusted internal PRs while keeping branch protection rules intact.
+
+How to verify:
+
+- `gh api repos/gother111/proofound-platform --jq '{allow_auto_merge,allow_squash_merge,default_branch}'`
+- `gh api repos/gother111/proofound-platform/branches/master/protection --jq '{required_status_checks:.required_status_checks.contexts, required_approving_review_count:.required_pull_request_reviews.required_approving_review_count}'`
+- `ruby -ryaml -e "YAML.load_file('.github/workflows/auto-enable-automerge.yml'); puts 'YAML_OK'"`
+- Open a non-draft, non-fork trusted PR and confirm GitHub marks auto-merge enabled automatically.
+
+Open risks/TODO:
+
+- Workflow must be merged to `master` before it becomes active.
+- If GitHub token or repo policy permissions change, workflow may no longer be able to set auto-merge and will need permission updates.
