@@ -14,6 +14,7 @@ type OrganizationRow = Pick<
   | 'slug'
   | 'displayName'
   | 'legalName'
+  | 'verified'
   | 'type'
   | 'logoUrl'
   | 'coverImageUrl'
@@ -64,6 +65,7 @@ function mapOrganization(
     slug: row.slug,
     displayName: row.displayName ?? '',
     legalName: row.legalName ?? null,
+    verified: row.verified ?? false,
     type: (row.type as OrganizationRow['type']) ?? null,
     logoUrl: row.logoUrl ?? null,
     coverImageUrl: row.coverImageUrl ?? null,
@@ -162,6 +164,7 @@ export async function getUserOrganizations(userId: string) {
           slug,
           displayName:display_name,
           legalName:legal_name,
+          verified,
           type,
           logoUrl:logo_url,
           coverImageUrl:cover_image_url,
@@ -237,6 +240,7 @@ export async function getActiveOrg(slug: string, userId: string) {
         slug,
         displayName:display_name,
         legalName:legal_name,
+        verified,
         type,
         logoUrl:logo_url,
         coverImageUrl:cover_image_url,
@@ -294,6 +298,7 @@ export async function getActiveOrg(slug: string, userId: string) {
       slug: data.slug,
       displayName: (data as Record<string, unknown>).displayName as string | undefined,
       legalName: (data as Record<string, unknown>).legalName as string | null | undefined,
+      verified: (data as Record<string, unknown>).verified as boolean | undefined,
       type: data.type as OrganizationRow['type'],
       logoUrl: (data as Record<string, unknown>).logoUrl as string | null | undefined,
       coverImageUrl: (data as Record<string, unknown>).coverImageUrl as string | null | undefined,
