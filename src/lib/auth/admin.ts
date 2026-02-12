@@ -22,6 +22,24 @@ export interface AdminUser {
   adminLevel: AdminLevel;
 }
 
+function getMockPlatformRoleForTests(): 'super_admin' | 'platform_admin' | null {
+  if (process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE !== 'true') {
+    return null;
+  }
+
+  const isTestContext = process.env.NODE_ENV === 'test' || process.env.PLAYWRIGHT === 'true';
+  if (!isTestContext) {
+    return null;
+  }
+
+  const explicitRole = process.env.MOCK_PLATFORM_ROLE?.trim();
+  if (explicitRole === 'platform_admin' || explicitRole === 'super_admin') {
+    return explicitRole;
+  }
+
+  return process.env.MOCK_ADMIN_MODE === 'true' ? 'platform_admin' : null;
+}
+
 /**
  * Check if user is a platform admin (platform_admin or super_admin)
  */
@@ -105,10 +123,7 @@ export async function getAdminLevel(userId: string): Promise<AdminLevel> {
 
     // Check if user is admin of any organization
     const orgMembership = await db.query.organizationMembers.findFirst({
-      where: and(
-        eq(organizationMembers.userId, userId),
-        eq(organizationMembers.status, 'active')
-      ),
+      where: and(eq(organizationMembers.userId, userId), eq(organizationMembers.status, 'active')),
       columns: {
         role: true,
       },
@@ -132,10 +147,23 @@ export async function getAdminLevel(userId: string): Promise<AdminLevel> {
 export async function getAdminUser(): Promise<AdminUser | null> {
   try {
     const supabase = await createClient();
-    const { data: { user }, error } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
 
     if (error || !user) {
       return null;
+    }
+
+    const mockPlatformRole = getMockPlatformRoleForTests();
+    if (mockPlatformRole) {
+      return {
+        userId: user.id,
+        email: user.email || 'mock-admin@proofound.test',
+        platformRole: mockPlatformRole,
+        adminLevel: mockPlatformRole,
+      };
     }
 
     const profile = await db.query.profiles.findFirst({
@@ -176,7 +204,10 @@ export async function getAdminUser(): Promise<AdminUser | null> {
 export async function requirePlatformAdmin(): Promise<AdminUser> {
   const adminUser = await getAdminUser();
 
-  if (!adminUser || (adminUser.adminLevel !== 'platform_admin' && adminUser.adminLevel !== 'super_admin')) {
+  if (
+    !adminUser ||
+    (adminUser.adminLevel !== 'platform_admin' && adminUser.adminLevel !== 'super_admin')
+  ) {
     redirect('/403');
   }
 
@@ -230,12 +261,7 @@ export async function canPerformAdminAction(
     if (adminLevel === 'org_admin' && targetOrgId) {
       const isAdmin = await isOrgAdmin(userId, targetOrgId);
       if (isAdmin) {
-        const orgActions = [
-          'view_org',
-          'edit_org',
-          'manage_org_members',
-          'view_org_analytics',
-        ];
+        const orgActions = ['view_org', 'edit_org', 'manage_org_members', 'view_org_analytics'];
         return orgActions.includes(action);
       }
     }
@@ -253,7 +279,7 @@ export async function canPerformAdminAction(
  */
 export function isEmailInAdminWhitelist(email: string): boolean {
   const whitelist = process.env.PLATFORM_ADMIN_EMAILS || '';
-  const emails = whitelist.split(',').map(e => e.trim().toLowerCase());
+  const emails = whitelist.split(',').map((e) => e.trim().toLowerCase());
   return emails.includes(email.toLowerCase());
 }
 
@@ -263,10 +289,7 @@ export function isEmailInAdminWhitelist(email: string): boolean {
 export async function getPendingAdminInvitation(email: string) {
   try {
     return await db.query.adminInvitations.findFirst({
-      where: and(
-        eq(adminInvitations.email, email),
-        eq(adminInvitations.status, 'pending')
-      ),
+      where: and(eq(adminInvitations.email, email), eq(adminInvitations.status, 'pending')),
     });
   } catch (error) {
     console.error('Error checking admin invitation:', error);

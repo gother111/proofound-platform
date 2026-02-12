@@ -128,9 +128,20 @@ export async function signupOrganization(page: Page, org: TestOrganization) {
     .getByLabel(/password/i)
     .first()
     .fill(org.password);
+  const confirmPasswordInput = page.locator('input[name="confirmPassword"]');
+  if (await confirmPasswordInput.isVisible()) {
+    await confirmPasswordInput.fill(org.password);
+  }
+
+  const gdprConsent = page.getByTestId('gdpr-consent');
+  if (await gdprConsent.isVisible()) {
+    await gdprConsent.check();
+  }
 
   // Submit signup form
-  await page.getByRole('button', { name: /sign up|create account/i }).click();
+  await page
+    .getByRole('button', { name: /create organization account|create account|sign up/i })
+    .click();
 
   // Wait for redirect to onboarding
   await page.waitForURL(/onboarding|app/, { timeout: 10000 });
