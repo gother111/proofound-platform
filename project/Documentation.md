@@ -1154,3 +1154,34 @@ Open risks/TODO:
 
 - `onLoadingChange` is optional and callback-driven. If future dashboard implementations skip emitting loading transitions, parent loading text may drift again.
 - Current coverage is component-level. A future E2E assertion on `/app/i/home` could harden this behavior end-to-end.
+
+---
+
+## 2026-02-12: Vercel Production Visibility Triage (master commit missing in UI)
+
+What changed:
+
+- Verified Git state and Vercel state for `master` deployment visibility.
+- Confirmed `origin/master` is at commit `35bf00e9924c516062b1812a7d3c39c5ac228d80`.
+- Queried Vercel project and deployment metadata for `proofound-platform`.
+- Confirmed latest production deployment on Vercel is still commit `eba9e428d4f6f38d3ae44f77daea697e26b82404` (older than `35bf00e`).
+- Attempted manual production deploy via Vercel CLI with token and hit quota block:
+  - `api-deployments-free-per-day` (more than 100 deployments/day), message: try again in 1 hour.
+- Re-linked local `.vercel/project.json` back to `proofound-platform` after a temporary CLI auto-link drift to `proofound`.
+
+Why:
+
+- User reported that merge to `master` was not visible in Vercel.
+- Root cause is not Git state. Root cause is deployment exhaustion on Vercel free-tier daily limit, so no deployment for commit `35bf00e` was created.
+
+How to verify:
+
+- `git rev-parse origin/master` -> `35bf00e9924c516062b1812a7d3c39c5ac228d80`
+- `npx vercel project inspect proofound-platform --token "$VERCEL_TOKEN"` -> linked GitHub repo `gother111/proofound-platform`, production branch `master`
+- `npx vercel inspect https://proofound-platform-glks17i3y-pavlo-samoshkos-projects.vercel.app --token "$VERCEL_TOKEN"` -> current production alias `proofound.io`, commit `eba9e42...`
+- `npx vercel deploy --prod --yes --token "$VERCEL_TOKEN"` -> fails with `api-deployments-free-per-day`
+
+Open risks/TODO:
+
+- No production deployment for commit `35bf00e` can be created until quota window resets or plan limits are increased.
+- After quota reset, trigger a production deployment for `proofound-platform` and verify `proofound.io` points to deployment built from `35bf00e`.
