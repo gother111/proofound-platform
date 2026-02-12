@@ -258,6 +258,61 @@ Audits + status snapshots:
 - `IMPLEMENTATION_STATUS_CURRENT.md`
 - `CODEBASE_AUDIT_REPORT.md`
 - `SECURITY_REVIEW_REPORT.md`
+
+## 2026-02-12: Maintainability Refactor (Phases 1-5)
+
+What changed:
+
+- Stabilized lint gate invocation by updating `scripts/lint-or-skip.js` to detect `eslint` availability via module resolution and run `npx eslint . --ext .js,.jsx,.ts,.tsx` instead of `next lint`.
+- Extracted assignment responsibilities into services and rewired route handlers:
+  - `src/lib/assignments/access.ts`
+  - `src/lib/assignments/activation.ts`
+  - `src/app/api/assignments/route.ts`
+  - `src/app/api/assignments/[id]/route.ts`
+- Extended matching service with optional replace behavior for activation flows:
+  - `src/lib/matching/generate-matches-for-assignment.ts`
+- Separated runtime Supabase server client creation from mock test double implementation:
+  - `src/lib/supabase/server.ts`
+  - `src/lib/supabase/mock-server-client.ts`
+- Reduced duplication in profile purpose actions by introducing shared helpers for mission/vision and values/causes updates:
+  - `src/actions/profile.ts`
+- Decomposed large profile/expertise UI modules into smaller sections:
+  - `src/components/profile/EditableProfileView.tsx`
+  - `src/components/profile/editable-profile/ProfileHeroSection.tsx`
+  - `src/components/profile/editable-profile/ProfileSidebar.tsx`
+  - `src/components/profile/editable-profile/ProfileTabsSection.tsx`
+  - `src/components/profile/editable-profile/ProfileDialogs.tsx`
+  - `src/app/app/i/expertise/components/EditSkillWindow.tsx`
+  - `src/app/app/i/expertise/components/edit-skill/types.ts`
+  - `src/app/app/i/expertise/components/edit-skill/ProofsSection.tsx`
+  - `src/app/app/i/expertise/components/edit-skill/VerificationSection.tsx`
+  - `src/app/app/i/expertise/components/edit-skill/DeleteSkillDialog.tsx`
+  - `src/app/app/i/expertise/components/add-skill/AddSkillDrawerView.tsx`
+  - `src/app/app/i/expertise/components/add-skill/SearchModePanel.tsx`
+  - `src/app/app/i/expertise/components/add-skill/BrowseModePanel.tsx`
+
+Why:
+
+- The assignment and profile paths had high churn and mixed responsibilities in single files.
+- Extracting service and UI boundaries lowers cognitive load and isolates future behavior changes.
+- Keeping external contracts unchanged while isolating internals reduces regression risk in incremental PRs.
+
+How to verify:
+
+- `npm ci`: PASS
+- `npm run lint`: PASS (1 pre-existing warning in `postcss.config.js`)
+- `npm run typecheck`: PASS
+- `npm run test -- tests/api/assignments.test.ts tests/actions/profile.test.ts src/lib/supabase/__tests__/server.test.ts tests/ui/step5-expertise-mapping.test.tsx tests/ui/share-profile-dialog.test.tsx`: PASS
+- `npm run test`: PASS
+- `npm run build`: PASS
+- `NEXT_PUBLIC_USE_MOCK_SUPABASE=true PLAYWRIGHT=true npm run test:e2e -- e2e/expertise/comprehensive-expertise.spec.ts --project=chromium --grep "attach proof|request verification" --reporter=line`: FAIL (local env issue: existing listeners on ports `3000` and `3010`, then auth helper timeout waiting for `/app` redirect)
+
+Open risks/TODO:
+
+- Local environment in this run used Node `v25.4.0`; repo expects Node `20.20.0` (`.nvmrc`). Consider rerunning gate commands under Node `20.20.0` for strict parity.
+- Build and tests log expected local warnings when `DATABASE_URL` is unset and mock DB fallback is active.
+- Lint still reports one warning in `postcss.config.js` (`import/no-anonymous-default-export`) that is unrelated to this refactor.
+- Expertise Playwright smoke for proof/verification flow needs a clean local port and deterministic auth setup before it can be treated as a blocking gate.
 - `CROSS_DOCUMENT_PRIVACY_AUDIT.md`
 - `RLS_DEPLOYMENT_SUMMARY.md`
 - `PRIVACY_DASHBOARD_IMPLEMENTATION_SUMMARY.md`
@@ -963,128 +1018,142 @@ Open risks/TODO:
 - `frame-ancestors *` is intentionally limited to `/p/<token>/embed`; keep this route-scoped and do not broaden it.
 - Optional hardening follow-up: replace `<img>` with `next/image` in `src/components/profile/PublicSnippetView.tsx` if layout permits.
 
-## 2026-02-12: Landing Persona CTAs to Dedicated Signup Routes
+---
+
+## 2026-02-12: Trusted PR Auto-Enable Auto-Merge
 
 What changed:
 
-- Updated landing CTA routing in `src/components/ProofoundLanding.tsx`:
-  - `Join as an Individual` now routes to `/signup/individual`.
-  - `Join as an Organization` now routes to `/signup/organization`.
-- Added dedicated signup pages:
+- Added workflow `.github/workflows/auto-enable-automerge.yml`.
+- Workflow triggers on `pull_request_target` for:
+  - `opened`
+  - `reopened`
+  - `synchronize`
+  - `ready_for_review`
+- Workflow enables PR auto-merge using squash mode:
+  - `gh pr merge <number> --auto --squash`
+- Guardrails:
+  - only non-draft PRs
+  - only same-repo head and base
+  - only trusted author associations (`OWNER`, `MEMBER`, `COLLABORATOR`)
+
+Why:
+
+- Remove manual clicking of "Enable auto-merge" on trusted internal PRs.
+- Keep merge policy aligned with squash-only configuration and existing branch protection.
+
+How to verify:
+
+- `ruby -ryaml -e "YAML.load_file('.github/workflows/auto-enable-automerge.yml'); puts 'YAML_OK'"`
+- Open a trusted non-draft internal PR and verify auto-merge is enabled automatically.
+- Confirm merge still waits for required checks (`ci`, `a11y`) and required review.
+
+Open risks/TODO:
+
+- Workflow must be merged to `master` before it is active.
+- If GitHub token permissions or org policy changes, workflow may fail and need permission updates.
+
+---
+
+## 2026-02-12: Profile Sharing Follow-up (Lint Hardening + Production Smoke)
+
+What changed:
+
+- Replaced avatar `<img>` with `next/image` in:
+  - `src/components/profile/PublicSnippetView.tsx`
+- Used fixed dimensions (`64x64`) and `unoptimized` to preserve existing remote image behavior while removing the lint violation.
+- Added reusable profile-sharing smoke steps to:
+  - `agent/checklists/verification.md`
+
+Why:
+
+- Clear the remaining non-blocking lint warning after profile sharing merge.
+- Capture a repeatable production smoke routine for public profile sharing endpoints.
+
+How to verify:
+
+- Local checks:
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint` (PASS, no warning in `PublicSnippetView`)
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck` (PASS)
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test` (PASS)
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build` (PASS)
+- Production smoke checks (`proofound.io`):
+  - `GET /api/health` -> `200` and healthy payload on deployed commit.
+  - `POST /api/profile/snippet` without CSRF/auth -> `403` (`CSRF validation failed`), confirming guard behavior.
+  - `GET /p/invalidtoken` -> `200` with invalid/expired fallback content (no server error).
+  - `GET /p/invalidtoken/embed` -> `200` with `content-security-policy` containing `frame-ancestors *` and matched embed route.
+
+Open risks/TODO:
+
+- `next/image` in `PublicSnippetView` is configured with `unoptimized` to avoid remote-loader/domain regressions; if optimization is required later, add explicit `images.remotePatterns` and remove `unoptimized`.
+
+## 2026-02-12: Signup Persona Redirects via Auth Routes
+
+What changed:
+
+- Added dedicated persona signup pages:
   - `src/app/(auth)/signup/individual/page.tsx`
   - `src/app/(auth)/signup/organization/page.tsx`
-- Kept `/signup` chooser behavior unchanged in `src/app/(auth)/signup/SignupContent.tsx`.
+- Updated `src/app/(auth)/signup/page.tsx` to normalize `searchParams.type` and redirect server-side:
+  - `?type=individual` -> `/signup/individual`
+  - `?type=organization|org|org_member` -> `/signup/organization`
+  - unknown values remain on chooser (`/signup`)
+- Updated `src/app/(auth)/signup/SignupContent.tsx` with query-based client fallback initialization for parity.
 
 Why:
 
-- Landing persona-specific CTAs should open the matching signup experience directly instead of taking users to the account-type chooser first.
+- Ensure persona-specific signup entry links open the dedicated signup flow directly.
+- Preserve compatibility for existing links using `/signup?type=...`.
+- Keep landing-sensitive files untouched so landing scope CI policy remains satisfied.
 
 How to verify:
 
-- `npm run lint` (PASS)
-- `npm run typecheck` (PASS)
-- `npm run test:e2e:landing` (PASS)
-- `npm run test:e2e:landing:visual` (PASS)
-- Browser smoke on running app (PASS):
-  - Click hero `Join as an Individual` on `/` and confirm URL becomes `/signup/individual`.
-  - Click hero `Join as an Organization` on `/` and confirm URL becomes `/signup/organization`.
+- `npm run lint` (PASS, one existing unrelated warning in `src/components/profile/PublicSnippetView.tsx`)
+- `npm run typecheck` (BLOCKED by unrelated pre-existing local API edits referencing missing `@/lib/api/auth`)
+- Runtime checks (PASS):
+  - `curl -sI /signup?type=individual` -> `307` + `location: /signup/individual`
+  - `curl -sI /signup?type=organization` -> `307` + `location: /signup/organization`
+  - `curl -sI /signup?type=unknown` -> `200`
 
 Open risks/TODO:
 
-- Existing `/signup?type=...` URLs are no longer used by landing CTAs. If any external campaigns rely on those query URLs, add compatibility parsing in `SignupContent` as a follow-up.
+- Local full typecheck cannot pass until unrelated in-progress API-route changes are resolved in this worktree.
 - Existing non-blocking lint warning remains unrelated: `<img>` usage in `src/components/profile/PublicSnippetView.tsx`.
 
-## 2026-02-12: Legacy Signup Query Compatibility
+---
+
+## 2026-02-12: Individual Dashboard Loading Message Reliability Fix
 
 What changed:
 
-- Updated `/signup` chooser client to honor legacy query param routing in `src/app/(auth)/signup/SignupContent.tsx`.
-- Added `resolveSignupTypeFromQueryParam` helper with safe normalization:
-  - `?type=individual` -> opens individual signup form directly.
-  - `?type=organization` -> opens organization signup form directly.
-  - Also accepts `org` and `org_member` for organization.
-  - Unknown values fall back to chooser.
+- Updated `src/app/app/i/home/DashboardClient.tsx` to stop using mount state as loading state.
+- Added explicit dashboard loading state in the client and only render `Dashboard loading…` while real dashboard loading is active.
+- Added error-path handling so loading text is hidden when dashboard error fallback is shown.
+- Extended `src/components/dashboard/DraggableDashboard.tsx` with optional `onLoadingChange?: (isLoading: boolean) => void`.
+- Emitted loading transitions from `DraggableDashboard` via `useEffect` so parent UI reflects true load status.
+- Added regression test coverage in `tests/ui/dashboard-client.test.tsx`:
+  - loading text appears during loading
+  - loading text disappears when loading completes
+  - error fallback hides loading text
 
 Why:
 
-- Some old or external links may still point to `/signup?type=...` after landing CTAs moved to dedicated routes.
-- This keeps backward compatibility without changing the current dedicated-route behavior.
+- The individual dashboard page showed `Dashboard loading…` permanently after mount because it was keyed to mount status instead of real dashboard fetch/loading state.
+- This caused misleading UX even when widgets had already loaded.
 
 How to verify:
 
+- `npm ci` (PASS; required in this worktree because `vitest` was initially missing)
+- `npm run test -- tests/ui/dashboard-client.test.tsx` (PASS)
 - `npm run lint` (PASS)
-- `npm run typecheck` (PASS)
-- Browser runtime smoke (PASS):
-  - `/signup?type=individual` shows heading `Create your individual account`.
-  - `/signup?type=organization` shows heading `Create your organization account`.
-  - `/signup?type=unknown` falls back to chooser (`Join Proofound`).
-- `npm run test:e2e:auth` (PARTIAL: 17 passed, 1 failed in login flow under mock auth)
-
-Open risks/TODO:
-
-- Auth E2E `should allow user to login with valid credentials` timed out waiting for `/app/i/home` in `e2e/auth.spec.ts` under `NEXT_PUBLIC_USE_MOCK_SUPABASE=true`; investigate mock login redirect stability separately.
-- Existing non-blocking lint warning remains unrelated: `<img>` usage in `src/components/profile/PublicSnippetView.tsx`.
-
-## 2026-02-12: Architecture Hardening Rollout (Migrations, RLS, Auth Boundaries, CI Gates)
-
-What changed:
-
-- Migration governance was unified around `src/db/migrations`:
-  - Reworked `run-migrations.mjs` to run ordered SQL files and record state in `app_migration_ledger`.
-  - Added supplemental ledgered execution for `src/db/policies.sql` and `src/db/triggers.sql`.
-  - Added CI drift guard script `scripts/check-migration-drift.mjs` and `npm run db:drift-check`.
-- CI gates were hardened in `.github/workflows/ci.yml`:
-  - Added blocking migration drift check.
-  - Removed `continue-on-error` from perf and go/no-go gate steps.
-- API auth boundary normalization:
-  - Added JSON-safe API auth helpers in `src/lib/api/auth.ts`.
-  - Updated critical routes to avoid redirect-style auth in API handlers and to enforce org membership checks:
-    - `src/app/api/decisions/route.ts`
-    - `src/app/api/decisions/window/[interviewId]/route.ts`
-    - `src/app/api/interviews/schedule/route.ts`
-    - `src/app/api/org/[id]/coverage/route.ts`
-    - `src/app/api/match/explain/[matchId]/route.ts`
-  - Replaced service-role-as-route-auth usage with internal secret boundary:
-    - `src/app/api/core/matching/profile/route.ts`
-    - `src/app/api/cron/refresh-matches/route.ts`
-    - Added `INTERNAL_API_SECRET` support in `.env.example`.
-- Analytics identity hardening:
-  - `src/app/api/analytics/track/route.ts` now binds identity server-side and validates org membership.
-  - `src/lib/analytics/events.ts` keeps canonical-first insert path with bounded compatibility fallback.
-- Immediate SQL injection remediation:
-  - `src/app/api/portfolio/view/route.ts` removed unsafe interpolated raw SQL path and uses parameterized insertion.
-  - Added regression tests:
-    - `tests/api/analytics-track-route.test.ts`
-    - `tests/api/portfolio-view-route.test.ts`
-- RLS hardening migration added:
-  - `src/db/migrations/20260212160000_rls_hardening_helpers.sql`
-  - Adds helper functions, explicit RLS enablement, force-RLS on sensitive tables, and policy normalization for sensitive domains.
-- Privacy test harness and extended policy suite stabilization:
-  - `vitest.supabase.config.ts` now includes SSR export-name shim compatibility for Supabase modules.
-  - `tests/privacy/rls-policies-extended.test.ts` was rewritten for canonical schema and current RLS semantics (org-scoped assignments, `months_experience`, staged conversation flow).
-
-Why:
-
-- The repository had migration and policy drift risk, mixed API auth contracts, and route-level schema assumptions that no longer matched canonical tables.
-- Security posture needed to be secure-by-default and verifiable in CI.
-- Privacy regression suite needed to run reliably against the real RLS model.
-
-How to verify:
-
-- `npm run lint` (PASS, one existing non-blocking warning in `src/components/profile/PublicSnippetView.tsx`)
 - `npm run typecheck` (PASS)
 - `npm run test` (PASS)
-- `npm run test:privacy` (PASS when run sequentially)
-- `npm run test:privacy:extended` (PASS)
-- `npm run db:drift-check` (PASS)
 - `npm run build` (PASS)
 
 Open risks/TODO:
 
-- Existing SQL sources under `migrations/`, `supabase/migrations/`, and `drizzle/` still exist physically. Runtime now uses canonical runner path, but repository cleanup/deprecation should continue in a follow-up.
-- Apply the new RLS migration in production only with backup/checkpoint procedures.
-- Set `INTERNAL_API_SECRET` in deployed environments before relying on internal route calls.
-- Privacy suites should be executed sequentially in CI/local runs to avoid intermittent cross-run interference.
+- `onLoadingChange` is optional and callback-driven. If future dashboard implementations skip emitting loading transitions, parent loading text may drift again.
+- Current coverage is component-level. A future E2E assertion on `/app/i/home` could harden this behavior end-to-end.
 
 ## 2026-02-12: EU MVP Launch Readiness Implementation (No-Go Baseline Closed)
 

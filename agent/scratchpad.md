@@ -1013,32 +1013,32 @@ Open TODOs / follow-ups:
 
 ---
 
-## 2026-02-12 14:15 CET
+## 2026-02-12 14:49 CET
 
 Task summary:
 
-- Implement landing CTA behavior so persona-specific join buttons open dedicated signup pages directly.
-- Add dedicated routes for individual and organization signup while keeping `/signup` chooser available.
+- Implement trusted internal PR auto-enable for GitHub auto-merge.
+- Open and arm PR with auto-merge for the workflow change.
 
 What worked:
 
-- Small scoped routing update in `src/components/ProofoundLanding.tsx`.
-- Dedicated pages in `src/app/(auth)/signup/individual/page.tsx` and `src/app/(auth)/signup/organization/page.tsx` rendered `SignupForm` directly with correct account type.
-- Landing guardrail verification commands passed.
+- Added dedicated workflow file with draft/fork/association guardrails.
+- Opened PR `#168` from clean branch and enabled auto-merge on that PR.
+- Closed superseded conflicting PR `#167`.
 
 What failed / wrong assumptions:
 
-- Initial Playwright smoke check used a non-scoped selector and failed strict mode because multiple `Join as an Individual` buttons exist on the landing page.
-- Re-ran with hero-scoped selectors and verified both routes successfully.
+- First PR branch conflicted with latest `master`; replaced with clean branch `codex/auto-enable-automerge-workflow-v2`.
+- `--force-with-lease` push is blocked by policy in this environment, so branch replacement was done via new branch + new PR.
 
 User corrections:
 
-- Requested direct navigation to dedicated signup page from landing persona buttons instead of chooser-step routing.
+- User asked for actual enablement, not only explanation of pending steps.
 
 Assumptions taken without asking:
 
-- `/signup` chooser should remain unchanged for generic entry points like `Get Started` and existing auth links.
-- Dedicated persona pages do not need an explicit in-page back button because browser back navigation remains available.
+- Trusted PR scope should be internal contributors only (`OWNER`, `MEMBER`, `COLLABORATOR`).
+- Existing branch protection requirements should remain unchanged.
 
 What the user corrected afterward:
 
@@ -1046,47 +1046,104 @@ What the user corrected afterward:
 
 Improvements next time:
 
-- Add a small landing CTA navigation Playwright test to assert URL targets and prevent routing regressions.
-- Use scoped locators first when CTA labels repeat in multiple sections.
+- Open clean branch from latest `origin/master` before creating PR when docs files are high-churn.
+- Prefer creating a fresh replacement PR over history rewrite if force push is disallowed.
 
 Commands run + outcomes:
 
-- `npm run lint`: PASS (one pre-existing warning in `src/components/profile/PublicSnippetView.tsx`).
-- `npm run typecheck`: PASS.
-- `npm run test:e2e:landing`: PASS.
-- `npm run test:e2e:landing:visual`: PASS.
-- `node` Playwright smoke script for hero CTA URLs: first run FAIL (strict-mode selector conflict), second run PASS (`/signup/individual`, `/signup/organization`).
+- `git worktree add -b codex/auto-enable-automerge-workflow /tmp/proofound-automerge origin/master`: PASS
+- `gh pr create ...` (first attempt): PASS (`#167`) but mergeable state was `CONFLICTING`
+- `git fetch origin master && git rebase origin/master`: CONFLICT in docs files
+- `git push --force-with-lease ...`: BLOCKED by policy
+- `git checkout -B codex/auto-enable-automerge-workflow-v2 origin/master && git cherry-pick 8172c45`: PASS
+- `git push -u origin codex/auto-enable-automerge-workflow-v2`: PASS
+- `gh pr create ...`: PASS (`#168`)
+- `gh pr merge 168 --auto --squash`: PASS (auto-merge request enabled)
+- `gh pr close 167 --comment \"Superseded by #168 (clean branch without conflicts).\"`: PASS
 
 Open TODOs / follow-ups:
 
-- Optional: add compatibility parsing for legacy `/signup?type=...` query links in `src/app/(auth)/signup/SignupContent.tsx` if marketing or external docs still use query URLs.
+- Wait for PR `#168` checks and required review, then it will merge automatically.
 
 ---
 
-## 2026-02-12 14:18 CET
+## 2026-02-12 14:42 CET
 
 Task summary:
 
-- Add backward compatibility for legacy `/signup?type=...` links.
-- Keep dedicated signup routes and chooser behavior intact.
+- Completed optional follow-ups after profile sharing merge.
+- Removed the remaining `PublicSnippetView` lint warning by switching avatar rendering to `next/image`.
+- Ran production smoke checks for profile-sharing related public endpoints and guard behavior.
 
 What worked:
 
-- `SignupContent` now initializes from query param and routes directly to the matching form for `individual` and `organization`.
-- Runtime browser checks confirmed expected behavior for valid and invalid query values.
+- Minimal UI-only change in `src/components/profile/PublicSnippetView.tsx` cleared the warning without behavior drift.
+- Full local verification (`lint`, `typecheck`, `test`, `build`) passed after the change.
+- Production smoke checks on `proofound.io` confirmed health, CSRF enforcement, invalid token fallback, and embed framing policy.
 
 What failed / wrong assumptions:
 
-- Full auth E2E suite has one failing login redirect test under mocked auth (`NEXT_PUBLIC_USE_MOCK_SUPABASE=true`), unrelated to this signup-query patch but surfaced during verification.
+- None in this run.
 
 User corrections:
 
-- User requested implementing optional legacy query compatibility immediately.
+- User requested execution of optional follow-ups after recovery lane completion.
 
 Assumptions taken without asking:
 
-- Supporting `type` is the primary compatibility requirement, with `org` and `org_member` as safe organization aliases.
-- Unknown query values should not hard fail and should show chooser.
+- Production smoke scope can be limited to publicly reachable and unauthenticated checks (`/api/health`, invalid token routes, no-auth POST guard).
+- Keeping `next/image` with `unoptimized` is preferred short-term to avoid remote image optimization/domain regressions.
+
+What the user corrected afterward:
+
+- None in this run.
+
+Improvements next time:
+
+- Add a dedicated CI smoke target for public snippet endpoints to avoid manual `curl` checks.
+
+Commands run + outcomes:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm ci`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS
+- `curl https://proofound.io/api/health`: PASS (`200`, healthy)
+- `curl -X POST https://proofound.io/api/profile/snippet` (no auth/CSRF): PASS (`403`, expected)
+- `curl https://proofound.io/p/invalidtoken`: PASS (`200`, fallback content)
+- `curl -I https://proofound.io/p/invalidtoken/embed`: PASS (`200`, `frame-ancestors *`)
+
+Open TODOs / follow-ups:
+
+- Optional: replace `unoptimized` with a configured optimized remote image path once `images.remotePatterns` is explicitly locked for snippet avatar/logo sources.
+
+## 2026-02-12 14:46 CET
+
+Task summary:
+
+- Complete persona signup routing as a minor merge from `codex/clean-post-merge-work-v2` while ignoring unrelated local edits.
+- Implement dedicated signup pages plus `/signup?type=...` redirect compatibility.
+
+What worked:
+
+- Added dedicated routes for individual and organization signup forms.
+- Added server-side redirect handling in `/signup` and client-side query fallback in chooser client.
+- Runtime redirect checks confirmed expected status/location behavior.
+
+What failed / wrong assumptions:
+
+- Full `npm run typecheck` is blocked by unrelated in-progress API route edits in working tree that reference missing `@/lib/api/auth`.
+
+User corrections:
+
+- User chose option `2`: continue merge flow from current branch context.
+- User then chose option `1`: isolate only signup-related files and ignore unrelated workspace changes.
+
+Assumptions taken without asking:
+
+- Keeping landing CTA source unchanged is acceptable because auth-route redirecting preserves the direct persona destination behavior.
+- Client fallback in `SignupContent` is helpful even with server redirects for resilience.
 
 What the user corrected afterward:
 
@@ -1094,80 +1151,131 @@ What the user corrected afterward:
 
 Improvements next time:
 
-- Add focused automated coverage for signup query-param initialization to avoid relying on manual runtime smoke.
-- Investigate auth mock login redirect timing in `e2e/auth.spec.ts` to reduce unrelated suite noise.
+- Start by checking current branch alias/worktree before first commit to avoid branch drift confusion.
+- Run landing-scope guard script before pushing any PR touching signup-plus-landing surfaces.
 
 Commands run + outcomes:
 
 - `npm run lint`: PASS (existing unrelated warning in `src/components/profile/PublicSnippetView.tsx`).
-- `npm run typecheck`: PASS.
-- Playwright runtime smoke script for `/signup?type=...`: PASS.
-- `npm run test:e2e:auth`: PARTIAL (17 passed, 1 failed: login redirect timeout).
+- `npm run typecheck`: FAIL due unrelated local API edits (`@/lib/api/auth` missing in multiple route files).
+- Runtime redirect checks via `curl -sI`: PASS for individual/organization redirects and unknown fallback.
 
 Open TODOs / follow-ups:
 
-- Stabilize or update mocked login redirect expectation in `e2e/auth.spec.ts` for reliable auth E2E runs.
+- Merge this isolated signup-routing patch PR after CI checks and required review complete.
+- Resolve unrelated API-route/typecheck work separately in its own branch/PR.
 
 ---
 
-## 2026-02-12 15:14 CET
+## 2026-02-12 15:01 CET
 
 Task summary:
 
-- Continued implementation of the approved architecture hardening plan on branch `codex/architecture-hardening-2026-02-12`.
-- Finished canonical privacy extended suite migration and completed full verification matrix.
-- Updated durable docs for migration governance, auth boundary, RLS, and CI gate changes.
+- Implemented the individual dashboard loading-state fix so `Dashboard loading…` only appears during real dashboard load.
+- Added callback-based loading state propagation from `DraggableDashboard` to `DashboardClient`.
+- Added a regression UI test suite for loading completion and error fallback behavior.
 
 What worked:
 
-- Canonical schema alignment in `tests/privacy/rls-policies-extended.test.ts` fixed 10 failing cases to 22/22 passing.
-- Sequential privacy suite execution passed for both `test:privacy` and `test:privacy:extended`.
-- Full verification matrix passed: lint, typecheck, unit tests, privacy tests, build, migration drift check.
-- Architecture hardening changes already in branch remained type-safe and build-safe after extended test updates.
+- Root cause was isolated quickly to mount-state misuse in `DashboardClient`.
+- Optional `onLoadingChange` callback kept compatibility while enabling correct state ownership in the parent.
+- New UI tests passed and prevented recurrence for this behavior.
+- Full verification command set passed after installing dependencies.
 
 What failed / wrong assumptions:
 
-- Running `test:privacy` and `test:privacy:extended` in parallel produced one transient failure and websocket port contention.
-- Temporary DB introspection helper file was created during investigation and then removed.
+- Initial targeted test command failed because `vitest` binary was missing in this worktree before `npm ci`.
 
 User corrections:
 
-- User instructed to continue implementation after branch-state interruption.
+- User provided a complete implementation plan and explicitly requested exact execution of that plan.
 
 Assumptions taken without asking:
 
-- Canonical schema contract for the failing privacy tests should follow live DB columns (`months_experience`, `assignments.org_id/role/status`, `conversations.stage` text).
-- Assignment privacy tests should reflect org-scoped RLS semantics rather than legacy profile-owned assignment columns.
-- Sequential execution is the correct default for privacy suites in verification.
+- Keep existing loading copy text (`Dashboard loading…`) and only change visibility logic.
+- Treat `onLoadingChange` as optional to avoid breaking other `DraggableDashboard` call sites.
 
 What the user corrected afterward:
 
-- None after continuation approval.
+- None.
 
 Improvements next time:
 
-- Avoid parallel execution for privacy suites that share Supabase test infrastructure.
-- Keep a small reusable SQL introspection snippet ready to quickly validate live schema and policies before rewriting RLS tests.
-- Keep test fixtures self-contained to reduce cross-test coupling in privacy suites.
+- Run a quick dependency availability check before the first verification command in fresh worktrees.
+- Add a lightweight route-level E2E assertion for `/app/i/home` loading text lifecycle.
 
 Commands run + outcomes:
 
-- `git status --short --branch`: PASS (confirmed branch and in-progress architecture hardening files).
-- `npm run test:privacy:extended`: FAIL (10 failures before canonicalization), then PASS (22/22) after patch.
-- `npm run lint`: PASS (one existing non-blocking warning).
+- `npm run test -- tests/ui/dashboard-client.test.tsx`: FAIL initially (`vitest: command not found`), then PASS after install.
+- `npm ci`: PASS (with expected engine warning on local Node version mismatch).
+- `npm run lint`: PASS.
 - `npm run typecheck`: PASS.
 - `npm run test`: PASS.
-- `npm run test:privacy`: PASS (sequential run).
-- `npm run test:privacy:extended`: PASS (sequential run).
-- `npm run db:drift-check`: PASS.
 - `npm run build`: PASS.
 
 Open TODOs / follow-ups:
 
-- Follow through with repository-level migration source cleanup/deprecation beyond runtime runner unification.
-- Monitor internal API secret rollout in deployed environments.
+- Optional: add an E2E assertion to ensure `Dashboard loading…` disappears after the individual dashboard becomes interactive.
 
 ---
+
+## 2026-02-12 15:27 CET
+
+Task summary:
+
+- Implemented the approved maintainability refactor plan across lint gate stability, assignment backend boundaries, Supabase runtime/mock separation, profile action deduplication, and profile/expertise UI decomposition.
+- Kept API contracts and user-visible behavior unchanged while splitting large files into services and feature sections.
+
+What worked:
+
+- Service extraction for assignment access and activation reduced route complexity without breaking tests.
+- Supabase server client cleanup succeeded with mock logic moved into a dedicated module.
+- Profile mission/vision/value/cause actions were consolidated with shared helper functions and retained analytics/audit behavior.
+- Expertise and profile UI decomposition compiled and passed both targeted and full test suites.
+
+What failed / wrong assumptions:
+
+- `checkAndEmitAssignmentActivation` evaluation helper initially returned a non-boolean `hasLocationAndComp` type and failed `tsc`.
+- New add-skill panel files were initially created but not wired into `AddSkillDrawerView`; this required a follow-up rewrite of that view.
+- Targeted expertise Playwright smoke could not validate proof/verification flow in this environment due local port contention (`3000` and `3010` already in use) and login redirect timeout in `e2e/helpers/auth.ts`.
+
+User corrections:
+
+- User explicitly requested direct implementation of the full refactor plan rather than review-only discussion.
+
+Assumptions taken without asking:
+
+- Existing warning-only lint issue in `postcss.config.js` is unrelated and can remain untouched in this refactor.
+- Assignment activation semantics remain unchanged when extracted, including in-process de-duplication and notification fan-out behavior.
+- Node version mismatch in this local environment (v25) is acceptable for this run as long as gate commands pass and the mismatch is documented.
+
+What the user corrected afterward:
+
+- None during execution.
+
+Improvements next time:
+
+- Run `nvm use` to enforce `.nvmrc` before `npm ci` so parity is guaranteed from the first verification pass.
+- Wire decomposed view modules immediately after extraction to avoid a second cleanup pass.
+
+Commands run + outcomes:
+
+- `ls -la`: PASS
+- `git status --short`: PASS
+- `sed -n ...` on `project/*`, `agent/*`, `README.md`, `package.json`, `.github/workflows/ci.yml`: PASS
+- `npm ci`: PASS
+- `npm run lint`: PASS (warning-only, unrelated existing warning in `postcss.config.js`)
+- `npm run typecheck`: FAIL then PASS after fixing boolean typing in `src/lib/assignments/activation.ts`
+- `npm run test -- tests/api/assignments.test.ts tests/actions/profile.test.ts src/lib/supabase/__tests__/server.test.ts tests/ui/step5-expertise-mapping.test.tsx tests/ui/share-profile-dialog.test.tsx`: PASS
+- `npm run test`: PASS
+- `npm run build`: PASS
+- `NEXT_PUBLIC_USE_MOCK_SUPABASE=true PLAYWRIGHT=true npm run test:e2e -- e2e/expertise/comprehensive-expertise.spec.ts --project=chromium --grep "attach proof|request verification" --reporter=line`: FAIL (web server port conflict + auth redirect timeout)
+
+Open TODOs / follow-ups:
+
+- Re-run lint/typecheck/test/build under Node `20.20.0` for strict engine parity.
+- Consider splitting this refactor into staged commits before PR creation (gates, backend services, runtime mock separation, profile actions, UI decomposition).
+- Re-run expertise Playwright smoke after freeing local ports and using a deterministic auth fixture path.
 
 ## 2026-02-12 17:34 CET
 

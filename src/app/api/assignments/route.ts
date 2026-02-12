@@ -2,14 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
-import { assignments, organizationMembers, matches, organizations } from '@/db/schema';
+import { assignments, organizationMembers, matches } from '@/db/schema';
 import { eq, and, inArray, sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { jsonErrorWithRequest, withApiObservability } from '@/lib/api/observability';
-import { emitAssignmentPublished, emitAnalyticsEvent } from '@/lib/analytics/events';
-import { notifyAssignmentPublished } from '@/lib/notifications';
+import { emitAnalyticsEvent } from '@/lib/analytics/events';
+import {
+  checkAndEmitAssignmentActivation,
+  evaluateAssignmentActivationCriteria,
+} from '@/lib/assignments/activation';
 import { triggerFirstAssignmentSurvey } from '@/lib/surveys/sus-triggers';
-import { generateMatchesForAssignment } from '@/lib/matching/generate-matches-for-assignment';
 
 export const dynamic = 'force-dynamic';
 
@@ -278,72 +280,14 @@ export async function POST(request: NextRequest) {
 
       // Check if assignment was created with 'active' status and meets activation criteria
       if (newAssignment.status === 'active') {
-        const hasCompleteDetails = !!newAssignment.role && !!newAssignment.description;
-        const mustHaveSkills = (newAssignment.mustHaveSkills as any[]) || [];
-        const hasMinimumSkills = mustHaveSkills.length >= 5;
-        const hasLocationAndComp =
-          (newAssignment.locationMode || newAssignment.country) &&
-          (newAssignment.compMin !== null || newAssignment.compMax !== null);
-
-        if (hasCompleteDetails && hasMinimumSkills && hasLocationAndComp) {
-          const publishTimeMinutes = 0; // Created and published simultaneously
-          await emitAssignmentPublished(user.id, newAssignment.id, orgId, {
-            hasCompleteDetails,
-            hasMinimumSkills,
-            mustHaveSkillsCount: mustHaveSkills.length,
-            hasLocationAndComp,
-            publishTimeMinutes,
-            publishedWithinTimeTarget: true, // Immediate publish
-          });
-
-          // Generate matches for this assignment
-          const matchStartTime = Date.now();
-          const matchesGenerated = await generateMatchesForAssignment(newAssignment.id);
-          log.info('assignment.matches.generated', {
-            requestId: ctx.requestId,
+        const evaluation = evaluateAssignmentActivationCriteria(newAssignment);
+        if (evaluation.canActivate) {
+          await checkAndEmitAssignmentActivation({
             assignmentId: newAssignment.id,
             orgId,
-            matchesGenerated,
-            durationMs: Date.now() - matchStartTime,
+            createdAt: newAssignment.createdAt,
+            userId: user.id,
           });
-
-          // Get organization name for notifications
-          const org = await db.query.organizations.findFirst({
-            where: eq(organizations.id, orgId),
-          });
-          const orgName = org?.displayName || 'An organization';
-
-          // Send notifications to top 10 matching candidates
-          if (matchesGenerated > 0) {
-            const topMatches = await db.query.matches.findMany({
-              where: eq(matches.assignmentId, newAssignment.id),
-              orderBy: (t: any, { desc }) => [desc(t.score)],
-              limit: 10,
-            });
-
-            for (const match of topMatches) {
-              try {
-                await notifyAssignmentPublished(
-                  match.profileId,
-                  newAssignment.id,
-                  newAssignment.role,
-                  orgName
-                );
-              } catch (notifyError) {
-                log.error('assignment.notification.failed', {
-                  profileId: match.profileId,
-                  assignmentId: newAssignment.id,
-                  error: notifyError instanceof Error ? notifyError.message : 'Unknown error',
-                });
-                // Continue with other notifications even if one fails
-              }
-            }
-
-            log.info('assignment.notifications.sent', {
-              assignmentId: newAssignment.id,
-              notificationsSent: topMatches.length,
-            });
-          }
         }
       }
 
