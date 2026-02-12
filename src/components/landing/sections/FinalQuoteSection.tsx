@@ -31,20 +31,12 @@ export function FinalQuoteSection({ shouldReduceMotion }: FinalQuoteSectionProps
     >
       {/* Parallax Watermark */}
       {reduceMotion ? (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none whitespace-nowrap opacity-[0.05]">
-          <span className="text-[25vw] font-display font-bold text-japandi-charcoal leading-none">
-            TRUST
-          </span>
-        </div>
+        <div className="absolute top-1/2 left-1/2 h-[55vw] w-[55vw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-proofound-forest/10 blur-3xl pointer-events-none" />
       ) : (
         <motion.div
-          style={{ y, opacity: 0.05 }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none whitespace-nowrap"
-        >
-          <span className="text-[25vw] font-display font-bold text-japandi-charcoal leading-none">
-            TRUST
-          </span>
-        </motion.div>
+          style={{ y, opacity }}
+          className="absolute top-1/2 left-1/2 h-[55vw] w-[55vw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-proofound-forest/10 blur-3xl pointer-events-none"
+        />
       )}
 
       <div className="max-w-6xl mx-auto text-center relative z-10">

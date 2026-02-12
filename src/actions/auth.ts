@@ -103,6 +103,7 @@ export async function signUp(
     }
 
     const supabase = await createClient({ allowCookieWrite: true });
+    const isMockAuth = process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true';
 
     let { data: signUpResult, error } = await supabase.auth.signUp({
       email: result.data.email,
@@ -188,75 +189,76 @@ export async function signUp(
         });
       }
 
-      // Store GDPR consent records (audit trail)
-      // Use service role since user session doesn't exist yet (email confirmation required)
-      try {
-        const { createAdminClient } = await import('@/lib/supabase/admin');
-        const serviceSupabase = createAdminClient();
+      // Store GDPR consent records in real environments.
+      // In mock mode we skip this branch so local/E2E auth tests don't require production privacy salts.
+      if (!isMockAuth) {
+        // Use service role since user session doesn't exist yet (email confirmation required)
+        try {
+          const { createAdminClient } = await import('@/lib/supabase/admin');
+          const serviceSupabase = createAdminClient();
 
-        // Hash PII for audit trail
-        const { anonymizeIP, anonymizeUserAgent } = await import('@/lib/utils/privacy');
-        const ip = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || 'unknown';
-        const ipHash = anonymizeIP(ip);
-        const userAgentHash = anonymizeUserAgent(headersList.get('user-agent') || 'unknown');
+          // Hash PII for audit trail
+          const { anonymizeIP, anonymizeUserAgent } = await import('@/lib/utils/privacy');
+          const ip =
+            headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || 'unknown';
+          const ipHash = anonymizeIP(ip);
+          const userAgentHash = anonymizeUserAgent(headersList.get('user-agent') || 'unknown');
 
-        // Prepare consent records
-        const consentRecords = [
-          {
-            profile_id: signUpResult.user.id,
-            consent_type: CONSENT_TYPES.PRIVACY,
-            consented: true,
-            consented_at: new Date().toISOString(),
-            ip_hash: ipHash,
-            user_agent_hash: userAgentHash,
-            version: getPolicyVersionForConsentType(CONSENT_TYPES.PRIVACY),
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          },
-          {
-            profile_id: signUpResult.user.id,
-            consent_type: CONSENT_TYPES.TOS,
-            consented: true,
-            consented_at: new Date().toISOString(),
-            ip_hash: ipHash,
-            user_agent_hash: userAgentHash,
-            version: getPolicyVersionForConsentType(CONSENT_TYPES.TOS),
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          },
-          {
-            profile_id: signUpResult.user.id,
-            consent_type: CONSENT_TYPES.MARKETING,
-            consented: result.data.marketingOptIn ?? false,
-            consented_at: new Date().toISOString(),
-            ip_hash: ipHash,
-            user_agent_hash: userAgentHash,
-            version: getPolicyVersionForConsentType(CONSENT_TYPES.MARKETING),
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          },
-        ];
+          // Prepare consent records
+          const consentRecords = [
+            {
+              profile_id: signUpResult.user.id,
+              consent_type: CONSENT_TYPES.PRIVACY,
+              consented: true,
+              consented_at: new Date().toISOString(),
+              ip_hash: ipHash,
+              user_agent_hash: userAgentHash,
+              version: getPolicyVersionForConsentType(CONSENT_TYPES.PRIVACY),
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+            {
+              profile_id: signUpResult.user.id,
+              consent_type: CONSENT_TYPES.TOS,
+              consented: true,
+              consented_at: new Date().toISOString(),
+              ip_hash: ipHash,
+              user_agent_hash: userAgentHash,
+              version: getPolicyVersionForConsentType(CONSENT_TYPES.TOS),
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+            {
+              profile_id: signUpResult.user.id,
+              consent_type: CONSENT_TYPES.MARKETING,
+              consented: result.data.marketingOptIn ?? false,
+              consented_at: new Date().toISOString(),
+              ip_hash: ipHash,
+              user_agent_hash: userAgentHash,
+              version: getPolicyVersionForConsentType(CONSENT_TYPES.MARKETING),
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+          ];
 
-        // Store consent records directly using service role
-        const { error: consentError } = await serviceSupabase
-          .from('user_consents')
-          .insert(consentRecords);
+          const { error: consentError } = await serviceSupabase
+            .from('user_consents')
+            .insert(consentRecords);
 
-        if (consentError) {
-          console.error('Failed to store consent records:', consentError);
-          // This is a critical GDPR compliance issue - we should not continue silently
+          if (consentError) {
+            console.error('Failed to store consent records:', consentError);
+            throw new Error(
+              `GDPR compliance error: Failed to store consent records - ${consentError.message}`
+            );
+          }
+
+          console.log('GDPR consent records stored successfully for user:', signUpResult.user.id);
+        } catch (consentError) {
+          console.error('CRITICAL: GDPR consent storage failed:', consentError);
           throw new Error(
-            `GDPR compliance error: Failed to store consent records - ${consentError.message}`
+            `GDPR compliance error: Unable to store required consent records. Signup cannot proceed.`
           );
         }
-
-        console.log('GDPR consent records stored successfully for user:', signUpResult.user.id);
-      } catch (consentError) {
-        // This is a critical GDPR compliance failure - log and re-throw
-        console.error('CRITICAL: GDPR consent storage failed:', consentError);
-        throw new Error(
-          `GDPR compliance error: Unable to store required consent records. Signup cannot proceed.`
-        );
       }
 
       // Track user signup event for TTFQI and TTV metrics
@@ -440,6 +442,10 @@ export async function requestPasswordReset(formData: FormData) {
   const result = resetPasswordSchema.safeParse(data);
   if (!result.success) {
     return { error: 'Invalid email' };
+  }
+
+  if (process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true') {
+    return { success: true };
   }
 
   const siteUrl = resolveRequestSiteUrl(headersList);

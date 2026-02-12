@@ -59,6 +59,7 @@ const buttonVariants = cva(
         sm: 'h-9 px-4 text-sm',
         lg: 'h-12 px-8 text-lg min-w-[44px]',
         icon: 'h-10 w-10 min-h-[44px] min-w-[44px]', // Ensure icon buttons meet touch target
+        touch: 'h-11 min-h-[44px] min-w-[44px] px-4 text-sm',
       },
     },
     defaultVariants: {
