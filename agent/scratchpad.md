@@ -1709,3 +1709,46 @@ Commands run + outcomes:
 Open TODOs / follow-ups:
 
 - Push latest commit and wait for fresh CI rerun to complete, then confirm PR auto-merge.
+
+## 2026-02-12 23:35 CET
+
+Task summary:
+
+- Fixed accessibility regression causing CI `a11y` failure on expertise hub (`aria-progressbar-name`).
+
+What worked:
+
+- Raw Actions log identified failing node: shared `Progress` rendered with `role="progressbar"` and no accessible name.
+- Adding fallback `aria-label` in shared component resolved the failing a11y test.
+
+What failed / wrong assumptions:
+
+- Prior focus on workflow/env and timeout issues missed this separate semantic accessibility defect.
+
+User corrections:
+
+- None.
+
+Assumptions taken without asking:
+
+- Default fallback label `Progress` is acceptable as an immediate standards-compliance fix.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add explicit a11y coverage for shared primitives (`Progress`, `Dialog`, `Tabs`) to catch global semantic issues earlier.
+
+Commands run + outcomes:
+
+- `gh api repos/gother111/proofound-platform/actions/jobs/63458113616/logs`: PASS (captured failed a11y log).
+- `rg -n "aria-progressbar-name" /tmp/a11y-job-63458113616.log`: PASS (pinpointed violation).
+- `node ./scripts/playwright-node20.mjs test --config playwright.a11y.config.ts --project=chromium -g "Expertise hub should be accessible"`: PASS.
+- `npm run typecheck`: PASS.
+- `npm run lint`: PASS (existing warning only).
+
+Open TODOs / follow-ups:
+
+- Push latest a11y fix commit and verify PR checks rerun green.

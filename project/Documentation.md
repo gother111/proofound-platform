@@ -1516,3 +1516,25 @@ Open risks/TODO:
 
 - If `BASE_URL` is set to a host without an explicit port, config falls back to `PLAYWRIGHT_PORT`.
 - For runs against remote deployed URLs, consider a future `PLAYWRIGHT_SKIP_WEBSERVER` switch to avoid starting local dev server.
+
+## 2026-02-12: A11y Progressbar Naming Fix
+
+What changed:
+
+- Updated shared `Progress` component in `src/components/ui/progress.tsx` to provide an accessible name fallback (`aria-label="Progress"`) when no label metadata is supplied.
+- Preserved caller-provided naming via existing `aria-label`, `aria-labelledby`, or `title` props.
+
+Why:
+
+- Accessibility workflow failed on `aria-progressbar-name` in expertise hub a11y critical flow tests.
+- The shared progress bar rendered `role="progressbar"` without an accessible name in multiple screens.
+
+How to verify:
+
+- `node ./scripts/playwright-node20.mjs test --config playwright.a11y.config.ts --project=chromium -g "Expertise hub should be accessible"` (PASS)
+- `npm run typecheck` (PASS)
+- `npm run lint` (PASS with one existing warning in `postcss.config.js`)
+
+Open risks/TODO:
+
+- Generic fallback label is compliant but not context-rich. Over time, pass contextual labels for key progress bars in critical flows.
