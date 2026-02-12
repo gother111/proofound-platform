@@ -1216,3 +1216,63 @@ Commands run + outcomes:
 Open TODOs / follow-ups:
 
 - Optional: add an E2E assertion to ensure `Dashboard loading…` disappears after the individual dashboard becomes interactive.
+
+---
+
+## 2026-02-12 15:27 CET
+
+Task summary:
+
+- Implemented the approved maintainability refactor plan across lint gate stability, assignment backend boundaries, Supabase runtime/mock separation, profile action deduplication, and profile/expertise UI decomposition.
+- Kept API contracts and user-visible behavior unchanged while splitting large files into services and feature sections.
+
+What worked:
+
+- Service extraction for assignment access and activation reduced route complexity without breaking tests.
+- Supabase server client cleanup succeeded with mock logic moved into a dedicated module.
+- Profile mission/vision/value/cause actions were consolidated with shared helper functions and retained analytics/audit behavior.
+- Expertise and profile UI decomposition compiled and passed both targeted and full test suites.
+
+What failed / wrong assumptions:
+
+- `checkAndEmitAssignmentActivation` evaluation helper initially returned a non-boolean `hasLocationAndComp` type and failed `tsc`.
+- New add-skill panel files were initially created but not wired into `AddSkillDrawerView`; this required a follow-up rewrite of that view.
+- Targeted expertise Playwright smoke could not validate proof/verification flow in this environment due local port contention (`3000` and `3010` already in use) and login redirect timeout in `e2e/helpers/auth.ts`.
+
+User corrections:
+
+- User explicitly requested direct implementation of the full refactor plan rather than review-only discussion.
+
+Assumptions taken without asking:
+
+- Existing warning-only lint issue in `postcss.config.js` is unrelated and can remain untouched in this refactor.
+- Assignment activation semantics remain unchanged when extracted, including in-process de-duplication and notification fan-out behavior.
+- Node version mismatch in this local environment (v25) is acceptable for this run as long as gate commands pass and the mismatch is documented.
+
+What the user corrected afterward:
+
+- None during execution.
+
+Improvements next time:
+
+- Run `nvm use` to enforce `.nvmrc` before `npm ci` so parity is guaranteed from the first verification pass.
+- Wire decomposed view modules immediately after extraction to avoid a second cleanup pass.
+
+Commands run + outcomes:
+
+- `ls -la`: PASS
+- `git status --short`: PASS
+- `sed -n ...` on `project/*`, `agent/*`, `README.md`, `package.json`, `.github/workflows/ci.yml`: PASS
+- `npm ci`: PASS
+- `npm run lint`: PASS (warning-only, unrelated existing warning in `postcss.config.js`)
+- `npm run typecheck`: FAIL then PASS after fixing boolean typing in `src/lib/assignments/activation.ts`
+- `npm run test -- tests/api/assignments.test.ts tests/actions/profile.test.ts src/lib/supabase/__tests__/server.test.ts tests/ui/step5-expertise-mapping.test.tsx tests/ui/share-profile-dialog.test.tsx`: PASS
+- `npm run test`: PASS
+- `npm run build`: PASS
+- `NEXT_PUBLIC_USE_MOCK_SUPABASE=true PLAYWRIGHT=true npm run test:e2e -- e2e/expertise/comprehensive-expertise.spec.ts --project=chromium --grep "attach proof|request verification" --reporter=line`: FAIL (web server port conflict + auth redirect timeout)
+
+Open TODOs / follow-ups:
+
+- Re-run lint/typecheck/test/build under Node `20.20.0` for strict engine parity.
+- Consider splitting this refactor into staged commits before PR creation (gates, backend services, runtime mock separation, profile actions, UI decomposition).
+- Re-run expertise Playwright smoke after freeing local ports and using a deterministic auth fixture path.

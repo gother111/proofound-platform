@@ -258,6 +258,61 @@ Audits + status snapshots:
 - `IMPLEMENTATION_STATUS_CURRENT.md`
 - `CODEBASE_AUDIT_REPORT.md`
 - `SECURITY_REVIEW_REPORT.md`
+
+## 2026-02-12: Maintainability Refactor (Phases 1-5)
+
+What changed:
+
+- Stabilized lint gate invocation by updating `scripts/lint-or-skip.js` to detect `eslint` availability via module resolution and run `npx eslint . --ext .js,.jsx,.ts,.tsx` instead of `next lint`.
+- Extracted assignment responsibilities into services and rewired route handlers:
+  - `src/lib/assignments/access.ts`
+  - `src/lib/assignments/activation.ts`
+  - `src/app/api/assignments/route.ts`
+  - `src/app/api/assignments/[id]/route.ts`
+- Extended matching service with optional replace behavior for activation flows:
+  - `src/lib/matching/generate-matches-for-assignment.ts`
+- Separated runtime Supabase server client creation from mock test double implementation:
+  - `src/lib/supabase/server.ts`
+  - `src/lib/supabase/mock-server-client.ts`
+- Reduced duplication in profile purpose actions by introducing shared helpers for mission/vision and values/causes updates:
+  - `src/actions/profile.ts`
+- Decomposed large profile/expertise UI modules into smaller sections:
+  - `src/components/profile/EditableProfileView.tsx`
+  - `src/components/profile/editable-profile/ProfileHeroSection.tsx`
+  - `src/components/profile/editable-profile/ProfileSidebar.tsx`
+  - `src/components/profile/editable-profile/ProfileTabsSection.tsx`
+  - `src/components/profile/editable-profile/ProfileDialogs.tsx`
+  - `src/app/app/i/expertise/components/EditSkillWindow.tsx`
+  - `src/app/app/i/expertise/components/edit-skill/types.ts`
+  - `src/app/app/i/expertise/components/edit-skill/ProofsSection.tsx`
+  - `src/app/app/i/expertise/components/edit-skill/VerificationSection.tsx`
+  - `src/app/app/i/expertise/components/edit-skill/DeleteSkillDialog.tsx`
+  - `src/app/app/i/expertise/components/add-skill/AddSkillDrawerView.tsx`
+  - `src/app/app/i/expertise/components/add-skill/SearchModePanel.tsx`
+  - `src/app/app/i/expertise/components/add-skill/BrowseModePanel.tsx`
+
+Why:
+
+- The assignment and profile paths had high churn and mixed responsibilities in single files.
+- Extracting service and UI boundaries lowers cognitive load and isolates future behavior changes.
+- Keeping external contracts unchanged while isolating internals reduces regression risk in incremental PRs.
+
+How to verify:
+
+- `npm ci`: PASS
+- `npm run lint`: PASS (1 pre-existing warning in `postcss.config.js`)
+- `npm run typecheck`: PASS
+- `npm run test -- tests/api/assignments.test.ts tests/actions/profile.test.ts src/lib/supabase/__tests__/server.test.ts tests/ui/step5-expertise-mapping.test.tsx tests/ui/share-profile-dialog.test.tsx`: PASS
+- `npm run test`: PASS
+- `npm run build`: PASS
+- `NEXT_PUBLIC_USE_MOCK_SUPABASE=true PLAYWRIGHT=true npm run test:e2e -- e2e/expertise/comprehensive-expertise.spec.ts --project=chromium --grep "attach proof|request verification" --reporter=line`: FAIL (local env issue: existing listeners on ports `3000` and `3010`, then auth helper timeout waiting for `/app` redirect)
+
+Open risks/TODO:
+
+- Local environment in this run used Node `v25.4.0`; repo expects Node `20.20.0` (`.nvmrc`). Consider rerunning gate commands under Node `20.20.0` for strict parity.
+- Build and tests log expected local warnings when `DATABASE_URL` is unset and mock DB fallback is active.
+- Lint still reports one warning in `postcss.config.js` (`import/no-anonymous-default-export`) that is unrelated to this refactor.
+- Expertise Playwright smoke for proof/verification flow needs a clean local port and deterministic auth setup before it can be treated as a blocking gate.
 - `CROSS_DOCUMENT_PRIVACY_AUDIT.md`
 - `RLS_DEPLOYMENT_SUMMARY.md`
 - `PRIVACY_DASHBOARD_IMPLEMENTATION_SUMMARY.md`

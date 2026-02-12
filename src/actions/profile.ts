@@ -109,6 +109,87 @@ async function checkAndEmitProfileActivation(userId: string): Promise<void> {
   }
 }
 
+type PurposeVisibility = 'public' | 'network' | 'private';
+type PurposeTextField = 'mission' | 'vision';
+type PurposeListField = 'values' | 'causes';
+
+const purposeTextColumnMap = {
+  mission: individualProfiles.mission,
+  vision: individualProfiles.vision,
+} as const;
+
+async function updatePurposeTextField(
+  field: PurposeTextField,
+  value: string | null,
+  visibility: PurposeVisibility | undefined,
+  defaultVisibility: PurposeVisibility
+) {
+  const user = await requireAuth();
+
+  const current = await db
+    .select({
+      value: purposeTextColumnMap[field],
+      fieldVisibility: individualProfiles.fieldVisibility,
+    })
+    .from(individualProfiles)
+    .where(eq(individualProfiles.userId, user.id))
+    .limit(1);
+
+  const oldValue = (current[0]?.value as string | null | undefined) || null;
+  const currentFieldVisibility = (current[0]?.fieldVisibility as FieldVisibility) || {};
+
+  const { logPurposeEdit } = await import('@/lib/audit/purpose-log');
+  await logPurposeEdit(user.id, field, oldValue, value || '');
+
+  const updateData: Record<string, unknown> = { [field]: value };
+  if (visibility) {
+    updateData.fieldVisibility = {
+      ...currentFieldVisibility,
+      [field]: visibility,
+    };
+  }
+
+  await db.update(individualProfiles).set(updateData).where(eq(individualProfiles.userId, user.id));
+
+  const { emitEvent } = await import('@/lib/analytics/events');
+  await emitEvent({
+    eventType: 'purpose_updated',
+    userId: user.id,
+    properties: {
+      field,
+      wordCount: value?.split(/\s+/).length || 0,
+      hasValue: !!value,
+      visibility: visibility || currentFieldVisibility[field] || defaultVisibility,
+    },
+  });
+
+  await checkAndEmitProfileActivation(user.id);
+
+  revalidatePath('/app/i/profile');
+}
+
+async function replacePurposeListField(field: PurposeListField, values: Value[] | string[]) {
+  const user = await requireAuth();
+
+  await db
+    .update(individualProfiles)
+    .set({ [field]: values } as Record<string, unknown>)
+    .where(eq(individualProfiles.userId, user.id));
+
+  const { emitEvent } = await import('@/lib/analytics/events');
+  await emitEvent({
+    eventType: 'purpose_updated',
+    userId: user.id,
+    properties: {
+      field,
+      count: values.length,
+      hasValue: values.length > 0,
+    },
+  });
+
+  revalidatePath('/app/i/profile');
+}
+
 /**
  * Fetch the authenticated user's profile and related records.
  */
@@ -379,168 +460,22 @@ export async function updateMission(
   mission: string | null,
   visibility?: 'public' | 'network' | 'private'
 ) {
-  const user = await requireAuth();
-
-  // Get current value for audit trail
-  const current = await db
-    .select({
-      mission: individualProfiles.mission,
-      fieldVisibility: individualProfiles.fieldVisibility,
-    })
-    .from(individualProfiles)
-    .where(eq(individualProfiles.userId, user.id))
-    .limit(1);
-
-  const oldValue = current[0]?.mission || null;
-  const currentFieldVisibility = (current[0]?.fieldVisibility as FieldVisibility) || {};
-
-  // Log the change
-  const { logPurposeEdit } = await import('@/lib/audit/purpose-log');
-  await logPurposeEdit(user.id, 'mission', oldValue, mission || '');
-
-  // Update mission text and optionally visibility
-  const updateData: Record<string, unknown> = { mission };
-  if (visibility) {
-    updateData.fieldVisibility = {
-      ...currentFieldVisibility,
-      mission: visibility,
-    };
-  }
-
-  await db.update(individualProfiles).set(updateData).where(eq(individualProfiles.userId, user.id));
-
-  // Emit analytics event
-  const { emitEvent } = await import('@/lib/analytics/events');
-  await emitEvent({
-    eventType: 'purpose_updated',
-    userId: user.id,
-    properties: {
-      field: 'mission',
-      wordCount: mission?.split(/\s+/).length || 0,
-      hasValue: !!mission,
-      visibility: visibility || currentFieldVisibility.mission || 'public',
-    },
-  });
-
-  // Check if profile now meets activation criteria
-  await checkAndEmitProfileActivation(user.id);
-
-  revalidatePath('/app/i/profile');
+  await updatePurposeTextField('mission', mission, visibility, 'public');
 }
 
 export async function updateVision(
   vision: string | null,
   visibility?: 'public' | 'network' | 'private'
 ) {
-  const user = await requireAuth();
-
-  // Get current value for audit trail
-  const current = await db
-    .select({
-      vision: individualProfiles.vision,
-      fieldVisibility: individualProfiles.fieldVisibility,
-    })
-    .from(individualProfiles)
-    .where(eq(individualProfiles.userId, user.id))
-    .limit(1);
-
-  const oldValue = current[0]?.vision || null;
-  const currentFieldVisibility = (current[0]?.fieldVisibility as FieldVisibility) || {};
-
-  // Log the change
-  const { logPurposeEdit } = await import('@/lib/audit/purpose-log');
-  await logPurposeEdit(user.id, 'vision', oldValue, vision || '');
-
-  // Update vision text and optionally visibility
-  const updateData: Record<string, unknown> = { vision };
-  if (visibility) {
-    updateData.fieldVisibility = {
-      ...currentFieldVisibility,
-      vision: visibility,
-    };
-  }
-
-  await db.update(individualProfiles).set(updateData).where(eq(individualProfiles.userId, user.id));
-
-  // Emit analytics event
-  const { emitEvent } = await import('@/lib/analytics/events');
-  await emitEvent({
-    eventType: 'purpose_updated',
-    userId: user.id,
-    properties: {
-      field: 'vision',
-      wordCount: vision?.split(/\s+/).length || 0,
-      hasValue: !!vision,
-      visibility: visibility || currentFieldVisibility.vision || 'network',
-    },
-  });
-
-  // Check if profile now meets activation criteria
-  await checkAndEmitProfileActivation(user.id);
-
-  revalidatePath('/app/i/profile');
+  await updatePurposeTextField('vision', vision, visibility, 'network');
 }
 
 export async function replaceValues(values: Value[]) {
-  const user = await requireAuth();
-
-  // Get current values for audit trail
-  const current = await db
-    .select({ values: individualProfiles.values })
-    .from(individualProfiles)
-    .where(eq(individualProfiles.userId, user.id))
-    .limit(1);
-
-  const oldValues = (current[0]?.values as Value[]) || [];
-
-  // Purpose edit log is only for mission/vision; values are tracked via analytics below.
-
-  await db.update(individualProfiles).set({ values }).where(eq(individualProfiles.userId, user.id));
-
-  // Emit analytics event
-  const { emitEvent } = await import('@/lib/analytics/events');
-  await emitEvent({
-    eventType: 'purpose_updated',
-    userId: user.id,
-    properties: {
-      field: 'values',
-      count: values.length,
-      hasValue: values.length > 0,
-    },
-  });
-
-  revalidatePath('/app/i/profile');
+  await replacePurposeListField('values', values);
 }
 
 export async function replaceCauses(causes: string[]) {
-  const user = await requireAuth();
-
-  // Get current causes for audit trail
-  const current = await db
-    .select({ causes: individualProfiles.causes })
-    .from(individualProfiles)
-    .where(eq(individualProfiles.userId, user.id))
-    .limit(1);
-
-  const oldCauses = current[0]?.causes || [];
-
-  // Purpose edit log is only for mission/vision; causes are tracked via analytics below.
-
-  await db.update(individualProfiles).set({ causes }).where(eq(individualProfiles.userId, user.id));
-
-  // Emit analytics event
-  const { emitEvent } = await import('@/lib/analytics/events');
-  await emitEvent({
-    eventType: 'purpose_updated',
-    userId: user.id,
-    properties: {
-      field: 'causes',
-      count: causes.length,
-      hasValue: causes.length > 0,
-    },
-  });
-
-  revalidatePath('/app/i/profile');
+  await replacePurposeListField('causes', causes);
 }
 
 export async function replaceSkills(skills: Skill[]) {
