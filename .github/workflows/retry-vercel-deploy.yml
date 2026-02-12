@@ -1,0 +1,57 @@
+name: Retry Vercel Deploy Until Synced
+
+on:
+  push:
+    branches: [master]
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: retry-vercel-production-deploy
+  cancel-in-progress: false
+
+jobs:
+  retry-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Read repository head SHA
+        id: repo
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Read production health SHA
+        id: live
+        env:
+          HEALTH_URL: https://proofound.io/api/health
+        run: |
+          response="$(curl -fsS "$HEALTH_URL" || true)"
+          live_sha="$(
+            printf '%s' "$response" | node -e "let s='';process.stdin.on('data',c=>s+=c);process.stdin.on('end',()=>{try{const j=JSON.parse(s);process.stdout.write(j.version||'')}catch{process.stdout.write('')}})"
+          )"
+          echo "sha=${live_sha}" >> "$GITHUB_OUTPUT"
+
+      - name: Print sync status
+        run: |
+          echo "Repo SHA: ${{ steps.repo.outputs.sha }}"
+          echo "Live SHA: ${{ steps.live.outputs.sha }}"
+
+      - name: Trigger production deploy hook
+        if: steps.repo.outputs.sha != steps.live.outputs.sha
+        env:
+          VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "${VERCEL_DEPLOY_HOOK_URL}" ]; then
+            echo "VERCEL_DEPLOY_HOOK_URL secret is missing."
+            exit 1
+          fi
+          curl -fsS -X POST "$VERCEL_DEPLOY_HOOK_URL"
+

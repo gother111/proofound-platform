@@ -1115,3 +1115,52 @@ Commands run + outcomes:
 Open TODOs / follow-ups:
 
 - Optional: add an E2E assertion to ensure `Dashboard loading…` disappears after the individual dashboard becomes interactive.
+
+---
+
+## 2026-02-12 15:13 CET
+
+Task summary:
+
+- Added a GitHub Actions workflow to auto-retry production deploys after temporary Vercel quota limits.
+- Wired retry logic to compare `master` head SHA against live production SHA from `/api/health`.
+- Triggered deployment retries through Vercel deploy hook secret when production is behind.
+
+What worked:
+
+- Existing workflow layout in `.github/workflows/` allowed a clean additive workflow without changing CI jobs.
+- YAML parsed cleanly with repository-standard validation command.
+- The retry mechanism is idempotent for synced states because deploy hook runs only on SHA mismatch.
+
+What failed / wrong assumptions:
+
+- None.
+
+User corrections:
+
+- User requested enabling automatic deploy retry after quota reset, not manual redeploy.
+
+Assumptions taken without asking:
+
+- Using `VERCEL_DEPLOY_HOOK_URL` as the GitHub secret name is acceptable.
+- `https://proofound.io/api/health` remains publicly reachable and keeps returning `version` SHA.
+- A 30-minute retry cadence is acceptable for this repository.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add a guard for repeated unknown-health responses to reduce unnecessary deploy-hook calls during extended outages.
+- Optionally route the health URL through a workflow env secret for easier environment changes.
+
+Commands run + outcomes:
+
+- `git status -sb`: PASS (clean baseline before edits).
+- `ruby -ryaml -e "YAML.load_file('.github/workflows/retry-vercel-deploy.yml'); puts 'YAML_OK'"`: PASS.
+
+Open TODOs / follow-ups:
+
+- Add GitHub secret `VERCEL_DEPLOY_HOOK_URL` if not present.
+- Create production deploy hook in Vercel project `proofound-platform` and attach the generated URL to that secret.

@@ -1031,3 +1031,39 @@ Open risks/TODO:
 
 - `onLoadingChange` is optional and callback-driven. If future dashboard implementations skip emitting loading transitions, parent loading text may drift again.
 - Current coverage is component-level. A future E2E assertion on `/app/i/home` could harden this behavior end-to-end.
+
+---
+
+## 2026-02-12: Auto-Retry Production Deploy After Vercel Quota Reset
+
+What changed:
+
+- Added a new workflow at `.github/workflows/retry-vercel-deploy.yml`.
+- Workflow triggers on:
+  - `push` to `master`
+  - `schedule` every 30 minutes
+  - manual `workflow_dispatch`
+- Workflow compares:
+  - repo HEAD SHA (`git rev-parse HEAD`)
+  - live production SHA from `https://proofound.io/api/health` (`version`)
+- When SHAs differ, the workflow triggers Vercel production deploy via `VERCEL_DEPLOY_HOOK_URL` secret.
+
+Why:
+
+- If Vercel deploy quota temporarily blocks deploys, pushes can succeed while production remains on an older commit.
+- This workflow keeps retrying deploy until production catches up after quota is restored.
+
+How to verify:
+
+- YAML validation:
+  - `ruby -ryaml -e "YAML.load_file('.github/workflows/retry-vercel-deploy.yml'); puts 'YAML_OK'"` (PASS)
+- Required setup in GitHub repository secrets:
+  - `VERCEL_DEPLOY_HOOK_URL` must be set to a production deploy hook URL from Vercel.
+- Runtime verification:
+  - Trigger the workflow manually (`workflow_dispatch`) and confirm logs print `Repo SHA` and `Live SHA`.
+  - If SHA mismatch exists, confirm the deploy hook step runs and a new production deployment appears in Vercel.
+
+Open risks/TODO:
+
+- If `https://proofound.io/api/health` response shape changes (missing `version`), the workflow will keep treating production as out-of-sync and may trigger repeated deploy attempts.
+- If `VERCEL_DEPLOY_HOOK_URL` is not set, the workflow fails by design to surface the missing configuration.
