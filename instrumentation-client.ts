@@ -1,5 +1,10 @@
 import * as Sentry from '@sentry/nextjs';
 
+// Next.js loads this file on the client before application code.
+// Keep initialization side-effectful. Sentry's Next.js SDK may require
+// router transition instrumentation hooks to be exported from this module.
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
+
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
@@ -44,7 +49,7 @@ Sentry.init({
     'The user aborted a request',
   ],
 
-  beforeSend(event, hint) {
+  beforeSend(event) {
     // Don't send events in development unless explicitly enabled
     if (process.env.NODE_ENV === 'development' && !process.env.NEXT_PUBLIC_SENTRY_DEBUG) {
       return null;
