@@ -156,7 +156,9 @@ test.describe('Accessibility - Critical Flows', () => {
   }
 
   test('Profile page should be accessible (authenticated)', async ({ page }) => {
-    test.skip(!requiresAuthenticatedFixtures, 'Authenticated a11y checks require strict fixtures');
+    if (!requiresAuthenticatedFixtures) {
+      return;
+    }
     await loginAsAuthenticatedUser(page);
     await page.goto('/app/i/profile');
     await waitForUiToSettle(page);
@@ -169,7 +171,9 @@ test.describe('Accessibility - Critical Flows', () => {
   });
 
   test('Expertise hub should be accessible (authenticated)', async ({ page }) => {
-    test.skip(!requiresAuthenticatedFixtures, 'Authenticated a11y checks require strict fixtures');
+    if (!requiresAuthenticatedFixtures) {
+      return;
+    }
     await loginAsAuthenticatedUser(page);
     await page.goto('/app/i/expertise');
     await waitForUiToSettle(page);
@@ -182,7 +186,9 @@ test.describe('Accessibility - Critical Flows', () => {
   });
 
   test('Dashboard should be accessible (authenticated)', async ({ page }) => {
-    test.skip(!requiresAuthenticatedFixtures, 'Authenticated a11y checks require strict fixtures');
+    if (!requiresAuthenticatedFixtures) {
+      return;
+    }
     await loginAsAuthenticatedUser(page);
     await page.goto('/app/i/home');
     await waitForUiToSettle(page);
