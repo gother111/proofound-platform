@@ -237,3 +237,48 @@ Rows and columns: #142, #141, #137, #140, #138, #134, #136, #133, #132, #130, #1
 
 - Merges remain blocked by required-review policy when only self-review is available.
 - #142 has passing required checks but still needs one approval from another write-access reviewer.
+
+## Disposition Update (2026-02-12 01:40 UTC)
+
+### Merged Since Last Snapshot
+
+| PR   | Branch                                    | State  | Notes                                                         |
+| ---- | ----------------------------------------- | ------ | ------------------------------------------------------------- |
+| #144 | `codex/salvage-133-monitoring-percentile` | MERGED | Monitoring percentile/perf-status salvage.                    |
+| #145 | `codex/salvage-132-linkedin-fixes`        | MERGED | LinkedIn OAuth and settings verification salvage from `#132`. |
+| #147 | `codex/salvage-132-org-profile-core`      | MERGED | Organization profile API/editor core salvage from `#132`.     |
+
+### Open Active Merge Lane (master-based, scoped)
+
+| PR   | Branch                                     | State | Required checks              |
+| ---- | ------------------------------------------ | ----- | ---------------------------- |
+| #146 | `codex/salvage-132-oauth-helpers`          | OPEN  | `ci` pending, `a11y` pending |
+| #148 | `codex/salvage-132-admin-hardening-core`   | OPEN  | `ci` pending, `a11y` pending |
+| #149 | `codex/salvage-138-infra-doclinks`         | OPEN  | `ci` pending, `a11y` pending |
+| #150 | `codex/salvage-119-instrumentation-client` | OPEN  | `ci` pending, `a11y` pending |
+| #151 | `codex/salvage-124-vercel-env-sync`        | OPEN  | `ci` pending, `a11y` pending |
+
+### Closed Legacy PRs in This Run (with rationale)
+
+| PR   | State  | Disposition                                                                                      |
+| ---- | ------ | ------------------------------------------------------------------------------------------------ |
+| #120 | CLOSED | Superseded by merged LinkedIn salvage (`#145`).                                                  |
+| #123 | CLOSED | No unique code delta vs current `master` for touched files.                                      |
+| #125 | CLOSED | Docs/log-only from non-master base; no current-value unique content.                             |
+| #121 | CLOSED | Runtime OAuth deltas already present on `master`; residual diff is docs churn.                   |
+| #122 | CLOSED | Mixed a11y and landing from non-master base; landing-sensitive drift rejected.                   |
+| #118 | CLOSED | High-risk migration-sync branch; direct merge rejected in favor of controlled DB reconciliation. |
+| #116 | CLOSED | Legacy base mismatch and superseded active delivery path.                                        |
+| #86  | CLOSED | Unmergeable archival branch.                                                                     |
+
+### Remaining Source PRs Pending Final Closure
+
+| PR   | Status | Close condition                                                                |
+| ---- | ------ | ------------------------------------------------------------------------------ |
+| #132 | OPEN   | Close after remaining salvage PRs (`#146`, `#148`) merge and mapping is final. |
+| #138 | OPEN   | Close after doc-link salvage PR `#149` merges.                                 |
+| #119 | OPEN   | Close after instrumentation salvage PR `#150` merges.                          |
+| #124 | OPEN   | Close after env-sync salvage PR `#151` merges.                                 |
+| #134 | OPEN   | Close after docs-ledger consolidation PR merges.                               |
+| #131 | OPEN   | Close after docs-ledger consolidation PR merges.                               |
+| #117 | OPEN   | Close after admin users-route cleanup preservation in `#148` merges.           |
