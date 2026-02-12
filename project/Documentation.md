@@ -962,3 +962,37 @@ Open risks/TODO:
 - Existing already-shared `proofound.com` links outside the app cannot be redirected by this codebase alone.
 - `frame-ancestors *` is intentionally limited to `/p/<token>/embed`; keep this route-scoped and do not broaden it.
 - Optional hardening follow-up: replace `<img>` with `next/image` in `src/components/profile/PublicSnippetView.tsx` if layout permits.
+
+---
+
+## 2026-02-12: Profile Sharing Follow-up (Lint Hardening + Production Smoke)
+
+What changed:
+
+- Replaced avatar `<img>` with `next/image` in:
+  - `src/components/profile/PublicSnippetView.tsx`
+- Used fixed dimensions (`64x64`) and `unoptimized` to preserve existing remote image behavior while removing the lint violation.
+- Added reusable profile-sharing smoke steps to:
+  - `agent/checklists/verification.md`
+
+Why:
+
+- Clear the remaining non-blocking lint warning after profile sharing merge.
+- Capture a repeatable production smoke routine for public profile sharing endpoints.
+
+How to verify:
+
+- Local checks:
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint` (PASS, no warning in `PublicSnippetView`)
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck` (PASS)
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test` (PASS)
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build` (PASS)
+- Production smoke checks (`proofound.io`):
+  - `GET /api/health` -> `200` and healthy payload on deployed commit.
+  - `POST /api/profile/snippet` without CSRF/auth -> `403` (`CSRF validation failed`), confirming guard behavior.
+  - `GET /p/invalidtoken` -> `200` with invalid/expired fallback content (no server error).
+  - `GET /p/invalidtoken/embed` -> `200` with `content-security-policy` containing `frame-ancestors *` and matched embed route.
+
+Open risks/TODO:
+
+- `next/image` in `PublicSnippetView` is configured with `unoptimized` to avoid remote-loader/domain regressions; if optimization is required later, add explicit `images.remotePatterns` and remove `unoptimized`.
