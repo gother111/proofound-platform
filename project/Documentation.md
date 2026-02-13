@@ -10,8 +10,7 @@ This folder is the durable “project memory” surface for Proofound. It is mea
 
 ## Known Drift (Repo Truth)
 
-- `.github/workflows/ci.yml` matrix runs Node 18.x and 20.x, but `package.json` engines require Node `>=20.20.0 <21` (and `.nvmrc` pins `20.20.0`). (source: .github/workflows/ci.yml, package.json, .nvmrc)
-- `.github/workflows/playwright.yml` uses `node-version: lts/*`, which is not pinned to `package.json` engines and can drift as the LTS line changes over time. (source: .github/workflows/playwright.yml, package.json)
+- No known drift recorded for Node version pinning: CI and Playwright workflows use `node-version-file: '.nvmrc'`, and `package.json` engines require `>=20.20.0 <21`. (source: .github/workflows/ci.yml, .github/workflows/playwright.yml, .nvmrc, package.json)
 
 ## Decisions
 
