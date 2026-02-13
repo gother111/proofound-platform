@@ -78,6 +78,7 @@ Open risks/TODO:
   - `E2E_PROVIDER_USER_ID`, `E2E_PROVIDER_USER_EMAIL`, `E2E_PROVIDER_USER_PASSWORD`
 - Deploy retry workflow secret is missing:
   - `VERCEL_DEPLOY_HOOK_URL`
+- Draft PR tracking these changes: https://github.com/gother111/proofound-platform/pull/188
 
 ## 2026-02-11: Landing Regression Guardrail Policy
 

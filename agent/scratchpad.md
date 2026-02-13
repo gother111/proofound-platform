@@ -1610,3 +1610,56 @@ Open TODOs / follow-ups:
   - `E2E_PROVIDER_USER_ID`, `E2E_PROVIDER_USER_EMAIL`, `E2E_PROVIDER_USER_PASSWORD`
   - `VERCEL_DEPLOY_HOOK_URL`
 - Run strict MVP gate bundle (CI or local) once deterministic provider user and safe DB env are confirmed.
+
+---
+
+## 2026-02-13 21:07 CET
+
+Task summary:
+
+- Re-verified local gates under Node `v20.20.0`, confirmed Vercel preflight, pushed branch, and opened a draft PR for review.
+
+What worked:
+
+- Local verification commands still pass after the production readiness hardening changes.
+- Vercel governance checks (`vercel:preflight`, `vercel:env-parity`) run end-to-end against the linked project.
+
+What failed / wrong assumptions:
+
+- None.
+
+User corrections:
+
+- None.
+
+Assumptions taken without asking:
+
+- Creating a draft PR is acceptable as part of implementing the Day 1 "RC PR" step.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- None.
+
+Commands run + outcomes:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH node -v`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS (warning only)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:drift-check`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run vercel:preflight`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run vercel:env-parity`: PASS (informational diff)
+- `git push -u origin codex/prod-readiness-2day-launch`: PASS
+- `gh pr create --draft ...`: PASS (opened PR #188)
+
+Open TODOs / follow-ups:
+
+- Add GitHub Actions secrets required for strict provider E2E:
+  - `E2E_PROVIDER_USER_ID`, `E2E_PROVIDER_USER_EMAIL`, `E2E_PROVIDER_USER_PASSWORD`
+- Add deploy retry secret:
+  - `VERCEL_DEPLOY_HOOK_URL`
