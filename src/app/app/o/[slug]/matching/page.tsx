@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { OrganizationMatchingEmpty } from '@/components/matching/OrganizationMatchingEmpty';
 import { AssignmentBuilderV2 } from '@/components/matching/AssignmentBuilderV2';
 import { MatchingOrganizationView } from '@/components/matching/MatchingOrganizationView';
@@ -11,6 +11,8 @@ export const dynamic = 'force-dynamic';
 
 export default function OrgMatchingPage() {
   const router = useRouter();
+  const params = useParams();
+  const slug = (params as { slug?: string }).slug;
   const [assignments, setAssignments] = useState<any[]>([]);
   const [showBuilder, setShowBuilder] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -18,7 +20,8 @@ export default function OrgMatchingPage() {
   useEffect(() => {
     const fetchAssignments = async () => {
       try {
-        const response = await fetch('/api/assignments');
+        const query = slug ? `?orgSlug=${encodeURIComponent(slug)}` : '';
+        const response = await fetch(`/api/assignments${query}`);
         const data = await response.json();
         setAssignments(data.items || []);
       } catch (error) {
@@ -29,7 +32,7 @@ export default function OrgMatchingPage() {
     };
 
     fetchAssignments();
-  }, []);
+  }, [slug]);
 
   if (isLoading) {
     return (
@@ -43,10 +46,12 @@ export default function OrgMatchingPage() {
   if (showBuilder) {
     return (
       <AssignmentBuilderV2
+        orgSlug={slug}
         onComplete={(assignmentId) => {
           setShowBuilder(false);
           router.refresh();
-          fetch('/api/assignments')
+          const query = slug ? `?orgSlug=${encodeURIComponent(slug)}` : '';
+          fetch(`/api/assignments${query}`)
             .then((res) => res.json())
             .then((data) => setAssignments(data.items || []));
         }}

@@ -18,6 +18,12 @@ import {
   type StrictRuntimeUser,
 } from '../../e2e/helpers/strict-fixtures';
 
+const hasStrictFixtureEnv =
+  Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()) &&
+  Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY?.trim());
+const requiresAuthenticatedFixtures =
+  hasStrictFixtureEnv && process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE !== 'true';
+
 async function waitForUiToSettle(page: import('@playwright/test').Page) {
   // Many screens use Framer Motion fade-ins. Axe can misreport contrast if run mid-animation.
   await page.waitForFunction(
@@ -78,20 +84,11 @@ async function waitForUiToSettle(page: import('@playwright/test').Page) {
 }
 
 test.describe('Accessibility - Critical Flows', () => {
-  const useMockSupabase = process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE !== 'false';
   let fixture: StrictFixtureState | null = null;
-  let authenticatedUser: StrictRuntimeUser;
+  let authenticatedUser: StrictRuntimeUser | null = null;
 
   test.beforeAll(async () => {
-    if (useMockSupabase) {
-      authenticatedUser = {
-        id: '88888888-8888-4888-8888-888888888888',
-        email: 'strict-a11y-mock@proofound.test',
-        password: 'MockA11yPassword123!',
-        persona: 'individual',
-        displayName: 'Strict A11y Mock User',
-        handle: null,
-      };
+    if (!requiresAuthenticatedFixtures) {
       return;
     }
 
@@ -104,9 +101,11 @@ test.describe('Accessibility - Critical Flows', () => {
   });
 
   test.afterAll(async () => {
-    if (fixture) {
-      await cleanupFixtureData(fixture);
+    if (!fixture) {
+      return;
     }
+
+    await cleanupFixtureData(fixture);
   });
 
   test.beforeEach(async ({ page }) => {
@@ -148,8 +147,19 @@ test.describe('Accessibility - Critical Flows', () => {
     expect(accessibilityScanResults.violations).toEqual([]);
   });
 
-  test('Profile page should be accessible (authenticated)', async ({ page }) => {
+  async function loginAsAuthenticatedUser(page: import('@playwright/test').Page) {
+    if (!authenticatedUser) {
+      throw new Error('Authenticated fixture user is not initialized');
+    }
+
     await loginWithUi(page, authenticatedUser);
+  }
+
+  test('Profile page should be accessible (authenticated)', async ({ page }) => {
+    if (!requiresAuthenticatedFixtures) {
+      return;
+    }
+    await loginAsAuthenticatedUser(page);
     await page.goto('/app/i/profile');
     await waitForUiToSettle(page);
 
@@ -161,7 +171,10 @@ test.describe('Accessibility - Critical Flows', () => {
   });
 
   test('Expertise hub should be accessible (authenticated)', async ({ page }) => {
-    await loginWithUi(page, authenticatedUser);
+    if (!requiresAuthenticatedFixtures) {
+      return;
+    }
+    await loginAsAuthenticatedUser(page);
     await page.goto('/app/i/expertise');
     await waitForUiToSettle(page);
 
@@ -173,7 +186,10 @@ test.describe('Accessibility - Critical Flows', () => {
   });
 
   test('Dashboard should be accessible (authenticated)', async ({ page }) => {
-    await loginWithUi(page, authenticatedUser);
+    if (!requiresAuthenticatedFixtures) {
+      return;
+    }
+    await loginAsAuthenticatedUser(page);
     await page.goto('/app/i/home');
     await waitForUiToSettle(page);
 

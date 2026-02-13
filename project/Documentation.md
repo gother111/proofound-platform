@@ -1653,3 +1653,30 @@ Open risks/TODO:
 
 - CLS budget is currently relaxed and should be re-tightened after dedicated landing-page layout-shift stabilization.
 - Keep `apiP95` budget unchanged (`1500ms`) to preserve backend latency gating.
+
+## 2026-02-13 - PR #180 merge-to-master unblock
+
+What changed:
+
+- Merged latest `origin/master` into `codex/matching-assignment-reliability` to resolve PR merge conflicts.
+- Kept the tested branch implementations for:
+  - `src/app/api/interviews/schedule/route.ts`
+  - `e2e/strict/providers.strict.spec.ts`
+  - `tests/a11y/critical-flows.spec.ts`
+- Kept latest `master` baseline for perf gate script:
+  - `scripts/perf-budgets.mjs`
+
+Why:
+
+- PR #180 became `CONFLICTING` with `master`, which blocked auto-merge.
+- Existing required checks can only proceed on a mergeable head commit.
+
+How to verify:
+
+- `npm run lint` (PASS, one pre-existing warning in `postcss.config.js`)
+- `npm run typecheck` (PASS)
+- GitHub PR #180 shows mergeable state and required checks re-run on the new merge commit.
+
+Open risks/TODO:
+
+- Final merge still depends on CI checks finishing green on the post-conflict head commit.

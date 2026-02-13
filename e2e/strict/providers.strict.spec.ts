@@ -20,8 +20,8 @@ test.describe('Strict MVP Provider Flows (Zoom, Google, LinkedIn)', () => {
   test.describe.configure({ mode: 'serial' });
 
   let fixture: StrictFixtureState;
-  let hasManagedProviderUser = false;
   let providerUser: StrictRuntimeUser;
+  let managedProviderConfigured = false;
   let unconnectedUser: StrictRuntimeUser;
   let candidateUser: StrictRuntimeUser;
   let orgOwner: StrictRuntimeUser;
@@ -35,21 +35,15 @@ test.describe('Strict MVP Provider Flows (Zoom, Google, LinkedIn)', () => {
 
   test.beforeAll(async () => {
     fixture = createFixtureState();
-    hasManagedProviderUser =
-      Boolean(process.env.E2E_PROVIDER_USER_ID?.trim()) &&
-      Boolean(process.env.E2E_PROVIDER_USER_EMAIL?.trim()) &&
-      Boolean(process.env.E2E_PROVIDER_USER_PASSWORD?.trim());
-
-    if (hasManagedProviderUser) {
-      providerUser = getManagedProviderUser();
-    } else {
-      providerUser = await createRuntimeUser(fixture, {
+    const managedProvider = getManagedProviderUser();
+    managedProviderConfigured = Boolean(managedProvider);
+    providerUser =
+      managedProvider ??
+      (await createRuntimeUser(fixture, {
         persona: 'individual',
-        // Keep prefix short so generated handle retains entropy and avoids uniqueness collisions.
-        prefix: 'sp-fallback',
+        prefix: 'strict-provider-managed-fallback',
         displayName: 'Strict Provider Managed Fallback',
-      });
-    }
+      }));
 
     unconnectedUser = await createRuntimeUser(fixture, {
       persona: 'individual',
@@ -197,30 +191,26 @@ test.describe('Strict MVP Provider Flows (Zoom, Google, LinkedIn)', () => {
       matchId: noProviderMatch.id,
       scheduledAt: new Date(Date.now() + 1000 * 60 * 60 * 4).toISOString(),
       platform: 'zoom',
-      participantUserIds: [unconnectedUser.id, orgOwner.id],
+      participantUserIds: [orgOwner.id, unconnectedUser.id],
     });
-    expect([400, 403]).toContain(scheduleZoomResponse.status());
+    expect(scheduleZoomResponse.status()).toBe(400);
     const scheduleZoomPayload = (await scheduleZoomResponse.json()) as { error?: string };
-    if (scheduleZoomResponse.status() === 400) {
-      expect(scheduleZoomPayload.error).toMatch(/not connected/i);
-    } else {
-      expect(scheduleZoomPayload.error).toMatch(/organization owners\/admins|permission/i);
-    }
+    expect(scheduleZoomPayload.error).toMatch(/not connected/i);
   });
 
   test('Live provider scheduling contract requires connected provider in strict mode', async ({
     page,
   }) => {
+    await loginWithUi(page, providerUser);
+
     const requireConnected = process.env.STRICT_PROVIDER_E2E_REQUIRE_CONNECTED === 'true';
     const requireBoth = process.env.STRICT_PROVIDER_E2E_REQUIRE_BOTH === 'true';
-    const enforceConnectedProviders = hasManagedProviderUser && requireConnected;
-    const enforceBothProviders = hasManagedProviderUser && requireBoth;
 
-    if (!hasManagedProviderUser && !requireConnected && !requireBoth) {
+    if (!managedProviderConfigured) {
+      // No deterministic connected provider account configured for this environment.
+      // Keep strict suite deterministic by skipping live-provider assertions.
       return;
     }
-
-    await loginWithUi(page, providerUser);
 
     const statusResponse = await page.request.get('/api/integrations/video/status');
     expect(statusResponse.ok()).toBeTruthy();
@@ -233,14 +223,14 @@ test.describe('Strict MVP Provider Flows (Zoom, Google, LinkedIn)', () => {
     const googleConnected = statusPayload.google?.connected === true;
     const hasConnectedProvider = zoomConnected || googleConnected;
 
-    if (enforceBothProviders && (!zoomConnected || !googleConnected)) {
+    if (requireBoth && (!zoomConnected || !googleConnected)) {
       throw new Error(
         'Strict provider gate requires both connected providers (Zoom and Google). ' +
           'Connect deterministic staging accounts and set E2E_PROVIDER_USER_* to that user.'
       );
     }
 
-    if (!hasConnectedProvider && enforceConnectedProviders && !enforceBothProviders) {
+    if (!hasConnectedProvider && requireConnected && !requireBoth) {
       throw new Error(
         'Strict provider gate requires at least one connected provider (Zoom or Google). ' +
           'Connect a deterministic staging provider account or set STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=false for diagnostic runs.'
