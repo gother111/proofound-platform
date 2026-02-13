@@ -1707,3 +1707,53 @@ Open TODOs / follow-ups:
 
 - Push compatibility patch and rerun PR checks.
 - Merge PR #178 after required checks pass.
+
+---
+
+## 2026-02-13 01:20 CET
+
+Task summary:
+
+- Investigated second CI failure after duration fallback and found another legacy-schema mismatch: missing `interviews.meeting_url`.
+- Generalized interview scheduling compatibility to auto-handle missing legacy/current columns across schema variants.
+
+What worked:
+
+- Parsing missing column names from `PGRST204` messages enabled deterministic retry behavior.
+- Insert retry loop that drops only missing columns allowed one route to support modern and legacy interview schemas.
+- Legacy query fallback (`meeting_link AS meeting_url`) kept list endpoint compatible for strict flow verification.
+
+What failed / wrong assumptions:
+
+- First compatibility patch assumed only `duration` drift; CI surfaced additional drift in `meeting_url`.
+- CI polling with long `--watch` sessions remained slow for feedback.
+
+User corrections:
+
+- User requested completion through push and merge to `master`, so all required-check blockers must be resolved.
+
+Assumptions taken without asking:
+
+- It is acceptable to include both legacy and modern interview payload keys and remove missing ones at runtime.
+- Returning normalized meeting link fields (`meeting_url`, `meeting_link`, `meetingUrl`) is safe for existing consumers.
+
+What the user corrected afterward:
+
+- None during this iteration.
+
+Improvements next time:
+
+- Add dedicated API tests that simulate `PGRST204` missing-column errors for schedule route to prevent repeated CI-only discoveries.
+- Prefer targeted check status queries over long-lived watch commands.
+
+Commands run + outcomes:
+
+- `gh run view 21968969798 --job 63465734977 --log-failed`: PASS (root cause: missing `meeting_url`)
+- `npm run lint`: PASS (existing warning in `postcss.config.js`)
+- `npm run typecheck`: PASS
+- `npm run test -- tests/api/linkedin-oauth-redirects.test.ts src/lib/integrations/__tests__/oauth-helpers.test.ts tests/ui/linkedin-verification.test.tsx`: PASS
+
+Open TODOs / follow-ups:
+
+- Push generalized interview-schema compatibility patch.
+- Re-run PR #178 checks and merge once required checks are green.

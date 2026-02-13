@@ -1508,3 +1508,34 @@ Open risks/TODO:
 
 - The e2e workflow job (`npm run test:e2e`) still failed in the observed run due webServer timeout, which appears unrelated to this route patch.
 - This compatibility path should be removed once all environments are guaranteed to include the `interviews.duration` column.
+
+---
+
+## 2026-02-13: Interview schedule compatibility for missing `meeting_url` and other legacy columns
+
+What changed:
+
+- Extended `src/app/api/interviews/schedule/route.ts` compatibility logic to handle any missing `interviews` column, not only `duration`:
+  - Added `getMissingInterviewsColumn(...)` to parse missing-column names from Supabase (`PGRST204`) and Postgres (`42703`) errors.
+  - `POST /api/interviews/schedule` now retries inserts with a superset payload and removes missing columns one-by-one until insert succeeds.
+  - Insert payload now includes both modern and legacy shapes (`meeting_url` and `meeting_link`, plus legacy host/participant fields) to support both schema variants.
+  - `GET /api/interviews/schedule` now has legacy fallback queries using `meeting_link AS meeting_url`, then `NULL::text AS meeting_url` if needed.
+  - Normalized response now guarantees `duration` and meeting link output (`meeting_url`, `meeting_link`, and `meetingUrl`).
+
+Why:
+
+- After fixing missing `duration`, strict CI failed again on:
+  - `Could not find the 'meeting_url' column of 'interviews' in the schema cache`
+- The strict runner is operating against a legacy schema variant, so interview scheduling must tolerate column drift until schema convergence.
+
+How to verify:
+
+- `npm run lint` (PASS, one existing warning in `postcss.config.js`)
+- `npm run typecheck` (PASS)
+- `npm run test -- tests/api/linkedin-oauth-redirects.test.ts src/lib/integrations/__tests__/oauth-helpers.test.ts tests/ui/linkedin-verification.test.tsx` (PASS)
+- Re-run PR #178 checks and confirm `ci` no longer fails in `Run individual strict flow suite` at interview scheduling.
+
+Open risks/TODO:
+
+- Compatibility retry logic increases route complexity and should be replaced with a strict schema contract once migrations are unified.
+- Non-required `e2e` workflow still reports webServer startup timeout in this PR and may need separate stabilization.

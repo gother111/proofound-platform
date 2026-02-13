@@ -16,20 +16,48 @@ export const dynamic = 'force-dynamic';
 
 const DEFAULT_INTERVIEW_DURATION_MINUTES = 30;
 
-function isMissingInterviewsDurationError(error: unknown): boolean {
+function getMissingInterviewsColumn(error: unknown): string | null {
   if (!error || typeof error !== 'object') {
-    return false;
+    return null;
   }
 
   const candidate = error as { code?: string; message?: string; details?: string };
-  const combinedMessage = `${candidate.message ?? ''} ${candidate.details ?? ''}`.toLowerCase();
-  const mentionsDurationColumn =
-    combinedMessage.includes('duration') && combinedMessage.includes('interviews');
+  const combinedMessage = `${candidate.message ?? ''} ${candidate.details ?? ''}`;
 
-  return (
-    (candidate.code === 'PGRST204' && mentionsDurationColumn) ||
-    (candidate.code === '42703' && mentionsDurationColumn)
+  const supabaseMatch = combinedMessage.match(
+    /Could not find the '([^']+)' column of 'interviews'/i
   );
+  if (supabaseMatch?.[1]) {
+    return supabaseMatch[1];
+  }
+
+  if (candidate.code === '42703') {
+    const postgresMatch = combinedMessage.match(
+      /column\s+(?:\"?[\w]+\"?\.)?\"?([a-z_]+)\"?\s+does not exist/i
+    );
+    if (postgresMatch?.[1]) {
+      return postgresMatch[1];
+    }
+  }
+
+  return null;
+}
+
+function isMissingInterviewsColumnError(error: unknown): boolean {
+  return Boolean(getMissingInterviewsColumn(error));
+}
+
+function normalizeMeetingLink(interview: Record<string, unknown>, fallbackLink: string): string {
+  const meetingUrl =
+    typeof interview.meeting_url === 'string' && interview.meeting_url.trim().length > 0
+      ? interview.meeting_url
+      : null;
+  const meetingLink =
+    typeof interview.meeting_link === 'string' && interview.meeting_link.trim().length > 0
+      ? interview.meeting_link
+      : null;
+
+  return meetingUrl ?? meetingLink ?? (fallbackLink.trim().length > 0 ? fallbackLink : 'pending');
 }
 
 function normalizeInterviewDuration(duration: unknown): number {
@@ -108,32 +136,61 @@ export async function GET(request: NextRequest) {
         ORDER BY i.scheduled_at ASC
       `);
     } catch (queryError) {
-      if (!isMissingInterviewsDurationError(queryError)) {
+      if (!isMissingInterviewsColumnError(queryError)) {
         throw queryError;
       }
 
-      result = await db.execute(sql`
-        SELECT
-          i.id,
-          i.match_id,
-          i.scheduled_at,
-          ${DEFAULT_INTERVIEW_DURATION_MINUTES} AS duration,
-          i.platform,
-          i.meeting_url,
-          i.status,
-          i.created_at,
-          m.created_at AS match_created_at,
-          p.display_name AS candidate_name,
-          a.role AS assignment_title,
-          o.display_name AS organization_name
-        FROM interviews i
-        INNER JOIN matches m ON m.id = i.match_id
-        INNER JOIN assignments a ON a.id = m.assignment_id
-        INNER JOIN organizations o ON o.id = a.org_id
-        LEFT JOIN profiles p ON p.id = m.profile_id
-        WHERE ${whereClause}
-        ORDER BY i.scheduled_at ASC
-      `);
+      try {
+        result = await db.execute(sql`
+          SELECT
+            i.id,
+            i.match_id,
+            i.scheduled_at,
+            ${DEFAULT_INTERVIEW_DURATION_MINUTES} AS duration,
+            i.platform,
+            i.meeting_link AS meeting_url,
+            i.status,
+            i.created_at,
+            m.created_at AS match_created_at,
+            p.display_name AS candidate_name,
+            a.role AS assignment_title,
+            o.display_name AS organization_name
+          FROM interviews i
+          INNER JOIN matches m ON m.id = i.match_id
+          INNER JOIN assignments a ON a.id = m.assignment_id
+          INNER JOIN organizations o ON o.id = a.org_id
+          LEFT JOIN profiles p ON p.id = m.profile_id
+          WHERE ${whereClause}
+          ORDER BY i.scheduled_at ASC
+        `);
+      } catch (legacyQueryError) {
+        if (!isMissingInterviewsColumnError(legacyQueryError)) {
+          throw legacyQueryError;
+        }
+
+        result = await db.execute(sql`
+          SELECT
+            i.id,
+            i.match_id,
+            i.scheduled_at,
+            ${DEFAULT_INTERVIEW_DURATION_MINUTES} AS duration,
+            i.platform,
+            NULL::text AS meeting_url,
+            i.status,
+            i.created_at,
+            m.created_at AS match_created_at,
+            p.display_name AS candidate_name,
+            a.role AS assignment_title,
+            o.display_name AS organization_name
+          FROM interviews i
+          INNER JOIN matches m ON m.id = i.match_id
+          INNER JOIN assignments a ON a.id = m.assignment_id
+          INNER JOIN organizations o ON o.id = a.org_id
+          LEFT JOIN profiles p ON p.id = m.profile_id
+          WHERE ${whereClause}
+          ORDER BY i.scheduled_at ASC
+        `);
+      }
     }
 
     const interviews = getRows(result) as Array<{
@@ -142,7 +199,7 @@ export async function GET(request: NextRequest) {
       scheduled_at: string;
       duration: number;
       platform: string;
-      meeting_url: string;
+      meeting_url: string | null;
       status: string;
       match_created_at: string | null;
       candidate_name: string | null;
@@ -373,54 +430,66 @@ export async function POST(request: NextRequest) {
     // 5. Create interview record.
     const persistedPlatform = data.platform;
 
-    const interviewInsertBase = {
+    const participantUserIds = Array.from(
+      new Set<string>([match.profile_id, user.id, ...data.participantUserIds])
+    );
+
+    const interviewInsertBase: Record<string, unknown> = {
       match_id: data.matchId,
       scheduled_at: data.scheduledAt,
+      duration: DEFAULT_INTERVIEW_DURATION_MINUTES,
       platform: persistedPlatform,
       meeting_url: meetingLink,
+      meeting_link: meetingLink,
       meeting_id: meetingId,
       timezone: data.timezone,
       status: 'scheduled',
+      host_user_id: user.id,
+      participant_user_ids: participantUserIds,
     };
 
     let interview: any = null;
+    const missingColumnsRetried = new Set<string>();
 
-    const { data: interviewWithDuration, error: insertErrorWithDuration } = await supabase
-      .from('interviews')
-      .insert({
-        ...interviewInsertBase,
-        duration: DEFAULT_INTERVIEW_DURATION_MINUTES,
-      })
-      .select()
-      .single();
-
-    if (insertErrorWithDuration) {
-      if (!isMissingInterviewsDurationError(insertErrorWithDuration)) {
-        throw insertErrorWithDuration;
-      }
-
-      const { data: interviewWithoutDuration, error: insertErrorWithoutDuration } = await supabase
+    for (let attempt = 0; attempt < 12; attempt += 1) {
+      const { data: insertedInterview, error: insertError } = await supabase
         .from('interviews')
         .insert(interviewInsertBase)
         .select()
         .single();
 
-      if (insertErrorWithoutDuration) {
-        throw insertErrorWithoutDuration;
+      if (!insertError) {
+        interview = insertedInterview;
+        break;
       }
 
-      interview = interviewWithoutDuration;
-    } else {
-      interview = interviewWithDuration;
+      const missingColumn = getMissingInterviewsColumn(insertError);
+      if (!missingColumn || !(missingColumn in interviewInsertBase)) {
+        throw insertError;
+      }
+
+      missingColumnsRetried.add(missingColumn);
+      delete interviewInsertBase[missingColumn];
     }
 
     if (!interview?.id || typeof interview.id !== 'string') {
-      throw new Error('Interview insert returned no id');
+      throw new Error(
+        `Interview insert returned no id after fallback retries (${Array.from(
+          missingColumnsRetried
+        ).join(', ')})`
+      );
     }
 
+    const normalizedMeetingLink = normalizeMeetingLink(
+      interview as Record<string, unknown>,
+      meetingLink
+    );
     const normalizedInterview = {
       ...interview,
       duration: normalizeInterviewDuration(interview.duration),
+      meeting_url: normalizedMeetingLink,
+      meeting_link: normalizedMeetingLink,
+      meetingUrl: normalizedMeetingLink,
     };
 
     try {
