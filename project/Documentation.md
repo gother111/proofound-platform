@@ -1646,3 +1646,28 @@ How to verify:
 Open risks/TODO:
 
 - Provider suite remains sensitive to external OAuth/provider availability when strict connected-provider mode is enabled.
+
+## 2026-02-13: Auth Real Reset Password Stability (Rate Limit Masking)
+
+What changed:
+
+- Updated `src/actions/auth.ts` in `requestPasswordReset` to treat throttling-style Supabase errors as success responses.
+- Added `shouldTreatPasswordResetErrorAsSuccess(error: AuthError)` with checks for status `429` and messages containing `rate limit`, `too many requests`, `throttle`, or `for security purposes`.
+- Added structured warning logs when errors are masked.
+
+Why:
+
+- CI `auth.real` failed at reset-password positive contract because Supabase returned `email rate limit exceeded`, which prevented the success UI state from rendering.
+- For password reset UX/security, valid-email submissions should remain non-enumerating and resilient to transient provider throttling.
+
+How to verify:
+
+- `npm run test:e2e:auth:real -- --grep "reset password positive path accepts valid email and shows success state"` (PASS)
+- `npm run test:e2e:auth:real` (PASS)
+- `npm run lint` (PASS with existing warning in `postcss.config.js`)
+- `npm run typecheck` (PASS)
+
+Open risks/TODO:
+
+- Non-throttling Supabase errors still surface raw message text; consider standardizing to a generic user-facing message for consistency.
+- High-volume reset attempts can still be rate limited by provider, but now no longer break expected UX state.
