@@ -20,6 +20,41 @@ This folder is the durable “project memory” surface for Proofound. It is mea
 - Do not copy secrets from local env files or setup docs into tracked markdown.
 - At the end of every session, append a new entry to `agent/scratchpad.md` (append-only).
 
+## 2026-02-13: Integrations Discoverability + Canonical Provider Connect Routing
+
+What changed:
+
+- Updated Settings integrations tab to remove misleading "automatically available" copy and added a direct CTA link to the dedicated integrations manager page.
+  - `src/components/settings/SettingsContent.tsx`
+- Updated interview provider connect flow to use explicit canonical OAuth connect endpoints:
+  - Zoom: `/api/integrations/zoom/connect`
+  - Google: `/api/integrations/google/connect`
+  - Added popup-blocked user feedback.
+  - `src/components/interviews/VideoProviderSelector.tsx`
+- Added focused UI regression tests:
+  - `tests/ui/settings-integrations-discoverability.test.tsx`
+  - `tests/ui/video-provider-selector-connect-route.test.tsx`
+
+Why:
+
+- Users opening `/app/i/settings?tab=integrations` could miss Zoom/Google connect controls because the actionable UI lives on `/app/i/settings/integrations`.
+- Interview connect flow used an indirect route expression and needed explicit canonical routing alignment with secure OAuth connect/callback paths.
+
+How to verify:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- tests/ui/linkedin-verification.test.tsx tests/ui/settings-integrations-discoverability.test.tsx tests/ui/video-provider-selector-connect-route.test.tsx`
+- Read-only Supabase audit rerun (Node 20) confirms no bulk/preseed integration rows were created:
+  - `auth_users=2692`
+  - `user_video_integrations_rows=0`
+  - `sofia.martinez@proofound-demo.com` has `video_integrations=[]`
+
+Open risks/TODO:
+
+- Manual browser smoke as Sofia was not executed in this session because interactive login credentials were not available in-session.
+- OAuth connect can still fail if provider console redirect URIs do not match runtime callback URIs.
+
 ## 2026-02-13: CI Perf Budget Baseline Refresh (PR #178 merge unblock)
 
 What changed:

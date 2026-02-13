@@ -1957,3 +1957,55 @@ Open TODOs / follow-ups:
 
 - Push this final perf-budget refresh commit.
 - Wait for PR #178 required checks (`ci`, `a11y`) and merge to `master`.
+
+---
+
+## 2026-02-13 16:09 CET
+
+Task summary:
+
+- Implemented integrations discoverability and provider connect routing hardening.
+- Added direct Settings CTA to dedicated integrations page and explicit canonical connect routes in interview flow.
+- Added focused UI regression tests and reran Supabase read-only integration audit for Sofia.
+
+What worked:
+
+- Minimal UI patch resolved the missing-path confusion without introducing schema or API contract changes.
+- Focused tests validated both intended behavior changes quickly.
+- Read-only Supabase checks confirmed no unexpected integration row creation.
+
+What failed / wrong assumptions:
+
+- Initial planning assumption that interview flow used a definitively legacy endpoint was partially overstated; route string already resolved to canonical static paths, so the implementation made routing explicit and added popup-block feedback.
+- Manual browser smoke as Sofia could not be executed in-session due unavailable interactive credentials.
+
+User corrections:
+
+- User confirmed implementation should proceed exactly with the approved plan.
+- User confirmed the target account is `sofia.martinez@proofound-demo.com`.
+
+Assumptions taken without asking:
+
+- Existing lint warning in `postcss.config.js` is pre-existing and non-blocking for this task.
+- Focused regression tests plus lint/typecheck are sufficient verification scope for this UI-only change set.
+
+What the user corrected afterward:
+
+- None after implementation.
+
+Improvements next time:
+
+- Add a small shared test helper for `next/navigation` query-param tab selection to reduce repeated mocking.
+- Include a deterministic local login fixture for manual smoke paths that require authenticated UI validation.
+
+Commands run + outcomes:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS (1 existing warning in `postcss.config.js`).
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- tests/ui/linkedin-verification.test.tsx tests/ui/settings-integrations-discoverability.test.tsx tests/ui/video-provider-selector-connect-route.test.tsx`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH node <supabase read-only audit>`: PASS (`user_video_integrations_rows=0`, Sofia has no video integrations).
+
+Open TODOs / follow-ups:
+
+- Run manual authenticated browser smoke for Sofia once credentials are available.
+- Validate provider console redirect URI allowlists remain aligned with `/api/integrations/zoom/callback` and `/api/integrations/google/callback` across environments.
