@@ -1458,3 +1458,35 @@ Open risks/TODO:
 
 - Manual OAuth smoke tests still require valid LinkedIn app credentials and a running app environment; not executed in this run.
 - Test command output includes a pre-existing warning that `DATABASE_URL` is unset in the local environment and mock DB fallback is active.
+
+---
+
+## 2026-02-13: Vercel build OOM mitigation for Next.js lint/type phase
+
+What changed:
+
+- Updated `next.config.js` to skip Next.js lint during `next build`:
+  - Added `eslint.ignoreDuringBuilds = true`.
+- Updated `tsconfig.json` include list to remove dev-only generated types:
+  - Removed `.next/dev/types/**/*.ts`
+  - Kept `.next/types/**/*.ts` for App Router type coverage.
+
+Why:
+
+- Vercel build for branch `codex/fix-linkedin-verification` failed with `SIGKILL` during `Linting and checking validity of types ...` and build report indicated an OOM event.
+- Reducing build-time lint/type input lowers memory pressure in the post-compile phase without removing explicit lint/typecheck commands from the normal verification workflow.
+
+How to verify:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint` (PASS, one pre-existing warning in `postcss.config.js`)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build` (PASS)
+- Confirm build log now shows:
+  - `Skipping linting`
+  - `Checking validity of types ...`
+  - successful build completion.
+
+Open risks/TODO:
+
+- Next.js build no longer performs lint as part of `next build`; lint must continue to be enforced via CI and local verification commands.
+- If OOM persists on Vercel after this change, next step is to enable `VERCEL_BUILD_SYSTEM_REPORT=1` and inspect process-level memory in the report.

@@ -1605,3 +1605,50 @@ Commands run + outcomes:
 Open TODOs / follow-ups:
 
 - Run manual OAuth smoke checks in an environment with valid LinkedIn app credentials and callback allowlist configured.
+
+---
+
+## 2026-02-13 17:34 CET
+
+Task summary:
+
+- Investigated Vercel `SIGKILL` build failure caused by OOM during Next.js `Linting and checking validity of types` phase.
+- Applied low-risk build-memory mitigations and verified build success locally.
+
+What worked:
+
+- `eslint.ignoreDuringBuilds = true` in `next.config.js` removed build-time lint workload from `next build`.
+- Removing `.next/dev/types/**/*.ts` from `tsconfig.json` reduced type-check input scope to production-relevant generated types.
+- Local `npm run build` completed with `Skipping linting` and successful type validation.
+
+What failed / wrong assumptions:
+
+- Initial assumption that only LinkedIn-specific changes were needed was incorrect after reviewing Vercel logs; root cause was build memory pressure in Next.js checks.
+
+User corrections:
+
+- User provided Vercel build log with concrete OOM evidence and requested fix.
+
+Assumptions taken without asking:
+
+- Lint enforcement remains covered by explicit `npm run lint` in verification/CI, so skipping Next internal lint during build is acceptable.
+- Keeping TypeScript build errors enabled (`ignoreBuildErrors=false`) remains required for safety.
+
+What the user corrected afterward:
+
+- None after log submission.
+
+Improvements next time:
+
+- When Vercel build fails with `SIGKILL`, check for OOM markers immediately before investigating route-level code regressions.
+- Enable `VERCEL_BUILD_SYSTEM_REPORT=1` earlier in similar incidents for faster diagnostics.
+
+Commands run + outcomes:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS (1 existing warning)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS
+
+Open TODOs / follow-ups:
+
+- Re-run Vercel deployment for `codex/fix-linkedin-verification` and confirm no OOM event in build logs.
