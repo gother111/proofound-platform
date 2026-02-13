@@ -14,69 +14,58 @@ import { isActiveOrgMember } from '@/lib/api/auth';
 
 export const dynamic = 'force-dynamic';
 
-type InterviewSchemaColumns = {
-  durationColumn: 'duration' | 'duration_minutes' | null;
-  meetingLinkColumn: 'meeting_url' | 'meeting_link' | null;
-  hasTimezone: boolean;
-  hasHostUserId: boolean;
-  hasParticipantUserIds: boolean;
-};
+const DEFAULT_INTERVIEW_DURATION_MINUTES = 30;
 
-let interviewSchemaColumnsCache: InterviewSchemaColumns | null = null;
+function getMissingInterviewsColumn(error: unknown): string | null {
+  if (!error || typeof error !== 'object') {
+    return null;
+  }
 
-function resolveInterviewSchemaColumns(columns: Set<string>): InterviewSchemaColumns {
-  const durationColumn = columns.has('duration')
-    ? 'duration'
-    : columns.has('duration_minutes')
-      ? 'duration_minutes'
-      : null;
+  const candidate = error as { code?: string; message?: string; details?: string };
+  const combinedMessage = `${candidate.message ?? ''} ${candidate.details ?? ''}`;
 
-  const meetingLinkColumn = columns.has('meeting_url')
-    ? 'meeting_url'
-    : columns.has('meeting_link')
-      ? 'meeting_link'
-      : null;
+  const supabaseMatch = combinedMessage.match(
+    /Could not find the '([^']+)' column of 'interviews'/i
+  );
+  if (supabaseMatch?.[1]) {
+    return supabaseMatch[1];
+  }
 
-  return {
-    durationColumn,
-    meetingLinkColumn,
-    hasTimezone: columns.has('timezone'),
-    hasHostUserId: columns.has('host_user_id'),
-    hasParticipantUserIds: columns.has('participant_user_ids'),
-  };
+  if (candidate.code === '42703') {
+    const postgresMatch = combinedMessage.match(
+      /column\s+(?:\"?[\w]+\"?\.)?\"?([a-z_]+)\"?\s+does not exist/i
+    );
+    if (postgresMatch?.[1]) {
+      return postgresMatch[1];
+    }
+  }
+
+  return null;
 }
 
-async function getInterviewSchemaColumns(): Promise<InterviewSchemaColumns> {
-  if (interviewSchemaColumnsCache) {
-    return interviewSchemaColumnsCache;
+function isMissingInterviewsColumnError(error: unknown): boolean {
+  return Boolean(getMissingInterviewsColumn(error));
+}
+
+function normalizeMeetingLink(interview: Record<string, unknown>, fallbackLink: string): string {
+  const meetingUrl =
+    typeof interview.meeting_url === 'string' && interview.meeting_url.trim().length > 0
+      ? interview.meeting_url
+      : null;
+  const meetingLink =
+    typeof interview.meeting_link === 'string' && interview.meeting_link.trim().length > 0
+      ? interview.meeting_link
+      : null;
+
+  return meetingUrl ?? meetingLink ?? (fallbackLink.trim().length > 0 ? fallbackLink : 'pending');
+}
+
+function normalizeInterviewDuration(duration: unknown): number {
+  const parsed = Number(duration);
+  if (Number.isFinite(parsed) && parsed > 0) {
+    return parsed;
   }
-
-  try {
-    const result = await db.execute(sql`
-      SELECT column_name
-      FROM information_schema.columns
-      WHERE table_schema = 'public'
-        AND table_name = 'interviews'
-    `);
-
-    const rows = getRows(result) as Array<{ column_name?: string | null }>;
-    const columns = new Set(
-      rows.map((row) => row.column_name?.trim()).filter((value): value is string => Boolean(value))
-    );
-
-    interviewSchemaColumnsCache = resolveInterviewSchemaColumns(columns);
-  } catch (error) {
-    // Prefer modern-schema defaults when introspection fails.
-    interviewSchemaColumnsCache = {
-      durationColumn: 'duration',
-      meetingLinkColumn: 'meeting_url',
-      hasTimezone: true,
-      hasHostUserId: false,
-      hasParticipantUserIds: false,
-    };
-  }
-
-  return interviewSchemaColumnsCache;
+  return DEFAULT_INTERVIEW_DURATION_MINUTES;
 }
 
 /**
@@ -122,36 +111,87 @@ export async function GET(request: NextRequest) {
 
     const whereClause = filters.length > 0 ? sql.join(filters, sql` AND `) : sql`TRUE`;
 
-    const schemaColumns = await getInterviewSchemaColumns();
-    const durationExpression = schemaColumns.durationColumn
-      ? sql.raw(`i.${schemaColumns.durationColumn}`)
-      : sql`30::integer`;
-    const meetingLinkExpression = schemaColumns.meetingLinkColumn
-      ? sql.raw(`i.${schemaColumns.meetingLinkColumn}`)
-      : sql`NULL::text`;
+    let result;
+    try {
+      result = await db.execute(sql`
+        SELECT
+          i.id,
+          i.match_id,
+          i.scheduled_at,
+          i.duration,
+          i.platform,
+          i.meeting_url,
+          i.status,
+          i.created_at,
+          m.created_at AS match_created_at,
+          p.display_name AS candidate_name,
+          a.role AS assignment_title,
+          o.display_name AS organization_name
+        FROM interviews i
+        INNER JOIN matches m ON m.id = i.match_id
+        INNER JOIN assignments a ON a.id = m.assignment_id
+        INNER JOIN organizations o ON o.id = a.org_id
+        LEFT JOIN profiles p ON p.id = m.profile_id
+        WHERE ${whereClause}
+        ORDER BY i.scheduled_at ASC
+      `);
+    } catch (queryError) {
+      if (!isMissingInterviewsColumnError(queryError)) {
+        throw queryError;
+      }
 
-    const result = await db.execute(sql`
-      SELECT
-        i.id,
-        i.match_id,
-        i.scheduled_at,
-        ${durationExpression} AS duration,
-        i.platform,
-        ${meetingLinkExpression} AS meeting_link,
-        i.status,
-        i.created_at,
-        m.created_at AS match_created_at,
-        p.display_name AS candidate_name,
-        a.role AS assignment_title,
-        o.display_name AS organization_name
-      FROM interviews i
-      INNER JOIN matches m ON m.id = i.match_id
-      INNER JOIN assignments a ON a.id = m.assignment_id
-      INNER JOIN organizations o ON o.id = a.org_id
-      LEFT JOIN profiles p ON p.id = m.profile_id
-      WHERE ${whereClause}
-      ORDER BY i.scheduled_at ASC
-    `);
+      try {
+        result = await db.execute(sql`
+          SELECT
+            i.id,
+            i.match_id,
+            i.scheduled_at,
+            ${DEFAULT_INTERVIEW_DURATION_MINUTES} AS duration,
+            i.platform,
+            i.meeting_link AS meeting_url,
+            i.status,
+            i.created_at,
+            m.created_at AS match_created_at,
+            p.display_name AS candidate_name,
+            a.role AS assignment_title,
+            o.display_name AS organization_name
+          FROM interviews i
+          INNER JOIN matches m ON m.id = i.match_id
+          INNER JOIN assignments a ON a.id = m.assignment_id
+          INNER JOIN organizations o ON o.id = a.org_id
+          LEFT JOIN profiles p ON p.id = m.profile_id
+          WHERE ${whereClause}
+          ORDER BY i.scheduled_at ASC
+        `);
+      } catch (legacyQueryError) {
+        if (!isMissingInterviewsColumnError(legacyQueryError)) {
+          throw legacyQueryError;
+        }
+
+        result = await db.execute(sql`
+          SELECT
+            i.id,
+            i.match_id,
+            i.scheduled_at,
+            ${DEFAULT_INTERVIEW_DURATION_MINUTES} AS duration,
+            i.platform,
+            NULL::text AS meeting_url,
+            i.status,
+            i.created_at,
+            m.created_at AS match_created_at,
+            p.display_name AS candidate_name,
+            a.role AS assignment_title,
+            o.display_name AS organization_name
+          FROM interviews i
+          INNER JOIN matches m ON m.id = i.match_id
+          INNER JOIN assignments a ON a.id = m.assignment_id
+          INNER JOIN organizations o ON o.id = a.org_id
+          LEFT JOIN profiles p ON p.id = m.profile_id
+          WHERE ${whereClause}
+          ORDER BY i.scheduled_at ASC
+        `);
+      }
+    }
 
     const interviews = getRows(result) as Array<{
       id: string;
@@ -159,7 +199,7 @@ export async function GET(request: NextRequest) {
       scheduled_at: string;
       duration: number;
       platform: string;
-      meeting_link: string | null;
+      meeting_url: string | null;
       status: string;
       match_created_at: string | null;
       candidate_name: string | null;
@@ -171,9 +211,9 @@ export async function GET(request: NextRequest) {
       id: interview.id,
       matchId: interview.match_id,
       scheduledAt: interview.scheduled_at,
-      duration: interview.duration,
+      duration: normalizeInterviewDuration(interview.duration),
       platform: interview.platform,
-      meetingUrl: interview.meeting_link || 'pending',
+      meetingUrl: interview.meeting_url || 'pending',
       status: interview.status,
       matchAgreedAt: interview.match_created_at,
       candidateName: interview.candidate_name || 'Candidate',
@@ -283,10 +323,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const participantUserIds = Array.from(
-      new Set<string>([match.profile_id, user.id, ...data.participantUserIds])
-    );
-
     // 4. Handle meeting link based on platform.
     let meetingLink = '';
     let meetingId = '';
@@ -364,9 +400,14 @@ export async function POST(request: NextRequest) {
       } else {
         const { createGoogleMeet } = await import('@/lib/integrations/google-meet');
 
+        const participantSet = new Set<string>([
+          match.profile_id,
+          user.id,
+          ...data.participantUserIds,
+        ]);
         const participantEmails: string[] = [];
 
-        for (const participantId of participantUserIds) {
+        for (const participantId of participantSet) {
           const { data: profile } = await supabase.auth.admin.getUserById(participantId);
           if (profile.user?.email) {
             participantEmails.push(profile.user.email);
@@ -389,44 +430,67 @@ export async function POST(request: NextRequest) {
     // 5. Create interview record.
     const persistedPlatform = data.platform;
 
-    const schemaColumns = await getInterviewSchemaColumns();
-    const interviewInsert: Record<string, unknown> = {
+    const participantUserIds = Array.from(
+      new Set<string>([match.profile_id, user.id, ...data.participantUserIds])
+    );
+
+    const interviewInsertBase: Record<string, unknown> = {
       match_id: data.matchId,
       scheduled_at: data.scheduledAt,
+      duration: DEFAULT_INTERVIEW_DURATION_MINUTES,
       platform: persistedPlatform,
+      meeting_url: meetingLink,
+      meeting_link: meetingLink,
       meeting_id: meetingId,
+      timezone: data.timezone,
       status: 'scheduled',
+      host_user_id: user.id,
+      participant_user_ids: participantUserIds,
     };
 
-    if (schemaColumns.durationColumn) {
-      interviewInsert[schemaColumns.durationColumn] = 30;
+    let interview: any = null;
+    const missingColumnsRetried = new Set<string>();
+
+    for (let attempt = 0; attempt < 12; attempt += 1) {
+      const { data: insertedInterview, error: insertError } = await supabase
+        .from('interviews')
+        .insert(interviewInsertBase)
+        .select()
+        .single();
+
+      if (!insertError) {
+        interview = insertedInterview;
+        break;
+      }
+
+      const missingColumn = getMissingInterviewsColumn(insertError);
+      if (!missingColumn || !(missingColumn in interviewInsertBase)) {
+        throw insertError;
+      }
+
+      missingColumnsRetried.add(missingColumn);
+      delete interviewInsertBase[missingColumn];
     }
 
-    if (schemaColumns.meetingLinkColumn) {
-      interviewInsert[schemaColumns.meetingLinkColumn] = meetingLink;
+    if (!interview?.id || typeof interview.id !== 'string') {
+      throw new Error(
+        `Interview insert returned no id after fallback retries (${Array.from(
+          missingColumnsRetried
+        ).join(', ')})`
+      );
     }
 
-    if (schemaColumns.hasTimezone) {
-      interviewInsert.timezone = data.timezone;
-    }
-
-    if (schemaColumns.hasHostUserId) {
-      interviewInsert.host_user_id = user.id;
-    }
-
-    if (schemaColumns.hasParticipantUserIds) {
-      interviewInsert.participant_user_ids = participantUserIds;
-    }
-
-    const { data: interview, error: insertError } = await supabase
-      .from('interviews')
-      .insert(interviewInsert as any)
-      .select()
-      .single();
-
-    if (insertError) {
-      throw insertError;
-    }
+    const normalizedMeetingLink = normalizeMeetingLink(
+      interview as Record<string, unknown>,
+      meetingLink
+    );
+    const normalizedInterview = {
+      ...interview,
+      duration: normalizeInterviewDuration(interview.duration),
+      meeting_url: normalizedMeetingLink,
+      meeting_link: normalizedMeetingLink,
+      meetingUrl: normalizedMeetingLink,
+    };
 
     try {
       const { emitInterviewScheduledAsync } = await import('@/lib/analytics/events');
@@ -437,11 +501,11 @@ export async function POST(request: NextRequest) {
         (interviewDate.getTime() - matchDate.getTime()) / (1000 * 60 * 60 * 24)
       );
 
-      emitInterviewScheduledAsync(user.id, interview.id, {
-        interview_id: interview.id,
+      emitInterviewScheduledAsync(user.id, normalizedInterview.id, {
+        interview_id: normalizedInterview.id,
         assignment_id: match.assignment_id,
         match_id: data.matchId,
-        duration_minutes: 30,
+        duration_minutes: DEFAULT_INTERVIEW_DURATION_MINUTES,
         platform: persistedPlatform,
         days_since_match: daysSinceMatch,
       });
@@ -451,7 +515,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      interview,
+      interview: normalizedInterview,
       message: 'Interview scheduled successfully',
     });
   } catch (error: any) {

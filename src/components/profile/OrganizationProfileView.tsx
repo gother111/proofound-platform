@@ -30,6 +30,10 @@ type OrganizationProfile = {
   vision: string | null;
   website: string | null;
   foundedDate: string | null;
+  industry: string | null;
+  organizationSize: string | null;
+  impactArea: string | null;
+  legalForm: string | null;
   causes: string[] | null;
   workCulture: unknown;
   locations: string[] | null;

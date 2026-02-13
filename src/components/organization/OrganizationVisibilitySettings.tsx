@@ -29,6 +29,63 @@ interface VisibilitySettings {
   impact: string;
 }
 
+const DEFAULT_VISIBILITY_SETTINGS: VisibilitySettings = {
+  displayName: 'public',
+  mission: 'public',
+  vision: 'public',
+  causes: 'public',
+  workCulture: 'post_match',
+  structure: 'post_match',
+  projects: 'post_match',
+  partnerships: 'post_match',
+  goals: 'post_match',
+  impact: 'post_match',
+};
+
+const VALID_LEVELS = new Set(['public', 'post_match', 'post_conversation_start', 'internal_only']);
+
+function normalizeVisibilitySettings(input: unknown): VisibilitySettings {
+  if (!input || typeof input !== 'object') {
+    return { ...DEFAULT_VISIBILITY_SETTINGS };
+  }
+
+  const source = input as Record<string, unknown>;
+  const candidate: VisibilitySettings = {
+    displayName: 'public',
+    mission: 'public',
+    vision: 'public',
+    causes: 'public',
+    workCulture: 'post_match',
+    structure: 'post_match',
+    projects: 'post_match',
+    partnerships: 'post_match',
+    goals: 'post_match',
+    impact: 'post_match',
+  };
+
+  const fieldMap: Array<{ client: keyof VisibilitySettings; db: string }> = [
+    { client: 'displayName', db: 'display_name' },
+    { client: 'mission', db: 'mission' },
+    { client: 'vision', db: 'vision' },
+    { client: 'causes', db: 'causes' },
+    { client: 'workCulture', db: 'work_culture' },
+    { client: 'structure', db: 'structure' },
+    { client: 'projects', db: 'projects' },
+    { client: 'partnerships', db: 'partnerships' },
+    { client: 'goals', db: 'goals' },
+    { client: 'impact', db: 'impact' },
+  ];
+
+  for (const field of fieldMap) {
+    const raw = source[field.client] ?? source[field.db];
+    if (typeof raw === 'string' && VALID_LEVELS.has(raw)) {
+      candidate[field.client] = raw;
+    }
+  }
+
+  return candidate;
+}
+
 interface OrganizationVisibilitySettingsProps {
   orgId: string;
   canEdit?: boolean;
@@ -58,18 +115,7 @@ export function OrganizationVisibilitySettings({
   orgId,
   canEdit = true,
 }: OrganizationVisibilitySettingsProps) {
-  const [settings, setSettings] = useState<VisibilitySettings>({
-    displayName: 'public',
-    mission: 'public',
-    vision: 'public',
-    causes: 'public',
-    workCulture: 'post_match',
-    structure: 'post_match',
-    projects: 'post_match',
-    partnerships: 'post_match',
-    goals: 'post_match',
-    impact: 'post_match',
-  });
+  const [settings, setSettings] = useState<VisibilitySettings>({ ...DEFAULT_VISIBILITY_SETTINGS });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -80,7 +126,7 @@ export function OrganizationVisibilitySettings({
       if (response.ok) {
         const data = await response.json();
         if (data.visibility) {
-          setSettings(data.visibility);
+          setSettings(normalizeVisibilitySettings(data.visibility));
         }
       }
     } catch (error) {
@@ -95,6 +141,9 @@ export function OrganizationVisibilitySettings({
   }, [fetchSettings]);
 
   const handleFieldChange = (field: keyof VisibilitySettings, value: string) => {
+    if (!VALID_LEVELS.has(value)) {
+      return;
+    }
     setSettings((prev) => ({ ...prev, [field]: value }));
     setHasChanges(true);
   };
@@ -105,13 +154,17 @@ export function OrganizationVisibilitySettings({
       const response = await apiFetch(`/api/organizations/${orgId}/visibility`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings),
+        body: JSON.stringify(normalizeVisibilitySettings(settings)),
       });
 
       if (!response.ok) {
         throw new Error('Failed to save visibility settings');
       }
 
+      const data = await response.json().catch(() => ({}));
+      if (data?.visibility) {
+        setSettings(normalizeVisibilitySettings(data.visibility));
+      }
       setHasChanges(false);
       toast.success('Visibility settings updated');
     } catch (error) {
@@ -167,10 +220,18 @@ export function OrganizationVisibilitySettings({
           <div className="text-sm text-blue-900 dark:text-blue-300">
             <p className="font-medium mb-1">Visibility Levels Explained</p>
             <ul className="text-blue-700 dark:text-blue-400 space-y-1 text-xs">
-              <li>• <strong>Public:</strong> Visible to anyone browsing the platform</li>
-              <li>• <strong>Post-Match:</strong> Visible after successful matching with candidates</li>
-              <li>• <strong>Post-Conversation:</strong> Visible after conversation has started</li>
-              <li>• <strong>Internal Only:</strong> Visible to organization members only</li>
+              <li>
+                • <strong>Public:</strong> Visible to anyone browsing the platform
+              </li>
+              <li>
+                • <strong>Post-Match:</strong> Visible after successful matching with candidates
+              </li>
+              <li>
+                • <strong>Post-Conversation:</strong> Visible after conversation has started
+              </li>
+              <li>
+                • <strong>Internal Only:</strong> Visible to organization members only
+              </li>
             </ul>
           </div>
         </div>
@@ -178,7 +239,10 @@ export function OrganizationVisibilitySettings({
         {/* Field Settings */}
         <div className="space-y-4">
           {Object.entries(FIELD_LABELS).map(([field, label]) => (
-            <div key={field} className="flex items-center justify-between gap-4 p-4 rounded-lg border">
+            <div
+              key={field}
+              className="flex items-center justify-between gap-4 p-4 rounded-lg border"
+            >
               <div className="flex-1">
                 <Label className="text-sm font-medium">{label}</Label>
                 <p className="text-xs text-muted-foreground mt-0.5">
@@ -223,12 +287,11 @@ export function OrganizationVisibilitySettings({
         {/* Note */}
         <div className="p-3 bg-muted/30 rounded-lg text-xs text-muted-foreground">
           <p>
-            <strong>Note:</strong> These settings control the initial visibility. Individual candidates
-            may still request access to specific information during the matching process.
+            <strong>Note:</strong> These settings control the initial visibility. Individual
+            candidates may still request access to specific information during the matching process.
           </p>
         </div>
       </CardContent>
     </Card>
   );
 }
-
