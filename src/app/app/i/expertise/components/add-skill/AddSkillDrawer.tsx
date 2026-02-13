@@ -18,8 +18,16 @@ import type { AddSkillDrawerProps, L1Domain, L2Category, L3Subcategory, L4Skill 
 import { useDebouncedSearch } from './useDebouncedSearch';
 import { AddSkillDrawerView } from './AddSkillDrawerView';
 
-export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: AddSkillDrawerProps) {
+export function AddSkillDrawer({
+  open,
+  onOpenChange,
+  domains,
+  taxonomyReady = true,
+  onSkillAdded,
+}: AddSkillDrawerProps) {
   const { toast } = useToast();
+  const taxonomyUnavailableMessage =
+    'Skill taxonomy is currently unavailable. Please retry after taxonomy recovery completes.';
 
   // Mode: 'search' (default) or 'browse' (L1→L2→L3→L4)
   const [mode, setMode] = useState<'search' | 'browse'>('search');
@@ -147,6 +155,13 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
       fetchDomains();
     }
   }, [open, mode, loadedDomains]);
+
+  useEffect(() => {
+    if (open && !taxonomyReady) {
+      setMode('search');
+      setStep(1);
+    }
+  }, [open, taxonomyReady]);
 
   // Update loadedDomains when domains prop changes
   useEffect(() => {
@@ -343,6 +358,14 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
   // Quick add straight from search card with defaults
   const handleQuickAdd = async (skill: L4Skill) => {
     if (!skill?.code) return;
+    if (!taxonomyReady) {
+      toast({
+        title: 'Taxonomy unavailable',
+        description: taxonomyUnavailableMessage,
+        variant: 'destructive',
+      });
+      return;
+    }
 
     setQuickAddingCodes((prev) => new Set(prev).add(skill.code));
     try {
@@ -416,6 +439,14 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
 
   const handleBulkAdd = async () => {
     if (bulkSelection.size === 0) return;
+    if (!taxonomyReady) {
+      toast({
+        title: 'Taxonomy unavailable',
+        description: taxonomyUnavailableMessage,
+        variant: 'destructive',
+      });
+      return;
+    }
     setBulkAdding(true);
 
     const selectedSkills = searchResults.filter((skill) => bulkSelection.has(skill.code));
@@ -477,6 +508,15 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
   };
 
   const handleSave = async (saveAndAddAnother: boolean = false) => {
+    if (!taxonomyReady) {
+      toast({
+        title: 'Taxonomy unavailable',
+        description: taxonomyUnavailableMessage,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     // Validate required fields with user-friendly error messages
     if (!l4Search || l4Search.trim() === '') {
       toast({
@@ -658,6 +698,7 @@ export function AddSkillDrawer({ open, onOpenChange, domains, onSkillAdded }: Ad
       saving={saving}
       handleSave={handleSave}
       searchQuery={searchQuery}
+      taxonomyReady={taxonomyReady}
       handleSearchChange={handleSearchChange}
       searchResults={searchResults}
       searchLoading={searchLoading}

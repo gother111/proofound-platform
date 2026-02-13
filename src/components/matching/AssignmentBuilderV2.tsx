@@ -15,106 +15,108 @@ import {
 } from './assignment-steps';
 
 // Zod validation schema matching assignments table
-const AssignmentFormSchema = z.object({
-  // Step 1: Business Value
-  role: z.string().min(3, 'Role title must be at least 3 characters'),
-  businessValue: z.string().min(1, 'Business value is required'),
-  expectedImpact: z.string().optional(),
-  stakeholders: z.array(z.string()).optional(),
+const AssignmentFormSchema = z
+  .object({
+    // Step 1: Business Value
+    role: z.string().min(3, 'Role title must be at least 3 characters'),
+    businessValue: z.string().min(1, 'Business value is required'),
+    expectedImpact: z.string().optional(),
+    stakeholders: z.array(z.string()).optional(),
 
-  // Step 2: Target Outcomes
-  outcomes: z
-    .array(
-      z.object({
-        metric: z.string().min(1, 'Metric is required'),
-        target: z.string().min(1, 'Target is required'),
-        timeframe: z.string().min(1, 'Timeframe is required'),
-      })
-    )
-    .min(1, 'At least one outcome is required'),
+    // Step 2: Target Outcomes
+    outcomes: z
+      .array(
+        z.object({
+          metric: z.string().min(1, 'Metric is required'),
+          target: z.string().min(1, 'Target is required'),
+          timeframe: z.string().min(1, 'Timeframe is required'),
+        })
+      )
+      .min(1, 'At least one outcome is required'),
 
-  // Step 3: Weight Matrix
-  weights: z.object({
-    mission: z.number().min(0).max(100),
-    expertise: z.number().min(0).max(100),
-    workMode: z.number().min(0).max(100),
-  }),
-  workModeRequirement: z.enum(['hard', 'soft']),
-  workModePreference: z.enum(['onsite', 'hybrid', 'remote']),
+    // Step 3: Weight Matrix
+    weights: z.object({
+      mission: z.number().min(0).max(100),
+      expertise: z.number().min(0).max(100),
+      workMode: z.number().min(0).max(100),
+    }),
+    workModeRequirement: z.enum(['hard', 'soft']),
+    workModePreference: z.enum(['onsite', 'hybrid', 'remote']),
 
-  // Step 4: Practicals
-  compMin: z.number().min(1, 'Minimum salary is required'),
-  compMax: z.number().min(1, 'Maximum salary is required'),
-  currency: z.string().default('USD'),
-  hoursMin: z.number().min(10).max(40),
-  hoursMax: z.number().min(10).max(40),
-  locationMode: z.enum(['onsite', 'hybrid', 'remote']),
-  city: z.string().optional(),
-  country: z.string().optional(),
-  startEarliest: z.string().optional(),
-  startLatest: z.string().optional(),
-  duration: z.string().optional(),
+    // Step 4: Practicals
+    compMin: z.number().min(1, 'Minimum salary is required'),
+    compMax: z.number().min(1, 'Maximum salary is required'),
+    currency: z.string().default('USD'),
+    hoursMin: z.number().min(10).max(40),
+    hoursMax: z.number().min(10).max(40),
+    locationMode: z.enum(['onsite', 'hybrid', 'remote']),
+    city: z.string().optional(),
+    country: z.string().optional(),
+    startEarliest: z.string().optional(),
+    startLatest: z.string().optional(),
+    duration: z.string().optional(),
 
-  // Step 5: Expertise Mapping
-  mustHaveSkills: z
-    .array(
-      z.object({
-        id: z.string(),
-        label: z.string(),
-        level: z.number().min(1).max(5),
-        linkedToBV: z.boolean().optional(),
-        linkedToTO: z.boolean().optional(),
-      })
-    )
-    .min(1, 'At least one must-have skill is required'),
-  niceToHaveSkills: z
-    .array(
-      z.object({
-        id: z.string(),
-        label: z.string(),
-        level: z.number().min(1).max(5),
-      })
-    )
-    .optional(),
-  educationRequired: z.boolean().optional(),
-  educationJustification: z.string().optional(),
-}).refine(
-  (data) => data.compMax > data.compMin,
-  {
+    // Step 5: Expertise Mapping
+    mustHaveSkills: z
+      .array(
+        z.object({
+          id: z.string(),
+          label: z.string(),
+          level: z.number().min(1).max(5),
+          linkedToBV: z.boolean().optional(),
+          linkedToTO: z.boolean().optional(),
+        })
+      )
+      .min(1, 'At least one must-have skill is required'),
+    niceToHaveSkills: z
+      .array(
+        z.object({
+          id: z.string(),
+          label: z.string(),
+          level: z.number().min(1).max(5),
+        })
+      )
+      .optional(),
+    educationRequired: z.boolean().optional(),
+    educationJustification: z.string().optional(),
+  })
+  .refine((data) => data.compMax > data.compMin, {
     message: 'Maximum salary must be greater than minimum',
     path: ['compMax'],
-  }
-).refine(
-  (data) => data.hoursMax >= data.hoursMin,
-  {
+  })
+  .refine((data) => data.hoursMax >= data.hoursMin, {
     message: 'Maximum hours must be greater than or equal to minimum',
     path: ['hoursMax'],
-  }
-).refine(
-  (data) => {
-    const total = data.weights.mission + data.weights.expertise + data.weights.workMode;
-    return total === 100;
-  },
-  {
-    message: 'Weights must total exactly 100%',
-    path: ['weights'],
-  }
-).refine(
-  (data) => !data.educationRequired || (data.educationJustification && data.educationJustification.length > 0),
-  {
-    message: 'Education justification is required when education is mandatory',
-    path: ['educationJustification'],
-  }
-);
+  })
+  .refine(
+    (data) => {
+      const total = data.weights.mission + data.weights.expertise + data.weights.workMode;
+      return total === 100;
+    },
+    {
+      message: 'Weights must total exactly 100%',
+      path: ['weights'],
+    }
+  )
+  .refine(
+    (data) =>
+      !data.educationRequired ||
+      (data.educationJustification && data.educationJustification.length > 0),
+    {
+      message: 'Education justification is required when education is mandatory',
+      path: ['educationJustification'],
+    }
+  );
 
 type AssignmentFormData = z.infer<typeof AssignmentFormSchema>;
 
 interface AssignmentBuilderV2Props {
+  orgSlug?: string;
   onComplete?: (assignmentId: string) => void;
   onCancel?: () => void;
 }
 
-export function AssignmentBuilderV2({ onComplete, onCancel }: AssignmentBuilderV2Props) {
+export function AssignmentBuilderV2({ orgSlug, onComplete, onCancel }: AssignmentBuilderV2Props) {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -206,16 +208,18 @@ export function AssignmentBuilderV2({ onComplete, onCancel }: AssignmentBuilderV
         expectedImpact: JSON.stringify(data.outcomes), // Store outcomes as JSON
         status: 'draft',
         creationStatus: 'pending_review', // Step 5 complete, awaiting approval
+        ...(orgSlug ? { organizationSlug: orgSlug } : {}),
         valuesRequired: [], // TODO: Map from form if values are collected
         causeTags: [],
         mustHaveSkills: data.mustHaveSkills.map((skill) => ({
           id: skill.id,
           level: skill.level,
         })),
-        niceToHaveSkills: data.niceToHaveSkills?.map((skill) => ({
-          id: skill.id,
-          level: skill.level,
-        })) || [],
+        niceToHaveSkills:
+          data.niceToHaveSkills?.map((skill) => ({
+            id: skill.id,
+            level: skill.level,
+          })) || [],
         locationMode: data.locationMode,
         city: data.city,
         country: data.country,
@@ -241,13 +245,13 @@ export function AssignmentBuilderV2({ onComplete, onCancel }: AssignmentBuilderV
       if (!response.ok) {
         const error = await response.json().catch(() => ({}));
         const errorMessage = error.message || error.error || 'Failed to create assignment';
-        
+
         console.error('Assignment creation failed:', {
           status: response.status,
           statusText: response.statusText,
           error: error,
         });
-        
+
         throw new Error(errorMessage);
       }
 
@@ -263,7 +267,8 @@ export function AssignmentBuilderV2({ onComplete, onCancel }: AssignmentBuilderV
       }
     } catch (error) {
       console.error('Assignment creation error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create assignment. Please try again.';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to create assignment. Please try again.';
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -303,11 +308,7 @@ export function AssignmentBuilderV2({ onComplete, onCancel }: AssignmentBuilderV
         )}
 
         {currentStep === 5 && (
-          <Step5ExpertiseMapping
-            form={form}
-            onSubmit={handleSubmit}
-            onBack={handleBack}
-          />
+          <Step5ExpertiseMapping form={form} onSubmit={handleSubmit} onBack={handleBack} />
         )}
       </div>
 

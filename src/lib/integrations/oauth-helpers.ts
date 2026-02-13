@@ -55,10 +55,15 @@ export function buildOAuthCallbackHtml({
 export function resolveOAuthRedirectUri(
   request: Pick<NextRequest, 'nextUrl'>,
   configuredRedirect: string | undefined,
-  fallbackPath: string
+  fallbackPath: string,
+  options?: {
+    preferRequestOrigin?: boolean;
+  }
 ): string {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_URL || request.nextUrl.origin;
+  const envBaseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_URL;
+  const baseUrl = options?.preferRequestOrigin
+    ? request.nextUrl.origin || envBaseUrl
+    : envBaseUrl || request.nextUrl.origin;
 
   if (configuredRedirect) {
     return configuredRedirect.startsWith('/')

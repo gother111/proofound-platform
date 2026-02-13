@@ -1,21 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import { z } from 'zod';
-import { requireAuth } from '@/lib/auth';
+
 import { db } from '@/db';
-import { assignments, organizationMembers, matches } from '@/db/schema';
-import { eq, and, inArray, sql } from 'drizzle-orm';
-import { log } from '@/lib/log';
-import { jsonErrorWithRequest, withApiObservability } from '@/lib/api/observability';
+import { assignments, matches, organizationMembers, organizations } from '@/db/schema';
 import { emitAnalyticsEvent } from '@/lib/analytics/events';
 import {
   checkAndEmitAssignmentActivation,
   evaluateAssignmentActivationCriteria,
 } from '@/lib/assignments/activation';
+import { jsonErrorWithRequest, withApiObservability } from '@/lib/api/observability';
+import { requireAuth } from '@/lib/auth';
+import { log } from '@/lib/log';
 import { triggerFirstAssignmentSurvey } from '@/lib/surveys/sus-triggers';
 
 export const dynamic = 'force-dynamic';
 
-// Validation schemas
 const SkillRequirementSchema = z.object({
   id: z.string(),
   level: z.number().min(0).max(5),
@@ -35,10 +35,22 @@ const LanguageRequirementSchema = z.object({
   level: z.enum(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']),
 });
 
+const CreationStatusSchema = z.enum([
+  'draft',
+  'pipeline_in_progress',
+  'pending_review',
+  'ready_to_publish',
+  'published',
+]);
+
 const AssignmentSchema = z.object({
   role: z.string().min(1),
   description: z.string().optional(),
   status: z.enum(['draft', 'active', 'paused', 'closed']).optional(),
+  creationStatus: CreationStatusSchema.optional(),
+  businessValue: z.string().optional(),
+  expectedImpact: z.string().optional(),
+  organizationSlug: z.string().optional(),
   valuesRequired: z.array(z.string()).optional(),
   causeTags: z.array(z.string()).optional(),
   mustHaveSkills: z.array(SkillRequirementSchema).optional(),
@@ -53,90 +65,166 @@ const AssignmentSchema = z.object({
   currency: z.string().optional(),
   hoursMin: z.number().optional(),
   hoursMax: z.number().optional(),
-  startEarliest: z.string().optional(), // ISO date string
+  startEarliest: z.string().optional(),
   startLatest: z.string().optional(),
   verificationGates: z.array(z.string()).optional(),
   weights: z.record(z.number()).optional(),
 });
 
-/**
- * Helper to get user's organization ID
- */
-async function getUserOrgId(userId: string): Promise<string | null> {
-  const membership = await db.query.organizationMembers.findFirst({
+type ResolveOrgResult =
+  | { ok: true; orgId: string }
+  | { ok: false; status: number; code: string; message: string };
+
+async function resolveOrgForUser(
+  userId: string,
+  orgSlug?: string | null
+): Promise<ResolveOrgResult> {
+  if (orgSlug) {
+    const org = await db.query.organizations.findFirst({
+      where: eq(organizations.slug, orgSlug),
+    });
+
+    if (!org) {
+      return {
+        ok: false,
+        status: 404,
+        code: 'org_not_found',
+        message: 'Organization not found',
+      };
+    }
+
+    const membership = await db.query.organizationMembers.findFirst({
+      where: and(
+        eq(organizationMembers.userId, userId),
+        eq(organizationMembers.orgId, org.id),
+        eq(organizationMembers.status, 'active')
+      ),
+    });
+
+    if (!membership) {
+      return {
+        ok: false,
+        status: 403,
+        code: 'org_access_denied',
+        message: 'You do not have access to this organization',
+      };
+    }
+
+    return { ok: true, orgId: org.id };
+  }
+
+  const memberships = await db.query.organizationMembers.findMany({
     where: and(eq(organizationMembers.userId, userId), eq(organizationMembers.status, 'active')),
+    limit: 2,
   });
 
-  return membership?.orgId || null;
+  if (memberships.length === 0) {
+    return {
+      ok: false,
+      status: 403,
+      code: 'org_membership_required',
+      message: 'You must be a member of an organization to create assignments',
+    };
+  }
+
+  if (memberships.length > 1) {
+    return {
+      ok: false,
+      status: 409,
+      code: 'org_context_required',
+      message: 'Multiple organizations found. Provide orgSlug to disambiguate.',
+    };
+  }
+
+  return { ok: true, orgId: memberships[0].orgId };
 }
 
-/**
- * GET /api/assignments
- *
- * Returns assignments for the current user's organization with pagination.
- * Query params:
- * - limit: Number of items to return (default: 20, max: 100)
- * - offset: Number of items to skip (default: 0)
- * - status: Filter by status (draft, active, paused, closed)
- */
+async function resolveOrgForList(
+  userId: string,
+  orgSlug?: string | null
+): Promise<ResolveOrgResult | { ok: true; orgId: null }> {
+  if (orgSlug) {
+    return resolveOrgForUser(userId, orgSlug);
+  }
+
+  const memberships = await db.query.organizationMembers.findMany({
+    where: and(eq(organizationMembers.userId, userId), eq(organizationMembers.status, 'active')),
+    limit: 2,
+  });
+
+  if (memberships.length === 0) {
+    return { ok: true, orgId: null };
+  }
+
+  if (memberships.length > 1) {
+    return {
+      ok: false,
+      status: 409,
+      code: 'org_context_required',
+      message: 'Multiple organizations found. Provide orgSlug to disambiguate.',
+    };
+  }
+
+  return { ok: true, orgId: memberships[0].orgId };
+}
 
 export async function GET(request: NextRequest) {
   return withApiObservability(request, '/api/assignments', async (ctx) => {
     try {
       const user = await requireAuth();
+      const searchParams = request.nextUrl.searchParams;
+      const orgSlug = searchParams.get('orgSlug');
 
-      // Check if user is a member of an organization
-      const orgId = await getUserOrgId(user.id);
+      const orgResult = await resolveOrgForList(user.id, orgSlug);
+      if (!orgResult.ok) {
+        return jsonErrorWithRequest(ctx.requestId, orgResult.message, orgResult.status, {
+          code: orgResult.code,
+        });
+      }
 
-      if (!orgId) {
-        log.info('assignments.list.no_org', { requestId: ctx.requestId, userId: user.id });
+      if (!orgResult.orgId) {
         return NextResponse.json({ items: [], hasMore: false });
       }
 
-      // Get pagination parameters
-      const searchParams = request.nextUrl.searchParams;
       const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
       const offset = parseInt(searchParams.get('offset') || '0', 10);
       const statusFilter = searchParams.get('status');
 
-      // Build query
-      let query = db.select().from(assignments).where(eq(assignments.orgId, orgId)).$dynamic();
+      let query = db
+        .select()
+        .from(assignments)
+        .where(eq(assignments.orgId, orgResult.orgId))
+        .$dynamic();
 
-      // Add status filter if provided
       if (statusFilter && ['draft', 'active', 'paused', 'closed'].includes(statusFilter)) {
         query = query.where(
-          and(eq(assignments.orgId, orgId), eq(assignments.status, statusFilter as any))
+          and(eq(assignments.orgId, orgResult.orgId), eq(assignments.status, statusFilter as any))
         );
       }
 
-      // Fetch assignments with pagination (fetch one extra to check if there are more)
       const orgAssignments = await query
-        .orderBy((t: any) => t.createdAt)
+        .orderBy((table: any) => table.createdAt)
         .limit(limit + 1)
         .offset(offset);
 
       log.info('assignments.list.fetched', {
         requestId: ctx.requestId,
         userId: user.id,
-        orgId,
+        orgId: orgResult.orgId,
         count: orgAssignments.length,
         limit,
         offset,
         status: statusFilter,
       });
 
-      // Check if there are more results
       const hasMore = orgAssignments.length > limit;
       const assignmentsToReturn = hasMore ? orgAssignments.slice(0, limit) : orgAssignments;
-
-      // -----------------------------------------------------------------------
-      // PRD safeguard: TTFQI 72h warning if <5 matches after 72 hours
-      // -----------------------------------------------------------------------
-      const activeAssignments = assignmentsToReturn.filter((a: any) => a.status === 'active');
-      const assignmentIds = activeAssignments.map((a: any) => a.id);
+      const activeAssignments = assignmentsToReturn.filter(
+        (assignment) => assignment.status === 'active'
+      );
+      const assignmentIds = activeAssignments.map((assignment) => assignment.id);
 
       let matchCounts: Record<string, number> = {};
-
       if (assignmentIds.length > 0) {
         const rows = await db
           .select({
@@ -147,18 +235,15 @@ export async function GET(request: NextRequest) {
           .where(inArray(matches.assignmentId, assignmentIds))
           .groupBy(matches.assignmentId);
 
-        matchCounts = rows.reduce(
-          (acc, row) => {
-            acc[row.assignmentId] = row.count;
-            return acc;
-          },
-          {} as Record<string, number>
-        );
+        matchCounts = rows.reduce<Record<string, number>>((acc, row) => {
+          acc[row.assignmentId] = row.count;
+          return acc;
+        }, {});
       }
 
       const now = Date.now();
       const itemsWithWarnings = await Promise.all(
-        assignmentsToReturn.map(async (assignment: any) => {
+        assignmentsToReturn.map(async (assignment) => {
           const ageHours = (now - new Date(assignment.createdAt).getTime()) / (1000 * 60 * 60);
           const count = matchCounts[assignment.id] ?? 0;
           const warn =
@@ -181,11 +266,11 @@ export async function GET(request: NextRequest) {
                 entityId: assignment.id,
                 properties: warn,
               });
-            } catch (e) {
+            } catch (error) {
               log.warn('assignments.ttfqi_warning.emit_failed', {
                 requestId: ctx.requestId,
                 assignmentId: assignment.id,
-                error: e instanceof Error ? e.message : String(e),
+                error: error instanceof Error ? error.message : String(error),
               });
             }
           }
@@ -207,84 +292,63 @@ export async function GET(request: NextRequest) {
         requestId: ctx.requestId,
         error: error instanceof Error ? error.message : 'Unknown error',
       });
-
       return jsonErrorWithRequest(ctx.requestId, 'Failed to fetch assignments', 500);
     }
   });
 }
 
-/**
- * POST /api/assignments
- *
- * Creates a new assignment for the current user's organization.
- */
 export async function POST(request: NextRequest) {
   return withApiObservability(request, '/api/assignments', async (ctx) => {
     try {
       const user = await requireAuth();
-
-      // Check if user is a member of an organization
-      const orgId = await getUserOrgId(user.id);
-
-      if (!orgId) {
-        return jsonErrorWithRequest(
-          ctx.requestId,
-          'You must be a member of an organization to create assignments',
-          403
-        );
-      }
-
       const body = await request.json();
-
-      // Validate input
       const validatedData = AssignmentSchema.parse(body);
 
-      // Convert date strings to Date objects
-      const assignmentData = {
-        orgId,
-        ...validatedData,
-        startEarliest: validatedData.startEarliest,
-        startLatest: validatedData.startLatest,
+      const orgResult = await resolveOrgForUser(user.id, validatedData.organizationSlug);
+      if (!orgResult.ok) {
+        return jsonErrorWithRequest(ctx.requestId, orgResult.message, orgResult.status, {
+          code: orgResult.code,
+        });
+      }
+
+      const { organizationSlug: _organizationSlug, ...assignmentFields } = validatedData;
+      const assignmentData: typeof assignments.$inferInsert = {
+        orgId: orgResult.orgId,
+        ...assignmentFields,
       };
 
-      // Insert assignment in a transaction (though this is a single operation,
-      // we wrap it for consistency and potential future multi-step operations)
       const [newAssignment] = await db.insert(assignments).values(assignmentData).returning();
 
       log.info('assignment.created', {
         assignmentId: newAssignment.id,
-        orgId,
+        orgId: orgResult.orgId,
         role: newAssignment.role,
       });
 
-      // Check if this is the organization's first assignment and trigger SUS survey
       try {
         const existingAssignments = await db
           .select({ id: assignments.id })
           .from(assignments)
-          .where(eq(assignments.orgId, orgId))
-          .limit(2); // Just need to know if there are 1 or more
+          .where(eq(assignments.orgId, orgResult.orgId))
+          .limit(2);
 
         if (existingAssignments.length === 1) {
-          // This is the first assignment - trigger SUS survey for the user who created it
           await triggerFirstAssignmentSurvey(user.id);
         }
       } catch (error) {
         log.error('sus_survey.first_assignment_check_failed', {
           error: error instanceof Error ? error.message : 'Unknown error',
           userId: user.id,
-          orgId,
+          orgId: orgResult.orgId,
         });
-        // Don't let survey trigger failure break assignment creation
       }
 
-      // Check if assignment was created with 'active' status and meets activation criteria
       if (newAssignment.status === 'active') {
         const evaluation = evaluateAssignmentActivationCriteria(newAssignment);
         if (evaluation.canActivate) {
           await checkAndEmitAssignmentActivation({
             assignmentId: newAssignment.id,
-            orgId,
+            orgId: orgResult.orgId,
             createdAt: newAssignment.createdAt,
             userId: user.id,
           });
@@ -294,9 +358,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ assignment: newAssignment }, { status: 201 });
     } catch (error) {
       if (error instanceof z.ZodError) {
-        log.error('assignment.validation.failed', {
-          errors: error.errors,
-        });
+        log.error('assignment.validation.failed', { errors: error.errors });
         return jsonErrorWithRequest(ctx.requestId, 'Invalid input', 400, {
           details: error.errors,
           message:
@@ -304,7 +366,6 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      // Database connection errors
       if (
         error instanceof Error &&
         (error.message.includes('connect') ||
