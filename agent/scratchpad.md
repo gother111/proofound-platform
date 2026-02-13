@@ -1700,3 +1700,42 @@ Commands run + outcomes:
 
 - `git commit -m \"docs: align verification checklist migration guidance\"`: PASS
 - `git push`: PASS
+
+---
+
+## 2026-02-13 21:11 CET
+
+Task summary:
+
+- Corrected a false "Known Drift" note in `project/Documentation.md` about Node versions in CI by re-checking the workflows against `.nvmrc`.
+
+What worked:
+
+- Quick repo-truth validation of `.github/workflows/*.yml` before leaving a durable project memory note.
+
+What failed / wrong assumptions:
+
+- Previous note incorrectly claimed CI/Playwright workflows were not pinned to `.nvmrc`.
+
+User corrections:
+
+- None.
+
+Assumptions taken without asking:
+
+- None.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- When writing governance notes about CI config, always open the workflow file being cited in the same session.
+
+Commands run + outcomes:
+
+- `sed -n '1,240p' .github/workflows/ci.yml`: PASS
+- `sed -n '1,220p' .github/workflows/playwright.yml`: PASS
+- `git commit -m \"docs: fix Node pinning drift note\"`: PASS
+- `git push`: PASS
