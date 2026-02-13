@@ -102,7 +102,7 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 
 - Create a checkpoint: `npm run db:backup:checkpoint`
 - Reconcile migration ledger: `npm run db:audit:migrations`
-- Apply production schema changes through versioned SQL under `supabase/migrations/`.
+- Apply production schema changes through ordered SQL under `src/db/migrations/*.sql` and apply with `npm run db:migrate` (prefer `DIRECT_URL` for DDL).
 - Do not run `npm run db:push` against production.
 
 ## E2E / Accessibility (If You Touched Critical UX)
