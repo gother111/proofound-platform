@@ -2004,3 +2004,73 @@ Open TODOs / follow-ups:
 
 - Finalize merge commit, push branch, and wait for required checks.
 - Confirm PR #180 auto-merges into `master`.
+
+## 2026-02-13 12:47 CET
+
+Task summary:
+
+- Hardened mobile UX to prevent page-level sideways scroll across the site.
+- Confirmed and reinforced Settings discoverability on mobile profile shells for individual and organization personas.
+
+What worked:
+
+- Added global mobile overflow guard without changing desktop behavior.
+- Updated both app shells to prevent horizontal scroll in main content containers.
+- Converted mobile bottom nav to adaptive-width tabs so five items fit narrow screens.
+- Extended mobile regression tests with profile routes and iPhone SE checks.
+
+What failed / wrong assumptions:
+
+- None.
+
+Assumptions taken without asking:
+
+- Blocking document-level horizontal scroll on all mobile pages is acceptable while preserving local `overflow-x-auto` containers.
+- Keeping five bottom-nav items with compact labels is preferred over reducing tab count.
+
+User corrections:
+
+- User confirmed compact 5-tab mobile navigation must keep Settings clearly findable for both individual and organization profiles.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add a targeted visual-regression snapshot for mobile bottom nav at 320px width.
+- Track components that still rely on horizontal scrolling to ensure they remain intentional.
+
+Commands run + outcomes:
+
+- `npm run lint`: pending.
+- `npm run typecheck`: pending.
+- `npm run test:e2e:mobile`: pending.
+
+Open TODOs / follow-ups:
+
+- Complete the verification command sequence and record final pass/fail status.
+
+### 2026-02-13 12:59 CET (verification addendum)
+
+- Task summary: Finalized verification outcomes for mobile overflow + settings discoverability hardening.
+- What worked:
+  - Sequential verification with Node 20 path completed all required checks.
+- What failed / wrong assumptions:
+  - Initial shell loop used a reserved zsh variable name (`status`), causing script interruption.
+- User corrections:
+  - User explicitly required no sideways mobile movement and confirmed settings visibility/organization on mobile.
+- Improvements next time:
+  - Use a non-reserved variable name in zsh command loops.
+  - Capture and append final verification outcomes immediately after last test patch.
+- Assumptions taken without asking:
+  - Environment-level DB warnings in E2E logs are non-blocking for this UI-focused mobile verification.
+- What the user corrected afterward:
+  - Requested broader mobile UX hardening beyond just settings visibility.
+- Commands run + outcomes:
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint` -> pass (warning only)
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build` -> pass
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck` -> pass
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:mobile` -> pass
+- Open TODOs / follow-ups:
+  - Optional cleanup of existing lint warning in `postcss.config.js`.

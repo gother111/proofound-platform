@@ -1680,3 +1680,52 @@ How to verify:
 Open risks/TODO:
 
 - Final merge still depends on CI checks finishing green on the post-conflict head commit.
+
+## 2026-02-13: Mobile overflow containment and settings discoverability hardening
+
+What changed:
+
+- Added mobile document-level horizontal overflow containment in `src/app/globals.css` (`max-width: 767px`) for `html` and `body`.
+- Updated individual and organization shell main containers to vertical-only scrolling and explicit horizontal clipping:
+  - `src/app/app/i/layout.tsx`
+  - `src/app/app/o/[slug]/layout.tsx`
+- Refined mobile bottom navigation sizing to fit narrow widths while keeping five tabs and preserving Settings visibility:
+  - `src/components/app/LeftNav.tsx`
+- Expanded smartphone regression coverage:
+  - Added profile routes to horizontal-overflow assertions.
+  - Added iPhone SE checks to enforce no horizontal overflow and confirm Settings visibility on both profile shells.
+  - File: `e2e/mobile-smartphone.spec.ts`
+
+Why:
+
+- Mobile profile and app pages could still allow sideways movement when child content exceeded viewport width.
+- Bottom navigation tab minimum widths could force width pressure on very small devices.
+- Existing mobile tests did not enforce overflow behavior on profile routes or narrow viewport devices.
+
+How to verify:
+
+- `npm run lint`
+- `npm run typecheck`
+- `npm run test:e2e:mobile`
+- Manual smoke:
+  - `/app/i/profile` does not move sideways and shows Settings in mobile nav.
+  - `/app/o/test-org/profile` does not move sideways and shows Settings in mobile nav.
+  - `/p/invalidtoken` does not allow page-level sideways movement on mobile viewport.
+
+Open risks/TODO:
+
+- Global mobile overflow clipping can hide latent layout bugs that should still be fixed at component level.
+- Some long nav labels now rely on truncation at very narrow widths and should be reviewed if labels are renamed.
+
+## Verification addendum (2026-02-13)
+
+Final verification rerun after the mobile E2E isolation patch:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint` passed (1 existing warning in `postcss.config.js` about anonymous default export).
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build` passed.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck` passed.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:mobile` passed.
+
+Notes:
+
+- During E2E execution, server logs still show expected environment-level warnings/errors related to missing `DATABASE_URL` and mock DB behavior in this local setup, but the mobile test suite completed successfully.

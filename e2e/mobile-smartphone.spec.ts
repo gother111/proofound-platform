@@ -30,30 +30,41 @@ test.describe('Smartphone UI regression', () => {
       '/login',
       '/signup',
       '/reset-password',
-      '/verify-email?token=validmocktoken&email=test%40example.com',
       '/app/i/home',
+      '/app/i/profile',
       '/app/o/test-org/home',
+      '/app/o/test-org/profile',
       '/app/o/test-org/assignments',
       '/admin',
+      '/verify-email?token=validmocktoken&email=test%40example.com',
     ];
 
     for (const route of routes) {
-      await gotoStable(page, route);
-
-      const overflowPx = await page.evaluate(() => {
-        const html = document.documentElement;
-        const body = document.body;
-        const viewportWidth = window.innerWidth;
-        const docWidth = Math.max(
-          html.scrollWidth,
-          html.offsetWidth,
-          body?.scrollWidth ?? 0,
-          body?.offsetWidth ?? 0
-        );
-        return Math.max(0, docWidth - viewportWidth);
+      const isolatedPage = await page.context().newPage();
+      await isolatedPage.addInitScript(() => {
+        localStorage.setItem('proofound-cookie-consent', 'v1.0.2025-11-06-declined');
       });
 
-      expect(overflowPx, `${route} has horizontal overflow`).toBeLessThanOrEqual(1);
+      try {
+        await gotoStable(isolatedPage, route);
+
+        const overflowPx = await isolatedPage.evaluate(() => {
+          const html = document.documentElement;
+          const body = document.body;
+          const viewportWidth = window.innerWidth;
+          const docWidth = Math.max(
+            html.scrollWidth,
+            html.offsetWidth,
+            body?.scrollWidth ?? 0,
+            body?.offsetWidth ?? 0
+          );
+          return Math.max(0, docWidth - viewportWidth);
+        });
+
+        expect(overflowPx, `${route} has horizontal overflow`).toBeLessThanOrEqual(1);
+      } finally {
+        await isolatedPage.close();
+      }
     }
   });
 
@@ -116,6 +127,45 @@ test.describe('Smartphone UI regression', () => {
       await gotoStable(page, route);
       const mobileNav = page.getByRole('navigation', { name: 'Mobile primary navigation' });
       await expect(mobileNav.getByRole('link', { name: 'Settings' })).toBeVisible();
+    }
+  });
+
+  test('narrow mobile width resilience for profile shells', async ({ browser }) => {
+    const context = await browser.newContext({ ...devices['iPhone SE'] });
+
+    try {
+      for (const route of ['/app/i/profile', '/app/o/test-org/profile']) {
+        const page = await context.newPage();
+        await page.addInitScript(() => {
+          localStorage.setItem('proofound-cookie-consent', 'v1.0.2025-11-06-declined');
+        });
+
+        try {
+          await gotoStable(page, route);
+
+          const overflowPx = await page.evaluate(() => {
+            const html = document.documentElement;
+            const body = document.body;
+            const viewportWidth = window.innerWidth;
+            const docWidth = Math.max(
+              html.scrollWidth,
+              html.offsetWidth,
+              body?.scrollWidth ?? 0,
+              body?.offsetWidth ?? 0
+            );
+            return Math.max(0, docWidth - viewportWidth);
+          });
+
+          expect(overflowPx, `${route} overflows on iPhone SE`).toBeLessThanOrEqual(1);
+
+          const mobileNav = page.getByRole('navigation', { name: 'Mobile primary navigation' });
+          await expect(mobileNav.getByRole('link', { name: 'Settings' })).toBeVisible();
+        } finally {
+          await page.close();
+        }
+      }
+    } finally {
+      await context.close();
     }
   });
 });
