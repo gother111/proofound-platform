@@ -18,6 +18,8 @@
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx src/db/seed.ts",
     "db:seed-taxonomy": "tsx scripts/seed-expertise-taxonomy.ts",
+    "db:backup:checkpoint": "node ./scripts/db-backup-checkpoint.mjs",
+    "db:audit:migrations": "node ./scripts/audit-migration-ledger.mjs",
     "email:dev": "email dev --dir src/emails",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -47,6 +49,8 @@
     "perf:budgets": "node ./scripts/perf-budgets.mjs",
     "go:no-go": "node ./scripts/go-no-go-check.mjs",
     "gates:mvp:strict": "node ./scripts/run-mvp-strict-gates.mjs",
+    "vercel:preflight": "node ./scripts/vercel-preflight.mjs",
+    "vercel:env-parity": "node ./scripts/vercel-env-parity.mjs",
     "docs:freshness": "node ./scripts/docs-freshness-check.mjs",
     "test:smoke:gap-service": "tsx scripts/smoke-skill-gaps.ts",
     "test:smoke:learning": "tsx scripts/smoke-learning-provider.ts"
