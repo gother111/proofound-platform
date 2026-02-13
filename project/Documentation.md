@@ -20,6 +20,32 @@ This folder is the durable “project memory” surface for Proofound. It is mea
 - Do not copy secrets from local env files or setup docs into tracked markdown.
 - At the end of every session, append a new entry to `agent/scratchpad.md` (append-only).
 
+## 2026-02-13: Mobile Settings Access on Profile Shells
+
+What changed:
+
+- Updated mobile bottom-tab behavior to ensure Settings is visible in the app shell navigation for both individual and organization personas.
+- Changed `src/components/app/LeftNav.tsx` to build a dedicated mobile list that always includes `/settings` while keeping total visible mobile actions at five.
+- Added `e2e/mobile-smartphone.spec.ts` assertions for Settings visibility on:
+  - `/app/i/profile`
+  - `/app/o/test-org/profile`
+- Kept desktop navigation ordering unchanged.
+
+Why:
+
+- Mobile nav was previously showing `navItems.slice(0, 5)`, which dropped the settings item because Settings was positioned later in `navItems` for both personas.
+
+How to verify:
+
+- `npm run test:e2e:mobile` (expected to cover new Settings-visibility checks in mobile profile routes).
+- Manual smoke on mobile viewport:
+  - `/app/i/profile` shows Settings in the bottom tab bar.
+  - `/app/o/test-org/profile` shows Settings in the bottom tab bar.
+
+Open risks/TODO:
+
+- The mobile profile shell still shows only one row of five actions; if more features are needed, consider a dedicated profile overflow/access layer instead.
+
 ## 2026-02-11: Landing Regression Guardrail Policy
 
 What changed:

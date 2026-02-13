@@ -1553,3 +1553,46 @@ Open TODOs / follow-ups:
 
 - Decide whether to move `tests/e2e/prd-flows-organization.spec.ts` under `e2e/` or add a second Playwright config for `tests/e2e`.
 - Re-run targeted organization settings route regression once discovery path is aligned.
+
+## 2026-02-13 09:09 CET
+
+Task summary:
+
+Implemented mobile nav Settings visibility fix for profile shells.
+
+What worked:
+
+- Updated `src/components/app/LeftNav.tsx` to prioritize Settings in mobile nav while keeping top-row action count at five.
+- Added `e2e/mobile-smartphone.spec.ts` checks for Settings visibility on `/app/i/profile` and `/app/o/test-org/profile`.
+- Updated `project/Documentation.md` with change notes, verification notes, and residual risks.
+
+What failed / wrong assumptions:
+
+- None.
+
+Assumptions taken without asking:
+
+- Keeping desktop sidebar ordering unchanged and limiting mobile actions to five.
+- Settings should be placed in mobile profile shell navigation without adding a new nav component.
+
+User corrections:
+
+- User provided a concrete implementation plan and asked for direct execution.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Consider adding a regression assertion for route-active state on mobile Settings while on `/app/i/settings`.
+
+Commands run + outcomes:
+
+- `cat src/components/app/LeftNav.tsx`: inspected existing desktop/mobile nav behavior.
+- `cat e2e/mobile-smartphone.spec.ts`: confirmed target test file and suite pattern.
+- `npm` commands were not executed in this session (implementation only).
+
+Open TODOs / follow-ups:
+
+- Run `npm run test:e2e:mobile` after merge to validate profile route behavior in an instrumented mobile viewport.
