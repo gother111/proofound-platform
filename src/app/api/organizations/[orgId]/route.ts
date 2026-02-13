@@ -4,8 +4,11 @@ import { db } from '@/db';
 import { organizations, organizationMembers } from '@/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { normalizeOrganizationWebsite } from '@/lib/organizations/normalizeWebsite';
+import { LEGAL_FORM_VALUES, ORGANIZATION_SIZE_VALUES } from '@/lib/organizations/profile-options';
 
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+const ORGANIZATION_SIZE_SET = new Set<string>(ORGANIZATION_SIZE_VALUES);
+const LEGAL_FORM_SET = new Set<string>(LEGAL_FORM_VALUES);
 
 function isValidIsoDate(value: string): boolean {
   if (!ISO_DATE_REGEX.test(value)) {
@@ -160,6 +163,43 @@ export async function PUT(
       }
     }
 
+    if (organizationSize !== undefined) {
+      if (organizationSize !== null && typeof organizationSize !== 'string') {
+        return NextResponse.json(
+          { error: 'Organization size must be a valid option or null' },
+          { status: 400 }
+        );
+      }
+
+      const normalizedOrganizationSize = organizationSize?.trim() || null;
+      if (
+        normalizedOrganizationSize !== null &&
+        !ORGANIZATION_SIZE_SET.has(normalizedOrganizationSize)
+      ) {
+        return NextResponse.json(
+          { error: 'Organization size must be one of the supported values' },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (legalForm !== undefined) {
+      if (legalForm !== null && typeof legalForm !== 'string') {
+        return NextResponse.json(
+          { error: 'Legal form must be a valid option or null' },
+          { status: 400 }
+        );
+      }
+
+      const normalizedLegalForm = legalForm?.trim() || null;
+      if (normalizedLegalForm !== null && !LEGAL_FORM_SET.has(normalizedLegalForm)) {
+        return NextResponse.json(
+          { error: 'Legal form must be one of the supported values' },
+          { status: 400 }
+        );
+      }
+    }
+
     // Build update object with only provided fields
     const updateData: any = {
       updatedAt: new Date(),
@@ -180,10 +220,11 @@ export async function PUT(
       updateData.website = normalizedWebsite.value;
     }
     if (tagline !== undefined) updateData.tagline = tagline?.trim() || null;
-    if (industry !== undefined) updateData.industry = industry;
-    if (organizationSize !== undefined) updateData.organizationSize = organizationSize;
-    if (impactArea !== undefined) updateData.impactArea = impactArea;
-    if (legalForm !== undefined) updateData.legalForm = legalForm;
+    if (industry !== undefined) updateData.industry = industry?.trim() || null;
+    if (organizationSize !== undefined)
+      updateData.organizationSize = organizationSize?.trim() || null;
+    if (impactArea !== undefined) updateData.impactArea = impactArea?.trim() || null;
+    if (legalForm !== undefined) updateData.legalForm = legalForm?.trim() || null;
     if (foundedDate !== undefined) updateData.foundedDate = foundedDate;
     if (values !== undefined) updateData.values = values;
 

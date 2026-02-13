@@ -237,13 +237,19 @@ export function OrgDashboardClient({ orgSlug, orgId, userRole }: OrgDashboardCli
   };
 
   const getWidgetComponent = (widgetId: string) => {
+    const canManageSettings = userRole === 'owner' || userRole === 'admin';
+
     switch (widgetId) {
       case 'org-pipeline':
         return <OrgMatchingCard orgSlug={orgSlug} className="lg:col-span-2" />;
       case 'org-goals':
-        return <OrgGoalsCard orgSlug={orgSlug} orgId={orgId} />;
+        return (
+          <OrgGoalsCard orgSlug={orgSlug} orgId={orgId} canManageSettings={canManageSettings} />
+        );
       case 'team':
-        return <TeamRolesCard orgSlug={orgSlug} orgId={orgId} />;
+        return (
+          <TeamRolesCard orgSlug={orgSlug} orgId={orgId} canManageSettings={canManageSettings} />
+        );
       case 'tasks':
         return <TasksCard />;
       case 'projects':

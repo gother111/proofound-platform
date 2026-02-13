@@ -159,4 +159,45 @@ describe('organizations [orgId] route', () => {
     expect(response.status).toBe(200);
     expect(setMock).toHaveBeenCalledWith(expect.objectContaining({ foundedDate: '2024-02-29' }));
   });
+
+  it('returns 400 for invalid organizationSize values', async () => {
+    mockMembership('owner');
+
+    const response = await PUT(buildPutRequest({ organizationSize: '2-3' }), params);
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe('Organization size must be one of the supported values');
+    expect(db.update).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for invalid legalForm values', async () => {
+    mockMembership('owner');
+
+    const response = await PUT(buildPutRequest({ legalForm: 'charity' }), params);
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe('Legal form must be one of the supported values');
+    expect(db.update).not.toHaveBeenCalled();
+  });
+
+  it('accepts valid organizationSize and legalForm values', async () => {
+    mockMembership('admin');
+    const { setMock } = mockUpdateReturningOrganization();
+
+    const response = await PUT(
+      buildPutRequest({ organizationSize: '11-50', legalForm: 'llc', industry: ' Tech ' }),
+      params
+    );
+
+    expect(response.status).toBe(200);
+    expect(setMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationSize: '11-50',
+        legalForm: 'llc',
+        industry: 'Tech',
+      })
+    );
+  });
 });

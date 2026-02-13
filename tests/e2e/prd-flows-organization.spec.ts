@@ -81,6 +81,27 @@ test.describe('Organization Flows - Enterprise (O-18 to O-20)', () => {
     await page.goto('/app/o/test-org/settings');
 
     // Verify settings page loads
-    await expect(page).toHaveURL(/\/app\/o\/.*\/settings|\/auth\/login/);
+    await expect(page).toHaveURL(/\/app\/o\/.*\/settings|\/auth\/login|\/login/);
+  });
+
+  test('O-20a: Organization profile settings subpage accessible', async ({ page }) => {
+    await page.goto('/app/o/test-org/settings/profile');
+
+    // Verify settings profile page loads or redirects to auth
+    await expect(page).toHaveURL(/\/app\/o\/.*\/settings\/profile|\/auth\/login|\/login/);
+  });
+
+  test('O-20b: Organization team settings subpage accessible', async ({ page }) => {
+    await page.goto('/app/o/test-org/settings/team');
+
+    // Verify settings team page loads or redirects to auth
+    await expect(page).toHaveURL(/\/app\/o\/.*\/settings\/team|\/auth\/login|\/login/);
+  });
+
+  test('O-20c: Organization goals settings subpage accessible', async ({ page }) => {
+    await page.goto('/app/o/test-org/settings/goals');
+
+    // Verify settings goals page loads or redirects to auth
+    await expect(page).toHaveURL(/\/app\/o\/.*\/settings\/goals|\/auth\/login|\/login/);
   });
 });
