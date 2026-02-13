@@ -22,7 +22,14 @@ export async function GET(req: NextRequest) {
   try {
     // Verify cron secret for security
     const authHeader = req.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET || 'dev-secret';
+    const cronSecret = process.env.CRON_SECRET;
+
+    if (!cronSecret) {
+      log.error('decision.reminders.cron.misconfigured', {
+        message: 'CRON_SECRET is missing. Refusing to run cron job.',
+      });
+      return NextResponse.json({ error: 'Cron misconfigured' }, { status: 500 });
+    }
 
     if (authHeader !== `Bearer ${cronSecret}`) {
       log.warn('decision.reminders.cron.unauthorized', {
