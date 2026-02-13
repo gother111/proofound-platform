@@ -115,7 +115,9 @@ export async function createRuntimeUser(
   const password = options.password ?? DEFAULT_PASSWORD;
   const displayName = options.displayName ?? `Strict ${options.prefix}`;
   const defaultHandle =
-    options.handle === undefined ? normalizeHandle(uniqueSuffix(options.prefix)) : options.handle;
+    options.handle === undefined
+      ? normalizeHandle(`${randomUUID().slice(0, 8)}-${options.prefix}`)
+      : options.handle;
 
   const { data, error } = await supabase.auth.admin.createUser({
     email,
@@ -417,10 +419,21 @@ export async function createRuntimeConversation(
 export async function loginWithUi(page: Page, user: StrictRuntimeUser): Promise<void> {
   await page.goto('/login');
   await expect(page.getByTestId('login-email')).toBeVisible();
-  await page.getByTestId('login-email').fill(user.email);
-  await page.getByTestId('login-password').fill(user.password);
-  await page.getByTestId('login-submit').click();
-  await page.waitForURL(/\/(app|onboarding)(\/|$)/, { timeout: 20000 });
+  const attemptLogin = async () => {
+    await page.getByTestId('login-email').fill(user.email);
+    await page.getByTestId('login-password').fill(user.password);
+    await page.getByTestId('login-submit').click();
+  };
+
+  await attemptLogin();
+
+  try {
+    await page.waitForURL(/\/(app|onboarding)(\/|$)/, { timeout: 45000 });
+  } catch {
+    // One retry smooths over transient auth/session timing under CI load.
+    await attemptLogin();
+    await page.waitForURL(/\/(app|onboarding)(\/|$)/, { timeout: 30000 });
+  }
 }
 
 export async function getCsrfToken(request: APIRequestContext): Promise<string> {

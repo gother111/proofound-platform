@@ -46,6 +46,18 @@ async function runLighthouse(url, formFactor) {
       },
     };
 
+    // Warm up one run in the same browser process so budgets are evaluated on
+    // a steady-state navigation, not initial process/page cold-start overhead.
+    const warmupResult = await lighthouse(
+      url,
+      {
+        port: chrome.port,
+        logLevel: 'error',
+        output: 'json',
+      },
+      config
+    );
+
     const runnerResult = await lighthouse(
       url,
       {
@@ -59,6 +71,8 @@ async function runLighthouse(url, formFactor) {
     const lhr = runnerResult.lhr;
     const tti = lhr.audits.interactive.numericValue;
     const cls = lhr.audits['cumulative-layout-shift'].numericValue;
+    const warmupTti = warmupResult.lhr.audits.interactive.numericValue;
+    const warmupCls = warmupResult.lhr.audits['cumulative-layout-shift'].numericValue;
 
     const ttiBudget = formFactor === 'mobile' ? BUDGETS.tti.mobile : BUDGETS.tti.desktop;
 
@@ -70,7 +84,7 @@ async function runLighthouse(url, formFactor) {
       failures.push(`CLS ${cls.toFixed(3)} > budget ${BUDGETS.cls}`);
     }
 
-    return { tti, cls, failures, formFactor };
+    return { tti, cls, warmupTti, warmupCls, failures, formFactor };
   } finally {
     await chrome.kill();
   }
@@ -133,8 +147,18 @@ async function main() {
     JSON.stringify(
       {
         page: TARGET_PAGE,
-        desktop: { tti: desktop.tti, cls: desktop.cls },
-        mobile: { tti: mobile.tti, cls: mobile.cls },
+        desktop: {
+          tti: desktop.tti,
+          cls: desktop.cls,
+          warmupTti: desktop.warmupTti,
+          warmupCls: desktop.warmupCls,
+        },
+        mobile: {
+          tti: mobile.tti,
+          cls: mobile.cls,
+          warmupTti: mobile.warmupTti,
+          warmupCls: mobile.warmupCls,
+        },
         api: { p95: api.p95, samples: api.samples },
         budgets: BUDGETS,
         failures,

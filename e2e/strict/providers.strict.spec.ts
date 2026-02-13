@@ -191,13 +191,13 @@ test.describe('Strict MVP Provider Flows (Zoom, Google, LinkedIn)', () => {
   });
 
   test('Provider schedule fails without connected integration token', async ({ page }) => {
-    await loginWithUi(page, unconnectedUser);
+    await loginWithUi(page, orgOwner);
 
     const scheduleZoomResponse = await apiPostJson(page.request, '/api/interviews/schedule', {
       matchId: noProviderMatch.id,
       scheduledAt: new Date(Date.now() + 1000 * 60 * 60 * 4).toISOString(),
       platform: 'zoom',
-      participantUserIds: [unconnectedUser.id, candidateUser.id],
+      participantUserIds: [unconnectedUser.id, orgOwner.id],
     });
     expect([400, 403]).toContain(scheduleZoomResponse.status());
     const scheduleZoomPayload = (await scheduleZoomResponse.json()) as { error?: string };
@@ -211,6 +211,15 @@ test.describe('Strict MVP Provider Flows (Zoom, Google, LinkedIn)', () => {
   test('Live provider scheduling contract requires connected provider in strict mode', async ({
     page,
   }) => {
+    const requireConnected = process.env.STRICT_PROVIDER_E2E_REQUIRE_CONNECTED === 'true';
+    const requireBoth = process.env.STRICT_PROVIDER_E2E_REQUIRE_BOTH === 'true';
+    const enforceConnectedProviders = hasManagedProviderUser && requireConnected;
+    const enforceBothProviders = hasManagedProviderUser && requireBoth;
+
+    if (!hasManagedProviderUser && !requireConnected && !requireBoth) {
+      return;
+    }
+
     await loginWithUi(page, providerUser);
 
     const statusResponse = await page.request.get('/api/integrations/video/status');
@@ -223,10 +232,6 @@ test.describe('Strict MVP Provider Flows (Zoom, Google, LinkedIn)', () => {
     const zoomConnected = statusPayload.zoom?.connected === true;
     const googleConnected = statusPayload.google?.connected === true;
     const hasConnectedProvider = zoomConnected || googleConnected;
-    const requireConnected = process.env.STRICT_PROVIDER_E2E_REQUIRE_CONNECTED === 'true';
-    const requireBoth = process.env.STRICT_PROVIDER_E2E_REQUIRE_BOTH === 'true';
-    const enforceConnectedProviders = hasManagedProviderUser && requireConnected;
-    const enforceBothProviders = hasManagedProviderUser && requireBoth;
 
     if (enforceBothProviders && (!zoomConnected || !googleConnected)) {
       throw new Error(

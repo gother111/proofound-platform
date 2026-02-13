@@ -463,10 +463,29 @@ export async function requestPasswordReset(formData: FormData) {
   });
 
   if (error) {
+    // Keep response non-enumerating and resilient to transient provider throttling.
+    if (shouldTreatPasswordResetErrorAsSuccess(error)) {
+      console.warn('Password reset request throttled or masked:', {
+        status: error.status,
+        message: error.message,
+      });
+      return { success: true };
+    }
+
     return { error: error.message };
   }
 
   return { success: true };
+}
+
+function shouldTreatPasswordResetErrorAsSuccess(error: AuthError): boolean {
+  const message = error.message.toLowerCase();
+
+  return (
+    error.status === 429 ||
+    /rate limit|too many requests|throttle/.test(message) ||
+    /for security purposes/.test(message)
+  );
 }
 
 export async function confirmPasswordReset(formData: FormData) {
