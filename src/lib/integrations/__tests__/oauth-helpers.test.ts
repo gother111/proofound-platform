@@ -53,4 +53,30 @@ describe('oauth helpers', () => {
       'https://request-origin.example/api/integrations/zoom/callback'
     );
   });
+
+  it('prefers request origin when configured for multi-domain callbacks', () => {
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://proofound.io';
+    const request = {
+      nextUrl: new URL('https://demo.proofound.io/api/auth/linkedin'),
+    } as any;
+
+    expect(
+      resolveOAuthRedirectUri(request, undefined, '/api/auth/linkedin/callback', {
+        preferRequestOrigin: true,
+      })
+    ).toBe('https://demo.proofound.io/api/auth/linkedin/callback');
+  });
+
+  it('resolves relative configured redirect against request origin when preferred', () => {
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://proofound.io';
+    const request = {
+      nextUrl: new URL('https://demo.proofound.io/api/auth/linkedin'),
+    } as any;
+
+    expect(
+      resolveOAuthRedirectUri(request, '/api/auth/linkedin/callback', '/api/fallback', {
+        preferRequestOrigin: true,
+      })
+    ).toBe('https://demo.proofound.io/api/auth/linkedin/callback');
+  });
 });

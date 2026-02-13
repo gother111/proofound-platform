@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { generateLinkedInAuthUrl } from '@/lib/linkedin';
 import { randomBytes } from 'crypto';
+import { resolveOAuthRedirectUri } from '@/lib/integrations/oauth-helpers';
 
 export async function GET(request: NextRequest) {
   try {
@@ -26,8 +27,12 @@ export async function GET(request: NextRequest) {
     // Generate state parameter for CSRF protection
     const state = randomBytes(32).toString('hex');
 
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
-    const redirectUri = new URL('/api/auth/linkedin/callback', baseUrl).toString();
+    const redirectUri = resolveOAuthRedirectUri(
+      request,
+      process.env.LINKEDIN_REDIRECT_URI,
+      '/api/auth/linkedin/callback',
+      { preferRequestOrigin: true }
+    );
 
     // Store state in cookie for verification on callback
     const response = NextResponse.redirect(generateLinkedInAuthUrl(state, redirectUri));
