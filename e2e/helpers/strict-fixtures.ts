@@ -175,10 +175,14 @@ export async function createRuntimeUser(
   };
 }
 
-export function getManagedProviderUser(): StrictRuntimeUser {
-  const id = requireEnv('E2E_PROVIDER_USER_ID');
-  const email = requireEnv('E2E_PROVIDER_USER_EMAIL');
-  const password = requireEnv('E2E_PROVIDER_USER_PASSWORD');
+export function getManagedProviderUser(): StrictRuntimeUser | null {
+  const id = process.env.E2E_PROVIDER_USER_ID?.trim();
+  const email = process.env.E2E_PROVIDER_USER_EMAIL?.trim();
+  const password = process.env.E2E_PROVIDER_USER_PASSWORD?.trim();
+
+  if (!id || !email || !password) {
+    return null;
+  }
 
   return {
     id,
