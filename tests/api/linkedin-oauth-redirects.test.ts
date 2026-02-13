@@ -27,7 +27,7 @@ describe('LinkedIn OAuth redirects', () => {
     expect(location).toContain('/login?error=unauthorized');
   });
 
-  it('GET /api/auth/linkedin/callback redirects state mismatch to /app/i/settings (not /settings)', async () => {
+  it('GET /api/auth/linkedin/callback redirects state mismatch to integrations by default', async () => {
     const req = new NextRequest('http://localhost/api/auth/linkedin/callback?code=abc&state=bad', {
       headers: {
         cookie: 'linkedin_oauth_state=good; linkedin_oauth_user=user_123',
@@ -40,8 +40,46 @@ describe('LinkedIn OAuth redirects', () => {
 
     const location = res.headers.get('location');
     expect(location).toBeTruthy();
-    expect(location).toContain('/app/i/settings?');
-    // Ensure we did not redirect to the old non-existent /settings route.
-    expect(location).not.toMatch(/\/\/[^/]+\/settings\?/);
+    const url = new URL(location!);
+    expect(url.pathname).toBe('/app/i/settings');
+    expect(url.searchParams.get('tab')).toBe('integrations');
+    expect(url.searchParams.get('error')).toBe('linkedin_auth_failed');
+  });
+
+  it('GET /api/auth/linkedin/callback redirects state mismatch to verification target when context cookie is verification', async () => {
+    const req = new NextRequest('http://localhost/api/auth/linkedin/callback?code=abc&state=bad', {
+      headers: {
+        cookie:
+          'linkedin_oauth_state=good; linkedin_oauth_user=user_123; linkedin_oauth_context=verification',
+      },
+    });
+    const res = await linkedinCallbackGet(req);
+
+    expect(res.status).toBeGreaterThanOrEqual(300);
+    expect(res.status).toBeLessThan(400);
+
+    const location = res.headers.get('location');
+    expect(location).toBeTruthy();
+    const url = new URL(location!);
+    expect(url.pathname).toBe('/app/i/settings');
+    expect(url.searchParams.get('tab')).toBe('account');
+    expect(url.searchParams.get('verification_error')).toBe('linkedin_auth_failed');
+  });
+
+  it('GET /api/auth/linkedin/callback falls back to integrations when context cookie is invalid', async () => {
+    const req = new NextRequest('http://localhost/api/auth/linkedin/callback?code=abc&state=bad', {
+      headers: {
+        cookie:
+          'linkedin_oauth_state=good; linkedin_oauth_user=user_123; linkedin_oauth_context=unexpected',
+      },
+    });
+    const res = await linkedinCallbackGet(req);
+
+    const location = res.headers.get('location');
+    expect(location).toBeTruthy();
+    const url = new URL(location!);
+    expect(url.pathname).toBe('/app/i/settings');
+    expect(url.searchParams.get('tab')).toBe('integrations');
+    expect(url.searchParams.get('error')).toBe('linkedin_auth_failed');
   });
 });

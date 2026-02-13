@@ -1553,3 +1553,55 @@ Open TODOs / follow-ups:
 
 - Decide whether to move `tests/e2e/prd-flows-organization.spec.ts` under `e2e/` or add a second Playwright config for `tests/e2e`.
 - Re-run targeted organization settings route regression once discovery path is aligned.
+
+---
+
+## 2026-02-13 16:44 CET
+
+Task summary:
+
+- Implemented LinkedIn verification and settings integrations reliability fixes from the approved plan.
+- Added OAuth context-aware LinkedIn callback redirects for verification versus integrations flows.
+- Fixed CSRF-blocked disconnect actions and added regression tests for redirect and request wiring.
+
+What worked:
+
+- OAuth context cookie approach (`linkedin_oauth_context`) cleanly separated callback destinations.
+- Replacing mutating `fetch` calls with `apiFetch` resolved CSRF-risky request wiring in settings components.
+- New focused unit/UI tests validated redirect context and disconnect method wiring.
+
+What failed / wrong assumptions:
+
+- Initial combined targeted Vitest run timed out due a test mock returning a new `URLSearchParams` each render, causing repeated effects in `IntegrationsClient`.
+- TypeScript helper return types in LinkedIn callback needed explicit `Record<string, string>` shaping.
+
+User corrections:
+
+- User requested direct implementation of the full approved plan without further planning.
+
+Assumptions taken without asking:
+
+- `verification` and `verification_error` query params on `/app/i/settings?tab=account` are acceptable one-time flags for the verification flow.
+- Keeping integrations UI structure unchanged is preferred for this change set.
+- Running targeted automated checks plus docs updates is sufficient for this pass without full e2e OAuth provider execution.
+
+What the user corrected afterward:
+
+- None after implementation started.
+
+Improvements next time:
+
+- Use stable objects in `next/navigation` mocks for components with effects keyed on `useSearchParams`.
+- Predeclare explicit return types for mixed-key redirect param helpers to avoid union inference issues.
+
+Commands run + outcomes:
+
+- `npm ci`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS (1 pre-existing warning in `postcss.config.js`)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- tests/ui/settings-integrations-client.test.tsx`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- tests/api/linkedin-oauth-redirects.test.ts tests/ui/linkedin-verification.test.tsx tests/ui/linkedin-connect.test.tsx tests/ui/settings-integrations-client.test.tsx`: PASS
+
+Open TODOs / follow-ups:
+
+- Run manual OAuth smoke checks in an environment with valid LinkedIn app credentials and callback allowlist configured.

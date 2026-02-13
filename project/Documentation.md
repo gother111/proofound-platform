@@ -1410,3 +1410,51 @@ Open risks/TODO:
 - `tests/e2e/prd-flows-organization.spec.ts` is outside Playwright `testDir`, so this regression is not currently in the active e2e run path.
 - Any hidden consumer expecting snake_case visibility response keys may require migration to the camelCase contract.
 - Settings subpages are owner/admin-only; if role resolution changes upstream, access behavior must be revalidated.
+
+---
+
+## 2026-02-13: LinkedIn verification and settings integrations reliability
+
+What changed:
+
+- Added LinkedIn OAuth context support in `src/app/api/auth/linkedin/route.ts`:
+  - Accepts optional `context=integrations|verification`
+  - Defaults to `integrations`
+  - Stores `linkedin_oauth_context` httpOnly cookie (10 minutes)
+- Updated LinkedIn callback in `src/app/api/auth/linkedin/callback/route.ts`:
+  - Context-aware redirect targets for success and error
+  - `verification` context returns to account tab with `verification` or `verification_error` query flags
+  - `integrations` context keeps existing integrations-tab behavior
+  - Clears `linkedin_oauth_state`, `linkedin_oauth_user`, and `linkedin_oauth_context` cookies on all callback outcomes
+- Updated LinkedIn settings callers:
+  - `src/components/settings/LinkedInConnect.tsx` now initiates OAuth via `/api/auth/linkedin?context=integrations`
+  - `src/components/settings/LinkedInVerification.tsx` now initiates OAuth via `/api/auth/linkedin?context=verification`
+- Restored verification flow continuity in `src/components/settings/VerificationStatus.tsx`:
+  - Detects `verification=linkedin_connected`
+  - Auto-opens LinkedIn verification panel
+  - Clears one-time query params (`verification`, `verification_error`, `message`) after consumption
+- Fixed CSRF-blocked disconnect actions:
+  - `src/components/settings/LinkedInConnect.tsx` now uses `apiFetch` for POST `/api/expertise/linkedin-disconnect`
+  - `src/app/app/i/settings/integrations/IntegrationsClient.tsx` now uses `apiFetch` for DELETE `/api/integrations/video/:provider`
+- Added regression coverage:
+  - `tests/api/linkedin-oauth-redirects.test.ts` extended with verification-context and fallback assertions
+  - `tests/ui/linkedin-connect.test.tsx` (new)
+  - `tests/ui/settings-integrations-client.test.tsx` (new)
+
+Why:
+
+- Mutating disconnect requests in settings used raw `fetch` and failed CSRF validation in middleware.
+- LinkedIn OAuth always returned users to integrations tab, breaking verification flow continuity when started from account verification.
+- Missing regression tests allowed redirect-context and CSRF wiring regressions to reappear.
+
+How to verify:
+
+- `npm ci`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint` (PASS, one pre-existing warning in `postcss.config.js`)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- tests/api/linkedin-oauth-redirects.test.ts tests/ui/linkedin-verification.test.tsx tests/ui/linkedin-connect.test.tsx tests/ui/settings-integrations-client.test.tsx` (PASS)
+
+Open risks/TODO:
+
+- Manual OAuth smoke tests still require valid LinkedIn app credentials and a running app environment; not executed in this run.
+- Test command output includes a pre-existing warning that `DATABASE_URL` is unset in the local environment and mock DB fallback is active.
