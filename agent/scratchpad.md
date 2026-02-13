@@ -1663,3 +1663,40 @@ Open TODOs / follow-ups:
   - `E2E_PROVIDER_USER_ID`, `E2E_PROVIDER_USER_EMAIL`, `E2E_PROVIDER_USER_PASSWORD`
 - Add deploy retry secret:
   - `VERCEL_DEPLOY_HOOK_URL`
+
+---
+
+## 2026-02-13 21:09 CET
+
+Task summary:
+
+- Removed remaining checklist drift by aligning migration guidance in the verification checklist to the canonical `src/db/migrations` + `db:migrate` workflow.
+
+What worked:
+
+- Small doc-only patch and push after verifying the earlier production readiness changes.
+
+What failed / wrong assumptions:
+
+- None.
+
+User corrections:
+
+- None.
+
+Assumptions taken without asking:
+
+- `src/db/migrations` is the canonical source of truth for production DDL in this repo, not `supabase/migrations`.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add a docs freshness or drift check that ensures `agent/checklists/*` match canonical migration tooling.
+
+Commands run + outcomes:
+
+- `git commit -m \"docs: align verification checklist migration guidance\"`: PASS
+- `git push`: PASS
