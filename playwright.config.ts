@@ -1,17 +1,20 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const playwrightPort = Number.parseInt(process.env.PLAYWRIGHT_PORT || '33100', 10);
-const baseURL = process.env.BASE_URL || `http://127.0.0.1:${playwrightPort}`;
+const configuredPort = Number.parseInt(process.env.PLAYWRIGHT_PORT || '33100', 10);
+const configuredBaseURL = process.env.BASE_URL?.trim();
 const parsedBaseURL = (() => {
+  if (!configuredBaseURL) {
+    return null;
+  }
   try {
-    return new URL(baseURL);
+    return new URL(configuredBaseURL);
   } catch {
     return null;
   }
 })();
-const webServerPort = parsedBaseURL?.port
-  ? Number.parseInt(parsedBaseURL.port, 10)
-  : playwrightPort;
+const baseURLPort = parsedBaseURL?.port ? Number.parseInt(parsedBaseURL.port, 10) : NaN;
+const webServerPort = Number.isFinite(baseURLPort) ? baseURLPort : configuredPort;
+const baseURL = configuredBaseURL || `http://127.0.0.1:${webServerPort}`;
 
 export default defineConfig({
   testDir: './e2e',
@@ -51,10 +54,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    // Keep app boot port aligned with BASE_URL for CI jobs that override BASE_URL.
     command: `npm run dev -- -p ${webServerPort}`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
-    timeout: 120000, // Allow more time for server startup
+    timeout: 240000, // CI startup can exceed 120s on cold runners
   },
 });

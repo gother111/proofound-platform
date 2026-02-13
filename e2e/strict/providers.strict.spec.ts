@@ -203,6 +203,9 @@ test.describe('Strict MVP Provider Flows (Zoom, Google, LinkedIn)', () => {
   }) => {
     await loginWithUi(page, providerUser);
 
+    const requireConnected = process.env.STRICT_PROVIDER_E2E_REQUIRE_CONNECTED === 'true';
+    const requireBoth = process.env.STRICT_PROVIDER_E2E_REQUIRE_BOTH === 'true';
+
     if (!managedProviderConfigured) {
       // No deterministic connected provider account configured for this environment.
       // Keep strict suite deterministic by skipping live-provider assertions.
@@ -219,8 +222,6 @@ test.describe('Strict MVP Provider Flows (Zoom, Google, LinkedIn)', () => {
     const zoomConnected = statusPayload.zoom?.connected === true;
     const googleConnected = statusPayload.google?.connected === true;
     const hasConnectedProvider = zoomConnected || googleConnected;
-    const requireConnected = process.env.STRICT_PROVIDER_E2E_REQUIRE_CONNECTED === 'true';
-    const requireBoth = process.env.STRICT_PROVIDER_E2E_REQUIRE_BOTH === 'true';
 
     if (requireBoth && (!zoomConnected || !googleConnected)) {
       throw new Error(
