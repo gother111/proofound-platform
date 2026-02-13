@@ -2029,3 +2029,48 @@ Open TODOs / follow-ups:
 
 - Commit/push provider strict resilience patch.
 - Re-run CI and finish merge.
+
+## 2026-02-13 02:33:00 CET
+
+Task summary (1-3 lines):
+
+- Investigated next CI providers strict failures on latest run.
+- Patched strict fixture handle generation and aligned provider negative test actor with intended auth path.
+
+What worked:
+
+- CI log pinpointed concrete issues: `profiles_handle_unique` collisions and wrong actor for provider-token assertion.
+- Generating unique handles within 40-char bound eliminated truncation-driven collisions.
+
+What failed / wrong assumptions:
+
+- Assumed existing `normalizeHandle(uniqueSuffix(...)).slice(40)` preserved uniqueness, but long prefixes could truncate entropy away.
+- Assumed provider negative test actor still reached provider-token gate while it actually hit org-role authorization first.
+
+User corrections:
+
+- None.
+
+Assumptions taken without asking:
+
+- Using `orgOwner` for provider-token negative scheduling case better reflects intended route contract than unauthorized user path.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add explicit test helper for deterministic short handles to avoid accidental uniqueness truncation regressions.
+- Add provider strict assertions that differentiate auth-gate failures from integration-token failures.
+
+Commands run + outcomes (short):
+
+- `gh api /repos/.../actions/jobs/63471452637/logs`: PASS (triaged failures)
+- `npm run lint`: PASS (1 pre-existing warning)
+- `npm run typecheck`: PASS
+
+Open TODOs / follow-ups:
+
+- Commit/push this providers strict stability patch.
+- Observe new CI run and complete merge.

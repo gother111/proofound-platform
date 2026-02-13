@@ -1743,3 +1743,29 @@ How to verify:
 Open risks/TODO:
 
 - For launch-gate confidence with real providers, CI or gate runner still needs deterministic connected provider account env (`E2E_PROVIDER_USER_*`) and connected Zoom/Google integrations.
+
+## 2026-02-13 - Provider strict retry stability and auth-path assertion alignment
+
+What changed:
+
+- Fixed strict fixture default handle collisions under retries:
+  - `e2e/helpers/strict-fixtures.ts`
+  - Added `generateUniqueHandle()` to guarantee entropy remains inside the 40-char handle limit (previous prefix truncation could drop uniqueness and trigger `profiles_handle_unique` violations).
+- Fixed provider negative scheduling assertion path:
+  - `e2e/strict/providers.strict.spec.ts`
+  - The "fails without connected integration token" scenario now authenticates as `orgOwner` (authorized scheduler) so the expected 400 "not connected" error is asserted on the correct code path.
+
+Why:
+
+- CI providers strict step still failed after env fallback changes due:
+  - Duplicate `profiles.handle` collisions on retried suite setup.
+  - Test using a non-org-admin actor, causing auth-gate mismatch versus intended provider-token validation.
+
+How to verify:
+
+- `npm run lint`: PASS (1 pre-existing warning in `postcss.config.js`)
+- `npm run typecheck`: PASS
+
+Open risks/TODO:
+
+- Providers strict suite still depends on external provider state for full live-path validation when deterministic provider env is configured.
