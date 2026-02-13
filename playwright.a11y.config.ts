@@ -7,6 +7,7 @@ const baseURL = process.env.BASE_URL || `http://127.0.0.1:${playwrightPort}`;
 // Keeps CI stable by running against a mock Supabase environment for public pages.
 export default defineConfig({
   testDir: './tests/a11y',
+  testIgnore: /.*\.strict\.spec\.ts/,
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,

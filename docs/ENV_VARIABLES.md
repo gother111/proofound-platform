@@ -7,7 +7,7 @@ Complete guide to all environment variables used in Proofound, including which f
 > Current production domain: **`https://proofound.io`**
 >
 > Update `NEXT_PUBLIC_SITE_URL` in Vercel environment variables to match your actual domain.
-> `proofound.io` is legacy/parked and should not be used for app URLs.
+> Keep `NEXT_PUBLIC_SITE_URL` and `NEXT_PUBLIC_APP_URL` aligned per environment.
 
 ## Quick Reference
 
@@ -38,7 +38,7 @@ LINKEDIN_CLIENT_SECRET=your_linkedin_client_secret
 # Optional override; default is <current-origin>/api/auth/linkedin/callback
 LINKEDIN_REDIRECT_URI=https://yourdomain.com/api/auth/linkedin/callback
 E2E_PROVIDER_USER_ID=deterministic_user_uuid
-E2E_PROVIDER_USER_EMAIL=provider-e2e@test.proofound.com
+E2E_PROVIDER_USER_EMAIL=provider-e2e@test.proofound.io
 E2E_PROVIDER_USER_PASSWORD=your_deterministic_test_password
 STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true
 STRICT_PROVIDER_E2E_REQUIRE_BOTH=true
@@ -53,6 +53,9 @@ MATCHING_FEATURE_ENABLED=true
 NEXT_PUBLIC_WIREFRAME_MODE=false
 RATE_LIMIT_WINDOW_SECONDS=60
 RATE_LIMIT_MAX=30
+DEBUG_INGEST_ENABLED=false
+DEBUG_INGEST_URL=
+NEXT_PUBLIC_DEBUG_INGEST_URL=
 ```
 
 ---
@@ -216,7 +219,7 @@ NEXT_PUBLIC_SITE_URL=https://proofound.io
 **Important**:
 
 - ✅ Canonical domain: `https://proofound.io`
-- ❌ Legacy/parked domain: `https://proofound.io`
+- ❌ Legacy/parked domain: `https://old-proofound.example`
 - ✅ No trailing slash: `https://proofound.io`
 - ❌ No trailing slash: `https://proofound.io/`
 - ✅ Include protocol (http/https)
