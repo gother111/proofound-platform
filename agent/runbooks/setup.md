@@ -112,7 +112,7 @@ Strict provider E2E deterministic account:
   - `RUN_MIGRATIONS_GUIDE.md`, `APPLY_MIGRATIONS_MANUAL.md` (source: RUN_MIGRATIONS_GUIDE.md, APPLY_MIGRATIONS_MANUAL.md)
 - Safety scripts:
   - `npm run db:backup:checkpoint` creates schema and critical-table checkpoints before production DDL.
-  - `npm run db:audit:migrations` compares local `supabase/migrations` files against `supabase_migrations.schema_migrations`.
+  - Migration ledger checks are run via `npm run db:drift-check` and `npm run db:migrate` against `src/db/migrations/` (and `src/db/policies.sql`/`src/db/triggers.sql` where applicable).
 - Policy: do not run `npm run db:push` against production. Use explicit SQL migration files.
 
 ## E2E / Accessibility (Repo Truth)

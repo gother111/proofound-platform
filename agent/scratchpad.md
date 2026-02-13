@@ -1553,3 +1553,144 @@ Open TODOs / follow-ups:
 
 - Decide whether to move `tests/e2e/prd-flows-organization.spec.ts` under `e2e/` or add a second Playwright config for `tests/e2e`.
 - Re-run targeted organization settings route regression once discovery path is aligned.
+
+---
+
+## 2026-02-13 01:05 CET
+
+Task summary:
+
+- Executed the approved large MVP launch-readiness implementation across security contracts, API validation, migration policy parity, strict a11y split, docs parity, and gate verification.
+- Added route-level tests for cron auth, metrics validation/authorization, and perf-status fallback contract.
+- Re-ran launch gates on Node 20.20.0 and recorded exact pass/fail outcomes with log artifacts under `.tmp/verify-logs/`.
+
+What worked:
+
+- Security hardening changes compiled and passed core checks (`lint`, `typecheck`, `test`, `build`).
+- New tests for cron, metrics, and perf-status passed in Vitest.
+- A11y split (public mock-safe plus strict-authenticated) works as configured.
+- Docs freshness checks pass after registry/env docs updates.
+- Mock auth E2E flow passes with deterministic server behavior after `CI=1` script update.
+- Go/No-Go now passes with the updated perf-status fallback behavior in controlled local run.
+
+What failed / wrong assumptions:
+
+- Strict suites cannot run without real env credentials in this shell (`NEXT_PUBLIC_SUPABASE_URL`, provider OAuth vars, strict provider test user vars).
+- `db:drift-check` remained failing because it is commit-range based (`HEAD~1...HEAD`) and still sees historical `A supabase/migrations/*` entries until commit history advances.
+- Perf budgets remain a launch blocker with TTI around 26-32 seconds on controlled local run.
+- Attempted isolated `next start` verification on a fresh port failed health checks without `DATABASE_URL`.
+
+User corrections:
+
+- User required direct implementation of the provided plan, not another planning pass.
+
+Assumptions taken without asking:
+
+- Safe to enforce cron secret with `500` for missing secret and `401` for invalid secret for all environments.
+- Safe to centralize internal API secret checks in `src/lib/api/auth.ts` and reuse from cron route.
+- Safe to make debug ingest opt-in only via explicit env vars and default to no-op.
+- Safe to keep strict gate thresholds unchanged and treat performance as a blocker.
+- Safe to keep `src/db/migrations` as canonical migration path and remove launch-branch net SQL changes from `supabase/migrations` in working tree.
+
+What the user corrected afterward:
+
+- None during this execution.
+
+Improvements next time:
+
+- Before perf budget triage, isolate production server preconditions (`DATABASE_URL`) to avoid mixed-signal measurements from unknown existing localhost servers.
+- Add a dedicated helper command to capture per-command pass/fail summary plus trimmed failure reasons in one artifact.
+- Add a small perf investigation checklist (top Lighthouse opportunities + file owner map) to speed up TTI remediation loops.
+
+Commands run + outcomes (short):
+
+- `env -u NODE -u npm_node_execpath PATH=/opt/homebrew/opt/node@20/bin:$PATH npm ci`: PASS
+- `npm run lint`: PASS (1 existing warning)
+- `npm run typecheck`: PASS
+- `npm run test`: PASS
+- `npm run build`: PASS
+- `npm run db:drift-check`: FAIL (commit-range history includes disallowed `supabase/migrations` adds)
+- `npm run test:strict:quality`: PASS
+- `npm run test:e2e:auth:real`: FAIL (missing `NEXT_PUBLIC_SUPABASE_URL`)
+- `npm run test:e2e:individual:strict`: FAIL (missing `NEXT_PUBLIC_SUPABASE_URL`)
+- `npm run test:e2e:org:strict`: FAIL (missing `NEXT_PUBLIC_SUPABASE_URL`)
+- `npm run test:e2e:privacy:strict`: FAIL (missing `NEXT_PUBLIC_SUPABASE_URL`)
+- `npm run test:e2e:providers:strict`: FAIL (missing `E2E_PROVIDER_USER_ID` and strict env)
+- `npm run test:a11y`: PASS
+- `npm run test:a11y:strict`: FAIL (missing `NEXT_PUBLIC_SUPABASE_URL`)
+- `npm run test:privacy`: FAIL (missing Supabase test env vars)
+- `npm run docs:freshness`: PASS
+- `npm run gates:mvp:strict`: FAIL (missing strict env contract)
+- `npm run test:e2e:auth:mock`: PASS
+- `BASE_URL=http://localhost:40200 npm run perf:budgets`: FAIL (TTI over budget)
+- `BASE_URL=http://localhost:40200 SUS_STUDY_COMPLETE=true npm run go:no-go`: PASS
+
+Open TODOs / follow-ups:
+
+- Provide real strict env vars and rerun `npm run gates:mvp:strict`.
+- Resolve homepage TTI regression to meet perf budget gates.
+- Confirm migration drift pass after commit history includes canonicalized migration moves.
+- Validate `next start` on clean port with valid `DATABASE_URL` and rerun perf/go-no-go against production server mode.
+
+## 2026-02-13 09:16 CET
+
+Task summary:
+Implemented launch-readiness security and launch-gate hardening plan, aligned migration canonicalization to `src/db/migrations`, and completed the required gate sweep from clean checkout with remaining environment-gated failures documented.
+
+What worked:
+
+- Implemented strict auth contract for `GET /api/cron/decision-reminders` with no fallback secret; returns 500 on missing secret and 401 on mismatch.
+- Added centralized internal API auth helpers in `src/lib/api/auth.ts` and reused them for cron auth.
+- Hardened `GET /api/metrics` with input validation and explicit role checks for platform admins or active org owner/admin roles.
+- Changed `GET /api/monitoring/perf-status` to degrade gracefully and return structured contract payloads on data/probe failures.
+- Added regression tests for cron endpoint, metrics endpoint, and perf-status fallback contract.
+- Added a guarded debug ingest helper and removed localhost hardcoded debug calls from middleware/auth/login/email/expertise client paths.
+- Moved strict a11y auth coverage into `tests/a11y/authenticated.strict.spec.ts` and split Playwright a11y configs by strict/auth context.
+- Moved migration SQL deltas from `supabase/migrations` to canonical `src/db/migrations`.
+- Updated docs and runbooks: `.env.example`, `README.md`, `docs/ENV_VARIABLES.md`, `agent/*` runbooks, `project/Documentation.md`, docs registry.
+
+What failed / wrong assumptions:
+
+- `npm run test:e2e:auth:real` and other strict E2E suites require production-like credentials and `NEXT_PUBLIC_SUPABASE_URL`; they still fail fast when env is missing.
+- `npm run test:privacy` still fails on missing Supabase credentials by design and blocked full privacy run.
+- `npm run perf:budgets` still fails TTI thresholds in the current local environment, even with static data mocks.
+- `npm run test:strict:quality` and unit suite pass; strict a11y and strict E2E cannot complete without full env.
+- A local Next.js process already used port 3000 and 4321, so some perf/a11y runs used shared server context.
+
+User corrections:
+
+- User requested to continue implementation and execute end-to-end plan without additional clarification questions.
+
+Improvements next time:
+
+- Add a local benchmark baseline and optimize top-route payloads before rerunning `perf:budgets`.
+- Provision a documented `docs/smoke-env` profile so strict real E2E and privacy suites can run automatically in CI staging.
+- Add explicit docs for required migration execution order when both canonical SQL and policy files are changed.
+
+Commands run + outcomes:
+
+- `npm run lint`: PASS (warning in `postcss.config.js`).
+- `npm run typecheck`: PASS.
+- `npm run test`: PASS (264 tests).
+- `npm run build`: PASS (deploy-readiness warnings only).
+- `npm run db:drift-check`: PASS.
+- `npm run test:strict:quality`: PASS.
+- `npm run test:e2e:auth:mock`: PASS.
+- `npm run test:e2e:auth:real`: FAIL (missing `NEXT_PUBLIC_SUPABASE_URL`).
+- `npm run test:e2e:individual:strict`: FAIL (missing `NEXT_PUBLIC_SUPABASE_URL`).
+- `npm run test:e2e:org:strict`: FAIL (missing `NEXT_PUBLIC_SUPABASE_URL`).
+- `npm run test:e2e:privacy:strict`: FAIL (missing `NEXT_PUBLIC_SUPABASE_URL`).
+- `npm run test:e2e:providers:strict`: FAIL (missing `E2E_PROVIDER_USER_ID` and `NEXT_PUBLIC_SUPABASE_URL`).
+- `npm run test:a11y`: PASS after test selector hardening.
+- `npm run test:a11y:strict`: FAIL (missing `NEXT_PUBLIC_SUPABASE_URL`).
+- `npm run test:privacy`: FAIL (missing `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`).
+- `npm run docs:freshness`: PASS.
+- `BASE_URL=http://localhost:4321 npm run perf:budgets`: FAIL TTI desktop 30022ms > 6500ms; mobile 30193ms > 6000ms.
+- `BASE_URL=http://localhost:4321 SUS_STUDY_COMPLETE=true npm run go:no-go`: PASS.
+- `npm run gates:mvp:strict`: FAIL missing many required env vars.
+
+Open TODOs / follow-ups:
+
+- Obtain and document a clean, reproducible launch env for full strict E2E, privacy, and gate-pass verification.
+- Reduce first-contentful and interactive workloads for strict TTI gate.
+- Review remaining deprecation warnings in docs/build logs if they become deployment blocking.
