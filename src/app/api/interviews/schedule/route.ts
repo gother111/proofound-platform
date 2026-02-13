@@ -18,6 +18,15 @@ function isMissingColumnError(error: { code?: string; message?: string } | null,
   return Boolean(error?.code === 'PGRST204' && error?.message?.includes(`'${column}'`));
 }
 
+function extractMissingColumn(error: { code?: string; message?: string } | null): string | null {
+  if (error?.code !== 'PGRST204' || !error?.message) {
+    return null;
+  }
+
+  const match = error.message.match(/Could not find the '([^']+)' column/);
+  return match?.[1] ?? null;
+}
+
 /**
  * GET /api/interviews/schedule
  * Returns scheduled interviews where the current user is candidate or org member.
@@ -356,51 +365,70 @@ export async function POST(request: NextRequest) {
 
     let interview: any = null;
 
-    const modernInsert = await supabase
-      .from('interviews')
-      .insert({
-        ...baseInterviewInsert,
-        duration_minutes: 30,
-        meeting_link: meetingLink,
-      })
-      .select()
-      .single();
+    const insertPayload: Record<string, unknown> = {
+      ...baseInterviewInsert,
+      duration_minutes: 30,
+      meeting_link: meetingLink,
+    };
 
-    if (modernInsert.error) {
-      const shouldFallbackToLegacyShape =
-        isMissingColumnError(modernInsert.error, 'duration_minutes') ||
-        isMissingColumnError(modernInsert.error, 'meeting_link') ||
-        isMissingColumnError(modernInsert.error, 'timezone') ||
-        isMissingColumnError(modernInsert.error, 'host_user_id') ||
-        isMissingColumnError(modernInsert.error, 'participant_user_ids');
+    let lastInsertError: any = null;
 
-      if (!shouldFallbackToLegacyShape) {
-        throw modernInsert.error;
-      }
-
-      const legacyPlatform = persistedPlatform === 'google_meet' ? 'google' : 'zoom';
-
-      const legacyInsert = await supabase
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      const insertResult = await supabase
         .from('interviews')
-        .insert({
-          match_id: data.matchId,
-          scheduled_at: data.scheduledAt,
-          platform: legacyPlatform,
-          meeting_id: meetingId,
-          status: 'scheduled',
-          duration: 30,
-          meeting_url: meetingLink,
-        })
+        .insert(insertPayload)
         .select()
         .single();
 
-      if (legacyInsert.error) {
-        throw legacyInsert.error;
+      if (!insertResult.error) {
+        interview = insertResult.data;
+        break;
       }
 
-      interview = legacyInsert.data;
-    } else {
-      interview = modernInsert.data;
+      lastInsertError = insertResult.error;
+
+      const missingColumn = extractMissingColumn(insertResult.error);
+      if (!missingColumn) {
+        const isLegacyPlatformEnumError =
+          insertResult.error?.code === '22P02' &&
+          typeof insertResult.error?.message === 'string' &&
+          insertResult.error.message.toLowerCase().includes('platform');
+
+        if (isLegacyPlatformEnumError && insertPayload.platform === 'manual') {
+          insertPayload.platform = 'zoom';
+          continue;
+        }
+
+        throw insertResult.error;
+      }
+
+      switch (missingColumn) {
+        case 'duration_minutes':
+          insertPayload.duration = insertPayload.duration_minutes ?? 30;
+          delete insertPayload.duration_minutes;
+          continue;
+        case 'duration':
+          delete insertPayload.duration;
+          continue;
+        case 'meeting_link':
+          insertPayload.meeting_url = insertPayload.meeting_link ?? meetingLink;
+          delete insertPayload.meeting_link;
+          continue;
+        case 'meeting_url':
+          delete insertPayload.meeting_url;
+          continue;
+        case 'timezone':
+        case 'host_user_id':
+        case 'participant_user_ids':
+          delete insertPayload[missingColumn];
+          continue;
+        default:
+          throw insertResult.error;
+      }
+    }
+
+    if (!interview) {
+      throw lastInsertError ?? new Error('Failed to insert interview after compatibility retries');
     }
 
     try {

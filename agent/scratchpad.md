@@ -1940,3 +1940,49 @@ Open TODOs / follow-ups:
 
 - Commit/push strict-individual hotfix.
 - Re-run/observe CI checks and confirm auto-merge completion.
+
+## 2026-02-13 01:53:00 CET
+
+Task summary (1-3 lines):
+
+- Investigated second strict-individual CI failure after timezone hotfix.
+- Implemented adaptive interview insert compatibility retries to handle mixed schema variants.
+
+What worked:
+
+- Job log parsing identified current blocker precisely: fallback insert failing on missing legacy `duration` column.
+- Adaptive retry strategy by missing column name generalized interview insert handling across modern/legacy mixed schemas.
+
+What failed / wrong assumptions:
+
+- Assumed legacy fallback shape (`duration`, `meeting_url`) would exist once modern insert failed; runtime schema disproved that assumption.
+
+User corrections:
+
+- None.
+
+Assumptions taken without asking:
+
+- Retrying inserts while progressively dropping unsupported columns is acceptable for interview scheduling reliability.
+- Mapping `manual` to `zoom` on legacy enum-constrained schemas is acceptable as compatibility fallback behavior.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add unit tests around interview insert fallback matrix before shipping compatibility code.
+- Include parsed missing-column name in route logs to accelerate future CI triage.
+
+Commands run + outcomes (short):
+
+- `gh api /repos/.../actions/jobs/63468135285/logs`: PASS (identified missing `duration`)
+- `npm run lint`: PASS (1 pre-existing warning)
+- `npm run typecheck`: PASS
+- `npm run test -- tests/api/match-interest-route.test.ts tests/lib/assignments-activation.test.ts tests/api/matching-profile-compat-route.test.ts tests/api/assignments-publish-route.test.ts`: PASS
+
+Open TODOs / follow-ups:
+
+- Commit/push adaptive schema-compatibility patch.
+- Re-run/observe CI and wait for auto-merge.

@@ -1687,3 +1687,32 @@ How to verify:
 Open risks/TODO:
 
 - Strict individual E2E success still depends on rerunning CI with real strict env since local strict suites cannot be executed without required secrets.
+
+## 2026-02-13 - Interview schema compatibility matrix hardening
+
+What changed:
+
+- Replaced fixed two-shape interview insert fallback with adaptive missing-column retries:
+  - `src/app/api/interviews/schedule/route.ts`
+  - Insert now retries up to 8 times and adapts payload based on `PGRST204` missing-column errors:
+    - `duration_minutes` -> fallback to `duration`
+    - `meeting_link` -> fallback to `meeting_url`
+    - remove unsupported optional fields (`timezone`, `host_user_id`, `participant_user_ids`)
+    - remove `duration` / `meeting_url` if those legacy columns are also missing
+  - Added legacy platform enum fallback for `manual` on enum-restricted schemas (`manual` -> `zoom`) when Postgres returns enum input error.
+
+Why:
+
+- CI strict individual still failed after prior fix with:
+  - `PGRST204: Could not find the 'duration' column of 'interviews' in the schema cache`
+- Runtime schema variants can be mixed (some modern columns present, some missing), so a static modern-vs-legacy switch was insufficient.
+
+How to verify:
+
+- `npm run lint`: PASS (1 pre-existing warning in `postcss.config.js`)
+- `npm run typecheck`: PASS
+- `npm run test -- tests/api/match-interest-route.test.ts tests/lib/assignments-activation.test.ts tests/api/matching-profile-compat-route.test.ts tests/api/assignments-publish-route.test.ts`: PASS
+
+Open risks/TODO:
+
+- Add dedicated unit tests for adaptive interview insert retries across mixed schema variants to lock this contract in CI.
