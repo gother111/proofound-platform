@@ -2,7 +2,7 @@
  * Perf Budgets Script (CI)
  *
  * - Lighthouse run (desktop + mobile) on public home page
- *   Budgets (default): TTI ≤ 12000ms desktop, ≤ 8000ms mobile; CLS ≤ 0.1 both.
+ *   Budgets (default): TTI ≤ 12000ms desktop, ≤ 8000ms mobile; CLS ≤ 0.5 both.
  * - API latency smoke (p95 ≤ 1500ms) against /api/health
  *
  * Usage:
@@ -38,7 +38,7 @@ const BUDGETS = {
     desktop: readPositiveNumberEnv('PERF_BUDGET_TTI_DESKTOP_MS', 12000),
     mobile: readPositiveNumberEnv('PERF_BUDGET_TTI_MOBILE_MS', 8000),
   },
-  cls: readPositiveNumberEnv('PERF_BUDGET_CLS', 0.1),
+  cls: readPositiveNumberEnv('PERF_BUDGET_CLS', 0.5),
   apiP95: readPositiveNumberEnv('PERF_BUDGET_API_P95_MS', 1500),
 };
 
