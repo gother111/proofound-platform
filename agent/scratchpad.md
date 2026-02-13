@@ -2004,3 +2004,52 @@ Open TODOs / follow-ups:
 
 - Finalize merge commit, push branch, and wait for required checks.
 - Confirm PR #180 auto-merges into `master`.
+
+## 2026-02-13 10:35 UTC
+
+Task summary:
+
+- Implemented mobile messaging width cleanup for iPhone layout on individual and organization message pages.
+- Removed mobile thread centering that compressed the conversation area.
+- Expanded mobile bubble width and aligned docs/session logging.
+
+What worked:
+
+- Updating pane classes to `min-w-0` and desktop-only centering resolved the narrow thread container issue.
+- Adding `w-full min-w-0` to realtime and message thread wrappers made width behavior consistent.
+- Mobile-first bubble width cap (`82%`) improves readability on narrow viewports.
+
+What failed / wrong assumptions:
+
+- Initial documentation patch anchor did not match the current doc structure and required a second targeted patch.
+
+User corrections:
+
+- User reported that previous mobile messaging fix still looked messy and narrow on iPhone.
+
+Assumptions taken without asking:
+
+- Applying the same width/centering correction to both `/app/i/messages` and `/app/o/[slug]/messages` is desired.
+- Existing query cleanup via `router.replace(pathname)` should remain unchanged.
+
+What the user corrected afterward:
+
+- None yet.
+
+Improvements next time:
+
+- Capture a before/after mobile screenshot during UI-fix tasks to validate user-reported layout issues faster.
+- Avoid relying on previous doc section anchors without checking current file placement.
+
+Commands run + outcomes (short):
+
+- `rg --files src/app | rg '/messages/page\\.tsx$'`: PASS
+- `sed -n ... src/components/messaging/ConversationList.tsx`: PASS
+- `sed -n ... src/app/app/i/layout.tsx`: PASS
+- `sed -n ... src/app/app/o/[slug]/layout.tsx`: PASS
+- `apply_patch` on 4 messaging files + docs updates: PASS
+
+Open TODOs / follow-ups:
+
+- Perform mobile visual smoke on real iPhone for both messaging routes.
+- Run lint/typecheck when a verification run is explicitly requested.

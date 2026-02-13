@@ -166,8 +166,8 @@ function OrganizationMessagesPageContent() {
 
       {/* Right: Message Thread or Empty State */}
       <div
-        className={`h-full min-h-0 flex-1 flex items-center justify-center bg-[#F7F6F1] ${
-          !selectedConversationId ? 'hidden md:flex' : 'flex'
+        className={`h-full min-h-0 min-w-0 flex-1 bg-[#F7F6F1] ${
+          !selectedConversationId ? 'hidden md:flex md:items-center md:justify-center' : 'flex'
         }`}
       >
         {selectedConversation ? (

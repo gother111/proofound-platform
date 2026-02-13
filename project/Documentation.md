@@ -85,6 +85,41 @@ Open risks/TODO:
 - LinkedIn app callback allowlist must include every active domain callback (`https://<domain>/api/auth/linkedin/callback`) used by production/demo/testing environments.
 - If `LINKEDIN_REDIRECT_URI` is set to a different top-level domain than the active app domain, OAuth state cookies can fail to round-trip in callback flow.
 
+## 2026-02-13: Messaging Mobile Width Cleanup (iPhone)
+
+What changed:
+
+- Updated messaging pane sizing on both routes to prevent narrow thread rendering on smartphone widths:
+  - `src/app/app/i/messages/page.tsx`
+  - `src/app/app/o/[slug]/messages/page.tsx`
+- Removed selected-thread centering behavior on mobile and kept centered empty state only for desktop.
+- Enforced full-width thread wrappers in:
+  - `src/components/messaging/RealtimeMessageThread.tsx`
+  - `src/components/messaging/MessageThread.tsx`
+- Increased message bubble width on mobile while preserving current desktop proportions:
+  - `max-w-[82%] sm:max-w-[75%] lg:max-w-[70%]`
+
+Why:
+
+- Messaging still felt visually cramped on iPhone because thread containers did not force full width and the bubble width cap was too conservative for phone screens.
+
+How to verify:
+
+- `/app/i/messages` and `/app/o/<slug>/messages` at phone width:
+  - conversation list fills width.
+  - selected thread fills width.
+  - mobile back returns to list.
+- Desktop (`md+`):
+  - list and thread remain side-by-side.
+  - empty state remains centered when no conversation is selected.
+- Regression:
+  - send flow remains functional.
+  - live badge and compose area remain visible.
+
+Open risks/TODO:
+
+- Fine-tune bubble width per device if additional visual QA feedback requires tighter line-length control.
+
 ## 2026-02-11: Landing Regression Guardrail Policy
 
 What changed:
