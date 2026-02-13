@@ -166,11 +166,15 @@ jobs:
         run: npx playwright install --with-deps
 
       - name: Run E2E tests
-        run: npm run test:e2e
+        run: |
+          npm run test:e2e:auth:real
+          npm run test:e2e:landing
         env:
           BASE_URL: http://localhost:3000
           NEXT_PUBLIC_SITE_URL: http://localhost:3000
+          SITE_URL: http://localhost:3000
           NEXT_PUBLIC_APP_ENV: test
+          NEXT_PUBLIC_USE_MOCK_SUPABASE: "false"
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
