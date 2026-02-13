@@ -192,16 +192,21 @@ export async function GET(request: Request) {
           }
         );
 
-        if (searchError) {
-          console.error('Smart search error:', searchError);
-          console.log('Falling back to basic search...');
+        if (searchError || !searchResults || searchResults.length === 0) {
+          if (searchError) {
+            console.error('Smart search error:', searchError);
+            console.log('Falling back to basic search...');
+          } else {
+            console.log('Smart search returned 0 results, falling back to basic search...');
+          }
 
-          // Fallback: fetch skills without complex joins
+          // Fallback: direct name match query when search index/function is stale
           const { data: fallbackSkills, error: fallbackError } = await supabase
             .from('skills_taxonomy')
             .select('*')
             .eq('status', 'active')
-            .limit(1000);
+            .ilike('name_i18n->>en', `%${search}%`)
+            .limit(50);
 
           if (fallbackError) {
             console.error('Fallback search error:', fallbackError);
@@ -214,18 +219,7 @@ export async function GET(request: Request) {
             );
           }
 
-          // Client-side filtering
-          const searchLower = search.toLowerCase();
-          const filteredSkills = (fallbackSkills || []).filter((skill: any) => {
-            const name = skill.name_i18n?.en?.toLowerCase() || '';
-            const slug = skill.slug?.toLowerCase() || '';
-            const description = skill.description_i18n?.en?.toLowerCase() || '';
-            return (
-              name.includes(searchLower) ||
-              slug.includes(searchLower) ||
-              description.includes(searchLower)
-            );
-          });
+          const filteredSkills = fallbackSkills || [];
 
           // Fetch parent context separately
           if (filteredSkills.length > 0) {

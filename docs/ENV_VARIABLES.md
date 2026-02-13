@@ -35,6 +35,8 @@ GOOGLE_CLIENT_SECRET=your_google_oauth_client_secret
 GOOGLE_REDIRECT_URI=https://yourdomain.com/api/integrations/google/callback
 LINKEDIN_CLIENT_ID=your_linkedin_client_id
 LINKEDIN_CLIENT_SECRET=your_linkedin_client_secret
+# Optional override; default is <current-origin>/api/auth/linkedin/callback
+LINKEDIN_REDIRECT_URI=https://yourdomain.com/api/auth/linkedin/callback
 E2E_PROVIDER_USER_ID=deterministic_user_uuid
 E2E_PROVIDER_USER_EMAIL=provider-e2e@test.proofound.com
 E2E_PROVIDER_USER_PASSWORD=your_deterministic_test_password
@@ -341,6 +343,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 - `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` — Required for Google Meet integration and Google social login through Supabase.
 - `GOOGLE_REDIRECT_URI` — Must match the app integration callback (recommended: `https://yourdomain.com/api/integrations/google/callback`).
 - `LINKEDIN_CLIENT_ID` and `LINKEDIN_CLIENT_SECRET` — Required for LinkedIn settings integration callback and LinkedIn social login through Supabase.
+- `LINKEDIN_REDIRECT_URI` — Optional override for LinkedIn settings callback URI. If unset, app uses `<request-origin>/api/auth/linkedin/callback` to support multi-domain environments.
 - `NEXT_PUBLIC_SITE_URL` — Canonical app base URL used for OAuth callback construction (`NEXT_PUBLIC_URL` is legacy fallback only).
 
 **Provider callback split (important)**:
@@ -350,6 +353,12 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 - LinkedIn integration callback (app route): `https://yourdomain.com/api/auth/linkedin/callback`
 - LinkedIn social auth callback (Supabase): `https://<supabase-project>.supabase.co/auth/v1/callback`
 - Zoom integration callback (app route): `https://yourdomain.com/api/integrations/zoom/callback`
+
+**LinkedIn callback resolution contract**:
+
+- If `LINKEDIN_REDIRECT_URI` is absolute, app uses it as-is.
+- If `LINKEDIN_REDIRECT_URI` is relative, app resolves it against the current request origin.
+- If `LINKEDIN_REDIRECT_URI` is not set, app uses `<current-origin>/api/auth/linkedin/callback`.
 
 **Used By**:
 
