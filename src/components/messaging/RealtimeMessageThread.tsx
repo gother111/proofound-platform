@@ -15,6 +15,7 @@ interface RealtimeMessageThreadProps {
   otherPartyAvatar?: string;
   stage: 'masked' | 'revealed';
   onSendMessage: (content: string) => Promise<void>;
+  onBack?: () => void;
 }
 
 /**
@@ -34,6 +35,7 @@ export function RealtimeMessageThread({
   otherPartyAvatar,
   stage,
   onSendMessage,
+  onBack,
 }: RealtimeMessageThreadProps) {
   const [messages, setMessages] = useState<ThreadMessage[]>(initialMessages);
   const [isOtherUserTyping, setIsOtherUserTyping] = useState(false);
@@ -174,6 +176,7 @@ export function RealtimeMessageThread({
         stage={stage}
         isTyping={isOtherUserTyping}
         onSendMessage={handleSend}
+        onBack={onBack}
       />
     </div>
   );

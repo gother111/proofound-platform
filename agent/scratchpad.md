@@ -1553,3 +1553,46 @@ Open TODOs / follow-ups:
 
 - Decide whether to move `tests/e2e/prd-flows-organization.spec.ts` under `e2e/` or add a second Playwright config for `tests/e2e`.
 - Re-run targeted organization settings route regression once discovery path is aligned.
+
+## 2026-02-13 10:00 UTC
+
+Task summary:
+
+- Implemented responsive messaging layout behavior for smartphone messaging on individual and organization pages.
+- Added an optional mobile back action to message thread and wired it through the realtime wrapper.
+- Updated docs and session log as required.
+
+What worked:
+
+- Updated both message pages to use `flex flex-col md:flex-row` with mobile-only single-pane visibility logic.
+- Replaced fixed `h-[calc(100vh-4rem)]` wrappers with container-aware `h-full min-h-0`.
+- Added `onBack?: () => void` to `MessageThread` and `RealtimeMessageThread`.
+- Kept desktop layout and message API contract untouched.
+
+What failed / wrong assumptions:
+
+- `AGENTS.md` was not present in this worktree.
+
+User corrections:
+
+- None.
+
+Assumptions taken without asking:
+
+- Safe to return to base path via `router.replace(pathname)` for mobile back action cleanup.
+
+Improvements next time:
+
+- Consider adding explicit mobile visual regression snapshots for both `/app/i/messages` and `/app/o/<slug>/messages`.
+- Add a short note in runbooks for manual mobile verification steps once tooling is available.
+
+Commands run + outcomes:
+
+- `git status --short`: expected modified files only.
+- `sed -n '1,260p' 'src/app/app/o/[slug]/messages/page.tsx'`: confirmed responsive classes and back handler wiring.
+- `git diff -- src/app/app/i/messages/page.tsx 'src/app/app/o/[slug]/messages/page.tsx' src/components/messaging/MessageThread.tsx src/components/messaging/RealtimeMessageThread.tsx project/Documentation.md`: confirmed intended changes.
+
+Open TODOs / follow-ups:
+
+- Run mobile visual checks at <= 768 and desktop checks at >= 1024.
+- Execute `npm run lint`, `npm run typecheck`, and relevant Playwright message path checks in a Node 20 environment.

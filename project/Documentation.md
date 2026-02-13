@@ -20,6 +20,44 @@ This folder is the durable “project memory” surface for Proofound. It is mea
 - Do not copy secrets from local env files or setup docs into tracked markdown.
 - At the end of every session, append a new entry to `agent/scratchpad.md` (append-only).
 
+## 2026-02-13: Messaging Mobile Layout Reorganization
+
+What changed:
+
+- Updated individual messages layout to be responsive for smartphone:
+  - `src/app/app/i/messages/page.tsx`
+  - `src/app/app/o/[slug]/messages/page.tsx`
+- Kept desktop split-pane behavior (`md:`) and switched mobile to selector mode:
+  - list first on mobile
+  - conversation thread opens with back control
+  - back returns to list and clears the active thread selection
+- Removed fixed viewport-height wrappers from message pages and aligned to container height classes (`h-full min-h-0`).
+- Added optional mobile back action support in message thread components:
+  - `src/components/messaging/MessageThread.tsx`
+  - `src/components/messaging/RealtimeMessageThread.tsx`
+- No messaging API route or auth/privacy contract changes were made.
+
+Why:
+
+- The previous mobile layout forced the desktop two-column pattern, which felt cramped and did not provide a clear list-vs-thread flow.
+
+How to verify:
+
+- `/app/i/messages`:
+  - Mobile: list is shown when no conversation is selected.
+  - Selecting a thread opens the thread view and hides list.
+  - Back control returns to list.
+- `/app/o/<slug>/messages`:
+  - Same behavior as individual messaging.
+- Desktop (`md+`):
+  - Conversation list and thread remain side-by-side.
+- Keep message actions visible:
+  - Composer, send action, character counter, live status indicator.
+
+Open risks/TODO:
+
+- If deep-link restore logic is needed for shared query params, add explicit query normalization in a follow-up.
+
 ## 2026-02-11: Landing Regression Guardrail Policy
 
 What changed:
