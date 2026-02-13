@@ -20,6 +20,65 @@ This folder is the durable “project memory” surface for Proofound. It is mea
 - Do not copy secrets from local env files or setup docs into tracked markdown.
 - At the end of every session, append a new entry to `agent/scratchpad.md` (append-only).
 
+## 2026-02-13: Production Readiness Hardening (2-Day Private Beta Plan)
+
+What changed:
+
+- Node 20 guardrails:
+  - Updated Node wrappers to refuse Node < 20.20.0 and Node >= 21 (auto re-exec to Node 20 path when possible):
+    - `scripts/next-dev-node20.mjs`
+    - `scripts/playwright-node20.mjs`
+- Made checklists executable (npm scripts now exist):
+  - `vercel:preflight`, `vercel:env-parity`
+  - `db:backup:checkpoint`, `db:audit:migrations`
+  - Wrapper added: `scripts/vercel-env-parity.mjs`
+- Tightened Vercel preflight requirements for production to include provider OAuth keys:
+  - `scripts/vercel-preflight.mjs`
+- Cron security hardening:
+  - Cron routes now fail closed with `500` if `CRON_SECRET` is missing:
+    - `src/app/api/cron/decision-reminders/route.ts`
+    - `src/app/api/cron/account-deletion-workflow/route.ts`
+- Migration tooling hardening:
+  - `db:migrate` and DB checkpoints now prefer `DIRECT_URL` when present:
+    - `run-migrations.mjs`
+    - `scripts/db-backup-checkpoint.mjs`
+- Launch docs and env templates aligned to repo governance:
+  - `PRODUCTION_CHECKLIST.md`
+  - `LAUNCH_RUNBOOK.md`
+  - `docs/deployment-guide.md`
+  - `docs/ENV_VARIABLES.md`
+  - `README.md`
+  - `.env.example`
+  - `agent/checklists/preflight.md`
+
+Why:
+
+- Close P0 launch blockers: Node drift, non-runnable checklist commands, insecure cron secret fallback behavior, and inconsistent migration/deploy documentation.
+- Ensure preflight checks reflect the actual launch requirement that meeting providers are configured.
+
+How to verify:
+
+- Node/toolchain:
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH node -v` (expect `v20.20.0`)
+- Repo checks:
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`
+- Vercel governance:
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run vercel:preflight`
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run vercel:env-parity` (informational)
+- Cron auth (manual):
+  - Without `CRON_SECRET`, cron routes should return `500`.
+  - With `CRON_SECRET`, cron routes should return `200` when called with `Authorization: Bearer $CRON_SECRET`.
+
+Open risks/TODO:
+
+- GitHub Actions secrets required for provider strict E2E gates are not present in repo secrets:
+  - `E2E_PROVIDER_USER_ID`, `E2E_PROVIDER_USER_EMAIL`, `E2E_PROVIDER_USER_PASSWORD`
+- Deploy retry workflow secret is missing:
+  - `VERCEL_DEPLOY_HOOK_URL`
+
 ## 2026-02-11: Landing Regression Guardrail Policy
 
 What changed:

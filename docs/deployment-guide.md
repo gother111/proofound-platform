@@ -32,6 +32,7 @@ Before deploying, ensure you have:
 - [ ] All tests passing locally
 
 **Accounts Needed:**
+
 - Vercel: https://vercel.com
 - Supabase: https://supabase.com
 - Sentry: https://sentry.io
@@ -46,12 +47,13 @@ Before deploying, ensure you have:
 Create a staging environment before production:
 
 **Branch Strategy:**
+
 ```bash
 # Create staging branch
 git checkout -b staging
 git push -u origin staging
 
-# Production deploys from main/master
+# Production deploys from master
 # Staging deploys from staging
 ```
 
@@ -60,12 +62,14 @@ git push -u origin staging
 Create environment variable files for reference (DO NOT commit):
 
 **`.env.example`** (commit this as template):
+
 ```bash
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJxxx...
 SUPABASE_SERVICE_ROLE_KEY=eyJxxx...
 DATABASE_URL=postgresql://postgres:xxx@db.xxx.supabase.co:6543/postgres
+DIRECT_URL=postgresql://postgres:xxx@db.xxx.supabase.co:5432/postgres
 
 # Email (Resend)
 RESEND_API_KEY=re_xxx
@@ -91,7 +95,8 @@ MATCHING_FEATURE_ENABLED=true
 LOG_LEVEL=info
 
 # App Configuration
-NEXT_PUBLIC_APP_URL=https://yourdomain.com
+NEXT_PUBLIC_SITE_URL=https://yourdomain.com
+SITE_URL=https://yourdomain.com
 ```
 
 **Security Note:** Never commit `.env.local` or `.env.production` files. Use Vercel's environment variable management.
@@ -115,11 +120,13 @@ NEXT_PUBLIC_APP_URL=https://yourdomain.com
 ### 2. Configure Database
 
 **Get connection details:**
+
 ```
 Project Settings → Database → Connection string
 ```
 
 **Connection strings:**
+
 - **Direct:** `postgresql://postgres:[password]@db.[project-ref].supabase.co:5432/postgres`
 - **Pooler (Transaction):** `postgresql://postgres:[password]@db.[project-ref].supabase.co:6543/postgres`
 
@@ -127,27 +134,16 @@ Project Settings → Database → Connection string
 
 ### 3. Run Database Migrations
 
-**Install Drizzle CLI:**
+Proofound uses canonical SQL migrations under `src/db/migrations/` and a migration runner:
+
+- Canonical path: `src/db/migrations/*.sql` (enforced by CI drift checks)
+- Runner: `npm run db:migrate` (runs `run-migrations.mjs`)
+
+**Apply migrations:**
+
 ```bash
-npm install -g drizzle-kit
-```
-
-**Configure connection:**
-```bash
-# Set DATABASE_URL temporarily (or use .env.production)
-export DATABASE_URL="postgresql://postgres:[password]@db.[project-ref].supabase.co:6543/postgres"
-```
-
-**Push schema:**
-```bash
-# Generate migrations
-npm run db:generate
-
-# Push to production database
-npm run db:push
-
-# Verify tables created
-npx drizzle-kit studio
+# Prefer DIRECT_URL (direct connection) for DDL where possible
+PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:migrate
 ```
 
 **Alternative: SQL Editor in Supabase:**
@@ -163,17 +159,14 @@ npx drizzle-kit studio
 
 ```bash
 # Seed taxonomy data
-npm run seed:taxonomy
-
-# Or run seed script with production DATABASE_URL
-DATABASE_URL="your-production-url" node scripts/seed-taxonomy.mjs
+PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:seed-taxonomy
 ```
 
 **Demo Data (Optional for staging):**
 
 ```bash
 # Only for staging environment
-DATABASE_URL="your-staging-url" npm run seed:demo
+DATABASE_URL="your-staging-url" PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:seed
 ```
 
 ### 5. Enable Row Level Security (RLS)
@@ -248,6 +241,7 @@ ALTER TABLE skills ENABLE ROW LEVEL SECURITY;
 **Framework Preset:** Next.js (auto-detected)
 
 **Build & Development Settings:**
+
 - **Build Command:** `npm run build`
 - **Output Directory:** `.next` (default)
 - **Install Command:** `npm install`
@@ -262,6 +256,7 @@ ALTER TABLE skills ENABLE ROW LEVEL SECURITY;
 Add all variables from `.env.example`:
 
 **For Production:**
+
 1. Click "Add Environment Variable"
 2. Select "Production" environment
 3. Add each variable:
@@ -271,6 +266,7 @@ NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJxxx...
 SUPABASE_SERVICE_ROLE_KEY=eyJxxx...
 DATABASE_URL=postgresql://postgres:xxx@db.xxx.supabase.co:6543/postgres
+DIRECT_URL=postgresql://postgres:xxx@db.xxx.supabase.co:5432/postgres
 RESEND_API_KEY=re_xxx
 EMAIL_FROM=noreply@yourdomain.com
 NEXT_PUBLIC_SENTRY_DSN=https://xxx@sentry.io/xxx
@@ -280,7 +276,8 @@ SENTRY_AUTH_TOKEN=xxx
 CRON_SECRET=generate-random-secret-here
 MATCHING_FEATURE_ENABLED=true
 LOG_LEVEL=info
-NEXT_PUBLIC_APP_URL=https://yourdomain.com
+NEXT_PUBLIC_SITE_URL=https://yourdomain.com
+SITE_URL=https://yourdomain.com
 ```
 
 **For Preview/Development:**
@@ -305,6 +302,7 @@ Repeat for Preview and Development environments (use staging database for previe
 **Verify KV Connection:**
 
 After deployment, check logs for:
+
 ```
 {"level":"info","event":"cache.hit","key":"taxonomy:l1",...}
 ```
@@ -317,7 +315,7 @@ Click "Deploy" button in Vercel dashboard.
 
 **Deployment from Git:**
 
-Every push to `main` triggers production deployment.
+Every push to `master` triggers production deployment.
 Every push to `staging` triggers staging deployment.
 Every PR creates a preview deployment.
 
@@ -330,6 +328,7 @@ Every PR creates a preview deployment.
 **Deployment URL:**
 
 Vercel provides auto-generated URL:
+
 ```
 https://proofound-xxx.vercel.app
 ```
@@ -352,11 +351,13 @@ https://proofound-xxx.vercel.app
 Vercel provides DNS records to add:
 
 **For root domain (yourdomain.com):**
+
 - Type: A
 - Name: @
 - Value: 76.76.21.21
 
 **For www subdomain (www.yourdomain.com):**
+
 - Type: CNAME
 - Name: www
 - Value: cname.vercel-dns.com
@@ -374,6 +375,7 @@ Vercel provides DNS records to add:
 Vercel automatically provisions SSL certificates via Let's Encrypt.
 
 **Verify SSL:**
+
 1. Wait for DNS propagation
 2. Check Vercel dashboard → Domains
 3. Status should show "Valid Certificate"
@@ -572,12 +574,14 @@ vercel logs --follow
 ```
 
 **Check for:**
+
 - Structured logs appearing
 - No error logs
 - Request IDs present
 - User IDs present (after auth)
 
 **Example good log:**
+
 ```json
 {
   "level": "info",
@@ -594,11 +598,13 @@ vercel logs --follow
 ### 3. Check Monitoring Services
 
 **Sentry:**
+
 - [ ] No errors in dashboard
 - [ ] Performance monitoring working
 - [ ] Alerts configured
 
 **Vercel Analytics:**
+
 - [ ] Web Vitals being tracked
 - [ ] Page views recording
 - [ ] No anomalies
@@ -629,12 +635,14 @@ lighthouse https://yourdomain.com \
 ```
 
 **Target scores:**
+
 - Performance: > 90
 - Accessibility: > 90
 - Best Practices: > 90
 - SEO: > 90
 
 **Check Core Web Vitals:**
+
 - LCP < 2.5s
 - FID < 100ms
 - CLS < 0.1
@@ -709,6 +717,7 @@ npm run typecheck
 **Missing Environment Variables:**
 
 Check Vercel build logs for:
+
 ```
 Error: NEXT_PUBLIC_SUPABASE_URL is not defined
 ```
@@ -741,6 +750,7 @@ Error: connect ETIMEDOUT
 ```
 
 **Fixes:**
+
 - Verify DATABASE_URL is correct
 - Check DATABASE_URL uses port 6543 (pooler)
 - Verify IP allowlist in Supabase (should allow all for Vercel)
@@ -753,6 +763,7 @@ Error: Invalid JWT
 ```
 
 **Fixes:**
+
 - Verify SUPABASE_SERVICE_ROLE_KEY is correct
 - Check Supabase project URL matches
 - Verify Auth settings in Supabase dashboard
@@ -764,6 +775,7 @@ Error: KV connection failed
 ```
 
 **Fixes:**
+
 - Verify Vercel KV is created and connected
 - Check KV_REST_API_URL and KV_REST_API_TOKEN are set
 - Ensure KV database is in same region as app
@@ -790,6 +802,7 @@ Error: sorry, too many clients already
 ```
 
 **Fixes:**
+
 - Use transaction pooler (port 6543)
 - Close connections properly in code
 - Check for connection leaks

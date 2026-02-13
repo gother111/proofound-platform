@@ -1553,3 +1553,60 @@ Open TODOs / follow-ups:
 
 - Decide whether to move `tests/e2e/prd-flows-organization.spec.ts` under `e2e/` or add a second Playwright config for `tests/e2e`.
 - Re-run targeted organization settings route regression once discovery path is aligned.
+
+---
+
+## 2026-02-13 20:55 CET
+
+Task summary:
+
+- Implement production readiness hardening for the 2-day private beta launch plan (Node parity, runnable checklists, cron auth safety, and docs alignment).
+
+What worked:
+
+- Added missing npm scripts so checklists are runnable (`vercel:*`, `db:*`).
+- Vercel project linking and `npm run vercel:preflight` succeeded after linking.
+- Cron routes now fail closed when `CRON_SECRET` is missing, removing the unsafe fallback secret path.
+- Repo docs are more consistent on branch name (`master`) and migration process (`src/db/migrations` + `db:migrate`).
+
+What failed / wrong assumptions:
+
+- GitHub Actions secrets required by strict provider E2E gates were missing (`E2E_PROVIDER_USER_*`).
+- Deploy retry workflow secret `VERCEL_DEPLOY_HOOK_URL` was missing.
+
+User corrections:
+
+- None.
+
+Assumptions taken without asking:
+
+- Default env parity compare project should be `proofound` (legacy/decommissioned Vercel project).
+- Preferring `DIRECT_URL` for migrations and DB checkpoints is always safer than using pooled `DATABASE_URL`.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add a dedicated preflight script to validate GitHub Actions secret presence before running strict gates.
+- Decide and document the exact environment to run strict E2E gates against (avoid accidental production DB writes).
+
+Commands run + outcomes:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm ci`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS (one warning)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npx -y vercel@latest link --project proofound-platform --yes --token "$VERCEL_TOKEN"`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run vercel:preflight`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run vercel:env-parity`: PASS (informational diff)
+- `gh secret list --repo gother111/proofound-platform`: PASS (identified missing secrets)
+
+Open TODOs / follow-ups:
+
+- Add GitHub Actions secrets:
+  - `E2E_PROVIDER_USER_ID`, `E2E_PROVIDER_USER_EMAIL`, `E2E_PROVIDER_USER_PASSWORD`
+  - `VERCEL_DEPLOY_HOOK_URL`
+- Run strict MVP gate bundle (CI or local) once deterministic provider user and safe DB env are confirmed.

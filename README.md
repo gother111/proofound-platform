@@ -118,7 +118,9 @@ NEXT_PUBLIC_APP_ENV=local
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-DATABASE_URL=postgresql://postgres:[PASSWORD]@db.your-project.supabase.co:5432/postgres
+DATABASE_URL=postgresql://postgres:[PASSWORD]@db.your-project.supabase.co:6543/postgres
+DIRECT_URL=postgresql://postgres:[PASSWORD]@db.your-project.supabase.co:5432/postgres
+PII_HASH_SALT=your-salt
 
 # Resend
 RESEND_API_KEY=re_your_key
@@ -129,10 +131,11 @@ RATE_LIMIT_WINDOW_SECONDS=60
 RATE_LIMIT_MAX=30
 
 # Sentry (error monitoring)
-SENTRY_DSN=
+NEXT_PUBLIC_SENTRY_DSN=
 SENTRY_ORG=
 SENTRY_PROJECT=
 SENTRY_AUTH_TOKEN=
+SENTRY_DEBUG=false
 
 # Cron jobs
 CRON_SECRET=your-cron-bearer-token
@@ -145,14 +148,11 @@ CRON_SECRET=your-cron-bearer-token
 Run migrations and triggers:
 
 ```bash
-# Generate migration files
-npm run db:generate
-
-# Push schema to Supabase
-npm run db:push
-
 # Apply ordered SQL migrations + policy/trigger supplements
-npm run db:migrate
+PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:migrate
+
+# Optional but recommended for matching
+PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:seed-taxonomy
 ```
 
 **Quick guide to DB scripts:**
@@ -160,7 +160,9 @@ npm run db:migrate
 - `npm run db:generate` — Create a new migration from schema changes.
 - `npm run db:migrate` — Apply ordered `src/db/migrations/*.sql` plus ledgered policy/trigger SQL.
 - `npm run db:drift-check` — Enforce canonical migration-path discipline in CI.
-- `npm run db:push` — Push the current schema directly to the database (bypasses migration files).
+- `npm run db:push` — Dev-only. Push the current schema directly to a database (bypasses migration files). Do not use this for production.
+- `npm run db:backup:checkpoint` — Create a database checkpoint before risky DDL.
+- `npm run db:audit:migrations` — Audit Supabase migration ledger drift (local files vs remote `supabase_migrations.schema_migrations`).
 - `npm run db:seed` — Seed feature flags (and demo data when enabled).
 - `npm run db:seed-taxonomy` — Seed the expertise taxonomy slice used by matching.
 
@@ -247,12 +249,15 @@ npm run typecheck        # TypeScript type checking
 npm run db:generate      # Generate Drizzle migrations
 npm run db:migrate       # Run ordered SQL migrations + policy/trigger supplements
 npm run db:drift-check   # Check migration path drift
-npm run db:push          # Push schema to database
+npm run db:push          # Dev-only schema push (do not use for production)
+npm run db:backup:checkpoint  # Create a DB checkpoint before risky DDL
+npm run db:audit:migrations   # Audit Supabase migration ledger drift
 npm run db:studio        # Open Drizzle Studio
 npm run db:seed          # Seed database
 
-# Brand Tokens
-npm run tokens:sync      # Sync tokens from Figma (requires setup)
+# Vercel
+npm run vercel:preflight  # Check Vercel project link + required env key presence
+npm run vercel:env-parity # Optional env parity snapshot vs legacy project
 
 # Testing
 npm run test             # Run unit tests (Vitest)
@@ -401,20 +406,18 @@ E2E tests include `@axe-core/playwright` for WCAG AA compliance checks on key pa
 
 **Post-Deployment:**
 
-- Run migrations via Supabase dashboard or `npm run db:push`
+- Apply database migrations explicitly via `npm run db:migrate` (do not use `db:push` for production)
 - Verify email sending works
 - Test auth flows end-to-end
 
 ### Database Migrations on Deploy
 
-Option 1: Run migrations manually in Supabase SQL Editor after schema changes
+Proofound does not run database migrations automatically in the Vercel build.
 
-Option 2: Add migration command to Vercel build:
+Apply schema changes out of band using canonical SQL migrations (`src/db/migrations/*.sql`) and:
 
-```json
-{
-  "build": "npm run db:push && next build"
-}
+```bash
+PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:migrate
 ```
 
 ## CI/CD
@@ -427,7 +430,7 @@ GitHub Actions workflow (`.github/workflows/ci.yml`) runs on push/PR:
 4. Run unit tests
 5. Build
 
-Protect your `main` branch:
+Protect your `master` branch:
 
 - Require PR reviews
 - Require CI to pass

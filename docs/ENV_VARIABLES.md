@@ -7,7 +7,7 @@ Complete guide to all environment variables used in Proofound, including which f
 > Current production domain: **`https://proofound.io`**
 >
 > Update `NEXT_PUBLIC_SITE_URL` in Vercel environment variables to match your actual domain.
-> `proofound.io` is legacy/parked and should not be used for app URLs.
+> `proofound.com` is legacy/parked and should not be used for app URLs.
 
 ## Quick Reference
 
@@ -15,7 +15,7 @@ Complete guide to all environment variables used in Proofound, including which f
 # ============================================================================
 # CRITICAL - Required for app to function
 # ============================================================================
-DATABASE_URL=postgresql://user:pass@host:5432/db
+DATABASE_URL=postgresql://user:pass@host:6543/db  # Pooled (transaction) recommended for runtime
 NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJxxx...
 SUPABASE_SERVICE_ROLE_KEY=eyJxxx...
@@ -40,7 +40,7 @@ E2E_PROVIDER_USER_EMAIL=provider-e2e@test.proofound.com
 E2E_PROVIDER_USER_PASSWORD=your_deterministic_test_password
 STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true
 STRICT_PROVIDER_E2E_REQUIRE_BOTH=true
-DIRECT_URL=postgresql://user:pass@host:5432/db  # Optional; Drizzle uses this, otherwise falls back to DATABASE_URL
+DIRECT_URL=postgresql://user:pass@host:5432/db  # Direct (non-pooled) recommended for migrations and tooling
 
 # ============================================================================
 # OPTIONAL - Enhance functionality
@@ -214,7 +214,7 @@ NEXT_PUBLIC_SITE_URL=https://proofound.io
 **Important**:
 
 - ✅ Canonical domain: `https://proofound.io`
-- ❌ Legacy/parked domain: `https://proofound.io`
+- ❌ Legacy/parked domain: `https://proofound.com`
 - ✅ No trailing slash: `https://proofound.io`
 - ❌ No trailing slash: `https://proofound.io/`
 - ✅ Include protocol (http/https)
