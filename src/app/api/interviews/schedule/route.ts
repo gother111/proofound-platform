@@ -370,6 +370,7 @@ export async function POST(request: NextRequest) {
       const shouldFallbackToLegacyShape =
         isMissingColumnError(modernInsert.error, 'duration_minutes') ||
         isMissingColumnError(modernInsert.error, 'meeting_link') ||
+        isMissingColumnError(modernInsert.error, 'timezone') ||
         isMissingColumnError(modernInsert.error, 'host_user_id') ||
         isMissingColumnError(modernInsert.error, 'participant_user_ids');
 
@@ -386,7 +387,6 @@ export async function POST(request: NextRequest) {
           scheduled_at: data.scheduledAt,
           platform: legacyPlatform,
           meeting_id: meetingId,
-          timezone: data.timezone,
           status: 'scheduled',
           duration: 30,
           meeting_url: meetingLink,

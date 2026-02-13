@@ -1894,3 +1894,49 @@ Open TODOs / follow-ups:
 
 - Commit/push this follow-up.
 - Resolve all PR conversations and merge when required checks pass.
+
+## 2026-02-13 01:27:00 CET
+
+Task summary (1-3 lines):
+
+- Investigated new CI failure in strict individual flow after enabling auto-merge.
+- Applied hotfix for interview legacy fallback (`timezone` missing column) and reduced strict login redirect timeout sensitivity.
+
+What worked:
+
+- CI job log extraction identified exact schema-cache failure (`PGRST204` missing `timezone`) in `/api/interviews/schedule`.
+- Small fallback extension + removing `timezone` from legacy insert path addressed the concrete 500 root cause.
+
+What failed / wrong assumptions:
+
+- Prior fallback hardening still assumed `timezone` existed in legacy schema variants.
+
+User corrections:
+
+- None.
+
+Assumptions taken without asking:
+
+- Omitting `timezone` in legacy insert is acceptable because legacy schemas either default it or do not support the column.
+- Increasing strict login redirect wait to `45s` is an acceptable tradeoff to reduce CI false negatives.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add API tests for `interviews/schedule` missing-column matrix (`duration_minutes`, `meeting_link`, `host_user_id`, `participant_user_ids`, `timezone`).
+- Add stricter diagnostics in `loginWithUi` to print current URL/form error before timeout.
+
+Commands run + outcomes (short):
+
+- `gh api /repos/.../actions/jobs/63466262945/logs`: PASS (retrieved root-cause logs)
+- `npm run lint`: PASS (1 pre-existing warning)
+- `npm run typecheck`: PASS
+- `npm run test -- tests/api/match-interest-route.test.ts tests/lib/assignments-activation.test.ts tests/api/matching-profile-compat-route.test.ts tests/api/assignments-publish-route.test.ts`: PASS
+
+Open TODOs / follow-ups:
+
+- Commit/push strict-individual hotfix.
+- Re-run/observe CI checks and confirm auto-merge completion.

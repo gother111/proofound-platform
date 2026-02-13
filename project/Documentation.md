@@ -1659,3 +1659,31 @@ How to verify:
 Open risks/TODO:
 
 - No dedicated automated unit tests exist yet for `/api/interviews/schedule` modern/legacy fallback branches; add route-level tests for missing-column fallback and org-admin list visibility.
+
+## 2026-02-13 - CI strict-individual hotfix follow-up
+
+What changed:
+
+- Extended interview schedule legacy fallback for missing `timezone` interview column:
+  - `src/app/api/interviews/schedule/route.ts`
+  - Fallback trigger now includes `PGRST204` for `timezone`.
+  - Legacy fallback insert now omits `timezone`, relying on table defaults/legacy shape.
+- Reduced strict login redirect flake sensitivity:
+  - `e2e/helpers/strict-fixtures.ts`
+  - `loginWithUi` redirect wait increased from `20s` to `45s`.
+
+Why:
+
+- CI strict individual flow failed with:
+  - `Failed to schedule interview` caused by `PGRST204` missing `timezone` column in runtime schema cache.
+  - Intermittent login redirect timeout during strict flow setup (`waitForURL` timeout at 20s).
+
+How to verify:
+
+- `npm run lint`: PASS (1 pre-existing warning in `postcss.config.js`)
+- `npm run typecheck`: PASS
+- `npm run test -- tests/api/match-interest-route.test.ts tests/lib/assignments-activation.test.ts tests/api/matching-profile-compat-route.test.ts tests/api/assignments-publish-route.test.ts`: PASS
+
+Open risks/TODO:
+
+- Strict individual E2E success still depends on rerunning CI with real strict env since local strict suites cannot be executed without required secrets.
