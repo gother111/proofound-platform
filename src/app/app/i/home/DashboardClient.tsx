@@ -49,7 +49,7 @@ export function DashboardClient({ initialLayout }: DashboardClientProps) {
   return (
     <div className="space-y-2">
       {isDashboardLoading && !hasRenderError ? (
-        <div className="text-xs text-gray-500" aria-live="polite">
+        <div className="text-xs text-gray-600" aria-live="polite">
           Dashboard loading…
         </div>
       ) : null}

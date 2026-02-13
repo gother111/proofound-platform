@@ -31,7 +31,7 @@ import { normalizeSkillForClient } from './utils/normalizeSkill';
 interface ExpertiseAtlasClientProps {
   initialSkills: any[];
   domains: any[];
-  hasSkills: boolean;
+  taxonomyReady: boolean;
   widgetData: any | null;
   linkedInConnected: boolean;
 }
@@ -39,7 +39,7 @@ interface ExpertiseAtlasClientProps {
 export function ExpertiseAtlasClient({
   initialSkills,
   domains,
-  hasSkills,
+  taxonomyReady,
   widgetData,
   linkedInConnected,
 }: ExpertiseAtlasClientProps) {
@@ -92,7 +92,8 @@ export function ExpertiseAtlasClient({
     if (total < 3) nextStep = 'Add 3 skills to unlock the dashboard and matching.';
     else if (proofed < 2) nextStep = 'Attach proofs to your top 2 skills.';
     else if (verified < 1) nextStep = 'Request one verification to boost credibility.';
-    else if (fresh < Math.max(1, Math.ceil(total * 0.5))) nextStep = 'Update recency on a key skill.';
+    else if (fresh < Math.max(1, Math.ceil(total * 0.5)))
+      nextStep = 'Update recency on a key skill.';
 
     return {
       score: Math.round(Math.min(100, score)),
@@ -156,6 +157,8 @@ export function ExpertiseAtlasClient({
     return filtered;
   }, [skills, filters]);
 
+  const hasAnySkills = skills.length > 0;
+
   // Handle skill added - optimistic update + soft refresh
   const handleSkillAdded = (skill?: any) => {
     if (skill) {
@@ -182,6 +185,7 @@ export function ExpertiseAtlasClient({
         open={isAddSkillDrawerOpen}
         onOpenChange={setIsAddSkillDrawerOpen}
         domains={domains}
+        taxonomyReady={taxonomyReady}
         onSkillAdded={handleSkillAdded}
       />
     </>
@@ -375,6 +379,13 @@ export function ExpertiseAtlasClient({
         {/* About Section */}
         <AboutSection />
 
+        {!taxonomyReady && (
+          <div className="mb-6 rounded-lg border border-[#C76B4A] bg-[#FFF0F0] px-4 py-3 text-sm text-[#8B4A36]">
+            Expertise taxonomy data is currently unavailable. Dashboard coverage and add-skill
+            search will be limited until recovery completes.
+          </div>
+        )}
+
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-6">
@@ -402,7 +413,7 @@ export function ExpertiseAtlasClient({
 
           {/* Skills Atlas Tab */}
           <TabsContent value="atlas" className="space-y-6">
-            {!hasSkills ? (
+            {!hasAnySkills ? (
               emptyStateContent
             ) : (
               <>
@@ -421,11 +432,14 @@ export function ExpertiseAtlasClient({
                             {readiness.score}% ready
                           </h3>
                           <p className="text-sm text-muted-foreground mt-1">
-                            Why this matters: solid signals (skills + proofs + recency) increase your
-                            rank transparency and intro quality.
+                            Why this matters: solid signals (skills + proofs + recency) increase
+                            your rank transparency and intro quality.
                           </p>
                         </div>
-                        <Badge variant="secondary" className="bg-proofound-parchment text-proofound-forest">
+                        <Badge
+                          variant="secondary"
+                          className="bg-proofound-parchment text-proofound-forest"
+                        >
                           {readiness.nextStep}
                         </Badge>
                       </div>
@@ -517,7 +531,8 @@ export function ExpertiseAtlasClient({
                       {/* Row 4 - Full Width */}
                       <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
                         <p className="text-xs text-muted-foreground mb-2">
-                          Why this matters: coverage shows where you’re strong and what to fill next.
+                          Why this matters: coverage shows where you’re strong and what to fill
+                          next.
                         </p>
                         <CoverageHeatmap
                           data={widgetData.coverage}
@@ -623,6 +638,7 @@ export function ExpertiseAtlasClient({
           open={isAddSkillDrawerOpen}
           onOpenChange={setIsAddSkillDrawerOpen}
           domains={domains}
+          taxonomyReady={taxonomyReady}
           onSkillAdded={handleSkillAdded}
         />
 

@@ -23,6 +23,11 @@ Add these to your `.env.local` file:
 # LinkedIn OAuth (REQUIRED)
 LINKEDIN_CLIENT_ID=your_linkedin_client_id
 LINKEDIN_CLIENT_SECRET=your_linkedin_client_secret
+
+# Optional override: force a specific callback URI
+# If omitted, callback defaults to the current request domain:
+# <current-origin>/api/auth/linkedin/callback
+LINKEDIN_REDIRECT_URI=
 ```
 
 ### Getting LinkedIn OAuth Credentials
@@ -38,6 +43,7 @@ LINKEDIN_CLIENT_SECRET=your_linkedin_client_secret
 5. Add these redirect URLs:
    - Local: `http://localhost:3000/api/auth/linkedin/callback`
    - Production: `https://proofound.io/api/auth/linkedin/callback`
+   - Demo/Staging (if used): `https://<your-demo-domain>/api/auth/linkedin/callback`
 6. Under **"OAuth 2.0 scopes"**, request:
    - `openid` (required)
    - `profile` (required)
@@ -100,6 +106,8 @@ ngrok http 3000
 3. Update your `.env.local`:
    ```bash
    NEXT_PUBLIC_SITE_URL=https://abc123.ngrok.io
+   # Optional only if you want to pin one callback URI
+   # LINKEDIN_REDIRECT_URI=https://abc123.ngrok.io/api/auth/linkedin/callback
    ```
 4. Restart your dev server
 
@@ -155,19 +163,14 @@ The automated system analyzes:
 
 1. **Verification Badge** (Primary, +50 points)
    - LinkedIn's official identity verification badge
-   
 2. **Connections** (+15 points max)
    - 500+ connections = high trust
-   
 3. **Profile Completeness** (+15 points max)
    - Photo, headline, about, experience, education, skills
-   
 4. **Account Age** (+10 points max)
    - Old accounts (5+ years) = more trustworthy
-   
 5. **Experience Count** (+5 points max)
    - Multiple work experiences = established profile
-   
 6. **Profile Photo** (+5 points)
    - Has professional photo
 
@@ -191,39 +194,51 @@ The automated system analyzes:
 ## Troubleshooting
 
 ### "LinkedIn not connected" error
+
 **Solution**: Verify `LINKEDIN_CLIENT_ID` and `LINKEDIN_CLIENT_SECRET` are set in `.env.local`
 
 ### OAuth redirect fails
-**Solution**: 
+
+**Solution**:
+
 - Check redirect URL matches LinkedIn app settings exactly
+- If `LINKEDIN_REDIRECT_URI` is set, it must exactly match one registered LinkedIn callback URL
+- If `LINKEDIN_REDIRECT_URI` is not set, ensure the active app domain callback URL is registered in LinkedIn
 - For local dev, use ngrok HTTPS URL
 - Verify `NEXT_PUBLIC_SITE_URL` is set correctly
 
 ### "Playwright not found" error
+
 **Solution**:
+
 ```bash
 npx playwright install chromium
 ```
 
 ### Automated check returns low confidence
+
 **Solution**:
+
 - Verify LinkedIn profile is public (not private)
 - Check if profile has verification badge
 - Ensure profile is complete (photo, experience, etc.)
 - If confidence is genuinely low, suggest user try Veriff or Work Email instead
 
 ### Admin dashboard shows "Forbidden"
+
 **Solution**: Ensure user has `role = 'admin'` in `profiles` table
 
 ## API Endpoints
 
 ### User Endpoints
+
 - `GET /api/auth/linkedin` - OAuth initiation
 - `GET /api/auth/linkedin/callback` - OAuth callback
 - `POST /api/verification/linkedin/initiate` - Start verification
 - `GET /api/verification/status` - Get verification status
 
-### Admin Endpoints  
+### Admin Endpoints
+
 - `GET /api/admin/verification/linkedin/queue` - Get pending verifications
 - `POST /api/admin/verification/linkedin/[userId]/review` - Approve/reject
 
@@ -249,6 +264,7 @@ Track these metrics after deployment:
 ## Support
 
 For issues or questions:
+
 1. Check troubleshooting section above
 2. Review logs in browser console (F12)
 3. Check server logs for API errors
@@ -259,4 +275,3 @@ For issues or questions:
 **Last Updated**: 2025-11-01  
 **Feature Status**: ✅ Fully Implemented  
 **Migration**: `drizzle/0029_add_linkedin_verification.sql`
-
