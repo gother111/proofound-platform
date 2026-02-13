@@ -1729,3 +1729,86 @@ Final verification rerun after the mobile E2E isolation patch:
 Notes:
 
 - During E2E execution, server logs still show expected environment-level warnings/errors related to missing `DATABASE_URL` and mock DB behavior in this local setup, but the mobile test suite completed successfully.
+
+## 2026-02-13: Mobile notification dropdown viewport containment hardening
+
+What changed:
+
+- Updated mobile notification dropdown layout in `src/components/notifications/NotificationDropdown.tsx`:
+  - Added `data-testid="notifications-dropdown"` for stable E2E targeting.
+  - Replaced fixed `w-96` mobile behavior with viewport-anchored mobile positioning:
+    - Mobile: `fixed inset-x-2 top-16` with max-height guard.
+    - Desktop: preserved anchored dropdown behavior via `sm:absolute sm:right-0 sm:top-12 sm:w-96`.
+  - Improved small-screen header control fit:
+    - Mark-all-read text is hidden on small screens while preserving an explicit aria-label.
+    - Added explicit aria-labels for settings and close icon buttons.
+- Expanded mobile regression tests in `e2e/mobile-smartphone.spec.ts`:
+  - Added assertion that opened notification dropdown remains within viewport for app shells on iPhone 12.
+  - Added narrow viewport assertion (iPhone SE) for the same behavior.
+
+Why:
+
+- Mobile audit found the dropdown could overflow left on narrow screens due to fixed width and trigger-relative anchoring.
+- Goal was to ensure all navigation/overlay UI remains aligned and fully usable on mobile without horizontal drift.
+
+How to verify:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:mobile`
+
+Verification results:
+
+- `npm run lint`: pass (1 existing warning in `postcss.config.js`)
+- `npm run typecheck`: pass
+- `npm run test:e2e:mobile`: pass (`8 passed`)
+
+Open risks/TODO:
+
+- Environment-level mock DB warnings during E2E remain expected in this local setup and are outside this UI change scope.
+- Notification routes are currently individual-shell paths in the dropdown actions; cross-persona routing alignment can be reviewed separately if needed.
+
+## 2026-02-13: Mobile notifications non-disturbing UX hardening
+
+What changed:
+
+- Updated `src/components/notifications/NotificationBell.tsx` to pass explicit mobile and shell context into notification rendering:
+  - Detects mobile viewport (`max-width: 767px`) via `matchMedia`.
+  - Detects shell type from pathname (`individual`, `organization`, `unknown`) and captures org slug for org routes.
+- Updated `src/components/notifications/NotificationDropdown.tsx` for mobile-safe behavior:
+  - Added props: `isMobile`, `shellType`, `orgSlug`.
+  - Added mobile auto-dismiss timer (4500ms) with interaction-based reset (`pointerdown`, `touchstart`, `wheel`).
+  - Added viewport-safe mobile positioning that reserves bottom nav space:
+    - mobile: fixed top panel with explicit bottom offset (`calc(5.5rem + env(safe-area-inset-bottom))`).
+    - desktop: existing right-anchored dropdown behavior preserved.
+  - Hid settings icon action on mobile to reduce clutter.
+  - Made routes shell-aware:
+    - settings action: org -> `/app/o/{slug}/settings`, individual -> `/app/i/settings/notifications`.
+    - view-all action: org -> `/app/o/{slug}/messages` fallback, individual -> `/app/i/notifications`.
+- Expanded `e2e/mobile-smartphone.spec.ts` coverage:
+  - Added assertion that notifications dropdown stays above bottom mobile nav.
+  - Added mobile idle auto-dismiss test.
+  - Added interaction-resets-dismiss timer test.
+  - Kept existing viewport-fit assertions for iPhone 12 and iPhone SE.
+
+Why:
+
+- Mobile notifications were still disruptive in small viewports and could interfere with primary navigation UX.
+- Goal was to keep notifications lightweight, intuitive, and non-blocking while preserving desktop behavior.
+
+How to verify:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:mobile`
+
+Verification results:
+
+- `npm run lint`: pass (1 existing warning in `postcss.config.js`)
+- `npm run typecheck`: pass
+- `npm run test:e2e:mobile`: pass (`10 passed`)
+
+Open risks/TODO:
+
+- 4500ms mobile auto-dismiss may feel aggressive for slower readers and can be tuned based on product feedback.
+- Org "View all notifications" currently routes to org messages as an intentional fallback until a dedicated org notifications page exists.

@@ -2074,3 +2074,91 @@ Open TODOs / follow-ups:
   - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:mobile` -> pass
 - Open TODOs / follow-ups:
   - Optional cleanup of existing lint warning in `postcss.config.js`.
+
+## 2026-02-13 18:47 CET
+
+Task summary:
+
+- Re-audited mobile shell alignment and implemented remaining mobile hardening for notifications dropdown viewport containment.
+- Added explicit E2E coverage for opened notifications dropdown alignment on iPhone 12 and iPhone SE.
+
+What worked:
+
+- Existing mobile nav/settings and overflow containment were already in place and passing tests.
+- New dropdown alignment assertions correctly reproduced the remaining issue and then validated the fix.
+
+What failed / wrong assumptions:
+
+- Initial responsive width change alone was insufficient because dropdown remained trigger-anchored and could still shift outside the viewport on mobile.
+
+User corrections:
+
+- User asked for a full mobile alignment check and to fix any remaining issues after prior settings/overflow work.
+
+Assumptions taken without asking:
+
+- Viewport-anchored `fixed` positioning for the dropdown on mobile is acceptable UX as long as desktop anchored behavior remains unchanged.
+- Existing mock DB warnings are non-blocking for mobile UI verification.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add overlay viewport containment checks proactively for interactive popovers in mobile audits.
+
+Commands run + outcomes:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint` -> pass (warning only)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck` -> pass
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:mobile` -> initial fail on dropdown left overflow, then pass (`8 passed`) after mobile positioning fix
+
+Open TODOs / follow-ups:
+
+- Optional: audit notification action routes for org shell parity.
+
+## 2026-02-13 19:05 CET
+
+Task summary:
+
+- Implemented mobile notifications UX hardening to keep notifications non-disturbing and avoid covering bottom navigation.
+- Added shell-aware routing behavior and extended mobile E2E checks for lifecycle and placement behavior.
+
+What worked:
+
+- Mobile dropdown behavior became predictable with viewport-safe constraints and reserved bottom-nav space.
+- New E2E assertions caught/validated behavior for auto-dismiss and no-overlap across iPhone 12 and iPhone SE.
+
+What failed / wrong assumptions:
+
+- Initial timer ref type used `window.setTimeout` return type and failed typecheck in this repo setup.
+
+User corrections:
+
+- User emphasized notifications should not be disturbing and should not cover bottom navigation on mobile.
+
+Assumptions taken without asking:
+
+- 4500ms is an acceptable default auto-dismiss duration for mobile idle state.
+- Org shell fallback route for "View all" should be org messages until dedicated org notifications exist.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add explicit product-tunable constant for mobile notification auto-dismiss duration.
+- Consider introducing dedicated org notifications route to remove fallback semantics.
+
+Commands run + outcomes:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint` -> pass (warning only)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck` -> pass
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:mobile` -> pass (`10 passed`)
+
+Open TODOs / follow-ups:
+
+- Optional product tuning for mobile auto-dismiss duration.
+- Optional dedicated org notifications page/route.

@@ -22,6 +22,59 @@ async function gotoStable(page: import('@playwright/test').Page, route: string) 
   }
 }
 
+async function expectNotificationDropdownWithinViewport(page: import('@playwright/test').Page) {
+  const dropdown = page.getByTestId('notifications-dropdown');
+  await expect(dropdown).toBeVisible();
+
+  const bounds = await dropdown.evaluate((node) => {
+    const rect = node.getBoundingClientRect();
+    return {
+      left: rect.left,
+      right: rect.right,
+      width: rect.width,
+      viewportWidth: window.innerWidth,
+    };
+  });
+
+  expect(
+    bounds.left,
+    'Notification dropdown left edge must stay in viewport'
+  ).toBeGreaterThanOrEqual(0);
+  expect(
+    bounds.right,
+    `Notification dropdown right edge ${bounds.right}px exceeds viewport ${bounds.viewportWidth}px`
+  ).toBeLessThanOrEqual(bounds.viewportWidth);
+}
+
+async function expectNotificationDropdownAboveBottomNav(page: import('@playwright/test').Page) {
+  const layout = await page.evaluate(() => {
+    const dropdown = document.querySelector(
+      '[data-testid="notifications-dropdown"]'
+    ) as HTMLElement | null;
+    const bottomNav = document.querySelector(
+      '[aria-label="Mobile primary navigation"]'
+    ) as HTMLElement | null;
+
+    if (!dropdown || !bottomNav) {
+      return null;
+    }
+
+    const dropdownRect = dropdown.getBoundingClientRect();
+    const bottomNavRect = bottomNav.getBoundingClientRect();
+
+    return {
+      dropdownBottom: dropdownRect.bottom,
+      bottomNavTop: bottomNavRect.top,
+    };
+  });
+
+  expect(layout, 'Notification dropdown or mobile nav is missing').not.toBeNull();
+  expect(
+    layout!.dropdownBottom,
+    'Notification dropdown overlaps bottom mobile nav'
+  ).toBeLessThanOrEqual(layout!.bottomNavTop + 1);
+}
+
 test.describe('Smartphone UI regression', () => {
   test.describe.configure({ mode: 'serial' });
   test('key mobile routes render without horizontal overflow', async ({ page }) => {
@@ -79,6 +132,56 @@ test.describe('Smartphone UI regression', () => {
       expect(box!.width, `${route} profile trigger width`).toBeGreaterThanOrEqual(44);
       expect(box!.height, `${route} profile trigger height`).toBeGreaterThanOrEqual(44);
     }
+  });
+
+  test('notifications dropdown stays inside viewport on app shells', async ({ page }) => {
+    for (const route of ['/app/i/home', '/app/o/test-org/home']) {
+      await gotoStable(page, route);
+
+      const notificationsTrigger = page.getByRole('button', { name: 'Notifications' }).first();
+      await expect(notificationsTrigger).toBeVisible();
+      await notificationsTrigger.click();
+
+      await expectNotificationDropdownWithinViewport(page);
+      await expectNotificationDropdownAboveBottomNav(page);
+      await page.getByRole('button', { name: 'Close notifications' }).first().click();
+    }
+  });
+
+  test('mobile notifications dropdown auto-dismisses after inactivity', async ({ page }) => {
+    for (const route of ['/app/i/home', '/app/o/test-org/home']) {
+      await gotoStable(page, route);
+
+      const notificationsTrigger = page.getByRole('button', { name: 'Notifications' }).first();
+      await expect(notificationsTrigger).toBeVisible();
+      await notificationsTrigger.click();
+
+      const dropdown = page.getByTestId('notifications-dropdown');
+      await expect(dropdown).toBeVisible();
+      await page.waitForTimeout(4800);
+      await expect(dropdown).toBeHidden();
+    }
+  });
+
+  test('mobile notifications dropdown stays open while interacting', async ({ page }) => {
+    await gotoStable(page, '/app/i/home');
+
+    const notificationsTrigger = page.getByRole('button', { name: 'Notifications' }).first();
+    await expect(notificationsTrigger).toBeVisible();
+    await notificationsTrigger.click();
+
+    const dropdown = page.getByTestId('notifications-dropdown');
+    await expect(dropdown).toBeVisible();
+
+    await page.waitForTimeout(3000);
+    await dropdown.evaluate((node) => {
+      node.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    });
+    await page.waitForTimeout(2200);
+    await expect(dropdown).toBeVisible();
+
+    await page.waitForTimeout(2600);
+    await expect(dropdown).toBeHidden();
   });
 
   test('admin mobile header actions are visible and inside viewport', async ({ page }) => {
@@ -160,6 +263,34 @@ test.describe('Smartphone UI regression', () => {
 
           const mobileNav = page.getByRole('navigation', { name: 'Mobile primary navigation' });
           await expect(mobileNav.getByRole('link', { name: 'Settings' })).toBeVisible();
+        } finally {
+          await page.close();
+        }
+      }
+    } finally {
+      await context.close();
+    }
+  });
+
+  test('narrow mobile notifications dropdown stays inside viewport', async ({ browser }) => {
+    const context = await browser.newContext({ ...devices['iPhone SE'] });
+
+    try {
+      for (const route of ['/app/i/home', '/app/o/test-org/home']) {
+        const page = await context.newPage();
+        await page.addInitScript(() => {
+          localStorage.setItem('proofound-cookie-consent', 'v1.0.2025-11-06-declined');
+        });
+
+        try {
+          await gotoStable(page, route);
+
+          const notificationsTrigger = page.getByRole('button', { name: 'Notifications' }).first();
+          await expect(notificationsTrigger).toBeVisible();
+          await notificationsTrigger.click();
+
+          await expectNotificationDropdownWithinViewport(page);
+          await expectNotificationDropdownAboveBottomNav(page);
         } finally {
           await page.close();
         }
