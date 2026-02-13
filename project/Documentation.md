@@ -1630,3 +1630,32 @@ Open risks/TODO:
 
 - Compatibility metadata for legacy matching profile fields is now stored in `matching_profiles.verified.__compat_profile`; if other code overwrites `verified` wholesale without merge semantics, legacy `name`/`constraints` may be cleared.
 - Full merge remains gated by GitHub required checks (`ci`, `a11y`) and conversation-resolution rules.
+
+## 2026-02-13 - Interview schedule review-thread follow-up
+
+What changed:
+
+- Restored org-admin visibility for interview list endpoint:
+  - `src/app/api/interviews/schedule/route.ts`
+  - `GET` now computes user-accessible match IDs via `matches` + `assignments` + active `organization_members` (`owner`/`admin`) and includes those in interview access filtering.
+- Added GET compatibility fallback when modern participant columns are absent:
+  - If `host_user_id` / `participant_user_ids` are missing (`PGRST204`), route falls back to legacy filtering by accessible `match_id` set.
+- Broadened POST legacy insert fallback trigger and payload:
+  - Fallback now also triggers when `host_user_id` or `participant_user_ids` columns are missing.
+  - Legacy fallback insert no longer sends unsupported modern columns and maps platform to legacy enum shape.
+
+Why:
+
+- PR review identified two regressions:
+  - Org admins could lose visibility into interviews scheduled by other org admins.
+  - Legacy-schema environments could still 500 on POST because fallback ignored missing host/participant columns.
+
+How to verify:
+
+- `npm run lint`: PASS (1 pre-existing warning in `postcss.config.js`)
+- `npm run typecheck`: PASS
+- `npm run test -- tests/api/match-interest-route.test.ts tests/lib/assignments-activation.test.ts tests/api/matching-profile-compat-route.test.ts tests/api/assignments-publish-route.test.ts`: PASS
+
+Open risks/TODO:
+
+- No dedicated automated unit tests exist yet for `/api/interviews/schedule` modern/legacy fallback branches; add route-level tests for missing-column fallback and org-admin list visibility.

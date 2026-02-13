@@ -1850,3 +1850,47 @@ Open TODOs / follow-ups:
 
 - Commit/push this patch set.
 - Recheck PR #180 checks, resolve remaining conversations, and merge once required checks are green.
+
+## 2026-02-13 01:03:00 CET
+
+Task summary (1-3 lines):
+
+- Follow-up on newly surfaced unresolved review threads in `interviews/schedule`.
+- Restored org-admin list access in GET and widened legacy fallback handling in POST.
+
+What worked:
+
+- Computing accessible match IDs via SQL join (`matches` + `assignments` + `organization_members`) restored org-side visibility without relying only on host/participant columns.
+- Missing-column fallback handling for `host_user_id` and `participant_user_ids` removed a legacy-schema 500 path.
+
+What failed / wrong assumptions:
+
+- Initial assumption that earlier interview schema compatibility hotfix fully addressed review findings was incomplete; list-access and host/participant fallback gaps remained.
+
+User corrections:
+
+- None.
+
+Assumptions taken without asking:
+
+- Org interview management visibility should include active org `owner`/`admin` members.
+- Legacy platform enum mapping can safely map `google_meet` to `google` and non-google values to `zoom` in fallback insert.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add direct unit tests for `/api/interviews/schedule` fallback and org-admin visibility before pushing interview schema compatibility fixes.
+
+Commands run + outcomes (short):
+
+- `npm run lint`: PASS (1 pre-existing warning)
+- `npm run typecheck`: PASS
+- `npm run test -- tests/api/match-interest-route.test.ts tests/lib/assignments-activation.test.ts tests/api/matching-profile-compat-route.test.ts tests/api/assignments-publish-route.test.ts`: PASS
+
+Open TODOs / follow-ups:
+
+- Commit/push this follow-up.
+- Resolve all PR conversations and merge when required checks pass.

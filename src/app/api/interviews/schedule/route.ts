@@ -14,6 +14,10 @@ import { isActiveOrgMember } from '@/lib/api/auth';
 
 export const dynamic = 'force-dynamic';
 
+function isMissingColumnError(error: { code?: string; message?: string } | null, column: string) {
+  return Boolean(error?.code === 'PGRST204' && error?.message?.includes(`'${column}'`));
+}
+
 /**
  * GET /api/interviews/schedule
  * Returns scheduled interviews where the current user is candidate or org member.
@@ -34,10 +38,35 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const matchId = searchParams.get('matchId');
 
+    // Match-level access keeps org admin visibility even when interviews were created by another admin.
+    const accessMatchesResult = await db.execute(sql`
+      SELECT DISTINCT m.id
+      FROM matches m
+      INNER JOIN assignments a ON a.id = m.assignment_id
+      LEFT JOIN organization_members om
+        ON om.org_id = a.org_id
+        AND om.user_id = ${user.id}
+        AND om.status = 'active'
+        AND om.role IN ('owner', 'admin')
+      WHERE m.profile_id = ${user.id}
+         OR om.user_id IS NOT NULL
+    `);
+
+    const accessMatchRows = getRows(accessMatchesResult) as Array<{ id: string }>;
+    const accessibleMatchIds = Array.from(new Set(accessMatchRows.map((row) => row.id)));
+
+    const modernAccessFilters = [
+      `host_user_id.eq.${user.id}`,
+      `participant_user_ids.cs.{${user.id}}`,
+    ];
+    if (accessibleMatchIds.length > 0) {
+      modernAccessFilters.push(`match_id.in.(${accessibleMatchIds.join(',')})`);
+    }
+
     let query = supabase
       .from('interviews')
       .select('*')
-      .or(`host_user_id.eq.${user.id},participant_user_ids.cs.{${user.id}}`)
+      .or(modernAccessFilters.join(','))
       .order('scheduled_at', { ascending: true });
 
     if (status) {
@@ -48,9 +77,43 @@ export async function GET(request: NextRequest) {
       query = query.eq('match_id', matchId);
     }
 
-    const { data: interviews, error: interviewsError } = await query;
-    if (interviewsError) {
-      throw interviewsError;
+    const { data: modernInterviews, error: modernInterviewsError } = await query;
+
+    let interviews = modernInterviews;
+
+    if (modernInterviewsError) {
+      const missingModernAccessColumns =
+        isMissingColumnError(modernInterviewsError, 'host_user_id') ||
+        isMissingColumnError(modernInterviewsError, 'participant_user_ids');
+
+      if (!missingModernAccessColumns) {
+        throw modernInterviewsError;
+      }
+
+      if (accessibleMatchIds.length === 0) {
+        interviews = [];
+      } else {
+        let legacyQuery = supabase
+          .from('interviews')
+          .select('*')
+          .in('match_id', accessibleMatchIds)
+          .order('scheduled_at', { ascending: true });
+
+        if (status) {
+          legacyQuery = legacyQuery.eq('status', status);
+        }
+
+        if (matchId) {
+          legacyQuery = legacyQuery.eq('match_id', matchId);
+        }
+
+        const { data: legacyInterviews, error: legacyInterviewsError } = await legacyQuery;
+        if (legacyInterviewsError) {
+          throw legacyInterviewsError;
+        }
+
+        interviews = legacyInterviews;
+      }
     }
 
     const transformedInterviews = (interviews ?? []).map((interview: any) => ({
@@ -85,10 +148,6 @@ const ScheduleInterviewSchema = z.object({
   timezone: z.string().optional().default('UTC'),
   manualMeetingLink: z.string().url().optional(),
 });
-
-function isMissingColumnError(error: { code?: string; message?: string } | null, column: string) {
-  return Boolean(error?.code === 'PGRST204' && error?.message?.includes(`'${column}'`));
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -310,16 +369,25 @@ export async function POST(request: NextRequest) {
     if (modernInsert.error) {
       const shouldFallbackToLegacyShape =
         isMissingColumnError(modernInsert.error, 'duration_minutes') ||
-        isMissingColumnError(modernInsert.error, 'meeting_link');
+        isMissingColumnError(modernInsert.error, 'meeting_link') ||
+        isMissingColumnError(modernInsert.error, 'host_user_id') ||
+        isMissingColumnError(modernInsert.error, 'participant_user_ids');
 
       if (!shouldFallbackToLegacyShape) {
         throw modernInsert.error;
       }
 
+      const legacyPlatform = persistedPlatform === 'google_meet' ? 'google' : 'zoom';
+
       const legacyInsert = await supabase
         .from('interviews')
         .insert({
-          ...baseInterviewInsert,
+          match_id: data.matchId,
+          scheduled_at: data.scheduledAt,
+          platform: legacyPlatform,
+          meeting_id: meetingId,
+          timezone: data.timezone,
+          status: 'scheduled',
           duration: 30,
           meeting_url: meetingLink,
         })
