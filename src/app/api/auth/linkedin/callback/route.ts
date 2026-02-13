@@ -11,7 +11,11 @@ import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { userIntegrations } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
-import { exchangeLinkedInCode, fetchLinkedInProfile } from '@/lib/linkedin';
+import {
+  exchangeLinkedInCode,
+  fetchLinkedInProfile,
+  resolveLinkedInRedirectUri,
+} from '@/lib/linkedin';
 
 type LinkedInOAuthContext = 'integrations' | 'verification';
 
@@ -121,8 +125,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
-    const redirectUri = new URL('/api/auth/linkedin/callback', baseUrl).toString();
+    const redirectUri = resolveLinkedInRedirectUri(request);
 
     // Exchange authorization code for access token
     const tokenData = await exchangeLinkedInCode(code, redirectUri);

@@ -23,6 +23,7 @@ Add these to your `.env.local` file:
 # LinkedIn OAuth (REQUIRED)
 LINKEDIN_CLIENT_ID=your_linkedin_client_id
 LINKEDIN_CLIENT_SECRET=your_linkedin_client_secret
+LINKEDIN_REDIRECT_URI=https://proofound.io/api/auth/linkedin/callback
 ```
 
 ### Getting LinkedIn OAuth Credentials
@@ -43,6 +44,7 @@ LINKEDIN_CLIENT_SECRET=your_linkedin_client_secret
    - `profile` (required)
    - `email` (required)
 7. Copy **Client ID** and **Client Secret** to your `.env.local`
+8. Set `LINKEDIN_REDIRECT_URI` in your environment to the exact callback configured in LinkedIn (recommended: `https://proofound.io/api/auth/linkedin/callback` without a trailing slash)
 
 ## Optional Environment Variables
 
@@ -155,19 +157,14 @@ The automated system analyzes:
 
 1. **Verification Badge** (Primary, +50 points)
    - LinkedIn's official identity verification badge
-   
 2. **Connections** (+15 points max)
    - 500+ connections = high trust
-   
 3. **Profile Completeness** (+15 points max)
    - Photo, headline, about, experience, education, skills
-   
 4. **Account Age** (+10 points max)
    - Old accounts (5+ years) = more trustworthy
-   
 5. **Experience Count** (+5 points max)
    - Multiple work experiences = established profile
-   
 6. **Profile Photo** (+5 points)
    - Has professional photo
 
@@ -191,39 +188,52 @@ The automated system analyzes:
 ## Troubleshooting
 
 ### "LinkedIn not connected" error
-**Solution**: Verify `LINKEDIN_CLIENT_ID` and `LINKEDIN_CLIENT_SECRET` are set in `.env.local`
+
+**Solution**:
+
+- Verify `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`, and `LINKEDIN_REDIRECT_URI` are set.
+- Verify `LINKEDIN_REDIRECT_URI` exactly matches LinkedIn Developer callback (including host, path, and trailing slash behavior).
 
 ### OAuth redirect fails
-**Solution**: 
+
+**Solution**:
+
 - Check redirect URL matches LinkedIn app settings exactly
 - For local dev, use ngrok HTTPS URL
 - Verify `NEXT_PUBLIC_SITE_URL` is set correctly
 
 ### "Playwright not found" error
+
 **Solution**:
+
 ```bash
 npx playwright install chromium
 ```
 
 ### Automated check returns low confidence
+
 **Solution**:
+
 - Verify LinkedIn profile is public (not private)
 - Check if profile has verification badge
 - Ensure profile is complete (photo, experience, etc.)
 - If confidence is genuinely low, suggest user try Veriff or Work Email instead
 
 ### Admin dashboard shows "Forbidden"
+
 **Solution**: Ensure user has `role = 'admin'` in `profiles` table
 
 ## API Endpoints
 
 ### User Endpoints
+
 - `GET /api/auth/linkedin` - OAuth initiation
 - `GET /api/auth/linkedin/callback` - OAuth callback
 - `POST /api/verification/linkedin/initiate` - Start verification
 - `GET /api/verification/status` - Get verification status
 
-### Admin Endpoints  
+### Admin Endpoints
+
 - `GET /api/admin/verification/linkedin/queue` - Get pending verifications
 - `POST /api/admin/verification/linkedin/[userId]/review` - Approve/reject
 
@@ -249,6 +259,7 @@ Track these metrics after deployment:
 ## Support
 
 For issues or questions:
+
 1. Check troubleshooting section above
 2. Review logs in browser console (F12)
 3. Check server logs for API errors
@@ -259,4 +270,3 @@ For issues or questions:
 **Last Updated**: 2025-11-01  
 **Feature Status**: ✅ Fully Implemented  
 **Migration**: `drizzle/0029_add_linkedin_verification.sql`
-

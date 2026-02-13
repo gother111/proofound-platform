@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { generateLinkedInAuthUrl } from '@/lib/linkedin';
+import { generateLinkedInAuthUrl, resolveLinkedInRedirectUri } from '@/lib/linkedin';
 import { randomBytes } from 'crypto';
 
 type LinkedInOAuthContext = 'integrations' | 'verification';
@@ -52,8 +52,7 @@ export async function GET(request: NextRequest) {
     // Generate state parameter for CSRF protection
     const state = randomBytes(32).toString('hex');
 
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
-    const redirectUri = new URL('/api/auth/linkedin/callback', baseUrl).toString();
+    const redirectUri = resolveLinkedInRedirectUri(request);
 
     // Store state in cookie for verification on callback
     const response = NextResponse.redirect(generateLinkedInAuthUrl(state, redirectUri));

@@ -1652,3 +1652,54 @@ Commands run + outcomes:
 Open TODOs / follow-ups:
 
 - Re-run Vercel deployment for `codex/fix-linkedin-verification` and confirm no OOM event in build logs.
+
+---
+
+## 2026-02-13 19:53 CET
+
+Task summary:
+
+- Implemented LinkedIn OAuth redirect URI mismatch hardening for production (`https://proofound.io`).
+- Added explicit `LINKEDIN_REDIRECT_URI` support and unified callback resolution between auth-init and callback exchange.
+- Added tests and deploy-readiness warning coverage to prevent redirect drift regressions.
+
+What worked:
+
+- Shared resolver in `src/lib/linkedin.ts` created deterministic callback URI selection with a clear fallback chain.
+- LinkedIn init and callback routes now use the same resolver, eliminating mismatch risk between auth and token exchange phases.
+- New resolver and API tests passed and validated `LINKEDIN_REDIRECT_URI` plus `SITE_URL` fallback behavior.
+
+What failed / wrong assumptions:
+
+- None during implementation; all targeted checks passed.
+
+User corrections:
+
+- User reported live issue persisted and clarified they tested with Sofia account on production domain.
+
+Assumptions taken without asking:
+
+- Canonical callback domain remains `https://proofound.io`.
+- Preview can use the same canonical `LINKEDIN_REDIRECT_URI` to avoid callback allowlist churn.
+- Warning-only deploy-readiness behavior is preferred over hard fail for missing `LINKEDIN_REDIRECT_URI`.
+
+What the user corrected afterward:
+
+- None after implementation in this run.
+
+Improvements next time:
+
+- Add a dedicated runtime health/debug endpoint for OAuth callback URI introspection to accelerate production mismatch triage.
+- Capture and surface provider-side OAuth error query payloads in a structured log for faster root-cause mapping.
+
+Commands run + outcomes:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS (1 pre-existing warning in `postcss.config.js`)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- tests/api/linkedin-oauth-redirects.test.ts tests/lib/linkedin-redirect-uri.test.ts`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS
+
+Open TODOs / follow-ups:
+
+- Set `LINKEDIN_REDIRECT_URI=https://proofound.io/api/auth/linkedin/callback` in Vercel Production and Preview.
+- Confirm LinkedIn Developer app callback list includes exact `https://proofound.io/api/auth/linkedin/callback` and Supabase callback.

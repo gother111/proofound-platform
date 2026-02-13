@@ -1490,3 +1490,48 @@ Open risks/TODO:
 
 - Next.js build no longer performs lint as part of `next build`; lint must continue to be enforced via CI and local verification commands.
 - If OOM persists on Vercel after this change, next step is to enable `VERCEL_BUILD_SYSTEM_REPORT=1` and inspect process-level memory in the report.
+
+---
+
+## 2026-02-13: LinkedIn redirect URI mismatch hardening (`proofound.io`)
+
+What changed:
+
+- Added deterministic LinkedIn callback URI resolver in `src/lib/linkedin.ts`:
+  - New `resolveLinkedInRedirectUri(request)` helper.
+  - Resolution precedence:
+    1. `LINKEDIN_REDIRECT_URI` (absolute or relative)
+    2. Base URL fallback chain: `NEXT_PUBLIC_SITE_URL` -> `NEXT_PUBLIC_URL` -> `SITE_URL` -> `request.nextUrl.origin`
+  - Callback path default remains `/api/auth/linkedin/callback`.
+- Updated LinkedIn OAuth routes to share the same callback resolution:
+  - `src/app/api/auth/linkedin/route.ts`
+  - `src/app/api/auth/linkedin/callback/route.ts`
+- Hardened deploy diagnostics in `scripts/check-deploy-readiness.mjs`:
+  - Adds warning when LinkedIn OAuth credentials are present but `LINKEDIN_REDIRECT_URI` is missing.
+  - Keeps warning-only behavior (no strict failure unless existing strict flag is enabled).
+- Updated env template and docs:
+  - `.env.example` adds `LINKEDIN_REDIRECT_URI=`.
+  - `docs/ENV_VARIABLES.md` documents explicit LinkedIn callback env and exact-match requirement.
+  - `docs/LINKEDIN_VERIFICATION_SETUP.md` updated with `LINKEDIN_REDIRECT_URI` setup and mismatch troubleshooting.
+- Added regression coverage:
+  - `tests/lib/linkedin-redirect-uri.test.ts` (new) validates resolver precedence and fallbacks.
+  - `tests/api/linkedin-oauth-redirects.test.ts` extended to assert auth route emits expected `redirect_uri` for explicit and `SITE_URL` fallback cases.
+
+Why:
+
+- User-facing production failure showed LinkedIn OAuth error: `redirect_uri does not match the registered value`.
+- LinkedIn routes previously used a narrower callback base fallback and lacked explicit redirect URI override, creating configuration drift risk versus registered LinkedIn app callback.
+
+How to verify:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint` (PASS, one pre-existing warning in `postcss.config.js`)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- tests/api/linkedin-oauth-redirects.test.ts tests/lib/linkedin-redirect-uri.test.ts` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build` (PASS)
+
+Open risks/TODO:
+
+- Runtime success still depends on deployment configuration:
+  - Set `LINKEDIN_REDIRECT_URI=https://proofound.io/api/auth/linkedin/callback` in Vercel Production (and Preview per policy).
+  - Ensure LinkedIn Developer App includes exact callback `https://proofound.io/api/auth/linkedin/callback`.
+  - Ensure Supabase social callback `https://<supabase-project>.supabase.co/auth/v1/callback` remains configured for LinkedIn social auth.
