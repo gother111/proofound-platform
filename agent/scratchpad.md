@@ -2004,3 +2004,214 @@ Open TODOs / follow-ups:
 
 - Finalize merge commit, push branch, and wait for required checks.
 - Confirm PR #180 auto-merges into `master`.
+
+---
+
+## 2026-02-13 18:41 CET
+
+Task summary:
+
+- Implemented the approved large mobile parity foundation: backend `/api/mobile/v1` routes, mobile auth contract, push delivery schema + dispatcher, and initial route tests.
+- Bootstrapped native SwiftUI iOS app structure in `/Users/yuriibakurov/Desktop/proofound-ios/proofound` with app state, auth flow, persona shells, localization (EN/SV), and environment config via `.xcconfig`.
+
+What worked:
+
+- Backend mobile route and helper additions compile cleanly and integrate with current Drizzle schema.
+- Full backend verification commands passed (`lint`, `typecheck`, `test`, `build`).
+- New mobile API tests passed and were included in full unit run.
+- iOS project was rewired from template entrypoint to app-state-driven shell and set to iOS 18 iPhone-first target.
+
+What failed / wrong assumptions:
+
+- Initial mobile route implementations had type mismatches (feature flag field mismatch, SQL result extraction mismatch, and org enum typing), which required follow-up fixes.
+- `npm run db:drift-check` failed due pre-existing migration drift entries in `supabase/migrations` that are unrelated to this session.
+- iOS compile/test verification could not run because `xcode-select` points to CommandLineTools, not a full Xcode app.
+
+User corrections:
+
+- User requested direct execution of the full approved implementation plan, not another planning pass.
+
+Assumptions taken without asking:
+
+- Proceeded with additive mobile API design under `/api/mobile/v1/*` while keeping existing web APIs unchanged.
+- Treated in-app notifications as source-of-truth and implemented APNS as best-effort side dispatch.
+- Used foundational SwiftUI architecture and representative parity shells/endpoints in v1 while deferring complete per-screen parity polishing to subsequent iterations.
+
+What the user corrected afterward:
+
+- None after implementation started in this session.
+
+Improvements next time:
+
+- Add broader contract tests per mobile route family (matching, messaging, interviews, org, admin).
+- Add explicit staging smoke scripts for APNS token registration and delivery-attempt auditing.
+- Run iOS unit/UI tests once full Xcode is selected and simulator runtimes are installed.
+
+Commands run + outcomes:
+
+- `npm ci`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS (one warning).
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:drift-check`: FAIL (pre-existing drift entries outside `src/db/migrations`).
+- `xcodebuild -project proofound.xcodeproj -scheme proofound -destination 'platform=iOS Simulator,name=iPhone 16' build`: FAIL (`xcode-select` currently points to CommandLineTools).
+
+Open TODOs / follow-ups:
+
+- Select full Xcode with `xcode-select` and run iOS build/tests.
+- Wire real Supabase project values into iOS `Config/*.xcconfig` for end-to-end auth testing.
+- Expand mobile route test coverage and add staging E2E parity checks for individual/org/admin flows.
+
+---
+
+## 2026-02-13 19:27 CET
+
+Task summary:
+
+- Ran iOS simulator smoke test end-to-end and fixed remaining mobile API failures.
+- Interviews read route failed due schema drift (`duration`/`meeting_url` vs `duration_minutes`/`meeting_link`).
+- Device token routes failed because push infra tables were missing locally.
+
+What worked:
+
+- Patched `src/app/api/mobile/v1/interviews/route.ts` GET query to normalize values from both schema variants.
+- Applied migration `src/db/migrations/20260213190000_add_mobile_api_push_infra.sql` to local DB.
+- Re-ran simulator smoke and reached full pass on all listed steps.
+
+What failed / wrong assumptions:
+
+- Initial assumption that local DB matched current Drizzle interview columns was wrong.
+- Initial local DB state lacked `mobile_device_tokens`, so token APIs could not run until migration applied.
+
+User corrections:
+
+- User requested to continue immediately and complete simulator end-to-end verification.
+
+Assumptions taken without asking:
+
+- Kept mobile response contract unchanged while adding backward-compatible interview field resolution.
+- Applied existing SQL migration to local DB only for testability.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add automated compatibility tests for legacy interview schema in mobile route tests.
+- Add a setup step that verifies required mobile tables before running simulator smoke.
+
+Commands run + outcomes:
+
+- `psql "$DATABASE_URL" -c "SELECT ... FROM information_schema.columns WHERE table_name='interviews'"`: PASS (confirmed legacy columns).
+- `psql "$DATABASE_URL" -f src/db/migrations/20260213190000_add_mobile_api_push_infra.sql`: PASS.
+- `npm run test -- tests/api/mobile-bootstrap-route.test.ts tests/api/mobile-device-token-route.test.ts`: PASS.
+- `npm run typecheck`: PASS.
+- `npm run lint`: PASS (one existing warning in `postcss.config.js`).
+- `xcodebuild ... build` + `xcrun simctl launch ...`: PASS.
+- Simulator smoke screenshot: `Smoke test passed` (all steps green).
+
+Open TODOs / follow-ups:
+
+- Make `POST /api/mobile/v1/interviews` legacy-schema compatible if legacy environments must support mobile interview scheduling.
+- Ensure push infra migration is applied in staging and production before enabling device-token flows there.
+
+---
+
+## 2026-02-13 20:34 CET
+
+Task summary:
+
+- Tightened iOS welcome and auth screen behavior for Dynamic Type and small screens.
+- Hardened OAuth callback acceptance to only process the expected callback URL.
+- Captured updated simulator screenshots for the latest welcome and auth-card states.
+
+What worked:
+
+- `@ScaledMetric` and `ViewThatFits` improved Dynamic Type behavior without redesigning the layout.
+- `ScrollViewReader` scroll-to-auth-card reduced small-screen friction after tapping "Get started".
+- `xcodebuild` continues to work by setting `DEVELOPER_DIR` per command without changing global `xcode-select`.
+
+What failed / wrong assumptions:
+
+- First attempt to patch iOS files used paths relative to the backend repo cwd, which failed.
+
+User corrections:
+
+- User requested using the `apply_patch` tool for edits (not via shell execution).
+
+Assumptions taken without asking:
+
+- Kept the existing SF Symbols for Google/LinkedIn buttons instead of introducing branded icon assets.
+- Used a small delay (50ms) before scrolling to ensure the auth card is laid out.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add a minimal XCTest target so `xcodebuild test` is runnable.
+- Add explicit Terms and Privacy links (and branded provider icons) when design and URLs are finalized.
+
+Commands run + outcomes:
+
+- `DEVELOPER_DIR=/Users/yuriibakurov/Downloads/Xcode.app/Contents/Developer xcodebuild -project proofound.xcodeproj -scheme proofound -destination 'platform=iOS Simulator,id=BF2E44E4-6525-4B16-A724-FD5EFC7B9C93' build`: PASS.
+- `DEVELOPER_DIR=/Users/yuriibakurov/Downloads/Xcode.app/Contents/Developer xcrun simctl launch --terminate-running-process BF2E44E4-6525-4B16-A724-FD5EFC7B9C93 proofound.proofound`: PASS.
+- `DEVELOPER_DIR=/Users/yuriibakurov/Downloads/Xcode.app/Contents/Developer xcrun simctl io BF2E44E4-6525-4B16-A724-FD5EFC7B9C93 screenshot ...`: PASS.
+
+Open TODOs / follow-ups:
+
+- Re-run simulator smoke test with valid `PROOFOUND_SMOKE_*` values to confirm the full end-to-end flow still passes.
+- Validate Google and LinkedIn OAuth end-to-end in simulator with the Supabase redirect URL allowlist configured.
+
+---
+
+## 2026-02-14 10:32 CET
+
+Task summary:
+
+- Stabilized the shared assignment-matching engine used by `/api/mobile/v1/matching/assignment`.
+- Ran backend verification and ensured the iOS app builds for the simulator.
+
+What worked:
+
+- Fixing the assignment matcher scoring contract to align with `scoreSkillsEnhanced` and `scoreVerifications` unblocked `tsc` and `next build`.
+- Full backend verification (`lint`, `typecheck`, `test`, `build`) completed successfully.
+- `xcodebuild` for the iOS simulator succeeds when invoked with `DEVELOPER_DIR` pointing at the full Xcode app.
+
+What failed / wrong assumptions:
+
+- The first matcher implementation used incorrect scorer fields (`total`) and wrong function signatures, which broke `npm run typecheck`.
+- Runtime mobile smoke could not be executed in this shell because required iOS runtime env vars were not set.
+
+User corrections:
+
+- None.
+
+Assumptions taken without asking:
+
+- Used `iPhone 16e` as the simulator destination because it is available/booted in this environment.
+- Treated the existing `eslint` warning in `postcss.config.js` as non-blocking since lint exits successfully.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add a minimal XCTest target so `xcodebuild test` can run in CI-like environments.
+- Keep simulator smoke credentials and Supabase config centralized via Xcode scheme or a local untracked `.xcconfig` override.
+
+Commands run + outcomes:
+
+- `npm run lint`: PASS (one existing warning in `postcss.config.js`)
+- `npm run typecheck`: PASS
+- `npm run test`: PASS
+- `npm run build`: PASS
+- `DEVELOPER_DIR=... xcodebuild -project proofound.xcodeproj -scheme proofound -destination 'platform=iOS Simulator,name=iPhone 16e' build`: PASS
+
+Open TODOs / follow-ups:
+
+- Run iOS simulator smoke end to end once `PROOFOUND_SITE_URL`, `PROOFOUND_SUPABASE_URL`, `PROOFOUND_SUPABASE_ANON_KEY`, and `PROOFOUND_SMOKE_*` are available at runtime.
