@@ -1766,7 +1766,6 @@ What changed:
 - Added push delivery infrastructure in schema and SQL migrations:
   - `src/db/schema.ts`
   - `src/db/migrations/20260213190000_add_mobile_api_push_infra.sql`
-  - `supabase/migrations/20260213190000_add_mobile_api_push_infra.sql`
 - Added APNS push dispatcher and wired notification creation to enqueue push delivery attempts:
   - `src/lib/notifications/push.ts`
   - `src/lib/notifications/index.ts`
