@@ -36,7 +36,7 @@ export default async function IndividualLayout({ children }: { children: React.R
           {/* Add bottom padding on mobile to account for bottom navigation (80px) */}
           <main
             id="main-content"
-            className="flex-1 overflow-auto pb-20 md:pb-0"
+            className="flex-1 overflow-y-auto overflow-x-hidden pb-20 md:pb-0"
             role="main"
             aria-label="Main content"
             // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- scrollable landmark must be keyboard focusable for WCAG 2.1.1
