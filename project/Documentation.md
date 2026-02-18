@@ -1715,3 +1715,57 @@ How to verify:
 Open risks/TODO:
 
 - Final merge still depends on CI checks finishing green on the post-conflict head commit.
+
+---
+
+## 2026-02-18: Inline settings integrations, scheduler manual fallback, and calendar actions
+
+What changed:
+
+- Replaced the Settings tab CTA-only integrations copy with inline Zoom and Google controls:
+  - Added `src/components/settings/VideoIntegrationsManager.tsx` as the shared connect/disconnect/status UI.
+  - Wired `src/components/settings/SettingsContent.tsx` to render video integrations directly in `?tab=integrations` next to LinkedIn.
+- Kept compatibility for old dedicated path:
+  - Updated `src/app/app/i/settings/integrations/page.tsx` to redirect to `/app/i/settings?tab=integrations` while preserving `success|error|message` params.
+  - Kept `src/app/app/i/settings/integrations/IntegrationsClient.tsx` as a thin wrapper over the shared manager.
+- Updated OAuth callback fallback behavior:
+  - `src/lib/integrations/oauth-helpers.ts` now defaults callback fallback redirects to `/app/i/settings?tab=integrations`.
+  - Fixed query-string merge in helper so existing `tab=integrations` is preserved when appending `success|error|message`.
+- Updated primary scheduling modal to support low-friction non-integration flow:
+  - `src/components/interviews/ScheduleInterviewModal.tsx` now supports `platform: 'zoom' | 'google_meet' | 'manual'`.
+  - Fixed payload from `startTime` to `scheduledAt` for `/api/interviews/schedule`.
+  - Added manual URL input/validation and `manualMeetingLink` payload when manual mode is selected.
+  - Added provider-status prefetch and defaulting behavior (manual when no provider connected).
+- Added calendar actions in both interviews pages:
+  - `src/app/app/i/interviews/page.tsx`
+  - `src/app/app/o/[slug]/interviews/page.tsx`
+  - Added shared helper `src/lib/interviews/calendar.ts` for deterministic Google Calendar URL and `.ics` generation.
+- Added/updated tests:
+  - Added `tests/ui/settings-integrations-client.test.tsx`.
+  - Updated `tests/ui/settings-integrations-discoverability.test.tsx` for inline controls.
+  - Added `tests/ui/schedule-interview-modal.test.tsx` (manual + google_meet payload checks).
+  - Added `src/lib/interviews/__tests__/calendar.test.ts`.
+  - Updated `src/lib/integrations/__tests__/oauth-helpers.test.ts` for new redirect behavior.
+
+Why:
+
+- Users could not manage Zoom/Google directly in settings integrations, causing discoverability and trust issues.
+- Scheduling had avoidable friction when users did not connect providers.
+- Interview list pages lacked explicit cross-calendar actions despite existing meeting links.
+
+How to verify:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint` (PASS; one pre-existing warning in `postcss.config.js`)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- tests/ui/settings-integrations-discoverability.test.tsx tests/ui/video-provider-selector-connect-route.test.tsx tests/ui/settings-integrations-client.test.tsx` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- tests/ui/schedule-interview-modal.test.tsx src/lib/interviews/__tests__/calendar.test.ts src/lib/integrations/__tests__/oauth-helpers.test.ts` (PASS)
+- Read-only Supabase data check (`.env.local` target project):
+  - `auth.users`: 2822
+  - `user_video_integrations`: 0 rows
+  - `sofia.martinez@proofound-demo.com`: found, with zero video integrations
+
+Open risks/TODO:
+
+- Zoom Marketplace branding/activation (app name/icon/support/privacy/terms) must still be configured in Zoom UI; this cannot be applied from repo code.
+- If deployed env still uses legacy `ZOOM_REDIRECT_URI` callback path, compatibility works via redirect, but canonical provider redirect should be standardized to `/api/integrations/zoom/callback`.
+- Existing pre-commit lint warning in `postcss.config.js` remains unchanged.

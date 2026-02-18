@@ -55,10 +55,33 @@ describe('Settings integrations discoverability', () => {
   beforeEach(() => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => ({
-        ok: true,
-        json: async () => ({ email: 'sofia.martinez@proofound-demo.com' }),
-      }))
+      vi.fn(async (input: string | URL) => {
+        const url = typeof input === 'string' ? input : input.toString();
+
+        if (url === '/api/user/email') {
+          return {
+            ok: true,
+            json: async () => ({ email: 'sofia.martinez@proofound-demo.com' }),
+          };
+        }
+
+        if (url === '/api/integrations/video') {
+          return {
+            ok: true,
+            json: async () => ({
+              integrations: [
+                { provider: 'zoom', connected: false, connectedAt: null },
+                { provider: 'google', connected: false, connectedAt: null },
+              ],
+            }),
+          };
+        }
+
+        return {
+          ok: true,
+          json: async () => ({}),
+        };
+      })
     );
   });
 
@@ -66,16 +89,19 @@ describe('Settings integrations discoverability', () => {
     vi.restoreAllMocks();
   });
 
-  it('shows a direct link to the dedicated Zoom/Google integrations manager', async () => {
+  it('shows inline Zoom and Google controls in settings integrations tab', async () => {
     render(<SettingsContent userId="user-1" />);
 
-    const manageLink = await screen.findByRole('link', {
-      name: /manage zoom & google integrations/i,
-    });
-
-    expect(manageLink).toHaveAttribute('href', '/app/i/settings/integrations');
+    expect(await screen.findByRole('button', { name: /connect zoom/i })).toBeInTheDocument();
     expect(
-      screen.getByText(/google meet and zoom are managed in the dedicated integrations page/i)
+      screen.getByRole('button', {
+        name: /connect google calendar/i,
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /if you do not connect a provider, you can still schedule with a manual link/i
+      )
     ).toBeInTheDocument();
     expect(screen.getByTestId('linkedin-connect')).toBeInTheDocument();
   });

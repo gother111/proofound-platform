@@ -2056,3 +2056,54 @@ Open TODOs / follow-ups:
 
 - Run manual authenticated browser smoke for Sofia once credentials are available.
 - Validate provider console redirect URI allowlists remain aligned with `/api/integrations/zoom/callback` and `/api/integrations/google/callback` across environments.
+
+## 2026-02-18 16:31 CET
+
+Task summary (1-3 lines):
+
+- Implemented approved integrations/scheduling UX consolidation across settings and interviews.
+- Moved Zoom/Google management inline into `Settings > Integrations`, updated OAuth fallback return target, and added manual-link fallback scheduling.
+- Added join/calendar actions (Google Calendar deep link + `.ics`) for both individual and organization interview lists.
+
+What worked:
+
+- Shared component extraction (`VideoIntegrationsManager`) reduced duplicated logic and preserved existing API behavior.
+- Redirect compatibility from `/app/i/settings/integrations` to tab-based settings allowed old links to keep working.
+- Focused tests for scheduler payload and calendar helper caught integration-contract details quickly.
+
+What failed / wrong assumptions:
+
+- Assumed `tests/ui/settings-integrations-client.test.tsx` already existed in current workspace snapshot; it was absent and had to be re-added.
+- Running two Vitest commands in parallel triggered a dev WebSocket port conflict warning (`24678` already in use); reruns were done sequentially.
+
+User corrections:
+
+- User required checking project documentation before deciding scheduling permission model.
+- User clarified they want low-friction scheduling and explicit calendar/link behavior without forcing provider integration.
+
+Assumptions taken without asking:
+
+- Kept scheduling creation authorization model unchanged (org-admin initiated) while improving manual fallback and participant join/calendar UX.
+- Kept no schema migrations and no integration-row preseed behavior.
+
+What the user corrected afterward:
+
+- Asked for implementation immediately after planning and requested concrete end-to-end verification for both org and individual interview flows.
+
+Improvements next time:
+
+- Add a dedicated shared test helper for mocked select/dialog controls to simplify UI modal tests.
+- Avoid parallel Vitest runs in the same repo session to prevent port contention warnings.
+
+Commands run + outcomes (short):
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS (one pre-existing warning in `postcss.config.js`).
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- tests/ui/settings-integrations-discoverability.test.tsx tests/ui/video-provider-selector-connect-route.test.tsx tests/ui/settings-integrations-client.test.tsx`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- tests/ui/schedule-interview-modal.test.tsx src/lib/interviews/__tests__/calendar.test.ts src/lib/integrations/__tests__/oauth-helpers.test.ts`: PASS.
+- `node <read-only postgres check via .env.local DATABASE_URL>`: PASS (`user_video_integrations` rows remain `0`; Sofia has no video integrations).
+
+Open TODOs / follow-ups:
+
+- Apply Zoom Marketplace branding and production activation settings in Zoom console manually.
+- Standardize production `ZOOM_REDIRECT_URI` env to canonical `/api/integrations/zoom/callback` if legacy callback is still configured.

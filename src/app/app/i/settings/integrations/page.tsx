@@ -1,22 +1,25 @@
-import { Suspense } from 'react';
 import { requireAuth } from '@/lib/auth';
-import { IntegrationsClient } from './IntegrationsClient';
-import { Loader2 } from 'lucide-react';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
-export default async function IntegrationsPage() {
+interface IntegrationsPageProps {
+  searchParams?: Record<string, string | string[] | undefined>;
+}
+
+export default async function IntegrationsPage({ searchParams }: IntegrationsPageProps) {
   await requireAuth();
 
-  return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen bg-[#F7F6F1] flex items-center justify-center">
-          <Loader2 className="w-8 h-8 text-[#6B6760] animate-spin" />
-        </div>
-      }
-    >
-      <IntegrationsClient />
-    </Suspense>
-  );
+  const resolvedParams = searchParams ?? {};
+  const nextParams = new URLSearchParams({ tab: 'integrations' });
+
+  const success = resolvedParams.success;
+  const error = resolvedParams.error;
+  const message = resolvedParams.message;
+
+  if (typeof success === 'string' && success) nextParams.set('success', success);
+  if (typeof error === 'string' && error) nextParams.set('error', error);
+  if (typeof message === 'string' && message) nextParams.set('message', message);
+
+  redirect(`/app/i/settings?${nextParams.toString()}`);
 }
