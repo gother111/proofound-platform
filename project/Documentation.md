@@ -20,6 +20,33 @@ This folder is the durable “project memory” surface for Proofound. It is mea
 - Do not copy secrets from local env files or setup docs into tracked markdown.
 - At the end of every session, append a new entry to `agent/scratchpad.md` (append-only).
 
+## 2026-02-18: Vercel Build OOM Mitigation (PR #187)
+
+What changed:
+
+- Updated `next.config.js` to detect Vercel builds via `VERCEL`/`VERCEL_ENV`.
+- On Vercel builds only:
+  - `eslint.ignoreDuringBuilds = true`
+  - `typescript.ignoreBuildErrors = true`
+
+Why:
+
+- Vercel preview builds for PR #187 were killed by OOM during the post-compile `next build` phase (`Linting and checking validity of types`), even though CI already enforces lint and typecheck before merge.
+
+How to verify:
+
+- `npm run lint`
+- `npm run typecheck`
+- `VERCEL=1 VERCEL_ENV=preview npm run build`
+  - Expected output includes:
+    - `Skipping validation of types`
+    - `Skipping linting`
+
+Open risks/TODO:
+
+- Vercel build now relies on CI as the canonical lint/type gate. If branch protection/check requirements are relaxed in the future, type/lint regressions could reach deploy.
+- Keep required checks `ci` and `a11y` enforced on `master`.
+
 ## 2026-02-13: CI Perf Budget Baseline Refresh (PR #178 merge unblock)
 
 What changed:

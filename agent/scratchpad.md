@@ -2162,3 +2162,50 @@ Open TODOs / follow-ups:
 
 - Optional product tuning for mobile auto-dismiss duration.
 - Optional dedicated org notifications page/route.
+
+## 2026-02-18 09:36 CET
+
+Task summary:
+
+- Investigated Vercel preview build OOM on `codex/add-mobile-settings-access`.
+- Added a Vercel-only Next.js build safeguard to skip in-build lint/type validation.
+- Re-verified local lint, typecheck, and Vercel-mode build behavior.
+
+What worked:
+
+- Build log pinpointed OOM after compile during `Linting and checking validity of types`.
+- Vercel-only `next.config.js` guard (`eslint.ignoreDuringBuilds`, `typescript.ignoreBuildErrors`) removed the high-memory validation phase.
+- `VERCEL=1 VERCEL_ENV=preview npm run build` completed successfully and explicitly printed `Skipping validation of types` and `Skipping linting`.
+
+What failed / wrong assumptions:
+
+- Initial assumption that PR auto-merge queue was stable was wrong because newly merged PR #184 made #185-#188 dirty again.
+
+User corrections:
+
+- User asked to keep monitoring PR merges and fix the Vercel OOM build failure.
+
+Assumptions taken without asking:
+
+- CI remains the canonical lint/type gate for deploy safety while Vercel build skips those phases.
+- Applying the OOM mitigation only for Vercel builds is acceptable to preserve local/CI strictness.
+
+What the user corrected afterward:
+
+- None yet in this iteration.
+
+Improvements next time:
+
+- Add an explicit deploy-mode note in runbooks earlier when CI already enforces quality gates.
+- Watch auto-merge queues after each merge since sequential merges can re-introduce conflicts.
+
+Commands run + outcomes:
+
+- `npm run lint` -> PASS (1 existing warning in `postcss.config.js`).
+- `npm run typecheck` -> PASS.
+- `VERCEL=1 VERCEL_ENV=preview npm run build` -> PASS; skipped lint/type and completed build artifacts.
+
+Open TODOs / follow-ups:
+
+- Keep monitoring #185, #186, #187, and #188 mergeability as `master` advances.
+- Re-sync dirty PR branches after each merge event.
