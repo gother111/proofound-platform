@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import { Bell, Check, Settings, X } from 'lucide-react';
@@ -22,19 +22,61 @@ interface Notification {
 interface NotificationDropdownProps {
   onClose: () => void;
   onNotificationRead: () => void;
+  isMobile: boolean;
+  shellType: 'individual' | 'organization' | 'unknown';
+  orgSlug?: string;
 }
 
 export function NotificationDropdown({
   onClose,
   onNotificationRead,
+  isMobile,
+  shellType,
+  orgSlug,
 }: NotificationDropdownProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const autoCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
+  const settingsPath =
+    shellType === 'organization' && orgSlug
+      ? `/app/o/${orgSlug}/settings`
+      : '/app/i/settings/notifications';
+  const viewAllPath =
+    shellType === 'organization' && orgSlug ? `/app/o/${orgSlug}/messages` : '/app/i/notifications';
+
+  const clearAutoCloseTimer = useCallback(() => {
+    if (!autoCloseTimerRef.current) {
+      return;
+    }
+
+    clearTimeout(autoCloseTimerRef.current);
+    autoCloseTimerRef.current = null;
+  }, []);
+
+  const scheduleAutoClose = useCallback(() => {
+    if (!isMobile) {
+      return;
+    }
+
+    clearAutoCloseTimer();
+    autoCloseTimerRef.current = setTimeout(() => {
+      onClose();
+    }, 4500);
+  }, [clearAutoCloseTimer, isMobile, onClose]);
+
+  const handleMobileInteraction = () => {
+    if (!isMobile) {
+      return;
+    }
+
+    scheduleAutoClose();
+  };
 
   useEffect(() => {
     fetchNotifications();
+    scheduleAutoClose();
 
     // Close dropdown when clicking outside
     const handleClickOutside = (event: MouseEvent) => {
@@ -44,8 +86,11 @@ export function NotificationDropdown({
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [onClose]);
+    return () => {
+      clearAutoCloseTimer();
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [clearAutoCloseTimer, onClose, scheduleAutoClose]);
 
   const fetchNotifications = async () => {
     try {
@@ -100,40 +145,52 @@ export function NotificationDropdown({
   return (
     <div
       ref={dropdownRef}
-      className="absolute right-0 top-12 w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50"
+      data-testid="notifications-dropdown"
+      className={cn(
+        'z-50 flex flex-col rounded-lg border border-gray-200 bg-white shadow-lg',
+        isMobile ? 'fixed inset-x-2 top-16 overflow-hidden' : 'absolute right-0 top-12 w-96'
+      )}
+      style={isMobile ? { bottom: 'calc(5.5rem + env(safe-area-inset-bottom))' } : undefined}
+      onPointerDown={handleMobileInteraction}
+      onWheel={handleMobileInteraction}
+      onTouchStart={handleMobileInteraction}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b">
-        <h3 className="font-semibold text-lg">Notifications</h3>
-        <div className="flex items-center gap-2">
+      <div className="flex items-start justify-between gap-2 border-b p-4 sm:items-center">
+        <h3 className="min-w-0 pr-1 text-base font-semibold sm:text-lg">Notifications</h3>
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           <Button
             variant="ghost"
             size="sm"
             onClick={markAllAsRead}
-            className="text-xs"
+            className="h-11 min-h-[44px] px-2 text-xs sm:h-9 sm:min-h-0 sm:px-3"
+            aria-label="Mark all notifications as read"
             disabled={notifications.every((n) => n.read)}
           >
-            <Check className="h-3 w-3 mr-1" />
-            Mark all read
+            <Check className="h-3 w-3 sm:mr-1" />
+            <span className="hidden sm:inline">Mark all read</span>
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              router.push('/app/i/settings/notifications');
-              onClose();
-            }}
-          >
-            <Settings className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={onClose}>
+          {!isMobile && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                router.push(settingsPath);
+                onClose();
+              }}
+              aria-label="Notification settings"
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
+          )}
+          <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close notifications">
             <X className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
       {/* Notifications List */}
-      <ScrollArea className="h-[400px]">
+      <ScrollArea className={cn('min-h-0', isMobile ? 'flex-1' : 'h-[400px]')}>
         {isLoading ? (
           <div className="flex items-center justify-center h-32">
             <p className="text-sm text-gray-500">Loading...</p>
@@ -189,7 +246,7 @@ export function NotificationDropdown({
             variant="ghost"
             size="sm"
             onClick={() => {
-              router.push('/app/i/notifications');
+              router.push(viewAllPath);
               onClose();
             }}
             className="text-xs text-blue-600 hover:text-blue-700"
