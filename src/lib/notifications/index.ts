@@ -2,6 +2,7 @@ import { db } from '@/db';
 import { notifications, notificationPreferences } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { log } from '@/lib/log';
+import { enqueuePushForNotification } from '@/lib/notifications/push';
 
 export type NotificationType =
   | 'match_suggested'
@@ -64,6 +65,22 @@ export async function createNotification(params: CreateNotificationParams) {
       notificationId: notification.id,
       userId: params.userId,
       type: params.type,
+    });
+
+    // Push delivery is best-effort and must not break in-app notification flow.
+    void enqueuePushForNotification({
+      notificationId: notification.id,
+      userId: params.userId,
+      type: params.type,
+      title: params.title,
+      message: params.message,
+      metadata: params.metadata,
+    }).catch((error) => {
+      log.error('notification.push.enqueue_failed', {
+        notificationId: notification.id,
+        userId: params.userId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
     });
 
     return notification;
@@ -238,11 +255,7 @@ export async function notifyInterviewScheduled(
 /**
  * Notify user of a signed contract
  */
-export async function notifyContractSigned(
-  userId: string,
-  contractId: string,
-  orgName: string
-) {
+export async function notifyContractSigned(userId: string, contractId: string, orgName: string) {
   return createNotification({
     userId,
     type: 'contract_signed',
