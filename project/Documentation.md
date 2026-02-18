@@ -1896,3 +1896,56 @@ Open risks/TODO:
 - Build logs still include repeated mock-database warnings when `DATABASE_URL` is not set locally; build passes but logs are noisy.
 - Current publish readiness enforces assignment outcomes from `assignment_outcomes` table; legacy records without normalized outcomes will need a backfill/edit pass before publish.
 - Deprecated builder components remain in repo for compatibility but are no longer wired in the primary organization flow.
+
+---
+
+## 2026-02-18: PR #193 rebase onto master and merge-readiness execution
+
+What changed:
+
+- Rebased `codex/assess-prd-flows-and-code` onto latest `origin/master` and force-pushed branch head.
+- Created rollback tag before rebase:
+  - `merge-backup/codex-assess-prd-flows-and-code-2026-02-18`
+- Resolved rebase conflicts to preserve trust/privacy intent in canonicalization files.
+- Added post-rebase compatibility fixes required by current `master` test contracts:
+  - `src/app/api/assignments/route.ts`
+    - Restored explicit organization context contract (`orgId` or `orgSlug`) for POST create flow.
+    - Restored context resolver behavior used by GET/POST route paths.
+  - `src/app/api/matching/profile/route.ts`
+    - Restored legacy compatibility behavior expected by existing tests (compat metadata under `verified.__compat_profile`).
+- Updated PR #193 title/body with rebased scope and verification outcomes:
+  - <https://github.com/gother111/proofound-platform/pull/193>
+
+Why:
+
+- Branch needed to be rebased to current `master` before landing via PR.
+- Rebase surfaced contract mismatches against current `master` tests that required minimal compatibility restoration.
+- Goal was to preserve trust/privacy remediation while keeping existing compatibility guarantees currently enforced in test suite.
+
+How to verify:
+
+- Git state and rebase:
+  - `git rev-list --left-right --count HEAD...origin/master` -> `2 0` after fix commit
+  - `git log --oneline --max-count=5` includes:
+    - `168b79c5` Implement trust privacy remediation
+    - `ac3f7466` fix: restore master compatibility for assignment context and matching profile legacy route
+- Local checks:
+  - `npm run lint` -> PASS (1 pre-existing warning in `postcss.config.js`)
+  - `npm run typecheck` -> PASS
+  - `npm run test` -> PASS
+  - `npm run build` -> PASS
+  - `npm run test:strict:quality` -> PASS
+- Env-gated checks (blocked in this environment):
+  - `npm run test:privacy` -> FAIL (missing Supabase env vars)
+  - `npm run test:privacy:extended` -> FAIL (missing Supabase env vars)
+  - `npm run test:e2e:individual:strict` -> FAIL (missing `NEXT_PUBLIC_SUPABASE_URL`)
+  - `npm run test:e2e:org:strict` -> FAIL (missing `NEXT_PUBLIC_SUPABASE_URL`)
+  - `npm run test:e2e:privacy:strict` -> FAIL (missing `NEXT_PUBLIC_SUPABASE_URL`)
+  - `npm run test:e2e:providers:strict` -> FAIL (missing `NEXT_PUBLIC_SUPABASE_URL` and provider strict env)
+  - `npm run gates:mvp:strict` -> FAIL (missing strict env bundle)
+
+Open risks/TODO:
+
+- Strict privacy/provider gate commands remain blocked until full env bundle is provisioned.
+- `matching/profile` route currently uses legacy compatibility persistence expected by tests; canonical-only behavior for this route remains deferred.
+- PR checks still need to complete in CI before merge.

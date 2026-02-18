@@ -2261,3 +2261,69 @@ Open TODOs / follow-ups:
 
 - Consider moving/deleting deprecated assignment creator components if no compatibility callers remain.
 - Optional: add targeted E2E execution for new strict draft-resume-publish contract in CI suite selection.
+
+---
+
+## 2026-02-18 22:31 CET
+
+Task summary:
+
+- Executed merge-readiness workflow for `codex/assess-prd-flows-and-code` to land via PR into `master`.
+- Rebases completed, branch force-pushed, PR #193 updated, and verification rerun.
+
+What worked:
+
+- Created rollback tag before history rewrite and completed rebase onto latest `origin/master`.
+- Resolved trust/privacy conflict points and preserved canonicalization changes.
+- Restored assignment/matching compatibility contracts required by current tests.
+- Core verification suite passed (`lint`, `typecheck`, `test`, `build`, `test:strict:quality`).
+
+What failed / wrong assumptions:
+
+- Initial `--rebase-merges` pass kept branch off latest `origin/master`; required targeted `rebase --onto` correction.
+- Running multiple strict suites concurrently caused `EADDRINUSE`; rerun sequentially was required.
+
+User corrections:
+
+- User requested direct implementation of the merge plan (execute, not plan only).
+
+Assumptions taken without asking:
+
+- Safe to drop the old merge commit when replaying because it was topology-only and redundant after rebase.
+- Acceptable to restore legacy matching profile behavior to satisfy current `master` compatibility tests.
+- Acceptable to add one follow-up fix commit after rebase before pushing.
+
+What the user corrected afterward:
+
+- None during execution.
+
+Improvements next time:
+
+- Start with `rebase --onto` immediately when the source branch includes an old merge commit that can mislead `--rebase-merges`.
+- Keep strict E2E commands strictly sequential to avoid known port contention.
+
+Commands run + outcomes:
+
+- `git fetch origin master`: PASS
+- `git tag merge-backup/codex-assess-prd-flows-and-code-2026-02-18 ...`: PASS
+- `git rebase --rebase-merges --keep-empty origin/master`: PARTIAL (required follow-up)
+- `git rebase --onto origin/master acd35055 codex/assess-prd-flows-and-code`: PASS after conflict resolution
+- `npm run lint`: PASS (1 pre-existing warning)
+- `npm run typecheck`: PASS
+- `npm run test`: PASS
+- `npm run build`: PASS
+- `npm run test:strict:quality`: PASS
+- `npm run test:privacy`: FAIL (missing Supabase env)
+- `npm run test:privacy:extended`: FAIL (missing Supabase env)
+- `npm run test:e2e:individual:strict`: FAIL (missing `NEXT_PUBLIC_SUPABASE_URL`)
+- `npm run test:e2e:org:strict`: FAIL (missing `NEXT_PUBLIC_SUPABASE_URL`)
+- `npm run test:e2e:privacy:strict`: FAIL (missing `NEXT_PUBLIC_SUPABASE_URL`)
+- `npm run test:e2e:providers:strict`: FAIL (missing strict env vars)
+- `npm run gates:mvp:strict`: FAIL (missing required env bundle)
+- `git push --force-with-lease origin codex/assess-prd-flows-and-code`: PASS
+- `gh pr edit 193 ...`: PASS
+
+Open TODOs / follow-ups:
+
+- Wait for PR #193 CI checks to finish and merge through branch protection flow.
+- Re-run strict/privacy/provider suites in environment with required secrets.

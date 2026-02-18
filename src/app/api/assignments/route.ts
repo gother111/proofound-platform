@@ -12,6 +12,7 @@ import {
   evaluateAssignmentActivationCriteria,
 } from '@/lib/assignments/activation';
 import { triggerFirstAssignmentSurvey } from '@/lib/surveys/sus-triggers';
+import { AssignmentStatusSchema } from '@/lib/contracts/domain';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,7 +44,7 @@ const AssignmentSchema = z.object({
   creationStatus: z
     .enum(['draft', 'pipeline_in_progress', 'pending_review', 'ready_to_publish', 'published'])
     .optional(),
-  status: z.enum(['draft', 'active', 'paused', 'closed']).optional(),
+  status: AssignmentStatusSchema.optional(),
   valuesRequired: z.array(z.string()).optional(),
   causeTags: z.array(z.string()).optional(),
   mustHaveSkills: z.array(SkillRequirementSchema).optional(),
@@ -146,7 +147,6 @@ export async function GET(request: NextRequest) {
     try {
       const user = await requireAuth();
 
-      // Check if user is a member of an organization
       const searchParams = request.nextUrl.searchParams;
       const orgIdFilter = searchParams.get('orgId');
       const orgSlugFilter = searchParams.get('orgSlug');
@@ -310,28 +310,7 @@ export async function POST(request: NextRequest) {
       // Convert date strings to Date objects
       const assignmentData = {
         orgId,
-        role: validatedData.role,
-        description: validatedData.description,
-        businessValue: validatedData.businessValue,
-        expectedImpact: validatedData.expectedImpact,
-        creationStatus: validatedData.creationStatus,
-        status: validatedData.status,
-        valuesRequired: validatedData.valuesRequired,
-        causeTags: validatedData.causeTags,
-        mustHaveSkills: validatedData.mustHaveSkills,
-        niceToHaveSkills: validatedData.niceToHaveSkills,
-        minLanguage: validatedData.minLanguage,
-        locationMode: validatedData.locationMode,
-        radiusKm: validatedData.radiusKm,
-        country: validatedData.country,
-        city: validatedData.city,
-        compMin: validatedData.compMin,
-        compMax: validatedData.compMax,
-        currency: validatedData.currency,
-        hoursMin: validatedData.hoursMin,
-        hoursMax: validatedData.hoursMax,
-        verificationGates: validatedData.verificationGates,
-        weights: validatedData.weights,
+        ...validatedData,
         startEarliest: validatedData.startEarliest,
         startLatest: validatedData.startLatest,
       };
