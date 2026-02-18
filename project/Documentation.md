@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `Documentation.md`
-> Last Verified: `2026-02-12`
+> Last Verified: `2026-02-14`
 
 # Documentation (Status + Index)
 
@@ -19,6 +19,77 @@ This folder is the durable “project memory” surface for Proofound. It is mea
 - Do not invent missing files. If a referenced file is absent, add a TODO with the expected location and why it is expected.
 - Do not copy secrets from local env files or setup docs into tracked markdown.
 - At the end of every session, append a new entry to `agent/scratchpad.md` (append-only).
+
+## 2026-02-14: Mobile Practical Loop APIs (Org + Notifications + Onboarding)
+
+What changed:
+
+- Extracted shared assignment-matching engine:
+  - `src/lib/core/matching/assignmentMatcher.ts` (`computeAssignmentMatches`)
+- Refactored the web assignment matching route to use the shared engine:
+  - `src/app/api/core/matching/assignment/route.ts`
+- Added additive mobile endpoints under `/api/mobile/v1/*`:
+  - `src/app/api/mobile/v1/matching/assignment/route.ts`
+  - `src/app/api/mobile/v1/shortlist/route.ts`
+  - `src/app/api/mobile/v1/notifications/[id]/read/route.ts`
+  - `src/app/api/mobile/v1/notifications/mark-all-read/route.ts`
+  - `src/app/api/mobile/v1/persona/switch/route.ts`
+  - `src/app/api/mobile/v1/onboarding/individual/route.ts`
+  - `src/app/api/mobile/v1/onboarding/org/route.ts`
+- Fixed mutual-interest reveal logic for org member vs candidate:
+  - `src/app/api/core/matching/interest/route.ts`
+  - `src/app/api/mobile/v1/matching/interest/route.ts`
+- Added contract tests for the new practical routes:
+  - `tests/api/mobile-practical-routes.test.ts`
+
+Why:
+
+- iOS organization daily loop needs a mobile-safe candidates feed (`matching/assignment`), shortlist (`shortlist`), and notification read actions without relying on browser-session auth.
+- Sharing matching logic between web and mobile reduces parity drift and keeps scoring consistent.
+
+How to verify:
+
+- `npm run lint` (expect one existing warning in `postcss.config.js`)
+- `npm run typecheck`
+- `npm run test`
+- `npm run build`
+- Focused mobile route tests:
+  - `npm run test -- tests/api/mobile-bootstrap-route.test.ts tests/api/mobile-device-token-route.test.ts tests/api/mobile-practical-routes.test.ts`
+
+Open risks/TODO:
+
+- `POST /api/mobile/v1/matching/assignment` upserts `matches` so mobile results have `matchId` for explain. Validate idempotency and monitor `matches` growth in non-local environments.
+- End-to-end mobile smoke requires runtime env vars (Supabase URL/anon key plus a test login); do not store those values in tracked docs.
+
+## 2026-02-13: Mobile Smoke Stabilization (Simulator E2E)
+
+What changed:
+
+- Updated `src/app/api/mobile/v1/interviews/route.ts` `GET` query to support both interview schema variants by reading from `to_jsonb(i)` keys and normalizing to mobile response fields (`duration`, `meeting_url`).
+- Applied existing push infra migration locally:
+  - `src/db/migrations/20260213190000_add_mobile_api_push_infra.sql`
+- Re-ran iOS simulator smoke flow against local backend (`/api/mobile/v1/*`) and confirmed all smoke steps pass, including interviews and device token register/unregister.
+
+Why:
+
+- Local database in this environment uses legacy interview column names (`duration_minutes`, `meeting_link`) and was missing `mobile_device_tokens` tables, which caused smoke failures on interviews and token routes.
+
+How to verify:
+
+- Backend API checks:
+  - `npm run test -- tests/api/mobile-bootstrap-route.test.ts tests/api/mobile-device-token-route.test.ts`
+  - `npm run typecheck`
+  - `npm run lint`
+- Local DB schema/migration:
+  - `psql "$DATABASE_URL" -f src/db/migrations/20260213190000_add_mobile_api_push_infra.sql`
+- Simulator smoke:
+  - Launch iOS app with `PROOFOUND_SMOKE_TEST=1` and valid `PROOFOUND_SMOKE_*` environment values.
+  - Confirm screen summary is `Smoke test passed`.
+
+Open risks/TODO:
+
+- `POST /api/mobile/v1/interviews` still writes using the new Drizzle interview columns and may fail on environments still using legacy interview schema.
+- Migration application must still be performed in each non-local environment where `/api/mobile/v1/devices/token` is enabled.
 
 ## 2026-02-13: CI Perf Budget Baseline Refresh (PR #178 merge unblock)
 
@@ -1715,3 +1786,49 @@ How to verify:
 Open risks/TODO:
 
 - Final merge still depends on CI checks finishing green on the post-conflict head commit.
+
+## 2026-02-13: Mobile API v1 foundation and push infrastructure
+
+What changed:
+
+- Added new mobile API namespace with bearer-token auth and standard response envelope:
+  - `src/lib/api/mobile/auth.ts`
+  - `src/lib/api/mobile/response.ts`
+- Added mobile CSRF bypass path for authenticated bearer-token requests:
+  - `src/lib/csrf.ts`
+- Added `/api/mobile/v1/*` route foundation for bootstrap, profile visibility, matching, messaging, interviews, org data, verification, account status, notifications, and admin read endpoints:
+  - `src/app/api/mobile/v1/**`
+- Added push delivery infrastructure in schema and SQL migrations:
+  - `src/db/schema.ts`
+  - `src/db/migrations/20260213190000_add_mobile_api_push_infra.sql`
+- Added APNS push dispatcher and wired notification creation to enqueue push delivery attempts:
+  - `src/lib/notifications/push.ts`
+  - `src/lib/notifications/index.ts`
+- Added mobile parity matrix and mobile API tests:
+  - `docs/mobile/IOS_PARITY_MATRIX.md`
+  - `tests/api/mobile-bootstrap-route.test.ts`
+  - `tests/api/mobile-device-token-route.test.ts`
+- Added reusable verification checklist note for mobile API route changes:
+  - `agent/checklists/verification.md`
+
+Why:
+
+- The iOS app requires a stable, additive backend contract that does not depend on browser session cookies and CSRF tokens.
+- Complex mobile workflows and policy-sensitive actions needed explicit mobile-safe endpoints and shared auth guards.
+- Push notifications required first-class token registration and delivery audit tables to keep in-app notifications as source-of-truth while enabling APNS fanout.
+
+How to verify:
+
+- Backend checks run in this session (Node 20 path):
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint` (PASS, one existing unrelated warning in `postcss.config.js`)
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck` (PASS)
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test` (PASS)
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build` (PASS)
+- Additional migration discipline check:
+  - `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:drift-check` (FAIL, pre-existing drift entries in `supabase/migrations/*`; no new drift introduced by this change set)
+
+Open risks/TODO:
+
+- Mobile API route coverage is currently foundational; additional contract tests are still needed for each route family beyond bootstrap and device-token flows.
+- APNS delivery is best-effort and depends on production APNS credentials (`APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_BUNDLE_ID`, `APNS_PRIVATE_KEY`) being correctly configured.
+- iOS `xcodebuild test` is still not wired because there is no test action configured for the scheme yet.
