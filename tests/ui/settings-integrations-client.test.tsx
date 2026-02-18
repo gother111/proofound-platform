@@ -1,7 +1,7 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { IntegrationsClient } from '../../src/app/app/i/settings/integrations/IntegrationsClient';
+import { IntegrationsClient } from '@/app/app/i/settings/integrations/IntegrationsClient';
 
 const mockSearchParams = new URLSearchParams('');
 
@@ -20,7 +20,7 @@ vi.mock('sonner', () => ({
   },
 }));
 
-vi.mock('../../src/components/ui/card', () => ({
+vi.mock('@/components/ui/card', () => ({
   Card: (props: any) => <div {...props} />,
   CardHeader: (props: any) => <div {...props} />,
   CardTitle: ({ children, ...props }: any) => <h3 {...props}>{children}</h3>,
@@ -28,11 +28,11 @@ vi.mock('../../src/components/ui/card', () => ({
   CardDescription: (props: any) => <p {...props} />,
 }));
 
-vi.mock('../../src/components/ui/button', () => ({
+vi.mock('@/components/ui/button', () => ({
   Button: (props: any) => <button {...props} />,
 }));
 
-vi.mock('../../src/components/ui/badge', () => ({
+vi.mock('@/components/ui/badge', () => ({
   Badge: (props: any) => <span {...props} />,
 }));
 
