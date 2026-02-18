@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
-import { assignments, organizationMembers, matches } from '@/db/schema';
+import { assignments, organizationMembers, matches, organizations } from '@/db/schema';
 import { eq, and, inArray, sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { jsonErrorWithRequest, withApiObservability } from '@/lib/api/observability';
@@ -39,6 +39,11 @@ const LanguageRequirementSchema = z.object({
 const AssignmentSchema = z.object({
   role: z.string().min(1),
   description: z.string().optional(),
+  businessValue: z.string().optional(),
+  expectedImpact: z.string().optional(),
+  creationStatus: z
+    .enum(['draft', 'pipeline_in_progress', 'pending_review', 'ready_to_publish', 'published'])
+    .optional(),
   status: AssignmentStatusSchema.optional(),
   valuesRequired: z.array(z.string()).optional(),
   causeTags: z.array(z.string()).optional(),
@@ -60,6 +65,19 @@ const AssignmentSchema = z.object({
   weights: z.record(z.number()).optional(),
 });
 
+const AssignmentCreateSchema = AssignmentSchema.extend({
+  orgId: z.string().uuid().optional(),
+  orgSlug: z.string().min(1).optional(),
+}).superRefine((value, ctx) => {
+  if (!value.orgId && !value.orgSlug) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Organization context is required',
+      path: ['orgId'],
+    });
+  }
+});
+
 /**
  * Helper to get user's organization ID
  */
@@ -69,6 +87,49 @@ async function getUserOrgId(userId: string): Promise<string | null> {
   });
 
   return membership?.orgId || null;
+}
+
+async function resolveUserOrgContext(
+  userId: string,
+  context?: {
+    orgId?: string | null;
+    orgSlug?: string | null;
+  }
+): Promise<string | null> {
+  if (context?.orgId) {
+    const membership = await db.query.organizationMembers.findFirst({
+      where: and(
+        eq(organizationMembers.userId, userId),
+        eq(organizationMembers.orgId, context.orgId),
+        eq(organizationMembers.status, 'active')
+      ),
+    });
+
+    return membership?.orgId || null;
+  }
+
+  if (context?.orgSlug) {
+    const org = await db.query.organizations.findFirst({
+      where: eq(organizations.slug, context.orgSlug),
+      columns: { id: true },
+    });
+
+    if (!org) {
+      return null;
+    }
+
+    const membership = await db.query.organizationMembers.findFirst({
+      where: and(
+        eq(organizationMembers.userId, userId),
+        eq(organizationMembers.orgId, org.id),
+        eq(organizationMembers.status, 'active')
+      ),
+    });
+
+    return membership?.orgId || null;
+  }
+
+  return getUserOrgId(userId);
 }
 
 /**
@@ -86,8 +147,13 @@ export async function GET(request: NextRequest) {
     try {
       const user = await requireAuth();
 
-      // Check if user is a member of an organization
-      const orgId = await getUserOrgId(user.id);
+      const searchParams = request.nextUrl.searchParams;
+      const orgIdFilter = searchParams.get('orgId');
+      const orgSlugFilter = searchParams.get('orgSlug');
+      const orgId = await resolveUserOrgContext(user.id, {
+        orgId: orgIdFilter,
+        orgSlug: orgSlugFilter,
+      });
 
       if (!orgId) {
         log.info('assignments.list.no_org', { requestId: ctx.requestId, userId: user.id });
@@ -95,7 +161,6 @@ export async function GET(request: NextRequest) {
       }
 
       // Get pagination parameters
-      const searchParams = request.nextUrl.searchParams;
       const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
       const offset = parseInt(searchParams.get('offset') || '0', 10);
       const statusFilter = searchParams.get('status');
@@ -224,21 +289,23 @@ export async function POST(request: NextRequest) {
     try {
       const user = await requireAuth();
 
-      // Check if user is a member of an organization
-      const orgId = await getUserOrgId(user.id);
+      const body = await request.json();
+
+      // Validate input
+      const validatedData = AssignmentCreateSchema.parse(body);
+      const orgId = await resolveUserOrgContext(user.id, {
+        orgId: validatedData.orgId,
+        orgSlug: validatedData.orgSlug,
+      });
 
       if (!orgId) {
         return jsonErrorWithRequest(
           ctx.requestId,
-          'You must be a member of an organization to create assignments',
-          403
+          'Organization not found or access denied',
+          403,
+          'You must be an active member of the target organization to create assignments.'
         );
       }
-
-      const body = await request.json();
-
-      // Validate input
-      const validatedData = AssignmentSchema.parse(body);
 
       // Convert date strings to Date objects
       const assignmentData = {
