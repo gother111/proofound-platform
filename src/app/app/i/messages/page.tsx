@@ -10,7 +10,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ConversationList, type Conversation } from '@/components/messaging/ConversationList';
 import { RealtimeMessageThread } from '@/components/messaging/RealtimeMessageThread';
 import { type Message } from '@/components/messaging/MessageThread';
@@ -22,6 +22,8 @@ export const dynamic = 'force-dynamic';
 function MessagesPageContent() {
   const searchParams = useSearchParams();
   const conversationParam = searchParams.get('conversation');
+  const pathname = usePathname();
+  const router = useRouter();
 
   const { userId: currentUserId, isLoading: isAuthLoading } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -132,19 +134,28 @@ function MessagesPageContent() {
 
   const selectedConversation = conversations.find((c) => c.id === selectedConversationId);
 
+  const handleBackToConversationList = () => {
+    setSelectedConversationId(undefined);
+    router.replace(pathname);
+  };
+
   // Show loading state if auth is not ready
   if (isAuthLoading || !currentUserId) {
     return (
-      <div className="h-[calc(100vh-4rem)] flex items-center justify-center">
+      <div className="h-full flex items-center justify-center">
         <p className="text-[#6B6760]">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex">
+    <div className="h-full min-h-0 flex flex-col md:flex-row">
       {/* Left: Conversation List */}
-      <div className="w-80 flex-shrink-0">
+      <div
+        className={`w-full min-h-0 md:w-80 flex-shrink-0 ${
+          selectedConversationId ? 'hidden md:block' : 'block'
+        }`}
+      >
         <ConversationList
           conversations={conversations}
           selectedId={selectedConversationId}
@@ -154,7 +165,11 @@ function MessagesPageContent() {
       </div>
 
       {/* Right: Message Thread or Empty State */}
-      <div className="flex-1 flex items-center justify-center bg-[#F7F6F1]">
+      <div
+        className={`h-full min-h-0 min-w-0 flex-1 bg-[#F7F6F1] ${
+          !selectedConversationId ? 'hidden md:flex md:items-center md:justify-center' : 'flex'
+        }`}
+      >
         {selectedConversation ? (
           <RealtimeMessageThread
             conversationId={selectedConversation.id}
@@ -164,6 +179,7 @@ function MessagesPageContent() {
             otherPartyAvatar={selectedConversation.otherPartyAvatar}
             stage={selectedConversation.stage}
             onSendMessage={handleSendMessage}
+            onBack={handleBackToConversationList}
           />
         ) : (
           <div className="text-center space-y-4">
@@ -186,7 +202,7 @@ export default function MessagesPage() {
   return (
     <Suspense
       fallback={
-        <div className="h-[calc(100vh-4rem)] flex items-center justify-center">
+        <div className="h-full flex items-center justify-center">
           <p className="text-[#6B6760]">Loading...</p>
         </div>
       }

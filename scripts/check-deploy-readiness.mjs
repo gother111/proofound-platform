@@ -4,11 +4,19 @@
  */
 const env = process.env;
 const missing = [];
+const warnings = [];
 
 if (!(env.NEXT_PUBLIC_SUPABASE_URL || env.SUPABASE_URL)) missing.push('NEXT_PUBLIC_SUPABASE_URL/SUPABASE_URL');
 if (!(env.NEXT_PUBLIC_SUPABASE_ANON_KEY || env.SUPABASE_ANON_KEY)) missing.push('NEXT_PUBLIC_SUPABASE_ANON_KEY/SUPABASE_ANON_KEY');
 if (!(env.NEXT_PUBLIC_SITE_URL || env.SITE_URL)) missing.push('NEXT_PUBLIC_SITE_URL/SITE_URL');
 if (!env.DATABASE_URL) missing.push('DATABASE_URL');
+
+const hasLinkedInCreds = Boolean(env.LINKEDIN_CLIENT_ID) && Boolean(env.LINKEDIN_CLIENT_SECRET);
+if (hasLinkedInCreds && !env.LINKEDIN_REDIRECT_URI) {
+  warnings.push(
+    'LINKEDIN_REDIRECT_URI is not set. LinkedIn OAuth may fail with redirect_uri mismatch.'
+  );
+}
 
 if (missing.length) {
   console.warn('⚠️ Deploy readiness check: missing env vars:\n - ' + missing.join('\n - '));
@@ -16,4 +24,8 @@ if (missing.length) {
   if (process.env.FORCE_STRICT_DEPLOY_CHECK === 'true') process.exit(1);
 } else {
   console.log('✅ Deploy readiness: all required env vars present.');
+}
+
+if (warnings.length) {
+  console.warn('⚠️ Deploy readiness warning:\n - ' + warnings.join('\n - '));
 }

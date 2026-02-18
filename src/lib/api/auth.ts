@@ -25,6 +25,10 @@ export function getInternalApiSecret(): string {
   return (process.env.INTERNAL_API_SECRET || process.env.CRON_SECRET || '').trim();
 }
 
+export function hasInternalApiSecret(): boolean {
+  return getInternalApiSecret().length > 0;
+}
+
 export function isTrustedInternalRequest(request: NextRequest): boolean {
   const sharedSecret = getInternalApiSecret();
   if (!sharedSecret) {
@@ -35,6 +39,24 @@ export function isTrustedInternalRequest(request: NextRequest): boolean {
   const authorization = request.headers.get('authorization');
 
   return internalHeader === sharedSecret || authorization === `Bearer ${sharedSecret}`;
+}
+
+export function requireInternalApiRequest(request: NextRequest): NextResponse | null {
+  if (!hasInternalApiSecret()) {
+    return NextResponse.json(
+      {
+        error: 'Server misconfiguration',
+        message: 'Missing INTERNAL_API_SECRET/CRON_SECRET configuration',
+      },
+      { status: 500 }
+    );
+  }
+
+  if (!isTrustedInternalRequest(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  return null;
 }
 
 export async function isActiveOrgMember(

@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { db } from '@/db';
-import { assignmentOutcomes, assignments } from '@/db/schema';
+import { assignmentOutcomes, assignments, organizations } from '@/db/schema';
 import { checkAndEmitAssignmentActivation } from '@/lib/assignments/activation';
 import { verifyAssignmentAccess } from '@/lib/assignments/access';
 import { requireAuth } from '@/lib/auth';
@@ -47,7 +47,7 @@ function validatePublishReadiness(
   };
 }
 
-export async function POST(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   let assignmentId: string | undefined;
 
   try {
@@ -66,6 +66,17 @@ export async function POST(_request: NextRequest, { params }: { params: Promise<
 
     if (!assignment) {
       return NextResponse.json({ error: 'Assignment not found' }, { status: 404 });
+    }
+
+    const orgSlug = request.nextUrl.searchParams.get('orgSlug');
+    if (orgSlug) {
+      const org = await db.query.organizations.findFirst({
+        where: eq(organizations.slug, orgSlug),
+      });
+
+      if (!org || org.id !== assignment.orgId) {
+        return NextResponse.json({ error: 'Organization context mismatch' }, { status: 403 });
+      }
     }
 
     const outcomes = await db.query.assignmentOutcomes.findMany({

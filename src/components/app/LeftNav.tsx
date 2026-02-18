@@ -43,6 +43,13 @@ interface LeftNavProps {
   basePath?: string;
 }
 
+interface NavItem {
+  href: string;
+  icon: typeof Home;
+  label: string;
+  dataTour?: string;
+}
+
 export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
@@ -50,7 +57,7 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
 
   const isOrg = basePath?.startsWith('/app/o/');
 
-  const individualNavItems = [
+  const individualNavItems: NavItem[] = [
     { href: `${basePath}/home`, icon: Home, label: 'Dashboard', dataTour: 'home-link' },
     { href: `${basePath}/profile`, icon: User, label: 'Profile', dataTour: 'profile-link' },
     {
@@ -82,7 +89,7 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
     { href: `${basePath}/settings`, icon: Settings, label: 'Settings', dataTour: 'settings-link' },
   ];
 
-  const orgNavItems = [
+  const orgNavItems: NavItem[] = [
     { href: `${basePath}/home`, icon: Home, label: 'Dashboard', dataTour: 'home-link' },
     {
       href: `${basePath}/assignments`,
@@ -110,6 +117,11 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
   ];
 
   const navItems = isOrg ? orgNavItems : individualNavItems;
+  const settingsHref = `${basePath}/settings`;
+  const settingsNavItem = navItems.find((item) => item.href === settingsHref);
+  const mobileNavItems = settingsNavItem
+    ? [...navItems.filter((item) => item.href !== settingsHref).slice(0, 4), settingsNavItem]
+    : navItems.slice(0, 5);
 
   return (
     <>
@@ -189,9 +201,9 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
         role="navigation"
         aria-label="Mobile primary navigation"
       >
-        <div className="flex items-center justify-around px-2 py-2 safe-area-inset-bottom">
-          {/* Show first 5 most important nav items on mobile */}
-          {navItems.slice(0, 5).map((item) => {
+        <div className="flex items-center gap-1 px-1 py-2 safe-area-inset-bottom">
+          {/* Show mobile nav items with settings always included */}
+          {mobileNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href || pathname?.startsWith(item.href);
 
@@ -199,7 +211,7 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors min-w-[64px] min-h-[64px] justify-center ${
+                className={`flex flex-1 min-w-0 flex-col items-center gap-1 px-1 py-2 rounded-lg transition-colors min-h-[64px] justify-center ${
                   isActive
                     ? 'text-proofound-forest'
                     : 'text-muted-foreground hover:text-proofound-charcoal'
@@ -208,7 +220,9 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
                 aria-label={item.label}
               >
                 <Icon className="w-6 h-6" aria-hidden="true" />
-                <span className="text-xs font-medium">{item.label}</span>
+                <span className="w-full max-w-full truncate text-center text-[11px] font-medium leading-none">
+                  {item.label}
+                </span>
               </Link>
             );
           })}
