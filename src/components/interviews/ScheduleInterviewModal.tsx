@@ -12,7 +12,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Calendar, Clock, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -50,7 +50,9 @@ export function ScheduleInterviewModal({
 }: ScheduleInterviewModalProps) {
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
-  const [platform, setPlatform] = useState<'zoom' | 'google'>('zoom');
+  const [platform, setPlatform] = useState<'zoom' | 'google_meet' | 'manual'>('manual');
+  const [manualMeetingLink, setManualMeetingLink] = useState('');
+  const [providerConnections, setProviderConnections] = useState({ zoom: false, google: false });
   const [timezone, setTimezone] = useState(
     Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
   );
@@ -59,6 +61,43 @@ export function ScheduleInterviewModal({
 
   const isReschedule = existingInterviewsCount > 0;
   const canReschedule = existingInterviewsCount < 1; // Only 1 reschedule allowed
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadProviderStatus() {
+      try {
+        const response = await fetch('/api/integrations/video/status');
+        if (!response.ok) return;
+
+        const data = await response.json();
+        if (!active) return;
+
+        const zoomConnected = data.zoom?.connected === true;
+        const googleConnected = data.google?.connected === true;
+
+        setProviderConnections({ zoom: zoomConnected, google: googleConnected });
+
+        // Keep manual as low-friction default when no provider is connected.
+        if (!zoomConnected && !googleConnected) {
+          setPlatform('manual');
+          return;
+        }
+
+        setPlatform((current) => {
+          if (current !== 'manual') return current;
+          return zoomConnected ? 'zoom' : 'google_meet';
+        });
+      } catch (statusError) {
+        console.error('Failed to load provider status:', statusError);
+      }
+    }
+
+    loadProviderStatus();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Calculate date constraints (7 days from match agreement)
   const minDate = new Date();
@@ -100,6 +139,20 @@ export function ScheduleInterviewModal({
       return;
     }
 
+    if (platform === 'manual') {
+      if (!manualMeetingLink.trim()) {
+        setError('Please add a meeting link when using manual mode');
+        return;
+      }
+
+      try {
+        new URL(manualMeetingLink.trim());
+      } catch {
+        setError('Please provide a valid meeting link URL');
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -111,11 +164,10 @@ export function ScheduleInterviewModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           matchId,
-          startTime: startTime.toISOString(),
-          duration: 30, // Fixed 30 minutes
+          scheduledAt: startTime.toISOString(),
           platform,
           timezone,
-          isReschedule,
+          ...(platform === 'manual' ? { manualMeetingLink: manualMeetingLink.trim() } : {}),
         }),
       });
 
@@ -127,10 +179,15 @@ export function ScheduleInterviewModal({
 
       // Success!
       if (onScheduled) {
+        const meetingUrl =
+          data?.interview?.meetingUrl ??
+          data?.interview?.meeting_link ??
+          data?.interview?.meeting_url ??
+          (platform === 'manual' ? manualMeetingLink.trim() : '');
         onScheduled({
           id: data.interview.id,
-          scheduledAt: data.interview.scheduledAt,
-          meetingUrl: data.interview.meetingUrl,
+          scheduledAt: data.interview.scheduledAt ?? data.interview.scheduled_at,
+          meetingUrl,
         });
       }
 
@@ -213,16 +270,44 @@ export function ScheduleInterviewModal({
               <Video className="w-4 h-4 inline mr-2" />
               Video Platform
             </Label>
-            <Select value={platform} onValueChange={(val) => setPlatform(val as 'zoom' | 'google')}>
+            <Select
+              value={platform}
+              onValueChange={(val) => setPlatform(val as 'zoom' | 'google_meet' | 'manual')}
+            >
               <SelectTrigger id="platform">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="zoom">Zoom</SelectItem>
-                <SelectItem value="google">Google Meet</SelectItem>
+                <SelectItem value="manual">Manual link (no integration required)</SelectItem>
+                <SelectItem value="zoom" disabled={!providerConnections.zoom}>
+                  Zoom {providerConnections.zoom ? '(connected)' : '(connect in Settings first)'}
+                </SelectItem>
+                <SelectItem value="google_meet" disabled={!providerConnections.google}>
+                  Google Meet{' '}
+                  {providerConnections.google ? '(connected)' : '(connect in Settings first)'}
+                </SelectItem>
               </SelectContent>
             </Select>
+            <p className="text-xs text-[#6B6760]">
+              {platform === 'manual'
+                ? 'Manual mode works with any valid meeting link (Zoom, Google Meet, Teams, and others).'
+                : 'Connected mode creates the meeting from your linked provider account automatically.'}
+            </p>
           </div>
+
+          {platform === 'manual' && (
+            <div className="space-y-2">
+              <Label htmlFor="manualMeetingLink">Meeting Link</Label>
+              <input
+                id="manualMeetingLink"
+                type="url"
+                value={manualMeetingLink}
+                onChange={(event) => setManualMeetingLink(event.target.value)}
+                placeholder="https://zoom.us/j/... or https://meet.google.com/..."
+                className="flex h-11 w-full rounded-lg border border-proofound-stone dark:border-border bg-white dark:bg-background px-4 py-2 text-base text-proofound-charcoal dark:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest"
+              />
+            </div>
+          )}
 
           {/* Error Message */}
           {error && (
