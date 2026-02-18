@@ -8,10 +8,24 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, Video, ExternalLink, User, FileCheck } from 'lucide-react';
+import {
+  Calendar,
+  Clock,
+  Video,
+  ExternalLink,
+  User,
+  FileCheck,
+  CalendarPlus,
+  Download,
+} from 'lucide-react';
 import { ScheduleInterviewButton } from '@/components/interviews/ScheduleInterviewButton';
 import { DecisionDialog } from '@/components/decisions/DecisionDialog';
 import { Button } from '@/components/ui/button';
+import {
+  buildGoogleCalendarUrl,
+  downloadInterviewIcs,
+  type InterviewCalendarPayload,
+} from '@/lib/interviews/calendar';
 
 export const dynamic = 'force-dynamic';
 
@@ -105,6 +119,17 @@ export default function OrganizationInterviewsPage() {
     });
   };
 
+  const toCalendarPayload = (interview: Interview): InterviewCalendarPayload => ({
+    interviewId: interview.id,
+    scheduledAt: interview.scheduledAt,
+    durationMinutes: interview.duration,
+    meetingUrl: interview.meetingUrl,
+    platform: interview.platform,
+    title: interview.candidateName
+      ? `Interview with ${interview.candidateName}`
+      : 'Proofound interview',
+  });
+
   if (isLoading) {
     return (
       <div className="p-8">
@@ -186,7 +211,7 @@ export default function OrganizationInterviewsPage() {
                     </div>
 
                     {/* Platform & Meeting Link */}
-                    <div className="flex items-center gap-4 mb-4">
+                    <div className="flex items-center gap-4 mb-4 flex-wrap">
                       <div className="flex items-center gap-2">
                         <Video className="w-4 h-4" style={{ color: '#6B6760' }} />
                         <span className="text-sm capitalize" style={{ color: '#6B6760' }}>
@@ -194,16 +219,37 @@ export default function OrganizationInterviewsPage() {
                         </span>
                       </div>
                       {interview.meetingUrl !== 'pending' && (
-                        <a
-                          href={interview.meetingUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm flex items-center gap-1 hover:underline"
-                          style={{ color: '#1C4D3A' }}
-                        >
-                          Join Meeting
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
+                        <>
+                          <a
+                            href={interview.meetingUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm flex items-center gap-1 hover:underline"
+                            style={{ color: '#1C4D3A' }}
+                          >
+                            Join Meeting
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                          <a
+                            href={buildGoogleCalendarUrl(toCalendarPayload(interview))}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm flex items-center gap-1 hover:underline"
+                            style={{ color: '#1C4D3A' }}
+                          >
+                            Add to Google Calendar
+                            <CalendarPlus className="w-3 h-3" />
+                          </a>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => downloadInterviewIcs(toCalendarPayload(interview))}
+                          >
+                            <Download className="w-3 h-3 mr-1" />
+                            .ics
+                          </Button>
+                        </>
                       )}
                     </div>
 
