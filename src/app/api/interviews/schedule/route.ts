@@ -14,58 +14,17 @@ import { isActiveOrgMember } from '@/lib/api/auth';
 
 export const dynamic = 'force-dynamic';
 
-const DEFAULT_INTERVIEW_DURATION_MINUTES = 30;
+function isMissingColumnError(error: { code?: string; message?: string } | null, column: string) {
+  return Boolean(error?.code === 'PGRST204' && error?.message?.includes(`'${column}'`));
+}
 
-function getMissingInterviewsColumn(error: unknown): string | null {
-  if (!error || typeof error !== 'object') {
+function extractMissingColumn(error: { code?: string; message?: string } | null): string | null {
+  if (error?.code !== 'PGRST204' || !error?.message) {
     return null;
   }
 
-  const candidate = error as { code?: string; message?: string; details?: string };
-  const combinedMessage = `${candidate.message ?? ''} ${candidate.details ?? ''}`;
-
-  const supabaseMatch = combinedMessage.match(
-    /Could not find the '([^']+)' column of 'interviews'/i
-  );
-  if (supabaseMatch?.[1]) {
-    return supabaseMatch[1];
-  }
-
-  if (candidate.code === '42703') {
-    const postgresMatch = combinedMessage.match(
-      /column\s+(?:\"?[\w]+\"?\.)?\"?([a-z_]+)\"?\s+does not exist/i
-    );
-    if (postgresMatch?.[1]) {
-      return postgresMatch[1];
-    }
-  }
-
-  return null;
-}
-
-function isMissingInterviewsColumnError(error: unknown): boolean {
-  return Boolean(getMissingInterviewsColumn(error));
-}
-
-function normalizeMeetingLink(interview: Record<string, unknown>, fallbackLink: string): string {
-  const meetingUrl =
-    typeof interview.meeting_url === 'string' && interview.meeting_url.trim().length > 0
-      ? interview.meeting_url
-      : null;
-  const meetingLink =
-    typeof interview.meeting_link === 'string' && interview.meeting_link.trim().length > 0
-      ? interview.meeting_link
-      : null;
-
-  return meetingUrl ?? meetingLink ?? (fallbackLink.trim().length > 0 ? fallbackLink : 'pending');
-}
-
-function normalizeInterviewDuration(duration: unknown): number {
-  const parsed = Number(duration);
-  if (Number.isFinite(parsed) && parsed > 0) {
-    return parsed;
-  }
-  return DEFAULT_INTERVIEW_DURATION_MINUTES;
+  const match = error.message.match(/Could not find the '([^']+)' column/);
+  return match?.[1] ?? null;
 }
 
 /**
@@ -88,134 +47,93 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const matchId = searchParams.get('matchId');
 
-    const filters = [
-      sql`(
-        m.profile_id = ${user.id}
-        OR EXISTS (
-          SELECT 1
-          FROM organization_members om
-          WHERE om.org_id = a.org_id
-            AND om.user_id = ${user.id}
-            AND om.status = 'active'
-        )
-      )`,
+    // Match-level access keeps org admin visibility even when interviews were created by another admin.
+    const accessMatchesResult = await db.execute(sql`
+      SELECT DISTINCT m.id
+      FROM matches m
+      INNER JOIN assignments a ON a.id = m.assignment_id
+      LEFT JOIN organization_members om
+        ON om.org_id = a.org_id
+        AND om.user_id = ${user.id}
+        AND om.status = 'active'
+        AND om.role IN ('owner', 'admin')
+      WHERE m.profile_id = ${user.id}
+         OR om.user_id IS NOT NULL
+    `);
+
+    const accessMatchRows = getRows(accessMatchesResult) as Array<{ id: string }>;
+    const accessibleMatchIds = Array.from(new Set(accessMatchRows.map((row) => row.id)));
+
+    const modernAccessFilters = [
+      `host_user_id.eq.${user.id}`,
+      `participant_user_ids.cs.{${user.id}}`,
     ];
+    if (accessibleMatchIds.length > 0) {
+      modernAccessFilters.push(`match_id.in.(${accessibleMatchIds.join(',')})`);
+    }
+
+    let query = supabase
+      .from('interviews')
+      .select('*')
+      .or(modernAccessFilters.join(','))
+      .order('scheduled_at', { ascending: true });
 
     if (status) {
-      filters.push(sql`i.status = ${status}`);
+      query = query.eq('status', status);
     }
 
     if (matchId) {
-      filters.push(sql`i.match_id = ${matchId}`);
+      query = query.eq('match_id', matchId);
     }
 
-    const whereClause = filters.length > 0 ? sql.join(filters, sql` AND `) : sql`TRUE`;
+    const { data: modernInterviews, error: modernInterviewsError } = await query;
 
-    let result;
-    try {
-      result = await db.execute(sql`
-        SELECT
-          i.id,
-          i.match_id,
-          i.scheduled_at,
-          i.duration,
-          i.platform,
-          i.meeting_url,
-          i.status,
-          i.created_at,
-          m.created_at AS match_created_at,
-          p.display_name AS candidate_name,
-          a.role AS assignment_title,
-          o.display_name AS organization_name
-        FROM interviews i
-        INNER JOIN matches m ON m.id = i.match_id
-        INNER JOIN assignments a ON a.id = m.assignment_id
-        INNER JOIN organizations o ON o.id = a.org_id
-        LEFT JOIN profiles p ON p.id = m.profile_id
-        WHERE ${whereClause}
-        ORDER BY i.scheduled_at ASC
-      `);
-    } catch (queryError) {
-      if (!isMissingInterviewsColumnError(queryError)) {
-        throw queryError;
+    let interviews = modernInterviews;
+
+    if (modernInterviewsError) {
+      const missingModernAccessColumns =
+        isMissingColumnError(modernInterviewsError, 'host_user_id') ||
+        isMissingColumnError(modernInterviewsError, 'participant_user_ids');
+
+      if (!missingModernAccessColumns) {
+        throw modernInterviewsError;
       }
 
-      try {
-        result = await db.execute(sql`
-          SELECT
-            i.id,
-            i.match_id,
-            i.scheduled_at,
-            ${DEFAULT_INTERVIEW_DURATION_MINUTES} AS duration,
-            i.platform,
-            i.meeting_link AS meeting_url,
-            i.status,
-            i.created_at,
-            m.created_at AS match_created_at,
-            p.display_name AS candidate_name,
-            a.role AS assignment_title,
-            o.display_name AS organization_name
-          FROM interviews i
-          INNER JOIN matches m ON m.id = i.match_id
-          INNER JOIN assignments a ON a.id = m.assignment_id
-          INNER JOIN organizations o ON o.id = a.org_id
-          LEFT JOIN profiles p ON p.id = m.profile_id
-          WHERE ${whereClause}
-          ORDER BY i.scheduled_at ASC
-        `);
-      } catch (legacyQueryError) {
-        if (!isMissingInterviewsColumnError(legacyQueryError)) {
-          throw legacyQueryError;
+      if (accessibleMatchIds.length === 0) {
+        interviews = [];
+      } else {
+        let legacyQuery = supabase
+          .from('interviews')
+          .select('*')
+          .in('match_id', accessibleMatchIds)
+          .order('scheduled_at', { ascending: true });
+
+        if (status) {
+          legacyQuery = legacyQuery.eq('status', status);
         }
 
-        result = await db.execute(sql`
-          SELECT
-            i.id,
-            i.match_id,
-            i.scheduled_at,
-            ${DEFAULT_INTERVIEW_DURATION_MINUTES} AS duration,
-            i.platform,
-            NULL::text AS meeting_url,
-            i.status,
-            i.created_at,
-            m.created_at AS match_created_at,
-            p.display_name AS candidate_name,
-            a.role AS assignment_title,
-            o.display_name AS organization_name
-          FROM interviews i
-          INNER JOIN matches m ON m.id = i.match_id
-          INNER JOIN assignments a ON a.id = m.assignment_id
-          INNER JOIN organizations o ON o.id = a.org_id
-          LEFT JOIN profiles p ON p.id = m.profile_id
-          WHERE ${whereClause}
-          ORDER BY i.scheduled_at ASC
-        `);
+        if (matchId) {
+          legacyQuery = legacyQuery.eq('match_id', matchId);
+        }
+
+        const { data: legacyInterviews, error: legacyInterviewsError } = await legacyQuery;
+        if (legacyInterviewsError) {
+          throw legacyInterviewsError;
+        }
+
+        interviews = legacyInterviews;
       }
     }
 
-    const interviews = getRows(result) as Array<{
-      id: string;
-      match_id: string;
-      scheduled_at: string;
-      duration: number;
-      platform: string;
-      meeting_url: string | null;
-      status: string;
-      match_created_at: string | null;
-      candidate_name: string | null;
-      assignment_title: string | null;
-      organization_name: string | null;
-    }>;
-
-    const transformedInterviews = interviews.map((interview) => ({
+    const transformedInterviews = (interviews ?? []).map((interview: any) => ({
       id: interview.id,
       matchId: interview.match_id,
       scheduledAt: interview.scheduled_at,
-      duration: normalizeInterviewDuration(interview.duration),
+      duration: interview.duration_minutes ?? interview.duration ?? 30,
       platform: interview.platform,
-      meetingUrl: interview.meeting_url || 'pending',
+      meetingUrl: interview.meeting_link ?? interview.meeting_url ?? 'pending',
       status: interview.status,
-      matchAgreedAt: interview.match_created_at,
+      matchAgreedAt: interview.match_agreed_at ?? null,
       candidateName: interview.candidate_name || 'Candidate',
       assignmentTitle: interview.assignment_title || 'Assignment',
       organizationName: interview.organization_name || 'Organization',
@@ -434,13 +352,10 @@ export async function POST(request: NextRequest) {
       new Set<string>([match.profile_id, user.id, ...data.participantUserIds])
     );
 
-    const interviewInsertBase: Record<string, unknown> = {
+    const baseInterviewInsert = {
       match_id: data.matchId,
       scheduled_at: data.scheduledAt,
-      duration: DEFAULT_INTERVIEW_DURATION_MINUTES,
       platform: persistedPlatform,
-      meeting_url: meetingLink,
-      meeting_link: meetingLink,
       meeting_id: meetingId,
       timezone: data.timezone,
       status: 'scheduled',
@@ -449,48 +364,72 @@ export async function POST(request: NextRequest) {
     };
 
     let interview: any = null;
-    const missingColumnsRetried = new Set<string>();
 
-    for (let attempt = 0; attempt < 12; attempt += 1) {
-      const { data: insertedInterview, error: insertError } = await supabase
+    const insertPayload: Record<string, unknown> = {
+      ...baseInterviewInsert,
+      duration_minutes: 30,
+      meeting_link: meetingLink,
+    };
+
+    let lastInsertError: any = null;
+
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      const insertResult = await supabase
         .from('interviews')
-        .insert(interviewInsertBase)
+        .insert(insertPayload)
         .select()
         .single();
 
-      if (!insertError) {
-        interview = insertedInterview;
+      if (!insertResult.error) {
+        interview = insertResult.data;
         break;
       }
 
-      const missingColumn = getMissingInterviewsColumn(insertError);
-      if (!missingColumn || !(missingColumn in interviewInsertBase)) {
-        throw insertError;
+      lastInsertError = insertResult.error;
+
+      const missingColumn = extractMissingColumn(insertResult.error);
+      if (!missingColumn) {
+        const isLegacyPlatformEnumError =
+          insertResult.error?.code === '22P02' &&
+          typeof insertResult.error?.message === 'string' &&
+          insertResult.error.message.toLowerCase().includes('platform');
+
+        if (isLegacyPlatformEnumError && insertPayload.platform === 'manual') {
+          insertPayload.platform = 'zoom';
+          continue;
+        }
+
+        throw insertResult.error;
       }
 
-      missingColumnsRetried.add(missingColumn);
-      delete interviewInsertBase[missingColumn];
+      switch (missingColumn) {
+        case 'duration_minutes':
+          insertPayload.duration = insertPayload.duration_minutes ?? 30;
+          delete insertPayload.duration_minutes;
+          continue;
+        case 'duration':
+          delete insertPayload.duration;
+          continue;
+        case 'meeting_link':
+          insertPayload.meeting_url = insertPayload.meeting_link ?? meetingLink;
+          delete insertPayload.meeting_link;
+          continue;
+        case 'meeting_url':
+          delete insertPayload.meeting_url;
+          continue;
+        case 'timezone':
+        case 'host_user_id':
+        case 'participant_user_ids':
+          delete insertPayload[missingColumn];
+          continue;
+        default:
+          throw insertResult.error;
+      }
     }
 
-    if (!interview?.id || typeof interview.id !== 'string') {
-      throw new Error(
-        `Interview insert returned no id after fallback retries (${Array.from(
-          missingColumnsRetried
-        ).join(', ')})`
-      );
+    if (!interview) {
+      throw lastInsertError ?? new Error('Failed to insert interview after compatibility retries');
     }
-
-    const normalizedMeetingLink = normalizeMeetingLink(
-      interview as Record<string, unknown>,
-      meetingLink
-    );
-    const normalizedInterview = {
-      ...interview,
-      duration: normalizeInterviewDuration(interview.duration),
-      meeting_url: normalizedMeetingLink,
-      meeting_link: normalizedMeetingLink,
-      meetingUrl: normalizedMeetingLink,
-    };
 
     try {
       const { emitInterviewScheduledAsync } = await import('@/lib/analytics/events');
@@ -501,11 +440,11 @@ export async function POST(request: NextRequest) {
         (interviewDate.getTime() - matchDate.getTime()) / (1000 * 60 * 60 * 24)
       );
 
-      emitInterviewScheduledAsync(user.id, normalizedInterview.id, {
-        interview_id: normalizedInterview.id,
+      emitInterviewScheduledAsync(user.id, interview.id, {
+        interview_id: interview.id,
         assignment_id: match.assignment_id,
         match_id: data.matchId,
-        duration_minutes: DEFAULT_INTERVIEW_DURATION_MINUTES,
+        duration_minutes: 30,
         platform: persistedPlatform,
         days_since_match: daysSinceMatch,
       });
@@ -515,7 +454,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      interview: normalizedInterview,
+      interview,
       message: 'Interview scheduled successfully',
     });
   } catch (error: any) {

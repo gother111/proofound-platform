@@ -112,6 +112,7 @@ Edit `.env.local` (you will copy these values into Vercel later):
 
 ```env
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 NEXT_PUBLIC_APP_ENV=local
 
 # Supabase (from step 2)
@@ -119,6 +120,7 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 DATABASE_URL=postgresql://postgres:[PASSWORD]@db.your-project.supabase.co:5432/postgres
+PII_HASH_SALT=local-dev-salt
 
 # Resend
 RESEND_API_KEY=re_your_key
@@ -136,6 +138,27 @@ SENTRY_AUTH_TOKEN=
 
 # Cron jobs
 CRON_SECRET=your-cron-bearer-token
+INTERNAL_API_SECRET=your-internal-api-token
+
+# OAuth providers (strict E2E + integrations)
+ZOOM_CLIENT_ID=
+ZOOM_CLIENT_SECRET=
+ZOOM_REDIRECT_URI=http://localhost:3000/api/integrations/zoom/callback
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REDIRECT_URI=http://localhost:3000/api/integrations/google/callback
+LINKEDIN_CLIENT_ID=
+LINKEDIN_CLIENT_SECRET=
+
+# Deterministic provider E2E identity
+E2E_PROVIDER_USER_ID=
+E2E_PROVIDER_USER_EMAIL=
+E2E_PROVIDER_USER_PASSWORD=
+
+# Optional debug ingest sink (disabled by default)
+DEBUG_INGEST_ENABLED=false
+DEBUG_INGEST_URL=
+NEXT_PUBLIC_DEBUG_INGEST_URL=
 ```
 
 > **Heads up:** Once this works locally, open your Vercel project, go to **Settings → Environment Variables**, and add each of the keys above (Production, Preview, and Development tabs). For `DATABASE_URL`, copy the Supabase value from **Project Settings → Database → Connection string → Node.js**.
@@ -251,15 +274,16 @@ npm run db:push          # Push schema to database
 npm run db:studio        # Open Drizzle Studio
 npm run db:seed          # Seed database
 
-# Brand Tokens
-npm run tokens:sync      # Sync tokens from Figma (requires setup)
-
 # Testing
 npm run test             # Run unit tests (Vitest)
 npm run test:e2e         # Run E2E tests (Playwright)
 npm run test:e2e:ui      # Run E2E tests with UI
+npm run test:e2e:auth:real     # Real auth contract (strict)
+npm run test:a11y:strict       # Strict a11y contract (real env)
 npm run perf:budgets     # Perf budgets (Lighthouse TTI/CLS + API p95)
 npm run go:no-go         # Go/No-Go gating (perf + SUS flag + RLS/a11y evidence)
+npm run gates:mvp:strict # Full strict launch gate bundle
+npm run docs:freshness   # Documentation drift warnings
 ```
 
 > **Troubleshooting:** If `npm run lint` reports that `next` cannot be found, follow the steps in [`docs/TROUBLESHOOTING_LINT.md`](docs/TROUBLESHOOTING_LINT.md).

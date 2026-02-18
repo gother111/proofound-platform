@@ -1958,6 +1958,53 @@ Open TODOs / follow-ups:
 - Push this final perf-budget refresh commit.
 - Wait for PR #178 required checks (`ci`, `a11y`) and merge to `master`.
 
+## 2026-02-13 04:30:00 CET
+
+Task summary (1-3 lines):
+
+- User asked to push and merge the MVP reliability branch into `master`.
+- Resolved blocking PR merge conflicts after `master` advanced.
+
+What worked:
+
+- `gh pr view` quickly identified merge blockage (`mergeable: CONFLICTING`).
+- Merging `origin/master` locally and resolving only conflicted files unblocked the branch.
+- Post-resolution local checks passed (`lint`, `typecheck`).
+
+What failed / wrong assumptions:
+
+- Assumed only CI perf budgets were blocking merge; merge conflicts appeared once `master` moved.
+
+User corrections:
+
+- None.
+
+Assumptions taken without asking:
+
+- Keeping already-tested branch behavior for interview/provider/a11y flow files is safer than replacing with incoming edits during conflict resolution.
+- Keeping current `master` perf-budget baseline is acceptable for merge velocity.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Rebase/merge from `master` earlier in long-running branches to avoid late conflict bursts.
+- Keep conflict-prone docs sections in smaller, scoped updates.
+
+Commands run + outcomes (short):
+
+- `gh pr view 180 --json mergeable,...`: PASS (detected `CONFLICTING`)
+- `git fetch origin master && git merge origin/master`: CONFLICT (resolved manually)
+- `npm run lint`: PASS (1 pre-existing warning)
+- `npm run typecheck`: PASS
+
+Open TODOs / follow-ups:
+
+- Finalize merge commit, push branch, and wait for required checks.
+- Confirm PR #180 auto-merges into `master`.
+
 ---
 
 ## 2026-02-13 16:09 CET

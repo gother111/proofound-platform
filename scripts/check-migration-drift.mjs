@@ -29,11 +29,47 @@ function getBaseCommit() {
   }
 }
 
-function getChangedFiles(base) {
-  if (!base) return [];
-  const output = runGit(['diff', '--name-only', `${base}...HEAD`]);
+function parseNameStatus(output) {
   if (!output) return [];
-  return output.split('\n').map((line) => line.trim()).filter(Boolean);
+  return output
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const parts = line.split(/\s+/);
+      const status = parts[0]?.[0] || 'M';
+      const file = parts[parts.length - 1];
+      return { status, file };
+    })
+    .filter((entry) => Boolean(entry.file));
+}
+
+function getChangedFilesBetween(base, extraArgs = []) {
+  if (!base) return [];
+  const output = runGit(['diff', '--name-status', ...extraArgs, `${base}...HEAD`]);
+  return parseNameStatus(output);
+}
+
+function getWorkingTreeChangedFiles() {
+  const unstaged = parseNameStatus(runGit(['diff', '--name-status', 'HEAD']));
+  const staged = parseNameStatus(runGit(['diff', '--name-status', '--cached']));
+  const byPath = new Map();
+
+  [...unstaged, ...staged].forEach((entry) => {
+    const existing = byPath.get(entry.file);
+    if (!existing || entry.status === 'D') {
+      byPath.set(entry.file, entry);
+      return;
+    }
+
+    if (existing.status === 'D') {
+      return;
+    }
+
+    byPath.set(entry.file, entry);
+  });
+
+  return Array.from(byPath.values());
 }
 
 function fail(message, details = []) {
@@ -53,14 +89,28 @@ function main() {
     return;
   }
 
-  const changedFiles = getChangedFiles(base);
-  if (changedFiles.length === 0) {
+  const changedFiles = getChangedFilesBetween(base);
+  const localChangedFiles = getWorkingTreeChangedFiles();
+  const normalizedMap = new Map();
+
+  for (const entry of changedFiles) {
+    normalizedMap.set(entry.file, entry);
+  }
+
+  for (const entry of localChangedFiles) {
+    normalizedMap.set(entry.file, entry);
+  }
+
+  const normalizedChanges = Array.from(normalizedMap.values());
+
+  if (normalizedChanges.length === 0) {
     console.log('Migration drift check passed (no changed files).');
     return;
   }
 
-  const disallowedSqlChanges = changedFiles.filter(
-    (file) =>
+  const disallowedSqlChanges = normalizedChanges.filter(
+    ({ file, status }) =>
+      status !== 'D' &&
       file.endsWith('.sql') &&
       (file.startsWith('supabase/migrations/') || file.startsWith('drizzle/'))
   );
@@ -68,21 +118,24 @@ function main() {
   if (disallowedSqlChanges.length > 0) {
     fail(
       'SQL migrations were changed outside src/db/migrations. Use src/db/migrations as canonical.',
-      disallowedSqlChanges
+      disallowedSqlChanges.map((entry) => `${entry.status} ${entry.file}`)
     );
   }
 
-  const schemaTouched = changedFiles.includes('src/db/schema.ts');
-  const canonicalMigrationTouched = changedFiles.some(
-    (file) => file.startsWith('src/db/migrations/') && file.endsWith('.sql')
+  const changedPaths = normalizedChanges.map((entry) => entry.file);
+
+  const schemaTouched = changedPaths.includes('src/db/schema.ts');
+  const canonicalMigrationTouched = normalizedChanges.some(
+    ({ file, status }) => status !== 'D' && file.startsWith('src/db/migrations/') && file.endsWith('.sql')
   );
 
   if (schemaTouched && !canonicalMigrationTouched) {
     fail('src/db/schema.ts changed without a corresponding src/db/migrations/*.sql change.');
   }
 
-  const invalidCanonicalNames = changedFiles
-    .filter((file) => file.startsWith('src/db/migrations/') && file.endsWith('.sql'))
+  const invalidCanonicalNames = normalizedChanges
+    .filter(({ file, status }) => status !== 'D' && file.startsWith('src/db/migrations/') && file.endsWith('.sql'))
+    .map(({ file }) => file)
     .filter((file) => !/^src\/db\/migrations\/\d{14}_[a-z0-9_]+\.sql$/.test(file));
 
   if (invalidCanonicalNames.length > 0) {
@@ -92,7 +145,7 @@ function main() {
     );
   }
 
-  if (changedFiles.includes('migrations-to-run.sql')) {
+  if (changedPaths.includes('migrations-to-run.sql')) {
     fail('migrations-to-run.sql is deprecated. Add migrations under src/db/migrations instead.');
   }
 

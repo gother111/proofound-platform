@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { signUp } from '@/actions/auth';
+import { requestPasswordReset, signUp } from '@/actions/auth';
 
 // Mock dependencies
 vi.mock('next/headers', () => ({
@@ -20,6 +20,7 @@ const mockSupabase = {
   auth: {
     signUp: vi.fn(),
     resend: vi.fn(),
+    resetPasswordForEmail: vi.fn(),
   },
   from: vi.fn(() => ({
     select: vi.fn(() => ({
@@ -57,6 +58,7 @@ vi.mock('@/lib/analytics/events', () => ({
 describe('Auth Actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSupabase.auth.resetPasswordForEmail.mockResolvedValue({ error: null });
   });
 
   describe('signUp', () => {
@@ -114,6 +116,42 @@ describe('Auth Actions', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('valid email');
+    });
+  });
+
+  describe('requestPasswordReset', () => {
+    it('returns validation error for malformed email', async () => {
+      const formData = new FormData();
+      formData.append('email', 'invalid-email');
+
+      const result = await requestPasswordReset(formData);
+
+      expect(result).toEqual({ error: 'Invalid email' });
+      expect(mockSupabase.auth.resetPasswordForEmail).not.toHaveBeenCalled();
+    });
+
+    it('returns success even when provider reset call errors', async () => {
+      mockSupabase.auth.resetPasswordForEmail.mockResolvedValue({
+        error: { message: 'Too many requests', status: 429 },
+      });
+
+      const formData = new FormData();
+      formData.append('email', 'valid@example.com');
+
+      const result = await requestPasswordReset(formData);
+
+      expect(result).toEqual({ success: true });
+      expect(mockSupabase.auth.resetPasswordForEmail).toHaveBeenCalledOnce();
+    });
+
+    it('returns success when provider reset call succeeds', async () => {
+      const formData = new FormData();
+      formData.append('email', 'valid@example.com');
+
+      const result = await requestPasswordReset(formData);
+
+      expect(result).toEqual({ success: true });
+      expect(mockSupabase.auth.resetPasswordForEmail).toHaveBeenCalledOnce();
     });
   });
 });

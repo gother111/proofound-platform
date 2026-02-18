@@ -1,15 +1,21 @@
 /**
- * Accessibility Tests for Public Critical Flows
+ * Accessibility Tests for Authenticated Strict Flows
  *
- * PRD: Part 8 (lines 1831-1834), Part 12.2
- * WCAG 2.1 AA compliance verification
+ * Runs only in strict a11y config with real Supabase-backed fixtures.
  */
 
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import {
+  cleanupFixtureData,
+  createFixtureState,
+  createRuntimeUser,
+  loginWithUi,
+  type StrictFixtureState,
+  type StrictRuntimeUser,
+} from '../../e2e/helpers/strict-fixtures';
 
 async function waitForUiToSettle(page: import('@playwright/test').Page) {
-  // Many screens use Framer Motion fade-ins. Axe can misreport contrast if run mid-animation.
   await page.waitForFunction(
     () => {
       const hasStableOpacity = (node: HTMLElement | null) => {
@@ -33,30 +39,6 @@ async function waitForUiToSettle(page: import('@playwright/test').Page) {
         return true;
       };
 
-      const isVisible = (node: HTMLElement | null) => {
-        if (!node) return false;
-        const style = getComputedStyle(node);
-        return style.display !== 'none' && style.visibility !== 'hidden';
-      };
-
-      if (window.location.pathname === '/signup') {
-        const marker = document.querySelector(
-          '[data-testid="signup-choice-screen"], [data-testid="signup-form"]'
-        );
-        if (!marker) return false;
-
-        const indicator = Array.from(document.querySelectorAll<HTMLElement>('h3, h1, button, a, p'))
-          .map((node) => node.textContent?.trim())
-          .filter(Boolean)
-          .some((text) => text?.includes('Continue as Individual'));
-
-        const hasChoice = indicator || false;
-
-        return (
-          hasChoice && isVisible(marker as HTMLElement) && hasStableOpacity(marker as HTMLElement)
-        );
-      }
-
       const form = document.querySelector('form[aria-label]') as HTMLElement | null;
       if (!form) return true;
       return hasStableOpacity(form);
@@ -65,15 +47,32 @@ async function waitForUiToSettle(page: import('@playwright/test').Page) {
   );
 }
 
-test.describe('Accessibility - Public Critical Flows', () => {
+test.describe('Accessibility - Authenticated Strict Flows', () => {
+  let fixture: StrictFixtureState;
+  let authenticatedUser: StrictRuntimeUser;
+
+  test.beforeAll(async () => {
+    fixture = createFixtureState();
+    authenticatedUser = await createRuntimeUser(fixture, {
+      persona: 'individual',
+      prefix: 'strict-a11y',
+      displayName: 'Strict A11y User',
+    });
+  });
+
+  test.afterAll(async () => {
+    await cleanupFixtureData(fixture);
+  });
+
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
       localStorage.setItem('proofound-cookie-consent', 'v1.0.2025-11-06-accepted');
     });
   });
 
-  test('Homepage should be accessible', async ({ page }) => {
-    await page.goto('/');
+  test('Profile page should be accessible (authenticated)', async ({ page }) => {
+    await loginWithUi(page, authenticatedUser);
+    await page.goto('/app/i/profile');
     await waitForUiToSettle(page);
 
     const accessibilityScanResults = await new AxeBuilder({ page })
@@ -83,8 +82,9 @@ test.describe('Accessibility - Public Critical Flows', () => {
     expect(accessibilityScanResults.violations).toEqual([]);
   });
 
-  test('Login page should be accessible', async ({ page }) => {
-    await page.goto('/login');
+  test('Expertise hub should be accessible (authenticated)', async ({ page }) => {
+    await loginWithUi(page, authenticatedUser);
+    await page.goto('/app/i/expertise');
     await waitForUiToSettle(page);
 
     const accessibilityScanResults = await new AxeBuilder({ page })
@@ -94,8 +94,9 @@ test.describe('Accessibility - Public Critical Flows', () => {
     expect(accessibilityScanResults.violations).toEqual([]);
   });
 
-  test('Signup page should be accessible', async ({ page }) => {
-    await page.goto('/signup');
+  test('Dashboard should be accessible (authenticated)', async ({ page }) => {
+    await loginWithUi(page, authenticatedUser);
+    await page.goto('/app/i/home');
     await waitForUiToSettle(page);
 
     const accessibilityScanResults = await new AxeBuilder({ page })

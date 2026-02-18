@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ChevronDown, ChevronUp, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
+import { sendDebugIngest } from '@/lib/debug-ingest';
 
 interface L1Domain {
   catId: number;
@@ -47,58 +48,28 @@ const DOMAIN_COLORS: Record<number, { bg: string; border: string; text: string }
 export function L1Grid({ domains, onDomainClick, l2CategoriesPerL1, onL2Click }: L1GridProps) {
   const [expandedDomain, setExpandedDomain] = useState<number | null>(null);
 
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/381d9e33-65b3-4af0-9925-b21521306aaa', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      sessionId: 'debug-session',
-      runId: 'pre-fix-1',
-      hypothesisId: 'H1',
-      location: 'L1Grid.tsx:entry',
-      message: 'L1Grid render start',
-      data: { domainCount: domains?.length ?? 0 },
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {});
-  // #endregion
-
   const handleDomainClick = (catId: number) => {
     if (expandedDomain === catId) {
       setExpandedDomain(null);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/381d9e33-65b3-4af0-9925-b21521306aaa', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: 'debug-session',
-          runId: 'pre-fix-1',
-          hypothesisId: 'H2',
-          location: 'L1Grid.tsx:toggle',
-          message: 'Collapse domain',
-          data: { catId },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
+      sendDebugIngest({
+        sessionId: 'debug-session',
+        runId: 'launch-readiness',
+        hypothesisId: 'H2',
+        location: 'L1Grid.tsx:toggle',
+        message: 'Collapse domain',
+        data: { catId },
+      });
     } else {
       setExpandedDomain(catId);
       onDomainClick(catId);
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/381d9e33-65b3-4af0-9925-b21521306aaa', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: 'debug-session',
-          runId: 'pre-fix-1',
-          hypothesisId: 'H2',
-          location: 'L1Grid.tsx:toggle',
-          message: 'Expand domain',
-          data: { catId },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
+      sendDebugIngest({
+        sessionId: 'debug-session',
+        runId: 'launch-readiness',
+        hypothesisId: 'H2',
+        location: 'L1Grid.tsx:toggle',
+        message: 'Expand domain',
+        data: { catId },
+      });
     }
   };
 
@@ -114,45 +85,6 @@ export function L1Grid({ domains, onDomainClick, l2CategoriesPerL1, onL2Click }:
           const colors = DOMAIN_COLORS[domain.catId] || DOMAIN_COLORS[1];
           const isExpanded = expandedDomain === domain.catId;
           const l2Categories = l2CategoriesPerL1[domain.catId] || [];
-
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/381d9e33-65b3-4af0-9925-b21521306aaa', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              sessionId: 'debug-session',
-              runId: 'pre-fix-1',
-              hypothesisId: 'H1',
-              location: 'L1Grid.tsx:map',
-              message: 'Render domain card',
-              data: {
-                catId: domain.catId,
-                name: domain.nameI18n?.en,
-                skillCount: domain.skillCount,
-                l2Count: l2Categories.length,
-              },
-              timestamp: Date.now(),
-            }),
-          }).catch(() => {});
-          // #endregion
-
-          if (isExpanded) {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/381d9e33-65b3-4af0-9925-b21521306aaa', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                sessionId: 'debug-session',
-                runId: 'pre-fix-1',
-                hypothesisId: 'H3',
-                location: 'L1Grid.tsx:l2Block',
-                message: 'Render L2 block',
-                data: { catId: domain.catId, l2Count: l2Categories.length },
-                timestamp: Date.now(),
-              }),
-            }).catch(() => {});
-            // #endregion
-          }
 
           return (
             <Card
@@ -254,26 +186,6 @@ export function L1Grid({ domains, onDomainClick, l2CategoriesPerL1, onL2Click }:
                   ) : (
                     <div className="space-y-2">
                       {l2Categories.map((l2) => {
-                        // #region agent log
-                        fetch('http://127.0.0.1:7242/ingest/381d9e33-65b3-4af0-9925-b21521306aaa', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({
-                            sessionId: 'debug-session',
-                            runId: 'pre-fix-1',
-                            hypothesisId: 'H3',
-                            location: 'L1Grid.tsx:l2Item',
-                            message: 'Render L2 item',
-                            data: {
-                              catId: domain.catId,
-                              subcatId: l2.subcatId,
-                              name: l2.nameI18n?.en,
-                            },
-                            timestamp: Date.now(),
-                          }),
-                        }).catch(() => {});
-                        // #endregion
-
                         return (
                           <button
                             key={l2.subcatId}

@@ -75,6 +75,15 @@ function normalizeHandle(raw: string): string {
     .slice(0, 40);
 }
 
+function generateUniqueHandle(prefix: string): string {
+  const safePrefix = normalizeHandle(prefix).replace(/^-+|-+$/g, '') || 'strict-user';
+  const timePart = Date.now().toString(36);
+  const uniquePart = randomUUID().slice(0, 8);
+  const maxPrefixLength = Math.max(1, 40 - timePart.length - uniquePart.length - 2);
+  const prefixPart = safePrefix.slice(0, maxPrefixLength);
+  return `${prefixPart}-${timePart}-${uniquePart}`;
+}
+
 export function createFixtureState(): StrictFixtureState {
   return {
     userIds: new Set<string>(),
@@ -115,9 +124,7 @@ export async function createRuntimeUser(
   const password = options.password ?? DEFAULT_PASSWORD;
   const displayName = options.displayName ?? `Strict ${options.prefix}`;
   const defaultHandle =
-    options.handle === undefined
-      ? normalizeHandle(`${randomUUID().slice(0, 8)}-${options.prefix}`)
-      : options.handle;
+    options.handle === undefined ? generateUniqueHandle(options.prefix) : options.handle;
 
   const { data, error } = await supabase.auth.admin.createUser({
     email,
@@ -177,10 +184,14 @@ export async function createRuntimeUser(
   };
 }
 
-export function getManagedProviderUser(): StrictRuntimeUser {
-  const id = requireEnv('E2E_PROVIDER_USER_ID');
-  const email = requireEnv('E2E_PROVIDER_USER_EMAIL');
-  const password = requireEnv('E2E_PROVIDER_USER_PASSWORD');
+export function getManagedProviderUser(): StrictRuntimeUser | null {
+  const id = process.env.E2E_PROVIDER_USER_ID?.trim();
+  const email = process.env.E2E_PROVIDER_USER_EMAIL?.trim();
+  const password = process.env.E2E_PROVIDER_USER_PASSWORD?.trim();
+
+  if (!id || !email || !password) {
+    return null;
+  }
 
   return {
     id,
