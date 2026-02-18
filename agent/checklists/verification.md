@@ -14,6 +14,8 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 - Typecheck: `npm run typecheck` (source: package.json)
 - Unit tests: `npm run test` (source: package.json)
 - Build: `npm run build` (source: package.json)
+- If changes touch `/api/mobile/v1/*` routes, run focused contract tests in addition to full unit tests:
+  - `npm run test -- tests/api/mobile-bootstrap-route.test.ts tests/api/mobile-device-token-route.test.ts`
 - If changes touch auth, RLS, policies, migrations, or privacy-sensitive API contracts:
   - Run `npm run db:migrate` first when there are unapplied SQL migrations so privacy tests validate current policy/trigger state.
   - Run `npm run test:privacy` and `npm run test:privacy:extended` sequentially (not in parallel) to avoid shared test-infra contention.
