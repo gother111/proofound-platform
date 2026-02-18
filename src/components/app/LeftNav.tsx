@@ -120,10 +120,7 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
   const settingsHref = `${basePath}/settings`;
   const settingsNavItem = navItems.find((item) => item.href === settingsHref);
   const mobileNavItems = settingsNavItem
-    ? [
-        ...navItems.filter((item) => item.href !== settingsHref).slice(0, 4),
-        settingsNavItem,
-      ]
+    ? [...navItems.filter((item) => item.href !== settingsHref).slice(0, 4), settingsNavItem]
     : navItems.slice(0, 5);
 
   return (
