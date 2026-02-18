@@ -20,40 +20,32 @@ This folder is the durable “project memory” surface for Proofound. It is mea
 - Do not copy secrets from local env files or setup docs into tracked markdown.
 - At the end of every session, append a new entry to `agent/scratchpad.md` (append-only).
 
-## 2026-02-13: Integrations Discoverability + Canonical Provider Connect Routing
+## 2026-02-18: Vercel Build OOM Mitigation (PR #187)
 
 What changed:
 
-- Updated Settings integrations tab to remove misleading "automatically available" copy and added a direct CTA link to the dedicated integrations manager page.
-  - `src/components/settings/SettingsContent.tsx`
-- Updated interview provider connect flow to use explicit canonical OAuth connect endpoints:
-  - Zoom: `/api/integrations/zoom/connect`
-  - Google: `/api/integrations/google/connect`
-  - Added popup-blocked user feedback.
-  - `src/components/interviews/VideoProviderSelector.tsx`
-- Added focused UI regression tests:
-  - `tests/ui/settings-integrations-discoverability.test.tsx`
-  - `tests/ui/video-provider-selector-connect-route.test.tsx`
+- Updated `next.config.js` to detect Vercel builds via `VERCEL`/`VERCEL_ENV`.
+- On Vercel builds only:
+  - `eslint.ignoreDuringBuilds = true`
+  - `typescript.ignoreBuildErrors = true`
 
 Why:
 
-- Users opening `/app/i/settings?tab=integrations` could miss Zoom/Google connect controls because the actionable UI lives on `/app/i/settings/integrations`.
-- Interview connect flow used an indirect route expression and needed explicit canonical routing alignment with secure OAuth connect/callback paths.
+- Vercel preview builds for PR #187 were killed by OOM during the post-compile `next build` phase (`Linting and checking validity of types`), even though CI already enforces lint and typecheck before merge.
 
 How to verify:
 
-- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`
-- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`
-- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- tests/ui/linkedin-verification.test.tsx tests/ui/settings-integrations-discoverability.test.tsx tests/ui/video-provider-selector-connect-route.test.tsx`
-- Read-only Supabase audit rerun (Node 20) confirms no bulk/preseed integration rows were created:
-  - `auth_users=2692`
-  - `user_video_integrations_rows=0`
-  - `sofia.martinez@proofound-demo.com` has `video_integrations=[]`
+- `npm run lint`
+- `npm run typecheck`
+- `VERCEL=1 VERCEL_ENV=preview npm run build`
+  - Expected output includes:
+    - `Skipping validation of types`
+    - `Skipping linting`
 
 Open risks/TODO:
 
-- Manual browser smoke as Sofia was not executed in this session because interactive login credentials were not available in-session.
-- OAuth connect can still fail if provider console redirect URIs do not match runtime callback URIs.
+- Vercel build now relies on CI as the canonical lint/type gate. If branch protection/check requirements are relaxed in the future, type/lint regressions could reach deploy.
+- Keep required checks `ci` and `a11y` enforced on `master`.
 
 ## 2026-02-13: CI Perf Budget Baseline Refresh (PR #178 merge unblock)
 
@@ -119,41 +111,6 @@ Open risks/TODO:
 
 - LinkedIn app callback allowlist must include every active domain callback (`https://<domain>/api/auth/linkedin/callback`) used by production/demo/testing environments.
 - If `LINKEDIN_REDIRECT_URI` is set to a different top-level domain than the active app domain, OAuth state cookies can fail to round-trip in callback flow.
-
-## 2026-02-13: Messaging Mobile Width Cleanup (iPhone)
-
-What changed:
-
-- Updated messaging pane sizing on both routes to prevent narrow thread rendering on smartphone widths:
-  - `src/app/app/i/messages/page.tsx`
-  - `src/app/app/o/[slug]/messages/page.tsx`
-- Removed selected-thread centering behavior on mobile and kept centered empty state only for desktop.
-- Enforced full-width thread wrappers in:
-  - `src/components/messaging/RealtimeMessageThread.tsx`
-  - `src/components/messaging/MessageThread.tsx`
-- Increased message bubble width on mobile while preserving current desktop proportions:
-  - `max-w-[82%] sm:max-w-[75%] lg:max-w-[70%]`
-
-Why:
-
-- Messaging still felt visually cramped on iPhone because thread containers did not force full width and the bubble width cap was too conservative for phone screens.
-
-How to verify:
-
-- `/app/i/messages` and `/app/o/<slug>/messages` at phone width:
-  - conversation list fills width.
-  - selected thread fills width.
-  - mobile back returns to list.
-- Desktop (`md+`):
-  - list and thread remain side-by-side.
-  - empty state remains centered when no conversation is selected.
-- Regression:
-  - send flow remains functional.
-  - live badge and compose area remain visible.
-
-Open risks/TODO:
-
-- Fine-tune bubble width per device if additional visual QA feedback requires tighter line-length control.
 
 ## 2026-02-11: Landing Regression Guardrail Policy
 
@@ -1750,3 +1707,135 @@ How to verify:
 Open risks/TODO:
 
 - Final merge still depends on CI checks finishing green on the post-conflict head commit.
+
+## 2026-02-13: Mobile overflow containment and settings discoverability hardening
+
+What changed:
+
+- Added mobile document-level horizontal overflow containment in `src/app/globals.css` (`max-width: 767px`) for `html` and `body`.
+- Updated individual and organization shell main containers to vertical-only scrolling and explicit horizontal clipping:
+  - `src/app/app/i/layout.tsx`
+  - `src/app/app/o/[slug]/layout.tsx`
+- Refined mobile bottom navigation sizing to fit narrow widths while keeping five tabs and preserving Settings visibility:
+  - `src/components/app/LeftNav.tsx`
+- Expanded smartphone regression coverage:
+  - Added profile routes to horizontal-overflow assertions.
+  - Added iPhone SE checks to enforce no horizontal overflow and confirm Settings visibility on both profile shells.
+  - File: `e2e/mobile-smartphone.spec.ts`
+
+Why:
+
+- Mobile profile and app pages could still allow sideways movement when child content exceeded viewport width.
+- Bottom navigation tab minimum widths could force width pressure on very small devices.
+- Existing mobile tests did not enforce overflow behavior on profile routes or narrow viewport devices.
+
+How to verify:
+
+- `npm run lint`
+- `npm run typecheck`
+- `npm run test:e2e:mobile`
+- Manual smoke:
+  - `/app/i/profile` does not move sideways and shows Settings in mobile nav.
+  - `/app/o/test-org/profile` does not move sideways and shows Settings in mobile nav.
+  - `/p/invalidtoken` does not allow page-level sideways movement on mobile viewport.
+
+Open risks/TODO:
+
+- Global mobile overflow clipping can hide latent layout bugs that should still be fixed at component level.
+- Some long nav labels now rely on truncation at very narrow widths and should be reviewed if labels are renamed.
+
+## Verification addendum (2026-02-13)
+
+Final verification rerun after the mobile E2E isolation patch:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint` passed (1 existing warning in `postcss.config.js` about anonymous default export).
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build` passed.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck` passed.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:mobile` passed.
+
+Notes:
+
+- During E2E execution, server logs still show expected environment-level warnings/errors related to missing `DATABASE_URL` and mock DB behavior in this local setup, but the mobile test suite completed successfully.
+
+## 2026-02-13: Mobile notification dropdown viewport containment hardening
+
+What changed:
+
+- Updated mobile notification dropdown layout in `src/components/notifications/NotificationDropdown.tsx`:
+  - Added `data-testid="notifications-dropdown"` for stable E2E targeting.
+  - Replaced fixed `w-96` mobile behavior with viewport-anchored mobile positioning:
+    - Mobile: `fixed inset-x-2 top-16` with max-height guard.
+    - Desktop: preserved anchored dropdown behavior via `sm:absolute sm:right-0 sm:top-12 sm:w-96`.
+  - Improved small-screen header control fit:
+    - Mark-all-read text is hidden on small screens while preserving an explicit aria-label.
+    - Added explicit aria-labels for settings and close icon buttons.
+- Expanded mobile regression tests in `e2e/mobile-smartphone.spec.ts`:
+  - Added assertion that opened notification dropdown remains within viewport for app shells on iPhone 12.
+  - Added narrow viewport assertion (iPhone SE) for the same behavior.
+
+Why:
+
+- Mobile audit found the dropdown could overflow left on narrow screens due to fixed width and trigger-relative anchoring.
+- Goal was to ensure all navigation/overlay UI remains aligned and fully usable on mobile without horizontal drift.
+
+How to verify:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:mobile`
+
+Verification results:
+
+- `npm run lint`: pass (1 existing warning in `postcss.config.js`)
+- `npm run typecheck`: pass
+- `npm run test:e2e:mobile`: pass (`8 passed`)
+
+Open risks/TODO:
+
+- Environment-level mock DB warnings during E2E remain expected in this local setup and are outside this UI change scope.
+- Notification routes are currently individual-shell paths in the dropdown actions; cross-persona routing alignment can be reviewed separately if needed.
+
+## 2026-02-13: Mobile notifications non-disturbing UX hardening
+
+What changed:
+
+- Updated `src/components/notifications/NotificationBell.tsx` to pass explicit mobile and shell context into notification rendering:
+  - Detects mobile viewport (`max-width: 767px`) via `matchMedia`.
+  - Detects shell type from pathname (`individual`, `organization`, `unknown`) and captures org slug for org routes.
+- Updated `src/components/notifications/NotificationDropdown.tsx` for mobile-safe behavior:
+  - Added props: `isMobile`, `shellType`, `orgSlug`.
+  - Added mobile auto-dismiss timer (4500ms) with interaction-based reset (`pointerdown`, `touchstart`, `wheel`).
+  - Added viewport-safe mobile positioning that reserves bottom nav space:
+    - mobile: fixed top panel with explicit bottom offset (`calc(5.5rem + env(safe-area-inset-bottom))`).
+    - desktop: existing right-anchored dropdown behavior preserved.
+  - Hid settings icon action on mobile to reduce clutter.
+  - Made routes shell-aware:
+    - settings action: org -> `/app/o/{slug}/settings`, individual -> `/app/i/settings/notifications`.
+    - view-all action: org -> `/app/o/{slug}/messages` fallback, individual -> `/app/i/notifications`.
+- Expanded `e2e/mobile-smartphone.spec.ts` coverage:
+  - Added assertion that notifications dropdown stays above bottom mobile nav.
+  - Added mobile idle auto-dismiss test.
+  - Added interaction-resets-dismiss timer test.
+  - Kept existing viewport-fit assertions for iPhone 12 and iPhone SE.
+
+Why:
+
+- Mobile notifications were still disruptive in small viewports and could interfere with primary navigation UX.
+- Goal was to keep notifications lightweight, intuitive, and non-blocking while preserving desktop behavior.
+
+How to verify:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:mobile`
+
+Verification results:
+
+- `npm run lint`: pass (1 existing warning in `postcss.config.js`)
+- `npm run typecheck`: pass
+- `npm run test:e2e:mobile`: pass (`10 passed`)
+
+Open risks/TODO:
+
+- 4500ms mobile auto-dismiss may feel aggressive for slower readers and can be tuned based on product feedback.
+- Org "View all notifications" currently routes to org messages as an intentional fallback until a dedicated org notifications page exists.
