@@ -55,7 +55,11 @@ Historical API specs are archived at:
 ### Assignments, Interviews, Contracts
 
 - `GET|POST /api/assignments`
-- `GET|PATCH|DELETE /api/assignments/[id]`
+- `GET|PUT|DELETE /api/assignments/[id]`
+- `POST /api/assignments/[id]/publish`
+- `GET|POST /api/assignments/[id]/outcomes`
+- `GET|POST /api/assignments/[id]/expertise-matrix`
+- `GET|POST /api/assignments/[id]/pipeline`
 - `POST /api/interviews/schedule`
 - `POST /api/interviews/complete`
 - `GET|POST /api/contracts`

@@ -7,9 +7,9 @@
 
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useForm } from 'react-hook-form';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import {
@@ -88,18 +88,31 @@ const STEPS = [
 export default function AssignmentBuilderPage() {
   const router = useRouter();
   const params = useParams();
-  const orgSlug = String((params as { slug?: string }).slug ?? '');
+  const searchParams = useSearchParams();
+  const slug =
+    typeof params.slug === 'string'
+      ? params.slug
+      : Array.isArray(params.slug)
+        ? params.slug[0]
+        : '';
+  const draftId = searchParams.get('draftId');
   const [currentStep, setCurrentStep] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
   const [assignmentId, setAssignmentId] = useState<string | null>(null);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [orgId, setOrgId] = useState<string | null>(null);
+  const [hasHydratedDraft, setHasHydratedDraft] = useState(false);
   const [stepStartTime, setStepStartTime] = useState<Date>(new Date());
   const [templates, setTemplates] = useState<AssignmentTemplate[]>([]);
   const [isTemplatePickerOpen, setIsTemplatePickerOpen] = useState(false);
   const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
   const [appliedTemplateId, setAppliedTemplateId] = useState<string | null>(null);
   const [appliedTemplateName, setAppliedTemplateName] = useState<string | null>(null);
+  const assignmentIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    assignmentIdRef.current = assignmentId;
+  }, [assignmentId]);
 
   const form = useForm<AssignmentFormData>({
     defaultValues: {
@@ -125,12 +138,75 @@ export default function AssignmentBuilderPage() {
     },
   });
 
+  const normalizeDateInput = useCallback((value?: string | null) => {
+    if (!value) return '';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+    const asDate = new Date(value);
+    if (Number.isNaN(asDate.getTime())) return '';
+    return asDate.toISOString().slice(0, 10);
+  }, []);
+
+  useEffect(() => {
+    if (!draftId || hasHydratedDraft) return;
+
+    const hydrateDraft = async () => {
+      try {
+        const response = await fetch(`/api/assignments/${draftId}`);
+        if (!response.ok) {
+          throw new Error('Failed to load draft assignment');
+        }
+
+        const payload = await response.json();
+        const assignment = payload.assignment;
+        if (!assignment?.id) {
+          throw new Error('Invalid draft assignment payload');
+        }
+
+        form.reset({
+          ...form.getValues(),
+          role: assignment.role || '',
+          businessValue: assignment.businessValue || '',
+          expectedImpact: assignment.expectedImpact || '',
+          outcomes: Array.isArray(assignment.outcomes) ? assignment.outcomes : [],
+          weights:
+            assignment.weights && typeof assignment.weights === 'object'
+              ? assignment.weights
+              : { mission: 33, expertise: 34, workMode: 33 },
+          locationMode: assignment.locationMode || 'hybrid',
+          city: assignment.city || '',
+          country: assignment.country || '',
+          compMin: assignment.compMin ?? assignment.compensationMin ?? 0,
+          compMax: assignment.compMax ?? assignment.compensationMax ?? 0,
+          currency: assignment.currency || 'USD',
+          hoursMin: assignment.hoursMin ?? 20,
+          hoursMax: assignment.hoursMax ?? 40,
+          startEarliest: normalizeDateInput(assignment.startEarliest),
+          startLatest: normalizeDateInput(assignment.startLatest),
+          verificationGates: assignment.verificationGates || [],
+          mustHaveSkills: assignment.requiredSkills || [],
+          niceToHaveSkills: assignment.niceToHaveSkills || [],
+        });
+
+        setAssignmentId(assignment.id);
+        setOrgId(assignment.orgId || null);
+        setLastSaved(new Date());
+      } catch (error) {
+        console.error(error);
+        toast.error('Could not load existing draft');
+      } finally {
+        setHasHydratedDraft(true);
+      }
+    };
+
+    void hydrateDraft();
+  }, [draftId, form, hasHydratedDraft, normalizeDateInput]);
+
   // Load templates for the organization
   useEffect(() => {
     const loadTemplates = async () => {
       setIsLoadingTemplates(true);
       try {
-        const response = await fetch(`/api/assignment-templates?orgSlug=${orgSlug}`);
+        const response = await fetch(`/api/assignment-templates?orgSlug=${slug}`);
         if (!response.ok) {
           throw new Error('Failed to load templates');
         }
@@ -145,7 +221,7 @@ export default function AssignmentBuilderPage() {
     };
 
     loadTemplates();
-  }, [orgSlug]);
+  }, [slug]);
 
   const handleApplyTemplate = (template: AssignmentTemplate) => {
     const mapped = mapTemplateToAssignmentForm(template.presetPayload);
@@ -158,40 +234,111 @@ export default function AssignmentBuilderPage() {
     setIsTemplatePickerOpen(false);
   };
 
-  const persistDraft = useCallback(
-    async (
-      creationStatus: 'pipeline_in_progress' | 'ready_to_publish' = 'pipeline_in_progress'
-    ) => {
-      const data = form.getValues();
-      const endpoint = assignmentId ? `/api/assignments/${assignmentId}` : '/api/assignments';
-      const method = assignmentId ? 'PUT' : 'POST';
+  const buildAssignmentPayload = useCallback(
+    (
+      data: AssignmentFormData,
+      overrides?: {
+        status?: 'draft' | 'active' | 'paused' | 'closed';
+        creationStatus?:
+          | 'draft'
+          | 'pipeline_in_progress'
+          | 'pending_review'
+          | 'ready_to_publish'
+          | 'published';
+      }
+    ) => ({
+      orgSlug: slug,
+      role: data.role,
+      description: data.businessValue,
+      businessValue: data.businessValue,
+      expectedImpact: data.expectedImpact,
+      status: overrides?.status ?? 'draft',
+      creationStatus: overrides?.creationStatus ?? 'pipeline_in_progress',
+      valuesRequired: [],
+      causeTags: [],
+      mustHaveSkills: data.mustHaveSkills,
+      niceToHaveSkills: data.niceToHaveSkills,
+      locationMode: data.locationMode,
+      city: data.city,
+      country: data.country,
+      compMin: data.compMin,
+      compMax: data.compMax,
+      currency: data.currency,
+      hoursMin: data.hoursMin,
+      hoursMax: data.hoursMax,
+      startEarliest: data.startEarliest,
+      startLatest: data.startLatest,
+      verificationGates: data.verificationGates,
+      weights: data.weights,
+    }),
+    [slug]
+  );
 
-      const response = await fetch(endpoint, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...data,
-          ...(!assignmentId ? { organizationSlug: orgSlug } : {}),
-          status: 'draft',
-          creationStatus,
-        }),
+  const shouldAutoSaveDraft = useCallback((data: AssignmentFormData) => {
+    return Boolean(
+      data.role ||
+        data.businessValue ||
+        (data.outcomes && data.outcomes.length > 0) ||
+        (data.mustHaveSkills && data.mustHaveSkills.length > 0)
+    );
+  }, []);
+
+  const persistDraft = useCallback(
+    async (options?: {
+      status?: 'draft' | 'active' | 'paused' | 'closed';
+      creationStatus?:
+        | 'draft'
+        | 'pipeline_in_progress'
+        | 'pending_review'
+        | 'ready_to_publish'
+        | 'published';
+    }) => {
+      const currentAssignmentId = assignmentIdRef.current;
+      const data = form.getValues();
+      const payload = buildAssignmentPayload(data, {
+        status: options?.status ?? 'draft',
+        creationStatus: options?.creationStatus ?? 'pipeline_in_progress',
       });
+
+      const response = currentAssignmentId
+        ? await fetch(`/api/assignments/${currentAssignmentId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          })
+        : await fetch('/api/assignments', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || errorData.error || 'Failed to save assignment');
+        throw new Error(
+          errorData.message || errorData.error || 'Failed to persist assignment draft'
+        );
       }
 
       const result = await response.json();
-      const savedAssignment = result.assignment;
+      const persistedAssignment = result.assignment;
+      if (!persistedAssignment?.id) {
+        throw new Error('Draft response missing assignment id');
+      }
 
-      if (savedAssignment?.id && !assignmentId) {
-        const newAssignmentId = savedAssignment.id;
-        const newOrgId = savedAssignment.orgId;
-        setAssignmentId(newAssignmentId);
-        setOrgId(newOrgId);
+      const isFirstCreate = !currentAssignmentId;
+      if (isFirstCreate) {
+        setAssignmentId(persistedAssignment.id);
+        setOrgId(persistedAssignment.orgId ?? null);
+        if (typeof window !== 'undefined' && slug) {
+          const draftUrl = `/app/o/${slug}/assignments/new?draftId=${persistedAssignment.id}`;
+          window.history.replaceState(null, '', draftUrl);
+        }
+      }
 
-        await fetch(`/api/assignments/${newAssignmentId}/pipeline`, {
+      setLastSaved(new Date());
+
+      if (isFirstCreate && persistedAssignment.orgId) {
+        await fetch(`/api/assignments/${persistedAssignment.id}/pipeline`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -202,56 +349,58 @@ export default function AssignmentBuilderPage() {
             stepData: {},
           }),
         });
-
-        if (newOrgId) {
-          await fetch('/api/analytics/track', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              eventType: 'assignment_creation_started',
-              orgId: newOrgId,
-              entityType: 'assignment',
-              entityId: newAssignmentId,
-              properties: { timestamp: new Date().toISOString() },
-            }),
-          });
-
-          await fetch('/api/analytics/track', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              eventType: 'assignment_step_started',
-              orgId: newOrgId,
-              entityType: 'assignment',
-              entityId: newAssignmentId,
-              properties: {
-                stepNumber: 1,
-                stepName: 'Business Value',
-                timestamp: new Date().toISOString(),
-              },
-            }),
-          });
-        }
+        await fetch('/api/analytics/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            eventType: 'assignment_creation_started',
+            orgId: persistedAssignment.orgId,
+            entityType: 'assignment',
+            entityId: persistedAssignment.id,
+            properties: { timestamp: new Date().toISOString() },
+          }),
+        });
+        await fetch('/api/analytics/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            eventType: 'assignment_step_started',
+            orgId: persistedAssignment.orgId,
+            entityType: 'assignment',
+            entityId: persistedAssignment.id,
+            properties: {
+              stepNumber: 1,
+              stepName: 'Business Value',
+              timestamp: new Date().toISOString(),
+            },
+          }),
+        });
       }
 
-      setLastSaved(new Date());
-      return savedAssignment;
+      return {
+        assignmentId: persistedAssignment.id as string,
+        orgId: (persistedAssignment.orgId as string | null) ?? orgId,
+      };
     },
-    [assignmentId, form, orgSlug]
+    [buildAssignmentPayload, form, orgId, slug]
   );
 
-  // Auto-save draft every 30 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      persistDraft('pipeline_in_progress').catch((error) => {
+      const current = form.getValues();
+      if (!shouldAutoSaveDraft(current)) {
+        return;
+      }
+
+      void persistDraft().catch((error) => {
         console.error('Failed to auto-save:', error);
       });
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [persistDraft]);
+  }, [form, persistDraft, shouldAutoSaveDraft]);
 
-  const saveOutcomes = async (targetAssignmentId: string | null = assignmentId) => {
+  const saveOutcomes = async (targetAssignmentId: string) => {
     if (!targetAssignmentId) return;
 
     const outcomes = form.getValues('outcomes');
@@ -284,7 +433,7 @@ export default function AssignmentBuilderPage() {
     }
   };
 
-  const saveExpertiseMatrix = async (targetAssignmentId: string | null = assignmentId) => {
+  const saveExpertiseMatrix = async (targetAssignmentId: string) => {
     if (!targetAssignmentId) return;
 
     const mustHaveSkills = form.getValues('mustHaveSkills') || [];
@@ -331,9 +480,9 @@ export default function AssignmentBuilderPage() {
   };
 
   const trackPipelineStep = async (
+    targetAssignmentId: string,
     stepOrder: number,
-    status: 'in_progress' | 'completed',
-    targetAssignmentId: string | null = assignmentId
+    status: 'in_progress' | 'completed'
   ) => {
     if (!targetAssignmentId) return;
 
@@ -364,6 +513,21 @@ export default function AssignmentBuilderPage() {
 
   const handleNext = async () => {
     if (currentStep < 5) {
+      let targetAssignmentId = assignmentId;
+      let targetOrgId = orgId;
+
+      try {
+        const persisted = await persistDraft({
+          status: 'draft',
+          creationStatus: 'pipeline_in_progress',
+        });
+        targetAssignmentId = persisted.assignmentId;
+        targetOrgId = persisted.orgId;
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'Failed to save draft');
+        return;
+      }
+
       const stepNames = [
         'Business Value',
         'Target Outcomes',
@@ -376,15 +540,15 @@ export default function AssignmentBuilderPage() {
       const timeSpentSeconds = Math.floor((new Date().getTime() - stepStartTime.getTime()) / 1000);
 
       // Emit step completed analytics
-      if (assignmentId && orgId) {
+      if (targetAssignmentId && targetOrgId) {
         await fetch('/api/analytics/track', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             eventType: 'assignment_step_completed',
-            orgId,
+            orgId: targetOrgId,
             entityType: 'assignment',
-            entityId: assignmentId,
+            entityId: targetAssignmentId,
             properties: {
               stepNumber: currentStep,
               stepName: stepNames[currentStep - 1],
@@ -396,11 +560,13 @@ export default function AssignmentBuilderPage() {
       }
 
       // Mark current step as completed
-      await trackPipelineStep(currentStep, 'completed');
+      if (targetAssignmentId) {
+        await trackPipelineStep(targetAssignmentId, currentStep, 'completed');
+      }
 
       // Save outcomes after Step 2
-      if (currentStep === 2) {
-        await saveOutcomes();
+      if (currentStep === 2 && targetAssignmentId) {
+        await saveOutcomes(targetAssignmentId);
       }
 
       // Move to next step
@@ -409,18 +575,20 @@ export default function AssignmentBuilderPage() {
       setStepStartTime(new Date());
 
       // Mark next step as in_progress
-      await trackPipelineStep(nextStep, 'in_progress');
+      if (targetAssignmentId) {
+        await trackPipelineStep(targetAssignmentId, nextStep, 'in_progress');
+      }
 
       // Emit step started analytics
-      if (assignmentId && orgId) {
+      if (targetAssignmentId && targetOrgId) {
         await fetch('/api/analytics/track', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             eventType: 'assignment_step_started',
-            orgId,
+            orgId: targetOrgId,
             entityType: 'assignment',
-            entityId: assignmentId,
+            entityId: targetAssignmentId,
             properties: {
               stepNumber: nextStep,
               stepName: stepNames[nextStep - 1],
@@ -472,68 +640,23 @@ export default function AssignmentBuilderPage() {
         return;
       }
 
-      const savedAssignment = await persistDraft('ready_to_publish');
-      const savedAssignmentId = savedAssignment?.id;
+      const persisted = await persistDraft({
+        status: 'draft',
+        creationStatus: 'pending_review',
+      });
+      const savedAssignmentId = persisted.assignmentId;
 
-      if (!savedAssignmentId) {
-        toast.error('Failed to save assignment');
-        return;
+      try {
+        await saveOutcomes(savedAssignmentId);
+        await saveExpertiseMatrix(savedAssignmentId);
+        await trackPipelineStep(savedAssignmentId, 5, 'completed');
+      } catch (error) {
+        console.error('Failed to save related data:', error);
+        toast.error('Warning: Some data may not have been saved');
       }
 
-      // Save outcomes and expertise matrix
-      if (savedAssignmentId) {
-        // Use the saved assignment ID if we don't have one yet
-        if (!assignmentId) {
-          setAssignmentId(savedAssignmentId);
-        }
-
-        // Save outcomes and expertise matrix with the correct assignment ID
-        const currentAssignmentId = assignmentId || savedAssignmentId;
-
-        try {
-          // Save outcomes
-          const outcomes = form.getValues('outcomes');
-          if (outcomes.length > 0) {
-            const transformedOutcomes = outcomes.map((outcome: any) => ({
-              outcomeType: 'continuous' as const,
-              title: outcome.metric,
-              description: `Target: ${outcome.target} in ${outcome.timeframe}`,
-              metrics: [
-                {
-                  name: outcome.metric,
-                  target: outcome.target,
-                  unit: '',
-                  current: '',
-                },
-              ],
-              successCriteria: `Achieve ${outcome.target} within ${outcome.timeframe}`,
-            }));
-
-            const outcomesResponse = await fetch(
-              `/api/assignments/${currentAssignmentId}/outcomes`,
-              {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ outcomes: transformedOutcomes }),
-              }
-            );
-
-            if (!outcomesResponse.ok) {
-              console.error('Failed to save outcomes');
-              toast.error('Warning: Outcomes may not have been saved');
-            }
-          }
-
-          // Save expertise matrix
-          await saveExpertiseMatrix(currentAssignmentId);
-        } catch (error) {
-          console.error('Failed to save related data:', error);
-          toast.error('Warning: Some data may not have been saved');
-        }
-      }
-
-      toast.success('Assignment saved successfully!');
-      router.push(`/app/o/${orgSlug}/assignments/${savedAssignmentId}/review`);
+      toast.success('Assignment saved for review');
+      router.push(`/app/o/${slug}/assignments/${savedAssignmentId}/review`);
     } catch (error) {
       console.error('Failed to save assignment:', error);
       toast.error(error instanceof Error ? error.message : 'An unexpected error occurred');

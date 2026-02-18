@@ -13,6 +13,7 @@ vi.mock('@/db', () => ({
   db: {
     query: {
       assignments: { findFirst: vi.fn() },
+      assignmentOutcomes: { findMany: vi.fn() },
       organizationMembers: { findFirst: vi.fn() },
       organizations: { findFirst: vi.fn() },
     },
@@ -26,6 +27,7 @@ vi.mock('@/lib/assignments/activation', () => ({
 
 vi.mock('@/lib/log', () => ({
   log: {
+    info: vi.fn(),
     error: vi.fn(),
   },
 }));
@@ -45,7 +47,14 @@ describe('assignment publish route', () => {
       id: assignmentId,
       orgId,
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      role: 'Product Designer',
+      businessValue: 'Improve candidate quality',
+      mustHaveSkills: ['Research'],
+      locationMode: 'remote',
+      compMin: 80000,
+      compMax: 100000,
     });
+    (db.query.assignmentOutcomes.findMany as any).mockResolvedValue([{ id: 'outcome-1' }]);
     (db.query.organizationMembers.findFirst as any).mockResolvedValue({ userId, orgId });
 
     const updateReturning = vi.fn().mockResolvedValue([
@@ -84,7 +93,14 @@ describe('assignment publish route', () => {
     (db.query.assignments.findFirst as any).mockResolvedValue({
       id: assignmentId,
       orgId,
+      role: 'Product Designer',
+      businessValue: 'Improve candidate quality',
+      mustHaveSkills: ['Research'],
+      locationMode: 'remote',
+      compMin: 80000,
+      compMax: 100000,
     });
+    (db.query.assignmentOutcomes.findMany as any).mockResolvedValue([{ id: 'outcome-1' }]);
     (db.query.organizationMembers.findFirst as any).mockResolvedValue({ userId, orgId });
     (db.query.organizations.findFirst as any).mockResolvedValue({
       id: 'cccccccc-cccc-cccc-cccc-cccccccccccc',

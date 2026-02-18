@@ -6,7 +6,6 @@ import { Check, Edit, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { toast } from 'sonner';
 
 interface Assignment {
   id: string;
@@ -82,23 +81,24 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
 
     setIsPublishing(true);
     try {
-      const response = await fetch(
-        `/api/assignments/${assignmentId}/publish?orgSlug=${encodeURIComponent(slug)}`,
-        {
-          method: 'POST',
-        }
-      );
+      const response = await fetch(`/api/assignments/${assignmentId}/publish`, {
+        method: 'POST',
+      });
 
       if (response.ok) {
-        toast.success('Assignment published');
         router.push(`/app/o/${slug}/matching`);
       } else {
-        const errorPayload = await response.json().catch(() => ({}));
-        toast.error(errorPayload.error || 'Failed to publish assignment');
+        const errorData = await response.json().catch(() => ({}));
+        const reason =
+          (errorData.details?.missing as string[] | undefined)?.join(', ') ||
+          errorData.message ||
+          errorData.error ||
+          'Failed to publish assignment';
+        alert(reason);
       }
     } catch (error) {
       console.error('Failed to publish:', error);
-      toast.error('Failed to publish assignment');
+      alert('Failed to publish assignment');
     } finally {
       setIsPublishing(false);
     }
@@ -131,7 +131,10 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
             <p className="text-[#6B6760]">Review all details before publishing</p>
           </div>
           <div className="flex gap-3">
-            <Button variant="outline" onClick={() => router.push(`/app/o/${slug}/assignments/new`)}>
+            <Button
+              variant="outline"
+              onClick={() => router.push(`/app/o/${slug}/assignments/new?draftId=${assignmentId}`)}
+            >
               <Edit className="h-4 w-4 mr-2" />
               Edit
             </Button>
