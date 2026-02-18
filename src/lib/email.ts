@@ -16,10 +16,11 @@ import InterviewScheduled from '../../emails/InterviewScheduled';
 import IdentityRevealed from '../../emails/IdentityRevealed';
 import VerificationApproved from '../../emails/VerificationApproved';
 import VerificationRejected from '../../emails/VerificationRejected';
+import { sendDebugIngest } from '@/lib/debug-ingest';
 
 // Allow build to succeed without RESEND_API_KEY
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder_key');
-const fromEmail = process.env.EMAIL_FROM || 'Proofound <no-reply@proofound.com>';
+const fromEmail = process.env.EMAIL_FROM || 'Proofound <no-reply@proofound.io>';
 
 export async function sendVerificationEmail(email: string, token: string, persona?: string) {
   const verifyUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/verify-email?token=${token}`;
@@ -362,26 +363,19 @@ export async function sendFeedbackRequestEmail(params: {
   const { to, direction, token, expiresAt, interviewTime } = params;
   const feedbackUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/feedback/${token}`;
 
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/381d9e33-65b3-4af0-9925-b21521306aaa', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      sessionId: 'debug-session',
-      runId: 'pre-fix-1',
-      hypothesisId: 'H-email',
-      location: 'email.ts:sendFeedbackRequestEmail',
-      message: 'Send feedback request email',
-      data: {
-        direction,
-        hasToken: Boolean(token),
-        hasExpiresAt: Boolean(expiresAt),
-        hasInterviewTime: Boolean(interviewTime),
-      },
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {});
-  // #endregion
+  sendDebugIngest({
+    sessionId: 'debug-session',
+    runId: 'launch-readiness',
+    hypothesisId: 'H-email',
+    location: 'email.ts:sendFeedbackRequestEmail',
+    message: 'Send feedback request email',
+    data: {
+      direction,
+      hasToken: Boolean(token),
+      hasExpiresAt: Boolean(expiresAt),
+      hasInterviewTime: Boolean(interviewTime),
+    },
+  });
 
   try {
     await resend.emails.send({

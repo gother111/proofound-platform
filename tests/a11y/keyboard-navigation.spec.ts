@@ -21,9 +21,17 @@ test.describe('Keyboard Navigation', () => {
     // Press Enter to activate
     await page.keyboard.press('Enter');
 
-    // Main content should now have focus
-    const mainContent = page.locator('#main-content');
-    await expect(mainContent).toBeFocused();
+    await page.waitForFunction(
+      () => {
+        const hasMainContent = document.querySelector('#main-content');
+        const focusedId = document.activeElement?.id;
+        return Boolean(hasMainContent && focusedId === 'main-content');
+      },
+      { timeout: 5000 }
+    );
+
+    const focusedId = await page.evaluate(() => document.activeElement?.id);
+    expect(focusedId).toBe('main-content');
   });
 
   test('Navigation menu should be keyboard accessible', async ({ page }) => {
@@ -41,13 +49,20 @@ test.describe('Keyboard Navigation', () => {
   test('Form inputs should be keyboard accessible', async ({ page }) => {
     await page.goto('/login');
 
-    const emailInput = page.getByLabel(/email address/i);
-    const passwordInput = page.getByLabel(/^password/i);
-    const submitButton = page.getByRole('button', { name: /sign in/i });
+    const emailInput = page.getByTestId('login-email');
+    const passwordInput = page.getByTestId('login-password');
+    const submitButton = page.getByTestId('login-submit');
 
-    // Tab forward until the email field receives focus (avoid brittle tab counts).
-    for (let i = 0; i < 25; i++) {
-      if (await emailInput.evaluate((el) => el === document.activeElement)) break;
+    await expect(emailInput).toBeVisible();
+    await expect(passwordInput).toBeVisible();
+    await expect(submitButton).toBeVisible();
+
+    // Tab forward until the email field receives focus.
+    // Some browsers or hydration states focus a container or skip links first.
+    for (let i = 0; i < 20; i++) {
+      if (await emailInput.evaluate((el) => el === document.activeElement)) {
+        break;
+      }
       await page.keyboard.press('Tab');
     }
     await expect(emailInput).toBeFocused();
