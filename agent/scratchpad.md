@@ -2209,3 +2209,55 @@ Open TODOs / follow-ups:
 
 - Keep monitoring #185, #186, #187, and #188 mergeability as `master` advances.
 - Re-sync dirty PR branches after each merge event.
+
+## 2026-02-18 16:45 CET
+
+Task summary:
+
+- Implemented large assignment flow hardening plan: unified creation entrypoint, fixed draft autosave/upsert lifecycle, added draft resume, and added publish endpoint.
+- Aligned assignment API contracts with explicit org scoping (`orgId`/`orgSlug`) and normalized review reads from `assignment_outcomes`.
+- Updated API/unit/e2e specs to enforce canonical `/assignments/new` flow and publish lifecycle behavior.
+
+What worked:
+
+- Replacing draft interval setup with `useEffect` and upsert-by-id stabilized draft lifecycle and avoided duplicate inserts.
+- New `POST /api/assignments/[id]/publish` route integrated cleanly with existing activation side effects.
+- Focused API tests passed after updating org context validation expectations.
+
+What failed / wrong assumptions:
+
+- Initial API tests failed because test `orgId` values were non-UUID while API now validates UUID format for `orgId`.
+- Running tests before `npm ci` failed because `vitest` was not installed in this worktree.
+
+User corrections:
+
+- User required direct implementation of the provided plan (not another planning round).
+
+Assumptions taken without asking:
+
+- Keeping DB schema unchanged was acceptable while enforcing creation/publish lifecycle at API layer.
+- Legacy builder components can stay in repository as non-primary paths while runtime wiring is consolidated.
+- Canonical create route remains `/app/o/[slug]/assignments/new` and deprecated `/o/[slug]/...` path may redirect.
+
+What the user corrected afterward:
+
+- None during this implementation session.
+
+Improvements next time:
+
+- Add a dedicated migration/backfill utility for legacy assignments missing normalized outcomes before publish.
+- Add one focused UI E2E for step-by-step draft persistence with a seeded org fixture to reduce dependence on permissive workflow specs.
+
+Commands run + outcomes:
+
+- `git status --short`: PASS (started clean)
+- `npm ci`: PASS (installed deps; engine warning due Node `v25.4.0` vs repo target Node 20)
+- `npm run test -- tests/api/assignments.test.ts tests/api/assignment-publish.test.ts`: FAIL initially, then PASS after test UUID fixes
+- `npm run typecheck`: PASS
+- `npm run lint`: PASS with one pre-existing warning in `postcss.config.js`
+- `npm run build`: PASS (with expected local env warning noise for missing `DATABASE_URL`)
+
+Open TODOs / follow-ups:
+
+- Consider moving/deleting deprecated assignment creator components if no compatibility callers remain.
+- Optional: add targeted E2E execution for new strict draft-resume-publish contract in CI suite selection.

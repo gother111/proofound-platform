@@ -1839,3 +1839,60 @@ Open risks/TODO:
 
 - 4500ms mobile auto-dismiss may feel aggressive for slower readers and can be tuned based on product feedback.
 - Org "View all notifications" currently routes to org messages as an intentional fallback until a dedicated org notifications page exists.
+
+## 2026-02-18: Assignment creation lifecycle hardening and flow unification
+
+What changed:
+
+- Unified runtime assignment creation entrypoint to canonical route and removed alternate runtime wiring:
+  - `src/app/app/o/[slug]/matching/page.tsx` now routes all create actions to `/app/o/[slug]/assignments/new`.
+  - `src/app/o/[slug]/assignments/new/page.tsx` now redirects to `/app/o/[slug]/assignments/new`.
+- Reworked canonical assignment builder draft lifecycle:
+  - `src/app/app/o/[slug]/assignments/new/page.tsx`
+  - Replaced invalid interval setup (`useState`) with `useEffect` autosave lifecycle.
+  - Implemented single-draft upsert behavior (`POST` once, `PUT` subsequent saves).
+  - Added URL-based draft resume (`?draftId=...`) and hydration of saved draft data.
+  - Removed invalid submit status (`ready_to_publish`) and finalized Step 5 as `pending_review` draft before review.
+- Hardened assignment API org scoping and contract alignment:
+  - `src/app/api/assignments/route.ts`
+  - `POST /api/assignments` now requires explicit org context (`orgId` or `orgSlug`) and verifies active membership in that org.
+  - `GET /api/assignments` now supports optional `orgId` / `orgSlug` filters with membership validation.
+- Normalized assignment read model for review:
+  - `src/app/api/assignments/[id]/route.ts`
+  - `GET /api/assignments/[id]` now reads outcomes from `assignment_outcomes` and returns normalized review payload fields.
+- Added publish endpoint required by review flow:
+  - `src/app/api/assignments/[id]/publish/route.ts`
+  - Implements publish readiness validation, updates status to `active`, sets `creationStatus=published`, and triggers activation side effects.
+- Updated review UX to reuse same draft id for edits and consume publish errors:
+  - `src/components/assignments/AssignmentReviewClient.tsx`
+- Updated legacy/secondary creators to include explicit org context for API compatibility:
+  - `src/components/matching/AssignmentBuilderV2.tsx`
+  - `src/components/assignments/AssignmentWizard.tsx`
+- Updated docs and tests for canonical flow and new API:
+  - `docs/API_REFERENCE.md`
+  - `tests/api/assignments.test.ts`
+  - `tests/api/assignment-publish.test.ts` (new)
+  - `e2e/workflows.spec.ts`
+  - `e2e/comprehensive_flow.spec.ts`
+  - `e2e/strict/organization.strict.spec.ts`
+  - `e2e/helpers/test-data-setup.ts`
+
+Why:
+
+- Assignment creation had divergent builders and payload contracts causing invalid statuses, potential duplicate drafts, and inconsistent org targeting.
+- Review/publish flow referenced a missing endpoint.
+- Review data used fallback fields inconsistent with persisted outcomes model.
+- Existing assignment e2e checks were permissive and route-inconsistent, reducing regression signal.
+
+How to verify:
+
+- `npm run test -- tests/api/assignments.test.ts tests/api/assignment-publish.test.ts` (PASS)
+- `npm run typecheck` (PASS)
+- `npm run lint` (PASS with one pre-existing unrelated warning in `postcss.config.js`)
+- `npm run build` (PASS)
+
+Open risks/TODO:
+
+- Build logs still include repeated mock-database warnings when `DATABASE_URL` is not set locally; build passes but logs are noisy.
+- Current publish readiness enforces assignment outcomes from `assignment_outcomes` table; legacy records without normalized outcomes will need a backfill/edit pass before publish.
+- Deprecated builder components remain in repo for compatibility but are no longer wired in the primary organization flow.
