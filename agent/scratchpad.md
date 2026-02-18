@@ -2107,3 +2107,44 @@ Open TODOs / follow-ups:
 
 - Apply Zoom Marketplace branding and production activation settings in Zoom console manually.
 - Standardize production `ZOOM_REDIRECT_URI` env to canonical `/api/integrations/zoom/callback` if legacy callback is still configured.
+
+## 2026-02-18 16:58 CET
+
+Task summary (1-3 lines):
+
+- Fixed Vercel production build failure caused by Next.js 15 `PageProps` typing mismatch on integrations redirect page.
+- Updated page prop typing to Promise-based `searchParams` and verified local parity build.
+
+What worked:
+
+- One-line type contract correction in `src/app/app/i/settings/integrations/page.tsx` resolved the compile-time error.
+- Local `typecheck` and full `next build` both passed after the patch.
+
+What failed / wrong assumptions:
+
+- Prior change assumed plain-object `searchParams` was acceptable in this route; this repo’s Next.js typing expects Promise-based `searchParams`.
+
+User corrections:
+
+- User provided Vercel logs confirming the exact failing file and error.
+
+Assumptions taken without asking:
+
+- Route redirect behavior should remain unchanged, only the prop typing contract needed correction.
+
+What the user corrected afterward:
+
+- Clarified the failure happened on Vercel with commit `cc0826c`, requiring build-parity verification.
+
+Improvements next time:
+
+- Run `npm run build` immediately after changing App Router page prop signatures to catch `PageProps` mismatches before push.
+
+Commands run + outcomes:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS.
+
+Open TODOs / follow-ups:
+
+- Redeploy branch `zoom-google-integration` on Vercel to confirm remote build now passes with this patch.

@@ -1769,3 +1769,30 @@ Open risks/TODO:
 - Zoom Marketplace branding/activation (app name/icon/support/privacy/terms) must still be configured in Zoom UI; this cannot be applied from repo code.
 - If deployed env still uses legacy `ZOOM_REDIRECT_URI` callback path, compatibility works via redirect, but canonical provider redirect should be standardized to `/api/integrations/zoom/callback`.
 - Existing pre-commit lint warning in `postcss.config.js` remains unchanged.
+
+---
+
+## 2026-02-18: Vercel build fix for Next.js 15 page props typing
+
+What changed:
+
+- Fixed `searchParams` typing in `src/app/app/i/settings/integrations/page.tsx` to match Next.js 15 `PageProps` expectations:
+  - from `Record<string, string | string[] | undefined>`
+  - to `Promise<Record<string, string | string[] | undefined>>`
+- Updated implementation to await `searchParams` before reading values.
+
+Why:
+
+- Vercel build failed during type validation with:
+  - `Type 'IntegrationsPageProps' does not satisfy the constraint 'PageProps'`
+  - `searchParams` expected `Promise<any> | undefined`.
+- The route behavior was correct, but the prop type signature was incompatible with this project’s Next.js 15 typing model.
+
+How to verify:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build` (PASS)
+
+Open risks/TODO:
+
+- Build still prints existing non-blocking warnings (Tailwind ambiguous class warning and metadataBase warning), unchanged by this fix.

@@ -4,13 +4,13 @@ import { redirect } from 'next/navigation';
 export const dynamic = 'force-dynamic';
 
 interface IntegrationsPageProps {
-  searchParams?: Record<string, string | string[] | undefined>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export default async function IntegrationsPage({ searchParams }: IntegrationsPageProps) {
   await requireAuth();
 
-  const resolvedParams = searchParams ?? {};
+  const resolvedParams = (await searchParams) ?? {};
   const nextParams = new URLSearchParams({ tab: 'integrations' });
 
   const success = resolvedParams.success;
