@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Video, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSearchParams } from 'next/navigation';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface Integration {
   provider: 'zoom' | 'google';
@@ -86,7 +87,7 @@ export function IntegrationsClient() {
     }
 
     try {
-      const response = await fetch(`/api/integrations/video/${provider}`, {
+      const response = await apiFetch(`/api/integrations/video/${provider}`, {
         method: 'DELETE',
       });
 

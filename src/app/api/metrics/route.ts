@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuth } from '@/lib/api/auth';
 import { db } from '@/db';
-import { organizationMembers } from '@/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { organizationMembers, profiles } from '@/db/schema';
+import { eq, and, inArray } from 'drizzle-orm';
 import {
   calculateTTSC,
   calculateTTFQI,
@@ -15,10 +15,21 @@ import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from '@/lib/rate-lim
 
 export const dynamic = 'force-dynamic';
 
+const ALLOWED_METRICS = new Set(['ttsc', 'ttfqi', 'ttv', 'pac', 'all']);
+
+function parseOptionalDate(value: string | null): Date | null {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+  return parsed;
+}
+
 /**
  * GET /api/metrics
  *
- * Returns platform metrics (admin/org-level access required)
+ * Returns platform metrics (platform admin/super admin, or active org owner/admin)
  * Includes: TTSC, TTFQI, TTV, PAC lift
  *
  * Query params:
@@ -28,8 +39,9 @@ export const dynamic = 'force-dynamic';
  * - cohort: optional cohort filter
  */
 export async function GET(request: NextRequest) {
-  // Apply rate limiting
   const { allowed, result } = await checkRateLimit(request, RATE_LIMITS.api);
+  const rateLimitHeaders = getRateLimitHeaders(result);
+
   if (!allowed) {
     return NextResponse.json(
       {
@@ -40,7 +52,7 @@ export async function GET(request: NextRequest) {
       {
         status: 429,
         headers: {
-          ...getRateLimitHeaders(result),
+          ...rateLimitHeaders,
           'Retry-After': Math.ceil((result.reset - Date.now()) / 1000).toString(),
         },
       }
@@ -48,52 +60,122 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const user = await requireAuth();
+    const authResult = await requireApiAuth();
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
 
-    // Check if user is admin or org owner
-    // For now, we'll allow any authenticated user to view metrics
-    // TODO: Implement proper admin/org-level authorization
-    const isOrgMember = await db.query.organizationMembers.findFirst({
-      where: and(eq(organizationMembers.userId, user.id), eq(organizationMembers.status, 'active')),
-    });
+    const { user } = authResult;
+    const searchParams = request.nextUrl.searchParams;
+    const metric = (searchParams.get('metric') || 'all').toLowerCase();
+    const startDateRaw = searchParams.get('startDate');
+    const endDateRaw = searchParams.get('endDate');
+    const cohortRaw = searchParams.get('cohort');
 
-    if (!isOrgMember) {
-      log.warn('metrics.unauthorized', {
-        userId: user.id,
-      });
+    if (!ALLOWED_METRICS.has(metric)) {
       return NextResponse.json(
         {
-          error: 'Unauthorized',
-          message: 'Metrics access requires organization membership',
+          error: 'Invalid metric parameter',
+          message: `metric must be one of: ${Array.from(ALLOWED_METRICS).join(', ')}`,
         },
-        { status: 403 }
+        { status: 400, headers: rateLimitHeaders }
       );
     }
 
-    const searchParams = request.nextUrl.searchParams;
-    const metric = searchParams.get('metric') || 'all';
-    const startDate = searchParams.get('startDate')
-      ? new Date(searchParams.get('startDate')!)
-      : undefined;
-    const endDate = searchParams.get('endDate')
-      ? new Date(searchParams.get('endDate')!)
-      : undefined;
-    const cohort = searchParams.get('cohort') || undefined;
+    const startDate = parseOptionalDate(startDateRaw);
+    const endDate = parseOptionalDate(endDateRaw);
 
-    let metrics: any;
+    if (startDateRaw && !startDate) {
+      return NextResponse.json(
+        {
+          error: 'Invalid startDate parameter',
+          message: 'startDate must be a valid ISO date string',
+        },
+        { status: 400, headers: rateLimitHeaders }
+      );
+    }
+
+    if (endDateRaw && !endDate) {
+      return NextResponse.json(
+        {
+          error: 'Invalid endDate parameter',
+          message: 'endDate must be a valid ISO date string',
+        },
+        { status: 400, headers: rateLimitHeaders }
+      );
+    }
+
+    if (startDate && endDate && startDate > endDate) {
+      return NextResponse.json(
+        {
+          error: 'Invalid date range',
+          message: 'startDate must be earlier than or equal to endDate',
+        },
+        { status: 400, headers: rateLimitHeaders }
+      );
+    }
+
+    if (cohortRaw && !/^[a-zA-Z0-9:_-]{1,64}$/.test(cohortRaw)) {
+      return NextResponse.json(
+        {
+          error: 'Invalid cohort parameter',
+          message:
+            'cohort must be 1-64 characters and only contain letters, numbers, colon, underscore, or hyphen',
+        },
+        { status: 400, headers: rateLimitHeaders }
+      );
+    }
+
+    const cohort = cohortRaw || undefined;
+    const profile = await db.query.profiles.findFirst({
+      where: eq(profiles.id, user.id),
+      columns: { platformRole: true },
+    });
+
+    const isPlatformAdmin =
+      profile?.platformRole === 'platform_admin' || profile?.platformRole === 'super_admin';
+
+    if (!isPlatformAdmin) {
+      const hasOrgMetricsAccess = await db.query.organizationMembers.findFirst({
+        where: and(
+          eq(organizationMembers.userId, user.id),
+          eq(organizationMembers.status, 'active'),
+          inArray(organizationMembers.role, ['owner', 'admin'])
+        ),
+        columns: { orgId: true, role: true },
+      });
+
+      if (!hasOrgMetricsAccess) {
+        log.warn('metrics.unauthorized', { userId: user.id });
+        return NextResponse.json(
+          {
+            error: 'Forbidden',
+            message:
+              'Metrics access requires platform admin or active organization owner/admin role',
+          },
+          { status: 403, headers: rateLimitHeaders }
+        );
+      }
+    }
+
+    let metrics: Record<string, unknown>;
 
     switch (metric) {
       case 'ttsc':
-        metrics = { ttsc: await calculateTTSC(cohort, startDate, endDate) };
+        metrics = {
+          ttsc: await calculateTTSC(cohort, startDate ?? undefined, endDate ?? undefined),
+        };
         break;
       case 'ttfqi':
-        metrics = { ttfqi: await calculateTTFQI(cohort, startDate, endDate) };
+        metrics = {
+          ttfqi: await calculateTTFQI(cohort, startDate ?? undefined, endDate ?? undefined),
+        };
         break;
       case 'ttv':
-        metrics = { ttv: await calculateTTV(cohort, startDate, endDate) };
+        metrics = { ttv: await calculateTTV(cohort, startDate ?? undefined, endDate ?? undefined) };
         break;
       case 'pac':
-        metrics = { pac: await calculatePACLift(startDate, endDate) };
+        metrics = { pac: await calculatePACLift(startDate ?? undefined, endDate ?? undefined) };
         break;
       case 'all':
       default:
@@ -118,7 +200,7 @@ export async function GET(request: NextRequest) {
         },
       },
       {
-        headers: getRateLimitHeaders(result),
+        headers: rateLimitHeaders,
       }
     );
   } catch (error) {
@@ -131,7 +213,7 @@ export async function GET(request: NextRequest) {
         error: 'Failed to fetch metrics',
         message: error instanceof Error ? error.message : 'An unexpected error occurred',
       },
-      { status: 500 }
+      { status: 500, headers: rateLimitHeaders }
     );
   }
 }

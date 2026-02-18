@@ -1,5 +1,5 @@
 import type { KeyboardEvent } from 'react';
-import { Check, ChevronRight, Loader2, Plus, Search } from 'lucide-react';
+import { ChevronRight, Loader2, Plus, Search } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import type { L4Skill } from './types';
 
 type SearchModePanelProps = {
   searchQuery: string;
+  taxonomyReady: boolean;
   handleSearchChange: (query: string) => void;
   searchResults: L4Skill[];
   searchLoading: boolean;
@@ -29,6 +30,7 @@ type SearchModePanelProps = {
 
 export function SearchModePanel({
   searchQuery,
+  taxonomyReady,
   handleSearchChange,
   searchResults,
   searchLoading,
@@ -56,13 +58,23 @@ export function SearchModePanel({
             placeholder="Type a skill name (e.g., Python, Project Management, React)..."
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
+            disabled={!taxonomyReady}
             className="pl-10"
           />
         </div>
         <p className="text-xs text-[#6B6760] mt-1">
-          Start typing to see suggestions from our skills taxonomy
+          {taxonomyReady
+            ? 'Start typing to see suggestions from our skills taxonomy'
+            : 'Taxonomy data is currently unavailable, so search suggestions are disabled.'}
         </p>
       </div>
+
+      {!taxonomyReady && (
+        <div className="rounded-lg border border-[#C76B4A] bg-[#FFF0F0] p-4 text-sm text-[#8B4A36]">
+          The skill taxonomy is unavailable right now. Add-skill search and browse results will stay
+          empty until taxonomy data is restored.
+        </div>
+      )}
 
       {searchLoading && (
         <div className="flex items-center justify-center gap-2 py-8 text-[#6B6760]">
@@ -78,12 +90,16 @@ export function SearchModePanel({
         </div>
       )}
 
-      {!searchLoading && !searchError && searchQuery.length >= 2 && searchResults.length === 0 && (
-        <div className="text-center py-8 text-[#6B6760]">
-          <p className="mb-2">No skills found matching &ldquo;{searchQuery}&rdquo;</p>
-          <p className="text-sm">Try a different search term or browse categories above</p>
-        </div>
-      )}
+      {!searchLoading &&
+        !searchError &&
+        taxonomyReady &&
+        searchQuery.length >= 2 &&
+        searchResults.length === 0 && (
+          <div className="text-center py-8 text-[#6B6760]">
+            <p className="mb-2">No skills found matching &ldquo;{searchQuery}&rdquo;</p>
+            <p className="text-sm">Try a different search term or browse categories above</p>
+          </div>
+        )}
 
       {!searchLoading && searchResults.length > 0 && (
         <div className="space-y-2 max-h-[500px] overflow-y-auto">

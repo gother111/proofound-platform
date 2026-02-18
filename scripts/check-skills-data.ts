@@ -62,24 +62,18 @@ async function checkSkillsData() {
   const { data: searchResults, error: searchError } = await supabase
     .from('skills_taxonomy')
     .select('code, name_i18n')
-    .limit(1000);
+    .ilike('name_i18n->>en', '%python%')
+    .limit(20);
 
   if (searchError) {
     console.error('❌ Error searching:', searchError.message);
     return;
   }
 
-  // Server-side filtering (mimicking current API)
-  const searchQuery = 'python';
-  const filtered = searchResults?.filter((skill: any) => {
-    const name = skill.name_i18n?.en?.toLowerCase() || '';
-    return name.includes(searchQuery.toLowerCase());
-  });
-
-  console.log(`   Found ${filtered?.length || 0} results containing "python"`);
-  if (filtered && filtered.length > 0) {
+  console.log(`   Found ${searchResults?.length || 0} results containing "python"`);
+  if (searchResults && searchResults.length > 0) {
     console.log('\n   Top 5 results:');
-    filtered.slice(0, 5).forEach((skill: any, idx: number) => {
+    searchResults.slice(0, 5).forEach((skill: any, idx: number) => {
       console.log(`   ${idx + 1}. ${skill.name_i18n?.en}`);
     });
   }

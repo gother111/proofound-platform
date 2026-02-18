@@ -13,6 +13,7 @@ vi.mock('@/db', () => ({
     query: {
       organizationMembers: {
         findFirst: vi.fn(),
+        findMany: vi.fn(),
       },
       assignments: {
         findFirst: vi.fn(),
@@ -33,6 +34,8 @@ vi.mock('@/db', () => ({
     select: vi.fn(() => ({
       from: vi.fn(() => ({
         where: vi.fn(() => ({
+          limit: vi.fn(() => Promise.resolve([])),
+          groupBy: vi.fn(() => Promise.resolve([])),
           $dynamic: vi.fn(() => ({
             where: vi.fn(() => ({
               orderBy: vi.fn(() => ({
@@ -48,6 +51,7 @@ vi.mock('@/db', () => ({
             })),
           })),
         })),
+        groupBy: vi.fn(() => Promise.resolve([])),
       })),
     })),
     insert: vi.fn(() => ({
@@ -90,7 +94,7 @@ describe('Assignment API', () => {
   describe('POST', () => {
     it('should create an assignment successfully', async () => {
       // Mock org membership
-      (db.query.organizationMembers.findFirst as any).mockResolvedValue({ orgId: 'test-org-id' });
+      (db.query.organizationMembers.findMany as any).mockResolvedValue([{ orgId: 'test-org-id' }]);
 
       const body = {
         role: 'Software Engineer',
@@ -116,7 +120,7 @@ describe('Assignment API', () => {
     });
 
     it('should accept skill metadata fields and persist them in assignment payload', async () => {
-      (db.query.organizationMembers.findFirst as any).mockResolvedValue({ orgId: 'test-org-id' });
+      (db.query.organizationMembers.findMany as any).mockResolvedValue([{ orgId: 'test-org-id' }]);
 
       const valuesMock = vi.fn(() => ({
         returning: vi.fn(() =>
@@ -177,7 +181,7 @@ describe('Assignment API', () => {
 
     it('should return 403 if user has no org', async () => {
       // Mock no org membership
-      (db.query.organizationMembers.findFirst as any).mockResolvedValue(null);
+      (db.query.organizationMembers.findMany as any).mockResolvedValue([]);
 
       const body = { role: 'Software Engineer' };
       const req = new NextRequest('http://localhost/api/assignments', {
@@ -192,7 +196,7 @@ describe('Assignment API', () => {
 
     it('should return 400 for invalid input', async () => {
       // Mock org membership
-      (db.query.organizationMembers.findFirst as any).mockResolvedValue({ orgId: 'test-org-id' });
+      (db.query.organizationMembers.findMany as any).mockResolvedValue([{ orgId: 'test-org-id' }]);
 
       const body = { description: 'Missing role' }; // Missing required 'role'
       const req = new NextRequest('http://localhost/api/assignments', {
@@ -204,12 +208,32 @@ describe('Assignment API', () => {
 
       expect(res.status).toBe(400);
     });
+
+    it('should return 409 when user belongs to multiple orgs and orgSlug is missing', async () => {
+      (db.query.organizationMembers.findMany as any).mockResolvedValue([
+        { orgId: 'org-1' },
+        { orgId: 'org-2' },
+      ]);
+
+      const body = {
+        role: 'Software Engineer',
+      };
+
+      const req = new NextRequest('http://localhost/api/assignments', {
+        method: 'POST',
+        body: JSON.stringify(body),
+      });
+
+      const res = await POST(req);
+
+      expect(res.status).toBe(409);
+    });
   });
 
   describe('GET', () => {
     it('should fetch assignments', async () => {
       // Mock org membership
-      (db.query.organizationMembers.findFirst as any).mockResolvedValue({ orgId: 'test-org-id' });
+      (db.query.organizationMembers.findMany as any).mockResolvedValue([{ orgId: 'test-org-id' }]);
 
       // Mock db select chain
       const mockAssignments = [{ id: '1', role: 'Dev' }];

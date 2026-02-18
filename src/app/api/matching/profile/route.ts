@@ -1,90 +1,165 @@
 /**
- * Matching Profile API
- *
- * POST /api/matching/profile - Create new matching profile
- * PUT /api/matching/profile - Update existing matching profile
- * GET /api/matching/profile - List user's matching profiles
+ * Legacy compatibility route for matching profile editor.
+ * Canonical profile persistence is stored in matching_profiles keyed by profile_id.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { db } from '@/db';
-import { sql } from 'drizzle-orm';
-import { log } from '@/lib/log';
 import { z } from 'zod';
+import { eq } from 'drizzle-orm';
 
-const createProfileSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  weights: z.record(z.any()),
-  constraints: z.record(z.any()),
-});
+import { db } from '@/db';
+import { matchingProfiles } from '@/db/schema';
+import { requireAuth } from '@/lib/auth';
+import { log } from '@/lib/log';
 
-const updateProfileSchema = z.object({
-  id: z.string().min(1, 'id is required'),
+const DEFAULT_WEIGHTS = {
+  skills: 0.3,
+  experience: 0.15,
+  values: 0.25,
+  causes: 0.15,
+  location: 0.05,
+  compensation: 0.05,
+  availability: 0.03,
+  language: 0.02,
+};
+
+const DEFAULT_CONSTRAINTS = {
+  requireEmailVerified: true,
+  requirePhoneVerified: false,
+  requireProfileComplete: false,
+  requireMinSkillMatch: false,
+  minSkillMatchThreshold: 0.3,
+  requireLocationMatch: false,
+  requireAvailabilityMatch: false,
+};
+
+const CompatProfileSchema = z.object({
+  id: z.string().uuid().optional(),
   name: z.string().min(1).optional(),
-  weights: z.record(z.any()).optional(),
+  weights: z.record(z.number()).optional(),
   constraints: z.record(z.any()).optional(),
 });
 
+const COMPAT_META_KEY = '__compat_profile';
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function extractCompatMeta(profile: typeof matchingProfiles.$inferSelect) {
+  const verified = isRecord(profile.verified) ? (profile.verified as Record<string, unknown>) : {};
+  const rawMeta = verified[COMPAT_META_KEY];
+
+  if (!isRecord(rawMeta)) {
+    return {};
+  }
+
+  const name = typeof rawMeta.name === 'string' ? rawMeta.name : undefined;
+  const constraints = isRecord(rawMeta.constraints)
+    ? (rawMeta.constraints as Record<string, unknown>)
+    : undefined;
+
+  return { name, constraints };
+}
+
+function mergeCompatMeta(
+  existingVerified: unknown,
+  payload: { name?: string; constraints?: Record<string, unknown> }
+) {
+  const verified = isRecord(existingVerified) ? { ...existingVerified } : {};
+  const existingMeta = isRecord(verified[COMPAT_META_KEY])
+    ? { ...(verified[COMPAT_META_KEY] as Record<string, unknown>) }
+    : {};
+
+  if (payload.name !== undefined) {
+    existingMeta.name = payload.name;
+  }
+  if (payload.constraints !== undefined) {
+    existingMeta.constraints = payload.constraints;
+  }
+
+  verified[COMPAT_META_KEY] = existingMeta;
+  return verified;
+}
+
+function toCompatProfile(profile: typeof matchingProfiles.$inferSelect) {
+  const meta = extractCompatMeta(profile);
+
+  return {
+    id: profile.profileId,
+    name: meta.name ?? 'Default Profile',
+    weights: (profile.weights as Record<string, number> | null) ?? DEFAULT_WEIGHTS,
+    constraints: { ...DEFAULT_CONSTRAINTS, ...(meta.constraints ?? {}) },
+    isActive: true,
+    createdAt: profile.createdAt,
+    updatedAt: profile.updatedAt,
+  };
+}
+
+async function upsertCompatProfile(userId: string, data: z.infer<typeof CompatProfileSchema>) {
+  const now = new Date();
+  const shouldUpdateCompatMeta = data.name !== undefined || data.constraints !== undefined;
+
+  let compatVerified: Record<string, unknown> | undefined;
+  if (shouldUpdateCompatMeta) {
+    const existingProfile = await db.query.matchingProfiles.findFirst({
+      where: eq(matchingProfiles.profileId, userId),
+    });
+
+    compatVerified = mergeCompatMeta(existingProfile?.verified, {
+      name: data.name,
+      constraints: data.constraints as Record<string, unknown> | undefined,
+    });
+  }
+
+  await db
+    .insert(matchingProfiles)
+    .values({
+      profileId: userId,
+      ...(data.weights ? { weights: data.weights } : {}),
+      ...(compatVerified ? { verified: compatVerified } : {}),
+    })
+    .onConflictDoUpdate({
+      target: matchingProfiles.profileId,
+      set: {
+        ...(data.weights ? { weights: data.weights } : {}),
+        ...(compatVerified ? { verified: compatVerified } : {}),
+        updatedAt: now,
+      },
+    });
+
+  const profile = await db.query.matchingProfiles.findFirst({
+    where: eq(matchingProfiles.profileId, userId),
+  });
+
+  if (!profile) {
+    throw new Error('Failed to save matching profile');
+  }
+
+  return profile;
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await requireAuth();
+    const parsed = CompatProfileSchema.safeParse(await req.json());
 
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const parsed = createProfileSchema.safeParse(await req.json());
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid profile payload', details: parsed.error.flatten() }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Invalid profile payload', details: parsed.error.flatten() },
+        { status: 400 }
+      );
     }
 
-    const { name, weights, constraints } = parsed.data;
-
-    // Insert profile
-    const result = await db.execute(sql`
-      INSERT INTO matching_profiles (
-        user_id,
-        name,
-        weights,
-        constraints,
-        is_active
-      ) VALUES (
-        ${user.id},
-        ${name},
-        ${JSON.stringify(weights)},
-        ${JSON.stringify(constraints)},
-        TRUE
-      )
-      RETURNING *
-    `);
-
-    const profile = (result as any[])[0];
-
-    log.info('matching.profile.created', {
-      userId: user.id,
-      profileId: profile.id,
-      name,
-    });
+    const profile = await upsertCompatProfile(user.id, parsed.data);
 
     return NextResponse.json({
       success: true,
-      profile: {
-        id: profile.id,
-        name: profile.name,
-        weights: profile.weights,
-        constraints: profile.constraints,
-        isActive: profile.is_active,
-        createdAt: profile.created_at,
-      },
+      profile: toCompatProfile(profile),
     });
   } catch (error) {
-    log.error('matching.profile.create.failed', {
+    log.error('matching.profile.compat.create.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
     });
     return NextResponse.json({ error: 'Failed to create profile' }, { status: 500 });
   }
@@ -92,113 +167,49 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await requireAuth();
+    const parsed = CompatProfileSchema.safeParse(await req.json());
 
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const parsed = updateProfileSchema.safeParse(await req.json());
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid profile payload', details: parsed.error.flatten() }, { status: 400 });
-    }
-    const { id, name, weights, constraints } = parsed.data;
-
-    // Verify ownership
-    const existing = await db.execute(sql`
-      SELECT user_id
-      FROM matching_profiles
-      WHERE id = ${id}
-    `);
-
-    if (!(existing as any[]).length) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Invalid profile payload', details: parsed.error.flatten() },
+        { status: 400 }
+      );
     }
 
-    if (((existing as any[])[0] as any).user_id !== user.id) {
+    if (parsed.data.id && parsed.data.id !== user.id) {
       return NextResponse.json({ error: 'Unauthorized to update this profile' }, { status: 403 });
     }
 
-    // Update profile
-    const result = await db.execute(sql`
-      UPDATE matching_profiles
-      SET
-        name = COALESCE(${name}, name),
-        weights = COALESCE(${weights ? JSON.stringify(weights) : null}::jsonb, weights),
-        constraints = COALESCE(${constraints ? JSON.stringify(constraints) : null}::jsonb, constraints),
-        updated_at = NOW()
-      WHERE id = ${id}
-      RETURNING *
-    `);
-
-    const profile = (result as any[])[0];
-
-    log.info('matching.profile.updated', {
-      userId: user.id,
-      profileId: id,
-      name,
-    });
+    const profile = await upsertCompatProfile(user.id, parsed.data);
 
     return NextResponse.json({
       success: true,
-      profile: {
-        id: profile.id,
-        name: profile.name,
-        weights: profile.weights,
-        constraints: profile.constraints,
-        isActive: profile.is_active,
-        updatedAt: profile.updated_at,
-      },
+      profile: toCompatProfile(profile),
     });
   } catch (error) {
-    log.error('matching.profile.update.failed', {
+    log.error('matching.profile.compat.update.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
     });
     return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 });
   }
 }
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await requireAuth();
 
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Get all profiles for user
-    const result = await db.execute(sql`
-      SELECT *
-      FROM matching_profiles
-      WHERE user_id = ${user.id}
-      ORDER BY created_at DESC
-    `);
-
-    const profiles = (result as any[]).map((row: any) => ({
-      id: row.id,
-      name: row.name,
-      weights: row.weights,
-      constraints: row.constraints,
-      isActive: row.is_active,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-    }));
+    const profile = await db.query.matchingProfiles.findFirst({
+      where: eq(matchingProfiles.profileId, user.id),
+    });
 
     return NextResponse.json({
       success: true,
-      profiles,
+      profiles: profile ? [toCompatProfile(profile)] : [],
     });
   } catch (error) {
-    log.error('matching.profile.list.failed', {
+    log.error('matching.profile.compat.list.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
     });
     return NextResponse.json({ error: 'Failed to list profiles' }, { status: 500 });
   }
