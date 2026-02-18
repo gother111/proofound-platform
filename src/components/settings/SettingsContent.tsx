@@ -14,6 +14,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { RotateCcw, Loader2 } from 'lucide-react';
 import { CustomizableDashboard } from '../dashboard/CustomizableDashboard';
+import Link from 'next/link';
 
 interface SettingsContentProps {
   userId: string;
@@ -245,11 +246,14 @@ export function SettingsContent({ userId }: SettingsContentProps) {
                 Connect your calendar for automated interview scheduling
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <p className="text-proofound-charcoal/70 dark:text-muted-foreground">
-                Google Meet and Zoom integrations are automatically available for scheduling
-                interviews.
+                Google Meet and Zoom are managed in the dedicated integrations page. Use it to
+                connect, disconnect, and verify your current provider status.
               </p>
+              <Button asChild variant="outline" className="w-full sm:w-auto">
+                <Link href="/app/i/settings/integrations">Manage Zoom & Google integrations</Link>
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
