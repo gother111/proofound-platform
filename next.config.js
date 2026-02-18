@@ -6,6 +6,11 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  eslint: {
+    // Run lint as an explicit CI step and skip it during Next build to reduce
+    // Vercel build memory pressure.
+    ignoreDuringBuilds: true,
+  },
   typescript: {
     // Fail builds on TypeScript errors (do not mask type safety issues)
     ignoreBuildErrors: false,
