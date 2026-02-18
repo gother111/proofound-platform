@@ -12,6 +12,7 @@ import { useState, useEffect } from 'react';
 import { Video, CheckCircle, AlertCircle, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { toast } from 'sonner';
 
 interface VideoProviderSelectorProps {
   selectedProvider: 'zoom' | 'google_meet' | null;
@@ -51,12 +52,21 @@ export function VideoProviderSelector({
     const height = 700;
     const left = window.screen.width / 2 - width / 2;
     const top = window.screen.height / 2 - height / 2;
+    const connectPath =
+      provider === 'google_meet'
+        ? '/api/integrations/google/connect'
+        : '/api/integrations/zoom/connect';
 
     const popup = window.open(
-      `/api/integrations/${provider === 'google_meet' ? 'google' : 'zoom'}/connect`,
+      connectPath,
       'oauth',
       `width=${width},height=${height},left=${left},top=${top}`
     );
+
+    if (!popup) {
+      toast.error('Popup blocked. Allow popups to connect your video provider.');
+      return;
+    }
 
     // Listen for OAuth completion
     const checkPopup = setInterval(() => {
