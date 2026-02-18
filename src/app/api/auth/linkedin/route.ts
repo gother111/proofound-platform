@@ -11,7 +11,33 @@ import { generateLinkedInAuthUrl } from '@/lib/linkedin';
 import { randomBytes } from 'crypto';
 import { resolveOAuthRedirectUri } from '@/lib/integrations/oauth-helpers';
 
+type LinkedInOAuthContext = 'integrations' | 'verification';
+
+function parseOAuthContext(value: string | null): LinkedInOAuthContext {
+  return value === 'verification' ? 'verification' : 'integrations';
+}
+
+function buildFailureRedirect(request: NextRequest, context: LinkedInOAuthContext): URL {
+  if (context === 'verification') {
+    return new URL(
+      `/app/i/settings?tab=account&verification_error=linkedin_auth_failed&message=${encodeURIComponent(
+        'Failed to initiate LinkedIn connection'
+      )}`,
+      request.url
+    );
+  }
+
+  return new URL(
+    `/app/i/settings?tab=integrations&error=linkedin_auth_failed&message=${encodeURIComponent(
+      'Failed to initiate LinkedIn connection'
+    )}`,
+    request.url
+  );
+}
+
 export async function GET(request: NextRequest) {
+  const context = parseOAuthContext(request.nextUrl.searchParams.get('context'));
+
   try {
     // Check if user is authenticated
     const supabase = await createClient();
@@ -54,16 +80,17 @@ export async function GET(request: NextRequest) {
       path: '/',
     });
 
+    response.cookies.set('linkedin_oauth_context', context, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 600, // 10 minutes
+      path: '/',
+    });
+
     return response;
   } catch (error) {
     console.error('LinkedIn OAuth initiation error:', error);
-    return NextResponse.redirect(
-      new URL(
-        `/app/i/settings?tab=integrations&error=linkedin_auth_failed&message=${encodeURIComponent(
-          'Failed to initiate LinkedIn connection'
-        )}`,
-        request.url
-      )
-    );
+    return NextResponse.redirect(buildFailureRedirect(request, context));
   }
 }

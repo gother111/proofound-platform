@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Linkedin, Check, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface LinkedInConnectProps {
   onConnectionChange?: (connected: boolean) => void;
@@ -51,13 +52,13 @@ export function LinkedInConnect({ onConnectionChange }: LinkedInConnectProps) {
 
   const handleConnect = () => {
     // Redirect to LinkedIn OAuth initiation endpoint
-    window.location.href = '/api/auth/linkedin';
+    window.location.href = '/api/auth/linkedin?context=integrations';
   };
 
   const handleDisconnect = async () => {
     setDisconnecting(true);
     try {
-      const response = await fetch('/api/expertise/linkedin-disconnect', {
+      const response = await apiFetch('/api/expertise/linkedin-disconnect', {
         method: 'POST',
       });
 

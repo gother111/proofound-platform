@@ -8,9 +8,9 @@ const isVercelBuild = process.env.VERCEL === '1' || Boolean(process.env.VERCEL_E
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
-    // Vercel build containers can OOM during the combined "next build" lint/typecheck phase.
-    // CI remains the canonical lint gate before merge.
-    ignoreDuringBuilds: isVercelBuild,
+    // Run lint as an explicit CI step and skip it during Next build to reduce
+    // Vercel build memory pressure.
+    ignoreDuringBuilds: true,
   },
   typescript: {
     // Vercel build containers can OOM during the combined "next build" lint/typecheck phase.
