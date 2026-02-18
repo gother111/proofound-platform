@@ -4,25 +4,24 @@ import { db } from '@/db';
 import { profileFieldVisibility } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
+import { ProfileVisibilityLevelSchema, PROFILE_VISIBILITY_DEFAULTS } from '@/lib/contracts/domain';
 
 export const dynamic = 'force-dynamic';
 
-const VisibilityLevelSchema = z.enum(['public', 'network_only', 'match_only', 'private']);
-
 const UpdateVisibilitySchema = z.object({
-  displayName: VisibilityLevelSchema.optional(),
-  avatar: VisibilityLevelSchema.optional(),
-  headline: VisibilityLevelSchema.optional(),
-  location: VisibilityLevelSchema.optional(),
-  mission: VisibilityLevelSchema.optional(),
-  vision: VisibilityLevelSchema.optional(),
-  values: VisibilityLevelSchema.optional(),
-  causes: VisibilityLevelSchema.optional(),
-  experiences: VisibilityLevelSchema.optional(),
-  education: VisibilityLevelSchema.optional(),
-  volunteering: VisibilityLevelSchema.optional(),
-  skills: VisibilityLevelSchema.optional(),
-  impactStories: VisibilityLevelSchema.optional(),
+  displayName: ProfileVisibilityLevelSchema.optional(),
+  avatar: ProfileVisibilityLevelSchema.optional(),
+  headline: ProfileVisibilityLevelSchema.optional(),
+  location: ProfileVisibilityLevelSchema.optional(),
+  mission: ProfileVisibilityLevelSchema.optional(),
+  vision: ProfileVisibilityLevelSchema.optional(),
+  values: ProfileVisibilityLevelSchema.optional(),
+  causes: ProfileVisibilityLevelSchema.optional(),
+  experiences: ProfileVisibilityLevelSchema.optional(),
+  education: ProfileVisibilityLevelSchema.optional(),
+  volunteering: ProfileVisibilityLevelSchema.optional(),
+  skills: ProfileVisibilityLevelSchema.optional(),
+  impactStories: ProfileVisibilityLevelSchema.optional(),
 });
 
 /**
@@ -42,22 +41,7 @@ export async function GET() {
       .limit(1);
 
     if (!visibility) {
-      // Return default settings
-      return NextResponse.json({
-        displayName: 'public',
-        avatar: 'public',
-        headline: 'public',
-        location: 'network_only',
-        mission: 'public',
-        vision: 'public',
-        values: 'public',
-        causes: 'public',
-        experiences: 'network_only',
-        education: 'public',
-        volunteering: 'public',
-        skills: 'public',
-        impactStories: 'match_only',
-      });
+      return NextResponse.json(PROFILE_VISIBILITY_DEFAULTS);
     }
 
     return NextResponse.json({
@@ -111,22 +95,21 @@ export async function POST(request: NextRequest) {
         })
         .where(eq(profileFieldVisibility.profileId, user.id));
     } else {
-      // Create new settings with defaults for unspecified fields
       await db.insert(profileFieldVisibility).values({
         profileId: user.id,
-        displayName: validated.displayName || 'public',
-        avatar: validated.avatar || 'public',
-        headline: validated.headline || 'public',
-        location: validated.location || 'network_only',
-        mission: validated.mission || 'public',
-        vision: validated.vision || 'public',
-        values: validated.values || 'public',
-        causes: validated.causes || 'public',
-        experiences: validated.experiences || 'network_only',
-        education: validated.education || 'public',
-        volunteering: validated.volunteering || 'public',
-        skills: validated.skills || 'public',
-        impactStories: validated.impactStories || 'match_only',
+        displayName: validated.displayName || PROFILE_VISIBILITY_DEFAULTS.displayName,
+        avatar: validated.avatar || PROFILE_VISIBILITY_DEFAULTS.avatar,
+        headline: validated.headline || PROFILE_VISIBILITY_DEFAULTS.headline,
+        location: validated.location || PROFILE_VISIBILITY_DEFAULTS.location,
+        mission: validated.mission || PROFILE_VISIBILITY_DEFAULTS.mission,
+        vision: validated.vision || PROFILE_VISIBILITY_DEFAULTS.vision,
+        values: validated.values || PROFILE_VISIBILITY_DEFAULTS.values,
+        causes: validated.causes || PROFILE_VISIBILITY_DEFAULTS.causes,
+        experiences: validated.experiences || PROFILE_VISIBILITY_DEFAULTS.experiences,
+        education: validated.education || PROFILE_VISIBILITY_DEFAULTS.education,
+        volunteering: validated.volunteering || PROFILE_VISIBILITY_DEFAULTS.volunteering,
+        skills: validated.skills || PROFILE_VISIBILITY_DEFAULTS.skills,
+        impactStories: validated.impactStories || PROFILE_VISIBILITY_DEFAULTS.impactStories,
       });
     }
 
