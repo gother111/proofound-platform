@@ -6,6 +6,7 @@ import { Check, Edit, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 
 interface Assignment {
   id: string;
@@ -81,18 +82,23 @@ export function AssignmentReviewClient({ initialAssignment, assignmentId, slug }
 
     setIsPublishing(true);
     try {
-      const response = await fetch(`/api/assignments/${assignmentId}/publish`, {
-        method: 'POST',
-      });
+      const response = await fetch(
+        `/api/assignments/${assignmentId}/publish?orgSlug=${encodeURIComponent(slug)}`,
+        {
+          method: 'POST',
+        }
+      );
 
       if (response.ok) {
+        toast.success('Assignment published');
         router.push(`/app/o/${slug}/matching`);
       } else {
-        alert('Failed to publish assignment');
+        const errorPayload = await response.json().catch(() => ({}));
+        toast.error(errorPayload.error || 'Failed to publish assignment');
       }
     } catch (error) {
       console.error('Failed to publish:', error);
-      alert('Failed to publish assignment');
+      toast.error('Failed to publish assignment');
     } finally {
       setIsPublishing(false);
     }
