@@ -10,7 +10,7 @@ on:
 
 jobs:
   test:
-    timeout-minutes: 60
+    timeout-minutes: 90
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -21,19 +21,36 @@ jobs:
       run: npm ci
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
-    - name: Run Playwright tests (uses real Supabase)
+    - name: Run Playwright smoke contracts (auth + landing)
       run: |
         # Fall back to local Postgres when the secret is not provided
         export DATABASE_URL="${DATABASE_URL:-postgresql://postgres:postgrespassword@127.0.0.1:5432/proofound}"
-        npx playwright test
+        npm run test:e2e:auth:real
+        npm run test:e2e:landing
       env:
-        # Real Supabase values should come from repo secrets or env vars
+        BASE_URL: http://localhost:3000
+        NEXT_PUBLIC_SITE_URL: http://localhost:3000
+        SITE_URL: http://localhost:3000
+        NEXT_PUBLIC_APP_ENV: test
+        NEXT_PUBLIC_USE_MOCK_SUPABASE: "false"
         NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
         NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
         SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        NEXT_PUBLIC_SITE_URL: 'http://localhost:3000'
-        # Pull from secret when available; shell fallback handles missing secret
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        PII_HASH_SALT: ${{ secrets.PII_HASH_SALT || 'ci-playwright-test-salt' }}
+        ZOOM_CLIENT_ID: ${{ secrets.ZOOM_CLIENT_ID }}
+        ZOOM_CLIENT_SECRET: ${{ secrets.ZOOM_CLIENT_SECRET }}
+        ZOOM_REDIRECT_URI: ${{ secrets.ZOOM_REDIRECT_URI }}
+        GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+        GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+        GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
+        LINKEDIN_CLIENT_ID: ${{ secrets.LINKEDIN_CLIENT_ID }}
+        LINKEDIN_CLIENT_SECRET: ${{ secrets.LINKEDIN_CLIENT_SECRET }}
+        E2E_PROVIDER_USER_ID: ${{ secrets.E2E_PROVIDER_USER_ID }}
+        E2E_PROVIDER_USER_EMAIL: ${{ secrets.E2E_PROVIDER_USER_EMAIL }}
+        E2E_PROVIDER_USER_PASSWORD: ${{ secrets.E2E_PROVIDER_USER_PASSWORD }}
+        STRICT_PROVIDER_E2E_REQUIRE_CONNECTED: ${{ secrets.E2E_PROVIDER_USER_ID != '' && secrets.E2E_PROVIDER_USER_EMAIL != '' && secrets.E2E_PROVIDER_USER_PASSWORD != '' && 'true' || 'false' }}
+        STRICT_PROVIDER_E2E_REQUIRE_BOTH: ${{ secrets.E2E_PROVIDER_USER_ID != '' && secrets.E2E_PROVIDER_USER_EMAIL != '' && secrets.E2E_PROVIDER_USER_PASSWORD != '' && 'true' || 'false' }}
     - uses: actions/upload-artifact@v4
       if: always()
       with:

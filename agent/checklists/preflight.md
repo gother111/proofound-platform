@@ -28,4 +28,4 @@ Repo Truth items include citations like `(source: README.md)`. Everything else i
 - Safety (policy):
   - Do not attempt dependency installs for docs-only work.
   - Do not paste secrets into tracked files.
-  - Never use `npm run db:push` against production. Use SQL migrations under `supabase/migrations/` only.
+  - Never use `npm run db:push` against production. Use SQL migrations tracked under `src/db/migrations/` and policy/triggers SQL from `src/db/policies.sql` and `src/db/triggers.sql`.

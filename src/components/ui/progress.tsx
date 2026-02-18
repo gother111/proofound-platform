@@ -11,7 +11,19 @@ type ProgressProps = React.ComponentPropsWithoutRef<'div'> & {
 };
 
 const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
-  ({ className, indicatorClassName, value = 0, max = 100, ...props }, ref) => {
+  (
+    {
+      className,
+      indicatorClassName,
+      value = 0,
+      max = 100,
+      'aria-label': ariaLabel,
+      'aria-labelledby': ariaLabelledby,
+      title,
+      ...props
+    },
+    ref
+  ) => {
     const percentage =
       Number.isFinite(value) && Number.isFinite(max) && max > 0 ? (value / max) * 100 : 0;
     const clamped = Math.min(Math.max(percentage, 0), 100);
@@ -23,6 +35,9 @@ const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
         aria-valuenow={Math.round(clamped)}
         aria-valuemin={0}
         aria-valuemax={100}
+        aria-label={ariaLabel ?? (!ariaLabelledby && !title ? 'Progress' : undefined)}
+        aria-labelledby={ariaLabelledby}
+        title={title}
         className={cn('relative h-2 w-full overflow-hidden rounded-full bg-muted', className)}
         {...props}
       >

@@ -62,7 +62,7 @@ Required env vars:
 
 - Zoom: `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`, `ZOOM_REDIRECT_URI`
 - Google: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`
-- LinkedIn: `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`
+- LinkedIn: `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`, optional `LINKEDIN_REDIRECT_URI`
 
 Supabase social auth callback requirements (same Google and LinkedIn client IDs):
 
@@ -75,6 +75,10 @@ Notes:
 - `GOOGLE_CLIENT_ID` must be the raw OAuth client id (for example `...apps.googleusercontent.com`) and must not include `http://` or `https://`.
 - For app-managed Google Meet integration, prefer `GOOGLE_REDIRECT_URI=https://<site-domain>/api/integrations/google/callback`.
 - For LinkedIn settings integration, callback must include `https://<site-domain>/api/auth/linkedin/callback`.
+- LinkedIn callback URI behavior:
+  - Absolute `LINKEDIN_REDIRECT_URI`: used as-is.
+  - Relative `LINKEDIN_REDIRECT_URI`: resolved against current request origin.
+  - Unset `LINKEDIN_REDIRECT_URI`: defaults to `<current-origin>/api/auth/linkedin/callback` (recommended for prod + demo domain support).
 - Callbacks validate an httpOnly state cookie set during connect (`zoom_oauth_state`, `google_oauth_state`). If the cookie is missing (for example, using a different domain, or blocked cookies), the callback will fail.
 
 Strict provider E2E deterministic account:
@@ -112,7 +116,7 @@ Strict provider E2E deterministic account:
   - `RUN_MIGRATIONS_GUIDE.md`, `APPLY_MIGRATIONS_MANUAL.md` (source: RUN_MIGRATIONS_GUIDE.md, APPLY_MIGRATIONS_MANUAL.md)
 - Safety scripts:
   - `npm run db:backup:checkpoint` creates schema and critical-table checkpoints before production DDL.
-  - `npm run db:audit:migrations` compares local `supabase/migrations` files against `supabase_migrations.schema_migrations`.
+  - Migration ledger checks are run via `npm run db:drift-check` and `npm run db:migrate` against `src/db/migrations/` (and `src/db/policies.sql`/`src/db/triggers.sql` where applicable).
 - Policy: do not run `npm run db:push` against production. Use explicit SQL migration files.
 
 ## E2E / Accessibility (Repo Truth)
