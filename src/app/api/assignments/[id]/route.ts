@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { db } from '@/db';
 import { assignmentOutcomes, assignments } from '@/db/schema';
 import { checkAndEmitAssignmentActivation } from '@/lib/assignments/activation';
-import { verifyAssignmentAccess } from '@/lib/assignments/access';
+import { verifyAssignmentAccess, verifyAssignmentMutationAccess } from '@/lib/assignments/access';
 import { requireAuth } from '@/lib/auth';
 import { log } from '@/lib/log';
 
@@ -22,9 +22,15 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     const resolvedParams = await params;
     assignmentId = resolvedParams.id;
 
-    const hasAccess = await verifyAssignmentAccess(user.id, assignmentId);
-    if (!hasAccess) {
+    const access = await verifyAssignmentMutationAccess(user.id, assignmentId);
+    if (access.status === 'assignment_not_found' || access.status === 'membership_not_found') {
       return NextResponse.json({ error: 'Assignment not found or access denied' }, { status: 404 });
+    }
+    if (access.status === 'insufficient_role') {
+      return NextResponse.json(
+        { error: 'Forbidden. Owner or admin role is required to update assignments.' },
+        { status: 403 }
+      );
     }
 
     const assignment = await db.query.assignments.findFirst({
@@ -154,9 +160,15 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const resolvedParams = await params;
     assignmentId = resolvedParams.id;
 
-    const hasAccess = await verifyAssignmentAccess(user.id, assignmentId);
-    if (!hasAccess) {
+    const access = await verifyAssignmentMutationAccess(user.id, assignmentId);
+    if (access.status === 'assignment_not_found' || access.status === 'membership_not_found') {
       return NextResponse.json({ error: 'Assignment not found or access denied' }, { status: 404 });
+    }
+    if (access.status === 'insufficient_role') {
+      return NextResponse.json(
+        { error: 'Forbidden. Owner or admin role is required to delete assignments.' },
+        { status: 403 }
+      );
     }
 
     const body = await request.json();

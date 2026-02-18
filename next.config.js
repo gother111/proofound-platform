@@ -3,19 +3,17 @@ import createNextIntlPlugin from 'next-intl/plugin';
 import { withSentryConfig } from '@sentry/nextjs';
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
-const isVercelBuild = process.env.VERCEL === '1' || Boolean(process.env.VERCEL_ENV);
+const skipBuildValidation = process.env.NEXT_SKIP_BUILD_VALIDATION === '1';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
-    // Run lint as an explicit CI step and skip it during Next build to reduce
-    // Vercel build memory pressure.
-    ignoreDuringBuilds: true,
+    // Keep lint as part of build by default. Explicitly opt out only when needed.
+    ignoreDuringBuilds: skipBuildValidation,
   },
   typescript: {
-    // Vercel build containers can OOM during the combined "next build" lint/typecheck phase.
-    // CI remains the canonical typecheck gate before merge.
-    ignoreBuildErrors: isVercelBuild,
+    // Keep type checks as part of build by default. Explicitly opt out only when needed.
+    ignoreBuildErrors: skipBuildValidation,
   },
   experimental: {
     serverActions: {

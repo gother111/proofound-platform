@@ -5,7 +5,6 @@ import { lt, and, eq, isNull, sql } from 'drizzle-orm';
 import {
   MATCHING_CONSTRAINTS,
   DECISION_CONSTRAINTS,
-  getMatchReviewDeadline,
   getDecisionDeadline,
 } from '@/lib/sla/constraints';
 import { log } from '@/lib/log';
@@ -17,7 +16,7 @@ export const dynamic = 'force-dynamic';
  *
  * Automated SLA enforcement cron job
  * - Expires matches past 72-hour review window
- * - Expires interviews past 48-hour decision window
+ * - Flags interviews past 48-hour decision window
  *
  * Protected by CRON_SECRET environment variable
  */
@@ -37,6 +36,7 @@ export async function GET(request: NextRequest) {
       expiredInterviews: 0,
       matchIds: [] as string[],
       interviewIds: [] as string[],
+      flaggedOverdueDecisions: 0,
     };
 
     // 1. Expire matches past 72-hour review window (PRD I-23)
@@ -51,15 +51,18 @@ export async function GET(request: NextRequest) {
       .where(
         and(
           lt(matches.createdAt, matchReviewCutoff),
-          isNull(matches.snoozedUntil)
-          // TODO: Add condition to check if match hasn't been actioned (no interview scheduled)
-          // This requires a relationship check or status field
+          isNull(matches.snoozedUntil),
+          sql`NOT EXISTS (
+            SELECT 1
+            FROM interviews i
+            WHERE i.match_id = ${matches.id}
+          )`
         )
       )
       .limit(100); // Process in batches
 
     if (expiredMatches.length > 0) {
-      const matchIds = expiredMatches.map(m => m.id);
+      const matchIds = expiredMatches.map((m) => m.id);
 
       // Soft delete by setting snoozedUntil to far future (or add status field in future)
       // For now, we'll mark them as "expired" by snoozing them for a year
@@ -71,7 +74,7 @@ export async function GET(request: NextRequest) {
         .set({ snoozedUntil: expiredDate })
         .where(
           sql`${matches.id} IN (${sql.join(
-            matchIds.map(id => sql`${id}`),
+            matchIds.map((id) => sql`${id}`),
             sql`, `
           )})`
         );
@@ -85,45 +88,36 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // 2. Expire interviews past 48-hour decision window (PRD I-22)
+    // 2. Flag interviews past 48-hour decision window (PRD I-22)
     const decisionCutoff = new Date(
       Date.now() - DECISION_CONSTRAINTS.WINDOW_HOURS * 60 * 60 * 1000
     );
 
-    // Find completed interviews without decisions past the deadline
+    // Find completed interviews without decisions past the deadline.
+    // Keep status unchanged until explicit product policy confirms auto-transition behavior.
     const expiredInterviews = await db
       .select({ id: interviews.id })
       .from(interviews)
       .where(
         and(
           eq(interviews.status, 'completed'),
+          isNull(interviews.decision),
           lt(interviews.scheduledAt, decisionCutoff)
-          // TODO: Add condition to check no decision has been recorded
-          // This requires a decision field or related table
         )
       )
       .limit(100); // Process in batches
 
     if (expiredInterviews.length > 0) {
-      const interviewIds = expiredInterviews.map(i => i.id);
-
-      // Update status to no_show (expired interviews)
-      await db
-        .update(interviews)
-        .set({ status: 'no_show' })
-        .where(
-          sql`${interviews.id} IN (${sql.join(
-            interviewIds.map(id => sql`${id}`),
-            sql`, `
-          )})`
-        );
+      const interviewIds = expiredInterviews.map((i) => i.id);
 
       results.expiredInterviews = expiredInterviews.length;
       results.interviewIds = interviewIds;
+      results.flaggedOverdueDecisions = expiredInterviews.length;
 
-      log.info('sla.interviews.expired', {
+      log.info('sla.interviews.overdue_decision_window', {
         count: expiredInterviews.length,
         cutoff: decisionCutoff.toISOString(),
+        decisionDeadlineExample: getDecisionDeadline(new Date(decisionCutoff)).toISOString(),
       });
     }
 

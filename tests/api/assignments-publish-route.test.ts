@@ -55,7 +55,11 @@ describe('assignment publish route', () => {
       compMax: 100000,
     });
     (db.query.assignmentOutcomes.findMany as any).mockResolvedValue([{ id: 'outcome-1' }]);
-    (db.query.organizationMembers.findFirst as any).mockResolvedValue({ userId, orgId });
+    (db.query.organizationMembers.findFirst as any).mockResolvedValue({
+      userId,
+      orgId,
+      role: 'owner',
+    });
 
     const updateReturning = vi.fn().mockResolvedValue([
       {
@@ -101,7 +105,11 @@ describe('assignment publish route', () => {
       compMax: 100000,
     });
     (db.query.assignmentOutcomes.findMany as any).mockResolvedValue([{ id: 'outcome-1' }]);
-    (db.query.organizationMembers.findFirst as any).mockResolvedValue({ userId, orgId });
+    (db.query.organizationMembers.findFirst as any).mockResolvedValue({
+      userId,
+      orgId,
+      role: 'owner',
+    });
     (db.query.organizations.findFirst as any).mockResolvedValue({
       id: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
       slug: 'other-org',
@@ -114,6 +122,32 @@ describe('assignment publish route', () => {
 
     const res = await POST(req, { params: Promise.resolve({ id: assignmentId }) });
 
+    expect(res.status).toBe(403);
+  });
+
+  it('rejects publish for non-admin org roles', async () => {
+    (requireAuth as any).mockResolvedValue({ id: userId });
+    (db.query.assignments.findFirst as any).mockResolvedValue({
+      id: assignmentId,
+      orgId,
+      role: 'Product Designer',
+      businessValue: 'Improve candidate quality',
+      mustHaveSkills: ['Research'],
+      locationMode: 'remote',
+      compMin: 80000,
+      compMax: 100000,
+    });
+    (db.query.organizationMembers.findFirst as any).mockResolvedValue({
+      userId,
+      orgId,
+      role: 'member',
+    });
+
+    const req = new NextRequest(`http://localhost/api/assignments/${assignmentId}/publish`, {
+      method: 'POST',
+    });
+
+    const res = await POST(req, { params: Promise.resolve({ id: assignmentId }) });
     expect(res.status).toBe(403);
   });
 });

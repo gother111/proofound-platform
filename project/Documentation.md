@@ -20,6 +20,62 @@ This folder is the durable “project memory” surface for Proofound. It is mea
 - Do not copy secrets from local env files or setup docs into tracked markdown.
 - At the end of every session, append a new entry to `agent/scratchpad.md` (append-only).
 
+## 2026-02-18: PRD Flow Hardening (Auth, Privacy, Messaging, Metrics)
+
+What changed:
+
+- Enforced owner/admin role gates for assignment mutations across create/update/delete/publish paths.
+  - `src/lib/assignments/access.ts`
+  - `src/app/api/assignments/route.ts`
+  - `src/app/api/assignments/[id]/route.ts`
+  - `src/app/api/assignments/[id]/publish/route.ts`
+- Fixed match visible-fields privacy lookup to use `profile_field_visibility` schema columns and fail closed on lookup failure for sensitive fields.
+  - `src/app/api/match/visible-fields/[matchId]/route.ts`
+- Consolidated messaging behavior by routing legacy `/api/messages*` endpoints to canonical `/api/conversations/[conversationId]/messages`.
+  - `src/app/api/messages/route.ts`
+  - `src/app/api/messages/[conversationId]/route.ts`
+  - `src/app/app/i/messages/page.tsx`
+  - `src/app/app/o/[slug]/messages/page.tsx`
+  - `src/lib/csrf.ts`
+- Corrected first-match analytics emission to use pre-upsert state and idempotency key checks.
+  - `src/app/api/core/matching/profile/route.ts`
+- Replaced fairness-gap placeholder metrics logic with real cohort aggregation and confidence grading.
+  - `src/lib/analytics/metrics.ts`
+- Replaced static admin fairness report bytes with generated markdown output and added explicit preview JSON mode.
+  - `src/app/api/admin/fairness-report/route.ts`
+- Updated SLA cron to flag overdue interview decisions instead of auto-marking `no_show`.
+  - `src/app/api/cron/sla-enforcement/route.ts`
+- Added route-intent wrappers for org alias routes (`assignments`, `candidates`, `team`).
+  - `src/app/app/o/[slug]/assignments/page.tsx`
+  - `src/app/app/o/[slug]/candidates/page.tsx`
+  - `src/app/app/o/[slug]/team/page.tsx`
+- Tightened build gates by removing prebuild bypass and making lint/type build skips opt-in.
+  - `package.json`
+  - `next.config.js`
+- Strengthened tests for assignment role gating and fairness-report payload behavior; tightened PRD E2E unauthenticated contracts.
+  - `tests/api/assignments.test.ts`
+  - `tests/api/assignments-publish-route.test.ts`
+  - `src/app/api/admin/__tests__/fairness-report-route.test.ts`
+  - `tests/e2e/prd-flows-individual.spec.ts`
+  - `tests/e2e/prd-flows-organization.spec.ts`
+
+Why:
+
+- Close P0 gaps in mutation authorization, privacy consistency, and endpoint drift against PRD-aligned flow behavior.
+- Improve reliability of analytics and reporting by removing placeholder/fail-open behavior.
+- Make route-level contracts explicit for both clients and tests.
+
+How to verify:
+
+- `npm run lint`
+- `npm run typecheck`
+- `npm run test -- tests/api/assignments.test.ts tests/api/assignments-publish-route.test.ts src/app/api/admin/__tests__/fairness-report-route.test.ts tests/api/matching-profile-compat-route.test.ts tests/api/match-interest-route.test.ts tests/api/organizations-route.test.ts`
+
+Open risks/TODO:
+
+- `next build` now runs lint/type checks by default again; this can reintroduce Vercel memory pressure unless `NEXT_SKIP_BUILD_VALIDATION=1` is set intentionally.
+- PRD E2E suites were tightened for explicit unauthenticated contracts; authenticated end-to-end contract coverage still depends on strict credentialed suites.
+
 ## 2026-02-18: Vercel Build OOM Mitigation (PR #187)
 
 What changed:

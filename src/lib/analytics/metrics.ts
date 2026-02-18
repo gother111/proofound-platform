@@ -599,7 +599,72 @@ export type FairnessGapResult = {
   gap: number;
   pValue: number;
   isSignificant: boolean;
+  confidence: 'high' | 'medium' | 'low';
 };
+
+function normalCdf(value: number): number {
+  // Abramowitz and Stegun approximation.
+  const abs = Math.abs(value);
+  const t = 1 / (1 + 0.2316419 * abs);
+  const d = 0.3989423 * Math.exp((-value * value) / 2);
+  const probability =
+    d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + 1.330274 * t))));
+  return value > 0 ? 1 - probability : probability;
+}
+
+function twoProportionPValue(successA: number, totalA: number, successB: number, totalB: number) {
+  if (totalA === 0 || totalB === 0) {
+    return 1;
+  }
+
+  const pooled = (successA + successB) / (totalA + totalB);
+  const denominator = Math.sqrt(pooled * (1 - pooled) * (1 / totalA + 1 / totalB));
+  if (denominator === 0) {
+    return 1;
+  }
+
+  const z = (successA / totalA - successB / totalB) / denominator;
+  const pOneTail = 1 - normalCdf(Math.abs(z));
+  return Math.max(0, Math.min(1, pOneTail * 2));
+}
+
+function inferConfidence(sampleSizeA: number, sampleSizeB: number): 'high' | 'medium' | 'low' {
+  const minSample = Math.min(sampleSizeA, sampleSizeB);
+  if (minSample >= 100) return 'high';
+  if (minSample >= 40) return 'medium';
+  return 'low';
+}
+
+async function querySingleCohortAnalytics(cohort: string, startIso: string, endIso: string) {
+  const result = await db.execute(sql`
+    SELECT
+      COUNT(*) FILTER (WHERE e.event_type = 'match_generated')::int as generated,
+      COUNT(*) FILTER (WHERE e.event_type = 'match_introduced')::int as introduced,
+      COUNT(*) FILTER (WHERE e.event_type = 'contract_signed')::int as contracted
+    FROM analytics_events e
+    INNER JOIN demographic_opt_ins d ON d.profile_id = e.user_id
+    WHERE d.opted_in = true
+      AND (
+        LOWER(COALESCE(d.gender, '')) = LOWER(${cohort})
+        OR LOWER(COALESCE(d.ethnicity, '')) = LOWER(${cohort})
+        OR LOWER(COALESCE(d.age_range, '')) = LOWER(${cohort})
+      )
+      AND e.created_at >= ${startIso}
+      AND e.created_at <= ${endIso}
+  `);
+
+  const row = (getRows(result)[0] ?? {}) as {
+    generated?: number | string | null;
+    introduced?: number | string | null;
+    contracted?: number | string | null;
+  };
+
+  return {
+    generated: Number(row.generated || 0),
+    introduced: Number(row.introduced || 0),
+    contracted: Number(row.contracted || 0),
+  };
+}
 
 export async function calculateFairnessGap(
   cohortA: string,
@@ -607,10 +672,88 @@ export async function calculateFairnessGap(
   startDate?: Date,
   endDate?: Date
 ): Promise<FairnessGapResult | null> {
-  void startDate;
-  void endDate;
-  log.warn('metrics.fairness_gap.placeholder', { cohortA, cohortB });
-  return null;
+  try {
+    const start = startDate || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+    const end = endDate || new Date();
+    const startIso = start.toISOString();
+    const endIso = end.toISOString();
+    const [cohortAStats, cohortBStats] = await Promise.all([
+      querySingleCohortAnalytics(cohortA, startIso, endIso),
+      querySingleCohortAnalytics(cohortB, startIso, endIso),
+    ]);
+
+    const toStats = (
+      cohortName: string,
+      stats: { generated: number; introduced: number; contracted: number }
+    ) => {
+      const generated = stats.generated;
+      const introduced = stats.introduced;
+      const contracted = stats.contracted;
+      const introductionRate = generated > 0 ? (introduced / generated) * 100 : 0;
+      const contractRate = generated > 0 ? (contracted / generated) * 100 : 0;
+      return {
+        name: cohortName,
+        generated,
+        introduced,
+        contracted,
+        introductionRate,
+        contractRate,
+      };
+    };
+
+    const statsA = toStats(cohortA, cohortAStats);
+    const statsB = toStats(cohortB, cohortBStats);
+
+    if (statsA.generated === 0 || statsB.generated === 0) {
+      return null;
+    }
+
+    const pValue = twoProportionPValue(
+      statsA.introduced,
+      statsA.generated,
+      statsB.introduced,
+      statsB.generated
+    );
+    const gap = statsA.introductionRate - statsB.introductionRate;
+    const confidence = inferConfidence(statsA.generated, statsB.generated);
+    const isSignificant = pValue < 0.05 && Math.abs(gap) >= 5;
+
+    log.info('metrics.fairness_gap.calculated', {
+      cohortA,
+      cohortB,
+      gap,
+      pValue,
+      confidence,
+      sampleA: statsA.generated,
+      sampleB: statsB.generated,
+    });
+
+    return {
+      cohortA: {
+        name: statsA.name,
+        introductionRate: statsA.introductionRate,
+        contractRate: statsA.contractRate,
+        sampleSize: statsA.generated,
+      },
+      cohortB: {
+        name: statsB.name,
+        introductionRate: statsB.introductionRate,
+        contractRate: statsB.contractRate,
+        sampleSize: statsB.generated,
+      },
+      gap,
+      pValue,
+      isSignificant,
+      confidence,
+    };
+  } catch (error) {
+    log.error('metrics.fairness_gap.failed', {
+      cohortA,
+      cohortB,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    return null;
+  }
 }
 
 // ============================================================================

@@ -88,7 +88,13 @@ export async function POST(request: NextRequest) {
       Object.keys(fieldVisibility).forEach((field) => {
         if (oldVisibility[field] !== fieldVisibility[field]) {
           const visibility = fieldVisibility[field];
-          if (visibility === 'public' || visibility === 'network' || visibility === 'private') {
+          if (
+            visibility === 'public' ||
+            visibility === 'network' ||
+            visibility === 'network_only' ||
+            visibility === 'match_only' ||
+            visibility === 'private'
+          ) {
             emitVisibilityChanged(user.id, field, visibility);
           }
         }

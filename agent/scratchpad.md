@@ -2209,3 +2209,56 @@ Open TODOs / follow-ups:
 
 - Keep monitoring #185, #186, #187, and #188 mergeability as `master` advances.
 - Re-sync dirty PR branches after each merge event.
+
+---
+
+## 2026-02-18 22:51 CET
+
+Task summary:
+
+- Implemented the approved PRD-to-current-state hardening plan across assignment auth, privacy visibility, messaging endpoint consolidation, analytics correctness, fairness/SLA behavior, and PRD flow tests.
+
+What worked:
+
+- Centralized assignment mutation authorization and reused it in create/update/delete/publish routes.
+- Migrated legacy messaging routes to canonical conversation message handlers without breaking existing `/api/messages` callers.
+- Fixed first-match analytics to evaluate pre-upsert state and added idempotency-key checks.
+- Replaced fairness report placeholder response with generated markdown + preview mode.
+- Focused API/unit suites passed after changes.
+
+What failed / wrong assumptions:
+
+- Initial message page updates produced nullable `senderId` type errors; fixed with non-null normalization.
+- Team alias wrapper first draft used an invalid synthetic slug; corrected to pass real route params.
+
+User corrections:
+
+- None in this implementation turn.
+
+Assumptions taken without asking:
+
+- Assignment mutations should be restricted to `owner`/`admin` roles only.
+- Visibility lookup failures should fail closed for sensitive fields.
+- SLA cron should stop auto-transitioning completed interviews to `no_show` until policy semantics are explicitly confirmed.
+- Build lint/type validation should be default-on, with explicit opt-out flag for emergency deploy pressure.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add dedicated tests for `PUT/DELETE /api/assignments/[id]` role gating in addition to create/publish coverage.
+- Add focused tests for visible-fields fail-closed behavior and `/api/messages` adapter compatibility.
+
+Commands run + outcomes:
+
+- `git status --short && git branch --show-current`: PASS (clean baseline, branch `codex/review-mvp-flows-and-code`).
+- `npm run lint`: PASS (warnings only: postcss anonymous export, existing hook deps warnings in messages pages).
+- `npm run typecheck`: PASS.
+- `npm run test -- tests/api/assignments.test.ts tests/api/assignments-publish-route.test.ts src/app/api/admin/__tests__/fairness-report-route.test.ts tests/api/matching-profile-compat-route.test.ts tests/api/match-interest-route.test.ts tests/api/organizations-route.test.ts`: PASS (29 tests).
+
+Open TODOs / follow-ups:
+
+- Validate `next build` behavior on Vercel with the tightened default validation gates.
+- Expand PRD E2E authenticated coverage with seeded credentials in strict suites.

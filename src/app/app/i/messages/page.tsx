@@ -2,14 +2,14 @@
  * Messages Page - Individual
  *
  * Two-column layout: conversation list + message thread
- * Connects to /api/conversations and /api/messages
+ * Connects to /api/conversations and /api/conversations/[conversationId]/messages
  *
  * Supports URL param: ?conversation=<id> to auto-select a conversation
  */
 
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useCallback } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ConversationList, type Conversation } from '@/components/messaging/ConversationList';
 import { RealtimeMessageThread } from '@/components/messaging/RealtimeMessageThread';
@@ -52,13 +52,6 @@ function MessagesPageContent() {
     }
   }, [conversationParam, conversations, hasAutoSelected]);
 
-  // Load messages when conversation is selected
-  useEffect(() => {
-    if (selectedConversationId) {
-      loadMessages(selectedConversationId);
-    }
-  }, [selectedConversationId]);
-
   const loadConversations = async () => {
     setIsLoadingConversations(true);
     try {
@@ -86,45 +79,70 @@ function MessagesPageContent() {
     }
   };
 
-  const loadMessages = async (conversationId: string) => {
-    setIsLoadingMessages(true);
-    try {
-      const response = await fetch(`/api/messages?conversationId=${conversationId}`);
-      if (response.ok) {
-        const data = await response.json();
-        // Transform messages to have Date objects for RealtimeMessageThread
-        const transformedMessages = (data.messages || []).map((msg: any) => ({
-          id: msg.id,
-          senderId: msg.senderId || msg.sender_id,
-          content: msg.content,
-          sentAt: new Date(msg.sentAt || msg.sent_at),
-          readAt: msg.readAt || msg.read_at ? new Date(msg.readAt || msg.read_at) : undefined,
-        }));
-        setMessages(transformedMessages);
+  const loadMessages = useCallback(
+    async (conversationId: string) => {
+      setIsLoadingMessages(true);
+      try {
+        const response = await fetch(`/api/conversations/${conversationId}/messages`);
+        if (response.ok) {
+          const data = await response.json();
+          // Transform messages to have Date objects for RealtimeMessageThread
+          const transformedMessages = (data.messages || []).map((msg: any) => ({
+            id: msg.id,
+            senderId:
+              msg.senderId ||
+              msg.sender_id ||
+              msg.sender?.id ||
+              (msg.isOwnMessage ? currentUserId : 'unknown'),
+            content: msg.content,
+            sentAt: new Date(msg.sentAt || msg.sent_at),
+            readAt: msg.readAt || msg.read_at ? new Date(msg.readAt || msg.read_at) : undefined,
+          }));
+          setMessages(transformedMessages);
+        }
+      } catch (error) {
+        console.error('Failed to load messages:', error);
+      } finally {
+        setIsLoadingMessages(false);
       }
-    } catch (error) {
-      console.error('Failed to load messages:', error);
-    } finally {
-      setIsLoadingMessages(false);
+    },
+    [currentUserId]
+  );
+
+  // Load messages when conversation is selected
+  useEffect(() => {
+    if (selectedConversationId) {
+      loadMessages(selectedConversationId);
     }
-  };
+  }, [selectedConversationId, loadMessages]);
 
   const handleSendMessage = async (content: string) => {
     if (!selectedConversationId) return;
 
     try {
-      const response = await fetch('/api/messages', {
+      const response = await fetch(`/api/conversations/${selectedConversationId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          conversationId: selectedConversationId,
-          content,
-        }),
+        body: JSON.stringify({ content }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        setMessages((prev) => [...prev, data.message]);
+        if (data.message) {
+          const normalizedMessage = {
+            id: data.message.id,
+            senderId: currentUserId || 'unknown',
+            content: data.message.content,
+            sentAt: new Date(
+              data.message.sentAt || data.message.sent_at || new Date().toISOString()
+            ),
+            readAt:
+              data.message.readAt || data.message.read_at
+                ? new Date(data.message.readAt || data.message.read_at)
+                : undefined,
+          };
+          setMessages((prev) => [...prev, normalizedMessage]);
+        }
       }
     } catch (error) {
       console.error('Failed to send message:', error);

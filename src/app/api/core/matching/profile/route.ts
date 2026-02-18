@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/db';
 import { assignments, matchingProfiles, skills, matches } from '@/db/schema';
-import { eq, and, gte } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { scrubDisallowedFields } from '@/lib/core/matching/firewall';
 import { getOrSet, CACHE_KEYS, CACHE_TTL } from '@/lib/cache';
 import { emitFirstMatchShown } from '@/lib/analytics/events';
+import { getRows } from '@/lib/db/rows';
 import {
   scoreValues,
   scoreCauses,
@@ -203,6 +204,7 @@ export async function POST(request: NextRequest) {
     const existingMatches = await db.query.matches.findMany({
       where: eq(matches.profileId, user.id),
     });
+    const hadMatchesBefore = existingMatches.length > 0;
 
     // Map assignmentId to matchId for returning with results
     const matchIdMap = new Map(existingMatches.map((m) => [m.assignmentId, m.id]));
@@ -424,18 +426,28 @@ export async function POST(request: NextRequest) {
     // Emit first match shown event for TTFQI tracking (only if there are matches)
     if (topKWithIds.length > 0) {
       try {
-        // Check if this is the user's first match ever
-        const hasSeenMatchesBefore = await db.query.matches.findFirst({
-          where: eq(matches.profileId, user.id),
-        });
+        const firstMatch = topKWithIds[0];
+        if (!hadMatchesBefore && firstMatch.id) {
+          const idempotencyKey = `first_match_shown:${user.id}`;
+          const existingEventResult = await db.execute(sql`
+            SELECT id
+            FROM analytics_events
+            WHERE event_type = 'first_match_shown'
+              AND user_id = ${user.id}
+              AND COALESCE(properties->>'idempotency_key', '') = ${idempotencyKey}
+            LIMIT 1
+          `);
+          const alreadyEmitted = getRows(existingEventResult).length > 0;
 
-        if (!hasSeenMatchesBefore) {
-          await emitFirstMatchShown(user.id, topKWithIds[0].assignmentId, {
-            score: topKWithIds[0].score,
-            mode,
-            // PRD: Include PAC for analytics
-            pac_contribution: topKWithIds[0].pac.total,
-          });
+          if (!alreadyEmitted) {
+            await emitFirstMatchShown(user.id, firstMatch.id, {
+              assignment_id: firstMatch.assignmentId,
+              score: firstMatch.score,
+              mode,
+              pac_contribution: firstMatch.pac.total,
+              idempotency_key: idempotencyKey,
+            });
+          }
         }
       } catch (analyticsError) {
         console.error('Failed to emit first match shown event:', analyticsError);

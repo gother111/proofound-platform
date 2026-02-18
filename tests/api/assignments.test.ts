@@ -91,7 +91,10 @@ describe('Assignment API', () => {
 
   describe('POST', () => {
     it('should require explicit organization context', async () => {
-      (db.query.organizationMembers.findFirst as any).mockResolvedValue({ orgId: TEST_ORG_ID });
+      (db.query.organizationMembers.findFirst as any).mockResolvedValue({
+        orgId: TEST_ORG_ID,
+        role: 'owner',
+      });
 
       const req = new NextRequest('http://localhost/api/assignments', {
         method: 'POST',
@@ -104,7 +107,10 @@ describe('Assignment API', () => {
 
     it('should create an assignment successfully', async () => {
       // Mock org membership
-      (db.query.organizationMembers.findFirst as any).mockResolvedValue({ orgId: TEST_ORG_ID });
+      (db.query.organizationMembers.findFirst as any).mockResolvedValue({
+        orgId: TEST_ORG_ID,
+        role: 'owner',
+      });
 
       const body = {
         orgId: TEST_ORG_ID,
@@ -131,7 +137,10 @@ describe('Assignment API', () => {
     });
 
     it('should accept skill metadata fields and persist them in assignment payload', async () => {
-      (db.query.organizationMembers.findFirst as any).mockResolvedValue({ orgId: TEST_ORG_ID });
+      (db.query.organizationMembers.findFirst as any).mockResolvedValue({
+        orgId: TEST_ORG_ID,
+        role: 'owner',
+      });
 
       const valuesMock = vi.fn(() => ({
         returning: vi.fn(() =>
@@ -208,7 +217,10 @@ describe('Assignment API', () => {
 
     it('should return 400 for invalid input', async () => {
       // Mock org membership
-      (db.query.organizationMembers.findFirst as any).mockResolvedValue({ orgId: TEST_ORG_ID });
+      (db.query.organizationMembers.findFirst as any).mockResolvedValue({
+        orgId: TEST_ORG_ID,
+        role: 'owner',
+      });
 
       const body = { orgId: TEST_ORG_ID, description: 'Missing role' }; // Missing required 'role'
       const req = new NextRequest('http://localhost/api/assignments', {
@@ -220,12 +232,32 @@ describe('Assignment API', () => {
 
       expect(res.status).toBe(400);
     });
+
+    it('should return 403 for non-admin organization roles', async () => {
+      (db.query.organizationMembers.findFirst as any).mockResolvedValue({
+        orgId: TEST_ORG_ID,
+        role: 'member',
+      });
+
+      const body = { orgId: TEST_ORG_ID, role: 'Software Engineer' };
+      const req = new NextRequest('http://localhost/api/assignments', {
+        method: 'POST',
+        body: JSON.stringify(body),
+      });
+
+      const res = await POST(req);
+
+      expect(res.status).toBe(403);
+    });
   });
 
   describe('GET', () => {
     it('should fetch assignments', async () => {
       // Mock org membership
-      (db.query.organizationMembers.findFirst as any).mockResolvedValue({ orgId: TEST_ORG_ID });
+      (db.query.organizationMembers.findFirst as any).mockResolvedValue({
+        orgId: TEST_ORG_ID,
+        role: 'member',
+      });
 
       // Mock db select chain
       const mockAssignments = [{ id: '1', role: 'Dev' }];

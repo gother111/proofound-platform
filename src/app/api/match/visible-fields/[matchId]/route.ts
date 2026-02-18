@@ -10,11 +10,59 @@ import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
 
+type VisibilityLevel = 'public' | 'network_only' | 'match_only' | 'private';
+
 interface VisibleField {
   field: string;
   label: string;
   value: string | string[];
   isRedacted: boolean;
+}
+
+const PROFILE_VISIBILITY_DEFAULTS: Record<string, VisibilityLevel> = {
+  display_name: 'public',
+  headline: 'public',
+  location: 'network_only',
+  values: 'public',
+  causes: 'public',
+  skills: 'public',
+};
+
+const FIELD_TO_VISIBILITY_COLUMN: Record<string, string> = {
+  name: 'display_name',
+  headline: 'headline',
+  location: 'location',
+  values: 'values',
+  causes: 'causes',
+  skills: 'skills',
+};
+
+const SENSITIVE_FIELDS = new Set([
+  'name',
+  'email',
+  'location',
+  'headline',
+  'bio',
+  'skills',
+  'values',
+  'causes',
+  'linkedin_url',
+]);
+
+function normalizeVisibilityLevel(value: unknown): VisibilityLevel | null {
+  if (
+    value === 'public' ||
+    value === 'network_only' ||
+    value === 'match_only' ||
+    value === 'private'
+  ) {
+    return value;
+  }
+  return null;
+}
+
+function isVisibleForMatch(level: VisibilityLevel) {
+  return level !== 'private';
 }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ matchId: string }> }) {
@@ -66,18 +114,25 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ matc
     const userData = userProfile.length > 0 ? (userProfile[0] as any) : {};
     const profileData = profile.length > 0 ? (profile[0] as any) : {};
 
-    // Get field visibility settings
-    let visibilityMap = new Map<string, boolean>();
+    // Get field visibility settings from normalized privacy table.
+    let visibilityRow: Record<string, unknown> | null = null;
+    let visibilityResolutionFailed = false;
     try {
-      const visibility = await db.execute(sql`
-        SELECT field_name, is_visible
+      const visibilityRows = await db.execute(sql`
+        SELECT display_name, headline, location, values, causes, skills
         FROM profile_field_visibility
-        WHERE user_id = ${user.id}
+        WHERE profile_id = ${user.id}
+        LIMIT 1
       `);
-      visibilityMap = new Map(visibility.map((row: any) => [row.field_name, row.is_visible]));
-    } catch {
-      // Table might be empty - default all fields to visible
-      log.warn('match.visible_fields.no_visibility_settings', { userId: user.id });
+      visibilityRow =
+        visibilityRows.length > 0 ? (visibilityRows[0] as Record<string, unknown>) : null;
+    } catch (error) {
+      visibilityResolutionFailed = true;
+      log.warn('match.visible_fields.visibility_resolution_failed', {
+        userId: user.id,
+        matchId,
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
 
     // Define all profile fields with their labels using correct column names
@@ -111,7 +166,22 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ matc
         return true;
       })
       .map((f) => {
-        const isVisible = visibilityMap.get(f.field) ?? true; // Default visible
+        let isVisible: boolean;
+
+        if (visibilityResolutionFailed && SENSITIVE_FIELDS.has(f.field)) {
+          // Fail closed when visibility lookup fails.
+          isVisible = false;
+        } else {
+          const visibilityColumn = FIELD_TO_VISIBILITY_COLUMN[f.field];
+          const resolvedLevel = visibilityColumn
+            ? normalizeVisibilityLevel(visibilityRow?.[visibilityColumn]) ||
+              PROFILE_VISIBILITY_DEFAULTS[visibilityColumn] ||
+              'private'
+            : 'private';
+
+          isVisible = isVisibleForMatch(resolvedLevel);
+        }
+
         return {
           field: f.field,
           label: f.label,

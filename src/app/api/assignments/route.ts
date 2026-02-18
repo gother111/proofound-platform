@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
-import { assignments, organizationMembers, matches, organizations } from '@/db/schema';
+import { assignments, matches } from '@/db/schema';
 import { eq, and, inArray, sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { jsonErrorWithRequest, withApiObservability } from '@/lib/api/observability';
 import { emitAnalyticsEvent } from '@/lib/analytics/events';
+import { ASSIGNMENT_MUTATION_ROLES, resolveUserOrgContext } from '@/lib/assignments/access';
 import {
   checkAndEmitAssignmentActivation,
   evaluateAssignmentActivationCriteria,
@@ -76,60 +77,6 @@ const AssignmentCreateSchema = AssignmentSchema.extend({
     });
   }
 });
-
-/**
- * Helper to get user's organization ID
- */
-async function getUserOrgId(userId: string): Promise<string | null> {
-  const membership = await db.query.organizationMembers.findFirst({
-    where: and(eq(organizationMembers.userId, userId), eq(organizationMembers.status, 'active')),
-  });
-
-  return membership?.orgId || null;
-}
-
-async function resolveUserOrgContext(
-  userId: string,
-  context?: {
-    orgId?: string | null;
-    orgSlug?: string | null;
-  }
-): Promise<string | null> {
-  if (context?.orgId) {
-    const membership = await db.query.organizationMembers.findFirst({
-      where: and(
-        eq(organizationMembers.userId, userId),
-        eq(organizationMembers.orgId, context.orgId),
-        eq(organizationMembers.status, 'active')
-      ),
-    });
-
-    return membership?.orgId || null;
-  }
-
-  if (context?.orgSlug) {
-    const org = await db.query.organizations.findFirst({
-      where: eq(organizations.slug, context.orgSlug),
-      columns: { id: true },
-    });
-
-    if (!org) {
-      return null;
-    }
-
-    const membership = await db.query.organizationMembers.findFirst({
-      where: and(
-        eq(organizationMembers.userId, userId),
-        eq(organizationMembers.orgId, org.id),
-        eq(organizationMembers.status, 'active')
-      ),
-    });
-
-    return membership?.orgId || null;
-  }
-
-  return getUserOrgId(userId);
-}
 
 /**
  * GET /api/assignments
@@ -293,17 +240,21 @@ export async function POST(request: NextRequest) {
 
       // Validate input
       const validatedData = AssignmentCreateSchema.parse(body);
-      const orgId = await resolveUserOrgContext(user.id, {
-        orgId: validatedData.orgId,
-        orgSlug: validatedData.orgSlug,
-      });
+      const orgId = await resolveUserOrgContext(
+        user.id,
+        {
+          orgId: validatedData.orgId,
+          orgSlug: validatedData.orgSlug,
+        },
+        ASSIGNMENT_MUTATION_ROLES
+      );
 
       if (!orgId) {
         return jsonErrorWithRequest(
           ctx.requestId,
           'Organization not found or access denied',
           403,
-          'You must be an active member of the target organization to create assignments.'
+          'Only organization owner/admin members can create assignments.'
         );
       }
 

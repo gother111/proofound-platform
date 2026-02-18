@@ -1,217 +1,104 @@
 /**
- * Messages API
+ * Legacy Messages API adapter.
  *
- * Send text-only messages within conversations
+ * Canonical implementation lives at:
+ * - GET /api/conversations/[conversationId]/messages
+ * - POST /api/conversations/[conversationId]/messages
+ *
+ * This route keeps backward compatibility for existing clients.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { db } from '@/db';
-import { messages, conversations, profiles } from '@/db/schema';
-import { eq, and, or } from 'drizzle-orm';
 import { z } from 'zod';
-import { notifyMessageReceived } from '@/lib/notifications';
+import {
+  GET as getConversationMessages,
+  POST as postConversationMessage,
+} from '@/app/api/conversations/[conversationId]/messages/route';
 
-const SendMessageSchema = z.object({
+const LegacySendMessageSchema = z.object({
   conversationId: z.string().uuid(),
   content: z.string().min(1).max(2000, 'Message cannot exceed 2000 characters'),
+  piiWarningShown: z.boolean().optional(),
 });
 
-export async function POST(request: NextRequest) {
-  try {
-    // Get authenticated user
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Parse and validate request body
-    const body = await request.json();
-    const validation = SendMessageSchema.safeParse(body);
-
-    if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Invalid input', details: validation.error.errors },
-        { status: 400 }
-      );
-    }
-
-    const { conversationId, content } = validation.data;
-
-    // Verify conversation exists and user is a participant
-    const conversation = await db
-      .select()
-      .from(conversations)
-      .where(eq(conversations.id, conversationId))
-      .limit(1);
-
-    if (!conversation.length) {
-      return NextResponse.json(
-        { error: 'Conversation not found' },
-        { status: 404 }
-      );
-    }
-
-    const conv = conversation[0];
-
-    // Check if user is a participant
-    const isParticipant =
-      conv.participantOneId === user.id || conv.participantTwoId === user.id;
-
-    if (!isParticipant) {
-      return NextResponse.json(
-        { error: 'You are not a participant in this conversation' },
-        { status: 403 }
-      );
-    }
-
-    // Insert message
-    const newMessage = await db
-      .insert(messages)
-      .values({
-        conversationId,
-        senderId: user.id,
-        content,
-      })
-      .returning();
-
-    // Update conversation's lastMessageAt and preview
-    const preview = content.length > 100 ? content.substring(0, 100) + '...' : content;
-
-    await db
-      .update(conversations)
-      .set({
-        lastMessageAt: new Date(),
-      })
-      .where(eq(conversations.id, conversationId));
-
-    // Send notification to the recipient
-    try {
-      const recipientId =
-        conv.participantOneId === user.id ? conv.participantTwoId : conv.participantOneId;
-
-      // Get sender's profile for notification
-      const senderProfile = await db.query.profiles.findFirst({
-        where: eq(profiles.id, user.id),
-      });
-
-      const senderName = senderProfile?.displayName || senderProfile?.handle || 'Someone';
-
-      await notifyMessageReceived(recipientId, conversationId, senderName, content);
-    } catch (notifError) {
-      console.error('Failed to send message notification:', notifError);
-      // Don't fail the request if notification fails
-    }
-
-    // TODO: Emit analytics event for message sent
-    // TODO: Send real-time notification via Supabase Realtime
-
-    return NextResponse.json(
-      {
-        message: newMessage[0],
-        success: true,
-      },
-      { status: 201 }
-    );
-  } catch (error) {
-    console.error('Send message error:', error);
-    return NextResponse.json(
-      { error: 'Failed to send message' },
-      { status: 500 }
-    );
-  }
+function buildConversationRequestUrl(request: NextRequest, conversationId: string) {
+  const url = new URL(request.url);
+  url.pathname = `/api/conversations/${conversationId}/messages`;
+  return url;
 }
 
-// GET endpoint to retrieve messages for a conversation
 export async function GET(request: NextRequest) {
-  try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+  const searchParams = request.nextUrl.searchParams;
+  const conversationId = searchParams.get('conversationId');
 
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  if (!conversationId) {
+    return NextResponse.json({ error: 'conversationId is required' }, { status: 400 });
+  }
 
-    const searchParams = request.nextUrl.searchParams;
-    const conversationId = searchParams.get('conversationId');
-    const limit = parseInt(searchParams.get('limit') || '50', 10);
-    const offset = parseInt(searchParams.get('offset') || '0', 10);
+  const proxiedUrl = buildConversationRequestUrl(request, conversationId);
+  proxiedUrl.searchParams.delete('conversationId');
 
-    if (!conversationId) {
-      return NextResponse.json(
-        { error: 'conversationId is required' },
-        { status: 400 }
-      );
-    }
+  const proxiedRequest = new NextRequest(proxiedUrl, {
+    method: 'GET',
+    headers: request.headers,
+  });
 
-    // Verify user is a participant
-    const conversation = await db
-      .select()
-      .from(conversations)
-      .where(eq(conversations.id, conversationId))
-      .limit(1);
+  const canonicalResponse = await getConversationMessages(proxiedRequest, {
+    params: Promise.resolve({ conversationId }),
+  });
 
-    if (!conversation.length) {
-      return NextResponse.json(
-        { error: 'Conversation not found' },
-        { status: 404 }
-      );
-    }
+  const payload = await canonicalResponse.json();
+  if (!canonicalResponse.ok) {
+    return NextResponse.json(payload, { status: canonicalResponse.status });
+  }
 
-    const conv = conversation[0];
-    const isParticipant =
-      conv.participantOneId === user.id || conv.participantTwoId === user.id;
+  const normalizedMessages = Array.isArray(payload.messages)
+    ? payload.messages.map((message: any) => ({
+        ...message,
+        senderId: message.sender?.id ?? (message.isOwnMessage ? 'self' : 'unknown'),
+      }))
+    : [];
 
-    if (!isParticipant) {
-      return NextResponse.json(
-        { error: 'You are not a participant in this conversation' },
-        { status: 403 }
-      );
-    }
+  return NextResponse.json({
+    ...payload,
+    messages: normalizedMessages,
+  });
+}
 
-    // Fetch messages
-    const conversationMessages = await db
-      .select()
-      .from(messages)
-      .where(eq(messages.conversationId, conversationId))
-      .orderBy(messages.sentAt)
-      .limit(limit)
-      .offset(offset);
+export async function POST(request: NextRequest) {
+  const body = await request.json().catch(() => null);
+  const parsed = LegacySendMessageSchema.safeParse(body);
 
-    // Mark unread messages as read (messages sent by the other party)
-    const unreadIds = conversationMessages
-      .filter((m) => m.senderId !== user.id && !m.readAt)
-      .map((m) => m.id);
-
-    if (unreadIds.length > 0) {
-      await db
-        .update(messages)
-        .set({ readAt: new Date() })
-        .where(
-          and(
-            eq(messages.conversationId, conversationId),
-            eq(messages.senderId, conv.participantOneId === user.id ? conv.participantTwoId : conv.participantOneId)
-          )
-        );
-    }
-
-    return NextResponse.json({
-      messages: conversationMessages,
-      hasMore: conversationMessages.length === limit,
-    });
-  } catch (error) {
-    console.error('Get messages error:', error);
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: 'Failed to fetch messages' },
-      { status: 500 }
+      { error: 'Invalid input', details: parsed.error.errors },
+      { status: 400 }
     );
   }
+
+  const { conversationId, content, piiWarningShown } = parsed.data;
+  const proxiedUrl = buildConversationRequestUrl(request, conversationId);
+
+  const proxiedRequest = new NextRequest(proxiedUrl, {
+    method: 'POST',
+    headers: request.headers,
+    body: JSON.stringify({ content, piiWarningShown }),
+  });
+
+  const canonicalResponse = await postConversationMessage(proxiedRequest, {
+    params: Promise.resolve({ conversationId }),
+  });
+
+  const payload = await canonicalResponse.json();
+  if (!canonicalResponse.ok) {
+    return NextResponse.json(payload, { status: canonicalResponse.status });
+  }
+
+  return NextResponse.json(
+    {
+      ...payload,
+      success: true,
+    },
+    { status: canonicalResponse.status }
+  );
 }
