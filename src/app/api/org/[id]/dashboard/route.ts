@@ -26,7 +26,7 @@ import {
   conversations,
   profiles,
 } from '@/db/schema';
-import { eq, and, sql, gte, desc, count } from 'drizzle-orm';
+import { eq, and, sql, gte, desc, count, isNull } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
@@ -104,70 +104,64 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     try {
       // Fetch all dashboard metrics concurrently (PRD Part 7)
-      [
-        assignmentsData,
-        teamData,
-        goalsData,
-        matchesData,
-        interestData,
-        conversationsData,
-      ] = await Promise.all([
-        db
-          .select({
-            status: assignments.status,
-            count: sql<number>`count(*)::int`,
-          })
-          .from(assignments)
-          .where(eq(assignments.orgId, org.id))
-          .groupBy(assignments.status),
+      [assignmentsData, teamData, goalsData, matchesData, interestData, conversationsData] =
+        await Promise.all([
+          db
+            .select({
+              status: assignments.status,
+              count: sql<number>`count(*)::int`,
+            })
+            .from(assignments)
+            .where(eq(assignments.orgId, org.id))
+            .groupBy(assignments.status),
 
-        db
-          .select({
-            role: organizationMembers.role,
-            count: sql<number>`count(*)::int`,
-          })
-          .from(organizationMembers)
-          .where(
-            and(eq(organizationMembers.orgId, org.id), eq(organizationMembers.status, 'active'))
-          )
-          .groupBy(organizationMembers.role),
+          db
+            .select({
+              role: organizationMembers.role,
+              count: sql<number>`count(*)::int`,
+            })
+            .from(organizationMembers)
+            .where(
+              and(eq(organizationMembers.orgId, org.id), eq(organizationMembers.status, 'active'))
+            )
+            .groupBy(organizationMembers.role),
 
-        db
-          .select({
-            status: organizationGoals.status,
-            count: sql<number>`count(*)::int`,
-          })
-          .from(organizationGoals)
-          .where(eq(organizationGoals.orgId, org.id))
-          .groupBy(organizationGoals.status),
+          db
+            .select({
+              status: organizationGoals.status,
+              count: sql<number>`count(*)::int`,
+            })
+            .from(organizationGoals)
+            .where(eq(organizationGoals.orgId, org.id))
+            .groupBy(organizationGoals.status),
 
-        db
-          .select({
-            assignmentCount: sql<number>`count(distinct ${assignments.id})::int`,
-            matchCount: sql<number>`count(${matches.id})::int`,
-            avgScore: sql<number>`round(avg(${matches.score}::numeric), 2)`,
-            highQualityMatches: sql<number>`count(${matches.id}) filter (where ${matches.score}::numeric >= 70)::int`,
-          })
-          .from(assignments)
-          .leftJoin(matches, eq(matches.assignmentId, assignments.id))
-          .where(and(eq(assignments.orgId, org.id), eq(assignments.status, 'active'))),
+          db
+            .select({
+              assignmentCount: sql<number>`count(distinct ${assignments.id})::int`,
+              matchCount: sql<number>`count(${matches.id})::int`,
+              avgScore: sql<number>`round(avg(${matches.score}::numeric), 2)`,
+              highQualityMatches: sql<number>`count(${matches.id}) filter (where ${matches.score}::numeric >= 70)::int`,
+            })
+            .from(assignments)
+            .leftJoin(matches, eq(matches.assignmentId, assignments.id))
+            .where(and(eq(assignments.orgId, org.id), eq(assignments.status, 'active'))),
 
-        db
-          .select({
-            count: sql<number>`count(*)::int`,
-          })
-          .from(matchInterest)
-          .innerJoin(assignments, eq(matchInterest.assignmentId, assignments.id))
-          .where(eq(assignments.orgId, org.id)),
+          db
+            .select({
+              count: sql<number>`count(*)::int`,
+            })
+            .from(matchInterest)
+            .innerJoin(assignments, eq(matchInterest.assignmentId, assignments.id))
+            .where(and(eq(assignments.orgId, org.id), isNull(matchInterest.targetProfileId))),
 
-        db
-          .select({
-            count: sql<number>`count(*)::int`,
-          })
-          .from(conversations)
-          .innerJoin(assignments, eq(conversations.assignmentId, assignments.id))
-          .where(eq(assignments.orgId, org.id)),
-      ]);
+          db
+            .select({
+              count: sql<number>`count(*)::int`,
+            })
+            .from(conversations)
+            .innerJoin(assignments, eq(conversations.assignmentId, assignments.id))
+            .where(eq(assignments.orgId, org.id)),
+        ]);
     } catch (err) {
       console.error('dashboard.metrics.fetch_failed', err);
       // Keep defaults to avoid 500

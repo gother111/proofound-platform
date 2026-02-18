@@ -27,6 +27,57 @@ export { getGateDescription, getGateActionLink } from './gates-utils';
 // Import types for local use
 import type { VerificationGate, VerificationStatus, GateCheckResult } from './gates-utils';
 
+function normalizeVerificationGates(raw: unknown): VerificationGate[] {
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+
+  const gates = raw.flatMap((entry) => {
+    if (typeof entry === 'string') {
+      return [
+        {
+          type: entry as VerificationGate['type'],
+          required: true,
+        },
+      ];
+    }
+
+    if (entry && typeof entry === 'object') {
+      const maybeGate = entry as Partial<VerificationGate> & { type?: unknown; required?: unknown };
+      if (typeof maybeGate.type === 'string') {
+        return [
+          {
+            type: maybeGate.type as VerificationGate['type'],
+            required: maybeGate.required !== false,
+            ...(typeof maybeGate.description === 'string'
+              ? { description: maybeGate.description }
+              : {}),
+          },
+        ];
+      }
+    }
+
+    return [];
+  });
+
+  const deduped = new Map<VerificationGate['type'], VerificationGate>();
+  for (const gate of gates) {
+    const existing = deduped.get(gate.type);
+    if (!existing) {
+      deduped.set(gate.type, gate);
+      continue;
+    }
+
+    deduped.set(gate.type, {
+      ...existing,
+      required: existing.required || gate.required,
+      description: existing.description || gate.description,
+    });
+  }
+
+  return [...deduped.values()];
+}
+
 // ============================================================================
 // GATE CHECKING
 // ============================================================================
@@ -57,9 +108,9 @@ export async function checkVerificationGates(
       };
     }
 
-    const gates = (assignmentRows[0] as any).verification_gates as VerificationGate[] | null;
+    const gates = normalizeVerificationGates((assignmentRows[0] as any).verification_gates);
 
-    if (!gates || gates.length === 0) {
+    if (gates.length === 0) {
       // No gates required
       return {
         passed: true,

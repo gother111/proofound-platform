@@ -14,6 +14,8 @@ type AssignmentActivationSnapshot = Pick<
   | 'status'
   | 'role'
   | 'description'
+  | 'businessValue'
+  | 'expectedImpact'
   | 'mustHaveSkills'
   | 'locationMode'
   | 'country'
@@ -41,7 +43,10 @@ const activatedAssignments = new Set<string>();
 export function evaluateAssignmentActivationCriteria(
   assignment: AssignmentActivationSnapshot
 ): AssignmentActivationEvaluation {
-  const hasCompleteDetails = !!assignment.role && !!assignment.description;
+  const hasNarrativeContext = Boolean(
+    assignment.description || assignment.businessValue || assignment.expectedImpact
+  );
+  const hasCompleteDetails = Boolean(assignment.role && hasNarrativeContext);
   const mustHaveSkills = (assignment.mustHaveSkills as any[]) || [];
   const hasMinimumSkills = mustHaveSkills.length >= 5;
   const hasLocationAndComp =

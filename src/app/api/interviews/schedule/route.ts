@@ -14,6 +14,19 @@ import { isActiveOrgMember } from '@/lib/api/auth';
 
 export const dynamic = 'force-dynamic';
 
+function isMissingColumnError(error: { code?: string; message?: string } | null, column: string) {
+  return Boolean(error?.code === 'PGRST204' && error?.message?.includes(`'${column}'`));
+}
+
+function extractMissingColumn(error: { code?: string; message?: string } | null): string | null {
+  if (error?.code !== 'PGRST204' || !error?.message) {
+    return null;
+  }
+
+  const match = error.message.match(/Could not find the '([^']+)' column/);
+  return match?.[1] ?? null;
+}
+
 /**
  * GET /api/interviews/schedule
  * Returns scheduled interviews where the current user is candidate or org member.
@@ -34,75 +47,93 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const matchId = searchParams.get('matchId');
 
-    const filters = [
-      sql`(
-        m.profile_id = ${user.id}
-        OR EXISTS (
-          SELECT 1
-          FROM organization_members om
-          WHERE om.org_id = a.org_id
-            AND om.user_id = ${user.id}
-            AND om.status = 'active'
-        )
-      )`,
+    // Match-level access keeps org admin visibility even when interviews were created by another admin.
+    const accessMatchesResult = await db.execute(sql`
+      SELECT DISTINCT m.id
+      FROM matches m
+      INNER JOIN assignments a ON a.id = m.assignment_id
+      LEFT JOIN organization_members om
+        ON om.org_id = a.org_id
+        AND om.user_id = ${user.id}
+        AND om.status = 'active'
+        AND om.role IN ('owner', 'admin')
+      WHERE m.profile_id = ${user.id}
+         OR om.user_id IS NOT NULL
+    `);
+
+    const accessMatchRows = getRows(accessMatchesResult) as Array<{ id: string }>;
+    const accessibleMatchIds = Array.from(new Set(accessMatchRows.map((row) => row.id)));
+
+    const modernAccessFilters = [
+      `host_user_id.eq.${user.id}`,
+      `participant_user_ids.cs.{${user.id}}`,
     ];
+    if (accessibleMatchIds.length > 0) {
+      modernAccessFilters.push(`match_id.in.(${accessibleMatchIds.join(',')})`);
+    }
+
+    let query = supabase
+      .from('interviews')
+      .select('*')
+      .or(modernAccessFilters.join(','))
+      .order('scheduled_at', { ascending: true });
 
     if (status) {
-      filters.push(sql`i.status = ${status}`);
+      query = query.eq('status', status);
     }
 
     if (matchId) {
-      filters.push(sql`i.match_id = ${matchId}`);
+      query = query.eq('match_id', matchId);
     }
 
-    const whereClause = filters.length > 0 ? sql.join(filters, sql` AND `) : sql`TRUE`;
+    const { data: modernInterviews, error: modernInterviewsError } = await query;
 
-    const result = await db.execute(sql`
-      SELECT
-        i.id,
-        i.match_id,
-        i.scheduled_at,
-        i.duration,
-        i.platform,
-        i.meeting_url,
-        i.status,
-        i.created_at,
-        m.created_at AS match_created_at,
-        p.display_name AS candidate_name,
-        a.role AS assignment_title,
-        o.display_name AS organization_name
-      FROM interviews i
-      INNER JOIN matches m ON m.id = i.match_id
-      INNER JOIN assignments a ON a.id = m.assignment_id
-      INNER JOIN organizations o ON o.id = a.org_id
-      LEFT JOIN profiles p ON p.id = m.profile_id
-      WHERE ${whereClause}
-      ORDER BY i.scheduled_at ASC
-    `);
+    let interviews = modernInterviews;
 
-    const interviews = getRows(result) as Array<{
-      id: string;
-      match_id: string;
-      scheduled_at: string;
-      duration: number;
-      platform: string;
-      meeting_url: string;
-      status: string;
-      match_created_at: string | null;
-      candidate_name: string | null;
-      assignment_title: string | null;
-      organization_name: string | null;
-    }>;
+    if (modernInterviewsError) {
+      const missingModernAccessColumns =
+        isMissingColumnError(modernInterviewsError, 'host_user_id') ||
+        isMissingColumnError(modernInterviewsError, 'participant_user_ids');
 
-    const transformedInterviews = interviews.map((interview) => ({
+      if (!missingModernAccessColumns) {
+        throw modernInterviewsError;
+      }
+
+      if (accessibleMatchIds.length === 0) {
+        interviews = [];
+      } else {
+        let legacyQuery = supabase
+          .from('interviews')
+          .select('*')
+          .in('match_id', accessibleMatchIds)
+          .order('scheduled_at', { ascending: true });
+
+        if (status) {
+          legacyQuery = legacyQuery.eq('status', status);
+        }
+
+        if (matchId) {
+          legacyQuery = legacyQuery.eq('match_id', matchId);
+        }
+
+        const { data: legacyInterviews, error: legacyInterviewsError } = await legacyQuery;
+        if (legacyInterviewsError) {
+          throw legacyInterviewsError;
+        }
+
+        interviews = legacyInterviews;
+      }
+    }
+
+    const transformedInterviews = (interviews ?? []).map((interview: any) => ({
       id: interview.id,
       matchId: interview.match_id,
       scheduledAt: interview.scheduled_at,
-      duration: interview.duration,
+      duration: interview.duration_minutes ?? interview.duration ?? 30,
       platform: interview.platform,
-      meetingUrl: interview.meeting_url || 'pending',
+      meetingUrl: interview.meeting_link ?? interview.meeting_url ?? 'pending',
       status: interview.status,
-      matchAgreedAt: interview.match_created_at,
+      matchAgreedAt: interview.match_agreed_at ?? null,
       candidateName: interview.candidate_name || 'Candidate',
       assignmentTitle: interview.assignment_title || 'Assignment',
       organizationName: interview.organization_name || 'Organization',
@@ -317,23 +348,87 @@ export async function POST(request: NextRequest) {
     // 5. Create interview record.
     const persistedPlatform = data.platform;
 
-    const { data: interview, error: insertError } = await supabase
-      .from('interviews')
-      .insert({
-        match_id: data.matchId,
-        scheduled_at: data.scheduledAt,
-        duration: 30,
-        platform: persistedPlatform,
-        meeting_url: meetingLink,
-        meeting_id: meetingId,
-        timezone: data.timezone,
-        status: 'scheduled',
-      })
-      .select()
-      .single();
+    const participantUserIds = Array.from(
+      new Set<string>([match.profile_id, user.id, ...data.participantUserIds])
+    );
 
-    if (insertError) {
-      throw insertError;
+    const baseInterviewInsert = {
+      match_id: data.matchId,
+      scheduled_at: data.scheduledAt,
+      platform: persistedPlatform,
+      meeting_id: meetingId,
+      timezone: data.timezone,
+      status: 'scheduled',
+      host_user_id: user.id,
+      participant_user_ids: participantUserIds,
+    };
+
+    let interview: any = null;
+
+    const insertPayload: Record<string, unknown> = {
+      ...baseInterviewInsert,
+      duration_minutes: 30,
+      meeting_link: meetingLink,
+    };
+
+    let lastInsertError: any = null;
+
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      const insertResult = await supabase
+        .from('interviews')
+        .insert(insertPayload)
+        .select()
+        .single();
+
+      if (!insertResult.error) {
+        interview = insertResult.data;
+        break;
+      }
+
+      lastInsertError = insertResult.error;
+
+      const missingColumn = extractMissingColumn(insertResult.error);
+      if (!missingColumn) {
+        const isLegacyPlatformEnumError =
+          insertResult.error?.code === '22P02' &&
+          typeof insertResult.error?.message === 'string' &&
+          insertResult.error.message.toLowerCase().includes('platform');
+
+        if (isLegacyPlatformEnumError && insertPayload.platform === 'manual') {
+          insertPayload.platform = 'zoom';
+          continue;
+        }
+
+        throw insertResult.error;
+      }
+
+      switch (missingColumn) {
+        case 'duration_minutes':
+          insertPayload.duration = insertPayload.duration_minutes ?? 30;
+          delete insertPayload.duration_minutes;
+          continue;
+        case 'duration':
+          delete insertPayload.duration;
+          continue;
+        case 'meeting_link':
+          insertPayload.meeting_url = insertPayload.meeting_link ?? meetingLink;
+          delete insertPayload.meeting_link;
+          continue;
+        case 'meeting_url':
+          delete insertPayload.meeting_url;
+          continue;
+        case 'timezone':
+        case 'host_user_id':
+        case 'participant_user_ids':
+          delete insertPayload[missingColumn];
+          continue;
+        default:
+          throw insertResult.error;
+      }
+    }
+
+    if (!interview) {
+      throw lastInsertError ?? new Error('Failed to insert interview after compatibility retries');
     }
 
     try {

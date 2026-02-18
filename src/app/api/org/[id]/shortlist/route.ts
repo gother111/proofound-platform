@@ -17,7 +17,7 @@ import {
   organizationMembers,
   profiles,
 } from '@/db/schema';
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, isNull, sql } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,7 +29,9 @@ async function getOrgWithAccess(orgIdOrSlug: string, userId: string) {
       displayName: organizations.displayName,
     })
     .from(organizations)
-    .where(sql`${organizations.id}::text = ${orgIdOrSlug} OR ${organizations.slug} = ${orgIdOrSlug}`)
+    .where(
+      sql`${organizations.id}::text = ${orgIdOrSlug} OR ${organizations.slug} = ${orgIdOrSlug}`
+    )
     .limit(1);
 
   if (orgs.length === 0) {
@@ -93,7 +95,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         )
       )
       .leftJoin(profiles, eq(matchInterest.actorProfileId, profiles.id))
-      .where(eq(assignments.orgId, org.id))
+      .where(and(eq(assignments.orgId, org.id), isNull(matchInterest.targetProfileId)))
       .orderBy(desc(matchInterest.createdAt))
       .limit(100);
 
@@ -103,4 +105,3 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: 'Failed to fetch shortlist' }, { status: 500 });
   }
 }
-

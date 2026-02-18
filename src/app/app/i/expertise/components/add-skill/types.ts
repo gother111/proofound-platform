@@ -56,5 +56,6 @@ export type AddSkillDrawerProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   domains: L1Domain[];
+  taxonomyReady?: boolean;
   onSkillAdded: (skill?: any) => void;
 };

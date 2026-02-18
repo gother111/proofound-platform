@@ -110,4 +110,12 @@ test.describe('Smartphone UI regression', () => {
 
     expect(paddingBottom).toBeGreaterThanOrEqual(80);
   });
+
+  test('mobile profile shells expose Settings in bottom navigation', async ({ page }) => {
+    for (const route of ['/app/i/profile', '/app/o/test-org/profile']) {
+      await gotoStable(page, route);
+      const mobileNav = page.getByRole('navigation', { name: 'Mobile primary navigation' });
+      await expect(mobileNav.getByRole('link', { name: 'Settings' })).toBeVisible();
+    }
+  });
 });

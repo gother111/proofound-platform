@@ -6,6 +6,7 @@ const PLAYWRIGHT_BASE_URL = process.env.BASE_URL || 'http://localhost:39123';
 // Runs against real runtime env and forbids mock Supabase mode.
 export default defineConfig({
   testDir: './tests/a11y',
+  testMatch: /.*\.strict\.spec\.ts/,
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
