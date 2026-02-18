@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { PrivacyOverview } from './PrivacyOverview';
 import { VerificationStatus } from './VerificationStatus';
 import { LinkedInConnect } from './LinkedInConnect';
-import { VideoIntegrationsManager } from './VideoIntegrationsManager';
 import { EmailManager } from './EmailManager';
 import { PasswordChangeForm } from './PasswordChangeForm';
 import { resetTour } from '@/actions/tour';
@@ -15,6 +14,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { RotateCcw, Loader2 } from 'lucide-react';
 import { CustomizableDashboard } from '../dashboard/CustomizableDashboard';
+import Link from 'next/link';
 
 interface SettingsContentProps {
   userId: string;
@@ -243,16 +243,17 @@ export function SettingsContent({ userId }: SettingsContentProps) {
                 Video Conferencing
               </CardTitle>
               <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-                Connect your Zoom or Google account for automatic interview link creation
+                Connect your calendar for automated interview scheduling
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
-                Connected providers are used to generate meeting links automatically when interviews
-                are scheduled. If you do not connect a provider, you can still schedule with a
-                manual link.
+            <CardContent className="space-y-4">
+              <p className="text-proofound-charcoal/70 dark:text-muted-foreground">
+                Google Meet and Zoom are managed in the dedicated integrations page. Use it to
+                connect, disconnect, and verify your current provider status.
               </p>
-              <VideoIntegrationsManager />
+              <Button asChild variant="outline" className="w-full sm:w-auto">
+                <Link href="/app/i/settings/integrations">Manage Zoom & Google integrations</Link>
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>

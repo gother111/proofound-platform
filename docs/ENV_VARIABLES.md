@@ -7,7 +7,7 @@ Complete guide to all environment variables used in Proofound, including which f
 > Current production domain: **`https://proofound.io`**
 >
 > Update `NEXT_PUBLIC_SITE_URL` in Vercel environment variables to match your actual domain.
-> Keep `NEXT_PUBLIC_SITE_URL` and `NEXT_PUBLIC_APP_URL` aligned per environment.
+> `proofound.io` is legacy/parked and should not be used for app URLs.
 
 ## Quick Reference
 
@@ -35,10 +35,9 @@ GOOGLE_CLIENT_SECRET=your_google_oauth_client_secret
 GOOGLE_REDIRECT_URI=https://yourdomain.com/api/integrations/google/callback
 LINKEDIN_CLIENT_ID=your_linkedin_client_id
 LINKEDIN_CLIENT_SECRET=your_linkedin_client_secret
-# Optional override; default is <current-origin>/api/auth/linkedin/callback
-LINKEDIN_REDIRECT_URI=https://yourdomain.com/api/auth/linkedin/callback
+LINKEDIN_REDIRECT_URI=https://proofound.io/api/auth/linkedin/callback
 E2E_PROVIDER_USER_ID=deterministic_user_uuid
-E2E_PROVIDER_USER_EMAIL=provider-e2e@test.proofound.io
+E2E_PROVIDER_USER_EMAIL=provider-e2e@test.proofound.com
 E2E_PROVIDER_USER_PASSWORD=your_deterministic_test_password
 STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true
 STRICT_PROVIDER_E2E_REQUIRE_BOTH=true
@@ -53,9 +52,6 @@ MATCHING_FEATURE_ENABLED=true
 NEXT_PUBLIC_WIREFRAME_MODE=false
 RATE_LIMIT_WINDOW_SECONDS=60
 RATE_LIMIT_MAX=30
-DEBUG_INGEST_ENABLED=false
-DEBUG_INGEST_URL=
-NEXT_PUBLIC_DEBUG_INGEST_URL=
 ```
 
 ---
@@ -219,7 +215,7 @@ NEXT_PUBLIC_SITE_URL=https://proofound.io
 **Important**:
 
 - ✅ Canonical domain: `https://proofound.io`
-- ❌ Legacy/parked domain: `https://old-proofound.example`
+- ❌ Legacy/parked domain: `https://proofound.io`
 - ✅ No trailing slash: `https://proofound.io`
 - ❌ No trailing slash: `https://proofound.io/`
 - ✅ Include protocol (http/https)
@@ -346,8 +342,8 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 - `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` — Required for Google Meet integration and Google social login through Supabase.
 - `GOOGLE_REDIRECT_URI` — Must match the app integration callback (recommended: `https://yourdomain.com/api/integrations/google/callback`).
 - `LINKEDIN_CLIENT_ID` and `LINKEDIN_CLIENT_SECRET` — Required for LinkedIn settings integration callback and LinkedIn social login through Supabase.
-- `LINKEDIN_REDIRECT_URI` — Optional override for LinkedIn settings callback URI. If unset, app uses `<request-origin>/api/auth/linkedin/callback` to support multi-domain environments.
-- `NEXT_PUBLIC_SITE_URL` — Canonical app base URL used for OAuth callback construction (`NEXT_PUBLIC_URL` is legacy fallback only).
+- `LINKEDIN_REDIRECT_URI` — Exact LinkedIn app callback URI used by `/api/auth/linkedin` and `/api/auth/linkedin/callback` exchange. Recommended value: `https://proofound.io/api/auth/linkedin/callback` (no trailing slash).
+- `NEXT_PUBLIC_SITE_URL` — Canonical app base URL used as fallback callback construction (`NEXT_PUBLIC_URL`, then `SITE_URL`, then request origin are legacy fallbacks).
 
 **Provider callback split (important)**:
 
@@ -356,12 +352,6 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 - LinkedIn integration callback (app route): `https://yourdomain.com/api/auth/linkedin/callback`
 - LinkedIn social auth callback (Supabase): `https://<supabase-project>.supabase.co/auth/v1/callback`
 - Zoom integration callback (app route): `https://yourdomain.com/api/integrations/zoom/callback`
-
-**LinkedIn callback resolution contract**:
-
-- If `LINKEDIN_REDIRECT_URI` is absolute, app uses it as-is.
-- If `LINKEDIN_REDIRECT_URI` is relative, app resolves it against the current request origin.
-- If `LINKEDIN_REDIRECT_URI` is not set, app uses `<current-origin>/api/auth/linkedin/callback`.
 
 **Used By**:
 
@@ -387,7 +377,8 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 4. Configure LinkedIn app callback URIs:
    - `https://yourdomain.com/api/auth/linkedin/callback`
    - `https://<supabase-project>.supabase.co/auth/v1/callback`
-5. Set `NEXT_PUBLIC_SITE_URL` to your canonical domain (for example `https://proofound.io`).
+5. Set `LINKEDIN_REDIRECT_URI` to your canonical callback URL (for example `https://proofound.io/api/auth/linkedin/callback`) and ensure the exact same value is registered in LinkedIn Developer settings.
+6. Set `NEXT_PUBLIC_SITE_URL` to your canonical domain (for example `https://proofound.io`).
 
 ---
 

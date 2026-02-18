@@ -23,11 +23,7 @@ Add these to your `.env.local` file:
 # LinkedIn OAuth (REQUIRED)
 LINKEDIN_CLIENT_ID=your_linkedin_client_id
 LINKEDIN_CLIENT_SECRET=your_linkedin_client_secret
-
-# Optional override: force a specific callback URI
-# If omitted, callback defaults to the current request domain:
-# <current-origin>/api/auth/linkedin/callback
-LINKEDIN_REDIRECT_URI=
+LINKEDIN_REDIRECT_URI=https://proofound.io/api/auth/linkedin/callback
 ```
 
 ### Getting LinkedIn OAuth Credentials
@@ -43,12 +39,12 @@ LINKEDIN_REDIRECT_URI=
 5. Add these redirect URLs:
    - Local: `http://localhost:3000/api/auth/linkedin/callback`
    - Production: `https://proofound.io/api/auth/linkedin/callback`
-   - Demo/Staging (if used): `https://<your-demo-domain>/api/auth/linkedin/callback`
 6. Under **"OAuth 2.0 scopes"**, request:
    - `openid` (required)
    - `profile` (required)
    - `email` (required)
 7. Copy **Client ID** and **Client Secret** to your `.env.local`
+8. Set `LINKEDIN_REDIRECT_URI` in your environment to the exact callback configured in LinkedIn (recommended: `https://proofound.io/api/auth/linkedin/callback` without a trailing slash)
 
 ## Optional Environment Variables
 
@@ -106,8 +102,6 @@ ngrok http 3000
 3. Update your `.env.local`:
    ```bash
    NEXT_PUBLIC_SITE_URL=https://abc123.ngrok.io
-   # Optional only if you want to pin one callback URI
-   # LINKEDIN_REDIRECT_URI=https://abc123.ngrok.io/api/auth/linkedin/callback
    ```
 4. Restart your dev server
 
@@ -195,15 +189,16 @@ The automated system analyzes:
 
 ### "LinkedIn not connected" error
 
-**Solution**: Verify `LINKEDIN_CLIENT_ID` and `LINKEDIN_CLIENT_SECRET` are set in `.env.local`
+**Solution**:
+
+- Verify `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`, and `LINKEDIN_REDIRECT_URI` are set.
+- Verify `LINKEDIN_REDIRECT_URI` exactly matches LinkedIn Developer callback (including host, path, and trailing slash behavior).
 
 ### OAuth redirect fails
 
 **Solution**:
 
 - Check redirect URL matches LinkedIn app settings exactly
-- If `LINKEDIN_REDIRECT_URI` is set, it must exactly match one registered LinkedIn callback URL
-- If `LINKEDIN_REDIRECT_URI` is not set, ensure the active app domain callback URL is registered in LinkedIn
 - For local dev, use ngrok HTTPS URL
 - Verify `NEXT_PUBLIC_SITE_URL` is set correctly
 

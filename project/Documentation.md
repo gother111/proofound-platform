@@ -20,40 +20,32 @@ This folder is the durable “project memory” surface for Proofound. It is mea
 - Do not copy secrets from local env files or setup docs into tracked markdown.
 - At the end of every session, append a new entry to `agent/scratchpad.md` (append-only).
 
-## 2026-02-13: Integrations Discoverability + Canonical Provider Connect Routing
+## 2026-02-18: Vercel Build OOM Mitigation (PR #187)
 
 What changed:
 
-- Updated Settings integrations tab to remove misleading "automatically available" copy and added a direct CTA link to the dedicated integrations manager page.
-  - `src/components/settings/SettingsContent.tsx`
-- Updated interview provider connect flow to use explicit canonical OAuth connect endpoints:
-  - Zoom: `/api/integrations/zoom/connect`
-  - Google: `/api/integrations/google/connect`
-  - Added popup-blocked user feedback.
-  - `src/components/interviews/VideoProviderSelector.tsx`
-- Added focused UI regression tests:
-  - `tests/ui/settings-integrations-discoverability.test.tsx`
-  - `tests/ui/video-provider-selector-connect-route.test.tsx`
+- Updated `next.config.js` to detect Vercel builds via `VERCEL`/`VERCEL_ENV`.
+- On Vercel builds only:
+  - `eslint.ignoreDuringBuilds = true`
+  - `typescript.ignoreBuildErrors = true`
 
 Why:
 
-- Users opening `/app/i/settings?tab=integrations` could miss Zoom/Google connect controls because the actionable UI lives on `/app/i/settings/integrations`.
-- Interview connect flow used an indirect route expression and needed explicit canonical routing alignment with secure OAuth connect/callback paths.
+- Vercel preview builds for PR #187 were killed by OOM during the post-compile `next build` phase (`Linting and checking validity of types`), even though CI already enforces lint and typecheck before merge.
 
 How to verify:
 
-- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`
-- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`
-- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- tests/ui/linkedin-verification.test.tsx tests/ui/settings-integrations-discoverability.test.tsx tests/ui/video-provider-selector-connect-route.test.tsx`
-- Read-only Supabase audit rerun (Node 20) confirms no bulk/preseed integration rows were created:
-  - `auth_users=2692`
-  - `user_video_integrations_rows=0`
-  - `sofia.martinez@proofound-demo.com` has `video_integrations=[]`
+- `npm run lint`
+- `npm run typecheck`
+- `VERCEL=1 VERCEL_ENV=preview npm run build`
+  - Expected output includes:
+    - `Skipping validation of types`
+    - `Skipping linting`
 
 Open risks/TODO:
 
-- Manual browser smoke as Sofia was not executed in this session because interactive login credentials were not available in-session.
-- OAuth connect can still fail if provider console redirect URIs do not match runtime callback URIs.
+- Vercel build now relies on CI as the canonical lint/type gate. If branch protection/check requirements are relaxed in the future, type/lint regressions could reach deploy.
+- Keep required checks `ci` and `a11y` enforced on `master`.
 
 ## 2026-02-13: CI Perf Budget Baseline Refresh (PR #178 merge unblock)
 
@@ -1716,83 +1708,134 @@ Open risks/TODO:
 
 - Final merge still depends on CI checks finishing green on the post-conflict head commit.
 
----
-
-## 2026-02-18: Inline settings integrations, scheduler manual fallback, and calendar actions
+## 2026-02-13: Mobile overflow containment and settings discoverability hardening
 
 What changed:
 
-- Replaced the Settings tab CTA-only integrations copy with inline Zoom and Google controls:
-  - Added `src/components/settings/VideoIntegrationsManager.tsx` as the shared connect/disconnect/status UI.
-  - Wired `src/components/settings/SettingsContent.tsx` to render video integrations directly in `?tab=integrations` next to LinkedIn.
-- Kept compatibility for old dedicated path:
-  - Updated `src/app/app/i/settings/integrations/page.tsx` to redirect to `/app/i/settings?tab=integrations` while preserving `success|error|message` params.
-  - Kept `src/app/app/i/settings/integrations/IntegrationsClient.tsx` as a thin wrapper over the shared manager.
-- Updated OAuth callback fallback behavior:
-  - `src/lib/integrations/oauth-helpers.ts` now defaults callback fallback redirects to `/app/i/settings?tab=integrations`.
-  - Fixed query-string merge in helper so existing `tab=integrations` is preserved when appending `success|error|message`.
-- Updated primary scheduling modal to support low-friction non-integration flow:
-  - `src/components/interviews/ScheduleInterviewModal.tsx` now supports `platform: 'zoom' | 'google_meet' | 'manual'`.
-  - Fixed payload from `startTime` to `scheduledAt` for `/api/interviews/schedule`.
-  - Added manual URL input/validation and `manualMeetingLink` payload when manual mode is selected.
-  - Added provider-status prefetch and defaulting behavior (manual when no provider connected).
-- Added calendar actions in both interviews pages:
-  - `src/app/app/i/interviews/page.tsx`
-  - `src/app/app/o/[slug]/interviews/page.tsx`
-  - Added shared helper `src/lib/interviews/calendar.ts` for deterministic Google Calendar URL and `.ics` generation.
-- Added/updated tests:
-  - Added `tests/ui/settings-integrations-client.test.tsx`.
-  - Updated `tests/ui/settings-integrations-discoverability.test.tsx` for inline controls.
-  - Added `tests/ui/schedule-interview-modal.test.tsx` (manual + google_meet payload checks).
-  - Added `src/lib/interviews/__tests__/calendar.test.ts`.
-  - Updated `src/lib/integrations/__tests__/oauth-helpers.test.ts` for new redirect behavior.
+- Added mobile document-level horizontal overflow containment in `src/app/globals.css` (`max-width: 767px`) for `html` and `body`.
+- Updated individual and organization shell main containers to vertical-only scrolling and explicit horizontal clipping:
+  - `src/app/app/i/layout.tsx`
+  - `src/app/app/o/[slug]/layout.tsx`
+- Refined mobile bottom navigation sizing to fit narrow widths while keeping five tabs and preserving Settings visibility:
+  - `src/components/app/LeftNav.tsx`
+- Expanded smartphone regression coverage:
+  - Added profile routes to horizontal-overflow assertions.
+  - Added iPhone SE checks to enforce no horizontal overflow and confirm Settings visibility on both profile shells.
+  - File: `e2e/mobile-smartphone.spec.ts`
 
 Why:
 
-- Users could not manage Zoom/Google directly in settings integrations, causing discoverability and trust issues.
-- Scheduling had avoidable friction when users did not connect providers.
-- Interview list pages lacked explicit cross-calendar actions despite existing meeting links.
+- Mobile profile and app pages could still allow sideways movement when child content exceeded viewport width.
+- Bottom navigation tab minimum widths could force width pressure on very small devices.
+- Existing mobile tests did not enforce overflow behavior on profile routes or narrow viewport devices.
 
 How to verify:
 
-- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint` (PASS; one pre-existing warning in `postcss.config.js`)
-- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck` (PASS)
-- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- tests/ui/settings-integrations-discoverability.test.tsx tests/ui/video-provider-selector-connect-route.test.tsx tests/ui/settings-integrations-client.test.tsx` (PASS)
-- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- tests/ui/schedule-interview-modal.test.tsx src/lib/interviews/__tests__/calendar.test.ts src/lib/integrations/__tests__/oauth-helpers.test.ts` (PASS)
-- Read-only Supabase data check (`.env.local` target project):
-  - `auth.users`: 2822
-  - `user_video_integrations`: 0 rows
-  - `sofia.martinez@proofound-demo.com`: found, with zero video integrations
+- `npm run lint`
+- `npm run typecheck`
+- `npm run test:e2e:mobile`
+- Manual smoke:
+  - `/app/i/profile` does not move sideways and shows Settings in mobile nav.
+  - `/app/o/test-org/profile` does not move sideways and shows Settings in mobile nav.
+  - `/p/invalidtoken` does not allow page-level sideways movement on mobile viewport.
 
 Open risks/TODO:
 
-- Zoom Marketplace branding/activation (app name/icon/support/privacy/terms) must still be configured in Zoom UI; this cannot be applied from repo code.
-- If deployed env still uses legacy `ZOOM_REDIRECT_URI` callback path, compatibility works via redirect, but canonical provider redirect should be standardized to `/api/integrations/zoom/callback`.
-- Existing pre-commit lint warning in `postcss.config.js` remains unchanged.
+- Global mobile overflow clipping can hide latent layout bugs that should still be fixed at component level.
+- Some long nav labels now rely on truncation at very narrow widths and should be reviewed if labels are renamed.
 
----
+## Verification addendum (2026-02-13)
 
-## 2026-02-18: Vercel build fix for Next.js 15 page props typing
+Final verification rerun after the mobile E2E isolation patch:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint` passed (1 existing warning in `postcss.config.js` about anonymous default export).
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build` passed.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck` passed.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:mobile` passed.
+
+Notes:
+
+- During E2E execution, server logs still show expected environment-level warnings/errors related to missing `DATABASE_URL` and mock DB behavior in this local setup, but the mobile test suite completed successfully.
+
+## 2026-02-13: Mobile notification dropdown viewport containment hardening
 
 What changed:
 
-- Fixed `searchParams` typing in `src/app/app/i/settings/integrations/page.tsx` to match Next.js 15 `PageProps` expectations:
-  - from `Record<string, string | string[] | undefined>`
-  - to `Promise<Record<string, string | string[] | undefined>>`
-- Updated implementation to await `searchParams` before reading values.
+- Updated mobile notification dropdown layout in `src/components/notifications/NotificationDropdown.tsx`:
+  - Added `data-testid="notifications-dropdown"` for stable E2E targeting.
+  - Replaced fixed `w-96` mobile behavior with viewport-anchored mobile positioning:
+    - Mobile: `fixed inset-x-2 top-16` with max-height guard.
+    - Desktop: preserved anchored dropdown behavior via `sm:absolute sm:right-0 sm:top-12 sm:w-96`.
+  - Improved small-screen header control fit:
+    - Mark-all-read text is hidden on small screens while preserving an explicit aria-label.
+    - Added explicit aria-labels for settings and close icon buttons.
+- Expanded mobile regression tests in `e2e/mobile-smartphone.spec.ts`:
+  - Added assertion that opened notification dropdown remains within viewport for app shells on iPhone 12.
+  - Added narrow viewport assertion (iPhone SE) for the same behavior.
 
 Why:
 
-- Vercel build failed during type validation with:
-  - `Type 'IntegrationsPageProps' does not satisfy the constraint 'PageProps'`
-  - `searchParams` expected `Promise<any> | undefined`.
-- The route behavior was correct, but the prop type signature was incompatible with this project’s Next.js 15 typing model.
+- Mobile audit found the dropdown could overflow left on narrow screens due to fixed width and trigger-relative anchoring.
+- Goal was to ensure all navigation/overlay UI remains aligned and fully usable on mobile without horizontal drift.
 
 How to verify:
 
-- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck` (PASS)
-- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:mobile`
+
+Verification results:
+
+- `npm run lint`: pass (1 existing warning in `postcss.config.js`)
+- `npm run typecheck`: pass
+- `npm run test:e2e:mobile`: pass (`8 passed`)
 
 Open risks/TODO:
 
-- Build still prints existing non-blocking warnings (Tailwind ambiguous class warning and metadataBase warning), unchanged by this fix.
+- Environment-level mock DB warnings during E2E remain expected in this local setup and are outside this UI change scope.
+- Notification routes are currently individual-shell paths in the dropdown actions; cross-persona routing alignment can be reviewed separately if needed.
+
+## 2026-02-13: Mobile notifications non-disturbing UX hardening
+
+What changed:
+
+- Updated `src/components/notifications/NotificationBell.tsx` to pass explicit mobile and shell context into notification rendering:
+  - Detects mobile viewport (`max-width: 767px`) via `matchMedia`.
+  - Detects shell type from pathname (`individual`, `organization`, `unknown`) and captures org slug for org routes.
+- Updated `src/components/notifications/NotificationDropdown.tsx` for mobile-safe behavior:
+  - Added props: `isMobile`, `shellType`, `orgSlug`.
+  - Added mobile auto-dismiss timer (4500ms) with interaction-based reset (`pointerdown`, `touchstart`, `wheel`).
+  - Added viewport-safe mobile positioning that reserves bottom nav space:
+    - mobile: fixed top panel with explicit bottom offset (`calc(5.5rem + env(safe-area-inset-bottom))`).
+    - desktop: existing right-anchored dropdown behavior preserved.
+  - Hid settings icon action on mobile to reduce clutter.
+  - Made routes shell-aware:
+    - settings action: org -> `/app/o/{slug}/settings`, individual -> `/app/i/settings/notifications`.
+    - view-all action: org -> `/app/o/{slug}/messages` fallback, individual -> `/app/i/notifications`.
+- Expanded `e2e/mobile-smartphone.spec.ts` coverage:
+  - Added assertion that notifications dropdown stays above bottom mobile nav.
+  - Added mobile idle auto-dismiss test.
+  - Added interaction-resets-dismiss timer test.
+  - Kept existing viewport-fit assertions for iPhone 12 and iPhone SE.
+
+Why:
+
+- Mobile notifications were still disruptive in small viewports and could interfere with primary navigation UX.
+- Goal was to keep notifications lightweight, intuitive, and non-blocking while preserving desktop behavior.
+
+How to verify:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:e2e:mobile`
+
+Verification results:
+
+- `npm run lint`: pass (1 existing warning in `postcss.config.js`)
+- `npm run typecheck`: pass
+- `npm run test:e2e:mobile`: pass (`10 passed`)
+
+Open risks/TODO:
+
+- 4500ms mobile auto-dismiss may feel aggressive for slower readers and can be tuned based on product feedback.
+- Org "View all notifications" currently routes to org messages as an intentional fallback until a dedicated org notifications page exists.
