@@ -57,14 +57,17 @@ describe('/api/monitoring/perf-status', () => {
     expect(fetchSpy).toHaveBeenCalledWith('https://example.com/api/health', { cache: 'no-store' });
   });
 
-  it('returns 500 when probe fails', async () => {
+  it('returns degraded payload when analytics and probe are unavailable', async () => {
     mockSelectRows([]);
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('error', { status: 500 }));
 
     const response = await GET(new Request('https://example.com/api/monitoring/perf-status'));
     const body = await response.json();
 
-    expect(response.status).toBe(500);
-    expect(body.error).toBe('Failed to compute performance status');
+    expect(response.status).toBe(200);
+    expect(body.ok).toBe(false);
+    expect(body.source).toBe('unavailable');
+    expect(body.status).toBe('critical');
+    expect(body.message).toContain('Fallback /api/health probe failed');
   });
 });
