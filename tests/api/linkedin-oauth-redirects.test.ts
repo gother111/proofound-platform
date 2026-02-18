@@ -127,7 +127,7 @@ describe('LinkedIn OAuth redirects', () => {
     );
   });
 
-  it('GET /api/auth/linkedin falls back to SITE_URL when public site env vars are missing', async () => {
+  it('GET /api/auth/linkedin falls back to request origin when public site env vars are missing', async () => {
     process.env.LINKEDIN_CLIENT_ID = 'linkedin-client-id';
     delete process.env.LINKEDIN_REDIRECT_URI;
     delete process.env.NEXT_PUBLIC_SITE_URL;
@@ -148,7 +148,7 @@ describe('LinkedIn OAuth redirects', () => {
     expect(location).toBeTruthy();
     const linkedinUrl = new URL(location!);
     expect(linkedinUrl.searchParams.get('redirect_uri')).toBe(
-      'https://proofound.io/api/auth/linkedin/callback'
+      'http://localhost/api/auth/linkedin/callback'
     );
   });
 });
