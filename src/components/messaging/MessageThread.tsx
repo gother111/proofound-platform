@@ -148,7 +148,7 @@ export function MessageThread({
 
   return (
     <DataErrorBoundary onRetry={() => window.location.reload()}>
-      <div className="flex flex-col h-full bg-white">
+      <div className="flex flex-col h-full min-h-0 w-full min-w-0 bg-white">
         {/* Header */}
         <div className="p-4 border-b bg-white sticky top-0 z-10">
           <div className="flex items-center gap-3">
@@ -209,7 +209,10 @@ export function MessageThread({
                 )}
 
                 <div
-                  className={cn('max-w-[70%] space-y-1', isOwnMessage && 'flex flex-col items-end')}
+                  className={cn(
+                    'max-w-[82%] sm:max-w-[75%] lg:max-w-[70%] space-y-1',
+                    isOwnMessage && 'flex flex-col items-end'
+                  )}
                 >
                   <div
                     className={cn(
