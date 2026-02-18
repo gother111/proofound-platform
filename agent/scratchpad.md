@@ -1553,3 +1553,82 @@ Open TODOs / follow-ups:
 
 - Decide whether to move `tests/e2e/prd-flows-organization.spec.ts` under `e2e/` or add a second Playwright config for `tests/e2e`.
 - Re-run targeted organization settings route regression once discovery path is aligned.
+
+---
+
+## 2026-02-18 17:00 CET
+
+Task summary:
+
+- Added a compact scratchpad entry policy for future sessions.
+- Kept the log append-only and did not rewrite historical entries.
+
+What worked:
+
+- Added strict per-section size limits to keep entries short and scannable.
+- Added a copy/paste template so future sessions follow the same compact structure.
+
+What failed / wrong assumptions:
+
+- None.
+
+User corrections:
+
+- User approved compacting the scratchpad format and asked to apply it.
+
+Assumptions taken without asking:
+
+- Compaction should apply to future entries only.
+- Existing verbose entries should remain unchanged for history integrity.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add periodic summary entries every 10 sessions if the log grows too quickly.
+- Keep command outcomes to one short line per command.
+
+Commands run + outcomes:
+
+- `ls -la`, `rg --files`, `sed`, `tail`: PASS (reviewed repo governance docs and current scratchpad state).
+- `date '+%Y-%m-%d %H:%M %Z'`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run docs:freshness`: PASS with warnings (3 pre-existing docs freshness warnings; warning mode only).
+
+Open TODOs / follow-ups:
+
+- Use the compact template below for every new session entry.
+
+Compact template (future entries):
+
+```md
+## YYYY-MM-DD HH:MM TZ
+
+Task summary:
+- 1 to 3 lines max.
+
+What worked:
+- Up to 3 bullets.
+
+What failed / wrong assumptions:
+- Up to 2 bullets.
+
+User corrections:
+- Up to 2 bullets, or `None`.
+
+Assumptions taken without asking:
+- Up to 3 bullets, or `None`.
+
+What the user corrected afterward:
+- Up to 2 bullets, or `None`.
+
+Improvements next time:
+- Up to 3 bullets.
+
+Commands run + outcomes:
+- `command`: PASS/FAIL/SKIPPED (short reason).
+
+Open TODOs / follow-ups:
+- Up to 3 bullets, or `None`.
+```

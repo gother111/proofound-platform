@@ -1410,3 +1410,29 @@ Open risks/TODO:
 - `tests/e2e/prd-flows-organization.spec.ts` is outside Playwright `testDir`, so this regression is not currently in the active e2e run path.
 - Any hidden consumer expecting snake_case visibility response keys may require migration to the camelCase contract.
 - Settings subpages are owner/admin-only; if role resolution changes upstream, access behavior must be revalidated.
+
+---
+
+## 2026-02-18: Scratchpad Compaction Template
+
+What changed:
+
+- Added a compact scratchpad template and policy at the end of `agent/scratchpad.md`.
+- Kept the scratchpad append-only by adding guidance as a new session entry instead of rewriting older entries.
+- Added explicit per-section limits to keep new entries concise and consistent.
+
+Why:
+
+- The scratchpad had become long and hard to scan quickly.
+- A compact format preserves history while reducing future log growth.
+
+How to verify:
+
+- Confirm `agent/scratchpad.md` ends with a new section dated `2026-02-18 17:00 CET`.
+- Confirm the entry contains a `Compact template (future entries)` code block.
+- Run `git diff -- agent/scratchpad.md project/Documentation.md` and verify only documentation updates are present.
+
+Open risks/TODO:
+
+- Existing historical entries remain verbose by design and were not compacted retroactively.
+- If compaction needs to be stricter, reduce bullet caps again after a few sessions of usage.
