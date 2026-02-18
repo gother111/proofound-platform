@@ -35,37 +35,46 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: 'Assignment not found' }, { status: 404 });
     }
 
-    const outcomes = await db.query.assignmentOutcomes.findMany({
+    const outcomesRows = await db.query.assignmentOutcomes.findMany({
       where: eq(assignmentOutcomes.assignmentId, assignmentId),
+      orderBy: (t, { asc }) => [asc(t.createdAt)],
     });
 
-    const normalizedOutcomes = outcomes.map((outcome) => {
-      const firstMetric = Array.isArray(outcome.metrics)
-        ? (outcome.metrics[0] as { name?: string; target?: string } | undefined)
-        : undefined;
-
-      const description = outcome.description || '';
-      const descriptionMatch = description.match(/^Target:\s*(.*?)\s+in\s+(.*)$/i);
-
+    const normalizedOutcomes = outcomesRows.map((outcome) => {
+      const firstMetric = Array.isArray(outcome.metrics) ? outcome.metrics[0] : null;
+      const timeframeMatch = outcome.description?.match(/in ([^.]*)$/i);
       return {
+        id: outcome.id,
         metric: firstMetric?.name || outcome.title,
-        target: firstMetric?.target || descriptionMatch?.[1] || '',
-        timeframe: descriptionMatch?.[2] || '',
+        target: firstMetric?.target || '',
+        timeframe: timeframeMatch?.[1] || '',
       };
     });
 
     const weights = (assignment.weights as Record<string, number> | null) || {};
     const responseAssignment = {
       id: assignment.id,
+      orgId: assignment.orgId,
       role: assignment.role,
-      businessValue: assignment.businessValue ?? assignment.description ?? '',
+      businessValue: assignment.businessValue ?? '',
       expectedImpact: assignment.expectedImpact ?? '',
       outcomes: normalizedOutcomes,
       missionWeight: weights.mission ?? 33,
       expertiseWeight: weights.expertise ?? 34,
+      workModeWeight: weights.workMode ?? 33,
       compensationMin: assignment.compMin,
       compensationMax: assignment.compMax,
+      compMin: assignment.compMin,
+      compMax: assignment.compMax,
       currency: assignment.currency,
+      hoursMin: assignment.hoursMin,
+      hoursMax: assignment.hoursMax,
+      locationMode: assignment.locationMode,
+      city: assignment.city,
+      country: assignment.country,
+      startEarliest: assignment.startEarliest,
+      startLatest: assignment.startLatest,
+      weights,
       location: assignment.locationMode || assignment.city || assignment.country || '',
       requiredSkills: (assignment.mustHaveSkills as any) || [],
       niceToHaveSkills: (assignment.niceToHaveSkills as any) || [],
@@ -87,12 +96,12 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 const AssignmentUpdateSchema = z.object({
   role: z.string().min(1).optional(),
   description: z.string().optional(),
+  businessValue: z.string().optional(),
+  expectedImpact: z.string().optional(),
   status: z.enum(['draft', 'active', 'paused', 'closed']).optional(),
   creationStatus: z
     .enum(['draft', 'pipeline_in_progress', 'pending_review', 'ready_to_publish', 'published'])
     .optional(),
-  businessValue: z.string().optional(),
-  expectedImpact: z.string().optional(),
   valuesRequired: z.array(z.string()).optional(),
   causeTags: z.array(z.string()).optional(),
   mustHaveSkills: z
