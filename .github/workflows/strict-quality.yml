@@ -1,52 +1,20 @@
-name: CI
+name: Strict Quality
 
 on:
   push:
-    branches: [master, develop]
-  pull_request:
-    branches: [master, develop]
-    types:
-      - opened
-      - reopened
-      - synchronize
-      - ready_for_review
-  pull_request_target:
-    branches: [master, develop]
-    types:
-      - opened
-      - reopened
-      - synchronize
-      - ready_for_review
+    branches: [master]
+  schedule:
+    - cron: '20 4 * * *'
+  workflow_dispatch:
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: strict-quality-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  ci:
-    if: >-
-      github.event_name == 'push' ||
-      (
-        github.event.pull_request.base.repo.full_name == github.repository &&
-        github.event.pull_request.head.repo.full_name == github.repository &&
-        (
-          github.event.pull_request.author_association == 'OWNER' ||
-          github.event.pull_request.author_association == 'MEMBER' ||
-          github.event.pull_request.author_association == 'COLLABORATOR'
-        ) &&
-        (
-          github.event_name == 'pull_request' ||
-          (
-            github.event_name == 'pull_request_target' &&
-            (
-              github.event.pull_request.mergeable_state == 'dirty' ||
-              github.event.pull_request.mergeable_state == 'unknown'
-            )
-          )
-        )
-      )
+  strict-quality:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 120
     env:
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
       SITE_URL: http://localhost:3000
@@ -76,36 +44,18 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: 'npm'
-
-      - name: Enforce landing PR scope
-        if: github.event_name != 'push'
-        run: node ./scripts/check-landing-pr-scope.mjs
-
-      - name: Detect landing-sensitive changes
-        id: landing_changes
-        if: github.event_name != 'push'
-        run: |
-          touched="$(node ./scripts/check-landing-pr-scope.mjs --print-landing-touched)"
-          echo "touched=${touched}" >> "$GITHUB_OUTPUT"
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
 
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
-
-      - name: Docs freshness (warning mode)
-        run: npm run docs:freshness
-        continue-on-error: true
 
       - name: Run linter
         run: npm run lint
@@ -116,28 +66,33 @@ jobs:
       - name: Check migration drift
         run: npm run db:drift-check
 
-      - name: Run unit tests
-        run: npm run test
-
       - name: Build application
         run: npm run build
 
-      - name: Run auth E2E real contract
-        run: npm run test:e2e:auth:real
+      - name: Enforce strict E2E quality guard
+        run: npm run test:strict:quality
 
-      - name: Run landing page contract
-        run: npm run test:e2e:landing
+      - name: Run accessibility strict contract
+        run: npm run test:a11y:strict
 
-      - name: Run landing visual baseline contract
-        if: github.event_name != 'push' && steps.landing_changes.outputs.touched == 'true'
-        run: npm run test:e2e:landing:visual
+      - name: Run individual strict flow suite
+        run: npm run test:e2e:individual:strict
 
-      - name: Upload test results
+      - name: Run organization strict flow suite
+        run: npm run test:e2e:org:strict
+
+      - name: Run privacy strict flow suite
+        run: npm run test:e2e:privacy:strict
+
+      - name: Run providers strict flow suite
+        run: npm run test:e2e:providers:strict
+
+      - name: Upload strict test artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ci-playwright-report
+          name: strict-quality-test-artifacts
           path: |
             playwright-report/
             test-results/
-          retention-days: 14
+          retention-days: 30

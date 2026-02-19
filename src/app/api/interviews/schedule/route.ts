@@ -11,6 +11,7 @@ import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { getRows } from '@/lib/db/rows';
 import { isActiveOrgMember } from '@/lib/api/auth';
+import { InterviewPlatformSchema, normalizeInterviewPlatform } from '@/lib/contracts/domain';
 
 export const dynamic = 'force-dynamic';
 
@@ -152,7 +153,7 @@ export async function GET(request: NextRequest) {
 const ScheduleInterviewSchema = z.object({
   matchId: z.string().uuid(),
   scheduledAt: z.string().datetime(),
-  platform: z.enum(['zoom', 'google_meet', 'manual']),
+  platform: InterviewPlatformSchema,
   participantUserIds: z.array(z.string().uuid()).optional().default([]),
   timezone: z.string().optional().default('UTC'),
   manualMeetingLink: z.string().url().optional(),
@@ -172,6 +173,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const data = ScheduleInterviewSchema.parse(body);
+    const normalizedPlatform = normalizeInterviewPlatform(data.platform);
 
     // 1. Verify match exists and org access is valid.
     const matchResult = await db.execute(sql`
@@ -245,7 +247,7 @@ export async function POST(request: NextRequest) {
     let meetingLink = '';
     let meetingId = '';
 
-    if (data.platform === 'manual') {
+    if (normalizedPlatform === 'manual') {
       if (!data.manualMeetingLink) {
         return NextResponse.json(
           { error: 'Meeting link is required when using manual platform' },
@@ -255,7 +257,7 @@ export async function POST(request: NextRequest) {
       meetingLink = data.manualMeetingLink;
       meetingId = `manual-${Date.now()}`;
     } else {
-      const provider = data.platform === 'google_meet' ? 'google_meet' : 'zoom';
+      const provider = normalizedPlatform === 'google_meet' ? 'google_meet' : 'zoom';
 
       const { data: videoIntegration, error: integrationError } = await supabase
         .from('user_video_integrations')
@@ -275,7 +277,7 @@ export async function POST(request: NextRequest) {
 
       let accessToken = videoIntegration.access_token;
       if (new Date(videoIntegration.token_expiry) < new Date()) {
-        if (data.platform === 'zoom') {
+        if (normalizedPlatform === 'zoom') {
           const { refreshZoomToken } = await import('@/lib/integrations/zoom');
           const newTokens = await refreshZoomToken(videoIntegration.refresh_token);
           accessToken = newTokens.access_token;
@@ -304,7 +306,7 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      if (data.platform === 'zoom') {
+      if (normalizedPlatform === 'zoom') {
         const { createZoomMeeting } = await import('@/lib/integrations/zoom');
         const meeting = await createZoomMeeting(accessToken, {
           topic: `Interview - ${match.role || 'Proofound Match'}`,
@@ -346,7 +348,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 5. Create interview record.
-    const persistedPlatform = data.platform;
+    const persistedPlatform = normalizedPlatform;
 
     const participantUserIds = Array.from(
       new Set<string>([match.profile_id, user.id, ...data.participantUserIds])
