@@ -138,6 +138,37 @@ Open risks/TODO:
 - Conflicts in application files still require manual resolution and review.
 - Union merge may keep duplicate lines in documentation logs; keep both files append-only and review merged output.
 
+## 2026-02-19: Required PR Check Reporting for Conflicted Branches
+
+What changed:
+
+- Updated required workflows to trigger on `pull_request_target` instead of `pull_request`:
+  - `.github/workflows/ci.yml`
+  - `.github/workflows/accessibility.yml`
+- Added safe checkout of PR head SHA for PR-target runs:
+  - `actions/checkout@v4` with `ref: ${{ github.event.pull_request.head.sha }}`
+- Added same-repo/trusted-association guards on `ci`, `e2e`, and `a11y` jobs for `pull_request_target` events.
+- Updated CI PR-only guards to `pull_request_target` for landing scope checks and visual baseline conditionals.
+
+Why:
+
+- GitHub does not start `pull_request` workflows when a PR is in merge-conflict state, which leaves required checks (`ci`, `a11y`) in "Expected" status.
+- `pull_request_target` still runs for conflicted PRs, so required check contexts are reported and no longer remain yellow-only due to missing status emission.
+
+How to verify:
+
+- Open a PR with a merge conflict and confirm Actions runs are created for:
+  - `CI` (`ci` job check)
+  - `Accessibility Audit` (`a11y` job check)
+- Confirm required contexts on the PR are reported (pass/fail/skipped) instead of only "Expected".
+- YAML sanity:
+  - `ruby -e "require 'yaml'; YAML.load_file('.github/workflows/ci.yml'); YAML.load_file('.github/workflows/accessibility.yml')"`
+
+Open risks/TODO:
+
+- Conflicted PRs still require manual conflict resolution before merge.
+- Fork PRs are intentionally guarded; if fork-based contribution is required with these checks, add a reviewed fork-safe strategy.
+
 ## 2026-02-11: Landing Regression Guardrail Policy
 
 What changed:
