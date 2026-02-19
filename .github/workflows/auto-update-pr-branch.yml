@@ -1,0 +1,91 @@
+name: Auto Update PR Branches
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-single-pr:
+    if: github.event_name == 'pull_request_target'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update this PR branch with latest base
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -u
+
+          if [ "${{ github.event.pull_request.base.repo.full_name }}" != "${{ github.repository }}" ] || [ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" ]; then
+            echo "Skipping cross-repo or fork PR."
+            exit 0
+          fi
+
+          if [ "${{ github.event.pull_request.draft }}" = "true" ]; then
+            echo "Skipping draft PR."
+            exit 0
+          fi
+
+          if gh api --method PUT -H "Accept: application/vnd.github+json" "/repos/${REPO}/pulls/${PR_NUMBER}/update-branch" >/tmp/update_response.json 2>/tmp/update_error.log; then
+            echo "Branch update requested for PR #${PR_NUMBER}."
+            cat /tmp/update_response.json
+            exit 0
+          fi
+
+          error_text="$(cat /tmp/update_error.log)"
+          echo "Branch update skipped for PR #${PR_NUMBER}: ${error_text}"
+          # Non-actionable responses should not fail the workflow.
+          if echo "${error_text}" | grep -Eqi "already up to date|not behind|merge conflict|422|Validation Failed"; then
+            exit 0
+          fi
+
+          exit 1
+
+  update-open-prs-after-master-push:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update all eligible open PR branches
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -u
+
+          gh pr list --repo "${REPO}" --base master --state open --json number,isDraft,isCrossRepository,mergeStateStatus --jq '.[] | select((.isDraft | not) and (.isCrossRepository | not)) | [.number, .mergeStateStatus] | @tsv' > /tmp/open_prs.tsv
+
+          if [ ! -s /tmp/open_prs.tsv ]; then
+            echo "No eligible open PRs to update."
+            exit 0
+          fi
+
+          while IFS=$'\t' read -r pr_number merge_state; do
+            if [ "${merge_state}" = "DIRTY" ]; then
+              echo "Skipping PR #${pr_number}: merge_state_status is DIRTY (manual conflict resolution required)."
+              continue
+            fi
+
+            if gh api --method PUT -H "Accept: application/vnd.github+json" "/repos/${REPO}/pulls/${pr_number}/update-branch" >/tmp/update_response.json 2>/tmp/update_error.log; then
+              echo "Branch update requested for PR #${pr_number}."
+              continue
+            fi
+
+            error_text="$(cat /tmp/update_error.log)"
+            echo "Branch update skipped for PR #${pr_number}: ${error_text}"
+            # Non-actionable responses should not fail the workflow.
+            if echo "${error_text}" | grep -Eqi "already up to date|not behind|merge conflict|422|Validation Failed"; then
+              continue
+            fi
+          done < /tmp/open_prs.tsv

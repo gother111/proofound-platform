@@ -20,110 +20,6 @@ This folder is the durable “project memory” surface for Proofound. It is mea
 - Do not copy secrets from local env files or setup docs into tracked markdown.
 - At the end of every session, append a new entry to `agent/scratchpad.md` (append-only).
 
-## 2026-02-18: Hardening Pass (Org Access, Legacy Messaging Deprecation, Route Contracts)
-
-What changed:
-
-- Restricted org assignment-invitation listing to authenticated active `owner|admin` membership with structured allow/deny logging.
-  - `src/app/api/organizations/[orgId]/assignments/route.ts`
-- Corrected assignment `[id]` access handling:
-  - `GET` uses read-level access checks.
-  - `PUT` and `DELETE` enforce owner/admin mutation checks with expected `403` and `404` semantics.
-  - `src/app/api/assignments/[id]/route.ts`
-- Added 30-day deprecation headers and usage telemetry for legacy messaging routes while preserving adapter compatibility.
-  - `src/app/api/messages/route.ts`
-  - `src/app/api/messages/[conversationId]/route.ts`
-- Migrated strict E2E messaging calls to canonical conversation-scoped endpoints.
-  - `e2e/strict/individual.strict.spec.ts`
-  - `e2e/strict/organization.strict.spec.ts`
-- Added missing API contract tests for:
-  - Org invitation access controls.
-  - Assignment mutation role gates for `PUT` and `DELETE`.
-  - Match visible-fields fail-closed behavior.
-  - Legacy `/api/messages*` adapter compatibility + deprecation headers.
-  - `tests/api/organization-assignments-route.test.ts`
-  - `tests/api/assignments-id-route.test.ts`
-  - `tests/api/match-visible-fields-route.test.ts`
-  - `tests/api/messages-legacy-route.test.ts`
-- Clarified PRD E2E naming/comments to explicitly mark unauthenticated redirect-contract intent.
-  - `tests/e2e/prd-flows-individual.spec.ts`
-  - `tests/e2e/prd-flows-organization.spec.ts`
-- Removed lint warning in PostCSS config by naming the default-exported object.
-  - `postcss.config.js`
-
-Why:
-
-- Close remaining P0/P1 gaps from PRD-aligned hardening around authorization, privacy contract regression protection, and legacy endpoint deprecation observability.
-- Keep legacy messaging backward-compatible during migration while making successor path explicit.
-
-How to verify:
-
-- `npm run lint`
-- `npm run typecheck`
-- `npm run test -- tests/api/organization-assignments-route.test.ts tests/api/assignments-id-route.test.ts tests/api/match-visible-fields-route.test.ts tests/api/messages-legacy-route.test.ts tests/api/assignments.test.ts tests/api/assignments-publish-route.test.ts tests/api/organizations-route.test.ts`
-
-Open risks/TODO:
-
-- Legacy `/api/messages*` sunset date currently computes from server start time; when strict calendar cutoff is needed, switch to a fixed date constant.
-- Stricter role gates may block existing non-admin org workflows until client UX clearly signals required role.
-- Deprecation telemetry is log-based; add dashboard/alert queries before removing legacy routes.
-
-## 2026-02-18: PRD Flow Hardening (Auth, Privacy, Messaging, Metrics)
-
-What changed:
-
-- Enforced owner/admin role gates for assignment mutations across create/update/delete/publish paths.
-  - `src/lib/assignments/access.ts`
-  - `src/app/api/assignments/route.ts`
-  - `src/app/api/assignments/[id]/route.ts`
-  - `src/app/api/assignments/[id]/publish/route.ts`
-- Fixed match visible-fields privacy lookup to use `profile_field_visibility` schema columns and fail closed on lookup failure for sensitive fields.
-  - `src/app/api/match/visible-fields/[matchId]/route.ts`
-- Consolidated messaging behavior by routing legacy `/api/messages*` endpoints to canonical `/api/conversations/[conversationId]/messages`.
-  - `src/app/api/messages/route.ts`
-  - `src/app/api/messages/[conversationId]/route.ts`
-  - `src/app/app/i/messages/page.tsx`
-  - `src/app/app/o/[slug]/messages/page.tsx`
-  - `src/lib/csrf.ts`
-- Corrected first-match analytics emission to use pre-upsert state and idempotency key checks.
-  - `src/app/api/core/matching/profile/route.ts`
-- Replaced fairness-gap placeholder metrics logic with real cohort aggregation and confidence grading.
-  - `src/lib/analytics/metrics.ts`
-- Replaced static admin fairness report bytes with generated markdown output and added explicit preview JSON mode.
-  - `src/app/api/admin/fairness-report/route.ts`
-- Updated SLA cron to flag overdue interview decisions instead of auto-marking `no_show`.
-  - `src/app/api/cron/sla-enforcement/route.ts`
-- Added route-intent wrappers for org alias routes (`assignments`, `candidates`, `team`).
-  - `src/app/app/o/[slug]/assignments/page.tsx`
-  - `src/app/app/o/[slug]/candidates/page.tsx`
-  - `src/app/app/o/[slug]/team/page.tsx`
-- Tightened build gates by removing prebuild bypass and making lint/type build skips opt-in.
-  - `package.json`
-  - `next.config.js`
-- Strengthened tests for assignment role gating and fairness-report payload behavior; tightened PRD E2E unauthenticated contracts.
-  - `tests/api/assignments.test.ts`
-  - `tests/api/assignments-publish-route.test.ts`
-  - `src/app/api/admin/__tests__/fairness-report-route.test.ts`
-  - `tests/e2e/prd-flows-individual.spec.ts`
-  - `tests/e2e/prd-flows-organization.spec.ts`
-
-Why:
-
-- Close P0 gaps in mutation authorization, privacy consistency, and endpoint drift against PRD-aligned flow behavior.
-- Improve reliability of analytics and reporting by removing placeholder/fail-open behavior.
-- Make route-level contracts explicit for both clients and tests.
-
-How to verify:
-
-- `npm run lint`
-- `npm run typecheck`
-- `npm run test -- tests/api/assignments.test.ts tests/api/assignments-publish-route.test.ts src/app/api/admin/__tests__/fairness-report-route.test.ts tests/api/matching-profile-compat-route.test.ts tests/api/match-interest-route.test.ts tests/api/organizations-route.test.ts`
-
-Open risks/TODO:
-
-- `next build` now runs lint/type checks by default again; this can reintroduce Vercel memory pressure unless `NEXT_SKIP_BUILD_VALIDATION=1` is set intentionally.
-- PRD E2E suites were tightened for explicit unauthenticated contracts; authenticated end-to-end contract coverage still depends on strict credentialed suites.
-
 ## 2026-02-18: Vercel Build OOM Mitigation (PR #187)
 
 What changed:
@@ -215,6 +111,91 @@ Open risks/TODO:
 
 - LinkedIn app callback allowlist must include every active domain callback (`https://<domain>/api/auth/linkedin/callback`) used by production/demo/testing environments.
 - If `LINKEDIN_REDIRECT_URI` is set to a different top-level domain than the active app domain, OAuth state cookies can fail to round-trip in callback flow.
+
+## 2026-02-19: PR Conflict Mitigation Automation
+
+What changed:
+
+- Added `.gitattributes` union merge rules for append-only docs:
+  - `agent/scratchpad.md`
+  - `project/Documentation.md`
+- Added `.github/workflows/auto-update-pr-branch.yml` to request automatic PR branch updates via GitHub API:
+  - on `pull_request_target` events for same-repo, non-draft PRs
+  - on `push` to `master` for all eligible open PRs
+
+Why:
+
+- Reduce repeated manual "Update branch" actions.
+- Reduce merge conflicts in recurring append-only documentation files that block required checks from running.
+
+How to verify:
+
+- `gh workflow view "Auto Update PR Branches"`
+- Make a PR intentionally behind `master`, then confirm the workflow run requests `update-branch` and the PR branch advances.
+- `git check-attr merge -- agent/scratchpad.md project/Documentation.md`
+
+Open risks/TODO:
+
+- Conflicts in application files still require manual resolution and review.
+- Union merge may keep duplicate lines in documentation logs; keep both files append-only and review merged output.
+
+## 2026-02-19: Required PR Check Reporting for Conflicted Branches
+
+What changed:
+
+- Updated required workflows to trigger on `pull_request_target` instead of `pull_request`:
+  - `.github/workflows/ci.yml`
+  - `.github/workflows/accessibility.yml`
+- Added safe checkout of PR head SHA for PR-target runs:
+  - `actions/checkout@v4` with `ref: ${{ github.event.pull_request.head.sha }}`
+- Added same-repo/trusted-association guards on `ci`, `e2e`, and `a11y` jobs for `pull_request_target` events.
+- Updated CI PR-only guards to `pull_request_target` for landing scope checks and visual baseline conditionals.
+
+Why:
+
+- GitHub does not start `pull_request` workflows when a PR is in merge-conflict state, which leaves required checks (`ci`, `a11y`) in "Expected" status.
+- `pull_request_target` still runs for conflicted PRs, so required check contexts are reported and no longer remain yellow-only due to missing status emission.
+
+How to verify:
+
+- Open a PR with a merge conflict and confirm Actions runs are created for:
+  - `CI` (`ci` job check)
+  - `Accessibility Audit` (`a11y` job check)
+- Confirm required contexts on the PR are reported (pass/fail/skipped) instead of only "Expected".
+- YAML sanity:
+  - `ruby -e "require 'yaml'; YAML.load_file('.github/workflows/ci.yml'); YAML.load_file('.github/workflows/accessibility.yml')"`
+
+Open risks/TODO:
+
+- Conflicted PRs still require manual conflict resolution before merge.
+- Fork PRs are intentionally guarded; if fork-based contribution is required with these checks, add a reviewed fork-safe strategy.
+
+## 2026-02-19: Transition Bridge for Required Check Rollout
+
+What changed:
+
+- Added `pull_request` triggers back to required workflows during rollout:
+  - `.github/workflows/ci.yml`
+  - `.github/workflows/accessibility.yml`
+- Kept `pull_request_target` support and limited those runs to conflict-prone states:
+  - `mergeable_state == dirty || unknown`
+- Kept PR-target trusted same-repo guardrails and head-SHA checkout behavior.
+
+Why:
+
+- A PR that introduces `pull_request_target`-only required checks cannot validate itself while `master` still has old trigger definitions.
+- Dual-trigger bridge allows current rollout PRs to report required checks immediately, while still covering conflicted PRs via `pull_request_target`.
+
+How to verify:
+
+- `ruby -e "require 'yaml'; YAML.load_file('.github/workflows/ci.yml'); YAML.load_file('.github/workflows/accessibility.yml')"`
+- On a mergeable PR, confirm `ci` and `a11y` are reported from `pull_request` runs.
+- On a conflicted PR, confirm `ci` and `a11y` are still reported via `pull_request_target` runs.
+
+Open risks/TODO:
+
+- Bridge mode may increase workflow volume during transition.
+- After rollout stabilizes, reassess whether `pull_request` should remain or be reduced.
 
 ## 2026-02-11: Landing Regression Guardrail Policy
 
@@ -1944,55 +1925,159 @@ Open risks/TODO:
 - 4500ms mobile auto-dismiss may feel aggressive for slower readers and can be tuned based on product feedback.
 - Org "View all notifications" currently routes to org messages as an intentional fallback until a dedicated org notifications page exists.
 
-## 2026-02-19: EU readiness blocker implementation (items 1-3)
+## 2026-02-18: Assignment creation lifecycle hardening and flow unification
 
 What changed:
 
-- Added shared server-side analytics consent guard:
-  - `src/lib/privacy/analytics-consent.ts`
-- Enforced analytics consent for non-essential telemetry write endpoints:
-  - `src/app/api/analytics/track/route.ts`
-  - `src/app/api/analytics/tour-event/route.ts`
-  - `src/app/api/analytics/dashboard/route.ts`
-  - `src/app/api/analytics/dashboard-load-time/route.ts`
-  - `src/app/api/analytics/web-vitals/route.ts` (POST)
-  - `src/app/api/performance/track/route.ts`
-- Updated stale assignment publish test mock contract to match current route authorization helper:
-  - `tests/api/assignment-publish.test.ts`
-- Added moderation rights API test coverage:
-  - `tests/api/moderation-appeals-route.test.ts`
-  - `tests/api/moderation-statements-of-reasons-route.test.ts`
-  - `tests/api/moderation-transparency-report-route.test.ts`
-- Added telemetry consent gating test coverage:
-  - `tests/api/analytics-track-route.test.ts`
-  - `tests/api/analytics-tour-event-route.test.ts`
-  - `tests/api/analytics-dashboard-route.test.ts`
-  - `tests/api/analytics-dashboard-load-time-route.test.ts`
-  - `tests/api/analytics-web-vitals-route.test.ts`
-  - `tests/api/performance-track-route.test.ts`
+- Unified runtime assignment creation entrypoint to canonical route and removed alternate runtime wiring:
+  - `src/app/app/o/[slug]/matching/page.tsx` now routes all create actions to `/app/o/[slug]/assignments/new`.
+  - `src/app/o/[slug]/assignments/new/page.tsx` now redirects to `/app/o/[slug]/assignments/new`.
+- Reworked canonical assignment builder draft lifecycle:
+  - `src/app/app/o/[slug]/assignments/new/page.tsx`
+  - Replaced invalid interval setup (`useState`) with `useEffect` autosave lifecycle.
+  - Implemented single-draft upsert behavior (`POST` once, `PUT` subsequent saves).
+  - Added URL-based draft resume (`?draftId=...`) and hydration of saved draft data.
+  - Removed invalid submit status (`ready_to_publish`) and finalized Step 5 as `pending_review` draft before review.
+- Hardened assignment API org scoping and contract alignment:
+  - `src/app/api/assignments/route.ts`
+  - `POST /api/assignments` now requires explicit org context (`orgId` or `orgSlug`) and verifies active membership in that org.
+  - `GET /api/assignments` now supports optional `orgId` / `orgSlug` filters with membership validation.
+- Normalized assignment read model for review:
+  - `src/app/api/assignments/[id]/route.ts`
+  - `GET /api/assignments/[id]` now reads outcomes from `assignment_outcomes` and returns normalized review payload fields.
+- Added publish endpoint required by review flow:
+  - `src/app/api/assignments/[id]/publish/route.ts`
+  - Implements publish readiness validation, updates status to `active`, sets `creationStatus=published`, and triggers activation side effects.
+- Updated review UX to reuse same draft id for edits and consume publish errors:
+  - `src/components/assignments/AssignmentReviewClient.tsx`
+- Updated legacy/secondary creators to include explicit org context for API compatibility:
+  - `src/components/matching/AssignmentBuilderV2.tsx`
+  - `src/components/assignments/AssignmentWizard.tsx`
+- Updated docs and tests for canonical flow and new API:
+  - `docs/API_REFERENCE.md`
+  - `tests/api/assignments.test.ts`
+  - `tests/api/assignment-publish.test.ts` (new)
+  - `e2e/workflows.spec.ts`
+  - `e2e/comprehensive_flow.spec.ts`
+  - `e2e/strict/organization.strict.spec.ts`
+  - `e2e/helpers/test-data-setup.ts`
 
 Why:
 
-- EU readiness required server-side enforcement of analytics consent instead of relying only on client-side telemetry mounting.
-- The assignment publish test suite had stale mocks (`verifyAssignmentAccess`) while route logic now uses `verifyAssignmentMutationAccess`.
-- DSA moderation rights endpoints existed but lacked dedicated automated tests for appeal/statements/transparency behavior.
+- Assignment creation had divergent builders and payload contracts causing invalid statuses, potential duplicate drafts, and inconsistent org targeting.
+- Review/publish flow referenced a missing endpoint.
+- Review data used fallback fields inconsistent with persisted outcomes model.
+- Existing assignment e2e checks were permissive and route-inconsistent, reducing regression signal.
 
 How to verify:
 
-- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint` (PASS)
-- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck` (PASS)
-- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test` (PASS)
-- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build` (PASS)
-- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:privacy` (PASS)
-- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:privacy:extended` (PASS)
-- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:a11y` (PASS)
-- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:a11y:strict` (PASS)
-- Runtime gate checks on isolated production server:
-  - `PORT=3110 npm run start`
-  - `BASE_URL=http://localhost:3110 npm run perf:budgets` (PASS)
-  - `BASE_URL=http://localhost:3110 SUS_STUDY_COMPLETE=true npm run go:no-go` (PASS)
+- `npm run test -- tests/api/assignments.test.ts tests/api/assignment-publish.test.ts` (PASS)
+- `npm run typecheck` (PASS)
+- `npm run lint` (PASS with one pre-existing unrelated warning in `postcss.config.js`)
+- `npm run build` (PASS)
 
 Open risks/TODO:
 
-- Some telemetry endpoints now intentionally return `202` with `{ success: true, skipped: 'analytics_consent_missing' }`; downstream dashboards/instrumentation should treat this as expected skip behavior, not failure.
-- Local/strict a11y runs still show pre-existing runtime console noise in authenticated expertise flows (`permission denied for table users`) but did not fail tests.
+- Build logs still include repeated mock-database warnings when `DATABASE_URL` is not set locally; build passes but logs are noisy.
+- Current publish readiness enforces assignment outcomes from `assignment_outcomes` table; legacy records without normalized outcomes will need a backfill/edit pass before publish.
+- Deprecated builder components remain in repo for compatibility but are no longer wired in the primary organization flow.
+
+---
+
+## 2026-02-18: PR #193 rebase onto master and merge-readiness execution
+
+What changed:
+
+- Rebased `codex/assess-prd-flows-and-code` onto latest `origin/master` and force-pushed branch head.
+- Created rollback tag before rebase:
+  - `merge-backup/codex-assess-prd-flows-and-code-2026-02-18`
+- Resolved rebase conflicts to preserve trust/privacy intent in canonicalization files.
+- Added post-rebase compatibility fixes required by current `master` test contracts:
+  - `src/app/api/assignments/route.ts`
+    - Restored explicit organization context contract (`orgId` or `orgSlug`) for POST create flow.
+    - Restored context resolver behavior used by GET/POST route paths.
+  - `src/app/api/matching/profile/route.ts`
+    - Restored legacy compatibility behavior expected by existing tests (compat metadata under `verified.__compat_profile`).
+- Updated PR #193 title/body with rebased scope and verification outcomes:
+  - <https://github.com/gother111/proofound-platform/pull/193>
+
+Why:
+
+- Branch needed to be rebased to current `master` before landing via PR.
+- Rebase surfaced contract mismatches against current `master` tests that required minimal compatibility restoration.
+- Goal was to preserve trust/privacy remediation while keeping existing compatibility guarantees currently enforced in test suite.
+
+How to verify:
+
+- Git state and rebase:
+  - `git rev-list --left-right --count HEAD...origin/master` -> `2 0` after fix commit
+  - `git log --oneline --max-count=5` includes:
+    - `168b79c5` Implement trust privacy remediation
+    - `ac3f7466` fix: restore master compatibility for assignment context and matching profile legacy route
+- Local checks:
+  - `npm run lint` -> PASS (1 pre-existing warning in `postcss.config.js`)
+  - `npm run typecheck` -> PASS
+  - `npm run test` -> PASS
+  - `npm run build` -> PASS
+  - `npm run test:strict:quality` -> PASS
+- Env-gated checks (blocked in this environment):
+  - `npm run test:privacy` -> FAIL (missing Supabase env vars)
+  - `npm run test:privacy:extended` -> FAIL (missing Supabase env vars)
+  - `npm run test:e2e:individual:strict` -> FAIL (missing `NEXT_PUBLIC_SUPABASE_URL`)
+  - `npm run test:e2e:org:strict` -> FAIL (missing `NEXT_PUBLIC_SUPABASE_URL`)
+  - `npm run test:e2e:privacy:strict` -> FAIL (missing `NEXT_PUBLIC_SUPABASE_URL`)
+  - `npm run test:e2e:providers:strict` -> FAIL (missing `NEXT_PUBLIC_SUPABASE_URL` and provider strict env)
+  - `npm run gates:mvp:strict` -> FAIL (missing strict env bundle)
+
+Open risks/TODO:
+
+- Strict privacy/provider gate commands remain blocked until full env bundle is provisioned.
+- `matching/profile` route currently uses legacy compatibility persistence expected by tests; canonical-only behavior for this route remains deferred.
+- PR checks still need to complete in CI before merge.
+
+## 2026-02-19: CI and A11y stability hotfix (lean required CI + production Playwright mode)
+
+What changed:
+
+- Reshaped required PR workflow in `.github/workflows/ci.yml`:
+  - Removed strict a11y, strict E2E suites, perf budgets, and go/no-go from required `ci`.
+  - Kept stable required gates: lint, typecheck, migration drift, unit tests, build, and smoke Playwright contracts (`auth:real`, landing, landing visual when touched).
+  - Added workflow concurrency cancelation and `timeout-minutes`.
+- Kept dedicated accessibility gate in `.github/workflows/accessibility.yml` as the single `a11y` workflow:
+  - Added workflow concurrency cancelation and `timeout-minutes`.
+  - Switched Playwright execution to production server mode via env (`PLAYWRIGHT_SERVER_MODE=prod`).
+- Added `.github/workflows/strict-quality.yml` (non-PR-required quality lane):
+  - Runs on `push` to `master`, nightly schedule, and manual dispatch.
+  - Runs strict quality guard plus strict a11y and strict individual/org/privacy/providers suites.
+  - Includes concurrency cancelation and timeout.
+- Added Playwright server mode support in:
+  - `playwright.config.ts`
+  - `playwright.a11y.config.ts`
+  - `playwright.a11y.strict.config.ts`
+  - New behavior: `PLAYWRIGHT_SERVER_MODE=prod` uses `next start`; default remains `next dev`.
+- Hardened strict org flake path:
+  - `e2e/strict/organization.strict.spec.ts` now polls `GET /api/assignments/:id` after draft `PUT` until updated `businessValue` is persisted before UI resume assertions.
+- Hardened transient request failures in strict fixture helpers:
+  - `e2e/helpers/strict-fixtures.ts` now retries transient CSRF/tokenized request failures (`socket hang up`, `ECONNRESET`, `aborted`) with bounded retries and short backoff.
+
+Why:
+
+- Required `ci` was carrying long, flaky strict gates on `next dev` and produced intermittent network reset failures.
+- Running Playwright on a built app (`next start`) improves determinism and reduces dev-server instability in CI.
+- Keeping strict suites in a dedicated workflow preserves coverage without blocking PR merges on flaky long-tail paths.
+
+How to verify:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint` (PASS, one pre-existing warning in `postcss.config.js`)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- e2e/strict/organization.strict.spec.ts tests/ui/settings-integrations-discoverability.test.tsx` (PASS for Vitest-covered test file)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:strict:quality` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build` (PASS)
+- `ruby -e "require 'yaml'; YAML.load_file('.github/workflows/ci.yml'); YAML.load_file('.github/workflows/accessibility.yml'); YAML.load_file('.github/workflows/strict-quality.yml')"` (PASS)
+
+Open risks/TODO:
+
+- `npm run test -- e2e/strict/organization.strict.spec.ts ...` runs through Vitest and does not execute Playwright strict E2E directly; strict flow runtime validation is expected in `strict-quality` workflow.
+- Branch protection should be confirmed to require only `ci` and `a11y`; `strict-quality` is intentionally non-required for PR merges.
+- If strict suites remain flaky after retry/poll hardening, next step is deeper endpoint-specific retry instrumentation on known unstable calls.

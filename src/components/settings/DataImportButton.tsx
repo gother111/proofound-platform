@@ -67,7 +67,11 @@ export function DataImportButton() {
       const response = await fetch('/api/user/import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          data,
+          mode: 'replace',
+          consentAcknowledged: true,
+        }),
       });
 
       const result = await response.json();
@@ -78,7 +82,8 @@ export function DataImportButton() {
 
       // Show success with details
       const imported = result.imported as ImportResult;
-      const total = imported.profile + imported.skills + imported.experiences + imported.volunteering;
+      const total =
+        imported.profile + imported.skills + imported.experiences + imported.volunteering;
 
       toast.success('Data imported successfully', {
         description: `Restored ${imported.skills} skills, ${imported.experiences} experiences, ${imported.volunteering} volunteering entries`,
@@ -89,7 +94,6 @@ export function DataImportButton() {
       setTimeout(() => {
         window.location.reload();
       }, 1500);
-
     } catch (error) {
       console.error('Import error:', error);
 
@@ -172,17 +176,10 @@ export function DataImportButton() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={handleCancelImport}
-              disabled={isImporting}
-            >
+            <Button variant="outline" onClick={handleCancelImport} disabled={isImporting}>
               Cancel
             </Button>
-            <Button
-              onClick={handleConfirmImport}
-              disabled={isImporting}
-            >
+            <Button onClick={handleConfirmImport} disabled={isImporting}>
               {isImporting ? 'Importing...' : 'Confirm Import'}
             </Button>
           </DialogFooter>

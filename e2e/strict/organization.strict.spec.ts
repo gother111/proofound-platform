@@ -312,6 +312,26 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
     });
     expect(autosaveUpdateResponse.ok()).toBeTruthy();
 
+    await expect
+      .poll(
+        async () => {
+          const assignmentResponse = await page.request.get(`/api/assignments/${draftId}`);
+          if (!assignmentResponse.ok()) {
+            return null;
+          }
+
+          const assignmentPayload = (await assignmentResponse.json()) as {
+            assignment?: { businessValue?: string };
+          };
+          return assignmentPayload.assignment?.businessValue ?? null;
+        },
+        {
+          timeout: 15000,
+          message: 'Draft assignment should persist business value before resume assertions',
+        }
+      )
+      .toBe('Updated strict draft business value');
+
     const listResponse = await page.request.get(
       `/api/assignments?limit=100&orgSlug=${organization.slug}`
     );
