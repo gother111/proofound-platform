@@ -14,7 +14,16 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization');
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    const cronSecret = process.env.CRON_SECRET;
+
+    if (!cronSecret) {
+      log.error('cron.account_deletion_workflow.misconfigured', {
+        message: 'CRON_SECRET is missing. Refusing to run cron job.',
+      });
+      return NextResponse.json({ error: 'Cron misconfigured' }, { status: 500 });
+    }
+
+    if (authHeader !== `Bearer ${cronSecret}`) {
       log.warn('cron.account_deletion_workflow.unauthorized', {
         ip: request.headers.get('x-forwarded-for') || 'unknown',
       });
