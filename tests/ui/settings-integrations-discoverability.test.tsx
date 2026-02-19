@@ -51,6 +51,10 @@ vi.mock('@/components/dashboard/CustomizableDashboard', () => ({
   CustomizableDashboard: () => <div data-testid="customizable-dashboard" />,
 }));
 
+vi.mock('@/components/settings/VideoIntegrationsManager', () => ({
+  VideoIntegrationsManager: () => <div data-testid="video-integrations-manager" />,
+}));
+
 describe('Settings integrations discoverability', () => {
   beforeEach(() => {
     vi.stubGlobal(
@@ -66,17 +70,13 @@ describe('Settings integrations discoverability', () => {
     vi.restoreAllMocks();
   });
 
-  it('shows a direct link to the dedicated Zoom/Google integrations manager', async () => {
+  it('shows inline Zoom/Google integrations controls on the same settings tab', async () => {
     render(<SettingsContent userId="user-1" />);
 
-    const manageLink = await screen.findByRole('link', {
-      name: /manage zoom & google integrations/i,
-    });
-
-    expect(manageLink).toHaveAttribute('href', '/app/i/settings/integrations');
-    expect(
-      screen.getByText(/google meet and zoom are managed in the dedicated integrations page/i)
-    ).toBeInTheDocument();
+    expect(await screen.findByTestId('video-integrations-manager')).toBeInTheDocument();
     expect(screen.getByTestId('linkedin-connect')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: /manage zoom & google integrations/i })
+    ).not.toBeInTheDocument();
   });
 });

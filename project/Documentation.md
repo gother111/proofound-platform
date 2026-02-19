@@ -1949,3 +1949,29 @@ Open risks/TODO:
 - Strict privacy/provider gate commands remain blocked until full env bundle is provisioned.
 - `matching/profile` route currently uses legacy compatibility persistence expected by tests; canonical-only behavior for this route remains deferred.
 - PR checks still need to complete in CI before merge.
+
+---
+
+## 2026-02-19: Hotfix inline Zoom/Google controls in Settings integrations tab
+
+What changed:
+
+- Updated `src/components/settings/SettingsContent.tsx` to render `VideoIntegrationsManager` inline inside `Settings > Integrations` under the `Video Conferencing` card.
+- Removed the old CTA-only flow (`Manage Zoom & Google integrations`) from the integrations tab UI.
+- Updated `tests/ui/settings-integrations-discoverability.test.tsx` to assert inline integrations rendering and to assert the old manage-link is absent.
+
+Why:
+
+- Production settings UX still required an extra click to reach Zoom/Google controls, while expected behavior is direct management on `/app/i/settings?tab=integrations` next to LinkedIn.
+
+How to verify:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint` (PASS, one pre-existing warning in `postcss.config.js`)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- tests/ui/settings-integrations-discoverability.test.tsx tests/ui/settings-integrations-client.test.tsx` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build` (PASS)
+
+Open risks/TODO:
+
+- Existing standalone route compatibility is intentionally preserved by redirect in `src/app/app/i/settings/integrations/page.tsx`.
+- Build warnings for Tailwind ambiguous class and metadataBase are pre-existing and unchanged.

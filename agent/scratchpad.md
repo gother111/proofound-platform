@@ -2327,3 +2327,50 @@ Open TODOs / follow-ups:
 
 - Wait for PR #193 CI checks to finish and merge through branch protection flow.
 - Re-run strict/privacy/provider suites in environment with required secrets.
+
+## 2026-02-19 10:17 PST
+
+Task summary:
+
+- Implemented hotfix to show Zoom and Google integrations directly in `Settings > Integrations` without requiring an extra manage-page click.
+- Updated discoverability test to enforce inline behavior.
+
+What worked:
+
+- `VideoIntegrationsManager` already existed and could be reused directly in `SettingsContent`.
+- Targeted test update cleanly validated regression from old CTA flow to inline manager flow.
+- Full verification sequence (`lint`, `typecheck`, focused tests, `build`) passed.
+
+What failed / wrong assumptions:
+
+- None in this change set.
+
+User corrections:
+
+- User confirmed production still showed CTA-only flow and required direct inline Zoom/Google controls in the same tab as LinkedIn.
+
+Assumptions taken without asking:
+
+- Keep `Video Conferencing` card container and inject inline manager in card content, rather than redesigning full tab layout.
+- Keep legacy `/app/i/settings/integrations` compatibility redirect unchanged.
+
+What the user corrected afterward:
+
+- None after implementation in this session.
+
+Improvements next time:
+
+- Add a second UI test asserting tab-level copy continuity to catch accidental reintroduction of CTA-only wording.
+
+Commands run + outcomes:
+
+- `git checkout -b codex/hotfix-inline-integrations origin/master`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS (1 pre-existing warning in `postcss.config.js`).
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- tests/ui/settings-integrations-discoverability.test.tsx tests/ui/settings-integrations-client.test.tsx`: PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS.
+
+Open TODOs / follow-ups:
+
+- Push hotfix branch and open PR to `master`.
+- Merge and verify production settings tab shows inline Zoom/Google controls.
