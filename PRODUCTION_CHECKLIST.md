@@ -30,6 +30,12 @@ Before deploying, ensure all required environment variables are set in Vercel:
   - ⚠️ **MOST COMMON ISSUE**: Missing this causes all database operations to fail
   - Note: Use port **6543** (pooled), not 5432 (direct)
 
+- [ ] **`DIRECT_URL`**
+  - What: PostgreSQL direct connection string (non-pooled)
+  - Where: Supabase Dashboard → Settings → Database → Connection string (Direct)
+  - Format: Supabase "Direct" connection URI (port **5432**, not pooled)
+  - Note: Used by tooling and migrations; keep `DATABASE_URL` as the pooled runtime connection
+
 - [ ] **`NEXT_PUBLIC_SITE_URL`**
   - What: Your production domain
   - Example: `https://proofound.vercel.app` or `https://your-domain.com`
@@ -38,6 +44,24 @@ Before deploying, ensure all required environment variables are set in Vercel:
 - [ ] **`SITE_URL`**
   - What: Same as NEXT_PUBLIC_SITE_URL (for server-side)
   - Example: Same value as above
+
+### Required Variables (Cron and Providers)
+
+- [ ] **`CRON_SECRET`**
+  - What: Bearer token used to authenticate Vercel Cron requests
+  - Generate: `openssl rand -base64 32`
+  - Used by: `/api/cron/*` routes
+
+- [ ] **Zoom OAuth** (`ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`, `ZOOM_REDIRECT_URI`)
+  - Required for: interview scheduling with Zoom
+  - Redirect URI (prod): `https://proofound.io/api/integrations/zoom/callback`
+
+- [ ] **Google OAuth** (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`)
+  - Required for: interview scheduling with Google Meet
+  - Redirect URI (prod): `https://proofound.io/api/integrations/google/callback`
+
+- [ ] **LinkedIn OAuth** (`LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`)
+  - Required for: LinkedIn verification flow
 
 ### Optional Variables (Email Features)
 
@@ -64,22 +88,22 @@ Before deploying, ensure all required environment variables are set in Vercel:
 
 ## 🗄️ Supabase Configuration
 
-- [ ] **Database tables created**
-  - Run migrations: `npm run db:push`
+- [ ] **Database schema applied**
+  - Safety checkpoint (recommended before production DDL): `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:backup:checkpoint`
+  - Apply canonical migrations: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:migrate`
+  - Note: Do not run `npm run db:push` against production. Use versioned SQL under `src/db/migrations/`.
   - Verify tables exist in Supabase Dashboard → Database → Tables
 
 - [ ] **RLS (Row Level Security) policies applied**
-  - Location: `supabase/migrations/` or `src/db/policies.sql`
-  - Apply manually in Supabase Dashboard → SQL Editor
+  - Location: `src/db/policies.sql` (applied by `npm run db:migrate`)
   - Test: Try accessing data without proper authentication
 
 - [ ] **Database triggers set up**
-  - Location: `src/db/triggers.sql`
-  - Apply manually in Supabase Dashboard → SQL Editor
+  - Location: `src/db/triggers.sql` (applied by `npm run db:migrate`)
 
 - [ ] **Auth settings configured**
   - Go to Supabase Dashboard → Authentication → URL Configuration
-  - Set **Site URL**: Your production URL (e.g., `https://proofound.vercel.app`)
+  - Set **Site URL**: Your production URL (e.g., `https://proofound.io`)
   - Add **Redirect URLs**:
     - `https://your-domain.com/auth/callback`
     - `https://your-domain.com/reset-password/confirm`
@@ -217,8 +241,8 @@ Before deploying, ensure all required environment variables are set in Vercel:
 
 **Solution**:
 
-1. Run migrations: `npm run db:push`
-2. Apply RLS policies manually in Supabase SQL Editor
+1. Apply canonical migrations: `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:migrate`
+2. Verify RLS + triggers are applied (policies and triggers are included in `db:migrate`)
 3. Verify tables exist in Supabase Dashboard
 
 ### Issue: Email features not working

@@ -134,15 +134,17 @@ async function isLegacySupplementalAlreadyPresent(client, migrationVersion) {
 }
 
 async function runMigrations() {
-  if (!process.env.DATABASE_URL) {
-    throw new Error('DATABASE_URL is required to run migrations.');
+  const databaseUrl = process.env.DIRECT_URL || process.env.DATABASE_URL;
+  if (!databaseUrl) {
+    throw new Error('DIRECT_URL or DATABASE_URL is required to run migrations.');
   }
 
   const client = new Client({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: databaseUrl,
   });
 
   try {
+    console.log(`Using ${process.env.DIRECT_URL ? 'DIRECT_URL' : 'DATABASE_URL'} for migrations.`);
     console.log('Connecting to database...');
     await client.connect();
     console.log('Connected.');

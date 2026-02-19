@@ -700,22 +700,15 @@ vercel rollback <deployment-url>
 git revert HEAD
 
 # Push to trigger new deployment
-git push origin main
+git push origin master
 ```
 
 **Database Rollback:**
 
-- Database migrations are reversible via Drizzle
-- If migration caused issue: Run reverse migration
-- If data corrupted: Restore from backup (see section 7.2)
-
-```bash
-# Drizzle rollback (if migration script exists)
-npm run db:rollback
-
-# Manual rollback: Apply reverse SQL
-psql $DATABASE_URL < migrations/reverse/YYYY-MM-DD.sql
-```
+- Database migrations are not automatically reversible.
+- Rolling back a Vercel deployment does not roll back database schema changes.
+- Preferred rollback path: restore from backup (see section 7.2).
+- Alternative: write an explicit reverse SQL migration and apply it (same process as forward migrations).
 
 ---
 
@@ -1291,13 +1284,13 @@ We apologize for the inconvenience.
 
 ### 8.1 Standard Deployment
 
-**Trigger:** Git push to `main` branch  
+**Trigger:** Git push to `master` branch  
 **Platform:** Vercel (automatic)  
 **Typical Duration:** 2-3 minutes
 
 **Process:**
 
-1. Push code to GitHub: `git push origin main`
+1. Push code to GitHub: `git push origin master`
 2. Vercel detects push, starts build
 3. Build runs: `npm install && npm run build`
 4. Tests run (if configured): `npm test`
@@ -1315,36 +1308,36 @@ We apologize for the inconvenience.
 
 ### 8.2 Database Migrations
 
-**Tool:** Drizzle ORM + Drizzle Kit
+**Canonical path:** `src/db/migrations/*.sql`
 
 **Process:**
 
 **1. Create Migration:**
 
 ```bash
-# Generate migration from schema changes
-npm run db:generate
-
-# Creates file: drizzle/migrations/NNNN_migration_name.sql
+# Create a new canonical SQL migration file:
+# src/db/migrations/YYYYMMDDHHMMSS_description.sql
+#
+# Notes:
+# - CI enforces the canonical path and filename format.
+# - If you change src/db/schema.ts, add a corresponding canonical migration.
 ```
 
 **2. Review Migration:**
 
 ```bash
-# Review generated SQL
-cat drizzle/migrations/NNNN_migration_name.sql
-
-# Ensure:
-# - No accidental data deletion
-# - Indexes added where needed
-# - Foreign keys correct
+# Review the SQL carefully:
+# - Avoid destructive changes unless explicitly approved.
+# - Ensure indexes and foreign keys are correct.
+# - Keep privacy guarantees intact (RLS and visibility semantics).
 ```
 
 **3. Test Migration (Staging):**
 
 ```bash
-# Apply to staging database
-DATABASE_URL=$STAGING_DATABASE_URL npm run db:migrate
+# Apply to staging database (if available)
+# Prefer direct DB connection for migrations:
+# DIRECT_URL=$STAGING_DIRECT_URL DATABASE_URL=$STAGING_DATABASE_URL npm run db:migrate
 
 # Test application works with new schema
 # Run smoke tests
@@ -1353,11 +1346,13 @@ DATABASE_URL=$STAGING_DATABASE_URL npm run db:migrate
 **4. Apply to Production:**
 
 ```bash
-# Apply to production database
-npm run db:migrate
-
-# Vercel will run this automatically on deploy
-# Or run manually if needed
+# Vercel does not run DB migrations automatically.
+#
+# Recommended before production DDL:
+# PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:backup:checkpoint
+#
+# Apply canonical migrations to production:
+# PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:migrate
 ```
 
 **5. Verify:**
@@ -1371,9 +1366,8 @@ npm run db:migrate
 **Rollback (if needed):**
 
 ```bash
-# Drizzle doesn't support automatic rollbacks
-# Must write reverse migration manually
-# Or restore from backup (see section 7.2)
+# Schema rollbacks are manual.
+# Restore from backup (preferred) or write an explicit reverse migration and apply it.
 ```
 
 ---
@@ -1414,9 +1408,9 @@ npm run db:migrate
 **1. Create Hotfix Branch:**
 
 ```bash
-# Create branch from main
-git checkout main
-git pull origin main
+# Create branch from master
+git checkout master
+git pull origin master
 git checkout -b hotfix/fix-critical-bug
 ```
 
@@ -1439,15 +1433,12 @@ npm run dev
 **4. Deploy Directly to Production:**
 
 ```bash
-# Push to main (skip PR for hotfixes)
+# Push branch and open an expedited PR
 git add .
 git commit -m "HOTFIX: Fix critical bug [description]"
 git push origin hotfix/fix-critical-bug
 
-# Merge via GitHub (or direct push to main if emergency)
-git checkout main
-git merge hotfix/fix-critical-bug
-git push origin main
+# Merge via GitHub to master once checks are green
 ```
 
 **5. Monitor:**
@@ -1645,7 +1636,7 @@ git push origin main
 
 ```bash
 # Deploy to production
-git push origin main
+git push origin master
 
 # Rollback to previous deployment
 vercel rollback
@@ -1676,20 +1667,20 @@ supabase dashboard
 supabase logs db
 
 # Backup database
-pg_dump $DATABASE_URL > backup.sql
+pg_dump "$DIRECT_URL" > backup.sql
 ```
 
 ### Database
 
 ```bash
 # Connect to production database
-psql $DATABASE_URL
+psql "$DIRECT_URL"
 
 # Run query
-psql $DATABASE_URL -c "SELECT COUNT(*) FROM profiles"
+psql "$DIRECT_URL" -c "SELECT COUNT(*) FROM profiles"
 
 # Export table to CSV
-psql $DATABASE_URL -c "COPY profiles TO STDOUT CSV HEADER" > profiles.csv
+psql "$DIRECT_URL" -c "COPY profiles TO STDOUT CSV HEADER" > profiles.csv
 
 # Restore from backup
 psql $DATABASE_URL < backup.sql

@@ -16,7 +16,7 @@ function readArg(flag) {
   return args[idx + 1] ?? null;
 }
 
-const databaseUrl = process.env.DATABASE_URL;
+const databaseUrl = process.env.DIRECT_URL || process.env.DATABASE_URL;
 const outRoot = readArg('--out') ?? '/tmp/proofound-db-checkpoints';
 
 const criticalTables = [
@@ -105,7 +105,7 @@ async function getTableFingerprint(client, tableName) {
 
 async function main() {
   if (!databaseUrl) {
-    throw new Error('DATABASE_URL is required.');
+    throw new Error('DIRECT_URL or DATABASE_URL is required.');
   }
 
   const checkpointDir = path.join(outRoot, nowStamp());
