@@ -1553,3 +1553,54 @@ Open TODOs / follow-ups:
 
 - Decide whether to move `tests/e2e/prd-flows-organization.spec.ts` under `e2e/` or add a second Playwright config for `tests/e2e`.
 - Re-run targeted organization settings route regression once discovery path is aligned.
+
+---
+
+## 2026-02-19 09:36 CET
+
+Task summary:
+
+- Implemented full Linear changelog backfill into a new tracking issue for MVP history.
+- Added monthly grouped change logs and a maintenance/index note.
+
+What worked:
+
+- Linear MCP access and project/team targeting were stable.
+- Deterministic git extraction with `--since=2025-10-01 --no-merges` produced clean monthly totals.
+- Compact monthly format preserved full commit references while keeping comments readable.
+
+What failed / wrong assumptions:
+
+- Initial long-form monthly comment format was too large and noisy; switched to compact format with full hash references.
+
+User corrections:
+
+- User asked for plain English option explanations before selecting format details.
+- User selected one changelog issue, full backfill scope, month-then-feature grouping, and In Progress state.
+
+Assumptions taken without asking:
+
+- Assignee defaulted to `y.bakurov@icloud.com` (project lead) as defined in plan defaults.
+- Keyword and path-based feature bucketing is acceptable for this first historical import.
+
+What the user corrected afterward:
+
+- None after implementation started.
+
+Improvements next time:
+
+- Add a reusable script under `agent/tools/` to generate monthly changelog comments directly from git for recurring updates.
+- Add a short validation utility that flags ambiguous bucket assignments for manual review.
+
+Commands run + outcomes:
+
+- `git rev-list --count --since='2025-10-01' --no-merges HEAD`: PASS (`608`)
+- `python3` extraction script for changelog payload generation: PASS
+- `mcp__linear__create_issue` for `PRO-5`: PASS
+- `mcp__linear__create_comment` (monthly + index comments): PASS
+- `mcp__linear__get_issue` and `mcp__linear__list_comments`: PASS
+- `date '+%Y-%m-%d %H:%M %Z'`: PASS (`2026-02-19 09:36 CET`)
+
+Open TODOs / follow-ups:
+
+- For future updates, append a new month comment to `PRO-5` instead of rewriting existing month sections.

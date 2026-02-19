@@ -1410,3 +1410,45 @@ Open risks/TODO:
 - `tests/e2e/prd-flows-organization.spec.ts` is outside Playwright `testDir`, so this regression is not currently in the active e2e run path.
 - Any hidden consumer expecting snake_case visibility response keys may require migration to the camelCase contract.
 - Settings subpages are owner/admin-only; if role resolution changes upstream, access behavior must be revalidated.
+
+---
+
+## 2026-02-19: Linear changelog backfill for MVP Launch
+
+What changed:
+
+- Created Linear issue `PRO-5` in team `Proofound`, project `MVP Launch`:
+  - Title: `MVP Changelog: Full Backfill + Ongoing Updates`
+  - State: `In Progress`
+  - Label: `Improvement`
+- Added issue description with scope, monthly totals, and maintenance rule.
+- Added four monthly changelog comments grouped by feature with commit references:
+  - October 2025 (186 commits)
+  - November 2025 (138 commits)
+  - December 2025 (125 commits)
+  - February 2026 (159 commits)
+- Added a final index and maintenance comment with verification notes and update instructions.
+
+Why:
+
+- Team needed one canonical Linear artifact that records completed work and change history in plain English while preserving full commit traceability.
+- Grouping by month and feature makes historical review and future updates manageable without rewriting older entries.
+
+How to verify:
+
+- Open Linear issue `PRO-5` and confirm:
+  - Team is `Proofound`
+  - Project is `MVP Launch`
+  - Status is `In Progress`
+  - Label includes `Improvement`
+- Confirm five comments exist on the issue:
+  - Four monthly backfill comments
+  - One index and maintenance comment
+- Verify git coverage integrity:
+  - `git rev-list --count --since='2025-10-01' --no-merges HEAD` returns `608`
+  - Month totals sum to `608` (`186 + 138 + 125 + 159`)
+
+Open risks/TODO:
+
+- Feature bucketing is deterministic and keyword/path-based; edge commits can be categorized differently than human intuition.
+- Future months must be appended consistently in the same format to keep this issue useful as a long-term changelog.
