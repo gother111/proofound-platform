@@ -17,7 +17,6 @@ import {
   index,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
-import { ASSIGNMENT_STATUS_VALUES, INTERVIEW_PLATFORM_VALUES } from '@/lib/contracts/domain';
 
 // Custom types for PostgreSQL-specific data types
 const bit = customType<{ data: string; notNull?: boolean; default?: boolean }>({
@@ -609,7 +608,7 @@ export const assignments = pgTable('assignments', {
   role: text('role').notNull(),
   description: text('description'),
   status: text('status', {
-    enum: [...ASSIGNMENT_STATUS_VALUES],
+    enum: ['draft', 'active', 'paused', 'closed'],
   })
     .default('draft')
     .notNull(),
@@ -1674,6 +1673,7 @@ export const notifications = pgTable('notifications', {
       'assignment_published',
       'interview_scheduled',
       'contract_signed',
+      'weekly_digest',
     ],
   }).notNull(),
   title: text('title').notNull(),
@@ -1724,6 +1724,11 @@ export const notificationPreferences = pgTable('notification_preferences', {
   pushAssignmentPublished: boolean('push_assignment_published').default(true).notNull(),
   pushInterviewScheduled: boolean('push_interview_scheduled').default(true).notNull(),
   pushContractSigned: boolean('push_contract_signed').default(true).notNull(),
+  emailWeeklyDigest: boolean('email_weekly_digest').default(true).notNull(),
+  digestFrequency: text('digest_frequency', { enum: ['weekly', 'disabled'] })
+    .default('weekly')
+    .notNull(),
+  lastDigestSentAt: timestamp('last_digest_sent_at'),
   // Audit fields
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -1888,7 +1893,7 @@ export const interviews = pgTable('interviews', {
     .notNull(),
   scheduledAt: timestamp('scheduled_at').notNull(),
   duration: integer('duration').default(30).notNull(), // minutes
-  platform: text('platform', { enum: [...INTERVIEW_PLATFORM_VALUES] }).notNull(),
+  platform: text('platform', { enum: ['zoom', 'google'] }).notNull(),
   meetingId: text('meeting_id').notNull(), // External meeting/event ID
   meetingUrl: text('meeting_url').notNull(),
   timezone: text('timezone').default('UTC'),

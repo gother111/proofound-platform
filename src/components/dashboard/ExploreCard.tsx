@@ -1,95 +1,108 @@
 'use client';
 
+import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
+import { Briefcase, TrendingUp, AlertTriangle } from 'lucide-react';
+
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Briefcase } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import type { MomentumSummary } from '@/lib/momentum/types';
 
-type ExploreTab = 'people' | 'projects' | 'partners';
+interface ExploreCardProps {
+  persona?: 'individual' | 'organization';
+  orgRef?: string;
+}
 
-export function ExploreCard() {
-  const router = useRouter();
-  const [activeTab, setActiveTab] = useState<ExploreTab>('people');
-  const [isHovered, setIsHovered] = useState(false);
+export function ExploreCard({ persona = 'individual', orgRef }: ExploreCardProps) {
+  const [summary, setSummary] = useState<MomentumSummary | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // TODO: Replace with actual data fetching from database
-  // For now, always show empty state
-  const hasData = false;
+  useEffect(() => {
+    async function load() {
+      try {
+        const params = new URLSearchParams({ persona });
+        if (orgRef) params.set('org', orgRef);
+
+        const response = await fetch(`/api/momentum/summary?${params.toString()}`, {
+          cache: 'no-store',
+        });
+        if (!response.ok) throw new Error('Failed to load momentum summary');
+
+        const data = (await response.json()) as MomentumSummary;
+        setSummary(data);
+      } catch (error) {
+        console.error('ExploreCard load failed', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    load();
+  }, [persona, orgRef]);
+
+  const actions = useMemo(() => summary?.topActions?.slice(0, 3) || [], [summary]);
+
+  if (loading) {
+    return (
+      <Card
+        className="p-4 border lg:col-span-3"
+        style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}
+      >
+        <p className="text-sm text-[#6B6760]">Loading actionable insights...</p>
+      </Card>
+    );
+  }
+
+  const fallbackHref = persona === 'organization' ? '/app/o' : '/app/i/matching';
 
   return (
     <Card className="p-4 border lg:col-span-3" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
       <div className="flex items-center justify-between mb-3">
-        <h5 className="text-sm" style={{ color: '#2D3330' }}>
+        <h5 className="text-sm font-semibold" style={{ color: '#2D3330' }}>
           Explore
         </h5>
+        {summary?.marketActivityLow ? (
+          <span className="inline-flex items-center gap-1 text-[11px] text-[#8A5A2B]">
+            <AlertTriangle className="w-3 h-3" /> Market activity low
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 text-[11px] text-[#1C4D3A]">
+            <TrendingUp className="w-3 h-3" /> Active market
+          </span>
+        )}
       </div>
 
-      {!hasData ? (
-        <div className="text-center py-6">
+      <p className="text-xs mb-4" style={{ color: '#6B6760' }}>
+        {summary?.summary || 'Keep momentum with the most useful next actions.'}
+      </p>
+
+      {actions.length === 0 ? (
+        <div className="text-center py-4">
           <Briefcase className="w-10 h-10 mx-auto mb-2" style={{ color: '#E8E6DD' }} />
           <p className="text-xs mb-3" style={{ color: '#6B6760' }}>
-            Discover opportunities aligned with your interests.
+            No immediate actions yet. Open your main workspace to continue.
           </p>
           <Button
             size="sm"
-            className="h-7 text-xs"
-            style={{
-              backgroundColor: isHovered ? '#2D5F4A' : '#1C4D3A',
-              color: '#F7F6F1',
-              transition: 'background-color 200ms',
-            }}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            onClick={() => router.push('/app/i/opportunities')}
+            className="h-8 text-xs bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]"
+            asChild
           >
-            Start exploring
+            <Link href={fallbackHref}>Open workspace</Link>
           </Button>
         </div>
       ) : (
-        <>
-          {/* Tabs - will be populated when data exists */}
-          <div
-            className="flex items-center gap-1 mb-3 p-0.5 rounded-lg w-fit"
-            style={{ backgroundColor: '#E8E6DD' }}
-          >
-            <button
-              className={`px-2.5 py-1 rounded text-xs transition-all ${activeTab === 'people' ? 'font-medium' : ''}`}
-              style={{
-                backgroundColor: activeTab === 'people' ? 'white' : 'transparent',
-                color: '#2D3330',
-              }}
-              onClick={() => setActiveTab('people')}
+        <div className="space-y-2">
+          {actions.map((action) => (
+            <Link
+              key={action.id}
+              href={action.actionUrl}
+              className="block rounded-lg border border-[#E8E6DD] px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1]"
             >
-              People
-            </button>
-            <button
-              className={`px-2.5 py-1 rounded text-xs transition-all ${activeTab === 'projects' ? 'font-medium' : ''}`}
-              style={{
-                backgroundColor: activeTab === 'projects' ? 'white' : 'transparent',
-                color: '#2D3330',
-              }}
-              onClick={() => setActiveTab('projects')}
-            >
-              Projects
-            </button>
-            <button
-              className={`px-2.5 py-1 rounded text-xs transition-all ${activeTab === 'partners' ? 'font-medium' : ''}`}
-              style={{
-                backgroundColor: activeTab === 'partners' ? 'white' : 'transparent',
-                color: '#2D3330',
-              }}
-              onClick={() => setActiveTab('partners')}
-            >
-              Partners
-            </button>
-          </div>
-
-          {/* Content grid - will be populated when data exists */}
-          <div className="grid grid-cols-4 gap-3">
-            {/* Opportunity cards will be rendered here when data is available */}
-          </div>
-        </>
+              <p className="text-sm font-medium text-[#2D3330]">{action.title}</p>
+              <p className="text-xs text-[#6B6760] mt-1">{action.description}</p>
+            </Link>
+          ))}
+        </div>
       )}
     </Card>
   );

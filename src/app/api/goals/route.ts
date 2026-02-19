@@ -13,9 +13,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
-import { growthPlans, capabilities, skills, skillsTaxonomy } from '@/db/schema';
+import { growthPlans } from '@/db/schema';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { z } from 'zod';
+import { toCanonicalGoal, toLegacyGoal } from '@/lib/goals/canonical';
 
 export const dynamic = 'force-dynamic';
 
@@ -72,7 +73,7 @@ export async function GET(request: NextRequest) {
       )!;
     }
 
-    // Fetch goals with related capability/skill info
+    // Fetch goals and normalize to canonical + backward-compatible shapes.
     const userGoals = await db
       .select({
         id: growthPlans.id,
@@ -92,18 +93,11 @@ export async function GET(request: NextRequest) {
       .orderBy(desc(growthPlans.updatedAt))
       .limit(limit);
 
-    // Calculate progress for each goal based on milestones
     const goalsWithProgress = userGoals.map((goal) => {
-      const milestones = (goal.milestones as any[]) || [];
-      const completedMilestones = milestones.filter((m) => m.completed).length;
-      const progress =
-        milestones.length > 0 ? Math.round((completedMilestones / milestones.length) * 100) : 0;
-
+      const canonicalGoal = toCanonicalGoal(goal);
       return {
-        ...goal,
-        progress,
-        completedMilestones,
-        totalMilestones: milestones.length,
+        ...canonicalGoal,
+        legacy: toLegacyGoal(canonicalGoal),
       };
     });
 
@@ -128,6 +122,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       goals: goalsWithProgress,
       stats,
+      contractVersion: 'v2-canonical',
     });
   } catch (error) {
     console.error('Failed to fetch goals:', error);
@@ -168,9 +163,13 @@ export async function POST(request: NextRequest) {
       })
       .returning();
 
+    const canonicalGoal = toCanonicalGoal(newGoal);
+
     return NextResponse.json({
       success: true,
-      goal: newGoal,
+      goal: canonicalGoal,
+      legacyGoal: toLegacyGoal(canonicalGoal),
+      contractVersion: 'v2-canonical',
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -236,9 +235,13 @@ export async function PATCH(request: NextRequest) {
       .where(eq(growthPlans.id, validatedData.id))
       .returning();
 
+    const canonicalGoal = toCanonicalGoal(updatedGoal);
+
     return NextResponse.json({
       success: true,
-      goal: updatedGoal,
+      goal: canonicalGoal,
+      legacyGoal: toLegacyGoal(canonicalGoal),
+      contractVersion: 'v2-canonical',
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

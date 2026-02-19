@@ -7,7 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { toast } from 'sonner';
 import type { SkillGap, GapMatrixRow } from '@/lib/skills/gap-service';
 import type { LearningRecommendations } from '@/lib/learning/types';
@@ -15,11 +22,13 @@ import { LearningRecommendationsList } from './LearningRecommendations';
 
 type Goal = {
   id: string;
-  title: string | null;
+  title: string;
   goal: string | null;
-  target_level: number | null;
-  target_date: string | null;
-  status: string | null;
+  targetLevel: number | null;
+  targetDate: string | null;
+  status: string;
+  progress: number;
+  nextStep: string;
 };
 
 type Coverage = { totalRequired: number; missing: number; covered: number };
@@ -37,6 +46,42 @@ type Props = {
   learning: LearningRecommendations;
   goals: Goal[];
 };
+
+type GoalApiResponse = {
+  goal?: unknown;
+  legacyGoal?: unknown;
+};
+
+function normalizeGoal(rawGoal: unknown, rawLegacyGoal?: unknown): Goal {
+  const canonical =
+    typeof rawGoal === 'object' && rawGoal !== null
+      ? (rawGoal as Record<string, unknown>)
+      : ({} as Record<string, unknown>);
+  const legacy =
+    typeof rawLegacyGoal === 'object' && rawLegacyGoal !== null
+      ? (rawLegacyGoal as Record<string, unknown>)
+      : ({} as Record<string, unknown>);
+
+  return {
+    id: String(canonical.id ?? legacy.id ?? ''),
+    title: String(canonical.title ?? legacy.title ?? 'Untitled goal'),
+    goal:
+      canonical.goal !== undefined
+        ? (canonical.goal as string | null)
+        : ((legacy.goal as string | null) ?? null),
+    targetLevel:
+      canonical.targetLevel !== undefined
+        ? (canonical.targetLevel as number | null)
+        : ((legacy.target_level as number | null) ?? null),
+    targetDate:
+      canonical.targetDate !== undefined
+        ? (canonical.targetDate as string | null)
+        : ((legacy.target_date as string | null) ?? null),
+    status: String(canonical.status ?? legacy.status ?? 'planned'),
+    progress: Number(canonical.progress ?? 0),
+    nextStep: String(canonical.nextStep ?? 'Define your first milestone'),
+  };
+}
 
 const StatCard = ({ label, value, hint }: { label: string; value: string; hint?: string }) => (
   <Card className="border-proofound-stone dark:border-border">
@@ -64,7 +109,7 @@ export function SkillGapsClient({
   const [stats, setStats] = useState<Coverage>(coverage);
   const [assignmentList, setAssignmentList] = useState(assignments);
   const [loading, setLoading] = useState(false);
-  const [goals, setGoals] = useState<Goal[]>(initialGoals);
+  const [goals, setGoals] = useState<Goal[]>(() => initialGoals.map((goal) => normalizeGoal(goal)));
   const [isPending, startTransition] = useTransition();
   const hasLoadedOnce = useRef(false);
 
@@ -123,8 +168,11 @@ export function SkillGapsClient({
           body: JSON.stringify({ skillCode, targetLevel: 3 }),
         });
         if (!res.ok) throw new Error('Failed to save goal');
-        const { goal } = await res.json();
-        setGoals((prev) => (goal ? [goal, ...prev] : prev));
+        const payload = (await res.json()) as GoalApiResponse;
+        const normalizedGoal = payload.goal
+          ? normalizeGoal(payload.goal, payload.legacyGoal)
+          : null;
+        setGoals((prev) => (normalizedGoal ? [normalizedGoal, ...prev] : prev));
         toast.success('Goal saved');
       } catch (error) {
         console.error(error);
@@ -142,8 +190,11 @@ export function SkillGapsClient({
           body: JSON.stringify({ id, status: 'completed' }),
         });
         if (!res.ok) throw new Error('Failed to update goal');
-        const { goal } = await res.json();
-        setGoals((prev) => prev.map((g) => (g.id === id ? goal ?? g : g)));
+        const payload = (await res.json()) as GoalApiResponse;
+        const normalizedGoal = payload.goal
+          ? normalizeGoal(payload.goal, payload.legacyGoal)
+          : null;
+        setGoals((prev) => prev.map((g) => (g.id === id ? (normalizedGoal ?? g) : g)));
         toast.success('Goal marked complete');
       } catch (error) {
         console.error(error);
@@ -219,7 +270,9 @@ export function SkillGapsClient({
         <TabsContent value="gaps" className="space-y-4">
           {loading ? (
             <Card>
-              <CardContent className="py-6 text-sm text-muted-foreground">Refreshing gaps…</CardContent>
+              <CardContent className="py-6 text-sm text-muted-foreground">
+                Refreshing gaps…
+              </CardContent>
             </Card>
           ) : gaps.length === 0 ? (
             <Card>
@@ -241,12 +294,17 @@ export function SkillGapsClient({
                         <CardTitle className="text-lg">{gap.skillName}</CardTitle>
                         <CardDescription>
                           Target L{gap.targetLevel} • You are at L{gap.currentLevel} • Importance{' '}
-                          {gap.importance}%
+                          {gap.importance}% • Expected lift {gap.expectedImpact.min}-
+                          {gap.expectedImpact.max}%
                         </CardDescription>
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge variant={gap.importance >= 80 ? 'destructive' : 'secondary'}>
-                          {gap.importance >= 80 ? 'Critical' : gap.importance >= 60 ? 'High' : 'Medium'}
+                          {gap.importance >= 80
+                            ? 'Critical'
+                            : gap.importance >= 60
+                              ? 'High'
+                              : 'Medium'}
                         </Badge>
                         <Button
                           size="sm"
@@ -302,7 +360,8 @@ export function SkillGapsClient({
                               key={`${row.assignmentId}-${req.skillCode}`}
                               variant={req.gap > 0 ? 'destructive' : 'secondary'}
                             >
-                              {skillNameMap[req.skillCode] ?? req.skillCode} • need L{req.targetLevel}
+                              {skillNameMap[req.skillCode] ?? req.skillCode} • need L
+                              {req.targetLevel}
                             </Badge>
                           ))}
                         </div>
@@ -344,8 +403,8 @@ export function SkillGapsClient({
                     <div>
                       <CardTitle className="text-base">{goal.title ?? goal.goal}</CardTitle>
                       <CardDescription>
-                        Target level {goal.target_level ?? 3}
-                        {goal.target_date ? ` • Target date ${goal.target_date}` : ''}
+                        Target level {goal.targetLevel ?? 3}
+                        {goal.targetDate ? ` • Target date ${goal.targetDate}` : ''}
                       </CardDescription>
                     </div>
                     <Badge variant={goal.status === 'completed' ? 'default' : 'secondary'}>
@@ -355,7 +414,7 @@ export function SkillGapsClient({
                 </CardHeader>
                 <CardContent className="flex items-center justify-between">
                   <div className="text-xs text-muted-foreground">
-                    Saved for {goal.goal ?? 'skill'}
+                    Saved for {goal.goal ?? 'skill'} • Next: {goal.nextStep}
                   </div>
                   {goal.status !== 'completed' ? (
                     <Button
@@ -376,11 +435,11 @@ export function SkillGapsClient({
 
       {topSkillCode ? (
         <p className="text-xs text-muted-foreground">
-          Tip: Focus on <span className="font-medium">{skillNameMap[topSkillCode] ?? topSkillCode}</span> first —
+          Tip: Focus on{' '}
+          <span className="font-medium">{skillNameMap[topSkillCode] ?? topSkillCode}</span> first —
           it has the highest importance score for your target assignments.
         </p>
       ) : null}
     </div>
   );
 }
-
