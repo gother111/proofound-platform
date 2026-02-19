@@ -2372,3 +2372,55 @@ Open TODOs / follow-ups:
 
 - Push workflow changes and confirm next conflicted PR reports `ci` and `a11y` checks.
 - If needed, extend policy for fork PRs with a dedicated safe workflow path.
+
+---
+
+## 2026-02-19 10:05 CET
+
+Task summary:
+
+- Continued active rebase without aborting, resolved documentation conflicts, and completed force-push of the required-check fix branch.
+- Added a transition bridge so this rollout PR can validate itself while still fixing yellow required checks for conflicted PRs.
+
+What worked:
+
+- Rebase finished successfully after resolving append-only doc conflicts.
+- Required workflow changes (`ci`, `a11y`, auto-update branch workflow, merge strategy rules) are preserved on the rebased branch.
+- YAML validation passed after adding dual `pull_request` + `pull_request_target` trigger bridge.
+
+What failed / wrong assumptions:
+
+- `pull_request_target`-only rollout created a temporary validation gap for the rollout PR itself because `master` had not yet adopted the new trigger.
+- Running `git rebase --continue` without `GIT_EDITOR` set failed in this environment.
+
+User corrections:
+
+- User explicitly requested to not abort rebase and to keep existing changes so they can land in `master`.
+
+Assumptions taken without asking:
+
+- A temporary dual-trigger bridge is acceptable to avoid deadlock on the rollout PR.
+- Limiting `pull_request_target` runs to `mergeable_state` dirty/unknown is acceptable to reduce duplicate runs on clean PRs.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add the transition bridge in the same commit as the initial trigger migration to avoid temporary PR self-validation gaps.
+- Set `GIT_EDITOR=true` for scripted rebase continues in non-interactive terminals.
+
+Commands run + outcomes:
+
+- `git fetch origin master && git rebase origin/master`: PARTIAL (docs conflicts encountered and then resolved).
+- `GIT_EDITOR=true git rebase --continue`: PASS.
+- `git push --force-with-lease origin codex/fix-required-check-reporting`: PASS.
+- `gh pr view 199 --json mergeable,mergeStateStatus,statusCheckRollup`: PASS (`MERGEABLE`, checks pending).
+- `ruby -e "require 'yaml'; YAML.load_file('.github/workflows/ci.yml'); YAML.load_file('.github/workflows/accessibility.yml')"`: PASS.
+- `rg -n "pull_request_target|pull_request|mergeable_state" .github/workflows/ci.yml .github/workflows/accessibility.yml`: PASS.
+
+Open TODOs / follow-ups:
+
+- Wait for PR #199 required checks (`ci`, `a11y`) to appear and complete after the bridge commit is pushed.
+- Merge PR #199 into `master`.

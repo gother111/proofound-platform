@@ -169,6 +169,33 @@ Open risks/TODO:
 - Conflicted PRs still require manual conflict resolution before merge.
 - Fork PRs are intentionally guarded; if fork-based contribution is required with these checks, add a reviewed fork-safe strategy.
 
+## 2026-02-19: Transition Bridge for Required Check Rollout
+
+What changed:
+
+- Added `pull_request` triggers back to required workflows during rollout:
+  - `.github/workflows/ci.yml`
+  - `.github/workflows/accessibility.yml`
+- Kept `pull_request_target` support and limited those runs to conflict-prone states:
+  - `mergeable_state == dirty || unknown`
+- Kept PR-target trusted same-repo guardrails and head-SHA checkout behavior.
+
+Why:
+
+- A PR that introduces `pull_request_target`-only required checks cannot validate itself while `master` still has old trigger definitions.
+- Dual-trigger bridge allows current rollout PRs to report required checks immediately, while still covering conflicted PRs via `pull_request_target`.
+
+How to verify:
+
+- `ruby -e "require 'yaml'; YAML.load_file('.github/workflows/ci.yml'); YAML.load_file('.github/workflows/accessibility.yml')"`
+- On a mergeable PR, confirm `ci` and `a11y` are reported from `pull_request` runs.
+- On a conflicted PR, confirm `ci` and `a11y` are still reported via `pull_request_target` runs.
+
+Open risks/TODO:
+
+- Bridge mode may increase workflow volume during transition.
+- After rollout stabilizes, reassess whether `pull_request` should remain or be reduced.
+
 ## 2026-02-11: Landing Regression Guardrail Policy
 
 What changed:
