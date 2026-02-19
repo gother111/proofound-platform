@@ -7,6 +7,10 @@
 Repo Truth items include citations like `(source: README.md)`. Everything else is policy.
 
 - Read the project memory first: `project/Prompt.md`, `project/Architecture.md`, `project/Plans.md`, `project/Implement.md`, `project/Documentation.md`.
+- Use sharded log entries for new work:
+  - `npm run log:session` -> `agent/scratchpad/entries/`
+  - `npm run log:change` -> `project/changes/entries/`
+  - Do not append per-task updates to `agent/scratchpad.md` or `project/Documentation.md`.
 - Confirm git state:
   - Run `git status` and ensure you understand what is already modified/uncommitted.
   - Plan to stage only files relevant to the task.

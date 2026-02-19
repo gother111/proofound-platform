@@ -48,6 +48,8 @@
     "go:no-go": "node ./scripts/go-no-go-check.mjs",
     "gates:mvp:strict": "node ./scripts/run-mvp-strict-gates.mjs",
     "docs:freshness": "node ./scripts/docs-freshness-check.mjs",
+    "log:session": "node ./scripts/new-session-log.mjs session",
+    "log:change": "node ./scripts/new-session-log.mjs change",
     "test:smoke:gap-service": "tsx scripts/smoke-skill-gaps.ts",
     "test:smoke:learning": "tsx scripts/smoke-learning-provider.ts"
   },

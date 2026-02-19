@@ -32,6 +32,15 @@ const ACTIVE_PATTERN_EXEMPT = new Set([
   'agent/scratchpad.md',
 ]);
 
+const REGISTRY_EXEMPT_PREFIXES = [
+  'agent/scratchpad/entries/',
+  'project/changes/entries/',
+];
+
+function isRegistryExempt(filePath) {
+  return REGISTRY_EXEMPT_PREFIXES.some((prefix) => filePath.startsWith(prefix));
+}
+
 function readFile(filePath) {
   return fs.readFileSync(filePath, 'utf8');
 }
@@ -119,6 +128,10 @@ function main() {
   const nonArchiveFiles = files.filter((f) => !f.startsWith('docs/archive/'));
 
   for (const file of nonArchiveFiles) {
+    if (isRegistryExempt(file)) {
+      continue;
+    }
+
     if (!registry.has(file)) {
       warnings.push(`Orphan file missing from registry: ${file}`);
     }
