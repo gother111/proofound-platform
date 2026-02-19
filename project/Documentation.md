@@ -111,6 +111,90 @@ Open risks/TODO:
 
 - LinkedIn app callback allowlist must include every active domain callback (`https://<domain>/api/auth/linkedin/callback`) used by production/demo/testing environments.
 - If `LINKEDIN_REDIRECT_URI` is set to a different top-level domain than the active app domain, OAuth state cookies can fail to round-trip in callback flow.
+## 2026-02-19: PR Conflict Mitigation Automation
+
+What changed:
+
+- Added `.gitattributes` union merge rules for append-only docs:
+  - `agent/scratchpad.md`
+  - `project/Documentation.md`
+- Added `.github/workflows/auto-update-pr-branch.yml` to request automatic PR branch updates via GitHub API:
+  - on `pull_request_target` events for same-repo, non-draft PRs
+  - on `push` to `master` for all eligible open PRs
+
+Why:
+
+- Reduce repeated manual "Update branch" actions.
+- Reduce merge conflicts in recurring append-only documentation files that block required checks from running.
+
+How to verify:
+
+- `gh workflow view "Auto Update PR Branches"`
+- Make a PR intentionally behind `master`, then confirm the workflow run requests `update-branch` and the PR branch advances.
+- `git check-attr merge -- agent/scratchpad.md project/Documentation.md`
+
+Open risks/TODO:
+
+- Conflicts in application files still require manual resolution and review.
+- Union merge may keep duplicate lines in documentation logs; keep both files append-only and review merged output.
+
+## 2026-02-19: Required PR Check Reporting for Conflicted Branches
+
+What changed:
+
+- Updated required workflows to trigger on `pull_request_target` instead of `pull_request`:
+  - `.github/workflows/ci.yml`
+  - `.github/workflows/accessibility.yml`
+- Added safe checkout of PR head SHA for PR-target runs:
+  - `actions/checkout@v4` with `ref: ${{ github.event.pull_request.head.sha }}`
+- Added same-repo/trusted-association guards on `ci`, `e2e`, and `a11y` jobs for `pull_request_target` events.
+- Updated CI PR-only guards to `pull_request_target` for landing scope checks and visual baseline conditionals.
+
+Why:
+
+- GitHub does not start `pull_request` workflows when a PR is in merge-conflict state, which leaves required checks (`ci`, `a11y`) in "Expected" status.
+- `pull_request_target` still runs for conflicted PRs, so required check contexts are reported and no longer remain yellow-only due to missing status emission.
+
+How to verify:
+
+- Open a PR with a merge conflict and confirm Actions runs are created for:
+  - `CI` (`ci` job check)
+  - `Accessibility Audit` (`a11y` job check)
+- Confirm required contexts on the PR are reported (pass/fail/skipped) instead of only "Expected".
+- YAML sanity:
+  - `ruby -e "require 'yaml'; YAML.load_file('.github/workflows/ci.yml'); YAML.load_file('.github/workflows/accessibility.yml')"`
+
+Open risks/TODO:
+
+- Conflicted PRs still require manual conflict resolution before merge.
+- Fork PRs are intentionally guarded; if fork-based contribution is required with these checks, add a reviewed fork-safe strategy.
+
+## 2026-02-19: Transition Bridge for Required Check Rollout
+
+What changed:
+
+- Added `pull_request` triggers back to required workflows during rollout:
+  - `.github/workflows/ci.yml`
+  - `.github/workflows/accessibility.yml`
+- Kept `pull_request_target` support and limited those runs to conflict-prone states:
+  - `mergeable_state == dirty || unknown`
+- Kept PR-target trusted same-repo guardrails and head-SHA checkout behavior.
+
+Why:
+
+- A PR that introduces `pull_request_target`-only required checks cannot validate itself while `master` still has old trigger definitions.
+- Dual-trigger bridge allows current rollout PRs to report required checks immediately, while still covering conflicted PRs via `pull_request_target`.
+
+How to verify:
+
+- `ruby -e "require 'yaml'; YAML.load_file('.github/workflows/ci.yml'); YAML.load_file('.github/workflows/accessibility.yml')"`
+- On a mergeable PR, confirm `ci` and `a11y` are reported from `pull_request` runs.
+- On a conflicted PR, confirm `ci` and `a11y` are still reported via `pull_request_target` runs.
+
+Open risks/TODO:
+
+- Bridge mode may increase workflow volume during transition.
+- After rollout stabilizes, reassess whether `pull_request` should remain or be reduced.
 
 ## 2026-02-11: Landing Regression Guardrail Policy
 

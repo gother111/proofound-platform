@@ -1983,6 +1983,36 @@ Assumptions taken without asking:
 
 - Keeping already-tested branch behavior for interview/provider/a11y flow files is safer than replacing with incoming edits during conflict resolution.
 - Keeping current `master` perf-budget baseline is acceptable for merge velocity.
+- Push branch and verify `Auto Update PR Branches` appears in Actions.
+- Validate with one intentionally behind PR and one conflicting PR to confirm expected behavior.
+
+---
+
+## 2026-02-19 09:58 CET
+
+Task summary:
+
+- Fixed required check reporting issue where `ci` and `a11y` stayed in yellow "Expected" for conflicted PRs.
+- Updated workflow triggers to ensure status contexts are emitted for PRs that are not mergeable yet.
+
+What worked:
+
+- Switching required workflows from `pull_request` to `pull_request_target` addresses missing check emission on conflicted PRs.
+- Guarding PR-target jobs to same-repo trusted contributors keeps the workflow safer.
+- YAML validation passed for all edited workflow files.
+
+What failed / wrong assumptions:
+
+- Initial assumption that auto branch update alone would eliminate yellow checks was incomplete; conflicts still prevented `pull_request` workflow starts.
+
+User corrections:
+
+- User asked to directly fix yellow required-check behavior across PRs.
+
+Assumptions taken without asking:
+
+- Team contribution model is primarily same-repo branches from trusted collaborators.
+- It is acceptable that fork PRs may be skipped by guarded `pull_request_target` job conditions.
 
 What the user corrected afterward:
 
@@ -2327,3 +2357,70 @@ Open TODOs / follow-ups:
 
 - Wait for PR #193 CI checks to finish and merge through branch protection flow.
 - Re-run strict/privacy/provider suites in environment with required secrets.
+- Add one post-merge validation step that automatically confirms required check contexts are present on the latest open PRs.
+- Consider documenting fork-safe CI strategy explicitly if external contributors become a primary path.
+
+Commands run + outcomes:
+
+- `sed -n '1,260p' .github/workflows/ci.yml`: PASS (baseline inspected).
+- `sed -n '1,220p' .github/workflows/accessibility.yml`: PASS (baseline inspected).
+- `ruby -e "require 'yaml'; YAML.load_file('.github/workflows/ci.yml'); YAML.load_file('.github/workflows/accessibility.yml'); YAML.load_file('.github/workflows/auto-update-pr-branch.yml')"`: PASS.
+- `rg -n "pull_request_target|pull_request" .github/workflows/ci.yml .github/workflows/accessibility.yml`: PASS (expected trigger/guard locations confirmed).
+- `git diff -- .github/workflows/ci.yml .github/workflows/accessibility.yml`: PASS (reviewed intended edits).
+
+Open TODOs / follow-ups:
+
+- Push workflow changes and confirm next conflicted PR reports `ci` and `a11y` checks.
+- If needed, extend policy for fork PRs with a dedicated safe workflow path.
+
+---
+
+## 2026-02-19 10:05 CET
+
+Task summary:
+
+- Continued active rebase without aborting, resolved documentation conflicts, and completed force-push of the required-check fix branch.
+- Added a transition bridge so this rollout PR can validate itself while still fixing yellow required checks for conflicted PRs.
+
+What worked:
+
+- Rebase finished successfully after resolving append-only doc conflicts.
+- Required workflow changes (`ci`, `a11y`, auto-update branch workflow, merge strategy rules) are preserved on the rebased branch.
+- YAML validation passed after adding dual `pull_request` + `pull_request_target` trigger bridge.
+
+What failed / wrong assumptions:
+
+- `pull_request_target`-only rollout created a temporary validation gap for the rollout PR itself because `master` had not yet adopted the new trigger.
+- Running `git rebase --continue` without `GIT_EDITOR` set failed in this environment.
+
+User corrections:
+
+- User explicitly requested to not abort rebase and to keep existing changes so they can land in `master`.
+
+Assumptions taken without asking:
+
+- A temporary dual-trigger bridge is acceptable to avoid deadlock on the rollout PR.
+- Limiting `pull_request_target` runs to `mergeable_state` dirty/unknown is acceptable to reduce duplicate runs on clean PRs.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add the transition bridge in the same commit as the initial trigger migration to avoid temporary PR self-validation gaps.
+- Set `GIT_EDITOR=true` for scripted rebase continues in non-interactive terminals.
+
+Commands run + outcomes:
+
+- `git fetch origin master && git rebase origin/master`: PARTIAL (docs conflicts encountered and then resolved).
+- `GIT_EDITOR=true git rebase --continue`: PASS.
+- `git push --force-with-lease origin codex/fix-required-check-reporting`: PASS.
+- `gh pr view 199 --json mergeable,mergeStateStatus,statusCheckRollup`: PASS (`MERGEABLE`, checks pending).
+- `ruby -e "require 'yaml'; YAML.load_file('.github/workflows/ci.yml'); YAML.load_file('.github/workflows/accessibility.yml')"`: PASS.
+- `rg -n "pull_request_target|pull_request|mergeable_state" .github/workflows/ci.yml .github/workflows/accessibility.yml`: PASS.
+
+Open TODOs / follow-ups:
+
+- Wait for PR #199 required checks (`ci`, `a11y`) to appear and complete after the bridge commit is pushed.
+- Merge PR #199 into `master`.
