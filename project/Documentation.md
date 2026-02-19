@@ -20,6 +20,33 @@ This folder is the durable “project memory” surface for Proofound. It is mea
 - Do not copy secrets from local env files or setup docs into tracked markdown.
 - At the end of every session, append a new entry to `agent/scratchpad.md` (append-only).
 
+## 2026-02-19: PR Conflict Mitigation Automation
+
+What changed:
+
+- Added `.gitattributes` union merge rules for append-only docs:
+  - `agent/scratchpad.md`
+  - `project/Documentation.md`
+- Added `.github/workflows/auto-update-pr-branch.yml` to request automatic PR branch updates via GitHub API:
+  - on `pull_request_target` events for same-repo, non-draft PRs
+  - on `push` to `master` for all eligible open PRs
+
+Why:
+
+- Reduce repeated manual "Update branch" actions.
+- Reduce merge conflicts in recurring append-only documentation files that block required checks from running.
+
+How to verify:
+
+- `gh workflow view "Auto Update PR Branches"`
+- Make a PR intentionally behind `master`, then confirm the workflow run requests `update-branch` and the PR branch advances.
+- `git check-attr merge -- agent/scratchpad.md project/Documentation.md`
+
+Open risks/TODO:
+
+- Conflicts in application files still require manual resolution and review.
+- Union merge may keep duplicate lines in documentation logs; keep both files append-only and review merged output.
+
 ## 2026-02-11: Landing Regression Guardrail Policy
 
 What changed:

@@ -1,0 +1,3 @@
+# Reduce recurring merge conflicts for append-only project logs.
+agent/scratchpad.md merge=union
+project/Documentation.md merge=union
