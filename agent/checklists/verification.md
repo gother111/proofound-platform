@@ -60,9 +60,8 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 ## Vercel Parity (When Deploy Might Break)
 
 - Ensure Node version matches `.nvmrc`/engines (source: .nvmrc, package.json)
-- Validate Vercel project linkage and envs with:
-  - `npx vercel@latest pull --yes --environment=production`
-  - `npx vercel@latest env ls`
+- Run `npm run vercel:preflight` to validate canonical Vercel linkage, production branch, and required env key presence.
+- Optional drift report between projects: `npm run vercel:env-parity`
 - Pull production project/env settings (creates `.vercel/`, which is gitignored): `npx vercel@latest pull --yes --environment=production` (source: .gitignore)
 - Run a prod-equivalent build locally: `npx vercel@latest build --prod`
   - If CLI auth is missing, use `--token` with a valid `VERCEL_TOKEN` (do not print it).
@@ -106,9 +105,9 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 
 ## Migration and Data Safety (Before Production DDL)
 
-- Create a database checkpoint using your provider snapshot tooling before production DDL.
-- Reconcile migration ledger via `node run-migrations.mjs` in a staging environment first.
-- Apply production schema changes through versioned SQL under `src/db/migrations/`.
+- Create a checkpoint: `npm run db:backup:checkpoint`
+- Reconcile migration ledger: `npm run db:audit:migrations`
+- Apply production schema changes through ordered SQL under `src/db/migrations/*.sql` and apply with `npm run db:migrate` (prefer `DIRECT_URL` for DDL).
 - Do not run `npm run db:push` against production.
 
 ## E2E / Accessibility (If You Touched Critical UX)

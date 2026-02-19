@@ -112,15 +112,15 @@ Edit `.env.local` (you will copy these values into Vercel later):
 
 ```env
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
-NEXT_PUBLIC_APP_URL=http://localhost:3000
 NEXT_PUBLIC_APP_ENV=local
 
 # Supabase (from step 2)
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-DATABASE_URL=postgresql://postgres:[PASSWORD]@db.your-project.supabase.co:5432/postgres
-PII_HASH_SALT=local-dev-salt
+DATABASE_URL=postgresql://postgres:[PASSWORD]@db.your-project.supabase.co:6543/postgres
+DIRECT_URL=postgresql://postgres:[PASSWORD]@db.your-project.supabase.co:5432/postgres
+PII_HASH_SALT=your-salt
 
 # Resend
 RESEND_API_KEY=re_your_key
@@ -131,34 +131,14 @@ RATE_LIMIT_WINDOW_SECONDS=60
 RATE_LIMIT_MAX=30
 
 # Sentry (error monitoring)
-SENTRY_DSN=
+NEXT_PUBLIC_SENTRY_DSN=
 SENTRY_ORG=
 SENTRY_PROJECT=
 SENTRY_AUTH_TOKEN=
+SENTRY_DEBUG=false
 
 # Cron jobs
 CRON_SECRET=your-cron-bearer-token
-INTERNAL_API_SECRET=your-internal-api-token
-
-# OAuth providers (strict E2E + integrations)
-ZOOM_CLIENT_ID=
-ZOOM_CLIENT_SECRET=
-ZOOM_REDIRECT_URI=http://localhost:3000/api/integrations/zoom/callback
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-GOOGLE_REDIRECT_URI=http://localhost:3000/api/integrations/google/callback
-LINKEDIN_CLIENT_ID=
-LINKEDIN_CLIENT_SECRET=
-
-# Deterministic provider E2E identity
-E2E_PROVIDER_USER_ID=
-E2E_PROVIDER_USER_EMAIL=
-E2E_PROVIDER_USER_PASSWORD=
-
-# Optional debug ingest sink (disabled by default)
-DEBUG_INGEST_ENABLED=false
-DEBUG_INGEST_URL=
-NEXT_PUBLIC_DEBUG_INGEST_URL=
 ```
 
 > **Heads up:** Once this works locally, open your Vercel project, go to **Settings → Environment Variables**, and add each of the keys above (Production, Preview, and Development tabs). For `DATABASE_URL`, copy the Supabase value from **Project Settings → Database → Connection string → Node.js**.
@@ -168,14 +148,11 @@ NEXT_PUBLIC_DEBUG_INGEST_URL=
 Run migrations and triggers:
 
 ```bash
-# Generate migration files
-npm run db:generate
-
-# Push schema to Supabase
-npm run db:push
-
 # Apply ordered SQL migrations + policy/trigger supplements
-npm run db:migrate
+PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:migrate
+
+# Optional but recommended for matching
+PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:seed-taxonomy
 ```
 
 **Quick guide to DB scripts:**
@@ -183,7 +160,9 @@ npm run db:migrate
 - `npm run db:generate` — Create a new migration from schema changes.
 - `npm run db:migrate` — Apply ordered `src/db/migrations/*.sql` plus ledgered policy/trigger SQL.
 - `npm run db:drift-check` — Enforce canonical migration-path discipline in CI.
-- `npm run db:push` — Push the current schema directly to the database (bypasses migration files).
+- `npm run db:push` — Dev-only. Push the current schema directly to a database (bypasses migration files). Do not use this for production.
+- `npm run db:backup:checkpoint` — Create a database checkpoint before risky DDL.
+- `npm run db:audit:migrations` — Audit Supabase migration ledger drift (local files vs remote `supabase_migrations.schema_migrations`).
 - `npm run db:seed` — Seed feature flags (and demo data when enabled).
 - `npm run db:seed-taxonomy` — Seed the expertise taxonomy slice used by matching.
 
@@ -270,20 +249,22 @@ npm run typecheck        # TypeScript type checking
 npm run db:generate      # Generate Drizzle migrations
 npm run db:migrate       # Run ordered SQL migrations + policy/trigger supplements
 npm run db:drift-check   # Check migration path drift
-npm run db:push          # Push schema to database
+npm run db:push          # Dev-only schema push (do not use for production)
+npm run db:backup:checkpoint  # Create a DB checkpoint before risky DDL
+npm run db:audit:migrations   # Audit Supabase migration ledger drift
 npm run db:studio        # Open Drizzle Studio
 npm run db:seed          # Seed database
+
+# Vercel
+npm run vercel:preflight  # Check Vercel project link + required env key presence
+npm run vercel:env-parity # Optional env parity snapshot vs legacy project
 
 # Testing
 npm run test             # Run unit tests (Vitest)
 npm run test:e2e         # Run E2E tests (Playwright)
 npm run test:e2e:ui      # Run E2E tests with UI
-npm run test:e2e:auth:real     # Real auth contract (strict)
-npm run test:a11y:strict       # Strict a11y contract (real env)
 npm run perf:budgets     # Perf budgets (Lighthouse TTI/CLS + API p95)
 npm run go:no-go         # Go/No-Go gating (perf + SUS flag + RLS/a11y evidence)
-npm run gates:mvp:strict # Full strict launch gate bundle
-npm run docs:freshness   # Documentation drift warnings
 ```
 
 > **Troubleshooting:** If `npm run lint` reports that `next` cannot be found, follow the steps in [`docs/TROUBLESHOOTING_LINT.md`](docs/TROUBLESHOOTING_LINT.md).
@@ -425,20 +406,18 @@ E2E tests include `@axe-core/playwright` for WCAG AA compliance checks on key pa
 
 **Post-Deployment:**
 
-- Run migrations via Supabase dashboard or `npm run db:push`
+- Apply database migrations explicitly via `npm run db:migrate` (do not use `db:push` for production)
 - Verify email sending works
 - Test auth flows end-to-end
 
 ### Database Migrations on Deploy
 
-Option 1: Run migrations manually in Supabase SQL Editor after schema changes
+Proofound does not run database migrations automatically in the Vercel build.
 
-Option 2: Add migration command to Vercel build:
+Apply schema changes out of band using canonical SQL migrations (`src/db/migrations/*.sql`) and:
 
-```json
-{
-  "build": "npm run db:push && next build"
-}
+```bash
+PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:migrate
 ```
 
 ## CI/CD
@@ -451,7 +430,7 @@ GitHub Actions workflow (`.github/workflows/ci.yml`) runs on push/PR:
 4. Run unit tests
 5. Build
 
-Protect your `main` branch:
+Protect your `master` branch:
 
 - Require PR reviews
 - Require CI to pass
