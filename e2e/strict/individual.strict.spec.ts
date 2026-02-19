@@ -212,10 +212,13 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
   }) => {
     await loginWithUi(page, individualUser);
 
-    const sendMessageResponse = await apiPostJson(page.request, '/api/messages', {
-      conversationId: seededConversation.id,
-      content: 'Strict contract message from individual flow test.',
-    });
+    const sendMessageResponse = await apiPostJson(
+      page.request,
+      `/api/conversations/${seededConversation.id}/messages`,
+      {
+        content: 'Strict contract message from individual flow test.',
+      }
+    );
     expect(sendMessageResponse.status()).toBe(201);
     const sendMessagePayload = (await sendMessageResponse.json()) as {
       message?: { id?: string };
@@ -223,7 +226,7 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
     expect(typeof sendMessagePayload.message?.id).toBe('string');
 
     const listMessagesResponse = await page.request.get(
-      `/api/messages?conversationId=${seededConversation.id}`
+      `/api/conversations/${seededConversation.id}/messages`
     );
     expect(listMessagesResponse.ok()).toBeTruthy();
     const listMessagesPayload = (await listMessagesResponse.json()) as {

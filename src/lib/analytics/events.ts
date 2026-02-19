@@ -393,7 +393,7 @@ export function emitSUSSurveyCompletedAsync(
 export function emitVisibilityChanged(
   userId: string,
   field: string,
-  visibility: 'public' | 'network' | 'private'
+  visibility: 'public' | 'network' | 'network_only' | 'match_only' | 'private'
 ): void {
   emitAnalyticsEventAsync({
     eventType: 'visibility_changed',

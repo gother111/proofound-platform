@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { assignmentOutcomes, assignments, organizations } from '@/db/schema';
 import { checkAndEmitAssignmentActivation } from '@/lib/assignments/activation';
-import { verifyAssignmentAccess } from '@/lib/assignments/access';
+import { verifyAssignmentMutationAccess } from '@/lib/assignments/access';
 import { requireAuth } from '@/lib/auth';
 import { log } from '@/lib/log';
 
@@ -55,9 +55,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const resolved = await params;
     assignmentId = resolved.id;
 
-    const hasAccess = await verifyAssignmentAccess(user.id, assignmentId);
-    if (!hasAccess) {
+    const access = await verifyAssignmentMutationAccess(user.id, assignmentId);
+    if (access.status === 'assignment_not_found' || access.status === 'membership_not_found') {
       return NextResponse.json({ error: 'Assignment not found or access denied' }, { status: 404 });
+    }
+    if (access.status === 'insufficient_role') {
+      return NextResponse.json(
+        { error: 'Forbidden. Owner or admin role is required to publish assignments.' },
+        { status: 403 }
+      );
     }
 
     const assignment = await db.query.assignments.findFirst({

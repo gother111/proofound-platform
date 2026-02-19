@@ -4,7 +4,7 @@
     "node": ">=20.20.0 <21"
   },
   "scripts": {
-    "prebuild": "node ./scripts/check-deploy-readiness.mjs || true",
+    "prebuild": "node ./scripts/check-deploy-readiness.mjs",
     "dev": "node ./scripts/next-dev-node20.mjs",
     "build": "next build",
     "start": "next start",

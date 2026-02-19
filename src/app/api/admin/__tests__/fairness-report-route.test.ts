@@ -35,7 +35,7 @@ describe('admin fairness report route', () => {
     expect(createClient).not.toHaveBeenCalled();
   });
 
-  it('returns PDF payload and records analytics event on success', async () => {
+  it('returns markdown report payload and records analytics event on success', async () => {
     vi.mocked(requirePlatformAdminJson).mockResolvedValue({
       adminLevel: 'platform_admin',
       userId: 'admin-1',
@@ -44,23 +44,36 @@ describe('admin fairness report route', () => {
     });
 
     const insertSpy = vi.fn().mockResolvedValue({ error: null });
+    const lteSpy = vi.fn().mockResolvedValue({
+      data: [{ score: 0.82, profile_id: 'profile-1', assignment_id: 'assignment-1' }],
+      error: null,
+    });
+    const gteSpy = vi.fn().mockReturnValue({ lte: lteSpy });
+    const selectSpy = vi.fn().mockReturnValue({ gte: gteSpy });
+    const fromSpy = vi.fn((table: string) => {
+      if (table === 'matches') {
+        return { select: selectSpy };
+      }
+      return { insert: insertSpy };
+    });
+
     vi.mocked(createClient).mockResolvedValue({
-      from: vi.fn().mockReturnValue({
-        insert: insertSpy,
-      }),
+      from: fromSpy,
     } as any);
 
     const response = await POST(buildRequest({ dateRange: '90' }));
     const body = await response.text();
 
     expect(response.status).toBe(200);
-    expect(response.headers.get('content-type')).toBe('application/pdf');
-    expect(body).toContain('Fairness Monitoring Report');
+    expect(response.headers.get('content-type')).toContain('text/markdown');
+    expect(body).toContain('# Fairness Monitoring Report');
     expect(insertSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         user_id: 'admin-1',
         event_type: 'fairness_report_generated',
-        event_data: { dateRange: '90' },
+        event_data: expect.objectContaining({
+          totalMatches: 1,
+        }),
       })
     );
   });
