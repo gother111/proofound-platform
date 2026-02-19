@@ -1983,6 +1983,36 @@ Assumptions taken without asking:
 
 - Keeping already-tested branch behavior for interview/provider/a11y flow files is safer than replacing with incoming edits during conflict resolution.
 - Keeping current `master` perf-budget baseline is acceptable for merge velocity.
+- Push branch and verify `Auto Update PR Branches` appears in Actions.
+- Validate with one intentionally behind PR and one conflicting PR to confirm expected behavior.
+
+---
+
+## 2026-02-19 09:58 CET
+
+Task summary:
+
+- Fixed required check reporting issue where `ci` and `a11y` stayed in yellow "Expected" for conflicted PRs.
+- Updated workflow triggers to ensure status contexts are emitted for PRs that are not mergeable yet.
+
+What worked:
+
+- Switching required workflows from `pull_request` to `pull_request_target` addresses missing check emission on conflicted PRs.
+- Guarding PR-target jobs to same-repo trusted contributors keeps the workflow safer.
+- YAML validation passed for all edited workflow files.
+
+What failed / wrong assumptions:
+
+- Initial assumption that auto branch update alone would eliminate yellow checks was incomplete; conflicts still prevented `pull_request` workflow starts.
+
+User corrections:
+
+- User asked to directly fix yellow required-check behavior across PRs.
+
+Assumptions taken without asking:
+
+- Team contribution model is primarily same-repo branches from trusted collaborators.
+- It is acceptable that fork PRs may be skipped by guarded `pull_request_target` job conditions.
 
 What the user corrected afterward:
 
@@ -2327,50 +2357,128 @@ Open TODOs / follow-ups:
 
 - Wait for PR #193 CI checks to finish and merge through branch protection flow.
 - Re-run strict/privacy/provider suites in environment with required secrets.
-
-## 2026-02-19 10:17 PST
-
-Task summary:
-
-- Implemented hotfix to show Zoom and Google integrations directly in `Settings > Integrations` without requiring an extra manage-page click.
-- Updated discoverability test to enforce inline behavior.
-
-What worked:
-
-- `VideoIntegrationsManager` already existed and could be reused directly in `SettingsContent`.
-- Targeted test update cleanly validated regression from old CTA flow to inline manager flow.
-- Full verification sequence (`lint`, `typecheck`, focused tests, `build`) passed.
-
-What failed / wrong assumptions:
-
-- None in this change set.
-
-User corrections:
-
-- User confirmed production still showed CTA-only flow and required direct inline Zoom/Google controls in the same tab as LinkedIn.
-
-Assumptions taken without asking:
-
-- Keep `Video Conferencing` card container and inject inline manager in card content, rather than redesigning full tab layout.
-- Keep legacy `/app/i/settings/integrations` compatibility redirect unchanged.
-
-What the user corrected afterward:
-
-- None after implementation in this session.
-
-Improvements next time:
-
-- Add a second UI test asserting tab-level copy continuity to catch accidental reintroduction of CTA-only wording.
+- Add one post-merge validation step that automatically confirms required check contexts are present on the latest open PRs.
+- Consider documenting fork-safe CI strategy explicitly if external contributors become a primary path.
 
 Commands run + outcomes:
 
-- `git checkout -b codex/hotfix-inline-integrations origin/master`: PASS.
-- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS (1 pre-existing warning in `postcss.config.js`).
-- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS.
-- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- tests/ui/settings-integrations-discoverability.test.tsx tests/ui/settings-integrations-client.test.tsx`: PASS.
-- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS.
+- `sed -n '1,260p' .github/workflows/ci.yml`: PASS (baseline inspected).
+- `sed -n '1,220p' .github/workflows/accessibility.yml`: PASS (baseline inspected).
+- `ruby -e "require 'yaml'; YAML.load_file('.github/workflows/ci.yml'); YAML.load_file('.github/workflows/accessibility.yml'); YAML.load_file('.github/workflows/auto-update-pr-branch.yml')"`: PASS.
+- `rg -n "pull_request_target|pull_request" .github/workflows/ci.yml .github/workflows/accessibility.yml`: PASS (expected trigger/guard locations confirmed).
+- `git diff -- .github/workflows/ci.yml .github/workflows/accessibility.yml`: PASS (reviewed intended edits).
 
 Open TODOs / follow-ups:
 
-- Push hotfix branch and open PR to `master`.
-- Merge and verify production settings tab shows inline Zoom/Google controls.
+- Push workflow changes and confirm next conflicted PR reports `ci` and `a11y` checks.
+- If needed, extend policy for fork PRs with a dedicated safe workflow path.
+
+---
+
+## 2026-02-19 10:05 CET
+
+Task summary:
+
+- Continued active rebase without aborting, resolved documentation conflicts, and completed force-push of the required-check fix branch.
+- Added a transition bridge so this rollout PR can validate itself while still fixing yellow required checks for conflicted PRs.
+
+What worked:
+
+- Rebase finished successfully after resolving append-only doc conflicts.
+- Required workflow changes (`ci`, `a11y`, auto-update branch workflow, merge strategy rules) are preserved on the rebased branch.
+- YAML validation passed after adding dual `pull_request` + `pull_request_target` trigger bridge.
+
+What failed / wrong assumptions:
+
+- `pull_request_target`-only rollout created a temporary validation gap for the rollout PR itself because `master` had not yet adopted the new trigger.
+- Running `git rebase --continue` without `GIT_EDITOR` set failed in this environment.
+
+User corrections:
+
+- User explicitly requested to not abort rebase and to keep existing changes so they can land in `master`.
+
+Assumptions taken without asking:
+
+- A temporary dual-trigger bridge is acceptable to avoid deadlock on the rollout PR.
+- Limiting `pull_request_target` runs to `mergeable_state` dirty/unknown is acceptable to reduce duplicate runs on clean PRs.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Add the transition bridge in the same commit as the initial trigger migration to avoid temporary PR self-validation gaps.
+- Set `GIT_EDITOR=true` for scripted rebase continues in non-interactive terminals.
+
+Commands run + outcomes:
+
+- `git fetch origin master && git rebase origin/master`: PARTIAL (docs conflicts encountered and then resolved).
+- `GIT_EDITOR=true git rebase --continue`: PASS.
+- `git push --force-with-lease origin codex/fix-required-check-reporting`: PASS.
+- `gh pr view 199 --json mergeable,mergeStateStatus,statusCheckRollup`: PASS (`MERGEABLE`, checks pending).
+- `ruby -e "require 'yaml'; YAML.load_file('.github/workflows/ci.yml'); YAML.load_file('.github/workflows/accessibility.yml')"`: PASS.
+- `rg -n "pull_request_target|pull_request|mergeable_state" .github/workflows/ci.yml .github/workflows/accessibility.yml`: PASS.
+
+Open TODOs / follow-ups:
+
+- Wait for PR #199 required checks (`ci`, `a11y`) to appear and complete after the bridge commit is pushed.
+- Merge PR #199 into `master`.
+
+---
+
+## 2026-02-19 10:42 CET
+
+Task summary:
+
+- Stabilized CI reliability by slimming required `ci`, keeping a single required `a11y`, and moving strict suites to a dedicated `strict-quality` workflow.
+- Switched Playwright CI mode to run against built app server (`next start`) via `PLAYWRIGHT_SERVER_MODE=prod`.
+- Hardened strict org draft resume flow and transient API request retries.
+
+What worked:
+
+- `gh-fix-ci` inspection confirmed no current failing checks on PR #201, while repo state still contained long strict gates in required `ci`.
+- Workflow split reduced required-path scope without changing public product/API contracts.
+- Playwright config switch was implemented with backward-compatible default (`dev`) and CI override (`prod`).
+- Added deterministic poll on assignment update and bounded retry handling for transient connection resets.
+
+What failed / wrong assumptions:
+
+- Skill helper script required `python3` (not `python`) in this environment.
+- `npm run test -- e2e/strict/organization.strict.spec.ts ...` is a Vitest invocation and does not execute Playwright strict E2E directly.
+
+User corrections:
+
+- User requested direct implementation and merge path for CI/a11y stability (not only diagnosis).
+
+Assumptions taken without asking:
+
+- Branch protection required checks remain `ci` and `a11y` only.
+- Keeping strict suites out of PR-required path is acceptable if they run on `master`/nightly/manual via `strict-quality`.
+- Retaining smoke Playwright checks (`auth:real`, landing) in required `ci` is sufficient for PR signal.
+
+What the user corrected afterward:
+
+- None in this session.
+
+Improvements next time:
+
+- Add a dedicated workflow-level smoke check to validate required check names against branch protection configuration after workflow refactors.
+- Add a tiny Playwright unit test for config command selection by `PLAYWRIGHT_SERVER_MODE` to avoid regressions in CI mode switches.
+
+Commands run + outcomes:
+
+- `gh auth status`: PASS
+- `python3 /Users/yuriibakurov/.codex/skills/gh-fix-ci/scripts/inspect_pr_checks.py --repo . --pr 201 --max-lines 200 --context 40`: PASS (`no failing checks detected`)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS (1 existing warning)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- e2e/strict/organization.strict.spec.ts tests/ui/settings-integrations-discoverability.test.tsx`: PASS (Vitest-covered file)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:strict:quality`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS
+- `ruby -e "require 'yaml'; YAML.load_file('.github/workflows/ci.yml'); YAML.load_file('.github/workflows/accessibility.yml'); YAML.load_file('.github/workflows/strict-quality.yml'); puts 'workflow yaml ok'"`: PASS
+
+Open TODOs / follow-ups:
+
+- Open PR from `codex/stabilize-ci-a11y` to `master` and validate required checks runtime reduction on first 3 PR runs.
+- Manually dispatch `Strict Quality` workflow once after merge to validate strict suites in new lane.
