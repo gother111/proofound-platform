@@ -29,6 +29,17 @@ export default async function SkillGapsPage() {
     .eq('profile_id', user.id)
     .order('created_at', { ascending: false });
 
+  const normalizedGoals = (goalsData ?? []).map((goal) => ({
+    id: goal.id,
+    title: goal.title,
+    goal: goal.goal,
+    targetLevel: goal.target_level,
+    targetDate: goal.target_date,
+    status: goal.status,
+    progress: 0,
+    nextStep: 'Define your first milestone',
+  }));
+
   return (
     <div className="space-y-6">
       <SkillGapsClient
@@ -37,9 +48,8 @@ export default async function SkillGapsPage() {
         matrix={analysis.matrix}
         coverage={analysis.coverage}
         learning={learning}
-        goals={goalsData ?? []}
+        goals={normalizedGoals}
       />
     </div>
   );
 }
-

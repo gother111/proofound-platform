@@ -28,7 +28,11 @@ interface NotificationPreferences {
   emailAssignmentPublished: boolean;
   emailInterviewScheduled: boolean;
   emailContractSigned: boolean;
+  emailWeeklyDigest: boolean;
+  digestFrequency: 'weekly' | 'disabled';
 }
+
+type BooleanPreferenceKey = Exclude<keyof NotificationPreferences, 'digestFrequency'>;
 
 const NOTIFICATION_TYPES = [
   {
@@ -98,11 +102,19 @@ export default function NotificationPreferencesPage() {
     }
   };
 
-  const handleToggle = (key: keyof NotificationPreferences) => {
+  const handleToggle = (key: BooleanPreferenceKey) => {
     if (!preferences) return;
     setPreferences((prev) => {
       if (!prev) return prev;
-      return { ...prev, [key]: !prev[key] };
+      const nextValue = !prev[key];
+      if (key === 'emailWeeklyDigest') {
+        return {
+          ...prev,
+          emailWeeklyDigest: nextValue as boolean,
+          digestFrequency: nextValue ? 'weekly' : 'disabled',
+        };
+      }
+      return { ...prev, [key]: nextValue };
     });
     setHasChanges(true);
   };
@@ -167,6 +179,33 @@ export default function NotificationPreferencesPage() {
           </p>
         </Card>
 
+        {/* Weekly Digest Controls */}
+        <Card className="p-6">
+          <div className="space-y-4">
+            <div>
+              <h3 className="font-semibold text-[#2D3330]">Weekly Digest</h3>
+              <p className="text-sm text-[#6B6760] mt-1">
+                Receive one low-noise weekly recap with progress, top actions, and real activity
+                updates.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between space-x-4 p-3 bg-[#F7F6F1] rounded-lg">
+              <div className="flex items-center space-x-3">
+                <Mail className="h-4 w-4 text-[#6B6760]" />
+                <Label htmlFor="emailWeeklyDigest" className="cursor-pointer">
+                  Weekly digest email
+                </Label>
+              </div>
+              <Switch
+                id="emailWeeklyDigest"
+                checked={preferences.emailWeeklyDigest}
+                onCheckedChange={() => handleToggle('emailWeeklyDigest')}
+              />
+            </div>
+          </div>
+        </Card>
+
         {/* Notification Types */}
         <Card className="p-6">
           <div className="space-y-6">
@@ -189,9 +228,9 @@ export default function NotificationPreferencesPage() {
                       </div>
                       <Switch
                         id={`inApp${type.id}`}
-                        checked={preferences[`inApp${type.id}` as keyof NotificationPreferences]}
+                        checked={preferences[`inApp${type.id}` as BooleanPreferenceKey]}
                         onCheckedChange={() =>
-                          handleToggle(`inApp${type.id}` as keyof NotificationPreferences)
+                          handleToggle(`inApp${type.id}` as BooleanPreferenceKey)
                         }
                       />
                     </div>
@@ -206,9 +245,9 @@ export default function NotificationPreferencesPage() {
                       </div>
                       <Switch
                         id={`email${type.id}`}
-                        checked={preferences[`email${type.id}` as keyof NotificationPreferences]}
+                        checked={preferences[`email${type.id}` as BooleanPreferenceKey]}
                         onCheckedChange={() =>
-                          handleToggle(`email${type.id}` as keyof NotificationPreferences)
+                          handleToggle(`email${type.id}` as BooleanPreferenceKey)
                         }
                       />
                     </div>

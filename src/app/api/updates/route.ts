@@ -1,45 +1,62 @@
+import { NextRequest, NextResponse } from 'next/server';
+
 import { requireAuth } from '@/lib/auth';
-import { NextResponse } from 'next/server';
+import {
+  getIndividualActivityEvents,
+  getLatestOrgIdForUser,
+  getOrganizationActivityEvents,
+} from '@/lib/momentum/activity';
+import { resolveOrganizationId } from '@/lib/readiness/organization';
+import type { ActivityEvent } from '@/lib/momentum/types';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/updates
  *
- * Returns recent activity updates for the user's dashboard.
- * This aggregates various activities like:
- * - New matches
- * - Profile views
- * - Assignment applications
- * - Network activity
+ * Query params:
+ * - persona: individual | organization (default: individual)
+ * - org: organization id or slug (optional for organization persona)
+ * - limit: max number of updates (default: 8)
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const user = await requireAuth();
+    const searchParams = request.nextUrl.searchParams;
+    const personaParam = searchParams.get('persona');
+    const orgParam = searchParams.get('org');
+    const limitRaw = Number(searchParams.get('limit') ?? 8);
+    const limit = Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 20) : 8;
 
-    // For now, return sample data structure
-    // In production, this would query:
-    // - matches table for new matches
-    // - match_interest table for new interest
-    // - audit_logs for relevant activities
+    const persona = personaParam === 'organization' ? 'organization' : 'individual';
 
-    const updates: Array<{
-      id: string;
-      type: 'match' | 'view' | 'interest' | 'application';
-      text: string;
-      timestamp: string;
-      actionUrl?: string;
-    }> = [];
+    let updates: ActivityEvent[] = [];
 
-    // TODO: Implement real queries when match system is fully active
-    // Example:
-    // const recentMatches = await db.query.matches.findMany({
-    //   where: eq(matches.profileId, user.id),
-    //   orderBy: (matches, { desc }) => [desc(matches.createdAt)],
-    //   limit: 5,
-    // });
+    if (persona === 'organization') {
+      const orgId = orgParam
+        ? await resolveOrganizationId(orgParam)
+        : await getLatestOrgIdForUser(user.id);
 
-    return NextResponse.json({ updates });
+      if (orgId) {
+        updates = await getOrganizationActivityEvents(orgId, limit);
+      }
+    } else {
+      updates = await getIndividualActivityEvents(user.id, limit);
+    }
+
+    return NextResponse.json({
+      updates,
+      persona,
+      eventTypes: [
+        'goal_progress',
+        'profile_progress',
+        'verification_update',
+        'assignment_readiness',
+        'new_match',
+        'message',
+        'interview',
+      ],
+    });
   } catch (error) {
     console.error('Failed to fetch updates:', error);
     return NextResponse.json({ updates: [] });

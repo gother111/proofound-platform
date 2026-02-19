@@ -10,6 +10,10 @@ export type SkillGap = {
   targetLevel: number;
   gap: number;
   importance: number; // 0-100 scaled by demand
+  expectedImpact: {
+    min: number;
+    max: number;
+  };
   assignments: Array<{ id: string; role?: string; weight: number }>;
   tags?: string[];
   catId?: number;
@@ -53,6 +57,14 @@ const firstI18nValue = (val: Record<string, string> | null | undefined) => {
 };
 
 const unique = <T>(arr: T[]) => Array.from(new Set(arr));
+
+function estimateExpectedImpact(importance: number, gap: number, weight: number) {
+  const base = Math.max(2, Math.round(importance / 25));
+  const weightedSpread = Math.max(4, Math.round(gap * 2 + weight));
+  const min = Math.min(20, base);
+  const max = Math.min(28, min + weightedSpread);
+  return { min, max };
+}
 
 export type GapAnalysisOptions = {
   profileId: string;
@@ -151,7 +163,9 @@ export async function computeSkillGaps({
     .filter((a) => {
       const updated = a.updated_at ? new Date(a.updated_at) : null;
       const withinTimeframe = updated ? updated >= timeframeCutoff : true;
-      const matchesRole = roleFilter ? (a.role || '').toLowerCase().includes(roleFilter.toLowerCase()) : true;
+      const matchesRole = roleFilter
+        ? (a.role || '').toLowerCase().includes(roleFilter.toLowerCase())
+        : true;
       return withinTimeframe && matchesRole;
     })
     .slice(0, limitAssignments);
@@ -270,6 +284,11 @@ export async function computeSkillGaps({
     const currentLevel = userSkillMap.get(skillCode)?.level ?? 0;
     const importance = Math.round((meta.severity / maxSeverity) * 100);
     const tax = taxonomyMap.get(skillCode);
+    const expectedImpact = estimateExpectedImpact(
+      importance,
+      Math.max(meta.targetLevel - currentLevel, 0),
+      meta.totalWeight
+    );
 
     return {
       skillCode,
@@ -278,6 +297,7 @@ export async function computeSkillGaps({
       targetLevel: meta.targetLevel,
       gap: Math.max(meta.targetLevel - currentLevel, 0),
       importance,
+      expectedImpact,
       assignments: meta.assignments,
       tags: tax?.tags,
       catId: tax?.catId,

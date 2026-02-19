@@ -12,6 +12,7 @@ import { OrgGoalsCard } from '@/components/dashboard/OrgGoalsCard';
 import { TasksCard } from '@/components/dashboard/TasksCard';
 import { ProjectsCard } from '@/components/dashboard/ProjectsCard';
 import { OrgMatchingCard } from '@/components/dashboard/OrgMatchingCard';
+import { OrgReadinessCard } from '@/components/dashboard/org/OrgReadinessCard';
 import { TeamRolesCard } from '@/components/dashboard/TeamRolesCard';
 import { ExploreCard } from '@/components/dashboard/ExploreCard';
 import { WhileAwayCard } from '@/components/dashboard/WhileAwayCard';
@@ -68,6 +69,12 @@ const ORG_AVAILABLE_WIDGETS: Record<
     description: 'Track organizational objectives',
     defaultSize: 'default',
   },
+  'org-readiness': {
+    id: 'org-readiness',
+    name: 'Assignment Readiness',
+    description: 'Readiness score, demand signals, and recommended actions',
+    defaultSize: 'large',
+  },
   team: {
     id: 'team',
     name: 'Team',
@@ -103,10 +110,11 @@ const ORG_AVAILABLE_WIDGETS: Record<
 // Default org dashboard layout
 const DEFAULT_ORG_LAYOUT: DashboardWidget[] = [
   { widgetId: 'org-pipeline', position: 0, visible: true, size: 'large', settings: {} },
-  { widgetId: 'org-goals', position: 1, visible: true, size: 'default', settings: {} },
-  { widgetId: 'team', position: 2, visible: true, size: 'default', settings: {} },
-  { widgetId: 'tasks', position: 3, visible: true, size: 'default', settings: {} },
-  { widgetId: 'projects', position: 4, visible: true, size: 'default', settings: {} },
+  { widgetId: 'org-readiness', position: 1, visible: true, size: 'large', settings: {} },
+  { widgetId: 'org-goals', position: 2, visible: true, size: 'default', settings: {} },
+  { widgetId: 'team', position: 3, visible: true, size: 'default', settings: {} },
+  { widgetId: 'tasks', position: 4, visible: true, size: 'default', settings: {} },
+  { widgetId: 'projects', position: 5, visible: true, size: 'default', settings: {} },
 ];
 
 // Org preset layouts per PRD O8
@@ -119,9 +127,10 @@ const ORG_PRESET_LAYOUTS: Record<
     description: 'Focus on candidate pipeline',
     widgets: [
       { widgetId: 'org-pipeline', position: 0, visible: true, size: 'large', settings: {} },
-      { widgetId: 'team', position: 1, visible: true, size: 'default', settings: {} },
-      { widgetId: 'while-away', position: 2, visible: true, size: 'default', settings: {} },
-      { widgetId: 'tasks', position: 3, visible: true, size: 'default', settings: {} },
+      { widgetId: 'org-readiness', position: 1, visible: true, size: 'large', settings: {} },
+      { widgetId: 'team', position: 2, visible: true, size: 'default', settings: {} },
+      { widgetId: 'while-away', position: 3, visible: true, size: 'default', settings: {} },
+      { widgetId: 'tasks', position: 4, visible: true, size: 'default', settings: {} },
     ],
   },
   'hiring-manager': {
@@ -129,18 +138,20 @@ const ORG_PRESET_LAYOUTS: Record<
     description: 'Focus on assignments and goals',
     widgets: [
       { widgetId: 'org-pipeline', position: 0, visible: true, size: 'large', settings: {} },
-      { widgetId: 'org-goals', position: 1, visible: true, size: 'default', settings: {} },
-      { widgetId: 'team', position: 2, visible: true, size: 'default', settings: {} },
-      { widgetId: 'projects', position: 3, visible: true, size: 'default', settings: {} },
+      { widgetId: 'org-readiness', position: 1, visible: true, size: 'large', settings: {} },
+      { widgetId: 'org-goals', position: 2, visible: true, size: 'default', settings: {} },
+      { widgetId: 'team', position: 3, visible: true, size: 'default', settings: {} },
+      { widgetId: 'projects', position: 4, visible: true, size: 'default', settings: {} },
     ],
   },
   executive: {
     label: 'Executive',
     description: 'High-level overview',
     widgets: [
-      { widgetId: 'org-goals', position: 0, visible: true, size: 'large', settings: {} },
-      { widgetId: 'org-pipeline', position: 1, visible: true, size: 'default', settings: {} },
-      { widgetId: 'team', position: 2, visible: true, size: 'default', settings: {} },
+      { widgetId: 'org-readiness', position: 0, visible: true, size: 'large', settings: {} },
+      { widgetId: 'org-goals', position: 1, visible: true, size: 'large', settings: {} },
+      { widgetId: 'org-pipeline', position: 2, visible: true, size: 'default', settings: {} },
+      { widgetId: 'team', position: 3, visible: true, size: 'default', settings: {} },
     ],
   },
   balanced: {
@@ -246,6 +257,8 @@ export function OrgDashboardClient({ orgSlug, orgId, userRole }: OrgDashboardCli
         return (
           <OrgGoalsCard orgSlug={orgSlug} orgId={orgId} canManageSettings={canManageSettings} />
         );
+      case 'org-readiness':
+        return <OrgReadinessCard orgRef={orgSlug} />;
       case 'team':
         return (
           <TeamRolesCard orgSlug={orgSlug} orgId={orgId} canManageSettings={canManageSettings} />
@@ -255,9 +268,9 @@ export function OrgDashboardClient({ orgSlug, orgId, userRole }: OrgDashboardCli
       case 'projects':
         return <ProjectsCard />;
       case 'while-away':
-        return <WhileAwayCard />;
+        return <WhileAwayCard persona="organization" orgRef={orgSlug} />;
       case 'explore':
-        return <ExploreCard />;
+        return <ExploreCard persona="organization" orgRef={orgSlug} />;
       default:
         return null;
     }

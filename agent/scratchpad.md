@@ -1553,3 +1553,64 @@ Open TODOs / follow-ups:
 
 - Decide whether to move `tests/e2e/prd-flows-organization.spec.ts` under `e2e/` or add a second Playwright config for `tests/e2e`.
 - Re-run targeted organization settings route regression once discovery path is aligned.
+
+---
+
+## 2026-02-19 09:40 CET
+
+Task summary:
+
+- Implemented the cold-start utility MVP plan across APIs, readiness services, dashboard empty states, and weekly digest plumbing.
+- Unified goal contract behavior with canonical shape plus compatibility adapters.
+- Added individual and organization readiness surfaces so users see actionable value even with low match volume.
+
+What worked:
+
+- Canonical goal adapter and typed readiness/momentum models integrated cleanly with existing services.
+- Replacing `/api/updates` stub with real activity aggregation produced no type or lint regressions.
+- Dashboard no-empty-state updates for both personas compile and build successfully.
+- Weekly digest flow reuses existing notification and email infrastructure with minimal schema expansion.
+
+What failed / wrong assumptions:
+
+- Assumed migration and privacy verification could run locally, but environment lacked required DB/Supabase credentials.
+- First pass had a JSX parsing error in `ReadinessSprintPanel.tsx` and strict goal-type mismatch in `toCanonicalGoal`.
+
+User corrections:
+
+- User instructed to implement the provided full plan directly.
+
+Assumptions taken without asking:
+
+- Kept strict no-fake-entity behavior and transparent low-market messaging for all new empty states.
+- Treated weekly digest as opt-out via notification preferences with weekly default cadence.
+- Kept existing auth/privacy/RLS behavior unchanged and implemented new behavior through additive APIs/services.
+- Used org slug (`orgRef`) resolution for org readiness API consumer paths.
+
+What the user corrected afterward:
+
+- No additional corrections after implementation began in this session.
+
+Improvements next time:
+
+- Add targeted route tests for new momentum/readiness endpoints during initial implementation, not as follow-up.
+- Validate required env and DB credentials before starting privacy/migration verification commands.
+- Add a small UI test fixture for zero-match and zero-candidate states to protect against future empty-state regressions.
+
+Commands run + outcomes:
+
+- `git status --short`: PASS.
+- `npm install`: PASS (engine warning due Node 25 vs repo Node 20 target).
+- `npm run typecheck`: FAIL initially, then PASS after fixes.
+- `npm run lint`: PASS (warning only in `postcss.config.js`).
+- `npm run test`: PASS.
+- `npm run db:migrate`: FAIL (`DATABASE_URL is required to run migrations`).
+- `npm run test:privacy`: FAIL (missing Supabase env vars).
+- `npm run test:privacy:extended`: FAIL (missing Supabase env vars).
+- `npm run build`: PASS.
+
+Open TODOs / follow-ups:
+
+- Re-run `npm run db:migrate`, `npm run test:privacy`, and `npm run test:privacy:extended` after provisioning required env vars.
+- Add API tests for `/api/momentum/summary`, `/api/individual/readiness`, `/api/org/readiness`, and enhanced `/api/updates`.
+- Monitor weekly digest opt-out rate and delivery quality after production rollout.

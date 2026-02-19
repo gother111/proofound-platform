@@ -1410,3 +1410,77 @@ Open risks/TODO:
 - `tests/e2e/prd-flows-organization.spec.ts` is outside Playwright `testDir`, so this regression is not currently in the active e2e run path.
 - Any hidden consumer expecting snake_case visibility response keys may require migration to the camelCase contract.
 - Settings subpages are owner/admin-only; if role resolution changes upstream, access behavior must be revalidated.
+
+---
+
+## 2026-02-19: Cold-Start Utility MVP Layer (No-Empty-State)
+
+What changed:
+
+- Added shared cold-start momentum/readiness domain services and types:
+  - `src/lib/momentum/types.ts`
+  - `src/lib/momentum/activity.ts`
+  - `src/lib/momentum/summary.ts`
+  - `src/lib/readiness/individual.ts`
+  - `src/lib/readiness/organization.ts`
+- Added canonical goals adapter and normalized goal contract helpers:
+  - `src/lib/goals/canonical.ts`
+- Added new APIs:
+  - `GET /api/momentum/summary` in `src/app/api/momentum/summary/route.ts`
+  - `GET /api/individual/readiness` in `src/app/api/individual/readiness/route.ts`
+  - `GET /api/org/readiness` in `src/app/api/org/readiness/route.ts`
+- Replaced `/api/updates` stub behavior with typed real activity aggregation:
+  - `src/app/api/updates/route.ts`
+- Unified goals contract behavior and compatibility handling:
+  - canonicalized `src/app/api/goals/route.ts`
+  - compatibility adapter in `src/app/api/skill-gaps/goals/route.ts`
+- Added weekly digest pipeline and cron endpoint:
+  - `src/lib/notifications/weekly-digest.ts`
+  - `src/app/api/cron/weekly-digest/route.ts`
+  - updated `src/app/api/cron/decision-reminders/route.ts` to orchestrate weekly digest on schedule
+- Extended notifications domain and preferences for digest cadence:
+  - `src/lib/notifications/index.ts`
+  - `src/app/api/notifications/route.ts`
+  - `src/app/api/notifications/preferences/route.ts`
+- Added schema and SQL migrations for weekly digest preferences and notification type:
+  - `src/db/schema.ts`
+  - `src/db/migrations/20260219110000_add_weekly_digest_preferences.sql`
+  - `supabase/migrations/20260219110000_add_weekly_digest_preferences.sql`
+- Added and integrated no-empty-state UI surfaces:
+  - individual readiness sprint panel in `src/components/dashboard/ReadinessSprintPanel.tsx` and `src/app/app/i/home/page.tsx`
+  - org readiness card in `src/components/dashboard/org/OrgReadinessCard.tsx` and `src/app/app/o/[slug]/home/OrgDashboardClient.tsx`
+  - upgraded empty-state behavior in:
+    - `src/components/dashboard/ExploreCard.tsx`
+    - `src/components/dashboard/WhileAwayCard.tsx`
+    - `src/components/dashboard/MatchingResultsCard.tsx`
+    - `src/app/app/i/matching/page.tsx`
+- Extended skill gap impact model and aligned goals data shape in skill gap UI:
+  - `src/lib/skills/gap-service.ts`
+  - `src/components/skill-gaps/SkillGapsClient.tsx`
+  - `src/app/app/i/skill-gaps/page.tsx`
+- Added weekly digest controls to individual notification settings:
+  - `src/app/app/i/settings/notifications/page.tsx`
+
+Why:
+
+- Cold-start periods had blank or low-value states that could cause early churn for both individuals and organizations.
+- Platform needed transparent, actionable prep value without fake users or synthetic candidate/company entities.
+- Existing goals endpoints had overlapping behavior and needed one canonical contract with safe compatibility.
+- Retention loop needed weekly, opt-out digest reminders reusing existing notifications stack.
+
+How to verify:
+
+- `npm run lint`: PASS (one existing non-blocking warning in `postcss.config.js`)
+- `npm run typecheck`: PASS
+- `npm run test`: PASS
+- `npm run build`: PASS
+- `npm run db:migrate`: FAIL in this environment (`DATABASE_URL is required to run migrations`)
+- `npm run test:privacy`: FAIL in this environment (missing `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`)
+- `npm run test:privacy:extended`: FAIL in this environment (same missing Supabase env)
+
+Open risks/TODO:
+
+- Privacy suites and migration verification are blocked locally until DB and Supabase test credentials are configured.
+- Weekly digest rollout should be feature-flagged in production until unsubscribe rate and engagement are observed for several weekly cycles.
+- No new targeted tests were added for new momentum/readiness API routes in this change set. Consider adding route-level tests for zero-match and zero-candidate fixtures.
+- Local runtime uses Node `v25.4.0` in this environment while repo engines target Node 20.

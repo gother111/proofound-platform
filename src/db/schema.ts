@@ -1673,6 +1673,7 @@ export const notifications = pgTable('notifications', {
       'assignment_published',
       'interview_scheduled',
       'contract_signed',
+      'weekly_digest',
     ],
   }).notNull(),
   title: text('title').notNull(),
@@ -1714,6 +1715,11 @@ export const notificationPreferences = pgTable('notification_preferences', {
   emailAssignmentPublished: boolean('email_assignment_published').default(true).notNull(),
   emailInterviewScheduled: boolean('email_interview_scheduled').default(true).notNull(),
   emailContractSigned: boolean('email_contract_signed').default(true).notNull(),
+  emailWeeklyDigest: boolean('email_weekly_digest').default(true).notNull(),
+  digestFrequency: text('digest_frequency', { enum: ['weekly', 'disabled'] })
+    .default('weekly')
+    .notNull(),
+  lastDigestSentAt: timestamp('last_digest_sent_at'),
   // Audit fields
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
