@@ -12,6 +12,7 @@ import { sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { getRows } from '@/lib/db/rows';
 import { anonymizeUserAgent } from '@/lib/utils/privacy';
+import { requireAnalyticsConsentForUser } from '@/lib/privacy/analytics-consent';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,6 +52,14 @@ export async function POST(req: NextRequest) {
     // If user is anonymous, skip DB insert to avoid FK/NOT NULL issues
     if (!userId) {
       return NextResponse.json({ success: true, skipped: 'anonymous' });
+    }
+
+    const hasAnalyticsConsent = await requireAnalyticsConsentForUser(userId);
+    if (!hasAnalyticsConsent) {
+      return NextResponse.json(
+        { success: true, skipped: 'analytics_consent_missing' },
+        { status: 202 }
+      );
     }
 
     let userAgentHash: string | null = null;

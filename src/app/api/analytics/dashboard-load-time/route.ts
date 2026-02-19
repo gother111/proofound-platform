@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
+import { requireAnalyticsConsentForUser } from '@/lib/privacy/analytics-consent';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,7 +21,18 @@ export async function POST(req: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json(
+        { success: true, skipped: 'analytics_consent_missing' },
+        { status: 202 }
+      );
+    }
+
+    const hasAnalyticsConsent = await requireAnalyticsConsentForUser(user.id);
+    if (!hasAnalyticsConsent) {
+      return NextResponse.json(
+        { success: true, skipped: 'analytics_consent_missing' },
+        { status: 202 }
+      );
     }
 
     const body = await req.json();
