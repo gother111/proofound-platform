@@ -1,59 +1,39 @@
 'use client';
 
-/**
- * MatchingResultsCard Widget
- *
- * Displays user's top matches with scores and PAC (Proof of Authentic Connection)
- * Part of the customizable dashboard (PRD F2)
- *
- * Features:
- * - Shows top matches with match scores
- * - Visual score indicators
- * - Quick link to view all matches
- * - Prompt to set up matching if not configured
- */
-
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import {
-  Sparkles,
-  Loader2,
   AlertCircle,
-  TrendingUp,
   ArrowRight,
-  Shield,
-  Star,
-  Briefcase,
+  Loader2,
   MapPin,
+  Shield,
+  Sparkles,
+  Star,
+  TrendingUp,
 } from 'lucide-react';
+
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api/fetch';
+import type { ReadinessAction } from '@/lib/momentum/types';
 
 interface MatchingResultsCardProps {
   className?: string;
-  basePath?: string; // '/app/i' or '/app/o/[slug]'
+  basePath?: string;
 }
 
-// Type for match result
 interface MatchResult {
-  id?: string;
   assignmentId: string;
   score: number;
   subscores: Record<string, number>;
-  contributions: Record<string, number>;
-  gaps: Array<{ id: string; required: number; have: number }>;
-  missing: string[];
   assignment: {
     title?: string;
     headline?: string;
     locationMode?: string;
     country?: string;
-    compMin?: number;
-    compMax?: number;
-    currency?: string;
   };
 }
 
@@ -61,13 +41,9 @@ interface MatchResponse {
   items: MatchResult[];
   meta: {
     total: number;
-    returned: number;
-    durationMs: number;
-    weights: Record<string, number>;
   };
 }
 
-// Get score color based on match score
 function getScoreColor(score: number): { text: string; bg: string } {
   if (score >= 80) return { text: '#166534', bg: '#DCFCE7' };
   if (score >= 60) return { text: '#1C4D3A', bg: '#D8EDE4' };
@@ -75,7 +51,6 @@ function getScoreColor(score: number): { text: string; bg: string } {
   return { text: '#6B6760', bg: '#E8E6DD' };
 }
 
-// Format location
 function formatLocation(mode?: string, country?: string): string {
   if (mode === 'remote') return 'Remote';
   if (mode === 'hybrid' && country) return `Hybrid · ${country}`;
@@ -89,35 +64,41 @@ export function MatchingResultsCard({ className, basePath = '/app/i' }: Matching
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [noProfile, setNoProfile] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
+  const [readinessActions, setReadinessActions] = useState<ReadinessAction[]>([]);
 
-  // Fetch matches from API
   useEffect(() => {
-    async function fetchMatches() {
+    async function fetchData() {
       try {
         setIsLoading(true);
         setError(null);
         setNoProfile(false);
 
-        const response = await apiFetch('/api/match/profile', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ k: 5 }), // Fetch top 5 matches
-        });
+        const [matchesResponse, readinessResponse] = await Promise.all([
+          apiFetch('/api/match/profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ k: 5 }),
+          }),
+          fetch('/api/individual/readiness', { cache: 'no-store' }),
+        ]);
 
-        if (response.status === 404) {
-          // No matching profile set up yet
+        if (readinessResponse.ok) {
+          const readinessPayload = await readinessResponse.json();
+          setReadinessActions(readinessPayload.topActions || []);
+        }
+
+        if (matchesResponse.status === 404) {
           setNoProfile(true);
           return;
         }
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
+        if (!matchesResponse.ok) {
+          const errorData = await matchesResponse.json().catch(() => ({}));
           throw new Error(errorData.message || 'Failed to fetch matches');
         }
 
-        const data: MatchResponse = await response.json();
-        setMatches(data.items.slice(0, 3)); // Show top 3 on dashboard
+        const data: MatchResponse = await matchesResponse.json();
+        setMatches(data.items.slice(0, 3));
         setTotalMatches(data.meta.total);
       } catch (err) {
         console.error('Error fetching matches:', err);
@@ -127,10 +108,9 @@ export function MatchingResultsCard({ className, basePath = '/app/i' }: Matching
       }
     }
 
-    fetchMatches();
+    fetchData();
   }, []);
 
-  // Loading state
   if (isLoading) {
     return (
       <Card
@@ -149,7 +129,6 @@ export function MatchingResultsCard({ className, basePath = '/app/i' }: Matching
     );
   }
 
-  // Error state
   if (error) {
     return (
       <Card
@@ -171,8 +150,9 @@ export function MatchingResultsCard({ className, basePath = '/app/i' }: Matching
     );
   }
 
-  // No matching profile state
-  if (noProfile) {
+  if (noProfile || matches.length === 0) {
+    const fallbackActions = readinessActions.length > 0 ? readinessActions : [];
+
     return (
       <Card
         className={`p-4 border ${className || ''}`}
@@ -183,75 +163,49 @@ export function MatchingResultsCard({ className, basePath = '/app/i' }: Matching
             Matches
           </h5>
         </div>
-        <div className="text-center py-6">
+
+        <div className="text-center py-2">
           <Sparkles className="w-10 h-10 mx-auto mb-2" style={{ color: '#E8E6DD' }} />
           <p className="text-xs mb-3" style={{ color: '#6B6760' }}>
-            Set up your matching profile to discover aligned opportunities.
+            {noProfile
+              ? 'Set up your matching profile to unlock real opportunities.'
+              : 'No matches yet. Use these actions to improve match readiness.'}
           </p>
-          <Link href={`${basePath}/matching/preferences`}>
-            <Button
-              size="sm"
-              className="h-7 text-xs"
-              style={{
-                backgroundColor: isHovered ? '#2D5F4A' : '#1C4D3A',
-                color: '#F7F6F1',
-                transition: 'background-color 200ms',
-              }}
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={() => setIsHovered(false)}
-            >
-              Set up matching
-            </Button>
-          </Link>
+        </div>
+
+        {fallbackActions.length > 0 ? (
+          <div className="space-y-2">
+            {fallbackActions.slice(0, 2).map((action) => (
+              <Link
+                key={action.id}
+                href={action.actionUrl}
+                className="block rounded-lg border border-[#E8E6DD] px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1]"
+              >
+                <p className="text-xs font-semibold text-[#2D3330]">{action.title}</p>
+                <p className="text-xs text-[#6B6760] mt-1">{action.description}</p>
+              </Link>
+            ))}
+          </div>
+        ) : null}
+
+        <div className="mt-3">
+          <Button
+            size="sm"
+            className="h-8 text-xs bg-[#1C4D3A] hover:bg-[#2D5F4A] text-white w-full"
+            asChild
+          >
+            <Link href={`${basePath}/matching/preferences`}>Open matching preferences</Link>
+          </Button>
         </div>
       </Card>
     );
   }
 
-  // No matches found state
-  if (matches.length === 0) {
-    return (
-      <Card
-        className={`p-4 border ${className || ''}`}
-        style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}
-      >
-        <div className="flex items-center justify-between mb-3">
-          <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
-            Matches
-          </h5>
-        </div>
-        <div className="text-center py-6">
-          <Sparkles className="w-10 h-10 mx-auto mb-2" style={{ color: '#E8E6DD' }} />
-          <p className="text-xs mb-3" style={{ color: '#6B6760' }}>
-            No matches yet. Update your profile and skills to improve your match potential.
-          </p>
-          <Link href={`${basePath}/expertise`}>
-            <Button
-              size="sm"
-              className="h-7 text-xs"
-              style={{
-                backgroundColor: isHovered ? '#2D5F4A' : '#1C4D3A',
-                color: '#F7F6F1',
-                transition: 'background-color 200ms',
-              }}
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={() => setIsHovered(false)}
-            >
-              Improve profile
-            </Button>
-          </Link>
-        </div>
-      </Card>
-    );
-  }
-
-  // Matches list view
   return (
     <Card
       className={`p-4 border ${className || ''}`}
       style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}
     >
-      {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <h5 className="text-sm font-medium" style={{ color: '#2D3330' }}>
@@ -275,18 +229,13 @@ export function MatchingResultsCard({ className, basePath = '/app/i' }: Matching
         </Link>
       </div>
 
-      {/* Matches list */}
       <div className="space-y-3">
         {matches.map((match) => {
           const scorePercent = Math.round(match.score * 100);
           const colors = getScoreColor(scorePercent);
 
           return (
-            <Link
-              key={match.assignmentId}
-              href={`${basePath}/matching/${match.assignmentId}`}
-              className="block"
-            >
+            <Link key={match.assignmentId} href={`${basePath}/matching`} className="block">
               <div
                 className="p-2.5 rounded-lg border hover:border-opacity-100 transition-all"
                 style={{
@@ -316,19 +265,18 @@ export function MatchingResultsCard({ className, basePath = '/app/i' }: Matching
                   </Badge>
                 </div>
 
-                {/* Score breakdown preview */}
                 <div className="flex items-center gap-2">
                   <Progress
                     value={scorePercent}
                     className="h-1.5 flex-1"
                     style={{ backgroundColor: '#E8E6DD' }}
                   />
-                  {match.subscores.skills >= 0.7 && (
+                  {Number(match.subscores?.skills ?? 0) >= 0.7 && (
                     <span title="Strong skills match">
                       <Star className="w-3 h-3" style={{ color: '#F59E0B' }} />
                     </span>
                   )}
-                  {match.subscores.values >= 0.7 && (
+                  {Number(match.subscores?.values ?? 0) >= 0.7 && (
                     <span title="Values aligned">
                       <Shield className="w-3 h-3" style={{ color: '#1C4D3A' }} />
                     </span>
@@ -340,7 +288,6 @@ export function MatchingResultsCard({ className, basePath = '/app/i' }: Matching
         })}
       </div>
 
-      {/* Footer */}
       <div
         className="mt-4 pt-3 border-t flex items-center justify-between"
         style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}

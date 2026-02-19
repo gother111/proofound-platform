@@ -18,6 +18,7 @@ const CreateNotificationSchema = z.object({
     'assignment_published',
     'interview_scheduled',
     'contract_signed',
+    'weekly_digest',
   ]),
   title: z.string().min(1),
   message: z.string().min(1),
@@ -46,17 +47,11 @@ export async function GET(request: NextRequest) {
     const unreadOnly = searchParams.get('unread') === 'true';
 
     // Build query
-    let query = db
-      .select()
-      .from(notifications)
-      .where(eq(notifications.userId, user.id))
-      .$dynamic();
+    let query = db.select().from(notifications).where(eq(notifications.userId, user.id)).$dynamic();
 
     // Filter by read status if requested
     if (unreadOnly) {
-      query = query.where(
-        and(eq(notifications.userId, user.id), eq(notifications.read, false))
-      );
+      query = query.where(and(eq(notifications.userId, user.id), eq(notifications.read, false)));
     }
 
     // Fetch notifications with pagination
@@ -67,9 +62,7 @@ export async function GET(request: NextRequest) {
 
     // Check if there are more results
     const hasMore = userNotifications.length > limit;
-    const notificationsToReturn = hasMore
-      ? userNotifications.slice(0, limit)
-      : userNotifications;
+    const notificationsToReturn = hasMore ? userNotifications.slice(0, limit) : userNotifications;
 
     return NextResponse.json({
       items: notificationsToReturn,
@@ -81,10 +74,7 @@ export async function GET(request: NextRequest) {
       error: error instanceof Error ? error.message : 'Unknown error',
     });
 
-    return NextResponse.json(
-      { error: 'Failed to fetch notifications' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch notifications' }, { status: 500 });
   }
 }
 
@@ -137,9 +127,6 @@ export async function POST(request: NextRequest) {
       error: error instanceof Error ? error.message : 'Unknown error',
     });
 
-    return NextResponse.json(
-      { error: 'Failed to create notification' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to create notification' }, { status: 500 });
   }
 }

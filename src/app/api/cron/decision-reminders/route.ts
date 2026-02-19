@@ -13,7 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { processDecisionReminders } from '@/lib/decisions/automation';
 import { checkPerformanceHealth, sendPerformanceAlert } from '@/lib/analytics/health-check';
-import { requireInternalApiRequest } from '@/lib/api/auth';
+import { processWeeklyDigests } from '@/lib/notifications/weekly-digest';
 import { log } from '@/lib/log';
 
 export const runtime = 'nodejs';
@@ -21,13 +21,25 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
-    const authFailure = requireInternalApiRequest(req);
-    if (authFailure) {
-      log.warn('decision.reminders.cron.unauthorized', {
-        authHeader: req.headers.get('authorization') ? 'present' : 'missing',
-        hasConfiguredSecret: Boolean(process.env.INTERNAL_API_SECRET || process.env.CRON_SECRET),
+    // Verify cron secret for security
+    const authHeader = req.headers.get('authorization');
+    const cronSecret = process.env.CRON_SECRET;
+
+    if (!cronSecret) {
+      log.error('decision.reminders.cron.misconfigured', {
+        reason: 'CRON_SECRET missing',
       });
-      return authFailure;
+      return NextResponse.json(
+        { error: 'CRON_SECRET is missing. Refusing to run cron job.' },
+        { status: 500 }
+      );
+    }
+
+    if (authHeader !== `Bearer ${cronSecret}`) {
+      log.warn('decision.reminders.cron.unauthorized', {
+        authHeader: authHeader ? 'present' : 'missing',
+      });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // ========================================
@@ -79,6 +91,42 @@ export async function GET(req: NextRequest) {
     // Final Summary
     // ========================================
 
+    // Weekly digest orchestration piggybacks on the daily cron to avoid extra Vercel cron slots.
+    let weeklyDigest: {
+      status: 'skipped' | 'success' | 'error';
+      processed?: number;
+      emailed?: number;
+      createdInApp?: number;
+      skipped?: number;
+      errors?: number;
+      reason?: string;
+    } = { status: 'skipped', reason: 'Not scheduled today' };
+
+    const isWeeklyDigestEnabled = process.env.ENABLE_WEEKLY_DIGEST !== 'false';
+    const isMondayUtc = new Date().getUTCDay() === 1;
+    if (!isWeeklyDigestEnabled) {
+      weeklyDigest = { status: 'skipped', reason: 'ENABLE_WEEKLY_DIGEST=false' };
+    } else if (!isMondayUtc) {
+      weeklyDigest = { status: 'skipped', reason: 'Runs on Monday UTC only' };
+    } else {
+      try {
+        const digestResult = await processWeeklyDigests(false);
+        weeklyDigest = {
+          status: 'success',
+          processed: digestResult.processed,
+          emailed: digestResult.emailed,
+          createdInApp: digestResult.createdInApp,
+          skipped: digestResult.skipped,
+          errors: digestResult.errors.length,
+        };
+      } catch (error) {
+        weeklyDigest = {
+          status: 'error',
+          reason: error instanceof Error ? error.message : 'Unknown weekly digest error',
+        };
+      }
+    }
+
     return NextResponse.json({
       success: true,
       decisionReminders: decisionResult,
@@ -88,6 +136,7 @@ export async function GET(req: NextRequest) {
         breaches: healthStatus?.breaches.length ?? 0,
         metrics: healthStatus?.metrics ?? null,
       },
+      weeklyDigest,
     });
   } catch (error) {
     log.error('decision.reminders.cron.failed', {

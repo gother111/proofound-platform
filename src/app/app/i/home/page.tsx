@@ -1,6 +1,7 @@
 import { requireAuth } from '@/lib/auth';
 import Link from 'next/link';
 import { DashboardClient } from './DashboardClient';
+import { ReadinessSprintPanel } from '@/components/dashboard/ReadinessSprintPanel';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { getDashboardMetrics } from '@/lib/dashboard/metrics';
@@ -174,6 +175,8 @@ export default async function IndividualHomePage() {
               )
             )}
           </section>
+
+          <ReadinessSprintPanel />
 
           {/* Customizable Dashboard */}
           <DashboardClient />
