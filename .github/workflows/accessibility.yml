@@ -18,6 +18,10 @@ on:
       - synchronize
       - ready_for_review
 
+concurrency:
+  group: a11y-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   a11y:
     if: >-
@@ -42,17 +46,20 @@ jobs:
         )
       )
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     env:
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      SITE_URL: http://localhost:3000
       NEXT_PUBLIC_APP_ENV: ci
       NODE_OPTIONS: --max-old-space-size=6144
+      PLAYWRIGHT_SERVER_MODE: prod
+      NEXT_PUBLIC_USE_MOCK_SUPABASE: "true"
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       PII_HASH_SALT: ${{ secrets.PII_HASH_SALT || 'ci-playwright-test-salt' }}
-      NEXT_PUBLIC_USE_MOCK_SUPABASE: "false"
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -72,10 +79,9 @@ jobs:
       - name: Build application
         run: npm run build
         env:
-          # Add any required environment variables for build
           SKIP_ENV_VALIDATION: true
 
-      - name: Install Playwright browsers
+      - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
       - name: Run automated accessibility tests

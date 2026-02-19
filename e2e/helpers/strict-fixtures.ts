@@ -54,6 +54,15 @@ export interface StrictFixtureState {
 }
 
 const DEFAULT_PASSWORD = 'TestPassword123!';
+const TRANSIENT_REQUEST_ERROR_PATTERNS = ['socket hang up', 'econnreset', 'aborted'];
+const REQUEST_RETRY_ATTEMPTS = Number.parseInt(
+  process.env.STRICT_REQUEST_RETRY_ATTEMPTS || '3',
+  10
+);
+const REQUEST_RETRY_DELAY_MS = Number.parseInt(
+  process.env.STRICT_REQUEST_RETRY_DELAY_MS || '400',
+  10
+);
 
 function requireEnv(name: string): string {
   const value = process.env[name]?.trim();
@@ -61,6 +70,47 @@ function requireEnv(name: string): string {
     throw new Error(`Missing required environment variable: ${name}`);
   }
   return value;
+}
+
+function isTransientRequestError(error: unknown): boolean {
+  const message =
+    error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+  return TRANSIENT_REQUEST_ERROR_PATTERNS.some((pattern) => message.includes(pattern));
+}
+
+async function wait(ms: number): Promise<void> {
+  await new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+async function withTransientRequestRetry<T>(
+  operationName: string,
+  operation: () => Promise<T>
+): Promise<T> {
+  const maxAttempts =
+    Number.isFinite(REQUEST_RETRY_ATTEMPTS) && REQUEST_RETRY_ATTEMPTS > 0
+      ? REQUEST_RETRY_ATTEMPTS
+      : 1;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      const shouldRetry = attempt < maxAttempts && isTransientRequestError(error);
+      if (!shouldRetry) {
+        throw error;
+      }
+
+      const reason = error instanceof Error ? error.message : String(error);
+      console.warn(
+        `[strict-fixtures] transient ${operationName} error on attempt ${attempt}/${maxAttempts}: ${reason}`
+      );
+      await wait(REQUEST_RETRY_DELAY_MS * attempt);
+    }
+  }
+
+  throw new Error(`Unexpected retry exhaustion for ${operationName}`);
 }
 
 function uniqueSuffix(prefix: string): string {
@@ -461,32 +511,38 @@ export async function getCsrfToken(request: APIRequestContext): Promise<string> 
 }
 
 export async function apiPostJson(request: APIRequestContext, url: string, data: unknown) {
-  const csrfToken = await getCsrfToken(request);
-  return request.post(url, {
-    data,
-    headers: {
-      'x-csrf-token': csrfToken,
-    },
+  return withTransientRequestRetry(`POST ${url}`, async () => {
+    const csrfToken = await getCsrfToken(request);
+    return request.post(url, {
+      data,
+      headers: {
+        'x-csrf-token': csrfToken,
+      },
+    });
   });
 }
 
 export async function apiPutJson(request: APIRequestContext, url: string, data: unknown) {
-  const csrfToken = await getCsrfToken(request);
-  return request.put(url, {
-    data,
-    headers: {
-      'x-csrf-token': csrfToken,
-    },
+  return withTransientRequestRetry(`PUT ${url}`, async () => {
+    const csrfToken = await getCsrfToken(request);
+    return request.put(url, {
+      data,
+      headers: {
+        'x-csrf-token': csrfToken,
+      },
+    });
   });
 }
 
 export async function apiDeleteJson(request: APIRequestContext, url: string, data?: unknown) {
-  const csrfToken = await getCsrfToken(request);
-  return request.delete(url, {
-    data,
-    headers: {
-      'x-csrf-token': csrfToken,
-    },
+  return withTransientRequestRetry(`DELETE ${url}`, async () => {
+    const csrfToken = await getCsrfToken(request);
+    return request.delete(url, {
+      data,
+      headers: {
+        'x-csrf-token': csrfToken,
+      },
+    });
   });
 }
 

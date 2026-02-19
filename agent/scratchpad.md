@@ -2424,3 +2424,61 @@ Open TODOs / follow-ups:
 
 - Wait for PR #199 required checks (`ci`, `a11y`) to appear and complete after the bridge commit is pushed.
 - Merge PR #199 into `master`.
+
+---
+
+## 2026-02-19 10:42 CET
+
+Task summary:
+
+- Stabilized CI reliability by slimming required `ci`, keeping a single required `a11y`, and moving strict suites to a dedicated `strict-quality` workflow.
+- Switched Playwright CI mode to run against built app server (`next start`) via `PLAYWRIGHT_SERVER_MODE=prod`.
+- Hardened strict org draft resume flow and transient API request retries.
+
+What worked:
+
+- `gh-fix-ci` inspection confirmed no current failing checks on PR #201, while repo state still contained long strict gates in required `ci`.
+- Workflow split reduced required-path scope without changing public product/API contracts.
+- Playwright config switch was implemented with backward-compatible default (`dev`) and CI override (`prod`).
+- Added deterministic poll on assignment update and bounded retry handling for transient connection resets.
+
+What failed / wrong assumptions:
+
+- Skill helper script required `python3` (not `python`) in this environment.
+- `npm run test -- e2e/strict/organization.strict.spec.ts ...` is a Vitest invocation and does not execute Playwright strict E2E directly.
+
+User corrections:
+
+- User requested direct implementation and merge path for CI/a11y stability (not only diagnosis).
+
+Assumptions taken without asking:
+
+- Branch protection required checks remain `ci` and `a11y` only.
+- Keeping strict suites out of PR-required path is acceptable if they run on `master`/nightly/manual via `strict-quality`.
+- Retaining smoke Playwright checks (`auth:real`, landing) in required `ci` is sufficient for PR signal.
+
+What the user corrected afterward:
+
+- None in this session.
+
+Improvements next time:
+
+- Add a dedicated workflow-level smoke check to validate required check names against branch protection configuration after workflow refactors.
+- Add a tiny Playwright unit test for config command selection by `PLAYWRIGHT_SERVER_MODE` to avoid regressions in CI mode switches.
+
+Commands run + outcomes:
+
+- `gh auth status`: PASS
+- `python3 /Users/yuriibakurov/.codex/skills/gh-fix-ci/scripts/inspect_pr_checks.py --repo . --pr 201 --max-lines 200 --context 40`: PASS (`no failing checks detected`)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint`: PASS (1 existing warning)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- e2e/strict/organization.strict.spec.ts tests/ui/settings-integrations-discoverability.test.tsx`: PASS (Vitest-covered file)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:strict:quality`: PASS
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build`: PASS
+- `ruby -e "require 'yaml'; YAML.load_file('.github/workflows/ci.yml'); YAML.load_file('.github/workflows/accessibility.yml'); YAML.load_file('.github/workflows/strict-quality.yml'); puts 'workflow yaml ok'"`: PASS
+
+Open TODOs / follow-ups:
+
+- Open PR from `codex/stabilize-ci-a11y` to `master` and validate required checks runtime reduction on first 3 PR runs.
+- Manually dispatch `Strict Quality` workflow once after merge to validate strict suites in new lane.

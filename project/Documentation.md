@@ -111,6 +111,7 @@ Open risks/TODO:
 
 - LinkedIn app callback allowlist must include every active domain callback (`https://<domain>/api/auth/linkedin/callback`) used by production/demo/testing environments.
 - If `LINKEDIN_REDIRECT_URI` is set to a different top-level domain than the active app domain, OAuth state cookies can fail to round-trip in callback flow.
+
 ## 2026-02-19: PR Conflict Mitigation Automation
 
 What changed:
@@ -2033,3 +2034,50 @@ Open risks/TODO:
 - Strict privacy/provider gate commands remain blocked until full env bundle is provisioned.
 - `matching/profile` route currently uses legacy compatibility persistence expected by tests; canonical-only behavior for this route remains deferred.
 - PR checks still need to complete in CI before merge.
+
+## 2026-02-19: CI and A11y stability hotfix (lean required CI + production Playwright mode)
+
+What changed:
+
+- Reshaped required PR workflow in `.github/workflows/ci.yml`:
+  - Removed strict a11y, strict E2E suites, perf budgets, and go/no-go from required `ci`.
+  - Kept stable required gates: lint, typecheck, migration drift, unit tests, build, and smoke Playwright contracts (`auth:real`, landing, landing visual when touched).
+  - Added workflow concurrency cancelation and `timeout-minutes`.
+- Kept dedicated accessibility gate in `.github/workflows/accessibility.yml` as the single `a11y` workflow:
+  - Added workflow concurrency cancelation and `timeout-minutes`.
+  - Switched Playwright execution to production server mode via env (`PLAYWRIGHT_SERVER_MODE=prod`).
+- Added `.github/workflows/strict-quality.yml` (non-PR-required quality lane):
+  - Runs on `push` to `master`, nightly schedule, and manual dispatch.
+  - Runs strict quality guard plus strict a11y and strict individual/org/privacy/providers suites.
+  - Includes concurrency cancelation and timeout.
+- Added Playwright server mode support in:
+  - `playwright.config.ts`
+  - `playwright.a11y.config.ts`
+  - `playwright.a11y.strict.config.ts`
+  - New behavior: `PLAYWRIGHT_SERVER_MODE=prod` uses `next start`; default remains `next dev`.
+- Hardened strict org flake path:
+  - `e2e/strict/organization.strict.spec.ts` now polls `GET /api/assignments/:id` after draft `PUT` until updated `businessValue` is persisted before UI resume assertions.
+- Hardened transient request failures in strict fixture helpers:
+  - `e2e/helpers/strict-fixtures.ts` now retries transient CSRF/tokenized request failures (`socket hang up`, `ECONNRESET`, `aborted`) with bounded retries and short backoff.
+
+Why:
+
+- Required `ci` was carrying long, flaky strict gates on `next dev` and produced intermittent network reset failures.
+- Running Playwright on a built app (`next start`) improves determinism and reduces dev-server instability in CI.
+- Keeping strict suites in a dedicated workflow preserves coverage without blocking PR merges on flaky long-tail paths.
+
+How to verify:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint` (PASS, one pre-existing warning in `postcss.config.js`)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- e2e/strict/organization.strict.spec.ts tests/ui/settings-integrations-discoverability.test.tsx` (PASS for Vitest-covered test file)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:strict:quality` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build` (PASS)
+- `ruby -e "require 'yaml'; YAML.load_file('.github/workflows/ci.yml'); YAML.load_file('.github/workflows/accessibility.yml'); YAML.load_file('.github/workflows/strict-quality.yml')"` (PASS)
+
+Open risks/TODO:
+
+- `npm run test -- e2e/strict/organization.strict.spec.ts ...` runs through Vitest and does not execute Playwright strict E2E directly; strict flow runtime validation is expected in `strict-quality` workflow.
+- Branch protection should be confirmed to require only `ci` and `a11y`; `strict-quality` is intentionally non-required for PR merges.
+- If strict suites remain flaky after retry/poll hardening, next step is deeper endpoint-specific retry instrumentation on known unstable calls.
