@@ -1,10 +1,15 @@
 # Agent Scratchpad (Session Log)
 
-Append-only session log for work performed in this repo.
+Historical session log archive for work performed in this repo.
+
+Status:
+
+- Frozen for routine per-task updates to reduce PR merge conflicts.
+- Create new logs in `agent/scratchpad/entries/` instead.
+- Use `npm run log:session` to create a sharded session entry.
 
 Rules:
 
-- Append new entries at the end of the file.
 - Do not rewrite or reorder prior entries.
 - Keep entries concise.
 - Do not include secrets or copy env var values.

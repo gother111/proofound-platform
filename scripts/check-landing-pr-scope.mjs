@@ -20,7 +20,11 @@ const LANDING_ALLOWED_EXACT = new Set([
   'agent/scratchpad.md',
 ]);
 
-const LANDING_ALLOWED_PREFIXES = ['e2e/landing-visual.spec.ts-snapshots/'];
+const LANDING_ALLOWED_PREFIXES = [
+  'e2e/landing-visual.spec.ts-snapshots/',
+  'agent/scratchpad/entries/',
+  'project/changes/entries/',
+];
 
 function run(command, { allowFailure = false } = {}) {
   try {
