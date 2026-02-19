@@ -1,7 +1,9 @@
 /**
- * PRD Individual Flows E2E Tests
+ * PRD Individual Flows E2E Tests (Unauthenticated Contract)
  *
- * Tests Individual flows I-00 to I-30 from the PRD
+ * Purpose:
+ * - Verify public pages load and protected Individual routes redirect unauthenticated users to login.
+ * - Do not treat these tests as authenticated behavior validation.
  */
 
 import { test, expect } from '@playwright/test';
@@ -12,7 +14,7 @@ async function expectAuthRedirect(page: any, path: string) {
   await expect(page.locator('input[type="email"]')).toBeVisible();
 }
 
-test.describe('Individual Flows - Authentication & Onboarding (I-00 to I-04)', () => {
+test.describe('Individual Flows - Unauthenticated Contract (I-00 to I-04)', () => {
   test('I-00: Landing Page loads with signup CTA', async ({ page }) => {
     await page.goto('/');
 
@@ -44,7 +46,7 @@ test.describe('Individual Flows - Authentication & Onboarding (I-00 to I-04)', (
   });
 });
 
-test.describe('Individual Flows - Profile Setup (I-05 to I-10)', () => {
+test.describe('Individual Flows - Unauthenticated Contract Profile Setup (I-05 to I-10)', () => {
   test('I-05: Profile Basics page accessible', async ({ page }) => {
     await expectAuthRedirect(page, '/app/i/profile');
   });
@@ -54,7 +56,7 @@ test.describe('Individual Flows - Profile Setup (I-05 to I-10)', () => {
   });
 });
 
-test.describe('Individual Flows - Expertise Atlas (I-11 to I-14)', () => {
+test.describe('Individual Flows - Unauthenticated Contract Expertise Atlas (I-11 to I-14)', () => {
   test('I-11: Expertise Hub page loads', async ({ page }) => {
     await expectAuthRedirect(page, '/app/i/expertise');
   });
@@ -64,7 +66,7 @@ test.describe('Individual Flows - Expertise Atlas (I-11 to I-14)', () => {
   });
 });
 
-test.describe('Individual Flows - Matching (I-15 to I-19)', () => {
+test.describe('Individual Flows - Unauthenticated Contract Matching (I-15 to I-19)', () => {
   test('I-15: Matching Profile page accessible', async ({ page }) => {
     await expectAuthRedirect(page, '/app/i/matching');
   });
@@ -90,13 +92,13 @@ test.describe('Individual Flows - Matching (I-15 to I-19)', () => {
   });
 });
 
-test.describe('Individual Flows - Zen Hub (I-26 to I-30)', () => {
+test.describe('Individual Flows - Unauthenticated Contract Zen Hub (I-26 to I-30)', () => {
   test('I-26: Zen Hub page accessible', async ({ page }) => {
     await expectAuthRedirect(page, '/app/i/zen');
   });
 });
 
-test.describe('Individual Flows - Settings (I-23 to I-25)', () => {
+test.describe('Individual Flows - Unauthenticated Contract Settings (I-23 to I-25)', () => {
   test('I-23: Settings page accessible', async ({ page }) => {
     await expectAuthRedirect(page, '/app/i/settings');
   });

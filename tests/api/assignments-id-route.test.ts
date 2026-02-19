@@ -1,0 +1,157 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { NextRequest } from 'next/server';
+
+import { DELETE, PUT } from '@/app/api/assignments/[id]/route';
+import { db } from '@/db';
+import { requireAuth } from '@/lib/auth';
+import { verifyAssignmentMutationAccess } from '@/lib/assignments/access';
+import { checkAndEmitAssignmentActivation } from '@/lib/assignments/activation';
+
+vi.mock('@/lib/auth', () => ({
+  requireAuth: vi.fn(),
+}));
+
+vi.mock('@/lib/assignments/access', () => ({
+  verifyAssignmentAccess: vi.fn(),
+  verifyAssignmentMutationAccess: vi.fn(),
+}));
+
+vi.mock('@/lib/assignments/activation', () => ({
+  checkAndEmitAssignmentActivation: vi.fn(),
+}));
+
+vi.mock('@/db', () => ({
+  db: {
+    query: {
+      assignments: { findFirst: vi.fn() },
+      assignmentOutcomes: { findMany: vi.fn() },
+    },
+    update: vi.fn(),
+    delete: vi.fn(),
+  },
+}));
+
+vi.mock('@/lib/log', () => ({
+  log: {
+    info: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
+const params = { params: Promise.resolve({ id: 'assignment-1' }) };
+
+describe('assignment [id] mutation routes', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (requireAuth as any).mockResolvedValue({ id: 'user-1' });
+  });
+
+  it('PUT returns 403 for member/viewer roles', async () => {
+    (verifyAssignmentMutationAccess as any).mockResolvedValue({
+      status: 'insufficient_role',
+      role: 'member',
+    });
+
+    const req = new NextRequest('http://localhost/api/assignments/assignment-1', {
+      method: 'PUT',
+      body: JSON.stringify({ role: 'Updated role' }),
+    });
+
+    const res = await PUT(req, params);
+    expect(res.status).toBe(403);
+  });
+
+  it('PUT returns 404 for non-members', async () => {
+    (verifyAssignmentMutationAccess as any).mockResolvedValue({
+      status: 'membership_not_found',
+    });
+
+    const req = new NextRequest('http://localhost/api/assignments/assignment-1', {
+      method: 'PUT',
+      body: JSON.stringify({ role: 'Updated role' }),
+    });
+
+    const res = await PUT(req, params);
+    expect(res.status).toBe(404);
+  });
+
+  it('PUT updates assignment for owner/admin', async () => {
+    (verifyAssignmentMutationAccess as any).mockResolvedValue({
+      status: 'ok',
+      role: 'owner',
+      orgId: 'org-1',
+    });
+    const returningMock = vi.fn().mockResolvedValue([
+      {
+        id: 'assignment-1',
+        orgId: 'org-1',
+        createdAt: new Date('2026-01-01T00:00:00.000Z'),
+        status: 'active',
+        role: 'Updated role',
+      },
+    ]);
+    const whereMock = vi.fn().mockReturnValue({ returning: returningMock });
+    const setMock = vi.fn().mockReturnValue({ where: whereMock });
+    (db.update as any).mockReturnValue({ set: setMock });
+
+    const req = new NextRequest('http://localhost/api/assignments/assignment-1', {
+      method: 'PUT',
+      body: JSON.stringify({ role: 'Updated role', status: 'active' }),
+    });
+
+    const res = await PUT(req, params);
+    const payload = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(payload.assignment.role).toBe('Updated role');
+    expect(checkAndEmitAssignmentActivation).toHaveBeenCalledTimes(1);
+  });
+
+  it('DELETE returns 403 for member/viewer roles', async () => {
+    (verifyAssignmentMutationAccess as any).mockResolvedValue({
+      status: 'insufficient_role',
+      role: 'viewer',
+    });
+
+    const req = new NextRequest('http://localhost/api/assignments/assignment-1', {
+      method: 'DELETE',
+    });
+
+    const res = await DELETE(req, params);
+    expect(res.status).toBe(403);
+  });
+
+  it('DELETE returns 404 for non-members', async () => {
+    (verifyAssignmentMutationAccess as any).mockResolvedValue({
+      status: 'membership_not_found',
+    });
+
+    const req = new NextRequest('http://localhost/api/assignments/assignment-1', {
+      method: 'DELETE',
+    });
+
+    const res = await DELETE(req, params);
+    expect(res.status).toBe(404);
+  });
+
+  it('DELETE succeeds for owner/admin', async () => {
+    (verifyAssignmentMutationAccess as any).mockResolvedValue({
+      status: 'ok',
+      role: 'admin',
+      orgId: 'org-1',
+    });
+    const whereMock = vi.fn().mockResolvedValue(undefined);
+    (db.delete as any).mockReturnValue({ where: whereMock });
+
+    const req = new NextRequest('http://localhost/api/assignments/assignment-1', {
+      method: 'DELETE',
+    });
+
+    const res = await DELETE(req, params);
+    const payload = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(payload.success).toBe(true);
+    expect(db.delete).toHaveBeenCalledTimes(1);
+  });
+});

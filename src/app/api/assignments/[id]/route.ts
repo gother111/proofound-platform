@@ -22,15 +22,9 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     const resolvedParams = await params;
     assignmentId = resolvedParams.id;
 
-    const access = await verifyAssignmentMutationAccess(user.id, assignmentId);
-    if (access.status === 'assignment_not_found' || access.status === 'membership_not_found') {
+    const hasAccess = await verifyAssignmentAccess(user.id, assignmentId);
+    if (!hasAccess) {
       return NextResponse.json({ error: 'Assignment not found or access denied' }, { status: 404 });
-    }
-    if (access.status === 'insufficient_role') {
-      return NextResponse.json(
-        { error: 'Forbidden. Owner or admin role is required to update assignments.' },
-        { status: 403 }
-      );
     }
 
     const assignment = await db.query.assignments.findFirst({
@@ -166,7 +160,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
     if (access.status === 'insufficient_role') {
       return NextResponse.json(
-        { error: 'Forbidden. Owner or admin role is required to delete assignments.' },
+        { error: 'Forbidden. Owner or admin role is required to update assignments.' },
         { status: 403 }
       );
     }
@@ -232,9 +226,15 @@ export async function DELETE(
     const resolvedParams = await params;
     assignmentId = resolvedParams.id;
 
-    const hasAccess = await verifyAssignmentAccess(user.id, assignmentId);
-    if (!hasAccess) {
+    const access = await verifyAssignmentMutationAccess(user.id, assignmentId);
+    if (access.status === 'assignment_not_found' || access.status === 'membership_not_found') {
       return NextResponse.json({ error: 'Assignment not found or access denied' }, { status: 404 });
+    }
+    if (access.status === 'insufficient_role') {
+      return NextResponse.json(
+        { error: 'Forbidden. Owner or admin role is required to delete assignments.' },
+        { status: 403 }
+      );
     }
 
     await db.delete(assignments).where(eq(assignments.id, assignmentId));

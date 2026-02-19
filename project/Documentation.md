@@ -20,6 +20,54 @@ This folder is the durable “project memory” surface for Proofound. It is mea
 - Do not copy secrets from local env files or setup docs into tracked markdown.
 - At the end of every session, append a new entry to `agent/scratchpad.md` (append-only).
 
+## 2026-02-18: Hardening Pass (Org Access, Legacy Messaging Deprecation, Route Contracts)
+
+What changed:
+
+- Restricted org assignment-invitation listing to authenticated active `owner|admin` membership with structured allow/deny logging.
+  - `src/app/api/organizations/[orgId]/assignments/route.ts`
+- Corrected assignment `[id]` access handling:
+  - `GET` uses read-level access checks.
+  - `PUT` and `DELETE` enforce owner/admin mutation checks with expected `403` and `404` semantics.
+  - `src/app/api/assignments/[id]/route.ts`
+- Added 30-day deprecation headers and usage telemetry for legacy messaging routes while preserving adapter compatibility.
+  - `src/app/api/messages/route.ts`
+  - `src/app/api/messages/[conversationId]/route.ts`
+- Migrated strict E2E messaging calls to canonical conversation-scoped endpoints.
+  - `e2e/strict/individual.strict.spec.ts`
+  - `e2e/strict/organization.strict.spec.ts`
+- Added missing API contract tests for:
+  - Org invitation access controls.
+  - Assignment mutation role gates for `PUT` and `DELETE`.
+  - Match visible-fields fail-closed behavior.
+  - Legacy `/api/messages*` adapter compatibility + deprecation headers.
+  - `tests/api/organization-assignments-route.test.ts`
+  - `tests/api/assignments-id-route.test.ts`
+  - `tests/api/match-visible-fields-route.test.ts`
+  - `tests/api/messages-legacy-route.test.ts`
+- Clarified PRD E2E naming/comments to explicitly mark unauthenticated redirect-contract intent.
+  - `tests/e2e/prd-flows-individual.spec.ts`
+  - `tests/e2e/prd-flows-organization.spec.ts`
+- Removed lint warning in PostCSS config by naming the default-exported object.
+  - `postcss.config.js`
+
+Why:
+
+- Close remaining P0/P1 gaps from PRD-aligned hardening around authorization, privacy contract regression protection, and legacy endpoint deprecation observability.
+- Keep legacy messaging backward-compatible during migration while making successor path explicit.
+
+How to verify:
+
+- `npm run lint`
+- `npm run typecheck`
+- `npm run test -- tests/api/organization-assignments-route.test.ts tests/api/assignments-id-route.test.ts tests/api/match-visible-fields-route.test.ts tests/api/messages-legacy-route.test.ts tests/api/assignments.test.ts tests/api/assignments-publish-route.test.ts tests/api/organizations-route.test.ts`
+
+Open risks/TODO:
+
+- Legacy `/api/messages*` sunset date currently computes from server start time; when strict calendar cutoff is needed, switch to a fixed date constant.
+- Stricter role gates may block existing non-admin org workflows until client UX clearly signals required role.
+- Deprecation telemetry is log-based; add dashboard/alert queries before removing legacy routes.
+
 ## 2026-02-18: PRD Flow Hardening (Auth, Privacy, Messaging, Metrics)
 
 What changed:

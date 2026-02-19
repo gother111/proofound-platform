@@ -263,14 +263,17 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
       )
     ).toBeTruthy();
 
-    const sendMessageResponse = await apiPostJson(page.request, '/api/messages', {
-      conversationId: seededConversation.id,
-      content: 'Strict organization message in shortlist workflow.',
-    });
+    const sendMessageResponse = await apiPostJson(
+      page.request,
+      `/api/conversations/${seededConversation.id}/messages`,
+      {
+        content: 'Strict organization message in shortlist workflow.',
+      }
+    );
     expect(sendMessageResponse.status()).toBe(201);
 
     const messageListResponse = await page.request.get(
-      `/api/messages?conversationId=${seededConversation.id}`
+      `/api/conversations/${seededConversation.id}/messages`
     );
     expect(messageListResponse.ok()).toBeTruthy();
 

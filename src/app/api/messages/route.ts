@@ -10,10 +10,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { createClient } from '@/lib/supabase/server';
 import {
   GET as getConversationMessages,
   POST as postConversationMessage,
 } from '@/app/api/conversations/[conversationId]/messages/route';
+import { log } from '@/lib/log';
 
 const LegacySendMessageSchema = z.object({
   conversationId: z.string().uuid(),
@@ -21,18 +23,59 @@ const LegacySendMessageSchema = z.object({
   piiWarningShown: z.boolean().optional(),
 });
 
+const LEGACY_MESSAGES_SUNSET = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toUTCString();
+
+function withLegacyDeprecationHeaders(
+  response: NextResponse,
+  conversationId?: string
+): NextResponse {
+  response.headers.set('Deprecation', 'true');
+  response.headers.set('Sunset', LEGACY_MESSAGES_SUNSET);
+  if (conversationId) {
+    response.headers.set(
+      'Link',
+      `</api/conversations/${conversationId}/messages>; rel="successor-version"`
+    );
+  } else {
+    response.headers.set('Link', '</api/conversations>; rel="successor-version"');
+  }
+  return response;
+}
+
 function buildConversationRequestUrl(request: NextRequest, conversationId: string) {
   const url = new URL(request.url);
   url.pathname = `/api/conversations/${conversationId}/messages`;
   return url;
 }
 
+async function getLegacyCallerUserId(): Promise<string | null> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    return user?.id || null;
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const conversationId = searchParams.get('conversationId');
+  const callerUserId = await getLegacyCallerUserId();
+
+  log.info('messages.legacy_api.used', {
+    endpoint: '/api/messages',
+    method: 'GET',
+    conversationId,
+    userId: callerUserId,
+  });
 
   if (!conversationId) {
-    return NextResponse.json({ error: 'conversationId is required' }, { status: 400 });
+    return withLegacyDeprecationHeaders(
+      NextResponse.json({ error: 'conversationId is required' }, { status: 400 })
+    );
   }
 
   const proxiedUrl = buildConversationRequestUrl(request, conversationId);
@@ -49,7 +92,10 @@ export async function GET(request: NextRequest) {
 
   const payload = await canonicalResponse.json();
   if (!canonicalResponse.ok) {
-    return NextResponse.json(payload, { status: canonicalResponse.status });
+    return withLegacyDeprecationHeaders(
+      NextResponse.json(payload, { status: canonicalResponse.status }),
+      conversationId
+    );
   }
 
   const normalizedMessages = Array.isArray(payload.messages)
@@ -59,20 +105,30 @@ export async function GET(request: NextRequest) {
       }))
     : [];
 
-  return NextResponse.json({
-    ...payload,
-    messages: normalizedMessages,
-  });
+  return withLegacyDeprecationHeaders(
+    NextResponse.json({
+      ...payload,
+      messages: normalizedMessages,
+    }),
+    conversationId
+  );
 }
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   const parsed = LegacySendMessageSchema.safeParse(body);
+  const callerUserId = await getLegacyCallerUserId();
+
+  log.info('messages.legacy_api.used', {
+    endpoint: '/api/messages',
+    method: 'POST',
+    conversationId: parsed.success ? parsed.data.conversationId : null,
+    userId: callerUserId,
+  });
 
   if (!parsed.success) {
-    return NextResponse.json(
-      { error: 'Invalid input', details: parsed.error.errors },
-      { status: 400 }
+    return withLegacyDeprecationHeaders(
+      NextResponse.json({ error: 'Invalid input', details: parsed.error.errors }, { status: 400 })
     );
   }
 
@@ -91,14 +147,20 @@ export async function POST(request: NextRequest) {
 
   const payload = await canonicalResponse.json();
   if (!canonicalResponse.ok) {
-    return NextResponse.json(payload, { status: canonicalResponse.status });
+    return withLegacyDeprecationHeaders(
+      NextResponse.json(payload, { status: canonicalResponse.status }),
+      conversationId
+    );
   }
 
-  return NextResponse.json(
-    {
-      ...payload,
-      success: true,
-    },
-    { status: canonicalResponse.status }
+  return withLegacyDeprecationHeaders(
+    NextResponse.json(
+      {
+        ...payload,
+        success: true,
+      },
+      { status: canonicalResponse.status }
+    ),
+    conversationId
   );
 }

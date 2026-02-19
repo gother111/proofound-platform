@@ -2262,3 +2262,52 @@ Open TODOs / follow-ups:
 
 - Validate `next build` behavior on Vercel with the tightened default validation gates.
 - Expand PRD E2E authenticated coverage with seeded credentials in strict suites.
+
+---
+
+## 2026-02-18 23:08 CET
+
+Task summary:
+
+- Implemented the 1-2 day hardening plan for org invitation access, assignment mutation contracts, visible-fields fail-closed tests, and legacy `/api/messages*` deprecation signaling.
+- Migrated strict E2E messaging calls to canonical conversation endpoints and removed the PostCSS lint warning.
+
+What worked:
+
+- Owner/admin gate enforcement for org assignment invitations integrated cleanly with existing DB membership checks.
+- Legacy messaging adapter deprecation headers and telemetry were added without breaking response compatibility.
+- New targeted API tests provided direct coverage for role-gated mutation paths and privacy fallback behavior.
+
+What failed / wrong assumptions:
+
+- Initial legacy POST adapter test used a non-UUID `conversationId` and failed with `400` due schema validation.
+
+User corrections:
+
+- User requested full implementation of the hardening plan, then approved proceeding directly.
+
+Assumptions taken without asking:
+
+- Org assignment invitation listing should be restricted to active `owner|admin` only.
+- Deprecation window for legacy `/api/messages*` should be 30 days from current deploy/runtime.
+- PRD flow specs in `tests/e2e` should remain unauthenticated redirect-contract checks, while strict suites carry authenticated behavior checks.
+
+What the user corrected afterward:
+
+- None.
+
+Improvements next time:
+
+- Introduce a fixed calendar sunset constant for legacy endpoint deprecation to avoid runtime-relative drift.
+- Add dashboard-level queries/alerts for legacy endpoint usage before hard removal.
+
+Commands run + outcomes:
+
+- `npm run lint` -> PASS.
+- `npm run typecheck` -> PASS.
+- `npm run test -- tests/api/organization-assignments-route.test.ts tests/api/assignments-id-route.test.ts tests/api/match-visible-fields-route.test.ts tests/api/messages-legacy-route.test.ts tests/api/assignments.test.ts tests/api/assignments-publish-route.test.ts tests/api/organizations-route.test.ts` -> initial FAIL (1 test), then PASS after UUID fixture fix.
+
+Open TODOs / follow-ups:
+
+- Remove legacy `/api/messages*` adapters after the deprecation window and usage drops to zero.
+- Consider adding one integration-level strict API test that asserts deprecation headers and successor link contract end-to-end.

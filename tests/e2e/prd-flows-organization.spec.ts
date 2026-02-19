@@ -1,7 +1,9 @@
 /**
- * PRD Organization Flows E2E Tests
+ * PRD Organization Flows E2E Tests (Unauthenticated Contract)
  *
- * Tests Organization flows O-01 to O-20 from the PRD
+ * Purpose:
+ * - Verify public pages load and protected Organization routes redirect unauthenticated users to login.
+ * - Do not treat these tests as authenticated behavior validation.
  */
 
 import { test, expect } from '@playwright/test';
@@ -12,7 +14,7 @@ async function expectAuthRedirect(page: any, path: string) {
   await expect(page.locator('input[type="email"]')).toBeVisible();
 }
 
-test.describe('Organization Flows - Onboarding (O-01 to O-07)', () => {
+test.describe('Organization Flows - Unauthenticated Contract Onboarding (O-01 to O-07)', () => {
   test('O-01: Landing page has organization trial CTA', async ({ page }) => {
     await page.goto('/');
 
@@ -39,7 +41,7 @@ test.describe('Organization Flows - Onboarding (O-01 to O-07)', () => {
   });
 });
 
-test.describe('Organization Flows - Team & Profile (O-08 to O-12)', () => {
+test.describe('Organization Flows - Unauthenticated Contract Team & Profile (O-08 to O-12)', () => {
   test('O-08: Team management page accessible', async ({ page }) => {
     await expectAuthRedirect(page, '/app/o/test-org/team');
   });
@@ -49,7 +51,7 @@ test.describe('Organization Flows - Team & Profile (O-08 to O-12)', () => {
   });
 });
 
-test.describe('Organization Flows - Assignments (O-13 to O-17)', () => {
+test.describe('Organization Flows - Unauthenticated Contract Assignments (O-13 to O-17)', () => {
   test('O-13: Assignment creation page accessible', async ({ page }) => {
     await expectAuthRedirect(page, '/app/o/test-org/assignments');
   });
@@ -59,7 +61,7 @@ test.describe('Organization Flows - Assignments (O-13 to O-17)', () => {
   });
 });
 
-test.describe('Organization Flows - Enterprise (O-18 to O-20)', () => {
+test.describe('Organization Flows - Unauthenticated Contract Enterprise (O-18 to O-20)', () => {
   test('O-18: Enterprise Atlas page accessible', async ({ page }) => {
     await expectAuthRedirect(page, '/app/o/test-org/atlas');
   });
