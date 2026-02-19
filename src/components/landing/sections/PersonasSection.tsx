@@ -4,6 +4,8 @@ import React, { useRef, useState } from 'react';
 import { motion, useInView, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, ArrowRight } from 'lucide-react';
+import CredentialVisualization from '@/components/landing/visuals/CredentialVisualization';
+import OrganizationVisualization from '@/components/landing/visuals/OrganizationVisualization';
 
 interface PersonasSectionProps {
   shouldReduceMotion?: boolean | null;
@@ -154,30 +156,13 @@ export function PersonasSection({
               </motion.div>
             </div>
 
-            {/* Visual Side - Abstract Representation */}
-            <div className="flex-1 w-full aspect-square md:aspect-auto md:h-[500px] relative bg-card/20 rounded-[2.5rem] overflow-hidden shadow-inner border border-border flex items-center justify-center">
-              <div className="absolute inset-0 bg-gradient-to-br from-extended-sage/10 to-proofound-terracotta/10" />
-              {/* Animated Circles */}
-              <motion.div
-                animate={reduceMotion ? undefined : { scale: [1, 1.1, 1], rotate: [0, 5, 0] }}
-                transition={
-                  reduceMotion ? undefined : { duration: 8, repeat: Infinity, ease: 'easeInOut' }
-                }
-                className="w-64 h-64 bg-extended-sage/20 rounded-full blur-3xl absolute top-1/4 left-1/4 mix-blend-multiply"
-              />
-              <motion.div
-                animate={reduceMotion ? undefined : { scale: [1, 1.2, 1], rotate: [0, -5, 0] }}
-                transition={
-                  reduceMotion ? undefined : { duration: 10, repeat: Infinity, ease: 'easeInOut' }
-                }
-                className="w-80 h-80 bg-proofound-terracotta/20 rounded-full blur-3xl absolute bottom-1/4 right-1/4 mix-blend-multiply"
-              />
-
-              <div className="relative z-10 text-center p-12 backdrop-blur-sm bg-card/10 rounded-3xl border border-border shadow-lg max-w-xs">
-                <p className="font-serif text-3xl text-foreground italic leading-tight">
-                  {activePersona === 'individual' ? 'Your journey, verified.' : 'Trust at scale.'}
-                </p>
-              </div>
+            {/* Visual Side - Persona-Specific Tile */}
+            <div className="relative flex w-full flex-1 items-center justify-center overflow-hidden rounded-[2.5rem] border border-border bg-card/20 p-4 shadow-inner md:h-[500px] md:aspect-auto md:p-6">
+              {activePersona === 'individual' ? (
+                <CredentialVisualization shouldReduceMotion={reduceMotion} />
+              ) : (
+                <OrganizationVisualization shouldReduceMotion={reduceMotion} />
+              )}
             </div>
           </motion.div>
         </AnimatePresence>

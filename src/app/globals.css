@@ -247,8 +247,67 @@
   }
 }
 
+/* Landing personas tile micro-animation keyframes */
+@keyframes pf-personas-float-slow {
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-20px) rotate(2deg);
+  }
+}
+
+@keyframes pf-personas-float-slower {
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg) scale(1);
+  }
+
+  50% {
+    transform: translateY(15px) rotate(-2deg) scale(1.02);
+  }
+}
+
+@keyframes pf-personas-morph-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pf-personas-morph-spin-reverse {
+  from {
+    transform: rotate(360deg);
+  }
+
+  to {
+    transform: rotate(0deg);
+  }
+}
+
 /* Custom utility classes */
 @layer utilities {
+  .pf-personas-anim-float-slow {
+    animation: pf-personas-float-slow 10s ease-in-out infinite;
+  }
+
+  .pf-personas-anim-float-slower {
+    animation: pf-personas-float-slower 14s ease-in-out infinite;
+  }
+
+  .pf-personas-anim-morph-spin {
+    animation: pf-personas-morph-spin 35s linear infinite;
+  }
+
+  .pf-personas-anim-morph-spin-reverse {
+    animation: pf-personas-morph-spin-reverse 45s linear infinite;
+  }
+
   .text-balance {
     text-wrap: balance;
   }

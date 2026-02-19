@@ -78,10 +78,15 @@ test.describe('Landing Page', () => {
     // Organizations tab should show org content
     await page.getByTestId('landing-personas-toggle-organization').click();
     await expect(page.getByTestId('landing-persona-title')).toHaveText(/For Organizations/i);
+    await expect(personas.getByText(/^Aligned$/)).toBeVisible();
+    await expect(personas.getByText(/^Verified Skill$/)).toBeVisible();
+    await expect(personas.getByText(/^1 Match$/)).toBeVisible();
 
     // Individuals tab should show individual content
     await page.getByTestId('landing-personas-toggle-individual').click();
     await expect(page.getByTestId('landing-persona-title')).toHaveText(/For Individuals/i);
+    await expect(personas.getByText(/^Verified$/)).toBeVisible();
+    await expect(personas.getByText(/^Identity$/)).toBeVisible();
   });
 
   test('renders principles section', async ({ page }) => {
