@@ -17,6 +17,7 @@ import {
   index,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+import { ASSIGNMENT_STATUS_VALUES, INTERVIEW_PLATFORM_VALUES } from '@/lib/contracts/domain';
 
 // Custom types for PostgreSQL-specific data types
 const bit = customType<{ data: string; notNull?: boolean; default?: boolean }>({
@@ -608,7 +609,7 @@ export const assignments = pgTable('assignments', {
   role: text('role').notNull(),
   description: text('description'),
   status: text('status', {
-    enum: ['draft', 'active', 'paused', 'closed'],
+    enum: [...ASSIGNMENT_STATUS_VALUES],
   })
     .default('draft')
     .notNull(),
@@ -1714,10 +1715,72 @@ export const notificationPreferences = pgTable('notification_preferences', {
   emailAssignmentPublished: boolean('email_assignment_published').default(true).notNull(),
   emailInterviewScheduled: boolean('email_interview_scheduled').default(true).notNull(),
   emailContractSigned: boolean('email_contract_signed').default(true).notNull(),
+  // Push notification preferences (by type)
+  pushMatchSuggested: boolean('push_match_suggested').default(true).notNull(),
+  pushIntroAccepted: boolean('push_intro_accepted').default(true).notNull(),
+  pushMessageReceived: boolean('push_message_received').default(true).notNull(),
+  pushVerificationRequested: boolean('push_verification_requested').default(true).notNull(),
+  pushVerificationCompleted: boolean('push_verification_completed').default(true).notNull(),
+  pushAssignmentPublished: boolean('push_assignment_published').default(true).notNull(),
+  pushInterviewScheduled: boolean('push_interview_scheduled').default(true).notNull(),
+  pushContractSigned: boolean('push_contract_signed').default(true).notNull(),
   // Audit fields
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
+
+export const mobileDeviceTokens = pgTable(
+  'mobile_device_tokens',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    token: text('token').notNull(),
+    platform: text('platform', { enum: ['ios'] })
+      .default('ios')
+      .notNull(),
+    environment: text('environment', { enum: ['sandbox', 'production'] })
+      .default('sandbox')
+      .notNull(),
+    enabled: boolean('enabled').default(true).notNull(),
+    appVersion: text('app_version'),
+    deviceModel: text('device_model'),
+    osVersion: text('os_version'),
+    lastSeenAt: timestamp('last_seen_at').defaultNow().notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    tokenUnique: unique('mobile_device_tokens_token_unique').on(table.token),
+    userIdx: index('mobile_device_tokens_user_idx').on(table.userId),
+  })
+);
+
+export const pushDeliveryAttempts = pgTable(
+  'push_delivery_attempts',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    notificationId: uuid('notification_id')
+      .references(() => notifications.id, { onDelete: 'cascade' })
+      .notNull(),
+    tokenId: uuid('token_id')
+      .references(() => mobileDeviceTokens.id, { onDelete: 'cascade' })
+      .notNull(),
+    status: text('status', { enum: ['pending', 'sent', 'failed'] })
+      .default('pending')
+      .notNull(),
+    errorCode: text('error_code'),
+    errorMessage: text('error_message'),
+    apnsId: text('apns_id'),
+    attemptedAt: timestamp('attempted_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    notificationIdx: index('push_delivery_attempts_notification_idx').on(table.notificationId),
+    tokenIdx: index('push_delivery_attempts_token_idx').on(table.tokenId),
+    attemptedIdx: index('push_delivery_attempts_attempted_idx').on(table.attemptedAt),
+  })
+);
 
 // ====================================
 // Contracts & Metrics Infrastructure
@@ -1825,7 +1888,7 @@ export const interviews = pgTable('interviews', {
     .notNull(),
   scheduledAt: timestamp('scheduled_at').notNull(),
   duration: integer('duration').default(30).notNull(), // minutes
-  platform: text('platform', { enum: ['zoom', 'google'] }).notNull(),
+  platform: text('platform', { enum: [...INTERVIEW_PLATFORM_VALUES] }).notNull(),
   meetingId: text('meeting_id').notNull(), // External meeting/event ID
   meetingUrl: text('meeting_url').notNull(),
   timezone: text('timezone').default('UTC'),
@@ -2060,6 +2123,10 @@ export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = typeof notifications.$inferInsert;
 export type NotificationPreference = typeof notificationPreferences.$inferSelect;
 export type InsertNotificationPreference = typeof notificationPreferences.$inferInsert;
+export type MobileDeviceToken = typeof mobileDeviceTokens.$inferSelect;
+export type InsertMobileDeviceToken = typeof mobileDeviceTokens.$inferInsert;
+export type PushDeliveryAttempt = typeof pushDeliveryAttempts.$inferSelect;
+export type InsertPushDeliveryAttempt = typeof pushDeliveryAttempts.$inferInsert;
 
 // Stakeholder Assignment System (Feature 4)
 export const assignmentInvitations = pgTable('assignment_invitations', {

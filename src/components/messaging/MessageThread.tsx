@@ -11,7 +11,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
-import { Check, CheckCheck, Loader2, Send } from 'lucide-react';
+import { ArrowLeft, Check, CheckCheck, Loader2, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -39,6 +39,7 @@ interface MessageThreadProps {
   stage: 'masked' | 'revealed';
   isTyping?: boolean;
   onSendMessage: (content: string) => void;
+  onBack?: () => void;
 }
 
 const MAX_MESSAGE_LENGTH = 500;
@@ -52,6 +53,7 @@ export function MessageThread({
   stage,
   isTyping = false,
   onSendMessage,
+  onBack,
 }: MessageThreadProps) {
   const [messageText, setMessageText] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -146,10 +148,20 @@ export function MessageThread({
 
   return (
     <DataErrorBoundary onRetry={() => window.location.reload()}>
-      <div className="flex flex-col h-full bg-white">
+      <div className="flex flex-col h-full min-h-0 w-full min-w-0 bg-white">
         {/* Header */}
         <div className="p-4 border-b bg-white sticky top-0 z-10">
           <div className="flex items-center gap-3">
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                aria-label="Back to conversations"
+                className="md:hidden inline-flex items-center justify-center h-10 w-10 rounded-lg border border-[#D8D2C8] text-[#2D3330] hover:bg-[#F7F6F1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1C4D3A] focus-visible:ring-offset-2"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+            )}
             <Avatar className="h-10 w-10">
               {stage === 'revealed' && otherPartyAvatar ? (
                 <AvatarImage src={otherPartyAvatar} alt={displayName} />
@@ -197,7 +209,10 @@ export function MessageThread({
                 )}
 
                 <div
-                  className={cn('max-w-[70%] space-y-1', isOwnMessage && 'flex flex-col items-end')}
+                  className={cn(
+                    'max-w-[82%] sm:max-w-[75%] lg:max-w-[70%] space-y-1',
+                    isOwnMessage && 'flex flex-col items-end'
+                  )}
                 >
                   <div
                     className={cn(

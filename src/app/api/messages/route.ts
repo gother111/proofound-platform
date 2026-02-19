@@ -1,217 +1,164 @@
 /**
- * Messages API
+ * Legacy Messages API adapter.
  *
- * Send text-only messages within conversations
+ * Canonical endpoint: /api/conversations/[conversationId]/messages
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { db } from '@/db';
-import { messages, conversations, profiles } from '@/db/schema';
-import { eq, and, or } from 'drizzle-orm';
 import { z } from 'zod';
-import { notifyMessageReceived } from '@/lib/notifications';
+import {
+  GET as getCanonicalConversationMessages,
+  POST as postCanonicalConversationMessage,
+} from '@/app/api/conversations/[conversationId]/messages/route';
+import { addDeprecationHeaders } from '@/lib/api/deprecation';
+
+const DeprecatedMessagesPath = '/api/conversations/{conversationId}/messages';
 
 const SendMessageSchema = z.object({
   conversationId: z.string().uuid(),
-  content: z.string().min(1).max(2000, 'Message cannot exceed 2000 characters'),
+  content: z.string().min(1).max(2000),
+  piiWarningShown: z.boolean().optional(),
 });
 
-export async function POST(request: NextRequest) {
+const ListMessagesSchema = z.object({
+  conversationId: z.string().uuid(),
+});
+
+type CanonicalMessage = {
+  id: string;
+  conversationId?: string;
+  content: string;
+  sentAt: string;
+  readAt?: string | null;
+  status?: string;
+  containsEmail?: boolean;
+  containsPhone?: boolean;
+  containsUrl?: boolean;
+  sender?: {
+    id: string;
+  } | null;
+};
+
+function toLegacyMessage(message: CanonicalMessage, conversationId: string) {
+  return {
+    id: message.id,
+    conversationId: message.conversationId || conversationId,
+    senderId: message.sender?.id,
+    content: message.content,
+    sentAt: message.sentAt,
+    readAt: message.readAt || null,
+    status: message.status || 'sent',
+    containsEmail: !!message.containsEmail,
+    containsPhone: !!message.containsPhone,
+    containsUrl: !!message.containsUrl,
+  };
+}
+
+export async function GET(request: NextRequest) {
   try {
-    // Get authenticated user
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const parsed = ListMessagesSchema.safeParse({
+      conversationId: request.nextUrl.searchParams.get('conversationId'),
+    });
 
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Parse and validate request body
-    const body = await request.json();
-    const validation = SendMessageSchema.safeParse(body);
-
-    if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Invalid input', details: validation.error.errors },
-        { status: 400 }
+    if (!parsed.success) {
+      return addDeprecationHeaders(
+        NextResponse.json({ error: 'conversationId is required' }, { status: 400 }),
+        DeprecatedMessagesPath
       );
     }
 
-    const { conversationId, content } = validation.data;
+    const canonicalResponse = await getCanonicalConversationMessages(request, {
+      params: Promise.resolve({ conversationId: parsed.data.conversationId }),
+    });
 
-    // Verify conversation exists and user is a participant
-    const conversation = await db
-      .select()
-      .from(conversations)
-      .where(eq(conversations.id, conversationId))
-      .limit(1);
+    const payload = await canonicalResponse.json().catch(() => null);
 
-    if (!conversation.length) {
-      return NextResponse.json(
-        { error: 'Conversation not found' },
-        { status: 404 }
+    if (!canonicalResponse.ok) {
+      return addDeprecationHeaders(
+        NextResponse.json(payload || { error: 'Failed to fetch messages' }, {
+          status: canonicalResponse.status,
+        }),
+        DeprecatedMessagesPath
       );
     }
 
-    const conv = conversation[0];
+    const canonicalMessages = ((payload as any)?.messages || []) as CanonicalMessage[];
+    const legacyMessages = canonicalMessages.map((message) =>
+      toLegacyMessage(message, parsed.data.conversationId)
+    );
 
-    // Check if user is a participant
-    const isParticipant =
-      conv.participantOneId === user.id || conv.participantTwoId === user.id;
-
-    if (!isParticipant) {
-      return NextResponse.json(
-        { error: 'You are not a participant in this conversation' },
-        { status: 403 }
-      );
-    }
-
-    // Insert message
-    const newMessage = await db
-      .insert(messages)
-      .values({
-        conversationId,
-        senderId: user.id,
-        content,
-      })
-      .returning();
-
-    // Update conversation's lastMessageAt and preview
-    const preview = content.length > 100 ? content.substring(0, 100) + '...' : content;
-
-    await db
-      .update(conversations)
-      .set({
-        lastMessageAt: new Date(),
-      })
-      .where(eq(conversations.id, conversationId));
-
-    // Send notification to the recipient
-    try {
-      const recipientId =
-        conv.participantOneId === user.id ? conv.participantTwoId : conv.participantOneId;
-
-      // Get sender's profile for notification
-      const senderProfile = await db.query.profiles.findFirst({
-        where: eq(profiles.id, user.id),
-      });
-
-      const senderName = senderProfile?.displayName || senderProfile?.handle || 'Someone';
-
-      await notifyMessageReceived(recipientId, conversationId, senderName, content);
-    } catch (notifError) {
-      console.error('Failed to send message notification:', notifError);
-      // Don't fail the request if notification fails
-    }
-
-    // TODO: Emit analytics event for message sent
-    // TODO: Send real-time notification via Supabase Realtime
-
-    return NextResponse.json(
-      {
-        message: newMessage[0],
-        success: true,
-      },
-      { status: 201 }
+    return addDeprecationHeaders(
+      NextResponse.json({
+        messages: legacyMessages,
+        hasMore: Boolean((payload as any)?.hasMore),
+      }),
+      DeprecatedMessagesPath
     );
   } catch (error) {
-    console.error('Send message error:', error);
-    return NextResponse.json(
-      { error: 'Failed to send message' },
-      { status: 500 }
+    console.error('Get messages adapter error:', error);
+    return addDeprecationHeaders(
+      NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 }),
+      DeprecatedMessagesPath
     );
   }
 }
 
-// GET endpoint to retrieve messages for a conversation
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const searchParams = request.nextUrl.searchParams;
-    const conversationId = searchParams.get('conversationId');
-    const limit = parseInt(searchParams.get('limit') || '50', 10);
-    const offset = parseInt(searchParams.get('offset') || '0', 10);
-
-    if (!conversationId) {
-      return NextResponse.json(
-        { error: 'conversationId is required' },
-        { status: 400 }
+    const parsed = SendMessageSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return addDeprecationHeaders(
+        NextResponse.json(
+          { error: 'Invalid input', details: parsed.error.errors },
+          { status: 400 }
+        ),
+        DeprecatedMessagesPath
       );
     }
 
-    // Verify user is a participant
-    const conversation = await db
-      .select()
-      .from(conversations)
-      .where(eq(conversations.id, conversationId))
-      .limit(1);
+    const canonicalRequest = new NextRequest(
+      `${request.nextUrl.origin}/api/conversations/${parsed.data.conversationId}/messages`,
+      {
+        method: 'POST',
+        headers: request.headers,
+        body: JSON.stringify({
+          content: parsed.data.content,
+          piiWarningShown: parsed.data.piiWarningShown,
+        }),
+      }
+    );
 
-    if (!conversation.length) {
-      return NextResponse.json(
-        { error: 'Conversation not found' },
-        { status: 404 }
-      );
-    }
-
-    const conv = conversation[0];
-    const isParticipant =
-      conv.participantOneId === user.id || conv.participantTwoId === user.id;
-
-    if (!isParticipant) {
-      return NextResponse.json(
-        { error: 'You are not a participant in this conversation' },
-        { status: 403 }
-      );
-    }
-
-    // Fetch messages
-    const conversationMessages = await db
-      .select()
-      .from(messages)
-      .where(eq(messages.conversationId, conversationId))
-      .orderBy(messages.sentAt)
-      .limit(limit)
-      .offset(offset);
-
-    // Mark unread messages as read (messages sent by the other party)
-    const unreadIds = conversationMessages
-      .filter((m) => m.senderId !== user.id && !m.readAt)
-      .map((m) => m.id);
-
-    if (unreadIds.length > 0) {
-      await db
-        .update(messages)
-        .set({ readAt: new Date() })
-        .where(
-          and(
-            eq(messages.conversationId, conversationId),
-            eq(messages.senderId, conv.participantOneId === user.id ? conv.participantTwoId : conv.participantOneId)
-          )
-        );
-    }
-
-    return NextResponse.json({
-      messages: conversationMessages,
-      hasMore: conversationMessages.length === limit,
+    const canonicalResponse = await postCanonicalConversationMessage(canonicalRequest, {
+      params: Promise.resolve({ conversationId: parsed.data.conversationId }),
     });
+
+    const payload = await canonicalResponse.json().catch(() => null);
+
+    if (!canonicalResponse.ok) {
+      return addDeprecationHeaders(
+        NextResponse.json(payload || { error: 'Failed to send message' }, {
+          status: canonicalResponse.status,
+        }),
+        DeprecatedMessagesPath
+      );
+    }
+
+    const canonicalMessage = (payload as any)?.message as CanonicalMessage;
+    return addDeprecationHeaders(
+      NextResponse.json(
+        {
+          message: toLegacyMessage(canonicalMessage, parsed.data.conversationId),
+          success: true,
+        },
+        { status: 201 }
+      ),
+      DeprecatedMessagesPath
+    );
   } catch (error) {
-    console.error('Get messages error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch messages' },
-      { status: 500 }
+    console.error('Send message adapter error:', error);
+    return addDeprecationHeaders(
+      NextResponse.json({ error: 'Failed to send message' }, { status: 500 }),
+      DeprecatedMessagesPath
     );
   }
 }

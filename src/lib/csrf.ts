@@ -66,6 +66,15 @@ export function csrfProtection(request: NextRequest): NextResponse | null {
     return null;
   }
 
+  // Mobile API endpoints are authenticated with bearer tokens and are not cookie-based.
+  // Double-submit cookies do not apply to this channel.
+  if (pathname.startsWith('/api/mobile/')) {
+    const authorization = request.headers.get('authorization');
+    if (authorization?.toLowerCase().startsWith('bearer ')) {
+      return null;
+    }
+  }
+
   // Skip CSRF for internal authenticated API routes
   // These routes are called from authenticated pages and protected by session cookies
   // The Supabase session cookie with SameSite=Lax provides CSRF protection.
@@ -76,6 +85,7 @@ export function csrfProtection(request: NextRequest): NextResponse | null {
     '/api/interviews/',
     '/api/analytics/',
     '/api/messages/',
+    '/api/conversations/',
     '/api/goals/',
     '/api/skill-gaps/',
     '/api/dashboard/layout',
