@@ -1452,3 +1452,111 @@ Open risks/TODO:
 
 - Feature bucketing is deterministic and keyword/path-based; edge commits can be categorized differently than human intuition.
 - Future months must be appended consistently in the same format to keep this issue useful as a long-term changelog.
+
+---
+
+## 2026-02-19: Linear changelog clarity + status tracker update (PRO-5)
+
+What changed:
+
+- Updated Linear issue `PRO-5` description to a clear operational structure with explicit sections:
+  - `Completed`
+  - `In Progress`
+  - `Todo`
+- Corrected scope totals in the issue metadata section to current repo truth:
+  - Total non-merge commits: `609`
+  - Month totals: `2025-10=186`, `2025-11=138`, `2025-12=125`, `2026-02=160`
+- Added a new issue comment (`4fd0cba6-efee-4622-a74e-f88832bbfae1`) that clarifies:
+  - canonical detailed month comment IDs
+  - update policy (append-only monthly updates)
+  - next clarity pass objective for per-commit impact wording
+
+Why:
+
+- User requested clearer changelog readability with explicit progress tracking (`done`, `in progress`, `todo`) while preserving category-based commit history.
+- Prior issue metadata in older comments used stale totals (`608`, February `159`) and needed correction for current `HEAD`.
+
+How to verify:
+
+- Open Linear issue `PRO-5` and confirm description now includes `Completed`, `In Progress`, and `Todo` checklists.
+- Confirm issue remains:
+  - Team: `Proofound`
+  - Project: `MVP Launch`
+  - State: `In Progress`
+  - Label: `Improvement`
+- Confirm latest structure comment exists on `PRO-5`:
+  - `4fd0cba6-efee-4622-a74e-f88832bbfae1`
+- Verify repo truth totals from git:
+  - `git rev-list --count --since='2025-10-01' --no-merges HEAD` => `609`
+  - `git log --since='2025-10-01' --no-merges --date=format:'%Y-%m' --pretty='%ad' | sort | uniq -c`
+
+Open risks/TODO:
+
+- Historical older comments still contain earlier totals and are kept for audit history.
+- Existing detailed comments are commit-complete and categorized, but some commit lines can be further improved with stronger per-line impact phrasing in a future clarity pass.
+
+---
+
+## 2026-02-19: Linear weekly changelog hub migration and PRO-5 retirement
+
+What changed:
+
+- Reorganized changelog tracking into weekly hub structure in Linear:
+  - Hub issue: `PRO-6` (`MVP Weekly Changelog Hub`) in `Proofound` / `MVP Launch`.
+  - Canonical weekly child issues attached to `PRO-6`:
+    - `PRO-7` (`2025-W41`) `Done`
+    - `PRO-8` (`2025-W42`) `Done`
+    - `PRO-9` (`2025-W43`) `Done`
+    - `PRO-10` (`2025-W44`) `Done`
+    - `PRO-12` (`2025-W45`) `Done`
+    - `PRO-13` (`2025-W47`) `Done`
+    - `PRO-14` (`2025-W48`) `Done`
+    - `PRO-16` (`2025-W49`) `Done`
+    - `PRO-17` (`2025-W50`) `Done`
+    - `PRO-21` (`2026-W06`) `Done`
+    - `PRO-23` (`2026-W07`) `Done`
+    - `PRO-24` (`2026-W08`) `In Progress`
+- Updated `PRO-6` description with:
+  - scope totals (`609` non-merge commits),
+  - ISO week rule,
+  - status policy,
+  - one-click weekly index links,
+  - ongoing append-only SOP.
+- Retired old monthly hub:
+  - Added supersession comment on `PRO-5` pointing to `PRO-6`.
+  - Moved `PRO-5` to `Canceled`.
+- Resolved accidental duplicate weekly issues created during migration:
+  - Marked duplicate copies as `Duplicate`,
+  - linked them to canonical issues via `duplicateOf`,
+  - removed them from the hub parent linkage so `PRO-6` remains clean.
+
+Why:
+
+- `PRO-5` was overloaded and hard to review in one place.
+- Weekly split with one hub and child issues improves readability, ownership, and ongoing update discipline.
+- Keeping exactly one canonical issue per week avoids reviewer confusion.
+
+How to verify:
+
+- Open `PRO-6` and confirm it is `In Progress`, labeled `Improvement` + `Changelog`, with 12 child issues in chronological week coverage.
+- Confirm child state policy:
+  - historical weeks are `Done`,
+  - current week `2026-W08` (`PRO-24`) is `In Progress`.
+- Confirm `PRO-5` is `Canceled` and has supersession comment linking `PRO-6`.
+- Verify coverage integrity from git and payload source:
+  - `git rev-list --count --since='2025-10-01' --no-merges HEAD` -> `609`
+  - `jq '[.[].count] | add' /tmp/linear_weekly_payloads_compact/payloads.json` -> `609`
+  - hash uniqueness check across weekly payload files reports `total=609 unique=609 duplicate_hashes=0`.
+
+Open risks/TODO:
+
+- Week `2025-W46` has no non-merge commits in scope, so no issue exists for that week by design.
+- Existing duplicate issues remain in Linear as `Duplicate` records for audit traceability, though detached from hub.
+- Current week `In Progress`/`Todo` lines are operational placeholders and should be refreshed as active MVP Launch work changes.
+
+Update note (2026-02-19):
+
+- `PRO-24` current-week operational sections were finalized from live project state:
+  - In Progress non-changelog issues: `none`
+  - Todo non-changelog issues: `none`
+  - Snapshot timestamp recorded in issue body: `2026-02-19`

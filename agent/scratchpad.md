@@ -1604,3 +1604,153 @@ Commands run + outcomes:
 Open TODOs / follow-ups:
 
 - For future updates, append a new month comment to `PRO-5` instead of rewriting existing month sections.
+
+---
+
+## 2026-02-19 10:22 CET
+
+Task summary:
+
+- Applied Linear changelog clarity update requested by user for `PRO-5`.
+- Structured issue metadata into explicit `Completed`, `In Progress`, and `Todo` sections.
+- Corrected changelog totals to current `HEAD` and added a structure comment with canonical month references.
+
+What worked:
+
+- Linear MCP read/update flow was stable for issue and comment updates.
+- Git verification commands confirmed current truth quickly (`609` total, February `160`).
+- Existing detailed month comments already provided full commit coverage under categories, so clarity improvements could focus on structure and operations.
+
+What failed / wrong assumptions:
+
+- Initial assumption that a full v3 rewrite of all month comments (with expanded per-commit impact phrasing) was practical in one pass; payload size and operational overhead made that unsuitable for this iteration.
+
+User corrections:
+
+- User asked to make changelog clearer, keep category grouping, and explicitly separate done/in-progress/todo tracking.
+
+Assumptions taken without asking:
+
+- It is acceptable to keep existing detailed month comments as canonical while improving issue-level structure and operational guidance first.
+- Older compact comments can remain as historical artifacts rather than being deleted.
+
+What the user corrected afterward:
+
+- None in this execution pass.
+
+Improvements next time:
+
+- Add a small reusable helper under `agent/tools/` that generates per-commit impact wording in chunked monthly payloads to make deeper clarity passes easier.
+- Add a quick checker that flags stale month totals in historical index comments.
+
+Commands run + outcomes:
+
+- `git status --short`: PASS (clean before edits).
+- `git rev-list --count --since='2025-10-01' --no-merges HEAD`: PASS (`609`).
+- `git log --since='2025-10-01' --no-merges --date=format:'%Y-%m' --pretty='%ad' | sort | uniq -c`: PASS (`2025-10=186`, `2025-11=138`, `2025-12=125`, `2026-02=160`).
+- `mcp__linear__update_issue (PRO-5)`: PASS.
+- `mcp__linear__create_comment (PRO-5)`: PASS (`4fd0cba6-efee-4622-a74e-f88832bbfae1`).
+- `mcp__linear__get_issue` and `mcp__linear__list_comments`: PASS.
+
+Open TODOs / follow-ups:
+
+- Optional: run a dedicated v3 clarity pass that rewrites month comments with per-commit impact phrasing while preserving the same category buckets.
+
+---
+
+## 2026-02-19 10:55 CET
+
+Task summary:
+
+- Reorganized changelog tracking from overloaded `PRO-5` into weekly hub model under `PRO-6`.
+- Created/validated weekly child issues with commit-by-commit category sections for full scope since `2025-10-01`.
+- Retired `PRO-5` and cleaned migration duplicates to keep the hub reviewable.
+
+What worked:
+
+- Linear MCP issue creation/update flow worked reliably for hub, child issues, labels, comments, and state transitions.
+- Weekly payload source in `/tmp/linear_weekly_payloads_compact` matched git truth and enabled deterministic backfill.
+- Coverage integrity checks passed (`609` git non-merge commits and `609` aggregated weekly entries).
+
+What failed / wrong assumptions:
+
+- Assumed only `PRO-7`/`PRO-8` existed under the new hub at execution start; a parallel/background run had already created additional weekly issues.
+- This created duplicate weekly issue sets that required cleanup after detection.
+
+User corrections:
+
+- User requested clearer changelog structure than a single overloaded issue.
+- User requested weekly split, category grouping, and explicit progress visibility (`Done`/`In Progress`/`Todo`).
+
+Assumptions taken without asking:
+
+- Kept one canonical weekly issue per week and moved duplicate copies to `Duplicate` instead of deleting.
+- Left duplicate issues in Linear for traceability but removed them from hub parent linkage.
+- Treated `2025-W46` as intentionally absent because no non-merge commits exist for that week in scope.
+
+What the user corrected afterward:
+
+- User requested continuation during the final documentation/logging phase (`continue`).
+
+Improvements next time:
+
+- Run a pre-create parent-child inventory immediately before bulk creation to prevent duplicate weekly tickets.
+- Add a small one-shot helper to compare planned week set against existing child titles before any create calls.
+
+Commands run + outcomes:
+
+- `git rev-list --count --since='2025-10-01' --no-merges HEAD`: PASS (`609`)
+- `jq '[.[].count] | add' /tmp/linear_weekly_payloads_compact/payloads.json`: PASS (`609`)
+- hash uniqueness check across weekly markdown payloads: PASS (`total=609 unique=609 duplicate_hashes=0`)
+- `mcp__linear__create_issue` (weekly children + state policy): PASS
+- `mcp__linear__update_issue` (hub index, duplicate cleanup, `PRO-5` state): PASS
+- `mcp__linear__create_comment` (supersession note on `PRO-5`): PASS
+- `mcp__linear__list_issues` + `mcp__linear__get_issue`: PASS (structure/status verification)
+
+Open TODOs / follow-ups:
+
+- For ongoing operation, update only current week issue (`PRO-24`) and roll to next week issue at week close.
+- Optional: tighten current-week `In Progress` and `Todo` lines by syncing with active `MVP Launch` started/unstarted work items each update cycle.
+
+---
+
+## 2026-02-19 13:05 CET
+
+Task summary:
+
+- Continued post-migration cleanup by replacing `PRO-24` placeholder operational text with explicit live project-state values.
+
+What worked:
+
+- Project-level issue state query returned deterministic result for `MVP Launch` non-changelog work (`none` started, `none` unstarted).
+- `PRO-24` update applied cleanly without changing weekly commit section structure.
+
+What failed / wrong assumptions:
+
+- None.
+
+User corrections:
+
+- User asked to continue execution after initial completion summary.
+
+Assumptions taken without asking:
+
+- `Todo` should reflect unstarted state categories (`Todo`/`Backlog`) and be reported as `none` when empty.
+
+What the user corrected afterward:
+
+- None after this continuation step.
+
+Improvements next time:
+
+- Query both status names and status types in one step to avoid ambiguity between `Todo` and `Backlog` naming.
+
+Commands run + outcomes:
+
+- `mcp__linear__list_issues` (`MVP Launch`, `In Progress`): PASS (only changelog issues present).
+- `mcp__linear__list_issues` (`MVP Launch`, `Todo`/`unstarted`/`Backlog`): PASS (no issues).
+- `mcp__linear__update_issue` (`PRO-24`): PASS.
+
+Open TODOs / follow-ups:
+
+- As soon as non-changelog work starts in `MVP Launch`, update `PRO-24` In Progress/Todo lists accordingly.
