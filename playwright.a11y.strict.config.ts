@@ -1,6 +1,27 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const PLAYWRIGHT_BASE_URL = process.env.BASE_URL || 'http://localhost:39123';
+const configuredPort = Number.parseInt(process.env.PLAYWRIGHT_PORT || '39123', 10);
+const configuredBaseURL = process.env.BASE_URL?.trim();
+const parsedBaseURL = (() => {
+  if (!configuredBaseURL) {
+    return null;
+  }
+  try {
+    return new URL(configuredBaseURL);
+  } catch {
+    return null;
+  }
+})();
+const baseURLPort = parsedBaseURL?.port ? Number.parseInt(parsedBaseURL.port, 10) : NaN;
+const webServerPort = Number.isFinite(baseURLPort) ? baseURLPort : configuredPort;
+const playwrightBaseURL = configuredBaseURL || `http://127.0.0.1:${webServerPort}`;
+const playwrightServerMode = process.env.PLAYWRIGHT_SERVER_MODE?.trim().toLowerCase();
+const strictEnvPrefix =
+  'PII_HASH_SALT=${PII_HASH_SALT:-playwright-test-salt} NEXT_PUBLIC_USE_MOCK_SUPABASE=false ';
+const webServerCommand =
+  playwrightServerMode === 'prod'
+    ? `${strictEnvPrefix}npm run start -- -p ${webServerPort}`
+    : `${strictEnvPrefix}npm run dev -- -p ${webServerPort}`;
 
 // Strict a11y contract config for MVP launch decisions.
 // Runs against real runtime env and forbids mock Supabase mode.
@@ -13,7 +34,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: [['html', { open: 'never' }], ['line']],
   use: {
-    baseURL: PLAYWRIGHT_BASE_URL,
+    baseURL: playwrightBaseURL,
     trace: 'on-first-retry',
     actionTimeout: 30000,
     navigationTimeout: 30000,
@@ -28,9 +49,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command:
-      'PII_HASH_SALT=${PII_HASH_SALT:-playwright-test-salt} PORT=39123 NEXT_PUBLIC_USE_MOCK_SUPABASE=false npm run dev',
-    url: PLAYWRIGHT_BASE_URL,
+    command: webServerCommand,
+    url: playwrightBaseURL,
     reuseExistingServer: false,
     timeout: 120000,
   },
