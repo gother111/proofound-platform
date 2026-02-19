@@ -16,15 +16,16 @@ export function buildOAuthCallbackHtml({
   error,
   message,
   defaultType,
-  redirectBasePath = '/app/i/settings/integrations',
+  redirectBasePath = '/app/i/settings?tab=integrations',
 }: OAuthCallbackHtmlOptions): string {
-  const params = new URLSearchParams();
+  const [basePath, baseQuery = ''] = redirectBasePath.split('?');
+  const params = new URLSearchParams(baseQuery);
   if (success) params.set('success', success);
   if (error) params.set('error', error);
   if (message) params.set('message', message);
 
   const query = params.toString();
-  const redirectPath = query ? `${redirectBasePath}?${query}` : redirectBasePath;
+  const redirectPath = query ? `${basePath}?${query}` : basePath;
   const postMessageType = success || error || defaultType;
 
   return `<!doctype html>
@@ -43,7 +44,7 @@ export function buildOAuthCallbackHtml({
         window.location.assign(${JSON.stringify(redirectPath)});
       })();
     </script>
-    <p>Returning to Proofound...</p>
+    <p>Returning to Proofound settings...</p>
   </body>
 </html>`;
 }

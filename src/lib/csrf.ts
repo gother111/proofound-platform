@@ -85,6 +85,7 @@ export function csrfProtection(request: NextRequest): NextResponse | null {
     '/api/interviews/',
     '/api/analytics/',
     '/api/messages/',
+    '/api/conversations/',
     '/api/goals/',
     '/api/skill-gaps/',
     '/api/dashboard/layout',

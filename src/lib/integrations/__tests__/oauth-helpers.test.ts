@@ -16,7 +16,7 @@ describe('oauth helpers', () => {
       defaultType: 'zoom_oauth',
     });
 
-    expect(html).toContain('/app/i/settings/integrations?success=zoom_connected');
+    expect(html).toContain('/app/i/settings?tab=integrations&success=zoom_connected');
     expect(html).toContain('zoom_connected');
   });
 

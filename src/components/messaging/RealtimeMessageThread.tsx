@@ -145,7 +145,7 @@ export function RealtimeMessageThread({
   };
 
   return (
-    <div className="relative h-full flex flex-col">
+    <div className="relative h-full min-h-0 w-full min-w-0 flex flex-col">
       {/* Connection status indicator */}
       <div className="absolute top-2 right-2 z-10">
         <Badge

@@ -33,10 +33,13 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 ## PR Scope Discipline
 
 - Keep default PR scope at `<=20` files unless explicitly declared as a large change.
-- Keep session/docs logs out of feature PRs when possible:
+- Legacy shared log files are history/index surfaces and should stay out of feature PRs:
   - `agent/scratchpad.md`
   - `project/Documentation.md`
-- Use dedicated docs-only PRs for session logs and operational notes.
+- Use sharded log entries for routine updates:
+  - `agent/scratchpad/entries/*.md`
+  - `project/changes/entries/*.md`
+- CI enforces shared log scope via `scripts/check-shared-log-files.mjs`.
 
 ## Landing Guardrail (Required When Landing Files Change)
 
@@ -126,7 +129,7 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
   - Provider strict gate defaults to `STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true` and `STRICT_PROVIDER_E2E_REQUIRE_BOTH=true`.
   - Provider strict gate requires deterministic provider user env vars: `E2E_PROVIDER_USER_ID`, `E2E_PROVIDER_USER_EMAIL`, `E2E_PROVIDER_USER_PASSWORD`.
   - Deterministic provider user must have both Zoom and Google connected for launch-gate runs.
-- For credential-gated E2E smokes, document required env vars explicitly in `project/Documentation.md` and mark command outcome as PASS/SKIPPED with reason.
+- For credential-gated E2E smokes, document required env vars in `project/changes/entries/*.md` and mark command outcome as PASS/SKIPPED with reason.
 
 ## Manual Smoke Checks (OAuth Integrations)
 

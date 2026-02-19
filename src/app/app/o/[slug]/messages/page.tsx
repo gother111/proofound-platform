@@ -89,13 +89,13 @@ function OrganizationMessagesPageContent() {
   const loadMessages = async (conversationId: string) => {
     setIsLoadingMessages(true);
     try {
-      const response = await fetch(`/api/messages?conversationId=${conversationId}`);
+      const response = await fetch(`/api/conversations/${conversationId}/messages?limit=100`);
       if (response.ok) {
         const data = await response.json();
         // Transform messages to have Date objects for RealtimeMessageThread
         const transformedMessages = (data.messages || []).map((msg: any) => ({
           id: msg.id,
-          senderId: msg.senderId || msg.sender_id,
+          senderId: msg.senderId || msg.sender_id || msg.sender?.id,
           content: msg.content,
           sentAt: new Date(msg.sentAt || msg.sent_at),
           readAt: msg.readAt || msg.read_at ? new Date(msg.readAt || msg.read_at) : undefined,
@@ -113,18 +113,32 @@ function OrganizationMessagesPageContent() {
     if (!selectedConversationId) return;
 
     try {
-      const response = await fetch('/api/messages', {
+      const response = await fetch(`/api/conversations/${selectedConversationId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          conversationId: selectedConversationId,
           content,
         }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        setMessages((prev) => [...prev, data.message]);
+        const message = data.message;
+        if (message) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: message.id,
+              senderId: message.sender?.id || currentUserId,
+              content: message.content,
+              sentAt: new Date(message.sentAt || message.sent_at),
+              readAt:
+                message.readAt || message.read_at
+                  ? new Date(message.readAt || message.read_at)
+                  : undefined,
+            },
+          ]);
+        }
       }
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -166,8 +180,8 @@ function OrganizationMessagesPageContent() {
 
       {/* Right: Message Thread or Empty State */}
       <div
-        className={`h-full min-h-0 flex-1 flex items-center justify-center bg-[#F7F6F1] ${
-          !selectedConversationId ? 'hidden md:flex' : 'flex'
+        className={`h-full min-h-0 min-w-0 flex-1 bg-[#F7F6F1] ${
+          !selectedConversationId ? 'hidden md:flex md:items-center md:justify-center' : 'flex'
         }`}
       >
         {selectedConversation ? (

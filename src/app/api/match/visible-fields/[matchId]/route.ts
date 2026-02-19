@@ -7,8 +7,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
-import { sql } from 'drizzle-orm';
+import { profileFieldVisibility } from '@/db/schema';
+import { eq, sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
+import {
+  PROFILE_VISIBILITY_DEFAULTS,
+  type ProfileVisibilityLevel,
+  isVisibleInMatchContext,
+} from '@/lib/contracts/domain';
 
 interface VisibleField {
   field: string;
@@ -17,7 +23,45 @@ interface VisibleField {
   isRedacted: boolean;
 }
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ matchId: string }> }) {
+const fieldVisibilityMapping: Record<string, keyof typeof PROFILE_VISIBILITY_DEFAULTS | null> = {
+  name: 'displayName',
+  email: null,
+  location: 'location',
+  headline: 'headline',
+  bio: null,
+  skills: 'skills',
+  values: 'values',
+  causes: 'causes',
+  linkedin_url: null,
+};
+
+function resolveFieldVisibility(
+  field: string,
+  settings: Record<string, ProfileVisibilityLevel>
+): ProfileVisibilityLevel {
+  const mappedKey = fieldVisibilityMapping[field];
+
+  if (!mappedKey) {
+    return 'private';
+  }
+
+  return settings[mappedKey] || 'private';
+}
+
+function toVisibilityLevel(value: string | undefined): ProfileVisibilityLevel {
+  if (
+    value === 'public' ||
+    value === 'network_only' ||
+    value === 'match_only' ||
+    value === 'private'
+  ) {
+    return value;
+  }
+
+  return 'private';
+}
+
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ matchId: string }> }) {
   try {
     const supabase = await createClient();
     const {
@@ -66,19 +110,32 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ matc
     const userData = userProfile.length > 0 ? (userProfile[0] as any) : {};
     const profileData = profile.length > 0 ? (profile[0] as any) : {};
 
-    // Get field visibility settings
-    let visibilityMap = new Map<string, boolean>();
-    try {
-      const visibility = await db.execute(sql`
-        SELECT field_name, is_visible
-        FROM profile_field_visibility
-        WHERE user_id = ${user.id}
-      `);
-      visibilityMap = new Map(visibility.map((row: any) => [row.field_name, row.is_visible]));
-    } catch {
-      // Table might be empty - default all fields to visible
-      log.warn('match.visible_fields.no_visibility_settings', { userId: user.id });
-    }
+    const [visibility] = await db
+      .select()
+      .from(profileFieldVisibility)
+      .where(eq(profileFieldVisibility.profileId, user.id))
+      .limit(1);
+
+    const resolvedVisibility: Record<string, ProfileVisibilityLevel> = {
+      ...PROFILE_VISIBILITY_DEFAULTS,
+      ...(visibility
+        ? {
+            displayName: toVisibilityLevel(visibility.displayName),
+            avatar: toVisibilityLevel(visibility.avatar),
+            headline: toVisibilityLevel(visibility.headline),
+            location: toVisibilityLevel(visibility.location),
+            mission: toVisibilityLevel(visibility.mission),
+            vision: toVisibilityLevel(visibility.vision),
+            values: toVisibilityLevel(visibility.values),
+            causes: toVisibilityLevel(visibility.causes),
+            experiences: toVisibilityLevel(visibility.experiences),
+            education: toVisibilityLevel(visibility.education),
+            volunteering: toVisibilityLevel(visibility.volunteering),
+            skills: toVisibilityLevel(visibility.skills),
+            impactStories: toVisibilityLevel(visibility.impactStories),
+          }
+        : {}),
+    };
 
     // Define all profile fields with their labels using correct column names
     const allFields = [
@@ -104,14 +161,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ matc
     // Filter out empty fields and apply visibility settings
     const visibleFields: VisibleField[] = allFields
       .filter((f) => {
-        // Filter out empty/null values
         if (!f.value) return false;
         if (Array.isArray(f.value) && f.value.length === 0) return false;
         if (f.value === 'Not specified' || f.value === 'Not provided') return false;
         return true;
       })
       .map((f) => {
-        const isVisible = visibilityMap.get(f.field) ?? true; // Default visible
+        const visibilityLevel = resolveFieldVisibility(f.field, resolvedVisibility);
+        const isVisible = isVisibleInMatchContext(visibilityLevel);
+
         return {
           field: f.field,
           label: f.label,

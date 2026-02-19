@@ -17,6 +17,7 @@ import {
   index,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+import { ASSIGNMENT_STATUS_VALUES, INTERVIEW_PLATFORM_VALUES } from '@/lib/contracts/domain';
 
 // Custom types for PostgreSQL-specific data types
 const bit = customType<{ data: string; notNull?: boolean; default?: boolean }>({
@@ -608,7 +609,7 @@ export const assignments = pgTable('assignments', {
   role: text('role').notNull(),
   description: text('description'),
   status: text('status', {
-    enum: ['draft', 'active', 'paused', 'closed'],
+    enum: [...ASSIGNMENT_STATUS_VALUES],
   })
     .default('draft')
     .notNull(),
@@ -1887,7 +1888,7 @@ export const interviews = pgTable('interviews', {
     .notNull(),
   scheduledAt: timestamp('scheduled_at').notNull(),
   duration: integer('duration').default(30).notNull(), // minutes
-  platform: text('platform', { enum: ['zoom', 'google'] }).notNull(),
+  platform: text('platform', { enum: [...INTERVIEW_PLATFORM_VALUES] }).notNull(),
   meetingId: text('meeting_id').notNull(), // External meeting/event ID
   meetingUrl: text('meeting_url').notNull(),
   timezone: text('timezone').default('UTC'),

@@ -5,15 +5,54 @@ on:
     branches: [master, develop]
   pull_request:
     branches: [master, develop]
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+  pull_request_target:
+    branches: [master, develop]
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   ci:
+    if: >-
+      github.event_name == 'push' ||
+      (
+        github.event.pull_request.base.repo.full_name == github.repository &&
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        (
+          github.event.pull_request.author_association == 'OWNER' ||
+          github.event.pull_request.author_association == 'MEMBER' ||
+          github.event.pull_request.author_association == 'COLLABORATOR'
+        ) &&
+        (
+          github.event_name == 'pull_request' ||
+          (
+            github.event_name == 'pull_request_target' &&
+            (
+              github.event.pull_request.mergeable_state == 'dirty' ||
+              github.event.pull_request.mergeable_state == 'unknown'
+            )
+          )
+        )
+      )
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     env:
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
       SITE_URL: http://localhost:3000
       NEXT_PUBLIC_APP_ENV: ci
       NODE_OPTIONS: --max-old-space-size=6144
+      PLAYWRIGHT_SERVER_MODE: prod
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -39,6 +78,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -46,13 +86,17 @@ jobs:
           node-version-file: '.nvmrc'
           cache: 'npm'
 
+      - name: Enforce shared log PR scope
+        if: github.event_name != 'push'
+        run: node ./scripts/check-shared-log-files.mjs
+
       - name: Enforce landing PR scope
-        if: github.event_name == 'pull_request'
+        if: github.event_name != 'push'
         run: node ./scripts/check-landing-pr-scope.mjs
 
       - name: Detect landing-sensitive changes
         id: landing_changes
-        if: github.event_name == 'pull_request'
+        if: github.event_name != 'push'
         run: |
           touched="$(node ./scripts/check-landing-pr-scope.mjs --print-landing-touched)"
           echo "touched=${touched}" >> "$GITHUB_OUTPUT"
@@ -79,125 +123,25 @@ jobs:
       - name: Run unit tests
         run: npm run test
 
-      - name: Run auth E2E real contract
-        run: npm run test:e2e:auth:real
-
-      - name: Run accessibility strict contract
-        run: npm run test:a11y:strict
-
-      - name: Enforce strict E2E quality guard
-        run: npm run test:strict:quality
-
-      - name: Run individual strict flow suite (required)
-        run: npm run test:e2e:individual:strict
-
-      - name: Run organization strict flow suite (required)
-        run: npm run test:e2e:org:strict
-
-      - name: Run privacy strict flow suite (required)
-        run: npm run test:e2e:privacy:strict
-
-      - name: Run providers strict flow suite (required, real-provider)
-        run: npm run test:e2e:providers:strict
-
       - name: Build application
         run: npm run build
+
+      - name: Run auth E2E real contract
+        run: npm run test:e2e:auth:real
 
       - name: Run landing page contract
         run: npm run test:e2e:landing
 
       - name: Run landing visual baseline contract
-        if: github.event_name == 'pull_request' && steps.landing_changes.outputs.touched == 'true'
+        if: github.event_name != 'push' && steps.landing_changes.outputs.touched == 'true'
         run: npm run test:e2e:landing:visual
-
-      - name: Rebuild application for production start
-        run: npm run build
-
-      - name: Start app server (background)
-        run: |
-          npm run start -- -p 3000 > /tmp/next.log 2>&1 &
-          echo $! > /tmp/next_pid
-          # wait for health and active database connectivity
-          for i in {1..30}; do
-            response="$(curl -fsS http://localhost:3000/api/health || true)"
-            if echo "$response" | grep -q '"status":"healthy"' && echo "$response" | grep -q '"connected":true'; then
-              echo "App is healthy and DB is connected"
-              exit 0
-            fi
-            sleep 1
-          done
-          echo "App did not become healthy with DB connectivity" && cat /tmp/next.log && exit 1
-
-      - name: Run performance budgets (TTI/CLS/API p95)
-        env:
-          BASE_URL: http://localhost:3000
-        run: npm run perf:budgets
-
-      - name: Go / No-Go gates
-        env:
-          BASE_URL: http://localhost:3000
-          SUS_STUDY_COMPLETE: "true"
-        run: npm run go:no-go
-
-      - name: Stop app server
-        if: always()
-        run: |
-          if [ -f /tmp/next_pid ]; then
-            kill "$(cat /tmp/next_pid)" || true
-          fi
-
-  e2e:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps
-
-      - name: Run E2E tests
-        run: |
-          npm run test:e2e:auth:real
-          npm run test:e2e:landing
-        env:
-          BASE_URL: http://localhost:3000
-          NEXT_PUBLIC_SITE_URL: http://localhost:3000
-          SITE_URL: http://localhost:3000
-          NEXT_PUBLIC_APP_ENV: test
-          NEXT_PUBLIC_USE_MOCK_SUPABASE: "false"
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          PII_HASH_SALT: ${{ secrets.PII_HASH_SALT || 'ci-playwright-test-salt' }}
-          ZOOM_CLIENT_ID: ${{ secrets.ZOOM_CLIENT_ID }}
-          ZOOM_CLIENT_SECRET: ${{ secrets.ZOOM_CLIENT_SECRET }}
-          ZOOM_REDIRECT_URI: ${{ secrets.ZOOM_REDIRECT_URI }}
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
-          LINKEDIN_CLIENT_ID: ${{ secrets.LINKEDIN_CLIENT_ID }}
-          LINKEDIN_CLIENT_SECRET: ${{ secrets.LINKEDIN_CLIENT_SECRET }}
-          E2E_PROVIDER_USER_ID: ${{ secrets.E2E_PROVIDER_USER_ID }}
-          E2E_PROVIDER_USER_EMAIL: ${{ secrets.E2E_PROVIDER_USER_EMAIL }}
-          E2E_PROVIDER_USER_PASSWORD: ${{ secrets.E2E_PROVIDER_USER_PASSWORD }}
-          STRICT_PROVIDER_E2E_REQUIRE_CONNECTED: ${{ secrets.E2E_PROVIDER_USER_ID != '' && secrets.E2E_PROVIDER_USER_EMAIL != '' && secrets.E2E_PROVIDER_USER_PASSWORD != '' && 'true' || 'false' }}
-          STRICT_PROVIDER_E2E_REQUIRE_BOTH: ${{ secrets.E2E_PROVIDER_USER_ID != '' && secrets.E2E_PROVIDER_USER_EMAIL != '' && secrets.E2E_PROVIDER_USER_PASSWORD != '' && 'true' || 'false' }}
 
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 30
+          name: ci-playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14

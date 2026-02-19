@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -111,13 +111,19 @@ const AssignmentFormSchema = z
 type AssignmentFormData = z.infer<typeof AssignmentFormSchema>;
 
 interface AssignmentBuilderV2Props {
-  orgSlug?: string;
   onComplete?: (assignmentId: string) => void;
   onCancel?: () => void;
 }
 
-export function AssignmentBuilderV2({ orgSlug, onComplete, onCancel }: AssignmentBuilderV2Props) {
+export function AssignmentBuilderV2({ onComplete, onCancel }: AssignmentBuilderV2Props) {
   const router = useRouter();
+  const params = useParams();
+  const slug =
+    typeof params.slug === 'string'
+      ? params.slug
+      : Array.isArray(params.slug)
+        ? params.slug[0]
+        : null;
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -208,7 +214,7 @@ export function AssignmentBuilderV2({ orgSlug, onComplete, onCancel }: Assignmen
         expectedImpact: JSON.stringify(data.outcomes), // Store outcomes as JSON
         status: 'draft',
         creationStatus: 'pending_review', // Step 5 complete, awaiting approval
-        ...(orgSlug ? { organizationSlug: orgSlug } : {}),
+        orgSlug: slug ?? undefined,
         valuesRequired: [], // TODO: Map from form if values are collected
         causeTags: [],
         mustHaveSkills: data.mustHaveSkills.map((skill) => ({
@@ -263,7 +269,7 @@ export function AssignmentBuilderV2({ orgSlug, onComplete, onCancel }: Assignmen
       if (onComplete && assignmentId) {
         onComplete(assignmentId);
       } else {
-        router.push(`/o/assignments/${assignmentId}`);
+        router.push(slug ? `/app/o/${slug}/assignments/${assignmentId}/review` : '/app');
       }
     } catch (error) {
       console.error('Assignment creation error:', error);
