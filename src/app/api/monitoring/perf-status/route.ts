@@ -6,7 +6,7 @@ import { and, eq, gte, sql } from 'drizzle-orm';
 import { calculatePercentile, getPerformanceStatus } from '@/lib/monitoring/api-latency';
 
 export const dynamic = 'force-dynamic';
-type PerfStatusSource = 'analytics_events' | 'probe';
+type PerfStatusSource = 'analytics_events' | 'probe' | 'unavailable';
 
 async function probeHealthDurations(origin: string, sampleCount = 10): Promise<number[]> {
   const healthUrl = `${origin}/api/health`;
@@ -44,34 +44,71 @@ function buildPerfPayload(durations: number[], source: PerfStatusSource, fallbac
   };
 }
 
+function buildUnavailablePayload(reason: string) {
+  return {
+    ok: false,
+    status: 'critical',
+    sampleCount: 0,
+    windowHours: 24,
+    p95: null,
+    budgetMs: 1500,
+    message: reason,
+    source: 'unavailable' as const,
+  };
+}
+
 export async function GET(request: Request) {
   try {
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000); // last 24h
+    let analyticsError: string | null = null;
+    let durations: number[] = [];
 
-    const rows = await db
-      .select({
-        duration: sql<number>`(properties ->> 'duration_ms')::float`,
-      })
-      .from(analyticsEvents)
-      .where(
-        and(eq(analyticsEvents.eventType, 'api_latency'), gte(analyticsEvents.createdAt, since))
-      );
+    try {
+      const rows = await db
+        .select({
+          duration: sql<number>`(properties ->> 'duration_ms')::float`,
+        })
+        .from(analyticsEvents)
+        .where(
+          and(eq(analyticsEvents.eventType, 'api_latency'), gte(analyticsEvents.createdAt, since))
+        );
 
-    const durations = rows
-      .map((r) => r.duration)
-      .filter((n) => typeof n === 'number' && Number.isFinite(n));
+      durations = rows
+        .map((r) => r.duration)
+        .filter((n) => typeof n === 'number' && Number.isFinite(n));
+    } catch (error) {
+      analyticsError = error instanceof Error ? error.message : 'unknown analytics error';
+    }
 
     if (durations.length > 0) {
       return NextResponse.json(buildPerfPayload(durations, 'analytics_events'));
     }
 
-    const origin = new URL(request.url).origin;
-    const probeDurations = await probeHealthDurations(origin, 10);
+    const noDataReason = analyticsError
+      ? `Could not read api_latency events (${analyticsError}).`
+      : 'No api_latency events in the last 24h.';
 
-    return NextResponse.json(
-      buildPerfPayload(probeDurations, 'probe', 'No api_latency events in the last 24h.')
-    );
+    try {
+      const origin = new URL(request.url).origin;
+      const probeDurations = await probeHealthDurations(origin, 10);
+
+      return NextResponse.json(buildPerfPayload(probeDurations, 'probe', noDataReason));
+    } catch (probeError) {
+      const probeReason = probeError instanceof Error ? probeError.message : 'unknown probe error';
+      return NextResponse.json(
+        buildUnavailablePayload(
+          `${noDataReason} Fallback /api/health probe failed (${probeReason}).`
+        )
+      );
+    }
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to compute performance status' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json(
+      {
+        error: 'Failed to compute performance status',
+        message,
+      },
+      { status: 500 }
+    );
   }
 }

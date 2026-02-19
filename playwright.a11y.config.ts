@@ -1,12 +1,18 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const playwrightPort = Number.parseInt(process.env.PLAYWRIGHT_PORT || '33101', 10);
+const playwrightServerMode = process.env.PLAYWRIGHT_SERVER_MODE?.trim().toLowerCase();
 const baseURL = process.env.BASE_URL || `http://127.0.0.1:${playwrightPort}`;
+const webServerCommand =
+  playwrightServerMode === 'prod'
+    ? `NEXT_PUBLIC_USE_MOCK_SUPABASE=true npm run start -- -p ${playwrightPort}`
+    : `NEXT_PUBLIC_USE_MOCK_SUPABASE=true npm run dev -- -p ${playwrightPort}`;
 
 // Separate config for accessibility tests.
 // Keeps CI stable by running against a mock Supabase environment for public pages.
 export default defineConfig({
   testDir: './tests/a11y',
+  testIgnore: /.*\.strict\.spec\.ts/,
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
@@ -29,7 +35,7 @@ export default defineConfig({
   ],
   webServer: {
     // Avoid requiring real Supabase credentials for a11y tests.
-    command: `NEXT_PUBLIC_USE_MOCK_SUPABASE=true npm run dev -- -p ${playwrightPort}`,
+    command: webServerCommand,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120000,

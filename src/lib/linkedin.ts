@@ -1,8 +1,10 @@
 /**
  * LinkedIn API Helper Library
- * 
+ *
  * Handles LinkedIn OAuth and API interactions for profile data retrieval
  */
+
+import type { NextRequest } from 'next/server';
 
 export interface LinkedInProfile {
   id: string;
@@ -22,12 +24,70 @@ export interface LinkedInTokenResponse {
   scope?: string;
 }
 
+const LINKEDIN_CALLBACK_PATH = '/api/auth/linkedin/callback';
+
+function normalizeHttpUrl(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  const hasScheme = /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(trimmed);
+  const withScheme = hasScheme ? trimmed : `https://${trimmed}`;
+
+  try {
+    const parsed = new URL(withScheme);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return null;
+    }
+    return parsed.toString();
+  } catch {
+    return null;
+  }
+}
+
+function resolveBaseUrl(request: Pick<NextRequest, 'nextUrl'>): string {
+  const candidates = [
+    process.env.NEXT_PUBLIC_SITE_URL,
+    process.env.NEXT_PUBLIC_URL,
+    process.env.SITE_URL,
+    request.nextUrl.origin,
+  ];
+
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    const normalized = normalizeHttpUrl(candidate);
+    if (!normalized) continue;
+    return normalized;
+  }
+
+  return request.nextUrl.origin;
+}
+
+/**
+ * Resolve LinkedIn OAuth redirect URI using explicit override first and then
+ * canonical site URL fallbacks.
+ */
+export function resolveLinkedInRedirectUri(request: Pick<NextRequest, 'nextUrl'>): string {
+  const configured = process.env.LINKEDIN_REDIRECT_URI;
+  if (configured && configured.trim()) {
+    if (configured.startsWith('/')) {
+      const baseUrl = resolveBaseUrl(request);
+      return new URL(configured, baseUrl).toString();
+    }
+
+    const normalized = normalizeHttpUrl(configured);
+    if (normalized) {
+      return normalized;
+    }
+  }
+
+  const baseUrl = resolveBaseUrl(request);
+  return new URL(LINKEDIN_CALLBACK_PATH, baseUrl).toString();
+}
+
 /**
  * Fetch LinkedIn profile data using access token
  */
-export async function fetchLinkedInProfile(
-  accessToken: string
-): Promise<LinkedInProfile> {
+export async function fetchLinkedInProfile(accessToken: string): Promise<LinkedInProfile> {
   try {
     // Fetch basic profile information
     const profileResponse = await fetch('https://api.linkedin.com/v2/me', {
@@ -74,8 +134,8 @@ export async function fetchLinkedInProfile(
       email,
       vanityName: profileData.vanityName,
       headline: profileData.headline?.localized?.en_US,
-      profilePicture: profileData.profilePicture?.['displayImage~']?.elements?.[0]?.identifiers?.[0]
-        ?.identifier,
+      profilePicture:
+        profileData.profilePicture?.['displayImage~']?.elements?.[0]?.identifiers?.[0]?.identifier,
     };
   } catch (error) {
     console.error('Error fetching LinkedIn profile:', error);
@@ -128,9 +188,7 @@ export async function exchangeLinkedInCode(
 /**
  * Refresh LinkedIn access token
  */
-export async function refreshLinkedInToken(
-  refreshToken: string
-): Promise<LinkedInTokenResponse> {
+export async function refreshLinkedInToken(refreshToken: string): Promise<LinkedInTokenResponse> {
   const clientId = process.env.LINKEDIN_CLIENT_ID;
   const clientSecret = process.env.LINKEDIN_CLIENT_SECRET;
 
@@ -179,7 +237,7 @@ export function constructLinkedInProfileUrl(profile: LinkedInProfile): string {
   const namePart = `${profile.firstName}-${profile.lastName}`
     .toLowerCase()
     .replace(/[^a-z0-9-]/g, '-');
-  
+
   return `https://www.linkedin.com/in/${namePart}`;
 }
 
@@ -193,11 +251,7 @@ export function generateLinkedInAuthUrl(state: string, redirectUri: string): str
     throw new Error('LinkedIn Client ID not configured');
   }
 
-  const scopes = [
-    'openid',
-    'profile',
-    'email',
-  ];
+  const scopes = ['openid', 'profile', 'email'];
 
   const params = new URLSearchParams({
     response_type: 'code',
@@ -231,4 +285,3 @@ export function validateLinkedInConfig(): {
     missingVars,
   };
 }
-

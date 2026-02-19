@@ -124,12 +124,14 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
     await loginWithUi(page, orgUser);
 
     const createAssignmentResponse = await apiPostJson(page.request, '/api/assignments', {
+      orgId: organization.id,
       role: 'Strict Lifecycle Assignment',
       description: 'Lifecycle assignment for strict org flow validation',
+      businessValue: 'Strict lifecycle assignment business value',
       status: 'draft',
       valuesRequired: ['integrity'],
       causeTags: ['education'],
-      mustHaveSkills: [],
+      mustHaveSkills: [{ id: 'strict.skill.1', level: 3 }],
       niceToHaveSkills: [],
       locationMode: 'remote',
       compMin: 95000,
@@ -154,15 +156,34 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
       managed: true,
     };
 
-    const updateAssignmentResponse = await apiPutJson(
+    const outcomesResponse = await apiPostJson(
       page.request,
-      `/api/assignments/${assignmentId}`,
+      `/api/assignments/${assignmentId}/outcomes`,
       {
-        status: 'active',
-        description: 'Activated strict lifecycle assignment',
+        outcomes: [
+          {
+            outcomeType: 'continuous',
+            title: 'Ship strict lifecycle',
+            description: 'Validate end-to-end lifecycle',
+            metrics: [{ name: 'Milestones', target: '3', unit: 'count', current: '0' }],
+            successCriteria: 'Deliver all lifecycle milestones',
+          },
+        ],
       }
     );
-    expect(updateAssignmentResponse.ok()).toBeTruthy();
+    expect(outcomesResponse.ok()).toBeTruthy();
+
+    const publishAssignmentResponse = await apiPostJson(
+      page.request,
+      `/api/assignments/${assignmentId}/publish`,
+      {}
+    );
+    expect(publishAssignmentResponse.ok()).toBeTruthy();
+    const publishPayload = (await publishAssignmentResponse.json()) as {
+      assignment?: { status?: string; creationStatus?: string };
+    };
+    expect(publishPayload.assignment?.status).toBe('active');
+    expect(publishPayload.assignment?.creationStatus).toBe('published');
 
     const pipelineStepResponse = await apiPostJson(
       page.request,
@@ -255,6 +276,103 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
 
     await page.goto(`/app/o/${organization.slug}/messages`);
     await expect(page.getByText(/Select a conversation/i)).toBeVisible();
+  });
+
+  test('O-07b draft autosave/update and resume-to-publish contract is strict', async ({ page }) => {
+    await loginWithUi(page, orgUser);
+
+    const uniqueRole = `Strict Draft Resume ${Date.now()}`;
+    const createDraftResponse = await apiPostJson(page.request, '/api/assignments', {
+      orgId: organization.id,
+      role: uniqueRole,
+      description: 'Initial strict draft description',
+      businessValue: 'Initial strict draft business value',
+      status: 'draft',
+      mustHaveSkills: [{ id: 'strict.resume.skill.1', level: 3 }],
+      locationMode: 'hybrid',
+      compMin: 120000,
+      compMax: 160000,
+      currency: 'USD',
+    });
+    expect(createDraftResponse.status()).toBe(201);
+    const createDraftPayload = (await createDraftResponse.json()) as {
+      assignment?: { id?: string };
+    };
+    const draftId = createDraftPayload.assignment?.id;
+    if (!draftId) throw new Error('Draft creation did not return assignment id');
+    fixture.assignmentIds.add(draftId);
+
+    const autosaveUpdateResponse = await apiPutJson(page.request, `/api/assignments/${draftId}`, {
+      businessValue: 'Updated strict draft business value',
+      creationStatus: 'pipeline_in_progress',
+      status: 'draft',
+    });
+    expect(autosaveUpdateResponse.ok()).toBeTruthy();
+
+    await expect
+      .poll(
+        async () => {
+          const assignmentResponse = await page.request.get(`/api/assignments/${draftId}`);
+          if (!assignmentResponse.ok()) {
+            return null;
+          }
+
+          const assignmentPayload = (await assignmentResponse.json()) as {
+            assignment?: { businessValue?: string };
+          };
+          return assignmentPayload.assignment?.businessValue ?? null;
+        },
+        {
+          timeout: 15000,
+          message: 'Draft assignment should persist business value before resume assertions',
+        }
+      )
+      .toBe('Updated strict draft business value');
+
+    const listResponse = await page.request.get(
+      `/api/assignments?limit=100&orgSlug=${organization.slug}`
+    );
+    expect(listResponse.ok()).toBeTruthy();
+    const listPayload = (await listResponse.json()) as { items?: Array<{ role?: string }> };
+    const sameRoleAssignments = (listPayload.items ?? []).filter(
+      (item) => item.role === uniqueRole
+    );
+    expect(sameRoleAssignments.length).toBe(1);
+
+    await page.goto(`/app/o/${organization.slug}/assignments/new?draftId=${draftId}`);
+    await expect(page.getByLabel(/role title/i)).toHaveValue(uniqueRole);
+    await expect(page.getByLabel(/business value/i)).toHaveValue(
+      'Updated strict draft business value'
+    );
+
+    const outcomesResponse = await apiPostJson(
+      page.request,
+      `/api/assignments/${draftId}/outcomes`,
+      {
+        outcomes: [
+          {
+            outcomeType: 'continuous',
+            title: 'Strict resume outcome',
+            description: 'Validate strict resume path',
+            metrics: [{ name: 'Outcome', target: '1', unit: 'count', current: '0' }],
+            successCriteria: 'Outcome completed',
+          },
+        ],
+      }
+    );
+    expect(outcomesResponse.ok()).toBeTruthy();
+
+    const publishResponse = await apiPostJson(
+      page.request,
+      `/api/assignments/${draftId}/publish`,
+      {}
+    );
+    expect(publishResponse.ok()).toBeTruthy();
+    const publishPayload = (await publishResponse.json()) as {
+      assignment?: { status?: string; creationStatus?: string };
+    };
+    expect(publishPayload.assignment?.status).toBe('active');
+    expect(publishPayload.assignment?.creationStatus).toBe('published');
   });
 
   test('O-13..O-16 feedback, offer, deliverables, and verification paths are strict', async ({

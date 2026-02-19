@@ -110,7 +110,9 @@ export default async function ExpertiseAtlasPage() {
       verification_count: verificationCountMap[skill.id] || 0,
       verification_sources: verificationSourcesMap[skill.id] || [],
       // Map database field names to component expected names
-      evidenceStrength: skill.evidence_strength ? parseFloat(skill.evidence_strength.toString()) : 0,
+      evidenceStrength: skill.evidence_strength
+        ? parseFloat(skill.evidence_strength.toString())
+        : 0,
       impactScore: skill.impact_score ? parseFloat(skill.impact_score.toString()) : 0,
       monthsExperience: skill.months_experience || 0,
       skillCode: skill.skill_code || skill.skill_id || '',
@@ -136,6 +138,23 @@ export default async function ExpertiseAtlasPage() {
     if (l2Error) {
       logger.error('Failed to fetch L2 categories', l2Error);
     }
+
+    // Detect taxonomy availability so the UI can show explicit recovery guidance
+    const [{ count: l3Count, error: l3CountError }, { count: l4Count, error: l4CountError }] =
+      await Promise.all([
+        supabase.from('skills_l3').select('*', { count: 'exact', head: true }),
+        supabase.from('skills_taxonomy').select('*', { count: 'exact', head: true }),
+      ]);
+
+    if (l3CountError) {
+      logger.error('Failed to count L3 taxonomy rows', l3CountError);
+    }
+    if (l4CountError) {
+      logger.error('Failed to count L4 taxonomy rows', l4CountError);
+    }
+
+    const taxonomyReady =
+      (l2Categories?.length || 0) > 0 && (l3Count || 0) > 0 && (l4Count || 0) > 0;
 
     // Create L2 name lookup map
     const l2NameMap: Record<number, any> = {};
@@ -228,7 +247,7 @@ export default async function ExpertiseAtlasPage() {
       <ExpertiseAtlasClient
         initialSkills={enrichedSkills}
         domains={domainsWithStats}
-        hasSkills={hasSkills}
+        taxonomyReady={taxonomyReady}
         widgetData={widgetData}
         linkedInConnected={isLinkedInConnected}
       />
@@ -240,7 +259,7 @@ export default async function ExpertiseAtlasPage() {
       <ExpertiseAtlasClient
         initialSkills={[]}
         domains={[]}
-        hasSkills={false}
+        taxonomyReady={false}
         widgetData={null}
         linkedInConnected={false}
       />

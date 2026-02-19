@@ -63,6 +63,7 @@ export interface AddSkillDrawerViewProps {
   handleSave: (saveAndAddAnother?: boolean) => void;
 
   searchQuery: string;
+  taxonomyReady: boolean;
   handleSearchChange: (query: string) => void;
   searchResults: L4Skill[];
   searchLoading: boolean;
@@ -118,6 +119,7 @@ export function AddSkillDrawerView({
   saving,
   handleSave,
   searchQuery,
+  taxonomyReady,
   handleSearchChange,
   searchResults,
   searchLoading,
@@ -165,6 +167,7 @@ export function AddSkillDrawerView({
           <Button
             variant={mode === 'browse' ? 'default' : 'outline'}
             size="sm"
+            disabled={!taxonomyReady}
             onClick={() => {
               setMode('browse');
               setStep(1);
@@ -179,6 +182,7 @@ export function AddSkillDrawerView({
         {mode === 'search' && (
           <SearchModePanel
             searchQuery={searchQuery}
+            taxonomyReady={taxonomyReady}
             handleSearchChange={handleSearchChange}
             searchResults={searchResults}
             searchLoading={searchLoading}

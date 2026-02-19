@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { OrganizationMatchingEmpty } from '@/components/matching/OrganizationMatchingEmpty';
-import { AssignmentBuilderV2 } from '@/components/matching/AssignmentBuilderV2';
 import { MatchingOrganizationView } from '@/components/matching/MatchingOrganizationView';
 import { toast } from 'sonner';
 
@@ -11,14 +10,21 @@ export const dynamic = 'force-dynamic';
 
 export default function OrgMatchingPage() {
   const router = useRouter();
+  const params = useParams();
+  const slug =
+    typeof params.slug === 'string'
+      ? params.slug
+      : Array.isArray(params.slug)
+        ? params.slug[0]
+        : null;
   const [assignments, setAssignments] = useState<any[]>([]);
-  const [showBuilder, setShowBuilder] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchAssignments = async () => {
       try {
-        const response = await fetch('/api/assignments');
+        const orgQuery = slug ? `?orgSlug=${encodeURIComponent(slug)}` : '';
+        const response = await fetch(`/api/assignments${orgQuery}`);
         const data = await response.json();
         setAssignments(data.items || []);
       } catch (error) {
@@ -28,8 +34,16 @@ export default function OrgMatchingPage() {
       }
     };
 
-    fetchAssignments();
-  }, []);
+    void fetchAssignments();
+  }, [slug]);
+
+  const handleCreateAssignment = () => {
+    if (!slug) {
+      toast.error('Organization context not found');
+      return;
+    }
+    router.push(`/app/o/${slug}/assignments/new`);
+  };
 
   if (isLoading) {
     return (
@@ -39,31 +53,13 @@ export default function OrgMatchingPage() {
     );
   }
 
-  // Show builder if triggered
-  if (showBuilder) {
-    return (
-      <AssignmentBuilderV2
-        onComplete={(assignmentId) => {
-          setShowBuilder(false);
-          router.refresh();
-          fetch('/api/assignments')
-            .then((res) => res.json())
-            .then((data) => setAssignments(data.items || []));
-        }}
-        onCancel={() => {
-          setShowBuilder(false);
-        }}
-      />
-    );
-  }
-
   // Show empty state if no assignments
   if (assignments.length === 0) {
-    return <OrganizationMatchingEmpty onCreateAssignment={() => setShowBuilder(true)} />;
+    return <OrganizationMatchingEmpty onCreateAssignment={handleCreateAssignment} />;
   }
 
   // Show filled view with matches
   return (
-    <MatchingOrganizationView assignments={assignments} onCreateNew={() => setShowBuilder(true)} />
+    <MatchingOrganizationView assignments={assignments} onCreateNew={handleCreateAssignment} />
   );
 }
