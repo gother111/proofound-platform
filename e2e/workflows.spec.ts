@@ -114,85 +114,65 @@ test.describe('Core Workflows', () => {
 
   test.describe('Assignment Creation (Organization)', () => {
     test('should display assignment creation page', async ({ page }) => {
-      await page.goto('/app/o/test-org/assignments/create');
+      await page.goto('/app/o/test-org/assignments/new');
 
       await page.waitForTimeout(1000);
 
       if (page.url().includes('/login')) {
-        // Not authenticated
+        expect(page.url()).toContain('/login');
         return;
       }
 
-      // Should show assignment creation form or wizard
-      expect(page.url()).toContain('/assignments');
+      expect(page.url()).toContain('/assignments/new');
+      await expect(page.getByRole('heading', { name: /create new assignment/i })).toBeVisible();
     });
 
     test('should show step-by-step wizard', async ({ page }) => {
-      await page.goto('/app/o/test-org/assignments/create');
+      await page.goto('/app/o/test-org/assignments/new');
 
       await page.waitForTimeout(1000);
 
-      if (page.url().includes('/login') || !page.url().includes('/assignments')) {
+      if (page.url().includes('/login')) {
+        expect(page.url()).toContain('/login');
         return;
       }
 
-      // Look for step indicators
-      const stepIndicators = page.locator('[data-step], .step, .wizard-step');
-      const hasSteps = (await stepIndicators.count()) > 0;
-
-      // Or look for numbered steps
-      const hasNumberedSteps = await page.getByText(/step \d|1 of \d|step 1/i).isVisible();
-
-      // It's ok if no steps - might be single page form
-      expect(true).toBeTruthy();
+      await expect(page.getByText(/step 1 of 5/i)).toBeVisible();
+      await expect(page.getByRole('heading', { name: /step 1: business value/i })).toBeVisible();
     });
 
     test('should validate required fields', async ({ page }) => {
-      await page.goto('/app/o/test-org/assignments/create');
+      await page.goto('/app/o/test-org/assignments/new');
 
       await page.waitForTimeout(1000);
 
-      if (page.url().includes('/login') || !page.url().includes('/assignments')) {
+      if (page.url().includes('/login')) {
+        expect(page.url()).toContain('/login');
         return;
       }
 
-      // Try to submit without filling required fields
-      const submitButton = page.getByRole('button', { name: /submit|create|next/i });
-
-      if (await submitButton.isVisible()) {
-        await submitButton.click();
-        await page.waitForTimeout(500);
-
-        // Should show validation error
-        const hasError = await page.getByText(/required|fill out|complete/i).isVisible();
-
-        // Validation might be lenient - test still passes
-      }
-
-      expect(true).toBeTruthy();
+      const nextButton = page.getByRole('button', { name: /next: target outcomes/i });
+      await expect(nextButton).toBeDisabled();
     });
 
     test('should allow entering assignment details', async ({ page }) => {
-      await page.goto('/app/o/test-org/assignments/create');
+      await page.goto('/app/o/test-org/assignments/new');
 
       await page.waitForTimeout(1000);
 
-      if (page.url().includes('/login') || !page.url().includes('/assignments')) {
+      if (page.url().includes('/login')) {
+        expect(page.url()).toContain('/login');
         return;
       }
 
-      // Fill in assignment details if fields exist
-      const titleField = page.getByLabel(/title|position|role/i);
-      if (await titleField.isVisible()) {
-        await titleField.fill('Senior Software Engineer');
-      }
-
-      const descriptionField = page.getByLabel(/description|details/i);
-      if (await descriptionField.isVisible()) {
-        await descriptionField.fill('Looking for an experienced engineer to join our team.');
-      }
-
-      expect(true).toBeTruthy();
+      const roleField = page.getByLabel(/role title/i);
+      const businessValueField = page.getByLabel(/business value/i);
+      await roleField.fill('Senior Software Engineer');
+      await businessValueField.fill('Improve platform reliability and delivery speed.');
+      await expect(roleField).toHaveValue('Senior Software Engineer');
+      await expect(businessValueField).toHaveValue(
+        'Improve platform reliability and delivery speed.'
+      );
     });
   });
 

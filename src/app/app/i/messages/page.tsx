@@ -2,7 +2,7 @@
  * Messages Page - Individual
  *
  * Two-column layout: conversation list + message thread
- * Connects to /api/conversations and /api/messages
+ * Connects to /api/conversations and /api/conversations/[conversationId]/messages
  *
  * Supports URL param: ?conversation=<id> to auto-select a conversation
  */
@@ -10,7 +10,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ConversationList, type Conversation } from '@/components/messaging/ConversationList';
 import { RealtimeMessageThread } from '@/components/messaging/RealtimeMessageThread';
 import { type Message } from '@/components/messaging/MessageThread';
@@ -22,6 +22,8 @@ export const dynamic = 'force-dynamic';
 function MessagesPageContent() {
   const searchParams = useSearchParams();
   const conversationParam = searchParams.get('conversation');
+  const pathname = usePathname();
+  const router = useRouter();
 
   const { userId: currentUserId, isLoading: isAuthLoading } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -87,13 +89,13 @@ function MessagesPageContent() {
   const loadMessages = async (conversationId: string) => {
     setIsLoadingMessages(true);
     try {
-      const response = await fetch(`/api/messages?conversationId=${conversationId}`);
+      const response = await fetch(`/api/conversations/${conversationId}/messages?limit=100`);
       if (response.ok) {
         const data = await response.json();
         // Transform messages to have Date objects for RealtimeMessageThread
         const transformedMessages = (data.messages || []).map((msg: any) => ({
           id: msg.id,
-          senderId: msg.senderId || msg.sender_id,
+          senderId: msg.senderId || msg.sender_id || msg.sender?.id,
           content: msg.content,
           sentAt: new Date(msg.sentAt || msg.sent_at),
           readAt: msg.readAt || msg.read_at ? new Date(msg.readAt || msg.read_at) : undefined,
@@ -111,18 +113,32 @@ function MessagesPageContent() {
     if (!selectedConversationId) return;
 
     try {
-      const response = await fetch('/api/messages', {
+      const response = await fetch(`/api/conversations/${selectedConversationId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          conversationId: selectedConversationId,
           content,
         }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        setMessages((prev) => [...prev, data.message]);
+        const message = data.message;
+        if (message) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: message.id,
+              senderId: message.sender?.id || currentUserId,
+              content: message.content,
+              sentAt: new Date(message.sentAt || message.sent_at),
+              readAt:
+                message.readAt || message.read_at
+                  ? new Date(message.readAt || message.read_at)
+                  : undefined,
+            },
+          ]);
+        }
       }
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -132,19 +148,28 @@ function MessagesPageContent() {
 
   const selectedConversation = conversations.find((c) => c.id === selectedConversationId);
 
+  const handleBackToConversationList = () => {
+    setSelectedConversationId(undefined);
+    router.replace(pathname);
+  };
+
   // Show loading state if auth is not ready
   if (isAuthLoading || !currentUserId) {
     return (
-      <div className="h-[calc(100vh-4rem)] flex items-center justify-center">
+      <div className="h-full flex items-center justify-center">
         <p className="text-[#6B6760]">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex">
+    <div className="h-full min-h-0 flex flex-col md:flex-row">
       {/* Left: Conversation List */}
-      <div className="w-80 flex-shrink-0">
+      <div
+        className={`w-full min-h-0 md:w-80 flex-shrink-0 ${
+          selectedConversationId ? 'hidden md:block' : 'block'
+        }`}
+      >
         <ConversationList
           conversations={conversations}
           selectedId={selectedConversationId}
@@ -154,7 +179,11 @@ function MessagesPageContent() {
       </div>
 
       {/* Right: Message Thread or Empty State */}
-      <div className="flex-1 flex items-center justify-center bg-[#F7F6F1]">
+      <div
+        className={`h-full min-h-0 min-w-0 flex-1 bg-[#F7F6F1] ${
+          !selectedConversationId ? 'hidden md:flex md:items-center md:justify-center' : 'flex'
+        }`}
+      >
         {selectedConversation ? (
           <RealtimeMessageThread
             conversationId={selectedConversation.id}
@@ -164,6 +193,7 @@ function MessagesPageContent() {
             otherPartyAvatar={selectedConversation.otherPartyAvatar}
             stage={selectedConversation.stage}
             onSendMessage={handleSendMessage}
+            onBack={handleBackToConversationList}
           />
         ) : (
           <div className="text-center space-y-4">
@@ -186,7 +216,7 @@ export default function MessagesPage() {
   return (
     <Suspense
       fallback={
-        <div className="h-[calc(100vh-4rem)] flex items-center justify-center">
+        <div className="h-full flex items-center justify-center">
           <p className="text-[#6B6760]">Loading...</p>
         </div>
       }

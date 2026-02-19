@@ -1,111 +1,85 @@
 /**
- * Matching Profile Detail API
+ * Legacy matching profile detail adapter.
  *
- * GET /api/matching/profile/[id] - Get specific matching profile
- * DELETE /api/matching/profile/[id] - Delete matching profile
+ * Canonical endpoint: /api/core/matching/matching-profile
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { eq } from 'drizzle-orm';
 import { db } from '@/db';
-import { sql } from 'drizzle-orm';
-import { log } from '@/lib/log';
+import { matchingProfiles } from '@/db/schema';
+import { requireAuth } from '@/lib/auth';
+import { addDeprecationHeaders } from '@/lib/api/deprecation';
+import { GET as getCanonicalMatchingProfile } from '@/app/api/core/matching/matching-profile/route';
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+const CanonicalPath = '/api/core/matching/matching-profile';
 
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { id } = await params;
-
-    // Get profile
-    const result = await db.execute(sql`
-      SELECT *
-      FROM matching_profiles
-      WHERE id = ${id}
-        AND user_id = ${user.id}
-    `);
-
-    if (!result.length) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
-    }
-
-    const profile = result[0] as any;
-
-    return NextResponse.json({
-      success: true,
-      profile: {
-        id: profile.id,
-        name: profile.name,
-        weights: profile.weights,
-        constraints: profile.constraints,
-        isActive: profile.is_active,
-        createdAt: profile.created_at,
-        updatedAt: profile.updated_at,
-      },
-    });
-  } catch (error) {
-    log.error('matching.profile.get.failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-    });
-    return NextResponse.json({ error: 'Failed to get profile' }, { status: 500 });
+function toLegacyProfile(profile: any) {
+  if (!profile) {
+    return null;
   }
+
+  const verified = (profile.verified || {}) as Record<string, boolean>;
+
+  return {
+    id: profile.profileId,
+    name: 'Default Profile',
+    weights: profile.weights || {},
+    constraints: {
+      requireEmailVerified: !!verified.email,
+      requirePhoneVerified: !!verified.phone,
+      requireProfileComplete: !!verified.profileComplete,
+    },
+    isActive: true,
+    createdAt: profile.createdAt,
+    updatedAt: profile.updatedAt,
+  };
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
 
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  const canonicalResponse = await getCanonicalMatchingProfile();
+  const payload = await canonicalResponse.json().catch(() => null);
 
-    const { id } = await params;
-
-    // Verify ownership
-    const existing = await db.execute(sql`
-      SELECT user_id
-      FROM matching_profiles
-      WHERE id = ${id}
-    `);
-
-    if (!existing.length) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
-    }
-
-    if ((existing[0] as any).user_id !== user.id) {
-      return NextResponse.json({ error: 'Unauthorized to delete this profile' }, { status: 403 });
-    }
-
-    // Delete profile
-    await db.execute(sql`
-      DELETE FROM matching_profiles
-      WHERE id = ${id}
-    `);
-
-    log.info('matching.profile.deleted', {
-      userId: user.id,
-      profileId: id,
-    });
-
-    return NextResponse.json({
-      success: true,
-    });
-  } catch (error) {
-    log.error('matching.profile.delete.failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-    });
-    return NextResponse.json({ error: 'Failed to delete profile' }, { status: 500 });
+  if (!canonicalResponse.ok) {
+    return addDeprecationHeaders(
+      NextResponse.json(payload || { error: 'Failed to get profile' }, {
+        status: canonicalResponse.status,
+      }),
+      CanonicalPath
+    );
   }
+
+  const profile = (payload as any)?.profile;
+  if (!profile || profile.profileId !== id) {
+    return addDeprecationHeaders(
+      NextResponse.json({ error: 'Profile not found' }, { status: 404 }),
+      CanonicalPath
+    );
+  }
+
+  return addDeprecationHeaders(
+    NextResponse.json({
+      success: true,
+      profile: toLegacyProfile(profile),
+    }),
+    CanonicalPath
+  );
+}
+
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const user = await requireAuth();
+
+  if (id !== user.id) {
+    return addDeprecationHeaders(
+      NextResponse.json({ error: 'Profile not found' }, { status: 404 }),
+      CanonicalPath
+    );
+  }
+
+  await db.delete(matchingProfiles).where(eq(matchingProfiles.profileId, user.id));
+
+  return addDeprecationHeaders(NextResponse.json({ success: true }), CanonicalPath);
 }

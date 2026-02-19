@@ -5,16 +5,67 @@ on:
     branches: [master, develop]
   pull_request:
     branches: [master, develop]
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+  pull_request_target:
+    branches: [master, develop]
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+
+concurrency:
+  group: a11y-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   a11y:
+    if: >-
+      github.event_name == 'push' ||
+      (
+        github.event.pull_request.base.repo.full_name == github.repository &&
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        (
+          github.event.pull_request.author_association == 'OWNER' ||
+          github.event.pull_request.author_association == 'MEMBER' ||
+          github.event.pull_request.author_association == 'COLLABORATOR'
+        ) &&
+        (
+          github.event_name == 'pull_request' ||
+          (
+            github.event_name == 'pull_request_target' &&
+            (
+              github.event.pull_request.mergeable_state == 'dirty' ||
+              github.event.pull_request.mergeable_state == 'unknown'
+            )
+          )
+        )
+      )
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     env:
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      SITE_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_ENV: ci
       NODE_OPTIONS: --max-old-space-size=6144
-    
+      PLAYWRIGHT_SERVER_MODE: prod
+      NEXT_PUBLIC_USE_MOCK_SUPABASE: "true"
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      PII_HASH_SALT: ${{ secrets.PII_HASH_SALT || 'ci-playwright-test-salt' }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -28,16 +79,14 @@ jobs:
       - name: Build application
         run: npm run build
         env:
-          # Add any required environment variables for build
           SKIP_ENV_VALIDATION: true
 
-      - name: Install Playwright browsers
+      - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
       - name: Run automated accessibility tests
         run: npm run test:a11y
         env:
-          # Add any required test environment variables
           CI: true
 
       - name: Upload accessibility test results

@@ -1,5 +1,7 @@
 # Documentation Registry
 
+> Doc Class: `active`
+> Last Verified: `2026-02-12`
 > Generated for documentation freshness governance.
 > Last Generated: `2026-02-12`
 
@@ -238,6 +240,7 @@ Columns: `path`, `class`, `owner-surface`, `verification-source`, `last-verified
 | `project/Architecture.md`                                                                               | `active`         | `project`     | `repo+live`         | `2026-02-12`  | `-`                                                                                                     | `true`    |
 | `project/Documentation.md`                                                                              | `active`         | `project`     | `repo+live`         | `2026-02-12`  | `-`                                                                                                     | `true`    |
 | `project/Implement.md`                                                                                  | `active`         | `project`     | `repo+live`         | `2026-02-12`  | `-`                                                                                                     | `true`    |
+| `project/MVP_FLOW_MATRIX_2026-02-12.md`                                                                 | `active`         | `project`     | `repo+live`         | `2026-02-12`  | `-`                                                                                                     | `false`   |
 | `project/PR_TRIAGE_2026-02.md`                                                                          | `active`         | `project`     | `repo+live`         | `2026-02-12`  | `-`                                                                                                     | `false`   |
 | `project/Plans.md`                                                                                      | `active`         | `project`     | `repo+live`         | `2026-02-12`  | `-`                                                                                                     | `true`    |
 | `project/Prompt.md`                                                                                     | `active`         | `project`     | `repo+live`         | `2026-02-12`  | `-`                                                                                                     | `true`    |

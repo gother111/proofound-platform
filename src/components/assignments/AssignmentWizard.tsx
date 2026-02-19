@@ -131,6 +131,7 @@ export function AssignmentWizard({ organizationId }: { organizationId: string })
       // Map frontend data to backend schema
       const payload = {
         ...data,
+        orgId: organizationId,
         status: 'draft',
         // Map skills to expected schema (using dummy IDs for now as we don't have a skill selector)
         mustHaveSkills: data.requiredSkills.map((s) => ({
@@ -170,6 +171,7 @@ export function AssignmentWizard({ organizationId }: { organizationId: string })
       // Map frontend data to backend schema
       const payload = {
         ...data,
+        orgId: organizationId,
         status: 'active',
         // Map skills to expected schema (using dummy IDs for now)
         mustHaveSkills: data.requiredSkills.map((s) => ({

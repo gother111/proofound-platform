@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { nanoid } from 'nanoid';
 import { csrfProtection, getOrGenerateCSRFToken, setCSRFTokenCookie } from '@/lib/csrf';
 import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit/index';
+import { sendDebugIngest } from '@/lib/debug-ingest';
 
 // Apply consistent security headers for both page and API responses.
 const applySecurityHeaders = (response: NextResponse, request: NextRequest) => {
@@ -137,23 +138,16 @@ export async function middleware(request: NextRequest) {
       return response;
     };
 
-    // #region agent log
     if (isDev) {
-      fetch('http://127.0.0.1:7242/ingest/381d9e33-65b3-4af0-9925-b21521306aaa', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: 'debug-session',
-          runId: 'pre-fix-1',
-          hypothesisId: 'H-edge',
-          location: 'middleware.ts:entry',
-          message: 'Middleware entry',
-          data: { path: pathname, method: request.method, isApi: pathname.startsWith('/api') },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
+      sendDebugIngest({
+        sessionId: 'debug-session',
+        runId: 'launch-readiness',
+        hypothesisId: 'H-edge',
+        location: 'middleware.ts:entry',
+        message: 'Middleware entry',
+        data: { path: pathname, method: request.method, isApi: pathname.startsWith('/api') },
+      });
     }
-    // #endregion
 
     // CSRF protection for API routes (allowlist some public endpoints)
     if (pathname.startsWith('/api')) {
@@ -181,23 +175,16 @@ export async function middleware(request: NextRequest) {
       attachRateLimitHeaders(response);
       applySecurityHeaders(response, request);
 
-      // #region agent log
       if (isDev) {
-        fetch('http://127.0.0.1:7242/ingest/381d9e33-65b3-4af0-9925-b21521306aaa', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sessionId: 'debug-session',
-            runId: 'pre-fix-1',
-            hypothesisId: 'H-edge',
-            location: 'middleware.ts:api',
-            message: 'API middleware pass-through',
-            data: { path: pathname },
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {});
+        sendDebugIngest({
+          sessionId: 'debug-session',
+          runId: 'launch-readiness',
+          hypothesisId: 'H-edge',
+          location: 'middleware.ts:api',
+          message: 'API middleware pass-through',
+          data: { path: pathname },
+        });
       }
-      // #endregion
 
       return response;
     }

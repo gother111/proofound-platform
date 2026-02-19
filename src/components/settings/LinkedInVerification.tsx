@@ -76,7 +76,7 @@ export function LinkedInVerification({ onSuccess }: LinkedInVerificationProps) {
 
   const handleConnectLinkedIn = () => {
     // Redirect to LinkedIn OAuth
-    window.location.href = '/api/auth/linkedin';
+    window.location.href = '/api/auth/linkedin?context=verification';
   };
 
   const handleInitiateVerification = async () => {

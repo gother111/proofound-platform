@@ -14,6 +14,8 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 - Typecheck: `npm run typecheck` (source: package.json)
 - Unit tests: `npm run test` (source: package.json)
 - Build: `npm run build` (source: package.json)
+- If changes touch `/api/mobile/v1/*` routes, run focused contract tests in addition to full unit tests:
+  - `npm run test -- tests/api/mobile-bootstrap-route.test.ts tests/api/mobile-device-token-route.test.ts`
 - If changes touch auth, RLS, policies, migrations, or privacy-sensitive API contracts:
   - Run `npm run db:migrate` first when there are unapplied SQL migrations so privacy tests validate current policy/trigger state.
   - Run `npm run test:privacy` and `npm run test:privacy:extended` sequentially (not in parallel) to avoid shared test-infra contention.
@@ -55,8 +57,9 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 ## Vercel Parity (When Deploy Might Break)
 
 - Ensure Node version matches `.nvmrc`/engines (source: .nvmrc, package.json)
-- Run `npm run vercel:preflight` to validate canonical Vercel linkage, production branch, and required env key presence.
-- Optional drift report between projects: `npm run vercel:env-parity`
+- Validate Vercel project linkage and envs with:
+  - `npx vercel@latest pull --yes --environment=production`
+  - `npx vercel@latest env ls`
 - Pull production project/env settings (creates `.vercel/`, which is gitignored): `npx vercel@latest pull --yes --environment=production` (source: .gitignore)
 - Run a prod-equivalent build locally: `npx vercel@latest build --prod`
   - If CLI auth is missing, use `--token` with a valid `VERCEL_TOKEN` (do not print it).
@@ -100,9 +103,9 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 
 ## Migration and Data Safety (Before Production DDL)
 
-- Create a checkpoint: `npm run db:backup:checkpoint`
-- Reconcile migration ledger: `npm run db:audit:migrations`
-- Apply production schema changes through versioned SQL under `supabase/migrations/`.
+- Create a database checkpoint using your provider snapshot tooling before production DDL.
+- Reconcile migration ledger via `node run-migrations.mjs` in a staging environment first.
+- Apply production schema changes through versioned SQL under `src/db/migrations/`.
 - Do not run `npm run db:push` against production.
 
 ## E2E / Accessibility (If You Touched Critical UX)

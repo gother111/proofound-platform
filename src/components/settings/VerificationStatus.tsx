@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -13,6 +14,7 @@ import {
   XCircle,
   Linkedin,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { WorkEmailVerificationForm } from './WorkEmailVerificationForm';
 import { VeriffVerification } from './VeriffVerification';
 import { LinkedInVerification } from './LinkedInVerification';
@@ -33,10 +35,39 @@ export function VerificationStatus() {
   const [showWorkEmailForm, setShowWorkEmailForm] = useState(false);
   const [showVeriffFlow, setShowVeriffFlow] = useState(false);
   const [showLinkedInFlow, setShowLinkedInFlow] = useState(false);
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     fetchStatus();
   }, []);
+
+  useEffect(() => {
+    const verification = searchParams?.get('verification');
+    const verificationError = searchParams?.get('verification_error');
+    const message = searchParams?.get('message');
+
+    if (verification !== 'linkedin_connected' && verificationError !== 'linkedin_auth_failed') {
+      return;
+    }
+
+    if (verification === 'linkedin_connected') {
+      setShowLinkedInFlow(true);
+      toast.success('LinkedIn connected successfully. Continue with verification check.');
+    } else if (verificationError === 'linkedin_auth_failed') {
+      toast.error(message || 'LinkedIn connection failed. Please try again.');
+    }
+
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      urlParams.delete('verification');
+      urlParams.delete('verification_error');
+      urlParams.delete('message');
+
+      const query = urlParams.toString();
+      const nextUrl = query ? `${window.location.pathname}?${query}` : window.location.pathname;
+      window.history.replaceState({}, '', nextUrl);
+    }
+  }, [searchParams]);
 
   const fetchStatus = async () => {
     try {
