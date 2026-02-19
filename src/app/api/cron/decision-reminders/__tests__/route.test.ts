@@ -54,7 +54,7 @@ describe('/api/cron/decision-reminders', () => {
     const body = await response.json();
 
     expect(response.status).toBe(500);
-    expect(body.error).toBe('Server misconfiguration');
+    expect(body.error).toBe('CRON_SECRET is missing. Refusing to run cron job.');
     expect(mocks.processDecisionReminders).not.toHaveBeenCalled();
   });
 

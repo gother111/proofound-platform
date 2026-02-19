@@ -1,34 +1,51 @@
 /**
- * Learning Goals API
- * GET: list goals for the authenticated user
- * POST: create a new learning goal (skill + target date/level)
- * PATCH: update goal status or target_date
+ * Learning Goals API (Compatibility Adapter)
+ *
+ * Canonical contract lives in /api/goals.
+ * This route remains for skill-gap UI compatibility and returns both
+ * canonical and legacy payload shapes.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { and, desc, eq } from 'drizzle-orm';
+
 import { requireAuth } from '@/lib/auth';
-import { createClient } from '@/lib/supabase/server';
+import { db } from '@/db';
+import { growthPlans } from '@/db/schema';
+import { toCanonicalGoal, toLegacyGoal } from '@/lib/goals/canonical';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
     const user = await requireAuth();
-    const supabase = await createClient();
 
-    const { data, error } = await supabase
-      .from('growth_plans')
-      .select('id, title, goal, target_level, target_date, status, created_at, updated_at')
-      .eq('profile_id', user.id)
-      .order('created_at', { ascending: false });
+    const rows = await db
+      .select()
+      .from(growthPlans)
+      .where(eq(growthPlans.profileId, user.id))
+      .orderBy(desc(growthPlans.createdAt));
 
-    if (error) throw error;
+    const goals = rows.map((row) => {
+      const canonicalGoal = toCanonicalGoal(row);
+      return {
+        ...toLegacyGoal(canonicalGoal),
+        canonical: canonicalGoal,
+      };
+    });
 
-    return NextResponse.json({ goals: data ?? [] });
+    return NextResponse.json({
+      goals,
+      contractVersion: 'v2-canonical-adapter',
+      canonicalRoute: '/api/goals',
+    });
   } catch (error) {
     console.error('Failed to load goals', error);
     return NextResponse.json(
-      { error: 'Failed to load goals', message: error instanceof Error ? error.message : 'Unknown error' },
+      {
+        error: 'Failed to load goals',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }
@@ -37,7 +54,6 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const user = await requireAuth();
-    const supabase = await createClient();
     const body = await request.json();
 
     const skillCode: string | undefined = body.skillCode;
@@ -48,26 +64,33 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'skillCode is required' }, { status: 400 });
     }
 
-    const { data, error } = await supabase
-      .from('growth_plans')
-      .insert({
-        profile_id: user.id,
+    const [inserted] = await db
+      .insert(growthPlans)
+      .values({
+        profileId: user.id,
         title: body.title ?? `Learn ${skillCode}`,
         goal: skillCode,
-        target_level: targetLevel ?? 3,
-        target_date: targetDate ?? null,
+        targetLevel: targetLevel ?? 3,
+        targetDate: targetDate ?? null,
         status: 'planned',
       })
-      .select()
-      .maybeSingle();
+      .returning();
 
-    if (error) throw error;
+    const canonicalGoal = toCanonicalGoal(inserted);
 
-    return NextResponse.json({ goal: data });
+    return NextResponse.json({
+      goal: canonicalGoal,
+      legacyGoal: toLegacyGoal(canonicalGoal),
+      contractVersion: 'v2-canonical-adapter',
+      canonicalRoute: '/api/goals',
+    });
   } catch (error) {
     console.error('Failed to create goal', error);
     return NextResponse.json(
-      { error: 'Failed to create goal', message: error instanceof Error ? error.message : 'Unknown error' },
+      {
+        error: 'Failed to create goal',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }
@@ -76,7 +99,6 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const user = await requireAuth();
-    const supabase = await createClient();
     const body = await request.json();
 
     const id: string | undefined = body.id;
@@ -84,27 +106,39 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'id is required' }, { status: 400 });
     }
 
-    const updates: Record<string, unknown> = {};
+    const updates: Partial<typeof growthPlans.$inferInsert> = {
+      updatedAt: new Date(),
+    };
+
     if (body.status) updates.status = body.status;
-    if (body.targetDate) updates.target_date = body.targetDate;
+    if (body.targetDate) updates.targetDate = body.targetDate;
 
-    const { data, error } = await supabase
-      .from('growth_plans')
-      .update(updates)
-      .eq('id', id)
-      .eq('profile_id', user.id)
-      .select()
-      .maybeSingle();
+    const [updated] = await db
+      .update(growthPlans)
+      .set(updates)
+      .where(and(eq(growthPlans.id, id), eq(growthPlans.profileId, user.id)))
+      .returning();
 
-    if (error) throw error;
+    if (!updated) {
+      return NextResponse.json({ error: 'Goal not found' }, { status: 404 });
+    }
 
-    return NextResponse.json({ goal: data });
+    const canonicalGoal = toCanonicalGoal(updated);
+
+    return NextResponse.json({
+      goal: canonicalGoal,
+      legacyGoal: toLegacyGoal(canonicalGoal),
+      contractVersion: 'v2-canonical-adapter',
+      canonicalRoute: '/api/goals',
+    });
   } catch (error) {
     console.error('Failed to update goal', error);
     return NextResponse.json(
-      { error: 'Failed to update goal', message: error instanceof Error ? error.message : 'Unknown error' },
+      {
+        error: 'Failed to update goal',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }
 }
-

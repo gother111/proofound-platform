@@ -34,6 +34,9 @@ export default function MatchingPage() {
     values: [],
   });
   const [showManageHiddenSnoozed, setShowManageHiddenSnoozed] = useState(false);
+  const [readinessActions, setReadinessActions] = useState<
+    Array<{ id: string; title: string; description: string; actionUrl: string }>
+  >([]);
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchMatches = async () => {
@@ -43,9 +46,19 @@ export default function MatchingPage() {
 
     try {
       // Fetch matching profile
-      const profileRes = await fetch('/api/matching-profile', {
-        signal: controller.signal,
-      });
+      const [profileRes, readinessRes] = await Promise.all([
+        fetch('/api/matching-profile', {
+          signal: controller.signal,
+        }),
+        fetch('/api/individual/readiness', {
+          signal: controller.signal,
+        }),
+      ]);
+
+      if (readinessRes.ok) {
+        const readinessPayload = await readinessRes.json();
+        setReadinessActions(readinessPayload.topActions || []);
+      }
 
       if (!profileRes.ok) {
         const errorData = await profileRes.json().catch(() => ({}));
@@ -111,7 +124,8 @@ export default function MatchingPage() {
         setFilteredMatches([]);
       } else {
         console.error('Error loading matching data:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Failed to load matching data';
+        const errorMessage =
+          error instanceof Error ? error.message : 'Failed to load matching data';
         toast.error(errorMessage);
       }
     } finally {
@@ -259,6 +273,20 @@ export default function MatchingPage() {
               ? 'Check back soon for new opportunities'
               : 'No matches found with current filters. Try adjusting your filters.'}
           </p>
+          {readinessActions.length > 0 ? (
+            <div className="mt-4 mx-auto max-w-xl text-left space-y-2">
+              {readinessActions.slice(0, 3).map((action) => (
+                <button
+                  key={action.id}
+                  onClick={() => router.push(action.actionUrl)}
+                  className="w-full rounded-lg border border-[#E8E6DD] px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1]"
+                >
+                  <p className="text-sm font-medium text-[#2D3330]">{action.title}</p>
+                  <p className="text-xs text-[#6B6760]">{action.description}</p>
+                </button>
+              ))}
+            </div>
+          ) : null}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -344,7 +372,9 @@ export default function MatchingPage() {
           onClick={() => setShowManageHiddenSnoozed((prev) => !prev)}
           className="text-sm text-[#1C4D3A] underline flex items-center gap-2"
         >
-          {showManageHiddenSnoozed ? 'Hide snoozed/hidden manager' : 'Manage snoozed or hidden matches'}
+          {showManageHiddenSnoozed
+            ? 'Hide snoozed/hidden manager'
+            : 'Manage snoozed or hidden matches'}
         </button>
 
         {showManageHiddenSnoozed && (

@@ -12,7 +12,8 @@ export type NotificationType =
   | 'verification_completed'
   | 'assignment_published'
   | 'interview_scheduled'
-  | 'contract_signed';
+  | 'contract_signed'
+  | 'weekly_digest';
 
 interface CreateNotificationParams {
   userId: string;
@@ -40,7 +41,7 @@ export async function createNotification(params: CreateNotificationParams) {
     // If preferences exist, check the specific type
     if (prefs) {
       const prefKey = getPreferenceKey(params.type, 'in-app');
-      if (!prefs[prefKey as keyof typeof prefs]) {
+      if (prefKey && !prefs[prefKey as keyof typeof prefs]) {
         // User has disabled this notification type
         return null;
       }
@@ -96,8 +97,8 @@ export async function createNotification(params: CreateNotificationParams) {
 /**
  * Get preference key for notification type
  */
-function getPreferenceKey(type: NotificationType, channel: 'in-app' | 'email'): string {
-  const typeMap: Record<NotificationType, string> = {
+function getPreferenceKey(type: NotificationType, channel: 'in-app' | 'email'): string | null {
+  const typeMap: Record<Exclude<NotificationType, 'weekly_digest'>, string> = {
     match_suggested: 'MatchSuggested',
     intro_accepted: 'IntroAccepted',
     message_received: 'MessageReceived',
@@ -107,6 +108,10 @@ function getPreferenceKey(type: NotificationType, channel: 'in-app' | 'email'): 
     interview_scheduled: 'InterviewScheduled',
     contract_signed: 'ContractSigned',
   };
+
+  if (type === 'weekly_digest') {
+    return channel === 'email' ? 'emailWeeklyDigest' : null;
+  }
 
   const prefix = channel === 'in-app' ? 'inApp' : 'email';
   return `${prefix}${typeMap[type]}`;

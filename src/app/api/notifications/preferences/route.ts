@@ -25,6 +25,8 @@ const UpdatePreferencesSchema = z.object({
   emailAssignmentPublished: z.boolean().optional(),
   emailInterviewScheduled: z.boolean().optional(),
   emailContractSigned: z.boolean().optional(),
+  emailWeeklyDigest: z.boolean().optional(),
+  digestFrequency: z.enum(['weekly', 'disabled']).optional(),
 });
 
 /**
@@ -57,10 +59,7 @@ export async function GET() {
       error: error instanceof Error ? error.message : 'Unknown error',
     });
 
-    return NextResponse.json(
-      { error: 'Failed to get notification preferences' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to get notification preferences' }, { status: 500 });
   }
 }
 
