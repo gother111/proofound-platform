@@ -10,9 +10,27 @@ import { db } from '@/db';
 import { performanceMetrics } from '@/db/schema';
 import type { InsertPerformanceMetric } from '@/db/schema';
 import { anonymizeUserAgent } from '@/lib/utils/privacy';
+import { requireApiAuth } from '@/lib/api/auth';
+import { requireAnalyticsConsentForUser } from '@/lib/privacy/analytics-consent';
 
 export async function POST(request: NextRequest) {
   try {
+    const authResult = await requireApiAuth();
+    if (authResult instanceof NextResponse) {
+      return NextResponse.json(
+        { success: true, skipped: 'analytics_consent_missing' },
+        { status: 202 }
+      );
+    }
+
+    const hasAnalyticsConsent = await requireAnalyticsConsentForUser(authResult.user.id);
+    if (!hasAnalyticsConsent) {
+      return NextResponse.json(
+        { success: true, skipped: 'analytics_consent_missing' },
+        { status: 202 }
+      );
+    }
+
     const data = await request.json();
 
     const { metricType, pageRoute, valueMs, deviceType, timestamp } = data;

@@ -1943,3 +1943,56 @@ Open risks/TODO:
 
 - 4500ms mobile auto-dismiss may feel aggressive for slower readers and can be tuned based on product feedback.
 - Org "View all notifications" currently routes to org messages as an intentional fallback until a dedicated org notifications page exists.
+
+## 2026-02-19: EU readiness blocker implementation (items 1-3)
+
+What changed:
+
+- Added shared server-side analytics consent guard:
+  - `src/lib/privacy/analytics-consent.ts`
+- Enforced analytics consent for non-essential telemetry write endpoints:
+  - `src/app/api/analytics/track/route.ts`
+  - `src/app/api/analytics/tour-event/route.ts`
+  - `src/app/api/analytics/dashboard/route.ts`
+  - `src/app/api/analytics/dashboard-load-time/route.ts`
+  - `src/app/api/analytics/web-vitals/route.ts` (POST)
+  - `src/app/api/performance/track/route.ts`
+- Updated stale assignment publish test mock contract to match current route authorization helper:
+  - `tests/api/assignment-publish.test.ts`
+- Added moderation rights API test coverage:
+  - `tests/api/moderation-appeals-route.test.ts`
+  - `tests/api/moderation-statements-of-reasons-route.test.ts`
+  - `tests/api/moderation-transparency-report-route.test.ts`
+- Added telemetry consent gating test coverage:
+  - `tests/api/analytics-track-route.test.ts`
+  - `tests/api/analytics-tour-event-route.test.ts`
+  - `tests/api/analytics-dashboard-route.test.ts`
+  - `tests/api/analytics-dashboard-load-time-route.test.ts`
+  - `tests/api/analytics-web-vitals-route.test.ts`
+  - `tests/api/performance-track-route.test.ts`
+
+Why:
+
+- EU readiness required server-side enforcement of analytics consent instead of relying only on client-side telemetry mounting.
+- The assignment publish test suite had stale mocks (`verifyAssignmentAccess`) while route logic now uses `verifyAssignmentMutationAccess`.
+- DSA moderation rights endpoints existed but lacked dedicated automated tests for appeal/statements/transparency behavior.
+
+How to verify:
+
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:privacy` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:privacy:extended` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:a11y` (PASS)
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:a11y:strict` (PASS)
+- Runtime gate checks on isolated production server:
+  - `PORT=3110 npm run start`
+  - `BASE_URL=http://localhost:3110 npm run perf:budgets` (PASS)
+  - `BASE_URL=http://localhost:3110 SUS_STUDY_COMPLETE=true npm run go:no-go` (PASS)
+
+Open risks/TODO:
+
+- Some telemetry endpoints now intentionally return `202` with `{ success: true, skipped: 'analytics_consent_missing' }`; downstream dashboards/instrumentation should treat this as expected skip behavior, not failure.
+- Local/strict a11y runs still show pre-existing runtime console noise in authenticated expertise flows (`permission denied for table users`) but did not fail tests.

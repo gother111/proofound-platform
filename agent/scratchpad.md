@@ -2311,3 +2311,64 @@ Open TODOs / follow-ups:
 
 - Remove legacy `/api/messages*` adapters after the deprecation window and usage drops to zero.
 - Consider adding one integration-level strict API test that asserts deprecation headers and successor link contract end-to-end.
+
+---
+
+## 2026-02-19 09:31 CET
+
+Task summary:
+
+- Implemented EU readiness blocker plan items 1-3: fixed stale assignment publish tests, added server-side analytics consent gating for telemetry writes, and added moderation-rights API tests.
+- Added telemetry consent test coverage for all in-scope write endpoints.
+
+What worked:
+
+- Shared consent utility (`analytics-consent.ts`) simplified consistent gating across six endpoints.
+- Targeted route tests caught integration behavior quickly before full suite runs.
+- Full verification matrix passed, including privacy, accessibility, perf budgets, and go/no-go.
+
+What failed / wrong assumptions:
+
+- Initial `perf:budgets` run failed because `next start` was executed without a current production build in `.next`.
+- One earlier baseline `test:privacy:extended` run showed a transient failure that did not reproduce after final implementation and full rerun.
+
+User corrections:
+
+- User explicitly requested implementing the full approved plan and then asked what remains.
+
+Assumptions taken without asking:
+
+- `analytics_tracking` in `user_consents` is the canonical server-side consent signal.
+- Trusted internal analytics calls in `/api/analytics/track` should bypass consent enforcement as specified in the plan.
+- Non-essential telemetry should skip with `202` status rather than fail with `4xx` to avoid user-flow disruption.
+
+What the user corrected afterward:
+
+- None after implementation started.
+
+Improvements next time:
+
+- Run `next build` immediately before isolated `next start` launch-gate checks to avoid stale `.next` confusion.
+- Add one shared route-test helper for Supabase chain mocks to reduce repeated boilerplate in moderation endpoint tests.
+
+Commands run + outcomes:
+
+- `npm run test -- tests/api/assignment-publish.test.ts` -> FAIL baseline (500/500 before fix).
+- `npm run test:privacy` -> PASS baseline.
+- `npm run test:privacy:extended` -> baseline showed transient FAIL once; final rerun PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test -- <10 targeted files>` -> PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run lint` -> PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run typecheck` -> PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test` -> PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run build` -> PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:privacy` -> PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:privacy:extended` -> PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:a11y` -> PASS.
+- `PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run test:a11y:strict` -> PASS.
+- `PORT=3110 npm run start && BASE_URL=http://localhost:3110 npm run perf:budgets` -> PASS.
+- `BASE_URL=http://localhost:3110 SUS_STUDY_COMPLETE=true npm run go:no-go` -> PASS.
+
+Open TODOs / follow-ups:
+
+- Monitor consumers of telemetry routes for expected handling of `202 analytics_consent_missing` skip responses.
+- If product requires, add integration tests that assert skipped telemetry does not create DB rows in a live test DB environment.

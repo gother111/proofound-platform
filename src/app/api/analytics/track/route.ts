@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { emitEvent, EVENT_TYPES, type EventType } from '@/lib/analytics/events';
 import { isActiveOrgMember, isTrustedInternalRequest, requireApiAuth } from '@/lib/api/auth';
+import { requireAnalyticsConsentForUser } from '@/lib/privacy/analytics-consent';
 
 /**
  * POST /api/analytics/track
@@ -37,6 +38,16 @@ export async function POST(req: NextRequest) {
         ? userId
         : undefined
       : authContext!.user.id;
+
+    if (!trustedInternalCall && resolvedUserId) {
+      const hasAnalyticsConsent = await requireAnalyticsConsentForUser(resolvedUserId);
+      if (!hasAnalyticsConsent) {
+        return NextResponse.json(
+          { success: true, skipped: 'analytics_consent_missing' },
+          { status: 202 }
+        );
+      }
+    }
 
     let resolvedOrgId: string | undefined;
     if (typeof orgId === 'string' && orgId.trim().length > 0) {

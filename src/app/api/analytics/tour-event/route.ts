@@ -8,27 +8,42 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { emitTourStarted, emitTourCompleted, emitTourSkipped } from '@/lib/analytics/events';
+import { requireApiAuth } from '@/lib/api/auth';
+import { requireAnalyticsConsentForUser } from '@/lib/privacy/analytics-consent';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { userId, event } = body;
+    const authResult = await requireApiAuth();
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
 
-    if (!userId || !event) {
-      return NextResponse.json({ error: 'Missing userId or event' }, { status: 400 });
+    const hasAnalyticsConsent = await requireAnalyticsConsentForUser(authResult.user.id);
+    if (!hasAnalyticsConsent) {
+      return NextResponse.json(
+        { success: true, skipped: 'analytics_consent_missing' },
+        { status: 202 }
+      );
+    }
+
+    const body = await request.json();
+    const { event } = body;
+
+    if (!event) {
+      return NextResponse.json({ error: 'Missing event' }, { status: 400 });
     }
 
     switch (event) {
       case 'started':
-        await emitTourStarted(userId);
+        await emitTourStarted(authResult.user.id);
         break;
       case 'completed':
-        await emitTourCompleted(userId);
+        await emitTourCompleted(authResult.user.id);
         break;
       case 'skipped':
-        await emitTourSkipped(userId);
+        await emitTourSkipped(authResult.user.id);
         break;
       default:
         return NextResponse.json({ error: 'Invalid event type' }, { status: 400 });

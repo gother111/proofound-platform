@@ -9,7 +9,7 @@ vi.mock('@/lib/auth', () => ({
 }));
 
 vi.mock('@/lib/assignments/access', () => ({
-  verifyAssignmentAccess: vi.fn(() => Promise.resolve(true)),
+  verifyAssignmentMutationAccess: vi.fn(() => Promise.resolve({ status: 'ok' })),
 }));
 
 vi.mock('@/lib/assignments/activation', () => ({

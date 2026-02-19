@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { requireAuth } from '@/lib/auth';
 import { trackEvent, AnalyticsEventType } from '@/lib/analytics';
+import { requireAnalyticsConsentForUser } from '@/lib/privacy/analytics-consent';
 
 const ALLOWED_EVENTS: AnalyticsEventType[] = [
   'dashboard_viewed',
@@ -36,6 +37,14 @@ function sanitizeProperties(raw: Record<string, unknown> = {}) {
 export async function POST(request: NextRequest) {
   try {
     const user = await requireAuth();
+    const hasAnalyticsConsent = await requireAnalyticsConsentForUser(user.id);
+    if (!hasAnalyticsConsent) {
+      return NextResponse.json(
+        { success: true, skipped: 'analytics_consent_missing' },
+        { status: 202 }
+      );
+    }
+
     const body = (await request.json()) as DashboardPayload;
 
     if (!body.eventType || !ALLOWED_EVENTS.includes(body.eventType)) {
