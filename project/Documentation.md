@@ -8,6 +8,8 @@
 
 This folder is the durable “project memory” surface for Proofound. It is meant to be read first by humans and agents before making changes.
 
+This file is now a historical governance index. Routine per-task updates should go to sharded entries under `project/changes/entries/`.
+
 ## Known Drift (Repo Truth)
 
 - `.github/workflows/ci.yml` matrix runs Node 18.x and 20.x, but `package.json` engines require Node `>=20.20.0 <21` (and `.nvmrc` pins `20.20.0`). (source: .github/workflows/ci.yml, package.json, .nvmrc)
@@ -18,7 +20,57 @@ This folder is the durable “project memory” surface for Proofound. It is mea
 - Repo Truth claims must cite a concrete path as `(source: README.md)`.
 - Do not invent missing files. If a referenced file is absent, add a TODO with the expected location and why it is expected.
 - Do not copy secrets from local env files or setup docs into tracked markdown.
-- At the end of every session, append a new entry to `agent/scratchpad.md` (append-only).
+- Create session logs with `npm run log:session` in `agent/scratchpad/entries/`.
+- Create change logs with `npm run log:change` in `project/changes/entries/`.
+- Do not add routine per-task entries to `agent/scratchpad.md` or `project/Documentation.md`.
+
+## 2026-02-19: Sharded Session and Change Logs + PR Guardrail
+
+What changed:
+
+- Added sharded log directories and index docs:
+  - `agent/scratchpad/entries/`
+  - `project/changes/entries/`
+  - `agent/scratchpad/README.md`
+  - `project/changes/README.md`
+- Added log template generator script and npm commands:
+  - `scripts/new-session-log.mjs`
+  - `npm run log:session`
+  - `npm run log:change`
+- Added CI guard script and workflow gate:
+  - `scripts/check-shared-log-files.mjs`
+  - `.github/workflows/ci.yml` (new shared-log-scope check on PR events)
+- Updated governance docs and repo policy to treat legacy shared files as historical/index surfaces:
+  - `AGENTS.md`
+  - `project/Implement.md`
+  - `agent/checklists/preflight.md`
+  - `agent/checklists/verification.md`
+  - `agent/scratchpad.md`
+  - `project/Documentation.md`
+- Updated docs freshness and landing scope compatibility for sharded entries:
+  - `scripts/docs-freshness-check.mjs`
+  - `scripts/check-landing-pr-scope.mjs`
+  - `docs/DOCS_REGISTRY.md`
+
+Why:
+
+- Multiple concurrent branches repeatedly conflicted on `agent/scratchpad.md` and `project/Documentation.md`.
+- Existing mitigations (`merge=union` and auto-update workflow) do not prevent GitHub PR `DIRTY` conflicts when the same shared files are modified across branches.
+
+How to verify:
+
+- `npm run lint`
+- `npm run typecheck`
+- `npm run docs:freshness`
+- `ruby -e "require 'yaml'; YAML.load_file('.github/workflows/ci.yml')"`
+- `node ./scripts/check-shared-log-files.mjs`
+- `node ./scripts/check-landing-pr-scope.mjs`
+- `git check-attr merge -- agent/scratchpad.md project/Documentation.md`
+
+Open risks/TODO:
+
+- Discoverability depends on teams using sharded entry directories consistently.
+- Existing open `DIRTY` PRs still need one-time cleanup/rebase after this policy lands on `master`.
 
 ## 2026-02-18: Vercel Build OOM Mitigation (PR #187)
 
