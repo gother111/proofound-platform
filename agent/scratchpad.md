@@ -1561,6 +1561,31 @@ Open TODOs / follow-ups:
 
 ---
 
+## 2026-02-19 09:42 CET
+
+Task summary:
+
+- Added automation to reduce recurring PR update and conflict friction.
+- Added merge strategy rules for append-only docs to reduce repetitive conflicts.
+
+What worked:
+
+- `.gitattributes` union strategy correctly applies to `agent/scratchpad.md` and `project/Documentation.md`.
+- New workflow YAML parses successfully and includes guarded update logic for same-repo PRs.
+
+What failed / wrong assumptions:
+
+- None during implementation.
+
+User corrections:
+
+- User requested direct implementation now instead of additional discussion.
+
+Assumptions taken without asking:
+
+- Default branch remains `master`.
+- Auto-updating should run only for same-repo PRs and skip draft PRs for safety.
+- It is acceptable to treat non-actionable update-branch API responses as non-failing workflow outcomes.
 ## 2026-02-12 22:24 CET
 
 Task summary:
@@ -1594,6 +1619,21 @@ What the user corrected afterward:
 
 Improvements next time:
 
+- Add a periodic reporting step (summary issue/comment) if the team wants visibility on how often PR auto-update is skipped due conflicts.
+- Consider isolating operational logs (`agent/scratchpad.md`, `project/Documentation.md`) into docs-only PRs more consistently to reduce merge pressure.
+
+Commands run + outcomes:
+
+- `gh api repos/gother111/proofound-platform/branches/master/protection ...`: PASS (required checks confirmed as `ci`, `a11y`).
+- `gh pr view 196 --json ...`: PASS (merge conflicts confirmed, no `ci`/`a11y` contexts for conflicted head).
+- `gh pr view 188 --json ...`: PASS (`ci` and `a11y` runs present when branch is mergeable).
+- `ruby -e "require 'yaml'; YAML.load_file('.github/workflows/auto-update-pr-branch.yml')"`: PASS.
+- `git check-attr merge -- agent/scratchpad.md project/Documentation.md`: PASS (`merge: union`).
+
+Open TODOs / follow-ups:
+
+- Push branch and verify `Auto Update PR Branches` appears in Actions.
+- Validate with one intentionally behind PR and one conflicting PR to confirm expected behavior.
 - Start verification commands with pinned Node path first to avoid toolchain drift.
 - Prefer static `vi.mock` factories in this repo when ESLint/parser compatibility is uncertain.
 
