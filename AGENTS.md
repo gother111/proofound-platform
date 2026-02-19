@@ -1,3 +1,6 @@
+> Doc Class: `governance`
+> Last Verified: `2026-02-19`
+
 # Repository Agent Instructions
 
 ## Core Rule
