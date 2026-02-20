@@ -130,6 +130,7 @@ export function HeroSection({
             <MagneticButton
               onClick={onIndividualSignup}
               size="lg"
+              containerClassName="w-full sm:w-auto"
               className="rounded-full px-8 py-7 text-lg shadow-lg hover:shadow-xl font-sans w-full sm:w-auto"
             >
               Join as an Individual
@@ -138,6 +139,7 @@ export function HeroSection({
               onClick={onOrganizationSignup}
               size="lg"
               variant="outline"
+              containerClassName="w-full sm:w-auto"
               className="rounded-full px-8 py-7 text-lg shadow-lg hover:shadow-xl font-sans w-full sm:w-auto"
             >
               Join as an Organization
