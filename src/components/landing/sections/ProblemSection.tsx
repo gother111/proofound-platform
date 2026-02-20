@@ -70,7 +70,7 @@ export function ProblemSection({ shouldReduceMotion }: ProblemSectionProps) {
     <section
       id="the-problem"
       ref={ref}
-      className="py-32 md:py-40 px-6 md:px-12 relative overflow-hidden bg-background scroll-mt-24"
+      className="py-20 md:py-32 lg:py-40 px-6 md:px-12 relative overflow-hidden bg-background scroll-mt-24"
     >
       {/* Organic Background Elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">

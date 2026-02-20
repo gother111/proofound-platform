@@ -8,10 +8,11 @@ import { cn } from '@/lib/utils';
 interface MagneticButtonProps extends ButtonProps {
   children: React.ReactNode;
   magneticStrength?: number;
+  containerClassName?: string;
 }
 
 export const MagneticButton = React.forwardRef<HTMLButtonElement, MagneticButtonProps>(
-  ({ children, className, magneticStrength = 0.2, ...props }, ref) => {
+  ({ children, className, magneticStrength = 0.2, containerClassName, ...props }, ref) => {
     const buttonRef = useRef<HTMLButtonElement | null>(null);
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const shouldReduceMotion = useReducedMotion();
@@ -37,7 +38,7 @@ export const MagneticButton = React.forwardRef<HTMLButtonElement, MagneticButton
       <motion.div
         animate={shouldReduceMotion ? { x: 0, y: 0 } : { x: position.x, y: position.y }}
         transition={{ type: 'spring', stiffness: 150, damping: 15, mass: 0.1 }}
-        className="inline-block"
+        className={cn('inline-block', containerClassName)}
       >
         <Button
           ref={(node) => {

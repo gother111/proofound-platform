@@ -31,7 +31,7 @@ export function HeroSection({
   return (
     <section
       ref={containerRef}
-      className="relative min-h-[90vh] flex items-center justify-center overflow-hidden px-6 md:px-12 pt-20 scroll-mt-24"
+      className="relative min-h-[100vh] sm:min-h-[90vh] flex items-center justify-center overflow-hidden px-6 md:px-12 pt-28 md:pt-32 scroll-mt-24"
       data-testid="landing-hero-section"
     >
       {/* Background Elements */}
@@ -125,12 +125,13 @@ export function HeroSection({
                 ? { duration: 0 }
                 : { duration: 1.2, delay: 0.6, ease: [0.22, 1, 0.36, 1] }
             }
-            className="flex flex-wrap gap-4"
+            className="flex flex-col sm:flex-row w-full sm:w-auto gap-4"
           >
             <MagneticButton
               onClick={onIndividualSignup}
               size="lg"
-              className="rounded-full px-8 py-7 text-lg shadow-lg hover:shadow-xl font-sans"
+              containerClassName="w-full sm:w-auto"
+              className="rounded-full px-8 py-7 text-lg shadow-lg hover:shadow-xl font-sans w-full sm:w-auto"
             >
               Join as an Individual
             </MagneticButton>
@@ -138,7 +139,8 @@ export function HeroSection({
               onClick={onOrganizationSignup}
               size="lg"
               variant="outline"
-              className="rounded-full px-8 py-7 text-lg shadow-lg hover:shadow-xl font-sans"
+              containerClassName="w-full sm:w-auto"
+              className="rounded-full px-8 py-7 text-lg shadow-lg hover:shadow-xl font-sans w-full sm:w-auto"
             >
               Join as an Organization
             </MagneticButton>
