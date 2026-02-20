@@ -25,6 +25,16 @@ import { SkipToContentLink } from '@/components/a11y/SkipToContentLink';
 export const metadata: Metadata = {
   title: 'Proofound - Focus on what matters',
   description: 'A credibility and connection platform built for authenticity, not algorithms.',
+  metadataBase: (() => {
+    const fallbackUrl = 'https://proofound.io';
+    const rawUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || fallbackUrl;
+
+    try {
+      return new URL(rawUrl);
+    } catch {
+      return new URL(fallbackUrl);
+    }
+  })(),
 };
 
 export default async function RootLayout({

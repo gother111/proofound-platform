@@ -37,7 +37,7 @@ export function StewardOwnershipSection({ shouldReduceMotion }: StewardOwnership
     <section
       id="steward-ownership"
       ref={ref}
-      className="py-32 px-6 md:px-12 relative bg-background scroll-mt-24"
+      className="py-32 md:py-40 px-6 md:px-12 relative bg-background scroll-mt-24"
     >
       {/* Background Decoration */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -48,16 +48,18 @@ export function StewardOwnershipSection({ shouldReduceMotion }: StewardOwnership
         <motion.div
           initial={reduceMotion ? false : { opacity: 0, y: 30 }}
           animate={effectiveInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-          transition={reduceMotion ? { duration: 0 } : { duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="text-center mb-20"
+          transition={
+            reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 100, damping: 20 }
+          }
+          className="text-center mb-24"
         >
-          <h2 className="text-4xl md:text-6xl font-display text-japandi-charcoal mb-6">
+          <h2 className="text-4xl md:text-6xl font-display text-foreground mb-6 text-balance">
             Steward Ownership — <br />
-            <span className="text-japandi-sage italic">Business Model of the Future</span>
+            <span className="text-japandi-sage italic">The Business Model of the Future</span>
           </h2>
-          <p className="text-xl text-japandi-charcoal/70 max-w-3xl mx-auto leading-relaxed font-sans">
-            Steward ownership ensures that a company&apos;s purpose and independence are protected
-            by giving control to stewards, not external shareholders.
+          <p className="text-xl text-foreground/70 max-w-3xl mx-auto leading-relaxed font-sans">
+            Purpose and independence are permanently protected by giving control to active stewards,
+            never to external shareholders.
           </p>
         </motion.div>
 
@@ -70,7 +72,7 @@ export function StewardOwnershipSection({ shouldReduceMotion }: StewardOwnership
               transition={
                 reduceMotion
                   ? { duration: 0 }
-                  : { duration: 0.6, delay: idx * 0.15, ease: [0.22, 1, 0.36, 1] }
+                  : { type: 'spring', stiffness: 100, damping: 20, delay: idx * 0.15 }
               }
               className={cn(
                 'group relative rounded-[2rem] p-10 bg-card/70 backdrop-blur-2xl border border-border',
@@ -97,7 +99,7 @@ export function StewardOwnershipSection({ shouldReduceMotion }: StewardOwnership
                 </div>
                 <h3
                   className={cn(
-                    'text-2xl font-display text-japandi-charcoal mb-4',
+                    'text-2xl font-display text-foreground mb-4',
                     reduceMotion
                       ? ''
                       : 'group-hover:text-japandi-sage transition-colors duration-300'
@@ -105,7 +107,7 @@ export function StewardOwnershipSection({ shouldReduceMotion }: StewardOwnership
                 >
                   {principle.title}
                 </h3>
-                <p className="text-japandi-charcoal/70 leading-relaxed font-sans text-lg">
+                <p className="text-foreground/70 leading-relaxed font-sans text-lg">
                   {principle.desc}
                 </p>
               </div>

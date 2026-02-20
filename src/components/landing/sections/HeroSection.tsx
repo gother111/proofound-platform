@@ -2,10 +2,10 @@
 
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { Button } from '@/components/ui/button';
+import { MagneticButton } from '@/components/landing/MagneticButton';
 import { ArrowRight } from 'lucide-react';
 import Image from 'next/image';
-// import Magnetic from '@/components/ui/Magnetic'; // This import is no longer needed based on the new code
+import { cn } from '@/lib/utils';
 
 interface HeroSectionProps {
   onIndividualSignup?: () => void;
@@ -35,22 +35,37 @@ export function HeroSection({
       data-testid="landing-hero-section"
     >
       {/* Background Elements */}
-      <div className="absolute inset-0 pointer-events-none">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* Grain Overlay */}
+        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-multiply dark:mix-blend-overlay z-0" />
+
+        {/* Animated Mesh Gradient */}
+        <div
+          className={cn(
+            'absolute inset-0 opacity-40 dark:opacity-20 z-0',
+            reduceMotion ? '' : 'animate-hero-mesh'
+          )}
+          style={{
+            backgroundImage:
+              'radial-gradient(at 80% 0%, hsla(150, 20%, 90%, 1) 0px, transparent 50%), radial-gradient(at 0% 100%, hsla(16, 40%, 90%, 1) 0px, transparent 50%), radial-gradient(at 40% 50%, hsla(43, 80%, 95%, 1) 0px, transparent 50%)',
+          }}
+        />
+
         {/* Organic Shape Right */}
         <motion.div
-          initial={reduceMotion ? false : { opacity: 0, scale: 0.8, x: 100 }}
-          animate={reduceMotion ? undefined : { opacity: 1, scale: 1, x: 0 }}
-          transition={reduceMotion ? { duration: 0 } : { duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
-          className="absolute top-1/4 -right-20 w-[600px] h-[600px] bg-japandi-sage/10 rounded-full blur-3xl"
+          initial={reduceMotion ? false : { opacity: 0, scale: 0.95 }}
+          animate={reduceMotion ? undefined : { opacity: 1, scale: 1 }}
+          transition={reduceMotion ? { duration: 0 } : { duration: 2.5, ease: [0.22, 1, 0.36, 1] }}
+          className="absolute top-1/4 -right-20 w-[60vw] h-[60vw] max-w-[800px] max-h-[800px] bg-japandi-sage/10 rounded-full blur-[100px] mix-blend-multiply dark:mix-blend-lighten"
         />
         {/* Organic Shape Left */}
         <motion.div
-          initial={reduceMotion ? false : { opacity: 0, scale: 0.8, x: -100 }}
-          animate={reduceMotion ? undefined : { opacity: 1, scale: 1, x: 0 }}
+          initial={reduceMotion ? false : { opacity: 0, scale: 0.95 }}
+          animate={reduceMotion ? undefined : { opacity: 1, scale: 1 }}
           transition={
-            reduceMotion ? { duration: 0 } : { duration: 1.5, delay: 0.2, ease: [0.22, 1, 0.36, 1] }
+            reduceMotion ? { duration: 0 } : { duration: 2.5, delay: 0.4, ease: [0.22, 1, 0.36, 1] }
           }
-          className="absolute -bottom-20 -left-20 w-[500px] h-[500px] bg-japandi-terracotta/10 rounded-full blur-3xl"
+          className="absolute -bottom-20 -left-20 w-[50vw] h-[50vw] max-w-[700px] max-h-[700px] bg-japandi-terracotta/10 rounded-full blur-[100px] mix-blend-multiply dark:mix-blend-lighten"
         />
       </div>
 
@@ -63,12 +78,12 @@ export function HeroSection({
           <div>
             <motion.h1
               // Avoid animating opacity on text so contrast does not drop below WCAG AA mid-transition.
-              initial={reduceMotion ? false : { y: 30 }}
+              initial={reduceMotion ? false : { y: 40 }}
               animate={reduceMotion ? undefined : { y: 0 }}
               transition={
                 reduceMotion
                   ? { duration: 0 }
-                  : { duration: 1.0, ease: [0.22, 1, 0.36, 1], delay: 0.1 }
+                  : { duration: 1.4, ease: [0.22, 1, 0.36, 1], delay: 0.1 }
               }
               className="text-5xl md:text-7xl lg:text-8xl font-serif text-foreground leading-[0.95] tracking-tight mb-6"
             >
@@ -80,53 +95,53 @@ export function HeroSection({
               transition={
                 reduceMotion
                   ? { duration: 0 }
-                  : { duration: 1.0, ease: [0.22, 1, 0.36, 1], delay: 0.2 }
+                  : { duration: 1.4, ease: [0.22, 1, 0.36, 1], delay: 0.25 }
               }
-              className="text-3xl md:text-4xl lg:text-5xl font-sans text-foreground leading-tight"
+              className="text-3xl md:text-4xl lg:text-5xl font-sans text-foreground leading-tight text-balance"
             >
-              A credibility engineering platform for impactful connections
+              The credibility infrastructure for impactful connections
             </motion.h2>
           </div>
 
           <motion.p
-            initial={reduceMotion ? false : { y: 20 }}
-            animate={reduceMotion ? undefined : { y: 0 }}
+            initial={reduceMotion ? false : { y: 20, opacity: 0 }}
+            animate={reduceMotion ? undefined : { y: 0, opacity: 1 }}
             transition={
               reduceMotion
                 ? { duration: 0 }
-                : { duration: 1.0, delay: 0.3, ease: [0.22, 1, 0.36, 1] }
+                : { duration: 1.2, delay: 0.45, ease: [0.22, 1, 0.36, 1] }
             }
             className="text-lg md:text-xl text-muted-foreground max-w-xl leading-relaxed font-sans"
           >
-            Unprecedented possibilities for work, business, and individual transformation. Backed by
-            evidence, not vanity metrics.
+            Unlock true potential for your career and organization. Backed by verified evidence, not
+            vanity metrics.
           </motion.p>
 
           <motion.div
-            initial={reduceMotion ? false : { y: 20 }}
-            animate={reduceMotion ? undefined : { y: 0 }}
+            initial={reduceMotion ? false : { y: 20, opacity: 0 }}
+            animate={reduceMotion ? undefined : { y: 0, opacity: 1 }}
             transition={
               reduceMotion
                 ? { duration: 0 }
-                : { duration: 1.0, delay: 0.4, ease: [0.22, 1, 0.36, 1] }
+                : { duration: 1.2, delay: 0.6, ease: [0.22, 1, 0.36, 1] }
             }
             className="flex flex-wrap gap-4"
           >
-            <Button
+            <MagneticButton
               onClick={onIndividualSignup}
               size="lg"
               className="rounded-full px-8 py-7 text-lg shadow-lg hover:shadow-xl font-sans"
             >
               Join as an Individual
-            </Button>
-            <Button
+            </MagneticButton>
+            <MagneticButton
               onClick={onOrganizationSignup}
               size="lg"
               variant="outline"
               className="rounded-full px-8 py-7 text-lg shadow-lg hover:shadow-xl font-sans"
             >
               Join as an Organization
-            </Button>
+            </MagneticButton>
           </motion.div>
         </motion.div>
       </div>

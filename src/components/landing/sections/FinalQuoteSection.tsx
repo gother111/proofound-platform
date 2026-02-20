@@ -27,7 +27,7 @@ export function FinalQuoteSection({ shouldReduceMotion }: FinalQuoteSectionProps
   return (
     <section
       ref={ref}
-      className="py-40 px-6 md:px-12 bg-background flex items-center justify-center relative overflow-hidden min-h-[60vh] scroll-mt-24"
+      className="py-32 md:py-40 px-6 md:px-12 bg-background flex items-center justify-center relative overflow-hidden min-h-[60vh] scroll-mt-24"
     >
       {/* Parallax decorative watermark (non-text to avoid decorative contrast violations) */}
       {reduceMotion ? (
@@ -48,7 +48,7 @@ export function FinalQuoteSection({ shouldReduceMotion }: FinalQuoteSectionProps
       )}
 
       <div className="max-w-6xl mx-auto text-center relative z-10">
-        <blockquote className="font-display text-5xl md:text-7xl lg:text-8xl text-japandi-charcoal leading-[1.1] italic tracking-tight">
+        <blockquote className="font-display text-5xl md:text-7xl lg:text-8xl text-foreground leading-[1.1] italic tracking-tight text-balance">
           {words.map((word, i) => (
             <motion.span
               key={i}
@@ -56,9 +56,10 @@ export function FinalQuoteSection({ shouldReduceMotion }: FinalQuoteSectionProps
               whileInView={reduceMotion ? undefined : { opacity: 1, y: 0, filter: 'blur(0px)' }}
               viewport={reduceMotion ? undefined : { once: true, margin: '-100px' }}
               transition={{
-                duration: reduceMotion ? 0 : 0.8,
+                type: 'spring',
+                stiffness: 100,
+                damping: 20,
                 delay: reduceMotion ? 0 : i * 0.05,
-                ease: [0.22, 1, 0.36, 1],
               }}
               className="inline-block mr-[0.25em]"
             >
@@ -77,7 +78,7 @@ export function FinalQuoteSection({ shouldReduceMotion }: FinalQuoteSectionProps
           className="mt-16 flex items-center justify-center gap-6"
         >
           <div className="h-px w-24 bg-japandi-terracotta" />
-          <span className="text-japandi-charcoal/60 font-medium tracking-[0.2em] uppercase text-sm font-sans">
+          <span className="text-foreground/60 font-medium tracking-[0.2em] uppercase text-sm font-sans">
             Proofound Manifesto
           </span>
           <div className="h-px w-24 bg-japandi-terracotta" />

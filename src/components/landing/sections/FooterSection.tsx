@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Twitter, Linkedin, Github, Mail, ArrowUpRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -18,8 +19,8 @@ export function FooterSection({ shouldReduceMotion }: FooterSectionProps) {
     platform: [
       { label: 'How it Works', href: '#how-it-works' },
       { label: 'Principles', href: '#principles' },
-      { label: 'For Individuals', href: '#for-whom' },
-      { label: 'For Organizations', href: '#for-whom' },
+      { label: 'For Individuals', href: '#personas' },
+      { label: 'For Organizations', href: '#personas' },
     ],
     company: [
       { label: 'About Us', href: '/about' },
@@ -69,16 +70,18 @@ export function FooterSection({ shouldReduceMotion }: FooterSectionProps) {
                 { icon: Github, href: '#', label: 'GitHub' },
                 { icon: Mail, href: 'mailto:hello@proofound.io', label: 'Email' },
               ].map((social, idx) => (
-                <a
+                <motion.a
                   key={idx}
                   href={social.href}
                   aria-label={social.label}
                   title={social.label}
-                  className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white hover:text-japandi-charcoal transition-colors transition-transform duration-300 hover:scale-110 group"
+                  whileHover={reduceMotion ? undefined : { scale: 1.15, rotate: [-5, 5, 0] }}
+                  whileTap={reduceMotion ? undefined : { scale: 0.95 }}
+                  className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white hover:text-foreground transition-colors duration-300 group"
                 >
                   <span className="sr-only">{social.label}</span>
                   <social.icon className="w-5 h-5" aria-hidden="true" />
-                </a>
+                </motion.a>
               ))}
             </div>
           </div>

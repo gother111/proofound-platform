@@ -27,18 +27,20 @@ export function ProofSection({ shouldReduceMotion }: ProofSectionProps) {
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
+    hidden: { opacity: 0, y: 30, scale: 0.95 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] },
+      scale: 1,
+      transition: { type: 'spring', stiffness: 100, damping: 20 },
     },
   };
 
   return (
     <section
+      id="proof"
       ref={ref}
-      className="py-32 px-6 md:px-12 relative overflow-hidden bg-background scroll-mt-24"
+      className="py-32 md:py-40 px-6 md:px-12 relative overflow-hidden bg-background scroll-mt-24"
     >
       {/* Background Elements */}
       <div className="absolute inset-0 pointer-events-none">
@@ -78,13 +80,15 @@ export function ProofSection({ shouldReduceMotion }: ProofSectionProps) {
         <motion.div
           initial={reduceMotion ? false : { opacity: 0, y: 30 }}
           animate={effectiveInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-          transition={reduceMotion ? { duration: 0 } : { duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="text-center mb-20"
+          transition={
+            reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 100, damping: 20 }
+          }
+          className="text-center mb-24 relative z-10"
         >
-          <h2 className="text-5xl md:text-6xl font-display text-japandi-charcoal mb-6">
+          <h2 className="text-5xl md:text-6xl font-display text-foreground mb-6 text-balance">
             Uncompromising <span className="text-japandi-terracotta">Proof.</span>
           </h2>
-          <p className="text-xl text-japandi-charcoal/60 font-sans max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xl text-foreground/60 font-sans max-w-2xl mx-auto leading-relaxed">
             We don't just claim credibility; we engineer it. Every interaction is verifiable,
             transparent, and secure by design.
           </p>
@@ -120,12 +124,12 @@ export function ProofSection({ shouldReduceMotion }: ProofSectionProps) {
                 <div className="w-16 h-16 rounded-2xl bg-japandi-terracotta/10 flex items-center justify-center mb-8 text-japandi-terracotta">
                   <ShieldCheck className="w-8 h-8" />
                 </div>
-                <h3 className="text-3xl md:text-4xl font-display text-japandi-charcoal mb-4">
+                <h3 className="text-3xl md:text-4xl font-display text-foreground mb-4">
                   Cryptographic Verification
                 </h3>
-                <p className="text-lg text-japandi-charcoal/70 font-sans leading-relaxed max-w-md">
-                  Every proof is traceable to its source. We use cryptographic signatures and
-                  time-stamped evidence to ensure that what you see is exactly what happened.
+                <p className="text-lg text-foreground/70 font-sans leading-relaxed max-w-md">
+                  Every proof is cryptographically verifiable, source-traceable, and time-stamped.
+                  Trust is engineered, not assumed.
                 </p>
               </div>
               <div className="mt-12">
@@ -193,10 +197,10 @@ export function ProofSection({ shouldReduceMotion }: ProofSectionProps) {
             <div className="w-14 h-14 rounded-2xl bg-japandi-sage/10 flex items-center justify-center mb-6 text-japandi-sage">
               <FileSearch className="w-7 h-7" />
             </div>
-            <h3 className="text-2xl font-display text-japandi-charcoal mb-3">Transparent Audits</h3>
-            <p className="text-japandi-charcoal/70 font-sans leading-relaxed">
-              Our algorithms are continuously monitored. We publish transparency reports that anyone
-              can understand.
+            <h3 className="text-2xl font-display text-foreground mb-3">Transparent Audits</h3>
+            <p className="text-foreground/70 font-sans leading-relaxed">
+              Continuous monitoring and published transparency reports ensure our algorithms remain
+              open and accountable.
             </p>
           </motion.div>
 
@@ -208,11 +212,11 @@ export function ProofSection({ shouldReduceMotion }: ProofSectionProps) {
               reduceMotion ? '' : 'hover:bg-card transition-colors duration-500'
             )}
           >
-            <div className="w-14 h-14 rounded-2xl bg-japandi-stone/20 flex items-center justify-center mb-6 text-japandi-charcoal">
+            <div className="w-14 h-14 rounded-2xl bg-japandi-stone/20 flex items-center justify-center mb-6 text-foreground">
               <Fingerprint className="w-7 h-7" />
             </div>
-            <h3 className="text-2xl font-display text-japandi-charcoal mb-3">Open Standards</h3>
-            <p className="text-japandi-charcoal/70 font-sans leading-relaxed">
+            <h3 className="text-2xl font-display text-foreground mb-3">Open Standards</h3>
+            <p className="text-foreground/70 font-sans leading-relaxed">
               Built on open protocols to ensure longevity and interoperability. No walled gardens.
             </p>
           </motion.div>
