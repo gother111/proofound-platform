@@ -37,7 +37,7 @@ export function StewardOwnershipSection({ shouldReduceMotion }: StewardOwnership
     <section
       id="steward-ownership"
       ref={ref}
-      className="py-32 md:py-40 px-6 md:px-12 relative bg-background scroll-mt-24"
+      className="py-20 md:py-32 lg:py-40 px-6 md:px-12 relative bg-background scroll-mt-24"
     >
       {/* Background Decoration */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">

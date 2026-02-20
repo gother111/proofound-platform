@@ -40,7 +40,7 @@ export function WhyNowSection({ shouldReduceMotion }: WhyNowSectionProps) {
   return (
     <section
       ref={ref}
-      className="py-32 md:py-40 px-6 md:px-12 relative bg-background overflow-hidden scroll-mt-24"
+      className="py-20 md:py-32 lg:py-40 px-6 md:px-12 relative bg-background overflow-hidden scroll-mt-24"
     >
       {/* Organic Background */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">

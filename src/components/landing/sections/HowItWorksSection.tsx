@@ -117,7 +117,7 @@ export function HowItWorksSection({ shouldReduceMotion }: HowItWorksSectionProps
     <section
       id="how-it-works"
       ref={ref}
-      className="py-32 md:py-40 px-6 md:px-12 relative bg-background scroll-mt-24"
+      className="py-20 md:py-32 lg:py-40 px-6 md:px-12 relative bg-background scroll-mt-24"
     >
       {/* Organic Background Shapes */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">

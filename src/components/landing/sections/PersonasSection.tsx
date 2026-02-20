@@ -56,7 +56,7 @@ export function PersonasSection({
     <section
       id="personas"
       ref={ref}
-      className="py-32 md:py-40 px-6 md:px-12 relative bg-background overflow-hidden scroll-mt-24"
+      className="py-20 md:py-32 lg:py-40 px-6 md:px-12 relative bg-background overflow-hidden scroll-mt-24"
       data-testid="landing-personas-section"
     >
       {/* Background Decoration */}
