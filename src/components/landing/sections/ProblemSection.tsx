@@ -13,6 +13,7 @@ import {
   Puzzle,
   Recycle,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ProblemSectionProps {
   shouldReduceMotion?: boolean | null;
@@ -25,15 +26,15 @@ export function ProblemSection({ shouldReduceMotion }: ProblemSectionProps) {
   const effectiveInView = reduceMotion ? true : isInView;
 
   const problems = [
-    { icon: Heart, text: 'Mental health toll of endless job searches and networking' },
-    { icon: Clock, text: 'Wasted time on connection rituals and manual verification' },
-    { icon: Eye, text: 'Bias, misalignment, and opacity in matching systems' },
-    { icon: TrendingUp, text: 'Vanity metrics that obscure real impact' },
-    { icon: FileText, text: "Outdated CVs and portfolios that don't tell the full story" },
-    { icon: DollarSign, text: 'Profit-only capital disconnected from mission alignment' },
-    { icon: Bot, text: 'AI anxiety and lack of transparency in algorithmic decisions' },
-    { icon: Puzzle, text: 'No universal problem-solving framework for collaboration' },
-    { icon: Recycle, text: 'Massive waste of time, talent, and resources' },
+    { icon: Heart, text: 'The endless toll of networking and job hunting' },
+    { icon: Clock, text: 'Wasted hours on manual verification rituals' },
+    { icon: Eye, text: 'Opaque, biased, and misaligned matching' },
+    { icon: TrendingUp, text: 'Vanity metrics obscuring real impact' },
+    { icon: FileText, text: 'Outdated CVs missing the full story' },
+    { icon: DollarSign, text: 'Capital disconnected from true mission' },
+    { icon: Bot, text: 'Anxiety from opaque algorithmic decisions' },
+    { icon: Puzzle, text: 'Fragmented frameworks for collaboration' },
+    { icon: Recycle, text: 'Wasted talent, time, and resources' },
   ];
 
   const containerVariants = {
@@ -47,14 +48,21 @@ export function ProblemSection({ shouldReduceMotion }: ProblemSectionProps) {
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
+    hidden: { opacity: 0, y: 30, scale: 0.95 },
     visible: {
       opacity: 1,
       y: 0,
+      scale: 1,
       transition: {
-        duration: reduceMotion ? 0 : 0.8,
-        ease: [0.22, 1, 0.36, 1],
+        type: 'spring',
+        stiffness: 100,
+        damping: 20,
       },
+    },
+    hover: {
+      y: -8,
+      scale: 1.03,
+      transition: { type: 'spring', stiffness: 300, damping: 20 },
     },
   };
 
@@ -62,7 +70,7 @@ export function ProblemSection({ shouldReduceMotion }: ProblemSectionProps) {
     <section
       id="the-problem"
       ref={ref}
-      className="py-24 px-6 md:px-12 relative overflow-hidden bg-background scroll-mt-24"
+      className="py-32 md:py-40 px-6 md:px-12 relative overflow-hidden bg-background scroll-mt-24"
     >
       {/* Organic Background Elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
@@ -77,7 +85,7 @@ export function ProblemSection({ shouldReduceMotion }: ProblemSectionProps) {
           transition={reduceMotion ? { duration: 0 } : { duration: 1.0, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-20"
         >
-          <h2 className="text-5xl md:text-6xl font-serif text-foreground mb-6 tracking-tight">
+          <h2 className="text-5xl md:text-6xl font-serif text-foreground mb-6 tracking-tight text-balance">
             The problems we solve
           </h2>
           <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto font-sans leading-relaxed">
@@ -89,31 +97,55 @@ export function ProblemSection({ shouldReduceMotion }: ProblemSectionProps) {
           variants={containerVariants}
           initial={reduceMotion ? false : 'hidden'}
           animate={effectiveInView ? 'visible' : 'hidden'}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 auto-rows-fr"
         >
-          {problems.map((problem, idx) => (
-            <motion.div
-              key={idx}
-              variants={itemVariants}
-              whileHover={
-                reduceMotion
-                  ? undefined
-                  : {
-                      y: -5,
-                      scale: 1.02,
-                      transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] },
-                    }
-              }
-              className="bg-card/60 dark:bg-card/20 backdrop-blur-md border border-border p-8 rounded-3xl flex flex-col gap-6 group hover:shadow-lg hover:shadow-proofound-terracotta/5 transition-colors transition-shadow transition-transform duration-300 h-full"
-            >
-              <div className="w-14 h-14 rounded-2xl bg-proofound-terracotta/10 flex items-center justify-center flex-shrink-0 group-hover:bg-proofound-terracotta/20 transition-colors duration-300">
-                <problem.icon className="w-7 h-7 text-proofound-terracotta" strokeWidth={1.5} />
-              </div>
-              <p className="text-lg text-foreground leading-relaxed font-sans font-medium">
-                {problem.text}
-              </p>
-            </motion.div>
-          ))}
+          {problems.map((problem, idx) => {
+            const isFeatured = idx === 0;
+            return (
+              <motion.div
+                key={idx}
+                variants={itemVariants}
+                whileHover={reduceMotion ? undefined : 'hover'}
+                className={cn(
+                  'bg-card/60 dark:bg-card/20 backdrop-blur-md border border-border p-8 rounded-3xl flex flex-col group hover:shadow-lg hover:shadow-proofound-terracotta/5 transition-colors transition-shadow duration-300 h-full',
+                  isFeatured ? 'md:col-span-2 lg:row-span-2 justify-between gap-12' : 'gap-6'
+                )}
+              >
+                <motion.div
+                  variants={{
+                    hover: reduceMotion
+                      ? {}
+                      : {
+                          y: -5,
+                          scale: 1.1,
+                          rotate: [-2, 2, 0],
+                          transition: { type: 'spring', stiffness: 400, damping: 10 },
+                        },
+                  }}
+                  className={cn(
+                    'rounded-2xl bg-proofound-terracotta/10 flex items-center justify-center flex-shrink-0 group-hover:bg-proofound-terracotta/20 transition-colors duration-300',
+                    isFeatured ? 'w-20 h-20' : 'w-14 h-14'
+                  )}
+                >
+                  <problem.icon
+                    className={cn(
+                      'text-proofound-terracotta',
+                      isFeatured ? 'w-10 h-10' : 'w-7 h-7'
+                    )}
+                    strokeWidth={1.5}
+                  />
+                </motion.div>
+                <p
+                  className={cn(
+                    'text-foreground leading-relaxed font-sans font-medium',
+                    isFeatured ? 'text-2xl md:text-3xl max-w-sm' : 'text-lg'
+                  )}
+                >
+                  {problem.text}
+                </p>
+              </motion.div>
+            );
+          })}
         </motion.div>
       </div>
     </section>

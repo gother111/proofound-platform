@@ -2,7 +2,7 @@
 
 import React, { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
-import { Button } from '@/components/ui/button';
+import { MagneticButton } from '@/components/landing/MagneticButton';
 import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -20,7 +20,7 @@ export function FinalCTASection({ onGetStarted, shouldReduceMotion }: FinalCTASe
   return (
     <section
       ref={ref}
-      className="py-40 px-6 md:px-12 relative bg-japandi-charcoal text-white overflow-hidden flex items-center justify-center min-h-[80vh] scroll-mt-24"
+      className="py-32 md:py-40 px-6 md:px-12 relative bg-japandi-charcoal text-white overflow-hidden flex items-center justify-center min-h-[80vh] scroll-mt-24"
       data-testid="landing-final-cta-section"
     >
       {/* Background Decoration */}
@@ -64,8 +64,10 @@ export function FinalCTASection({ onGetStarted, shouldReduceMotion }: FinalCTASe
         <motion.h2
           initial={reduceMotion ? false : { opacity: 0, y: 50 }}
           animate={effectiveInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
-          transition={reduceMotion ? { duration: 0 } : { duration: 1, ease: [0.22, 1, 0.36, 1] }}
-          className="text-6xl md:text-8xl lg:text-9xl font-display mb-12 leading-[0.9] tracking-tight"
+          transition={
+            reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 80, damping: 20 }
+          }
+          className="text-6xl md:text-8xl lg:text-9xl font-display mb-12 leading-[0.9] tracking-tight text-balance"
         >
           Ready to build <br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-japandi-sage to-white">
@@ -77,7 +79,9 @@ export function FinalCTASection({ onGetStarted, shouldReduceMotion }: FinalCTASe
           initial={reduceMotion ? false : { opacity: 0, y: 30 }}
           animate={effectiveInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
           transition={
-            reduceMotion ? { duration: 0 } : { duration: 1, delay: 0.2, ease: [0.22, 1, 0.36, 1] }
+            reduceMotion
+              ? { duration: 0 }
+              : { type: 'spring', stiffness: 80, damping: 20, delay: 0.2 }
           }
           className="text-xl md:text-2xl text-white/60 mb-16 max-w-2xl mx-auto font-sans leading-relaxed"
         >
@@ -89,37 +93,47 @@ export function FinalCTASection({ onGetStarted, shouldReduceMotion }: FinalCTASe
           initial={reduceMotion ? false : { opacity: 0, scale: 0.9 }}
           animate={effectiveInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.9 }}
           transition={
-            reduceMotion ? { duration: 0 } : { duration: 0.8, delay: 0.4, ease: [0.22, 1, 0.36, 1] }
+            reduceMotion
+              ? { duration: 0 }
+              : { type: 'spring', stiffness: 100, damping: 20, delay: 0.4 }
           }
         >
-          <Button
-            size="lg"
-            onClick={onGetStarted}
-            className={cn(
-              'bg-white text-japandi-charcoal hover:bg-white/90 text-xl px-16 py-10 rounded-full shadow-[0_0_50px_-10px_rgba(255,255,255,0.3)] hover:shadow-[0_0_80px_-10px_rgba(255,255,255,0.5)] font-sans relative overflow-hidden',
-              reduceMotion
-                ? 'transition-colors transition-shadow duration-300'
-                : 'transition-colors transition-shadow transition-transform duration-500 hover:scale-105 group'
-            )}
+          <motion.div
+            whileHover={reduceMotion ? {} : { scale: 1.05 }}
+            whileTap={reduceMotion ? {} : { scale: 0.95 }}
+            className="inline-block"
           >
-            <span className="relative z-10 flex items-center gap-3">
-              Get Started
-              <ArrowRight
+            <MagneticButton
+              size="lg"
+              onClick={onGetStarted}
+              className={cn(
+                'bg-white text-foreground hover:bg-white/90 text-xl px-16 py-10 rounded-full shadow-[0_0_50px_-10px_rgba(255,255,255,0.3)] hover:shadow-[0_0_80px_-10px_rgba(255,255,255,0.5)] font-sans relative overflow-hidden',
+                reduceMotion
+                  ? 'transition-colors transition-shadow duration-300'
+                  : 'transition-colors transition-shadow duration-500 group'
+              )}
+            >
+              <span className="relative z-10 flex items-center gap-3">
+                Get Started
+                <ArrowRight
+                  className={cn(
+                    'w-6 h-6',
+                    reduceMotion
+                      ? ''
+                      : 'group-hover:translate-x-2 transition-transform duration-300'
+                  )}
+                />
+              </span>
+              <div
                 className={cn(
-                  'w-6 h-6',
-                  reduceMotion ? '' : 'group-hover:translate-x-2 transition-transform duration-300'
+                  'absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent translate-x-[-150%]',
+                  reduceMotion
+                    ? 'hidden'
+                    : 'group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out'
                 )}
               />
-            </span>
-            <div
-              className={cn(
-                'absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent translate-x-[-150%]',
-                reduceMotion
-                  ? 'hidden'
-                  : 'group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out'
-              )}
-            />
-          </Button>
+            </MagneticButton>
+          </motion.div>
         </motion.div>
       </div>
     </section>

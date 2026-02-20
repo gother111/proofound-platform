@@ -20,7 +20,7 @@ test.describe('Landing Page', () => {
     // Subheading should be visible
     await expect(
       page.getByRole('heading', {
-        name: /A credibility engineering platform for impactful connections/i,
+        name: /The credibility infrastructure for impactful connections/i,
         level: 2,
       })
     ).toBeVisible();
@@ -67,26 +67,24 @@ test.describe('Landing Page', () => {
     await expect(openButton).toBeVisible();
   });
 
-  test('renders personas section toggle and switches between individuals and organizations', async ({
-    page,
-  }) => {
+  test('renders personas split panels on desktop', async ({ page }) => {
     const personas = page.getByTestId('landing-personas-section');
     await expect(personas).toBeVisible();
 
     await expect(personas.getByRole('heading', { name: /Built for you/i })).toBeVisible();
 
-    // Organizations tab should show org content
-    await page.getByTestId('landing-personas-toggle-organization').click();
-    await expect(page.getByTestId('landing-persona-title')).toHaveText(/For Organizations/i);
-    await expect(personas.getByText(/^Aligned$/)).toBeVisible();
-    await expect(personas.getByText(/^Verified Skill$/)).toBeVisible();
-    await expect(personas.getByText(/^1 Match$/)).toBeVisible();
+    // Instead of a toggle, desktop shows both panels
+    await expect(
+      personas.getByRole('heading', { name: /For Organizations/i }).first()
+    ).toBeVisible();
+    await expect(personas.getByRole('heading', { name: /For Individuals/i }).first()).toBeVisible();
 
-    // Individuals tab should show individual content
-    await page.getByTestId('landing-personas-toggle-individual').click();
-    await expect(page.getByTestId('landing-persona-title')).toHaveText(/For Individuals/i);
-    await expect(personas.getByText(/^Verified$/)).toBeVisible();
-    await expect(personas.getByText(/^Identity$/)).toBeVisible();
+    // The key outcomes should be visible inside the desktop panels
+    const desktopContainer = personas.locator('.hidden.md\\:grid');
+    await expect(desktopContainer.getByText(/Find mission-aligned opportunities/i)).toBeVisible();
+    await expect(desktopContainer.getByText(/Build a verified, portable profile/i)).toBeVisible();
+    await expect(desktopContainer.getByText(/Discover talent based on evidence/i)).toBeVisible();
+    await expect(desktopContainer.getByText(/Reduce bias in hiring/i)).toBeVisible();
   });
 
   test('renders principles section', async ({ page }) => {

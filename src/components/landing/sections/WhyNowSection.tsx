@@ -16,33 +16,31 @@ export function WhyNowSection({ shouldReduceMotion }: WhyNowSectionProps) {
 
   const reasons = [
     {
-      label: 'AI and Technology advancements are shifting global paradigms',
-      desc: 'New tools demand new trust models and possibilities',
+      label: 'The AI paradigm shift',
+      desc: 'New tools demand new models of trust and verification',
     },
     {
-      label: 'Simplicity of faking and growing trust challenges',
-      desc: 'Misinformation and deepfakes erode credibility everywhere',
+      label: 'The crisis of digital trust',
+      desc: 'Deepfakes and misinformation are eroding credibility everywhere',
     },
     {
-      label:
-        'Global mental health challenges grow as people question their immediate future and seek new transformation tools',
-      desc: 'Unprecedented uncertainty drives need for well-being infrastructure',
+      label: 'The search for meaning',
+      desc: 'Unprecedented uncertainty drives a need for well-being infrastructure',
     },
     {
-      label:
-        'Obsoletion of outdated CV and recruitment standards that become less and less efficient',
-      desc: "Traditional credentials don't capture real capability or values alignment",
+      label: 'The obsolescence of the CV',
+      desc: 'Static credentials fail to capture true capability or alignment',
     },
     {
-      label: 'Rapid globalization calls for coordination on an unprecedented scale',
-      desc: 'Cross-border collaboration requires new verification and trust systems',
+      label: 'The demand for borderless talent',
+      desc: 'Cross-border collaboration requires coordinated trust systems',
     },
   ];
 
   return (
     <section
       ref={ref}
-      className="py-32 px-6 md:px-12 relative bg-background overflow-hidden scroll-mt-24"
+      className="py-32 md:py-40 px-6 md:px-12 relative bg-background overflow-hidden scroll-mt-24"
     >
       {/* Organic Background */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
@@ -56,11 +54,11 @@ export function WhyNowSection({ shouldReduceMotion }: WhyNowSectionProps) {
           transition={reduceMotion ? { duration: 0 } : { duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-20"
         >
-          <h2 className="text-5xl md:text-6xl font-serif text-foreground mb-6 tracking-tight">
+          <h2 className="text-5xl md:text-6xl font-serif text-foreground mb-6 tracking-tight text-balance">
             Why now
           </h2>
-          <p className="text-xl md:text-2xl text-muted-foreground font-sans">
-            The timing has never been more critical.
+          <p className="text-xl md:text-2xl text-muted-foreground font-sans text-balance">
+            The paradigm is shifting. The need is immediate.
           </p>
         </motion.div>
 
@@ -73,7 +71,7 @@ export function WhyNowSection({ shouldReduceMotion }: WhyNowSectionProps) {
               transition={
                 reduceMotion
                   ? { duration: 0 }
-                  : { duration: 0.6, delay: idx * 0.1, ease: [0.22, 1, 0.36, 1] }
+                  : { type: 'spring', stiffness: 100, damping: 20, delay: idx * 0.1 }
               }
               className={cn(
                 'bg-card/60 backdrop-blur-md p-10 rounded-[2rem] flex items-start gap-8 border border-border',
