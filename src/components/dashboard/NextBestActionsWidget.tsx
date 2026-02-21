@@ -12,6 +12,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Sparkles,
   ArrowRight,
@@ -139,15 +140,25 @@ export function NextBestActionsWidget({ useMockData, onActionClick }: NextBestAc
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="animate-pulse">
-              <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-              <div className="h-2 bg-gray-200 rounded w-full mb-4"></div>
+            <div className="space-y-2 mb-6">
+              <Skeleton className="h-4 w-3/4 rounded-md" />
+              <Skeleton className="h-2 w-full rounded-full" />
             </div>
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="animate-pulse">
-                <div className="h-12 bg-gray-200 rounded"></div>
-              </div>
-            ))}
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="w-full text-left p-3 rounded-lg border border-[#E8E6DD] flex items-start gap-3"
+                >
+                  <Skeleton className="w-5 h-5 rounded-full shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-1/2 rounded-md" />
+                    <Skeleton className="h-3 w-5/6 rounded-md" />
+                  </div>
+                  <Skeleton className="w-4 h-4 rounded-full shrink-0" />
+                </div>
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>

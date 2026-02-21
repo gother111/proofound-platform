@@ -10,6 +10,7 @@ import { GlobalErrorHandler } from '@/components/GlobalErrorHandler';
 import { OptionalTelemetry } from '@/components/OptionalTelemetry';
 import { SUSPromptHost } from '@/components/surveys/SUSPromptHost';
 import { SkipToContentLink } from '@/components/a11y/SkipToContentLink';
+import { TransitionProvider } from '@/components/ui/transition-provider';
 
 /**
  * Root Layout Component
@@ -60,9 +61,10 @@ export default async function RootLayout({
           <NextIntlClientProvider messages={messages}>
             <GlobalErrorHandler />
             <SUSPromptHost />
+
             {/* Focus target for the skip link. Avoid wrapping in <main> to prevent nested main landmarks. */}
             <div id="main-content" tabIndex={-1}>
-              {children}
+              <TransitionProvider>{children}</TransitionProvider>
             </div>
             <Toaster />
             <ChatWidget />

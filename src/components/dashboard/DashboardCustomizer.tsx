@@ -29,14 +29,14 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { GlassCard } from '@/components/ui/glass-card';
+import { Eye, EyeOff, Plus, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { DashboardTile } from './DashboardTile';
-import { GripVertical, Plus, Settings, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export interface DashboardWidget {
   widgetId: string;
@@ -223,11 +223,13 @@ export function DashboardCustomizer({ userId, onClose }: DashboardCustomizerProp
 
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <p className="text-center text-[#6B6760]">Loading dashboard layout...</p>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 bg-transparent">
+        <GlassCard className="col-span-1 md:col-span-12">
+          <CardContent className="pt-6">
+            <p className="text-center text-[#6B6760]">Loading dashboard layout...</p>
+          </CardContent>
+        </GlassCard>
+      </div>
     );
   }
 
@@ -235,147 +237,180 @@ export function DashboardCustomizer({ userId, onClose }: DashboardCustomizerProp
   const hiddenWidgets = widgets.filter((w) => !w.visible);
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Settings className="h-5 w-5 text-[#1C4D3A]" />
-            <CardTitle>Customize Your Dashboard</CardTitle>
-          </div>
-          <div className="flex items-center gap-2">
-            {hasChanges && (
-              <>
-                <Button variant="outline" size="sm" onClick={handleReset}>
-                  Discard
-                </Button>
-                <Button size="sm" onClick={handleSave} disabled={isSaving}>
-                  {isSaving ? 'Saving...' : 'Save Changes'}
-                </Button>
-              </>
-            )}
-            {!hasChanges && onClose && (
-              <Button variant="outline" size="sm" onClick={onClose}>
-                Close
-              </Button>
-            )}
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Active Widgets */}
-        <div className="space-y-3">
+    <div className="grid grid-cols-1 md:grid-cols-12 gap-6 bg-transparent">
+      {/* Configuration Header */}
+      <GlassCard className="col-span-1 md:col-span-12">
+        <CardHeader>
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-[#2D3330]">Active Widgets</h3>
-            <Badge variant="secondary">{visibleWidgets.length} active</Badge>
-          </div>
-
-          {visibleWidgets.length > 0 ? (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext
-                items={visibleWidgets.map((w) => w.widgetId)}
-                strategy={verticalListSortingStrategy}
-              >
-                <div className="space-y-2">
-                  {visibleWidgets.map((widget) => {
-                    const widgetDef = AVAILABLE_WIDGETS.find((w) => w.id === widget.widgetId);
-                    return (
-                      <DashboardTile
-                        key={widget.widgetId}
-                        id={widget.widgetId}
-                        title={widgetDef?.name || widget.widgetId}
-                        description={widgetDef?.description || ''}
-                        icon={widgetDef?.icon || '📦'}
-                        visible={widget.visible}
-                        onToggleVisibility={() => handleToggleVisibility(widget.widgetId)}
-                      />
-                    );
-                  })}
-                </div>
-              </SortableContext>
-            </DndContext>
-          ) : (
-            <p className="text-sm text-[#9B9891] text-center py-4">
-              No active widgets. Add some from the available widgets below.
-            </p>
-          )}
-        </div>
-
-        {/* Hidden Widgets */}
-        {hiddenWidgets.length > 0 && (
-          <div className="space-y-3 pt-4 border-t border-[#E8E6DD]">
-            <h3 className="text-sm font-semibold text-[#2D3330]">Hidden Widgets</h3>
-            <div className="space-y-2">
-              {hiddenWidgets.map((widget) => {
-                const widgetDef = AVAILABLE_WIDGETS.find((w) => w.id === widget.widgetId);
-                return (
-                  <div
-                    key={widget.widgetId}
-                    className="flex items-center justify-between p-3 bg-[#F5F4F0] rounded-lg"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{widgetDef?.icon || '📦'}</span>
-                      <div>
-                        <p className="text-sm font-medium text-[#2D3330]">
-                          {widgetDef?.name || widget.widgetId}
-                        </p>
-                        <p className="text-xs text-[#9B9891]">{widgetDef?.description}</p>
-                      </div>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleToggleVisibility(widget.widgetId)}
-                    >
-                      Show
-                    </Button>
-                  </div>
-                );
-              })}
+            <div className="flex items-center gap-2">
+              <Settings className="h-5 w-5 text-[#1C4D3A]" />
+              <CardTitle>Customize Your Dashboard</CardTitle>
+            </div>
+            <div className="flex items-center gap-2">
+              {hasChanges && (
+                <>
+                  <Button variant="outline" size="sm" onClick={handleReset}>
+                    Discard
+                  </Button>
+                  <Button size="sm" onClick={handleSave} disabled={isSaving}>
+                    {isSaving ? 'Saving...' : 'Save Changes'}
+                  </Button>
+                </>
+              )}
+              {!hasChanges && onClose && (
+                <Button variant="outline" size="sm" onClick={onClose}>
+                  Close
+                </Button>
+              )}
             </div>
           </div>
-        )}
+        </CardHeader>
+      </GlassCard>
 
-        {/* Available Widgets to Add */}
-        <div className="space-y-3 pt-4 border-t border-[#E8E6DD]">
-          <h3 className="text-sm font-semibold text-[#2D3330]">Available Widgets</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {AVAILABLE_WIDGETS.filter(
-              (widgetDef) => !widgets.find((w) => w.widgetId === widgetDef.id)
-            ).map((widgetDef) => (
-              <div
-                key={widgetDef.id}
-                className="flex items-center justify-between p-3 border border-[#E8E6DD] rounded-lg hover:border-[#1C4D3A] transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{widgetDef.icon}</span>
-                  <div>
-                    <p className="text-sm font-medium text-[#2D3330]">{widgetDef.name}</p>
-                    <p className="text-xs text-[#9B9891]">{widgetDef.description}</p>
+      <div className="col-span-1 md:col-span-12 grid grid-cols-1 md:grid-cols-12 gap-6">
+        {/* Active Widgets */}
+        <GlassCard className="col-span-1 md:col-span-8 border-primary/20 bg-primary/5">
+          <CardHeader className="shrink-0 pb-4 border-b bg-background/50 backdrop-blur-sm">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-[#2D3330] flex items-center gap-2">
+                <Eye className="h-4 w-4 text-primary" /> Active Widgets
+              </h3>
+              <Badge variant="secondary">{visibleWidgets.length} active</Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="space-y-3">
+              {visibleWidgets.length > 0 ? (
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext
+                    items={visibleWidgets.map((w) => w.widgetId)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <div className="space-y-2">
+                      {visibleWidgets.map((widget) => {
+                        // Find widget definition
+                        const widgetDef = AVAILABLE_WIDGETS.find((w) => w.id === widget.widgetId);
+                        return (
+                          <DashboardTile
+                            key={widget.widgetId}
+                            id={widget.widgetId}
+                            title={widgetDef?.name || widget.widgetId}
+                            description={widgetDef?.description || ''}
+                            icon={widgetDef?.icon || '📦'}
+                            visible={widget.visible}
+                            onToggleVisibility={() => handleToggleVisibility(widget.widgetId)}
+                          />
+                        );
+                      })}
+                    </div>
+                  </SortableContext>
+                </DndContext>
+              ) : (
+                <p className="text-sm text-[#9B9891] text-center py-4">
+                  No active widgets. Add some from the available widgets below.
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </GlassCard>
+
+        {/* Hidden Widgets */}
+        <div className="col-span-1 md:col-span-4 flex flex-col gap-6">
+          <GlassCard className="bg-muted/20">
+            <CardHeader className="shrink-0 pb-4 border-b bg-background/50 backdrop-blur-sm">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                  <EyeOff className="h-4 w-4" /> Available Widgets
+                </h3>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <ScrollArea className="h-[400px] pr-4">
+                <div className="space-y-6">
+                  {hiddenWidgets.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="space-y-2">
+                        {hiddenWidgets.map((widget) => {
+                          const widgetDef = AVAILABLE_WIDGETS.find((w) => w.id === widget.widgetId);
+                          return (
+                            <div
+                              key={widget.widgetId}
+                              className="flex items-center justify-between p-3 bg-[#F5F4F0] rounded-lg"
+                            >
+                              <div className="flex items-center gap-3">
+                                <span className="text-2xl">{widgetDef?.icon || '📦'}</span>
+                                <div>
+                                  <p className="text-sm font-medium text-[#2D3330]">
+                                    {widgetDef?.name || widget.widgetId}
+                                  </p>
+                                  <p className="text-xs text-[#9B9891]">{widgetDef?.description}</p>
+                                </div>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleToggleVisibility(widget.widgetId)}
+                              >
+                                Show
+                              </Button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-3 pt-4 border-t border-[#E8E6DD]">
+                    <h3 className="text-sm font-semibold text-[#2D3330]">Library</h3>
+                    <div className="grid grid-cols-1 gap-3">
+                      {AVAILABLE_WIDGETS.filter(
+                        (widgetDef) => !widgets.find((w) => w.widgetId === widgetDef.id)
+                      ).map((widgetDef) => (
+                        <div
+                          key={widgetDef.id}
+                          className="flex items-center justify-between p-3 border border-[#E8E6DD] rounded-lg hover:border-[#1C4D3A] transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl">{widgetDef.icon}</span>
+                            <div>
+                              <p className="text-sm font-medium text-[#2D3330]">{widgetDef.name}</p>
+                              <p className="text-xs text-[#9B9891]">{widgetDef.description}</p>
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleAddWidget(widgetDef)}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
-                <Button size="sm" variant="outline" onClick={() => handleAddWidget(widgetDef)}>
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        </div>
+              </ScrollArea>
+            </CardContent>
+          </GlassCard>
 
-        {/* Help Text */}
-        <div className="text-xs text-[#9B9891] bg-blue-50 border border-blue-200 rounded-lg p-3">
-          <p className="font-medium text-blue-900 mb-1">💡 Customization Tips</p>
-          <ul className="list-disc list-inside space-y-0.5 text-blue-800">
-            <li>Drag widgets to reorder them</li>
-            <li>Toggle visibility to hide widgets you don't use</li>
-            <li>Add new widgets from the available widgets section</li>
-            <li>Your layout is saved automatically</li>
-          </ul>
+          {/* Help Text */}
+          <GlassCard className="bg-primary/5 border-primary/20">
+            <CardContent className="p-4">
+              <p className="font-medium text-primary mb-1">💡 Customization Tips</p>
+              <ul className="list-disc list-inside space-y-0.5 text-primary text-sm">
+                <li>Drag widgets to reorder them</li>
+                <li>Toggle visibility to hide widgets you don't use</li>
+                <li>Add new widgets from the available widgets section</li>
+                <li>Your layout is saved automatically</li>
+              </ul>
+            </CardContent>
+          </GlassCard>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

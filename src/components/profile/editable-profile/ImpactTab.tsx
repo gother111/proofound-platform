@@ -118,12 +118,7 @@ export function ImpactTab({
                   {story.verified && (
                     <Badge
                       variant="outline"
-                      className="gap-1"
-                      style={{
-                        backgroundColor: 'rgba(122, 146, 120, 0.1)',
-                        borderColor: 'rgba(122, 146, 120, 0.3)',
-                        color: 'rgb(122, 146, 120)',
-                      }}
+                      className="gap-1 bg-[#7A9278]/10 border-[#7A9278]/30 text-[#7A9278]"
                     >
                       <CheckCircle2 className="w-3 h-3" />
                       Verified

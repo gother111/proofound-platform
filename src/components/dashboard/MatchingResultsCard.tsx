@@ -17,6 +17,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
 import { apiFetch } from '@/lib/api/fetch';
 import type { ReadinessAction } from '@/lib/momentum/types';
 
@@ -122,8 +123,23 @@ export function MatchingResultsCard({ className, basePath = '/app/i' }: Matching
             Matches
           </h5>
         </div>
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#1C4D3A' }} />
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="p-2.5 rounded-lg border border-[#E8E6DD]/60 bg-[#F7F6F1]/50 space-y-2"
+            >
+              <div className="flex justify-between">
+                <Skeleton className="h-4 w-1/2 rounded-md" />
+                <Skeleton className="h-4 w-8 rounded-full" />
+              </div>
+              <Skeleton className="h-3 w-1/3 rounded-md" />
+              <div className="w-full flex items-center gap-2 mt-2">
+                <Skeleton className="h-1.5 flex-1 rounded-full" />
+                <Skeleton className="h-3 w-3 rounded-full" />
+              </div>
+            </div>
+          ))}
         </div>
       </Card>
     );

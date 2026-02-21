@@ -80,7 +80,7 @@ export function AvatarUpload({ avatar, onUpload }: AvatarUploadProps) {
         className={`group/avatar ${isUploading ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'}`}
         onClick={handleClick}
       >
-        <Avatar className="w-32 h-32 border-4 border-card shadow-lg ring-2 ring-[rgba(122,146,120,0.2)] ring-offset-2 bg-[#F5F3EE]">
+        <Avatar className="w-32 h-32 border-4 border-card shadow-lg ring-2 ring-[#7A9278]/20 ring-offset-2 bg-[#F5F3EE]">
           {avatar ? <AvatarImage src={avatar} className="object-cover" /> : null}
           <AvatarFallback className="bg-[#F5F3EE]">
             <div className="w-full h-full flex items-center justify-center relative">

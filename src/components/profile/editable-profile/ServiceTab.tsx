@@ -118,13 +118,7 @@ export function ServiceTab({ volunteering, onAddService, onDeleteService }: Serv
                 <p className="text-sm text-muted-foreground mb-1">{vol.orgDescription}</p>
                 <p className="text-xs text-muted-foreground mb-4">{vol.duration}</p>
                 <div className="space-y-3">
-                  <div
-                    className="p-3 rounded-lg border"
-                    style={{
-                      backgroundColor: 'rgba(198, 123, 92, 0.05)',
-                      borderColor: 'rgba(198, 123, 92, 0.2)',
-                    }}
-                  >
+                  <div className="p-3 rounded-lg border bg-[#C67B5C]/5 border-[#C67B5C]/20">
                     <h5 className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
                       <HandHeart className="w-3 h-3 text-[#C67B5C]" />
                       Personal Connection
