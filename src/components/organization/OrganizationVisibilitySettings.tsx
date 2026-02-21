@@ -176,7 +176,7 @@ export function OrganizationVisibilitySettings({
 
   if (isLoading) {
     return (
-      <Card className="border-proofound-stone dark:border-border rounded-2xl">
+      <Card className="border-black/5 dark:border-white/5 rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-300">
         <CardContent className="p-12">
           <div className="text-center">
             <p className="text-muted-foreground">Loading visibility settings...</p>
@@ -187,7 +187,7 @@ export function OrganizationVisibilitySettings({
   }
 
   return (
-    <Card className="border-proofound-stone dark:border-border rounded-2xl">
+    <Card className="border-black/5 dark:border-white/5 rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-300">
       <CardHeader>
         <div className="flex items-start justify-between">
           <div>

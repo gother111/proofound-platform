@@ -1,4 +1,8 @@
+'use client';
+
+import { useState } from 'react';
 import { Briefcase, GraduationCap, HandHeart, Network, Target } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Education, Experience, ImpactStory, Volunteering } from '@/types/profile';
@@ -42,54 +46,47 @@ export function ProfileTabsSection({
   onAddVolunteering,
   onDeleteVolunteering,
 }: ProfileTabsSectionProps) {
+  const [activeTab, setActiveTab] = useState('impact');
+
   return (
-    <Tabs defaultValue="impact" className="space-y-8">
-      <TabsList className="w-full justify-start bg-transparent border-b rounded-none h-auto p-0 gap-6">
-        <TabsTrigger
-          value="impact"
-          className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#7A9278] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-2 py-3 text-muted-foreground data-[state=active]:text-[#7A9278] transition-all"
-        >
-          <div className="flex items-center gap-2">
-            <Target className="w-4 h-4" />
-            <span>Impact</span>
-          </div>
-        </TabsTrigger>
-        <TabsTrigger
-          value="journey"
-          className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#C67B5C] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-2 py-3 text-muted-foreground data-[state=active]:text-[#C67B5C] transition-all"
-        >
-          <div className="flex items-center gap-2">
-            <Briefcase className="w-4 h-4" />
-            <span>Journey</span>
-          </div>
-        </TabsTrigger>
-        <TabsTrigger
-          value="learning"
-          className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#5C8B89] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-2 py-3 text-muted-foreground data-[state=active]:text-[#5C8B89] transition-all"
-        >
-          <div className="flex items-center gap-2">
-            <GraduationCap className="w-4 h-4" />
-            <span>Learning</span>
-          </div>
-        </TabsTrigger>
-        <TabsTrigger
-          value="service"
-          className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#C67B5C] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-2 py-3 text-muted-foreground data-[state=active]:text-[#C67B5C] transition-all"
-        >
-          <div className="flex items-center gap-2">
-            <HandHeart className="w-4 h-4" />
-            <span>Service</span>
-          </div>
-        </TabsTrigger>
-        <TabsTrigger
-          value="network"
-          className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#7A9278] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-2 py-3 text-muted-foreground data-[state=active]:text-[#7A9278] transition-all"
-        >
-          <div className="flex items-center gap-2">
-            <Network className="w-4 h-4" />
-            <span>Network</span>
-          </div>
-        </TabsTrigger>
+    <Tabs
+      defaultValue="impact"
+      value={activeTab}
+      onValueChange={setActiveTab}
+      className="space-y-8"
+    >
+      <TabsList className="w-full justify-start bg-transparent border-b border-border/40 rounded-none h-auto p-0 gap-6 relative">
+        {[
+          { id: 'impact', label: 'Impact', icon: Target, color: '#7A9278' },
+          { id: 'journey', label: 'Journey', icon: Briefcase, color: '#C67B5C' },
+          { id: 'learning', label: 'Learning', icon: GraduationCap, color: '#5C8B89' },
+          { id: 'service', label: 'Service', icon: HandHeart, color: '#C67B5C' },
+          { id: 'network', label: 'Network', icon: Network, color: '#7A9278' },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <TabsTrigger
+              key={tab.id}
+              value={tab.id}
+              className="rounded-none border-0 bg-transparent shadow-none px-2 py-3 text-muted-foreground transition-colors hover:text-foreground relative group data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+              style={{ color: isActive ? tab.color : undefined }}
+            >
+              <div className="flex items-center gap-2 relative z-10">
+                <Icon className="w-4 h-4" />
+                <span>{tab.label}</span>
+              </div>
+              {isActive && (
+                <motion.div
+                  layoutId="active-tab-indicator"
+                  className="absolute bottom-[-1px] left-0 right-0 h-0.5 rounded-full z-20"
+                  style={{ backgroundColor: tab.color }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                />
+              )}
+            </TabsTrigger>
+          );
+        })}
       </TabsList>
 
       <ImpactTab

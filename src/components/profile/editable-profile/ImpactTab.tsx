@@ -44,23 +44,28 @@ export function ImpactTab({
         <Card className="p-12 border-2 border-dashed border-muted-foreground/20">
           <div className="text-center space-y-6">
             <div className="flex justify-center">
-              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[#7A9278]/10 to-[#5C8B89]/10 flex items-center justify-center">
+              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[#7A9278]/5 to-[#5C8B89]/10 flex items-center justify-center">
                 <svg viewBox="0 0 100 100" className="w-20 h-20">
+                  <circle cx="50" cy="50" r="15" fill="none" stroke="#7A9278" strokeWidth="1.5" />
                   <circle
                     cx="50"
                     cy="50"
                     r="30"
                     fill="none"
-                    stroke="#7A9278"
-                    strokeWidth="1.5"
-                    strokeDasharray="4 4"
+                    stroke="#5C8B89"
+                    strokeWidth="1"
+                    strokeDasharray="4 6"
+                    opacity="0.7"
                   />
                   <path
-                    d="M 50 30 L 50 70 M 30 50 L 70 50"
-                    stroke="#7A9278"
+                    d="M 50 10 V 25 M 50 75 V 90 M 10 50 H 25 M 75 50 H 90"
+                    fill="none"
+                    stroke="#D4A574"
                     strokeWidth="1.5"
-                    opacity="0.6"
+                    strokeLinecap="round"
+                    opacity="0.8"
                   />
+                  <circle cx="50" cy="50" r="4" fill="#7A9278" />
                 </svg>
               </div>
             </div>

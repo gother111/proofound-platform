@@ -36,8 +36,25 @@ export function LearningTab({ education, onAddEducation, onDeleteEducation }: Le
         <Card className="p-12 border-2 border-dashed border-muted-foreground/20">
           <div className="text-center space-y-6">
             <div className="flex justify-center">
-              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[#5C8B89]/10 to-[#7A9278]/10 flex items-center justify-center">
-                <GraduationCap className="w-16 h-16 text-[#5C8B89]/60" />
+              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[#5C8B89]/5 to-[#7A9278]/10 flex items-center justify-center">
+                <svg viewBox="0 0 100 100" className="w-20 h-20">
+                  <path
+                    d="M 50 80 V 30 M 50 80 Q 30 90 15 75 V 25 Q 30 40 50 30 M 50 80 Q 70 90 85 75 V 25 Q 70 40 50 30"
+                    fill="none"
+                    stroke="#5C8B89"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <circle cx="50" cy="20" r="4" fill="#7A9278" opacity="0.8" />
+                  <path
+                    d="M 40 10 A 15 15 0 0 1 60 10"
+                    fill="none"
+                    stroke="#D4A574"
+                    strokeWidth="1"
+                    opacity="0.6"
+                  />
+                </svg>
               </div>
             </div>
             <div className="space-y-2">

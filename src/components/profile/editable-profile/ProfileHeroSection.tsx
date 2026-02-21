@@ -39,9 +39,9 @@ export function ProfileHeroSection({
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="relative -mt-16 mb-8">
-          <Card className="p-6 border-0 shadow-xl bg-white/90 dark:bg-stone-900/90 backdrop-blur-sm rounded-2xl overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#7A9278] via-[#C67B5C] to-[#5C8B89]" />
-            <div className="flex flex-col sm:flex-row gap-6 items-start">
+          <Card className="p-6 md:p-8 border border-white/40 dark:border-stone-800/50 shadow-[0_8px_30px_rgb(0,0,0,0.06)] bg-white/70 dark:bg-stone-900/60 backdrop-blur-md rounded-3xl overflow-hidden relative">
+            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#7A9278] via-[#E0D5C7] to-[#C9A57B]" />
+            <div className="flex flex-col sm:flex-row gap-6 items-start mt-2">
               <AvatarUpload
                 avatar={profile.basicInfo.avatar}
                 onUpload={(base64) => onUpdateBasicInfo({ avatar: base64 })}

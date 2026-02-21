@@ -1,11 +1,19 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Sparkles, Compass } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export function ProfileCompletionBanner({ profileCompletion }: { profileCompletion: number }) {
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setProgress(profileCompletion), 300);
+    return () => clearTimeout(timer);
+  }, [profileCompletion]);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
@@ -31,7 +39,7 @@ export function ProfileCompletionBanner({ profileCompletion }: { profileCompleti
               Your profile is a space to share your impact, values, and growth journey. Add
               meaningful context to help others understand who you are and what you care about.
             </p>
-            <Progress value={profileCompletion} className="h-2 mb-4" />
+            <Progress value={progress} className="h-2 mb-4" />
             <div className="flex items-center gap-2 text-xs text-proofound-charcoal/70 dark:text-muted-foreground">
               <Compass className="w-3 h-3" />
               <span>Start by adding a photo, tagline, and your mission</span>

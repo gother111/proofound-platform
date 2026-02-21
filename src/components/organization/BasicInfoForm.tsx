@@ -66,7 +66,7 @@ export function BasicInfoForm({ org, canEdit }: BasicInfoFormProps) {
       }
 
       toast.success('Organization profile updated successfully');
-      
+
       // Reload to show updated data
       window.location.reload();
     } catch (error) {
@@ -79,7 +79,7 @@ export function BasicInfoForm({ org, canEdit }: BasicInfoFormProps) {
 
   return (
     <div className="space-y-6">
-      <Card className="border-proofound-stone dark:border-border rounded-2xl">
+      <Card className="border-black/5 dark:border-white/5 rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-300">
         <CardHeader>
           <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
             Basic Information
@@ -150,11 +150,7 @@ export function BasicInfoForm({ org, canEdit }: BasicInfoFormProps) {
             </div>
 
             <div>
-              <OrganizationCausesEditor
-                causes={causes}
-                onChange={setCauses}
-                disabled={!canEdit}
-              />
+              <OrganizationCausesEditor causes={causes} onChange={setCauses} disabled={!canEdit} />
             </div>
 
             <div>
@@ -192,7 +188,7 @@ export function BasicInfoForm({ org, canEdit }: BasicInfoFormProps) {
         </CardContent>
       </Card>
 
-      <Card className="border-proofound-stone dark:border-border rounded-2xl">
+      <Card className="border-black/5 dark:border-white/5 rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-300">
         <CardHeader>
           <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
             Organization Details
@@ -219,4 +215,3 @@ export function BasicInfoForm({ org, canEdit }: BasicInfoFormProps) {
     </div>
   );
 }
-

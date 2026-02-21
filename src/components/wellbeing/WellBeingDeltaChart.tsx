@@ -18,6 +18,16 @@ import { Button } from '@/components/ui/button';
 import { TrendingUp, TrendingDown, Minus, Calendar, Lock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { apiFetch } from '@/lib/api/fetch';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  Legend,
+} from 'recharts';
 
 interface CheckInData {
   date: string; // ISO date string
@@ -109,7 +119,7 @@ export function WellBeingDeltaChart({ period = 14, autoFetch = true }: WellBeing
   // Empty state
   if (!deltaData || !deltaData.hasBaseline) {
     return (
-      <Card className="border-[#E8E6DD]">
+      <Card className="border-[#E8E6DD] rounded-3xl">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -122,17 +132,45 @@ export function WellBeingDeltaChart({ period = 14, autoFetch = true }: WellBeing
           </div>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8">
-            <Calendar className="w-12 h-12 text-[#6B6760] mx-auto mb-4 opacity-50" />
-            <p className="text-sm text-[#6B6760] mb-2">
-              Complete at least 2 check-ins to establish a baseline.
-            </p>
-            <p className="text-xs text-[#6B6760]">
-              Then we can show you how your well-being is trending over time.
+          <div className="text-center py-10 flex flex-col items-center">
+            <svg
+              width="120"
+              height="80"
+              viewBox="0 0 120 80"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="mb-6 opacity-60"
+            >
+              <path
+                d="M10 60 Q 30 20, 60 50 T 110 30"
+                stroke="#1C4D3A"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeDasharray="4 4"
+                opacity="0.5"
+              />
+              <path
+                d="M10 40 Q 40 70, 70 30 T 110 50"
+                stroke="#DC2626"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeDasharray="4 4"
+                opacity="0.5"
+              />
+              <circle cx="10" cy="60" r="4" fill="#1C4D3A" opacity="0.8" />
+              <circle cx="110" cy="30" r="4" fill="#1C4D3A" opacity="0.8" />
+              <circle cx="10" cy="40" r="4" fill="#DC2626" opacity="0.8" />
+              <circle cx="110" cy="50" r="4" fill="#DC2626" opacity="0.8" />
+            </svg>
+            <h3 className="text-lg font-medium text-[#2D3330] mb-2 font-['Crimson_Pro']">
+              Establish Your Baseline
+            </h3>
+            <p className="text-sm text-[#6B6760] max-w-xs mx-auto mb-2">
+              Complete at least 2 check-ins to track how your well-being trends over time.
             </p>
           </div>
 
-          <div className="mt-4 p-4 bg-[#F7F6F1] rounded-lg border border-[#E8E6DD]">
+          <div className="mt-4 p-5 bg-[#F7F6F1] rounded-2xl border border-[#E8E6DD]">
             <div className="flex items-start gap-2">
               <Lock className="w-4 h-4 text-[#1C4D3A] flex-shrink-0 mt-0.5" />
               <div className="text-xs leading-relaxed text-[#2D3330]">
@@ -155,43 +193,8 @@ export function WellBeingDeltaChart({ period = 14, autoFetch = true }: WellBeing
     })
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  // Calculate chart dimensions
-  const maxValue = 5;
-  const chartHeight = 160;
-  const chartWidth = 100; // percentage
-
-  const getYPosition = (value: number) => {
-    return chartHeight - (value / maxValue) * chartHeight;
-  };
-
-  const getXPosition = (index: number, total: number) => {
-    if (total === 1) return chartWidth / 2;
-    return (index / (total - 1)) * chartWidth;
-  };
-
-  // Generate SVG path for line
-  const generatePath = (values: number[]) => {
-    if (values.length === 0) return '';
-    if (values.length === 1) {
-      const x = getXPosition(0, 1);
-      const y = getYPosition(values[0]);
-      return `M ${x} ${y} L ${x} ${y}`;
-    }
-
-    return values
-      .map((value, index) => {
-        const x = getXPosition(index, values.length);
-        const y = getYPosition(value);
-        return index === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
-      })
-      .join(' ');
-  };
-
-  const stressPath = generatePath(recentCheckIns.map((c) => c.stress));
-  const controlPath = generatePath(recentCheckIns.map((c) => c.control));
-
   return (
-    <Card className="border-[#E8E6DD]">
+    <Card className="border-[#E8E6DD] rounded-3xl">
       <CardHeader>
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
@@ -305,102 +308,99 @@ export function WellBeingDeltaChart({ period = 14, autoFetch = true }: WellBeing
 
         {/* Trend Chart */}
         {recentCheckIns.length > 0 && (
-          <div className="space-y-2">
+          <div className="space-y-4 pt-4 border-t border-[#E8E6DD]">
             <h4 className="text-sm font-medium text-[#2D3330]">Trend Over Time</h4>
-            <div className="relative bg-white rounded-lg border border-[#E8E6DD] p-4">
-              <svg
-                viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-                className="w-full"
-                style={{ height: '180px' }}
-              >
-                {/* Grid lines */}
-                {[1, 2, 3, 4, 5].map((level) => (
-                  <line
-                    key={level}
-                    x1="0"
-                    y1={getYPosition(level)}
-                    x2={chartWidth}
-                    y2={getYPosition(level)}
-                    stroke="#E8E6DD"
-                    strokeWidth="0.5"
-                    strokeDasharray="2,2"
+            <div className="h-[220px] w-full bg-white rounded-2xl border border-[#E8E6DD] p-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={recentCheckIns}
+                  margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E8E6DD" />
+                  <XAxis
+                    dataKey="date"
+                    tickFormatter={(date) =>
+                      new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                    }
+                    stroke="#6B6760"
+                    fontSize={10}
+                    tickLine={false}
+                    axisLine={false}
+                    dy={10}
                   />
-                ))}
-
-                {/* Stress line (red) */}
-                <path
-                  d={stressPath}
-                  fill="none"
-                  stroke="#DC2626"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-
-                {/* Control line (green) */}
-                <path
-                  d={controlPath}
-                  fill="none"
-                  stroke="#059669"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-
-                {/* Data points */}
-                {recentCheckIns.map((c, index) => {
-                  const x = getXPosition(index, recentCheckIns.length);
-                  return (
-                    <g key={index}>
-                      {/* Stress point */}
-                      <circle
-                        cx={x}
-                        cy={getYPosition(c.stress)}
-                        r="3"
-                        fill="#DC2626"
-                        stroke="white"
-                        strokeWidth="2"
-                      />
-                      {/* Control point */}
-                      <circle
-                        cx={x}
-                        cy={getYPosition(c.control)}
-                        r="3"
-                        fill="#059669"
-                        stroke="white"
-                        strokeWidth="2"
-                      />
-                    </g>
-                  );
-                })}
-              </svg>
-
-              {/* Y-axis labels */}
-              <div className="absolute left-0 top-0 h-full flex flex-col justify-between py-4 pr-2">
-                {[5, 4, 3, 2, 1].map((level) => (
-                  <span key={level} className="text-xs text-[#6B6760]">
-                    {level}
-                  </span>
-                ))}
-              </div>
-
-              {/* Legend */}
-              <div className="flex items-center justify-center gap-6 mt-4 pt-4 border-t border-[#E8E6DD]">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-600" />
-                  <span className="text-xs text-[#6B6760]">Stress</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-green-600" />
-                  <span className="text-xs text-[#6B6760]">Control</span>
-                </div>
-              </div>
+                  <YAxis
+                    domain={[0, 5]}
+                    ticks={[1, 2, 3, 4, 5]}
+                    stroke="#6B6760"
+                    fontSize={10}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <RechartsTooltip
+                    content={({ active, payload, label }: any) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="bg-white/90 backdrop-blur-sm p-3 rounded-xl border border-[#E8E6DD] shadow-sm">
+                            <p className="text-xs font-semibold text-[#2D3330] mb-2">
+                              {new Date(label).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                              })}
+                            </p>
+                            {payload.map((entry: any, index: number) => (
+                              <div key={index} className="flex items-center gap-2 text-xs mb-1">
+                                <div
+                                  className="w-2 h-2 rounded-full"
+                                  style={{ backgroundColor: entry.color }}
+                                />
+                                <span className="text-[#6B6760] font-medium">{entry.name}:</span>
+                                <span className="text-[#2D3330] font-bold">
+                                  {Number(entry.value).toFixed(1)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                    cursor={{ stroke: '#E8E6DD', strokeWidth: 1, strokeDasharray: '4 4' }}
+                  />
+                  <Legend
+                    verticalAlign="bottom"
+                    height={36}
+                    iconType="circle"
+                    formatter={(value) => (
+                      <span className="text-xs text-[#6B6760] ml-1">{value}</span>
+                    )}
+                    wrapperStyle={{ paddingTop: '10px' }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="stress"
+                    name="Stress (lower is better)"
+                    stroke="#DC2626"
+                    strokeWidth={2}
+                    dot={{ r: 3, fill: '#DC2626', strokeWidth: 0 }}
+                    activeDot={{ r: 6, strokeWidth: 0 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="control"
+                    name="Control (higher is better)"
+                    stroke="#059669"
+                    strokeWidth={2}
+                    dot={{ r: 3, fill: '#059669', strokeWidth: 0 }}
+                    activeDot={{ r: 6, strokeWidth: 0 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </div>
         )}
 
         {/* Interpretation Help */}
-        <div className="p-4 bg-[#F7F6F1] rounded-lg border border-[#E8E6DD]">
+        <div className="p-4 bg-[#F7F6F1] rounded-2xl border border-[#E8E6DD]">
           <p className="text-xs leading-relaxed text-[#2D3330]">
             <strong className="font-semibold">How to read this:</strong> Positive deltas mean
             improvement from your baseline. Lower stress (↓) and higher control (↑) are healthier.

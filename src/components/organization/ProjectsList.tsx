@@ -138,7 +138,7 @@ export function ProjectsList({ orgId, canEdit = true }: ProjectsListProps) {
 
   if (isLoading) {
     return (
-      <Card className="border-proofound-stone dark:border-border rounded-2xl">
+      <Card className="border-black/5 dark:border-white/5 rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-300">
         <CardContent className="p-12">
           <div className="text-center">
             <p className="text-muted-foreground">Loading projects...</p>
@@ -150,7 +150,7 @@ export function ProjectsList({ orgId, canEdit = true }: ProjectsListProps) {
 
   return (
     <>
-      <Card className="border-proofound-stone dark:border-border rounded-2xl">
+      <Card className="border-black/5 dark:border-white/5 rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-300">
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>
