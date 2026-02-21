@@ -12,11 +12,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { GlassCard } from '@/components/ui/glass-card';
+import { HoverTilt } from '@/components/ui/hover-tilt';
 import { Button } from '@/components/ui/button';
 import { Settings, Loader2, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { DashboardCustomizer, type DashboardWidget } from './DashboardCustomizer';
+import { DashboardSkeleton } from './DashboardSkeleton';
 import { ExpertiseDepthWidget } from './ExpertiseDepthWidget';
 
 interface DynamicDashboardProps {
@@ -63,8 +66,8 @@ export function DynamicDashboard({ userId }: DynamicDashboardProps) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 text-primary animate-spin" />
+      <div className="py-4">
+        <DashboardSkeleton />
       </div>
     );
   }
@@ -109,7 +112,7 @@ export function DynamicDashboard({ userId }: DynamicDashboardProps) {
 
       {/* Empty State */}
       {!showCustomizer && visibleWidgets.length === 0 && (
-        <Card className="glass-card">
+        <GlassCard>
           <CardContent className="pt-12 pb-12 text-center">
             <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold font-display text-foreground mb-2">
@@ -123,7 +126,7 @@ export function DynamicDashboard({ userId }: DynamicDashboardProps) {
               Customize Dashboard
             </Button>
           </CardContent>
-        </Card>
+        </GlassCard>
       )}
     </div>
   );
@@ -147,15 +150,17 @@ function DashboardWidgetRenderer({ widget }: { widget: DashboardWidget }) {
 
   return (
     <motion.div variants={item} className={sizeClasses[size] || sizeClasses.default}>
-      <Card className="h-full min-h-[300px] glass-card hover:shadow-md hover:scale-[1.01] transition-all duration-300">
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2 font-display text-foreground">
-            <span>{widgetContent.icon}</span>
-            <span>{widgetContent.title}</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>{widgetContent.content}</CardContent>
-      </Card>
+      <HoverTilt intensity={4} className="h-full">
+        <GlassCard className="h-full min-h-[300px]">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2 font-display text-foreground">
+              <span>{widgetContent.icon}</span>
+              {widgetContent.title}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>{widgetContent.content}</CardContent>
+        </GlassCard>
+      </HoverTilt>
     </motion.div>
   );
 }
@@ -174,7 +179,7 @@ function getWidgetContent(widgetId: string): {
       title: 'Top Matches',
       content: (
         <div className="text-sm text-muted-foreground">
-          <p className="mb-2">Your best matching opportunities</p>
+          <p className="overline mb-3">Your best matching opportunities</p>
           <div className="space-y-2">
             <div className="p-3 bg-secondary/10 rounded border border-secondary/20">
               <p className="font-medium text-foreground">Senior Engineer @ TechCorp</p>
@@ -193,7 +198,7 @@ function getWidgetContent(widgetId: string): {
       title: 'Applications',
       content: (
         <div className="text-sm text-muted-foreground">
-          <p>Track your application status</p>
+          <p className="overline mb-3">Track your application status</p>
           <div className="mt-4 space-y-2">
             <div className="flex items-center justify-between">
               <span>In Review</span>
@@ -217,7 +222,7 @@ function getWidgetContent(widgetId: string): {
       title: 'Next Best Action',
       content: (
         <div className="text-sm text-muted-foreground">
-          <p className="mb-3">Recommended next steps to improve your profile:</p>
+          <p className="overline mb-3">Recommended next steps to improve your profile:</p>
           <ul className="space-y-2">
             <li className="flex items-start gap-2">
               <span className="text-primary">→</span>
@@ -236,7 +241,7 @@ function getWidgetContent(widgetId: string): {
       title: 'Well-Being Check',
       content: (
         <div className="text-sm text-muted-foreground">
-          <p>How are you feeling today?</p>
+          <p className="overline mb-3">How are you feeling today?</p>
           <div className="mt-4 flex items-center justify-center gap-4">
             <button className="text-3xl hover:scale-110 transition-transform">😊</button>
             <button className="text-3xl hover:scale-110 transition-transform">😐</button>
@@ -250,7 +255,7 @@ function getWidgetContent(widgetId: string): {
       title: 'Profile Progress',
       content: (
         <div className="text-sm text-muted-foreground">
-          <p className="mb-3">Your profile is 75% complete</p>
+          <p className="overline mb-3">Your profile is 75% complete</p>
           <div className="h-3 bg-secondary/10 rounded-full overflow-hidden mb-2">
             <div className="h-full w-3/4 bg-primary" />
           </div>

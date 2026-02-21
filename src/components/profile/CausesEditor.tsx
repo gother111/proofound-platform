@@ -104,12 +104,7 @@ export function CausesEditor({ open, onOpenChange, causes, onSave }: CausesEdito
                   <Badge
                     key={cause}
                     variant="outline"
-                    className="px-3 py-1.5 text-sm group"
-                    style={{
-                      backgroundColor: 'rgba(92, 139, 137, 0.1)',
-                      borderColor: 'rgba(92, 139, 137, 0.3)',
-                      color: 'rgb(92, 139, 137)',
-                    }}
+                    className="px-3 py-1.5 text-sm group bg-[#5C8B89]/10 border-[#5C8B89]/30 text-[#5C8B89]"
                   >
                     {cause}
                     <button
