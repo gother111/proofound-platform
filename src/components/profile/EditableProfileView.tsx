@@ -11,6 +11,7 @@ import { ProfileHeroSection } from './editable-profile/ProfileHeroSection';
 import { ProfileSidebar } from './editable-profile/ProfileSidebar';
 import { ProfileTabsSection } from './editable-profile/ProfileTabsSection';
 import { useProfileData } from '@/hooks/useProfileData';
+import { MobileProfileHeader } from '@/components/profile/MobileProfileHeader';
 
 export function EditableProfileView() {
   const router = useRouter();
@@ -134,6 +135,12 @@ export function EditableProfileView() {
     <div className="min-h-screen bg-proofound-parchment dark:bg-background">
       {showCompletionBanner && <ProfileCompletionBanner profileCompletion={profileCompletion} />}
 
+      <MobileProfileHeader
+        name={profile.basicInfo.name}
+        avatarUrl={profile.basicInfo.avatar}
+        tagline={profile.basicInfo.tagline}
+      />
+
       <ProfileHeroSection
         profile={profile}
         isPending={isPending}
@@ -148,14 +155,16 @@ export function EditableProfileView() {
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-          <ProfileSidebar
-            profile={profile}
-            onOpenMission={() => setIsMissionEditorOpen(true)}
-            onOpenVision={() => setIsVisionEditorOpen(true)}
-            onOpenValues={() => setIsValuesEditorOpen(true)}
-            onOpenCauses={() => setIsCausesEditorOpen(true)}
-          />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12 relative items-start">
+          <div className="space-y-8 lg:sticky lg:top-24 lg:self-start">
+            <ProfileSidebar
+              profile={profile}
+              onOpenMission={() => setIsMissionEditorOpen(true)}
+              onOpenVision={() => setIsVisionEditorOpen(true)}
+              onOpenValues={() => setIsValuesEditorOpen(true)}
+              onOpenCauses={() => setIsCausesEditorOpen(true)}
+            />
+          </div>
 
           <div className="lg:col-span-2">
             <ProfileTabsSection

@@ -91,12 +91,14 @@ export function CultureEditor({ orgId, initialCulture, canEdit = true }: Culture
   };
 
   const isEmpty =
-    !culture.workNorms || Object.keys(culture.workNorms).length === 0 || 
-    !culture.accessibility || Object.keys(culture.accessibility).length === 0;
+    !culture.workNorms ||
+    Object.keys(culture.workNorms).length === 0 ||
+    !culture.accessibility ||
+    Object.keys(culture.accessibility).length === 0;
 
   if (isEmpty && !canEdit) {
     return (
-      <Card className="border-proofound-stone dark:border-border rounded-2xl">
+      <Card className="border-black/5 dark:border-white/5 rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-300">
         <CardContent className="p-12">
           <div className="text-center">
             <Coffee className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
@@ -110,7 +112,7 @@ export function CultureEditor({ orgId, initialCulture, canEdit = true }: Culture
   }
 
   return (
-    <Card className="border-proofound-stone dark:border-border rounded-2xl">
+    <Card className="border-black/5 dark:border-white/5 rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-300">
       <CardHeader>
         <div className="flex items-start justify-between">
           <div>
@@ -144,12 +146,10 @@ export function CultureEditor({ orgId, initialCulture, canEdit = true }: Culture
             </div>
             <h3 className="text-lg font-semibold mb-2">Define your work culture</h3>
             <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
-              Help candidates understand how your team works by describing work norms,
-              collaboration style, and accessibility commitments.
+              Help candidates understand how your team works by describing work norms, collaboration
+              style, and accessibility commitments.
             </p>
-            <p className="text-xs text-muted-foreground mb-4">
-              Start by filling in the tabs below
-            </p>
+            <p className="text-xs text-muted-foreground mb-4">Start by filling in the tabs below</p>
           </div>
         ) : null}
 

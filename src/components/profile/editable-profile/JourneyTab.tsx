@@ -34,18 +34,34 @@ export function JourneyTab({ experiences, onAddExperience, onDeleteExperience }:
         <Card className="p-12 border-2 border-dashed border-muted-foreground/20">
           <div className="text-center space-y-6">
             <div className="flex justify-center">
-              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[#C67B5C]/10 to-[#D4A574]/10 flex items-center justify-center">
+              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[#C67B5C]/5 to-[#D4A574]/10 flex items-center justify-center">
                 <svg viewBox="0 0 100 100" className="w-20 h-20">
                   <path
-                    d="M 20 70 Q 35 40, 50 50 T 80 30"
+                    d="M 15 75 Q 35 55 50 65 T 85 35"
                     fill="none"
                     stroke="#C67B5C"
-                    strokeWidth="2"
-                    strokeDasharray="4 4"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
                   />
-                  <circle cx="20" cy="70" r="5" fill="#C67B5C" />
-                  <circle cx="50" cy="50" r="5" fill="#D4A574" />
-                  <circle cx="80" cy="30" r="5" fill="#7A9278" />
+                  <path
+                    d="M 30 85 L 30 40 M 70 85 L 70 50"
+                    fill="none"
+                    stroke="#D4A574"
+                    strokeWidth="1.5"
+                    opacity="0.5"
+                    strokeDasharray="2 4"
+                  />
+                  <circle cx="85" cy="35" r="3" fill="#C67B5C" />
+                  <circle cx="15" cy="75" r="3" fill="#7A9278" />
+                  <circle
+                    cx="70"
+                    cy="20"
+                    r="8"
+                    fill="none"
+                    stroke="#7A9278"
+                    strokeWidth="1"
+                    opacity="0.6"
+                  />
                 </svg>
               </div>
             </div>

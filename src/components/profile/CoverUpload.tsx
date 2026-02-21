@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Upload } from 'lucide-react';
+import { Upload, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import imageCompression from 'browser-image-compression';
@@ -17,6 +17,7 @@ const ACCEPTED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 export function CoverUpload({ coverImage, onUpload }: CoverUploadProps) {
   const [isHovering, setIsHovering] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,6 +41,7 @@ export function CoverUpload({ coverImage, onUpload }: CoverUploadProps) {
     }
 
     try {
+      setIsUploading(true);
       const compressed = await imageCompression(file, {
         maxSizeMB: 1.5,
         maxWidthOrHeight: 1920,
@@ -51,19 +53,24 @@ export function CoverUpload({ coverImage, onUpload }: CoverUploadProps) {
         const base64 = reader.result as string;
         onUpload(base64);
         setError(null);
+        setIsUploading(false);
       };
       reader.onerror = () => {
         setError('Failed to upload image');
+        setIsUploading(false);
       };
       reader.readAsDataURL(compressed);
     } catch (compressionError) {
       console.error('Cover image compression failed:', compressionError);
       setError('Could not compress cover image for upload');
+      setIsUploading(false);
     }
   };
 
   const handleClick = () => {
-    fileInputRef.current?.click();
+    if (!isUploading) {
+      fileInputRef.current?.click();
+    }
   };
 
   return (
@@ -72,7 +79,7 @@ export function CoverUpload({ coverImage, onUpload }: CoverUploadProps) {
         onHoverStart={() => setIsHovering(true)}
         onHoverEnd={() => setIsHovering(false)}
         onClick={handleClick}
-        className="h-48 cursor-pointer relative overflow-hidden"
+        className={`h-48 relative overflow-hidden ${isUploading ? 'cursor-not-allowed opacity-90' : 'cursor-pointer'}`}
       >
         {/* Cover image or gradient background */}
         {coverImage ? (
@@ -85,8 +92,8 @@ export function CoverUpload({ coverImage, onUpload }: CoverUploadProps) {
             priority
           />
         ) : (
-          <div className="h-full bg-gradient-to-br from-[#7A9278]/20 via-[#C67B5C]/10 to-[#5C8B89]/20 relative">
-            <div className="absolute inset-0 opacity-30">
+          <div className="h-full bg-gradient-to-br from-[#7A9278] via-[#E0D5C7] to-[#C9A57B] relative">
+            <div className="absolute inset-0 opacity-10">
               {/* Subtle network pattern */}
               <svg className="w-full h-full">
                 <defs>
@@ -117,8 +124,19 @@ export function CoverUpload({ coverImage, onUpload }: CoverUploadProps) {
           </div>
         )}
 
+        {/* Loading overlay */}
+        {isUploading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute inset-0 bg-background/50 backdrop-blur-sm flex items-center justify-center z-10"
+          >
+            <Loader2 className="w-8 h-8 text-[#7A9278] animate-spin" />
+          </motion.div>
+        )}
+
         {/* Hover overlay */}
-        {isHovering && (
+        {isHovering && !isUploading && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -141,6 +159,7 @@ export function CoverUpload({ coverImage, onUpload }: CoverUploadProps) {
         accept={ACCEPTED_TYPES.join(',')}
         onChange={handleFileChange}
         className="hidden"
+        disabled={isUploading}
         aria-label="Upload cover image"
       />
 

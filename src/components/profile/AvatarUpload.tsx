@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Upload } from 'lucide-react';
+import { Upload, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import imageCompression from 'browser-image-compression';
 import { toast } from 'sonner';
@@ -17,6 +17,7 @@ const ACCEPTED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 export function AvatarUpload({ avatar, onUpload }: AvatarUploadProps) {
   const [isHovering, setIsHovering] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,6 +39,7 @@ export function AvatarUpload({ avatar, onUpload }: AvatarUploadProps) {
     }
 
     try {
+      setIsUploading(true);
       const compressed = await imageCompression(file, {
         maxSizeMB: 0.75,
         maxWidthOrHeight: 1024,
@@ -49,19 +51,24 @@ export function AvatarUpload({ avatar, onUpload }: AvatarUploadProps) {
         const base64 = reader.result as string;
         onUpload(base64);
         setError(null);
+        setIsUploading(false);
       };
       reader.onerror = () => {
         setError('Failed to upload image');
+        setIsUploading(false);
       };
       reader.readAsDataURL(compressed);
     } catch (compressionError) {
       console.error('Image compression failed:', compressionError);
       setError('Could not compress image for upload');
+      setIsUploading(false);
     }
   };
 
   const handleClick = () => {
-    fileInputRef.current?.click();
+    if (!isUploading) {
+      fileInputRef.current?.click();
+    }
   };
 
   return (
@@ -70,7 +77,7 @@ export function AvatarUpload({ avatar, onUpload }: AvatarUploadProps) {
         whileHover={{ scale: 1.02 }}
         onHoverStart={() => setIsHovering(true)}
         onHoverEnd={() => setIsHovering(false)}
-        className="cursor-pointer group/avatar"
+        className={`group/avatar ${isUploading ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'}`}
         onClick={handleClick}
       >
         <Avatar className="w-32 h-32 border-4 border-card shadow-lg ring-2 ring-[rgba(122,146,120,0.2)] ring-offset-2 bg-[#F5F3EE]">
@@ -81,7 +88,7 @@ export function AvatarUpload({ avatar, onUpload }: AvatarUploadProps) {
                 <circle cx="50" cy="40" r="20" fill="none" stroke="#7A9278" strokeWidth="1.5" />
                 <path d="M 30 70 Q 50 60 70 70" fill="none" stroke="#7A9278" strokeWidth="1.5" />
               </svg>
-              {isHovering && (
+              {isHovering && !isUploading && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -94,7 +101,17 @@ export function AvatarUpload({ avatar, onUpload }: AvatarUploadProps) {
           </AvatarFallback>
         </Avatar>
 
-        {avatar && isHovering && (
+        {isUploading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute inset-0 bg-background/50 backdrop-blur-sm rounded-full flex items-center justify-center w-32 h-32"
+          >
+            <Loader2 className="w-8 h-8 text-[#7A9278] animate-spin" />
+          </motion.div>
+        )}
+
+        {avatar && isHovering && !isUploading && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -114,6 +131,7 @@ export function AvatarUpload({ avatar, onUpload }: AvatarUploadProps) {
         accept={ACCEPTED_TYPES.join(',')}
         onChange={handleFileChange}
         className="hidden"
+        disabled={isUploading}
         aria-label="Upload profile picture"
       />
 

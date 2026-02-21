@@ -12,6 +12,16 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { TrendingDown, TrendingUp, Calendar, Target } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  ReferenceLine,
+} from 'recharts';
 
 interface TTSCTrendPoint {
   period: string;
@@ -88,110 +98,104 @@ export function TTSCTrendCard({ orgSlug, groupBy = 'week' }: TTSCTrendCardProps)
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  // Simple line chart visualization (SVG)
+  // Recharts visualization
   const renderChart = () => {
     if (trends.length === 0) return null;
 
-    const width = 400;
-    const height = 120;
-    const padding = { top: 10, right: 10, bottom: 20, left: 40 };
-    const chartWidth = width - padding.left - padding.right;
-    const chartHeight = height - padding.top - padding.bottom;
-
-    const maxValue = Math.max(...trends.map((t) => t.medianDays), target) * 1.1;
-    const minValue = 0;
-
-    // Scale functions
-    const xScale = (index: number) => padding.left + (index / (trends.length - 1)) * chartWidth;
-    const yScale = (value: number) =>
-      padding.top + chartHeight - ((value - minValue) / (maxValue - minValue)) * chartHeight;
-
-    // Generate line path
-    const linePath = trends
-      .map((point, index) => {
-        const x = xScale(index);
-        const y = yScale(point.medianDays);
-        return index === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
-      })
-      .join(' ');
-
-    // Target line
-    const targetY = yScale(target);
+    const CustomTooltip = ({ active, payload, label }: any) => {
+      if (active && payload && payload.length) {
+        return (
+          <div className="bg-white/90 backdrop-blur-sm p-3 rounded-xl border border-[#E8E6DD] shadow-sm">
+            <p className="text-xs font-semibold text-[#2D3330] mb-2">{formatPeriodLabel(label)}</p>
+            <div className="flex items-center gap-2 text-xs mb-1">
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#1C4D3A' }} />
+              <span className="text-[#6B6760] font-medium">Median TTSC:</span>
+              <span className="text-[#2D3330] font-bold">{payload[0].value}d</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs">
+              <div className="w-4 h-0 border-t border-dashed border-[#6B6760]" />
+              <span className="text-[#6B6760] font-medium">Target:</span>
+              <span className="text-[#2D3330] font-bold">{target}d</span>
+            </div>
+          </div>
+        );
+      }
+      return null;
+    };
 
     return (
-      <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`}>
-        {/* Target line */}
-        <line
-          x1={padding.left}
-          y1={targetY}
-          x2={width - padding.right}
-          y2={targetY}
-          stroke="#6B6760"
-          strokeDasharray="4 4"
-          strokeWidth="1"
-        />
-        <text
-          x={width - padding.right - 5}
-          y={targetY - 5}
-          fontSize="10"
-          fill="#6B6760"
-          textAnchor="end"
-        >
-          Target: {target}d
-        </text>
-
-        {/* TTSC line */}
-        <path d={linePath} fill="none" stroke="#1C4D3A" strokeWidth="2" />
-
-        {/* Data points */}
-        {trends.map((point, index) => {
-          const x = xScale(index);
-          const y = yScale(point.medianDays);
-          const color = point.medianDays <= target ? '#1C4D3A' : '#C76B4A';
-
-          return (
-            <g key={index}>
-              <circle cx={x} cy={y} r="4" fill={color} />
-              {/* Tooltip on hover would go here */}
-            </g>
-          );
-        })}
-
-        {/* Y-axis labels */}
-        <text x={padding.left - 5} y={padding.top} fontSize="10" fill="#6B6760" textAnchor="end">
-          {Math.round(maxValue)}d
-        </text>
-        <text
-          x={padding.left - 5}
-          y={height - padding.bottom}
-          fontSize="10"
-          fill="#6B6760"
-          textAnchor="end"
-        >
-          0d
-        </text>
-      </svg>
+      <div className="h-[200px] w-full mt-6">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={trends} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E8E6DD" />
+            <XAxis
+              dataKey="period"
+              tickFormatter={formatPeriodLabel}
+              stroke="#6B6760"
+              fontSize={10}
+              tickLine={false}
+              axisLine={false}
+              dy={10}
+            />
+            <YAxis
+              stroke="#6B6760"
+              fontSize={10}
+              tickLine={false}
+              axisLine={false}
+              domain={[0, 'auto']}
+              tickFormatter={(val) => `${val}d`}
+            />
+            <Tooltip
+              content={<CustomTooltip />}
+              cursor={{ stroke: '#E8E6DD', strokeWidth: 1, strokeDasharray: '4 4' }}
+            />
+            <ReferenceLine y={target} stroke="#6B6760" strokeDasharray="4 4" />
+            <Line
+              type="monotone"
+              dataKey="medianDays"
+              stroke="#1C4D3A"
+              strokeWidth={2}
+              activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2, fill: '#1C4D3A' }}
+              dot={({ cx, cy, payload }) => {
+                const color = payload.medianDays <= target ? '#1C4D3A' : '#C76B4A';
+                return (
+                  <circle
+                    key={`dot-${payload.period}`}
+                    cx={cx}
+                    cy={cy}
+                    r={4}
+                    fill={color}
+                    stroke="none"
+                  />
+                );
+              }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
     );
   };
 
   return (
-    <Card className="p-6">
+    <Card className="p-6 border-[#E8E6DD] rounded-3xl">
       <div className="flex items-start justify-between mb-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Calendar className="w-5 h-5 text-[#6B6760]" />
-            <h3 className="text-lg font-semibold text-[#2D3330]">Time-to-Contract</h3>
+            <h3 className="text-lg font-semibold text-[#2D3330] font-['Crimson_Pro']">
+              Time-to-Contract
+            </h3>
           </div>
           <p className="text-sm text-[#6B6760]">Median days from activation to signed contract</p>
         </div>
 
         {/* Time period selector */}
-        <div className="flex gap-1 bg-[#F7F6F1] rounded-lg p-1">
+        <div className="flex gap-1 bg-[#F7F6F1] rounded-lg p-1 border border-[#E8E6DD]">
           <Button
             size="sm"
             variant="ghost"
             onClick={() => setSelectedGroupBy('week')}
-            className={`text-xs ${selectedGroupBy === 'week' ? 'bg-white shadow-sm' : ''}`}
+            className={`text-xs ${selectedGroupBy === 'week' ? 'bg-white shadow-sm' : 'text-[#6B6760]'}`}
           >
             Week
           </Button>
@@ -199,7 +203,7 @@ export function TTSCTrendCard({ orgSlug, groupBy = 'week' }: TTSCTrendCardProps)
             size="sm"
             variant="ghost"
             onClick={() => setSelectedGroupBy('month')}
-            className={`text-xs ${selectedGroupBy === 'month' ? 'bg-white shadow-sm' : ''}`}
+            className={`text-xs ${selectedGroupBy === 'month' ? 'bg-white shadow-sm' : 'text-[#6B6760]'}`}
           >
             Month
           </Button>
@@ -211,10 +215,39 @@ export function TTSCTrendCard({ orgSlug, groupBy = 'week' }: TTSCTrendCardProps)
           Loading trends...
         </div>
       ) : trends.length === 0 ? (
-        <div className="h-32 flex flex-col items-center justify-center text-sm text-[#6B6760]">
-          <Target className="w-8 h-8 mb-2 opacity-50" />
-          <p>No contract data yet</p>
-          <p className="text-xs mt-1">Data will appear as contracts are signed</p>
+        <div className="py-10 flex flex-col items-center text-center">
+          <svg
+            width="120"
+            height="80"
+            viewBox="0 0 120 80"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="mb-4 opacity-60"
+          >
+            <path
+              d="M20 60 L 40 40 L 70 50 L 100 20"
+              stroke="#1C4D3A"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeDasharray="4 4"
+              opacity="0.4"
+            />
+            <circle cx="100" cy="20" r="4" fill="#C76B4A" opacity="0.8" />
+            <path
+              d="M10 20 L 110 20"
+              stroke="#6B6760"
+              strokeWidth="1"
+              strokeDasharray="2 2"
+              opacity="0.3"
+            />
+          </svg>
+          <h3 className="text-lg font-semibold text-[#2D3330] mb-2 font-['Crimson_Pro']">
+            Awaiting Contract Data
+          </h3>
+          <p className="text-sm text-[#6B6760] max-w-xs mx-auto">
+            Trends will appear here as soon as time-to-contract metrics are recorded.
+          </p>
         </div>
       ) : (
         <>

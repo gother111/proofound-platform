@@ -75,12 +75,14 @@ export function GoalsManager({ orgId, canEdit = true }: GoalsManagerProps) {
     fetchGoals();
   }, [fetchGoals]);
 
-  const handleSaveGoal = async (goal: Omit<OrganizationGoal, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }) => {
+  const handleSaveGoal = async (
+    goal: Omit<OrganizationGoal, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }
+  ) => {
     try {
       const url = goal.id
         ? `/api/organizations/${orgId}/goals/${goal.id}`
         : `/api/organizations/${orgId}/goals`;
-      
+
       const method = goal.id ? 'PUT' : 'POST';
 
       const response = await apiFetch(url, {
@@ -137,7 +139,7 @@ export function GoalsManager({ orgId, canEdit = true }: GoalsManagerProps) {
 
   if (isLoading) {
     return (
-      <Card className="border-proofound-stone dark:border-border rounded-2xl">
+      <Card className="border-black/5 dark:border-white/5 rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-300">
         <CardContent className="p-12">
           <div className="text-center">
             <p className="text-muted-foreground">Loading goals...</p>
@@ -149,7 +151,7 @@ export function GoalsManager({ orgId, canEdit = true }: GoalsManagerProps) {
 
   return (
     <>
-      <Card className="border-proofound-stone dark:border-border rounded-2xl">
+      <Card className="border-black/5 dark:border-white/5 rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-300">
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>
@@ -334,4 +336,3 @@ export function GoalsManager({ orgId, canEdit = true }: GoalsManagerProps) {
     </>
   );
 }
-

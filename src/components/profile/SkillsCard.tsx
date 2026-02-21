@@ -35,8 +35,26 @@ export function SkillsCard({ skills, showManageLink = true }: SkillsCardProps) {
         </CardHeader>
         <CardContent>
           <div className="text-center py-4 space-y-3">
-            <div className="w-12 h-12 mx-auto rounded-full bg-[#D4A574]/10 flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-[#D4A574]" />
+            <div className="w-12 h-12 mx-auto rounded-full bg-gradient-to-br from-[#D4A574]/5 to-[#7A9278]/10 flex items-center justify-center">
+              <svg viewBox="0 0 100 100" className="w-8 h-8">
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="30"
+                  fill="none"
+                  stroke="#D4A574"
+                  strokeWidth="2"
+                  strokeDasharray="4 6"
+                  opacity="0.8"
+                />
+                <path
+                  d="M 50 30 L 50 70 M 30 50 L 70 50"
+                  stroke="#7A9278"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+                <circle cx="50" cy="50" r="6" fill="#D4A574" />
+              </svg>
             </div>
             <p className="text-sm text-muted-foreground">
               Add your skills and expertise to showcase your capabilities

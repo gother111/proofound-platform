@@ -61,7 +61,7 @@ function getVisibleFields(settings: VisibilitySettings, viewerLevel: string): st
 
 export function VisibilityPreview({ settings }: VisibilityPreviewProps) {
   return (
-    <Card className="border-proofound-stone dark:border-border rounded-2xl">
+    <Card className="border-black/5 dark:border-white/5 rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-300">
       <CardHeader>
         <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground flex items-center gap-2">
           <Eye className="h-5 w-5" />
