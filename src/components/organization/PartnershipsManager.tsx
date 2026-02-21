@@ -49,7 +49,9 @@ export function PartnershipsManager({ orgId, canEdit = true }: PartnershipsManag
   const [partnerships, setPartnerships] = useState<OrganizationPartnership[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showPartnershipForm, setShowPartnershipForm] = useState(false);
-  const [editingPartnership, setEditingPartnership] = useState<OrganizationPartnership | null>(null);
+  const [editingPartnership, setEditingPartnership] = useState<OrganizationPartnership | null>(
+    null
+  );
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -74,12 +76,16 @@ export function PartnershipsManager({ orgId, canEdit = true }: PartnershipsManag
     fetchPartnerships();
   }, [fetchPartnerships]);
 
-  const handleSavePartnership = async (partnership: Omit<OrganizationPartnership, 'id' | 'isVerified' | 'createdAt' | 'updatedAt'> & { id?: string }) => {
+  const handleSavePartnership = async (
+    partnership: Omit<OrganizationPartnership, 'id' | 'isVerified' | 'createdAt' | 'updatedAt'> & {
+      id?: string;
+    }
+  ) => {
     try {
       const url = partnership.id
         ? `/api/organizations/${orgId}/partnerships/${partnership.id}`
         : `/api/organizations/${orgId}/partnerships`;
-      
+
       const method = partnership.id ? 'PUT' : 'POST';
 
       const response = await apiFetch(url, {
@@ -136,7 +142,7 @@ export function PartnershipsManager({ orgId, canEdit = true }: PartnershipsManag
 
   if (isLoading) {
     return (
-      <Card className="border-proofound-stone dark:border-border rounded-2xl">
+      <Card className="border-black/5 dark:border-white/5 rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-300">
         <CardContent className="p-12">
           <div className="text-center">
             <p className="text-muted-foreground">Loading partnerships...</p>
@@ -148,7 +154,7 @@ export function PartnershipsManager({ orgId, canEdit = true }: PartnershipsManag
 
   return (
     <>
-      <Card className="border-proofound-stone dark:border-border rounded-2xl">
+      <Card className="border-black/5 dark:border-white/5 rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-300">
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>
@@ -184,8 +190,8 @@ export function PartnershipsManager({ orgId, canEdit = true }: PartnershipsManag
               </div>
               <h3 className="text-lg font-semibold mb-2">No partnerships yet</h3>
               <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
-                Document your collaborations with other organizations to showcase ecosystem engagement
-                and collective impact.
+                Document your collaborations with other organizations to showcase ecosystem
+                engagement and collective impact.
               </p>
               <Button
                 onClick={() => setShowPartnershipForm(true)}
@@ -270,8 +276,8 @@ export function PartnershipsManager({ orgId, canEdit = true }: PartnershipsManag
                   <div className="text-sm text-blue-900 dark:text-blue-300">
                     <p className="font-medium mb-1">Partnership visibility</p>
                     <p className="text-blue-700 dark:text-blue-400">
-                      Partnerships demonstrate your organization&apos;s ecosystem engagement and can help
-                      build credibility with candidates.
+                      Partnerships demonstrate your organization&apos;s ecosystem engagement and can
+                      help build credibility with candidates.
                     </p>
                   </div>
                 </div>

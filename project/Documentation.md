@@ -2133,3 +2133,35 @@ Open risks/TODO:
 - `npm run test -- e2e/strict/organization.strict.spec.ts ...` runs through Vitest and does not execute Playwright strict E2E directly; strict flow runtime validation is expected in `strict-quality` workflow.
 - Branch protection should be confirmed to require only `ci` and `a11y`; `strict-quality` is intentionally non-required for PR merges.
 - If strict suites remain flaky after retry/poll hardening, next step is deeper endpoint-specific retry instrumentation on known unstable calls.
+
+---
+
+## 2026-02-21: Profile UI Modernization and Micro-animations
+
+What changed:
+
+- Standardized layouts to a Left Sidebar (1/3) and Right Content (2/3) approach for both `EditableProfileView` and `OrganizationProfileView`.
+- Added `sticky` positioning to sidebars on both profiles.
+- Upgraded hero sections (`ProfileHeroSection` and `OrganizationHero`) with glassmorphism `backdrop-blur-md` effects and softer gradients.
+- Refined component aesthetics by shifting `rounded-2xl` to `rounded-3xl` across cards and ensuring subtle borders and shadows.
+- Gamified primary empty states (e.g., `CausesCard`) by adding interactive, pulsating dashed borders to drop-zones.
+- Integrated `framer-motion` for staggered scroll reveals (`whileInView`) on right-side content blocks.
+- Added animated progress bar loading to the `ProfileCompletionBanner` and layout-based animated tab underlines in `ProfileTabsSection`.
+
+Why:
+
+- The profile and organization views had mismatched layouts and lacked visual polish, feeling static and slightly dated.
+- Unifying layouts reduces cognitive load. Updating styling to a Japandi aesthetic (soft rounding, glassmorphism) brings a premium feel.
+- Micro-animations (Framer Motion) make interactions feel responsive and reduce perceived loading times.
+
+How to verify:
+
+- Start local dev server (`npm run dev`) and visit an individual profile and an org profile.
+- Scroll down the org profile to observe the staggered fade-in animations.
+- Switch tabs in the individual profile to see the animated active indicator.
+- Note the pulsating dashed borders on any empty state blocks.
+- `npm run build` (PASS)
+
+Open risks/TODO:
+
+- Need to configure `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` in the local/CI environments to ensure related Supabase client logic does not fail during server-side renders or static generation attempts on subsequent Vercel deployments.

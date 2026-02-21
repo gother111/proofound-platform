@@ -82,7 +82,7 @@ export function ImpactDashboard({ orgId, orgName, canEdit = true }: ImpactDashbo
       const url = entry.id
         ? `/api/organizations/${orgId}/impact/${entry.id}`
         : `/api/organizations/${orgId}/impact`;
-      
+
       const method = entry.id ? 'PUT' : 'POST';
 
       const response = await apiFetch(url, {
@@ -132,7 +132,7 @@ export function ImpactDashboard({ orgId, orgName, canEdit = true }: ImpactDashbo
 
   if (isLoading) {
     return (
-      <Card className="border-proofound-stone dark:border-border rounded-2xl">
+      <Card className="border-black/5 dark:border-white/5 rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-300">
         <CardContent className="p-12">
           <div className="text-center">
             <p className="text-muted-foreground">Loading impact data...</p>
@@ -144,7 +144,7 @@ export function ImpactDashboard({ orgId, orgName, canEdit = true }: ImpactDashbo
 
   return (
     <>
-      <Card className="border-proofound-stone dark:border-border rounded-2xl">
+      <Card className="border-black/5 dark:border-white/5 rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-300">
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>

@@ -1586,6 +1586,7 @@ Assumptions taken without asking:
 - Default branch remains `master`.
 - Auto-updating should run only for same-repo PRs and skip draft PRs for safety.
 - It is acceptable to treat non-actionable update-branch API responses as non-failing workflow outcomes.
+
 ## 2026-02-12 22:24 CET
 
 Task summary:
@@ -2527,3 +2528,64 @@ Open TODOs / follow-ups:
 
 - Open PR from `codex/stabilize-ci-a11y` to `master` and validate required checks runtime reduction on first 3 PR runs.
 - Manually dispatch `Strict Quality` workflow once after merge to validate strict suites in new lane.
+
+---
+
+## 2026-02-21 17:21 CET
+
+Task summary:
+
+- Modernized Profile UI: Standardized 1/3 sidebar and 2/3 content layouts across Individual and Organization profiles.
+- Added Japandi aesthetics (rounded-3xl, glassmorphism on hero sections) and interactive gamified empty states.
+- Integrated Framer Motion for scroll-reveals, active tab underlines, and progress bar animations.
+
+What worked:
+
+- `layoutId` from `framer-motion` provided entirely seamless active-tab transitions without extensive custom CSS.
+- Standardizing the layout structure drastically reduced the complexity differences between individual and org views.
+- Gamified dashed borders provided a strong visual cue for empty states.
+
+What failed / wrong assumptions:
+
+- Initially encountered missing environment variables related to Supabase during `npm run build` (`NEXT_PUBLIC_SUPABASE_URL`), though it did not block local component development due to client-side fallbacks.
+
+User corrections:
+
+- None.
+
+Improvements next time:
+
+- Create a shared generic `FadeInStagger` wrapper to avoid re-implementing `motion.div` attributes on multiple right-side blocks.
+- Check required environment variables for generic `build` commands earlier.
+
+Commands run + outcomes:
+
+- `npm run build`: successfully completed.
+
+Open TODOs / follow-ups:
+
+- Confirm all required Supabase env variables are explicitly present in CI and Vercel for complete build confidence.
+
+- **Date/time:** 2026-02-21
+- **Task:** Refining empty states and image upload UX in profiles, plus polishing mobile transitions (Phase 2).
+- **What worked:**
+  - Using `browser-image-compression` combined with a `backdrop-blur` UI for `isUploading` makes uploads feel very premium.
+  - Bespoke Japandi SVGs (abstract paths, minimal filled circles, 1.5px/2px strokes) fit the established design language much better than generic Lucide icons.
+  - Using `md:sticky` and fixing sticky behavior to `self-start` drastically improves usability on mobile.
+- **What failed / wrong assumptions:**
+  - Build warnings about missing env variables are expected locally.
+- **Commands run + outcomes:** `npm run build` completed successfully.
+- **Open TODOs / follow-ups:** Test custom file uploads via Supabase storage if not fully integrated.
+
+---
+
+## 2026-02-21 17:40 UTC
+
+- **Task summary:** Modernized five qualitative dashboards (`WellBeingTrendChart`, `WellBeingDeltaChart`, `TTSCTrendCard`, `GapMap`, `MatchScoreBreakdown`, and `ExpertiseDepthWidget`) by replacing legacy SVGs and default bars with advanced Recharts components (Line, Radar, RadialBar).
+- **What worked:**
+  - Standardizing via Recharts unlocked seamless scaling, clean backdrop tooltips, and engaging entry animations for formerly static UI states.
+  - Injecting bespoke abstract Japandi style SVGs for the chart "No Data" states greatly improved the polish factor.
+- **What failed / wrong assumptions:**
+  - RadarCharts ended up being vastly superior for visualizing multi-dimensional metrics instead of generic Bar charts.
+- **Commands run + outcomes:** `npm run lint`, `typecheck`, `build` fully succeeded against the new strict chart typescript schemas.
+- **Open TODOs / follow-ups:** Validate radar chart axis labels at very small mobile breakpoints to ensure text doesn't overlap container limits.

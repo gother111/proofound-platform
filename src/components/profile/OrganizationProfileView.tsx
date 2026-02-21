@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { OrganizationHero } from '@/components/organization/OrganizationHero';
 import { OrganizationPurpose } from '@/components/organization/OrganizationPurpose';
 import { OrganizationBasicInfoEditor } from '@/components/organization/OrganizationBasicInfoEditor';
@@ -16,6 +16,7 @@ import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Edit3, X } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 type OrganizationProfile = {
   id: string;
@@ -57,6 +58,12 @@ export function OrganizationProfileView({
 }: OrganizationProfileViewProps) {
   const [isEditingBasicInfo, setIsEditingBasicInfo] = useState(false);
   const basicInfoEditorRef = useRef<HTMLDivElement>(null);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setProgress(profileCompletion), 300);
+    return () => clearTimeout(timer);
+  }, [profileCompletion]);
 
   const openBasicInfoEditor = () => {
     setIsEditingBasicInfo(true);
@@ -99,7 +106,7 @@ export function OrganizationProfileView({
                     {profileCompletion}%
                   </span>
                 </div>
-                <Progress value={profileCompletion} className="h-2" />
+                <Progress value={progress} className="h-2" />
               </div>
               {canEdit && (
                 <Button
@@ -162,82 +169,126 @@ export function OrganizationProfileView({
         )}
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column */}
-          <div className="space-y-8 lg:col-span-2">
-            {/* Impact Section */}
-            <div className="space-y-4">
-              <ImpactDashboard orgId={org.id} orgName={org.displayName} canEdit={canEdit} />
-            </div>
-
-            {/* Organizational Structure Section */}
-            <div className="space-y-4">
-              <StructureManagerClient orgId={org.id} />
-            </div>
-
-            {/* Goals Section */}
-            <div className="space-y-4">
-              <GoalsManager orgId={org.id} canEdit={canEdit} />
-            </div>
-          </div>
-
-          {/* Right Column */}
-          <div className="space-y-8">
-            <Card className="border-proofound-stone dark:border-border rounded-2xl">
-              <CardHeader>
-                <CardTitle className="font-display text-proofound-charcoal dark:text-foreground">
-                  Organization Details
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <p className="text-sm font-medium text-proofound-charcoal dark:text-foreground">
-                    URL Slug
-                  </p>
-                  <p className="text-proofound-charcoal/70 dark:text-muted-foreground">
-                    {org.slug}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-proofound-charcoal dark:text-foreground">
-                    Type
-                  </p>
-                  <p className="text-proofound-charcoal/70 dark:text-muted-foreground capitalize">
-                    {org.type}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative items-start">
+          {/* Left Sidebar (1/3) */}
+          <div className="space-y-8 lg:sticky lg:top-24 lg:self-start">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              <Card className="border-black/5 dark:border-white/5 rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-300 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="font-display text-proofound-charcoal dark:text-foreground">
+                    Organization Details
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <p className="text-sm font-medium text-proofound-charcoal dark:text-foreground">
+                      URL Slug
+                    </p>
+                    <p className="text-proofound-charcoal/70 dark:text-muted-foreground">
+                      {org.slug}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-proofound-charcoal dark:text-foreground">
+                      Type
+                    </p>
+                    <p className="text-proofound-charcoal/70 dark:text-muted-foreground capitalize">
+                      {org.type}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
 
             {/* Work Culture Section (Editor) */}
-            <div className="space-y-4">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="space-y-4"
+            >
               <CultureEditor
                 orgId={org.id}
                 initialCulture={org.workCulture as any}
                 canEdit={canEdit}
               />
-            </div>
+            </motion.div>
 
             {/* Causes Section */}
-            <div className="space-y-4">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="space-y-4"
+            >
               <OrganizationCausesEditor
                 orgId={org.id}
                 initialCauses={org.causes || []}
                 canEdit={canEdit}
               />
-            </div>
+            </motion.div>
 
             {/* Partnerships Section */}
-            <div className="space-y-4">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="space-y-4"
+            >
               <PartnershipsManager orgId={org.id} canEdit={canEdit} />
-            </div>
+            </motion.div>
 
             {/* Visibility Settings Section */}
             {canEdit && (
-              <div className="space-y-4">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+                className="space-y-4"
+              >
                 <OrganizationVisibilitySettings orgId={org.id} canEdit={canEdit} />
-              </div>
+              </motion.div>
             )}
+          </div>
+
+          {/* Right Content (2/3) */}
+          <div className="space-y-8 lg:col-span-2">
+            {/* Impact Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-50px' }}
+              transition={{ duration: 0.6 }}
+              className="space-y-4"
+            >
+              <ImpactDashboard orgId={org.id} orgName={org.displayName} canEdit={canEdit} />
+            </motion.div>
+
+            {/* Organizational Structure Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-50px' }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="space-y-4"
+            >
+              <StructureManagerClient orgId={org.id} />
+            </motion.div>
+
+            {/* Goals Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-50px' }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="space-y-4"
+            >
+              <GoalsManager orgId={org.id} canEdit={canEdit} />
+            </motion.div>
           </div>
         </div>
       </div>
