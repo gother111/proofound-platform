@@ -117,7 +117,7 @@ export function HowItWorksSection({ shouldReduceMotion }: HowItWorksSectionProps
     <section
       id="how-it-works"
       ref={ref}
-      className="py-20 md:py-32 lg:py-40 px-6 md:px-12 relative bg-background scroll-mt-24"
+      className="py-16 md:py-32 lg:py-40 px-6 md:px-12 relative bg-background scroll-mt-24"
     >
       {/* Organic Background Shapes */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -191,7 +191,7 @@ export function HowItWorksSection({ shouldReduceMotion }: HowItWorksSectionProps
                 key={idx}
                 data-index={idx}
                 className={cn(
-                  'step-card group bg-card/60 backdrop-blur-xl border border-border rounded-[2rem] p-8 md:p-12 shadow-xl md:transition-all md:duration-700',
+                  'step-card group bg-card/60 backdrop-blur-xl border border-border rounded-[2rem] p-6 md:p-10 lg:p-12 shadow-xl md:transition-all md:duration-700',
                   activeStep === idx
                     ? 'md:opacity-100 md:scale-100'
                     : 'md:opacity-30 md:scale-[0.98]'
@@ -202,7 +202,7 @@ export function HowItWorksSection({ shouldReduceMotion }: HowItWorksSectionProps
                     <feature.icon className="w-8 h-8 text-foreground stroke-[1.5]" />
                   </div>
                   <div>
-                    <h3 className="text-3xl font-display text-foreground leading-tight mb-4">
+                    <h3 className="text-2xl md:text-3xl font-display text-foreground leading-tight mb-4">
                       {feature.title}
                     </h3>
                     <p className="text-lg text-foreground/90 font-sans leading-relaxed">

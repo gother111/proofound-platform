@@ -70,7 +70,7 @@ export function ProblemSection({ shouldReduceMotion }: ProblemSectionProps) {
     <section
       id="the-problem"
       ref={ref}
-      className="py-20 md:py-32 lg:py-40 px-6 md:px-12 relative overflow-hidden bg-background scroll-mt-24"
+      className="py-16 md:py-32 lg:py-40 px-6 md:px-12 relative overflow-hidden bg-background scroll-mt-24"
     >
       {/* Organic Background Elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
@@ -85,7 +85,7 @@ export function ProblemSection({ shouldReduceMotion }: ProblemSectionProps) {
           transition={reduceMotion ? { duration: 0 } : { duration: 1.0, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-20"
         >
-          <h2 className="text-5xl md:text-6xl font-serif text-foreground mb-6 tracking-tight text-balance">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-serif text-foreground mb-6 tracking-tight text-balance">
             The problems we solve
           </h2>
           <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto font-sans leading-relaxed">
@@ -107,7 +107,7 @@ export function ProblemSection({ shouldReduceMotion }: ProblemSectionProps) {
                 variants={itemVariants}
                 whileHover={reduceMotion ? undefined : 'hover'}
                 className={cn(
-                  'bg-card/60 dark:bg-card/20 backdrop-blur-md border border-border p-8 rounded-3xl flex flex-col group hover:shadow-lg hover:shadow-proofound-terracotta/5 transition-colors transition-shadow duration-300 h-full',
+                  'bg-card/60 dark:bg-card/20 backdrop-blur-md border border-border p-6 md:p-8 rounded-3xl flex flex-col group hover:shadow-lg hover:shadow-proofound-terracotta/5 transition-colors transition-shadow duration-300 h-full',
                   isFeatured ? 'md:col-span-2 lg:row-span-2 justify-between gap-12' : 'gap-6'
                 )}
               >

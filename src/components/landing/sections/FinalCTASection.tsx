@@ -20,7 +20,7 @@ export function FinalCTASection({ onGetStarted, shouldReduceMotion }: FinalCTASe
   return (
     <section
       ref={ref}
-      className="py-20 md:py-32 lg:py-40 px-6 md:px-12 relative bg-japandi-charcoal text-white overflow-hidden flex items-center justify-center min-h-[80vh] scroll-mt-24"
+      className="py-16 md:py-32 lg:py-40 px-6 md:px-12 relative bg-japandi-charcoal text-white overflow-hidden flex items-center justify-center min-h-[80dvh] scroll-mt-24"
       data-testid="landing-final-cta-section"
     >
       {/* Background Decoration */}
@@ -67,7 +67,7 @@ export function FinalCTASection({ onGetStarted, shouldReduceMotion }: FinalCTASe
           transition={
             reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 80, damping: 20 }
           }
-          className="text-6xl md:text-8xl lg:text-9xl font-display mb-12 leading-[0.9] tracking-tight text-balance"
+          className="text-5xl md:text-7xl lg:text-9xl font-display mb-12 leading-[0.9] tracking-tight text-balance"
         >
           Ready to build <br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-japandi-sage to-white">

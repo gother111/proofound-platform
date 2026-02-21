@@ -81,7 +81,7 @@ export function PrinciplesSection({ shouldReduceMotion }: PrinciplesSectionProps
     <section
       id="principles"
       ref={ref}
-      className="py-20 md:py-32 lg:py-40 px-6 md:px-12 relative bg-background overflow-hidden scroll-mt-24"
+      className="py-16 md:py-32 lg:py-40 px-6 md:px-12 relative bg-background overflow-hidden scroll-mt-24"
       data-testid="landing-principles-section"
     >
       {/* Background Decor */}
@@ -98,7 +98,7 @@ export function PrinciplesSection({ shouldReduceMotion }: PrinciplesSectionProps
           }
           className="text-center mb-20 relative z-10"
         >
-          <h2 className="text-5xl md:text-6xl font-serif text-foreground mb-6 tracking-tight text-balance">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-serif text-foreground mb-6 tracking-tight text-balance">
             What makes it trustworthy
           </h2>
           <p className="text-xl md:text-2xl text-muted-foreground font-sans max-w-2xl mx-auto">
@@ -130,7 +130,7 @@ export function PrinciplesSection({ shouldReduceMotion }: PrinciplesSectionProps
                   aria-expanded={isExpanded}
                   aria-controls={`principle-content-${idx}`}
                   id={`principle-header-${idx}`}
-                  className="w-full text-left px-6 py-6 md:px-10 md:py-8 flex items-center justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-extended-sage"
+                  className="w-full text-left px-5 py-5 md:px-10 md:py-8 flex items-center justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-extended-sage"
                 >
                   <div className="flex items-center gap-4 md:gap-8">
                     <span className="text-lg md:text-2xl font-display text-muted-foreground/40 w-8 flex-shrink-0">
@@ -138,7 +138,7 @@ export function PrinciplesSection({ shouldReduceMotion }: PrinciplesSectionProps
                     </span>
                     <h3
                       className={cn(
-                        'text-2xl md:text-4xl font-serif text-foreground leading-tight transition-colors duration-300',
+                        'text-xl md:text-3xl lg:text-4xl font-serif text-foreground leading-tight transition-colors duration-300',
                         isExpanded ? 'text-extended-sage' : ''
                       )}
                     >
@@ -170,7 +170,7 @@ export function PrinciplesSection({ shouldReduceMotion }: PrinciplesSectionProps
                       exit={reduceMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
                       transition={{ type: 'spring', stiffness: 100, damping: 20 }}
                     >
-                      <div className="px-6 pb-6 md:px-10 md:pb-10 pt-0 flex flex-col md:flex-row gap-6 md:gap-8 items-start md:items-center ml-0 md:ml-16">
+                      <div className="px-5 pb-5 md:px-10 md:pb-10 pt-0 flex flex-col md:flex-row gap-6 md:gap-8 items-start md:items-center ml-0 md:ml-16">
                         <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-extended-sage/10 flex items-center justify-center flex-shrink-0">
                           <principle.icon
                             className="w-7 h-7 md:w-8 md:h-8 text-extended-sage stroke-[1.5]"
