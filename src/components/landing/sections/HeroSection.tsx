@@ -31,7 +31,7 @@ export function HeroSection({
   return (
     <section
       ref={containerRef}
-      className="relative min-h-[100vh] sm:min-h-[90vh] flex items-center justify-center overflow-hidden px-6 md:px-12 pt-28 md:pt-32 scroll-mt-24"
+      className="relative min-h-[100dvh] sm:min-h-[90dvh] flex items-center justify-center overflow-hidden px-6 md:px-12 pt-28 md:pt-32 scroll-mt-24"
       data-testid="landing-hero-section"
     >
       {/* Background Elements */}
@@ -85,7 +85,7 @@ export function HeroSection({
                   ? { duration: 0 }
                   : { duration: 1.4, ease: [0.22, 1, 0.36, 1], delay: 0.1 }
               }
-              className="text-5xl md:text-7xl lg:text-8xl font-serif text-foreground leading-[0.95] tracking-tight mb-6"
+              className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-serif text-foreground leading-[0.95] tracking-tight mb-6"
             >
               Proofound
             </motion.h1>
@@ -97,7 +97,7 @@ export function HeroSection({
                   ? { duration: 0 }
                   : { duration: 1.4, ease: [0.22, 1, 0.36, 1], delay: 0.25 }
               }
-              className="text-3xl md:text-4xl lg:text-5xl font-sans text-foreground leading-tight text-balance"
+              className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-sans text-foreground leading-tight text-balance"
             >
               The credibility infrastructure for impactful connections
             </motion.h2>

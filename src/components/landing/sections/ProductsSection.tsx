@@ -59,7 +59,7 @@ export function ProductsSection({
     <section
       id="products"
       ref={ref}
-      className="py-20 md:py-32 lg:py-40 px-6 md:px-12 relative overflow-hidden bg-background scroll-mt-24"
+      className="py-16 md:py-32 lg:py-40 px-6 md:px-12 relative overflow-hidden bg-background scroll-mt-24"
     >
       {/* Background Elements */}
       <div className="absolute inset-0 pointer-events-none">
@@ -73,7 +73,7 @@ export function ProductsSection({
           transition={reduceMotion ? { duration: 0 } : { duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-20"
         >
-          <h2 className="text-4xl md:text-6xl font-display text-foreground mb-6 text-balance">
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-display text-foreground mb-6 text-balance">
             Products & Subscriptions
           </h2>
           <p className="text-xl text-foreground/60 font-sans max-w-2xl mx-auto">
@@ -93,7 +93,7 @@ export function ProductsSection({
                   : { type: 'spring', stiffness: 100, damping: 20, delay: idx * 0.15 }
               }
               className={cn(
-                'relative rounded-[2.5rem] p-10 md:p-12 group',
+                'relative rounded-[2.5rem] p-6 md:p-10 lg:p-12 group',
                 plan.highlight
                   ? 'bg-japandi-charcoal text-white shadow-2xl shadow-japandi-charcoal/20 scale-105 z-10'
                   : 'bg-card/70 backdrop-blur-xl border border-border',
@@ -131,7 +131,7 @@ export function ProductsSection({
                   </h3>
                   <div className="flex items-baseline gap-2 mb-4">
                     <span
-                      className={`text-5xl md:text-6xl font-bold font-display ${
+                      className={`text-4xl md:text-5xl lg:text-6xl font-bold font-display ${
                         plan.highlight ? 'text-white' : 'text-foreground'
                       }`}
                     >

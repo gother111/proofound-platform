@@ -56,7 +56,7 @@ export function PersonasSection({
     <section
       id="personas"
       ref={ref}
-      className="py-20 md:py-32 lg:py-40 px-6 md:px-12 relative bg-background overflow-hidden scroll-mt-24"
+      className="py-16 md:py-32 lg:py-40 px-6 md:px-12 relative bg-background overflow-hidden scroll-mt-24"
       data-testid="landing-personas-section"
     >
       {/* Background Decoration */}
@@ -71,7 +71,7 @@ export function PersonasSection({
           }
           className="text-center mb-16"
         >
-          <h2 className="text-5xl md:text-6xl font-serif text-foreground mb-6 tracking-tight text-balance">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-serif text-foreground mb-6 tracking-tight text-balance">
             Built for you
           </h2>
           <p className="text-xl md:text-2xl text-muted-foreground mb-12 font-sans">
@@ -116,11 +116,11 @@ export function PersonasSection({
               transition={
                 reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 200, damping: 24 }
               }
-              className="bg-card/60 backdrop-blur-xl rounded-[3rem] p-8 border border-border shadow-2xl flex flex-col gap-10 items-center"
+              className="bg-card/60 backdrop-blur-xl rounded-[3rem] p-6 border border-border shadow-2xl flex flex-col gap-10 items-center"
             >
               <div className="flex-1 space-y-8 w-full">
                 <h3
-                  className="text-4xl font-serif text-foreground"
+                  className="text-3xl font-serif text-foreground"
                   data-testid="landing-persona-title"
                 >
                   {current.title}
