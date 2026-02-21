@@ -144,7 +144,7 @@ export function OrganizationBasicInfoEditor({
   if (!canEdit) return null;
 
   return (
-    <Card className="border-proofound-stone dark:border-border rounded-2xl">
+    <Card className="border-black/5 dark:border-white/5 rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-300">
       <CardHeader>
         <CardTitle className="font-display text-proofound-charcoal dark:text-foreground">
           Edit Basic Information

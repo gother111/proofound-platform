@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Experience } from '@/types/profile';
+import { motion } from 'framer-motion';
 
 interface ExperienceFormProps {
   open: boolean;
@@ -85,97 +86,130 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Title */}
-          <div className="space-y-2">
-            <Label htmlFor="title">
-              Role/Title <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder='e.g., "Leading systemic change initiatives"'
-              className={errors.title ? 'border-red-500' : ''}
-            />
-            <p className="text-xs text-muted-foreground">Describe your work, not your job title</p>
-            {errors.title && <p className="text-xs text-red-500">{errors.title}</p>}
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, staggerChildren: 0.1 }}
+            className="space-y-6"
+          >
+            {/* Title */}
+            <motion.div
+              className="space-y-2"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <Label htmlFor="title">
+                Role/Title <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder='e.g., "Leading systemic change initiatives"'
+                className={errors.title ? 'border-red-500' : ''}
+              />
+              <p className="text-xs text-muted-foreground">
+                Describe your work, not your job title
+              </p>
+              {errors.title && <p className="text-xs text-red-500">{errors.title}</p>}
+            </motion.div>
 
-          {/* Organization Description */}
-          <div className="space-y-2">
-            <Label htmlFor="orgDescription">
-              Organization <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="orgDescription"
-              value={orgDescription}
-              onChange={(e) => setOrgDescription(e.target.value)}
-              placeholder='e.g., "National nonprofit, Climate Justice, 50-200 employees"'
-              className={errors.orgDescription ? 'border-red-500' : ''}
-            />
-            <p className="text-xs text-muted-foreground">Size, industry, location</p>
-            {errors.orgDescription && (
-              <p className="text-xs text-red-500">{errors.orgDescription}</p>
-            )}
-          </div>
+            {/* Organization Description */}
+            <motion.div
+              className="space-y-2"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <Label htmlFor="orgDescription">
+                Organization <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="orgDescription"
+                value={orgDescription}
+                onChange={(e) => setOrgDescription(e.target.value)}
+                placeholder='e.g., "National nonprofit, Climate Justice, 50-200 employees"'
+                className={errors.orgDescription ? 'border-red-500' : ''}
+              />
+              <p className="text-xs text-muted-foreground">Size, industry, location</p>
+              {errors.orgDescription && (
+                <p className="text-xs text-red-500">{errors.orgDescription}</p>
+              )}
+            </motion.div>
 
-          {/* Duration */}
-          <div className="space-y-2">
-            <Label htmlFor="duration">
-              Duration <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="duration"
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-              placeholder='e.g., "2023 - Present"'
-              className={errors.duration ? 'border-red-500' : ''}
-            />
-            {errors.duration && <p className="text-xs text-red-500">{errors.duration}</p>}
-          </div>
+            {/* Duration */}
+            <motion.div
+              className="space-y-2"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <Label htmlFor="duration">
+                Duration <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="duration"
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+                placeholder='e.g., "2023 - Present"'
+                className={errors.duration ? 'border-red-500' : ''}
+              />
+              {errors.duration && <p className="text-xs text-red-500">{errors.duration}</p>}
+            </motion.div>
 
-          {/* What I Learned */}
-          <div className="space-y-2">
-            <Label htmlFor="learning">
-              What I Learned <span className="text-red-500">*</span>
-            </Label>
-            <textarea
-              id="learning"
-              value={learning}
-              onChange={(e) => setLearning(e.target.value)}
-              placeholder="What new skills, knowledge, or perspectives did you gain?"
-              className={`flex min-h-[100px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${
-                errors.learning ? 'border-red-500' : ''
-              }`}
-            />
-            {errors.learning && <p className="text-xs text-red-500">{errors.learning}</p>}
-          </div>
+            {/* What I Learned */}
+            <motion.div
+              className="space-y-2"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <Label htmlFor="learning">
+                What I Learned <span className="text-red-500">*</span>
+              </Label>
+              <textarea
+                id="learning"
+                value={learning}
+                onChange={(e) => setLearning(e.target.value)}
+                placeholder="What new skills, knowledge, or perspectives did you gain?"
+                className={`flex min-h-[100px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${
+                  errors.learning ? 'border-red-500' : ''
+                }`}
+              />
+              {errors.learning && <p className="text-xs text-red-500">{errors.learning}</p>}
+            </motion.div>
 
-          {/* How I Grew */}
-          <div className="space-y-2">
-            <Label htmlFor="growth">
-              How I Grew <span className="text-red-500">*</span>
-            </Label>
-            <textarea
-              id="growth"
-              value={growth}
-              onChange={(e) => setGrowth(e.target.value)}
-              placeholder="How did this experience change you professionally?"
-              className={`flex min-h-[100px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${
-                errors.growth ? 'border-red-500' : ''
-              }`}
-            />
-            {errors.growth && <p className="text-xs text-red-500">{errors.growth}</p>}
-          </div>
+            {/* How I Grew */}
+            <motion.div
+              className="space-y-2"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <Label htmlFor="growth">
+                How I Grew <span className="text-red-500">*</span>
+              </Label>
+              <textarea
+                id="growth"
+                value={growth}
+                onChange={(e) => setGrowth(e.target.value)}
+                placeholder="How did this experience change you professionally?"
+                className={`flex min-h-[100px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${
+                  errors.growth ? 'border-red-500' : ''
+                }`}
+              />
+              {errors.growth && <p className="text-xs text-red-500">{errors.growth}</p>}
+            </motion.div>
 
-          {/* Guidance */}
-          <div className="bg-muted/30 rounded-lg p-4 text-xs text-muted-foreground">
-            <p className="font-medium mb-2">💡 Tip:</p>
-            <p>
-              Emphasize personal growth over job titles and responsibilities. Share authentic
-              insights about your development.
-            </p>
-          </div>
+            {/* Guidance */}
+            <motion.div
+              className="bg-muted/30 rounded-lg p-4 text-xs text-muted-foreground"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <p className="font-medium mb-2">💡 Tip:</p>
+              <p>
+                Emphasize personal growth over job titles and responsibilities. Share authentic
+                insights about your development.
+              </p>
+            </motion.div>
+          </motion.div>
         </div>
 
         <DialogFooter>

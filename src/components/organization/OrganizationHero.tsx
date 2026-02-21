@@ -30,29 +30,29 @@ export function OrganizationHero({ org, canEdit, onEditProfile }: OrganizationHe
   return (
     <div className="relative mb-8">
       {/* Cover Image Area */}
-      <div className="h-48 md:h-64 w-full rounded-b-3xl overflow-hidden relative bg-gradient-to-r from-proofound-forest to-teal">
+      <div className="h-48 md:h-64 w-full rounded-b-[2.5rem] overflow-hidden relative bg-gradient-to-br from-[#7A9278] via-[#E0D5C7] to-[#C9A57B]">
         {coverImageUrl && (
           <Image
             src={coverImageUrl}
             alt="Cover"
             fill
             sizes="100vw"
-            className="object-cover opacity-60"
+            className="object-cover opacity-80 mix-blend-overlay"
             priority
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
       </div>
 
       {/* Profile Content */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 relative -mt-20">
-        <div className="bg-white dark:bg-stone-900 rounded-2xl shadow-xl p-6 backdrop-blur-sm bg-white/95 dark:bg-stone-900/95 border border-white/20">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 relative -mt-24">
+        <div className="bg-white/70 dark:bg-stone-900/60 backdrop-blur-md border border-white/40 dark:border-stone-800/50 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] p-6 md:p-8">
           <div className="flex flex-col md:flex-row gap-6 items-start">
             {/* Logo */}
-            <div className="relative -mt-16 md:-mt-20 flex-shrink-0">
-              <Avatar className="w-32 h-32 md:w-40 md:h-40 border-4 border-white dark:border-stone-900 shadow-lg rounded-2xl">
+            <div className="relative -mt-16 md:-mt-24 flex-shrink-0">
+              <Avatar className="w-32 h-32 md:w-40 md:h-40 border-4 border-white/80 dark:border-stone-800/80 shadow-lg rounded-3xl">
                 <AvatarImage src={org.logoUrl ?? undefined} alt={org.displayName} />
-                <AvatarFallback className="text-4xl font-display bg-proofound-parchment text-proofound-forest rounded-2xl">
+                <AvatarFallback className="text-4xl font-display bg-[#E0D5C7]/30 text-[#7A9278] rounded-3xl">
                   {org.displayName?.substring(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>

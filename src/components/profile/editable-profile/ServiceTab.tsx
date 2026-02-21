@@ -36,8 +36,34 @@ export function ServiceTab({ volunteering, onAddService, onDeleteService }: Serv
         <Card className="p-12 border-2 border-dashed border-muted-foreground/20">
           <div className="text-center space-y-6">
             <div className="flex justify-center">
-              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[#C67B5C]/10 to-[#7A9278]/10 flex items-center justify-center">
-                <HandHeart className="w-16 h-16 text-[#C67B5C]/60" />
+              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[#C67B5C]/5 to-[#7A9278]/10 flex items-center justify-center">
+                <svg viewBox="0 0 100 100" className="w-20 h-20">
+                  <path
+                    d="M 20 60 Q 35 75 50 60 T 80 60"
+                    fill="none"
+                    stroke="#C67B5C"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M 30 40 Q 45 25 60 40 T 90 40"
+                    fill="none"
+                    stroke="#7A9278"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    opacity="0.8"
+                  />
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="25"
+                    fill="none"
+                    stroke="#D4A574"
+                    strokeWidth="1"
+                    strokeDasharray="3 5"
+                  />
+                  <circle cx="50" cy="50" r="6" fill="#C67B5C" opacity="0.6" />
+                </svg>
               </div>
             </div>
             <div className="space-y-2">

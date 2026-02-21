@@ -17,12 +17,17 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { TrendingUp, Plus, Target, Info, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+  Radar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
+  Legend,
+} from 'recharts';
 
 interface SkillGap {
   skillCode: string;
@@ -88,11 +93,11 @@ export function GapMap({ targetRole, userId }: GapMapProps) {
       });
 
       // Refresh gaps
-      setGaps(prev => prev.map(gap =>
-        gap.skillCode === skillCode
-          ? { ...gap, currentLevel: 1, gap: gap.targetLevel - 1 }
-          : gap
-      ));
+      setGaps((prev) =>
+        prev.map((gap) =>
+          gap.skillCode === skillCode ? { ...gap, currentLevel: 1, gap: gap.targetLevel - 1 } : gap
+        )
+      );
     } catch (err) {
       console.error('Add skill error:', err);
       toast.error('Failed to add skill', {
@@ -103,7 +108,7 @@ export function GapMap({ targetRole, userId }: GapMapProps) {
 
   if (loading) {
     return (
-      <Card className="border-proofound-stone dark:border-border rounded-xl">
+      <Card className="border-proofound-stone dark:border-border rounded-3xl">
         <CardContent className="pt-6">
           <div className="flex items-center justify-center py-12">
             <div className="space-y-3 text-center">
@@ -120,14 +125,11 @@ export function GapMap({ targetRole, userId }: GapMapProps) {
 
   if (error) {
     return (
-      <Card className="border-proofound-stone dark:border-border rounded-xl">
+      <Card className="border-proofound-stone dark:border-border rounded-3xl">
         <CardContent className="pt-6">
           <div className="text-center py-12 space-y-3">
             <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-            <Button
-              variant="outline"
-              onClick={() => window.location.reload()}
-            >
+            <Button variant="outline" onClick={() => window.location.reload()}>
               Try Again
             </Button>
           </div>
@@ -138,7 +140,7 @@ export function GapMap({ targetRole, userId }: GapMapProps) {
 
   if (gaps.length === 0) {
     return (
-      <Card className="border-proofound-stone dark:border-border rounded-xl">
+      <Card className="border-proofound-stone dark:border-border rounded-3xl">
         <CardHeader>
           <div className="flex items-center gap-3">
             <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
@@ -146,9 +148,7 @@ export function GapMap({ targetRole, userId }: GapMapProps) {
             </div>
             <div>
               <CardTitle className="text-lg font-['Crimson_Pro']">No Skill Gaps Found</CardTitle>
-              <CardDescription>
-                Your profile is well-matched to your target roles
-              </CardDescription>
+              <CardDescription>Your profile is well-matched to your target roles</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -158,8 +158,38 @@ export function GapMap({ targetRole, userId }: GapMapProps) {
 
   const topGaps = gaps.slice(0, 10);
 
+  // Prepare Radar Chart data
+  const radarData = topGaps.map((gap) => ({
+    subject: gap.skillName.length > 20 ? gap.skillName.substring(0, 20) + '...' : gap.skillName,
+    Current: gap.currentLevel,
+    Target: gap.targetLevel,
+    fullMark: 5,
+  }));
+
+  const CustomRadarTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div className="bg-white/90 backdrop-blur-sm p-3 rounded-xl border border-[#E8E6DD] shadow-sm">
+          <p className="text-xs font-semibold text-[#2D3330] mb-2">{data.subject}</p>
+          <div className="flex items-center gap-2 text-xs mb-1">
+            <div className="w-2 h-2 rounded-full bg-[#1C4D3A]" />
+            <span className="text-[#6B6760] font-medium">Currently:</span>
+            <span className="text-[#2D3330] font-bold">L{data.Current}</span>
+          </div>
+          <div className="flex items-center gap-2 text-xs">
+            <div className="w-2 h-2 rounded-full bg-[#C76B4A]" />
+            <span className="text-[#6B6760] font-medium">Target:</span>
+            <span className="text-[#2D3330] font-bold">L{data.Target}</span>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
-    <Card className="border-proofound-stone dark:border-border rounded-xl">
+    <Card className="border-proofound-stone dark:border-border rounded-3xl">
       <CardHeader>
         <div className="flex items-center gap-3">
           <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
@@ -180,8 +210,8 @@ export function GapMap({ targetRole, userId }: GapMapProps) {
               </TooltipTrigger>
               <TooltipContent className="max-w-sm">
                 <p className="text-xs">
-                  This analysis compares your current skills with those required for your target roles.
-                  Focus on high-importance gaps first for maximum impact.
+                  This analysis compares your current skills with those required for your target
+                  roles. Focus on high-importance gaps first for maximum impact.
                 </p>
               </TooltipContent>
             </Tooltip>
@@ -189,11 +219,42 @@ export function GapMap({ targetRole, userId }: GapMapProps) {
         </div>
       </CardHeader>
       <CardContent>
+        {topGaps.length >= 3 && (
+          <div className="h-[350px] w-full mb-8">
+            <ResponsiveContainer width="100%" height="100%">
+              <RadarChart cx="50%" cy="50%" outerRadius="65%" data={radarData}>
+                <PolarGrid stroke="#E8E6DD" />
+                <PolarAngleAxis dataKey="subject" tick={{ fill: '#6B6760', fontSize: 10 }} />
+                <PolarRadiusAxis
+                  angle={30}
+                  domain={[0, 5]}
+                  tick={{ fill: '#6B6760', fontSize: 10 }}
+                />
+                <Radar
+                  name="Current Proficiency"
+                  dataKey="Current"
+                  stroke="#1C4D3A"
+                  fill="#1C4D3A"
+                  fillOpacity={0.5}
+                />
+                <Radar
+                  name="Target Requirement"
+                  dataKey="Target"
+                  stroke="#C76B4A"
+                  fill="#C76B4A"
+                  fillOpacity={0.2}
+                />
+                <RechartsTooltip content={<CustomRadarTooltip />} />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '20px' }} />
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
         <div className="space-y-4">
           {topGaps.map((gap, idx) => {
-            const progressValue = gap.currentLevel > 0
-              ? (gap.currentLevel / gap.targetLevel) * 100
-              : 0;
+            const progressValue =
+              gap.currentLevel > 0 ? (gap.currentLevel / gap.targetLevel) * 100 : 0;
 
             return (
               <div
@@ -214,10 +275,20 @@ export function GapMap({ targetRole, userId }: GapMapProps) {
                         {gap.skillName}
                       </h4>
                       <Badge
-                        variant={gap.importance >= 80 ? 'destructive' : gap.importance >= 60 ? 'default' : 'secondary'}
+                        variant={
+                          gap.importance >= 80
+                            ? 'destructive'
+                            : gap.importance >= 60
+                              ? 'default'
+                              : 'secondary'
+                        }
                         className="text-xs"
                       >
-                        {gap.importance >= 80 ? 'Critical' : gap.importance >= 60 ? 'High' : 'Medium'}
+                        {gap.importance >= 80
+                          ? 'Critical'
+                          : gap.importance >= 60
+                            ? 'High'
+                            : 'Medium'}
                       </Badge>
                     </div>
 
@@ -244,7 +315,8 @@ export function GapMap({ targetRole, userId }: GapMapProps) {
                       <div className="flex items-center gap-2 mt-2 text-xs text-proofound-charcoal/60 dark:text-muted-foreground">
                         <Target className="h-3 w-3" />
                         <span>
-                          Needed by {gap.relatedRoles.length} role{gap.relatedRoles.length > 1 ? 's' : ''}
+                          Needed by {gap.relatedRoles.length} role
+                          {gap.relatedRoles.length > 1 ? 's' : ''}
                           {gap.relatedRoles.length <= 3 && `: ${gap.relatedRoles.join(', ')}`}
                         </span>
                       </div>

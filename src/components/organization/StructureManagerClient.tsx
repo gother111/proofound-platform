@@ -29,13 +29,13 @@ export function StructureManagerClient({ orgId }: StructureManagerClientProps) {
     async function fetchStructure() {
       try {
         const response = await apiFetch(`/api/organizations/${orgId}/structure`);
-        
+
         if (!response.ok) {
           throw new Error('Failed to fetch structure');
         }
 
         const data = await response.json();
-        
+
         // Map snake_case from API to camelCase for components
         const mappedStructure = (data.structure || []).map((item: any) => ({
           id: item.id,
@@ -60,7 +60,7 @@ export function StructureManagerClient({ orgId }: StructureManagerClientProps) {
 
   if (isLoading) {
     return (
-      <Card className="border-proofound-stone dark:border-border rounded-2xl">
+      <Card className="border-black/5 dark:border-white/5 rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-300">
         <CardContent className="p-6">
           <div className="space-y-4">
             <Skeleton className="h-8 w-64" />
@@ -78,13 +78,11 @@ export function StructureManagerClient({ orgId }: StructureManagerClientProps) {
 
   if (error) {
     return (
-      <Card className="border-proofound-stone dark:border-border rounded-2xl">
+      <Card className="border-black/5 dark:border-white/5 rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-300">
         <CardContent className="p-6">
           <div className="text-center py-8">
             <p className="text-red-600 dark:text-red-400">{error}</p>
-            <p className="text-sm text-muted-foreground mt-2">
-              Please try refreshing the page
-            </p>
+            <p className="text-sm text-muted-foreground mt-2">Please try refreshing the page</p>
           </div>
         </CardContent>
       </Card>
@@ -93,4 +91,3 @@ export function StructureManagerClient({ orgId }: StructureManagerClientProps) {
 
   return <StructureManager orgId={orgId} initialDepartments={departments} />;
 }
-

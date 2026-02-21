@@ -2,10 +2,21 @@
  * Well-Being Trend Chart
  *
  * Visual chart showing weekly stress and control trends.
- * Simple line chart using SVG.
+ * Modernized line chart using Recharts for an interactive & responsive experience.
  */
 
 'use client';
+
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from 'recharts';
 
 interface TrendDataPoint {
   week: number;
@@ -29,8 +40,11 @@ export function WellBeingTrendChart({ trend }: WellBeingTrendChartProps) {
 
   if (normalizedTrend.length === 0) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="font-semibold mb-3" style={{ color: '#2D3330' }}>
+      <div className="bg-white rounded-3xl border border-[#E8E6DD] p-6 text-center">
+        <h3
+          className="font-semibold mb-3 font-['Crimson_Pro'] text-lg"
+          style={{ color: '#2D3330' }}
+        >
           Trend Over Time
         </h3>
         <p className="text-sm" style={{ color: '#6B6760' }}>
@@ -40,44 +54,37 @@ export function WellBeingTrendChart({ trend }: WellBeingTrendChartProps) {
     );
   }
 
-  // Chart dimensions
-  const width = 600;
-  const height = 300;
-  const padding = { top: 20, right: 40, bottom: 40, left: 40 };
-  const chartWidth = width - padding.left - padding.right;
-  const chartHeight = height - padding.top - padding.bottom;
-
-  // Scale functions
-  const xScale = (week: number) => {
-    const maxWeek = Math.max(...normalizedTrend.map((d) => d.week));
-    const safeMaxWeek = maxWeek === 0 ? 1 : maxWeek;
-    return (week / safeMaxWeek) * chartWidth;
+  const formatWeekLabel = (weekStartDate: Date | undefined) => {
+    if (!weekStartDate) return '';
+    return weekStartDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  const yScale = (value: number) => {
-    return chartHeight - (value / 5) * chartHeight; // Scale 0-5 to chart height
-  };
-
-  // Generate path for line
-  const generatePath = (dataKey: 'avgStress' | 'avgControl') => {
-    return normalizedTrend
-      .map((d, i) => {
-        const x = padding.left + xScale(d.week);
-        const y = padding.top + yScale(d[dataKey]);
-        return `${i === 0 ? 'M' : 'L'} ${x},${y}`;
-      })
-      .join(' ');
-  };
-
-  const formatWeekLabel = (weekStart: Date) => {
-    return weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white/80 backdrop-blur-md p-3 rounded-xl border border-[#E8E6DD] shadow-sm">
+          <p className="text-xs font-semibold text-[#2D3330] mb-2">{formatWeekLabel(label)}</p>
+          {payload.map((entry: any, index: number) => (
+            <div key={index} className="flex items-center gap-2 text-xs mb-1">
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+              <span className="text-[#6B6760] font-medium">{entry.name}:</span>
+              <span className="text-[#2D3330] font-bold">{Number(entry.value).toFixed(1)}</span>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
+    <div className="bg-white rounded-3xl border border-[#E8E6DD] p-6">
       {/* Header */}
-      <div className="mb-4">
-        <h3 className="font-semibold mb-1" style={{ color: '#2D3330' }}>
+      <div className="mb-6">
+        <h3
+          className="font-semibold mb-1 font-['Crimson_Pro'] text-lg"
+          style={{ color: '#2D3330' }}
+        >
           Trend Over Time
         </h3>
         <p className="text-xs" style={{ color: '#6B6760' }}>
@@ -86,102 +93,58 @@ export function WellBeingTrendChart({ trend }: WellBeingTrendChartProps) {
       </div>
 
       {/* Chart */}
-      <div className="overflow-x-auto">
-        <svg width={width} height={height} className="mx-auto">
-          {/* Grid lines (1-5 scale) */}
-          {[0, 1, 2, 3, 4, 5].map((value) => (
-            <g key={value}>
-              <line
-                x1={padding.left}
-                y1={padding.top + yScale(value)}
-                x2={padding.left + chartWidth}
-                y2={padding.top + yScale(value)}
-                stroke="#E5E7EB"
-                strokeWidth="1"
-              />
-              <text
-                x={padding.left - 10}
-                y={padding.top + yScale(value)}
-                textAnchor="end"
-                dominantBaseline="middle"
-                fontSize="10"
-                fill="#6B7280"
-              >
-                {value}
-              </text>
-            </g>
-          ))}
-
-          {/* X-axis labels */}
-          {normalizedTrend.map((d) => (
-            <text
-              key={d.week}
-              x={padding.left + xScale(d.week)}
-              y={height - padding.bottom + 20}
-              textAnchor="middle"
-              fontSize="10"
-              fill="#6B7280"
-            >
-              {formatWeekLabel(d.weekStartDate)}
-            </text>
-          ))}
-
-          {/* Stress line (red) */}
-          <path
-            d={generatePath('avgStress')}
-            fill="none"
-            stroke="#DC2626"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-
-          {/* Control line (green) */}
-          <path
-            d={generatePath('avgControl')}
-            fill="none"
-            stroke="#059669"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-
-          {/* Data points */}
-          {normalizedTrend.map((d) => (
-            <g key={d.week}>
-              {/* Stress point */}
-              <circle
-                cx={padding.left + xScale(d.week)}
-                cy={padding.top + yScale(d.avgStress)}
-                r="4"
-                fill="#DC2626"
-              />
-              {/* Control point */}
-              <circle
-                cx={padding.left + xScale(d.week)}
-                cy={padding.top + yScale(d.avgControl)}
-                r="4"
-                fill="#059669"
-              />
-            </g>
-          ))}
-        </svg>
-      </div>
-
-      {/* Legend */}
-      <div className="flex items-center justify-center gap-6 mt-4">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#DC2626' }} />
-          <span className="text-xs" style={{ color: '#6B6760' }}>
-            Stress (lower is better)
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#059669' }} />
-          <span className="text-xs" style={{ color: '#6B6760' }}>
-            Control (higher is better)
-          </span>
-        </div>
+      <div className="h-[250px] w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={normalizedTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E8E6DD" />
+            <XAxis
+              dataKey="weekStartDate"
+              tickFormatter={formatWeekLabel}
+              stroke="#6B6760"
+              fontSize={10}
+              tickLine={false}
+              axisLine={false}
+              dy={10}
+            />
+            <YAxis
+              domain={[0, 5]}
+              ticks={[1, 2, 3, 4, 5]}
+              stroke="#6B6760"
+              fontSize={10}
+              tickLine={false}
+              axisLine={false}
+            />
+            <Tooltip
+              content={<CustomTooltip />}
+              cursor={{ stroke: '#E8E6DD', strokeWidth: 1, strokeDasharray: '4 4' }}
+            />
+            <Legend
+              verticalAlign="bottom"
+              height={36}
+              iconType="circle"
+              formatter={(value) => <span className="text-xs text-[#6B6760] ml-1">{value}</span>}
+              wrapperStyle={{ paddingTop: '20px' }}
+            />
+            <Line
+              type="monotone"
+              dataKey="avgStress"
+              name="Stress (lower is better)"
+              stroke="#DC2626"
+              strokeWidth={2}
+              activeDot={{ r: 6, strokeWidth: 0 }}
+              dot={{ r: 3, fill: '#DC2626', strokeWidth: 0 }}
+            />
+            <Line
+              type="monotone"
+              dataKey="avgControl"
+              name="Control (higher is better)"
+              stroke="#059669"
+              strokeWidth={2}
+              activeDot={{ r: 6, strokeWidth: 0 }}
+              dot={{ r: 3, fill: '#059669', strokeWidth: 0 }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
