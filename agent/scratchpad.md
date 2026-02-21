@@ -2589,3 +2589,16 @@ Open TODOs / follow-ups:
   - RadarCharts ended up being vastly superior for visualizing multi-dimensional metrics instead of generic Bar charts.
 - **Commands run + outcomes:** `npm run lint`, `typecheck`, `build` fully succeeded against the new strict chart typescript schemas.
 - **Open TODOs / follow-ups:** Validate radar chart axis labels at very small mobile breakpoints to ensure text doesn't overlap container limits.
+
+## 2026-02-21T18:55:00Z
+
+- **Task**: Implement Phase 3 Priority UI Enhancements (Micro-Interactions & Transitions).
+- **What worked**:
+  - Creating `HoverTilt` and `MagneticButton` wrappers utilizing Framer Motion's physics-based `useSpring` capabilities.
+  - Adding `AnimatePresence` inside `app/layout.tsx` for App Router global transitions.
+- **What failed**:
+  - Initially inserting manual JSX string replacement leading to lingering text nodes parsing as random output (`import {MagneticButton}...`). This triggered `react/jsx-no-comment-textnodes`.
+- **Improvements next time**:
+  - Be much more specific when utilizing `replace_file_content` targeting syntax changes. Refrain from matching multi-line blocks with empty comments unless precision is verified.
+- **Commands run**: `npm run lint` (cleared all JSX issues), `npm run build` (success).
+- **Open TODOs**: N/A for Phase 3. Advance to the next phase on the queue.

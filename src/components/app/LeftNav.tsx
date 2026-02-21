@@ -21,6 +21,7 @@ import {
   UserCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
 
 /**
  * LeftNav Component - Primary Navigation Sidebar
@@ -211,7 +212,7 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex flex-1 min-w-0 flex-col items-center gap-1 px-1 py-2 rounded-lg transition-colors min-h-[64px] justify-center ${
+                className={`relative flex flex-1 min-w-0 flex-col items-center gap-1 px-1 py-2 rounded-lg transition-colors min-h-[64px] justify-center ${
                   isActive
                     ? 'text-proofound-forest'
                     : 'text-muted-foreground hover:text-proofound-charcoal'
@@ -219,8 +220,21 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
                 aria-current={isActive ? 'page' : undefined}
                 aria-label={item.label}
               >
-                <Icon className="w-6 h-6" aria-hidden="true" />
-                <span className="w-full max-w-full truncate text-center text-[11px] font-medium leading-none">
+                {/* Fluid Active Indicator */}
+                {isActive && (
+                  <motion.div
+                    layoutId="mobile-nav-indicator"
+                    className="absolute inset-0 bg-proofound-forest/10 rounded-lg pointer-events-none"
+                    transition={{
+                      type: 'spring',
+                      stiffness: 400,
+                      damping: 30,
+                    }}
+                  />
+                )}
+
+                <Icon className="w-6 h-6 relative z-10" aria-hidden="true" />
+                <span className="w-full max-w-full truncate text-center text-[11px] font-medium leading-none relative z-10">
                   {item.label}
                 </span>
               </Link>

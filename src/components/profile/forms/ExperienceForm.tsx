@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -12,6 +12,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Experience } from '@/types/profile';
 import { motion } from 'framer-motion';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+
+const experienceSchema = z.object({
+  title: z.string().min(1, 'Title is required'),
+  orgDescription: z.string().min(1, 'Organization description is required'),
+  duration: z.string().min(1, 'Duration is required'),
+  learning: z.string().min(1, 'Learning description is required'),
+  growth: z.string().min(1, 'Growth description is required'),
+});
+
+type ExperienceFormData = z.infer<typeof experienceSchema>;
 
 interface ExperienceFormProps {
   open: boolean;
@@ -21,57 +34,50 @@ interface ExperienceFormProps {
 }
 
 export function ExperienceForm({ open, onOpenChange, experience, onSave }: ExperienceFormProps) {
-  const [title, setTitle] = useState('');
-  const [orgDescription, setOrgDescription] = useState('');
-  const [duration, setDuration] = useState('');
-  const [learning, setLearning] = useState('');
-  const [growth, setGrowth] = useState('');
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<ExperienceFormData>({
+    resolver: zodResolver(experienceSchema),
+    mode: 'onChange',
+    defaultValues: {
+      title: '',
+      orgDescription: '',
+      duration: '',
+      learning: '',
+      growth: '',
+    },
+  });
 
   useEffect(() => {
     if (open) {
       if (experience) {
-        setTitle(experience.title);
-        setOrgDescription(experience.orgDescription);
-        setDuration(experience.duration);
-        setLearning(experience.learning);
-        setGrowth(experience.growth);
+        reset({
+          title: experience.title,
+          orgDescription: experience.orgDescription,
+          duration: experience.duration,
+          learning: experience.learning,
+          growth: experience.growth,
+        });
       } else {
-        setTitle('');
-        setOrgDescription('');
-        setDuration('');
-        setLearning('');
-        setGrowth('');
+        reset({
+          title: '',
+          orgDescription: '',
+          duration: '',
+          learning: '',
+          growth: '',
+        });
       }
-      setErrors({});
     }
-  }, [open, experience]);
+  }, [open, experience, reset]);
 
-  const validate = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!title.trim()) newErrors.title = 'Title is required';
-    if (!orgDescription.trim()) newErrors.orgDescription = 'Organization description is required';
-    if (!duration.trim()) newErrors.duration = 'Duration is required';
-    if (!learning.trim()) newErrors.learning = 'Learning description is required';
-    if (!growth.trim()) newErrors.growth = 'Growth description is required';
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSave = () => {
-    if (!validate()) return;
-
+  const onSubmit = (data: ExperienceFormData) => {
     onSave({
-      title: title.trim(),
-      orgDescription: orgDescription.trim(),
-      duration: duration.trim(),
-      learning: learning.trim(),
-      growth: growth.trim(),
+      ...data,
       verified: false,
     });
-
     onOpenChange(false);
   };
 
@@ -85,7 +91,7 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 py-4">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -103,15 +109,14 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
               </Label>
               <Input
                 id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                {...register('title')}
                 placeholder='e.g., "Leading systemic change initiatives"'
                 className={errors.title ? 'border-red-500' : ''}
               />
               <p className="text-xs text-muted-foreground">
                 Describe your work, not your job title
               </p>
-              {errors.title && <p className="text-xs text-red-500">{errors.title}</p>}
+              {errors.title && <p className="text-xs text-red-500">{errors.title.message}</p>}
             </motion.div>
 
             {/* Organization Description */}
@@ -125,14 +130,13 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
               </Label>
               <Input
                 id="orgDescription"
-                value={orgDescription}
-                onChange={(e) => setOrgDescription(e.target.value)}
+                {...register('orgDescription')}
                 placeholder='e.g., "National nonprofit, Climate Justice, 50-200 employees"'
                 className={errors.orgDescription ? 'border-red-500' : ''}
               />
               <p className="text-xs text-muted-foreground">Size, industry, location</p>
               {errors.orgDescription && (
-                <p className="text-xs text-red-500">{errors.orgDescription}</p>
+                <p className="text-xs text-red-500">{errors.orgDescription.message}</p>
               )}
             </motion.div>
 
@@ -147,12 +151,11 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
               </Label>
               <Input
                 id="duration"
-                value={duration}
-                onChange={(e) => setDuration(e.target.value)}
+                {...register('duration')}
                 placeholder='e.g., "2023 - Present"'
                 className={errors.duration ? 'border-red-500' : ''}
               />
-              {errors.duration && <p className="text-xs text-red-500">{errors.duration}</p>}
+              {errors.duration && <p className="text-xs text-red-500">{errors.duration.message}</p>}
             </motion.div>
 
             {/* What I Learned */}
@@ -166,14 +169,13 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
               </Label>
               <textarea
                 id="learning"
-                value={learning}
-                onChange={(e) => setLearning(e.target.value)}
+                {...register('learning')}
                 placeholder="What new skills, knowledge, or perspectives did you gain?"
                 className={`flex min-h-[100px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${
                   errors.learning ? 'border-red-500' : ''
                 }`}
               />
-              {errors.learning && <p className="text-xs text-red-500">{errors.learning}</p>}
+              {errors.learning && <p className="text-xs text-red-500">{errors.learning.message}</p>}
             </motion.div>
 
             {/* How I Grew */}
@@ -187,14 +189,13 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
               </Label>
               <textarea
                 id="growth"
-                value={growth}
-                onChange={(e) => setGrowth(e.target.value)}
+                {...register('growth')}
                 placeholder="How did this experience change you professionally?"
                 className={`flex min-h-[100px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${
                   errors.growth ? 'border-red-500' : ''
                 }`}
               />
-              {errors.growth && <p className="text-xs text-red-500">{errors.growth}</p>}
+              {errors.growth && <p className="text-xs text-red-500">{errors.growth.message}</p>}
             </motion.div>
 
             {/* Guidance */}
@@ -210,16 +211,16 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
               </p>
             </motion.div>
           </motion.div>
-        </div>
 
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button type="button" onClick={handleSave}>
-            {experience ? 'Save Changes' : 'Add Experience'}
-          </Button>
-        </DialogFooter>
+          <DialogFooter className="mt-6">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {experience ? 'Save Changes' : 'Add Experience'}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

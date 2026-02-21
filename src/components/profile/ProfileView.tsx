@@ -1,10 +1,11 @@
 'use client';
 
-import { Card } from '@/components/ui/card';
+import { GlassCard } from '@/components/ui/glass-card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { MagneticButton } from '@/components/ui/magnetic-button';
 import {
   MapPin,
   Calendar,
@@ -96,14 +97,14 @@ export function ProfileView({ data }: ProfileViewProps) {
         {/* Profile Info */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative -mt-16 mb-8">
-            <Card className="p-6 border-2">
+            <GlassCard className="p-6">
               <div className="flex flex-col sm:flex-row gap-6 items-start">
                 {/* Avatar */}
                 <div className="relative">
-                  <Avatar className="w-32 h-32 border-4 border-card shadow-lg ring-2 ring-[rgba(122,146,120,0.2)] ring-offset-2">
+                  <Avatar className="w-32 h-32 border-4 border-card shadow-lg ring-2 ring-[#7A9278]/20 ring-offset-2">
                     <AvatarImage src={profile.avatarUrl || undefined} />
-                    <AvatarFallback className="bg-[rgb(245,243,238)] text-2xl">
-                      <User className="w-12 h-12" style={{ color: 'rgb(122, 146, 120)' }} />
+                    <AvatarFallback className="bg-[#F5F3EE] text-2xl">
+                      <User className="w-12 h-12 text-[#7A9278]" />
                     </AvatarFallback>
                   </Avatar>
                 </div>
@@ -115,12 +116,7 @@ export function ProfileView({ data }: ProfileViewProps) {
                     {profile.verified && (
                       <Badge
                         variant="outline"
-                        className="gap-1"
-                        style={{
-                          backgroundColor: 'rgba(122, 146, 120, 0.1)',
-                          borderColor: 'rgba(122, 146, 120, 0.3)',
-                          color: 'rgb(122, 146, 120)',
-                        }}
+                        className="gap-1 bg-[#7A9278]/10 border-[#7A9278]/30 text-[#7A9278]"
                       >
                         <CheckCircle2 className="w-3 h-3" />
                         Verified
@@ -142,21 +138,13 @@ export function ProfileView({ data }: ProfileViewProps) {
                   <p className="text-base text-foreground mb-4 max-w-3xl">{profile.tagline}</p>
 
                   <div className="flex gap-3">
-                    <Button
-                      variant="outline"
-                      className="rounded-full"
-                      style={{
-                        backgroundColor: 'rgba(122, 146, 120, 0.1)',
-                        borderColor: 'rgba(122, 146, 120, 0.3)',
-                        color: 'rgb(122, 146, 120)',
-                      }}
-                    >
+                    <MagneticButton className="rounded-full bg-[#7A9278]/10 border border-[#7A9278]/30 text-[#7A9278] px-4 py-2">
                       Edit Profile
-                    </Button>
+                    </MagneticButton>
                   </div>
                 </div>
               </div>
-            </Card>
+            </GlassCard>
           </div>
 
           {/* Main Content Grid */}
@@ -213,10 +201,7 @@ export function ProfileView({ data }: ProfileViewProps) {
                 {/* Impact Tab */}
                 <TabsContent value="impact" className="space-y-6">
                   {impactStories.map((story) => (
-                    <Card
-                      key={story.id}
-                      className="p-6 border-2 hover:border-[rgb(122,146,120)]/30 transition-colors"
-                    >
+                    <GlassCard key={story.id} interactive className="p-6">
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-3">
@@ -224,12 +209,7 @@ export function ProfileView({ data }: ProfileViewProps) {
                             {story.verified && (
                               <Badge
                                 variant="outline"
-                                className="gap-1"
-                                style={{
-                                  backgroundColor: 'rgba(122, 146, 120, 0.1)',
-                                  borderColor: 'rgba(122, 146, 120, 0.3)',
-                                  color: 'rgb(122, 146, 120)',
-                                }}
+                                className="gap-1 bg-[#7A9278]/10 border-[#7A9278]/30 text-[#7A9278]"
                               >
                                 <CheckCircle2 className="w-3 h-3" />
                                 Verified
@@ -266,17 +246,14 @@ export function ProfileView({ data }: ProfileViewProps) {
                           <p className="text-sm">{story.outcomes}</p>
                         </div>
                       </div>
-                    </Card>
+                    </GlassCard>
                   ))}
                 </TabsContent>
 
                 {/* Journey Tab */}
                 <TabsContent value="journey" className="space-y-6">
                   {experiences.map((experience) => (
-                    <Card
-                      key={experience.id}
-                      className="p-6 border-2 hover:border-[rgb(122,146,120)]/30 transition-colors"
-                    >
+                    <GlassCard key={experience.id} interactive className="p-6">
                       <div className="flex items-start gap-4">
                         <div className="w-12 h-12 rounded-full bg-muted/30 flex items-center justify-center flex-shrink-0">
                           <Briefcase className="w-5 h-5" style={{ color: 'rgb(198, 123, 92)' }} />
@@ -318,17 +295,14 @@ export function ProfileView({ data }: ProfileViewProps) {
                           </div>
                         </div>
                       </div>
-                    </Card>
+                    </GlassCard>
                   ))}
                 </TabsContent>
 
                 {/* Learning Tab */}
                 <TabsContent value="learning" className="space-y-6">
                   {education.map((edu) => (
-                    <Card
-                      key={edu.id}
-                      className="p-6 border-2 hover:border-[rgb(122,146,120)]/30 transition-colors"
-                    >
+                    <GlassCard key={edu.id} interactive className="p-6">
                       <div className="flex items-start gap-4">
                         <div className="w-12 h-12 rounded-full bg-muted/30 flex items-center justify-center flex-shrink-0">
                           <GraduationCap
@@ -365,17 +339,14 @@ export function ProfileView({ data }: ProfileViewProps) {
                           </div>
                         </div>
                       </div>
-                    </Card>
+                    </GlassCard>
                   ))}
                 </TabsContent>
 
                 {/* Service Tab */}
                 <TabsContent value="service" className="space-y-6">
                   {volunteering.map((vol) => (
-                    <Card
-                      key={vol.id}
-                      className="p-6 border-2 hover:border-[rgb(122,146,120)]/30 transition-colors"
-                    >
+                    <GlassCard key={vol.id} interactive className="p-6">
                       <div className="flex items-start gap-4">
                         <div className="w-12 h-12 rounded-full bg-muted/30 flex items-center justify-center flex-shrink-0">
                           <HandHeart className="w-5 h-5" style={{ color: 'rgb(198, 123, 92)' }} />
@@ -395,18 +366,9 @@ export function ProfileView({ data }: ProfileViewProps) {
 
                           <div className="space-y-3">
                             {/* Personal Connection - HIGHLIGHTED */}
-                            <div
-                              className="p-3 rounded-lg border"
-                              style={{
-                                backgroundColor: 'rgba(198, 123, 92, 0.05)',
-                                borderColor: 'rgba(198, 123, 92, 0.2)',
-                              }}
-                            >
+                            <div className="p-3 rounded-lg border bg-[#C67B5C]/5 border-[#C67B5C]/20">
                               <h5 className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
-                                <HandHeart
-                                  className="w-3 h-3"
-                                  style={{ color: 'rgb(198, 123, 92)' }}
-                                />
+                                <HandHeart className="w-3 h-3 text-[#C67B5C]" />
                                 Personal Connection
                               </h5>
                               <p className="text-sm mb-2 font-medium">{vol.cause}</p>
@@ -429,13 +391,13 @@ export function ProfileView({ data }: ProfileViewProps) {
                           </div>
                         </div>
                       </div>
-                    </Card>
+                    </GlassCard>
                   ))}
                 </TabsContent>
 
                 {/* Network Tab */}
                 <TabsContent value="network">
-                  <Card className="p-8 border-2">
+                  <GlassCard className="p-8">
                     <div className="text-center mb-8">
                       <Network
                         className="w-16 h-16 mx-auto mb-4"
@@ -494,7 +456,7 @@ export function ProfileView({ data }: ProfileViewProps) {
                         opportunities
                       </p>
                     </div>
-                  </Card>
+                  </GlassCard>
                 </TabsContent>
               </Tabs>
             </div>

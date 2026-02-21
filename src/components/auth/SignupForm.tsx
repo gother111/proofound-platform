@@ -431,7 +431,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
           {/* Divider */}
           <div className="relative my-6">
             <Separator className="bg-[#E8E6DD]" />
-            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-4 text-center text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-4 text-center overline">
               Or continue with
             </span>
           </div>
