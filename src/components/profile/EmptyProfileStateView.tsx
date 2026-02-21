@@ -1,6 +1,7 @@
 'use client';
 
-// This component renders the empty profile experience that mirrors the Figma design.
+import { FadeIn } from '@/components/ui/fade-in';
+import { SlideUp } from '@/components/ui/slide-up';
 import { motion } from 'framer-motion';
 import {
   Shield,
@@ -79,12 +80,7 @@ export function EmptyProfileStateView({
     <div className="min-h-screen bg-background">
       <div className="max-w-5xl mx-auto px-6 py-12">
         {/* Onboarding banner nudges the user to start populating the profile */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-8"
-        >
+        <SlideUp yOffset={-20} duration={0.6} className="mb-8">
           <Card className="p-6 border-2 border-[#7A9278]/30 bg-gradient-to-br from-[#7A9278]/5 via-background to-[#5C8B89]/5">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-full bg-[#7A9278]/10 flex items-center justify-center flex-shrink-0">
@@ -109,15 +105,10 @@ export function EmptyProfileStateView({
               </div>
             </div>
           </Card>
-        </motion.div>
+        </SlideUp>
 
         {/* Hero section with cover upload and avatar placeholder */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-12"
-        >
+        <SlideUp yOffset={20} duration={0.6} className="mb-12">
           <Card className="relative overflow-hidden border-2 border-dashed border-muted-foreground/20 hover:border-[#7A9278]/40 transition-all duration-300 group cursor-pointer">
             {/* Cover Area with Network Visualization - Empty State */}
             <div className="h-48 bg-gradient-to-br from-[#7A9278]/10 via-[#C67B5C]/5 to-[#5C8B89]/10 relative">
@@ -133,7 +124,13 @@ export function EmptyProfileStateView({
                       height="40"
                       patternUnits="userSpaceOnUse"
                     >
-                      <circle cx="20" cy="20" r="1" fill="currentColor" className="text-[#7A9278]" />
+                      <circle
+                        cx="20"
+                        cy="20"
+                        r="1"
+                        fill="currentColor"
+                        className="text-[#7A9278]"
+                      />
                       <line
                         x1="20"
                         y1="20"
@@ -224,16 +221,11 @@ export function EmptyProfileStateView({
               </div>
             </div>
           </Card>
-        </motion.div>
+        </SlideUp>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left column with mission, values, and causes */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="space-y-6"
-          >
+          <FadeIn delay={0.2} duration={0.6} className="space-y-6">
             {/* Mission - Empty State */}
             <Card className="p-6 border-2 border-dashed border-muted-foreground/20 hover:border-[#7A9278]/40 transition-colors group cursor-pointer">
               <div className="flex items-center gap-2 mb-4">
@@ -268,15 +260,24 @@ export function EmptyProfileStateView({
                   The principles that guide your decisions and actions.
                 </p>
                 <div className="flex flex-wrap gap-2 mb-3">
-                  <Badge variant="outline" className="text-xs text-muted-foreground/40 border-dashed">
+                  <Badge
+                    variant="outline"
+                    className="text-xs text-muted-foreground/40 border-dashed"
+                  >
                     <CircleDashed className="w-3 h-3 mr-1" />
                     Value 1
                   </Badge>
-                  <Badge variant="outline" className="text-xs text-muted-foreground/40 border-dashed">
+                  <Badge
+                    variant="outline"
+                    className="text-xs text-muted-foreground/40 border-dashed"
+                  >
                     <CircleDashed className="w-3 h-3 mr-1" />
                     Value 2
                   </Badge>
-                  <Badge variant="outline" className="text-xs text-muted-foreground/40 border-dashed">
+                  <Badge
+                    variant="outline"
+                    className="text-xs text-muted-foreground/40 border-dashed"
+                  >
                     <CircleDashed className="w-3 h-3 mr-1" />
                     Value 3
                   </Badge>
@@ -316,16 +317,10 @@ export function EmptyProfileStateView({
                 </Button>
               </div>
             </Card>
-
-          </motion.div>
+          </FadeIn>
 
           {/* Right column contains journey and volunteering tabs */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="lg:col-span-2 space-y-8"
-          >
+          <SlideUp yOffset={20} delay={0.3} duration={0.6} className="lg:col-span-2 space-y-8">
             <Tabs defaultValue="journey" className="w-full">
               <TabsList className="grid w-full grid-cols-2 rounded-full bg-muted/30">
                 <TabsTrigger value="journey" className="rounded-full">
@@ -520,7 +515,7 @@ export function EmptyProfileStateView({
                 </div>
               </div>
             </Card>
-          </motion.div>
+          </SlideUp>
         </div>
       </div>
     </div>

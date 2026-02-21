@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -12,6 +12,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Volunteering } from '@/types/profile';
 import { motion } from 'framer-motion';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+
+const volunteerSchema = z.object({
+  title: z.string().min(1, 'Role/Title is required'),
+  orgDescription: z.string().min(1, 'Organization description is required'),
+  duration: z.string().min(1, 'Duration is required'),
+  cause: z.string().min(1, 'Cause is required'),
+  impact: z.string().min(1, 'Impact description is required'),
+  skillsDeployed: z.string().min(1, 'Skills deployed is required'),
+  personalWhy: z.string().min(1, 'Personal motivation is required'),
+});
+
+type VolunteerFormData = z.infer<typeof volunteerSchema>;
 
 interface VolunteerFormProps {
   open: boolean;
@@ -21,67 +36,56 @@ interface VolunteerFormProps {
 }
 
 export function VolunteerForm({ open, onOpenChange, volunteering, onSave }: VolunteerFormProps) {
-  const [title, setTitle] = useState('');
-  const [orgDescription, setOrgDescription] = useState('');
-  const [duration, setDuration] = useState('');
-  const [cause, setCause] = useState('');
-  const [impact, setImpact] = useState('');
-  const [skillsDeployed, setSkillsDeployed] = useState('');
-  const [personalWhy, setPersonalWhy] = useState('');
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<VolunteerFormData>({
+    resolver: zodResolver(volunteerSchema),
+    mode: 'onChange',
+    defaultValues: {
+      title: '',
+      orgDescription: '',
+      duration: '',
+      cause: '',
+      impact: '',
+      skillsDeployed: '',
+      personalWhy: '',
+    },
+  });
 
   useEffect(() => {
     if (open) {
       if (volunteering) {
-        setTitle(volunteering.title);
-        setOrgDescription(volunteering.orgDescription);
-        setDuration(volunteering.duration);
-        setCause(volunteering.cause);
-        setImpact(volunteering.impact);
-        setSkillsDeployed(volunteering.skillsDeployed);
-        setPersonalWhy(volunteering.personalWhy);
+        reset({
+          title: volunteering.title,
+          orgDescription: volunteering.orgDescription,
+          duration: volunteering.duration,
+          cause: volunteering.cause,
+          impact: volunteering.impact,
+          skillsDeployed: volunteering.skillsDeployed,
+          personalWhy: volunteering.personalWhy,
+        });
       } else {
-        setTitle('');
-        setOrgDescription('');
-        setDuration('');
-        setCause('');
-        setImpact('');
-        setSkillsDeployed('');
-        setPersonalWhy('');
+        reset({
+          title: '',
+          orgDescription: '',
+          duration: '',
+          cause: '',
+          impact: '',
+          skillsDeployed: '',
+          personalWhy: '',
+        });
       }
-      setErrors({});
     }
-  }, [open, volunteering]);
+  }, [open, volunteering, reset]);
 
-  const validate = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!title.trim()) newErrors.title = 'Role/Title is required';
-    if (!orgDescription.trim()) newErrors.orgDescription = 'Organization description is required';
-    if (!duration.trim()) newErrors.duration = 'Duration is required';
-    if (!cause.trim()) newErrors.cause = 'Cause is required';
-    if (!impact.trim()) newErrors.impact = 'Impact description is required';
-    if (!skillsDeployed.trim()) newErrors.skillsDeployed = 'Skills deployed is required';
-    if (!personalWhy.trim()) newErrors.personalWhy = 'Personal motivation is required';
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSave = () => {
-    if (!validate()) return;
-
+  const onSubmit = (data: VolunteerFormData) => {
     onSave({
-      title: title.trim(),
-      orgDescription: orgDescription.trim(),
-      duration: duration.trim(),
-      cause: cause.trim(),
-      impact: impact.trim(),
-      skillsDeployed: skillsDeployed.trim(),
-      personalWhy: personalWhy.trim(),
+      ...data,
       verified: false,
     });
-
     onOpenChange(false);
   };
 
@@ -96,7 +100,7 @@ export function VolunteerForm({ open, onOpenChange, volunteering, onSave }: Volu
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 py-4">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -114,12 +118,11 @@ export function VolunteerForm({ open, onOpenChange, volunteering, onSave }: Volu
               </Label>
               <Input
                 id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                {...register('title')}
                 placeholder='e.g., "Board governance and strategic direction"'
                 className={errors.title ? 'border-red-500' : ''}
               />
-              {errors.title && <p className="text-xs text-red-500">{errors.title}</p>}
+              {errors.title && <p className="text-xs text-red-500">{errors.title.message}</p>}
             </motion.div>
 
             {/* Organization Description */}
@@ -133,13 +136,12 @@ export function VolunteerForm({ open, onOpenChange, volunteering, onSave }: Volu
               </Label>
               <Input
                 id="orgDescription"
-                value={orgDescription}
-                onChange={(e) => setOrgDescription(e.target.value)}
+                {...register('orgDescription')}
                 placeholder='e.g., "Youth-led climate organization, National reach"'
                 className={errors.orgDescription ? 'border-red-500' : ''}
               />
               {errors.orgDescription && (
-                <p className="text-xs text-red-500">{errors.orgDescription}</p>
+                <p className="text-xs text-red-500">{errors.orgDescription.message}</p>
               )}
             </motion.div>
 
@@ -154,32 +156,22 @@ export function VolunteerForm({ open, onOpenChange, volunteering, onSave }: Volu
               </Label>
               <Input
                 id="duration"
-                value={duration}
-                onChange={(e) => setDuration(e.target.value)}
+                {...register('duration')}
                 placeholder='e.g., "2022 - Present"'
                 className={errors.duration ? 'border-red-500' : ''}
               />
-              {errors.duration && <p className="text-xs text-red-500">{errors.duration}</p>}
+              {errors.duration && <p className="text-xs text-red-500">{errors.duration.message}</p>}
             </motion.div>
 
             {/* Personal Connection - HIGHLIGHTED SECTION */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="space-y-4 p-4 rounded-lg border-2"
-              style={{
-                backgroundColor: 'rgba(198, 123, 92, 0.05)',
-                borderColor: 'rgba(198, 123, 92, 0.3)',
-              }}
+              className="space-y-4 p-4 rounded-lg border-2 bg-[#C67B5C]/5 border-[#C67B5C]/30"
             >
               <div className="flex items-center gap-2">
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: 'rgb(198, 123, 92)' }}
-                />
-                <Label className="text-base" style={{ color: 'rgb(198, 123, 92)' }}>
-                  Personal Connection
-                </Label>
+                <div className="w-2 h-2 rounded-full bg-[#C67B5C]" />
+                <Label className="text-base text-[#C67B5C]">Personal Connection</Label>
               </div>
 
               {/* Cause */}
@@ -189,13 +181,12 @@ export function VolunteerForm({ open, onOpenChange, volunteering, onSave }: Volu
                 </Label>
                 <Input
                   id="cause"
-                  value={cause}
-                  onChange={(e) => setCause(e.target.value)}
+                  {...register('cause')}
                   placeholder='e.g., "Climate Justice - Amplifying youth voices"'
                   className={errors.cause ? 'border-red-500' : ''}
                 />
                 <p className="text-xs text-muted-foreground">What cause is this connected to?</p>
-                {errors.cause && <p className="text-xs text-red-500">{errors.cause}</p>}
+                {errors.cause && <p className="text-xs text-red-500">{errors.cause.message}</p>}
               </div>
 
               {/* Personal Why */}
@@ -205,8 +196,7 @@ export function VolunteerForm({ open, onOpenChange, volunteering, onSave }: Volu
                 </Label>
                 <textarea
                   id="personalWhy"
-                  value={personalWhy}
-                  onChange={(e) => setPersonalWhy(e.target.value)}
+                  {...register('personalWhy')}
                   placeholder="Share your personal connection and motivation for this cause"
                   className={`flex min-h-[100px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${
                     errors.personalWhy ? 'border-red-500' : ''
@@ -215,7 +205,9 @@ export function VolunteerForm({ open, onOpenChange, volunteering, onSave }: Volu
                 <p className="text-xs text-muted-foreground italic">
                   This is the heart of your service work - be authentic
                 </p>
-                {errors.personalWhy && <p className="text-xs text-red-500">{errors.personalWhy}</p>}
+                {errors.personalWhy && (
+                  <p className="text-xs text-red-500">{errors.personalWhy.message}</p>
+                )}
               </div>
             </motion.div>
 
@@ -230,14 +222,13 @@ export function VolunteerForm({ open, onOpenChange, volunteering, onSave }: Volu
               </Label>
               <textarea
                 id="impact"
-                value={impact}
-                onChange={(e) => setImpact(e.target.value)}
+                {...register('impact')}
                 placeholder="What change did you help create?"
                 className={`flex min-h-[80px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${
                   errors.impact ? 'border-red-500' : ''
                 }`}
               />
-              {errors.impact && <p className="text-xs text-red-500">{errors.impact}</p>}
+              {errors.impact && <p className="text-xs text-red-500">{errors.impact.message}</p>}
             </motion.div>
 
             {/* Skills Deployed */}
@@ -251,15 +242,14 @@ export function VolunteerForm({ open, onOpenChange, volunteering, onSave }: Volu
               </Label>
               <textarea
                 id="skillsDeployed"
-                value={skillsDeployed}
-                onChange={(e) => setSkillsDeployed(e.target.value)}
+                {...register('skillsDeployed')}
                 placeholder="What skills and expertise did you contribute?"
                 className={`flex min-h-[80px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${
                   errors.skillsDeployed ? 'border-red-500' : ''
                 }`}
               />
               {errors.skillsDeployed && (
-                <p className="text-xs text-red-500">{errors.skillsDeployed}</p>
+                <p className="text-xs text-red-500">{errors.skillsDeployed.message}</p>
               )}
             </motion.div>
 
@@ -276,16 +266,14 @@ export function VolunteerForm({ open, onOpenChange, volunteering, onSave }: Volu
               </p>
             </motion.div>
           </motion.div>
-        </div>
 
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button type="button" onClick={handleSave}>
-            {volunteering ? 'Save Changes' : 'Add Volunteer Work'}
-          </Button>
-        </DialogFooter>
+          <DialogFooter className="mt-6">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit">{volunteering ? 'Save Changes' : 'Add Volunteer Work'}</Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

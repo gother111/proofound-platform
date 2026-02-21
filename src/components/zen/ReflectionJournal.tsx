@@ -132,7 +132,7 @@ export function ReflectionJournal() {
                     <span className="text-2xl font-bold text-[#1C4D3A] dark:text-[#E2EDD9]">
                       {format(date, 'dd')}
                     </span>
-                    <span className="text-xs uppercase font-medium text-[#6B6760] dark:text-[#C9C2B8]">
+                    <span className="overline mb-0 border-none outline-none">
                       {format(date, 'MMM')}
                     </span>
                   </div>

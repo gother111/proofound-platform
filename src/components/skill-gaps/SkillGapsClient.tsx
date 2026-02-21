@@ -86,9 +86,7 @@ function normalizeGoal(rawGoal: unknown, rawLegacyGoal?: unknown): Goal {
 const StatCard = ({ label, value, hint }: { label: string; value: string; hint?: string }) => (
   <Card className="border-proofound-stone dark:border-border">
     <CardHeader className="pb-2">
-      <CardDescription className="text-xs uppercase tracking-wide text-muted-foreground">
-        {label}
-      </CardDescription>
+      <CardDescription className="overline">{label}</CardDescription>
       <CardTitle className="text-2xl">{value}</CardTitle>
       {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
     </CardHeader>

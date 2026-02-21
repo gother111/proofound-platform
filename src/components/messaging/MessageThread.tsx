@@ -12,6 +12,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import { ArrowLeft, Check, CheckCheck, Loader2, Send } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -182,71 +183,100 @@ export function MessageThread({
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#F7F6F1]">
+        <motion.div
+          className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#F7F6F1]"
+          initial="hidden"
+          animate="visible"
+          variants={{
+            hidden: { opacity: 0 },
+            visible: {
+              opacity: 1,
+              transition: { staggerChildren: 0.05 },
+            },
+          }}
+        >
           {messages.length === 0 && (
-            <div className="text-center py-12 space-y-2">
+            <motion.div
+              className="text-center py-12 space-y-2"
+              variants={{
+                hidden: { opacity: 0, y: 10 },
+                visible: { opacity: 1, y: 0 },
+              }}
+            >
               <p className="text-sm text-[#6B6760]">No messages yet</p>
               <p className="text-xs text-[#6B6760]">Start the conversation below</p>
-            </div>
+            </motion.div>
           )}
 
-          {messages.map((message) => {
-            const isOwnMessage = message.senderId === currentUserId;
-            return (
-              <div
-                key={message.id}
-                className={cn('flex gap-2', isOwnMessage ? 'justify-end' : 'justify-start')}
-              >
-                {!isOwnMessage && (
-                  <Avatar className="h-8 w-8 flex-shrink-0">
-                    {stage === 'revealed' && otherPartyAvatar ? (
-                      <AvatarImage src={otherPartyAvatar} alt={displayName} />
-                    ) : null}
-                    <AvatarFallback className="bg-[#1C4D3A] text-white text-xs">
-                      {getInitials(displayName)}
-                    </AvatarFallback>
-                  </Avatar>
-                )}
-
-                <div
-                  className={cn(
-                    'max-w-[82%] sm:max-w-[75%] lg:max-w-[70%] space-y-1',
-                    isOwnMessage && 'flex flex-col items-end'
-                  )}
+          <AnimatePresence initial={false}>
+            {messages.map((message) => {
+              const isOwnMessage = message.senderId === currentUserId;
+              return (
+                <motion.div
+                  key={message.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  variants={{
+                    hidden: { opacity: 0, y: 10 },
+                    visible: { opacity: 1, y: 0 },
+                  }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 24 }}
+                  className={cn('flex gap-2', isOwnMessage ? 'justify-end' : 'justify-start')}
                 >
+                  {!isOwnMessage && (
+                    <Avatar className="h-8 w-8 flex-shrink-0">
+                      {stage === 'revealed' && otherPartyAvatar ? (
+                        <AvatarImage src={otherPartyAvatar} alt={displayName} />
+                      ) : null}
+                      <AvatarFallback className="bg-[#1C4D3A] text-white text-xs">
+                        {getInitials(displayName)}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
+
                   <div
                     className={cn(
-                      'rounded-2xl px-4 py-2 break-words',
-                      isOwnMessage
-                        ? 'bg-[#1C4D3A] text-white rounded-br-sm'
-                        : 'bg-white border border-[#D8D2C8] text-[#2D3330] rounded-bl-sm'
+                      'max-w-[82%] sm:max-w-[75%] lg:max-w-[70%] space-y-1',
+                      isOwnMessage && 'flex flex-col items-end'
                     )}
                   >
-                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    <div
+                      className={cn(
+                        'rounded-2xl px-4 py-2 break-words',
+                        isOwnMessage
+                          ? 'bg-[#1C4D3A] text-white rounded-br-sm'
+                          : 'bg-white border border-[#D8D2C8] text-[#2D3330] rounded-bl-sm'
+                      )}
+                    >
+                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    </div>
+
+                    {/* Timestamp and read receipt */}
+                    <div className="flex items-center gap-1 px-2">
+                      <span className="text-xs text-[#6B6760]">
+                        {format(new Date(message.sentAt), 'HH:mm')}
+                      </span>
+                      {isOwnMessage && (
+                        <ReadReceipt
+                          status={message.readAt ? 'read' : 'delivered'}
+                          timestamp={message.readAt}
+                        />
+                      )}
+                    </div>
                   </div>
 
-                  {/* Timestamp and read receipt */}
-                  <div className="flex items-center gap-1 px-2">
-                    <span className="text-xs text-[#6B6760]">
-                      {format(new Date(message.sentAt), 'HH:mm')}
-                    </span>
-                    {isOwnMessage && (
-                      <ReadReceipt
-                        status={message.readAt ? 'read' : 'delivered'}
-                        timestamp={message.readAt}
-                      />
-                    )}
-                  </div>
-                </div>
-
-                {isOwnMessage && (
-                  <Avatar className="h-8 w-8 flex-shrink-0">
-                    <AvatarFallback className="bg-[#7A9278] text-white text-xs">You</AvatarFallback>
-                  </Avatar>
-                )}
-              </div>
-            );
-          })}
+                  {isOwnMessage && (
+                    <Avatar className="h-8 w-8 flex-shrink-0">
+                      <AvatarFallback className="bg-[#7A9278] text-white text-xs">
+                        You
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
 
           {/* Typing indicator */}
           {isTyping && (
@@ -282,7 +312,7 @@ export function MessageThread({
           {isTyping && <TypingIndicator isTyping={true} displayName={displayName} />}
 
           <div ref={messagesEndRef} />
-        </div>
+        </motion.div>
 
         {/* Compose */}
         <div className="p-4 border-t bg-white">
