@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { EmptyProfileStateView } from './EmptyProfileStateView';
+import { ProfileSkeleton } from './ProfileSkeleton';
 import { useProfileViewState } from './editable-profile/useProfileViewState';
 import { ProfileCompletionBanner } from './editable-profile/ProfileCompletionBanner';
 import { ProfileDialogs } from './editable-profile/ProfileDialogs';
@@ -101,11 +102,7 @@ export function EditableProfileView() {
   }, [profile]);
 
   if (isLoading || !profile) {
-    return (
-      <div className="min-h-screen bg-proofound-parchment dark:bg-background flex items-center justify-center">
-        <p className="text-proofound-charcoal/70 dark:text-muted-foreground">Loading profile...</p>
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   const showCompletionBanner = profileCompletion < 80;
