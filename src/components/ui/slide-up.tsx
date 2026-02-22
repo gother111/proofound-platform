@@ -18,7 +18,8 @@ export const SlideUp = React.forwardRef<HTMLDivElement, SlideUpProps>(
       <motion.div
         ref={ref}
         initial={{ opacity: 0, y: yOffset }}
-        animate={{ opacity: 1, y: 0 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-20px' }}
         exit={{ opacity: 0, y: -yOffset }}
         transition={{
           duration,
