@@ -1,28 +1,7 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
-import { usePathname } from 'next/navigation';
-
 export function TransitionProvider({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-
-  return (
-    <AnimatePresence initial={false} mode="wait">
-      <motion.div
-        key={pathname}
-        initial={false}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -15 }}
-        transition={{
-          type: 'spring',
-          stiffness: 260,
-          damping: 20,
-          mass: 0.5,
-        }}
-        className="w-full min-h-screen"
-      >
-        {children}
-      </motion.div>
-    </AnimatePresence>
-  );
+  // Route-level opacity transitions caused intermittent blank screens
+  // during client-side navigation in App Router. Keep this container static.
+  return <div className="w-full min-h-screen">{children}</div>;
 }
