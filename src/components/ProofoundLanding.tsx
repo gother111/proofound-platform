@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { motion, useScroll, useSpring, useReducedMotion, useTransform } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { LayoutGrid, Menu, X, ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { MagneticButton } from '@/components/ui/magnetic-button';
 import * as Dialog from '@radix-ui/react-dialog';
 
 // Import all section components
@@ -253,12 +253,12 @@ export function ProofoundLanding({
             className={`pointer-events-auto ${showStickyProgress ? '' : 'hidden md:block invisible'}`}
             aria-hidden={!showStickyProgress}
           >
-            <Button
+            <MagneticButton
               onClick={handleGetStarted}
-              className="rounded-full shadow-lg hover:shadow-xl transition-all font-sans hidden sm:flex"
+              className="rounded-full shadow-lg hover:shadow-xl transition-all font-sans hidden sm:flex items-center justify-center px-4 py-2"
             >
               Get Started
-            </Button>
+            </MagneticButton>
           </motion.div>
 
           <div className="pointer-events-auto">
