@@ -73,7 +73,7 @@ export async function fetchRedactedIndividualProfile(
   const { data: profile, error } = await supabase
     .from('individual_profiles')
     .select('*')
-    .eq('id', profileId)
+    .eq('user_id', profileId)
     .single();
 
   if (error || !profile) {
@@ -160,15 +160,12 @@ export async function fetchCompleteRedactedProfile(
   if (context === 'self') {
     const supabase = await createClient();
 
-    const [
-      { data: baseProfile },
-      { data: individualProfile },
-      { data: matchingProfile },
-    ] = await Promise.all([
-      supabase.from('profiles').select('*').eq('id', profileId).single(),
-      supabase.from('individual_profiles').select('*').eq('id', profileId).single(),
-      supabase.from('matching_profiles').select('*').eq('profile_id', profileId).single(),
-    ]);
+    const [{ data: baseProfile }, { data: individualProfile }, { data: matchingProfile }] =
+      await Promise.all([
+        supabase.from('profiles').select('*').eq('id', profileId).single(),
+        supabase.from('individual_profiles').select('*').eq('user_id', profileId).single(),
+        supabase.from('matching_profiles').select('*').eq('profile_id', profileId).single(),
+      ]);
 
     return {
       ...baseProfile,
@@ -196,10 +193,7 @@ export async function fetchCompleteRedactedProfile(
  * Check if a profile link token is valid
  * This would be used when someone accesses a profile via /profile/:handle?token=xxx
  */
-export async function validateProfileLinkToken(
-  profileId: string,
-  token: string
-): Promise<boolean> {
+export async function validateProfileLinkToken(profileId: string, token: string): Promise<boolean> {
   // TODO: Implement token validation logic
   // For now, we'll just check if token is non-empty
   // In production, you'd want to store tokens in the database with expiry

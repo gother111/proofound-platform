@@ -400,6 +400,16 @@ export async function getProfileData(): Promise<ProfileData> {
       redactMode: profile?.redactMode ?? false,
     };
   } catch (error) {
+    // Re-throw Next.js redirect/not-found errors - they must propagate
+    if (
+      error instanceof Error &&
+      (error.message === 'NEXT_REDIRECT' ||
+        error.message === 'NEXT_NOT_FOUND' ||
+        (error as any).digest?.startsWith('NEXT_REDIRECT') ||
+        (error as any).digest?.startsWith('NEXT_NOT_FOUND'))
+    ) {
+      throw error;
+    }
     console.error('Failed to get profile data:', error);
     // Return empty profile structure instead of throwing
     // This prevents the page from crashing completely

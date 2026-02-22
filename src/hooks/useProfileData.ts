@@ -75,6 +75,14 @@ export function useProfileData() {
         setProfileCompletion(calculateProfileCompletion(data));
       })
       .catch((error) => {
+        // Re-throw Next.js redirect/not-found errors
+        if (
+          error instanceof Error &&
+          ((error as any).digest?.startsWith('NEXT_REDIRECT') ||
+            (error as any).digest?.startsWith('NEXT_NOT_FOUND'))
+        ) {
+          throw error;
+        }
         console.error('Failed to load profile data:', error);
         toast.error('Unable to load profile data. Please try again.');
       })
