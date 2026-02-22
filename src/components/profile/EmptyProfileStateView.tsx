@@ -1,7 +1,5 @@
 'use client';
 
-import { FadeIn } from '@/components/ui/fade-in';
-import { SlideUp } from '@/components/ui/slide-up';
 import { motion } from 'framer-motion';
 import {
   Shield,
@@ -77,10 +75,10 @@ export function EmptyProfileStateView({
   const displayName = basicInfo.name?.trim() || 'Your Name';
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" data-testid="individual-empty-profile-view">
       <div className="max-w-5xl mx-auto px-6 py-12">
         {/* Onboarding banner nudges the user to start populating the profile */}
-        <SlideUp yOffset={-20} duration={0.6} className="mb-8">
+        <div className="mb-8">
           <Card className="p-6 border-2 border-[#7A9278]/30 bg-gradient-to-br from-[#7A9278]/5 via-background to-[#5C8B89]/5">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-full bg-[#7A9278]/10 flex items-center justify-center flex-shrink-0">
@@ -105,10 +103,10 @@ export function EmptyProfileStateView({
               </div>
             </div>
           </Card>
-        </SlideUp>
+        </div>
 
         {/* Hero section with cover upload and avatar placeholder */}
-        <SlideUp yOffset={20} duration={0.6} className="mb-12">
+        <div className="mb-12">
           <Card className="relative overflow-hidden border-2 border-dashed border-muted-foreground/20 hover:border-[#7A9278]/40 transition-all duration-300 group cursor-pointer">
             {/* Cover Area with Network Visualization - Empty State */}
             <div className="h-48 bg-gradient-to-br from-[#7A9278]/10 via-[#C67B5C]/5 to-[#5C8B89]/10 relative">
@@ -221,11 +219,11 @@ export function EmptyProfileStateView({
               </div>
             </div>
           </Card>
-        </SlideUp>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left column with mission, values, and causes */}
-          <FadeIn delay={0.2} duration={0.6} className="space-y-6">
+          <div className="space-y-6">
             {/* Mission - Empty State */}
             <Card className="p-6 border-2 border-dashed border-muted-foreground/20 hover:border-[#7A9278]/40 transition-colors group cursor-pointer">
               <div className="flex items-center gap-2 mb-4">
@@ -317,10 +315,10 @@ export function EmptyProfileStateView({
                 </Button>
               </div>
             </Card>
-          </FadeIn>
+          </div>
 
           {/* Right column contains journey and volunteering tabs */}
-          <SlideUp yOffset={20} delay={0.3} duration={0.6} className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2 space-y-8">
             <Tabs defaultValue="journey" className="w-full">
               <TabsList className="grid w-full grid-cols-2 rounded-full bg-muted/30">
                 <TabsTrigger value="journey" className="rounded-full">
@@ -515,7 +513,7 @@ export function EmptyProfileStateView({
                 </div>
               </div>
             </Card>
-          </SlideUp>
+          </div>
         </div>
       </div>
     </div>

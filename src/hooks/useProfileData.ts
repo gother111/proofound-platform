@@ -58,42 +58,124 @@ const initialPending: PendingState = {
   redactMode: false,
 };
 
+const PROFILE_LOAD_MAX_ATTEMPTS = 2;
+const PROFILE_LOAD_RETRY_DELAY_MS = 300;
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function getNextDigest(error: unknown): string | null {
+  if (typeof error === 'object' && error !== null && 'digest' in error) {
+    const digest = (error as { digest?: unknown }).digest;
+    if (typeof digest === 'string') {
+      return digest;
+    }
+  }
+  return null;
+}
+
+function getRedirectTargetFromDigest(digest: string): string | null {
+  const parts = digest.split(';');
+  const redirectTarget = parts[2];
+  if (!redirectTarget || redirectTarget === 'undefined') {
+    return null;
+  }
+  return redirectTarget;
+}
+
+function isTransientProfileLoadError(error: unknown): boolean {
+  if (error instanceof TypeError) {
+    return /failed to fetch|fetch failed|network/i.test(error.message);
+  }
+  if (error instanceof Error) {
+    return /failed to fetch|network|load failed|abort/i.test(error.message);
+  }
+  return false;
+}
+
 export function useProfileData() {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [profileCompletion, setProfileCompletion] = useState(5);
   const [pending, setPending] = useState<PendingState>(initialPending);
   const [isPending, startTransition] = useTransition();
 
+  const retryLoad = useCallback(() => {
+    setLoadError(null);
+    setIsLoading(true);
+    setLoadAttempt((attempt) => attempt + 1);
+  }, []);
+
   useEffect(() => {
     let active = true;
+    let skipLoadingReset = false;
 
-    getProfileData()
-      .then((data) => {
-        if (!active) return;
-        setProfile(data);
-        setProfileCompletion(calculateProfileCompletion(data));
-      })
-      .catch((error) => {
-        // Re-throw Next.js redirect/not-found errors
-        if (
-          error instanceof Error &&
-          ((error as any).digest?.startsWith('NEXT_REDIRECT') ||
-            (error as any).digest?.startsWith('NEXT_NOT_FOUND'))
-        ) {
-          throw error;
+    const loadProfile = async () => {
+      setIsLoading(true);
+      setLoadError(null);
+
+      for (let attempt = 1; attempt <= PROFILE_LOAD_MAX_ATTEMPTS; attempt += 1) {
+        try {
+          const data = await getProfileData();
+          if (!active) {
+            return;
+          }
+          setProfile(data);
+          setProfileCompletion(calculateProfileCompletion(data));
+          return;
+        } catch (error) {
+          if (!active) {
+            return;
+          }
+
+          const digest = getNextDigest(error);
+
+          if (digest?.startsWith('NEXT_REDIRECT')) {
+            const redirectTarget = getRedirectTargetFromDigest(digest);
+            skipLoadingReset = true;
+            if (redirectTarget) {
+              window.location.assign(redirectTarget);
+            } else {
+              window.location.reload();
+            }
+            return;
+          }
+
+          if (digest?.startsWith('NEXT_NOT_FOUND')) {
+            skipLoadingReset = true;
+            window.location.assign('/404');
+            return;
+          }
+
+          const shouldRetry =
+            isTransientProfileLoadError(error) && attempt < PROFILE_LOAD_MAX_ATTEMPTS;
+          if (shouldRetry) {
+            await sleep(PROFILE_LOAD_RETRY_DELAY_MS * attempt);
+            continue;
+          }
+
+          console.error('Failed to load profile data:', error);
+          setProfile(null);
+          setLoadError('Unable to load profile data. Please try again.');
+          toast.error('Unable to load profile data. Please try again.');
+          return;
         }
-        console.error('Failed to load profile data:', error);
-        toast.error('Unable to load profile data. Please try again.');
-      })
-      .finally(() => {
-        if (active) setIsLoading(false);
-      });
+      }
+    };
+
+    loadProfile().finally(() => {
+      if (active && !skipLoadingReset) {
+        setIsLoading(false);
+      }
+    });
 
     return () => {
       active = false;
     };
-  }, []);
+  }, [loadAttempt]);
 
   useEffect(() => {
     if (profile) {
@@ -403,6 +485,8 @@ export function useProfileData() {
   return {
     profile,
     isLoading,
+    loadError,
+    retryLoad,
     isPending,
     pending,
     profileCompletion,

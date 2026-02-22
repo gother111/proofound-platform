@@ -13,12 +13,16 @@ import { ProfileSidebar } from './editable-profile/ProfileSidebar';
 import { ProfileTabsSection } from './editable-profile/ProfileTabsSection';
 import { useProfileData } from '@/hooks/useProfileData';
 import { MobileProfileHeader } from '@/components/profile/MobileProfileHeader';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 export function EditableProfileView() {
   const router = useRouter();
   const {
     profile,
     isLoading,
+    loadError,
+    retryLoad,
     isPending,
     pending,
     profileCompletion,
@@ -101,8 +105,29 @@ export function EditableProfileView() {
     );
   }, [profile]);
 
-  if (isLoading || !profile) {
+  if (isLoading) {
     return <ProfileSkeleton />;
+  }
+
+  if (loadError || !profile) {
+    return (
+      <div className="min-h-screen bg-proofound-parchment dark:bg-background">
+        <div className="max-w-2xl mx-auto px-6 py-16">
+          <Card className="p-8 text-center space-y-4" data-testid="profile-load-error">
+            <h1 className="text-2xl font-display">Unable to load your profile</h1>
+            <p className="text-sm text-muted-foreground">
+              The profile page did not load successfully. Try again or return to your dashboard.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <Button onClick={retryLoad}>Try again</Button>
+              <Button variant="outline" onClick={() => router.push('/app/i/home')}>
+                Back to dashboard
+              </Button>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
   }
 
   const showCompletionBanner = profileCompletion < 80;
@@ -129,7 +154,10 @@ export function EditableProfileView() {
   }
 
   return (
-    <div className="min-h-screen bg-proofound-parchment dark:bg-background">
+    <div
+      className="min-h-screen bg-proofound-parchment dark:bg-background"
+      data-testid="individual-profile-root"
+    >
       {showCompletionBanner && <ProfileCompletionBanner profileCompletion={profileCompletion} />}
 
       <MobileProfileHeader
