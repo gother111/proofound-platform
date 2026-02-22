@@ -17,7 +17,8 @@ export const FadeIn = React.forwardRef<HTMLDivElement, FadeInProps>(
       <motion.div
         ref={ref}
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true, margin: '-20px' }}
         exit={{ opacity: 0 }}
         transition={{
           duration,

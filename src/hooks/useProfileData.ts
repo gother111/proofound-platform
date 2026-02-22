@@ -75,13 +75,20 @@ export function useProfileData() {
         setProfileCompletion(calculateProfileCompletion(data));
       })
       .catch((error) => {
-        // Re-throw Next.js redirect/not-found errors
-        if (
-          error instanceof Error &&
-          ((error as any).digest?.startsWith('NEXT_REDIRECT') ||
-            (error as any).digest?.startsWith('NEXT_NOT_FOUND'))
-        ) {
-          throw error;
+        // Handle Next.js redirect/not-found errors explicitly on the client
+        if (error instanceof Error) {
+          const digest = (error as any).digest;
+          if (digest?.startsWith('NEXT_REDIRECT')) {
+            // digest format: NEXT_REDIRECT;replace;/login...
+            const parts = digest.split(';');
+            const url = parts[2] || '/login';
+            window.location.href = url;
+            return;
+          }
+          if (digest?.startsWith('NEXT_NOT_FOUND')) {
+            window.location.href = '/404';
+            return;
+          }
         }
         console.error('Failed to load profile data:', error);
         toast.error('Unable to load profile data. Please try again.');
