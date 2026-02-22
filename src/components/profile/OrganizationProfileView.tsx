@@ -73,7 +73,10 @@ export function OrganizationProfileView({
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 min-h-screen bg-proofound-parchment dark:bg-background pb-12">
+    <div
+      className="max-w-7xl mx-auto space-y-8 min-h-screen bg-proofound-parchment dark:bg-background pb-12"
+      data-testid="org-profile-root"
+    >
       {/* Hero Section */}
       <OrganizationHero
         org={org}

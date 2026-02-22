@@ -3,7 +3,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export function ProfileSkeleton() {
   return (
-    <div className="min-h-screen bg-proofound-parchment dark:bg-background pb-12">
+    <div
+      className="min-h-screen bg-proofound-parchment dark:bg-background pb-12"
+      data-testid="profile-skeleton"
+    >
       {/* Hero Skeleton */}
       <div className="h-64 md:h-80 w-full bg-muted/40 animate-pulse relative">
         <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent" />

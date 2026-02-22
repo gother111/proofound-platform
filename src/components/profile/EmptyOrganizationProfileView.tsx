@@ -47,12 +47,7 @@ export function EmptyOrganizationProfileView({
     <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto px-6 py-12">
         {/* Profile Completion Banner */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-8"
-        >
+        <div className="mb-8">
           <Card className="p-6 border-2 border-[#7A9278]/30 bg-gradient-to-br from-[#7A9278]/5 via-background to-[#5C8B89]/5">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-full bg-[#7A9278]/10 flex items-center justify-center flex-shrink-0">
@@ -61,7 +56,9 @@ export function EmptyOrganizationProfileView({
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-lg">Welcome to Proofound!</h3>
-                  <span className="text-sm text-muted-foreground">{profileCompletion}% complete</span>
+                  <span className="text-sm text-muted-foreground">
+                    {profileCompletion}% complete
+                  </span>
                 </div>
                 <p className="text-sm text-muted-foreground mb-4">
                   Build trust and transparency by completing your organization profile. Share your
@@ -75,15 +72,10 @@ export function EmptyOrganizationProfileView({
               </div>
             </div>
           </Card>
-        </motion.div>
+        </div>
 
         {/* Hero Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-8"
-        >
+        <div className="mb-8">
           <Card className="relative overflow-hidden border-2 border-dashed border-muted-foreground/20 hover:border-[#7A9278]/40 transition-all duration-300 group cursor-pointer">
             {/* Cover with subtle pattern */}
             <div className="h-48 bg-gradient-to-br from-[#7A9278]/10 via-[#5C8B89]/5 to-[#D4A574]/10 relative">
@@ -98,7 +90,13 @@ export function EmptyOrganizationProfileView({
                       height="60"
                       patternUnits="userSpaceOnUse"
                     >
-                      <circle cx="30" cy="30" r="2" fill="currentColor" className="text-[#7A9278]" />
+                      <circle
+                        cx="30"
+                        cy="30"
+                        r="2"
+                        fill="currentColor"
+                        className="text-[#7A9278]"
+                      />
                       <path
                         d="M 30 30 L 45 45 M 30 30 L 15 15"
                         stroke="currentColor"
@@ -169,15 +167,10 @@ export function EmptyOrganizationProfileView({
               </div>
             </div>
           </Card>
-        </motion.div>
+        </div>
 
         {/* Crucial Business Information - Empty State */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="mb-8"
-        >
+        <div className="mb-8">
           <Card className="p-8 border-2 border-dashed border-muted-foreground/20 hover:border-[#7A9278]/40 transition-colors">
             <div className="flex items-center gap-2 mb-6">
               <Building className="w-6 h-6 text-[#7A9278]" />
@@ -280,8 +273,8 @@ export function EmptyOrganizationProfileView({
                   <div>
                     <h4 className="mb-2">Add Licenses & Certifications</h4>
                     <p className="text-sm text-muted-foreground">
-                      Display your official licenses, certifications, and accreditations (B Corp, ISO,
-                      Fair Trade, etc.)
+                      Display your official licenses, certifications, and accreditations (B Corp,
+                      ISO, Fair Trade, etc.)
                     </p>
                   </div>
                   <Button className="rounded-full bg-[#5C8B89] hover:bg-[#5C8B89]/90">
@@ -292,15 +285,10 @@ export function EmptyOrganizationProfileView({
               </Card>
             </div>
           </Card>
-        </motion.div>
+        </div>
 
         {/* Mission, Vision, Values - Empty State */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.15 }}
-          className="mb-8"
-        >
+        <div className="mb-8">
           <Card className="p-8 border-2 border-dashed border-muted-foreground/20 hover:border-[#7A9278]/40 transition-colors">
             <div className="grid md:grid-cols-2 gap-8 mb-8">
               {/* Mission - Empty */}
@@ -353,7 +341,7 @@ export function EmptyOrganizationProfileView({
               </Button>
             </div>
           </Card>
-        </motion.div>
+        </div>
 
         {/* Main Content - Tabs */}
         <Tabs defaultValue="impact" className="w-full">
@@ -528,8 +516,8 @@ export function EmptyOrganizationProfileView({
                 <div className="space-y-2">
                   <h3 className="text-lg">Company Statute</h3>
                   <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                    Share key provisions of your organizational statute or governing documents. Include
-                    purpose, governance structure, and stakeholder rights.
+                    Share key provisions of your organizational statute or governing documents.
+                    Include purpose, governance structure, and stakeholder rights.
                   </p>
                 </div>
 
@@ -540,8 +528,8 @@ export function EmptyOrganizationProfileView({
 
                 <div className="pt-4 text-xs text-muted-foreground">
                   <p>
-                    💡 Tip: Focus on the most relevant sections that define your organizational values
-                    and governance
+                    💡 Tip: Focus on the most relevant sections that define your organizational
+                    values and governance
                   </p>
                 </div>
               </div>
@@ -594,8 +582,8 @@ export function EmptyOrganizationProfileView({
                 <div className="space-y-2">
                   <h3 className="text-lg">Organizational Goals</h3>
                   <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                    Set and track major organizational goals like carbon neutrality targets, diversity
-                    commitments, or product innovation milestones.
+                    Set and track major organizational goals like carbon neutrality targets,
+                    diversity commitments, or product innovation milestones.
                   </p>
                 </div>
 
@@ -606,8 +594,8 @@ export function EmptyOrganizationProfileView({
 
                 <div className="pt-4 text-xs text-muted-foreground">
                   <p>
-                    💡 Example: &quot;Achieve carbon neutrality by 2030&quot; or &quot;Reach 50% gender parity in
-                    leadership by 2026&quot;
+                    💡 Example: &quot;Achieve carbon neutrality by 2030&quot; or &quot;Reach 50%
+                    gender parity in leadership by 2026&quot;
                   </p>
                 </div>
               </div>
@@ -616,18 +604,13 @@ export function EmptyOrganizationProfileView({
         </Tabs>
 
         {/* Bottom Encouragement */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
-          className="mt-12"
-        >
+        <div className="mt-12">
           <Card className="p-6 bg-gradient-to-r from-[#7A9278]/5 via-[#5C8B89]/5 to-[#C67B5C]/5 border-[#7A9278]/20">
             <div className="text-center space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  ✨ Transparency builds trust. A complete profile helps stakeholders understand your
-                  organization&apos;s values, structure, and commitments.
-                </p>
+              <p className="text-sm text-muted-foreground">
+                ✨ Transparency builds trust. A complete profile helps stakeholders understand your
+                organization&apos;s values, structure, and commitments.
+              </p>
               <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground/60">
                 <span className="flex items-center gap-1">
                   <Shield className="w-3 h-3" />
@@ -644,9 +627,8 @@ export function EmptyOrganizationProfileView({
               </div>
             </div>
           </Card>
-        </motion.div>
+        </div>
       </div>
     </div>
   );
 }
-
