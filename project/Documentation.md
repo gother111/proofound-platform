@@ -2133,3 +2133,61 @@ Open risks/TODO:
 - `npm run test -- e2e/strict/organization.strict.spec.ts ...` runs through Vitest and does not execute Playwright strict E2E directly; strict flow runtime validation is expected in `strict-quality` workflow.
 - Branch protection should be confirmed to require only `ci` and `a11y`; `strict-quality` is intentionally non-required for PR merges.
 - If strict suites remain flaky after retry/poll hardening, next step is deeper endpoint-specific retry instrumentation on known unstable calls.
+
+## 2026-02-22: Profile Page Loading & Data Fetching Fixes
+
+What changed:
+
+- Added `ProfileSkeleton` to `EditableProfileView.tsx` for high-quality loading state.
+- Fixed `profile-fetcher.ts` query bug (queried `individual_profiles` by `user_id` instead of `id`).
+- Fixed auth/redirect error swallowing in `actions/profile.ts` and `useProfileData.ts`.
+- Rebased and merged clean profile-only changes into `master`.
+
+Why:
+
+- To resolve a blank screen issue on first client-side navigation to `/app/i/profile`.
+- To fix a "column does not exist" Supabase error for profile lookups.
+- To ensure proper redirection to `/login` for unauthenticated users.
+
+How to verify:
+
+- Browser navigate to `/app/i/profile`: should see skeleton loading, then full profile.
+- Supabase logs: Check that queries to `individual_profiles` are successful.
+- Logout and try to access profile: should redirect to login.
+
+Open risks/TODO:
+
+- Monitor for any other race conditions in high-latency environments.
+- Investigate "permission denied" error for `users` table in skill verifications (separate issue).
+
+## 2026-02-22: Fix Lingering Profile Page Blank Screen
+
+What changed:
+
+- Updated `FadeIn` and `SlideUp` Framer Motion wrappers in `src/components/ui` to use `whileInView` instead of `animate`.
+- Refactored `NEXT_REDIRECT` error handling inside `src/hooks/useProfileData.ts` to use explicit `window.location.href` redirect instead of bubbling an unhandled promise rejection.
+
+Why:
+
+- The user reported the profile page still appeared blank on initial client-side navigation (though it worked on hard reload).
+- Found that Framer Motion components nested within Next.js App Router client transitions can get stuck at `opacity: 0` if the mount lifecycle is interrupted or preserved oddly. `whileInView` guarantees visibility if the elements enter the viewport.
+- Unhandled Next.js router exceptions in effects caused silent client router halting.
+
+How to verify:
+
+- Start the dev server, browse the app as an authenticated user, and actively navigate to and from the `/app/i/profile` link via the sidebar. The UI components (like the `EmptyProfileStateView`) will fade in smoothly without getting stuck at opacity 0.
+
+Open risks/TODO:
+
+- Framer Motion and Next.js App Router transitions continue to have edge-case incompatibilities; monitor for other "invisible" components.
+
+### Lingering Profile Page Blank Screen - Fix 2 (Tailwind CSS Skeletons)
+
+**What changed**:
+Removed `animate-in fade-in duration-500` classes from `src/components/profile/ProfileSkeleton.tsx` and `src/components/dashboard/DashboardSkeleton.tsx`.
+**Why**:
+Despite the previous Framer Motion fixes, the profile page still intermittently resulted in a completely blank screen during client-side navigation. Upon deeper investigation, the issue was tracked down to the `ProfileSkeleton` itself. Next.js App Router client transitions (using `startTransition`) can frequently cause the `tailwindcss-animate` `fade-in` utility to get stuck on the initial animation frame (`opacity: 0`), resulting in the skeleton loading state being completely invisible. Since `useProfileData` correctly returns an empty profile fallback instead of `null` and doesn't hang, the invisible skeleton was the sole remaining cause of the blank screen behavior.
+**How to verify**:
+Navigate to `/app/i/profile` from another page (client-side route transition). The profile skeleton should be immediately visible and no longer stay completely white/blank before the real data loads.
+**Open risks/TODO**:
+Monitor other uses of `animate-in fade-in` on top-level or Suspense boundaries as they are highly susceptible to this React 18 Concurrent Rendering hydration issue in Next.js.

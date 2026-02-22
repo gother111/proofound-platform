@@ -1,0 +1,527 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+    - link "Skip to main content" [ref=e2] [cursor=pointer]:
+        - /url: '#main-content'
+    - generic [ref=e4]:
+        - banner:
+            - link "Proofound home" [ref=e6] [cursor=pointer]:
+                - /url: /
+                - img "Proofound" [ref=e7]
+            - button "Open menu" [ref=e9] [cursor=pointer]:
+                - img [ref=e10]
+        - main [ref=e11]:
+            - generic [ref=e12]:
+                - generic [ref=e14]:
+                    - generic [ref=e15]:
+                        - heading "Proofound" [level=1] [ref=e16]
+                        - heading "The credibility infrastructure for impactful connections" [level=2] [ref=e17]
+                    - paragraph [ref=e18]: Unlock true potential for your career and organization. Backed by verified evidence, not vanity metrics.
+                    - generic [ref=e19]:
+                        - button "Join as an Individual" [ref=e21] [cursor=pointer]
+                        - button "Join as an Organization" [ref=e23] [cursor=pointer]
+                - generic:
+                    - generic:
+                        - img "Abstract organic shape"
+            - img [ref=e25]
+            - generic [ref=e29]:
+                - generic [ref=e30]:
+                    - heading "The problems we solve" [level=2] [ref=e31]
+                    - paragraph [ref=e32]: Today's connection and verification systems are broken.
+                - generic [ref=e33]:
+                    - generic [ref=e34]:
+                        - img [ref=e36]
+                        - paragraph [ref=e38]: The endless toll of networking and job hunting
+                    - generic [ref=e39]:
+                        - img [ref=e41]
+                        - paragraph [ref=e44]: Wasted hours on manual verification rituals
+                    - generic [ref=e45]:
+                        - img [ref=e47]
+                        - paragraph [ref=e50]: Opaque, biased, and misaligned matching
+                    - generic [ref=e51]:
+                        - img [ref=e53]
+                        - paragraph [ref=e56]: Vanity metrics obscuring real impact
+                    - generic [ref=e57]:
+                        - img [ref=e59]
+                        - paragraph [ref=e62]: Outdated CVs missing the full story
+                    - generic [ref=e63]:
+                        - img [ref=e65]
+                        - paragraph [ref=e67]: Capital disconnected from true mission
+                    - generic [ref=e68]:
+                        - img [ref=e70]
+                        - paragraph [ref=e73]: Anxiety from opaque algorithmic decisions
+                    - generic [ref=e74]:
+                        - img [ref=e76]
+                        - paragraph [ref=e78]: Fragmented frameworks for collaboration
+                    - generic [ref=e79]:
+                        - img [ref=e81]
+                        - paragraph [ref=e88]: Wasted talent, time, and resources
+            - img [ref=e90]
+            - generic [ref=e95]:
+                - generic [ref=e98]:
+                    - heading "How Proofound works" [level=2] [ref=e99]
+                    - paragraph [ref=e100]: A platform built on evidence, transparency, and dignity.
+                    - generic [ref=e101]:
+                        - button [ref=e103] [cursor=pointer]: AI-powered matching
+                        - button [ref=e104] [cursor=pointer]: Proof-based profiles
+                        - button [ref=e105] [cursor=pointer]: Transferable verification
+                        - button [ref=e106] [cursor=pointer]: Granular privacy controls
+                        - button [ref=e107] [cursor=pointer]: Decluttered UX
+                        - button [ref=e108] [cursor=pointer]: Mental health tools
+                        - button [ref=e109] [cursor=pointer]: Life & career planning
+                        - button [ref=e110] [cursor=pointer]: Data democratization
+                        - button [ref=e111] [cursor=pointer]: Talent mobility
+                        - button [ref=e112] [cursor=pointer]: Education & guidance
+                - generic [ref=e113]:
+                    - generic [ref=e115]:
+                        - img [ref=e117]
+                        - generic [ref=e119]:
+                            - heading "AI-powered matching" [level=3] [ref=e120]
+                            - paragraph [ref=e121]: Evidence-based algorithms that connect you to aligned opportunities, not vanity metrics
+                    - generic [ref=e123]:
+                        - img [ref=e125]
+                        - generic [ref=e128]:
+                            - heading "Proof-based profiles" [level=3] [ref=e129]
+                            - paragraph [ref=e130]: Verified skills, impact stories, and credentials—all traceable and transparent
+                    - generic [ref=e132]:
+                        - img [ref=e134]
+                        - generic [ref=e138]:
+                            - heading "Transferable verification" [level=3] [ref=e139]
+                            - paragraph [ref=e140]: Once verified, your proofs travel with you across contexts and time
+                    - generic [ref=e142]:
+                        - img [ref=e144]
+                        - generic [ref=e147]:
+                            - heading "Granular privacy controls" [level=3] [ref=e148]
+                            - paragraph [ref=e149]: You decide what's visible, to whom, and when—data dignity at every layer
+                    - generic [ref=e151]:
+                        - img [ref=e153]
+                        - generic [ref=e156]:
+                            - heading "Decluttered UX" [level=3] [ref=e157]
+                            - paragraph [ref=e158]: Clean, Japandi-inspired design that respects your attention and mental space
+                    - generic [ref=e160]:
+                        - img [ref=e162]
+                        - generic [ref=e164]:
+                            - heading "Mental health tools" [level=3] [ref=e165]
+                            - paragraph [ref=e166]: Built-in well-being support, not an afterthought—ikigai, safety planning, reflection
+                    - generic [ref=e168]:
+                        - img [ref=e170]
+                        - generic [ref=e173]:
+                            - heading "Life & career planning" [level=3] [ref=e174]
+                            - paragraph [ref=e175]: Map your journey with purpose, not just the next job title
+                    - generic [ref=e177]:
+                        - img [ref=e179]
+                        - generic [ref=e182]:
+                            - heading "Data democratization" [level=3] [ref=e183]
+                            - paragraph [ref=e184]: Your data, your insights—we give you the tools to understand and control it
+                    - generic [ref=e186]:
+                        - img [ref=e188]
+                        - generic [ref=e193]:
+                            - heading "Talent mobility" [level=3] [ref=e194]
+                            - paragraph [ref=e195]: Skills and evidence are portable, opening doors across sectors and geographies
+                    - generic [ref=e197]:
+                        - img [ref=e199]
+                        - generic [ref=e202]:
+                            - heading "Education & guidance" [level=3] [ref=e203]
+                            - paragraph [ref=e204]: Contextual learning pathways tailored to your goals and gaps
+            - generic [ref=e206]:
+                - generic [ref=e207]:
+                    - heading "What makes it trustworthy" [level=2] [ref=e208]
+                    - paragraph [ref=e209]: Principles that guide every decision we make.
+                - generic [ref=e210]:
+                    - generic [ref=e211]:
+                        - button "01 Eleanor Ostrom's commons principles" [expanded] [ref=e212] [cursor=pointer]:
+                            - generic [ref=e213]:
+                                - generic [ref=e214]: '01'
+                                - heading "Eleanor Ostrom's commons principles" [level=3] [ref=e215]
+                            - img [ref=e217]
+                        - region "01 Eleanor Ostrom's commons principles" [ref=e218]:
+                            - generic [ref=e219]:
+                                - img [ref=e221]
+                                - paragraph [ref=e224]: Governance designed for collective stewardship, not extraction
+                    - button "02 Distributed systems mindset" [ref=e226] [cursor=pointer]:
+                        - generic [ref=e227]:
+                            - generic [ref=e228]: '02'
+                            - heading "Distributed systems mindset" [level=3] [ref=e229]
+                        - img [ref=e231]
+                    - button "03 Anti-bias guardrails" [ref=e233] [cursor=pointer]:
+                        - generic [ref=e234]:
+                            - generic [ref=e235]: '03'
+                            - heading "Anti-bias guardrails" [level=3] [ref=e236]
+                        - img [ref=e238]
+                    - button "04 Steward-ownership ethos" [ref=e240] [cursor=pointer]:
+                        - generic [ref=e241]:
+                            - generic [ref=e242]: '04'
+                            - heading "Steward-ownership ethos" [level=3] [ref=e243]
+                        - img [ref=e245]
+                    - button "05 Remove the excess" [ref=e247] [cursor=pointer]:
+                        - generic [ref=e248]:
+                            - generic [ref=e249]: '05'
+                            - heading "Remove the excess" [level=3] [ref=e250]
+                        - img [ref=e252]
+                    - button "06 Information quality drives decisions" [ref=e254] [cursor=pointer]:
+                        - generic [ref=e255]:
+                            - generic [ref=e256]: '06'
+                            - heading "Information quality drives decisions" [level=3] [ref=e257]
+                        - img [ref=e259]
+            - img [ref=e261]
+            - generic [ref=e265]:
+                - generic [ref=e266]:
+                    - heading "Built for you" [level=2] [ref=e267]
+                    - paragraph [ref=e268]: Whether you're an individual or an organization, Proofound empowers you.
+                - generic [ref=e269]:
+                    - generic [ref=e271]:
+                        - generic [ref=e272]:
+                            - heading "For Individuals" [level=3] [ref=e273]
+                            - generic [ref=e274]:
+                                - generic [ref=e275]:
+                                    - img [ref=e277]
+                                    - paragraph [ref=e280]: Find mission-aligned opportunities without the mental health toll
+                                - generic [ref=e281]:
+                                    - img [ref=e283]
+                                    - paragraph [ref=e286]: Build a verified, portable profile that tells your real story
+                                - generic [ref=e287]:
+                                    - img [ref=e289]
+                                    - paragraph [ref=e292]: Access well-being tools and career planning support
+                        - generic [ref=e296]:
+                            - img [ref=e298]
+                            - generic [ref=e301]:
+                                - generic [ref=e304]: JD
+                                - img [ref=e309]
+                            - generic [ref=e325]:
+                                - img [ref=e326]
+                                - generic [ref=e329]: Verified
+                            - generic [ref=e330]:
+                                - img [ref=e331]
+                                - generic [ref=e333]: Identity
+                        - button "Join as an Individual" [ref=e337] [cursor=pointer]:
+                            - text: Join as an Individual
+                            - img [ref=e338]
+                    - generic [ref=e341]:
+                        - generic [ref=e342]:
+                            - heading "For Organizations" [level=3] [ref=e343]
+                            - generic [ref=e344]:
+                                - generic [ref=e345]:
+                                    - img [ref=e347]
+                                    - paragraph [ref=e350]: Discover talent based on evidence and alignment, not resumes
+                                - generic [ref=e351]:
+                                    - img [ref=e353]
+                                    - paragraph [ref=e356]: Reduce bias in hiring and partnership decisions
+                                - generic [ref=e357]:
+                                    - img [ref=e359]
+                                    - paragraph [ref=e362]: Build trust with transparent verification and matching
+                        - generic [ref=e366]:
+                            - img [ref=e368]
+                            - generic [ref=e370]:
+                                - generic [ref=e371]:
+                                    - img [ref=e373]
+                                    - generic [ref=e377]: 1 Match
+                                - generic [ref=e379]:
+                                    - generic [ref=e380]: A
+                                    - generic [ref=e386]: 98%
+                            - generic [ref=e387]:
+                                - img [ref=e388]
+                                - generic [ref=e392]: Aligned
+                            - generic [ref=e393]:
+                                - img [ref=e394]
+                                - generic [ref=e399]: Verified Skill
+                        - button "Join as an Organization" [ref=e403] [cursor=pointer]:
+                            - text: Join as an Organization
+                            - img [ref=e404]
+            - generic [ref=e407]:
+                - generic [ref=e408]:
+                    - heading "Why now" [level=2] [ref=e409]
+                    - paragraph [ref=e410]: The paradigm is shifting. The need is immediate.
+                - generic [ref=e411]:
+                    - generic [ref=e412]:
+                        - generic [ref=e414]: '1'
+                        - generic [ref=e415]:
+                            - heading "The AI paradigm shift" [level=3] [ref=e416]
+                            - paragraph [ref=e417]: New tools demand new models of trust and verification
+                    - generic [ref=e418]:
+                        - generic [ref=e420]: '2'
+                        - generic [ref=e421]:
+                            - heading "The crisis of digital trust" [level=3] [ref=e422]
+                            - paragraph [ref=e423]: Deepfakes and misinformation are eroding credibility everywhere
+                    - generic [ref=e424]:
+                        - generic [ref=e426]: '3'
+                        - generic [ref=e427]:
+                            - heading "The search for meaning" [level=3] [ref=e428]
+                            - paragraph [ref=e429]: Unprecedented uncertainty drives a need for well-being infrastructure
+                    - generic [ref=e430]:
+                        - generic [ref=e432]: '4'
+                        - generic [ref=e433]:
+                            - heading "The obsolescence of the CV" [level=3] [ref=e434]
+                            - paragraph [ref=e435]: Static credentials fail to capture true capability or alignment
+                    - generic [ref=e436]:
+                        - generic [ref=e438]: '5'
+                        - generic [ref=e439]:
+                            - heading "The demand for borderless talent" [level=3] [ref=e440]
+                            - paragraph [ref=e441]: Cross-border collaboration requires coordinated trust systems
+            - img [ref=e443]
+            - generic [ref=e447]:
+                - generic [ref=e448]:
+                    - heading "Uncompromising Proof." [level=2] [ref=e449]
+                    - paragraph [ref=e450]: We don't just claim credibility; we engineer it. Every interaction is verifiable, transparent, and secure by design.
+                - generic [ref=e451]:
+                    - generic [ref=e452]:
+                        - img [ref=e454]
+                        - generic [ref=e463]:
+                            - generic [ref=e464]:
+                                - img [ref=e466]
+                                - heading "Cryptographic Verification" [level=3] [ref=e469]
+                                - paragraph [ref=e470]: Every proof is cryptographically verifiable, source-traceable, and time-stamped. Trust is engineered, not assumed.
+                            - button "Explore our protocol" [ref=e472] [cursor=pointer]:
+                                - text: Explore our protocol
+                                - img [ref=e473]
+                    - generic [ref=e475]:
+                        - generic [ref=e477]:
+                            - img [ref=e479]
+                            - heading "Privacy First" [level=3] [ref=e482]
+                            - paragraph [ref=e483]: Granular controls at every layer. You decide what's visible, to whom, and when. Your data is yours, always.
+                        - generic [ref=e486]:
+                            - generic [ref=e487]: 100%
+                            - generic [ref=e488]: User Controlled
+                    - generic [ref=e489]:
+                        - img [ref=e491]
+                        - heading "Transparent Audits" [level=3] [ref=e496]
+                        - paragraph [ref=e497]: Continuous monitoring and published transparency reports ensure our algorithms remain open and accountable.
+                    - generic [ref=e498]:
+                        - img [ref=e500]
+                        - heading "Open Standards" [level=3] [ref=e509]
+                        - paragraph [ref=e510]: Built on open protocols to ensure longevity and interoperability. No walled gardens.
+            - img [ref=e512]
+            - generic [ref=e516]:
+                - generic [ref=e517]:
+                    - heading "Steward Ownership — The Business Model of the Future" [level=2] [ref=e518]:
+                        - text: Steward Ownership —
+                        - text: The Business Model of the Future
+                    - paragraph [ref=e519]: Purpose and independence are permanently protected by giving control to active stewards, never to external shareholders.
+                - generic [ref=e520]:
+                    - generic [ref=e523]:
+                        - img [ref=e525]
+                        - heading "Purpose Before Profit" [level=3] [ref=e529]
+                        - paragraph [ref=e530]: Mission is locked in; profits serve the company's long-term purpose.
+                    - generic [ref=e533]:
+                        - img [ref=e535]
+                        - heading "Self-Governance" [level=3] [ref=e540]
+                        - paragraph [ref=e541]: Control stays with active stewards who are committed to the mission, not to selling shares.
+                    - generic [ref=e544]:
+                        - img [ref=e546]
+                        - heading "Legacy Preservation" [level=3] [ref=e548]
+                        - paragraph [ref=e549]: Ownership can't be sold; it's passed on to future stewards who uphold the same values.
+            - img [ref=e551]
+            - generic [ref=e555]:
+                - generic [ref=e556]:
+                    - heading "Products & Subscriptions" [level=2] [ref=e557]
+                    - paragraph [ref=e558]: Simple, transparent pricing for everyone.
+                - generic [ref=e559]:
+                    - generic [ref=e561]:
+                        - generic [ref=e562]:
+                            - heading "Individual" [level=3] [ref=e563]
+                            - generic [ref=e564]:
+                                - generic [ref=e565]: Free
+                                - generic [ref=e566]: / forever
+                            - paragraph [ref=e567]: For professionals seeking verified growth and meaningful connections.
+                        - list [ref=e569]:
+                            - listitem [ref=e570]:
+                                - img [ref=e572]
+                                - generic [ref=e574]: Verified profile & portfolio
+                            - listitem [ref=e575]:
+                                - img [ref=e577]
+                                - generic [ref=e579]: AI-powered matching
+                            - listitem [ref=e580]:
+                                - img [ref=e582]
+                                - generic [ref=e584]: Mental health & reflection tools
+                            - listitem [ref=e585]:
+                                - img [ref=e587]
+                                - generic [ref=e589]: Portable credentials
+                        - button "Join as an Individual" [ref=e591] [cursor=pointer]
+                    - generic [ref=e592]:
+                        - generic [ref=e593]:
+                            - img [ref=e594]
+                            - text: POPULAR
+                        - generic [ref=e596]:
+                            - generic [ref=e597]:
+                                - heading "Organization" [level=3] [ref=e598]
+                                - generic [ref=e599]:
+                                    - generic [ref=e600]: Custom
+                                    - generic [ref=e601]: / per seat
+                                - paragraph [ref=e602]: For companies building trust-based teams and hiring with precision.
+                            - list [ref=e604]:
+                                - listitem [ref=e605]:
+                                    - img [ref=e607]
+                                    - generic [ref=e609]: Advanced talent discovery
+                                - listitem [ref=e610]:
+                                    - img [ref=e612]
+                                    - generic [ref=e614]: Bias-free screening tools
+                                - listitem [ref=e615]:
+                                    - img [ref=e617]
+                                    - generic [ref=e619]: Team alignment analytics
+                                - listitem [ref=e620]:
+                                    - img [ref=e622]
+                                    - generic [ref=e624]: Dedicated support
+                            - button "Join as an Organization" [ref=e626] [cursor=pointer]
+            - generic [ref=e628]:
+                - heading "Ready to build trust that lasts?" [level=2] [ref=e629]:
+                    - text: Ready to build
+                    - text: trust that lasts?
+                - paragraph [ref=e630]: Join the movement towards a more transparent, equitable, and meaningful professional world.
+                - button "Get Started" [ref=e634] [cursor=pointer]:
+                    - generic [ref=e635]:
+                        - text: Get Started
+                        - img [ref=e636]
+            - generic [ref=e640]:
+                - blockquote [ref=e641]:
+                    - generic [ref=e642]: The
+                    - generic [ref=e643]: future
+                    - generic [ref=e644]: of
+                    - generic [ref=e645]: work
+                    - generic [ref=e646]: isn't
+                    - generic [ref=e647]: about
+                    - generic [ref=e648]: working
+                    - generic [ref=e649]: more.
+                    - generic [ref=e650]: It's
+                    - generic [ref=e651]: about
+                    - generic [ref=e652]: working
+                    - generic [ref=e653]: with
+                    - generic [ref=e654]: purpose,
+                    - generic [ref=e655]: trust,
+                    - generic [ref=e656]: and
+                    - generic [ref=e657]: dignity.
+                - generic:
+                    - generic: Proofound Manifesto
+            - generic [ref=e658]:
+                - generic: Proofound
+                - generic [ref=e659]:
+                    - generic [ref=e660]:
+                        - generic [ref=e661]:
+                            - link "Proofound home" [ref=e662] [cursor=pointer]:
+                                - /url: /
+                                - img "Proofound" [ref=e663]
+                            - paragraph [ref=e664]: Credibility engineering for a world that needs trust more than ever. We build the infrastructure for verifiable professional reputation.
+                            - generic [ref=e665]:
+                                - link "Twitter" [ref=e666] [cursor=pointer]:
+                                    - /url: '#'
+                                    - generic [ref=e667]: Twitter
+                                    - img [ref=e668]
+                                - link "LinkedIn" [ref=e670] [cursor=pointer]:
+                                    - /url: '#'
+                                    - generic [ref=e671]: LinkedIn
+                                    - img [ref=e672]
+                                - link "GitHub" [ref=e676] [cursor=pointer]:
+                                    - /url: '#'
+                                    - generic [ref=e677]: GitHub
+                                    - img [ref=e678]
+                                - link "Email" [ref=e681] [cursor=pointer]:
+                                    - /url: mailto:hello@proofound.io
+                                    - generic [ref=e682]: Email
+                                    - img [ref=e683]
+                        - generic [ref=e686]:
+                            - heading "Platform" [level=4] [ref=e687]
+                            - list [ref=e688]:
+                                - listitem [ref=e689]:
+                                    - link "How it Works How it Works" [ref=e690] [cursor=pointer]:
+                                        - /url: '#how-it-works'
+                                        - generic [ref=e691]:
+                                            - generic [ref=e692]: How it Works
+                                            - generic [ref=e693]: How it Works
+                                - listitem [ref=e694]:
+                                    - link "Principles Principles" [ref=e695] [cursor=pointer]:
+                                        - /url: '#principles'
+                                        - generic [ref=e696]:
+                                            - generic [ref=e697]: Principles
+                                            - generic [ref=e698]: Principles
+                                - listitem [ref=e699]:
+                                    - link "For Individuals For Individuals" [ref=e700] [cursor=pointer]:
+                                        - /url: '#personas'
+                                        - generic [ref=e701]:
+                                            - generic [ref=e702]: For Individuals
+                                            - generic [ref=e703]: For Individuals
+                                - listitem [ref=e704]:
+                                    - link "For Organizations For Organizations" [ref=e705] [cursor=pointer]:
+                                        - /url: '#personas'
+                                        - generic [ref=e706]:
+                                            - generic [ref=e707]: For Organizations
+                                            - generic [ref=e708]: For Organizations
+                        - generic [ref=e709]:
+                            - heading "Company" [level=4] [ref=e710]
+                            - list [ref=e711]:
+                                - listitem [ref=e712]:
+                                    - link "About Us About Us" [ref=e713] [cursor=pointer]:
+                                        - /url: /about
+                                        - generic [ref=e714]:
+                                            - generic [ref=e715]: About Us
+                                            - generic [ref=e716]: About Us
+                                - listitem [ref=e717]:
+                                    - link "Manifesto Manifesto" [ref=e718] [cursor=pointer]:
+                                        - /url: /manifesto
+                                        - generic [ref=e719]:
+                                            - generic [ref=e720]: Manifesto
+                                            - generic [ref=e721]: Manifesto
+                                - listitem [ref=e722]:
+                                    - link "Careers Careers" [ref=e723] [cursor=pointer]:
+                                        - /url: /careers
+                                        - generic [ref=e724]:
+                                            - generic [ref=e725]: Careers
+                                            - generic [ref=e726]: Careers
+                                - listitem [ref=e727]:
+                                    - link "Contact Contact" [ref=e728] [cursor=pointer]:
+                                        - /url: /contact
+                                        - generic [ref=e729]:
+                                            - generic [ref=e730]: Contact
+                                            - generic [ref=e731]: Contact
+                        - generic [ref=e732]:
+                            - heading "Legal" [level=4] [ref=e733]
+                            - list [ref=e734]:
+                                - listitem [ref=e735]:
+                                    - link "Privacy Policy Privacy Policy" [ref=e736] [cursor=pointer]:
+                                        - /url: /privacy
+                                        - generic [ref=e737]:
+                                            - generic [ref=e738]: Privacy Policy
+                                            - generic [ref=e739]: Privacy Policy
+                                - listitem [ref=e740]:
+                                    - link "Terms of Service Terms of Service" [ref=e741] [cursor=pointer]:
+                                        - /url: /terms
+                                        - generic [ref=e742]:
+                                            - generic [ref=e743]: Terms of Service
+                                            - generic [ref=e744]: Terms of Service
+                                - listitem [ref=e745]:
+                                    - link "Cookie Policy Cookie Policy" [ref=e746] [cursor=pointer]:
+                                        - /url: /cookies
+                                        - generic [ref=e747]:
+                                            - generic [ref=e748]: Cookie Policy
+                                            - generic [ref=e749]: Cookie Policy
+                    - generic [ref=e750]:
+                        - paragraph [ref=e751]: © 2026 Proofound Inc. All rights reserved.
+                        - generic [ref=e752]:
+                            - generic [ref=e755]: All Systems Operational
+                            - paragraph [ref=e756]:
+                                - text: Designed with
+                                - text: ♥
+                                - text: in Stockholm
+    - region "Notifications alt+T"
+    - alert [ref=e757]
+    - generic [ref=e761]:
+        - img [ref=e763]
+        - generic [ref=e765]:
+            - generic [ref=e766]:
+                - heading "🍪 We Value Your Privacy" [level=3] [ref=e767]
+                - paragraph [ref=e768]: We use essential cookies to make Proofound work, and optional analytics cookies to understand how you use our platform and improve your experience. We never sell your data.
+            - generic [ref=e769]:
+                - paragraph [ref=e770]:
+                    - strong [ref=e771]: 'Essential cookies:'
+                    - text: Required for authentication and core functionality (always active)
+                - paragraph [ref=e772]:
+                    - strong [ref=e773]: 'Analytics cookies:'
+                    - text: Help us understand usage patterns (your choice)
+            - generic [ref=e774]:
+                - button "Accept All" [ref=e775] [cursor=pointer]
+                - button "Essential Only" [ref=e776] [cursor=pointer]
+                - link "Privacy Policy" [ref=e777] [cursor=pointer]:
+                    - /url: /privacy
+                - link "Cookie Policy" [ref=e778] [cursor=pointer]:
+                    - /url: /cookies
+                - link "Cookie Settings" [ref=e779] [cursor=pointer]:
+                    - /url: /cookies/settings?returnTo=%2F
+```
