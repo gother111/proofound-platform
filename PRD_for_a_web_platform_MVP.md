@@ -1453,6 +1453,7 @@ Each flow includes:
 - Users can activate in two tiers:
   - **Lite (match unlock):** ≥3 L4 skills with level + recency, ≥1 proof overall, purpose present, and matching constraints saved.
   - **Strong (quality boost):** ≥10 L4 skills with level + recency, ≥1 proof overall, purpose present, and matching constraints saved.
+- Activation is **non-blocking** for product access: users can open Matching immediately, while unmet Lite criteria are shown as checklist actions.
 - Users can still add/edit L4 properties (level, months, proof links/files) via guided flow or import.
 - Auto-suggest L4s from pasted CV/JD with explain-why; user acceptance/edit-in-place.
 - Time-to-activation (profile matchable at Lite tier) **≤ 20 minutes** P50 for first-time users.
@@ -1471,6 +1472,9 @@ Each flow includes:
 - Inline “Why this match” with editable constraints (location, availability, verification gates) and quick actions (intro, pass, snooze).
 - Compensation visibility defaults to **overlap-only** in matching surfaces unless explicit exact-range visibility is granted.
 - Setup flow always shows **sample match previews** (real near-matches when available, clearly labeled mock samples otherwise).
+- Matching endpoints return eligibility guidance without hard blocking:
+  - If Lite criteria are unmet, return `200` with `items` (possibly empty), `eligibility`, and `topActions`.
+  - UI remains usable and surfaces “Get match-ready in 4 quick steps” guidance.
 - **Fairness note** per release with cohort checks where users opt-in to share demographics.  
   **MoSCoW:** **Must** (shortlist + why + quick actions); **Should:** snooze/feedback loops; **Could:** experiment flags for alternative scoring.
 
@@ -2399,6 +2403,7 @@ Each flow includes:
 
 - [ ] Lite activation unlocks matching at **≥3 L4** (with level + recency) + ≥1 proof + purpose + constraints.
 - [ ] Strong activation is recognized at **≥10 L4** (with level + recency) + ≥1 proof + purpose + constraints.
+- [ ] Matching remains accessible before Lite completion (no hard lock screen), with a non-blocking readiness checklist.
 - [ ] CV paste → receive suggestions with “why it mapped”; accept/edit-in-place.
 - [ ] Profile reaches **Activation** when minimum threshold met (configurable).
 
@@ -2639,6 +2644,10 @@ Each flow includes:
   - Individual profile supports **tiered matchability**:
     - **Lite:** ≥3 L4 skills each have level + recency, ≥1 proof overall, matching constraints saved, and purpose present.
     - **Strong:** ≥10 L4 skills each have level + recency, ≥1 proof overall, matching constraints saved, and purpose present.
+  - Matching APIs are soft-gated for authenticated users:
+    - `POST /api/core/matching/profile` and `POST /api/core/matching/near-matches` return `200` with `eligibility` and `topActions` when Lite criteria are unmet.
+    - `meta.softGated=true` indicates unmet activation without blocking platform use.
+  - `GET /api/core/matching/matching-profile` auto-bootstraps a baseline matching profile row when missing.
   - Assignment publish readiness is mode-specific:
     - **Basic:** role, business value, ≥1 measurable outcome, practicals, and ≥3 must-have skills (default entry path).
     - **Advanced:** full 5-step completeness including stakeholders and weight matrix; exposed only after explicit opt-in; education marked “required” must include justification.
