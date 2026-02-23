@@ -5,8 +5,8 @@
  * Uses react-joyride for progressive UI disclosure
  *
  * Features:
- * - 8-step tour for individuals
- * - 6-step tour for organizations
+ * - 10-step tour for individuals
+ * - 7-step tour for organizations
  * - Skippable at any time (ESC key)
  * - Keyboard accessible (arrows for navigation)
  * - Marks as complete in database
