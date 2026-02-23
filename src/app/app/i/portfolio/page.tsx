@@ -1,15 +1,14 @@
-import { requirePersona } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import { requireAuth } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-export default async function IndividualPortfolioRedirectPage() {
-  const user = await requirePersona('individual');
-  const handle = user.handle?.trim();
+export default async function IndividualPortfolioShortcutPage() {
+  const user = await requireAuth();
 
-  if (!handle) {
-    redirect('/onboarding');
+  if (!user.handle) {
+    redirect('/app/i/profile');
   }
 
-  redirect(`/portfolio/${encodeURIComponent(handle)}`);
+  redirect(`/portfolio/${user.handle}`);
 }

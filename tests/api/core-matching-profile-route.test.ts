@@ -102,15 +102,21 @@ describe('core matching profile route', () => {
     expect(payload.profile.orgTypes).toEqual(['startup']);
   });
 
-  it('bootstraps a baseline matching profile on GET when missing', async () => {
-    const baselineProfile = {
+  it('auto-bootstraps baseline profile row on GET when missing', async () => {
+    const bootstrappedProfile = {
       profileId: userId,
-      desiredRoles: null,
-      desiredIndustries: null,
-      orgTypes: null,
+      desiredRoles: [],
+      desiredIndustries: [],
+      orgTypes: [],
+      weights: null,
+      createdAt: new Date('2026-02-23T00:00:00.000Z'),
+      updatedAt: new Date('2026-02-23T00:00:00.000Z'),
     };
 
-    (db.query.matchingProfiles.findFirst as any).mockResolvedValue(baselineProfile);
+    (db.query.matchingProfiles.findFirst as any)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(bootstrappedProfile);
+
     const onConflictDoNothing = vi.fn().mockResolvedValue(undefined);
     const values = vi.fn().mockReturnValue({ onConflictDoNothing });
     (db.insert as any).mockReturnValue({ values });
@@ -119,8 +125,13 @@ describe('core matching profile route', () => {
     const payload = await res.json();
 
     expect(res.status).toBe(200);
-    expect(values).toHaveBeenCalledWith(expect.objectContaining({ profileId: userId }));
+    expect(values).toHaveBeenCalledWith(
+      expect.objectContaining({
+        profileId: userId,
+      })
+    );
     expect(onConflictDoNothing).toHaveBeenCalled();
     expect(payload.profile.profileId).toBe(userId);
+    expect(Array.isArray(payload.profile.skills)).toBe(true);
   });
 });

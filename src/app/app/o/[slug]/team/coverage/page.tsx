@@ -2,11 +2,11 @@ import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
-export default async function OrganizationPortfolioShortcutPage({
+export default async function LegacyTeamCoveragePage({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  redirect(`/portfolio/org/${slug}`);
+  redirect(`/app/o/${slug}/team`);
 }

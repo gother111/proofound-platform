@@ -8,16 +8,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { completeOrganizationOnboarding } from '@/actions/onboarding';
 import { createClient } from '@/lib/supabase/client';
-import { PublicPortfolioReadyStep } from '@/components/onboarding/PublicPortfolioReadyStep';
+import { CheckCircle, Copy, ExternalLink } from 'lucide-react';
 
 export function OrganizationSetup() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [checkingExisting, setCheckingExisting] = useState(true);
-  const [success, setSuccess] = useState<{ orgSlug: string; publicPortfolioUrl: string } | null>(
-    null
-  );
+  const [success, setSuccess] = useState<{
+    orgName: string;
+    orgSlug: string;
+    portfolioUrl: string;
+  } | null>(null);
+  const [copied, setCopied] = useState(false);
 
   // Check if user already has an organization on mount
   useEffect(() => {
@@ -87,26 +90,72 @@ export function OrganizationSetup() {
         return;
       }
 
-      if (result.success && result.orgSlug && result.publicPortfolioUrl) {
-        setSuccess({
-          orgSlug: result.orgSlug,
-          publicPortfolioUrl: result.publicPortfolioUrl,
-        });
+      // Success - show dedicated public portfolio step
+      if (result.orgSlug) {
+        const orgName = formData.get('displayName') as string;
+        const portfolioUrl = `${window.location.origin}/portfolio/org/${result.orgSlug}`;
+        setSuccess({ orgName, orgSlug: result.orgSlug, portfolioUrl });
       }
-      setIsLoading(false);
     } catch (err) {
       setError('Something went wrong. Please try again.');
       setIsLoading(false);
     }
   }
 
+  // Show success message
   if (success) {
+    const handleCopy = async () => {
+      try {
+        await navigator.clipboard.writeText(success.portfolioUrl);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      } catch {
+        setCopied(false);
+      }
+    };
+
     return (
-      <PublicPortfolioReadyStep
-        persona="organization"
-        publicPortfolioUrl={success.publicPortfolioUrl}
-        onContinue={() => router.push(`/app/o/${success.orgSlug}/home`)}
-      />
+      <Card className="max-w-2xl mx-auto border-proofound-stone dark:border-border rounded-2xl">
+        <CardContent className="py-12 px-8">
+          <div className="text-center space-y-6">
+            <div className="mx-auto w-16 h-16 rounded-full bg-proofound-forest/10 flex items-center justify-center">
+              <CheckCircle className="w-10 h-10 text-proofound-forest dark:text-primary" />
+            </div>
+
+            <div className="space-y-2">
+              <h2 className="text-2xl font-['Crimson_Pro'] font-semibold text-proofound-forest dark:text-primary">
+                Public portfolio ready
+              </h2>
+              <p className="text-3xl font-bold text-proofound-charcoal dark:text-foreground">
+                Welcome to {success.orgName}!
+              </p>
+            </div>
+
+            <div className="bg-proofound-stone/30 dark:bg-muted rounded-xl p-6 text-left space-y-3">
+              <p className="font-medium text-proofound-charcoal dark:text-foreground">Live URL</p>
+              <p className="text-sm break-all text-proofound-charcoal/70 dark:text-muted-foreground">
+                {success.portfolioUrl}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <Button type="button" variant="outline" className="gap-2" onClick={handleCopy}>
+                <Copy className="h-4 w-4" />
+                {copied ? 'Copied' : 'Copy link'}
+              </Button>
+              <Button asChild type="button" variant="outline" className="gap-2">
+                <a href={success.portfolioUrl} target="_blank" rel="noreferrer">
+                  <ExternalLink className="h-4 w-4" />
+                  Open portfolio
+                </a>
+              </Button>
+              <Button type="button" onClick={() => router.push(`/app/o/${success.orgSlug}/home`)}>
+                Continue to app
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -114,10 +163,10 @@ export function OrganizationSetup() {
     <Card className="max-w-2xl mx-auto border-proofound-stone dark:border-border rounded-2xl">
       <CardHeader>
         <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
-          Publish Your Organization Portfolio
+          Create Your Organization
         </CardTitle>
         <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-          Create a clean public proof portfolio link your team can share on day 1
+          Set up your organization to start collaborating with your team
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -145,7 +194,7 @@ export function OrganizationSetup() {
             </Label>
             <div className="flex items-center gap-2">
               <span className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
-                proofound.com/portfolio/org/
+                proofound.com/o/
               </span>
               <Input
                 id="slug"
@@ -245,7 +294,7 @@ export function OrganizationSetup() {
               size="lg"
               className="bg-proofound-forest hover:bg-proofound-forest/90 text-white"
             >
-              {isLoading ? 'Publishing Portfolio...' : 'Publish Portfolio'}
+              {isLoading ? 'Creating Organization...' : 'Create Organization'}
             </Button>
           </div>
         </form>

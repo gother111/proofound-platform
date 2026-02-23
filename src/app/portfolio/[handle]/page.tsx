@@ -324,27 +324,37 @@ export default async function PortfolioPage({ params }: { params: Promise<{ hand
               </Badge>
             </CardHeader>
             <CardContent className="space-y-3">
-              <SummaryRow
-                label="Proofs added"
-                value={signals.proofs.count}
-                description="Links, media, certifications, or project evidence."
-              />
-              <Separator />
-              <SummaryRow
-                label="Skills verified"
-                value={signals.verifications.count}
-                description="Accepted verification requests from peers or managers."
-              />
-              <Separator />
-              <SummaryRow
-                label="Peer attestations"
-                value={signals.attestations.count}
-                description="Trusted confirmations attached to your profile."
-              />
-              {viewerIsOwner && (
-                <p className="text-xs text-slate-500">
-                  Tip: Add proof to your top 3 skills, then request one verification each for a fast
-                  trust lift.
+              {visibility.counts ? (
+                <>
+                  <SummaryRow
+                    label="Proofs added"
+                    value={signals.proofs.count}
+                    description="Links, media, certifications, or project evidence."
+                  />
+                  <Separator />
+                  <SummaryRow
+                    label="Skills verified"
+                    value={signals.verifications.count}
+                    description="Accepted verification requests from peers or managers."
+                  />
+                  <Separator />
+                  <SummaryRow
+                    label="Peer attestations"
+                    value={signals.attestations.count}
+                    description="Trusted confirmations attached to your profile."
+                  />
+                  {viewerIsOwner && (
+                    <p className="text-xs text-slate-500">
+                      Tip: Add proof to your top 3 skills, then request one verification each for a
+                      fast trust lift.
+                    </p>
+                  )}
+                </>
+              ) : (
+                <p className="text-sm text-slate-600">
+                  {viewerIsOwner
+                    ? 'Counts are hidden from public view.'
+                    : 'This section is hidden.'}
                 </p>
               )}
             </CardContent>
@@ -395,7 +405,9 @@ export default async function PortfolioPage({ params }: { params: Promise<{ hand
               {individual?.work_email && visibility.contact ? (
                 <ContactPill href={`mailto:${individual.work_email}`} label="Work email" />
               ) : (
-                <ContactPill href="mailto:hello@example.com" label="Email" muted />
+                <span className="rounded-full border border-slate-200 px-3 py-1 text-slate-500">
+                  Contact email hidden
+                </span>
               )}
               <ContactPill
                 href={shareUrl}

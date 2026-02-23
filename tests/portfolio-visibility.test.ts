@@ -29,25 +29,8 @@ describe('mergeVisibilityFlags', () => {
     const mergeVisibilityFlags = loadMergeVisibilityFlags();
     const merged = mergeVisibilityFlags(null);
     expect(merged.header).toBe(true);
-    expect(merged.contact).toBe(true);
-    expect(merged.skills).toBe(true);
-  });
-
-  it('applies overrides while keeping other defaults', () => {
-    const mergeVisibilityFlags = loadMergeVisibilityFlags();
-    const merged = mergeVisibilityFlags({ skills: false, contact: false });
-    expect(merged.skills).toBe(false);
+    expect(merged.workEmail).toBe(false);
     expect(merged.contact).toBe(false);
-    expect(merged.header).toBe(true);
-  });
-});
-
-describe('mergeVisibilityFlags', () => {
-  it('fills defaults when missing', () => {
-    const mergeVisibilityFlags = loadMergeVisibilityFlags();
-    const merged = mergeVisibilityFlags(null);
-    expect(merged.header).toBe(true);
-    expect(merged.contact).toBe(true);
     expect(merged.skills).toBe(true);
   });
 

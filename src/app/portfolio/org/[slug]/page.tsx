@@ -1,159 +1,240 @@
-import Link from 'next/link';
+import type { ReactNode } from 'react';
 import { notFound } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Globe2, Building2, Sparkles } from 'lucide-react';
-import { getPublicOrganizationPortfolioBySlug } from '@/lib/portfolio/public-organization';
+import { Separator } from '@/components/ui/separator';
+import { Briefcase, Building2, Globe2, ShieldCheck, Sparkles, Users } from 'lucide-react';
+import { ShareLinkButton } from '../../[handle]/ShareLinkButton';
 
-const FALLBACK_SITE_URL = 'https://proofound.io';
+const FALLBACK_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
-function resolveSiteUrl() {
-  const raw = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || FALLBACK_SITE_URL;
-  const normalized = raw.endsWith('/') ? raw.slice(0, -1) : raw;
-
-  try {
-    return new URL(normalized).toString().replace(/\/$/, '');
-  } catch {
-    return FALLBACK_SITE_URL;
+function toValueLabels(values: unknown): string[] {
+  if (!Array.isArray(values)) {
+    return [];
   }
+
+  return values
+    .map((item) => {
+      if (typeof item === 'string') {
+        return item;
+      }
+      if (item && typeof item === 'object' && 'label' in item) {
+        const label = (item as { label?: unknown }).label;
+        return typeof label === 'string' ? label : null;
+      }
+      return null;
+    })
+    .filter((item): item is string => Boolean(item))
+    .slice(0, 6);
 }
 
-function toTitleCase(value: string | null) {
-  if (!value) return null;
-  return value
-    .split('_')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-    .join(' ');
-}
-
-export const dynamic = 'force-dynamic';
-
-export default async function OrganizationPortfolioPublicPage({
+export default async function OrganizationPortfolioPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const portfolio = await getPublicOrganizationPortfolioBySlug(slug);
+  const supabase = await createClient();
 
-  if (!portfolio) {
-    notFound();
+  const { data: organization } = await supabase
+    .from('organizations')
+    .select(
+      `
+        id,
+        slug,
+        display_name,
+        tagline,
+        mission,
+        website,
+        type,
+        values,
+        causes,
+        verified
+      `
+    )
+    .eq('slug', slug)
+    .maybeSingle();
+
+  if (!organization) {
+    return notFound();
   }
 
-  const siteUrl = resolveSiteUrl();
-  const publicUrl = `${siteUrl}/portfolio/org/${encodeURIComponent(portfolio.slug)}`;
+  const [activeAssignmentsResult, teamMembersResult] = await Promise.all([
+    supabase
+      .from('assignments')
+      .select('id', { count: 'exact', head: true })
+      .eq('org_id', organization.id)
+      .eq('status', 'active'),
+    supabase
+      .from('organization_members')
+      .select('user_id', { count: 'exact', head: true })
+      .eq('org_id', organization.id)
+      .eq('status', 'active'),
+  ]);
+
+  const values = toValueLabels(organization.values);
+  const causes = Array.isArray(organization.causes)
+    ? organization.causes.filter((cause): cause is string => typeof cause === 'string').slice(0, 6)
+    : [];
+
+  const shareUrl = `${FALLBACK_URL.replace(/\/$/, '')}/portfolio/org/${slug}`;
+  const activeAssignments = activeAssignmentsResult.count ?? 0;
+  const teamMembers = teamMembersResult.count ?? 0;
 
   return (
-    <div className="min-h-screen bg-[#F7F6F1] px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mx-auto flex max-w-4xl flex-col gap-6">
+    <div className="min-h-screen bg-proofound-parchment">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-10">
         <Card>
-          <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-4">
-              {portfolio.logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={portfolio.logoUrl}
-                  alt={`${portfolio.displayName} logo`}
-                  className="h-14 w-14 rounded-xl border border-slate-200 object-cover"
-                />
-              ) : (
-                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-[#1C4D3A] text-white">
-                  <Building2 className="h-7 w-7" />
+          <CardContent className="flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1C4D3A] text-white">
+                  <Building2 className="h-5 w-5" />
                 </div>
-              )}
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <h1 className="text-2xl font-semibold text-slate-900">{portfolio.displayName}</h1>
-                  <Badge variant="outline">Public Portfolio</Badge>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-2xl font-semibold text-[#2D3330]">
+                      {organization.display_name}
+                    </h1>
+                    {organization.verified ? (
+                      <Badge variant="outline" className="border-emerald-200 text-emerald-700">
+                        <ShieldCheck className="mr-1 h-3.5 w-3.5" />
+                        Verified
+                      </Badge>
+                    ) : null}
+                  </div>
+                  <p className="text-sm text-[#6B6760]">Public organization portfolio</p>
                 </div>
-                {portfolio.tagline && <p className="text-sm text-slate-700">{portfolio.tagline}</p>}
-                <p className="text-xs text-slate-500">{publicUrl}</p>
               </div>
+
+              {organization.tagline ? (
+                <p className="text-sm text-[#2D3330]">{organization.tagline}</p>
+              ) : (
+                <p className="text-sm text-[#6B6760]">
+                  Purpose-led organization profile and active opportunities.
+                </p>
+              )}
             </div>
-            <Link
-              href="/signup"
-              className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-            >
-              <Sparkles className="h-4 w-4" />
-              Build yours on Proofound
-            </Link>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <ShareLinkButton url={shareUrl} />
+              {organization.website ? (
+                <a
+                  href={organization.website}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-md border border-[#D9D5CC] bg-white px-3 py-2 text-sm text-[#2D3330]"
+                >
+                  <Globe2 className="h-4 w-4" />
+                  Website
+                </a>
+              ) : null}
+            </div>
           </CardContent>
         </Card>
 
-        {!portfolio.hasVisibleContent ? (
-          <Card className="border-dashed border-slate-300">
-            <CardContent className="py-10 text-center text-sm text-slate-600">
-              This organization has not shared public details yet.
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Mission</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-[#2D3330]">
+                {organization.mission || 'Mission statement is not published yet.'}
+              </p>
             </CardContent>
           </Card>
-        ) : (
-          <>
-            {(portfolio.mission || portfolio.vision) && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Purpose</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4 text-sm text-slate-700">
-                  {portfolio.mission && (
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        Mission
-                      </p>
-                      <p className="mt-1 whitespace-pre-line">{portfolio.mission}</p>
-                    </div>
-                  )}
-                  {portfolio.vision && (
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        Vision
-                      </p>
-                      <p className="mt-1 whitespace-pre-line">{portfolio.vision}</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
 
-            {portfolio.causes.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Causes</CardTitle>
-                </CardHeader>
-                <CardContent className="flex flex-wrap gap-2">
-                  {portfolio.causes.map((cause) => (
-                    <Badge key={cause} variant="secondary">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-lg">Trust Summary</CardTitle>
+              <Badge variant="outline" className="gap-1">
+                <Sparkles className="h-3.5 w-3.5" />
+                Lean MVP
+              </Badge>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm text-[#2D3330]">
+              <SummaryItem
+                label="Active assignments"
+                value={activeAssignments}
+                icon={<Briefcase className="h-4 w-4 text-[#1C4D3A]" />}
+              />
+              <Separator />
+              <SummaryItem
+                label="Team members"
+                value={teamMembers}
+                icon={<Users className="h-4 w-4 text-[#1C4D3A]" />}
+              />
+              <Separator />
+              <SummaryItem
+                label="Organization type"
+                value={organization.type || 'not specified'}
+                icon={<Building2 className="h-4 w-4 text-[#1C4D3A]" />}
+              />
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Values and Causes</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <p className="mb-2 text-sm font-medium text-[#2D3330]">Values</p>
+              {values.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {values.map((value) => (
+                    <Badge key={value} variant="secondary">
+                      {value}
+                    </Badge>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-[#6B6760]">No public values listed yet.</p>
+              )}
+            </div>
+
+            <div>
+              <p className="mb-2 text-sm font-medium text-[#2D3330]">Causes</p>
+              {causes.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {causes.map((cause) => (
+                    <Badge key={cause} variant="outline">
                       {cause}
                     </Badge>
                   ))}
-                </CardContent>
-              </Card>
-            )}
-
-            {(portfolio.website || portfolio.foundedYear || portfolio.typeLabel) && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Details</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 text-sm text-slate-700">
-                  {portfolio.website && (
-                    <a
-                      href={portfolio.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 hover:text-slate-900"
-                    >
-                      <Globe2 className="h-4 w-4" />
-                      {portfolio.website}
-                    </a>
-                  )}
-                  {portfolio.foundedYear && <p>Founded {portfolio.foundedYear}</p>}
-                  {portfolio.typeLabel && <p>Type: {toTitleCase(portfolio.typeLabel)}</p>}
-                </CardContent>
-              </Card>
-            )}
-          </>
-        )}
+                </div>
+              ) : (
+                <p className="text-sm text-[#6B6760]">No public causes listed yet.</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
+    </div>
+  );
+}
+
+function SummaryItem({
+  label,
+  value,
+  icon,
+}: {
+  label: string;
+  value: number | string;
+  icon: ReactNode;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-2">
+        {icon}
+        <span className="text-sm text-[#2D3330]">{label}</span>
+      </div>
+      <span className="rounded-full bg-[#F7F6F1] px-3 py-1 text-sm font-medium text-[#2D3330]">
+        {value}
+      </span>
     </div>
   );
 }
