@@ -112,6 +112,9 @@ export default function AssignmentBuilderPage() {
   const [assignmentBasicModeEnabled, setAssignmentBasicModeEnabled] = useState(
     CLIENT_FF_DEFAULTS.assignmentBasicMode
   );
+  const [advancedModeUnlocked, setAdvancedModeUnlocked] = useState(
+    !CLIENT_FF_DEFAULTS.assignmentBasicMode
+  );
   const [flagsLoaded, setFlagsLoaded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [assignmentId, setAssignmentId] = useState<string | null>(null);
@@ -142,6 +145,7 @@ export default function AssignmentBuilderPage() {
 
         if (!basicModeEnabled) {
           setBuilderMode('advanced');
+          setAdvancedModeUnlocked(true);
           setCurrentStep((prev) => (prev === 3 ? 4 : prev));
         }
       } catch (error) {
@@ -236,9 +240,12 @@ export default function AssignmentBuilderPage() {
         setAssignmentId(assignment.id);
         setOrgId(assignment.orgId || null);
         if (assignmentBasicModeEnabled) {
-          setBuilderMode(assignment.builderMode === 'advanced' ? 'advanced' : 'basic');
+          const isAdvancedDraft = assignment.builderMode === 'advanced';
+          setBuilderMode(isAdvancedDraft ? 'advanced' : 'basic');
+          setAdvancedModeUnlocked(isAdvancedDraft);
         } else {
           setBuilderMode('advanced');
+          setAdvancedModeUnlocked(true);
         }
         setLastSaved(new Date());
       } catch (error) {
@@ -274,22 +281,60 @@ export default function AssignmentBuilderPage() {
     loadTemplates();
   }, [slug]);
 
+  const trackTemplateApplied = useCallback(
+    (template: AssignmentTemplate, selectedBuilderMode: BuilderMode) => {
+      void fetch('/api/analytics/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventType: 'assignment_template_applied',
+          orgId: orgId ?? undefined,
+          entityType: assignmentIdRef.current ? 'assignment' : undefined,
+          entityId: assignmentIdRef.current ?? undefined,
+          properties: {
+            templateId: template.id,
+            templateName: template.name,
+            roleFamily: template.roleFamily,
+            orgSlug: slug,
+            selectedBuilderMode,
+            recommendedBuilderMode: template.recommendedBuilderMode || null,
+          },
+        }),
+      }).catch(() => undefined);
+    },
+    [orgId, slug]
+  );
+
   const handleApplyTemplate = (template: AssignmentTemplate) => {
     const mapped = mapTemplateToAssignmentForm(template.presetPayload);
     form.reset({ ...form.getValues(), ...mapped });
+
+    let selectedBuilderMode: BuilderMode = 'advanced';
+
     if (assignmentBasicModeEnabled) {
       const templateMode = template.recommendedBuilderMode || 'basic';
-      setBuilderMode(templateMode);
-      if (templateMode === 'basic' && currentStep === 3) {
+      selectedBuilderMode =
+        templateMode === 'advanced' && !advancedModeUnlocked ? 'basic' : templateMode;
+      setBuilderMode(selectedBuilderMode);
+
+      if (templateMode === 'advanced' && !advancedModeUnlocked) {
+        toast.info('This template includes advanced controls. Enable Advanced mode to use them.');
+      }
+      if (selectedBuilderMode === 'basic' && currentStep === 3) {
         setCurrentStep(4);
       }
+    } else {
+      selectedBuilderMode = 'advanced';
+      setBuilderMode('advanced');
     }
+
     setAppliedTemplateId(template.id);
     setAppliedTemplateName(template.name);
     setCurrentStep(1);
     setStepStartTime(new Date());
     toast.success(`Applied template: ${template.name}`);
     setIsTemplatePickerOpen(false);
+    trackTemplateApplied(template, selectedBuilderMode);
   };
 
   const buildAssignmentPayload = useCallback(
@@ -685,6 +730,16 @@ export default function AssignmentBuilderPage() {
     }
   };
 
+  const handleEnableAdvancedMode = () => {
+    setAdvancedModeUnlocked(true);
+    setBuilderMode('advanced');
+  };
+
+  const handleSwitchToBasicMode = () => {
+    setBuilderMode('basic');
+    setCurrentStep((prev) => (prev === 3 ? 4 : prev));
+  };
+
   const handleSubmit = async () => {
     setIsSaving(true);
 
@@ -768,36 +823,46 @@ export default function AssignmentBuilderPage() {
               <div>
                 <p className="text-sm font-semibold text-[#2D3330]">Assignment builder mode</p>
                 <p className="text-xs text-[#6B6760]">
-                  Basic mode publishes faster. Advanced mode keeps full weight controls.
+                  {advancedModeUnlocked
+                    ? 'Switch between Basic and Advanced any time.'
+                    : 'You are in Basic mode. Enable Advanced mode only when you need extra control.'}
                 </p>
               </div>
-              <div className="inline-flex rounded-md border border-[#E8E6DD] bg-white p-1">
+              {advancedModeUnlocked ? (
+                <div className="inline-flex rounded-md border border-[#E8E6DD] bg-white p-1">
+                  <button
+                    type="button"
+                    className={`rounded px-3 py-1 text-sm ${
+                      builderMode === 'basic'
+                        ? 'bg-[#1C4D3A] text-white'
+                        : 'text-[#2D3330] hover:bg-[#F7F6F1]'
+                    }`}
+                    onClick={handleSwitchToBasicMode}
+                  >
+                    Basic
+                  </button>
+                  <button
+                    type="button"
+                    className={`rounded px-3 py-1 text-sm ${
+                      builderMode === 'advanced'
+                        ? 'bg-[#1C4D3A] text-white'
+                        : 'text-[#2D3330] hover:bg-[#F7F6F1]'
+                    }`}
+                    onClick={handleEnableAdvancedMode}
+                  >
+                    Advanced
+                  </button>
+                </div>
+              ) : (
                 <button
                   type="button"
-                  className={`rounded px-3 py-1 text-sm ${
-                    builderMode === 'basic'
-                      ? 'bg-[#1C4D3A] text-white'
-                      : 'text-[#2D3330] hover:bg-[#F7F6F1]'
-                  }`}
-                  onClick={() => {
-                    setBuilderMode('basic');
-                    setCurrentStep((prev) => (prev === 3 ? 4 : prev));
-                  }}
+                  data-testid="advanced-mode-opt-in"
+                  className="rounded-md border border-[#1C4D3A]/30 px-3 py-1.5 text-sm font-medium text-[#1C4D3A] hover:bg-[#EAF1ED]"
+                  onClick={handleEnableAdvancedMode}
                 >
-                  Basic
+                  Need extra control? Enable Advanced mode
                 </button>
-                <button
-                  type="button"
-                  className={`rounded px-3 py-1 text-sm ${
-                    builderMode === 'advanced'
-                      ? 'bg-[#1C4D3A] text-white'
-                      : 'text-[#2D3330] hover:bg-[#F7F6F1]'
-                  }`}
-                  onClick={() => setBuilderMode('advanced')}
-                >
-                  Advanced
-                </button>
-              </div>
+              )}
             </div>
           </Card>
         ) : null}

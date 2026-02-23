@@ -1,7 +1,7 @@
 # PROOFOUND — PRD TECHNICAL REQUIREMENTS & ARCHITECTURE
 
 **Document Version**: 1.0  
-**Last Updated**: 2025-10-30  
+**Last Updated**: 2026-02-23  
 **Scope**: Complete technical specifications for MVP → Future-proof architecture  
 **Audience**: Engineering, Product, Leadership
 
@@ -446,6 +446,19 @@ Fields: role (owner/admin/member/viewer), status (active/invited/suspended), joi
 Relationships:
   → organizations (many:1)
   → profiles (many:1)
+```
+
+**`org_candidate_invites`** (Bring-your-own-candidate intake):
+
+```
+Primary Key: id (UUID)
+Fields: orgId, inviteeEmail, inviteeEmailNormalized, tokenHash, status (pending/claimed/proof_submitted/revoked/expired), expiresAt, invitedBy, claimedByProfileId, claimedAt, proofSnippetId, proofShareToken, proofSubmittedAt, revokedAt
+Constraints: one active invite per (orgId, inviteeEmailNormalized) for pending/claimed states
+Relationships:
+  → organizations (many:1)
+  → profiles (many:1, invitedBy)
+  → profiles (many:1, claimedByProfileId)
+Security: tokenHash-only storage for invite links (raw tokens are never persisted)
 ```
 
 #### Proof & Verification
@@ -1257,6 +1270,8 @@ profiles (1) ←→ (many) impact_stories, experiences, education, volunteering
 
 organizations (1) ←→ (many) assignments
 organizations (1) ←→ (many) projects
+organizations (1) ←→ (many) org_candidate_invites
+profiles (1) ←→ (many) org_candidate_invites (as inviter or claimant)
 
 profiles (1) ←→ (1) matching_profiles
 assignments (1) ←→ (many) matches ←→ (1) profiles
@@ -1343,6 +1358,7 @@ RESEND_FROM_EMAIL=noreply@proofound.io
 - Verification response → User
 - Match notification → User
 - Organization invite → Invitee
+- Candidate invite (BYOC) → Candidate
 - Deletion reminders → User (7 days, 1 day before)
 
 **Pricing**: $20/month for 50K emails (MVP sufficient)
@@ -1550,6 +1566,11 @@ STRIPE_WEBHOOK_SECRET=whsec_[secret]
 - `/api/core/matching/interest` - Express interest
 - `/api/core/matching/matching-profile` - Matching profile CRUD
 - `/api/expertise/profile` - Expertise profile
+- `/api/organizations/[orgId]/candidate-invites` - Candidate invite list/create
+- `/api/organizations/[orgId]/candidate-invites/[inviteId]` - Candidate invite resend/revoke
+- `/api/candidate-invites/[token]` - Public candidate invite metadata
+- `/api/candidate-invites/[token]/claim` - Candidate invite claim
+- `/api/candidate-invites/[token]/proof-card` - Candidate proof card submission
 - `/api/taxonomy/[kind]` - Skills taxonomy
 - `/api/user/account` - User account management
 - `/api/user/export` - GDPR data export
@@ -1909,6 +1930,19 @@ STRIPE_WEBHOOK_SECRET=whsec_[secret]
 - **% assignments with ≥3 qualified matches in 7 days**
 - Target: ≥50%
 
+**First 10 Minutes Activation Success (MVP)**:
+
+- **Individual**: success requires both actions within 10 minutes after `individual_onboarding_completed`:
+  - `portfolio_share_link_copied`
+  - `portfolio_pdf_export_succeeded`
+- **Company**: success requires both actions within 10 minutes after `organization_onboarding_completed`:
+  - `assignment_template_applied`
+  - `assignment_publish_succeeded`
+- **Boundary rule**: events at exactly 10:00 are included (`<= 10 minutes`).
+- **Formulas**:
+  - Individual activation rate (10m) = successful individuals in 10m / new individuals
+  - Company activation rate (10m) = successful organization creators in 10m / new organization creators
+
 **Day-1 Admin Dashboard**:
 
 1. Time-to-first-match (median)
@@ -1916,6 +1950,8 @@ STRIPE_WEBHOOK_SECRET=whsec_[secret]
 3. Organization verification completion rate
 4. Match acceptance rate (+ decline reasons)
 5. Safety: Report rate & resolution SLA
+6. Individual first-10-minute activation rate
+7. Company first-10-minute activation rate
 
 ---
 
@@ -1927,6 +1963,12 @@ STRIPE_WEBHOOK_SECRET=whsec_[secret]
 - `created_profile` - Profile created
 - `profile_ready_for_match` - Profile meets matching criteria
 - `org_verified` - Organization verification approved
+- `individual_onboarding_completed` - Individual onboarding completed
+- `organization_onboarding_completed` - Organization onboarding completed
+- `portfolio_share_link_copied` - Portfolio share link copied
+- `portfolio_pdf_export_succeeded` - Portfolio PDF export returns 200
+- `assignment_template_applied` - Assignment template applied in builder
+- `assignment_publish_succeeded` - Assignment publish route returns 200
 - `assignment_published` - Assignment status → active
 - `match_suggested` - Match computed and shown to user
 - `match_viewed` - User views match details
@@ -1936,6 +1978,10 @@ STRIPE_WEBHOOK_SECRET=whsec_[secret]
 - `verification_requested` - User requests proof verification
 - `verification_completed` - Verifier responds (with status)
 - `content_reported` - User reports content
+- `candidate_invite_sent` - Organization sends BYOC candidate invite
+- `candidate_invite_opened` - Candidate opens invite link
+- `candidate_invite_claimed` - Candidate claims invite with email match
+- `candidate_proof_card_submitted` - Candidate submits proof card
 
 **Event Schema**:
 

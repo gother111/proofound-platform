@@ -83,6 +83,19 @@ export interface WellBeingDeltaResult {
   calculatedAt: Date;
 }
 
+export interface FirstTenMinuteActivationRate {
+  numerator: number;
+  denominator: number;
+  rate: number;
+}
+
+export interface FirstTenMinuteActivationMetrics {
+  windowMinutes: 10;
+  individual: FirstTenMinuteActivationRate;
+  company: FirstTenMinuteActivationRate;
+  calculatedAt: Date;
+}
+
 // ============================================================================
 // TIME TO FIRST QUALIFIED INTRODUCTION (TTFQI)
 // ============================================================================
@@ -756,24 +769,117 @@ export async function calculateFairnessGap(
   }
 }
 
+function toRate(numerator: number, denominator: number): number {
+  if (!denominator) return 0;
+  return Number(((numerator / denominator) * 100).toFixed(2));
+}
+
+async function calculatePersonaFirstTenMinuteRate(
+  onboardingEventType: string,
+  actionEventOne: string,
+  actionEventTwo: string,
+  startIso: string,
+  endIso: string
+): Promise<FirstTenMinuteActivationRate> {
+  const result = await db.execute(sql`
+    WITH onboarding AS (
+      SELECT
+        user_id,
+        MIN(created_at) as onboarding_at
+      FROM analytics_events
+      WHERE event_type = ${onboardingEventType}
+        AND user_id IS NOT NULL
+        AND created_at >= ${startIso}
+        AND created_at <= ${endIso}
+      GROUP BY user_id
+    ),
+    windowed_actions AS (
+      SELECT
+        o.user_id,
+        COALESCE(BOOL_OR(e.event_type = ${actionEventOne}), false) as has_action_one,
+        COALESCE(BOOL_OR(e.event_type = ${actionEventTwo}), false) as has_action_two
+      FROM onboarding o
+      LEFT JOIN analytics_events e
+        ON e.user_id = o.user_id
+       AND e.created_at >= o.onboarding_at
+       AND e.created_at <= (o.onboarding_at + INTERVAL '10 minutes')
+       AND e.event_type IN (${actionEventOne}, ${actionEventTwo})
+      GROUP BY o.user_id
+    )
+    SELECT
+      COUNT(*)::int as denominator,
+      COUNT(*) FILTER (WHERE has_action_one AND has_action_two)::int as numerator
+    FROM windowed_actions
+  `);
+
+  const row = (getRows(result)[0] ?? {}) as {
+    numerator?: number | string | null;
+    denominator?: number | string | null;
+  };
+
+  const numerator = Number(row.numerator || 0);
+  const denominator = Number(row.denominator || 0);
+
+  return {
+    numerator,
+    denominator,
+    rate: toRate(numerator, denominator),
+  };
+}
+
+export async function calculateFirstTenMinuteActivationMetrics(
+  startDate?: Date,
+  endDate?: Date
+): Promise<FirstTenMinuteActivationMetrics> {
+  const start = startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const end = endDate || new Date();
+  const startIso = start.toISOString();
+  const endIso = end.toISOString();
+
+  const [individual, company] = await Promise.all([
+    calculatePersonaFirstTenMinuteRate(
+      'individual_onboarding_completed',
+      'portfolio_share_link_copied',
+      'portfolio_pdf_export_succeeded',
+      startIso,
+      endIso
+    ),
+    calculatePersonaFirstTenMinuteRate(
+      'organization_onboarding_completed',
+      'assignment_template_applied',
+      'assignment_publish_succeeded',
+      startIso,
+      endIso
+    ),
+  ]);
+
+  return {
+    windowMinutes: 10,
+    individual,
+    company,
+    calculatedAt: new Date(),
+  };
+}
+
 // ============================================================================
 // GET ALL (lightweight)
 // ============================================================================
 
 export async function getAllMetrics(): Promise<Record<string, any>> {
   try {
-    const [ttsc, ttfqi, ttv, pac] = await Promise.all([
+    const [ttsc, ttfqi, ttv, pac, firstTenMinuteActivation] = await Promise.all([
       calculateTTSC(),
       calculateTTFQI(),
       calculateTTV(),
       calculatePACLift(),
+      calculateFirstTenMinuteActivationMetrics(),
     ]);
 
-    return { ttsc, ttfqi, ttv, pac };
+    return { ttsc, ttfqi, ttv, pac, firstTenMinuteActivation };
   } catch (error) {
     log.error('metrics.get_all.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
     });
-    return { ttsc: null, ttfqi: null, ttv: null, pac: null };
+    return { ttsc: null, ttfqi: null, ttv: null, pac: null, firstTenMinuteActivation: null };
   }
 }
