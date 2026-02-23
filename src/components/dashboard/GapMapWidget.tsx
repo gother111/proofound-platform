@@ -54,7 +54,7 @@ export function GapMapWidget() {
   }, []);
 
   const handleViewAll = () => {
-    router.push('/app/i/skill-gaps');
+    router.push('/app/i/expertise?tab=gap-analysis');
   };
 
   if (loading) {

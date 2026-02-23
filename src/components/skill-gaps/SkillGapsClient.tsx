@@ -39,17 +39,26 @@ type Filters = {
 };
 
 type Props = {
-  initialGaps: SkillGap[];
-  assignments: Array<{ id: string; role?: string; status?: string }>;
-  matrix: GapMatrixRow[];
-  coverage: Coverage;
-  learning: LearningRecommendations;
-  goals: Goal[];
+  initialGaps?: SkillGap[];
+  assignments?: Array<{ id: string; role?: string; status?: string }>;
+  matrix?: GapMatrixRow[];
+  coverage?: Coverage;
+  learning?: LearningRecommendations;
+  goals?: Goal[];
 };
 
 type GoalApiResponse = {
   goal?: unknown;
   legacyGoal?: unknown;
+};
+
+type SkillGapOverviewResponse = {
+  gaps?: SkillGap[];
+  assignments?: Array<{ id: string; role?: string; status?: string }>;
+  matrix?: GapMatrixRow[];
+  coverage?: Coverage;
+  learning?: LearningRecommendations;
+  goals?: Goal[];
 };
 
 function normalizeGoal(rawGoal: unknown, rawLegacyGoal?: unknown): Goal {
@@ -101,15 +110,62 @@ export function SkillGapsClient({
   learning,
   goals: initialGoals,
 }: Props) {
+  const hasInitialOverview =
+    Array.isArray(initialGaps) &&
+    Array.isArray(assignments) &&
+    Array.isArray(matrix) &&
+    coverage !== undefined &&
+    learning !== undefined &&
+    Array.isArray(initialGoals);
+  const initialCoverage = coverage ?? { totalRequired: 0, missing: 0, covered: 0 };
+
   const [filters, setFilters] = useState<Filters>({ timeframe: 180, role: '' });
-  const [gaps, setGaps] = useState<SkillGap[]>(initialGaps);
-  const [grid, setGrid] = useState<GapMatrixRow[]>(matrix);
-  const [stats, setStats] = useState<Coverage>(coverage);
-  const [assignmentList, setAssignmentList] = useState(assignments);
+  const [gaps, setGaps] = useState<SkillGap[]>(initialGaps ?? []);
+  const [grid, setGrid] = useState<GapMatrixRow[]>(matrix ?? []);
+  const [stats, setStats] = useState<Coverage>(initialCoverage);
+  const [assignmentList, setAssignmentList] = useState(assignments ?? []);
+  const [learningResources, setLearningResources] = useState<LearningRecommendations>(
+    learning ?? {}
+  );
   const [loading, setLoading] = useState(false);
-  const [goals, setGoals] = useState<Goal[]>(() => initialGoals.map((goal) => normalizeGoal(goal)));
+  const [initializing, setInitializing] = useState(!hasInitialOverview);
+  const [initialLoadError, setInitialLoadError] = useState<string | null>(null);
+  const [goals, setGoals] = useState<Goal[]>(() =>
+    (initialGoals ?? []).map((goal) => normalizeGoal(goal))
+  );
   const [isPending, startTransition] = useTransition();
   const hasLoadedOnce = useRef(false);
+
+  const loadOverview = async () => {
+    setInitializing(true);
+    setInitialLoadError(null);
+    try {
+      const response = await fetch('/api/skill-gaps/overview', { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error('Unable to load skill gap overview');
+      }
+      const data = (await response.json()) as SkillGapOverviewResponse;
+      setGaps(data.gaps ?? []);
+      setGrid(data.matrix ?? []);
+      setStats(data.coverage ?? initialCoverage);
+      setAssignmentList(data.assignments ?? []);
+      setLearningResources(data.learning ?? {});
+      setGoals((data.goals ?? []).map((goal) => normalizeGoal(goal)));
+    } catch (error) {
+      console.error(error);
+      setInitialLoadError('Could not load gap analysis. Please try again.');
+    } finally {
+      setInitializing(false);
+    }
+  };
+
+  useEffect(() => {
+    if (hasInitialOverview) {
+      return;
+    }
+    loadOverview();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasInitialOverview]);
 
   const skillNameMap = useMemo(() => {
     const map: Record<string, string> = {};
@@ -137,8 +193,8 @@ export function SkillGapsClient({
       const data = await res.json();
       setGaps(data.gaps ?? []);
       setGrid(data.matrix ?? []);
-      setStats(data.coverage ?? coverage);
-      setAssignmentList(data.assignments ?? assignments);
+      setStats(data.coverage ?? initialCoverage);
+      setAssignmentList(data.assignments ?? []);
     } catch (error) {
       console.error(error);
       toast.error('Could not refresh gap analysis. Please try again.');
@@ -203,6 +259,29 @@ export function SkillGapsClient({
 
   const missingSkillsCount = gaps.filter((gap) => gap.gap > 0).length;
 
+  if (initializing) {
+    return (
+      <Card>
+        <CardContent className="py-6 text-sm text-muted-foreground">
+          Loading gap analysis...
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (initialLoadError) {
+    return (
+      <Card>
+        <CardContent className="py-6">
+          <p className="text-sm text-muted-foreground">{initialLoadError}</p>
+          <Button className="mt-4" variant="outline" size="sm" onClick={loadOverview}>
+            Retry
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -221,7 +300,7 @@ export function SkillGapsClient({
               variant={filters.timeframe === days ? 'default' : 'outline'}
               size="sm"
               onClick={() => setFilters((prev) => ({ ...prev, timeframe: days }))}
-              disabled={loading}
+              disabled={loading || initializing}
             >
               Last {days}d
             </Button>
@@ -231,6 +310,7 @@ export function SkillGapsClient({
             className="w-48"
             value={filters.role}
             onChange={(e) => setFilters((prev) => ({ ...prev, role: e.target.value }))}
+            disabled={loading || initializing}
           />
         </div>
       </div>
@@ -381,7 +461,10 @@ export function SkillGapsClient({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <LearningRecommendationsList resources={learning} skillNames={skillNameMap} />
+              <LearningRecommendationsList
+                resources={learningResources}
+                skillNames={skillNameMap}
+              />
             </CardContent>
           </Card>
         </TabsContent>
