@@ -111,7 +111,7 @@ export function ReadinessSprintPanel() {
 
       <div className="flex justify-end">
         <Button asChild size="sm" className="bg-[#1C4D3A] hover:bg-[#2D5F4A] text-white">
-          <Link href="/app/i/skill-gaps">Open Skill Gaps</Link>
+          <Link href="/app/i/expertise?tab=gap-analysis">Open Skill Gaps</Link>
         </Button>
       </div>
     </Card>

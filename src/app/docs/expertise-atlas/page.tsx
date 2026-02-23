@@ -30,7 +30,7 @@ export default function ExpertiseAtlasDocsPage() {
           </li>
           <li className="flex items-start gap-2">
             <BookOpen className="mt-0.5 h-4 w-4 text-[#1C4D3A]" />
-            Use the Skill Gaps page to prioritize what to learn next.
+            Use the Gap Analysis tab in Expertise Atlas to prioritize what to learn next.
           </li>
           <li className="flex items-start gap-2">
             <Shield className="mt-0.5 h-4 w-4 text-[#1C4D3A]" />
@@ -44,7 +44,7 @@ export default function ExpertiseAtlasDocsPage() {
         <ol className="list-decimal space-y-2 pl-5 text-sm text-[#2D3330]">
           <li>Add core skills and set realistic proficiency levels.</li>
           <li>Attach proofs and request verification for your strongest skills.</li>
-          <li>Open Skill Gaps and focus on the top high-impact gaps first.</li>
+          <li>Open Gap Analysis and focus on the top high-impact gaps first.</li>
           <li>Return to Matching and review updated opportunities.</li>
         </ol>
       </section>
@@ -59,10 +59,10 @@ export default function ExpertiseAtlasDocsPage() {
             Open Expertise Atlas
           </Link>
           <Link
-            href="/app/i/skill-gaps"
+            href="/app/i/expertise?tab=gap-analysis"
             className="rounded-lg border border-[#D8D2C8] px-3 py-2 text-[#1C4D3A] hover:bg-[#EEF1EA]"
           >
-            Open Skill Gaps
+            Open Gap Analysis
           </Link>
           <Link
             href="/app/i/matching"
