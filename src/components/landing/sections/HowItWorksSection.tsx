@@ -38,13 +38,13 @@ export function HowItWorksSection({ shouldReduceMotion }: HowItWorksSectionProps
   const features = [
     {
       icon: Sparkles,
-      title: 'AI-powered matching',
-      desc: 'Evidence-based algorithms that connect you to aligned opportunities, not vanity metrics',
+      title: 'Public proof portfolio',
+      desc: 'Publish a clean, shareable portfolio URL on day 1 with evidence and trust signals in one place',
     },
     {
       icon: Award,
-      title: 'Proof-based profiles',
-      desc: 'Verified skills, impact stories, and credentials—all traceable and transparent',
+      title: 'Matching as a second step',
+      desc: 'After your portfolio is live, discover aligned opportunities and collaborators without relying on vanity metrics',
     },
     {
       icon: Key,
@@ -147,7 +147,8 @@ export function HowItWorksSection({ shouldReduceMotion }: HowItWorksSectionProps
                   How Proofound works
                 </h2>
                 <p className="text-xl md:text-2xl text-muted-foreground font-sans text-balance mb-12">
-                  A platform built on evidence, transparency, and dignity.
+                  Start by publishing your proof portfolio, then expand into matching and growth
+                  workflows.
                 </p>
 
                 {/* Progress Indicator (Desktop only) */}
