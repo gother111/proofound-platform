@@ -4,6 +4,7 @@ import { Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { getOrganizationRecoveryActions } from '@/lib/ui/recovery-actions';
 
 interface OrganizationMatchingEmptyProps {
   orgSlug?: string | null;
@@ -18,27 +19,7 @@ export function OrganizationMatchingEmpty({
   onCreateAssignment,
 }: OrganizationMatchingEmptyProps) {
   const router = useRouter();
-  const baseOrgPath = orgSlug ? `/app/o/${orgSlug}` : '/app/o';
-  const remediationActions = [
-    {
-      id: 'create-assignment',
-      title: 'Create first assignment',
-      description: 'Publish in Basic mode with outcomes, practicals, and core skills.',
-      onClick: onCreateAssignment,
-    },
-    {
-      id: 'start-from-template',
-      title: 'Start from template',
-      description: 'Open assignment templates to prefill required fields.',
-      onClick: () => router.push(`${baseOrgPath}/assignments/new?openTemplates=1`),
-    },
-    {
-      id: 'complete-org-profile',
-      title: 'Complete org profile',
-      description: 'Add mission, values, and context to improve matching quality.',
-      onClick: () => router.push(`${baseOrgPath}/profile`),
-    },
-  ] as const;
+  const remediationActions = getOrganizationRecoveryActions('org-matching-empty', orgSlug);
 
   return (
     <div className="flex items-center justify-center min-h-[60vh] px-4">
@@ -88,7 +69,13 @@ export function OrganizationMatchingEmpty({
             <button
               key={action.id}
               type="button"
-              onClick={action.onClick}
+              onClick={() => {
+                if (action.id === 'publish-assignment') {
+                  onCreateAssignment();
+                  return;
+                }
+                router.push(action.actionUrl);
+              }}
               className="rounded-lg border border-[#E8E6DD] bg-white px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1]"
             >
               <p className="text-sm font-medium text-[#2D3330]">{action.title}</p>

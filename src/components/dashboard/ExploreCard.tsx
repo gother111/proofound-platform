@@ -5,8 +5,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { Briefcase, TrendingUp, AlertTriangle } from 'lucide-react';
 
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import type { MomentumSummary } from '@/lib/momentum/types';
+import {
+  getIndividualRecoveryActions,
+  getOrganizationRecoveryActions,
+} from '@/lib/ui/recovery-actions';
 
 interface ExploreCardProps {
   persona?: 'individual' | 'organization';
@@ -53,7 +56,10 @@ export function ExploreCard({ persona = 'individual', orgRef }: ExploreCardProps
     );
   }
 
-  const fallbackHref = persona === 'organization' ? '/app/o' : '/app/i/matching';
+  const fallbackActions =
+    persona === 'organization'
+      ? getOrganizationRecoveryActions('org-matching-empty', orgRef)
+      : getIndividualRecoveryActions('dashboard-empty');
 
   return (
     <Card className="p-4 border lg:col-span-3" style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}>
@@ -80,15 +86,20 @@ export function ExploreCard({ persona = 'individual', orgRef }: ExploreCardProps
         <div className="text-center py-4">
           <Briefcase className="w-10 h-10 mx-auto mb-2" style={{ color: '#E8E6DD' }} />
           <p className="text-xs mb-3" style={{ color: '#6B6760' }}>
-            No immediate actions yet. Open your main workspace to continue.
+            No immediate actions yet. Use these steps to restore momentum.
           </p>
-          <Button
-            size="sm"
-            className="h-8 text-xs bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]"
-            asChild
-          >
-            <Link href={fallbackHref}>Open workspace</Link>
-          </Button>
+          <div className="space-y-2 text-left">
+            {fallbackActions.map((action) => (
+              <Link
+                key={action.id}
+                href={action.actionUrl}
+                className="block rounded-lg border border-[#E8E6DD] px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1]"
+              >
+                <p className="text-sm font-medium text-[#2D3330]">{action.title}</p>
+                <p className="text-xs text-[#6B6760] mt-1">{action.description}</p>
+              </Link>
+            ))}
+          </div>
         </div>
       ) : (
         <div className="space-y-2">

@@ -2,16 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import {
-  AlertCircle,
-  ArrowRight,
-  Loader2,
-  MapPin,
-  Shield,
-  Sparkles,
-  Star,
-  TrendingUp,
-} from 'lucide-react';
+import { AlertCircle, ArrowRight, MapPin, Shield, Sparkles, Star, TrendingUp } from 'lucide-react';
 
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,6 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { apiFetch } from '@/lib/api/fetch';
 import type { ReadinessAction } from '@/lib/momentum/types';
+import { getIndividualRecoveryActions } from '@/lib/ui/recovery-actions';
 
 interface MatchingResultsCardProps {
   className?: string;
@@ -167,7 +159,10 @@ export function MatchingResultsCard({ className, basePath = '/app/i' }: Matching
   }
 
   if (noProfile || matches.length === 0) {
-    const fallbackActions = readinessActions.length > 0 ? readinessActions : [];
+    const fallbackActions = getIndividualRecoveryActions(
+      noProfile ? 'profile-incomplete' : 'matching-empty',
+      readinessActions
+    );
 
     return (
       <Card
@@ -189,29 +184,17 @@ export function MatchingResultsCard({ className, basePath = '/app/i' }: Matching
           </p>
         </div>
 
-        {fallbackActions.length > 0 ? (
-          <div className="space-y-2">
-            {fallbackActions.slice(0, 2).map((action) => (
-              <Link
-                key={action.id}
-                href={action.actionUrl}
-                className="block rounded-lg border border-[#E8E6DD] px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1]"
-              >
-                <p className="text-xs font-semibold text-[#2D3330]">{action.title}</p>
-                <p className="text-xs text-[#6B6760] mt-1">{action.description}</p>
-              </Link>
-            ))}
-          </div>
-        ) : null}
-
-        <div className="mt-3">
-          <Button
-            size="sm"
-            className="h-8 text-xs bg-[#1C4D3A] hover:bg-[#2D5F4A] text-white w-full"
-            asChild
-          >
-            <Link href={`${basePath}/matching/preferences`}>Open matching preferences</Link>
-          </Button>
+        <div className="space-y-2">
+          {fallbackActions.map((action) => (
+            <Link
+              key={action.id}
+              href={action.actionUrl}
+              className="block rounded-lg border border-[#E8E6DD] px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1]"
+            >
+              <p className="text-xs font-semibold text-[#2D3330]">{action.title}</p>
+              <p className="text-xs text-[#6B6760] mt-1">{action.description}</p>
+            </Link>
+          ))}
         </div>
       </Card>
     );

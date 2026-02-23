@@ -15,6 +15,7 @@ import { Progress } from '@/components/ui/progress';
 import { apiFetch } from '@/lib/api/fetch';
 import { CheckCircle2, AlertCircle, Lock, Target, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { getIndividualRecoveryActions } from '@/lib/ui/recovery-actions';
 
 type ProfileCompletenessResponse = {
   percentage: number;
@@ -189,11 +190,13 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
   const nextTierActions = useMemo(() => {
     const remaining = stats?.eligibility?.nextTierTarget?.remaining;
     if (!remaining) return [];
-    const actions: Array<{ id: string; title: string; actionUrl: string }> = [];
+    const actions: Array<{ id: string; title: string; description: string; actionUrl: string }> =
+      [];
     if (remaining.skillsWithRecency > 0 || remaining.proofCount > 0) {
       actions.push({
         id: 'expertise',
         title: 'Add skills and proofs in Expertise Atlas',
+        description: 'Increase skill coverage and attach proof to improve trust and ranking.',
         actionUrl: '/app/i/expertise',
       });
     }
@@ -201,6 +204,7 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
       actions.push({
         id: 'purpose',
         title: 'Complete mission, values, or causes',
+        description: 'Purpose signals improve alignment and candidate fit quality.',
         actionUrl: '/app/i/profile',
       });
     }
@@ -208,11 +212,26 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
       actions.push({
         id: 'constraints',
         title: 'Set work and compensation preferences',
+        description: 'Preferences are required before matching can activate fully.',
         actionUrl: '/app/i/matching/preferences',
       });
     }
     return actions.slice(0, 3);
   }, [stats]);
+
+  const nextStepActions = useMemo(() => {
+    const hints =
+      nextTierActions.length > 0
+        ? nextTierActions
+        : (data?.actions || []).map((action) => ({
+            id: action.id,
+            title: action.title,
+            description: 'Complete this action to improve activation readiness.',
+            actionUrl: action.actionUrl,
+          }));
+
+    return getIndividualRecoveryActions('profile-incomplete', hints);
+  }, [data?.actions, nextTierActions]);
 
   return (
     <Card className="h-full">
@@ -281,18 +300,16 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
 
         <div className="space-y-2">
           <p className="text-xs font-medium text-[#2D3330]">Next steps</p>
-          {(nextTierActions.length > 0 ? nextTierActions : (data?.actions || []).slice(0, 3)).map(
-            (action) => (
-              <Link
-                key={action.id}
-                href={action.actionUrl}
-                className="flex items-center justify-between rounded-lg border border-[#E8E6DD] px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1] text-sm"
-              >
-                <span className="text-[#2D3330]">{action.title}</span>
-                <ArrowRight className="h-4 w-4 text-[#9B9891]" />
-              </Link>
-            )
-          )}
+          {nextStepActions.map((action) => (
+            <Link
+              key={action.id}
+              href={action.actionUrl}
+              className="flex items-center justify-between rounded-lg border border-[#E8E6DD] px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1] text-sm"
+            >
+              <span className="text-[#2D3330]">{action.title}</span>
+              <ArrowRight className="h-4 w-4 text-[#9B9891]" />
+            </Link>
+          ))}
           {loading && (
             <div className="space-y-2">
               <div className="h-3 w-2/3 bg-muted animate-pulse rounded" />

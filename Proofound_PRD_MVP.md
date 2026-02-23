@@ -97,6 +97,11 @@
 - **Soft gating:** Matching stays accessible even before Lite completion. Unmet criteria are surfaced as readiness checklist actions instead of hard API blocking.
 - **Explainability:** Each suggestion shows “**Why this match**” with % breakdown and **numeric improvement tips** (e.g., “Add proof X to increase score by ~8–12%”).
 - **Cold‑start:** Editorial “Starter Matches”; if <5 strong results, show “Near Matches” with missing/strength notes.
+- **Empty/incomplete recovery pattern (critical paths):**
+  - Individual empty or not-matchable states always show 3 clear actions: `Add a proof`, `Add a skill`, `Turn on matchable`.
+  - `Turn on matchable` routes to matching preferences.
+  - If results are empty due to active filters, show `Reset filters` before the 3 actions.
+  - Organization matching empty/no-result states always show 3 clear actions, including `Turn on candidate matching`.
 - **Refresh defaults:** Employment → **daily**; Volunteering → **weekly** (user‑configurable; system min daily).
 - **AC:** First suggestions within 24h of profile readiness; reasons render consistently.
 

@@ -1910,6 +1910,15 @@ Each flow includes:
 **Error & Empty States**
 
 - Empty: show top 3 actions to raise score (e.g., add L4 proof, widen availability).
+- Critical individual empty/incomplete states must always show exactly 3 recovery CTAs:
+  - `Add a proof`
+  - `Add a skill`
+  - `Turn on matchable` (routes to matching preferences)
+- Filtered zero-result state must show `Reset filters` before the 3 recovery CTAs.
+- Organization matching empty/no-results states must always show exactly 3 recovery CTAs, including:
+  - `Turn on candidate matching`
+  - `Publish assignment` (or publish updates)
+  - `Add skill requirements`
 - Gate mismatch: banner explaining unmet verification.
 - Rate limiting: prevent mass introduces within a window.
 

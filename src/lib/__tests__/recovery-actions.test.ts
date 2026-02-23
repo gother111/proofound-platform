@@ -1,0 +1,49 @@
+import { describe, expect, it } from 'vitest';
+
+import {
+  getIndividualRecoveryActions,
+  getOrganizationRecoveryActions,
+} from '@/lib/ui/recovery-actions';
+
+describe('recovery actions', () => {
+  it('returns exactly 3 individual recovery actions with unique destinations', () => {
+    const actions = getIndividualRecoveryActions('matching-empty');
+
+    expect(actions).toHaveLength(3);
+    expect(actions.map((action) => action.title)).toEqual(
+      expect.arrayContaining(['Add a proof', 'Add a skill', 'Turn on matchable'])
+    );
+    expect(new Set(actions.map((action) => action.actionUrl)).size).toBe(3);
+  });
+
+  it('maps hint actions without changing the 3-action contract', () => {
+    const actions = getIndividualRecoveryActions('matching-blocked', [
+      {
+        id: 'request-verification',
+        title: 'Add proof from verification',
+        description: 'Verification hint from readiness service.',
+        actionUrl: '/app/i/expertise',
+      },
+    ]);
+
+    expect(actions).toHaveLength(3);
+    expect(actions[0].title).toContain('proof');
+    expect(new Set(actions.map((action) => action.actionUrl)).size).toBe(3);
+  });
+
+  it('returns exactly 3 organization actions and includes candidate matching CTA', () => {
+    const actions = getOrganizationRecoveryActions('org-matching-empty', 'acme');
+
+    expect(actions).toHaveLength(3);
+    expect(actions.map((action) => action.title)).toContain('Turn on candidate matching');
+    expect(new Set(actions.map((action) => action.actionUrl)).size).toBe(3);
+  });
+
+  it('uses assignment review routes for assignment-no-matches context', () => {
+    const actions = getOrganizationRecoveryActions('assignment-no-matches', 'acme', 'assignment-1');
+
+    expect(actions).toHaveLength(3);
+    expect(actions[0].actionUrl).toContain('/app/o/acme/assignments/assignment-1/review');
+    expect(actions[1].actionUrl).toContain('focus=skills');
+  });
+});
