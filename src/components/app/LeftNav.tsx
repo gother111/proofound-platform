@@ -19,6 +19,7 @@ import {
   ClipboardList,
   MessageCircle,
   UserCheck,
+  UserRound,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
@@ -61,6 +62,12 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
   const individualNavItems: NavItem[] = [
     { href: `${basePath}/home`, icon: Home, label: 'Dashboard', dataTour: 'home-link' },
     { href: `${basePath}/profile`, icon: User, label: 'Profile', dataTour: 'profile-link' },
+    {
+      href: `${basePath}/portfolio`,
+      icon: UserRound,
+      label: 'Public Portfolio',
+      dataTour: 'portfolio-link',
+    },
     {
       href: `${basePath}/matching`,
       icon: Users,
@@ -111,6 +118,12 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
       icon: Video,
       label: 'Interviews',
       dataTour: 'interviews-link',
+    },
+    {
+      href: `${basePath}/portfolio`,
+      icon: ClipboardList,
+      label: 'Public Portfolio',
+      dataTour: 'portfolio-link',
     },
     { href: `${basePath}/profile`, icon: Building, label: 'Org Profile', dataTour: 'org-profile' },
     { href: `${basePath}/team`, icon: Users, label: 'Team', dataTour: 'team-link' },

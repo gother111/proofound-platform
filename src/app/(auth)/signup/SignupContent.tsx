@@ -115,8 +115,8 @@ export function SignupContent() {
                         Individual
                       </h3>
                       <p className="text-sm leading-6 text-[#44504B]">
-                        For professionals looking to showcase expertise, get matched with
-                        opportunities, and build verified credentials.
+                        For professionals who want a clean proof-based portfolio link they can share
+                        today, plus matching as they grow.
                       </p>
                     </div>
                     <div className="mt-auto">
@@ -147,8 +147,8 @@ export function SignupContent() {
                         Organization
                       </h3>
                       <p className="text-sm leading-6 text-[#44504B]">
-                        For organizations seeking verified experts, posting assignments, and
-                        building trusted teams.
+                        For organizations that need a shareable proof portfolio on day 1, with
+                        candidate matching and hiring workflows after that.
                       </p>
                     </div>
                     <div className="mt-auto">

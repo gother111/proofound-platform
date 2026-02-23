@@ -31,7 +31,8 @@ export function PersonaChoice({ onSelect }: PersonaChoiceProps) {
                 Individual
               </CardTitle>
               <CardDescription className="text-base text-proofound-charcoal/70 dark:text-muted-foreground">
-                Build your personal profile, showcase your skills, and connect with opportunities
+                Launch a clean public proof portfolio link you can share today, then unlock matching
+                opportunities
               </CardDescription>
             </div>
             <Button
@@ -54,7 +55,8 @@ export function PersonaChoice({ onSelect }: PersonaChoiceProps) {
                 Organization
               </CardTitle>
               <CardDescription className="text-base text-proofound-charcoal/70 dark:text-muted-foreground">
-                Create an organization, manage your team, and build credibility together
+                Publish a clean public organization portfolio link on day 1, then manage hiring and
+                collaboration
               </CardDescription>
             </div>
             <Button
