@@ -13,25 +13,25 @@ import type { VisibilityLevel } from '@/components/privacy/FieldVisibilityContro
 /**
  * Context for visibility enforcement
  */
-export type VisibilityContext = 'public' | 'matched' | 'admin';
+export type VisibilityContext = 'public' | 'network_only' | 'match_only' | 'admin';
 
 /**
  * Default visibility settings (privacy-first)
  */
 export const DEFAULT_VISIBILITY: Record<string, VisibilityLevel> = {
   mission: 'public',
-  vision: 'matched',
+  vision: 'match_only',
   values: 'public',
   causes: 'public',
   avatar: 'public',
   tagline: 'public',
-  location: 'matched',
+  location: 'network_only',
   skills: 'public',
-  experiences: 'matched',
-  education: 'matched',
-  impactStories: 'matched',
-  volunteering: 'matched',
-  certifications: 'matched',
+  experiences: 'network_only',
+  education: 'network_only',
+  impactStories: 'match_only',
+  volunteering: 'match_only',
+  certifications: 'match_only',
   contact: 'private', // Email, phone always private
   compensation: 'private', // Compensation expectations always private
 };
@@ -50,7 +50,7 @@ export function isFieldVisible(
   }
 
   // Get field's visibility setting
-  const visibility = fieldVisibility?.[fieldName] || DEFAULT_VISIBILITY[fieldName] || 'matched';
+  const visibility = fieldVisibility?.[fieldName] || DEFAULT_VISIBILITY[fieldName] || 'match_only';
 
   // Apply visibility rules
   if (visibility === 'private') {
@@ -59,8 +59,11 @@ export function isFieldVisible(
   if (visibility === 'public') {
     return true;
   }
-  if (visibility === 'matched') {
-    return context === 'matched';
+  if (visibility === 'network_only') {
+    return context === 'network_only' || context === 'match_only';
+  }
+  if (visibility === 'match_only') {
+    return context === 'match_only';
   }
 
   return false;
@@ -164,7 +167,7 @@ function redactField(value: any, fieldName: string): any {
 
 /**
  * Check if two users have a matched relationship
- * (for determining if "matched" visibility applies)
+ * (for determining if "match_only" visibility applies)
  */
 export async function hasMatchedRelationship(
   userId1: string,

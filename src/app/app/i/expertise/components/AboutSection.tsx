@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import {
   ChevronDown,
   ChevronUp,
@@ -187,10 +188,10 @@ export function AboutSection() {
               className="border-[#1C4D3A] text-[#1C4D3A] hover:bg-[#EEF1EA]"
               asChild
             >
-              <a href="/docs/expertise-atlas" target="_blank" rel="noopener noreferrer">
+              <Link href="/docs/expertise-atlas">
                 <BookOpen className="h-4 w-4 mr-2" />
                 Read Full Documentation
-              </a>
+              </Link>
             </Button>
           </div>
         </div>

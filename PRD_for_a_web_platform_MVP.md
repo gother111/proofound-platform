@@ -976,11 +976,11 @@ Each flow follows a consistent mini‑spec: **Purpose • Entry • Steps • In
 
 ---
 
-## I‑21 Interview Scheduling (One 30‑min Limit) **[MVP]**
+## I‑21 Interview Scheduling (Policy Presets + SLA) **[MVP]**
 
-**Purpose:** Coordinate a single 30‑minute interview, quickly.  
+**Purpose:** Coordinate a single interview quickly with preset-based policy defaults.
 **Entry:** From messaging.  
-**Steps:** Propose/accept slots → confirm 30‑min event (within **7 days** of match agreement) → calendar sync → video call link generated (Zoom or Google Meet).  
+**Steps:** Propose/accept slots → confirm event within the active policy window (`startup`: 7 days, `enterprise`: 14 days, `volunteer`: 21 days; `advanced` configurable) → select duration within preset limits → calendar sync → video call link generated (Zoom or Google Meet).
 **Inputs/Data:** Timezones; calendars (optional); video call platform preference (Zoom or Google Meet).  
 **Needs & Feelings:** Certainty; fairness; speed.  
 **System Support:** Timezone auto‑convert; reminders; reschedule allowed once; automatic video call link generation via Zoom or Google Meet integration.  
@@ -994,7 +994,7 @@ Each flow follows a consistent mini‑spec: **Purpose • Entry • Steps • In
 
 **Purpose:** Ensure timely closure and learning.  
 **Entry:** After interview.  
-**Steps:** Both sides respond **within 48 hours**: accept or decline; if assignment closes, **top matched candidates receive personalized feedback**.  
+**Steps:** Both sides respond within the active feedback SLA (default: **48 hours**): accept or decline; if assignment closes, **top matched candidates receive personalized feedback**.
 **Inputs/Data:** Decision; feedback notes.  
 **Needs & Feelings:** Equality; closure; growth.  
 **System Support:** Deadlines; templated, helpful feedback prompts.  
@@ -1157,7 +1157,7 @@ Each flow includes:
 - **First-run guidance** uses a **gradual reveal** of UI (nav, dashboard cards) with **concise hints** and **mock data** during onboarding only.
 - **Account modes**: a person can hold an **Individual** account and also act as an **Org Representative**; easy switching is required.
 - **Trial seats**: free trial permits **up to 5 seats** (CEO + 4).
-- **Interview policy**: one **30‑minute** interview per candidate; **7 days** to conduct after match acceptance; decision within **48 hours**; feedback required.
+- **Interview policy**: policy presets apply by default with mode-specific windows/durations (`startup`: 7 days/30 min, `enterprise`: 14 days/45 min, `volunteer`: 21 days/30 min). Advanced policy mode retains strict controls; decision feedback SLA remains 48 hours.
 - **Matching results**: **Top 5** candidates for free tier; if the pool is too small, platform compiles best matches by **72 hours** post‑publish.
 
 ---
@@ -1324,7 +1324,7 @@ Each flow includes:
 
 **Goal:** Move shortlisted candidates through one structured touchpoint.  
 **Entry:** From O‑15 shortlist.  
-**Happy‑path steps:** Open **message thread** → propose **30‑min** slot(s) via Zoom or Google Meet within **7 days**; system generates video call link automatically; auto‑invite **assigned stakeholders**; confirm time.  
+**Happy‑path steps:** Open **message thread** → propose slot(s) via Zoom or Google Meet within active policy window (`startup`: 7 days, `enterprise`: 14 days, `volunteer`: 21 days; `advanced` configurable) and duration limits (30/45/30/60 min max) → system generates video call link automatically; auto‑invite **assigned stakeholders**; confirm time.
 **Success:** Interview completed.  
 **Key data:** Conversation, Calendar event, Participants, Video call link.  
 **Edge cases:** Time‑zone collisions; no‑shows; reschedule once.  
@@ -1382,15 +1382,15 @@ Each flow includes:
 - **Competency (L1–L4)**: taxonomy items; bindings to ImpactArea/Project.
 - **Assignment**: BV, TO, weights, practicals, expertise mapping, education justification, stakeholders.
 - **Match**: score, subscores, rationale; rank.
-- **Interview**: 30‑min; Zoom; participants; scheduled ≤7 days after acceptance.
+- **Interview**: policy preset, duration, platform, participants, scheduled within active preset window.
 - **Decision/Feedback**: outcome with personal feedback ≤48h SLA.
 - **Settings/Security**: MFA, privacy, export JSON, deletion safeguards.
 
 ## Appendix B — SLA & Trial Rules
 
 - **Free tier:** Top 5 candidates; **≤72h** to populate if pool is small; **5 seats** (CEO + 4).
-- **Interview:** One **30‑minute** slot; **7 days** window to conduct after match acceptance.
-- **Decision:** **48 hours** to inform candidates with personalized feedback.
+- **Interview:** Preset defaults apply by policy (`startup`: 7 days/30 min, `enterprise`: 14 days/45 min, `volunteer`: 21 days/30 min); **advanced** policy mode allows stricter custom handling with max duration guardrails.
+- **Decision:** **48 hours** default SLA to inform candidates with personalized feedback; reminders/escalations remain mandatory.
 
 # PRD — MVP — Part 5: Scope (MVP Features)
 
@@ -1431,9 +1431,12 @@ Each flow includes:
 **Why Now:** Moves from keyword CVs to structured, high-signal expertise representation that AI can’t trivially game.  
 **Acceptance Criteria:**
 
-- Users can add ≥ 10 L4 skills via guided flow or import; edit L4 properties (level, months, proof links/files).
+- Users can activate in two tiers:
+  - **Lite (match unlock):** ≥3 L4 skills with level + recency, ≥1 proof overall, purpose present, and matching constraints saved.
+  - **Strong (quality boost):** ≥10 L4 skills with level + recency, ≥1 proof overall, purpose present, and matching constraints saved.
+- Users can still add/edit L4 properties (level, months, proof links/files) via guided flow or import.
 - Auto-suggest L4s from pasted CV/JD with explain-why; user acceptance/edit-in-place.
-- Time-to-activation (profile matchable) **≤ 20 minutes** P50 for first-time users.
+- Time-to-activation (profile matchable at Lite tier) **≤ 20 minutes** P50 for first-time users.
 - Event tracking on add/edit; visible **Expertise depth** tile on Dashboard.  
   **MoSCoW:** **Must** (manual add + basic auto-suggest); **Should:** Gap Map basic; **Could:** bulk CSV import.
 
@@ -1447,6 +1450,8 @@ Each flow includes:
 - Generates ranked shortlists with composite score and **PAC** component.
 - **TTFQI median ≤ 72 hours** for at least one target cohort after activation (Part 2).
 - Inline “Why this match” with editable constraints (location, availability, verification gates) and quick actions (intro, pass, snooze).
+- Compensation visibility defaults to **overlap-only** in matching surfaces unless explicit exact-range visibility is granted.
+- Setup flow always shows **sample match previews** (real near-matches when available, clearly labeled mock samples otherwise).
 - **Fairness note** per release with cohort checks where users opt-in to share demographics.  
   **MoSCoW:** **Must** (shortlist + why + quick actions); **Should:** snooze/feedback loops; **Could:** experiment flags for alternative scoring.
 
@@ -1470,8 +1475,9 @@ Each flow includes:
 **Why Now:** Trust and safety: users choose what’s visible to whom to avoid performative pressure and bias.  
 **Acceptance Criteria:**
 
-- Field-level visibility (public, link-only, match-only, private) for purpose, artifacts, and selected L4s.
+- Field-level visibility (public, network-only, match-only, private) for purpose, artifacts, and selected L4s.
 - One-click **Redact name/photo** mode for blinded previews.
+- Single **“What others can see”** summary panel with quick preview-as entry points.
 - Privacy settings surfaced in relevant flows (purpose edit, artifact upload, match review).  
   **MoSCoW:** **Must** (field-level + redact); **Could:** audience presets.
 
@@ -1484,6 +1490,7 @@ Each flow includes:
 
 - Users can request **peer/mentor attests** to artifacts or L4s via magic link.
 - Assignment-introduced **verification gates** are displayed pre-intro (e.g., ID, portfolio, reference).
+- Contextual “Request attestation” entry points appear on proof/skill surfaces and unmet gate banners.
 - Time-to-first verified proof P50 **≤ 7 days** for users who request it (from Persona flows).  
   **MoSCoW:** **Should** (soft verify/attest); **Could:** ID or employment verification later.
 
@@ -1578,12 +1585,13 @@ Each flow includes:
 
 ---
 
-### O7 — **Assignment Creation (5-Step)** with Verification Gates
+### O7 — **Assignment Creation (Basic + Advanced)** with Verification Gates
 
 **Why Now:** Standardized, efficient creation of high-signal roles; improves TTFQI and TTSC.  
 **Acceptance Criteria:**
 
-- 5 steps: (1) Role & outcomes, (2) Must/Nice skills (L4), (3) Verification gates, (4) Logistics (location/time/comp), (5) Review & publish.
+- **Basic mode (default):** role, business value, ≥1 outcome, practicals, and ≥3 must-have skills.
+- **Advanced mode:** retains full 5-step flow with stakeholders, weight matrix, verification gates, logistics, and review.
 - **Time-to-publish P50 ≤ 15 minutes**; task success ≥ 90%; drop-off < 10% on final steps.  
   **MoSCoW:** **Must**.
 
@@ -1639,7 +1647,7 @@ Each flow includes:
 **Why Now:** Speeds repeatable assignment creation and keeps quality consistent across teams.  
 **Acceptance Criteria:**
 
-- Create and save templates that prefill the **5-step Assignment** flow (role/outcomes, skills, gates, logistics, review) with **owner/department tags**.
+- Create and save templates that prefill **Basic or Advanced Assignment** flows with **owner/department tags** and recommended mode.
 - Clone a template into a new assignment; edits in the new assignment **do not mutate** the source template; version label shown on publish.
 - Template library shows usage and **time-to-publish** deltas; suggestions surface a relevant template when starting a similar role.  
   **MoSCoW:** **Should** (baseline template library + clone).
@@ -1815,7 +1823,9 @@ Each flow includes:
 - Validate files (size/type); virus-scan uploads.
 - Auto-suggest pipeline extracts candidates, maps to known L4 IDs with confidence + “why” rationale.
 - Compute **expertise_depth** (count, recency of proofs).
-- Profile **activation** triggers when minimum L4 count and properties met.
+- Profile **activation** computes two states:
+  - **Lite matchable:** ≥3 skills with level + recency, ≥1 proof, purpose present, constraints saved.
+  - **Strong matchable:** ≥10 skills with level + recency, ≥1 proof, purpose present, constraints saved.
 
 **Outputs**
 
@@ -1909,7 +1919,7 @@ Each flow includes:
 **Inputs**
 
 - Field-level visibility settings; global **Redact** toggle (name/photo).
-- Preview-as: public, link-only, match-only.
+- Preview-as: public, network-only, match-only.
 
 **Processing Rules**
 
@@ -1920,6 +1930,7 @@ Each flow includes:
 **Outputs**
 
 - Live preview; updated profile/match cards.
+- “What others can see” summary buckets: public, network-only, match-only, private.
 - Audit trail accessible to the user.
 
 **Error & Empty States**
@@ -2028,13 +2039,16 @@ Each flow includes:
 
 ---
 
-### O7 — Assignment Creation (5-Step) with Verification Gates
+### O7 — Assignment Creation (Basic + Advanced) with Verification Gates
 
-**Inputs**: (1) role & outcomes, (2) must/nice L4s, (3) verification gates, (4) logistics, (5) review.  
-**Processing**: validate fields; compute readiness; generate public-facing brief.  
-**Outputs**: published Assignment; preview card; shareable link.  
-**Errors/Empty**: incomplete required fields; invalid ranges; show inline fixers.  
-**Events**: `assignment_step_completed` {step}; `assignment_published` {assignment_id}.
+**Inputs**:
+
+- Basic mode: role, business value, outcomes, practicals, must-have skills (≥3).
+- Advanced mode: role/outcomes, must/nice L4s, verification gates, logistics, stakeholders/weights, review.
+  **Processing**: validate by mode; compute readiness; generate public-facing brief.
+  **Outputs**: published Assignment; preview card; shareable link.  
+  **Errors/Empty**: incomplete required fields; invalid ranges; show inline fixers.  
+  **Events**: `assignment_step_completed` {step, mode}; `assignment_published` {assignment_id, mode}.
 
 ---
 
@@ -2121,7 +2135,7 @@ Each flow includes:
 - **PII handling:** Minimize collection; isolate PII from analytics; never store PII in logs, events, or traces; redact on ingestion.
 - **Encryption:** TLS 1.2+ in transit; provider encryption at rest for DB and object storage; periodic key rotation.
 - **Consent & audit:** Versioned consent records (ToS, Privacy, verification) per user/org; immutable audit logs for visibility/verification changes.
-- **Privacy controls:** Field‑level visibility (public/link-only/match-only/private), profile redaction mode, opt‑out for analytics/ML.
+- **Privacy controls:** Field‑level visibility (public/network-only/match-only/private), profile redaction mode, opt‑out for analytics/ML.
 - **Vulnerability management:** Monthly dependency scans, critical fixes within 7 days; annual 3rd‑party pen test (post‑MVP).
 - **Incident response:** Pager on P1 incidents; 24h preliminary report; user notification if data is materially affected.
 - **Data residency posture:** Single region for MVP; clarify in Privacy Policy; add regional storage post‑MVP if required.
@@ -2224,7 +2238,8 @@ Each flow includes:
 - `match_viewed` — `{ match_id, score, pac }`
 - `match_actioned` — `{ match_id, action, reason? }`
 - `applied` — `{ assignment_id, match_score }`
-- `interview_scheduled` — `{ application_id, scheduled_at }`
+- `interview_scheduled` — `{ application_id, scheduled_at, duration_minutes, policy_preset }`
+- `assignment_published` — `{ assignment_id, builderMode, minimumRequiredSkills }`
 - `hired` — `{ application_id }`
 - `wellbeing_checkin_submitted` — `{ scores }` (non‑diagnostic, private path)
 
@@ -2265,8 +2280,13 @@ Each flow includes:
 ## Video Conferencing
 
 - **Providers:** Zoom API and/or Google Meet API for interview scheduling.
-- **Features:** Automatic meeting link generation, calendar invites with video link, timezone handling.
+- **Features:** Automatic meeting link generation, calendar invites with video link, timezone handling, and policy preset enforcement (`startup`, `enterprise`, `volunteer`, `advanced`) with preset-based duration limits.
 - **Fallback:** Manual link entry if API unavailable.
+
+## Feature Flag Control APIs
+
+- **User flags endpoint:** `/api/feature-flags` resolves audience-aware flags for activation tiering, assignment builder mode, plain-language vocabulary, and privacy summary.
+- **Rollout metrics endpoint:** `/api/admin/metrics/rollout` exposes admin-only rollout indicators (activation completion, publish completion, visibility reversal rate, tier/mode breakdown, and endpoint health for matching/publish APIs).
 
 ## Storage
 
@@ -2323,7 +2343,7 @@ Each flow includes:
 ## Third‑Party Limits & Risks
 
 - **Quotas/outages:** Email provider rate limits; map API quotas; object storage egress costs.
-- **Video conferencing APIs:** Zoom/Google Meet rate limits; account requirements; OAuth setup; meeting duration limits (Zoom free tier = 40 min, sufficient for 30-min interviews).
+- **Video conferencing APIs:** Zoom/Google Meet rate limits; account requirements; OAuth setup; preset-based meeting durations (30/45 min defaults by policy, up to 60 min in advanced mode) and manual-link fallback when provider limits apply.
 - **Vendor lock‑in:** Keep portable SQL and storage paths; document exit plans (e.g., Postgres dump, S3 export).
 - **Security posture:** Monitor for dependency CVEs; maintain an allowlist for uploads.
 
@@ -2357,7 +2377,8 @@ Each flow includes:
 
 **F3 Expertise Atlas**
 
-- [ ] Add ≥ **10 L4** skills with properties (level, months, proof).
+- [ ] Lite activation unlocks matching at **≥3 L4** (with level + recency) + ≥1 proof + purpose + constraints.
+- [ ] Strong activation is recognized at **≥10 L4** (with level + recency) + ≥1 proof + purpose + constraints.
 - [ ] CV paste → receive suggestions with “why it mapped”; accept/edit-in-place.
 - [ ] Profile reaches **Activation** when minimum threshold met (configurable).
 
@@ -2374,8 +2395,9 @@ Each flow includes:
 
 **F6 Visibility & Boundary Controls**
 
-- [ ] Field-level visibility works end-to-end (public/link-only/match-only/private).
+- [ ] Field-level visibility works end-to-end (public/network-only/match-only/private).
 - [ ] **Redact** mode hides name/photo in previews and cards.
+- [ ] “What others can see” summary panel groups fields into 4 buckets with preview-as links.
 
 **F7 Verification & Attestations (v1)**
 
@@ -2402,12 +2424,12 @@ Each flow includes:
 **O4 Impact Block** — Create impact entries; export **Evidence Pack (PDF)**.
 **O5 Projects Block** — Link artifacts & Assignments; status tags.
 **O6 Enterprise Expertise Hub** — Declare domains; JD paste → suggested L4s.
-**O7 Assignment Creation (5-step)** — Publish flow completes with gates & logistics.
+**O7 Assignment Creation (Basic + Advanced)** — Basic publish works by default; Advanced preserves strict 5-step behavior.
 **O8 Company Dashboard** — Tiles for pipeline (Shortlists, Intros, TTSC trend).
 **O9 Team Management Hub** — Invite members; roles/permissions enforced.
 **O10 Organization Type Flag** — For-profit vs Non-profit selected & reflected in copy.
 **O11 Post-Interview Feedback & Decision SLA** — Decision + personalized feedback required; reminders before 48h breach.
-**O12 Assignment Templates** — Templates prefill 5-step assignments; clone without mutating source; usage shown.
+**O12 Assignment Templates** — Templates prefill Basic/Advanced assignments with recommended mode; clone without mutating source; usage shown.
 
 ---
 
@@ -2432,8 +2454,8 @@ Each flow includes:
 
 ## 12.4 Smoke Test Playbook (must pass end-to-end)
 
-1. **Individual activation:** Sign up → Purpose → Atlas (≥10 L4) → Activate → See matches.
-2. **Org assignment:** Create org → Purpose → Assignment (5-step) → Publish → Shortlist appears.
+1. **Individual activation:** Sign up → Purpose → Atlas (Lite: ≥3 L4 + proof) → Activate → See matches; progress to Strong at ≥10 L4.
+2. **Org assignment:** Create org → Purpose → Assignment (Basic default) → Publish → Shortlist appears; Advanced path retains strict 5-step.
 3. **Introduce:** From shortlist → Introduce → Message thread opens (basic) → Mark as interview scheduled.
 4. **Verification:** Request attestation → Approver completes → Badge visible.
 5. **Zen Hub:** Opt-in → Add check-in → See reflection log; export PDF.
@@ -2482,7 +2504,7 @@ Each flow includes:
 
 ## 13.3 Kill-Switch & Rollback
 
-- **Feature flags** guard: Matching Hub variants, Zen Hub entry, verification flows.
+- **Feature flags** guard: `FF_ACTIVATION_TIERING`, `FF_ASSIGNMENT_BASIC_MODE`, `FF_UI_VOCAB_PLAIN`, `FF_PRIVACY_SUMMARY` (plus existing platform flags for legacy flows).
 - **Operational rollback:** Vercel instant rollback to last green deploy; DB migration strategy uses reversible migrations.
 - **Comms:** If user-impacting issue occurs, post status, email affected users (template ready).
 
@@ -2494,9 +2516,9 @@ Each flow includes:
 
 ## 14.1 Environments & Gating
 
-- **Dev (local):** Full stack with seed data; feature flags default **on**.
-- **Preview (Vercel):** Per‑PR deployments; synthetic data; flags set per branch; **QA sign‑off** required.
-- **Prod (Vercel):** Final deployment target; flags default **off** for new features.
+- **Dev (local):** Full stack with seed data; feature flags default **on** unless explicitly disabled via env or DB targeting.
+- **Preview (Vercel):** Per‑PR deployments; synthetic data; flags set per branch/audience; **QA sign‑off** required.
+- **Prod (Vercel):** Final deployment target; staged rollout by percentage and audience with force-override support for incident response.
 
 **Go/No‑Go Gates (must be green):**
 
@@ -2505,7 +2527,7 @@ Each flow includes:
 - Analytics dashboards live (TTFQI, TTV, TTSC).
 - Run smoke tests from 12.4 on Preview then on Prod after deploy.
 
-**Release strategy:** Trunk-based with feature flags; staged rollouts by cohort if needed; instant rollback available in Vercel.
+**Release strategy:** Trunk-based with feature flags and deterministic percentage rollout; sequence is internal-only → 10% → 50% → 100%; instant rollback available in Vercel.
 
 ## 14.2 Deployment
 
@@ -2518,6 +2540,7 @@ Each flow includes:
 
 - **Dashboards (Ops):** API RED (rate/errors/duration), page TTI P95, job success, error rate by release, DB health.
 - **Dashboards (Product):** NSM **TTSC**, **TTFQI**, **TTV**, conversion funnels, fairness note summary.
+- **Rollout dashboard:** Admin metrics endpoint tracks activation completion, assignment publish completion, privacy visibility reversal rate, activation tier mix, builder-mode mix, and p95/sla-breach rates for `/api/core/matching/profile` and `/api/assignments/[id]/publish`.
 - **Alerts:** 5xx spike, latency P95 breach, failed ETL, error rate by route, email bounce spike.
 - **Tracing:** Critical paths (assignment publish, shortlist generation) traced end-to-end.
 - **Log hygiene:** JSON logs with request-id; PII scrubbing.
@@ -2526,7 +2549,7 @@ Each flow includes:
 
 **Goals:** Instrument outcomes that reflect speed & quality of matches and user effort reduction.
 
-- **Core events:** `dashboard_viewed`, `l4_added`, `shortlist_generated`, `match_viewed`, `match_actioned{introduce|pass|snooze}`, `applied`, `interview_scheduled`, `hired`, `wellbeing_checkin_submitted` (private path).
+- **Core events:** `dashboard_viewed`, `l4_added`, `shortlist_generated`, `match_viewed`, `match_actioned{introduce|pass|snooze}`, `applied`, `interview_scheduled{duration_minutes,policy_preset}`, `assignment_published{builderMode,minimumRequiredSkills}`, `hired`, `wellbeing_checkin_submitted` (private path).
 - **Attribution:** `source` on landings (organic/referral/paid); `cohort` labels (persona, role family, region).
 - **Derived metrics:** **TTFQI**, **TTV**, **TTSC**; effort saved (self-report + steps); PAC lift on acceptance/hire.
 - **Data flow:** Client/server events → analytics DB via ETL (nightly); ML labels persisted in `ml_training_data`.
@@ -2564,8 +2587,9 @@ Each flow includes:
 ## A3 Visibility & Privacy Guardrails
 
 - Acceptance checks:
-  - “Preview as” (public/link-only/match-only) available before publish/export; sensitive fields default to match-only.
-  - Pre-publish check blocks sharing if private artifacts/fields are referenced in public/link-only surfaces; shows inline fixes.
+  - “Preview as” (public/network-only/match-only) available before publish/export; sensitive fields default to match-only.
+  - Pre-publish check blocks sharing if private artifacts/fields are referenced in public/network-only surfaces; shows inline fixes.
+  - “What others can see” summary panel is always available and grouped into public/network-only/match-only/private buckets.
   - Zen Hub data stored in a separate partition and excluded from ranking and analytics; privacy banner explicitly states this.
 
 ## A4 Resilience & Third-Party Fallbacks
@@ -2581,6 +2605,7 @@ Each flow includes:
   - Emit SLA events (`interview_window_started`, `interview_scheduled`, `feedback_due`, `feedback_sent`) with timestamps; dashboard shows compliance per assignment.
   - Alerts fire at 80% of the window and on breach for interviews and feedback (in-app + email to owners).
   - SLA status visible to org reviewers and candidates; breach reasons recorded.
+  - SLA policy supports recommended presets (startup, enterprise, volunteer) while preserving strict limits in advanced policy mode.
 
 ## A6 Matching Transparency (Rank Bands)
 
@@ -2591,14 +2616,40 @@ Each flow includes:
 ## A7 Activation Thresholds
 
 - Acceptance checks:
-  - Individual profile is “matchable” when ≥10 L4 skills each have level + recency and there is ≥1 proof overall; matching profile constraints are saved; purpose block has mission or values or causes filled.
-  - Assignment publish requires all five steps complete: business value + stakeholders, target outcomes with measurable fields, weight matrix set, logistics (location + salary/comp window), verification gates chosen; education marked “required” must include justification.
-  - Dashboards show activation state and next-best action when unmet.
+  - Individual profile supports **tiered matchability**:
+    - **Lite:** ≥3 L4 skills each have level + recency, ≥1 proof overall, matching constraints saved, and purpose present.
+    - **Strong:** ≥10 L4 skills each have level + recency, ≥1 proof overall, matching constraints saved, and purpose present.
+  - Assignment publish readiness is mode-specific:
+    - **Basic:** role, business value, ≥1 measurable outcome, practicals, and ≥3 must-have skills.
+    - **Advanced:** full 5-step completeness including stakeholders and weight matrix; education marked “required” must include justification.
+  - Dashboards show current tier/state and next-best action when unmet.
 
-## A8 Data Export/Import Safety
+## A8 Plain-Language Vocabulary Policy
+
+- Acceptance checks:
+  - User-facing copy defaults to plain terms (for example, “skills depth,” “purpose fit,” “time to first good match”) instead of internal metric codes.
+  - Internal event and analytics schema names remain unchanged for continuity.
+  - Advanced explanation tooltips may disclose canonical terms when explicitly requested by the user.
+
+## A9 Matching Preview, Compensation, and Empty-State Actions
+
+- Acceptance checks:
+  - Matching setup always shows sample previews using real near-matches when available, otherwise clearly labeled mock samples.
+  - Compensation is shown as overlap-only by default in matching cards and visible-fields APIs unless explicit exact-range visibility is granted.
+  - Empty states across Atlas, Matching, Assignment, and Privacy provide exactly three deep-linked remediation actions.
+
+## A10 Data Export/Import Safety
 
 - Acceptance checks:
   - Exports include schema version; imports run dry-run validation with a summary of changes; block on schema mismatch or invalid fields.
   - User sees preview of fields to be overwritten; no changes apply on failed validation; validation logs stored for audit.
+
+## A11 Feature-Flag Rollout and Monitoring
+
+- Acceptance checks:
+  - Feature keys are stable and environment-configurable: `FF_ACTIVATION_TIERING`, `FF_ASSIGNMENT_BASIC_MODE`, `FF_UI_VOCAB_PLAIN`, `FF_PRIVACY_SUMMARY`.
+  - Rollout follows internal-only → 10% → 50% → 100% with deterministic audience/percentage targeting.
+  - `/api/feature-flags` returns user-scoped flag states for authenticated sessions.
+  - `/api/admin/metrics/rollout` returns activation/publish/privacy indicators and endpoint-health metrics used in launch decisions.
 
 **Status:** Draft v0.1 · **Date:** —

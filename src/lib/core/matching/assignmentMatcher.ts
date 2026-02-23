@@ -2,7 +2,8 @@ import { inArray } from 'drizzle-orm';
 
 import { db } from '@/db';
 import type { Assignment } from '@/db/schema';
-import { matchingProfiles, skills } from '@/db/schema';
+import { assignmentExpertiseMatrix, matchingProfiles, skills } from '@/db/schema';
+import { deriveRequirementsFromMatrix } from '@/lib/assignments/expertise-matrix';
 import { log } from '@/lib/log';
 import { scrubDisallowedFields } from '@/lib/core/matching/firewall';
 import {
@@ -121,6 +122,19 @@ export async function computeAssignmentMatches(input: ComputeAssignmentMatchesIn
       })
     : [];
 
+  const assignmentIds = input.assignment ? [input.assignment.id] : [];
+  const matrixRows = assignmentIds.length
+    ? await db.query.assignmentExpertiseMatrix.findMany({
+        where: inArray(assignmentExpertiseMatrix.assignmentId, assignmentIds),
+      })
+    : [];
+  const matrixRowsByAssignment = new Map<string, typeof matrixRows>();
+  for (const row of matrixRows) {
+    const existing = matrixRowsByAssignment.get(row.assignmentId) || [];
+    existing.push(row);
+    matrixRowsByAssignment.set(row.assignmentId, existing);
+  }
+
   const skillsByProfile: Record<string, Record<string, Skill>> = {};
 
   for (const skill of candidateSkills) {
@@ -151,8 +165,23 @@ export async function computeAssignmentMatches(input: ComputeAssignmentMatchesIn
     const candidateSkillSet = skillsByProfile[profile.profileId] || {};
 
     // Apply hard filters with enhanced scoring
-    const mustHaveSkills = (assignment.mustHaveSkills as Skill[]) || [];
-    const niceToHaveSkills = (assignment.niceToHaveSkills as Skill[]) || [];
+    const matrixRowsForAssignment = matrixRowsByAssignment.get(assignment.id) || [];
+    const matrixRequirements =
+      matrixRowsForAssignment.length > 0
+        ? deriveRequirementsFromMatrix(
+            matrixRowsForAssignment.map((row) => ({
+              skillCode: row.skillCode,
+              requiredLevel: row.requiredLevel,
+              stakeholderRole: row.stakeholderRole,
+            }))
+          )
+        : null;
+    const mustHaveSkills = matrixRequirements
+      ? (matrixRequirements.mustHaveSkills as Skill[])
+      : (assignment.mustHaveSkills as Skill[]) || [];
+    const niceToHaveSkills = matrixRequirements
+      ? (matrixRequirements.niceToHaveSkills as Skill[])
+      : (assignment.niceToHaveSkills as Skill[]) || [];
 
     const enhancedSkillScore = scoreSkillsEnhanced(
       mustHaveSkills,

@@ -51,6 +51,7 @@ describe('match visible fields route', () => {
           linkedin_profile_url: 'https://linkedin.com/in/person',
         },
       ])
+      .mockResolvedValueOnce([{ comp_min: 90000, comp_max: 120000, currency: 'USD' }])
       .mockResolvedValueOnce([
         {
           display_name: 'private',
@@ -73,6 +74,8 @@ describe('match visible fields route', () => {
     expect(byField.get('name')?.isRedacted).toBe(true);
     expect(byField.get('headline')?.isRedacted).toBe(false);
     expect(byField.get('location')?.isRedacted).toBe(false);
+    expect(byField.get('compensation')?.value).toBe('Compensation overlap only');
+    expect(byField.get('compensation')?.isRedacted).toBe(false);
   });
 
   it('fails closed for sensitive fields when visibility resolution fails', async () => {
@@ -94,7 +97,8 @@ describe('match visible fields route', () => {
           },
         ];
       }
-      if (callIndex === 4) throw new Error('visibility lookup failed');
+      if (callIndex === 4) return [{ comp_min: 90000, comp_max: 120000, currency: 'USD' }];
+      if (callIndex === 5) throw new Error('visibility lookup failed');
       return [{ display_name: 'Proofound Org' }];
     });
 

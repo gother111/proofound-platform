@@ -55,7 +55,7 @@ export default function OrgMatchingPage() {
 
   // Show empty state if no assignments
   if (assignments.length === 0) {
-    return <OrganizationMatchingEmpty onCreateAssignment={handleCreateAssignment} />;
+    return <OrganizationMatchingEmpty orgSlug={slug} onCreateAssignment={handleCreateAssignment} />;
   }
 
   // Show filled view with matches

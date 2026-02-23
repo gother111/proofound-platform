@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
-import { assignments, matches } from '@/db/schema';
+import { assignmentExpertiseMatrix, assignments, matches } from '@/db/schema';
 import { eq, and, inArray, sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { jsonErrorWithRequest, withApiObservability } from '@/lib/api/observability';
@@ -12,8 +12,14 @@ import {
   checkAndEmitAssignmentActivation,
   evaluateAssignmentActivationCriteria,
 } from '@/lib/assignments/activation';
+import {
+  buildMatrixRowsFromRequirements,
+  deriveRequirementsFromMatrix,
+} from '@/lib/assignments/expertise-matrix';
 import { triggerFirstAssignmentSurvey } from '@/lib/surveys/sus-triggers';
 import { AssignmentStatusSchema } from '@/lib/contracts/domain';
+import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
+import { isFeatureEnabled } from '@/lib/feature-flags/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,6 +44,7 @@ const LanguageRequirementSchema = z.object({
 });
 
 const AssignmentSchema = z.object({
+  builderMode: z.enum(['basic', 'advanced']).optional(),
   role: z.string().min(1),
   description: z.string().optional(),
   businessValue: z.string().optional(),
@@ -259,16 +266,50 @@ export async function POST(request: NextRequest) {
       }
 
       // Convert date strings to Date objects
+      const matrixTemplateRows = buildMatrixRowsFromRequirements(
+        'pending',
+        validatedData.mustHaveSkills || [],
+        validatedData.niceToHaveSkills || []
+      );
+      const derivedRequirements = deriveRequirementsFromMatrix(matrixTemplateRows);
+
       const assignmentData = {
         orgId,
         ...validatedData,
+        builderMode: (await isFeatureEnabled(
+          FEATURE_FLAG_KEYS.ASSIGNMENT_BASIC_MODE,
+          { userId: user.id, orgId },
+          true
+        ))
+          ? (validatedData.builderMode ?? 'basic')
+          : 'advanced',
+        mustHaveSkills: derivedRequirements.mustHaveSkills,
+        niceToHaveSkills: derivedRequirements.niceToHaveSkills,
         startEarliest: validatedData.startEarliest,
         startLatest: validatedData.startLatest,
       };
 
-      // Insert assignment in a transaction (though this is a single operation,
-      // we wrap it for consistency and potential future multi-step operations)
-      const [newAssignment] = await db.insert(assignments).values(assignmentData).returning();
+      const newAssignment = await db.transaction(async (tx) => {
+        const [insertedAssignment] = await tx
+          .insert(assignments)
+          .values(assignmentData)
+          .returning();
+
+        if (matrixTemplateRows.length > 0) {
+          await tx.insert(assignmentExpertiseMatrix).values(
+            matrixTemplateRows.map((row) => ({
+              assignmentId: insertedAssignment.id,
+              skillCode: row.skillCode,
+              requiredLevel: row.requiredLevel,
+              stakeholderRole: row.stakeholderRole,
+              linkedOutcomeId: row.linkedOutcomeId ?? null,
+              outcomeRationale: row.outcomeRationale ?? null,
+            }))
+          );
+        }
+
+        return insertedAssignment;
+      });
 
       log.info('assignment.created', {
         assignmentId: newAssignment.id,

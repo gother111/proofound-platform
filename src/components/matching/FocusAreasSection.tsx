@@ -40,7 +40,13 @@ export function FocusAreasSection({ profile, onChange }: any) {
     });
   };
 
-  const orgTypeOptions = ['Company', 'NGO', 'Government', 'Network', 'Startup'];
+  const orgTypeOptions = [
+    { value: 'company', label: 'Company' },
+    { value: 'ngo', label: 'NGO' },
+    { value: 'government', label: 'Government' },
+    { value: 'network', label: 'Network' },
+    { value: 'startup', label: 'Startup' },
+  ];
 
   const toggleOrgType = (type: string) => {
     const current = profile.orgTypes || [];
@@ -119,17 +125,17 @@ export function FocusAreasSection({ profile, onChange }: any) {
         <Label>Organization Types</Label>
         <div className="space-y-2">
           {orgTypeOptions.map((type) => (
-            <div key={type} className="flex items-center space-x-2">
+            <div key={type.value} className="flex items-center space-x-2">
               <Checkbox
-                id={`org-${type}`}
-                checked={profile.orgTypes?.includes(type)}
-                onCheckedChange={() => toggleOrgType(type)}
+                id={`org-${type.value}`}
+                checked={profile.orgTypes?.includes(type.value)}
+                onCheckedChange={() => toggleOrgType(type.value)}
               />
               <label
-                htmlFor={`org-${type}`}
+                htmlFor={`org-${type.value}`}
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
-                {type}
+                {type.label}
               </label>
             </div>
           ))}

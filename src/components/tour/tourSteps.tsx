@@ -13,6 +13,7 @@
  */
 
 import type { Step } from 'react-joyride';
+import { UI_VOCABULARY } from '@/lib/copy/vocabulary';
 
 /**
  * Tour steps for individual users
@@ -94,12 +95,12 @@ export const individualTourSteps: Step[] = [
       <div className="space-y-2">
         <h3 className="text-base font-semibold text-[#2D3330]">Expertise Hub</h3>
         <p className="text-sm text-[#6B6760]">
-          Add your skills using our L1-L4 taxonomy. The more specific you are (L4 skills), the
-          better your matches will be.
+          Add your skills in Expertise Atlas. The more specific your skills and proof, the better
+          your matches will be.
         </p>
         <p className="text-xs text-[#9B9891] pt-2 border-t border-[#E8E6DD]">
-          <strong>About L4:</strong> These are the most granular, specific skills (e.g., "React
-          Hooks" instead of just "JavaScript").
+          <strong>Tip:</strong> Add concrete skill examples with proof (for example, "React Hooks"
+          instead of only "JavaScript").
         </p>
       </div>
     ),
@@ -170,7 +171,8 @@ export const individualTourSteps: Step[] = [
           </p>
           <ul className="text-xs text-[#9B9891] list-disc list-inside space-y-1 mt-1">
             <li>Complete your Profile (mission, vision, values)</li>
-            <li>Add at least 10 L4 skills to activate matching</li>
+            <li>Add at least 3 skills to unlock Lite activation</li>
+            <li>Grow to 10 skills for Strong activation</li>
             <li>Set your Matching preferences</li>
           </ul>
         </div>
@@ -218,7 +220,8 @@ export const organizationTourSteps: Step[] = [
         <h3 className="text-base font-semibold text-[#2D3330]">Assignments</h3>
         <p className="text-sm text-[#6B6760]">
           Create and manage role assignments. Define requirements, and our matching system will find
-          qualified candidates who align with your organization's mission.
+          qualified candidates who align with your organization's mission and{' '}
+          {UI_VOCABULARY.pacLabel.toLowerCase()}.
         </p>
       </div>
     ),

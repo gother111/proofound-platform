@@ -38,6 +38,9 @@ const CompatProfileSchema = z.object({
   name: z.string().min(1).optional(),
   weights: z.record(z.number()).optional(),
   constraints: z.record(z.any()).optional(),
+  desiredRoles: z.array(z.string()).optional(),
+  desiredIndustries: z.array(z.string()).optional(),
+  orgTypes: z.array(z.enum(['company', 'ngo', 'government', 'network', 'startup'])).optional(),
 });
 
 const COMPAT_META_KEY = '__compat_profile';
@@ -89,6 +92,9 @@ function toCompatProfile(profile: typeof matchingProfiles.$inferSelect) {
     id: profile.profileId,
     name: meta.name ?? 'Default Profile',
     weights: (profile.weights as Record<string, number> | null) ?? DEFAULT_WEIGHTS,
+    desiredRoles: profile.desiredRoles ?? [],
+    desiredIndustries: profile.desiredIndustries ?? [],
+    orgTypes: profile.orgTypes ?? [],
     constraints: { ...DEFAULT_CONSTRAINTS, ...(meta.constraints ?? {}) },
     isActive: true,
     createdAt: profile.createdAt,
@@ -117,12 +123,18 @@ async function upsertCompatProfile(userId: string, data: z.infer<typeof CompatPr
     .values({
       profileId: userId,
       ...(data.weights ? { weights: data.weights } : {}),
+      ...(data.desiredRoles ? { desiredRoles: data.desiredRoles } : {}),
+      ...(data.desiredIndustries ? { desiredIndustries: data.desiredIndustries } : {}),
+      ...(data.orgTypes ? { orgTypes: data.orgTypes } : {}),
       ...(compatVerified ? { verified: compatVerified } : {}),
     })
     .onConflictDoUpdate({
       target: matchingProfiles.profileId,
       set: {
         ...(data.weights ? { weights: data.weights } : {}),
+        ...(data.desiredRoles ? { desiredRoles: data.desiredRoles } : {}),
+        ...(data.desiredIndustries ? { desiredIndustries: data.desiredIndustries } : {}),
+        ...(data.orgTypes ? { orgTypes: data.orgTypes } : {}),
         ...(compatVerified ? { verified: compatVerified } : {}),
         updatedAt: now,
       },

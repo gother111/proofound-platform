@@ -16,6 +16,7 @@ type AssignmentActivationSnapshot = Pick<
   | 'description'
   | 'businessValue'
   | 'expectedImpact'
+  | 'builderMode'
   | 'mustHaveSkills'
   | 'locationMode'
   | 'country'
@@ -26,6 +27,7 @@ type AssignmentActivationSnapshot = Pick<
 export type AssignmentActivationEvaluation = {
   hasCompleteDetails: boolean;
   hasMinimumSkills: boolean;
+  minimumRequiredSkills: number;
   mustHaveSkillsCount: number;
   hasLocationAndComp: boolean;
   canActivate: boolean;
@@ -48,7 +50,8 @@ export function evaluateAssignmentActivationCriteria(
   );
   const hasCompleteDetails = Boolean(assignment.role && hasNarrativeContext);
   const mustHaveSkills = (assignment.mustHaveSkills as any[]) || [];
-  const hasMinimumSkills = mustHaveSkills.length >= 5;
+  const minimumRequiredSkills = assignment.builderMode === 'basic' ? 3 : 5;
+  const hasMinimumSkills = mustHaveSkills.length >= minimumRequiredSkills;
   const hasLocationAndComp =
     Boolean(assignment.locationMode || assignment.country) &&
     (assignment.compMin !== null || assignment.compMax !== null);
@@ -56,6 +59,7 @@ export function evaluateAssignmentActivationCriteria(
   return {
     hasCompleteDetails,
     hasMinimumSkills,
+    minimumRequiredSkills,
     mustHaveSkillsCount: mustHaveSkills.length,
     hasLocationAndComp,
     canActivate:
@@ -102,10 +106,12 @@ export async function checkAndEmitAssignmentActivation({
     await emitAssignmentPublished(userId, assignmentId, orgId, {
       hasCompleteDetails: evaluation.hasCompleteDetails,
       hasMinimumSkills: evaluation.hasMinimumSkills,
+      minimumRequiredSkills: evaluation.minimumRequiredSkills,
       mustHaveSkillsCount: evaluation.mustHaveSkillsCount,
       hasLocationAndComp: evaluation.hasLocationAndComp,
       publishTimeMinutes,
       publishedWithinTimeTarget,
+      builderMode: assignment.builderMode || 'basic',
     });
 
     activatedAssignments.add(assignmentId);

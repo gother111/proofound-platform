@@ -116,12 +116,14 @@ export function SkillsSideSheet({
 
                     <Badge variant="outline" className="gap-1">
                       <Lock className="w-3 h-3" />
-                      Proofs: match-only
+                      Proofs visible after mutual match
                     </Badge>
 
                     <Badge variant="outline" className="gap-1">
                       <Award className="w-3 h-3" />
-                      {verificationCount > 0 ? `${verificationCount} verified` : 'Request verification'}
+                      {verificationCount > 0
+                        ? `${verificationCount} verified`
+                        : 'Request verification'}
                     </Badge>
 
                     {relevance !== 'current' && (

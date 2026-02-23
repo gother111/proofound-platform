@@ -156,8 +156,32 @@ const ScheduleInterviewSchema = z.object({
   platform: InterviewPlatformSchema,
   participantUserIds: z.array(z.string().uuid()).optional().default([]),
   timezone: z.string().optional().default('UTC'),
+  policyPreset: z
+    .enum(['startup', 'enterprise', 'volunteer', 'advanced'])
+    .optional()
+    .default('startup'),
+  durationMinutes: z.number().int().min(15).max(90).optional(),
   manualMeetingLink: z.string().url().optional(),
 });
+
+const INTERVIEW_POLICY_PRESETS = {
+  startup: {
+    scheduleWithinDays: 7,
+    maxDurationMinutes: 30,
+  },
+  enterprise: {
+    scheduleWithinDays: 14,
+    maxDurationMinutes: 45,
+  },
+  volunteer: {
+    scheduleWithinDays: 21,
+    maxDurationMinutes: 30,
+  },
+  advanced: {
+    scheduleWithinDays: 7,
+    maxDurationMinutes: 60,
+  },
+} as const;
 
 export async function POST(request: NextRequest) {
   try {
@@ -174,6 +198,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const data = ScheduleInterviewSchema.parse(body);
     const normalizedPlatform = normalizeInterviewPlatform(data.platform);
+    const activePolicy = INTERVIEW_POLICY_PRESETS[data.policyPreset];
+    const durationMinutes = data.durationMinutes ?? 30;
 
     // 1. Verify match exists and org access is valid.
     const matchResult = await db.execute(sql`
@@ -231,14 +257,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. Validate scheduling window (within 7 days from now).
+    // 3. Validate scheduling window by active policy preset.
     const scheduledDate = new Date(data.scheduledAt);
     const now = new Date();
-    const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const maxScheduleDate = new Date(
+      now.getTime() + activePolicy.scheduleWithinDays * 24 * 60 * 60 * 1000
+    );
 
-    if (scheduledDate < now || scheduledDate > sevenDaysFromNow) {
+    if (scheduledDate < now || scheduledDate > maxScheduleDate) {
       return NextResponse.json(
-        { error: 'Interview must be scheduled within 7 days' },
+        { error: `Interview must be scheduled within ${activePolicy.scheduleWithinDays} days` },
+        { status: 400 }
+      );
+    }
+
+    if (durationMinutes > activePolicy.maxDurationMinutes) {
+      return NextResponse.json(
+        {
+          error: `Interview duration cannot exceed ${activePolicy.maxDurationMinutes} minutes for ${data.policyPreset} policy`,
+        },
         { status: 400 }
       );
     }
@@ -311,7 +348,7 @@ export async function POST(request: NextRequest) {
         const meeting = await createZoomMeeting(accessToken, {
           topic: `Interview - ${match.role || 'Proofound Match'}`,
           start_time: data.scheduledAt,
-          duration: 30,
+          duration: durationMinutes,
           timezone: data.timezone,
           agenda: 'Interview session via Proofound',
         });
@@ -337,7 +374,7 @@ export async function POST(request: NextRequest) {
         const meeting = await createGoogleMeet(accessToken, {
           summary: `Interview - ${match.role || 'Proofound Match'}`,
           start_time: data.scheduledAt,
-          duration: 30,
+          duration: durationMinutes,
           timezone: data.timezone,
           description: 'Interview session via Proofound',
           attendees: participantEmails,
@@ -369,7 +406,7 @@ export async function POST(request: NextRequest) {
 
     const insertPayload: Record<string, unknown> = {
       ...baseInterviewInsert,
-      duration_minutes: 30,
+      duration_minutes: durationMinutes,
       meeting_link: meetingLink,
     };
 
@@ -446,7 +483,8 @@ export async function POST(request: NextRequest) {
         interview_id: interview.id,
         assignment_id: match.assignment_id,
         match_id: data.matchId,
-        duration_minutes: 30,
+        duration_minutes: durationMinutes,
+        policy_preset: data.policyPreset,
         platform: persistedPlatform,
         days_since_match: daysSinceMatch,
       });

@@ -10,7 +10,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -19,6 +19,7 @@ import { RedactModeToggle } from '../privacy/RedactModeToggle';
 import { VisibilityPreview } from '../privacy/VisibilityPreview';
 import { toast } from 'sonner';
 import { Shield, Eye } from 'lucide-react';
+import { CLIENT_FF_DEFAULTS } from '@/lib/featureFlags';
 
 interface FieldVisibilitySettings {
   mission: VisibilityLevel;
@@ -51,37 +52,78 @@ interface PrivacySettingsProps {
   };
 }
 
-export function PrivacySettings({ userId, currentProfile }: PrivacySettingsProps) {
+const FIELD_VISIBILITY_KEYS: Array<keyof FieldVisibilitySettings> = [
+  'mission',
+  'vision',
+  'values',
+  'causes',
+  'avatar',
+  'tagline',
+  'location',
+  'skills',
+  'experiences',
+  'education',
+  'impactStories',
+];
+
+export function PrivacySettings({ userId: _userId, currentProfile }: PrivacySettingsProps) {
   const [fieldVisibility, setFieldVisibility] = useState<FieldVisibilitySettings>({
     mission: 'public',
-    vision: 'matched',
+    vision: 'public',
     values: 'public',
     causes: 'public',
     avatar: 'public',
     tagline: 'public',
-    location: 'matched',
+    location: 'network_only',
     skills: 'public',
-    experiences: 'matched',
-    education: 'matched',
-    impactStories: 'matched',
+    experiences: 'network_only',
+    education: 'public',
+    impactStories: 'match_only',
   });
 
   const [redactMode, setRedactMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [previewMode, setPreviewMode] = useState<'public' | 'matched'>('public');
+  const [privacySummaryEnabled, setPrivacySummaryEnabled] = useState(
+    CLIENT_FF_DEFAULTS.privacySummary
+  );
+  const [previewMode, setPreviewMode] = useState<'public' | 'network_only' | 'match_only'>(
+    'public'
+  );
 
-  // Load current settings
   useEffect(() => {
-    loadPrivacySettings();
-  }, [userId]);
+    const loadFlags = async () => {
+      try {
+        const response = await fetch('/api/feature-flags');
+        if (!response.ok) return;
+        const payload = await response.json();
+        setPrivacySummaryEnabled(payload?.flags?.privacySummary !== false);
+      } catch (error) {
+        console.error('Failed to load privacy summary feature flag', error);
+      }
+    };
 
-  const loadPrivacySettings = async () => {
+    void loadFlags();
+  }, []);
+
+  const loadPrivacySettings = useCallback(async () => {
     try {
       const response = await fetch('/api/profile/privacy-settings');
       if (response.ok) {
         const data = await response.json();
         if (data.fieldVisibility) {
-          setFieldVisibility(data.fieldVisibility);
+          const normalize = (value: string): VisibilityLevel => {
+            if (value === 'public') return 'public';
+            if (value === 'network_only' || value === 'network') return 'network_only';
+            if (value === 'match_only' || value === 'matched') return 'match_only';
+            return 'private';
+          };
+          const normalized: Partial<FieldVisibilitySettings> = {};
+          Object.entries(data.fieldVisibility as Record<string, string>).forEach(([key, value]) => {
+            if (FIELD_VISIBILITY_KEYS.includes(key as keyof FieldVisibilitySettings)) {
+              normalized[key as keyof FieldVisibilitySettings] = normalize(value);
+            }
+          });
+          setFieldVisibility((prev) => ({ ...prev, ...normalized }));
         }
         if (typeof data.redactMode === 'boolean') {
           setRedactMode(data.redactMode);
@@ -90,7 +132,12 @@ export function PrivacySettings({ userId, currentProfile }: PrivacySettingsProps
     } catch (error) {
       console.error('Failed to load privacy settings:', error);
     }
-  };
+  }, []);
+
+  // Load current settings
+  useEffect(() => {
+    void loadPrivacySettings();
+  }, [loadPrivacySettings]);
 
   const handleFieldVisibilityChange = (
     field: keyof FieldVisibilitySettings,
@@ -201,6 +248,21 @@ export function PrivacySettings({ userId, currentProfile }: PrivacySettingsProps
     },
   ];
 
+  const visibilitySummary = {
+    public: previewFields
+      .filter((field) => field.visibility === 'public')
+      .map((field) => field.label),
+    network_only: previewFields
+      .filter((field) => field.visibility === 'network_only')
+      .map((field) => field.label),
+    match_only: previewFields
+      .filter((field) => field.visibility === 'match_only')
+      .map((field) => field.label),
+    private: previewFields
+      .filter((field) => field.visibility === 'private')
+      .map((field) => field.label),
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -301,11 +363,14 @@ export function PrivacySettings({ userId, currentProfile }: PrivacySettingsProps
                 </p>
                 <Tabs
                   value={previewMode}
-                  onValueChange={(v) => setPreviewMode(v as 'public' | 'matched')}
+                  onValueChange={(v) =>
+                    setPreviewMode(v as 'public' | 'network_only' | 'match_only')
+                  }
                 >
                   <TabsList>
-                    <TabsTrigger value="public">Before Match</TabsTrigger>
-                    <TabsTrigger value="matched">After Match</TabsTrigger>
+                    <TabsTrigger value="public">Public</TabsTrigger>
+                    <TabsTrigger value="network_only">Network-only</TabsTrigger>
+                    <TabsTrigger value="match_only">Match-only</TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>
@@ -333,6 +398,53 @@ export function PrivacySettings({ userId, currentProfile }: PrivacySettingsProps
           </Tabs>
         </CardContent>
       </Card>
+
+      {privacySummaryEnabled ? (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Eye className="h-5 w-5 text-[#1C4D3A]" />
+              <CardTitle>What others can see</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              <div className="rounded-md border border-[#E8E6DD] p-3">
+                <p className="font-medium text-[#2D3330]">Public</p>
+                <p className="text-[#6B6760]">
+                  {visibilitySummary.public.join(', ') || 'Nothing yet'}
+                </p>
+              </div>
+              <div className="rounded-md border border-[#E8E6DD] p-3">
+                <p className="font-medium text-[#2D3330]">Network-only</p>
+                <p className="text-[#6B6760]">
+                  {visibilitySummary.network_only.join(', ') || 'Nothing yet'}
+                </p>
+              </div>
+              <div className="rounded-md border border-[#E8E6DD] p-3">
+                <p className="font-medium text-[#2D3330]">Match-only</p>
+                <p className="text-[#6B6760]">
+                  {visibilitySummary.match_only.join(', ') || 'Nothing yet'}
+                </p>
+              </div>
+              <div className="rounded-md border border-[#E8E6DD] p-3">
+                <p className="font-medium text-[#2D3330]">Private</p>
+                <p className="text-[#6B6760]">
+                  {visibilitySummary.private.join(', ') || 'Nothing yet'}
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={() => setPreviewMode('public')}>
+                Preview as public
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setPreviewMode('match_only')}>
+                Preview as matched org
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
     </div>
   );
 }
