@@ -4,6 +4,7 @@ import { VerifyEmailIndividual } from '../../emails/VerifyEmailIndividual';
 import { VerifyEmailOrganization } from '../../emails/VerifyEmailOrganization';
 import { ResetPassword } from '../../emails/ResetPassword';
 import { OrgInvite } from '../../emails/OrgInvite';
+import CandidateInvite from '../../emails/CandidateInvite';
 import { DeletionScheduled } from '../../emails/DeletionScheduled';
 import { DeletionReminder } from '../../emails/DeletionReminder';
 import { DeletionComplete } from '../../emails/DeletionComplete';
@@ -73,9 +74,14 @@ export async function sendOrgInviteEmail(
   email: string,
   orgName: string,
   role: string,
-  token: string
+  token: string,
+  orgSlug?: string
 ) {
-  const inviteUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/accept-invite?token=${token}`;
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const inviteUrl =
+    orgSlug && baseUrl
+      ? `${baseUrl}/app/o/${orgSlug}/invitations/${token}`
+      : `${baseUrl}/accept-invite?token=${token}`;
 
   try {
     await resend.emails.send({
@@ -87,6 +93,29 @@ export async function sendOrgInviteEmail(
   } catch (error) {
     console.error('Failed to send org invite email:', error);
     throw new Error('Failed to send org invite email');
+  }
+}
+
+export async function sendCandidateInviteEmail(
+  email: string,
+  orgName: string,
+  inviteUrl: string,
+  expiryDays: number
+) {
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to: email,
+      subject: `${orgName} invited you to share your Proof Card on Proofound`,
+      react: CandidateInvite({
+        orgName,
+        inviteUrl,
+        expiryDays,
+      }),
+    });
+  } catch (error) {
+    console.error('Failed to send candidate invite email:', error);
+    throw new Error('Failed to send candidate invite email');
   }
 }
 

@@ -154,7 +154,8 @@ export async function inviteMember(orgId: string, formData: FormData) {
       result.data.email,
       orgQuery.data.display_name,
       result.data.role,
-      token
+      token,
+      orgQuery.data.slug
     );
 
     // Log audit event
