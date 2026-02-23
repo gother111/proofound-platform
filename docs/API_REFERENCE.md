@@ -2,7 +2,7 @@
 
 > Doc Class: `active`
 > Verification Source: `src/app/api/**`, `package.json`, `.github/workflows/ci.yml`, `vercel.json`
-> Last Verified: `2026-02-12`
+> Last Verified: `2026-02-23`
 
 This is the canonical API documentation for the Proofound platform.
 
@@ -72,6 +72,11 @@ Historical API specs are archived at:
 - `POST /api/profile/snippet`
 - `GET|POST /api/organizations`
 - `GET|PATCH /api/organizations/[orgId]`
+- `GET|POST /api/organizations/[orgId]/candidate-invites`
+- `PATCH /api/organizations/[orgId]/candidate-invites/[inviteId]`
+- `GET /api/candidate-invites/[token]`
+- `POST /api/candidate-invites/[token]/claim`
+- `POST /api/candidate-invites/[token]/proof-card`
 
 ### Analytics and Admin
 
@@ -112,7 +117,7 @@ Most endpoints return JSON with one of the following shapes:
 1. Update route implementation in `src/app/api/**`.
 2. Add or update tests in `tests/**` or `e2e/**`.
 3. Update this file (`docs/API_REFERENCE.md`).
-4. If the change is significant, append rationale and verification to `project/Documentation.md`.
+4. If the change is significant, add rationale and verification in `project/changes/entries/`.
 
 ## Verification Checklist
 

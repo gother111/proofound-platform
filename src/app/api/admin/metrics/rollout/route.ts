@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { analyticsEvents, assignments, performanceMetrics } from '@/db/schema';
 import { requirePlatformAdminJson } from '@/lib/api/route-helpers';
+import { calculateFirstTenMinuteActivationMetrics } from '@/lib/analytics/metrics';
 import { getRows } from '@/lib/db/rows';
 
 export const dynamic = 'force-dynamic';
@@ -23,6 +24,9 @@ export async function GET(request: NextRequest) {
     const daysParam = Number(request.nextUrl.searchParams.get('days') || '14');
     const days = Number.isFinite(daysParam) && daysParam > 0 ? Math.min(daysParam, 90) : 14;
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    const now = new Date();
+
+    const firstTenMinuteActivation = await calculateFirstTenMinuteActivationMetrics(since, now);
 
     const [profileCreatedCountRows, profileActivatedCountRows, activationTierRows] =
       await Promise.all([
@@ -162,15 +166,22 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       windowDays: days,
-      generatedAt: new Date().toISOString(),
+      generatedAt: now.toISOString(),
       indicators: {
         activationCompletionRate: toPercent(profileActivatedCount, profileCreatedCount),
         assignmentPublishCompletionRate: toPercent(
           assignmentsPublishedCount,
           assignmentsCreatedCount
         ),
+        individualFirst10MinuteActivationRate: firstTenMinuteActivation.individual.rate,
+        companyFirst10MinuteActivationRate: firstTenMinuteActivation.company.rate,
         privacySettingsCompletionUsers: privacyCompletedUsers,
         privacyVisibilityReversalRate: toPercent(visibilityReversalCount, totalVisibilityChanges),
+      },
+      firstTenMinuteActivation: {
+        windowMinutes: firstTenMinuteActivation.windowMinutes,
+        individual: firstTenMinuteActivation.individual,
+        company: firstTenMinuteActivation.company,
       },
       activationTierBreakdown: activationTierRows,
       assignmentBuilderModeBreakdown: builderModeRows,

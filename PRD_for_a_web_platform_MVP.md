@@ -79,6 +79,7 @@ For job seekers overwhelmed by volatile, biased, and time-intensive hiring—and
 - MVP prioritizes **bias reduction, privacy, and transparency** by design (not add-ons).
 - MVP excludes engagement-driven social feeds; **no LinkedIn-style content feed**.
 - MVP will surface **values/causes** and **work-preference** signals in matching logic.
+- MVP supports **BYOC candidate invites** for organizations: invite known candidates by email and collect structured Proof Cards instead of CV attachments.
 
 **Open questions (to resolve in subsequent sections)**
 
@@ -132,6 +133,14 @@ For job seekers overwhelmed by volatile, biased, and time-intensive hiring—and
 7. **Fairness/Equity Signal (opt-in)**
    - **Definition:** **Fairness Gap** between opt-in demographic segments on intro and contract rates, controlling for skills/constraints.
    - **Target (MVP):** **No statistically significant negative gap** for underrepresented cohorts; publish a fairness note per release.
+8. **First-session Activation (10-minute)**
+   - **Definition:** Persona-specific first-session success inside a strict 10-minute window from onboarding completion.
+     - Individual: `individual_onboarding_completed` -> `portfolio_share_link_copied` + `portfolio_pdf_export_succeeded`
+     - Company: `organization_onboarding_completed` -> `assignment_template_applied` + `assignment_publish_succeeded`
+   - **Boundary:** Include events at exactly 10:00 (`<= 10 minutes`).
+   - **Formulas:**
+     - Individual activation rate (10m) = successful individuals in 10m / new individuals
+     - Company activation rate (10m) = successful organization creators in 10m / new organization creators
 
 ## 2.3 Anti-Goals / Non-Metrics (MVP)
 
@@ -1310,6 +1319,16 @@ Each flow includes:
 **Edge cases:** Editing after publish; tier upgrade prompt.  
 **MVP:** Yes.
 
+## O‑14A BYOC Candidate Invites & Proof Card Intake
+
+**Goal:** Let organizations bring known candidates into the platform without CV-first review.  
+**Entry:** Candidates area in org workspace (`Invited candidates` tab).  
+**Happy‑path steps:** Add one or many candidate emails → send invite links → candidate opens invite, authenticates with the same email, claims invite, and submits a Proof Card link (`/p/[token]`) generated from structured profile data.  
+**Success:** Invite status transitions to `proof_submitted`, and org reviewers can open the submitted Proof Card from the queue.  
+**Key data:** CandidateInvite(status lifecycle, token hash, claimant, proof snippet/token, timestamps).  
+**Edge cases:** Duplicate active invite blocked per org/email, expired/revoked token, claimant email mismatch, resend/revoke actions.  
+**MVP:** Yes.
+
 ## O‑15 Intake Matches & Review
 
 **Goal:** Receive and evaluate best candidates quickly.  
@@ -1590,8 +1609,8 @@ Each flow includes:
 **Why Now:** Standardized, efficient creation of high-signal roles; improves TTFQI and TTSC.  
 **Acceptance Criteria:**
 
-- **Basic mode (default):** role, business value, ≥1 outcome, practicals, and ≥3 must-have skills.
-- **Advanced mode:** retains full 5-step flow with stakeholders, weight matrix, verification gates, logistics, and review.
+- **Basic mode (default entry):** role, business value, ≥1 outcome, practicals, and ≥3 must-have skills.
+- **Advanced mode (explicit opt-in):** unlocked only when the creator asks for extra control; retains full 5-step flow with stakeholders, weight matrix, verification gates, logistics, and review.
 - **Time-to-publish P50 ≤ 15 minutes**; task success ≥ 90%; drop-off < 10% on final steps.  
   **MoSCoW:** **Must**.
 
@@ -1648,6 +1667,7 @@ Each flow includes:
 **Acceptance Criteria:**
 
 - Create and save templates that prefill **Basic or Advanced Assignment** flows with **owner/department tags** and recommended mode.
+- Advanced-recommended templates do **not** auto-switch mode unless Advanced has already been explicitly enabled for the draft.
 - Clone a template into a new assignment; edits in the new assignment **do not mutate** the source template; version label shown on publish.
 - Template library shows usage and **time-to-publish** deltas; suggestions surface a relevant template when starting a similar role.  
   **MoSCoW:** **Should** (baseline template library + clone).
@@ -2043,8 +2063,8 @@ Each flow includes:
 
 **Inputs**:
 
-- Basic mode: role, business value, outcomes, practicals, must-have skills (≥3).
-- Advanced mode: role/outcomes, must/nice L4s, verification gates, logistics, stakeholders/weights, review.
+- Basic mode (default entry): role, business value, outcomes, practicals, must-have skills (≥3).
+- Advanced mode (explicit opt-in): role/outcomes, must/nice L4s, verification gates, logistics, stakeholders/weights, review.
   **Processing**: validate by mode; compute readiness; generate public-facing brief.
   **Outputs**: published Assignment; preview card; shareable link.  
   **Errors/Empty**: incomplete required fields; invalid ranges; show inline fixers.  
@@ -2286,7 +2306,7 @@ Each flow includes:
 ## Feature Flag Control APIs
 
 - **User flags endpoint:** `/api/feature-flags` resolves audience-aware flags for activation tiering, assignment builder mode, plain-language vocabulary, and privacy summary.
-- **Rollout metrics endpoint:** `/api/admin/metrics/rollout` exposes admin-only rollout indicators (activation completion, publish completion, visibility reversal rate, tier/mode breakdown, and endpoint health for matching/publish APIs).
+- **Rollout metrics endpoint:** `/api/admin/metrics/rollout` exposes admin-only rollout indicators (activation completion, publish completion, individual/company first-10-minute activation rates, visibility reversal rate, tier/mode breakdown, and endpoint health for matching/publish APIs).
 
 ## Storage
 
@@ -2424,12 +2444,12 @@ Each flow includes:
 **O4 Impact Block** — Create impact entries; export **Evidence Pack (PDF)**.
 **O5 Projects Block** — Link artifacts & Assignments; status tags.
 **O6 Enterprise Expertise Hub** — Declare domains; JD paste → suggested L4s.
-**O7 Assignment Creation (Basic + Advanced)** — Basic publish works by default; Advanced preserves strict 5-step behavior.
+**O7 Assignment Creation (Basic + Advanced)** — Basic publish works by default; Advanced remains hidden until explicit opt-in and preserves strict 5-step behavior.
 **O8 Company Dashboard** — Tiles for pipeline (Shortlists, Intros, TTSC trend).
 **O9 Team Management Hub** — Invite members; roles/permissions enforced.
 **O10 Organization Type Flag** — For-profit vs Non-profit selected & reflected in copy.
 **O11 Post-Interview Feedback & Decision SLA** — Decision + personalized feedback required; reminders before 48h breach.
-**O12 Assignment Templates** — Templates prefill Basic/Advanced assignments with recommended mode; clone without mutating source; usage shown.
+**O12 Assignment Templates** — Templates prefill Basic/Advanced assignments with recommended mode; advanced recommendations do not auto-switch mode; clone without mutating source; usage shown.
 
 ---
 
@@ -2540,7 +2560,7 @@ Each flow includes:
 
 - **Dashboards (Ops):** API RED (rate/errors/duration), page TTI P95, job success, error rate by release, DB health.
 - **Dashboards (Product):** NSM **TTSC**, **TTFQI**, **TTV**, conversion funnels, fairness note summary.
-- **Rollout dashboard:** Admin metrics endpoint tracks activation completion, assignment publish completion, privacy visibility reversal rate, activation tier mix, builder-mode mix, and p95/sla-breach rates for `/api/core/matching/profile` and `/api/assignments/[id]/publish`.
+- **Rollout dashboard:** Admin metrics endpoint tracks activation completion, assignment publish completion, individual/company first-10-minute activation rates, privacy visibility reversal rate, activation tier mix, builder-mode mix, and p95/sla-breach rates for `/api/core/matching/profile` and `/api/assignments/[id]/publish`.
 - **Alerts:** 5xx spike, latency P95 breach, failed ETL, error rate by route, email bounce spike.
 - **Tracing:** Critical paths (assignment publish, shortlist generation) traced end-to-end.
 - **Log hygiene:** JSON logs with request-id; PII scrubbing.
@@ -2549,7 +2569,7 @@ Each flow includes:
 
 **Goals:** Instrument outcomes that reflect speed & quality of matches and user effort reduction.
 
-- **Core events:** `dashboard_viewed`, `l4_added`, `shortlist_generated`, `match_viewed`, `match_actioned{introduce|pass|snooze}`, `applied`, `interview_scheduled{duration_minutes,policy_preset}`, `assignment_published{builderMode,minimumRequiredSkills}`, `hired`, `wellbeing_checkin_submitted` (private path).
+- **Core events:** `dashboard_viewed`, `l4_added`, `shortlist_generated`, `match_viewed`, `match_actioned{introduce|pass|snooze}`, `applied`, `interview_scheduled{duration_minutes,policy_preset}`, `individual_onboarding_completed`, `organization_onboarding_completed`, `portfolio_share_link_copied`, `portfolio_pdf_export_succeeded`, `assignment_template_applied`, `assignment_publish_succeeded`, `assignment_published{builderMode,minimumRequiredSkills}`, `hired`, `wellbeing_checkin_submitted` (private path).
 - **Attribution:** `source` on landings (organic/referral/paid); `cohort` labels (persona, role family, region).
 - **Derived metrics:** **TTFQI**, **TTV**, **TTSC**; effort saved (self-report + steps); PAC lift on acceptance/hire.
 - **Data flow:** Client/server events → analytics DB via ETL (nightly); ML labels persisted in `ml_training_data`.
@@ -2620,8 +2640,8 @@ Each flow includes:
     - **Lite:** ≥3 L4 skills each have level + recency, ≥1 proof overall, matching constraints saved, and purpose present.
     - **Strong:** ≥10 L4 skills each have level + recency, ≥1 proof overall, matching constraints saved, and purpose present.
   - Assignment publish readiness is mode-specific:
-    - **Basic:** role, business value, ≥1 measurable outcome, practicals, and ≥3 must-have skills.
-    - **Advanced:** full 5-step completeness including stakeholders and weight matrix; education marked “required” must include justification.
+    - **Basic:** role, business value, ≥1 measurable outcome, practicals, and ≥3 must-have skills (default entry path).
+    - **Advanced:** full 5-step completeness including stakeholders and weight matrix; exposed only after explicit opt-in; education marked “required” must include justification.
   - Dashboards show current tier/state and next-best action when unmet.
 
 ## A8 Plain-Language Vocabulary Policy

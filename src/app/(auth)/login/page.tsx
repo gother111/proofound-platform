@@ -13,8 +13,26 @@ export const metadata = {
   description: 'Sign in to your Proofound account',
 };
 
-export default async function LoginPage() {
+function sanitizeNextPath(value: string | string[] | undefined): string | null {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (!raw) return null;
+
+  const trimmed = raw.trim();
+  if (!trimmed || !trimmed.startsWith('/') || trimmed.startsWith('//')) {
+    return null;
+  }
+
+  return trimmed;
+}
+
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ next?: string | string[] }>;
+}) {
   const isMock = process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true';
+  const params = (await searchParams) ?? {};
+  const nextPath = sanitizeNextPath(params.next);
 
   try {
     // Check if user is already logged in
@@ -61,11 +79,11 @@ export default async function LoginPage() {
           hypothesisId: 'H-redirect-loop',
           location: 'login/page.tsx:redirect',
           message: 'Redirecting logged-in user',
-          data: { homePath },
+          data: { homePath, nextPath },
         });
 
         // Important: do not catch the redirect (it throws NEXT_REDIRECT internally).
-        redirect(homePath);
+        redirect(nextPath || homePath);
       }
     }
   } catch (error) {
