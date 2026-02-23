@@ -274,13 +274,40 @@ export default function AssignmentBuilderPage() {
     loadTemplates();
   }, [slug]);
 
+  const trackTemplateApplied = useCallback(
+    (template: AssignmentTemplate, selectedBuilderMode: BuilderMode) => {
+      void fetch('/api/analytics/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventType: 'assignment_template_applied',
+          orgId: orgId ?? undefined,
+          entityType: assignmentIdRef.current ? 'assignment' : undefined,
+          entityId: assignmentIdRef.current ?? undefined,
+          properties: {
+            templateId: template.id,
+            templateName: template.name,
+            roleFamily: template.roleFamily,
+            orgSlug: slug,
+            selectedBuilderMode,
+            recommendedBuilderMode: template.recommendedBuilderMode || null,
+          },
+        }),
+      }).catch(() => undefined);
+    },
+    [orgId, slug]
+  );
+
   const handleApplyTemplate = (template: AssignmentTemplate) => {
     const mapped = mapTemplateToAssignmentForm(template.presetPayload);
     form.reset({ ...form.getValues(), ...mapped });
+    const selectedBuilderMode: BuilderMode = assignmentBasicModeEnabled
+      ? template.recommendedBuilderMode || 'basic'
+      : 'advanced';
+
     if (assignmentBasicModeEnabled) {
-      const templateMode = template.recommendedBuilderMode || 'basic';
-      setBuilderMode(templateMode);
-      if (templateMode === 'basic' && currentStep === 3) {
+      setBuilderMode(selectedBuilderMode);
+      if (selectedBuilderMode === 'basic' && currentStep === 3) {
         setCurrentStep(4);
       }
     }
@@ -290,6 +317,7 @@ export default function AssignmentBuilderPage() {
     setStepStartTime(new Date());
     toast.success(`Applied template: ${template.name}`);
     setIsTemplatePickerOpen(false);
+    trackTemplateApplied(template, selectedBuilderMode);
   };
 
   const buildAssignmentPayload = useCallback(

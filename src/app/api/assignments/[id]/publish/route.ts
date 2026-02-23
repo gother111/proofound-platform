@@ -5,6 +5,7 @@ import { db } from '@/db';
 import { assignmentOutcomes, assignments, organizations } from '@/db/schema';
 import { checkAndEmitAssignmentActivation } from '@/lib/assignments/activation';
 import { verifyAssignmentMutationAccess } from '@/lib/assignments/access';
+import { emitAssignmentPublishSucceeded } from '@/lib/analytics/events';
 import { requireAuth } from '@/lib/auth';
 import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
 import { isFeatureEnabled } from '@/lib/feature-flags/server';
@@ -144,6 +145,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       })
       .where(eq(assignments.id, assignmentId))
       .returning();
+
+    await emitAssignmentPublishSucceeded(user.id, assignmentId, publishedAssignment.orgId, {
+      builderMode: publishedAssignment.builderMode || 'basic',
+      source: 'assignments_publish_route',
+    });
 
     await checkAndEmitAssignmentActivation({
       assignmentId,
