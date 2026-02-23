@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
-import { PUT } from '@/app/api/core/matching/matching-profile/route';
+import { GET, PUT } from '@/app/api/core/matching/matching-profile/route';
 import { db } from '@/db';
 import { requireAuth } from '@/lib/auth';
 import { evaluateIndividualMatchability } from '@/lib/matching/eligibility';
@@ -100,5 +100,27 @@ describe('core matching profile route', () => {
     expect(payload.profile.desiredRoles).toEqual(['Staff Engineer']);
     expect(payload.profile.desiredIndustries).toEqual(['Technology']);
     expect(payload.profile.orgTypes).toEqual(['startup']);
+  });
+
+  it('bootstraps a baseline matching profile on GET when missing', async () => {
+    const baselineProfile = {
+      profileId: userId,
+      desiredRoles: null,
+      desiredIndustries: null,
+      orgTypes: null,
+    };
+
+    (db.query.matchingProfiles.findFirst as any).mockResolvedValue(baselineProfile);
+    const onConflictDoNothing = vi.fn().mockResolvedValue(undefined);
+    const values = vi.fn().mockReturnValue({ onConflictDoNothing });
+    (db.insert as any).mockReturnValue({ values });
+
+    const res = await GET();
+    const payload = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(values).toHaveBeenCalledWith(expect.objectContaining({ profileId: userId }));
+    expect(onConflictDoNothing).toHaveBeenCalled();
+    expect(payload.profile.profileId).toBe(userId);
   });
 });

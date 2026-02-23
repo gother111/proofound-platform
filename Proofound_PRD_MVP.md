@@ -90,6 +90,8 @@
 - **Inputs:** Expertise Atlas; mission/values; availability; location/timezone; salary band; industry; languages.
 - **Default Weights (guard‑railed):** Mission/Values **30%**, Core Expertise **40%**, Tools **10%**, Logistics **10%**, Recency **10%**; adjustable ±15pp.
 - **Results set:** **Top 5–10** matches per assignment (configurable).
+- **Activation tiers:** Lite requires ≥3 skills with recency, ≥1 proof, purpose present, and matching constraints saved; Strong requires ≥10 skills with recency plus the same proof/purpose/constraints.
+- **Soft gating:** Matching stays accessible even before Lite completion. Unmet criteria are surfaced as readiness checklist actions instead of hard API blocking.
 - **Explainability:** Each suggestion shows “**Why this match**” with % breakdown and **numeric improvement tips** (e.g., “Add proof X to increase score by ~8–12%”).
 - **Cold‑start:** Editorial “Starter Matches”; if <5 strong results, show “Near Matches” with missing/strength notes.
 - **Refresh defaults:** Employment → **daily**; Volunteering → **weekly** (user‑configurable; system min daily).

@@ -24,6 +24,16 @@ interface MatchingProfileSetupProps {
   onCancel: () => void;
 }
 
+interface ExpertiseStatsData {
+  skillsWithRecency?: number;
+  skillsWithProofs?: number;
+  activationThresholds?: {
+    lite?: {
+      skillsWithRecency?: number;
+    };
+  };
+}
+
 /**
  * Multi-step wizard for setting up matching profile (individuals).
  */
@@ -54,6 +64,9 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
   const [valuesOptions, setValuesOptions] = useState<TypeaheadOption[]>([]);
   const [causesOptions, setCausesOptions] = useState<TypeaheadOption[]>([]);
   const [atlasSkillCount, setAtlasSkillCount] = useState<number | null>(null);
+  const [skillsWithRecencyCount, setSkillsWithRecencyCount] = useState<number | null>(null);
+  const [proofCount, setProofCount] = useState<number | null>(null);
+  const [liteSkillsThreshold, setLiteSkillsThreshold] = useState(3);
   const [sampleMatches, setSampleMatches] = useState<
     Array<{ title: string; reason: string; score: number }>
   >([]);
@@ -70,17 +83,25 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
           apiFetch('/api/expertise/stats'),
         ]);
 
-        const [valuesData, causesData, statsData] = await Promise.all([
+        const [valuesData, causesData, statsDataRaw] = await Promise.all([
           valuesRes.json(),
           causesRes.json(),
           statsRes.ok ? statsRes.json() : Promise.resolve({ totalL4Skills: null }),
         ]);
+        const statsData = statsDataRaw as ExpertiseStatsData & { totalL4Skills?: number | null };
 
         setValuesOptions(valuesData.items || []);
         setCausesOptions(causesData.items || []);
         setAtlasSkillCount(
           typeof statsData.totalL4Skills === 'number' ? statsData.totalL4Skills : null
         );
+        setSkillsWithRecencyCount(
+          typeof statsData.skillsWithRecency === 'number' ? statsData.skillsWithRecency : null
+        );
+        setProofCount(
+          typeof statsData.skillsWithProofs === 'number' ? statsData.skillsWithProofs : null
+        );
+        setLiteSkillsThreshold(statsData.activationThresholds?.lite?.skillsWithRecency || 3);
       } catch (error) {
         toast.error('Failed to load setup data');
       }
@@ -179,13 +200,23 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
   // Calculate progress
   const calculateProgress = () => {
     let completed = 0;
-    const total = 5;
+    const total = 4;
+    const hasLiteSkills =
+      typeof skillsWithRecencyCount === 'number' && skillsWithRecencyCount >= liteSkillsThreshold;
+    const hasProof = typeof proofCount === 'number' && proofCount >= 1;
+    const hasPurpose = valuesTags.length > 0 || causeTags.length > 0;
+    const hasBasicPreferences =
+      !!location.workMode &&
+      !!availability.earliest &&
+      !!availability.latest &&
+      compensation.min > 0 &&
+      compensation.max > 0 &&
+      !!compensation.currency;
 
-    if (valuesTags.length >= 3) completed++;
-    if (desiredRoles.length > 0 || desiredIndustries.length > 0 || orgTypes.length > 0) completed++;
-    if (location.workMode && availability.earliest && availability.latest) completed++;
-    if (languages.length > 0) completed++;
-    if (compensation.min > 0 && compensation.max > 0) completed++;
+    if (hasLiteSkills) completed++;
+    if (hasProof) completed++;
+    if (hasBasicPreferences) completed++;
+    if (hasPurpose) completed++;
 
     return (completed / total) * 100;
   };
@@ -194,13 +225,6 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
 
   // Submit
   const handleSubmit = async () => {
-    // Validation
-    if (valuesTags.length < 3) {
-      toast.error('Please select at least 3 values');
-      setCurrentTab('values');
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
@@ -240,7 +264,7 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
         throw new Error(errorMessage);
       }
 
-      toast.success('Matching profile activated!');
+      toast.success('Profile saved. You can keep using matching while you finish setup.');
       onComplete();
       router.refresh();
     } catch (error) {
@@ -260,11 +284,11 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
       {/* Header */}
       <div className="mb-6">
         <h2 className="text-2xl font-semibold mb-2" style={{ color: '#2D3330' }}>
-          Set Up Your Matching Profile
+          Get match-ready in 4 quick steps
         </h2>
         <Progress value={progress} className="h-2" />
         <p className="text-sm mt-2" style={{ color: '#6B6760' }}>
-          {Math.round(progress)}% complete
+          {Math.round(progress)}% complete. Save anytime and finish the rest later.
         </p>
       </div>
 
@@ -293,8 +317,16 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
                   Edit skills, proofs, and verification there.
                 </p>
                 <p className="text-sm" style={{ color: '#2D3330' }}>
-                  Current Atlas skills:{' '}
-                  <strong>{atlasSkillCount === null ? 'Loading…' : atlasSkillCount}</strong>
+                  Current Atlas readiness:{' '}
+                  <strong>
+                    {skillsWithRecencyCount === null ? 'Loading…' : skillsWithRecencyCount}
+                  </strong>{' '}
+                  / {liteSkillsThreshold} skills with recency and{' '}
+                  <strong>{proofCount === null ? 'Loading…' : proofCount}</strong> proof
+                  {proofCount === 1 ? '' : 's'}.
+                </p>
+                <p className="text-xs text-[#6B6760]">
+                  Tip: add skills and proofs in Atlas first, then save your preferences here.
                 </p>
                 <Button
                   variant="outline"
@@ -348,7 +380,7 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
         {/* Step 3: Values & Causes */}
         <TabsContent value="values" className="space-y-4">
           <div>
-            <Label>Your Top Values (Select 3-5)</Label>
+            <Label>Your Top Values (Optional)</Label>
             <TypeaheadChips
               options={valuesOptions}
               value={valuesTags}
@@ -540,7 +572,7 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
               disabled={isSubmitting}
               style={{ backgroundColor: '#1C4D3A' }}
             >
-              {isSubmitting ? 'Activating...' : 'Activate Matching'}
+              {isSubmitting ? 'Saving...' : 'Save and Continue'}
             </Button>
           </div>
         </TabsContent>

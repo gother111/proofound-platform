@@ -113,7 +113,7 @@ export function OrganizationSetup() {
 
             <div className="space-y-2">
               <h2 className="text-2xl font-['Crimson_Pro'] font-semibold text-proofound-forest dark:text-primary">
-                Organization Created Successfully!
+                Organization Activated!
               </h2>
               <p className="text-3xl font-bold text-proofound-charcoal dark:text-foreground">
                 Welcome to {success.orgName}!
@@ -122,7 +122,7 @@ export function OrganizationSetup() {
 
             <div className="bg-proofound-stone/30 dark:bg-muted rounded-xl p-6 text-left space-y-3">
               <p className="font-medium text-proofound-charcoal dark:text-foreground">
-                Your organization has been created and you&apos;re now ready to:
+                Your organization is active now. You can:
               </p>
               <ul className="space-y-2 text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
                 <li className="flex items-start gap-2">
@@ -135,7 +135,7 @@ export function OrganizationSetup() {
                   <span className="text-proofound-forest dark:text-primary font-bold mt-0.5">
                     •
                   </span>
-                  <span>Set up your organization profile</span>
+                  <span>Complete profile details anytime</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-proofound-forest dark:text-primary font-bold mt-0.5">
@@ -162,7 +162,7 @@ export function OrganizationSetup() {
           Create Your Organization
         </CardTitle>
         <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-          Set up your organization to start collaborating with your team
+          Activate with name, URL, and type. Add the rest whenever you are ready.
         </CardDescription>
       </CardHeader>
       <CardContent>

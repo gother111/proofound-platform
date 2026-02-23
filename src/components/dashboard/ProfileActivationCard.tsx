@@ -1,7 +1,7 @@
 /**
  * Profile Activation Tile
  *
- * Shows readiness against activation gate (≥10 L4 skills with recency, ≥1 proof, purpose block).
+ * Shows readiness for Lite/Strong activation with a simple match-ready checklist.
  * Uses mock data when the tour is running to align with PRD first-run guidance.
  */
 
@@ -169,21 +169,20 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
   }, [stats]);
 
   const activationChecks = useMemo(() => {
-    const activationTieringEnabled = stats?.featureFlags?.activationTiering !== false;
-    const liteSkillsThreshold = stats?.activationThresholds.lite.skillsWithRecency ?? 3;
-    const strongSkillsThreshold = stats?.activationThresholds.strong.skillsWithRecency ?? 10;
+    const liteSkillsThreshold = stats?.activationThresholds?.lite?.skillsWithRecency ?? 3;
     const skillsWithRecency = stats?.skillsWithRecency ?? data?.skillCount ?? 0;
-    const skillsLite = skillsWithRecency >= liteSkillsThreshold;
-    const skillsStrong = skillsWithRecency >= strongSkillsThreshold;
-    const proofs = (data?.proofCount ?? 0) >= 1;
-    const values = (data?.valuesCount ?? 0) >= 1;
+    const hasLiteSkills = skillsWithRecency >= liteSkillsThreshold;
+    const hasProof = (data?.proofCount ?? 0) >= 1;
+    const eligibilityTier = stats?.eligibility?.tier || 'none';
+    const remaining = stats?.eligibility?.nextTierTarget?.remaining;
+    const hasPurpose = remaining ? remaining.purpose === 0 : eligibilityTier !== 'none';
+    const hasConstraints = remaining ? remaining.constraints === 0 : eligibilityTier !== 'none';
+
     return [
-      ...(activationTieringEnabled
-        ? [{ label: `${liteSkillsThreshold}+ recent skills (Lite)`, pass: skillsLite }]
-        : []),
-      { label: `${strongSkillsThreshold}+ recent skills (Strong)`, pass: skillsStrong },
-      { label: '≥1 proof', pass: proofs },
-      { label: 'Purpose/values set', pass: values },
+      { label: `${liteSkillsThreshold} key skills with recency`, pass: hasLiteSkills },
+      { label: '1 proof artifact', pass: hasProof },
+      { label: 'Basic preferences saved', pass: hasConstraints },
+      { label: 'Mission, values, or causes', pass: hasPurpose },
     ];
   }, [data, stats]);
 
@@ -221,10 +220,10 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
         <div className="space-y-1">
           <CardTitle className="text-lg flex items-center gap-2">
             <Target className="h-5 w-5 text-[#1C4D3A]" />
-            Profile Activation
+            Get match-ready in 4 quick steps
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Hit the activation gate to unlock matches.
+            You are active now. Completing these steps improves match quality.
           </p>
         </div>
         <Badge variant="outline" className="text-xs">
