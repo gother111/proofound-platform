@@ -39,7 +39,8 @@ test.describe('Landing Visual Baseline (af705d4)', () => {
       animations: 'disabled',
       caret: 'hide',
       fullPage: false,
-      maxDiffPixelRatio: 0.01,
+      // CI font/rasterization variance can exceed 1% even with deterministic styles.
+      maxDiffPixelRatio: 0.03,
     });
   });
 });

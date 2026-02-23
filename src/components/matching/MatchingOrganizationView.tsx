@@ -18,6 +18,7 @@ import { MatchResultCard } from './MatchResultCard';
 import { toast } from 'sonner';
 import { Plus, Settings } from 'lucide-react';
 import { apiFetch } from '@/lib/api/fetch';
+import { getOrganizationRecoveryActions } from '@/lib/ui/recovery-actions';
 
 interface Assignment {
   id: string;
@@ -42,13 +43,19 @@ export function MatchingOrganizationView({
 }: MatchingOrganizationViewProps) {
   const params = useParams();
   const router = useRouter();
-  const slug = (params as { slug?: string })?.slug;
+  const rawSlug = (params as { slug?: string | string[] })?.slug;
+  const slug = Array.isArray(rawSlug) ? rawSlug[0] : rawSlug;
   const [selectedAssignment, setSelectedAssignment] = useState<string>(assignments[0]?.id || '');
   const [matches, setMatches] = useState<unknown[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [preset, setPreset] = useState<string>('balanced');
 
   const currentAssignment = assignments.find((a) => a.id === selectedAssignment);
+  const recoveryActions = getOrganizationRecoveryActions(
+    'assignment-no-matches',
+    slug || null,
+    selectedAssignment || undefined
+  );
 
   // Fetch matches when assignment or preset changes
   useEffect(() => {
@@ -214,6 +221,19 @@ export function MatchingOrganizationView({
               <p className="text-sm" style={{ color: '#6B6760' }}>
                 Check back soon or adjust your filters
               </p>
+              <div className="mt-4 grid grid-cols-1 gap-2 text-left md:grid-cols-3">
+                {recoveryActions.map((action) => (
+                  <button
+                    key={action.id}
+                    type="button"
+                    onClick={() => router.push(action.actionUrl)}
+                    className="rounded-lg border border-[#E8E6DD] bg-white px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1]"
+                  >
+                    <p className="text-sm font-medium text-[#2D3330]">{action.title}</p>
+                    <p className="text-xs text-[#6B6760]">{action.description}</p>
+                  </button>
+                ))}
+              </div>
             </div>
           ) : (
             <div>
@@ -229,13 +249,11 @@ export function MatchingOrganizationView({
                     variant="blind"
                     skills={
                       match.profile?.skills
-                        ? Object.entries(match.profile.skills).map(
-                            ([id, data]: [string, any]) => ({
-                              id,
-                              label: id,
-                              level: data.level,
-                            })
-                          )
+                        ? Object.entries(match.profile.skills).map(([id, data]: [string, any]) => ({
+                            id,
+                            label: id,
+                            level: data.level,
+                          }))
                         : []
                     }
                     onInterested={() => handleInterested(match.profileId)}

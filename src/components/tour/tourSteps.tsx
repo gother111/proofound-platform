@@ -2,7 +2,7 @@
  * Guided Tour Steps Configuration
  *
  * Implements PRD Part 4, Flow I-03: "Reveal UI" tour
- * 8-step tour for first-time individual users
+ * 10-step tour for first-time individual users
  *
  * PRD References:
  * - Part 4: User Flows - First Login (I-03)
@@ -18,16 +18,17 @@ import { UI_VOCABULARY } from '@/lib/copy/vocabulary';
 /**
  * Tour steps for individual users
  *
- * PRD Flow I-03: 8-step progressive disclosure
+ * PRD Flow I-03: progressive disclosure
  * 1. Blank canvas → Welcome
  * 2. Reveal Navigation
  * 3. Reveal Dashboard
  * 4. Jump to Profile (empty state)
- * 5. Show Expertise Hub
- * 6. Show Matching Profile
- * 7. Show Zen Hub
- * 8. Show Settings
- * 9. Suggest "Start with your Profile"
+ * 5. Show Public Portfolio
+ * 6. Show Expertise Hub
+ * 7. Show Matching Profile
+ * 8. Show Zen Hub
+ * 9. Show Settings
+ * 10. Suggest next actions
  */
 export const individualTourSteps: Step[] = [
   {
@@ -36,7 +37,8 @@ export const individualTourSteps: Step[] = [
       <div className="space-y-3">
         <h2 className="text-lg font-semibold text-[#2D3330]">Welcome to Proofound! 👋</h2>
         <p className="text-sm text-[#6B6760]">
-          Let's take a quick tour to help you get started. This will only take about 2 minutes.
+          Your day-1 goal is to publish a clean public portfolio link and share it immediately. This
+          quick tour takes about 2 minutes.
         </p>
         <p className="text-xs text-[#9B9891]">
           You can skip this tour anytime by pressing ESC, or replay it later from Settings.
@@ -83,6 +85,20 @@ export const individualTourSteps: Step[] = [
         </p>
         <p className="text-xs text-[#9B9891] pt-2 border-t border-[#E8E6DD]">
           <strong>Tip:</strong> Start here first! A complete profile helps you get better matches.
+        </p>
+      </div>
+    ),
+    placement: 'right',
+    disableBeacon: true,
+  },
+  {
+    target: '[data-tour="portfolio-link"]',
+    content: (
+      <div className="space-y-2">
+        <h3 className="text-base font-semibold text-[#2D3330]">Public Portfolio</h3>
+        <p className="text-sm text-[#6B6760]">
+          This is your clean, proof-based link. Copy it and share it right away. Matching remains
+          available as a secondary step after your portfolio is live.
         </p>
       </div>
     ),
@@ -162,14 +178,15 @@ export const individualTourSteps: Step[] = [
       <div className="space-y-3">
         <h2 className="text-lg font-semibold text-[#2D3330]">You're all set! 🎉</h2>
         <p className="text-sm text-[#6B6760]">
-          Ready to get started? We recommend beginning with your <strong>Profile</strong> to
-          introduce yourself, then adding your skills in the <strong>Expertise Hub</strong>.
+          Start with your <strong>Public Portfolio</strong>: publish, copy, and share your link.
+          Then strengthen it with Profile and Expertise details.
         </p>
         <div className="pt-3 border-t border-[#E8E6DD]">
           <p className="text-xs text-[#9B9891]">
             <strong>Next steps:</strong>
           </p>
           <ul className="text-xs text-[#9B9891] list-disc list-inside space-y-1 mt-1">
+            <li>Share your Public Portfolio link</li>
             <li>Complete your Profile (mission, vision, values)</li>
             <li>Add at least 3 skills to unlock Lite activation</li>
             <li>Grow to 10 skills for Strong activation</li>
@@ -193,7 +210,8 @@ export const organizationTourSteps: Step[] = [
       <div className="space-y-3">
         <h2 className="text-lg font-semibold text-[#2D3330]">Welcome to Proofound! 👋</h2>
         <p className="text-sm text-[#6B6760]">
-          Let's show you around your organization workspace. This will take about 2 minutes.
+          Your first win is to publish a clean organization portfolio link that your team can share
+          today. This tour takes about 2 minutes.
         </p>
       </div>
     ),
@@ -207,6 +225,20 @@ export const organizationTourSteps: Step[] = [
         <h3 className="text-base font-semibold text-[#2D3330]">Organization Navigation</h3>
         <p className="text-sm text-[#6B6760]">
           Your sidebar helps you manage assignments, review candidates, and track team activity.
+        </p>
+      </div>
+    ),
+    placement: 'right',
+    disableBeacon: true,
+  },
+  {
+    target: '[data-tour="portfolio-link"]',
+    content: (
+      <div className="space-y-2">
+        <h3 className="text-base font-semibold text-[#2D3330]">Public Portfolio</h3>
+        <p className="text-sm text-[#6B6760]">
+          Publish your organization proof portfolio and share it externally right away. Matching and
+          hiring workflows stay available after this first step.
         </p>
       </div>
     ),
@@ -261,8 +293,8 @@ export const organizationTourSteps: Step[] = [
       <div className="space-y-3">
         <h2 className="text-lg font-semibold text-[#2D3330]">Ready to find great talent! 🎉</h2>
         <p className="text-sm text-[#6B6760]">
-          Start by creating your first <strong>Assignment</strong> to define what you're looking
-          for.
+          Start by sharing your public portfolio link, then create your first{' '}
+          <strong>Assignment</strong> to define what you're looking for.
         </p>
       </div>
     ),

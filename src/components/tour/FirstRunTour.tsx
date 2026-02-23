@@ -2,7 +2,7 @@
  * First-Run Guided Tour (Flow I-03)
  *
  * PRD Requirement: First-run guided tour that progressively reveals UI
- * Steps: Navigation → Dashboard → Profile → Expertise Hub → Matching → Zen Hub → Settings
+ * Steps: Navigation → Dashboard → Profile → Public Portfolio → Expertise Hub → Matching → Zen Hub → Settings
  *
  * Features:
  * - Progressive reveal with styled background
@@ -22,6 +22,7 @@ import {
   Home,
   User,
   Compass,
+  Link2,
   Target,
   Heart,
   Settings,
@@ -50,7 +51,7 @@ const individualTourSteps: TourStep[] = [
     id: 'welcome',
     title: 'Welcome to Proofound! ✨',
     description:
-      "We're here to help you find opportunities that align with your skills, values, and purpose. Let's take a quick tour to show you around.",
+      "Your first win is simple: publish a clean, proof-based portfolio link and share it today. Let's take a quick tour.",
     icon: Home,
     placement: 'center',
   },
@@ -58,7 +59,7 @@ const individualTourSteps: TourStep[] = [
     id: 'navigation',
     title: 'Your Navigation',
     description:
-      'This sidebar is your command center. Access your dashboard, profile, matches, and more from here.',
+      'This sidebar is your command center. Access your dashboard, profile, public portfolio link, matching, and more from here.',
     icon: Compass,
     target: '[data-tour="left-nav"]',
     placement: 'right',
@@ -68,7 +69,7 @@ const individualTourSteps: TourStep[] = [
     id: 'dashboard',
     title: 'Dashboard',
     description:
-      'Your dashboard gives you a snapshot of your journey: active matches, tasks, projects, and impact. Everything you need to see at a glance.',
+      'Your dashboard gives you a snapshot of your progress, including proof readiness and what to improve next.',
     icon: Home,
     target: '[data-tour="home-link"]',
     placement: 'right',
@@ -80,6 +81,15 @@ const individualTourSteps: TourStep[] = [
       'Build your profile to showcase your skills, experience, mission, and values. A complete profile helps organizations understand who you are and what drives you.',
     icon: User,
     target: '[data-tour="profile-link"]',
+    placement: 'right',
+  },
+  {
+    id: 'portfolio',
+    title: 'Public Portfolio',
+    description:
+      'This is your share-ready public link. Publish once, then copy and send it to collaborators, partners, or hiring teams immediately.',
+    icon: Link2,
+    target: '[data-tour="portfolio-link"]',
     placement: 'right',
   },
   {
@@ -95,7 +105,7 @@ const individualTourSteps: TourStep[] = [
     id: 'matching',
     title: 'Find Opportunities',
     description:
-      'Discover assignments and roles that match your skills AND values. Our algorithm prioritizes Purpose-Alignment-Contribution (PAC) to find meaningful work.',
+      'Matching is the next layer. Once your portfolio is published, discover assignments and roles aligned with your skills and values.',
     icon: Target,
     target: '[data-tour="matching-link"]',
     placement: 'right',
@@ -122,7 +132,7 @@ const individualTourSteps: TourStep[] = [
     id: 'complete',
     title: "You're All Set! 🎉",
     description:
-      "You can restart this tour anytime from Settings → Help. Now, let's build your profile and find opportunities that align with your purpose!",
+      "You can restart this tour anytime from Settings → Help. Start by sharing your public portfolio link, then use matching when you're ready.",
     icon: Home,
     placement: 'center',
   },
@@ -217,9 +227,9 @@ export function FirstRunTour({ onComplete, onSkip, basePath = '/app/i' }: FirstR
   }, [currentStep, step.target, step.revealDelay]);
 
   const handleActionButton = () => {
-    // For "complete" step, suggest going to profile
+    // For "complete" step, suggest going to public portfolio
     if (step.id === 'complete') {
-      router.push(`${basePath}/profile`);
+      router.push(`${basePath}/portfolio`);
       handleComplete();
     } else {
       handleNext();

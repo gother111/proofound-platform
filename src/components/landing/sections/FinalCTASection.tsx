@@ -69,9 +69,9 @@ export function FinalCTASection({ onGetStarted, shouldReduceMotion }: FinalCTASe
           }
           className="text-5xl md:text-7xl lg:text-9xl font-display mb-12 leading-[0.9] tracking-tight text-balance"
         >
-          Ready to build <br />
+          Ready to share <br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-japandi-sage to-white">
-            trust that lasts?
+            proof today?
           </span>
         </motion.h2>
 
@@ -85,8 +85,8 @@ export function FinalCTASection({ onGetStarted, shouldReduceMotion }: FinalCTASe
           }
           className="text-xl md:text-2xl text-white/60 mb-16 max-w-2xl mx-auto font-sans leading-relaxed"
         >
-          Join the movement towards a more transparent, equitable, and meaningful professional
-          world.
+          Start with a clean public proof portfolio link, then grow into matching and collaboration
+          workflows at your pace.
         </motion.p>
 
         <motion.div

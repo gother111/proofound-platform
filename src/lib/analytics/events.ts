@@ -193,6 +193,22 @@ export function trackEvent(event: AnalyticsEvent): void {
 // ASSIGNMENT EVENTS
 // ============================================================================
 
+export async function emitAssignmentPublishSucceeded(
+  userId: string,
+  assignmentId: string,
+  organizationId?: string,
+  properties?: Record<string, any>
+): Promise<void> {
+  await emitAnalyticsEvent({
+    eventType: 'assignment_publish_succeeded',
+    userId,
+    organizationId,
+    entityType: 'assignment',
+    entityId: assignmentId,
+    properties,
+  });
+}
+
 export async function emitAssignmentPublished(
   userId: string,
   assignmentId: string,
@@ -575,6 +591,64 @@ export function emitProfileActivatedAsync(
       ...(activationDurationMs != null ? { activation_duration_ms: activationDurationMs } : null),
       ...props,
     },
+  });
+}
+
+export async function emitIndividualOnboardingCompleted(
+  userId: string,
+  properties?: Record<string, any>
+): Promise<void> {
+  await emitAnalyticsEvent({
+    eventType: 'individual_onboarding_completed',
+    userId,
+    profileId: userId,
+    entityType: 'profile',
+    entityId: userId,
+    properties,
+  });
+}
+
+export async function emitOrganizationOnboardingCompleted(
+  userId: string,
+  organizationId?: string,
+  properties?: Record<string, any>
+): Promise<void> {
+  await emitAnalyticsEvent({
+    eventType: 'organization_onboarding_completed',
+    userId,
+    profileId: userId,
+    organizationId,
+    entityType: 'profile',
+    entityId: userId,
+    properties,
+  });
+}
+
+export async function emitPortfolioShareLinkCopied(
+  userId: string,
+  properties?: Record<string, any>
+): Promise<void> {
+  await emitAnalyticsEvent({
+    eventType: 'portfolio_share_link_copied',
+    userId,
+    profileId: userId,
+    entityType: 'profile',
+    entityId: userId,
+    properties,
+  });
+}
+
+export async function emitPortfolioPdfExportSucceeded(
+  userId: string,
+  properties?: Record<string, any>
+): Promise<void> {
+  await emitAnalyticsEvent({
+    eventType: 'portfolio_pdf_export_succeeded',
+    userId,
+    profileId: userId,
+    entityType: 'profile',
+    entityId: userId,
+    properties,
   });
 }
 

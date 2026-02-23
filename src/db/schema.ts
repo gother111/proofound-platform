@@ -223,6 +223,42 @@ export const orgInvitations = pgTable('org_invitations', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+// Organization candidate invites (BYOC flow)
+export const orgCandidateInvites = pgTable(
+  'org_candidate_invites',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    orgId: uuid('org_id')
+      .references(() => organizations.id, { onDelete: 'cascade' })
+      .notNull(),
+    inviteeEmail: text('invitee_email').notNull(),
+    inviteeEmailNormalized: text('invitee_email_normalized').notNull(),
+    tokenHash: text('token_hash').notNull().unique(),
+    status: text('status', {
+      enum: ['pending', 'claimed', 'proof_submitted', 'revoked', 'expired'],
+    })
+      .default('pending')
+      .notNull(),
+    expiresAt: timestamp('expires_at').notNull(),
+    invitedBy: uuid('invited_by').references(() => profiles.id, { onDelete: 'set null' }),
+    claimedByProfileId: uuid('claimed_by_profile_id').references(() => profiles.id, {
+      onDelete: 'set null',
+    }),
+    claimedAt: timestamp('claimed_at'),
+    proofSnippetId: uuid('proof_snippet_id'),
+    proofShareToken: text('proof_share_token'),
+    proofSubmittedAt: timestamp('proof_submitted_at'),
+    revokedAt: timestamp('revoked_at'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    orgIdIdx: index('idx_org_candidate_invites_org_id').on(table.orgId),
+    statusIdx: index('idx_org_candidate_invites_status').on(table.status),
+    expiresAtIdx: index('idx_org_candidate_invites_expires_at').on(table.expiresAt),
+  })
+);
+
 // Organization ownership structure
 export const organizationOwnership = pgTable('organization_ownership', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -2002,6 +2038,8 @@ export type InsertVolunteering = typeof volunteering.$inferInsert;
 export type Organization = typeof organizations.$inferSelect;
 export type OrganizationMember = typeof organizationMembers.$inferSelect;
 export type OrgInvitation = typeof orgInvitations.$inferInsert;
+export type OrgCandidateInvite = typeof orgCandidateInvites.$inferSelect;
+export type InsertOrgCandidateInvite = typeof orgCandidateInvites.$inferInsert;
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type FeatureFlag = typeof featureFlags.$inferSelect;
 

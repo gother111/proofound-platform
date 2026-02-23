@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { fetchTrustExportData } from '@/lib/portfolio/export-data';
 import { generateTrustPdf } from '@/lib/portfolio/pdf';
+import { emitPortfolioPdfExportSucceeded } from '@/lib/analytics/events';
 
 const FALLBACK_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
@@ -41,6 +42,11 @@ export async function GET() {
     // `Uint8Array.from` copies into a new ArrayBuffer (avoids Buffer/SharedArrayBuffer typing issues).
     const bytes = Uint8Array.from(buffer);
     const blob = new Blob([bytes], { type: 'application/pdf' });
+
+    await emitPortfolioPdfExportSucceeded(user.id, {
+      source: 'portfolio_export_route',
+      handle: data.profile.handle,
+    });
 
     return new NextResponse(blob, {
       status: 200,

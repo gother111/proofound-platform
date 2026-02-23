@@ -17,23 +17,23 @@ function getSiteUrl(): string {
 const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
-  title: 'Proofound | Credibility Infrastructure for Verified Professional Matching',
+  title: 'Proofound | Publish a Public Proof Portfolio on Day 1',
   description:
-    'Proofound is a credibility and verification platform for professionals and organizations that need evidence-based matching and trustworthy reputation signals.',
+    'Proofound helps individuals and organizations publish a clean public proof portfolio link on day 1, then grow into matching and collaboration workflows.',
   keywords: [
     'Proofound',
-    'credibility platform',
-    'verified professional profile',
+    'public portfolio',
+    'proof-based portfolio',
+    'verified profile',
+    'professional credibility',
+    'organization portfolio',
     'evidence based matching',
-    'trustworthy hiring platform',
-    'professional verification',
-    'mission aligned opportunities',
   ],
   alternates: { canonical: '/' },
   openGraph: {
-    title: 'Proofound | Credibility Infrastructure for Verified Professional Matching',
+    title: 'Proofound | Public Proof Portfolio, Ready to Share',
     description:
-      'Build a profile backed by evidence, not vanity metrics. Match with professionals and organizations using transparent credibility signals.',
+      'Create a clean proof-based public portfolio link on day 1. Matching stays available as a secondary benefit as your profile grows.',
     url: siteUrl,
     siteName: 'Proofound',
     type: 'website',
@@ -48,9 +48,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Proofound | Credibility Infrastructure',
+    title: 'Proofound | Public Proof Portfolio',
     description:
-      'Evidence-based profiles and transparent professional matching for individuals and organizations.',
+      'Publish a clean public proof portfolio link today, then unlock matching and collaboration.',
     images: [`${siteUrl}/hero-visual.jpg`],
   },
 };
@@ -64,7 +64,7 @@ export default function Home() {
     logo: `${siteUrl}/logo.png`,
     sameAs: [],
     description:
-      'Proofound is a credibility and connection platform built for authenticity, evidence-based verification, and mission-aligned matching.',
+      'Proofound is a credibility platform built for public proof portfolios first, with matching and collaboration layered on after.',
   };
 
   const webSiteJsonLd = {
@@ -73,7 +73,7 @@ export default function Home() {
     name: 'Proofound',
     url: siteUrl,
     description:
-      'Evidence-based professional matching and verification for individuals and organizations.',
+      'Public proof portfolios for individuals and organizations, with matching and collaboration workflows.',
   };
 
   const webPageJsonLd = {
@@ -87,7 +87,7 @@ export default function Home() {
       name: 'Proofound',
     },
     description:
-      'Build a profile backed by evidence, not vanity metrics. Match with individuals and organizations that share your mission.',
+      'Build and share a clean proof-based public portfolio link on day 1, then use matching and workflows as you scale.',
   };
 
   // Auth check disabled for debugging/verification of landing page
