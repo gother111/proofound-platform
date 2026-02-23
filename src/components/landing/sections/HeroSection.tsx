@@ -99,7 +99,7 @@ export function HeroSection({
               }
               className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-sans text-foreground leading-tight text-balance"
             >
-              The credibility infrastructure for impactful connections
+              Publish your public proof portfolio on day 1
             </motion.h2>
           </div>
 
@@ -113,8 +113,8 @@ export function HeroSection({
             }
             className="text-lg md:text-xl text-muted-foreground max-w-xl leading-relaxed font-sans"
           >
-            Unlock true potential for your career and organization. Backed by verified evidence, not
-            vanity metrics.
+            Get a clean, shareable portfolio link today. Then layer on matching, hiring, and
+            collaboration workflows as you grow.
           </motion.p>
 
           <motion.div

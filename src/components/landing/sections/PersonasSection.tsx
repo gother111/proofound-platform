@@ -29,7 +29,7 @@ export function PersonasSection({
     individual: {
       title: 'For Individuals',
       outcomes: [
-        'Find mission-aligned opportunities without the mental health toll',
+        'Publish a clean public proof portfolio link you can share immediately',
         'Build a verified, portable profile that tells your real story',
         'Access well-being tools and career planning support',
       ],
@@ -40,9 +40,10 @@ export function PersonasSection({
     organization: {
       title: 'For Organizations',
       outcomes: [
+        'Publish a clean public organization portfolio link on day 1',
         'Discover talent based on evidence and alignment, not resumes',
         'Reduce bias in hiring and partnership decisions',
-        'Build trust with transparent verification and matching',
+        'Use transparent verification and matching as secondary workflow layers',
       ],
       cta: 'Join as an Organization',
       onAction: onOrganizationSignup,
