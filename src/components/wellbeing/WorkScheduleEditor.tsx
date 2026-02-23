@@ -114,12 +114,17 @@ export function WorkScheduleEditor({ userId }: WorkScheduleEditorProps) {
       // Log analytics event if burnout threshold exceeded
       const totalHours = calculateTotalHours();
       if (totalHours > BURNOUT_THRESHOLDS.warning) {
-        await fetch('/api/analytics/events', {
+        await fetch('/api/analytics/track', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            event_type: 'burnout_risk_detected',
-            event_data: { totalHours, threshold: BURNOUT_THRESHOLDS.warning },
+            eventType: 'custom',
+            entityType: 'custom',
+            properties: {
+              legacy_event_type: 'burnout_risk_detected',
+              totalHours,
+              threshold: BURNOUT_THRESHOLDS.warning,
+            },
           }),
         });
       }
@@ -254,9 +259,10 @@ export function WorkScheduleEditor({ userId }: WorkScheduleEditorProps) {
             <AlertDescription>
               {totalHours > BURNOUT_THRESHOLDS.warning ? (
                 <>
-                  <strong>High burnout risk detected!</strong> You're working {totalHours.toFixed(1)}{' '}
-                  hours per week. Research shows working over {BURNOUT_THRESHOLDS.warning} hours
-                  significantly increases stress and decreases productivity. Consider:
+                  <strong>High burnout risk detected!</strong> You're working{' '}
+                  {totalHours.toFixed(1)} hours per week. Research shows working over{' '}
+                  {BURNOUT_THRESHOLDS.warning} hours significantly increases stress and decreases
+                  productivity. Consider:
                   <ul className="mt-2 list-disc list-inside text-sm">
                     <li>Delegating or rescheduling non-urgent tasks</li>
                     <li>Setting clear work-life boundaries</li>
@@ -281,8 +287,8 @@ export function WorkScheduleEditor({ userId }: WorkScheduleEditorProps) {
             <CheckCircle2 className="h-4 w-4 text-green-600" />
             <AlertDescription>
               <strong>Healthy work-life balance!</strong> Your current schedule of{' '}
-              {totalHours.toFixed(1)} hours per week is within healthy limits. Keep up the good
-              work and continue monitoring your well-being.
+              {totalHours.toFixed(1)} hours per week is within healthy limits. Keep up the good work
+              and continue monitoring your well-being.
             </AlertDescription>
           </Alert>
         )}
@@ -385,11 +391,13 @@ export function WorkScheduleEditor({ userId }: WorkScheduleEditorProps) {
         {/* Research Citation */}
         <div className="text-xs text-[#6B6760] dark:text-muted-foreground p-3 bg-[#F7F6F1] dark:bg-background/50 rounded-lg border border-[#E8E6DD] dark:border-border">
           <p>
-            <strong>Evidence-based thresholds:</strong> Based on burnoutDefaults (soft {BURNOUT_THRESHOLDS.safe}h, hard {BURNOUT_THRESHOLDS.warning}h). Quiet hours: {burnoutDefaults.quietHours.start}–{burnoutDefaults.quietHours.end} ({burnoutDefaults.quietHours.timezoneNote}).
+            <strong>Evidence-based thresholds:</strong> Based on burnoutDefaults (soft{' '}
+            {BURNOUT_THRESHOLDS.safe}h, hard {BURNOUT_THRESHOLDS.warning}h). Quiet hours:{' '}
+            {burnoutDefaults.quietHours.start}–{burnoutDefaults.quietHours.end} (
+            {burnoutDefaults.quietHours.timezoneNote}).
           </p>
         </div>
       </CardContent>
     </Card>
   );
 }
-

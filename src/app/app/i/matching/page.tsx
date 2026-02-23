@@ -31,6 +31,15 @@ type MatchabilityBlockedPayload = {
   topActions: Array<{ id: string; title: string; description: string; actionUrl: string }>;
 };
 
+function isMatchabilityBlockedPayload(payload: unknown): payload is MatchabilityBlockedPayload {
+  return Boolean(
+    payload &&
+      typeof payload === 'object' &&
+      (payload as { error?: string }).error === 'PROFILE_NOT_MATCHABLE' &&
+      Array.isArray((payload as { topActions?: unknown }).topActions)
+  );
+}
+
 export default function MatchingPage() {
   const router = useRouter();
   const [matchingProfile, setMatchingProfile] = useState<unknown | null>(null);
@@ -131,10 +140,10 @@ export default function MatchingPage() {
           signal: controller.signal,
         });
 
-        if (matchesRes.status === 412) {
-          const blockedPayload = (await matchesRes
-            .json()
-            .catch(() => null)) as MatchabilityBlockedPayload | null;
+        const matchesPayload = await matchesRes.json().catch(() => null);
+
+        if (isMatchabilityBlockedPayload(matchesPayload)) {
+          const blockedPayload = matchesPayload;
           setBlockedState(blockedPayload);
           setMatches([]);
           setFilteredMatches([]);
@@ -142,12 +151,12 @@ export default function MatchingPage() {
         }
 
         if (!matchesRes.ok) {
-          const errorData = await matchesRes.json().catch(() => ({}));
+          const errorData = matchesPayload || {};
           console.error('Failed to load matches:', errorData);
           throw new Error(errorData.message || 'Failed to load matches');
         }
 
-        const matchesData = await matchesRes.json();
+        const matchesData = matchesPayload || {};
         const matchItems = matchesData.items || [];
         setBlockedState(null);
         setMatches(matchItems);

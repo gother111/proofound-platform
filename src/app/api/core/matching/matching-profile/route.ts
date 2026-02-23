@@ -98,10 +98,17 @@ export async function GET() {
   try {
     const user = await requireAuth();
 
-    // Fetch matching profile
-    const profile = await db.query.matchingProfiles.findFirst({
+    // Fetch matching profile and auto-bootstrap baseline row if missing.
+    let profile = await db.query.matchingProfiles.findFirst({
       where: eq(matchingProfiles.profileId, user.id),
     });
+
+    if (!profile) {
+      await db.insert(matchingProfiles).values({ profileId: user.id }).onConflictDoNothing();
+      profile = await db.query.matchingProfiles.findFirst({
+        where: eq(matchingProfiles.profileId, user.id),
+      });
+    }
 
     // Fetch skills separately
     const userSkills = await db.query.skills.findMany({
@@ -111,10 +118,13 @@ export async function GET() {
     const eligibility = await evaluateIndividualMatchability(user.id);
 
     if (!profile) {
-      return NextResponse.json({
-        profile: null,
-        eligibility,
-      });
+      return NextResponse.json(
+        {
+          error: 'Failed to initialize matching profile',
+          eligibility,
+        },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({

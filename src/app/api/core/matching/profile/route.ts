@@ -41,6 +41,17 @@ import { calculateFocusBoost } from '@/lib/core/matching/focus';
 
 export const dynamic = 'force-dynamic';
 
+const DEFAULT_ASSIGNMENT_SCAN_MULTIPLIER = 10;
+const MIN_ASSIGNMENT_SCAN_LIMIT = 50;
+const MAX_ASSIGNMENT_SCAN_LIMIT = 500;
+
+function resolveAssignmentScanLimit(k: number): number {
+  return Math.min(
+    MAX_ASSIGNMENT_SCAN_LIMIT,
+    Math.max(MIN_ASSIGNMENT_SCAN_LIMIT, k * DEFAULT_ASSIGNMENT_SCAN_MULTIPLIER)
+  );
+}
+
 // Validation schemas
 const MatchRequestSchema = z.object({
   weights: z.record(z.number()).optional(),
@@ -97,8 +108,21 @@ export async function POST(request: NextRequest) {
   try {
     // Allow internal cron calls to compute matches for a specific userId.
     const isInternalCall = isTrustedInternalRequest(request);
-
-    const body = await request.json();
+    const rawBody = await request.text();
+    let body: unknown = {};
+    if (rawBody.trim().length > 0) {
+      try {
+        body = JSON.parse(rawBody) as unknown;
+      } catch {
+        return NextResponse.json(
+          {
+            error: 'Invalid input',
+            message: 'Request body must be valid JSON.',
+          },
+          { status: 400 }
+        );
+      }
+    }
 
     let validatedData:
       | z.infer<typeof MatchRequestSchema>
@@ -119,6 +143,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { mode, k = 20, useSemanticMatching = false } = validatedData;
+    const assignmentScanLimit = resolveAssignmentScanLimit(k);
 
     const eligibility = await evaluateIndividualMatchability(user.id);
     if (!eligibility.eligible) {
@@ -145,7 +170,7 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      return NextResponse.json(toNotMatchablePayload(eligibility), { status: 412 });
+      return NextResponse.json(toNotMatchablePayload(eligibility), { status: 200 });
     }
 
     // Fetch user's matching profile (with caching)
@@ -232,7 +257,8 @@ export async function POST(request: NextRequest) {
         sponsorshipCountries: assignments.sponsorshipCountries,
       })
       .from(assignments)
-      .where(eq(assignments.status, 'active'));
+      .where(eq(assignments.status, 'active'))
+      .limit(assignmentScanLimit);
 
     const matrixRows = activeAssignments.length
       ? await db.query.assignmentExpertiseMatrix.findMany({
@@ -570,6 +596,7 @@ export async function POST(request: NextRequest) {
       poolSize: activeAssignments.length,
       resultCount: topK.length,
       durationMs: duration,
+      assignmentScanLimit,
     });
 
     return NextResponse.json({

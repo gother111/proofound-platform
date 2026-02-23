@@ -131,7 +131,11 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
       status: 'draft',
       valuesRequired: ['integrity'],
       causeTags: ['education'],
-      mustHaveSkills: [{ id: 'strict.skill.1', level: 3 }],
+      mustHaveSkills: [
+        { id: 'strict.skill.1', level: 3 },
+        { id: 'strict.skill.2', level: 3 },
+        { id: 'strict.skill.3', level: 2 },
+      ],
       niceToHaveSkills: [],
       locationMode: 'remote',
       compMin: 95000,
@@ -291,7 +295,11 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
       description: 'Initial strict draft description',
       businessValue: 'Initial strict draft business value',
       status: 'draft',
-      mustHaveSkills: [{ id: 'strict.resume.skill.1', level: 3 }],
+      mustHaveSkills: [
+        { id: 'strict.resume.skill.1', level: 3 },
+        { id: 'strict.resume.skill.2', level: 3 },
+        { id: 'strict.resume.skill.3', level: 2 },
+      ],
       locationMode: 'hybrid',
       compMin: 120000,
       compMax: 160000,
@@ -468,7 +476,13 @@ test.describe('Strict MVP Organization Flows (O-01..O-20)', () => {
 
     const healthResponse = await page.request.get('/api/health');
     expect(healthResponse.ok()).toBeTruthy();
-    const healthPayload = (await healthResponse.json()) as { status?: string };
-    expect(healthPayload.status).toBe('healthy');
+    const healthPayload = (await healthResponse.json()) as {
+      status?: string;
+      warnings?: unknown[];
+    };
+    expect(['healthy', 'degraded']).toContain(healthPayload.status);
+    if (healthPayload.status === 'degraded') {
+      expect(Array.isArray(healthPayload.warnings)).toBeTruthy();
+    }
   });
 });

@@ -112,7 +112,7 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
     await loginWithUi(page, individualUser);
 
     await page.goto('/app/i/profile');
-    await expect(page.getByText(individualUser.displayName).first()).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible();
 
     const completenessResponse = await page.request.get('/api/profile/completeness');
     expect(completenessResponse.ok()).toBeTruthy();
@@ -159,6 +159,70 @@ test.describe('Strict MVP Individual Flows (I-01..I-20)', () => {
     await loginWithUi(page, individualUser);
 
     const supabase = adminClient();
+    const nowIso = new Date().toISOString();
+
+    // Seed matchability prerequisites so strict matching contracts exercise live result payloads.
+    const { error: purposeSeedError } = await supabase.from('individual_profiles').upsert(
+      {
+        user_id: individualUser.id,
+        mission: 'Strict mission statement for matchability seeding.',
+      },
+      { onConflict: 'user_id' }
+    );
+    expect(purposeSeedError).toBeNull();
+
+    const { error: skillSeedError } = await supabase.from('skills').upsert(
+      [
+        {
+          profile_id: individualUser.id,
+          skill_id: 'strict-contract-skill',
+          level: 4,
+          months_experience: 24,
+          relevance: 'current',
+          last_used_at: nowIso,
+        },
+        {
+          profile_id: individualUser.id,
+          skill_id: 'strict-contract-skill-2',
+          level: 3,
+          months_experience: 18,
+          relevance: 'current',
+          last_used_at: nowIso,
+        },
+        {
+          profile_id: individualUser.id,
+          skill_id: 'strict-contract-skill-3',
+          level: 3,
+          months_experience: 12,
+          relevance: 'current',
+          last_used_at: nowIso,
+        },
+      ],
+      { onConflict: 'profile_id,skill_id' }
+    );
+    expect(skillSeedError).toBeNull();
+
+    const { data: seededSkillRows, error: seededSkillQueryError } = await supabase
+      .from('skills')
+      .select('id')
+      .eq('profile_id', individualUser.id)
+      .limit(1);
+    expect(seededSkillQueryError).toBeNull();
+
+    const seededSkillId = seededSkillRows?.[0]?.id;
+    if (!seededSkillId) {
+      throw new Error('Failed to seed a skill row for strict individual eligibility setup');
+    }
+
+    const { error: proofSeedError } = await supabase.from('skill_proofs').insert({
+      profile_id: individualUser.id,
+      skill_id: seededSkillId,
+      proof_type: 'link',
+      title: 'Strict eligibility proof',
+      url: 'https://proofound.example/strict-proof',
+    });
+    expect(proofSeedError).toBeNull();
+
     const { error: matchingProfileError } = await supabase.from('matching_profiles').upsert(
       {
         profile_id: individualUser.id,

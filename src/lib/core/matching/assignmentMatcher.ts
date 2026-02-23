@@ -61,6 +61,23 @@ export type ComputeAssignmentMatchesInput = {
   startTime?: number;
 };
 
+const DEFAULT_FULL_SCAN_MULTIPLIER = 10;
+const MIN_FULL_SCAN_LIMIT = 50;
+const MAX_FULL_SCAN_LIMIT = 500;
+
+function resolveCandidateScanLimit(k: number, annLimit?: number): number {
+  const fullScanTarget = Math.min(
+    MAX_FULL_SCAN_LIMIT,
+    Math.max(MIN_FULL_SCAN_LIMIT, k * DEFAULT_FULL_SCAN_MULTIPLIER)
+  );
+
+  if (annLimit && Number.isFinite(annLimit) && annLimit > 0) {
+    return Math.min(MAX_FULL_SCAN_LIMIT, Math.max(fullScanTarget, annLimit));
+  }
+
+  return fullScanTarget;
+}
+
 /**
  * Shared assignment-matching engine used by both web and mobile routes.
  *
@@ -74,6 +91,7 @@ export async function computeAssignmentMatches(input: ComputeAssignmentMatchesIn
 }> {
   const startTime = input.startTime ?? Date.now();
   const { assignmentId, assignment, weights, k, useTwoStage, annLimit } = input;
+  const candidateScanLimit = resolveCandidateScanLimit(k, annLimit);
 
   // ========================================================================
   // TWO-STAGE MATCHING (PRD: Proofound_Matching_Conversation.md)
@@ -106,12 +124,17 @@ export async function computeAssignmentMatches(input: ComputeAssignmentMatchesIn
       log.warn('match.assignment.stage1.fallback', {
         assignmentId,
         reason: 'No ANN results, falling back to full scan',
+        candidateScanLimit,
       });
-      candidateProfiles = await db.query.matchingProfiles.findMany();
+      candidateProfiles = await db.query.matchingProfiles.findMany({
+        limit: candidateScanLimit,
+      });
     }
   } else {
     // Traditional full scan
-    candidateProfiles = await db.query.matchingProfiles.findMany();
+    candidateProfiles = await db.query.matchingProfiles.findMany({
+      limit: candidateScanLimit,
+    });
   }
 
   // Fetch skills for candidates with enhanced attributes
@@ -321,6 +344,7 @@ export async function computeAssignmentMatches(input: ComputeAssignmentMatchesIn
     poolSize: candidateProfiles.length,
     resultCount: topK.length,
     durationMs: duration,
+    candidateScanLimit,
     twoStage: useTwoStage,
     stage1Count: useTwoStage ? stage1Count : undefined,
   });
