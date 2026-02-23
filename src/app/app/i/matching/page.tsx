@@ -10,6 +10,7 @@ import { SkeletonCard } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { SnoozedMatchesList } from '@/components/matching/SnoozedMatchesList';
 import { HiddenMatchesList } from '@/components/matching/HiddenMatchesList';
+import { getIndividualRecoveryActions, type RecoveryActionHint } from '@/lib/ui/recovery-actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,7 +29,13 @@ type MatchabilityBlockedPayload = {
   eligibility: {
     criteria: Record<string, MatchabilityCriterion>;
   };
-  topActions: Array<{ id: string; title: string; description: string; actionUrl: string }>;
+  topActions: RecoveryActionHint[];
+};
+
+const EMPTY_FILTERS = {
+  causes: [],
+  skillDomains: [],
+  values: [],
 };
 
 export default function MatchingPage() {
@@ -46,51 +53,18 @@ export default function MatchingPage() {
     workMode?: string;
     minComp?: number;
     maxComp?: number;
-  }>({
-    causes: [],
-    skillDomains: [],
-    values: [],
-  });
+  }>({ ...EMPTY_FILTERS });
   const [showManageHiddenSnoozed, setShowManageHiddenSnoozed] = useState(false);
   const [blockedState, setBlockedState] = useState<MatchabilityBlockedPayload | null>(null);
-  const [readinessActions, setReadinessActions] = useState<
-    Array<{ id: string; title: string; description: string; actionUrl: string }>
-  >([]);
+  const [readinessActions, setReadinessActions] = useState<RecoveryActionHint[]>([]);
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const ensureThreeActions = (
-    actions: Array<{ id: string; title: string; description: string; actionUrl: string }>
-  ) => {
-    const defaults = [
-      {
-        id: 'update-expertise-atlas-default',
-        title: 'Update Expertise Atlas',
-        description: 'Add skills with recency and at least one proof artifact.',
-        actionUrl: '/app/i/expertise',
-      },
-      {
-        id: 'set-matching-constraints-default',
-        title: 'Set matching constraints',
-        description: 'Save work mode, availability window, and compensation range.',
-        actionUrl: '/app/i/matching/preferences',
-      },
-      {
-        id: 'complete-purpose-default',
-        title: 'Complete purpose section',
-        description: 'Add mission, values, or causes to improve purpose fit.',
-        actionUrl: '/app/i/profile',
-      },
-    ] as const;
-
-    const merged = [...actions];
-    for (const fallback of defaults) {
-      if (merged.length >= 3) break;
-      if (!merged.some((item) => item.actionUrl === fallback.actionUrl)) {
-        merged.push(fallback);
-      }
-    }
-    return merged.slice(0, 3);
-  };
+  const blockedRecoveryActions = getIndividualRecoveryActions(
+    'matching-blocked',
+    blockedState?.topActions || []
+  );
+  const emptyRecoveryActions = getIndividualRecoveryActions('matching-empty', readinessActions);
+  const hasFilteredOutMatches = matches.length > 0 && filteredMatches.length === 0;
 
   const fetchMatches = async () => {
     // Create abort controller for timeout
@@ -110,7 +84,7 @@ export default function MatchingPage() {
 
       if (readinessRes.ok) {
         const readinessPayload = await readinessRes.json();
-        setReadinessActions(readinessPayload.topActions || []);
+        setReadinessActions((readinessPayload.topActions || []) as RecoveryActionHint[]);
       }
 
       if (!profileRes.ok) {
@@ -268,6 +242,10 @@ export default function MatchingPage() {
     setFilteredMatches(filtered);
   }, [activeFilters, matches]);
 
+  const resetFilters = () => {
+    setActiveFilters({ ...EMPTY_FILTERS });
+  };
+
   if (isLoading) {
     return (
       <div className="max-w-5xl mx-auto px-4 py-6">
@@ -354,20 +332,18 @@ export default function MatchingPage() {
               ))}
           </div>
 
-          {ensureThreeActions(blockedState.topActions).length > 0 ? (
-            <div className="mt-4 grid grid-cols-1 gap-2 md:grid-cols-3">
-              {ensureThreeActions(blockedState.topActions).map((action) => (
-                <button
-                  key={action.id}
-                  onClick={() => router.push(action.actionUrl)}
-                  className="rounded-lg border border-[#E8E6DD] px-3 py-2 text-left hover:border-[#1C4D3A] hover:bg-white"
-                >
-                  <p className="text-sm font-medium text-[#2D3330]">{action.title}</p>
-                  <p className="text-xs text-[#6B6760]">{action.description}</p>
-                </button>
-              ))}
-            </div>
-          ) : null}
+          <div className="mt-4 grid grid-cols-1 gap-2 md:grid-cols-3">
+            {blockedRecoveryActions.map((action) => (
+              <button
+                key={action.id}
+                onClick={() => router.push(action.actionUrl)}
+                className="rounded-lg border border-[#E8E6DD] px-3 py-2 text-left hover:border-[#1C4D3A] hover:bg-white"
+              >
+                <p className="text-sm font-medium text-[#2D3330]">{action.title}</p>
+                <p className="text-xs text-[#6B6760]">{action.description}</p>
+              </button>
+            ))}
+          </div>
         </div>
       ) : filteredMatches.length === 0 ? (
         <div className="text-center py-12">
@@ -377,20 +353,27 @@ export default function MatchingPage() {
               ? 'Check back soon for new opportunities'
               : 'No matches found with current filters. Try adjusting your filters.'}
           </p>
-          {ensureThreeActions(readinessActions).length > 0 ? (
-            <div className="mt-4 mx-auto max-w-xl text-left space-y-2">
-              {ensureThreeActions(readinessActions).map((action) => (
-                <button
-                  key={action.id}
-                  onClick={() => router.push(action.actionUrl)}
-                  className="w-full rounded-lg border border-[#E8E6DD] px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1]"
-                >
-                  <p className="text-sm font-medium text-[#2D3330]">{action.title}</p>
-                  <p className="text-xs text-[#6B6760]">{action.description}</p>
-                </button>
-              ))}
-            </div>
+          {hasFilteredOutMatches ? (
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="mt-4 rounded-lg border border-[#1C4D3A] px-3 py-2 text-sm font-medium text-[#1C4D3A] hover:bg-[#EEF1EA]"
+            >
+              Reset filters
+            </button>
           ) : null}
+          <div className="mt-4 mx-auto max-w-xl text-left space-y-2">
+            {emptyRecoveryActions.map((action) => (
+              <button
+                key={action.id}
+                onClick={() => router.push(action.actionUrl)}
+                className="w-full rounded-lg border border-[#E8E6DD] px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1]"
+              >
+                <p className="text-sm font-medium text-[#2D3330]">{action.title}</p>
+                <p className="text-xs text-[#6B6760]">{action.description}</p>
+              </button>
+            ))}
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

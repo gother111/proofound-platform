@@ -1,4 +1,5 @@
 import { FileText, Loader2, Plus, Trash2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -6,6 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { getIndividualRecoveryActions } from '@/lib/ui/recovery-actions';
 
 import type { Proof, ProofDraft } from './types';
 
@@ -32,6 +34,9 @@ export function ProofsSection({
   onAddProof,
   onDeleteProof,
 }: ProofsSectionProps) {
+  const router = useRouter();
+  const recoveryActions = getIndividualRecoveryActions('proofs-empty');
+
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
@@ -160,6 +165,25 @@ export function ProofsSection({
           <p className="text-sm text-[#6B6760]">
             No proofs added yet. Add your first proof to boost credibility.
           </p>
+          <div className="mt-4 grid grid-cols-1 gap-2 text-left">
+            {recoveryActions.map((action) => (
+              <button
+                key={action.id}
+                type="button"
+                onClick={() => {
+                  if (action.id === 'add-proof') {
+                    setShowAddProof(true);
+                    return;
+                  }
+                  router.push(action.actionUrl);
+                }}
+                className="rounded-lg border border-[#E8E6DD] bg-white px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1]"
+              >
+                <p className="text-sm font-medium text-[#2D3330]">{action.title}</p>
+                <p className="text-xs text-[#6B6760]">{action.description}</p>
+              </button>
+            ))}
+          </div>
         </div>
       ) : (
         <div className="space-y-2">
