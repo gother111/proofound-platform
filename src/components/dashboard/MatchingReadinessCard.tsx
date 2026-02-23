@@ -92,7 +92,7 @@ export function MatchingReadinessCard({ useMockData, onActionClick }: MatchingRe
         <div className="space-y-2">
           <p className="text-xs font-medium text-[#2D3330]">Next best action</p>
           <Link
-            href="/app/i/skill-gaps"
+            href="/app/i/expertise?tab=gap-analysis"
             className="flex items-center justify-between rounded-lg border border-[#E8E6DD] px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1] text-sm"
             onClick={() => onActionClick?.('gap-analysis')}
           >

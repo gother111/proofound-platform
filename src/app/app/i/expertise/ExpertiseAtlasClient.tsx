@@ -20,9 +20,10 @@ import { VerificationSourcesPie } from './widgets/VerificationSourcesPie';
 import { NextBestActions } from './widgets/NextBestActions';
 import { LinkedInImportModal } from '@/components/expertise/LinkedInImportModal';
 import { CVJDAutoSuggest } from '@/components/expertise/CVJDAutoSuggest';
+import { SkillGapsClient } from '@/components/skill-gaps/SkillGapsClient';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowRight, Plus, BookOpen, Linkedin, TrendingUp, FileText, Grid3x3 } from 'lucide-react';
+import { Plus, BookOpen, Linkedin, TrendingUp, FileText, Grid3x3 } from 'lucide-react';
 import { AboutSection } from './components/AboutSection';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -34,6 +35,7 @@ interface ExpertiseAtlasClientProps {
   taxonomyReady: boolean;
   widgetData: any | null;
   linkedInConnected: boolean;
+  initialTab?: 'atlas' | 'gap-analysis' | 'import-cv';
 }
 
 export function ExpertiseAtlasClient({
@@ -42,10 +44,11 @@ export function ExpertiseAtlasClient({
   taxonomyReady,
   widgetData,
   linkedInConnected,
+  initialTab = 'atlas',
 }: ExpertiseAtlasClientProps) {
   const router = useRouter();
   const [skills, setSkills] = useState(initialSkills);
-  const [activeTab, setActiveTab] = useState<string>('atlas');
+  const [activeTab, setActiveTab] = useState<string>(initialTab);
   const [selectedL1, setSelectedL1] = useState<number | null>(null);
   const [selectedL2, setSelectedL2] = useState<any | null>(null);
   const [selectedL3, setSelectedL3] = useState<any | null>(null);
@@ -109,6 +112,11 @@ export function ExpertiseAtlasClient({
   useEffect(() => {
     setSkills(initialSkills);
   }, [initialSkills]);
+
+  // Keep selected tab synced with deep-link query values.
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   // Filter skills for side sheet (must be before early return)
   const filteredSkills = useMemo(() => {
@@ -607,21 +615,7 @@ export function ExpertiseAtlasClient({
 
           {/* Gap Analysis Tab */}
           <TabsContent value="gap-analysis">
-            <div className="space-y-6">
-              <div className="bg-white rounded-lg p-6 shadow-sm border">
-                <h2 className="text-2xl font-semibold text-[#2D3330] mb-4">Skill Gaps</h2>
-                <p className="text-[#6B6760] mb-6">
-                  Use the dedicated Skill Gaps page to review top gaps, assignment coverage,
-                  learning recommendations, and goals.
-                </p>
-                <Button asChild>
-                  <Link href="/app/i/skill-gaps">
-                    Open Skill Gaps
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-              </div>
-            </div>
+            <SkillGapsClient />
           </TabsContent>
 
           {/* Import from CV Tab */}
