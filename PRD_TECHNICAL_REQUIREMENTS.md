@@ -1930,6 +1930,19 @@ STRIPE_WEBHOOK_SECRET=whsec_[secret]
 - **% assignments with ≥3 qualified matches in 7 days**
 - Target: ≥50%
 
+**First 10 Minutes Activation Success (MVP)**:
+
+- **Individual**: success requires both actions within 10 minutes after `individual_onboarding_completed`:
+  - `portfolio_share_link_copied`
+  - `portfolio_pdf_export_succeeded`
+- **Company**: success requires both actions within 10 minutes after `organization_onboarding_completed`:
+  - `assignment_template_applied`
+  - `assignment_publish_succeeded`
+- **Boundary rule**: events at exactly 10:00 are included (`<= 10 minutes`).
+- **Formulas**:
+  - Individual activation rate (10m) = successful individuals in 10m / new individuals
+  - Company activation rate (10m) = successful organization creators in 10m / new organization creators
+
 **Day-1 Admin Dashboard**:
 
 1. Time-to-first-match (median)
@@ -1937,6 +1950,8 @@ STRIPE_WEBHOOK_SECRET=whsec_[secret]
 3. Organization verification completion rate
 4. Match acceptance rate (+ decline reasons)
 5. Safety: Report rate & resolution SLA
+6. Individual first-10-minute activation rate
+7. Company first-10-minute activation rate
 
 ---
 
@@ -1948,6 +1963,12 @@ STRIPE_WEBHOOK_SECRET=whsec_[secret]
 - `created_profile` - Profile created
 - `profile_ready_for_match` - Profile meets matching criteria
 - `org_verified` - Organization verification approved
+- `individual_onboarding_completed` - Individual onboarding completed
+- `organization_onboarding_completed` - Organization onboarding completed
+- `portfolio_share_link_copied` - Portfolio share link copied
+- `portfolio_pdf_export_succeeded` - Portfolio PDF export returns 200
+- `assignment_template_applied` - Assignment template applied in builder
+- `assignment_publish_succeeded` - Assignment publish route returns 200
 - `assignment_published` - Assignment status → active
 - `match_suggested` - Match computed and shown to user
 - `match_viewed` - User views match details

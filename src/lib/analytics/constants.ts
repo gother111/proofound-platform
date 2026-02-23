@@ -18,11 +18,17 @@
  * Per PRD Part 7 (Functional Requirements)
  */
 export const EventType = {
+  // Onboarding
+  INDIVIDUAL_ONBOARDING_COMPLETED: 'individual_onboarding_completed',
+  ORGANIZATION_ONBOARDING_COMPLETED: 'organization_onboarding_completed',
+
   // Profile & Activation
   PROFILE_CREATED: 'profile_created',
   PROFILE_ACTIVATED: 'profile_activated', // Minimum L4 skills + matchable
   PROFILE_UPDATED: 'profile_updated',
   PURPOSE_UPDATED: 'purpose_updated',
+  PORTFOLIO_SHARE_LINK_COPIED: 'portfolio_share_link_copied',
+  PORTFOLIO_PDF_EXPORT_SUCCEEDED: 'portfolio_pdf_export_succeeded',
 
   // Expertise & Skills
   L4_SKILL_ADDED: 'l4_skill_added',
@@ -66,6 +72,8 @@ export const EventType = {
   // Organizations
   ASSIGNMENT_CREATED: 'assignment_created',
   ASSIGNMENT_PUBLISHED: 'assignment_published',
+  ASSIGNMENT_PUBLISH_SUCCEEDED: 'assignment_publish_succeeded',
+  ASSIGNMENT_TEMPLATE_APPLIED: 'assignment_template_applied',
   TTFQI_WARNING_EMITTED: 'ttfqi_warning_emitted',
   CANDIDATE_INVITE_SENT: 'candidate_invite_sent',
   CANDIDATE_INVITE_OPENED: 'candidate_invite_opened',
@@ -328,10 +336,14 @@ export function isLifecycleEvent(eventType: EventTypeValue): boolean {
  */
 export function getEventDisplayName(eventType: EventTypeValue): string {
   const names: Record<EventTypeValue, string> = {
+    [EventType.INDIVIDUAL_ONBOARDING_COMPLETED]: 'Individual Onboarding Completed',
+    [EventType.ORGANIZATION_ONBOARDING_COMPLETED]: 'Organization Onboarding Completed',
     [EventType.PROFILE_CREATED]: 'Profile Created',
     [EventType.PROFILE_ACTIVATED]: 'Profile Activated',
     [EventType.PROFILE_UPDATED]: 'Profile Updated',
     [EventType.PURPOSE_UPDATED]: 'Purpose Updated',
+    [EventType.PORTFOLIO_SHARE_LINK_COPIED]: 'Portfolio Share Link Copied',
+    [EventType.PORTFOLIO_PDF_EXPORT_SUCCEEDED]: 'Portfolio PDF Export Succeeded',
     [EventType.L4_SKILL_ADDED]: 'Skill Added',
     [EventType.PROOF_UPLOADED]: 'Proof Uploaded',
     [EventType.CV_IMPORTED]: 'CV Imported',
@@ -361,6 +373,8 @@ export function getEventDisplayName(eventType: EventTypeValue): string {
     [EventType.DECISION_MADE]: 'Decision Made',
     [EventType.ASSIGNMENT_CREATED]: 'Assignment Created',
     [EventType.ASSIGNMENT_PUBLISHED]: 'Assignment Published',
+    [EventType.ASSIGNMENT_PUBLISH_SUCCEEDED]: 'Assignment Publish Succeeded',
+    [EventType.ASSIGNMENT_TEMPLATE_APPLIED]: 'Assignment Template Applied',
     [EventType.TTFQI_WARNING_EMITTED]: 'TTFQI Warning Emitted',
     [EventType.WELLBEING_OPT_IN]: 'Well-being Opt-In',
     [EventType.WELLBEING_CHECKIN]: 'Well-being Check-In',

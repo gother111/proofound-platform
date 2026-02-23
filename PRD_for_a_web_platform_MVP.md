@@ -133,6 +133,14 @@ For job seekers overwhelmed by volatile, biased, and time-intensive hiring—and
 7. **Fairness/Equity Signal (opt-in)**
    - **Definition:** **Fairness Gap** between opt-in demographic segments on intro and contract rates, controlling for skills/constraints.
    - **Target (MVP):** **No statistically significant negative gap** for underrepresented cohorts; publish a fairness note per release.
+8. **First-session Activation (10-minute)**
+   - **Definition:** Persona-specific first-session success inside a strict 10-minute window from onboarding completion.
+     - Individual: `individual_onboarding_completed` -> `portfolio_share_link_copied` + `portfolio_pdf_export_succeeded`
+     - Company: `organization_onboarding_completed` -> `assignment_template_applied` + `assignment_publish_succeeded`
+   - **Boundary:** Include events at exactly 10:00 (`<= 10 minutes`).
+   - **Formulas:**
+     - Individual activation rate (10m) = successful individuals in 10m / new individuals
+     - Company activation rate (10m) = successful organization creators in 10m / new organization creators
 
 ## 2.3 Anti-Goals / Non-Metrics (MVP)
 
@@ -2297,7 +2305,7 @@ Each flow includes:
 ## Feature Flag Control APIs
 
 - **User flags endpoint:** `/api/feature-flags` resolves audience-aware flags for activation tiering, assignment builder mode, plain-language vocabulary, and privacy summary.
-- **Rollout metrics endpoint:** `/api/admin/metrics/rollout` exposes admin-only rollout indicators (activation completion, publish completion, visibility reversal rate, tier/mode breakdown, and endpoint health for matching/publish APIs).
+- **Rollout metrics endpoint:** `/api/admin/metrics/rollout` exposes admin-only rollout indicators (activation completion, publish completion, individual/company first-10-minute activation rates, visibility reversal rate, tier/mode breakdown, and endpoint health for matching/publish APIs).
 
 ## Storage
 
@@ -2551,7 +2559,7 @@ Each flow includes:
 
 - **Dashboards (Ops):** API RED (rate/errors/duration), page TTI P95, job success, error rate by release, DB health.
 - **Dashboards (Product):** NSM **TTSC**, **TTFQI**, **TTV**, conversion funnels, fairness note summary.
-- **Rollout dashboard:** Admin metrics endpoint tracks activation completion, assignment publish completion, privacy visibility reversal rate, activation tier mix, builder-mode mix, and p95/sla-breach rates for `/api/core/matching/profile` and `/api/assignments/[id]/publish`.
+- **Rollout dashboard:** Admin metrics endpoint tracks activation completion, assignment publish completion, individual/company first-10-minute activation rates, privacy visibility reversal rate, activation tier mix, builder-mode mix, and p95/sla-breach rates for `/api/core/matching/profile` and `/api/assignments/[id]/publish`.
 - **Alerts:** 5xx spike, latency P95 breach, failed ETL, error rate by route, email bounce spike.
 - **Tracing:** Critical paths (assignment publish, shortlist generation) traced end-to-end.
 - **Log hygiene:** JSON logs with request-id; PII scrubbing.
@@ -2560,7 +2568,7 @@ Each flow includes:
 
 **Goals:** Instrument outcomes that reflect speed & quality of matches and user effort reduction.
 
-- **Core events:** `dashboard_viewed`, `l4_added`, `shortlist_generated`, `match_viewed`, `match_actioned{introduce|pass|snooze}`, `applied`, `interview_scheduled{duration_minutes,policy_preset}`, `assignment_published{builderMode,minimumRequiredSkills}`, `hired`, `wellbeing_checkin_submitted` (private path).
+- **Core events:** `dashboard_viewed`, `l4_added`, `shortlist_generated`, `match_viewed`, `match_actioned{introduce|pass|snooze}`, `applied`, `interview_scheduled{duration_minutes,policy_preset}`, `individual_onboarding_completed`, `organization_onboarding_completed`, `portfolio_share_link_copied`, `portfolio_pdf_export_succeeded`, `assignment_template_applied`, `assignment_publish_succeeded`, `assignment_published{builderMode,minimumRequiredSkills}`, `hired`, `wellbeing_checkin_submitted` (private path).
 - **Attribution:** `source` on landings (organic/referral/paid); `cohort` labels (persona, role family, region).
 - **Derived metrics:** **TTFQI**, **TTV**, **TTSC**; effort saved (self-report + steps); PAC lift on acceptance/hire.
 - **Data flow:** Client/server events → analytics DB via ETL (nightly); ML labels persisted in `ml_training_data`.
