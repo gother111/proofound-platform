@@ -10,7 +10,8 @@ import { SkeletonCard } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { SnoozedMatchesList } from '@/components/matching/SnoozedMatchesList';
 import { HiddenMatchesList } from '@/components/matching/HiddenMatchesList';
-import { getIndividualRecoveryActions, type RecoveryActionHint } from '@/lib/ui/recovery-actions';
+import { CheckCircle2, Circle } from 'lucide-react';
+import { getIndividualRecoveryActions } from '@/lib/ui/recovery-actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,13 +24,37 @@ type MatchabilityCriterion = {
   required: number | string;
 };
 
-type MatchabilityBlockedPayload = {
-  error: 'PROFILE_NOT_MATCHABLE';
+type MatchabilityState = {
+  eligible: boolean;
+  tier: 'none' | 'lite' | 'strong';
   message: string;
-  eligibility: {
-    criteria: Record<string, MatchabilityCriterion>;
+  criteria: Record<string, MatchabilityCriterion>;
+};
+
+type MatchingAction = {
+  id: string;
+  title: string;
+  description: string;
+  actionUrl: string;
+};
+
+type MatchingResponsePayload = {
+  items?: Array<Record<string, any>>;
+  eligibility?: MatchabilityState;
+  topActions?: MatchingAction[];
+  meta?: {
+    eligibility?: MatchabilityState;
   };
-  topActions: RecoveryActionHint[];
+};
+
+type ReadinessPayload = {
+  topActions?: MatchingAction[];
+};
+
+type MatchingProfilePayload = {
+  profile?: unknown | null;
+  message?: string;
+  error?: string;
 };
 
 const EMPTY_FILTERS = {
@@ -55,13 +80,13 @@ export default function MatchingPage() {
     maxComp?: number;
   }>({ ...EMPTY_FILTERS });
   const [showManageHiddenSnoozed, setShowManageHiddenSnoozed] = useState(false);
-  const [blockedState, setBlockedState] = useState<MatchabilityBlockedPayload | null>(null);
-  const [readinessActions, setReadinessActions] = useState<RecoveryActionHint[]>([]);
+  const [activationState, setActivationState] = useState<MatchabilityState | null>(null);
+  const [readinessActions, setReadinessActions] = useState<MatchingAction[]>([]);
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const blockedRecoveryActions = getIndividualRecoveryActions(
+  const checklistOrder = ['skillsWithRecency', 'proofs', 'constraints', 'purpose'];
+  const activationRecoveryActions = getIndividualRecoveryActions(
     'matching-blocked',
-    blockedState?.topActions || []
+    readinessActions
   );
   const emptyRecoveryActions = getIndividualRecoveryActions('matching-empty', readinessActions);
   const hasFilteredOutMatches = matches.length > 0 && filteredMatches.length === 0;
@@ -83,8 +108,8 @@ export default function MatchingPage() {
       ]);
 
       if (readinessRes.ok) {
-        const readinessPayload = await readinessRes.json();
-        setReadinessActions((readinessPayload.topActions || []) as RecoveryActionHint[]);
+        const readinessPayload = (await readinessRes.json()) as ReadinessPayload;
+        setReadinessActions(readinessPayload.topActions || []);
       }
 
       if (!profileRes.ok) {
@@ -93,7 +118,7 @@ export default function MatchingPage() {
         throw new Error(errorData.message || 'Failed to load matching profile');
       }
 
-      const profileData = await profileRes.json();
+      const profileData = (await profileRes.json()) as MatchingProfilePayload;
       setMatchingProfile(profileData.profile);
 
       // If profile exists, fetch matches
@@ -105,25 +130,21 @@ export default function MatchingPage() {
           signal: controller.signal,
         });
 
-        if (matchesRes.status === 412) {
-          const blockedPayload = (await matchesRes
-            .json()
-            .catch(() => null)) as MatchabilityBlockedPayload | null;
-          setBlockedState(blockedPayload);
-          setMatches([]);
-          setFilteredMatches([]);
-          return;
-        }
-
         if (!matchesRes.ok) {
           const errorData = await matchesRes.json().catch(() => ({}));
           console.error('Failed to load matches:', errorData);
           throw new Error(errorData.message || 'Failed to load matches');
         }
 
-        const matchesData = await matchesRes.json();
+        const matchesData = (await matchesRes.json()) as MatchingResponsePayload;
         const matchItems = matchesData.items || [];
-        setBlockedState(null);
+        const eligibility = matchesData.eligibility || matchesData.meta?.eligibility || null;
+
+        if (matchesData.topActions && matchesData.topActions.length > 0) {
+          setReadinessActions(matchesData.topActions);
+        }
+
+        setActivationState(eligibility && !eligibility.eligible ? eligibility : null);
         setMatches(matchItems);
         setFilteredMatches(matchItems);
 
@@ -150,7 +171,7 @@ export default function MatchingPage() {
           }
         }
       } else {
-        setBlockedState(null);
+        setActivationState(null);
       }
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
@@ -160,7 +181,7 @@ export default function MatchingPage() {
         });
         // Set empty state on timeout
         setMatchingProfile(null);
-        setBlockedState(null);
+        setActivationState(null);
         setMatches([]);
         setFilteredMatches([]);
       } else {
@@ -290,12 +311,10 @@ export default function MatchingPage() {
         <div className="flex items-center justify-between mb-2">
           <h1 className="text-2xl font-semibold text-[#2D3330] dark:text-[#E8DCC4]">Matching</h1>
           <div className="flex items-center gap-2">
-            {!blockedState ? (
-              <EnhancedMatchFilters
-                activeFilters={activeFilters}
-                onFiltersChange={setActiveFilters}
-              />
-            ) : null}
+            <EnhancedMatchFilters
+              activeFilters={activeFilters}
+              onFiltersChange={setActiveFilters}
+            />
             <button
               onClick={() => {
                 setShowSetup(true);
@@ -307,33 +326,42 @@ export default function MatchingPage() {
           </div>
         </div>
         <p className="text-sm text-[#6B6760] dark:text-[#8A8174]">
-          {blockedState
-            ? 'Complete the required matchability steps to unlock personalized opportunities.'
+          {activationState
+            ? 'You can explore now. Complete these steps to unlock stronger match quality.'
             : `${filteredMatches.length} opportunit${filteredMatches.length === 1 ? 'y' : 'ies'} aligned with your skills and values`}
         </p>
       </div>
 
-      {blockedState ? (
+      {activationState ? (
         <div className="rounded-xl border border-[#E8E6DD] bg-[#F7F6F1] p-5">
-          <h2 className="text-lg font-semibold text-[#2D3330]">Profile setup required</h2>
-          <p className="mt-1 text-sm text-[#6B6760]">{blockedState.message}</p>
+          <h2 className="text-lg font-semibold text-[#2D3330]">Get match-ready in 4 quick steps</h2>
+          <p className="mt-1 text-sm text-[#6B6760]">{activationState.message}</p>
 
           <div className="mt-4 space-y-2">
-            {Object.values(blockedState.eligibility.criteria)
-              .filter((criterion) => !criterion.met)
+            {Object.values(activationState.criteria)
+              .sort((a, b) => checklistOrder.indexOf(a.id) - checklistOrder.indexOf(b.id))
               .map((criterion) => (
                 <div
                   key={criterion.id}
                   className="rounded-md border border-[#E8E6DD] bg-white px-3 py-2"
                 >
-                  <p className="text-sm font-medium text-[#2D3330]">{criterion.label}</p>
-                  <p className="text-xs text-[#6B6760]">{criterion.detail}</p>
+                  <div className="flex items-center gap-2">
+                    {criterion.met ? (
+                      <CheckCircle2 className="h-4 w-4 text-[#1C4D3A]" />
+                    ) : (
+                      <Circle className="h-4 w-4 text-[#6B6760]" />
+                    )}
+                    <p className="text-sm font-medium text-[#2D3330]">{criterion.label}</p>
+                  </div>
+                  <p className="mt-1 text-xs text-[#6B6760]">
+                    {criterion.met ? 'Completed' : criterion.detail}
+                  </p>
                 </div>
               ))}
           </div>
 
           <div className="mt-4 grid grid-cols-1 gap-2 md:grid-cols-3">
-            {blockedRecoveryActions.map((action) => (
+            {activationRecoveryActions.map((action) => (
               <button
                 key={action.id}
                 onClick={() => router.push(action.actionUrl)}
@@ -345,7 +373,9 @@ export default function MatchingPage() {
             ))}
           </div>
         </div>
-      ) : filteredMatches.length === 0 ? (
+      ) : null}
+
+      {filteredMatches.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-lg mb-2 text-proofound-charcoal">No matches yet</p>
           <p className="text-sm text-muted-foreground">
@@ -453,25 +483,23 @@ export default function MatchingPage() {
         </div>
       )}
 
-      {!blockedState ? (
-        <div className="mt-8">
-          <button
-            onClick={() => setShowManageHiddenSnoozed((prev) => !prev)}
-            className="text-sm text-[#1C4D3A] underline flex items-center gap-2"
-          >
-            {showManageHiddenSnoozed
-              ? 'Hide snoozed/hidden manager'
-              : 'Manage snoozed or hidden matches'}
-          </button>
+      <div className="mt-8">
+        <button
+          onClick={() => setShowManageHiddenSnoozed((prev) => !prev)}
+          className="text-sm text-[#1C4D3A] underline flex items-center gap-2"
+        >
+          {showManageHiddenSnoozed
+            ? 'Hide snoozed/hidden manager'
+            : 'Manage snoozed or hidden matches'}
+        </button>
 
-          {showManageHiddenSnoozed && (
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <SnoozedMatchesList onRestored={refreshMatches} />
-              <HiddenMatchesList onRestored={refreshMatches} />
-            </div>
-          )}
-        </div>
-      ) : null}
+        {showManageHiddenSnoozed && (
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <SnoozedMatchesList onRestored={refreshMatches} />
+            <HiddenMatchesList onRestored={refreshMatches} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

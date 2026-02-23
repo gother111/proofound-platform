@@ -46,16 +46,17 @@ vi.mock('sonner', () => ({
   },
 }));
 
-describe('MatchingPage blocked state', () => {
+describe('MatchingPage soft-gated state', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('renders dedicated blocked card for 412 profile-not-matchable response', async () => {
-    const blockedPayload = {
-      error: 'PROFILE_NOT_MATCHABLE',
+  it('renders non-blocking checklist when eligibility is incomplete', async () => {
+    const softGatedPayload = {
       message: 'Your profile is not matchable yet.',
       eligibility: {
+        eligible: false,
+        message: 'Complete these steps to improve match quality.',
         criteria: {
           skillsWithRecency: {
             id: 'skillsWithRecency',
@@ -64,6 +65,30 @@ describe('MatchingPage blocked state', () => {
             detail: 'Add skills with last used dates.',
             current: 2,
             required: 10,
+          },
+          proofs: {
+            id: 'proofs',
+            label: 'Proof artifacts',
+            met: false,
+            detail: 'Add one proof.',
+            current: 0,
+            required: 1,
+          },
+          constraints: {
+            id: 'constraints',
+            label: 'Matching constraints',
+            met: false,
+            detail: 'Set work mode and availability.',
+            current: false,
+            required: 'work mode + availability + compensation',
+          },
+          purpose: {
+            id: 'purpose',
+            label: 'Purpose block',
+            met: false,
+            detail: 'Add mission or values.',
+            current: false,
+            required: 'mission OR values OR causes',
           },
         },
       },
@@ -88,9 +113,9 @@ describe('MatchingPage blocked state', () => {
         json: async () => ({ topActions: [] }),
       })
       .mockResolvedValueOnce({
-        ok: false,
-        status: 412,
-        json: async () => blockedPayload,
+        ok: true,
+        status: 200,
+        json: async () => softGatedPayload,
       });
 
     (global as any).fetch = fetchMock;
@@ -98,10 +123,11 @@ describe('MatchingPage blocked state', () => {
     render(<MatchingPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Profile setup required')).toBeInTheDocument();
+      expect(screen.getByText('Get match-ready in 4 quick steps')).toBeInTheDocument();
     });
 
     expect(screen.getByText('Skills with recency')).toBeInTheDocument();
-    expect(screen.getByText('Update Expertise Atlas')).toBeInTheDocument();
+    expect(screen.getAllByText('Update Expertise Atlas').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Profile setup required')).not.toBeInTheDocument();
   });
 });

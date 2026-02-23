@@ -34,12 +34,6 @@ vi.mock('@/lib/auth', () => ({
 
 vi.mock('@/lib/matching/eligibility', () => ({
   evaluateIndividualMatchability: vi.fn(),
-  toNotMatchablePayload: (result: any) => ({
-    error: 'PROFILE_NOT_MATCHABLE',
-    message: result.message,
-    eligibility: result,
-    topActions: result.topActions,
-  }),
 }));
 
 const baseEligibility = {
@@ -85,7 +79,7 @@ describe('core matching gating routes', () => {
     (evaluateIndividualMatchability as any).mockResolvedValue(baseEligibility);
   });
 
-  it('/api/core/matching/profile returns 412 with eligibility payload', async () => {
+  it('/api/core/matching/profile returns 200 with soft-gating metadata', async () => {
     const req = new NextRequest('http://localhost/api/core/matching/profile', {
       method: 'POST',
       body: JSON.stringify({}),
@@ -94,13 +88,14 @@ describe('core matching gating routes', () => {
     const res = await postProfile(req);
     const payload = await res.json();
 
-    expect(res.status).toBe(412);
-    expect(payload.error).toBe('PROFILE_NOT_MATCHABLE');
+    expect(res.status).toBe(200);
+    expect(payload.items).toEqual([]);
     expect(payload.eligibility.unmetCriteria).toEqual(baseEligibility.unmetCriteria);
     expect(payload.topActions[0].actionUrl).toBe('/app/i/expertise');
+    expect(payload.meta.softGated).toBe(true);
   });
 
-  it('/api/core/matching/near-matches returns 412 with same shape', async () => {
+  it('/api/core/matching/near-matches returns 200 with same soft-gate shape', async () => {
     const req = new NextRequest('http://localhost/api/core/matching/near-matches', {
       method: 'POST',
       body: JSON.stringify({}),
@@ -109,9 +104,10 @@ describe('core matching gating routes', () => {
     const res = await postNearMatches(req);
     const payload = await res.json();
 
-    expect(res.status).toBe(412);
-    expect(payload.error).toBe('PROFILE_NOT_MATCHABLE');
+    expect(res.status).toBe(200);
+    expect(payload.items).toEqual([]);
     expect(payload.eligibility.unmetCriteria).toEqual(baseEligibility.unmetCriteria);
     expect(Array.isArray(payload.topActions)).toBe(true);
+    expect(payload.meta.softGated).toBe(true);
   });
 });

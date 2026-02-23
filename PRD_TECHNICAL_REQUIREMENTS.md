@@ -1563,6 +1563,7 @@ STRIPE_WEBHOOK_SECRET=whsec_[secret]
 - `/api/assignments/[id]` - Assignment CRUD
 - `/api/core/matching/profile` - Profile matching
 - `/api/core/matching/assignment` - Assignment matching
+- `/api/core/matching/near-matches` - Near-match suggestions for cold start
 - `/api/core/matching/interest` - Express interest
 - `/api/core/matching/matching-profile` - Matching profile CRUD
 - `/api/expertise/profile` - Expertise profile
@@ -1576,6 +1577,16 @@ STRIPE_WEBHOOK_SECRET=whsec_[secret]
 - `/api/user/export` - GDPR data export
 - `/api/user/audit-log` - User audit log
 - `/api/user/consent` - Consent management
+
+**Matching Soft-Gate Contract (Lite Activation)**:
+
+- `POST /api/core/matching/profile` and `POST /api/core/matching/near-matches` return `200` for authenticated users even when Lite activation is incomplete.
+- When Lite requirements are unmet, payload includes:
+  - `items` (may be empty)
+  - `eligibility` (full criteria and tier state)
+  - `topActions` (next best actions)
+  - `meta.softGated=true`
+- `GET /api/core/matching/matching-profile` auto-bootstraps a baseline profile row if one does not exist, so new users avoid null-profile dead ends.
 
 **Cron Endpoints** (Vercel Cron):
 

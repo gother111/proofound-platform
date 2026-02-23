@@ -25,7 +25,7 @@ import {
   type LocationMode,
 } from '@/lib/core/matching/scorers';
 import { getPreset, normalizeWeights, type PresetKey } from '@/lib/core/matching/presets';
-import { evaluateIndividualMatchability, toNotMatchablePayload } from '@/lib/matching/eligibility';
+import { evaluateIndividualMatchability } from '@/lib/matching/eligibility';
 import { calculateFocusBoost } from '@/lib/core/matching/focus';
 
 export const dynamic = 'force-dynamic';
@@ -110,8 +110,27 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      return NextResponse.json(toNotMatchablePayload(eligibility), { status: 412 });
+      return NextResponse.json({
+        items: [],
+        topActions: eligibility.topActions,
+        eligibility,
+        meta: {
+          total: 0,
+          returned: 0,
+          threshold,
+          durationMs: Date.now() - startTime,
+          weights: null,
+          softGated: true,
+          eligibility,
+          message: eligibility.message,
+        },
+      });
     }
+
+    await db
+      .insert(matchingProfiles)
+      .values({ profileId: user.id })
+      .onConflictDoNothing({ target: matchingProfiles.profileId });
 
     // Fetch user's matching profile
     const profile = await db.query.matchingProfiles.findFirst({
@@ -334,12 +353,15 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       items: topK,
+      topActions: eligibility.topActions,
+      eligibility,
       meta: {
         total: results.length,
         returned: topK.length,
         threshold,
         durationMs: duration,
         weights: weights,
+        eligibility,
         message:
           topK.length === 0
             ? 'No near matches found. Try adjusting your matching profile or reducing requirements.'
