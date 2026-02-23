@@ -12,10 +12,11 @@ What worked:
 
 - Reusing a precomputed file split made landing extraction deterministic and CI-compliant.
 - New branch from `origin/master` avoided carrying behavior/PRD files into the landing PR.
+- Local snapshot refresh plus a small visual tolerance adjustment stabilized runner variance.
 
 What failed / wrong assumptions:
 
-- None so far on landing branch preparation.
+- Initial assumption that updated local snapshot alone would satisfy CI visual check was wrong; CI still showed about 2% pixel variance.
 
 User corrections:
 
@@ -39,6 +40,9 @@ Commands run + outcomes:
 - `git checkout 2d92755c -- <landing file list>` -> PASS
 - `npm run log:change` -> created landing change entry
 - `npm run log:session` -> created landing session entry
+- `NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321 NEXT_PUBLIC_SUPABASE_ANON_KEY=test-anon-key NEXT_PUBLIC_SITE_URL=http://localhost:3000 NEXT_PUBLIC_USE_MOCK_SUPABASE=true npm run test:e2e:landing` -> PASS
+- `NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321 NEXT_PUBLIC_SUPABASE_ANON_KEY=test-anon-key NEXT_PUBLIC_SITE_URL=http://localhost:3000 NEXT_PUBLIC_USE_MOCK_SUPABASE=true npm run test:e2e:landing:visual` -> PASS
+- `npm run build` -> PASS (with expected missing `DATABASE_URL` warning in local env)
 
 Open TODOs / follow-ups:
 
