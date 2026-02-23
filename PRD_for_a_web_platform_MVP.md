@@ -1598,8 +1598,8 @@ Each flow includes:
 **Why Now:** Standardized, efficient creation of high-signal roles; improves TTFQI and TTSC.  
 **Acceptance Criteria:**
 
-- **Basic mode (default):** role, business value, ≥1 outcome, practicals, and ≥3 must-have skills.
-- **Advanced mode:** retains full 5-step flow with stakeholders, weight matrix, verification gates, logistics, and review.
+- **Basic mode (default entry):** role, business value, ≥1 outcome, practicals, and ≥3 must-have skills.
+- **Advanced mode (explicit opt-in):** unlocked only when the creator asks for extra control; retains full 5-step flow with stakeholders, weight matrix, verification gates, logistics, and review.
 - **Time-to-publish P50 ≤ 15 minutes**; task success ≥ 90%; drop-off < 10% on final steps.  
   **MoSCoW:** **Must**.
 
@@ -1656,6 +1656,7 @@ Each flow includes:
 **Acceptance Criteria:**
 
 - Create and save templates that prefill **Basic or Advanced Assignment** flows with **owner/department tags** and recommended mode.
+- Advanced-recommended templates do **not** auto-switch mode unless Advanced has already been explicitly enabled for the draft.
 - Clone a template into a new assignment; edits in the new assignment **do not mutate** the source template; version label shown on publish.
 - Template library shows usage and **time-to-publish** deltas; suggestions surface a relevant template when starting a similar role.  
   **MoSCoW:** **Should** (baseline template library + clone).
@@ -2051,8 +2052,8 @@ Each flow includes:
 
 **Inputs**:
 
-- Basic mode: role, business value, outcomes, practicals, must-have skills (≥3).
-- Advanced mode: role/outcomes, must/nice L4s, verification gates, logistics, stakeholders/weights, review.
+- Basic mode (default entry): role, business value, outcomes, practicals, must-have skills (≥3).
+- Advanced mode (explicit opt-in): role/outcomes, must/nice L4s, verification gates, logistics, stakeholders/weights, review.
   **Processing**: validate by mode; compute readiness; generate public-facing brief.
   **Outputs**: published Assignment; preview card; shareable link.  
   **Errors/Empty**: incomplete required fields; invalid ranges; show inline fixers.  
@@ -2432,12 +2433,12 @@ Each flow includes:
 **O4 Impact Block** — Create impact entries; export **Evidence Pack (PDF)**.
 **O5 Projects Block** — Link artifacts & Assignments; status tags.
 **O6 Enterprise Expertise Hub** — Declare domains; JD paste → suggested L4s.
-**O7 Assignment Creation (Basic + Advanced)** — Basic publish works by default; Advanced preserves strict 5-step behavior.
+**O7 Assignment Creation (Basic + Advanced)** — Basic publish works by default; Advanced remains hidden until explicit opt-in and preserves strict 5-step behavior.
 **O8 Company Dashboard** — Tiles for pipeline (Shortlists, Intros, TTSC trend).
 **O9 Team Management Hub** — Invite members; roles/permissions enforced.
 **O10 Organization Type Flag** — For-profit vs Non-profit selected & reflected in copy.
 **O11 Post-Interview Feedback & Decision SLA** — Decision + personalized feedback required; reminders before 48h breach.
-**O12 Assignment Templates** — Templates prefill Basic/Advanced assignments with recommended mode; clone without mutating source; usage shown.
+**O12 Assignment Templates** — Templates prefill Basic/Advanced assignments with recommended mode; advanced recommendations do not auto-switch mode; clone without mutating source; usage shown.
 
 ---
 
@@ -2628,8 +2629,8 @@ Each flow includes:
     - **Lite:** ≥3 L4 skills each have level + recency, ≥1 proof overall, matching constraints saved, and purpose present.
     - **Strong:** ≥10 L4 skills each have level + recency, ≥1 proof overall, matching constraints saved, and purpose present.
   - Assignment publish readiness is mode-specific:
-    - **Basic:** role, business value, ≥1 measurable outcome, practicals, and ≥3 must-have skills.
-    - **Advanced:** full 5-step completeness including stakeholders and weight matrix; education marked “required” must include justification.
+    - **Basic:** role, business value, ≥1 measurable outcome, practicals, and ≥3 must-have skills (default entry path).
+    - **Advanced:** full 5-step completeness including stakeholders and weight matrix; exposed only after explicit opt-in; education marked “required” must include justification.
   - Dashboards show current tier/state and next-best action when unmet.
 
 ## A8 Plain-Language Vocabulary Policy
