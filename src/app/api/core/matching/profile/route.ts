@@ -36,7 +36,7 @@ import {
 import { getPreset, normalizeWeights, type PresetKey } from '@/lib/core/matching/presets';
 import { batchGetMissionVisionScoresForProfile } from '@/lib/matching/semantic';
 import { isTrustedInternalRequest, requireApiAuth } from '@/lib/api/auth';
-import { evaluateIndividualMatchability, toNotMatchablePayload } from '@/lib/matching/eligibility';
+import { evaluateIndividualMatchability } from '@/lib/matching/eligibility';
 import { calculateFocusBoost } from '@/lib/core/matching/focus';
 
 export const dynamic = 'force-dynamic';
@@ -145,7 +145,20 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      return NextResponse.json(toNotMatchablePayload(eligibility), { status: 412 });
+      return NextResponse.json({
+        items: [],
+        topActions: eligibility.topActions,
+        eligibility,
+        meta: {
+          total: 0,
+          returned: 0,
+          durationMs: Date.now() - startTime,
+          weights: null,
+          softGated: true,
+          eligibility,
+          message: eligibility.message,
+        },
+      });
     }
 
     // Fetch user's matching profile (with caching)
@@ -153,6 +166,11 @@ export async function POST(request: NextRequest) {
     const profile = await getOrSet(
       cacheKeyProfile,
       async () => {
+        await db
+          .insert(matchingProfiles)
+          .values({ profileId: user.id })
+          .onConflictDoNothing({ target: matchingProfiles.profileId });
+
         return await db.query.matchingProfiles.findFirst({
           where: eq(matchingProfiles.profileId, user.id),
         });
@@ -574,15 +592,14 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       items: topKWithIds,
+      topActions: eligibility.topActions,
+      eligibility,
       meta: {
         total: results.length,
         returned: topKWithIds.length,
         durationMs: duration,
         weights: weights,
-        eligibility: {
-          tier: eligibility.tier,
-          nextTierTarget: eligibility.nextTierTarget,
-        },
+        eligibility,
       },
     });
   } catch (error) {

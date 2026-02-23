@@ -3,12 +3,13 @@ import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
 import { matchingProfiles, skills } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { emitAnalyticsEventAsync, emitProfileActivated } from '@/lib/analytics/events';
 import { evaluateIndividualMatchability } from '@/lib/matching/eligibility';
 import { getWeightBiasBucket } from '@/lib/core/matching/presets';
 import { MATCHABILITY_STRONG_SKILLS_WITH_RECENCY } from '@/lib/matching/thresholds';
+import { getRows } from '@/lib/db/rows';
 
 export const dynamic = 'force-dynamic';
 const ENABLE_MATCHING_PROFILE_SKILL_WRITES =
@@ -19,6 +20,29 @@ const ENABLE_MATCHING_PROFILE_SKILL_WRITES =
  */
 const activatedProfiles = new Set<string>();
 
+async function ensureMatchingProfile(profileId: string) {
+  await db
+    .insert(matchingProfiles)
+    .values({ profileId })
+    .onConflictDoNothing({ target: matchingProfiles.profileId });
+
+  return db.query.matchingProfiles.findFirst({
+    where: eq(matchingProfiles.profileId, profileId),
+  });
+}
+
+async function hasActivationEvent(profileId: string) {
+  const existing = await db.execute(sql`
+    SELECT id
+    FROM analytics_events
+    WHERE user_id = ${profileId}
+      AND event_type = 'profile_activated'
+    LIMIT 1
+  `);
+
+  return getRows(existing as any).length > 0;
+}
+
 /**
  * Check if profile meets activation criteria and emit event.
  */
@@ -26,6 +50,11 @@ async function checkAndEmitProfileActivation(userId: string): Promise<void> {
   if (activatedProfiles.has(userId)) return;
 
   try {
+    if (await hasActivationEvent(userId)) {
+      activatedProfiles.add(userId);
+      return;
+    }
+
     const eligibility = await evaluateIndividualMatchability(userId);
     if (!eligibility.eligible) return;
 
@@ -92,16 +121,14 @@ const MatchingProfileSchema = z.object({
 /**
  * GET /api/matching-profile
  *
- * Returns the current user's matching profile, or null if not set up.
+ * Returns the current user's matching profile.
+ * Bootstraps a baseline row if missing.
  */
 export async function GET() {
   try {
     const user = await requireAuth();
 
-    // Fetch matching profile
-    const profile = await db.query.matchingProfiles.findFirst({
-      where: eq(matchingProfiles.profileId, user.id),
-    });
+    const profile = await ensureMatchingProfile(user.id);
 
     // Fetch skills separately
     const userSkills = await db.query.skills.findMany({
@@ -111,10 +138,7 @@ export async function GET() {
     const eligibility = await evaluateIndividualMatchability(user.id);
 
     if (!profile) {
-      return NextResponse.json({
-        profile: null,
-        eligibility,
-      });
+      return NextResponse.json({ error: 'Failed to initialize matching profile' }, { status: 500 });
     }
 
     return NextResponse.json({

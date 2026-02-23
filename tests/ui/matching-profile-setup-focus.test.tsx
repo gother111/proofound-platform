@@ -115,7 +115,7 @@ describe('MatchingProfileSetup focus and weighting step', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /next: languages/i }));
     fireEvent.click(screen.getByRole('button', { name: /review & activate/i }));
-    fireEvent.click(screen.getByRole('button', { name: /activate matching/i }));
+    fireEvent.click(screen.getByRole('button', { name: /save and continue/i }));
 
     await waitFor(() => {
       expect(onComplete).toHaveBeenCalled();
