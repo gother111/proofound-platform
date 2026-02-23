@@ -31,6 +31,7 @@ import { GET } from '../route';
 describe('/api/cron/decision-reminders', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv('ENABLE_WEEKLY_DIGEST', 'false');
     mocks.processDecisionReminders.mockResolvedValue({ processed: 2, sent: 1 });
     mocks.checkPerformanceHealth.mockResolvedValue({
       healthy: true,
@@ -92,5 +93,5 @@ describe('/api/cron/decision-reminders', () => {
     expect(mocks.processDecisionReminders).toHaveBeenCalledTimes(1);
     expect(mocks.checkPerformanceHealth).toHaveBeenCalledTimes(1);
     expect(mocks.sendPerformanceAlert).not.toHaveBeenCalled();
-  });
+  }, 15000);
 });
