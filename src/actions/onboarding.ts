@@ -7,6 +7,10 @@ import { generateSlug } from '@/lib/utils';
 import { nanoid } from 'nanoid';
 import { randomUUID } from 'crypto';
 import { createClient } from '@/lib/supabase/server';
+import {
+  emitIndividualOnboardingCompleted,
+  emitOrganizationOnboardingCompleted,
+} from '@/lib/analytics/events';
 
 const choosePersonaSchema = z.object({
   persona: z.enum(['individual', 'org_member']),
@@ -117,6 +121,9 @@ export async function completeIndividualOnboarding(formData: FormData) {
     }
 
     revalidatePath('/app/i');
+    await emitIndividualOnboardingCompleted(user.id, {
+      source: 'web_onboarding',
+    });
     return { success: true };
   } catch (error: any) {
     console.error('Individual onboarding error:', error);
@@ -246,6 +253,10 @@ export async function completeOrganizationOnboarding(formData: FormData) {
     }
 
     revalidatePath(`/app/o/${orgSlug}`);
+    await emitOrganizationOnboardingCompleted(user.id, orgId, {
+      source: 'web_onboarding',
+      orgSlug,
+    });
     return { success: true, orgSlug };
   } catch (error: any) {
     console.error('Organization onboarding error:', error);

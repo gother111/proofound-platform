@@ -142,6 +142,21 @@
 **North Star:** Time‑to‑First‑Accepted Match (median).  
 **North Star 2:** % assignments with ≥3 qualified matches in 7d.
 
+**First 10 Minutes Activation Success (MVP):**
+
+- **Individual success statement:** "I created my portfolio share link and exported my trust PDF."
+  - Measured as both actions completed within 10 minutes of `individual_onboarding_completed`:
+    - `portfolio_share_link_copied`
+    - `portfolio_pdf_export_succeeded`
+- **Company success statement:** "I published my first assignment using a template."
+  - Measured as both actions completed within 10 minutes of `organization_onboarding_completed`:
+    - `assignment_template_applied`
+    - `assignment_publish_succeeded`
+- **Boundary rule:** an action at exactly 10:00 is counted (`<= 10 minutes`).
+- **KPI formulas:**
+  - Individual activation rate (10m) = successful individuals within 10m / new individuals
+  - Company activation rate (10m) = successful organization creators within 10m / new organization creators
+
 **Day‑1 Admin Dashboard (tiles):**
 
 1. Time‑to‑first‑match (median)
@@ -149,8 +164,10 @@
 3. Org verification completion rate
 4. Match acceptance rate (+ decline reasons)
 5. Safety: report rate & resolution SLA
+6. Individual first-10-minute activation rate
+7. Company first-10-minute activation rate
 
-**Core Events:** `signed_up`, `created_profile`, `profile_ready_for_match`, `org_verified`, `assignment_published`, `match_suggested`, `match_viewed`, `match_accepted`, `match_declined(reason)`, `message_sent`, `verification_requested`, `verification_completed(status)`, `content_reported`.
+**Core Events:** `signed_up`, `created_profile`, `profile_ready_for_match`, `org_verified`, `individual_onboarding_completed`, `organization_onboarding_completed`, `portfolio_share_link_copied`, `portfolio_pdf_export_succeeded`, `assignment_template_applied`, `assignment_publish_succeeded`, `assignment_published`, `match_suggested`, `match_viewed`, `match_accepted`, `match_declined(reason)`, `message_sent`, `verification_requested`, `verification_completed(status)`, `content_reported`.
 
 **Targets (90d):** profile completion ≥60% D+1; first suggestion <24h; acceptance ≥20%; ≥50% assignments with ≥3 qualified matches in 7d; verified users ≥30% by D+14; report rate <1% with <24h SLA.
 

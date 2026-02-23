@@ -281,27 +281,60 @@ export default function AssignmentBuilderPage() {
     loadTemplates();
   }, [slug]);
 
+  const trackTemplateApplied = useCallback(
+    (template: AssignmentTemplate, selectedBuilderMode: BuilderMode) => {
+      void fetch('/api/analytics/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventType: 'assignment_template_applied',
+          orgId: orgId ?? undefined,
+          entityType: assignmentIdRef.current ? 'assignment' : undefined,
+          entityId: assignmentIdRef.current ?? undefined,
+          properties: {
+            templateId: template.id,
+            templateName: template.name,
+            roleFamily: template.roleFamily,
+            orgSlug: slug,
+            selectedBuilderMode,
+            recommendedBuilderMode: template.recommendedBuilderMode || null,
+          },
+        }),
+      }).catch(() => undefined);
+    },
+    [orgId, slug]
+  );
+
   const handleApplyTemplate = (template: AssignmentTemplate) => {
     const mapped = mapTemplateToAssignmentForm(template.presetPayload);
     form.reset({ ...form.getValues(), ...mapped });
+
+    let selectedBuilderMode: BuilderMode = 'advanced';
+
     if (assignmentBasicModeEnabled) {
       const templateMode = template.recommendedBuilderMode || 'basic';
+      selectedBuilderMode =
+        templateMode === 'advanced' && !advancedModeUnlocked ? 'basic' : templateMode;
+      setBuilderMode(selectedBuilderMode);
+
       if (templateMode === 'advanced' && !advancedModeUnlocked) {
-        setBuilderMode('basic');
         toast.info('This template includes advanced controls. Enable Advanced mode to use them.');
-      } else {
-        setBuilderMode(templateMode);
-        if (templateMode === 'basic' && currentStep === 3) {
-          setCurrentStep(4);
-        }
       }
+      if (selectedBuilderMode === 'basic' && currentStep === 3) {
+        setCurrentStep(4);
+      }
+    } else {
+      selectedBuilderMode = 'advanced';
+      setBuilderMode('advanced');
     }
+
     setAppliedTemplateId(template.id);
     setAppliedTemplateName(template.name);
     setCurrentStep(1);
     setStepStartTime(new Date());
     toast.success(`Applied template: ${template.name}`);
     setIsTemplatePickerOpen(false);
+    trackTemplateApplied(template, selectedBuilderMode);
   };
 
   const buildAssignmentPayload = useCallback(
