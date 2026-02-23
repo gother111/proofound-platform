@@ -1,6 +1,11 @@
 # Addendum — Public Portfolio Brief (v0.1)
 
-Objective: Public, shareable portfolio URL that reimagines a CV into a clean, scannable profile compatible with hiring workflows.
+Objective: Make day-1 value tangible for both personas by guaranteeing a public, shareable portfolio URL that can be copied and sent immediately.
+
+Portfolio-first promise (day 1):
+
+- Primary promise: "I built a clean proof-based portfolio link and can share it today."
+- Secondary promise: matching remains available but is not the first user promise.
 
 Core sections (single template, responsive):
 
@@ -14,6 +19,18 @@ Owner controls and visibility:
 
 - Owner-only visibility toggles for header, proof bar items, counts, skills, bio, contact.
 - Public view is read-only; owner actions hidden from public viewers.
+- Day-1 defaults publish only a minimal safe allowlist; contact/work-email remain hidden unless explicitly enabled.
+
+URL contracts:
+
+- Individual public URL: `/portfolio/{handle}`
+- Organization public URL: `/portfolio/org/{slug}`
+- In-app shortcuts: `/app/i/portfolio` and `/app/o/{slug}/portfolio` (redirect to public URLs)
+
+Onboarding completion requirement:
+
+- Onboarding ends with a dedicated "Public portfolio ready" step for both personas.
+- Step shows live URL, copy button, open/view button, and continue-to-app action.
 
 Exports:
 

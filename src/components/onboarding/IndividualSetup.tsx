@@ -7,11 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { completeIndividualOnboarding } from '@/actions/onboarding';
+import { PublicPortfolioReadyStep } from '@/components/onboarding/PublicPortfolioReadyStep';
 
 export function IndividualSetup() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<{ publicPortfolioUrl: string } | null>(null);
 
   async function handleSubmit(formData: FormData) {
     setIsLoading(true);
@@ -26,22 +28,34 @@ export function IndividualSetup() {
         return;
       }
 
-      // Success - redirect to individual home
-      router.push('/app/i/home');
+      if (result.success && result.publicPortfolioUrl) {
+        setSuccess({ publicPortfolioUrl: result.publicPortfolioUrl });
+      }
+      setIsLoading(false);
     } catch (err) {
       setError('Something went wrong. Please try again.');
       setIsLoading(false);
     }
   }
 
+  if (success) {
+    return (
+      <PublicPortfolioReadyStep
+        persona="individual"
+        publicPortfolioUrl={success.publicPortfolioUrl}
+        onContinue={() => router.push('/app/i/home')}
+      />
+    );
+  }
+
   return (
     <Card className="max-w-2xl mx-auto border-proofound-stone dark:border-border rounded-2xl">
       <CardHeader>
         <CardTitle className="font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
-          Complete Your Profile
+          Build Your Public Portfolio
         </CardTitle>
         <CardDescription className="text-proofound-charcoal/70 dark:text-muted-foreground">
-          Let&apos;s set up your individual profile so others can find and connect with you
+          Launch a clean proof-based portfolio link you can share today
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -141,7 +155,7 @@ export function IndividualSetup() {
               size="lg"
               className="bg-proofound-forest hover:bg-proofound-forest/90 text-white"
             >
-              {isLoading ? 'Creating Profile...' : 'Complete Setup'}
+              {isLoading ? 'Publishing Portfolio...' : 'Publish Portfolio'}
             </Button>
           </div>
         </form>

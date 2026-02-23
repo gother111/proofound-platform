@@ -89,7 +89,8 @@
 
 - ✅ Minimal data collection (only what's needed for matching)
 - ✅ Privacy-by-default settings:
-  - Profile visibility: `network` (not public)
+  - Profile visibility: `public` with a minimal safe field allowlist (day-1 shareable portfolio)
+  - Contact/work email visibility: `private` by default
   - Proof visibility: `private`
   - Marketing emails: opt-in
 - ✅ Granular visibility controls (public/network/private)
@@ -1946,13 +1947,19 @@ STRIPE_WEBHOOK_SECRET=whsec_[secret]
 - **Individual**: success requires both actions within 10 minutes after `individual_onboarding_completed`:
   - `portfolio_share_link_copied`
   - `portfolio_pdf_export_succeeded`
-- **Company**: success requires both actions within 10 minutes after `organization_onboarding_completed`:
-  - `assignment_template_applied`
-  - `assignment_publish_succeeded`
+- **Company**: success requires `portfolio_share_link_copied` within 10 minutes after `organization_onboarding_completed`.
 - **Boundary rule**: events at exactly 10:00 are included (`<= 10 minutes`).
 - **Formulas**:
   - Individual activation rate (10m) = successful individuals in 10m / new individuals
   - Company activation rate (10m) = successful organization creators in 10m / new organization creators
+
+**Public Portfolio Route Contracts (MVP)**:
+
+- Public individual URL: `GET /portfolio/{handle}`
+- Public organization URL: `GET /portfolio/org/{slug}`
+- Authenticated convenience routes:
+  - `GET /app/i/portfolio` -> redirect to `/portfolio/{handle}`
+  - `GET /app/o/{slug}/portfolio` -> redirect to `/portfolio/org/{slug}`
 
 **Day-1 Admin Dashboard**:
 

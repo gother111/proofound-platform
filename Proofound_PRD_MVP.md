@@ -14,7 +14,7 @@
 • Avg. time‑to‑hire in EU NGOs/SMEs → …  
 • Burnout/meaning metrics → …
 
-**Primary Outcome (MVP):** Reduce **Time‑to‑First‑Accepted Match** (median) and increase **% assignments with ≥3 qualified matches in 7 days** (North Star secondary).
+**Primary Outcome (MVP):** Guarantee a day-1 win: publish and share a clean public proof portfolio link on signup day. Matching remains the core downstream outcome and is tracked via **Time‑to‑First‑Accepted Match** (median) and **% assignments with ≥3 qualified matches in 7 days**.
 
 **Principles:** Transparency • Non‑discrimination • Authenticity • Trustworthiness • Never monetize inequality/exclusion.
 
@@ -57,7 +57,7 @@
 
 ## 3) Information Architecture & Navigation
 
-**Global nav:** Home · **Matches** · Profile · For Organizations · Zen Hub (Coming Soon) · Settings.  
+**Global nav:** Home · **Public Portfolio** · **Matches** · Profile · For Organizations · Zen Hub (Coming Soon) · Settings.  
 **Settings:** Toggle Individual ↔ Organization; privacy/export/delete; notifications; language.
 
 ---
@@ -75,11 +75,14 @@
 - **Private:** name, region (not exact), email, masked contacts, salary band (masked), availability, timezone.
 - **Proofs:** **Up to 3 per claim** → (1) verified reference; (2) link/file; (3) credential. Artifacts can support multiple claims.
 - **AC:** required fields; link validation; duplicate‑proof detection; WYSIWYG preview; granular visibility.
+- **Day-1 publish UX:** onboarding must end with a dedicated "public portfolio ready" step that shows `/portfolio/{handle}`, copy action, view action, and continue action.
+- **Day-1 privacy default:** minimal safe fields are public by default for shareability; contact and work-email remain hidden until explicitly enabled.
 
 ### 4.3 Organizations & Assignments **[MVP]**
 
 - **Fields:** role (title‑inflation guardrails), location/remote, timelines, start date, **budget range (masked)**, proof requirements, expertise mapping, expected outcomes/impact, mission/values.
 - **Org verification:** required **before** matching (domain email + checks).
+- **Public org portfolio URL:** organizations get a clean public route at `/portfolio/org/{slug}` and an onboarding success step focused on copying and sharing this link on day 1.
 - **BYOC candidate invites:** owners/admins can invite existing candidates by email, candidates must claim with matching email, and submit a structured Proof Card link for review.
 - **AC:** Draft → Publish → Close; edit history; audit log; masked budgets respected everywhere.
 - **AC (BYOC):** one active invite per org/email; status lifecycle `pending → claimed → proof_submitted` (+ `revoked`/`expired`); resend/revoke available to org admins.
@@ -153,10 +156,8 @@
   - Measured as both actions completed within 10 minutes of `individual_onboarding_completed`:
     - `portfolio_share_link_copied`
     - `portfolio_pdf_export_succeeded`
-- **Company success statement:** "I published my first assignment using a template."
-  - Measured as both actions completed within 10 minutes of `organization_onboarding_completed`:
-    - `assignment_template_applied`
-    - `assignment_publish_succeeded`
+- **Company success statement:** "I copied my public organization portfolio link and can share it now."
+  - Measured as `portfolio_share_link_copied` within 10 minutes of `organization_onboarding_completed`.
 - **Boundary rule:** an action at exactly 10:00 is counted (`<= 10 minutes`).
 - **KPI formulas:**
   - Individual activation rate (10m) = successful individuals within 10m / new individuals
