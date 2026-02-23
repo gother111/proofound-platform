@@ -5,7 +5,8 @@
  *
  * Visibility levels per PRD Part 5, F4:
  * - public: Visible to all organizations
- * - matched: Only visible after mutual interest
+ * - network_only: Visible to trusted network/link contexts
+ * - match_only: Only visible after mutual interest
  * - private: Never shown to organizations
  *
  * PRD References:
@@ -15,7 +16,6 @@
 
 'use client';
 
-import { useState } from 'react';
 import { Lock, Users, Eye, Info } from 'lucide-react';
 import {
   Select,
@@ -26,8 +26,9 @@ import {
 } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Label } from '@/components/ui/label';
+import type { ProfileVisibilityLevel } from '@/lib/contracts/domain';
 
-export type VisibilityLevel = 'public' | 'matched' | 'private';
+export type VisibilityLevel = ProfileVisibilityLevel;
 
 interface FieldVisibilityControlProps {
   fieldName: string;
@@ -43,15 +44,22 @@ const visibilityOptions = [
     value: 'public' as const,
     label: 'Public',
     icon: Users,
-    description: 'Visible to all organizations during matching',
+    description: 'Visible to everyone',
     color: 'text-blue-600',
   },
   {
-    value: 'matched' as const,
-    label: 'After Match',
+    value: 'network_only' as const,
+    label: 'Network-only',
+    icon: Eye,
+    description: 'Visible to trusted network views and matched organizations',
+    color: 'text-amber-600',
+  },
+  {
+    value: 'match_only' as const,
+    label: 'Match-only',
     icon: Eye,
     description: 'Only visible after mutual interest is confirmed',
-    color: 'text-amber-600',
+    color: 'text-emerald-600',
   },
   {
     value: 'private' as const,
@@ -70,7 +78,8 @@ export function FieldVisibilityControl({
   description,
   disabled = false,
 }: FieldVisibilityControlProps) {
-  const currentOption = visibilityOptions.find((opt) => opt.value === value);
+  const currentOption =
+    visibilityOptions.find((opt) => opt.value === value) || visibilityOptions[3];
   const Icon = currentOption?.icon || Lock;
 
   return (

@@ -10,14 +10,31 @@ const logger = createLogger('ExpertisePage');
 
 export const dynamic = 'force-dynamic';
 
+type ExpertiseTab = 'atlas' | 'gap-analysis' | 'import-cv';
+
+interface ExpertiseAtlasPageProps {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}
+
+function normalizeInitialTab(rawTab: string | string[] | undefined): ExpertiseTab {
+  const value = Array.isArray(rawTab) ? rawTab[0] : rawTab;
+  if (value === 'gap-analysis' || value === 'import-cv') {
+    return value;
+  }
+  return 'atlas';
+}
+
 /**
  * Expertise Atlas Page - Main entry point
  *
  * Shows user's skills organized in L1→L2→L3→L4 hierarchy
  * Starts with empty state if no skills exist
  */
-export default async function ExpertiseAtlasPage() {
+export default async function ExpertiseAtlasPage({ searchParams }: ExpertiseAtlasPageProps) {
   try {
+    const resolvedParams = (await searchParams) ?? {};
+    const initialTab = normalizeInitialTab(resolvedParams.tab);
+
     const user = await requireAuth();
     const supabase = await createClient();
 
@@ -250,6 +267,7 @@ export default async function ExpertiseAtlasPage() {
         taxonomyReady={taxonomyReady}
         widgetData={widgetData}
         linkedInConnected={isLinkedInConnected}
+        initialTab={initialTab}
       />
     );
   } catch (error) {
@@ -262,6 +280,7 @@ export default async function ExpertiseAtlasPage() {
         taxonomyReady={false}
         widgetData={null}
         linkedInConnected={false}
+        initialTab="atlas"
       />
     );
   }

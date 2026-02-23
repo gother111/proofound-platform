@@ -24,15 +24,21 @@ interface ProfileField {
 
 interface VisibilityPreviewProps {
   fields: ProfileField[];
-  viewMode: 'public' | 'matched';
+  viewMode: 'public' | 'network_only' | 'match_only';
 }
 
 export function VisibilityPreview({ fields, viewMode }: VisibilityPreviewProps) {
   const visibleFields = fields.filter((field) => {
     if (viewMode === 'public') {
       return field.visibility === 'public';
-    } else if (viewMode === 'matched') {
-      return field.visibility === 'public' || field.visibility === 'matched';
+    } else if (viewMode === 'network_only') {
+      return field.visibility === 'public' || field.visibility === 'network_only';
+    } else if (viewMode === 'match_only') {
+      return (
+        field.visibility === 'public' ||
+        field.visibility === 'network_only' ||
+        field.visibility === 'match_only'
+      );
     }
     return false;
   });
@@ -48,12 +54,17 @@ export function VisibilityPreview({ fields, viewMode }: VisibilityPreviewProps) 
             {viewMode === 'public' ? (
               <>
                 <Eye className="h-3 w-3" />
-                <span>Before Match</span>
+                <span>Public</span>
+              </>
+            ) : viewMode === 'network_only' ? (
+              <>
+                <Eye className="h-3 w-3" />
+                <span>Network-only</span>
               </>
             ) : (
               <>
                 <Eye className="h-3 w-3" />
-                <span>After Match</span>
+                <span>Match-only</span>
               </>
             )}
           </Badge>
@@ -93,9 +104,13 @@ export function VisibilityPreview({ fields, viewMode }: VisibilityPreviewProps) 
               {hiddenFields.map((field) => (
                 <div key={field.name} className="text-sm text-[#9B9891]">
                   <span className="font-medium">{field.label}</span>
-                  {field.visibility === 'matched' && viewMode === 'public' && (
-                    <span className="text-xs ml-2">(shown after match)</span>
+                  {field.visibility === 'network_only' && viewMode === 'public' && (
+                    <span className="text-xs ml-2">(shown in trusted network views)</span>
                   )}
+                  {field.visibility === 'match_only' &&
+                    (viewMode === 'public' || viewMode === 'network_only') && (
+                      <span className="text-xs ml-2">(shown after a match)</span>
+                    )}
                   {field.visibility === 'private' && (
                     <span className="text-xs ml-2">(always private)</span>
                   )}
@@ -116,7 +131,10 @@ export function VisibilityPreview({ fields, viewMode }: VisibilityPreviewProps) 
                 <strong>Before match:</strong> Only "Public" fields
               </li>
               <li>
-                <strong>After match:</strong> "Public" + "After Match" fields
+                <strong>Network view:</strong> "Public" + "Network-only" fields
+              </li>
+              <li>
+                <strong>After match:</strong> "Public" + "Network-only" + "Match-only" fields
               </li>
               <li>
                 <strong>Private fields:</strong> Never shared with organizations

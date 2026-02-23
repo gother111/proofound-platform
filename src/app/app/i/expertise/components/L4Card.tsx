@@ -79,7 +79,7 @@ export function L4Card({ skill, onEdit }: L4CardProps) {
         <div className="flex flex-col items-end gap-2">
           <Badge variant="outline" className="gap-1 text-xs">
             <Lock className="h-3.5 w-3.5" />
-            Proofs: match-only by default
+            Proof visibility: shared after mutual match
           </Badge>
           <Badge variant="outline" className="gap-1 text-xs">
             <ShieldCheck className="h-3.5 w-3.5" />

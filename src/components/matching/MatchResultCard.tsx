@@ -79,6 +79,10 @@ export function MatchResultCard({
 
   // Top 3 skills
   const topSkills = skills.slice(0, 3);
+  const showExactCompensation =
+    (result.assignment as any)?.visibility?.showExactSalary === true ||
+    (result.profile as any)?.visibility?.showExactSalary === true ||
+    (data as any)?.showExactSalary === true;
 
   // Match score percentage
   const scorePercent = Math.round(result.score * 100);
@@ -328,11 +332,13 @@ export function MatchResultCard({
         )}
 
         {/* Compensation */}
-        {(data?.compMin || data?.compMax) && (
+        {(data?.compMin || data?.compMax || result.subscores?.compensation !== undefined) && (
           <div className="flex items-center gap-2">
             <DollarSign className="w-3 h-3" />
             <span>
-              {data.currency} {data.compMin?.toLocaleString()}-{data.compMax?.toLocaleString()}
+              {showExactCompensation && (data?.compMin || data?.compMax)
+                ? `${data.currency} ${data.compMin?.toLocaleString()}-${data.compMax?.toLocaleString()}`
+                : 'Compensation overlap only'}
             </span>
           </div>
         )}

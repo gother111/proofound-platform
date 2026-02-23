@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { EmptyState } from './components/EmptyState';
 import { L1Grid } from './components/L1Grid';
 import { L2Modal } from './components/L2Modal';
@@ -18,8 +19,8 @@ import { SkillWheel } from './widgets/SkillWheel';
 import { VerificationSourcesPie } from './widgets/VerificationSourcesPie';
 import { NextBestActions } from './widgets/NextBestActions';
 import { LinkedInImportModal } from '@/components/expertise/LinkedInImportModal';
-import { GapMap } from '@/components/expertise/GapMap';
 import { CVJDAutoSuggest } from '@/components/expertise/CVJDAutoSuggest';
+import { SkillGapsClient } from '@/components/skill-gaps/SkillGapsClient';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, BookOpen, Linkedin, TrendingUp, FileText, Grid3x3 } from 'lucide-react';
@@ -34,6 +35,7 @@ interface ExpertiseAtlasClientProps {
   taxonomyReady: boolean;
   widgetData: any | null;
   linkedInConnected: boolean;
+  initialTab?: 'atlas' | 'gap-analysis' | 'import-cv';
 }
 
 export function ExpertiseAtlasClient({
@@ -42,10 +44,11 @@ export function ExpertiseAtlasClient({
   taxonomyReady,
   widgetData,
   linkedInConnected,
+  initialTab = 'atlas',
 }: ExpertiseAtlasClientProps) {
   const router = useRouter();
   const [skills, setSkills] = useState(initialSkills);
-  const [activeTab, setActiveTab] = useState<string>('atlas');
+  const [activeTab, setActiveTab] = useState<string>(initialTab);
   const [selectedL1, setSelectedL1] = useState<number | null>(null);
   const [selectedL2, setSelectedL2] = useState<any | null>(null);
   const [selectedL3, setSelectedL3] = useState<any | null>(null);
@@ -109,6 +112,11 @@ export function ExpertiseAtlasClient({
   useEffect(() => {
     setSkills(initialSkills);
   }, [initialSkills]);
+
+  // Keep selected tab synced with deep-link query values.
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   // Filter skills for side sheet (must be before early return)
   const filteredSkills = useMemo(() => {
@@ -283,8 +291,11 @@ export function ExpertiseAtlasClient({
   };
 
   const handleSkillDeleted = () => {
-    // Refresh page after deletion
-    window.location.reload();
+    if (skillToEdit?.id) {
+      setSkills((prev) => prev.filter((skill) => skill.id !== skillToEdit.id));
+    }
+    setSkillToEdit(null);
+    router.refresh();
   };
 
   // Widget click handlers
@@ -349,9 +360,12 @@ export function ExpertiseAtlasClient({
             <Button
               variant="outline"
               className="border-proofound-forest text-proofound-forest hover:bg-proofound-forest/10 font-medium rounded-xl"
+              asChild
             >
-              <BookOpen className="h-4 w-4 mr-2" />
-              Learn More
+              <Link href="/docs/expertise-atlas">
+                <BookOpen className="h-4 w-4 mr-2" />
+                Learn More
+              </Link>
             </Button>
             {linkedInConnected && (
               <Button
@@ -365,7 +379,6 @@ export function ExpertiseAtlasClient({
             )}
             <Button
               onClick={() => {
-                console.log('DEBUG: Add Skill button clicked');
                 setIsAddSkillDrawerOpen(true);
               }}
               className="bg-proofound-forest text-white hover:bg-proofound-forest/90 font-medium rounded-xl shadow-sm"
@@ -602,18 +615,7 @@ export function ExpertiseAtlasClient({
 
           {/* Gap Analysis Tab */}
           <TabsContent value="gap-analysis">
-            <div className="space-y-6">
-              <div className="bg-white rounded-lg p-6 shadow-sm border">
-                <h2 className="text-2xl font-semibold text-[#2D3330] mb-4">
-                  Identify Your Skill Gaps
-                </h2>
-                <p className="text-[#6B6760] mb-6">
-                  Analyze your current skills against target role requirements and get personalized
-                  recommendations for growth.
-                </p>
-                <GapMap />
-              </div>
-            </div>
+            <SkillGapsClient />
           </TabsContent>
 
           {/* Import from CV Tab */}

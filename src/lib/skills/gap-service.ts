@@ -184,7 +184,7 @@ export async function computeSkillGaps({
   // Fetch required skills per assignment
   const { data: requirements, error: reqError } = await client
     .from('assignment_expertise_matrix')
-    .select('assignment_id, skill_code, min_level, weight, is_required')
+    .select('assignment_id, skill_code, required_level, stakeholder_role, linked_outcome_id')
     .in('assignment_id', filteredAssignmentIds);
 
   if (reqError) {
@@ -217,8 +217,11 @@ export async function computeSkillGaps({
 
     reqsForAssignment.forEach((req) => {
       const skillCode = req.skill_code;
-      const targetLevel = req.min_level ?? 1;
-      const weight = req.weight ?? 1;
+      const targetLevel = req.required_level ?? 1;
+      const role = (req.stakeholder_role || '').toLowerCase();
+      const weightBase =
+        role === 'nice' || role === 'nice_to_have' || role === 'preferred' ? 0.65 : 1;
+      const weight = req.linked_outcome_id ? weightBase + 0.2 : weightBase;
       const currentLevel = userSkillMap.get(skillCode)?.level ?? 0;
       const gap = Math.max(targetLevel - currentLevel, 0);
 

@@ -20,16 +20,29 @@ vi.mock('@/lib/assignments/activation', () => ({
   checkAndEmitAssignmentActivation: vi.fn(),
 }));
 
-vi.mock('@/db', () => ({
-  db: {
-    query: {
-      assignments: { findFirst: vi.fn() },
-      assignmentOutcomes: { findMany: vi.fn() },
+vi.mock('@/db', () => {
+  const update = vi.fn();
+  const remove = vi.fn();
+  const transaction = vi.fn(async (cb: any) =>
+    cb({
+      update,
+      delete: vi.fn(() => ({ where: vi.fn().mockResolvedValue(undefined) })),
+      insert: vi.fn(() => ({ values: vi.fn().mockResolvedValue(undefined) })),
+    })
+  );
+
+  return {
+    db: {
+      query: {
+        assignments: { findFirst: vi.fn() },
+        assignmentOutcomes: { findMany: vi.fn() },
+      },
+      update,
+      delete: remove,
+      transaction,
     },
-    update: vi.fn(),
-    delete: vi.fn(),
-  },
-}));
+  };
+});
 
 vi.mock('@/lib/log', () => ({
   log: {

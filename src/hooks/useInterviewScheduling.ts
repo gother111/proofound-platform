@@ -14,6 +14,7 @@ export interface InterviewScheduleData {
   platform: 'zoom' | 'google_meet';
   participantUserIds: string[];
   timezone?: string;
+  durationMinutes?: number;
 }
 
 export interface Interview {
@@ -34,13 +35,34 @@ export interface Interview {
 export interface UseInterviewSchedulingOptions {
   onScheduled?: (interview: Interview) => void;
   onError?: (error: Error) => void;
+  policyPreset?: 'startup' | 'enterprise' | 'volunteer' | 'advanced';
 }
+
+const INTERVIEW_POLICY_PRESETS = {
+  startup: {
+    scheduleWithinDays: 7,
+    maxDurationMinutes: 30,
+  },
+  enterprise: {
+    scheduleWithinDays: 14,
+    maxDurationMinutes: 45,
+  },
+  volunteer: {
+    scheduleWithinDays: 21,
+    maxDurationMinutes: 30,
+  },
+  advanced: {
+    scheduleWithinDays: 7,
+    maxDurationMinutes: 30,
+  },
+} as const;
 
 export function useInterviewScheduling(options: UseInterviewSchedulingOptions = {}) {
   const [isScheduling, setIsScheduling] = useState(false);
   const [isRescheduling, setIsRescheduling] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const activePolicy = INTERVIEW_POLICY_PRESETS[options.policyPreset || 'startup'];
 
   /**
    * Schedule a new interview
@@ -60,6 +82,8 @@ export function useInterviewScheduling(options: UseInterviewSchedulingOptions = 
             platform: data.platform,
             participantUserIds: data.participantUserIds,
             timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+            policyPreset: options.policyPreset || 'startup',
+            durationMinutes: data.durationMinutes ?? 30,
           }),
         });
 
@@ -192,8 +216,8 @@ export function useInterviewScheduling(options: UseInterviewSchedulingOptions = 
   const validateSchedulingWindow = useCallback(
     (scheduledAt: Date, matchAcceptedAt: Date): { valid: boolean; error?: string } => {
       const now = new Date();
-      const sevenDaysFromMatch = new Date(matchAcceptedAt);
-      sevenDaysFromMatch.setDate(sevenDaysFromMatch.getDate() + 7);
+      const maxScheduleDate = new Date(matchAcceptedAt);
+      maxScheduleDate.setDate(maxScheduleDate.getDate() + activePolicy.scheduleWithinDays);
 
       if (scheduledAt < now) {
         return {
@@ -202,16 +226,16 @@ export function useInterviewScheduling(options: UseInterviewSchedulingOptions = 
         };
       }
 
-      if (scheduledAt > sevenDaysFromMatch) {
+      if (scheduledAt > maxScheduleDate) {
         return {
           valid: false,
-          error: 'Interview must be scheduled within 7 days of match acceptance',
+          error: `Interview must be scheduled within ${activePolicy.scheduleWithinDays} days of match acceptance`,
         };
       }
 
       return { valid: true };
     },
-    []
+    [activePolicy.scheduleWithinDays]
   );
 
   /**
@@ -226,16 +250,16 @@ export function useInterviewScheduling(options: UseInterviewSchedulingOptions = 
         };
       }
 
-      if (durationMinutes > 30) {
+      if (durationMinutes > activePolicy.maxDurationMinutes) {
         return {
           valid: false,
-          error: 'Interview duration cannot exceed 30 minutes',
+          error: `Interview duration cannot exceed ${activePolicy.maxDurationMinutes} minutes`,
         };
       }
 
       return { valid: true };
     },
-    []
+    [activePolicy.maxDurationMinutes]
   );
 
   /**
@@ -261,5 +285,6 @@ export function useInterviewScheduling(options: UseInterviewSchedulingOptions = 
     validateSchedulingWindow,
     validateDuration,
     canReschedule,
+    activePolicy,
   };
 }

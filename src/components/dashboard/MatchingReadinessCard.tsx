@@ -37,7 +37,7 @@ export function MatchingReadinessCard({ useMockData, onActionClick }: MatchingRe
 
     async function load() {
       try {
-        const response = await apiFetch('/api/expertise/gap-analysis');
+        const response = await apiFetch('/api/skill-gaps');
         if (!response.ok) throw new Error('Failed to fetch gaps');
         const json = (await response.json()) as GapResponse;
         setGapCount(json.gaps?.length ?? 0);

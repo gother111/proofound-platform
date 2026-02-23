@@ -35,6 +35,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { UI_VOCABULARY } from '@/lib/copy/vocabulary';
 
 interface MatchExplainerProps {
   // Overall match data
@@ -171,10 +172,7 @@ export function MatchExplainerModal({
                   <p className="text-sm text-[#6B6760] mb-1">Your Ranking</p>
                   <div className="flex items-center gap-2">
                     <Award className="w-5 h-5" style={{ color: getRankColor() }} />
-                    <p
-                      className="text-xl font-semibold"
-                      style={{ color: getRankColor() }}
-                    >
+                    <p className="text-xl font-semibold" style={{ color: getRankColor() }}>
                       {getRankDisplay()}
                     </p>
                   </div>
@@ -213,9 +211,7 @@ export function MatchExplainerModal({
                       <TrendingUp className="w-4 h-4 text-[#1C4D3A]" />
                       <span className="text-sm font-medium text-[#2D3330]">Skills Match</span>
                     </div>
-                    <span className="text-sm font-semibold text-[#1C4D3A]">
-                      {skillsPercent}%
-                    </span>
+                    <span className="text-sm font-semibold text-[#1C4D3A]">{skillsPercent}%</span>
                   </div>
                   <Progress value={skillsPercent} className="h-2" />
                 </div>
@@ -228,7 +224,7 @@ export function MatchExplainerModal({
                     <div className="flex items-center gap-2">
                       <Heart className="w-4 h-4 text-[#C76B4A]" />
                       <span className="text-sm font-medium text-[#2D3330]">
-                        Purpose Alignment (PAC)
+                        {UI_VOCABULARY.pacLabel}
                       </span>
                     </div>
                     <span className="text-sm font-semibold text-[#C76B4A]">{pacPercent}%</span>
@@ -263,9 +259,7 @@ export function MatchExplainerModal({
                       <AlertCircle className="w-4 h-4 text-[#6B6760]" />
                       <span className="text-sm font-medium text-[#2D3330]">Skill Recency</span>
                     </div>
-                    <span className="text-sm font-semibold text-[#6B6760]">
-                      {recencyPercent}%
-                    </span>
+                    <span className="text-sm font-semibold text-[#6B6760]">{recencyPercent}%</span>
                   </div>
                   <Progress value={recencyPercent} className="h-2" />
                 </div>
@@ -277,13 +271,9 @@ export function MatchExplainerModal({
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <Award className="w-4 h-4 text-[#6B6760]" />
-                      <span className="text-sm font-medium text-[#2D3330]">
-                        Evidence Strength
-                      </span>
+                      <span className="text-sm font-medium text-[#2D3330]">Evidence Strength</span>
                     </div>
-                    <span className="text-sm font-semibold text-[#6B6760]">
-                      {evidencePercent}%
-                    </span>
+                    <span className="text-sm font-semibold text-[#6B6760]">{evidencePercent}%</span>
                   </div>
                   <Progress value={evidencePercent} className="h-2" />
                 </div>
@@ -291,8 +281,8 @@ export function MatchExplainerModal({
 
               <div className="bg-[#F7F6F1] rounded-lg p-4 border border-[#E8E6DD] mt-4">
                 <p className="text-xs leading-relaxed text-[#2D3330]">
-                  <strong className="font-semibold">How it works:</strong> Your composite score
-                  is a weighted combination of these factors. Higher scores in key areas (Skills +
+                  <strong className="font-semibold">How it works:</strong> Your composite score is a
+                  weighted combination of these factors. Higher scores in key areas (Skills +
                   Purpose) boost your overall match.
                 </p>
               </div>
@@ -305,9 +295,7 @@ export function MatchExplainerModal({
                   {/* Required Skills */}
                   {skillsMatch.required.length > 0 && (
                     <div>
-                      <h4 className="text-sm font-semibold text-[#2D3330] mb-3">
-                        Required Skills
-                      </h4>
+                      <h4 className="text-sm font-semibold text-[#2D3330] mb-3">Required Skills</h4>
                       <div className="space-y-2">
                         {skillsMatch.required.map((skill, idx) => (
                           <div
@@ -452,9 +440,9 @@ export function MatchExplainerModal({
 
                   <div className="bg-[#F7F6F1] rounded-lg p-4 border border-[#E8E6DD]">
                     <p className="text-xs leading-relaxed text-[#2D3330]">
-                      <strong className="font-semibold">PAC (Purpose-Alignment Contribution)</strong>{' '}
-                      uses Jaccard similarity to measure value and cause overlap. Higher PAC means
-                      this role aligns with what matters to you.
+                      <strong className="font-semibold">{UI_VOCABULARY.pacLabel}</strong> uses value
+                      and cause overlap to estimate mission alignment. Higher scores mean this role
+                      aligns more closely with what matters to you.
                     </p>
                   </div>
                 </>
@@ -476,9 +464,7 @@ export function MatchExplainerModal({
                         <p className="text-sm font-medium text-[#2D3330] capitalize mb-0.5">
                           {key.replace(/([A-Z])/g, ' $1').trim()}
                         </p>
-                        {value.details && (
-                          <p className="text-xs text-[#6B6760]">{value.details}</p>
-                        )}
+                        {value.details && <p className="text-xs text-[#6B6760]">{value.details}</p>}
                       </div>
                       {value.match ? (
                         <CheckCircle2 className="w-5 h-5 text-[#1C4D3A] flex-shrink-0 ml-2" />
@@ -508,4 +494,3 @@ export function MatchExplainerModal({
     </Dialog>
   );
 }
-

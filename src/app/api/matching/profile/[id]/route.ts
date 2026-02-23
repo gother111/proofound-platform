@@ -25,6 +25,9 @@ function toLegacyProfile(profile: any) {
     id: profile.profileId,
     name: 'Default Profile',
     weights: profile.weights || {},
+    desiredRoles: profile.desiredRoles || [],
+    desiredIndustries: profile.desiredIndustries || [],
+    orgTypes: profile.orgTypes || [],
     constraints: {
       requireEmailVerified: !!verified.email,
       requirePhoneVerified: !!verified.phone,

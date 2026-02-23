@@ -3,7 +3,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { db } from '@/db';
-import { assignmentOutcomes, assignments } from '@/db/schema';
+import { assignmentExpertiseMatrix, assignmentOutcomes, assignments } from '@/db/schema';
+import {
+  buildMatrixRowsFromRequirements,
+  deriveRequirementsFromMatrix,
+} from '@/lib/assignments/expertise-matrix';
 import { checkAndEmitAssignmentActivation } from '@/lib/assignments/activation';
 import { verifyAssignmentAccess, verifyAssignmentMutationAccess } from '@/lib/assignments/access';
 import { requireAuth } from '@/lib/auth';
@@ -39,6 +43,19 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       where: eq(assignmentOutcomes.assignmentId, assignmentId),
       orderBy: (t, { asc }) => [asc(t.createdAt)],
     });
+    const matrixRows = await db.query.assignmentExpertiseMatrix.findMany({
+      where: eq(assignmentExpertiseMatrix.assignmentId, assignmentId),
+    });
+    const derivedRequirements =
+      matrixRows.length > 0
+        ? deriveRequirementsFromMatrix(
+            matrixRows.map((row) => ({
+              skillCode: row.skillCode,
+              requiredLevel: row.requiredLevel,
+              stakeholderRole: row.stakeholderRole,
+            }))
+          )
+        : null;
 
     const normalizedOutcomes = outcomesRows.map((outcome) => {
       const firstMetric = Array.isArray(outcome.metrics) ? outcome.metrics[0] : null;
@@ -76,11 +93,14 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       startLatest: assignment.startLatest,
       weights,
       location: assignment.locationMode || assignment.city || assignment.country || '',
-      requiredSkills: (assignment.mustHaveSkills as any) || [],
-      niceToHaveSkills: (assignment.niceToHaveSkills as any) || [],
+      requiredSkills:
+        derivedRequirements?.mustHaveSkills ?? ((assignment.mustHaveSkills as any) || []),
+      niceToHaveSkills:
+        derivedRequirements?.niceToHaveSkills ?? ((assignment.niceToHaveSkills as any) || []),
       verificationGates: assignment.verificationGates || [],
       status: assignment.status,
       creationStatus: assignment.creationStatus,
+      builderMode: assignment.builderMode || 'basic',
     };
 
     return NextResponse.json({ assignment: responseAssignment });
@@ -94,6 +114,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 }
 
 const AssignmentUpdateSchema = z.object({
+  builderMode: z.enum(['basic', 'advanced']).optional(),
   role: z.string().min(1).optional(),
   description: z.string().optional(),
   businessValue: z.string().optional(),
@@ -167,19 +188,64 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     const body = await request.json();
     const validatedData = AssignmentUpdateSchema.parse(body);
+    const targetAssignmentId = assignmentId;
+
+    if (!targetAssignmentId) {
+      return NextResponse.json({ error: 'Invalid assignment id' }, { status: 400 });
+    }
+
+    const shouldSyncMatrix =
+      validatedData.mustHaveSkills !== undefined || validatedData.niceToHaveSkills !== undefined;
+    const matrixRows = shouldSyncMatrix
+      ? buildMatrixRowsFromRequirements(
+          targetAssignmentId,
+          validatedData.mustHaveSkills || [],
+          validatedData.niceToHaveSkills || []
+        )
+      : [];
+    const derivedRequirements = shouldSyncMatrix ? deriveRequirementsFromMatrix(matrixRows) : null;
 
     const updateData = {
       ...validatedData,
+      ...(derivedRequirements
+        ? {
+            mustHaveSkills: derivedRequirements.mustHaveSkills,
+            niceToHaveSkills: derivedRequirements.niceToHaveSkills,
+          }
+        : {}),
       startEarliest: validatedData.startEarliest,
       startLatest: validatedData.startLatest,
       updatedAt: new Date(),
     };
 
-    const [updatedAssignment] = await db
-      .update(assignments)
-      .set(updateData)
-      .where(eq(assignments.id, assignmentId))
-      .returning();
+    const updatedAssignment = await db.transaction(async (tx) => {
+      const [updated] = await tx
+        .update(assignments)
+        .set(updateData)
+        .where(eq(assignments.id, targetAssignmentId))
+        .returning();
+
+      if (shouldSyncMatrix) {
+        await tx
+          .delete(assignmentExpertiseMatrix)
+          .where(eq(assignmentExpertiseMatrix.assignmentId, targetAssignmentId));
+
+        if (matrixRows.length > 0) {
+          await tx.insert(assignmentExpertiseMatrix).values(
+            matrixRows.map((row) => ({
+              assignmentId: targetAssignmentId,
+              skillCode: row.skillCode,
+              requiredLevel: row.requiredLevel,
+              stakeholderRole: row.stakeholderRole,
+              linkedOutcomeId: row.linkedOutcomeId ?? null,
+              outcomeRationale: row.outcomeRationale ?? null,
+            }))
+          );
+        }
+      }
+
+      return updated;
+    });
 
     log.info('assignment.updated', {
       assignmentId,
