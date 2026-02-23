@@ -28,6 +28,7 @@
 | Profiles         | Proof‑based profile; 3 proofs/claim; privacy controls                      | Rich portfolios; imports; team profiles                           |
 | Matching         | Opt‑in suggestions; user/org weights; explainability; **top 5–10 results** | Adaptive weights; team/role matching; scheduling                  |
 | Assignments      | Outcomes, proof reqs, masked budgets                                       | Contracts, milestones, payments                                   |
+| BYOC intake      | Org email invites; candidate claim + Proof Card submission                 | Auto-ingest to assignment scoring; ATS connectors                 |
 | Verification     | Email/domain + referee; seniority-weighted (not visible)                   | Multi‑ref trees; doc checks; registry lookups; continuous signals |
 | Cluster Snapshot | **Private, compute‑only** (no public UI)                                   | Personal UI, graph analytics, org network views                   |
 | Messaging        | Post‑match text; links + **PDF ≤5 MB**                                     | Voice/video, scheduling, doc exchange                             |
@@ -79,7 +80,9 @@
 
 - **Fields:** role (title‑inflation guardrails), location/remote, timelines, start date, **budget range (masked)**, proof requirements, expertise mapping, expected outcomes/impact, mission/values.
 - **Org verification:** required **before** matching (domain email + checks).
+- **BYOC candidate invites:** owners/admins can invite existing candidates by email, candidates must claim with matching email, and submit a structured Proof Card link for review.
 - **AC:** Draft → Publish → Close; edit history; audit log; masked budgets respected everywhere.
+- **AC (BYOC):** one active invite per org/email; status lifecycle `pending → claimed → proof_submitted` (+ `revoked`/`expired`); resend/revoke available to org admins.
 
 ### 4.4 Matching & Recommendations **[MVP]**
 
@@ -150,7 +153,7 @@
 4. Match acceptance rate (+ decline reasons)
 5. Safety: report rate & resolution SLA
 
-**Core Events:** `signed_up`, `created_profile`, `profile_ready_for_match`, `org_verified`, `assignment_published`, `match_suggested`, `match_viewed`, `match_accepted`, `match_declined(reason)`, `message_sent`, `verification_requested`, `verification_completed(status)`, `content_reported`.
+**Core Events:** `signed_up`, `created_profile`, `profile_ready_for_match`, `org_verified`, `assignment_published`, `match_suggested`, `match_viewed`, `match_accepted`, `match_declined(reason)`, `message_sent`, `verification_requested`, `verification_completed(status)`, `content_reported`, `candidate_invite_sent`, `candidate_invite_opened`, `candidate_invite_claimed`, `candidate_proof_card_submitted`.
 
 **Targets (90d):** profile completion ≥60% D+1; first suggestion <24h; acceptance ≥20%; ≥50% assignments with ≥3 qualified matches in 7d; verified users ≥30% by D+14; report rate <1% with <24h SLA.
 
