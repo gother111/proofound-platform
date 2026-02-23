@@ -173,6 +173,87 @@ CREATE POLICY "Org admins can delete invitations"
     )
   );
 
+-- Organization candidate invites policies (BYOC)
+DO $$
+BEGIN
+  IF to_regclass('public.org_candidate_invites') IS NULL THEN
+    RETURN;
+  END IF;
+
+  EXECUTE 'ALTER TABLE public.org_candidate_invites ENABLE ROW LEVEL SECURITY';
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'org_candidate_invites'
+      AND policyname = 'Org members can view candidate invites'
+  ) THEN
+    EXECUTE '
+      CREATE POLICY "Org members can view candidate invites"
+      ON public.org_candidate_invites FOR SELECT
+      USING (
+        EXISTS (
+          SELECT 1 FROM public.organization_members
+          WHERE organization_members.org_id = org_candidate_invites.org_id
+            AND organization_members.user_id = auth.uid()
+            AND organization_members.status = ''active''
+        )
+      )';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'org_candidate_invites'
+      AND policyname = 'Org admins can create candidate invites'
+  ) THEN
+    EXECUTE '
+      CREATE POLICY "Org admins can create candidate invites"
+      ON public.org_candidate_invites FOR INSERT
+      WITH CHECK (
+        EXISTS (
+          SELECT 1 FROM public.organization_members
+          WHERE organization_members.org_id = org_candidate_invites.org_id
+            AND organization_members.user_id = auth.uid()
+            AND organization_members.role IN (''owner'', ''admin'')
+            AND organization_members.status = ''active''
+        )
+      )';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'org_candidate_invites'
+      AND policyname = 'Org admins can update candidate invites'
+  ) THEN
+    EXECUTE '
+      CREATE POLICY "Org admins can update candidate invites"
+      ON public.org_candidate_invites FOR UPDATE
+      USING (
+        EXISTS (
+          SELECT 1 FROM public.organization_members
+          WHERE organization_members.org_id = org_candidate_invites.org_id
+            AND organization_members.user_id = auth.uid()
+            AND organization_members.role IN (''owner'', ''admin'')
+            AND organization_members.status = ''active''
+        )
+      )
+      WITH CHECK (
+        EXISTS (
+          SELECT 1 FROM public.organization_members
+          WHERE organization_members.org_id = org_candidate_invites.org_id
+            AND organization_members.user_id = auth.uid()
+            AND organization_members.role IN (''owner'', ''admin'')
+            AND organization_members.status = ''active''
+        )
+      )';
+  END IF;
+END $$;
+
 -- Audit logs policies
 CREATE POLICY "Users can view own audit logs"
   ON public.audit_logs FOR SELECT

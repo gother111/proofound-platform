@@ -44,6 +44,7 @@ function SignInSubmitButton() {
 export function SignIn({ onBack, onCreateAccount }: SignInProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const nextPath = searchParams.get('next');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [clientError, setClientError] = useState<string | null>(null);
@@ -177,6 +178,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
             noValidate
             data-testid="login-form"
           >
+            <input type="hidden" name="next" value={nextPath || ''} />
             <div className="space-y-2">
               <Label
                 htmlFor="email"
@@ -299,7 +301,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
           <div className="mt-7 text-center text-sm text-neutral-dark-500">
             <span>Don&apos;t have an account? </span>
             <Link
-              href="/signup"
+              href={nextPath ? `/signup?next=${encodeURIComponent(nextPath)}` : '/signup'}
               onClick={(event) => {
                 if (onCreateAccount) {
                   event.preventDefault();

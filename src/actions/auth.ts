@@ -60,6 +60,18 @@ function resolveRequestSiteUrl(headersList: Headers): string {
   return '';
 }
 
+function sanitizeNextPath(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  if (!trimmed.startsWith('/') || trimmed.startsWith('//')) {
+    return null;
+  }
+
+  return trimmed;
+}
+
 export async function signUp(
   prevState: SignUpState | undefined,
   formData: FormData
@@ -69,6 +81,7 @@ export async function signUp(
 
     const rawEmail = (formData.get('email') as string | null) ?? '';
     const email = rawEmail.trim().toLowerCase();
+    const nextPath = sanitizeNextPath((formData.get('next') as string | null) ?? null);
 
     const personaChoice = (formData.get('persona') as string | null)?.trim();
     const normalizedPersona = personaChoice === 'organization' ? 'org_member' : personaChoice;
@@ -109,7 +122,9 @@ export async function signUp(
       email: result.data.email,
       password: result.data.password,
       options: {
-        emailRedirectTo: `${siteUrl}/auth/callback`,
+        emailRedirectTo: nextPath
+          ? `${siteUrl}/auth/callback?next=${encodeURIComponent(nextPath)}`
+          : `${siteUrl}/auth/callback`,
         data: {
           persona: result.data.persona,
         },
@@ -161,7 +176,7 @@ export async function signUp(
     const identities = signUpResult.user?.identities ?? [];
     if (identities.length === 0) {
       const verificationEmail = signUpResult.user?.email ?? result.data.email;
-      await resendVerificationEmail(supabase, verificationEmail, siteUrl);
+      await resendVerificationEmail(supabase, verificationEmail, siteUrl, nextPath);
       return {
         error:
           'An account with this email already exists. We just sent a fresh verification link to your inbox.',
@@ -306,6 +321,7 @@ export async function signIn(
     const rawEmail = (formData.get('email') as string | null) ?? '';
     const email = rawEmail.trim().toLowerCase();
     const password = (formData.get('password') as string | null) ?? '';
+    const nextPath = sanitizeNextPath((formData.get('next') as string | null) ?? null);
     const data = {
       email,
       password,
@@ -330,13 +346,12 @@ export async function signIn(
     if (error) {
       const siteUrl = resolveRequestSiteUrl(headersList);
       if (isEmailNotConfirmedError(error) && siteUrl) {
-        await resendVerificationEmail(supabase, email, siteUrl);
+        await resendVerificationEmail(supabase, email, siteUrl, nextPath);
       }
       return { error: mapSupabaseSignInError(error, email) };
     }
 
-    // Pass the same supabase client that has the authenticated session
-    const destination = await resolveUserHomePath(supabase);
+    const destination = nextPath || (await resolveUserHomePath(supabase));
 
     revalidatePath('/', 'layout');
     redirect(destination);
@@ -386,14 +401,17 @@ function mapSupabaseSignInError(error: AuthError, email?: string): string {
 async function resendVerificationEmail(
   supabase: ServerSupabaseClient,
   email: string,
-  siteUrl: string
+  siteUrl: string,
+  nextPath?: string | null
 ) {
   try {
     await supabase.auth.resend({
       type: 'signup',
       email,
       options: {
-        emailRedirectTo: `${siteUrl}/auth/callback`,
+        emailRedirectTo: nextPath
+          ? `${siteUrl}/auth/callback?next=${encodeURIComponent(nextPath)}`
+          : `${siteUrl}/auth/callback`,
       },
     });
   } catch (resendError) {

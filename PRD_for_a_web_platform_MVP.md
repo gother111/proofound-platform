@@ -79,6 +79,7 @@ For job seekers overwhelmed by volatile, biased, and time-intensive hiring—and
 - MVP prioritizes **bias reduction, privacy, and transparency** by design (not add-ons).
 - MVP excludes engagement-driven social feeds; **no LinkedIn-style content feed**.
 - MVP will surface **values/causes** and **work-preference** signals in matching logic.
+- MVP supports **BYOC candidate invites** for organizations: invite known candidates by email and collect structured Proof Cards instead of CV attachments.
 
 **Open questions (to resolve in subsequent sections)**
 
@@ -1316,6 +1317,16 @@ Each flow includes:
 **Success:** Assignment live; matching pipeline starts.  
 **Key data:** Assignment.status=Published; subscription tier.  
 **Edge cases:** Editing after publish; tier upgrade prompt.  
+**MVP:** Yes.
+
+## O‑14A BYOC Candidate Invites & Proof Card Intake
+
+**Goal:** Let organizations bring known candidates into the platform without CV-first review.  
+**Entry:** Candidates area in org workspace (`Invited candidates` tab).  
+**Happy‑path steps:** Add one or many candidate emails → send invite links → candidate opens invite, authenticates with the same email, claims invite, and submits a Proof Card link (`/p/[token]`) generated from structured profile data.  
+**Success:** Invite status transitions to `proof_submitted`, and org reviewers can open the submitted Proof Card from the queue.  
+**Key data:** CandidateInvite(status lifecycle, token hash, claimant, proof snippet/token, timestamps).  
+**Edge cases:** Duplicate active invite blocked per org/email, expired/revoked token, claimant email mismatch, resend/revoke actions.  
 **MVP:** Yes.
 
 ## O‑15 Intake Matches & Review

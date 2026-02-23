@@ -75,6 +75,10 @@ export const EventType = {
   ASSIGNMENT_PUBLISH_SUCCEEDED: 'assignment_publish_succeeded',
   ASSIGNMENT_TEMPLATE_APPLIED: 'assignment_template_applied',
   TTFQI_WARNING_EMITTED: 'ttfqi_warning_emitted',
+  CANDIDATE_INVITE_SENT: 'candidate_invite_sent',
+  CANDIDATE_INVITE_OPENED: 'candidate_invite_opened',
+  CANDIDATE_INVITE_CLAIMED: 'candidate_invite_claimed',
+  CANDIDATE_PROOF_CARD_SUBMITTED: 'candidate_proof_card_submitted',
 
   // Well-being (Zen Hub)
   WELLBEING_OPT_IN: 'wellbeing_opt_in',
@@ -387,6 +391,10 @@ export function getEventDisplayName(eventType: EventTypeValue): string {
     [EventType.ATTESTATION_PROVIDED]: 'Attestation Provided',
     [EventType.SKILL_PROOF_ADDED]: 'Skill Proof Added',
     [EventType.SKILL_PROOF_DELETED]: 'Skill Proof Deleted',
+    [EventType.CANDIDATE_INVITE_SENT]: 'Candidate Invite Sent',
+    [EventType.CANDIDATE_INVITE_OPENED]: 'Candidate Invite Opened',
+    [EventType.CANDIDATE_INVITE_CLAIMED]: 'Candidate Invite Claimed',
+    [EventType.CANDIDATE_PROOF_CARD_SUBMITTED]: 'Candidate Proof Card Submitted',
     [EventType.VISIBILITY_CHANGED]: 'Visibility Changed',
     [EventType.REDACT_MODE_TOGGLED]: 'Redact Mode Toggled',
     [EventType.PRIVACY_SETTINGS_UPDATED]: 'Privacy Settings Updated',
