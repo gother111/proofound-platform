@@ -9,6 +9,7 @@ import {
   assignmentOutcomes,
 } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
+import { deriveRequirementsFromMatrix } from '@/lib/assignments/expertise-matrix';
 import { log } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
@@ -16,7 +17,7 @@ export const dynamic = 'force-dynamic';
 const ExpertiseMatrixItemSchema = z.object({
   skillCode: z.string(),
   requiredLevel: z.number().min(1).max(5),
-  stakeholderRole: z.string().optional().default('creator'),
+  stakeholderRole: z.string().optional().default('must'),
   linkedOutcomeId: z.string().uuid().optional(),
   outcomeRationale: z.string().optional(),
 });
@@ -84,6 +85,23 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
       await db.insert(assignmentExpertiseMatrix).values(matrixData);
     }
+
+    const derivedRequirements = deriveRequirementsFromMatrix(
+      validatedMatrix.map((item) => ({
+        skillCode: item.skillCode,
+        requiredLevel: item.requiredLevel,
+        stakeholderRole: item.stakeholderRole,
+      }))
+    );
+
+    await db
+      .update(assignments)
+      .set({
+        mustHaveSkills: derivedRequirements.mustHaveSkills,
+        niceToHaveSkills: derivedRequirements.niceToHaveSkills,
+        updatedAt: new Date(),
+      })
+      .where(eq(assignments.id, assignmentId));
 
     log.info('assignment.expertise-matrix.saved', {
       assignmentId,

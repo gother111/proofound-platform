@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { EmptyState } from './components/EmptyState';
 import { L1Grid } from './components/L1Grid';
 import { L2Modal } from './components/L2Modal';
@@ -18,11 +19,10 @@ import { SkillWheel } from './widgets/SkillWheel';
 import { VerificationSourcesPie } from './widgets/VerificationSourcesPie';
 import { NextBestActions } from './widgets/NextBestActions';
 import { LinkedInImportModal } from '@/components/expertise/LinkedInImportModal';
-import { GapMap } from '@/components/expertise/GapMap';
 import { CVJDAutoSuggest } from '@/components/expertise/CVJDAutoSuggest';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, BookOpen, Linkedin, TrendingUp, FileText, Grid3x3 } from 'lucide-react';
+import { ArrowRight, Plus, BookOpen, Linkedin, TrendingUp, FileText, Grid3x3 } from 'lucide-react';
 import { AboutSection } from './components/AboutSection';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -283,8 +283,11 @@ export function ExpertiseAtlasClient({
   };
 
   const handleSkillDeleted = () => {
-    // Refresh page after deletion
-    window.location.reload();
+    if (skillToEdit?.id) {
+      setSkills((prev) => prev.filter((skill) => skill.id !== skillToEdit.id));
+    }
+    setSkillToEdit(null);
+    router.refresh();
   };
 
   // Widget click handlers
@@ -349,9 +352,12 @@ export function ExpertiseAtlasClient({
             <Button
               variant="outline"
               className="border-proofound-forest text-proofound-forest hover:bg-proofound-forest/10 font-medium rounded-xl"
+              asChild
             >
-              <BookOpen className="h-4 w-4 mr-2" />
-              Learn More
+              <Link href="/docs/expertise-atlas">
+                <BookOpen className="h-4 w-4 mr-2" />
+                Learn More
+              </Link>
             </Button>
             {linkedInConnected && (
               <Button
@@ -365,7 +371,6 @@ export function ExpertiseAtlasClient({
             )}
             <Button
               onClick={() => {
-                console.log('DEBUG: Add Skill button clicked');
                 setIsAddSkillDrawerOpen(true);
               }}
               className="bg-proofound-forest text-white hover:bg-proofound-forest/90 font-medium rounded-xl shadow-sm"
@@ -604,14 +609,17 @@ export function ExpertiseAtlasClient({
           <TabsContent value="gap-analysis">
             <div className="space-y-6">
               <div className="bg-white rounded-lg p-6 shadow-sm border">
-                <h2 className="text-2xl font-semibold text-[#2D3330] mb-4">
-                  Identify Your Skill Gaps
-                </h2>
+                <h2 className="text-2xl font-semibold text-[#2D3330] mb-4">Skill Gaps</h2>
                 <p className="text-[#6B6760] mb-6">
-                  Analyze your current skills against target role requirements and get personalized
-                  recommendations for growth.
+                  Use the dedicated Skill Gaps page to review top gaps, assignment coverage,
+                  learning recommendations, and goals.
                 </p>
-                <GapMap />
+                <Button asChild>
+                  <Link href="/app/i/skill-gaps">
+                    Open Skill Gaps
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
               </div>
             </div>
           </TabsContent>

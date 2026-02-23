@@ -52,6 +52,7 @@ export function GapMap({ targetRole, userId }: GapMapProps) {
   const [gaps, setGaps] = useState<SkillGap[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     async function fetchGaps() {
@@ -74,18 +75,29 @@ export function GapMap({ targetRole, userId }: GapMapProps) {
     }
 
     fetchGaps();
-  }, [targetRole, userId]);
+  }, [targetRole, userId, reloadKey]);
 
   const handleAddSkill = async (skillCode: string) => {
     try {
-      const response = await fetch('/api/skills/add', {
+      const response = await fetch('/api/expertise/user-skills', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ skillCode, level: 1 }), // Start at level 1
+        body: JSON.stringify({
+          skill_code: skillCode,
+          level: 1,
+          relevance: 'current',
+          months_experience: 0,
+          last_used_at: new Date().toISOString(),
+        }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to add skill');
+        const errorPayload = await response.json().catch(() => ({}));
+        if (errorPayload.error === 'Skill already exists in your profile') {
+          toast.info('Skill is already in your profile');
+          return;
+        }
+        throw new Error(errorPayload.error || 'Failed to add skill');
       }
 
       toast.success('Skill added to your profile', {
@@ -129,7 +141,13 @@ export function GapMap({ targetRole, userId }: GapMapProps) {
         <CardContent className="pt-6">
           <div className="text-center py-12 space-y-3">
             <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-            <Button variant="outline" onClick={() => window.location.reload()}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setError(null);
+                setReloadKey((prev) => prev + 1);
+              }}
+            >
               Try Again
             </Button>
           </div>
@@ -339,8 +357,7 @@ export function GapMap({ targetRole, userId }: GapMapProps) {
                         size="sm"
                         variant="outline"
                         onClick={() => {
-                          // Navigate to skill edit
-                          window.location.href = `/profile/skills?edit=${gap.skillCode}`;
+                          window.location.href = '/app/i/expertise';
                         }}
                       >
                         Update Level

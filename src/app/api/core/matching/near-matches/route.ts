@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
-import { assignments, matchingProfiles, skills } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { assignments, matchingProfiles, organizations, skills } from '@/db/schema';
+import { eq, inArray } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { scrubDisallowedFields } from '@/lib/core/matching/firewall';
+import { emitAnalyticsEventAsync } from '@/lib/analytics/events';
 import {
   scoreValues,
   scoreCauses,
@@ -24,6 +25,8 @@ import {
   type LocationMode,
 } from '@/lib/core/matching/scorers';
 import { getPreset, normalizeWeights, type PresetKey } from '@/lib/core/matching/presets';
+import { evaluateIndividualMatchability, toNotMatchablePayload } from '@/lib/matching/eligibility';
+import { calculateFocusBoost } from '@/lib/core/matching/focus';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,6 +47,19 @@ interface NearMatchResult {
   missing: string[];
   assignment: unknown;
   reason: string; // Why this is a near match
+  focusBoost: {
+    total: number;
+    matched: {
+      role: boolean;
+      industry: boolean;
+      orgType: boolean;
+    };
+    contributions: {
+      role: number;
+      industry: number;
+      orgType: number;
+    };
+  };
 }
 
 /**
@@ -68,6 +84,34 @@ export async function POST(request: NextRequest) {
     // Validate input
     const validatedData = NearMatchRequestSchema.parse(body);
     const { mode, k = 10, threshold = 0.3 } = validatedData;
+
+    const eligibility = await evaluateIndividualMatchability(user.id);
+    if (!eligibility.eligible) {
+      log.info('matching.gated.not_matchable', {
+        userId: user.id,
+        endpoint: '/api/core/matching/near-matches',
+        tier: eligibility.tier,
+        unmetCriteria: eligibility.unmetCriteria,
+        counts: eligibility.counts,
+      });
+
+      emitAnalyticsEventAsync({
+        eventType: 'matching_gated_not_matchable',
+        userId: user.id,
+        profileId: user.id,
+        entityType: 'api',
+        entityId: '/api/core/matching/near-matches',
+        properties: {
+          unmetCriteria: eligibility.unmetCriteria,
+          unmetCriteriaCount: eligibility.unmetCriteria.length,
+          tier: eligibility.tier,
+          nextTierTarget: eligibility.nextTierTarget?.tier || null,
+          counts: eligibility.counts,
+        },
+      });
+
+      return NextResponse.json(toNotMatchablePayload(eligibility), { status: 412 });
+    }
 
     // Fetch user's matching profile
     const profile = await db.query.matchingProfiles.findFirst({
@@ -108,6 +152,21 @@ export async function POST(request: NextRequest) {
     const activeAssignments = await db.query.assignments.findMany({
       where: eq(assignments.status, 'active'),
     });
+    const orgIds = Array.from(
+      new Set(activeAssignments.map((assignment) => assignment.orgId).filter(Boolean))
+    );
+    const orgRows =
+      orgIds.length > 0
+        ? await db
+            .select({
+              id: organizations.id,
+              type: organizations.type,
+              industry: organizations.industry,
+            })
+            .from(organizations)
+            .where(inArray(organizations.id, orgIds))
+        : [];
+    const orgById = new Map(orgRows.map((row) => [row.id, row]));
 
     // Compute scores (with relaxed filters)
     const results: NearMatchResult[] = [];
@@ -192,9 +251,23 @@ export async function POST(request: NextRequest) {
 
       // Compose weighted score
       const composed = composeWeighted(subscores, weights);
+      const organization = orgById.get(assignment.orgId);
+      const focusBoost = calculateFocusBoost(
+        {
+          desiredRoles: (profile.desiredRoles as string[] | null) || [],
+          desiredIndustries: (profile.desiredIndustries as string[] | null) || [],
+          orgTypes: (profile.orgTypes as string[] | null) || [],
+        },
+        {
+          assignmentRole: assignment.role,
+          orgIndustry: organization?.industry,
+          orgType: organization?.type,
+        }
+      );
+      const finalScore = Math.min(1, composed.total + focusBoost.boost);
 
       // Only include if score meets threshold
-      if (composed.total < threshold) {
+      if (finalScore < threshold) {
         continue;
       }
 
@@ -220,13 +293,21 @@ export async function POST(request: NextRequest) {
 
       results.push({
         assignmentId: assignment.id,
-        score: composed.total,
+        score: finalScore,
         subscores,
-        contributions: composed.contributions,
+        contributions: {
+          ...composed.contributions,
+          focusBoost: focusBoost.boost,
+        },
         gaps: skillScore.gaps,
         missing: skillScore.missing,
         assignment: scrubbedAssignment,
         reason,
+        focusBoost: {
+          total: focusBoost.boost,
+          matched: focusBoost.matched,
+          contributions: focusBoost.contributions,
+        },
       });
     }
 

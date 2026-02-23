@@ -1,7 +1,13 @@
 'use client';
 
 import { AssignmentTemplatePayload } from '@/lib/templates/prefill';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -17,6 +23,7 @@ export type AssignmentTemplate = {
   description?: string | null;
   appliesToSteps: string[];
   presetPayload: AssignmentTemplatePayload;
+  recommendedBuilderMode?: 'basic' | 'advanced';
   isGlobal: boolean;
   status: string;
 };
@@ -37,6 +44,17 @@ function roleFamilyLabel(family: string) {
     design: 'Design',
   };
   return map[family] || family;
+}
+
+function resolveRecommendedMode(template: AssignmentTemplate): 'basic' | 'advanced' {
+  if (template.recommendedBuilderMode) {
+    return template.recommendedBuilderMode;
+  }
+
+  const advancedMarkers = ['weights', 'weight-matrix', 'stakeholders', 'step-3'];
+  return template.appliesToSteps.some((step) => advancedMarkers.includes(step))
+    ? 'advanced'
+    : 'basic';
 }
 
 function TemplatePreview({ payload }: { payload?: AssignmentTemplatePayload }) {
@@ -116,33 +134,41 @@ export function TemplatePicker({
 
           <ScrollArea className="h-[60vh] pr-3">
             <div className="space-y-3">
-              {templates.map((template) => (
-                <Card key={template.id} className="p-4 space-y-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <p className="font-semibold">{template.name}</p>
-                        <Badge variant={template.isGlobal ? 'default' : 'outline'}>
-                          {template.isGlobal ? 'Global' : 'Org'}
-                        </Badge>
-                        <Badge variant="secondary">{roleFamilyLabel(template.roleFamily)}</Badge>
+              {templates.map((template) => {
+                const recommendedMode = resolveRecommendedMode(template);
+                return (
+                  <Card key={template.id} className="p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold">{template.name}</p>
+                          <Badge variant={template.isGlobal ? 'default' : 'outline'}>
+                            {template.isGlobal ? 'Global' : 'Org'}
+                          </Badge>
+                          <Badge variant="secondary">{roleFamilyLabel(template.roleFamily)}</Badge>
+                          <Badge variant="outline">
+                            {recommendedMode === 'basic'
+                              ? 'Basic mode recommended'
+                              : 'Advanced mode recommended'}
+                          </Badge>
+                        </div>
+                        {template.summary && (
+                          <p className="text-sm text-muted-foreground">{template.summary}</p>
+                        )}
                       </div>
-                      {template.summary && (
-                        <p className="text-sm text-muted-foreground">{template.summary}</p>
-                      )}
+                      <Button
+                        onClick={() => onApply(template)}
+                        variant="default"
+                        disabled={template.status !== 'active'}
+                      >
+                        {appliedTemplateId === template.id ? 'Applied' : 'Apply'}
+                      </Button>
                     </div>
-                    <Button
-                      onClick={() => onApply(template)}
-                      variant="default"
-                      disabled={template.status !== 'active'}
-                    >
-                      {appliedTemplateId === template.id ? 'Applied' : 'Apply'}
-                    </Button>
-                  </div>
 
-                  <TemplatePreview payload={template.presetPayload} />
-                </Card>
-              ))}
+                    <TemplatePreview payload={template.presetPayload} />
+                  </Card>
+                );
+              })}
             </div>
           </ScrollArea>
         </div>
@@ -150,4 +176,3 @@ export function TemplatePicker({
     </Sheet>
   );
 }
-

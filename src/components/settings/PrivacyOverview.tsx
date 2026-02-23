@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,9 +19,10 @@ import {
 import { DataBreakdown } from './DataBreakdown';
 import { AuditLogTable } from './AuditLogTable';
 import { DeleteAccount } from './DeleteAccount';
-import { DataImportButton } from './DataImportButton';
 import { EnhancedDataImportDialog } from './EnhancedDataImportDialog';
 import { VisibilitySettingsModal } from '../privacy/VisibilitySettingsModal';
+import { apiFetch } from '@/lib/api/fetch';
+import { CLIENT_FF_DEFAULTS } from '@/lib/featureFlags';
 
 interface PrivacyOverviewProps {
   userId: string;
@@ -34,6 +35,47 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
   const [showVisibilitySettings, setShowVisibilitySettings] = useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [privacySummaryEnabled, setPrivacySummaryEnabled] = useState(
+    CLIENT_FF_DEFAULTS.privacySummary
+  );
+  const [visibilityCounts, setVisibilityCounts] = useState({
+    public: 0,
+    network_only: 0,
+    match_only: 0,
+    private: 0,
+  });
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const flagsResponse = await fetch('/api/feature-flags');
+        if (flagsResponse.ok) {
+          const flagsPayload = await flagsResponse.json();
+          setPrivacySummaryEnabled(flagsPayload?.flags?.privacySummary !== false);
+        }
+
+        const response = await apiFetch('/api/profile/privacy-settings');
+        if (!response.ok) return;
+        const payload = await response.json();
+        const fieldVisibility = (payload?.fieldVisibility || {}) as Record<string, string>;
+        const counts = {
+          public: 0,
+          network_only: 0,
+          match_only: 0,
+          private: 0,
+        };
+        Object.values(fieldVisibility).forEach((level) => {
+          if (level === 'public') counts.public += 1;
+          if (level === 'network_only') counts.network_only += 1;
+          if (level === 'match_only') counts.match_only += 1;
+          if (level === 'private') counts.private += 1;
+        });
+        setVisibilityCounts(counts);
+      } catch (error) {
+        console.error('Failed to load visibility summary', error);
+      }
+    })();
+  }, []);
 
   const handleExportData = async () => {
     setIsExporting(true);
@@ -138,6 +180,77 @@ export function PrivacyOverview({ userId }: PrivacyOverviewProps) {
       </Card>
 
       {/* Data Categories */}
+      {privacySummaryEnabled ? (
+        <Card className="border-proofound-stone dark:border-border rounded-xl">
+          <CardHeader>
+            <CardTitle className="text-xl font-['Crimson_Pro']">What others can see</CardTitle>
+            <CardDescription>
+              Visibility summary across Public, Network-only, Match-only, and Private fields
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+              <div className="rounded-lg border p-3">
+                <p className="font-medium">Public</p>
+                <p className="text-muted-foreground">{visibilityCounts.public} fields</p>
+              </div>
+              <div className="rounded-lg border p-3">
+                <p className="font-medium">Network-only</p>
+                <p className="text-muted-foreground">{visibilityCounts.network_only} fields</p>
+              </div>
+              <div className="rounded-lg border p-3">
+                <p className="font-medium">Match-only</p>
+                <p className="text-muted-foreground">{visibilityCounts.match_only} fields</p>
+              </div>
+              <div className="rounded-lg border p-3">
+                <p className="font-medium">Private</p>
+                <p className="text-muted-foreground">{visibilityCounts.private} fields</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setShowVisibilitySettings(true)}>
+                Preview as public/org
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      <Card className="border-proofound-stone dark:border-border rounded-xl">
+        <CardHeader>
+          <CardTitle className="text-lg font-['Crimson_Pro']">Quick privacy fixes</CardTitle>
+          <CardDescription>
+            Three fast actions to review and correct visibility before sharing your profile.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 gap-2 md:grid-cols-3">
+          <Button
+            variant="outline"
+            className="h-auto py-3 text-left"
+            onClick={() => setShowVisibilitySettings(true)}
+          >
+            <span className="font-medium">Review field visibility</span>
+          </Button>
+          <Button
+            variant="outline"
+            className="h-auto py-3 text-left"
+            onClick={() => setShowAuditLog(true)}
+          >
+            <span className="font-medium">Check privacy audit log</span>
+          </Button>
+          <Button
+            variant="outline"
+            className="h-auto py-3 text-left"
+            onClick={handleExportData}
+            disabled={isExporting}
+          >
+            <span className="font-medium">
+              {isExporting ? 'Exporting data...' : 'Export and inspect my data'}
+            </span>
+          </Button>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Profile Data */}
         <Card className="border-proofound-stone dark:border-border rounded-xl hover:shadow-md transition-shadow">

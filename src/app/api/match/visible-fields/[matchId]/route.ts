@@ -9,8 +9,11 @@ import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
-
-type VisibilityLevel = 'public' | 'network_only' | 'match_only' | 'private';
+import {
+  isVisibleInMatchContext,
+  type ProfileVisibilityLevel,
+  ProfileVisibilityLevelSchema,
+} from '@/lib/contracts/domain';
 
 interface VisibleField {
   field: string;
@@ -19,7 +22,7 @@ interface VisibleField {
   isRedacted: boolean;
 }
 
-const PROFILE_VISIBILITY_DEFAULTS: Record<string, VisibilityLevel> = {
+const PROFILE_VISIBILITY_DEFAULTS: Record<string, ProfileVisibilityLevel> = {
   display_name: 'public',
   headline: 'public',
   location: 'network_only',
@@ -47,22 +50,16 @@ const SENSITIVE_FIELDS = new Set([
   'values',
   'causes',
   'linkedin_url',
+  'compensation',
 ]);
 
-function normalizeVisibilityLevel(value: unknown): VisibilityLevel | null {
-  if (
-    value === 'public' ||
-    value === 'network_only' ||
-    value === 'match_only' ||
-    value === 'private'
-  ) {
-    return value;
-  }
-  return null;
+function normalizeVisibilityLevel(value: unknown): ProfileVisibilityLevel | null {
+  const parsed = ProfileVisibilityLevelSchema.safeParse(value);
+  return parsed.success ? parsed.data : null;
 }
 
-function isVisibleForMatch(level: VisibilityLevel) {
-  return level !== 'private';
+function isVisibleForMatch(level: ProfileVisibilityLevel) {
+  return isVisibleInMatchContext(level);
 }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ matchId: string }> }) {
@@ -110,9 +107,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ matc
       FROM individual_profiles
       WHERE user_id = ${user.id}
     `);
+    const matchingProfile = await db.execute(sql`
+      SELECT comp_min, comp_max, currency
+      FROM matching_profiles
+      WHERE profile_id = ${user.id}
+      LIMIT 1
+    `);
 
     const userData = userProfile.length > 0 ? (userProfile[0] as any) : {};
     const profileData = profile.length > 0 ? (profile[0] as any) : {};
+    const matchingProfileData = matchingProfile.length > 0 ? (matchingProfile[0] as any) : {};
+    const hasCompensationRange =
+      matchingProfileData.comp_min != null && matchingProfileData.comp_max != null;
 
     // Get field visibility settings from normalized privacy table.
     let visibilityRow: Record<string, unknown> | null = null;
@@ -154,6 +160,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ matc
         label: 'LinkedIn',
         value: profileData.linkedin_profile_url || 'Not provided',
       },
+      {
+        field: 'compensation',
+        label: 'Compensation',
+        value: hasCompensationRange ? 'Compensation overlap only' : null,
+      },
     ];
 
     // Filter out empty fields and apply visibility settings
@@ -168,7 +179,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ matc
       .map((f) => {
         let isVisible: boolean;
 
-        if (visibilityResolutionFailed && SENSITIVE_FIELDS.has(f.field)) {
+        if (f.field === 'compensation') {
+          isVisible = !visibilityResolutionFailed;
+        } else if (visibilityResolutionFailed && SENSITIVE_FIELDS.has(f.field)) {
           // Fail closed when visibility lookup fails.
           isVisible = false;
         } else {

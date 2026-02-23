@@ -197,3 +197,66 @@ export function getConstraintsWeight(preset: WeightPreset): number {
     (preset.workAuthorization || 0)
   );
 }
+
+function normalizeStrictWeights(weights: Record<string, number>): WeightPreset {
+  const clampedEntries = Object.entries(weights).map(
+    ([key, value]) => [key, Math.max(0, value)] as const
+  );
+  const sum = clampedEntries.reduce((acc, [, value]) => acc + value, 0);
+
+  if (sum <= 0) {
+    return MATCH_PRESETS.balanced;
+  }
+
+  const normalized = Object.fromEntries(
+    clampedEntries.map(([key, value]) => [key, value / sum])
+  ) as WeightPreset;
+
+  return normalized;
+}
+
+function interpolateWeights(from: WeightPreset, to: WeightPreset, ratio: number): WeightPreset {
+  const t = Math.max(0, Math.min(1, ratio));
+  const keys = new Set([...Object.keys(from), ...Object.keys(to)]);
+  const interpolated: Record<string, number> = {};
+
+  keys.forEach((key) => {
+    const start = from[key] ?? 0;
+    const end = to[key] ?? 0;
+    interpolated[key] = start + (end - start) * t;
+  });
+
+  return normalizeStrictWeights(interpolated);
+}
+
+/**
+ * Convert a user-facing mission-vs-skills bias slider (0-100) into normalized weights.
+ * 0: skills-first, 50: balanced, 100: mission-first
+ */
+export function weightsFromMissionSkillsBias(value: number): WeightPreset {
+  const clampedValue = Math.max(0, Math.min(100, value));
+
+  if (clampedValue <= 50) {
+    return interpolateWeights(
+      MATCH_PRESETS['skills-first'],
+      MATCH_PRESETS.balanced,
+      clampedValue / 50
+    );
+  }
+
+  return interpolateWeights(
+    MATCH_PRESETS.balanced,
+    MATCH_PRESETS['mission-first'],
+    (clampedValue - 50) / 50
+  );
+}
+
+export function getWeightBiasBucket(value: number): string {
+  const clamped = Math.max(0, Math.min(100, Math.round(value)));
+
+  if (clamped <= 20) return '0-20';
+  if (clamped <= 40) return '21-40';
+  if (clamped <= 60) return '41-60';
+  if (clamped <= 80) return '61-80';
+  return '81-100';
+}

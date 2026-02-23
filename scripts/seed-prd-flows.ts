@@ -16,7 +16,10 @@ try {
   envFile.split('\n').forEach((line) => {
     const [key, ...values] = line.split('=');
     if (key && !key.startsWith('#') && values.length > 0 && !process.env[key.trim()]) {
-      const value = values.join('=').trim().replace(/^["']|["']$/g, '');
+      const value = values
+        .join('=')
+        .trim()
+        .replace(/^["']|["']$/g, '');
       process.env[key.trim()] = value;
     }
   });
@@ -28,7 +31,9 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !serviceRoleKey) {
-  console.error('❌ Missing Supabase credentials. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.');
+  console.error(
+    '❌ Missing Supabase credentials. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.'
+  );
   process.exit(1);
 }
 
@@ -45,7 +50,10 @@ function logStep(message: string) {
 
 async function upsert(table: string, rows: any[], options: UpsertOptions = {}) {
   if (!rows.length) return [];
-  const { data, error } = await supabase.from(table).upsert(rows, { ...options }).select();
+  const { data, error } = await supabase
+    .from(table)
+    .upsert(rows, { ...options })
+    .select();
   if (error) {
     throw new Error(`Upsert failed for ${table}: ${error.message}`);
   }
@@ -53,7 +61,10 @@ async function upsert(table: string, rows: any[], options: UpsertOptions = {}) {
 }
 
 async function ensureAuthUser(email: string, password: string, metadata: Record<string, unknown>) {
-  const { data: userList, error: listError } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  const { data: userList, error: listError } = await supabase.auth.admin.listUsers({
+    page: 1,
+    perPage: 1000,
+  });
   if (listError) throw new Error(`auth listUsers failed: ${listError.message}`);
 
   const existing = userList.users.find((u) => u.email === email);
@@ -65,7 +76,8 @@ async function ensureAuthUser(email: string, password: string, metadata: Record<
     email_confirm: true,
     user_metadata: metadata,
   });
-  if (createError || !created?.user) throw new Error(`auth createUser failed for ${email}: ${createError?.message}`);
+  if (createError || !created?.user)
+    throw new Error(`auth createUser failed for ${email}: ${createError?.message}`);
   return created.user.id;
 }
 
@@ -73,40 +85,193 @@ async function main() {
   logStep('Seeding PRD-aligned taxonomy (best-effort)');
   const taxonomy = {
     categories: [
-      { cat_id: 1, slug: 'product-design', name_i18n: { en: 'Product Design' }, description_i18n: { en: 'UI/UX and product craft' }, icon: '🎨', display_order: 100 },
-      { cat_id: 2, slug: 'data-science', name_i18n: { en: 'Data Science' }, description_i18n: { en: 'Analytics and ML' }, icon: '📊', display_order: 200 },
-      { cat_id: 3, slug: 'security', name_i18n: { en: 'Security' }, description_i18n: { en: 'Security & privacy' }, icon: '🔐', display_order: 300 },
-      { cat_id: 4, slug: 'manufacturing', name_i18n: { en: 'Manufacturing' }, description_i18n: { en: 'Ops & efficiency' }, icon: '🏭', display_order: 400 },
-      { cat_id: 5, slug: 'founder-ops', name_i18n: { en: 'Founder Ops' }, description_i18n: { en: 'Growth, ops, fundraising' }, icon: '🚀', display_order: 500 },
+      {
+        cat_id: 1,
+        slug: 'product-design',
+        name_i18n: { en: 'Product Design' },
+        description_i18n: { en: 'UI/UX and product craft' },
+        icon: '🎨',
+        display_order: 100,
+      },
+      {
+        cat_id: 2,
+        slug: 'data-science',
+        name_i18n: { en: 'Data Science' },
+        description_i18n: { en: 'Analytics and ML' },
+        icon: '📊',
+        display_order: 200,
+      },
+      {
+        cat_id: 3,
+        slug: 'security',
+        name_i18n: { en: 'Security' },
+        description_i18n: { en: 'Security & privacy' },
+        icon: '🔐',
+        display_order: 300,
+      },
+      {
+        cat_id: 4,
+        slug: 'manufacturing',
+        name_i18n: { en: 'Manufacturing' },
+        description_i18n: { en: 'Ops & efficiency' },
+        icon: '🏭',
+        display_order: 400,
+      },
+      {
+        cat_id: 5,
+        slug: 'founder-ops',
+        name_i18n: { en: 'Founder Ops' },
+        description_i18n: { en: 'Growth, ops, fundraising' },
+        icon: '🚀',
+        display_order: 500,
+      },
     ],
     subcategories: [
       { cat_id: 1, subcat_id: 1, slug: 'ux-ui', name_i18n: { en: 'UX/UI' }, display_order: 1 },
-      { cat_id: 2, subcat_id: 1, slug: 'analytics-ml', name_i18n: { en: 'Analytics & ML' }, display_order: 1 },
-      { cat_id: 3, subcat_id: 1, slug: 'appsec', name_i18n: { en: 'Application Security' }, display_order: 1 },
-      { cat_id: 4, subcat_id: 1, slug: 'lean-ops', name_i18n: { en: 'Lean Ops' }, display_order: 1 },
-      { cat_id: 5, subcat_id: 1, slug: 'ops-strategy', name_i18n: { en: 'Ops & Strategy' }, display_order: 1 },
+      {
+        cat_id: 2,
+        subcat_id: 1,
+        slug: 'analytics-ml',
+        name_i18n: { en: 'Analytics & ML' },
+        display_order: 1,
+      },
+      {
+        cat_id: 3,
+        subcat_id: 1,
+        slug: 'appsec',
+        name_i18n: { en: 'Application Security' },
+        display_order: 1,
+      },
+      {
+        cat_id: 4,
+        subcat_id: 1,
+        slug: 'lean-ops',
+        name_i18n: { en: 'Lean Ops' },
+        display_order: 1,
+      },
+      {
+        cat_id: 5,
+        subcat_id: 1,
+        slug: 'ops-strategy',
+        name_i18n: { en: 'Ops & Strategy' },
+        display_order: 1,
+      },
     ],
     l3: [
-      { cat_id: 1, subcat_id: 1, l3_id: 1, slug: 'ui-systems', name_i18n: { en: 'UI Systems' }, display_order: 1 },
-      { cat_id: 2, subcat_id: 1, l3_id: 1, slug: 'time-series', name_i18n: { en: 'Time Series' }, display_order: 1 },
-      { cat_id: 3, subcat_id: 1, l3_id: 1, slug: 'threat-modeling', name_i18n: { en: 'Threat Modeling' }, display_order: 1 },
-      { cat_id: 4, subcat_id: 1, l3_id: 1, slug: 'process-optimization', name_i18n: { en: 'Process Optimization' }, display_order: 1 },
-      { cat_id: 5, subcat_id: 1, l3_id: 1, slug: 'fundraising', name_i18n: { en: 'Fundraising' }, display_order: 1 },
+      {
+        cat_id: 1,
+        subcat_id: 1,
+        l3_id: 1,
+        slug: 'ui-systems',
+        name_i18n: { en: 'UI Systems' },
+        display_order: 1,
+      },
+      {
+        cat_id: 2,
+        subcat_id: 1,
+        l3_id: 1,
+        slug: 'time-series',
+        name_i18n: { en: 'Time Series' },
+        display_order: 1,
+      },
+      {
+        cat_id: 3,
+        subcat_id: 1,
+        l3_id: 1,
+        slug: 'threat-modeling',
+        name_i18n: { en: 'Threat Modeling' },
+        display_order: 1,
+      },
+      {
+        cat_id: 4,
+        subcat_id: 1,
+        l3_id: 1,
+        slug: 'process-optimization',
+        name_i18n: { en: 'Process Optimization' },
+        display_order: 1,
+      },
+      {
+        cat_id: 5,
+        subcat_id: 1,
+        l3_id: 1,
+        slug: 'fundraising',
+        name_i18n: { en: 'Fundraising' },
+        display_order: 1,
+      },
     ],
     l4: [
-      { code: '01.01.01.901', cat_id: 1, subcat_id: 1, l3_id: 1, skill_id: 901, slug: 'figma-system', name_i18n: { en: 'Figma design system' }, description_i18n: { en: 'Designing UI kits and systems in Figma' } },
-      { code: '01.01.01.902', cat_id: 1, subcat_id: 1, l3_id: 1, skill_id: 902, slug: 'ux-research', name_i18n: { en: 'UX research synthesis' } },
-      { code: '02.01.01.901', cat_id: 2, subcat_id: 1, l3_id: 1, skill_id: 901, slug: 'time-series-cleaning', name_i18n: { en: 'Time-series cleaning & forecasting' } },
-      { code: '03.01.01.901', cat_id: 3, subcat_id: 1, l3_id: 1, skill_id: 901, slug: 'threat-modeling', name_i18n: { en: 'Threat modeling & SOC2 readiness' } },
-      { code: '04.01.01.901', cat_id: 4, subcat_id: 1, l3_id: 1, skill_id: 901, slug: 'lean-oee', name_i18n: { en: 'Lean manufacturing & OEE' } },
-      { code: '05.01.01.901', cat_id: 5, subcat_id: 1, l3_id: 1, skill_id: 901, slug: 'fundraising-strategy', name_i18n: { en: 'Fundraising strategy' } },
-      { code: '05.01.01.902', cat_id: 5, subcat_id: 1, l3_id: 1, skill_id: 902, slug: 'org-ops', name_i18n: { en: 'Org ops & hiring' } },
+      {
+        code: '01.01.01.901',
+        cat_id: 1,
+        subcat_id: 1,
+        l3_id: 1,
+        skill_id: 901,
+        slug: 'figma-system',
+        name_i18n: { en: 'Figma design system' },
+        description_i18n: { en: 'Designing UI kits and systems in Figma' },
+      },
+      {
+        code: '01.01.01.902',
+        cat_id: 1,
+        subcat_id: 1,
+        l3_id: 1,
+        skill_id: 902,
+        slug: 'ux-research',
+        name_i18n: { en: 'UX research synthesis' },
+      },
+      {
+        code: '02.01.01.901',
+        cat_id: 2,
+        subcat_id: 1,
+        l3_id: 1,
+        skill_id: 901,
+        slug: 'time-series-cleaning',
+        name_i18n: { en: 'Time-series cleaning & forecasting' },
+      },
+      {
+        code: '03.01.01.901',
+        cat_id: 3,
+        subcat_id: 1,
+        l3_id: 1,
+        skill_id: 901,
+        slug: 'threat-modeling',
+        name_i18n: { en: 'Threat modeling & SOC2 readiness' },
+      },
+      {
+        code: '04.01.01.901',
+        cat_id: 4,
+        subcat_id: 1,
+        l3_id: 1,
+        skill_id: 901,
+        slug: 'lean-oee',
+        name_i18n: { en: 'Lean manufacturing & OEE' },
+      },
+      {
+        code: '05.01.01.901',
+        cat_id: 5,
+        subcat_id: 1,
+        l3_id: 1,
+        skill_id: 901,
+        slug: 'fundraising-strategy',
+        name_i18n: { en: 'Fundraising strategy' },
+      },
+      {
+        code: '05.01.01.902',
+        cat_id: 5,
+        subcat_id: 1,
+        l3_id: 1,
+        skill_id: 902,
+        slug: 'org-ops',
+        name_i18n: { en: 'Org ops & hiring' },
+      },
     ],
   };
 
   try {
     await upsert('skills_categories', taxonomy.categories, { onConflict: 'cat_id' });
-    await upsert('skills_subcategories', taxonomy.subcategories, { onConflict: 'cat_id,subcat_id' });
+    await upsert('skills_subcategories', taxonomy.subcategories, {
+      onConflict: 'cat_id,subcat_id',
+    });
     await upsert('skills_l3', taxonomy.l3, { onConflict: 'cat_id,subcat_id,l3_id' });
     await upsert('skills_taxonomy', taxonomy.l4, { onConflict: 'code' });
   } catch (taxonomyError) {
@@ -115,14 +280,46 @@ async function main() {
 
   logStep('Creating auth users');
   const users = {
-    nenah: { email: 'nenah@proofound-demo.com', password: 'DemoPass123!', meta: { persona: 'student' } },
-    mateo: { email: 'mateo@proofound-demo.com', password: 'DemoPass123!', meta: { persona: 'switcher' } },
-    ola: { email: 'ola@proofound-demo.com', password: 'DemoPass123!', meta: { persona: 'advisor' } },
-    dmitry: { email: 'dmitry@proofound-demo.com', password: 'DemoPass123!', meta: { persona: 'mentor' } },
-    priya: { email: 'priya@proofound-demo.com', password: 'DemoPass123!', meta: { persona: 'founder' } },
-    greengridAdmin: { email: 'ops@greengrid-demo.com', password: 'DemoPass123!', meta: { persona: 'org_admin' } },
-    bridgesAdmin: { email: 'talent@bridges-demo.org', password: 'DemoPass123!', meta: { persona: 'org_admin' } },
-    cityAdmin: { email: 'sourcing@cityworks-demo.gov', password: 'DemoPass123!', meta: { persona: 'org_admin' } },
+    nenah: {
+      email: 'nenah@proofound-demo.com',
+      password: 'DemoPass123!',
+      meta: { persona: 'student' },
+    },
+    mateo: {
+      email: 'mateo@proofound-demo.com',
+      password: 'DemoPass123!',
+      meta: { persona: 'switcher' },
+    },
+    ola: {
+      email: 'ola@proofound-demo.com',
+      password: 'DemoPass123!',
+      meta: { persona: 'advisor' },
+    },
+    dmitry: {
+      email: 'dmitry@proofound-demo.com',
+      password: 'DemoPass123!',
+      meta: { persona: 'mentor' },
+    },
+    priya: {
+      email: 'priya@proofound-demo.com',
+      password: 'DemoPass123!',
+      meta: { persona: 'founder' },
+    },
+    greengridAdmin: {
+      email: 'ops@greengrid-demo.com',
+      password: 'DemoPass123!',
+      meta: { persona: 'org_admin' },
+    },
+    bridgesAdmin: {
+      email: 'talent@bridges-demo.org',
+      password: 'DemoPass123!',
+      meta: { persona: 'org_admin' },
+    },
+    cityAdmin: {
+      email: 'sourcing@cityworks-demo.gov',
+      password: 'DemoPass123!',
+      meta: { persona: 'org_admin' },
+    },
   };
 
   const userIds: Record<string, string> = {};
@@ -135,11 +332,31 @@ async function main() {
     { id: userIds.nenah, persona: 'individual', display_name: 'Nenah I.', handle: 'nenah-impact' },
     { id: userIds.mateo, persona: 'individual', display_name: 'Mateo D.', handle: 'mateo-climate' },
     { id: userIds.ola, persona: 'individual', display_name: 'Ola K.', handle: 'ola-sec' },
-    { id: userIds.dmitry, persona: 'individual', display_name: 'Dmitry V.', handle: 'dmitry-mentor' },
+    {
+      id: userIds.dmitry,
+      persona: 'individual',
+      display_name: 'Dmitry V.',
+      handle: 'dmitry-mentor',
+    },
     { id: userIds.priya, persona: 'individual', display_name: 'Priya R.', handle: 'priya-founder' },
-    { id: userIds.greengridAdmin, persona: 'org_member', display_name: 'Greengrid Ops', handle: 'greengrid-ops' },
-    { id: userIds.bridgesAdmin, persona: 'org_member', display_name: 'Bridges Talent', handle: 'bridges-talent' },
-    { id: userIds.cityAdmin, persona: 'org_member', display_name: 'CityWorks Sourcing', handle: 'cityworks-sourcing' },
+    {
+      id: userIds.greengridAdmin,
+      persona: 'org_member',
+      display_name: 'Greengrid Ops',
+      handle: 'greengrid-ops',
+    },
+    {
+      id: userIds.bridgesAdmin,
+      persona: 'org_member',
+      display_name: 'Bridges Talent',
+      handle: 'bridges-talent',
+    },
+    {
+      id: userIds.cityAdmin,
+      persona: 'org_member',
+      display_name: 'CityWorks Sourcing',
+      handle: 'cityworks-sourcing',
+    },
   ];
   await upsert('profiles', profileRows, { onConflict: 'id' });
 
@@ -213,11 +430,51 @@ async function main() {
   await upsert('individual_profiles', individualProfiles, { onConflict: 'user_id' });
 
   const fieldVisibility = [
-    { profile_id: userIds.nenah, display_name: 'public', avatar: 'public', headline: 'public', location: 'network_only', mission: 'match_only', vision: 'match_only' },
-    { profile_id: userIds.mateo, display_name: 'public', avatar: 'public', headline: 'public', location: 'public', mission: 'match_only', vision: 'match_only' },
-    { profile_id: userIds.ola, display_name: 'public', avatar: 'public', headline: 'public', location: 'match_only', mission: 'match_only', vision: 'match_only' },
-    { profile_id: userIds.dmitry, display_name: 'public', avatar: 'public', headline: 'public', location: 'public', mission: 'public', vision: 'public' },
-    { profile_id: userIds.priya, display_name: 'public', avatar: 'public', headline: 'public', location: 'network_only', mission: 'public', vision: 'public' },
+    {
+      profile_id: userIds.nenah,
+      display_name: 'public',
+      avatar: 'public',
+      headline: 'public',
+      location: 'network_only',
+      mission: 'match_only',
+      vision: 'match_only',
+    },
+    {
+      profile_id: userIds.mateo,
+      display_name: 'public',
+      avatar: 'public',
+      headline: 'public',
+      location: 'public',
+      mission: 'match_only',
+      vision: 'match_only',
+    },
+    {
+      profile_id: userIds.ola,
+      display_name: 'public',
+      avatar: 'public',
+      headline: 'public',
+      location: 'match_only',
+      mission: 'match_only',
+      vision: 'match_only',
+    },
+    {
+      profile_id: userIds.dmitry,
+      display_name: 'public',
+      avatar: 'public',
+      headline: 'public',
+      location: 'public',
+      mission: 'public',
+      vision: 'public',
+    },
+    {
+      profile_id: userIds.priya,
+      display_name: 'public',
+      avatar: 'public',
+      headline: 'public',
+      location: 'network_only',
+      mission: 'public',
+      vision: 'public',
+    },
   ];
   await supabase.from('profile_field_visibility').delete().in('profile_id', Object.values(userIds));
   await supabase.from('profile_field_visibility').insert(fieldVisibility);
@@ -291,13 +548,63 @@ async function main() {
   await supabase.from('skills').delete().in('profile_id', Object.values(userIds));
 
   const skillRows = [
-    { id: randomUUID(), profile_id: userIds.nenah, skill_id: 'figma', level: 3, months_experience: 12, last_used_at: new Date().toISOString(), evidence_strength: 0.6 },
-    { id: randomUUID(), profile_id: userIds.nenah, skill_id: 'ux-research', level: 2, months_experience: 8, evidence_strength: 0.5 },
-    { id: randomUUID(), profile_id: userIds.mateo, skill_id: 'ts-forecast', level: 4, months_experience: 18, evidence_strength: 0.7 },
-    { id: randomUUID(), profile_id: userIds.ola, skill_id: 'threat-modeling', level: 5, months_experience: 84, evidence_strength: 0.9 },
-    { id: randomUUID(), profile_id: userIds.dmitry, skill_id: 'lean-oee', level: 4, months_experience: 120, evidence_strength: 0.85 },
-    { id: randomUUID(), profile_id: userIds.priya, skill_id: 'fundraising', level: 4, months_experience: 48, evidence_strength: 0.75 },
-    { id: randomUUID(), profile_id: userIds.priya, skill_id: 'org-ops', level: 4, months_experience: 60, evidence_strength: 0.7 },
+    {
+      id: randomUUID(),
+      profile_id: userIds.nenah,
+      skill_id: 'figma',
+      level: 3,
+      months_experience: 12,
+      last_used_at: new Date().toISOString(),
+      evidence_strength: 0.6,
+    },
+    {
+      id: randomUUID(),
+      profile_id: userIds.nenah,
+      skill_id: 'ux-research',
+      level: 2,
+      months_experience: 8,
+      evidence_strength: 0.5,
+    },
+    {
+      id: randomUUID(),
+      profile_id: userIds.mateo,
+      skill_id: 'ts-forecast',
+      level: 4,
+      months_experience: 18,
+      evidence_strength: 0.7,
+    },
+    {
+      id: randomUUID(),
+      profile_id: userIds.ola,
+      skill_id: 'threat-modeling',
+      level: 5,
+      months_experience: 84,
+      evidence_strength: 0.9,
+    },
+    {
+      id: randomUUID(),
+      profile_id: userIds.dmitry,
+      skill_id: 'lean-oee',
+      level: 4,
+      months_experience: 120,
+      evidence_strength: 0.85,
+    },
+    {
+      id: randomUUID(),
+      profile_id: userIds.priya,
+      skill_id: 'fundraising',
+      level: 4,
+      months_experience: 48,
+      evidence_strength: 0.75,
+    },
+    {
+      id: randomUUID(),
+      profile_id: userIds.priya,
+      skill_id: 'org-ops',
+      level: 4,
+      months_experience: 60,
+      evidence_strength: 0.7,
+    },
   ];
   const skills = await upsert('skills', skillRows, { onConflict: 'id' });
 
@@ -314,16 +621,38 @@ async function main() {
 
   logStep('Seeding wellbeing (Zen Hub) data');
   const wellbeingOptIns = [
-    { user_id: userIds.nenah, opted_in: true, privacy_banner_acknowledged: true, opted_in_at: new Date().toISOString() },
-    { user_id: userIds.mateo, opted_in: true, privacy_banner_acknowledged: true, opted_in_at: new Date().toISOString() },
+    {
+      user_id: userIds.nenah,
+      opted_in: true,
+      privacy_banner_acknowledged: true,
+      opted_in_at: new Date().toISOString(),
+    },
+    {
+      user_id: userIds.mateo,
+      opted_in: true,
+      privacy_banner_acknowledged: true,
+      opted_in_at: new Date().toISOString(),
+    },
   ];
   await upsert('wellbeing_opt_ins', wellbeingOptIns, { onConflict: 'user_id' });
 
   await upsert(
     'wellbeing_checkins',
     [
-      { user_id: userIds.nenah, stress_level: 2, control_level: 4, milestone_trigger_id: 'activation', created_at: new Date().toISOString() },
-      { user_id: userIds.mateo, stress_level: 3, control_level: 3, milestone_trigger_id: 'interview', created_at: new Date().toISOString() },
+      {
+        user_id: userIds.nenah,
+        stress_level: 2,
+        control_level: 4,
+        milestone_trigger_id: 'activation',
+        created_at: new Date().toISOString(),
+      },
+      {
+        user_id: userIds.mateo,
+        stress_level: 3,
+        control_level: 3,
+        milestone_trigger_id: 'interview',
+        created_at: new Date().toISOString(),
+      },
     ],
     { onConflict: 'id' }
   );
@@ -351,9 +680,16 @@ async function main() {
       type: 'company',
       mission: 'Scale low-carbon grid infra with secure systems',
       vision: 'Resilient grid with trusted advisors',
-      values: [{ icon: '🌍', label: 'Impact' }, { icon: '🔐', label: 'Security' }],
+      values: [
+        { icon: '🌍', label: 'Impact' },
+        { icon: '🔐', label: 'Security' },
+      ],
       causes: ['Climate Action', 'Energy'],
-      work_culture: { collaboration: 'Lean squads', decision_making: 'Data-led', wellbeing: 'Low meeting load' },
+      work_culture: {
+        collaboration: 'Lean squads',
+        decision_making: 'Data-led',
+        wellbeing: 'Low meeting load',
+      },
       adminUser: userIds.greengridAdmin,
       assignment: {
         id: 'aaaa1111-2222-4333-8444-aaaaaaaaaa01',
@@ -380,9 +716,16 @@ async function main() {
       type: 'ngo',
       mission: 'Recruit skilled volunteers with donor-ready impact',
       vision: 'Safe, transparent volunteering',
-      values: [{ icon: '🤝', label: 'Equity' }, { icon: '🌱', label: 'Growth' }],
+      values: [
+        { icon: '🤝', label: 'Equity' },
+        { icon: '🌱', label: 'Growth' },
+      ],
       causes: ['Youth', 'Education'],
-      work_culture: { collaboration: 'Community-first', decision_making: 'Shared', wellbeing: 'Async friendly' },
+      work_culture: {
+        collaboration: 'Community-first',
+        decision_making: 'Shared',
+        wellbeing: 'Async friendly',
+      },
       adminUser: userIds.bridgesAdmin,
       assignment: {
         id: 'bbbb1111-2222-4333-8444-bbbbbbbbbb01',
@@ -409,9 +752,16 @@ async function main() {
       type: 'government',
       mission: 'Transparent sourcing with audit trail',
       vision: 'Fast, compliant micro-RFPs',
-      values: [{ icon: '🏛️', label: 'Transparency' }, { icon: '⏱️', label: 'Speed' }],
+      values: [
+        { icon: '🏛️', label: 'Transparency' },
+        { icon: '⏱️', label: 'Speed' },
+      ],
       causes: ['Civic Tech'],
-      work_culture: { collaboration: 'Cross-dept', decision_making: 'Policy-first', wellbeing: 'Reasonable hours' },
+      work_culture: {
+        collaboration: 'Cross-dept',
+        decision_making: 'Policy-first',
+        wellbeing: 'Reasonable hours',
+      },
       adminUser: userIds.cityAdmin,
       assignment: {
         id: 'cccc1111-2222-4333-8444-cccccccccc01',
@@ -449,13 +799,24 @@ async function main() {
     { onConflict: 'id' }
   );
 
-  await supabase.from('organization_field_visibility').delete().in(
-    'org_id',
-    orgs.map((o) => o.id)
-  );
   await supabase
     .from('organization_field_visibility')
-    .insert(orgs.map((org) => ({ org_id: org.id, display_name: 'public', mission: 'public', vision: 'public', causes: 'public' })));
+    .delete()
+    .in(
+      'org_id',
+      orgs.map((o) => o.id)
+    );
+  await supabase
+    .from('organization_field_visibility')
+    .insert(
+      orgs.map((org) => ({
+        org_id: org.id,
+        display_name: 'public',
+        mission: 'public',
+        vision: 'public',
+        causes: 'public',
+      }))
+    );
 
   const orgMembers = orgs.map((org) => ({
     org_id: org.id,
@@ -513,20 +874,23 @@ async function main() {
       id: randomUUID(),
       assignment_id: org.assignment.id,
       skill_code: skillCodeMap[skill.id] ?? null,
-      min_level: skill.level,
-      weight: 1.0,
-      is_required: true,
-      stakeholder_role: 'lead',
+      required_level: skill.level,
+      stakeholder_role: 'must',
       linked_outcome_id: outcomeIds[idx],
       outcome_rationale: 'PRD seed coverage',
     }))
   );
 
-  await supabase.from('assignment_expertise_matrix').delete().in(
-    'assignment_id',
-    orgs.map((o) => o.assignment.id)
-  );
-  await supabase.from('assignment_expertise_matrix').insert(expertiseMatrix.filter((row) => row.skill_code));
+  await supabase
+    .from('assignment_expertise_matrix')
+    .delete()
+    .in(
+      'assignment_id',
+      orgs.map((o) => o.assignment.id)
+    );
+  await supabase
+    .from('assignment_expertise_matrix')
+    .insert(expertiseMatrix.filter((row) => row.skill_code));
 
   logStep('Creating matches, conversations, messages, and interviews');
   const matchIds = {
@@ -631,10 +995,36 @@ async function main() {
   await upsert(
     'analytics_events',
     [
-      { event_type: 'profile_activated', user_id: userIds.nenah, properties: { l4_count: 2 }, created_at: new Date(now.getTime() - 1000 * 60 * 60 * 24 * 2).toISOString() },
-      { event_type: 'first_qualified_intro', user_id: userIds.nenah, entity_type: 'match', entity_id: matchIds.ola, properties: { match_score: 0.9 }, created_at: new Date(now.getTime() - 1000 * 60 * 60 * 24).toISOString() },
-      { event_type: 'interview_scheduled', user_id: userIds.ola, entity_type: 'interview', entity_id: interviewId, properties: { assignment_id: orgs[0].assignment.id }, created_at: now.toISOString() },
-      { event_type: 'match_generated', user_id: userIds.mateo, entity_type: 'match', entity_id: matchIds.mateo, properties: { score: 0.88 }, created_at: now.toISOString() },
+      {
+        event_type: 'profile_activated',
+        user_id: userIds.nenah,
+        properties: { l4_count: 2 },
+        created_at: new Date(now.getTime() - 1000 * 60 * 60 * 24 * 2).toISOString(),
+      },
+      {
+        event_type: 'first_qualified_intro',
+        user_id: userIds.nenah,
+        entity_type: 'match',
+        entity_id: matchIds.ola,
+        properties: { match_score: 0.9 },
+        created_at: new Date(now.getTime() - 1000 * 60 * 60 * 24).toISOString(),
+      },
+      {
+        event_type: 'interview_scheduled',
+        user_id: userIds.ola,
+        entity_type: 'interview',
+        entity_id: interviewId,
+        properties: { assignment_id: orgs[0].assignment.id },
+        created_at: now.toISOString(),
+      },
+      {
+        event_type: 'match_generated',
+        user_id: userIds.mateo,
+        entity_type: 'match',
+        entity_id: matchIds.mateo,
+        properties: { score: 0.88 },
+        created_at: now.toISOString(),
+      },
     ],
     { onConflict: 'id' }
   );
@@ -646,4 +1036,3 @@ main().catch((err) => {
   console.error(err);
   process.exit(1);
 });
-

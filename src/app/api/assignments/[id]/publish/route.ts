@@ -6,6 +6,8 @@ import { assignmentOutcomes, assignments, organizations } from '@/db/schema';
 import { checkAndEmitAssignmentActivation } from '@/lib/assignments/activation';
 import { verifyAssignmentMutationAccess } from '@/lib/assignments/access';
 import { requireAuth } from '@/lib/auth';
+import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
+import { isFeatureEnabled } from '@/lib/feature-flags/server';
 import { log } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
@@ -17,15 +19,21 @@ type PublishValidationResult = {
 
 function validatePublishReadiness(
   assignment: typeof assignments.$inferSelect,
-  outcomesCount: number
+  outcomesCount: number,
+  assignmentBasicModeEnabled: boolean
 ): PublishValidationResult {
+  const builderMode =
+    assignmentBasicModeEnabled && assignment.builderMode === 'basic' ? 'basic' : 'advanced';
+  const enforceAdvancedWeights =
+    assignment.builderMode === 'advanced' || !assignmentBasicModeEnabled;
   const missing: string[] = [];
 
   if (!assignment.role?.trim()) missing.push('role');
   if (!assignment.businessValue?.trim()) missing.push('businessValue');
 
   const mustHaveSkills = Array.isArray(assignment.mustHaveSkills) ? assignment.mustHaveSkills : [];
-  if (mustHaveSkills.length === 0) missing.push('mustHaveSkills');
+  const minimumSkills = builderMode === 'basic' ? 3 : 1;
+  if (mustHaveSkills.length < minimumSkills) missing.push('mustHaveSkills');
 
   if (!assignment.locationMode && !assignment.city && !assignment.country) {
     missing.push('location');
@@ -40,6 +48,21 @@ function validatePublishReadiness(
   }
 
   if (outcomesCount === 0) missing.push('outcomes');
+
+  if (builderMode === 'advanced' && enforceAdvancedWeights) {
+    const weights = assignment.weights as Record<string, unknown> | null;
+    const mission = typeof weights?.mission === 'number' ? weights.mission : null;
+    const expertise = typeof weights?.expertise === 'number' ? weights.expertise : null;
+    const workMode = typeof weights?.workMode === 'number' ? weights.workMode : null;
+    if (
+      mission === null ||
+      expertise === null ||
+      workMode === null ||
+      mission + expertise + workMode !== 100
+    ) {
+      missing.push('weights');
+    }
+  }
 
   return {
     canPublish: missing.length === 0,
@@ -90,13 +113,23 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       columns: { id: true },
     });
 
-    const readiness = validatePublishReadiness(assignment, outcomes.length);
+    const assignmentBasicModeEnabled = await isFeatureEnabled(
+      FEATURE_FLAG_KEYS.ASSIGNMENT_BASIC_MODE,
+      { userId: user.id, orgId: assignment.orgId },
+      true
+    );
+
+    const readiness = validatePublishReadiness(
+      assignment,
+      outcomes.length,
+      assignmentBasicModeEnabled
+    );
     if (!readiness.canPublish) {
       return NextResponse.json(
         {
           error: 'Assignment is not ready to publish',
           message: 'Complete all required sections before publishing.',
-          details: { missing: readiness.missing },
+          details: { missing: readiness.missing, builderMode: assignment.builderMode || 'basic' },
         },
         { status: 400 }
       );

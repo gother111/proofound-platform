@@ -10,57 +10,66 @@ vi.mock('@/lib/auth', () => ({
   requireAuth: vi.fn(() => Promise.resolve({ id: 'test-user-id' })),
 }));
 
-vi.mock('@/db', () => ({
-  db: {
-    query: {
-      organizationMembers: {
-        findFirst: vi.fn(),
+vi.mock('@/db', () => {
+  const insert = vi.fn(() => ({
+    values: vi.fn(() => ({
+      returning: vi.fn(() =>
+        Promise.resolve([{ id: 'new-assignment-id', role: 'Developer', status: 'active' }])
+      ),
+    })),
+  }));
+
+  return {
+    db: {
+      query: {
+        organizationMembers: {
+          findFirst: vi.fn(),
+        },
+        assignments: {
+          findFirst: vi.fn(),
+        },
+        matchingProfiles: {
+          findMany: vi.fn(),
+        },
+        skills: {
+          findMany: vi.fn(),
+        },
+        organizations: {
+          findFirst: vi.fn(),
+        },
+        matches: {
+          findMany: vi.fn(),
+        },
       },
-      assignments: {
-        findFirst: vi.fn(),
-      },
-      matchingProfiles: {
-        findMany: vi.fn(),
-      },
-      skills: {
-        findMany: vi.fn(),
-      },
-      organizations: {
-        findFirst: vi.fn(),
-      },
-      matches: {
-        findMany: vi.fn(),
-      },
-    },
-    select: vi.fn(() => ({
-      from: vi.fn(() => ({
-        where: vi.fn(() => ({
-          $dynamic: vi.fn(() => ({
-            where: vi.fn(() => ({
+      select: vi.fn(() => ({
+        from: vi.fn(() => ({
+          where: vi.fn(() => ({
+            $dynamic: vi.fn(() => ({
+              where: vi.fn(() => ({
+                orderBy: vi.fn(() => ({
+                  limit: vi.fn(() => ({
+                    offset: vi.fn(() => Promise.resolve([])),
+                  })),
+                })),
+              })),
               orderBy: vi.fn(() => ({
                 limit: vi.fn(() => ({
                   offset: vi.fn(() => Promise.resolve([])),
                 })),
               })),
             })),
-            orderBy: vi.fn(() => ({
-              limit: vi.fn(() => ({
-                offset: vi.fn(() => Promise.resolve([])),
-              })),
-            })),
           })),
         })),
       })),
-    })),
-    insert: vi.fn(() => ({
-      values: vi.fn(() => ({
-        returning: vi.fn(() =>
-          Promise.resolve([{ id: 'new-assignment-id', role: 'Developer', status: 'active' }])
-        ),
-      })),
-    })),
-  },
-}));
+      insert,
+      transaction: vi.fn(async (cb: any) =>
+        cb({
+          insert,
+        })
+      ),
+    },
+  };
+});
 
 vi.mock('@/lib/log', () => ({
   logContext: {
@@ -178,25 +187,23 @@ describe('Assignment API', () => {
       const res = await POST(req);
       expect(res.status).toBe(201);
 
-      expect(valuesMock).toHaveBeenCalledWith(
+      expect(valuesMock).toHaveBeenNthCalledWith(
+        1,
         expect.objectContaining({
           orgId: TEST_ORG_ID,
-          mustHaveSkills: [
-            expect.objectContaining({
-              id: '03.01.01.001',
-              level: 4,
-              label: 'TypeScript',
-              catId: 3,
-              subcatId: 1,
-              l3Id: 1,
-              l1Label: 'Tools & Technologies',
-              l2Label: 'Programming',
-              l3Label: 'Typed Languages',
-              linkedToBV: true,
-              linkedToTO: false,
-            }),
-          ],
+          builderMode: 'basic',
+          mustHaveSkills: [expect.objectContaining({ id: '03.01.01.001', level: 4 })],
         })
+      );
+      expect(valuesMock).toHaveBeenNthCalledWith(
+        2,
+        expect.arrayContaining([
+          expect.objectContaining({
+            skillCode: '03.01.01.001',
+            requiredLevel: 4,
+            stakeholderRole: 'must',
+          }),
+        ])
       );
     });
 

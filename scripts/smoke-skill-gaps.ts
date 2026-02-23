@@ -11,7 +11,10 @@ const makeBuilder = (rows: Row[]) => {
     limit: (n?: number) =>
       Promise.resolve({ data: typeof n === 'number' ? rows.slice(0, n) : rows, error: null }),
     in: (_col: string, vals: any[]) =>
-      Promise.resolve({ data: rows.filter((r) => vals.includes(r.assignment_id ?? r.id ?? r.skill_code)), error: null }),
+      Promise.resolve({
+        data: rows.filter((r) => vals.includes(r.assignment_id ?? r.id ?? r.skill_code)),
+        error: null,
+      }),
   };
   return builder;
 };
@@ -33,9 +36,19 @@ async function main() {
       { id: 'a2', role: 'Fullstack Dev', status: 'active', updated_at: '2024-11-01' },
     ],
     assignment_expertise_matrix: [
-      { assignment_id: 'a1', skill_code: 'react', min_level: 4, weight: 2 },
-      { assignment_id: 'a1', skill_code: 'graphql', min_level: 3, weight: 1 },
-      { assignment_id: 'a2', skill_code: 'typescript', min_level: 4, weight: 1 },
+      { assignment_id: 'a1', skill_code: 'react', required_level: 4, stakeholder_role: 'must' },
+      {
+        assignment_id: 'a1',
+        skill_code: 'graphql',
+        required_level: 3,
+        stakeholder_role: 'nice',
+      },
+      {
+        assignment_id: 'a2',
+        skill_code: 'typescript',
+        required_level: 4,
+        stakeholder_role: 'must',
+      },
     ],
     skills_taxonomy: [
       { code: 'react', name_i18n: { en: 'React' } },
@@ -57,4 +70,3 @@ main().catch((err) => {
   console.error('gap-service smoke failed', err);
   process.exit(1);
 });
-

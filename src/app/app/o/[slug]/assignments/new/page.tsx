@@ -21,10 +21,12 @@ import {
 } from '@/components/matching/assignment-steps';
 import { TemplatePicker, type AssignmentTemplate } from '@/components/matching/TemplatePicker';
 import { mapTemplateToAssignmentForm } from '@/lib/templates/prefill';
+import { CLIENT_FF_DEFAULTS } from '@/lib/featureFlags';
 
 export const dynamic = 'force-dynamic';
 
 interface AssignmentFormData {
+  builderMode?: 'basic' | 'advanced';
   // Step 1
   role: string;
   businessValue: string;
@@ -85,6 +87,13 @@ const STEPS = [
   { id: 5, name: 'Expertise', description: 'Required skills' },
 ];
 
+type BuilderMode = 'basic' | 'advanced';
+
+function getActiveSteps(mode: BuilderMode) {
+  if (mode === 'advanced') return STEPS;
+  return STEPS.filter((step) => step.id !== 3);
+}
+
 export default function AssignmentBuilderPage() {
   const router = useRouter();
   const params = useParams();
@@ -97,6 +106,13 @@ export default function AssignmentBuilderPage() {
         : '';
   const draftId = searchParams.get('draftId');
   const [currentStep, setCurrentStep] = useState(1);
+  const [builderMode, setBuilderMode] = useState<BuilderMode>(
+    CLIENT_FF_DEFAULTS.assignmentBasicMode ? 'basic' : 'advanced'
+  );
+  const [assignmentBasicModeEnabled, setAssignmentBasicModeEnabled] = useState(
+    CLIENT_FF_DEFAULTS.assignmentBasicMode
+  );
+  const [flagsLoaded, setFlagsLoaded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [assignmentId, setAssignmentId] = useState<string | null>(null);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -109,10 +125,34 @@ export default function AssignmentBuilderPage() {
   const [appliedTemplateId, setAppliedTemplateId] = useState<string | null>(null);
   const [appliedTemplateName, setAppliedTemplateName] = useState<string | null>(null);
   const assignmentIdRef = useRef<string | null>(null);
+  const activeSteps = getActiveSteps(builderMode);
 
   useEffect(() => {
     assignmentIdRef.current = assignmentId;
   }, [assignmentId]);
+
+  useEffect(() => {
+    const loadFlags = async () => {
+      try {
+        const response = await fetch('/api/feature-flags');
+        if (!response.ok) return;
+        const payload = await response.json();
+        const basicModeEnabled = payload?.flags?.assignmentBasicMode !== false;
+        setAssignmentBasicModeEnabled(basicModeEnabled);
+
+        if (!basicModeEnabled) {
+          setBuilderMode('advanced');
+          setCurrentStep((prev) => (prev === 3 ? 4 : prev));
+        }
+      } catch (error) {
+        console.error('Failed to load feature flags for assignment builder', error);
+      } finally {
+        setFlagsLoaded(true);
+      }
+    };
+
+    void loadFlags();
+  }, []);
 
   const form = useForm<AssignmentFormData>({
     defaultValues: {
@@ -164,6 +204,12 @@ export default function AssignmentBuilderPage() {
 
         form.reset({
           ...form.getValues(),
+          builderMode:
+            assignmentBasicModeEnabled && assignment.builderMode === 'advanced'
+              ? 'advanced'
+              : assignmentBasicModeEnabled
+                ? 'basic'
+                : 'advanced',
           role: assignment.role || '',
           businessValue: assignment.businessValue || '',
           expectedImpact: assignment.expectedImpact || '',
@@ -189,6 +235,11 @@ export default function AssignmentBuilderPage() {
 
         setAssignmentId(assignment.id);
         setOrgId(assignment.orgId || null);
+        if (assignmentBasicModeEnabled) {
+          setBuilderMode(assignment.builderMode === 'advanced' ? 'advanced' : 'basic');
+        } else {
+          setBuilderMode('advanced');
+        }
         setLastSaved(new Date());
       } catch (error) {
         console.error(error);
@@ -199,7 +250,7 @@ export default function AssignmentBuilderPage() {
     };
 
     void hydrateDraft();
-  }, [draftId, form, hasHydratedDraft, normalizeDateInput]);
+  }, [assignmentBasicModeEnabled, draftId, form, hasHydratedDraft, normalizeDateInput]);
 
   // Load templates for the organization
   useEffect(() => {
@@ -226,6 +277,13 @@ export default function AssignmentBuilderPage() {
   const handleApplyTemplate = (template: AssignmentTemplate) => {
     const mapped = mapTemplateToAssignmentForm(template.presetPayload);
     form.reset({ ...form.getValues(), ...mapped });
+    if (assignmentBasicModeEnabled) {
+      const templateMode = template.recommendedBuilderMode || 'basic';
+      setBuilderMode(templateMode);
+      if (templateMode === 'basic' && currentStep === 3) {
+        setCurrentStep(4);
+      }
+    }
     setAppliedTemplateId(template.id);
     setAppliedTemplateName(template.name);
     setCurrentStep(1);
@@ -248,6 +306,7 @@ export default function AssignmentBuilderPage() {
       }
     ) => ({
       orgSlug: slug,
+      builderMode: assignmentBasicModeEnabled ? builderMode : 'advanced',
       role: data.role,
       description: data.businessValue,
       businessValue: data.businessValue,
@@ -271,7 +330,7 @@ export default function AssignmentBuilderPage() {
       verificationGates: data.verificationGates,
       weights: data.weights,
     }),
-    [slug]
+    [assignmentBasicModeEnabled, builderMode, slug]
   );
 
   const shouldAutoSaveDraft = useCallback((data: AssignmentFormData) => {
@@ -371,6 +430,7 @@ export default function AssignmentBuilderPage() {
             properties: {
               stepNumber: 1,
               stepName: 'Business Value',
+              builderMode,
               timestamp: new Date().toISOString(),
             },
           }),
@@ -382,7 +442,7 @@ export default function AssignmentBuilderPage() {
         orgId: (persistedAssignment.orgId as string | null) ?? orgId,
       };
     },
-    [buildAssignmentPayload, form, orgId, slug]
+    [buildAssignmentPayload, builderMode, form, orgId, slug]
   );
 
   useEffect(() => {
@@ -437,7 +497,8 @@ export default function AssignmentBuilderPage() {
     if (!targetAssignmentId) return;
 
     const mustHaveSkills = form.getValues('mustHaveSkills') || [];
-    if (mustHaveSkills.length === 0) return;
+    const niceToHaveSkills = form.getValues('niceToHaveSkills') || [];
+    if (mustHaveSkills.length === 0 && niceToHaveSkills.length === 0) return;
 
     try {
       // Get outcomes to potentially link skills to them
@@ -449,7 +510,7 @@ export default function AssignmentBuilderPage() {
       }
 
       // Transform skills to expertise matrix format
-      const expertiseMatrix = mustHaveSkills.map((skill: any) => {
+      const mustRows = mustHaveSkills.map((skill: any) => {
         // Try to find a linked outcome if the skill is marked as linked
         let linkedOutcomeId = undefined;
         if (skill.linkedToTO && outcomes.length > 0) {
@@ -460,7 +521,7 @@ export default function AssignmentBuilderPage() {
         return {
           skillCode: skill.id,
           requiredLevel: skill.level,
-          stakeholderRole: 'creator',
+          stakeholderRole: 'must',
           linkedOutcomeId,
           outcomeRationale:
             skill.linkedToBV || skill.linkedToTO
@@ -468,6 +529,14 @@ export default function AssignmentBuilderPage() {
               : undefined,
         };
       });
+
+      const niceRows = niceToHaveSkills.map((skill: any) => ({
+        skillCode: skill.id,
+        requiredLevel: skill.level || 1,
+        stakeholderRole: 'nice',
+      }));
+
+      const expertiseMatrix = [...mustRows, ...niceRows];
 
       await fetch(`/api/assignments/${targetAssignmentId}/expertise-matrix`, {
         method: 'POST',
@@ -512,7 +581,8 @@ export default function AssignmentBuilderPage() {
   };
 
   const handleNext = async () => {
-    if (currentStep < 5) {
+    const lastStepId = activeSteps[activeSteps.length - 1]?.id ?? 5;
+    if (currentStep < lastStepId) {
       let targetAssignmentId = assignmentId;
       let targetOrgId = orgId;
 
@@ -528,13 +598,13 @@ export default function AssignmentBuilderPage() {
         return;
       }
 
-      const stepNames = [
-        'Business Value',
-        'Target Outcomes',
-        'Weight Matrix',
-        'Practicals',
-        'Expertise Mapping',
-      ];
+      const stepNames: Record<number, string> = {
+        1: 'Business Value',
+        2: 'Target Outcomes',
+        3: 'Weight Matrix',
+        4: 'Practicals',
+        5: 'Expertise Mapping',
+      };
 
       // Calculate time spent on current step
       const timeSpentSeconds = Math.floor((new Date().getTime() - stepStartTime.getTime()) / 1000);
@@ -551,7 +621,8 @@ export default function AssignmentBuilderPage() {
             entityId: targetAssignmentId,
             properties: {
               stepNumber: currentStep,
-              stepName: stepNames[currentStep - 1],
+              stepName: stepNames[currentStep],
+              builderMode,
               timeSpentSeconds,
               timestamp: new Date().toISOString(),
             },
@@ -570,7 +641,7 @@ export default function AssignmentBuilderPage() {
       }
 
       // Move to next step
-      const nextStep = currentStep + 1;
+      const nextStep = builderMode === 'basic' && currentStep === 2 ? 4 : currentStep + 1;
       setCurrentStep(nextStep);
       setStepStartTime(new Date());
 
@@ -591,7 +662,8 @@ export default function AssignmentBuilderPage() {
             entityId: targetAssignmentId,
             properties: {
               stepNumber: nextStep,
-              stepName: stepNames[nextStep - 1],
+              stepName: stepNames[nextStep],
+              builderMode,
               timestamp: new Date().toISOString(),
             },
           }),
@@ -604,7 +676,11 @@ export default function AssignmentBuilderPage() {
 
   const handleBack = () => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+      if (builderMode === 'basic' && currentStep === 4) {
+        setCurrentStep(2);
+      } else {
+        setCurrentStep(currentStep - 1);
+      }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
@@ -640,6 +716,24 @@ export default function AssignmentBuilderPage() {
         return;
       }
 
+      if (builderMode === 'basic' && data.mustHaveSkills.length < 3) {
+        toast.error('Basic mode requires at least 3 must-have skills');
+        setIsSaving(false);
+        return;
+      }
+
+      if (builderMode === 'advanced') {
+        const totalWeight =
+          (data.weights?.mission || 0) +
+          (data.weights?.expertise || 0) +
+          (data.weights?.workMode || 0);
+        if (totalWeight !== 100) {
+          toast.error('Advanced mode requires weight matrix total to be exactly 100%');
+          setIsSaving(false);
+          return;
+        }
+      }
+
       const persisted = await persistDraft({
         status: 'draft',
         creationStatus: 'pending_review',
@@ -668,9 +762,49 @@ export default function AssignmentBuilderPage() {
   return (
     <div className="min-h-screen bg-[#F7F6F1] p-6">
       <div className="max-w-4xl mx-auto space-y-6">
+        {assignmentBasicModeEnabled && flagsLoaded ? (
+          <Card className="p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-[#2D3330]">Assignment builder mode</p>
+                <p className="text-xs text-[#6B6760]">
+                  Basic mode publishes faster. Advanced mode keeps full weight controls.
+                </p>
+              </div>
+              <div className="inline-flex rounded-md border border-[#E8E6DD] bg-white p-1">
+                <button
+                  type="button"
+                  className={`rounded px-3 py-1 text-sm ${
+                    builderMode === 'basic'
+                      ? 'bg-[#1C4D3A] text-white'
+                      : 'text-[#2D3330] hover:bg-[#F7F6F1]'
+                  }`}
+                  onClick={() => {
+                    setBuilderMode('basic');
+                    setCurrentStep((prev) => (prev === 3 ? 4 : prev));
+                  }}
+                >
+                  Basic
+                </button>
+                <button
+                  type="button"
+                  className={`rounded px-3 py-1 text-sm ${
+                    builderMode === 'advanced'
+                      ? 'bg-[#1C4D3A] text-white'
+                      : 'text-[#2D3330] hover:bg-[#F7F6F1]'
+                  }`}
+                  onClick={() => setBuilderMode('advanced')}
+                >
+                  Advanced
+                </button>
+              </div>
+            </div>
+          </Card>
+        ) : null}
+
         {/* Progress Steps */}
         <div className="flex items-center justify-between">
-          {STEPS.map((step, index) => (
+          {activeSteps.map((step, index) => (
             <div key={step.id} className="flex items-center flex-1">
               <div className="flex flex-col items-center">
                 <div
@@ -689,7 +823,7 @@ export default function AssignmentBuilderPage() {
                   <p className="text-xs text-[#6B6760]">{step.description}</p>
                 </div>
               </div>
-              {index < STEPS.length - 1 && (
+              {index < activeSteps.length - 1 && (
                 <div
                   className={`flex-1 h-1 mx-2 ${
                     currentStep > step.id ? 'bg-[#7A9278]' : 'bg-gray-200'
@@ -714,7 +848,7 @@ export default function AssignmentBuilderPage() {
           {currentStep === 2 && (
             <Step2TargetOutcomes form={form} onNext={handleNext} onBack={handleBack} />
           )}
-          {currentStep === 3 && (
+          {currentStep === 3 && builderMode === 'advanced' && (
             <Step3WeightMatrix form={form} onNext={handleNext} onBack={handleBack} />
           )}
           {currentStep === 4 && (

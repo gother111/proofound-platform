@@ -468,6 +468,18 @@ export const matchingProfiles = pgTable('matching_profiles', {
   compMin: integer('comp_min'),
   compMax: integer('comp_max'),
   currency: text('currency').default('USD'),
+  desiredRoles: text('desired_roles')
+    .array()
+    .default(sql`'{}'::text[]`)
+    .notNull(),
+  desiredIndustries: text('desired_industries')
+    .array()
+    .default(sql`'{}'::text[]`)
+    .notNull(),
+  orgTypes: text('org_types')
+    .array()
+    .default(sql`'{}'::text[]`)
+    .notNull(),
   weights: jsonb('weights'), // User's preferred weights
   // Work authorization & sponsorship
   needsSponsorship: boolean('needs_sponsorship').default(false),
@@ -617,6 +629,9 @@ export const assignments = pgTable('assignments', {
     enum: ['draft', 'pipeline_in_progress', 'pending_review', 'ready_to_publish', 'published'],
   })
     .default('draft')
+    .notNull(),
+  builderMode: text('builder_mode', { enum: ['basic', 'advanced'] })
+    .default('basic')
     .notNull(),
   businessValue: text('business_value'),
   expectedImpact: text('expected_impact'),
