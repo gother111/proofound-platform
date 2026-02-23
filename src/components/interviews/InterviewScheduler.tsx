@@ -18,7 +18,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -47,24 +47,29 @@ interface InterviewSchedulerProps {
   matchAcceptedAt: Date;
   onScheduled?: (interview: any) => void;
   onCancel?: () => void;
+  defaultPolicyPreset?: 'startup' | 'enterprise' | 'volunteer' | 'advanced';
 }
 
 type Step = 'provider' | 'datetime' | 'duration' | 'timezone' | 'review';
 
 export function InterviewScheduler({
   matchId,
-  assignmentId,
+  assignmentId: _assignmentId,
   candidateId,
   candidateName = 'Candidate',
   matchAcceptedAt,
   onScheduled,
   onCancel,
+  defaultPolicyPreset = 'startup',
 }: InterviewSchedulerProps) {
   const [currentStep, setCurrentStep] = useState<Step>('provider');
   const [provider, setProvider] = useState<'zoom' | 'google_meet' | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [duration, setDuration] = useState(30); // Fixed at 30 min per PRD
+  const [policyPreset, setPolicyPreset] = useState<
+    'startup' | 'enterprise' | 'volunteer' | 'advanced'
+  >(defaultPolicyPreset);
+  const [duration, setDuration] = useState(30);
   const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [scheduledInterview, setScheduledInterview] = useState<any>(null);
@@ -80,10 +85,18 @@ export function InterviewScheduler({
   const currentStepIndex = steps.findIndex((s) => s.id === currentStep);
   const progress = ((currentStepIndex + 1) / steps.length) * 100;
 
-  // Calculate 7-day window
+  const policyConfig = {
+    startup: { scheduleWithinDays: 7, maxDurationMinutes: 30, label: 'Startup' },
+    enterprise: { scheduleWithinDays: 14, maxDurationMinutes: 45, label: 'Enterprise' },
+    volunteer: { scheduleWithinDays: 21, maxDurationMinutes: 30, label: 'Volunteer' },
+    advanced: { scheduleWithinDays: 7, maxDurationMinutes: 60, label: 'Advanced' },
+  } as const;
+  const activePolicy = policyConfig[policyPreset];
+
+  // Calculate policy scheduling window
   const minDate = new Date();
   const maxDate = new Date(matchAcceptedAt);
-  maxDate.setDate(maxDate.getDate() + 7);
+  maxDate.setDate(maxDate.getDate() + activePolicy.scheduleWithinDays);
 
   const canProceed = () => {
     switch (currentStep) {
@@ -92,7 +105,7 @@ export function InterviewScheduler({
       case 'datetime':
         return selectedDate !== null && selectedTime !== null;
       case 'duration':
-        return duration === 30; // Always true since it's fixed
+        return duration > 0 && duration <= activePolicy.maxDurationMinutes;
       case 'timezone':
         return timezone !== '';
       case 'review':
@@ -143,6 +156,8 @@ export function InterviewScheduler({
           platform: provider,
           participantUserIds: [candidateId],
           timezone,
+          policyPreset,
+          durationMinutes: duration,
         }),
       });
 
@@ -221,8 +236,8 @@ export function InterviewScheduler({
           <CardDescription>
             {currentStep === 'provider' && 'Choose your preferred video conferencing platform'}
             {currentStep === 'datetime' &&
-              `Select date and time (must be within 7 days, by ${maxDate.toLocaleDateString()})`}
-            {currentStep === 'duration' && 'Interview duration is fixed at 30 minutes'}
+              `Select date and time (must be within ${activePolicy.scheduleWithinDays} days, by ${maxDate.toLocaleDateString()})`}
+            {currentStep === 'duration' && 'Select policy preset and interview duration'}
             {currentStep === 'timezone' && 'Confirm your timezone for the interview'}
             {currentStep === 'review' && 'Review and confirm your interview details'}
           </CardDescription>
@@ -248,22 +263,72 @@ export function InterviewScheduler({
           {/* Step 3: Duration */}
           {currentStep === 'duration' && (
             <div className="space-y-4">
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-[#2D3330]">Policy preset</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {(Object.keys(policyConfig) as Array<keyof typeof policyConfig>).map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => {
+                        setPolicyPreset(preset);
+                        setDuration((prev) =>
+                          Math.min(prev, policyConfig[preset].maxDurationMinutes)
+                        );
+                      }}
+                      className={`rounded-lg border px-3 py-2 text-left ${
+                        policyPreset === preset
+                          ? 'border-[#1C4D3A] bg-[#E8F5E1]'
+                          : 'border-[#E8E6DD] bg-white'
+                      }`}
+                    >
+                      <p className="text-sm font-medium text-[#2D3330]">
+                        {policyConfig[preset].label}
+                      </p>
+                      <p className="text-xs text-[#6B6760]">
+                        {policyConfig[preset].scheduleWithinDays}d window · up to{' '}
+                        {policyConfig[preset].maxDurationMinutes}m
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="p-4 bg-[#E8F5E1] rounded-lg border border-[#1C4D3A]/20">
                 <div className="flex items-center gap-3">
                   <Clock className="w-5 h-5 text-[#1C4D3A]" />
                   <div>
-                    <p className="font-semibold text-[#2D3330]">30 Minutes</p>
+                    <p className="font-semibold text-[#2D3330]">Duration: {duration} minutes</p>
                     <p className="text-sm text-[#6B6760]">
-                      Interview duration is fixed at 30 minutes as per platform policy
+                      Max duration for {activePolicy.label.toLowerCase()} preset is{' '}
+                      {activePolicy.maxDurationMinutes} minutes.
                     </p>
                   </div>
                 </div>
               </div>
 
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-[#2D3330]">Interview duration</p>
+                <div className="flex flex-wrap gap-2">
+                  {[30, 45, 60].map((value) => (
+                    <Button
+                      key={value}
+                      type="button"
+                      variant={duration === value ? 'default' : 'outline'}
+                      disabled={value > activePolicy.maxDurationMinutes}
+                      onClick={() => setDuration(value)}
+                      className={duration === value ? 'bg-[#1C4D3A] text-white' : ''}
+                    >
+                      {value} min
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
               <div className="p-3 bg-[#F7F6F1] rounded-lg border border-[#E8E6DD]">
                 <p className="text-xs text-[#6B6760]">
-                  <strong>Note:</strong> This ensures fair and consistent interview experiences for
-                  all candidates.
+                  <strong>Note:</strong> Presets provide recommended defaults. Advanced mode keeps
+                  stricter manual control.
                 </p>
               </div>
             </div>
@@ -347,8 +412,14 @@ export function InterviewScheduler({
                   <p className="text-xs text-[#6B6760] mb-1">Duration</p>
                   <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4 text-[#1C4D3A]" />
-                    <p className="font-medium text-[#2D3330]">30 minutes</p>
+                    <p className="font-medium text-[#2D3330]">{duration} minutes</p>
                   </div>
+                </div>
+
+                {/* Policy Preset */}
+                <div className="p-3 border border-[#E8E6DD] rounded-lg">
+                  <p className="text-xs text-[#6B6760] mb-1">Policy preset</p>
+                  <p className="font-medium text-[#2D3330]">{activePolicy.label}</p>
                 </div>
 
                 {/* Timezone */}
@@ -370,7 +441,10 @@ export function InterviewScheduler({
                     <ul className="text-xs space-y-1 ml-4 list-disc">
                       <li>Calendar invites will be sent to all participants</li>
                       <li>Meeting link will be generated automatically</li>
-                      <li>You can reschedule once within the 7-day window</li>
+                      <li>
+                        You can reschedule once within the {activePolicy.scheduleWithinDays}-day
+                        window
+                      </li>
                       <li>Candidate will be notified immediately</li>
                     </ul>
                   </div>

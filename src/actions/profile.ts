@@ -11,7 +11,6 @@ import {
   experiences,
   education,
   volunteering,
-  matchingProfiles,
   skills as skillsTable,
   skillsTaxonomy,
   skillProofs,
@@ -19,6 +18,8 @@ import {
 import { requireAuth } from '@/lib/auth';
 import { emitProfileActivated } from '@/lib/analytics/events';
 import { triggerProfileActivationSurvey } from '@/lib/surveys/sus-triggers';
+import { evaluateIndividualMatchability } from '@/lib/matching/eligibility';
+import { MATCHABILITY_STRONG_SKILLS_WITH_RECENCY } from '@/lib/matching/thresholds';
 import type {
   ProfileData,
   BasicInfo,
@@ -37,11 +38,8 @@ import type {
 const activatedProfiles = new Set<string>();
 
 /**
- * Check if profile meets PRD-strict activation criteria
- * Criteria:
- * - ≥10 L4 skills with level + proof
- * - Mission AND Vision filled
- * - Matching profile exists (indicates user completed matchmaking setup)
+ * Check if profile meets activation criteria and emit event.
+ * Uses shared matchability eligibility to avoid rule drift.
  */
 async function checkAndEmitProfileActivation(userId: string): Promise<void> {
   // Skip if already emitted for this profile
@@ -50,52 +48,25 @@ async function checkAndEmitProfileActivation(userId: string): Promise<void> {
   }
 
   try {
-    // Fetch profile data
-    const [profile] = await db
-      .select()
-      .from(individualProfiles)
-      .where(eq(individualProfiles.userId, userId))
-      .limit(1);
+    const eligibility = await evaluateIndividualMatchability(userId);
+    if (!eligibility.eligible) return;
 
-    if (!profile) return;
-
-    // Check 1: Mission AND Vision filled
-    const hasPurposeBlock = !!profile.mission && !!profile.vision;
-    if (!hasPurposeBlock) return;
-
-    // Check 2: ≥10 L4 skills with level + proof
-    const skillsCount = await db
-      .select({ count: skillsTable.id })
-      .from(skillsTable)
-      .where(eq(skillsTable.profileId, userId));
-
-    const l4SkillsCount = skillsCount.length;
-    const hasMinimumL4Count = l4SkillsCount >= 10;
-    if (!hasMinimumL4Count) return;
-
-    // Check 3: Matching profile exists
-    const [matchingProfile] = await db
-      .select()
-      .from(matchingProfiles)
-      .where(eq(matchingProfiles.profileId, userId))
-      .limit(1);
-
-    const hasMatchingProfile = !!matchingProfile;
-    if (!hasMatchingProfile) return;
-
-    // Calculate completion score (0-100)
-    let completionScore = 0;
-    if (hasPurposeBlock) completionScore += 30;
-    if (hasMinimumL4Count) completionScore += 40;
-    if (hasMatchingProfile) completionScore += 30;
+    const completionScore = eligibility.tier === 'strong' ? 100 : 75;
+    const hasMinimumL4Count =
+      eligibility.counts.skillsWithRecency >= MATCHABILITY_STRONG_SKILLS_WITH_RECENCY;
+    const hasPurposeBlock = eligibility.counts.hasPurpose;
+    const hasMatchingProfile = eligibility.counts.hasConstraints;
 
     // All criteria met - emit activation event!
     await emitProfileActivated(userId, 0, {
       completionScore,
       hasMinimumL4Count,
-      l4SkillsCount,
+      l4SkillsCount: eligibility.counts.skillsWithRecency,
       hasPurposeBlock,
       hasMatchingProfile,
+      proofCount: eligibility.counts.proofCount,
+      activationTier: eligibility.tier,
+      nextTierTarget: eligibility.nextTierTarget?.tier || null,
     });
 
     // Trigger SUS survey for profile activation milestone

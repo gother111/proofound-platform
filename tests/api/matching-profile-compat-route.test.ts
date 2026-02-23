@@ -40,6 +40,9 @@ describe('matching profile legacy compatibility route', () => {
     (db.query.matchingProfiles.findFirst as any).mockResolvedValueOnce(null).mockResolvedValueOnce({
       profileId: userId,
       weights: { skills: 0.3, values: 0.2 },
+      desiredRoles: ['Product Designer'],
+      desiredIndustries: ['Education'],
+      orgTypes: ['ngo'],
       verified: {
         __compat_profile: {
           name: 'Product Designer',
@@ -59,6 +62,9 @@ describe('matching profile legacy compatibility route', () => {
       body: JSON.stringify({
         name: 'Product Designer',
         constraints: { requireEmailVerified: false, requireLocationMatch: true },
+        desiredRoles: ['Product Designer'],
+        desiredIndustries: ['Education'],
+        orgTypes: ['ngo'],
       }),
     });
 
@@ -75,11 +81,17 @@ describe('matching profile legacy compatibility route', () => {
             constraints: { requireEmailVerified: false, requireLocationMatch: true },
           },
         },
+        desiredRoles: ['Product Designer'],
+        desiredIndustries: ['Education'],
+        orgTypes: ['ngo'],
       })
     );
     expect(payload.profile.name).toBe('Product Designer');
     expect(payload.profile.constraints.requireEmailVerified).toBe(false);
     expect(payload.profile.constraints.requireLocationMatch).toBe(true);
+    expect(payload.profile.desiredRoles).toEqual(['Product Designer']);
+    expect(payload.profile.desiredIndustries).toEqual(['Education']);
+    expect(payload.profile.orgTypes).toEqual(['ngo']);
   });
 
   it('returns persisted compat metadata on GET', async () => {
@@ -87,6 +99,9 @@ describe('matching profile legacy compatibility route', () => {
     (db.query.matchingProfiles.findFirst as any).mockResolvedValue({
       profileId: userId,
       weights: null,
+      desiredRoles: ['Policy Analyst'],
+      desiredIndustries: ['Public Policy'],
+      orgTypes: ['government'],
       verified: {
         __compat_profile: {
           name: 'Policy Analyst',
@@ -104,5 +119,8 @@ describe('matching profile legacy compatibility route', () => {
     expect(payload.profiles).toHaveLength(1);
     expect(payload.profiles[0].name).toBe('Policy Analyst');
     expect(payload.profiles[0].constraints.requireProfileComplete).toBe(true);
+    expect(payload.profiles[0].desiredRoles).toEqual(['Policy Analyst']);
+    expect(payload.profiles[0].desiredIndustries).toEqual(['Public Policy']);
+    expect(payload.profiles[0].orgTypes).toEqual(['government']);
   });
 });

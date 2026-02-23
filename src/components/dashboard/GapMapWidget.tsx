@@ -34,7 +34,7 @@ export function GapMapWidget() {
   useEffect(() => {
     async function fetchTopGaps() {
       try {
-        const response = await apiFetch('/api/expertise/gap-analysis');
+        const response = await apiFetch('/api/skill-gaps');
         if (response.ok) {
           const data = await response.json();
           // Get top 3 gaps sorted by importance
@@ -54,7 +54,7 @@ export function GapMapWidget() {
   }, []);
 
   const handleViewAll = () => {
-    router.push('/app/i/expertise?tab=gap-analysis');
+    router.push('/app/i/skill-gaps');
   };
 
   if (loading) {

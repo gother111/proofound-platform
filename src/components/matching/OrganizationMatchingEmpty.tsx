@@ -1,17 +1,45 @@
 'use client';
 
 import { Users } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
 interface OrganizationMatchingEmptyProps {
+  orgSlug?: string | null;
   onCreateAssignment: () => void;
 }
 
 /**
  * Empty state for organizations who haven't created any assignments yet.
  */
-export function OrganizationMatchingEmpty({ onCreateAssignment }: OrganizationMatchingEmptyProps) {
+export function OrganizationMatchingEmpty({
+  orgSlug,
+  onCreateAssignment,
+}: OrganizationMatchingEmptyProps) {
+  const router = useRouter();
+  const baseOrgPath = orgSlug ? `/app/o/${orgSlug}` : '/app/o';
+  const remediationActions = [
+    {
+      id: 'create-assignment',
+      title: 'Create first assignment',
+      description: 'Publish in Basic mode with outcomes, practicals, and core skills.',
+      onClick: onCreateAssignment,
+    },
+    {
+      id: 'start-from-template',
+      title: 'Start from template',
+      description: 'Open assignment templates to prefill required fields.',
+      onClick: () => router.push(`${baseOrgPath}/assignments/new?openTemplates=1`),
+    },
+    {
+      id: 'complete-org-profile',
+      title: 'Complete org profile',
+      description: 'Add mission, values, and context to improve matching quality.',
+      onClick: () => router.push(`${baseOrgPath}/profile`),
+    },
+  ] as const;
+
   return (
     <div className="flex items-center justify-center min-h-[60vh] px-4">
       <Card
@@ -54,6 +82,20 @@ export function OrganizationMatchingEmpty({ onCreateAssignment }: OrganizationMa
         <p className="text-sm" style={{ color: '#6B6760' }}>
           Define skills, values, and impact areas • Candidates remain anonymous
         </p>
+
+        <div className="mt-6 grid grid-cols-1 gap-2 text-left">
+          {remediationActions.map((action) => (
+            <button
+              key={action.id}
+              type="button"
+              onClick={action.onClick}
+              className="rounded-lg border border-[#E8E6DD] bg-white px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1]"
+            >
+              <p className="text-sm font-medium text-[#2D3330]">{action.title}</p>
+              <p className="text-xs text-[#6B6760]">{action.description}</p>
+            </button>
+          ))}
+        </div>
 
         {/* Subtle background decoration */}
         <div className="mt-8 flex justify-center gap-2 opacity-20">

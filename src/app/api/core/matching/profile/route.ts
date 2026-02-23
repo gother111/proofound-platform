@@ -1,17 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/db';
-import { assignments, matchingProfiles, skills, matches } from '@/db/schema';
-import { eq, sql } from 'drizzle-orm';
+import {
+  assignmentExpertiseMatrix,
+  assignments,
+  matchingProfiles,
+  matches,
+  organizations,
+  skills,
+} from '@/db/schema';
+import { eq, inArray, sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { scrubDisallowedFields } from '@/lib/core/matching/firewall';
 import { getOrSet, CACHE_KEYS, CACHE_TTL } from '@/lib/cache';
-import { emitFirstMatchShown } from '@/lib/analytics/events';
+import { emitAnalyticsEventAsync, emitFirstMatchShown } from '@/lib/analytics/events';
 import { getRows } from '@/lib/db/rows';
+import { deriveRequirementsFromMatrix } from '@/lib/assignments/expertise-matrix';
 import {
-  scoreValues,
-  scoreCauses,
-  scoreSkills,
   scoreSkillsEnhanced,
   scoreExperience,
   scoreVerifications,
@@ -20,8 +25,6 @@ import {
   scoreCompensation,
   scoreLanguage,
   scorePAC,
-  scoreSkillsRecency,
-  scoreSkillsEvidence,
   scoreWorkAuthorization,
   composeWeighted,
   compareMatches,
@@ -33,6 +36,8 @@ import {
 import { getPreset, normalizeWeights, type PresetKey } from '@/lib/core/matching/presets';
 import { batchGetMissionVisionScoresForProfile } from '@/lib/matching/semantic';
 import { isTrustedInternalRequest, requireApiAuth } from '@/lib/api/auth';
+import { evaluateIndividualMatchability, toNotMatchablePayload } from '@/lib/matching/eligibility';
+import { calculateFocusBoost } from '@/lib/core/matching/focus';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,6 +69,19 @@ interface MatchResult {
     valuesScore: number;
     causesScore: number;
     missionVisionScore: number;
+  };
+  focusBoost: {
+    total: number;
+    matched: {
+      role: boolean;
+      industry: boolean;
+      orgType: boolean;
+    };
+    contributions: {
+      role: number;
+      industry: number;
+      orgType: number;
+    };
   };
 }
 
@@ -101,6 +119,34 @@ export async function POST(request: NextRequest) {
     }
 
     const { mode, k = 20, useSemanticMatching = false } = validatedData;
+
+    const eligibility = await evaluateIndividualMatchability(user.id);
+    if (!eligibility.eligible) {
+      log.info('matching.gated.not_matchable', {
+        userId: user.id,
+        endpoint: '/api/core/matching/profile',
+        tier: eligibility.tier,
+        unmetCriteria: eligibility.unmetCriteria,
+        counts: eligibility.counts,
+      });
+
+      emitAnalyticsEventAsync({
+        eventType: 'matching_gated_not_matchable',
+        userId: user.id,
+        profileId: user.id,
+        entityType: 'api',
+        entityId: '/api/core/matching/profile',
+        properties: {
+          unmetCriteria: eligibility.unmetCriteria,
+          unmetCriteriaCount: eligibility.unmetCriteria.length,
+          tier: eligibility.tier,
+          nextTierTarget: eligibility.nextTierTarget?.tier || null,
+          counts: eligibility.counts,
+        },
+      });
+
+      return NextResponse.json(toNotMatchablePayload(eligibility), { status: 412 });
+    }
 
     // Fetch user's matching profile (with caching)
     const cacheKeyProfile = `${CACHE_KEYS.PROFILE}matching:${user.id}`;
@@ -149,9 +195,6 @@ export async function POST(request: NextRequest) {
       };
     }
 
-    // Pre-compute aggregate skill quality metrics
-    const userSkillsList = Object.values(skillsMap);
-
     // Determine weights
     const weights = validatedData.weights
       ? normalizeWeights(validatedData.weights)
@@ -165,6 +208,7 @@ export async function POST(request: NextRequest) {
     const activeAssignments = await db
       .select({
         id: assignments.id,
+        orgId: assignments.orgId,
         role: assignments.role,
         description: assignments.description,
         status: assignments.status,
@@ -189,6 +233,35 @@ export async function POST(request: NextRequest) {
       })
       .from(assignments)
       .where(eq(assignments.status, 'active'));
+
+    const matrixRows = activeAssignments.length
+      ? await db.query.assignmentExpertiseMatrix.findMany({
+          where: inArray(
+            assignmentExpertiseMatrix.assignmentId,
+            activeAssignments.map((assignment) => assignment.id)
+          ),
+        })
+      : [];
+    const matrixRowsByAssignment = new Map<string, typeof matrixRows>();
+    for (const row of matrixRows) {
+      const existing = matrixRowsByAssignment.get(row.assignmentId) || [];
+      existing.push(row);
+      matrixRowsByAssignment.set(row.assignmentId, existing);
+    }
+
+    const orgIds = Array.from(new Set(activeAssignments.map((assignment) => assignment.orgId)));
+    const orgRows =
+      orgIds.length > 0
+        ? await db
+            .select({
+              id: organizations.id,
+              type: organizations.type,
+              industry: organizations.industry,
+            })
+            .from(organizations)
+            .where(inArray(organizations.id, orgIds))
+        : [];
+    const orgById = new Map(orgRows.map((row) => [row.id, row]));
 
     // Batch fetch mission/vision scores for PAC (if using semantic matching)
     let missionVisionScores: Map<string, number> = new Map();
@@ -235,8 +308,23 @@ export async function POST(request: NextRequest) {
       }
 
       // Apply hard filters
-      const mustHaveSkills = (assignment.mustHaveSkills as Skill[]) || [];
-      const niceToHaveSkills = (assignment.niceToHaveSkills as Skill[]) || [];
+      const matrixRowsForAssignment = matrixRowsByAssignment.get(assignment.id) || [];
+      const matrixRequirements =
+        matrixRowsForAssignment.length > 0
+          ? deriveRequirementsFromMatrix(
+              matrixRowsForAssignment.map((row) => ({
+                skillCode: row.skillCode,
+                requiredLevel: row.requiredLevel,
+                stakeholderRole: row.stakeholderRole,
+              }))
+            )
+          : null;
+      const mustHaveSkills = matrixRequirements
+        ? (matrixRequirements.mustHaveSkills as Skill[])
+        : (assignment.mustHaveSkills as Skill[]) || [];
+      const niceToHaveSkills = matrixRequirements
+        ? (matrixRequirements.niceToHaveSkills as Skill[])
+        : (assignment.niceToHaveSkills as Skill[]) || [];
 
       // Use enhanced skills scoring with recency/evidence/impact
       const enhancedSkillScore = scoreSkillsEnhanced(mustHaveSkills, niceToHaveSkills, skillsMap);
@@ -341,6 +429,20 @@ export async function POST(request: NextRequest) {
 
       // Compose weighted score
       const composed = composeWeighted(subscores, weights);
+      const organization = orgById.get(assignment.orgId);
+      const focusBoost = calculateFocusBoost(
+        {
+          desiredRoles: (profile.desiredRoles as string[] | null) || [],
+          desiredIndustries: (profile.desiredIndustries as string[] | null) || [],
+          orgTypes: (profile.orgTypes as string[] | null) || [],
+        },
+        {
+          assignmentRole: assignment.role,
+          orgIndustry: organization?.industry,
+          orgType: organization?.type,
+        }
+      );
+      const finalScore = Math.min(1, composed.total + focusBoost.boost);
 
       // Scrub org-identifying info from assignment
       const scrubbedAssignment = scrubDisallowedFields(assignment);
@@ -351,9 +453,12 @@ export async function POST(request: NextRequest) {
       results.push({
         ...(existingMatchId && { id: existingMatchId }),
         assignmentId: assignment.id,
-        score: composed.total,
+        score: finalScore,
         subscores,
-        contributions: composed.contributions,
+        contributions: {
+          ...composed.contributions,
+          focusBoost: focusBoost.boost,
+        },
         gaps: enhancedSkillScore.gaps,
         missing: enhancedSkillScore.missing,
         assignment: scrubbedAssignment,
@@ -363,6 +468,11 @@ export async function POST(request: NextRequest) {
           valuesScore: pacScore.valuesScore,
           causesScore: pacScore.causesScore,
           missionVisionScore: pacScore.missionVisionScore,
+        },
+        focusBoost: {
+          total: focusBoost.boost,
+          matched: focusBoost.matched,
+          contributions: focusBoost.contributions,
         },
       });
     }
@@ -469,6 +579,10 @@ export async function POST(request: NextRequest) {
         returned: topKWithIds.length,
         durationMs: duration,
         weights: weights,
+        eligibility: {
+          tier: eligibility.tier,
+          nextTierTarget: eligibility.nextTierTarget,
+        },
       },
     });
   } catch (error) {

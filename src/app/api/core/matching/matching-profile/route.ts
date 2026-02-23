@@ -2,12 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
-import { matchingProfiles, skills, individualProfiles } from '@/db/schema';
+import { matchingProfiles, skills } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { log } from '@/lib/log';
-import { emitProfileActivated } from '@/lib/analytics/events';
+import { emitAnalyticsEventAsync, emitProfileActivated } from '@/lib/analytics/events';
+import { evaluateIndividualMatchability } from '@/lib/matching/eligibility';
+import { getWeightBiasBucket } from '@/lib/core/matching/presets';
+import { MATCHABILITY_STRONG_SKILLS_WITH_RECENCY } from '@/lib/matching/thresholds';
 
 export const dynamic = 'force-dynamic';
+const ENABLE_MATCHING_PROFILE_SKILL_WRITES =
+  process.env.MATCHING_PROFILE_ENABLE_SKILL_WRITES === 'true';
 
 /**
  * Track if profile was already activated (to avoid duplicate events)
@@ -15,49 +20,26 @@ export const dynamic = 'force-dynamic';
 const activatedProfiles = new Set<string>();
 
 /**
- * Check if profile meets PRD-strict activation criteria and emit event
+ * Check if profile meets activation criteria and emit event.
  */
 async function checkAndEmitProfileActivation(userId: string): Promise<void> {
   if (activatedProfiles.has(userId)) return;
 
   try {
-    const [profile] = await db
-      .select()
-      .from(individualProfiles)
-      .where(eq(individualProfiles.userId, userId))
-      .limit(1);
+    const eligibility = await evaluateIndividualMatchability(userId);
+    if (!eligibility.eligible) return;
 
-    if (!profile) return;
-
-    const hasPurposeBlock = !!profile.mission && !!profile.vision;
-    if (!hasPurposeBlock) return;
-
-    const skillsCount = await db
-      .select({ count: skills.id })
-      .from(skills)
-      .where(eq(skills.profileId, userId));
-
-    const l4SkillsCount = skillsCount.length;
-    const hasMinimumL4Count = l4SkillsCount >= 10;
-    if (!hasMinimumL4Count) return;
-
-    const [matchingProfile] = await db
-      .select()
-      .from(matchingProfiles)
-      .where(eq(matchingProfiles.profileId, userId))
-      .limit(1);
-
-    if (!matchingProfile) return;
-
-    let completionScore = 30 + 40 + 30; // All criteria met = 100
-
-    // Use 0 for duration since we don't track when activation started
+    const completionScore = eligibility.tier === 'strong' ? 100 : 75;
     await emitProfileActivated(userId, 0, {
       completionScore,
-      hasMinimumL4Count,
-      l4SkillsCount,
-      hasPurposeBlock,
-      hasMatchingProfile: true,
+      hasMinimumL4Count:
+        eligibility.counts.skillsWithRecency >= MATCHABILITY_STRONG_SKILLS_WITH_RECENCY,
+      l4SkillsCount: eligibility.counts.skillsWithRecency,
+      hasPurposeBlock: eligibility.counts.hasPurpose,
+      hasMatchingProfile: eligibility.counts.hasConstraints,
+      proofCount: eligibility.counts.proofCount,
+      activationTier: eligibility.tier,
+      nextTierTarget: eligibility.nextTierTarget?.tier || null,
     });
 
     activatedProfiles.add(userId);
@@ -99,7 +81,11 @@ const MatchingProfileSchema = z.object({
   compMin: z.number().optional(),
   compMax: z.number().optional(),
   currency: z.string().optional(),
+  desiredRoles: z.array(z.string()).optional(),
+  desiredIndustries: z.array(z.string()).optional(),
+  orgTypes: z.array(z.enum(['company', 'ngo', 'government', 'network', 'startup'])).optional(),
   weights: z.record(z.number()).optional(),
+  weightBias: z.number().min(0).max(100).optional(),
   skills: z.array(SkillInputSchema).optional(),
 });
 
@@ -122,8 +108,13 @@ export async function GET() {
       where: eq(skills.profileId, user.id),
     });
 
+    const eligibility = await evaluateIndividualMatchability(user.id);
+
     if (!profile) {
-      return NextResponse.json({ profile: null });
+      return NextResponse.json({
+        profile: null,
+        eligibility,
+      });
     }
 
     return NextResponse.json({
@@ -131,6 +122,7 @@ export async function GET() {
         ...profile,
         skills: userSkills,
       },
+      eligibility,
     });
   } catch (error) {
     log.error('matching-profile.get.failed', {
@@ -155,15 +147,25 @@ export async function PUT(request: NextRequest) {
     const validatedData = MatchingProfileSchema.parse(body);
 
     // Extract skills separately
-    const { skills: skillsInput, ...profileData } = validatedData;
+    const { skills: skillsInput, weightBias, ...profileData } = validatedData;
 
-    const { availabilityEarliest, availabilityLatest, ...restProfile } = profileData;
+    const {
+      availabilityEarliest,
+      availabilityLatest,
+      desiredRoles,
+      desiredIndustries,
+      orgTypes,
+      ...restProfile
+    } = profileData;
 
     const profileToUpsert: typeof matchingProfiles.$inferInsert = {
       profileId: user.id,
       ...restProfile,
       ...(availabilityEarliest !== undefined ? { availabilityEarliest } : {}),
       ...(availabilityLatest !== undefined ? { availabilityLatest } : {}),
+      ...(desiredRoles !== undefined ? { desiredRoles } : {}),
+      ...(desiredIndustries !== undefined ? { desiredIndustries } : {}),
+      ...(orgTypes !== undefined ? { orgTypes } : {}),
     };
 
     // Upsert matching profile
@@ -178,13 +180,10 @@ export async function PUT(request: NextRequest) {
         },
       });
 
-    // Update skills if provided
-    if (skillsInput) {
-      // Delete existing skills
-      await db.delete(skills).where(eq(skills.profileId, user.id));
-
-      // Insert new skills
-      if (skillsInput.length > 0) {
+    // Deprecated compatibility path: skill writes are disabled by default.
+    if (skillsInput && skillsInput.length > 0) {
+      if (ENABLE_MATCHING_PROFILE_SKILL_WRITES) {
+        await db.delete(skills).where(eq(skills.profileId, user.id));
         await db.insert(skills).values(
           skillsInput.map((skill) => ({
             profileId: user.id,
@@ -193,6 +192,11 @@ export async function PUT(request: NextRequest) {
             monthsExperience: skill.monthsExperience,
           }))
         );
+      } else {
+        log.info('matching-profile.skills_ignored', {
+          userId: user.id,
+          suppliedSkillCount: skillsInput.length,
+        });
       }
     }
 
@@ -201,8 +205,46 @@ export async function PUT(request: NextRequest) {
       skillCount: skillsInput?.length || 0,
     });
 
+    if (desiredRoles !== undefined || desiredIndustries !== undefined || orgTypes !== undefined) {
+      emitAnalyticsEventAsync({
+        eventType: 'matching_focus_updated',
+        userId: user.id,
+        profileId: user.id,
+        entityType: 'profile',
+        entityId: user.id,
+        properties: {
+          desiredRolesCount: desiredRoles?.length ?? 0,
+          desiredIndustriesCount: desiredIndustries?.length ?? 0,
+          orgTypesCount: orgTypes?.length ?? 0,
+          hasFocusFields:
+            (desiredRoles?.length ?? 0) > 0 ||
+            (desiredIndustries?.length ?? 0) > 0 ||
+            (orgTypes?.length ?? 0) > 0,
+        },
+      });
+    }
+
+    if (typeof weightBias === 'number') {
+      emitAnalyticsEventAsync({
+        eventType: 'matching_weight_bias_changed',
+        userId: user.id,
+        profileId: user.id,
+        entityType: 'profile',
+        entityId: user.id,
+        properties: {
+          biasValue: weightBias,
+          biasBucket: getWeightBiasBucket(weightBias),
+          hasFocusFields:
+            (desiredRoles?.length ?? 0) > 0 ||
+            (desiredIndustries?.length ?? 0) > 0 ||
+            (orgTypes?.length ?? 0) > 0,
+        },
+      });
+    }
+
     // Check if profile now meets activation criteria
     await checkAndEmitProfileActivation(user.id);
+    const eligibility = await evaluateIndividualMatchability(user.id);
 
     // Fetch and return updated profile
     const updatedProfile = await db.query.matchingProfiles.findFirst({
@@ -218,6 +260,7 @@ export async function PUT(request: NextRequest) {
         ...updatedProfile,
         skills: updatedSkills,
       },
+      eligibility,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

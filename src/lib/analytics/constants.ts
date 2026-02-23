@@ -39,6 +39,9 @@ export const EventType = {
   MATCH_SNOOZED: 'match_snoozed',
   MATCH_UNSNOOZED: 'match_unsnoozed',
   FIRST_MATCH_SHOWN: 'first_match_shown',
+  MATCHING_FOCUS_UPDATED: 'matching_focus_updated',
+  MATCHING_WEIGHT_BIAS_CHANGED: 'matching_weight_bias_changed',
+  MATCHING_GATED_NOT_MATCHABLE: 'matching_gated_not_matchable',
 
   // Introductions & Applications
   FIRST_QUALIFIED_INTRO: 'first_qualified_intro', // TTFQI endpoint
@@ -337,6 +340,9 @@ export function getEventDisplayName(eventType: EventTypeValue): string {
     [EventType.MATCH_SNOOZED]: 'Match Snoozed',
     [EventType.MATCH_UNSNOOZED]: 'Match Unsnoozed',
     [EventType.FIRST_MATCH_SHOWN]: 'First Match Shown',
+    [EventType.MATCHING_FOCUS_UPDATED]: 'Matching Focus Updated',
+    [EventType.MATCHING_WEIGHT_BIAS_CHANGED]: 'Matching Weight Bias Changed',
+    [EventType.MATCHING_GATED_NOT_MATCHABLE]: 'Matching Gated Not Matchable',
     [EventType.FIRST_QUALIFIED_INTRO]: 'First Qualified Introduction',
     [EventType.APPLICATION_SUBMITTED]: 'Application Submitted',
     [EventType.APPLICATION_ACCEPTED]: 'Application Accepted',

@@ -1,6 +1,7 @@
 'use client';
 
 import { Target } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
@@ -12,6 +13,29 @@ interface IndividualMatchingEmptyProps {
  * Empty state for individuals who haven't set up matching yet.
  */
 export function IndividualMatchingEmpty({ onSetup }: IndividualMatchingEmptyProps) {
+  const router = useRouter();
+
+  const remediationActions = [
+    {
+      id: 'setup-matching',
+      title: 'Set up matching profile',
+      description: 'Add constraints and preferences to unlock matching.',
+      onClick: onSetup,
+    },
+    {
+      id: 'add-skills',
+      title: 'Add skills and proof',
+      description: 'Add at least 3 skills with recency and one proof.',
+      onClick: () => router.push('/app/i/expertise'),
+    },
+    {
+      id: 'complete-purpose',
+      title: 'Complete purpose section',
+      description: 'Add mission, values, or causes for better purpose fit.',
+      onClick: () => router.push('/app/i/profile'),
+    },
+  ] as const;
+
   return (
     <div className="flex items-center justify-center min-h-[60vh] px-4">
       <Card
@@ -49,6 +73,20 @@ export function IndividualMatchingEmpty({ onSetup }: IndividualMatchingEmptyProp
         <p className="text-sm" style={{ color: '#6B6760' }}>
           Takes ~5 minutes • 100% anonymous until mutual interest
         </p>
+
+        <div className="mt-6 grid grid-cols-1 gap-2 text-left">
+          {remediationActions.map((action) => (
+            <button
+              key={action.id}
+              type="button"
+              onClick={action.onClick}
+              className="rounded-lg border border-[#E8E6DD] bg-white px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1]"
+            >
+              <p className="text-sm font-medium text-[#2D3330]">{action.title}</p>
+              <p className="text-xs text-[#6B6760]">{action.description}</p>
+            </button>
+          ))}
+        </div>
 
         {/* Subtle background decoration */}
         <div className="mt-8 flex justify-center gap-2 opacity-20">

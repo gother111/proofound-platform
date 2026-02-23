@@ -14,6 +14,7 @@
 
 import { Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { UI_VOCABULARY } from '@/lib/copy/vocabulary';
 
 interface PACBadgeProps {
   pacScore: number; // 0-100
@@ -76,10 +77,9 @@ export function PACBadge({
         <TooltipTrigger asChild>{badge}</TooltipTrigger>
         <TooltipContent className="max-w-xs">
           <div className="space-y-2">
-            <p className="font-semibold">Purpose-Alignment Contribution</p>
+            <p className="font-semibold">{UI_VOCABULARY.pacLabel}</p>
             <p className="text-sm text-[#6B6760]">
-              This score measures how well your values and causes align with this organization's
-              mission. A higher PAC score indicates stronger purpose alignment.
+              {UI_VOCABULARY.pacTooltip} A higher score indicates stronger purpose alignment.
             </p>
             <div className="pt-2 border-t border-[#E8E6DD] text-xs space-y-1">
               <p>

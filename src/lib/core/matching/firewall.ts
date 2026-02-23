@@ -29,6 +29,11 @@ const DISALLOWED_FIELDS = [
   'linkedIn',
   'twitter',
   'socialMedia',
+  // Hide exact compensation by default; UI can still communicate overlap.
+  'compMin',
+  'compMax',
+  'minSalary',
+  'maxSalary',
   // Also scrub exact organization names in Stage 1
   'orgName',
   'legalName',

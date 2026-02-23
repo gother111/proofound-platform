@@ -115,6 +115,8 @@ interface AssignmentBuilderV2Props {
   onCancel?: () => void;
 }
 
+type BuilderMode = 'basic' | 'advanced';
+
 export function AssignmentBuilderV2({ onComplete, onCancel }: AssignmentBuilderV2Props) {
   const router = useRouter();
   const params = useParams();
@@ -126,6 +128,7 @@ export function AssignmentBuilderV2({ onComplete, onCancel }: AssignmentBuilderV
         : null;
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [builderMode, setBuilderMode] = useState<BuilderMode>('basic');
 
   const form = useForm<AssignmentFormData>({
     resolver: zodResolver(AssignmentFormSchema),
@@ -176,7 +179,9 @@ export function AssignmentBuilderV2({ onComplete, onCancel }: AssignmentBuilderV
         fieldsToValidate = ['outcomes'];
         break;
       case 3:
-        fieldsToValidate = ['weights', 'workModeRequirement', 'workModePreference'];
+        if (builderMode === 'advanced') {
+          fieldsToValidate = ['weights', 'workModeRequirement', 'workModePreference'];
+        }
         break;
       case 4:
         fieldsToValidate = ['compMin', 'compMax', 'hoursMin', 'hoursMax', 'locationMode'];
@@ -188,8 +193,20 @@ export function AssignmentBuilderV2({ onComplete, onCancel }: AssignmentBuilderV
 
     const isValid = await form.trigger(fieldsToValidate);
 
+    if (currentStep === 5 && builderMode === 'basic') {
+      const mustHaveSkills = form.getValues('mustHaveSkills') || [];
+      if (mustHaveSkills.length < 3) {
+        toast.error('Basic mode requires at least 3 must-have skills');
+        return;
+      }
+    }
+
     if (isValid) {
-      setCurrentStep(currentStep + 1);
+      if (currentStep === 2 && builderMode === 'basic') {
+        setCurrentStep(4);
+      } else {
+        setCurrentStep(currentStep + 1);
+      }
       // Scroll to top
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
@@ -198,7 +215,11 @@ export function AssignmentBuilderV2({ onComplete, onCancel }: AssignmentBuilderV
   };
 
   const handleBack = () => {
-    setCurrentStep(currentStep - 1);
+    if (currentStep === 4 && builderMode === 'basic') {
+      setCurrentStep(2);
+    } else {
+      setCurrentStep(currentStep - 1);
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -206,8 +227,14 @@ export function AssignmentBuilderV2({ onComplete, onCancel }: AssignmentBuilderV
     setIsSubmitting(true);
 
     try {
+      if (builderMode === 'basic' && (data.mustHaveSkills?.length || 0) < 3) {
+        toast.error('Basic mode requires at least 3 must-have skills');
+        return;
+      }
+
       // Transform data to match API expectations
       const payload = {
+        builderMode,
         role: data.role,
         description: data.businessValue, // Map businessValue to description
         businessValue: data.businessValue,
@@ -286,8 +313,35 @@ export function AssignmentBuilderV2({ onComplete, onCancel }: AssignmentBuilderV
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Create New Assignment</h1>
         <p className="text-muted-foreground">
-          5-step workflow to define role, outcomes, and expertise requirements
+          Basic mode publishes faster with fewer required inputs. Advanced mode keeps full controls.
         </p>
+        <div className="mt-4 inline-flex rounded-md border border-[#E8E6DD] p-1">
+          <button
+            type="button"
+            className={`rounded px-3 py-1 text-sm ${
+              builderMode === 'basic'
+                ? 'bg-[#1C4D3A] text-white'
+                : 'text-[#2D3330] hover:bg-[#F7F6F1]'
+            }`}
+            onClick={() => {
+              setBuilderMode('basic');
+              if (currentStep === 3) setCurrentStep(2);
+            }}
+          >
+            Basic
+          </button>
+          <button
+            type="button"
+            className={`rounded px-3 py-1 text-sm ${
+              builderMode === 'advanced'
+                ? 'bg-[#1C4D3A] text-white'
+                : 'text-[#2D3330] hover:bg-[#F7F6F1]'
+            }`}
+            onClick={() => setBuilderMode('advanced')}
+          >
+            Advanced
+          </button>
+        </div>
       </div>
 
       <div className="bg-card rounded-lg border p-6">
@@ -305,7 +359,7 @@ export function AssignmentBuilderV2({ onComplete, onCancel }: AssignmentBuilderV
           <Step2TargetOutcomes form={form} onNext={() => void handleNext()} onBack={handleBack} />
         )}
 
-        {currentStep === 3 && (
+        {currentStep === 3 && builderMode === 'advanced' && (
           <Step3WeightMatrix form={form} onNext={() => void handleNext()} onBack={handleBack} />
         )}
 

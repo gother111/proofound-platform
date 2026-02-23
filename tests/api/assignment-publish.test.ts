@@ -93,7 +93,11 @@ describe('Assignment publish API', () => {
       orgId: 'org-1',
       role: 'Role',
       businessValue: 'Business value',
-      mustHaveSkills: [{ id: 'skill-1', level: 3 }],
+      mustHaveSkills: [
+        { id: 'skill-1', level: 3 },
+        { id: 'skill-2', level: 3 },
+        { id: 'skill-3', level: 3 },
+      ],
       locationMode: 'remote',
       city: null,
       country: null,
