@@ -1,7 +1,7 @@
 /**
  * Profile Activation Tile
  *
- * Shows readiness against activation gate (≥10 L4 skills with recency, ≥1 proof, purpose block).
+ * Shows readiness for Lite/Strong activation with a simple match-ready checklist.
  * Uses mock data when the tour is running to align with PRD first-run guidance.
  */
 
@@ -15,6 +15,7 @@ import { Progress } from '@/components/ui/progress';
 import { apiFetch } from '@/lib/api/fetch';
 import { CheckCircle2, AlertCircle, Lock, Target, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { getIndividualRecoveryActions } from '@/lib/ui/recovery-actions';
 
 type ProfileCompletenessResponse = {
   percentage: number;
@@ -169,32 +170,33 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
   }, [stats]);
 
   const activationChecks = useMemo(() => {
-    const activationTieringEnabled = stats?.featureFlags?.activationTiering !== false;
-    const liteSkillsThreshold = stats?.activationThresholds.lite.skillsWithRecency ?? 3;
-    const strongSkillsThreshold = stats?.activationThresholds.strong.skillsWithRecency ?? 10;
+    const liteSkillsThreshold = stats?.activationThresholds?.lite?.skillsWithRecency ?? 3;
     const skillsWithRecency = stats?.skillsWithRecency ?? data?.skillCount ?? 0;
-    const skillsLite = skillsWithRecency >= liteSkillsThreshold;
-    const skillsStrong = skillsWithRecency >= strongSkillsThreshold;
-    const proofs = (data?.proofCount ?? 0) >= 1;
-    const values = (data?.valuesCount ?? 0) >= 1;
+    const hasLiteSkills = skillsWithRecency >= liteSkillsThreshold;
+    const hasProof = (data?.proofCount ?? 0) >= 1;
+    const eligibilityTier = stats?.eligibility?.tier || 'none';
+    const remaining = stats?.eligibility?.nextTierTarget?.remaining;
+    const hasPurpose = remaining ? remaining.purpose === 0 : eligibilityTier !== 'none';
+    const hasConstraints = remaining ? remaining.constraints === 0 : eligibilityTier !== 'none';
+
     return [
-      ...(activationTieringEnabled
-        ? [{ label: `${liteSkillsThreshold}+ recent skills (Lite)`, pass: skillsLite }]
-        : []),
-      { label: `${strongSkillsThreshold}+ recent skills (Strong)`, pass: skillsStrong },
-      { label: '≥1 proof', pass: proofs },
-      { label: 'Purpose/values set', pass: values },
+      { label: `${liteSkillsThreshold} key skills with recency`, pass: hasLiteSkills },
+      { label: '1 proof artifact', pass: hasProof },
+      { label: 'Basic preferences saved', pass: hasConstraints },
+      { label: 'Mission, values, or causes', pass: hasPurpose },
     ];
   }, [data, stats]);
 
   const nextTierActions = useMemo(() => {
     const remaining = stats?.eligibility?.nextTierTarget?.remaining;
     if (!remaining) return [];
-    const actions: Array<{ id: string; title: string; actionUrl: string }> = [];
+    const actions: Array<{ id: string; title: string; description: string; actionUrl: string }> =
+      [];
     if (remaining.skillsWithRecency > 0 || remaining.proofCount > 0) {
       actions.push({
         id: 'expertise',
         title: 'Add skills and proofs in Expertise Atlas',
+        description: 'Increase skill coverage and attach proof to improve trust and ranking.',
         actionUrl: '/app/i/expertise',
       });
     }
@@ -202,6 +204,7 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
       actions.push({
         id: 'purpose',
         title: 'Complete mission, values, or causes',
+        description: 'Purpose signals improve alignment and candidate fit quality.',
         actionUrl: '/app/i/profile',
       });
     }
@@ -209,11 +212,26 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
       actions.push({
         id: 'constraints',
         title: 'Set work and compensation preferences',
+        description: 'Preferences are required before matching can activate fully.',
         actionUrl: '/app/i/matching/preferences',
       });
     }
     return actions.slice(0, 3);
   }, [stats]);
+
+  const nextStepActions = useMemo(() => {
+    const hints =
+      nextTierActions.length > 0
+        ? nextTierActions
+        : (data?.actions || []).map((action) => ({
+            id: action.id,
+            title: action.title,
+            description: 'Complete this action to improve activation readiness.',
+            actionUrl: action.actionUrl,
+          }));
+
+    return getIndividualRecoveryActions('profile-incomplete', hints);
+  }, [data?.actions, nextTierActions]);
 
   return (
     <Card className="h-full">
@@ -221,10 +239,10 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
         <div className="space-y-1">
           <CardTitle className="text-lg flex items-center gap-2">
             <Target className="h-5 w-5 text-[#1C4D3A]" />
-            Profile Activation
+            Get match-ready in 4 quick steps
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Hit the activation gate to unlock matches.
+            You are active now. Completing these steps improves match quality.
           </p>
         </div>
         <Badge variant="outline" className="text-xs">
@@ -282,18 +300,16 @@ export function ProfileActivationCard({ useMockData }: ProfileActivationCardProp
 
         <div className="space-y-2">
           <p className="text-xs font-medium text-[#2D3330]">Next steps</p>
-          {(nextTierActions.length > 0 ? nextTierActions : (data?.actions || []).slice(0, 3)).map(
-            (action) => (
-              <Link
-                key={action.id}
-                href={action.actionUrl}
-                className="flex items-center justify-between rounded-lg border border-[#E8E6DD] px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1] text-sm"
-              >
-                <span className="text-[#2D3330]">{action.title}</span>
-                <ArrowRight className="h-4 w-4 text-[#9B9891]" />
-              </Link>
-            )
-          )}
+          {nextStepActions.map((action) => (
+            <Link
+              key={action.id}
+              href={action.actionUrl}
+              className="flex items-center justify-between rounded-lg border border-[#E8E6DD] px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1] text-sm"
+            >
+              <span className="text-[#2D3330]">{action.title}</span>
+              <ArrowRight className="h-4 w-4 text-[#9B9891]" />
+            </Link>
+          ))}
           {loading && (
             <div className="space-y-2">
               <div className="h-3 w-2/3 bg-muted animate-pulse rounded" />

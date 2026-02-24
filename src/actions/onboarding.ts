@@ -3,35 +3,32 @@
 import { requireAuth } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { generateSlug } from '@/lib/utils';
-import { nanoid } from 'nanoid';
 import { randomUUID } from 'crypto';
 import { createClient } from '@/lib/supabase/server';
+import { resolvePublicSnippetBaseUrl } from '@/lib/profile/snippet-generator';
+import { ORGANIZATION_DAY_ONE_VISIBILITY } from '@/lib/portfolio/public-organization';
 
 const choosePersonaSchema = z.object({
   persona: z.enum(['individual', 'org_member']),
 });
 
-const individualSetupSchema = z.object({
-  handle: z
-    .string()
-    .min(3)
-    .max(30)
-    .regex(/^[a-z0-9_-]+$/),
-  displayName: z.string().min(1).max(100),
-  locale: z.string().default('en'),
-});
+const INDIVIDUAL_DAY_ONE_FIELD_VISIBILITY = {
+  header: true,
+  proofBar: true,
+  workEmail: false,
+  linkedin: true,
+  identity: true,
+  counts: true,
+  skills: true,
+  bio: true,
+  contact: false,
+} as const;
 
-const orgSetupSchema = z.object({
-  displayName: z.string().min(1).max(100),
-  slug: z
-    .string()
-    .min(3)
-    .max(50)
-    .regex(/^[a-z0-9-]+$/),
-  type: z.enum(['company', 'ngo', 'government', 'network', 'other']),
-  mission: z.string().optional(),
-});
+function buildPublicPortfolioUrl(pathname: string) {
+  const baseUrl = resolvePublicSnippetBaseUrl();
+  const normalizedPath = pathname.startsWith('/') ? pathname : `/${pathname}`;
+  return `${baseUrl}${normalizedPath}`;
+}
 
 export async function choosePersona(formData: FormData) {
   const user = await requireAuth();
@@ -80,11 +77,13 @@ export async function completeIndividualOnboarding(formData: FormData) {
 
   try {
     const supabase = await createClient({ allowCookieWrite: true });
+    const normalizedHandle = handle.toLowerCase();
+    const publicPortfolioPath = `/portfolio/${encodeURIComponent(normalizedHandle)}`;
 
     const profileUpdate = await supabase
       .from('profiles')
       .update({
-        handle: handle.toLowerCase(),
+        handle: normalizedHandle,
         display_name: displayName,
         persona: 'individual',
         updated_at: new Date().toISOString(),
@@ -105,7 +104,8 @@ export async function completeIndividualOnboarding(formData: FormData) {
       headline: headline || null,
       bio: bio || null,
       location: location || null,
-      visibility: 'network',
+      visibility: 'public',
+      field_visibility: INDIVIDUAL_DAY_ONE_FIELD_VISIBILITY,
     });
 
     if (individualInsert.error) {
@@ -117,7 +117,12 @@ export async function completeIndividualOnboarding(formData: FormData) {
     }
 
     revalidatePath('/app/i');
-    return { success: true };
+    revalidatePath(publicPortfolioPath);
+    return {
+      success: true,
+      handle: normalizedHandle,
+      publicPortfolioUrl: buildPublicPortfolioUrl(publicPortfolioPath),
+    };
   } catch (error: any) {
     console.error('Individual onboarding error:', error);
     return { error: 'Failed to complete setup. Please try again.' };
@@ -170,7 +175,14 @@ export async function completeOrganizationOnboarding(formData: FormData) {
 
       if (orgData?.slug) {
         revalidatePath(`/app/o/${orgData.slug}`);
-        return { success: true, orgSlug: orgData.slug, redirected: true };
+        return {
+          success: true,
+          orgSlug: orgData.slug,
+          redirected: true,
+          publicPortfolioUrl: buildPublicPortfolioUrl(
+            `/portfolio/org/${encodeURIComponent(orgData.slug)}`
+          ),
+        };
       }
 
       return {
@@ -245,8 +257,27 @@ export async function completeOrganizationOnboarding(formData: FormData) {
       console.error('Failed to update persona after organization onboarding:', personaUpdate.error);
     }
 
+    const orgVisibilityUpsert = await supabase.from('organization_field_visibility').upsert({
+      org_id: orgId,
+      ...ORGANIZATION_DAY_ONE_VISIBILITY,
+      updated_at: new Date().toISOString(),
+    });
+
+    if (orgVisibilityUpsert.error) {
+      console.error(
+        'Failed to apply day-1 organization visibility defaults:',
+        orgVisibilityUpsert.error
+      );
+    }
+
+    const publicPortfolioPath = `/portfolio/org/${encodeURIComponent(orgSlug)}`;
     revalidatePath(`/app/o/${orgSlug}`);
-    return { success: true, orgSlug };
+    revalidatePath(publicPortfolioPath);
+    return {
+      success: true,
+      orgSlug,
+      publicPortfolioUrl: buildPublicPortfolioUrl(publicPortfolioPath),
+    };
   } catch (error: any) {
     console.error('Organization onboarding error:', error);
     return { error: 'Failed to create organization. Please try again.' };

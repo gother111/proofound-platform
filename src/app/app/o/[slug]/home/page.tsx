@@ -5,7 +5,6 @@
  * PRD Reference: O8 - Company Dashboard
  */
 
-import { headers } from 'next/headers';
 import { requireAuth, getActiveOrg } from '@/lib/auth';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -14,13 +13,7 @@ import { Card } from '@/components/ui/card';
 import { Briefcase, Users, Target, TrendingUp, ArrowRight, Building2 } from 'lucide-react';
 import { OrgDashboardClient } from './OrgDashboardClient';
 import { db } from '@/db';
-import {
-  assignments,
-  matches,
-  matchInterest,
-  organizationMembers,
-  organizationGoals,
-} from '@/db/schema';
+import { assignments, matches, matchInterest, organizationMembers } from '@/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
@@ -96,24 +89,6 @@ export default async function OrganizationHomePage({
     console.error('Failed to fetch org dashboard metrics:', error);
   }
 
-  const heroStats = [
-    {
-      icon: Briefcase,
-      label: 'Active assignments',
-      value: String(metrics.activeAssignments),
-    },
-    {
-      icon: Users,
-      label: 'Candidates matched',
-      value: String(metrics.totalMatches),
-    },
-    {
-      icon: Target,
-      label: 'In shortlist',
-      value: String(metrics.shortlists),
-    },
-  ];
-
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#F7F6F1' }}>
       <div className="max-w-[1400px] mx-auto px-4 py-4">
@@ -133,23 +108,12 @@ export default async function OrganizationHomePage({
                 </div>
                 <p className="text-white/90 text-sm leading-relaxed">
                   {metrics.activeAssignments > 0
-                    ? `You have ${metrics.activeAssignments} active assignment${metrics.activeAssignments > 1 ? 's' : ''} with ${metrics.totalMatches} candidate match${metrics.totalMatches > 1 ? 'es' : ''}. ${metrics.shortlists > 0 ? `${metrics.shortlists} candidate${metrics.shortlists > 1 ? 's' : ''} in your shortlist.` : ''}`
-                    : 'Create an assignment to start matching with qualified candidates.'}
+                    ? `Your public organization portfolio is live. You also have ${metrics.activeAssignments} active assignment${metrics.activeAssignments > 1 ? 's' : ''} with ${metrics.totalMatches} candidate match${metrics.totalMatches > 1 ? 'es' : ''}.`
+                    : 'Your day-1 win is live: a clean public organization portfolio link. Next, create your first assignment when ready.'}
                 </p>
-                <div className="flex flex-wrap gap-4 text-sm">
-                  {heroStats.map(({ icon: Icon, label, value }) => (
-                    <div key={label} className="flex items-center gap-2">
-                      <Icon className="w-5 h-5" />
-                      <span className="font-medium">{value}</span>
-                      <span className="text-white/70">{label}</span>
-                    </div>
-                  ))}
-                </div>
-                <Link href={`/app/o/${slug}/assignments/new`}>
+                <Link href={`/app/o/${slug}/portfolio`}>
                   <Button className="text-sm mt-1 bg-white text-[#1C4D3A] hover:bg-[#F7F6F1] min-h-[44px]">
-                    {metrics.activeAssignments > 0
-                      ? 'Create new assignment'
-                      : 'Create first assignment'}
+                    Open public portfolio
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </Link>

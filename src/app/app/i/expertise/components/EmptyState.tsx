@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Sparkles, Plus, BookOpen, FileText } from 'lucide-react';
+import { getIndividualRecoveryActions } from '@/lib/ui/recovery-actions';
 
 interface EmptyStateProps {
   onAddSkill: () => void;
@@ -12,26 +13,7 @@ interface EmptyStateProps {
 
 export function EmptyState({ onAddSkill, onImportCV }: EmptyStateProps) {
   const router = useRouter();
-  const remediationActions = [
-    {
-      id: 'import-cv',
-      title: 'Import CV or resume',
-      description: 'Auto-map skills and fill your first Atlas entries quickly.',
-      onClick: () => onImportCV?.(),
-    },
-    {
-      id: 'add-first-skills',
-      title: 'Add first 3 skills manually',
-      description: 'Add recency and proof to unlock Lite activation.',
-      onClick: onAddSkill,
-    },
-    {
-      id: 'set-constraints',
-      title: 'Set matching constraints',
-      description: 'Save availability, location, and compensation preferences.',
-      onClick: () => router.push('/app/i/matching/preferences'),
-    },
-  ] as const;
+  const remediationActions = getIndividualRecoveryActions('expertise-empty');
 
   return (
     <div className="min-h-[600px] flex items-center justify-center px-6 py-12">
@@ -101,7 +83,13 @@ export function EmptyState({ onAddSkill, onImportCV }: EmptyStateProps) {
               <button
                 key={action.id}
                 type="button"
-                onClick={action.onClick}
+                onClick={() => {
+                  if (action.id === 'add-proof' || action.id === 'add-skill') {
+                    onAddSkill();
+                    return;
+                  }
+                  router.push(action.actionUrl);
+                }}
                 className="w-full rounded-lg border border-[#E8E6DD] bg-white px-3 py-2 hover:border-[#1C4D3A] hover:bg-[#F7F6F1]"
               >
                 <p className="text-sm font-medium text-[#2D3330]">{action.title}</p>

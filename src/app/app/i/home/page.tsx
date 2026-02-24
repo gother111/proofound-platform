@@ -67,7 +67,7 @@ export default async function IndividualHomePage() {
       footnote:
         metrics.qualityMatches > 0
           ? 'Keep proofs fresh to climb higher.'
-          : 'Add proofs to unlock stronger matches.',
+          : 'Add proofs to strengthen your public portfolio and unlock stronger matches.',
       Icon: Users,
       changeColor: '#5F745D',
     },
@@ -108,10 +108,10 @@ export default async function IndividualHomePage() {
               <div className="space-y-3 max-w-xl">
                 <h1 className="text-3xl font-['Crimson_Pro']">Welcome back, {firstName}</h1>
                 <p className="text-white/90 text-sm leading-relaxed">
-                  You have {metrics.qualityMatches} high-fit matches and{' '}
+                  Your public portfolio is your day-1 asset. You currently have{' '}
                   {metrics.pendingVerifications} verification
-                  {metrics.pendingVerifications === 1 ? '' : 's'} awaiting review. Keep your proofs
-                  active to stay momentum-ready.
+                  {metrics.pendingVerifications === 1 ? '' : 's'} awaiting review and{' '}
+                  {metrics.qualityMatches} high-fit matches building in the background.
                 </p>
                 <div className="flex flex-wrap gap-4 text-sm">
                   {heroStats.map(({ icon: Icon, label, value }) => (
@@ -122,12 +122,12 @@ export default async function IndividualHomePage() {
                     </div>
                   ))}
                 </div>
-                <Link href="/app/i/profile">
+                <Link href="/app/i/portfolio">
                   <Button
                     size="sm"
                     className="text-sm mt-1 bg-white text-[#1C4D3A] hover:bg-[#F7F6F1]"
                   >
-                    Complete your profile
+                    Open public portfolio
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </Link>

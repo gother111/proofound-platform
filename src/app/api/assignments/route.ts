@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
-import { assignmentExpertiseMatrix, assignments, matches } from '@/db/schema';
+import { assignmentExpertiseMatrix, assignments, matches, skillsTaxonomy } from '@/db/schema';
 import { eq, and, inArray, sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { jsonErrorWithRequest, withApiObservability } from '@/lib/api/observability';
@@ -271,6 +271,40 @@ export async function POST(request: NextRequest) {
         validatedData.mustHaveSkills || [],
         validatedData.niceToHaveSkills || []
       );
+      const matrixSkillCodes = Array.from(
+        new Set(
+          matrixTemplateRows
+            .map((row) => row.skillCode)
+            .filter((skillCode): skillCode is string => Boolean(skillCode))
+        )
+      );
+      let matrixRowsForInsert = matrixTemplateRows;
+
+      if (matrixSkillCodes.length > 0) {
+        const taxonomyRows = await db
+          .select({ code: skillsTaxonomy.code })
+          .from(skillsTaxonomy)
+          .where(inArray(skillsTaxonomy.code, matrixSkillCodes));
+
+        const knownSkillCodes = new Set(taxonomyRows.map((row) => row.code));
+        const unknownSkillCodes = matrixSkillCodes.filter(
+          (skillCode) => !knownSkillCodes.has(skillCode)
+        );
+
+        if (unknownSkillCodes.length > 0) {
+          log.warn('assignment.create.unknown_matrix_skills', {
+            requestId: ctx.requestId,
+            userId: user.id,
+            orgId,
+            unknownSkillCodes,
+          });
+        }
+
+        matrixRowsForInsert = matrixTemplateRows.filter((row) =>
+          knownSkillCodes.has(row.skillCode)
+        );
+      }
+
       const derivedRequirements = deriveRequirementsFromMatrix(matrixTemplateRows);
 
       const assignmentData = {
@@ -295,9 +329,9 @@ export async function POST(request: NextRequest) {
           .values(assignmentData)
           .returning();
 
-        if (matrixTemplateRows.length > 0) {
+        if (matrixRowsForInsert.length > 0) {
           await tx.insert(assignmentExpertiseMatrix).values(
-            matrixTemplateRows.map((row) => ({
+            matrixRowsForInsert.map((row) => ({
               assignmentId: insertedAssignment.id,
               skillCode: row.skillCode,
               requiredLevel: row.requiredLevel,

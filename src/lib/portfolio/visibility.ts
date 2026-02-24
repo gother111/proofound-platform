@@ -13,13 +13,13 @@ type VisibilityFlags = {
 const defaultVisibility: Required<VisibilityFlags> = {
   header: true,
   proofBar: true,
-  workEmail: true,
+  workEmail: false,
   linkedin: true,
   identity: true,
   counts: true,
   skills: true,
   bio: true,
-  contact: true,
+  contact: false,
 };
 
 export function mergeVisibilityFlags(

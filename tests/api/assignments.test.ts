@@ -19,6 +19,31 @@ vi.mock('@/db', () => {
     })),
   }));
 
+  const taxonomyCodes = new Set(['03.01.01.001']);
+
+  const listQueryBuilder = {
+    where: vi.fn(() => ({
+      $dynamic: vi.fn(() => ({
+        where: vi.fn(() => ({
+          orderBy: vi.fn(() => ({
+            limit: vi.fn(() => ({
+              offset: vi.fn(() => Promise.resolve([])),
+            })),
+          })),
+        })),
+        orderBy: vi.fn(() => ({
+          limit: vi.fn(() => ({
+            offset: vi.fn(() => Promise.resolve([])),
+          })),
+        })),
+      })),
+    })),
+  };
+
+  const taxonomyQueryBuilder = {
+    where: vi.fn(() => Promise.resolve(Array.from(taxonomyCodes).map((code) => ({ code })))),
+  };
+
   return {
     db: {
       query: {
@@ -42,24 +67,12 @@ vi.mock('@/db', () => {
         },
       },
       select: vi.fn(() => ({
-        from: vi.fn(() => ({
-          where: vi.fn(() => ({
-            $dynamic: vi.fn(() => ({
-              where: vi.fn(() => ({
-                orderBy: vi.fn(() => ({
-                  limit: vi.fn(() => ({
-                    offset: vi.fn(() => Promise.resolve([])),
-                  })),
-                })),
-              })),
-              orderBy: vi.fn(() => ({
-                limit: vi.fn(() => ({
-                  offset: vi.fn(() => Promise.resolve([])),
-                })),
-              })),
-            })),
-          })),
-        })),
+        from: vi.fn((table: any) => {
+          if (table && typeof table === 'object' && 'code' in table && !('orgId' in table)) {
+            return taxonomyQueryBuilder;
+          }
+          return listQueryBuilder;
+        }),
       })),
       insert,
       transaction: vi.fn(async (cb: any) =>
@@ -77,6 +90,7 @@ vi.mock('@/lib/log', () => ({
   },
   log: {
     info: vi.fn(),
+    warn: vi.fn(),
     error: vi.fn(),
   },
 }));
@@ -205,6 +219,37 @@ describe('Assignment API', () => {
           }),
         ])
       );
+    });
+
+    it('should skip unknown matrix skill codes instead of returning 500', async () => {
+      (db.query.organizationMembers.findFirst as any).mockResolvedValue({
+        orgId: TEST_ORG_ID,
+        role: 'owner',
+      });
+
+      (db.select as any).mockReturnValueOnce({
+        from: vi.fn(() => ({
+          where: vi.fn(() => Promise.resolve([])),
+        })),
+      });
+
+      const body = {
+        orgId: TEST_ORG_ID,
+        role: 'Strict Lifecycle Assignment',
+        status: 'draft',
+        mustHaveSkills: [{ id: 'strict.skill.1', level: 3 }],
+      };
+
+      const req = new NextRequest('http://localhost/api/assignments', {
+        method: 'POST',
+        body: JSON.stringify(body),
+      });
+
+      const res = await POST(req);
+      const data = await res.json();
+
+      expect(res.status).toBe(201);
+      expect(data.assignment).toBeDefined();
     });
 
     it('should return 403 if user has no org', async () => {

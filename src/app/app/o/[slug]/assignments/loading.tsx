@@ -1,5 +1,5 @@
-import { ListSkeleton } from '@/components/skeletons/ListSkeleton';
+import { OrgListLoading } from '@/components/skeletons/OrgListLoading';
 
 export default function Loading() {
-  return <ListSkeleton />;
+  return <OrgListLoading />;
 }

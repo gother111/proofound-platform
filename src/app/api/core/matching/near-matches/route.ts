@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      return NextResponse.json(toNotMatchablePayload(eligibility), { status: 412 });
+      return NextResponse.json(toNotMatchablePayload(eligibility), { status: 200 });
     }
 
     // Fetch user's matching profile

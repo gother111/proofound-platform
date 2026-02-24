@@ -46,6 +46,34 @@ function isUndefinedColumnError(error: unknown): boolean {
   );
 }
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function isUuid(value: string): boolean {
+  return UUID_PATTERN.test(value);
+}
+
+function normalizeEntityReference(event: AnalyticsEvent): {
+  entityId: string | null;
+  properties: Record<string, any>;
+} {
+  const properties = { ...(event.properties || {}) };
+  const rawEntityId = typeof event.entityId === 'string' ? event.entityId.trim() : '';
+
+  if (!rawEntityId) {
+    return { entityId: null, properties };
+  }
+
+  if (isUuid(rawEntityId)) {
+    return { entityId: rawEntityId, properties };
+  }
+
+  if (properties.entity_ref == null) {
+    properties.entity_ref = rawEntityId;
+  }
+
+  return { entityId: null, properties };
+}
+
 export type WellbeingCheckinSubmittedProps = {
   checkin_id: string;
   scores: { stress: number; control: number };
@@ -71,6 +99,8 @@ export type ReflectionAddedProps = {
  */
 export async function emitAnalyticsEvent(event: AnalyticsEvent): Promise<void> {
   try {
+    const normalized = normalizeEntityReference(event);
+
     try {
       await db.execute(sql`
         INSERT INTO analytics_events (
@@ -87,8 +117,8 @@ export async function emitAnalyticsEvent(event: AnalyticsEvent): Promise<void> {
           ${event.userId || event.profileId || null},
           ${event.organizationId || null},
           ${event.entityType || null},
-          ${event.entityId || null},
-          ${JSON.stringify(event.properties || {})},
+          ${normalized.entityId},
+          ${JSON.stringify(normalized.properties)},
           ${event.sessionId || null},
           NOW()
         )
@@ -119,8 +149,8 @@ export async function emitAnalyticsEvent(event: AnalyticsEvent): Promise<void> {
           ${event.organizationId || null},
           ${event.organizationId || null},
           ${event.entityType || null},
-          ${event.entityId || null},
-          ${JSON.stringify(event.properties || {})},
+          ${normalized.entityId},
+          ${JSON.stringify(normalized.properties)},
           ${event.privacyPartition || 'default'},
           ${event.sessionId || null},
           NOW()
@@ -132,7 +162,7 @@ export async function emitAnalyticsEvent(event: AnalyticsEvent): Promise<void> {
     log.info('analytics.event.emitted', {
       eventType: event.eventType,
       userId: event.userId,
-      entityId: event.entityId,
+      entityId: normalized.entityId,
     });
   } catch (error) {
     log.error('analytics.event.failed', {
@@ -162,6 +192,22 @@ export function trackEvent(event: AnalyticsEvent): void {
 // ============================================================================
 // ASSIGNMENT EVENTS
 // ============================================================================
+
+export async function emitAssignmentPublishSucceeded(
+  userId: string,
+  assignmentId: string,
+  organizationId?: string,
+  properties?: Record<string, any>
+): Promise<void> {
+  await emitAnalyticsEvent({
+    eventType: 'assignment_publish_succeeded',
+    userId,
+    organizationId,
+    entityType: 'assignment',
+    entityId: assignmentId,
+    properties,
+  });
+}
 
 export async function emitAssignmentPublished(
   userId: string,
@@ -545,6 +591,64 @@ export function emitProfileActivatedAsync(
       ...(activationDurationMs != null ? { activation_duration_ms: activationDurationMs } : null),
       ...props,
     },
+  });
+}
+
+export async function emitIndividualOnboardingCompleted(
+  userId: string,
+  properties?: Record<string, any>
+): Promise<void> {
+  await emitAnalyticsEvent({
+    eventType: 'individual_onboarding_completed',
+    userId,
+    profileId: userId,
+    entityType: 'profile',
+    entityId: userId,
+    properties,
+  });
+}
+
+export async function emitOrganizationOnboardingCompleted(
+  userId: string,
+  organizationId?: string,
+  properties?: Record<string, any>
+): Promise<void> {
+  await emitAnalyticsEvent({
+    eventType: 'organization_onboarding_completed',
+    userId,
+    profileId: userId,
+    organizationId,
+    entityType: 'profile',
+    entityId: userId,
+    properties,
+  });
+}
+
+export async function emitPortfolioShareLinkCopied(
+  userId: string,
+  properties?: Record<string, any>
+): Promise<void> {
+  await emitAnalyticsEvent({
+    eventType: 'portfolio_share_link_copied',
+    userId,
+    profileId: userId,
+    entityType: 'profile',
+    entityId: userId,
+    properties,
+  });
+}
+
+export async function emitPortfolioPdfExportSucceeded(
+  userId: string,
+  properties?: Record<string, any>
+): Promise<void> {
+  await emitAnalyticsEvent({
+    eventType: 'portfolio_pdf_export_succeeded',
+    userId,
+    profileId: userId,
+    entityType: 'profile',
+    entityId: userId,
+    properties,
   });
 }
 

@@ -51,7 +51,7 @@ describe('MatchingPage blocked state', () => {
     vi.clearAllMocks();
   });
 
-  it('renders dedicated blocked card for 412 profile-not-matchable response', async () => {
+  it('renders dedicated blocked card for profile-not-matchable payload', async () => {
     const blockedPayload = {
       error: 'PROFILE_NOT_MATCHABLE',
       message: 'Your profile is not matchable yet.',
@@ -88,8 +88,8 @@ describe('MatchingPage blocked state', () => {
         json: async () => ({ topActions: [] }),
       })
       .mockResolvedValueOnce({
-        ok: false,
-        status: 412,
+        ok: true,
+        status: 200,
         json: async () => blockedPayload,
       });
 

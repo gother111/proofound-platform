@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useFormState, useFormStatus } from 'react-dom';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,6 +39,8 @@ function SignupSubmitButton({ children }: { children: React.ReactNode }) {
 
 export function SignupForm({ accountType, onBack }: SignupFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextPath = searchParams.get('next');
   const [showPassword, setShowPassword] = useState(false);
   const [clientError, setClientError] = useState<string | null>(null);
   const [email, setEmail] = useState('');
@@ -249,6 +251,7 @@ export function SignupForm({ accountType, onBack }: SignupFormProps) {
             noValidate
             data-testid="signup-form"
           >
+            <input type="hidden" name="next" value={nextPath || ''} />
             <input type="hidden" name="persona" value={personaValue} />
             <input type="hidden" name="gdprConsent" value={gdprConsent.toString()} />
             <input type="hidden" name="marketingOptIn" value={marketingOptIn.toString()} />

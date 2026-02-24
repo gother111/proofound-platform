@@ -8,21 +8,27 @@ import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 
 type VisibilityFlags = {
+  header: boolean;
+  proofBar: boolean;
   workEmail: boolean;
   linkedin: boolean;
   identity: boolean;
   counts: boolean;
   skills: boolean;
   bio: boolean;
+  contact: boolean;
 };
 
 const defaults: VisibilityFlags = {
-  workEmail: true,
+  header: true,
+  proofBar: true,
+  workEmail: false,
   linkedin: true,
   identity: true,
   counts: true,
   skills: true,
   bio: true,
+  contact: false,
 };
 
 export function PortfolioVisibilityCard() {
@@ -83,6 +89,16 @@ export function PortfolioVisibilityCard() {
         ) : (
           <>
             <VisibilityRow
+              label="Header (name, handle, headline)"
+              checked={flags.header}
+              onCheckedChange={() => toggle('header')}
+            />
+            <VisibilityRow
+              label="Proof bar block"
+              checked={flags.proofBar}
+              onCheckedChange={() => toggle('proofBar')}
+            />
+            <VisibilityRow
               label="Identity badge"
               checked={flags.identity}
               onCheckedChange={() => toggle('identity')}
@@ -111,6 +127,11 @@ export function PortfolioVisibilityCard() {
               label="Bio/About"
               checked={flags.bio}
               onCheckedChange={() => toggle('bio')}
+            />
+            <VisibilityRow
+              label="Contact section"
+              checked={flags.contact}
+              onCheckedChange={() => toggle('contact')}
             />
 
             <Button size="sm" onClick={save} disabled={saving}>

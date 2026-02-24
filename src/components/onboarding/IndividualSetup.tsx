@@ -7,11 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { completeIndividualOnboarding } from '@/actions/onboarding';
+import { CheckCircle2, Copy, ExternalLink } from 'lucide-react';
 
 export function IndividualSetup() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [portfolioUrl, setPortfolioUrl] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   async function handleSubmit(formData: FormData) {
     setIsLoading(true);
@@ -26,12 +29,76 @@ export function IndividualSetup() {
         return;
       }
 
-      // Success - redirect to individual home
-      router.push('/app/i/home');
+      const handle = String(formData.get('handle') || '').toLowerCase();
+      if (handle) {
+        setPortfolioUrl(`${window.location.origin}/portfolio/${handle}`);
+      } else {
+        router.push('/app/i/home');
+      }
+
+      setIsLoading(false);
     } catch (err) {
       setError('Something went wrong. Please try again.');
       setIsLoading(false);
     }
+  }
+
+  const handleCopyUrl = async () => {
+    if (!portfolioUrl) return;
+    try {
+      await navigator.clipboard.writeText(portfolioUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      setCopied(false);
+    }
+  };
+
+  if (portfolioUrl) {
+    return (
+      <Card className="max-w-2xl mx-auto border-proofound-stone dark:border-border rounded-2xl">
+        <CardContent className="py-10 px-8 space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-proofound-forest/10">
+              <CheckCircle2 className="h-7 w-7 text-proofound-forest" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-['Crimson_Pro'] text-proofound-charcoal dark:text-foreground">
+                Public portfolio ready
+              </h2>
+              <p className="text-sm text-proofound-charcoal/70 dark:text-muted-foreground">
+                Your shareable portfolio link is live.
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-proofound-stone bg-proofound-parchment/50 px-4 py-3">
+            <p className="text-xs uppercase tracking-wide text-proofound-charcoal/60 mb-1">
+              Live URL
+            </p>
+            <p className="text-sm break-all text-proofound-charcoal dark:text-foreground">
+              {portfolioUrl}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <Button type="button" variant="outline" onClick={handleCopyUrl} className="gap-2">
+              <Copy className="h-4 w-4" />
+              {copied ? 'Copied' : 'Copy link'}
+            </Button>
+            <Button asChild type="button" variant="outline" className="gap-2">
+              <a href={portfolioUrl} target="_blank" rel="noreferrer">
+                <ExternalLink className="h-4 w-4" />
+                Open portfolio
+              </a>
+            </Button>
+            <Button type="button" onClick={() => router.push('/app/i/home')}>
+              Continue to app
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (

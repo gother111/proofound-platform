@@ -20,7 +20,7 @@ test.describe('Landing Page', () => {
     // Subheading should be visible
     await expect(
       page.getByRole('heading', {
-        name: /The credibility infrastructure for impactful connections/i,
+        name: /Publish your public proof portfolio on day 1/i,
         level: 2,
       })
     ).toBeVisible();
@@ -81,9 +81,13 @@ test.describe('Landing Page', () => {
 
     // The key outcomes should be visible inside the desktop panels
     const desktopContainer = personas.locator('.hidden.md\\:grid');
-    await expect(desktopContainer.getByText(/Find mission-aligned opportunities/i)).toBeVisible();
+    await expect(
+      desktopContainer.getByText(/Publish a clean public proof portfolio link/i)
+    ).toBeVisible();
     await expect(desktopContainer.getByText(/Build a verified, portable profile/i)).toBeVisible();
-    await expect(desktopContainer.getByText(/Discover talent based on evidence/i)).toBeVisible();
+    await expect(
+      desktopContainer.getByText(/Publish a clean public organization portfolio link/i)
+    ).toBeVisible();
     await expect(desktopContainer.getByText(/Reduce bias in hiring/i)).toBeVisible();
   });
 
@@ -103,7 +107,7 @@ test.describe('Landing Page', () => {
   });
 
   test('renders CTA section', async ({ page }) => {
-    const ctaHeading = page.getByRole('heading', { name: /Ready to build trust that lasts/i });
+    const ctaHeading = page.getByRole('heading', { name: /Ready to share/i });
     await expect(ctaHeading).toBeVisible();
     const ctaSection = page.getByTestId('landing-final-cta-section');
 

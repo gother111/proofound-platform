@@ -85,7 +85,7 @@ describe('core matching gating routes', () => {
     (evaluateIndividualMatchability as any).mockResolvedValue(baseEligibility);
   });
 
-  it('/api/core/matching/profile returns 412 with eligibility payload', async () => {
+  it('/api/core/matching/profile returns 200 with eligibility payload when gated', async () => {
     const req = new NextRequest('http://localhost/api/core/matching/profile', {
       method: 'POST',
       body: JSON.stringify({}),
@@ -94,13 +94,13 @@ describe('core matching gating routes', () => {
     const res = await postProfile(req);
     const payload = await res.json();
 
-    expect(res.status).toBe(412);
+    expect(res.status).toBe(200);
     expect(payload.error).toBe('PROFILE_NOT_MATCHABLE');
     expect(payload.eligibility.unmetCriteria).toEqual(baseEligibility.unmetCriteria);
     expect(payload.topActions[0].actionUrl).toBe('/app/i/expertise');
   });
 
-  it('/api/core/matching/near-matches returns 412 with same shape', async () => {
+  it('/api/core/matching/near-matches returns 200 with same shape when gated', async () => {
     const req = new NextRequest('http://localhost/api/core/matching/near-matches', {
       method: 'POST',
       body: JSON.stringify({}),
@@ -109,7 +109,7 @@ describe('core matching gating routes', () => {
     const res = await postNearMatches(req);
     const payload = await res.json();
 
-    expect(res.status).toBe(412);
+    expect(res.status).toBe(200);
     expect(payload.error).toBe('PROFILE_NOT_MATCHABLE');
     expect(payload.eligibility.unmetCriteria).toEqual(baseEligibility.unmetCriteria);
     expect(Array.isArray(payload.topActions)).toBe(true);

@@ -14,7 +14,7 @@
 • Avg. time‑to‑hire in EU NGOs/SMEs → …  
 • Burnout/meaning metrics → …
 
-**Primary Outcome (MVP):** Reduce **Time‑to‑First‑Accepted Match** (median) and increase **% assignments with ≥3 qualified matches in 7 days** (North Star secondary).
+**Primary Outcome (MVP):** Guarantee a day-1 win: publish and share a clean public proof portfolio link on signup day. Matching remains the core downstream outcome and is tracked via **Time‑to‑First‑Accepted Match** (median) and **% assignments with ≥3 qualified matches in 7 days**.
 
 **Principles:** Transparency • Non‑discrimination • Authenticity • Trustworthiness • Never monetize inequality/exclusion.
 
@@ -28,6 +28,7 @@
 | Profiles         | Proof‑based profile; 3 proofs/claim; privacy controls                      | Rich portfolios; imports; team profiles                           |
 | Matching         | Opt‑in suggestions; user/org weights; explainability; **top 5–10 results** | Adaptive weights; team/role matching; scheduling                  |
 | Assignments      | Outcomes, proof reqs, masked budgets                                       | Contracts, milestones, payments                                   |
+| BYOC intake      | Org email invites; candidate claim + Proof Card submission                 | Auto-ingest to assignment scoring; ATS connectors                 |
 | Verification     | Email/domain + referee; seniority-weighted (not visible)                   | Multi‑ref trees; doc checks; registry lookups; continuous signals |
 | Cluster Snapshot | **Private, compute‑only** (no public UI)                                   | Personal UI, graph analytics, org network views                   |
 | Messaging        | Post‑match text; links + **PDF ≤5 MB**                                     | Voice/video, scheduling, doc exchange                             |
@@ -56,7 +57,7 @@
 
 ## 3) Information Architecture & Navigation
 
-**Global nav:** Home · **Matches** · Profile · For Organizations · Zen Hub (Coming Soon) · Settings.  
+**Global nav:** Home · **Public Portfolio** · **Matches** · Profile · For Organizations · Zen Hub (Coming Soon) · Settings.  
 **Settings:** Toggle Individual ↔ Organization; privacy/export/delete; notifications; language.
 
 ---
@@ -74,12 +75,17 @@
 - **Private:** name, region (not exact), email, masked contacts, salary band (masked), availability, timezone.
 - **Proofs:** **Up to 3 per claim** → (1) verified reference; (2) link/file; (3) credential. Artifacts can support multiple claims.
 - **AC:** required fields; link validation; duplicate‑proof detection; WYSIWYG preview; granular visibility.
+- **Day-1 publish UX:** onboarding must end with a dedicated "public portfolio ready" step that shows `/portfolio/{handle}`, copy action, view action, and continue action.
+- **Day-1 privacy default:** minimal safe fields are public by default for shareability; contact and work-email remain hidden until explicitly enabled.
 
 ### 4.3 Organizations & Assignments **[MVP]**
 
 - **Fields:** role (title‑inflation guardrails), location/remote, timelines, start date, **budget range (masked)**, proof requirements, expertise mapping, expected outcomes/impact, mission/values.
 - **Org verification:** required **before** matching (domain email + checks).
+- **Public org portfolio URL:** organizations get a clean public route at `/portfolio/org/{slug}` and an onboarding success step focused on copying and sharing this link on day 1.
+- **BYOC candidate invites:** owners/admins can invite existing candidates by email, candidates must claim with matching email, and submit a structured Proof Card link for review.
 - **AC:** Draft → Publish → Close; edit history; audit log; masked budgets respected everywhere.
+- **AC (BYOC):** one active invite per org/email; status lifecycle `pending → claimed → proof_submitted` (+ `revoked`/`expired`); resend/revoke available to org admins.
 
 ### 4.4 Matching & Recommendations **[MVP]**
 
@@ -87,8 +93,15 @@
 - **Inputs:** Expertise Atlas; mission/values; availability; location/timezone; salary band; industry; languages.
 - **Default Weights (guard‑railed):** Mission/Values **30%**, Core Expertise **40%**, Tools **10%**, Logistics **10%**, Recency **10%**; adjustable ±15pp.
 - **Results set:** **Top 5–10** matches per assignment (configurable).
+- **Activation tiers:** Lite requires ≥3 skills with recency, ≥1 proof, purpose present, and matching constraints saved; Strong requires ≥10 skills with recency plus the same proof/purpose/constraints.
+- **Soft gating:** Matching stays accessible even before Lite completion. Unmet criteria are surfaced as readiness checklist actions instead of hard API blocking.
 - **Explainability:** Each suggestion shows “**Why this match**” with % breakdown and **numeric improvement tips** (e.g., “Add proof X to increase score by ~8–12%”).
 - **Cold‑start:** Editorial “Starter Matches”; if <5 strong results, show “Near Matches” with missing/strength notes.
+- **Empty/incomplete recovery pattern (critical paths):**
+  - Individual empty or not-matchable states always show 3 clear actions: `Add a proof`, `Add a skill`, `Turn on matchable`.
+  - `Turn on matchable` routes to matching preferences.
+  - If results are empty due to active filters, show `Reset filters` before the 3 actions.
+  - Organization matching empty/no-result states always show 3 clear actions, including `Turn on candidate matching`.
 - **Refresh defaults:** Employment → **daily**; Volunteering → **weekly** (user‑configurable; system min daily).
 - **AC:** First suggestions within 24h of profile readiness; reasons render consistently.
 
@@ -142,6 +155,19 @@
 **North Star:** Time‑to‑First‑Accepted Match (median).  
 **North Star 2:** % assignments with ≥3 qualified matches in 7d.
 
+**First 10 Minutes Activation Success (MVP):**
+
+- **Individual success statement:** "I created my portfolio share link and exported my trust PDF."
+  - Measured as both actions completed within 10 minutes of `individual_onboarding_completed`:
+    - `portfolio_share_link_copied`
+    - `portfolio_pdf_export_succeeded`
+- **Company success statement:** "I copied my public organization portfolio link and can share it now."
+  - Measured as `portfolio_share_link_copied` within 10 minutes of `organization_onboarding_completed`.
+- **Boundary rule:** an action at exactly 10:00 is counted (`<= 10 minutes`).
+- **KPI formulas:**
+  - Individual activation rate (10m) = successful individuals within 10m / new individuals
+  - Company activation rate (10m) = successful organization creators within 10m / new organization creators
+
 **Day‑1 Admin Dashboard (tiles):**
 
 1. Time‑to‑first‑match (median)
@@ -149,8 +175,10 @@
 3. Org verification completion rate
 4. Match acceptance rate (+ decline reasons)
 5. Safety: report rate & resolution SLA
+6. Individual first-10-minute activation rate
+7. Company first-10-minute activation rate
 
-**Core Events:** `signed_up`, `created_profile`, `profile_ready_for_match`, `org_verified`, `assignment_published`, `match_suggested`, `match_viewed`, `match_accepted`, `match_declined(reason)`, `message_sent`, `verification_requested`, `verification_completed(status)`, `content_reported`.
+**Core Events:** `signed_up`, `created_profile`, `profile_ready_for_match`, `org_verified`, `individual_onboarding_completed`, `organization_onboarding_completed`, `portfolio_share_link_copied`, `portfolio_pdf_export_succeeded`, `assignment_template_applied`, `assignment_publish_succeeded`, `assignment_published`, `match_suggested`, `match_viewed`, `match_accepted`, `match_declined(reason)`, `message_sent`, `verification_requested`, `verification_completed(status)`, `content_reported`, `candidate_invite_sent`, `candidate_invite_opened`, `candidate_invite_claimed`, `candidate_proof_card_submitted`.
 
 **Targets (90d):** profile completion ≥60% D+1; first suggestion <24h; acceptance ≥20%; ≥50% assignments with ≥3 qualified matches in 7d; verified users ≥30% by D+14; report rate <1% with <24h SLA.
 
