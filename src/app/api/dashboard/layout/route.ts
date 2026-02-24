@@ -14,8 +14,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { db } from '@/db';
 import { dashboardLayouts } from '@/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { z } from 'zod';
+import { AVAILABLE_WIDGETS, sanitizeLayout } from '@/lib/dashboard/layout';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,8 +54,12 @@ export async function GET() {
 
     // If no layout exists, return default
     if (userLayouts.length === 0) {
+      const sanitizedDefaultLayout = sanitizeLayout(DEFAULT_LAYOUT, {
+        defaultLayout: DEFAULT_LAYOUT,
+        availableWidgets: AVAILABLE_WIDGETS,
+      });
       return NextResponse.json({
-        widgets: DEFAULT_LAYOUT,
+        widgets: sanitizedDefaultLayout,
         isDefault: true,
       });
     }
@@ -63,12 +68,19 @@ export async function GET() {
       widgetId: item.widgetId,
       position: item.position,
       visible: item.visible,
-      size: item.size,
-      settings: item.settings,
+      size: item.size ?? 'default',
+      settings:
+        item.settings && typeof item.settings === 'object'
+          ? (item.settings as Record<string, any>)
+          : {},
     }));
+    const sanitizedWidgets = sanitizeLayout(widgets, {
+      defaultLayout: DEFAULT_LAYOUT,
+      availableWidgets: AVAILABLE_WIDGETS,
+    });
 
     return NextResponse.json({
-      widgets,
+      widgets: sanitizedWidgets,
       isDefault: false,
     });
   } catch (error) {
@@ -103,21 +115,32 @@ export async function POST(request: NextRequest) {
     }
 
     const layout = layoutSchema.parse(layoutData);
+    const sanitizedLayout = sanitizeLayout(layout, {
+      defaultLayout: DEFAULT_LAYOUT,
+      availableWidgets: AVAILABLE_WIDGETS,
+    });
 
     // Delete existing layout
     await db.delete(dashboardLayouts).where(eq(dashboardLayouts.userId, user.id));
 
     // Insert new layout
-    if (layout.length > 0) {
-      const layoutItems = layout.map((item) => ({
-        userId: user.id,
-        widgetId: item.widgetId,
-        position: item.position,
-        visible: item.visible,
-        // DB only supports small/default/large; map legacy "full" to "large".
-        size: item.size === 'full' ? 'large' : item.size,
-        settings: item.settings,
-      }));
+    if (sanitizedLayout.length > 0) {
+      const layoutItems = sanitizedLayout.map((item) => {
+        const normalizedSize: 'small' | 'default' | 'large' =
+          item.size === 'small' || item.size === 'default' || item.size === 'large'
+            ? item.size
+            : 'large';
+
+        return {
+          userId: user.id,
+          widgetId: item.widgetId,
+          position: item.position,
+          visible: item.visible,
+          // DB only supports small/default/large.
+          size: normalizedSize,
+          settings: item.settings,
+        };
+      });
 
       await db.insert(dashboardLayouts).values(layoutItems);
     }

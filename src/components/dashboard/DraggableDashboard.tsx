@@ -33,6 +33,7 @@ import {
   AVAILABLE_WIDGETS,
   PRESET_LAYOUTS,
   DEFAULT_LAYOUT,
+  sanitizeLayout,
 } from '@/lib/dashboard/layout';
 import {
   Dialog,
@@ -97,6 +98,14 @@ export function DraggableDashboard({
   const userLayoutRef = useRef<DashboardWidget[] | null>(initialLayout || null);
   const onErrorRef = useRef(onError);
   const onLoadingChangeRef = useRef(onLoadingChange);
+  const sanitizeWidgets = useCallback(
+    (widgets: DashboardWidget[] | null | undefined) =>
+      sanitizeLayout(widgets, {
+        defaultLayout: DEFAULT_LAYOUT,
+        availableWidgets: AVAILABLE_WIDGETS,
+      }),
+    []
+  );
 
   useEffect(() => {
     onErrorRef.current = onError;
@@ -118,19 +127,20 @@ export function DraggableDashboard({
         if (response.ok) {
           const data = await response.json();
           const widgets = (data.widgets as DashboardWidget[] | undefined) || [];
-          if (widgets.length > 0) {
-            setLayout(widgets);
-            userLayoutRef.current = widgets;
-          } else {
-            setLayout(DEFAULT_LAYOUT);
-          }
+          const sanitizedWidgets = sanitizeWidgets(widgets);
+          setLayout(sanitizedWidgets);
+          userLayoutRef.current = sanitizedWidgets;
         } else {
-          setLayout(DEFAULT_LAYOUT);
+          const sanitizedDefault = sanitizeWidgets(DEFAULT_LAYOUT);
+          setLayout(sanitizedDefault);
+          userLayoutRef.current = sanitizedDefault;
         }
       } catch (error) {
         console.error('Failed to fetch dashboard layout:', error);
         onErrorRef.current?.('Failed to load dashboard layout');
-        setLayout(DEFAULT_LAYOUT);
+        const sanitizedDefault = sanitizeWidgets(DEFAULT_LAYOUT);
+        setLayout(sanitizedDefault);
+        userLayoutRef.current = sanitizedDefault;
       } finally {
         setLoading(false);
       }
@@ -139,10 +149,12 @@ export function DraggableDashboard({
     if (!initialLayout) {
       fetchLayout();
     } else {
-      userLayoutRef.current = initialLayout;
+      const sanitizedInitialLayout = sanitizeWidgets(initialLayout);
+      setLayout(sanitizedInitialLayout);
+      userLayoutRef.current = sanitizedInitialLayout;
       setLoading(false);
     }
-  }, [initialLayout]);
+  }, [initialLayout, sanitizeWidgets]);
 
   const logDashboardEvent = useCallback(
     async (
@@ -186,11 +198,11 @@ export function DraggableDashboard({
             if (currentLayout.length) {
               userLayoutRef.current = currentLayout;
             }
-            return DEFAULT_LAYOUT;
+            return sanitizeWidgets(DEFAULT_LAYOUT);
           });
           setLoading(false);
         } else {
-          setLayout(userLayoutRef.current || DEFAULT_LAYOUT);
+          setLayout(sanitizeWidgets(userLayoutRef.current || DEFAULT_LAYOUT));
         }
       }
     };
@@ -198,7 +210,7 @@ export function DraggableDashboard({
     window.addEventListener('dashboard-mock-mode', handleMockToggle as EventListener);
     return () =>
       window.removeEventListener('dashboard-mock-mode', handleMockToggle as EventListener);
-  }, []);
+  }, [sanitizeWidgets]);
 
   useEffect(() => {
     if (!loading && !hasTrackedView) {
@@ -272,7 +284,11 @@ export function DraggableDashboard({
       const response = await fetch('/api/dashboard/layout');
       if (response.ok) {
         const data = await response.json();
-        setLayout(data.widgets || []);
+        const sanitizedWidgets = sanitizeWidgets(
+          (data.widgets as DashboardWidget[] | undefined) || []
+        );
+        setLayout(sanitizedWidgets);
+        userLayoutRef.current = sanitizedWidgets;
         toast.success('Layout reset to default');
       }
     } catch (error) {

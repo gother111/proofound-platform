@@ -7,7 +7,7 @@
  * Uses org-specific widgets and layout storage
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { OrgGoalsCard } from '@/components/dashboard/OrgGoalsCard';
 import { TasksCard } from '@/components/dashboard/TasksCard';
 import { ProjectsCard } from '@/components/dashboard/ProjectsCard';
@@ -37,6 +37,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { sanitizeLayout } from '@/lib/dashboard/layout';
 
 interface OrgDashboardClientProps {
   orgSlug: string;
@@ -107,6 +108,16 @@ const ORG_AVAILABLE_WIDGETS: Record<
   },
 };
 
+const ORG_LAYOUT_WIDGET_CONFIG = Object.fromEntries(
+  Object.values(ORG_AVAILABLE_WIDGETS).map((widget) => [
+    widget.id,
+    {
+      defaultSize: widget.defaultSize,
+      availableSizes: ['small', 'default', 'large'] as const,
+    },
+  ])
+);
+
 // Default org dashboard layout
 const DEFAULT_ORG_LAYOUT: DashboardWidget[] = [
   { widgetId: 'org-pipeline', position: 0, visible: true, size: 'large', settings: {} },
@@ -167,6 +178,14 @@ export function OrgDashboardClient({ orgSlug, orgId, userRole }: OrgDashboardCli
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isWidgetPickerOpen, setIsWidgetPickerOpen] = useState(false);
+  const sanitizeOrgLayout = useCallback(
+    (widgets: DashboardWidget[] | null | undefined) =>
+      sanitizeLayout(widgets, {
+        defaultLayout: DEFAULT_ORG_LAYOUT,
+        availableWidgets: ORG_LAYOUT_WIDGET_CONFIG,
+      }),
+    []
+  );
 
   // Fetch org dashboard layout
   useEffect(() => {
@@ -175,23 +194,29 @@ export function OrgDashboardClient({ orgSlug, orgId, userRole }: OrgDashboardCli
         // For now, use local storage for org layouts (could extend API later)
         const stored = localStorage.getItem(`org-dashboard-layout-${orgId}`);
         if (stored) {
-          setLayout(JSON.parse(stored));
+          const parsed = JSON.parse(stored) as DashboardWidget[];
+          setLayout(sanitizeOrgLayout(parsed));
+        } else {
+          setLayout(sanitizeOrgLayout(DEFAULT_ORG_LAYOUT));
         }
       } catch (error) {
         console.error('Failed to fetch org dashboard layout:', error);
+        setLayout(sanitizeOrgLayout(DEFAULT_ORG_LAYOUT));
       } finally {
         setLoading(false);
       }
     }
 
     fetchLayout();
-  }, [orgId]);
+  }, [orgId, sanitizeOrgLayout]);
 
   const handleSave = async () => {
     setSaving(true);
     try {
       // Save to local storage (could be extended to API)
-      localStorage.setItem(`org-dashboard-layout-${orgId}`, JSON.stringify(layout));
+      const sanitizedLayout = sanitizeOrgLayout(layout);
+      setLayout(sanitizedLayout);
+      localStorage.setItem(`org-dashboard-layout-${orgId}`, JSON.stringify(sanitizedLayout));
       toast.success('Dashboard layout saved!');
       setEditMode(false);
     } catch (error) {
@@ -203,7 +228,7 @@ export function OrgDashboardClient({ orgSlug, orgId, userRole }: OrgDashboardCli
   };
 
   const handleReset = () => {
-    setLayout(DEFAULT_ORG_LAYOUT);
+    setLayout(sanitizeOrgLayout(DEFAULT_ORG_LAYOUT));
     localStorage.removeItem(`org-dashboard-layout-${orgId}`);
     toast.success('Layout reset to default');
   };
@@ -211,7 +236,7 @@ export function OrgDashboardClient({ orgSlug, orgId, userRole }: OrgDashboardCli
   const handleApplyPreset = (presetKey: string) => {
     const preset = ORG_PRESET_LAYOUTS[presetKey];
     if (preset) {
-      setLayout(preset.widgets);
+      setLayout(sanitizeOrgLayout(preset.widgets));
       toast.success(`Applied ${preset.label} preset`);
     }
   };

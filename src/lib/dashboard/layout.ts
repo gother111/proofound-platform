@@ -25,6 +25,19 @@ export interface DashboardWidget {
   settings: Record<string, any>;
 }
 
+type LayoutWidgetLike = {
+  widgetId: string;
+  position: number;
+  visible: boolean;
+  size: string;
+  settings: Record<string, any>;
+};
+
+type LayoutWidgetConfigLike = {
+  defaultSize: string;
+  availableSizes: readonly string[];
+};
+
 /**
  * All available widgets
  */
@@ -179,7 +192,13 @@ export const PRESET_LAYOUTS: Record<
     widgets: [
       { widgetId: 'profile-activation', position: 0, visible: true, size: 'default', settings: {} },
       { widgetId: 'matching-readiness', position: 1, visible: true, size: 'default', settings: {} },
-      { widgetId: 'interviews-feedback', position: 2, visible: true, size: 'default', settings: {} },
+      {
+        widgetId: 'interviews-feedback',
+        position: 2,
+        visible: true,
+        size: 'default',
+        settings: {},
+      },
       { widgetId: 'next-best-actions', position: 3, visible: true, size: 'full', settings: {} },
       { widgetId: 'notifications', position: 4, visible: true, size: 'small', settings: {} },
     ],
@@ -215,7 +234,13 @@ export const PRESET_LAYOUTS: Record<
     widgets: [
       { widgetId: 'profile-activation', position: 0, visible: true, size: 'default', settings: {} },
       { widgetId: 'matching-readiness', position: 1, visible: true, size: 'large', settings: {} },
-      { widgetId: 'interviews-feedback', position: 2, visible: true, size: 'default', settings: {} },
+      {
+        widgetId: 'interviews-feedback',
+        position: 2,
+        visible: true,
+        size: 'default',
+        settings: {},
+      },
       { widgetId: 'next-best-actions', position: 3, visible: true, size: 'full', settings: {} },
     ],
   },
@@ -224,7 +249,13 @@ export const PRESET_LAYOUTS: Record<
     label: 'Mentor',
     description: 'Focus on impact and helping others',
     widgets: [
-      { widgetId: 'interviews-feedback', position: 0, visible: true, size: 'default', settings: {} },
+      {
+        widgetId: 'interviews-feedback',
+        position: 0,
+        visible: true,
+        size: 'default',
+        settings: {},
+      },
       { widgetId: 'momentum-metrics', position: 1, visible: true, size: 'default', settings: {} },
       { widgetId: 'zen-snapshot', position: 2, visible: true, size: 'small', settings: {} },
       { widgetId: 'notifications', position: 3, visible: true, size: 'small', settings: {} },
@@ -237,7 +268,13 @@ export const PRESET_LAYOUTS: Record<
     widgets: [
       { widgetId: 'profile-activation', position: 0, visible: true, size: 'default', settings: {} },
       { widgetId: 'matching-readiness', position: 1, visible: true, size: 'default', settings: {} },
-      { widgetId: 'interviews-feedback', position: 2, visible: true, size: 'default', settings: {} },
+      {
+        widgetId: 'interviews-feedback',
+        position: 2,
+        visible: true,
+        size: 'default',
+        settings: {},
+      },
       { widgetId: 'momentum-metrics', position: 3, visible: true, size: 'default', settings: {} },
       { widgetId: 'notifications', position: 4, visible: true, size: 'small', settings: {} },
     ],
@@ -286,6 +323,59 @@ export function validateLayout(layout: DashboardWidget[]): {
     valid: errors.length === 0,
     errors,
   };
+}
+
+/**
+ * Normalize persisted layouts to avoid duplicate or invalid widgets at runtime.
+ */
+export function sanitizeLayout<T extends LayoutWidgetLike>(
+  layout: T[] | null | undefined,
+  options: {
+    defaultLayout: T[];
+    availableWidgets?: Record<string, LayoutWidgetConfigLike>;
+  }
+): T[] {
+  const { defaultLayout, availableWidgets } = options;
+  const source = Array.isArray(layout) ? layout : [];
+  const sortedSource = [...source].sort((a, b) => a.position - b.position);
+  const selectedByWidgetId = new Map<string, { item: T; order: number }>();
+
+  sortedSource.forEach((rawItem, order) => {
+    if (availableWidgets && !availableWidgets[rawItem.widgetId]) {
+      return;
+    }
+
+    const existing = selectedByWidgetId.get(rawItem.widgetId);
+    if (!existing) {
+      selectedByWidgetId.set(rawItem.widgetId, { item: rawItem, order });
+      return;
+    }
+
+    // Prefer the first visible duplicate if the current selected entry is hidden.
+    if (!existing.item.visible && rawItem.visible) {
+      selectedByWidgetId.set(rawItem.widgetId, { item: rawItem, order });
+    }
+  });
+
+  const deduped = [...selectedByWidgetId.values()]
+    .sort((a, b) => a.order - b.order)
+    .map(({ item }) => item);
+  const base = deduped.length > 0 ? deduped : defaultLayout;
+
+  return base.map((item, index) => {
+    let normalizedSize = item.size;
+    const config = availableWidgets?.[item.widgetId];
+    if (config && !config.availableSizes.includes(normalizedSize)) {
+      normalizedSize = config.defaultSize;
+    }
+
+    return {
+      ...item,
+      position: index,
+      size: normalizedSize as T['size'],
+      settings: item.settings ?? {},
+    };
+  });
 }
 
 /**
