@@ -317,11 +317,11 @@ export function VerificationStatus() {
         </Card>
 
         {/* Work Email Option */}
-        <Card className="border-2 hover:border-proofound-teal/30 transition-colors cursor-pointer">
+        <Card className="border-2 hover:border-proofound-terracotta/30 transition-colors cursor-pointer">
           <CardContent className="p-6">
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full bg-proofound-teal/10 flex items-center justify-center flex-shrink-0">
-                <Mail className="w-6 h-6 text-proofound-teal" />
+              <div className="w-12 h-12 rounded-full bg-proofound-terracotta/10 flex items-center justify-center flex-shrink-0">
+                <Mail className="w-6 h-6 text-proofound-terracotta" />
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold mb-1">Work Email Verification</h3>
@@ -332,7 +332,7 @@ export function VerificationStatus() {
                 <Button
                   onClick={() => setShowWorkEmailForm(true)}
                   variant="outline"
-                  className="border-proofound-teal text-proofound-teal hover:bg-proofound-teal/10"
+                  className="border-proofound-terracotta text-proofound-terracotta hover:bg-proofound-terracotta/10"
                 >
                   Verify with Work Email
                 </Button>

@@ -2,7 +2,6 @@ import { Edit3, Eye, Leaf, Plus, Sparkles, Target } from 'lucide-react';
 
 import { CausesCard } from '@/components/profile/CausesCard';
 import { MissionCard } from '@/components/profile/MissionCard';
-import { SkillsCard } from '@/components/profile/SkillsCard';
 import { ValuesCard } from '@/components/profile/ValuesCard';
 import { VisionCard } from '@/components/profile/VisionCard';
 import { Button } from '@/components/ui/button';
@@ -176,10 +175,6 @@ export function ProfileSidebar({
             </Button>
           </Card>
         )}
-      </div>
-
-      <div>
-        <SkillsCard skills={profile.skills} showManageLink={true} />
       </div>
     </div>
   );

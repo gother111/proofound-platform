@@ -1,7 +1,8 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 import { EmptyProfileStateView } from './EmptyProfileStateView';
 import { ProfileSkeleton } from './ProfileSkeleton';
@@ -15,6 +16,7 @@ import { useProfileData } from '@/hooks/useProfileData';
 import { MobileProfileHeader } from '@/components/profile/MobileProfileHeader';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import type { Education, Volunteering } from '@/types/profile';
 
 export function EditableProfileView() {
   const router = useRouter();
@@ -37,8 +39,10 @@ export function EditableProfileView() {
     deleteExperience,
     addEducation,
     deleteEducation,
+    updateEducation,
     addVolunteering,
     deleteVolunteering,
+    updateVolunteering,
     toggleRedactMode,
   } = useProfileData();
 
@@ -64,6 +68,8 @@ export function EditableProfileView() {
     isShareDialogOpen,
     setIsShareDialogOpen,
   } = useProfileViewState();
+  const [editingEducation, setEditingEducation] = useState<Education | null>(null);
+  const [editingVolunteering, setEditingVolunteering] = useState<Volunteering | null>(null);
 
   const isEmptyProfile = useMemo(() => {
     if (!profile) {
@@ -105,6 +111,93 @@ export function EditableProfileView() {
     );
   }, [profile]);
 
+  const openPurposeEditor = useCallback(
+    (field: 'mission' | 'vision') => {
+      if (!profile) {
+        return;
+      }
+
+      const hasValues = profile.values.length > 0;
+      const hasCauses = profile.causes.length > 0;
+
+      if (!hasValues) {
+        setIsValuesEditorOpen(true);
+        toast.info(
+          `Add at least one value before editing your ${field}. Values and causes must be completed first.`
+        );
+        return;
+      }
+
+      if (!hasCauses) {
+        setIsCausesEditorOpen(true);
+        toast.info(
+          `Add at least one cause before editing your ${field}. Values and causes must be completed first.`
+        );
+        return;
+      }
+
+      if (field === 'mission') {
+        setIsMissionEditorOpen(true);
+      } else {
+        setIsVisionEditorOpen(true);
+      }
+    },
+    [
+      profile,
+      setIsCausesEditorOpen,
+      setIsMissionEditorOpen,
+      setIsValuesEditorOpen,
+      setIsVisionEditorOpen,
+    ]
+  );
+
+  const openMissionEditor = useCallback(() => {
+    openPurposeEditor('mission');
+  }, [openPurposeEditor]);
+
+  const openVisionEditor = useCallback(() => {
+    openPurposeEditor('vision');
+  }, [openPurposeEditor]);
+
+  const availableSkillNames = useMemo(
+    () => profile?.skills.map((skill) => skill.name).filter(Boolean) ?? [],
+    [profile?.skills]
+  );
+
+  const openAddEducation = () => {
+    setEditingEducation(null);
+    setIsEducationFormOpen(true);
+  };
+
+  const openEditEducation = (item: Education) => {
+    setEditingEducation(item);
+    setIsEducationFormOpen(true);
+  };
+
+  const handleEducationFormOpenChange = (open: boolean) => {
+    setIsEducationFormOpen(open);
+    if (!open) {
+      setEditingEducation(null);
+    }
+  };
+
+  const openAddVolunteering = () => {
+    setEditingVolunteering(null);
+    setIsVolunteerFormOpen(true);
+  };
+
+  const openEditVolunteering = (item: Volunteering) => {
+    setEditingVolunteering(item);
+    setIsVolunteerFormOpen(true);
+  };
+
+  const handleVolunteeringFormOpenChange = (open: boolean) => {
+    setIsVolunteerFormOpen(open);
+    if (!open) {
+      setEditingVolunteering(null);
+    }
+  };
+
   if (isLoading) {
     return <ProfileSkeleton />;
   }
@@ -140,14 +233,14 @@ export function EditableProfileView() {
         isPending={isPending}
         pending={pending}
         onEditProfile={() => setIsEditProfileOpen(true)}
-        onOpenMission={() => setIsMissionEditorOpen(true)}
+        onOpenMission={openMissionEditor}
         onOpenValues={() => setIsValuesEditorOpen(true)}
         onOpenCauses={() => setIsCausesEditorOpen(true)}
         onOpenSkills={() => router.push('/app/i/expertise')}
         onAddImpactStory={() => setIsImpactStoryFormOpen(true)}
         onAddExperience={() => setIsExperienceFormOpen(true)}
-        onAddEducation={() => setIsEducationFormOpen(true)}
-        onAddVolunteering={() => setIsVolunteerFormOpen(true)}
+        onAddEducation={openAddEducation}
+        onAddVolunteering={openAddVolunteering}
         onUpdateBasicInfo={updateBasicInfo}
       />
     );
@@ -184,8 +277,8 @@ export function EditableProfileView() {
           <div className="space-y-8 lg:sticky lg:top-24 lg:self-start">
             <ProfileSidebar
               profile={profile}
-              onOpenMission={() => setIsMissionEditorOpen(true)}
-              onOpenVision={() => setIsVisionEditorOpen(true)}
+              onOpenMission={openMissionEditor}
+              onOpenVision={openVisionEditor}
               onOpenValues={() => setIsValuesEditorOpen(true)}
               onOpenCauses={() => setIsCausesEditorOpen(true)}
             />
@@ -203,9 +296,11 @@ export function EditableProfileView() {
               onDeleteImpactStory={deleteImpactStory}
               onAddExperience={() => setIsExperienceFormOpen(true)}
               onDeleteExperience={deleteExperience}
-              onAddEducation={() => setIsEducationFormOpen(true)}
+              onAddEducation={openAddEducation}
+              onEditEducation={openEditEducation}
               onDeleteEducation={deleteEducation}
-              onAddVolunteering={() => setIsVolunteerFormOpen(true)}
+              onAddVolunteering={openAddVolunteering}
+              onEditVolunteering={openEditVolunteering}
               onDeleteVolunteering={deleteVolunteering}
             />
           </div>
@@ -229,11 +324,14 @@ export function EditableProfileView() {
         isExperienceFormOpen={isExperienceFormOpen}
         setIsExperienceFormOpen={setIsExperienceFormOpen}
         isEducationFormOpen={isEducationFormOpen}
-        setIsEducationFormOpen={setIsEducationFormOpen}
+        setIsEducationFormOpen={handleEducationFormOpenChange}
         isVolunteerFormOpen={isVolunteerFormOpen}
-        setIsVolunteerFormOpen={setIsVolunteerFormOpen}
+        setIsVolunteerFormOpen={handleVolunteeringFormOpenChange}
         isShareDialogOpen={isShareDialogOpen}
         setIsShareDialogOpen={setIsShareDialogOpen}
+        editingEducation={editingEducation}
+        editingVolunteering={editingVolunteering}
+        availableSkillNames={availableSkillNames}
         onUpdateBasicInfo={updateBasicInfo}
         onUpdateMission={updateMission}
         onUpdateVision={updateVision}
@@ -242,7 +340,9 @@ export function EditableProfileView() {
         onAddImpactStory={addImpactStory}
         onAddExperience={addExperience}
         onAddEducation={addEducation}
+        onUpdateEducation={updateEducation}
         onAddVolunteering={addVolunteering}
+        onUpdateVolunteering={updateVolunteering}
       />
     </div>
   );

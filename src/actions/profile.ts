@@ -133,10 +133,25 @@ async function updatePurposeTextField(
     .select({
       value: purposeTextColumnMap[field],
       fieldVisibility: individualProfiles.fieldVisibility,
+      values: individualProfiles.values,
+      causes: individualProfiles.causes,
     })
     .from(individualProfiles)
     .where(eq(individualProfiles.userId, user.id))
     .limit(1);
+
+  const currentValues = Array.isArray(current[0]?.values) ? current[0].values : [];
+  const currentCauses = Array.isArray(current[0]?.causes) ? current[0].causes : [];
+  const missingRequirements: string[] = [];
+  if (currentValues.length === 0) {
+    missingRequirements.push('at least one value');
+  }
+  if (currentCauses.length === 0) {
+    missingRequirements.push('at least one cause');
+  }
+  if (missingRequirements.length > 0) {
+    throw new Error(`Add ${missingRequirements.join(' and ')} before updating your ${field}.`);
+  }
 
   const oldValue = (current[0]?.value as string | null | undefined) || null;
   const currentFieldVisibility = (current[0]?.fieldVisibility as FieldVisibility) || {};
@@ -619,6 +634,29 @@ export async function createEducation(data: Omit<EducationType, 'id'>) {
   return inserted;
 }
 
+export async function updateEducation(id: string, data: Omit<EducationType, 'id'>) {
+  const user = await requireAuth();
+  const [updated] = await db
+    .update(education)
+    .set({
+      institution: data.institution,
+      degree: data.degree,
+      duration: data.duration,
+      skills: data.skills,
+      projects: data.projects,
+      verified: data.verified ?? false,
+    })
+    .where(and(eq(education.id, id), eq(education.userId, user.id)))
+    .returning();
+
+  if (!updated) {
+    throw new Error('Education entry not found.');
+  }
+
+  revalidatePath('/app/i/profile');
+  return updated;
+}
+
 export async function deleteEducation(id: string) {
   const user = await requireAuth();
   await db.delete(education).where(and(eq(education.id, id), eq(education.userId, user.id)));
@@ -644,6 +682,31 @@ export async function createVolunteering(data: Omit<VolunteeringType, 'id'>) {
 
   revalidatePath('/app/i/profile');
   return inserted;
+}
+
+export async function updateVolunteering(id: string, data: Omit<VolunteeringType, 'id'>) {
+  const user = await requireAuth();
+  const [updated] = await db
+    .update(volunteering)
+    .set({
+      title: data.title,
+      orgDescription: data.orgDescription,
+      duration: data.duration,
+      cause: data.cause,
+      impact: data.impact,
+      skillsDeployed: data.skillsDeployed,
+      personalWhy: data.personalWhy,
+      verified: data.verified ?? false,
+    })
+    .where(and(eq(volunteering.id, id), eq(volunteering.userId, user.id)))
+    .returning();
+
+  if (!updated) {
+    throw new Error('Volunteering entry not found.');
+  }
+
+  revalidatePath('/app/i/profile');
+  return updated;
 }
 
 export async function deleteVolunteering(id: string) {

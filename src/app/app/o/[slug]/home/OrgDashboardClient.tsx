@@ -174,6 +174,7 @@ const ORG_PRESET_LAYOUTS: Record<
 
 export function OrgDashboardClient({ orgSlug, orgId, userRole }: OrgDashboardClientProps) {
   const [layout, setLayout] = useState<DashboardWidget[]>(DEFAULT_ORG_LAYOUT);
+  const [widgetVisibility, setWidgetVisibility] = useState<Record<string, boolean>>({});
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -199,9 +200,11 @@ export function OrgDashboardClient({ orgSlug, orgId, userRole }: OrgDashboardCli
         } else {
           setLayout(sanitizeOrgLayout(DEFAULT_ORG_LAYOUT));
         }
+        setWidgetVisibility({});
       } catch (error) {
         console.error('Failed to fetch org dashboard layout:', error);
         setLayout(sanitizeOrgLayout(DEFAULT_ORG_LAYOUT));
+        setWidgetVisibility({});
       } finally {
         setLoading(false);
       }
@@ -229,6 +232,7 @@ export function OrgDashboardClient({ orgSlug, orgId, userRole }: OrgDashboardCli
 
   const handleReset = () => {
     setLayout(sanitizeOrgLayout(DEFAULT_ORG_LAYOUT));
+    setWidgetVisibility({});
     localStorage.removeItem(`org-dashboard-layout-${orgId}`);
     toast.success('Layout reset to default');
   };
@@ -237,11 +241,21 @@ export function OrgDashboardClient({ orgSlug, orgId, userRole }: OrgDashboardCli
     const preset = ORG_PRESET_LAYOUTS[presetKey];
     if (preset) {
       setLayout(sanitizeOrgLayout(preset.widgets));
+      setWidgetVisibility({});
       toast.success(`Applied ${preset.label} preset`);
     }
   };
 
   const handleToggleWidget = (widgetId: string, checked: boolean) => {
+    if (checked) {
+      setWidgetVisibility((previous) => {
+        if (!(widgetId in previous)) return previous;
+        const next = { ...previous };
+        delete next[widgetId];
+        return next;
+      });
+    }
+
     setLayout((prev) => {
       const existingIndex = prev.findIndex((w) => w.widgetId === widgetId);
 
@@ -272,6 +286,13 @@ export function OrgDashboardClient({ orgSlug, orgId, userRole }: OrgDashboardCli
     });
   };
 
+  const handleWidgetVisibilityChange = useCallback((widgetId: string, visible: boolean) => {
+    setWidgetVisibility((previous) => {
+      if (previous[widgetId] === visible) return previous;
+      return { ...previous, [widgetId]: visible };
+    });
+  }, []);
+
   const getWidgetComponent = (widgetId: string) => {
     const canManageSettings = userRole === 'owner' || userRole === 'admin';
 
@@ -293,7 +314,13 @@ export function OrgDashboardClient({ orgSlug, orgId, userRole }: OrgDashboardCli
       case 'projects':
         return <ProjectsCard />;
       case 'while-away':
-        return <WhileAwayCard persona="organization" orgRef={orgSlug} />;
+        return (
+          <WhileAwayCard
+            persona="organization"
+            orgRef={orgSlug}
+            onVisibilityChange={(visible) => handleWidgetVisibilityChange(widgetId, visible)}
+          />
+        );
       case 'explore':
         return <ExploreCard persona="organization" orgRef={orgSlug} />;
       default:
@@ -317,7 +344,7 @@ export function OrgDashboardClient({ orgSlug, orgId, userRole }: OrgDashboardCli
     );
   }
 
-  const visibleWidgets = layout.filter((w) => w.visible);
+  const visibleWidgets = layout.filter((w) => w.visible && widgetVisibility[w.widgetId] !== false);
 
   // Only show customize button to admins/owners
   const canCustomize = userRole === 'owner' || userRole === 'admin';
