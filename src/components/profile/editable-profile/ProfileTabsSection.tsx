@@ -25,8 +25,10 @@ type ProfileTabsSectionProps = {
   onAddExperience: () => void;
   onDeleteExperience: (id: string) => void;
   onAddEducation: () => void;
+  onEditEducation: (education: Education) => void;
   onDeleteEducation: (id: string) => void;
   onAddVolunteering: () => void;
+  onEditVolunteering: (volunteering: Volunteering) => void;
   onDeleteVolunteering: (id: string) => void;
 };
 
@@ -42,8 +44,10 @@ export function ProfileTabsSection({
   onAddExperience,
   onDeleteExperience,
   onAddEducation,
+  onEditEducation,
   onDeleteEducation,
   onAddVolunteering,
+  onEditVolunteering,
   onDeleteVolunteering,
 }: ProfileTabsSectionProps) {
   const [activeTab, setActiveTab] = useState('impact');
@@ -105,12 +109,14 @@ export function ProfileTabsSection({
       <LearningTab
         education={education}
         onAddEducation={onAddEducation}
+        onEditEducation={onEditEducation}
         onDeleteEducation={onDeleteEducation}
       />
 
       <ServiceTab
         volunteering={volunteering}
         onAddService={onAddVolunteering}
+        onEditService={onEditVolunteering}
         onDeleteService={onDeleteVolunteering}
       />
 
