@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { CheckCircle2, XCircle, Clock, Shield, Loader2, AlertCircle } from 'lucide-react';
+import { apiFetch } from '@/lib/api/fetch';
 
 type VerificationStatus = 'pending' | 'accepted' | 'declined' | 'expired' | 'failed';
 
@@ -139,7 +140,7 @@ export default function VerifySkillPage() {
     setError(null);
 
     try {
-      const response = await fetch(`/api/verify/${token}`, {
+      const response = await apiFetch(`/api/verify/${token}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

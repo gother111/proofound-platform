@@ -23,6 +23,7 @@ import { triggerProfileActivationSurvey } from '@/lib/surveys/sus-triggers';
 import { evaluateIndividualMatchability } from '@/lib/matching/eligibility';
 import { MATCHABILITY_STRONG_SKILLS_WITH_RECENCY } from '@/lib/matching/thresholds';
 import { sendEmail } from '@/lib/email/sender';
+import { buildExperienceTimeline } from '@/lib/profile/experience-timeline';
 import type {
   ProfileData,
   BasicInfo,
@@ -38,6 +39,37 @@ import type {
   Volunteering as VolunteeringType,
   FieldVisibility,
 } from '@/types/profile';
+
+function coerceDateOnlyString(value: unknown): string | null {
+  if (!value) {
+    return null;
+  }
+
+  if (value instanceof Date) {
+    return value.toISOString().slice(0, 10);
+  }
+
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const isoDatePrefix = trimmed.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (isoDatePrefix) {
+    return isoDatePrefix[1];
+  }
+
+  const isoMonthOnly = trimmed.match(/^(\d{4}-\d{2})$/);
+  if (isoMonthOnly) {
+    return `${isoMonthOnly[1]}-01`;
+  }
+
+  return null;
+}
 
 /**
  * Track if profile was already activated (to avoid duplicate events)
@@ -108,10 +140,25 @@ async function updatePurposeTextField(
     .select({
       value: purposeTextColumnMap[field],
       fieldVisibility: individualProfiles.fieldVisibility,
+      values: individualProfiles.values,
+      causes: individualProfiles.causes,
     })
     .from(individualProfiles)
     .where(eq(individualProfiles.userId, user.id))
     .limit(1);
+
+  const currentValues = Array.isArray(current[0]?.values) ? current[0].values : [];
+  const currentCauses = Array.isArray(current[0]?.causes) ? current[0].causes : [];
+  const missingRequirements: string[] = [];
+  if (currentValues.length === 0) {
+    missingRequirements.push('at least one value');
+  }
+  if (currentCauses.length === 0) {
+    missingRequirements.push('at least one cause');
+  }
+  if (missingRequirements.length > 0) {
+    throw new Error(`Add ${missingRequirements.join(' and ')} before updating your ${field}.`);
+  }
 
   const oldValue = (current[0]?.value as string | null | undefined) || null;
   const currentFieldVisibility = (current[0]?.fieldVisibility as FieldVisibility) || {};
@@ -284,8 +331,12 @@ export async function getProfileData(): Promise<ProfileData> {
             title: experiences.title,
             orgDescription: experiences.orgDescription,
             duration: experiences.duration,
-            learning: experiences.learning,
-            growth: experiences.growth,
+            startDate: experiences.startDate,
+            endDate: experiences.endDate,
+            outcomes: experiences.outcomes,
+            projects: experiences.projects,
+            colleagues: experiences.colleagues,
+            achievements: experiences.achievements,
             verified: experiences.verified,
           })
           .from(experiences)
@@ -359,6 +410,28 @@ export async function getProfileData(): Promise<ProfileData> {
       };
     });
 
+    const mappedExperiences: Experience[] = experienceRows.map((row: any) => {
+      const timeline = buildExperienceTimeline({
+        startDate: coerceDateOnlyString(row.startDate),
+        endDate: coerceDateOnlyString(row.endDate),
+        duration: row.duration,
+      });
+
+      return {
+        id: row.id,
+        title: row.title,
+        orgDescription: row.orgDescription,
+        duration: timeline.duration,
+        startDate: timeline.startDate,
+        endDate: timeline.endDate,
+        outcomes: row.outcomes,
+        projects: row.projects,
+        colleagues: row.colleagues,
+        achievements: row.achievements,
+        verified: row.verified,
+      };
+    });
+
     return {
       basicInfo: {
         name: profileBasics?.displayName ?? user.displayName ?? 'Your Name',
@@ -377,7 +450,7 @@ export async function getProfileData(): Promise<ProfileData> {
       causes: profile?.causes ?? [],
       skills: mappedSkills, // Now fetched from L4 skills table
       impactStories: impactRows,
-      experiences: experienceRows,
+      experiences: mappedExperiences,
       education: educationRows,
       volunteering: volunteeringRows,
       fieldVisibility:
@@ -707,21 +780,44 @@ export async function deleteImpactStory(id: string) {
 
 export async function createExperience(data: Omit<Experience, 'id'>) {
   const user = await requireAuth();
+  const timeline = buildExperienceTimeline({
+    startDate: data.startDate,
+    endDate: data.endDate,
+    duration: data.duration,
+  });
+
   const [inserted] = await db
     .insert(experiences)
     .values({
       userId: user.id,
       title: data.title,
       orgDescription: data.orgDescription,
-      duration: data.duration,
-      learning: data.learning,
-      growth: data.growth,
+      duration: timeline.duration,
+      startDate: timeline.startDate,
+      endDate: timeline.endDate,
+      outcomes: data.outcomes,
+      projects: data.projects,
+      colleagues: data.colleagues,
+      achievements: data.achievements,
       verified: data.verified ?? false,
     })
     .returning();
 
   revalidatePath('/app/i/profile');
-  return inserted;
+  const normalizedStartDate = coerceDateOnlyString((inserted as any).startDate);
+  const normalizedEndDate = coerceDateOnlyString((inserted as any).endDate);
+  const normalizedTimeline = buildExperienceTimeline({
+    startDate: normalizedStartDate,
+    endDate: normalizedEndDate,
+    duration: (inserted as any).duration,
+  });
+
+  return {
+    ...(inserted as any),
+    startDate: normalizedTimeline.startDate,
+    endDate: normalizedTimeline.endDate,
+    duration: normalizedTimeline.duration,
+  };
 }
 
 export async function deleteExperience(id: string) {
@@ -749,6 +845,29 @@ export async function createEducation(data: Omit<EducationType, 'id'>) {
   return inserted;
 }
 
+export async function updateEducation(id: string, data: Omit<EducationType, 'id'>) {
+  const user = await requireAuth();
+  const [updated] = await db
+    .update(education)
+    .set({
+      institution: data.institution,
+      degree: data.degree,
+      duration: data.duration,
+      skills: data.skills,
+      projects: data.projects,
+      verified: data.verified ?? false,
+    })
+    .where(and(eq(education.id, id), eq(education.userId, user.id)))
+    .returning();
+
+  if (!updated) {
+    throw new Error('Education entry not found.');
+  }
+
+  revalidatePath('/app/i/profile');
+  return updated;
+}
+
 export async function deleteEducation(id: string) {
   const user = await requireAuth();
   await db.delete(education).where(and(eq(education.id, id), eq(education.userId, user.id)));
@@ -774,6 +893,31 @@ export async function createVolunteering(data: Omit<VolunteeringType, 'id'>) {
 
   revalidatePath('/app/i/profile');
   return inserted;
+}
+
+export async function updateVolunteering(id: string, data: Omit<VolunteeringType, 'id'>) {
+  const user = await requireAuth();
+  const [updated] = await db
+    .update(volunteering)
+    .set({
+      title: data.title,
+      orgDescription: data.orgDescription,
+      duration: data.duration,
+      cause: data.cause,
+      impact: data.impact,
+      skillsDeployed: data.skillsDeployed,
+      personalWhy: data.personalWhy,
+      verified: data.verified ?? false,
+    })
+    .where(and(eq(volunteering.id, id), eq(volunteering.userId, user.id)))
+    .returning();
+
+  if (!updated) {
+    throw new Error('Volunteering entry not found.');
+  }
+
+  revalidatePath('/app/i/profile');
+  return updated;
 }
 
 export async function deleteVolunteering(id: string) {

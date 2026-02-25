@@ -18,8 +18,40 @@ import {
 import { requireAuth } from '@/lib/auth';
 import { log } from '@/lib/log';
 import { db } from '@/db';
+import { buildExperienceTimeline } from '@/lib/profile/experience-timeline';
 
 export const dynamic = 'force-dynamic';
+
+function toDateOnlyString(value: unknown): string | null {
+  if (!value) {
+    return null;
+  }
+
+  if (value instanceof Date) {
+    return value.toISOString().slice(0, 10);
+  }
+
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const isoDatePrefix = trimmed.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (isoDatePrefix) {
+    return isoDatePrefix[1];
+  }
+
+  const isoMonthOnly = trimmed.match(/^(\d{4}-\d{2})$/);
+  if (isoMonthOnly) {
+    return `${isoMonthOnly[1]}-01`;
+  }
+
+  return null;
+}
 
 /**
  * GET /api/user/export
@@ -97,15 +129,28 @@ export async function GET() {
         lastUsed: skill.lastUsedAt ? skill.lastUsedAt.toISOString() : null,
         notes: undefined,
       })),
-      experiences: experiencesData.map((experience) => ({
-        type: 'work',
-        organization: experience.orgDescription || 'Organization not specified',
-        role: experience.title || undefined,
-        startDate: undefined,
-        endDate: null,
-        description: experience.learning || undefined,
-        location: undefined,
-      })),
+      experiences: experiencesData.map((experience) => {
+        const timeline = buildExperienceTimeline({
+          startDate: toDateOnlyString((experience as any).startDate),
+          endDate: toDateOnlyString((experience as any).endDate),
+          duration: experience.duration,
+        });
+
+        return {
+          type: 'work',
+          organization: experience.orgDescription || 'Organization not specified',
+          role: experience.title || undefined,
+          startDate: timeline.startDate || undefined,
+          endDate: timeline.endDate,
+          description:
+            experience.outcomes ||
+            experience.achievements ||
+            experience.projects ||
+            experience.colleagues ||
+            undefined,
+          location: undefined,
+        };
+      }),
       volunteering: volunteeringData.map((entry) => ({
         organization: entry.orgDescription || 'Organization not specified',
         role: entry.title || undefined,

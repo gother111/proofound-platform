@@ -33,7 +33,13 @@ vi.mock('@/components/dashboard/ExploreCard', () => ({
   ExploreCard: () => <div>widget:explore</div>,
 }));
 vi.mock('@/components/dashboard/WhileAwayCard', () => ({
-  WhileAwayCard: () => <div>widget:while-away</div>,
+  WhileAwayCard: ({ onVisibilityChange }: { onVisibilityChange?: (visible: boolean) => void }) => {
+    React.useEffect(() => {
+      onVisibilityChange?.(false);
+    }, [onVisibilityChange]);
+
+    return <div>widget:while-away</div>;
+  },
 }));
 
 describe('OrgDashboardClient', () => {
@@ -85,5 +91,25 @@ describe('OrgDashboardClient', () => {
     expect(screen.getAllByText('widget:org-readiness')).toHaveLength(1);
     expect(screen.queryByText('widget:tasks')).not.toBeInTheDocument();
     expect(screen.queryByText('widget:org-goals')).not.toBeInTheDocument();
+  });
+
+  it('omits while-away widget when the card reports no updates', async () => {
+    localStorage.setItem(
+      'org-dashboard-layout-org-123',
+      JSON.stringify([
+        { widgetId: 'while-away', position: 0, visible: true, size: 'default', settings: {} },
+        { widgetId: 'team', position: 1, visible: true, size: 'default', settings: {} },
+      ])
+    );
+
+    render(<OrgDashboardClient orgSlug="acme" orgId="org-123" userRole="owner" />);
+
+    await waitFor(() => {
+      expect(screen.getByText('widget:team')).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText('widget:while-away')).not.toBeInTheDocument();
+    });
   });
 });

@@ -92,6 +92,9 @@ export function ProofsSection({
                 onChange={(e) => setNewProof({ ...newProof, title: e.target.value })}
                 className="mt-1"
               />
+              <p className="text-xs text-[#6B6760] mt-1">
+                Provide a title or URL. If title is empty, we will derive one from the URL.
+              </p>
             </div>
             <div>
               <Label htmlFor="proof-url" className="text-[#2D3330]">
@@ -134,7 +137,7 @@ export function ProofsSection({
             <div className="flex gap-2">
               <Button
                 onClick={onAddProof}
-                disabled={!newProof.title || addingProof}
+                disabled={(!newProof.title.trim() && !newProof.url.trim()) || addingProof}
                 className="bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]"
               >
                 {addingProof ? (
@@ -220,6 +223,7 @@ export function ProofsSection({
                   variant="ghost"
                   size="sm"
                   onClick={() => onDeleteProof(proof.id)}
+                  aria-label={`Remove proof ${proof.title}`}
                   className="text-[#C76B4A] hover:text-[#8B4A36] hover:bg-[#FFF0F0]"
                 >
                   <Trash2 className="h-4 w-4" />

@@ -604,6 +604,7 @@ export const skillVerificationRequests = pgTable('skill_verification_requests', 
   requesterProfileId: uuid('requester_profile_id')
     .references(() => profiles.id, { onDelete: 'cascade' })
     .notNull(),
+  verificationToken: text('verification_token').notNull(),
   verifierEmail: text('verifier_email').notNull(),
   verifierProfileId: uuid('verifier_profile_id').references(() => profiles.id, {
     onDelete: 'set null',
@@ -1016,22 +1017,35 @@ export const impactStories = pgTable('impact_stories', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-// Experiences - work experience focused on growth and learning
-export const experiences = pgTable('experiences', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id')
-    .references(() => profiles.id, { onDelete: 'cascade' })
-    .notNull(),
-  projectId: uuid('project_id').references(() => projects.id, { onDelete: 'set null' }),
-  title: text('title').notNull(), // "Leading systemic change" not "Director"
-  orgDescription: text('org_description').notNull(), // Size, industry, location
-  duration: text('duration').notNull(),
-  learning: text('learning').notNull(), // What they learned
-  growth: text('growth').notNull(), // How they grew
-  verified: boolean('verified').default(false),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+// Experiences - work experience with timeline, outcomes, and collaboration context
+export const experiences = pgTable(
+  'experiences',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    projectId: uuid('project_id').references(() => projects.id, { onDelete: 'set null' }),
+    title: text('title').notNull(), // "Leading systemic change" not "Director"
+    orgDescription: text('org_description').notNull(), // Size, industry, location
+    duration: text('duration').notNull(),
+    startDate: date('start_date'),
+    endDate: date('end_date'),
+    outcomes: text('outcomes').notNull(), // Measurable outcomes
+    projects: text('projects').notNull(), // Key projects and initiatives
+    colleagues: text('colleagues').notNull(), // Collaboration and team context
+    achievements: text('achievements').notNull(), // Notable achievements
+    verified: boolean('verified').default(false),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    dateOrderCheck: check(
+      'experiences_date_order_check',
+      sql`${table.endDate} IS NULL OR ${table.startDate} IS NULL OR ${table.endDate} >= ${table.startDate}`
+    ),
+  })
+);
 
 // Education - focused on skills and meaningful projects
 export const education = pgTable('education', {

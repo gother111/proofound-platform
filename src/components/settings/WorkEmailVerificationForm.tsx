@@ -20,7 +20,8 @@ interface WorkEmailVerificationFormProps {
 
 interface Organization {
   id: string;
-  displayName: string;
+  displayName: string | null;
+  display_name?: string | null;
   slug: string;
 }
 
@@ -42,13 +43,22 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
     try {
       setLoadingOrgs(true);
       const response = await apiFetch('/api/organizations');
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch organizations');
       }
-      
+
       const data = await response.json();
-      setOrganizations(data.organizations || []);
+      const normalizedOrganizations = (
+        (data.organizations as Organization[] | undefined) || []
+      ).map((organization) => ({
+        id: organization.id,
+        slug: organization.slug,
+        displayName: organization.displayName ?? organization.display_name ?? null,
+        display_name: organization.display_name ?? organization.displayName ?? null,
+      }));
+
+      setOrganizations(normalizedOrganizations);
     } catch (err) {
       console.error('Error fetching organizations:', err);
       // Don't show error, just allow optional org selection
@@ -59,29 +69,35 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    
+
     if (!email) {
       setEmailError('Work email is required');
       return false;
     }
-    
+
     if (!emailRegex.test(email)) {
       setEmailError('Please enter a valid email address');
       return false;
     }
-    
+
     // Check for common free email providers
     const freeEmailDomains = [
-      'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com',
-      'protonmail.com', 'icloud.com', 'aol.com', 'mail.com'
+      'gmail.com',
+      'yahoo.com',
+      'hotmail.com',
+      'outlook.com',
+      'protonmail.com',
+      'icloud.com',
+      'aol.com',
+      'mail.com',
     ];
-    
+
     const domain = email.split('@')[1].toLowerCase();
     if (freeEmailDomains.includes(domain)) {
       setEmailError('Please use your company/organization email, not a personal email');
       return false;
     }
-    
+
     setEmailError(null);
     return true;
   };
@@ -96,14 +112,14 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateEmail(workEmail)) {
       return;
     }
-    
+
     setSubmitting(true);
     setError(null);
-    
+
     try {
       const response = await apiFetch('/api/verification/work-email/send', {
         method: 'POST',
@@ -115,15 +131,15 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
           orgId: selectedOrgId && selectedOrgId !== 'none' ? selectedOrgId : null,
         }),
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || 'Failed to send verification email');
       }
-      
+
       setSuccess(true);
-      
+
       // Call onSuccess after showing success message briefly
       setTimeout(() => {
         onSuccess();
@@ -169,9 +185,7 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
             required
           />
         </div>
-        {emailError && (
-          <p className="text-sm text-red-600 dark:text-red-400">{emailError}</p>
-        )}
+        {emailError && <p className="text-sm text-red-600 dark:text-red-400">{emailError}</p>}
         <p className="text-xs text-muted-foreground">
           Use your company or organization email address, not a personal email.
         </p>
@@ -187,20 +201,29 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
           disabled={submitting || loadingOrgs}
         >
           <SelectTrigger id="organization">
-            <SelectValue placeholder={loadingOrgs ? "Loading..." : "Select your organization"} />
+            <SelectValue placeholder={loadingOrgs ? 'Loading...' : 'Select your organization'} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="none">None - I&apos;ll link later</SelectItem>
             {organizations.map((org) => (
               <SelectItem key={org.id} value={org.id}>
-                {org.displayName}
+                {org.displayName || org.slug || 'Unnamed organization'}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
-        <p className="text-xs text-muted-foreground">
-          Link your profile to an organization. You can change this later.
-        </p>
+        {loadingOrgs ? (
+          <p className="text-xs text-muted-foreground">Loading organizations...</p>
+        ) : organizations.length === 0 ? (
+          <p className="text-xs text-muted-foreground">
+            No organizations are available for your account right now. You can still verify your
+            email and link an organization later.
+          </p>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Link your profile to an organization. You can change this later.
+          </p>
+        )}
       </div>
 
       {error && (
@@ -214,7 +237,7 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
         <button
           type="submit"
           disabled={submitting}
-          className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-proofound-teal px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-proofound-teal/90 disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-proofound-forest px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-proofound-forest/90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {submitting ? (
             <>
@@ -244,4 +267,3 @@ export function WorkEmailVerificationForm({ onSuccess }: WorkEmailVerificationFo
     </form>
   );
 }
-

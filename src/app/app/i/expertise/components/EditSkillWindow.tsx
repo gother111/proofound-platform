@@ -33,6 +33,23 @@ const LEVEL_LABELS = [
   { value: 5, label: 'Expert', description: 'Recognized authority' },
 ];
 
+function deriveProofTitleFromUrl(rawUrl: string): string {
+  try {
+    const parsed = new URL(rawUrl);
+    const pathname = parsed.pathname.replace(/\/+$/, '');
+    const lastSegment = pathname.split('/').filter(Boolean).pop();
+
+    if (lastSegment) {
+      const decoded = decodeURIComponent(lastSegment).replace(/[-_]+/g, ' ').trim();
+      if (decoded.length > 0) return decoded.slice(0, 80);
+    }
+
+    return parsed.hostname || 'Proof Link';
+  } catch {
+    return 'Proof Link';
+  }
+}
+
 type SkillRecord = {
   id: string;
   level?: number;
@@ -67,7 +84,6 @@ export function EditSkillWindow({
 
   const [level, setLevel] = useState(2);
   const [lastUsedDate, setLastUsedDate] = useState('');
-  const [relevance, setRelevance] = useState<'current' | 'emerging' | 'obsolete'>('current');
   const [saving, setSaving] = useState(false);
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -105,7 +121,6 @@ export function EditSkillWindow({
       setLastUsedDate(
         skill.last_used_at ? new Date(skill.last_used_at).toISOString().split('T')[0] : ''
       );
-      setRelevance(skill.relevance || 'current');
 
       setLoadingProofs(true);
       try {
@@ -152,7 +167,6 @@ export function EditSkillWindow({
       const payload = {
         level,
         last_used_at: lastUsedDate || new Date().toISOString(),
-        relevance,
       };
 
       const response = await apiFetch(`/api/expertise/user-skills/${skill.id}`, {
@@ -226,16 +240,31 @@ export function EditSkillWindow({
   };
 
   const handleAddProof = async () => {
-    if (!newProof.title) {
+    const hasTitle = Boolean(newProof.title?.trim());
+    const hasUrl = Boolean(newProof.url?.trim());
+
+    if (!hasTitle && !hasUrl) {
+      toast({
+        title: 'Missing proof details',
+        description: 'Add a title or a URL before submitting a proof.',
+        variant: 'destructive',
+      });
       return;
     }
+
+    const payload: ProofDraft = {
+      ...newProof,
+      title: hasTitle ? newProof.title.trim() : deriveProofTitleFromUrl(newProof.url.trim()),
+      description: newProof.description?.trim() || '',
+      url: newProof.url?.trim() || '',
+    };
 
     setAddingProof(true);
     try {
       const response = await apiFetch(`/api/expertise/user-skills/${skill.id}/proofs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newProof),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
@@ -243,7 +272,7 @@ export function EditSkillWindow({
         setProofs((current) => [...current, data.proof]);
         toast({
           title: '📎 Proof Added',
-          description: `"${newProof.title}" has been attached to this skill.`,
+          description: `"${payload.title}" has been attached to this skill.`,
         });
         setNewProof({
           proofType: 'project',
@@ -253,13 +282,14 @@ export function EditSkillWindow({
           issuedDate: '',
         });
         setShowAddProof(false);
+        onSkillUpdated();
         return;
       }
 
-      const error = (await response.json()) as { error?: string };
+      const error = (await response.json()) as { error?: string; message?: string };
       toast({
         title: 'Error',
-        description: error.error || 'Failed to add proof. Please try again.',
+        description: error.message || error.error || 'Failed to add proof. Please try again.',
         variant: 'destructive',
       });
     } catch (error) {
@@ -286,6 +316,7 @@ export function EditSkillWindow({
           title: 'Proof Removed',
           description: 'The proof has been removed from this skill.',
         });
+        onSkillUpdated();
         return;
       }
 
@@ -322,12 +353,24 @@ export function EditSkillWindow({
       );
 
       if (response.ok) {
-        const data = (await response.json()) as { request: VerificationRequest };
+        const data = (await response.json()) as {
+          request: VerificationRequest;
+          email_sent?: boolean;
+        };
         setVerificationRequests((current) => [data.request, ...current]);
-        toast({
-          title: '✉️ Verification Request Sent',
-          description: `An email has been sent to ${newVerificationRequest.verifierEmail}.`,
-        });
+        if (data.email_sent) {
+          toast({
+            title: '✉️ Verification Request Sent',
+            description: `An email has been sent to ${newVerificationRequest.verifierEmail}.`,
+          });
+        } else {
+          toast({
+            title: 'Verification Request Saved',
+            description:
+              'The request was saved, but the email could not be sent. Please check email configuration.',
+            variant: 'destructive',
+          });
+        }
         setNewVerificationRequest({
           verifierEmail: '',
           verifierSource: 'peer',
@@ -419,53 +462,6 @@ export function EditSkillWindow({
                 className="mt-2"
               />
               <p className="text-xs text-[#6B6760] mt-1">When did you last use this skill?</p>
-            </div>
-
-            <div>
-              <Label className="text-[#2D3330] mb-3 block font-medium">Relevance</Label>
-              <RadioGroup
-                value={relevance}
-                onValueChange={(value) =>
-                  setRelevance(value as 'current' | 'emerging' | 'obsolete')
-                }
-              >
-                <div className="flex items-center space-x-3 mb-2">
-                  <RadioGroupItem value="current" id="edit-relevance-current" />
-                  <Label htmlFor="edit-relevance-current" className="cursor-pointer">
-                    <Badge
-                      variant="outline"
-                      className="bg-[#EEF1EA] text-[#1C4D3A] border-[#7A9278]"
-                    >
-                      Current
-                    </Badge>
-                    <span className="ml-2 text-sm text-[#6B6760]">Widely used today</span>
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-3 mb-2">
-                  <RadioGroupItem value="emerging" id="edit-relevance-emerging" />
-                  <Label htmlFor="edit-relevance-emerging" className="cursor-pointer">
-                    <Badge
-                      variant="outline"
-                      className="bg-[#E8F3F8] text-[#3E5C73] border-[#6B9AB8]"
-                    >
-                      Emerging
-                    </Badge>
-                    <span className="ml-2 text-sm text-[#6B6760]">Growing in demand</span>
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <RadioGroupItem value="obsolete" id="edit-relevance-obsolete" />
-                  <Label htmlFor="edit-relevance-obsolete" className="cursor-pointer">
-                    <Badge
-                      variant="outline"
-                      className="bg-[#FFF0F0] text-[#8B4A36] border-[#C76B4A]"
-                    >
-                      Obsolete
-                    </Badge>
-                    <span className="ml-2 text-sm text-[#6B6760]">Declining use</span>
-                  </Label>
-                </div>
-              </RadioGroup>
             </div>
 
             <Separator />
