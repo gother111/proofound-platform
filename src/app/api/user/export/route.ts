@@ -103,7 +103,12 @@ export async function GET() {
         role: experience.title || undefined,
         startDate: undefined,
         endDate: null,
-        description: experience.learning || undefined,
+        description:
+          experience.outcomes ||
+          experience.achievements ||
+          experience.projects ||
+          experience.colleagues ||
+          undefined,
         location: undefined,
       })),
       volunteering: volunteeringData.map((entry) => ({

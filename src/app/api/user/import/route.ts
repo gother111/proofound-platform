@@ -202,8 +202,10 @@ export async function POST(request: NextRequest) {
               experience.startDate && experience.endDate
                 ? `${experience.startDate} - ${experience.endDate}`
                 : experience.startDate || experience.endDate || 'Duration not specified',
-            learning: experience.description || 'No learning description provided',
-            growth: 'Imported from data portability export',
+            outcomes: experience.description || 'Imported from data portability export',
+            projects: 'Imported from data portability export',
+            colleagues: 'Imported from data portability export',
+            achievements: experience.description || 'Imported from data portability export',
           }))
         );
       }

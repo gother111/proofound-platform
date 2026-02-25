@@ -38,8 +38,10 @@ export interface Experience {
   title: string;
   orgDescription: string;
   duration: string;
-  learning: string;
-  growth: string;
+  outcomes: string;
+  projects: string;
+  colleagues: string;
+  achievements: string;
   verified: boolean | null;
 }
 

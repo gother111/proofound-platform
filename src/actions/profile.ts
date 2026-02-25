@@ -268,8 +268,10 @@ export async function getProfileData(): Promise<ProfileData> {
             title: experiences.title,
             orgDescription: experiences.orgDescription,
             duration: experiences.duration,
-            learning: experiences.learning,
-            growth: experiences.growth,
+            outcomes: experiences.outcomes,
+            projects: experiences.projects,
+            colleagues: experiences.colleagues,
+            achievements: experiences.achievements,
             verified: experiences.verified,
           })
           .from(experiences)
@@ -509,8 +511,10 @@ export async function createExperience(data: Omit<Experience, 'id'>) {
       title: data.title,
       orgDescription: data.orgDescription,
       duration: data.duration,
-      learning: data.learning,
-      growth: data.growth,
+      outcomes: data.outcomes,
+      projects: data.projects,
+      colleagues: data.colleagues,
+      achievements: data.achievements,
       verified: data.verified ?? false,
     })
     .returning();

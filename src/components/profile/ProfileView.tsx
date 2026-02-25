@@ -16,6 +16,9 @@ import {
   GraduationCap,
   HandHeart,
   Network,
+  FolderOpen,
+  Trophy,
+  Users,
 } from 'lucide-react';
 import { MissionCard } from './MissionCard';
 import { ValuesCard } from './ValuesCard';
@@ -51,8 +54,10 @@ interface ProfileViewProps {
       title: string;
       orgDescription: string;
       duration: string;
-      learning: string;
-      growth: string;
+      outcomes: string;
+      projects: string;
+      colleagues: string;
+      achievements: string;
       verified: boolean;
     }>;
     education: Array<{
@@ -281,16 +286,30 @@ export function ProfileView({ data }: ProfileViewProps) {
                             <div>
                               <h5 className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
                                 <Target className="w-3 h-3" />
-                                What I Learned
+                                Outcomes
                               </h5>
-                              <p className="text-sm">{experience.learning}</p>
+                              <p className="text-sm">{experience.outcomes}</p>
                             </div>
                             <div>
                               <h5 className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
-                                <Target className="w-3 h-3" />
-                                How I Grew
+                                <FolderOpen className="w-3 h-3" />
+                                Projects
                               </h5>
-                              <p className="text-sm">{experience.growth}</p>
+                              <p className="text-sm">{experience.projects}</p>
+                            </div>
+                            <div>
+                              <h5 className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
+                                <Users className="w-3 h-3" />
+                                Colleagues
+                              </h5>
+                              <p className="text-sm">{experience.colleagues}</p>
+                            </div>
+                            <div>
+                              <h5 className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
+                                <Trophy className="w-3 h-3" />
+                                Achievements
+                              </h5>
+                              <p className="text-sm">{experience.achievements}</p>
                             </div>
                           </div>
                         </div>
