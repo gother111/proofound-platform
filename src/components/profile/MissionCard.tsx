@@ -1,11 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import type { PurposeLinks } from '@/types/profile';
 import { Target } from 'lucide-react';
 
 interface MissionCardProps {
   mission: string | null;
+  missionLinks?: PurposeLinks;
 }
 
-export function MissionCard({ mission }: MissionCardProps) {
+export function MissionCard({ mission, missionLinks }: MissionCardProps) {
   if (!mission) return null;
 
   return (
@@ -19,8 +22,30 @@ export function MissionCard({ mission }: MissionCardProps) {
           Mission
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground leading-relaxed font-medium">{mission}</p>
+        {!!missionLinks && (missionLinks.values.length > 0 || missionLinks.causes.length > 0) && (
+          <div className="space-y-2">
+            {missionLinks.values.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {missionLinks.values.map((value) => (
+                  <Badge key={`mission-value-${value}`} variant="outline" className="text-xs">
+                    Value: {value}
+                  </Badge>
+                ))}
+              </div>
+            )}
+            {missionLinks.causes.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {missionLinks.causes.map((cause) => (
+                  <Badge key={`mission-cause-${cause}`} variant="outline" className="text-xs">
+                    Cause: {cause}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

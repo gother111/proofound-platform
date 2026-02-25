@@ -128,6 +128,10 @@ export interface Volunteering {
 }
 
 export type VisibilityLevel = 'public' | 'network' | 'private';
+export type PurposeLinks = {
+  values: string[];
+  causes: string[];
+};
 
 export interface FieldVisibility {
   mission?: VisibilityLevel;
@@ -146,6 +150,8 @@ export interface ProfileData {
   basicInfo: BasicInfo;
   mission: string | null;
   vision: string | null;
+  missionLinks?: PurposeLinks;
+  visionLinks?: PurposeLinks;
   values: Value[];
   causes: string[];
   skills: Skill[];

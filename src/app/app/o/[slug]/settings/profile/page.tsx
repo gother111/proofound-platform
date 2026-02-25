@@ -1,6 +1,11 @@
 import { OrganizationBasicInfoEditor } from '@/components/organization/OrganizationBasicInfoEditor';
 import { getActiveOrg, requireAuth } from '@/lib/auth';
 import { normalizeOrganizationValues } from '@/lib/organizations/normalizeValues';
+import {
+  createOrganizationDefaultPurposeLinks,
+  normalizeOrganizationPurposeLinks,
+  pruneOrganizationPurposeLinks,
+} from '@/lib/organizations/normalizePurposeLinks';
 import { notFound, redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
@@ -23,6 +28,16 @@ export default async function OrganizationProfileSettingsPage({
   const normalizedCauses = Array.isArray(org.causes)
     ? org.causes.filter((cause): cause is string => typeof cause === 'string')
     : [];
+  const missionLinks = pruneOrganizationPurposeLinks(
+    normalizeOrganizationPurposeLinks(org.missionLinks),
+    normalizedValues,
+    normalizedCauses
+  );
+  const visionLinks = pruneOrganizationPurposeLinks(
+    normalizeOrganizationPurposeLinks(org.visionLinks),
+    normalizedValues,
+    normalizedCauses
+  );
   const canManageSettings = membership.role === 'owner' || membership.role === 'admin';
   if (!canManageSettings) {
     redirect(`/app/o/${slug}/home`);
@@ -47,6 +62,14 @@ export default async function OrganizationProfileSettingsPage({
           tagline: org.tagline,
           mission: org.mission,
           vision: org.vision,
+          missionLinks:
+            org.mission && (missionLinks.values.length === 0 || missionLinks.causes.length === 0)
+              ? createOrganizationDefaultPurposeLinks(normalizedValues, normalizedCauses)
+              : missionLinks,
+          visionLinks:
+            org.vision && (visionLinks.values.length === 0 || visionLinks.causes.length === 0)
+              ? createOrganizationDefaultPurposeLinks(normalizedValues, normalizedCauses)
+              : visionLinks,
           industry: org.industry,
           organizationSize: org.organizationSize,
           impactArea: org.impactArea,

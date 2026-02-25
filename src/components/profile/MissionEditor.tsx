@@ -16,20 +16,70 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import type { PurposeLinks } from '@/types/profile';
 import { Eye, EyeOff, Users, Globe } from 'lucide-react';
 
 interface MissionEditorProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   mission: string | null;
+  missionLinks?: PurposeLinks;
+  availableValues: string[];
+  availableCauses: string[];
   visibility?: 'public' | 'network' | 'private';
-  onSave: (mission: string, visibility?: 'public' | 'network' | 'private') => void;
+  onSave: (
+    mission: string,
+    links: PurposeLinks,
+    visibility?: 'public' | 'network' | 'private'
+  ) => void;
+}
+
+function normalizeLabels(items: string[]): string[] {
+  const normalized: string[] = [];
+  const seen = new Set<string>();
+
+  for (const item of items) {
+    const trimmed = item.trim();
+    if (!trimmed || seen.has(trimmed)) {
+      continue;
+    }
+
+    seen.add(trimmed);
+    normalized.push(trimmed);
+  }
+
+  return normalized;
+}
+
+function normalizeLinks(
+  links: PurposeLinks | undefined,
+  values: string[],
+  causes: string[]
+): PurposeLinks {
+  const valueSet = new Set(values);
+  const causeSet = new Set(causes);
+
+  return {
+    values: (links?.values ?? []).filter((value) => valueSet.has(value)),
+    causes: (links?.causes ?? []).filter((cause) => causeSet.has(cause)),
+  };
+}
+
+function toggleItem(items: string[], target: string): string[] {
+  if (items.includes(target)) {
+    return items.filter((item) => item !== target);
+  }
+
+  return [...items, target];
 }
 
 export function MissionEditor({
   open,
   onOpenChange,
   mission,
+  missionLinks,
+  availableValues,
+  availableCauses,
   visibility = 'public',
   onSave,
 }: MissionEditorProps) {
@@ -37,15 +87,34 @@ export function MissionEditor({
   const [visibilityLevel, setVisibilityLevel] = useState<'public' | 'network' | 'private'>(
     visibility
   );
+  const [selectedValues, setSelectedValues] = useState<string[]>([]);
+  const [selectedCauses, setSelectedCauses] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+
+  const normalizedAvailableValues = normalizeLabels(availableValues);
+  const normalizedAvailableCauses = normalizeLabels(availableCauses);
 
   useEffect(() => {
     if (open) {
       setValue(mission || '');
       setVisibilityLevel(visibility);
+      const normalizedLinks = normalizeLinks(
+        missionLinks,
+        normalizedAvailableValues,
+        normalizedAvailableCauses
+      );
+      setSelectedValues(normalizedLinks.values);
+      setSelectedCauses(normalizedLinks.causes);
       setError(null);
     }
-  }, [open, mission, visibility]);
+  }, [
+    open,
+    mission,
+    visibility,
+    missionLinks,
+    normalizedAvailableValues,
+    normalizedAvailableCauses,
+  ]);
 
   const handleSave = () => {
     if (value.trim().length === 0) {
@@ -58,7 +127,19 @@ export function MissionEditor({
       return;
     }
 
-    onSave(value.trim(), visibilityLevel);
+    if (selectedValues.length === 0 || selectedCauses.length === 0) {
+      setError('Select at least one linked value and one linked cause.');
+      return;
+    }
+
+    onSave(
+      value.trim(),
+      {
+        values: selectedValues,
+        causes: selectedCauses,
+      },
+      visibilityLevel
+    );
     onOpenChange(false);
   };
 
@@ -126,10 +207,56 @@ export function MissionEditor({
               }`}
               maxLength={500}
             />
-            {error && <p className="text-xs text-red-500">{error}</p>}
           </div>
 
-          {/* Visibility Control */}
+          <div className="space-y-2" data-testid="mission-values-links">
+            <Label>Linked Values</Label>
+            {normalizedAvailableValues.length === 0 ? (
+              <p className="text-xs text-muted-foreground">Add at least one value first.</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {normalizedAvailableValues.map((option) => {
+                  const selected = selectedValues.includes(option);
+                  return (
+                    <Button
+                      key={option}
+                      type="button"
+                      size="sm"
+                      variant={selected ? 'default' : 'outline'}
+                      onClick={() => setSelectedValues((prev) => toggleItem(prev, option))}
+                    >
+                      {option}
+                    </Button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-2" data-testid="mission-causes-links">
+            <Label>Linked Causes</Label>
+            {normalizedAvailableCauses.length === 0 ? (
+              <p className="text-xs text-muted-foreground">Add at least one cause first.</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {normalizedAvailableCauses.map((option) => {
+                  const selected = selectedCauses.includes(option);
+                  return (
+                    <Button
+                      key={option}
+                      type="button"
+                      size="sm"
+                      variant={selected ? 'default' : 'outline'}
+                      onClick={() => setSelectedCauses((prev) => toggleItem(prev, option))}
+                    >
+                      {option}
+                    </Button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="visibility">Who can see this?</Label>
             <Select
@@ -179,13 +306,7 @@ export function MissionEditor({
             </p>
           </div>
 
-          <div className="bg-muted/30 rounded-lg p-3 text-xs text-muted-foreground">
-            <p className="font-medium mb-1">💡 Tip:</p>
-            <p>
-              Your mission should be clear and inspiring. Focus on the impact you want to create,
-              not just what you do.
-            </p>
-          </div>
+          {error && <p className="text-xs text-red-500">{error}</p>}
         </div>
 
         <DialogFooter>

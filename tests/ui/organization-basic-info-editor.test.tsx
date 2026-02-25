@@ -53,6 +53,8 @@ const org = {
   tagline: null,
   mission: 'Trust first',
   vision: 'Better matching',
+  missionLinks: { values: ['Integrity'], causes: ['Climate Justice'] },
+  visionLinks: { values: ['Integrity'], causes: ['Climate Justice'] },
   industry: null,
   organizationSize: null,
   impactArea: null,
@@ -118,6 +120,8 @@ describe('OrganizationBasicInfoEditor', () => {
 
     expect(payload.website).toBe('https://example.com/');
     expect(payload.values).toEqual(['Integrity', 'Transparency']);
+    expect(payload.missionLinks).toEqual({ values: ['Integrity'], causes: ['Climate Justice'] });
+    expect(payload.visionLinks).toEqual({ values: ['Integrity'], causes: ['Climate Justice'] });
     expect(payload.tagline).toBe('Trust-led hiring');
     expect(payload.industry).toBe('Technology');
     expect(payload.organizationSize).toBe('11-50');
@@ -135,7 +139,18 @@ describe('OrganizationBasicInfoEditor', () => {
   });
 
   it('blocks mission and vision save when core value or cause prerequisites are missing', async () => {
-    render(<OrganizationBasicInfoEditor org={{ ...org, values: [], causes: [] }} canEdit={true} />);
+    render(
+      <OrganizationBasicInfoEditor
+        org={{
+          ...org,
+          values: [],
+          causes: [],
+          missionLinks: { values: [], causes: [] },
+          visionLinks: { values: [], causes: [] },
+        }}
+        canEdit={true}
+      />
+    );
 
     fireEvent.change(screen.getByLabelText(/Mission Statement/i), {
       target: { value: 'Build trust first teams' },
@@ -154,5 +169,32 @@ describe('OrganizationBasicInfoEditor', () => {
     expect(
       screen.getByText(/Add at least one value before setting mission or vision/i)
     ).toBeInTheDocument();
+  });
+
+  it('blocks save when mission/vision links are missing', async () => {
+    render(
+      <OrganizationBasicInfoEditor
+        org={{
+          ...org,
+          mission: null,
+          vision: null,
+          missionLinks: { values: [], causes: [] },
+          visionLinks: { values: [], causes: [] },
+        }}
+        canEdit={true}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText(/Mission Statement/i), {
+      target: { value: 'Build trust first teams' },
+    });
+    fireEvent.submit(screen.getByRole('button', { name: /save changes/i }).closest('form')!);
+
+    expect(apiFetchMock).not.toHaveBeenCalled();
+    expect(toastMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Missing mission/vision links',
+      })
+    );
   });
 });

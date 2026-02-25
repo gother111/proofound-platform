@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,11 @@ import { apiFetch } from '@/lib/api/fetch';
 import { normalizeOrganizationWebsite } from '@/lib/organizations/normalizeWebsite';
 import { normalizeOrganizationValues } from '@/lib/organizations/normalizeValues';
 import {
+  createOrganizationDefaultPurposeLinks,
+  normalizeOrganizationPurposeLinks,
+  pruneOrganizationPurposeLinks,
+} from '@/lib/organizations/normalizePurposeLinks';
+import {
   LEGAL_FORM_OPTIONS,
   type LegalFormValue,
   LEGAL_FORM_VALUES,
@@ -20,6 +25,7 @@ import {
   ORGANIZATION_SIZE_VALUES,
 } from '@/lib/organizations/profile-options';
 import { Plus, X } from 'lucide-react';
+import type { PurposeLinks } from '@/types/profile';
 
 interface OrganizationBasicInfoEditorProps {
   org: {
@@ -29,6 +35,8 @@ interface OrganizationBasicInfoEditorProps {
     tagline: string | null;
     mission: string | null;
     vision: string | null;
+    missionLinks: PurposeLinks;
+    visionLinks: PurposeLinks;
     industry: string | null;
     organizationSize: string | null;
     impactArea: string | null;
@@ -53,12 +61,54 @@ export function OrganizationBasicInfoEditor({
   const [values, setValues] = useState<string[]>(() => normalizeOrganizationValues(org.values));
   const [newValue, setNewValue] = useState('');
   const [valueError, setValueError] = useState<string | null>(null);
+  const [missionLinks, setMissionLinks] = useState<PurposeLinks>(() => {
+    const initial = pruneOrganizationPurposeLinks(
+      normalizeOrganizationPurposeLinks(org.missionLinks),
+      normalizeOrganizationValues(org.values),
+      org.causes ?? []
+    );
+    if (org.mission && (initial.values.length === 0 || initial.causes.length === 0)) {
+      return createOrganizationDefaultPurposeLinks(org.values, org.causes ?? []);
+    }
+    return initial;
+  });
+  const [visionLinks, setVisionLinks] = useState<PurposeLinks>(() => {
+    const initial = pruneOrganizationPurposeLinks(
+      normalizeOrganizationPurposeLinks(org.visionLinks),
+      normalizeOrganizationValues(org.values),
+      org.causes ?? []
+    );
+    if (org.vision && (initial.values.length === 0 || initial.causes.length === 0)) {
+      return createOrganizationDefaultPurposeLinks(org.values, org.causes ?? []);
+    }
+    return initial;
+  });
+  const [linksError, setLinksError] = useState<string | null>(null);
 
   const isOrganizationSizeValue = (value: string): value is OrganizationSizeValue =>
     ORGANIZATION_SIZE_VALUES.some((option) => option === value);
   const isLegalFormValue = (value: string): value is LegalFormValue =>
     LEGAL_FORM_VALUES.some((option) => option === value);
   const hasCauses = Array.isArray(org.causes) && org.causes.length > 0;
+
+  useEffect(() => {
+    setMissionLinks((prev) => pruneOrganizationPurposeLinks(prev, values, org.causes ?? []));
+    setVisionLinks((prev) => pruneOrganizationPurposeLinks(prev, values, org.causes ?? []));
+  }, [values, org.causes]);
+
+  const toggleLink = (
+    links: PurposeLinks,
+    group: 'values' | 'causes',
+    option: string
+  ): PurposeLinks => {
+    const current = links[group];
+    return {
+      ...links,
+      [group]: current.includes(option)
+        ? current.filter((item) => item !== option)
+        : [...current, option],
+    };
+  };
 
   const handleAddValue = () => {
     const trimmed = newValue.trim();
@@ -81,11 +131,13 @@ export function OrganizationBasicInfoEditor({
     setValues((prev) => [...prev, trimmed]);
     setNewValue('');
     setValueError(null);
+    setLinksError(null);
   };
 
   const handleRemoveValue = (valueToRemove: string) => {
     setValues((prev) => prev.filter((value) => value !== valueToRemove));
     setValueError(null);
+    setLinksError(null);
   };
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -109,6 +161,10 @@ export function OrganizationBasicInfoEditor({
     const websiteInput = String(formData.get('website') ?? '');
     const hasValues = values.length > 0;
     const isSettingPurpose = mission.length > 0 || vision.length > 0;
+    const missionLinksValid =
+      mission.length === 0 || (missionLinks.values.length > 0 && missionLinks.causes.length > 0);
+    const visionLinksValid =
+      vision.length === 0 || (visionLinks.values.length > 0 && visionLinks.causes.length > 0);
 
     if (!displayName) {
       toast({
@@ -153,7 +209,21 @@ export function OrganizationBasicInfoEditor({
       return;
     }
 
+    if (!missionLinksValid || !visionLinksValid) {
+      setLinksError(
+        'Select at least one linked value and one linked cause for each non-empty mission or vision.'
+      );
+      toast({
+        title: 'Missing mission/vision links',
+        description:
+          'Select at least one linked value and one linked cause for each non-empty mission or vision.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsPending(true);
+    setLinksError(null);
     try {
       const response = await apiFetch(`/api/organizations/${org.id}`, {
         method: 'PUT',
@@ -171,6 +241,8 @@ export function OrganizationBasicInfoEditor({
           foundedDate,
           website: normalizedWebsite.value,
           values: values.length > 0 ? values : null,
+          missionLinks,
+          visionLinks,
         }),
       });
 
@@ -310,6 +382,55 @@ export function OrganizationBasicInfoEditor({
               className="flex min-h-[120px] w-full rounded-lg border border-proofound-stone dark:border-border bg-white dark:bg-background px-4 py-2 text-base transition-colors placeholder:text-proofound-charcoal/40 dark:placeholder:text-muted-foreground/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:border-proofound-forest disabled:cursor-not-allowed disabled:opacity-50 text-proofound-charcoal dark:text-foreground"
               maxLength={2000}
             />
+            <div className="mt-3 space-y-2">
+              <p className="text-xs text-proofound-charcoal/70 dark:text-muted-foreground">
+                Link mission to at least one value and one cause.
+              </p>
+              <div className="space-y-2" data-testid="org-mission-values-links">
+                <Label className="text-xs">Linked Values</Label>
+                <div className="flex flex-wrap gap-2">
+                  {values.map((option) => {
+                    const selected = missionLinks.values.includes(option);
+                    return (
+                      <Button
+                        key={`mission-value-${option}`}
+                        type="button"
+                        size="sm"
+                        variant={selected ? 'default' : 'outline'}
+                        onClick={() => {
+                          setMissionLinks((prev) => toggleLink(prev, 'values', option));
+                          setLinksError(null);
+                        }}
+                      >
+                        {option}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="space-y-2" data-testid="org-mission-causes-links">
+                <Label className="text-xs">Linked Causes</Label>
+                <div className="flex flex-wrap gap-2">
+                  {(org.causes ?? []).map((option) => {
+                    const selected = missionLinks.causes.includes(option);
+                    return (
+                      <Button
+                        key={`mission-cause-${option}`}
+                        type="button"
+                        size="sm"
+                        variant={selected ? 'default' : 'outline'}
+                        onClick={() => {
+                          setMissionLinks((prev) => toggleLink(prev, 'causes', option));
+                          setLinksError(null);
+                        }}
+                      >
+                        {option}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           </div>
 
           <div>
@@ -341,7 +462,60 @@ export function OrganizationBasicInfoEditor({
             <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground/60 mt-1">
               Max 300 characters recommended
             </p>
+            <div className="mt-3 space-y-2">
+              <p className="text-xs text-proofound-charcoal/70 dark:text-muted-foreground">
+                Link vision to at least one value and one cause.
+              </p>
+              <div className="space-y-2" data-testid="org-vision-values-links">
+                <Label className="text-xs">Linked Values</Label>
+                <div className="flex flex-wrap gap-2">
+                  {values.map((option) => {
+                    const selected = visionLinks.values.includes(option);
+                    return (
+                      <Button
+                        key={`vision-value-${option}`}
+                        type="button"
+                        size="sm"
+                        variant={selected ? 'default' : 'outline'}
+                        onClick={() => {
+                          setVisionLinks((prev) => toggleLink(prev, 'values', option));
+                          setLinksError(null);
+                        }}
+                      >
+                        {option}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="space-y-2" data-testid="org-vision-causes-links">
+                <Label className="text-xs">Linked Causes</Label>
+                <div className="flex flex-wrap gap-2">
+                  {(org.causes ?? []).map((option) => {
+                    const selected = visionLinks.causes.includes(option);
+                    return (
+                      <Button
+                        key={`vision-cause-${option}`}
+                        type="button"
+                        size="sm"
+                        variant={selected ? 'default' : 'outline'}
+                        onClick={() => {
+                          setVisionLinks((prev) => toggleLink(prev, 'causes', option));
+                          setLinksError(null);
+                        }}
+                      >
+                        {option}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           </div>
+
+          {linksError ? (
+            <p className="text-xs text-red-600 dark:text-red-400 mt-1">{linksError}</p>
+          ) : null}
 
           <div>
             <Label htmlFor="website" className="text-proofound-charcoal dark:text-foreground">

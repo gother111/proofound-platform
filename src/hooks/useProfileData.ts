@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useTransition } from 'react';
 import type {
   ProfileData,
   BasicInfo,
+  PurposeLinks,
   ImpactStory,
   Experience,
   Education,
@@ -228,30 +229,34 @@ export function useProfileData() {
   );
 
   const updateMission = useCallback(
-    (mission: string, visibility?: 'public' | 'network' | 'private') => {
+    (mission: string, links: PurposeLinks, visibility?: 'public' | 'network' | 'private') => {
       if (!profile) return;
-      setProfile((prev) => (prev ? { ...prev, mission } : prev));
+      setProfile((prev) => (prev ? { ...prev, mission, missionLinks: links } : prev));
       startTransition(() => {
-        runWithPending('mission', () => updateMissionAction(mission, visibility)).catch((error) => {
-          toast.error(
-            error instanceof Error && error.message ? error.message : 'Failed to update mission.'
-          );
-        });
+        runWithPending('mission', () => updateMissionAction(mission, links, visibility)).catch(
+          (error) => {
+            toast.error(
+              error instanceof Error && error.message ? error.message : 'Failed to update mission.'
+            );
+          }
+        );
       });
     },
     [profile, runWithPending]
   );
 
   const updateVision = useCallback(
-    (vision: string, visibility?: 'public' | 'network' | 'private') => {
+    (vision: string, links: PurposeLinks, visibility?: 'public' | 'network' | 'private') => {
       if (!profile) return;
-      setProfile((prev) => (prev ? { ...prev, vision } : prev));
+      setProfile((prev) => (prev ? { ...prev, vision, visionLinks: links } : prev));
       startTransition(() => {
-        runWithPending('vision', () => updateVisionAction(vision, visibility)).catch((error) => {
-          toast.error(
-            error instanceof Error && error.message ? error.message : 'Failed to update vision.'
-          );
-        });
+        runWithPending('vision', () => updateVisionAction(vision, links, visibility)).catch(
+          (error) => {
+            toast.error(
+              error instanceof Error && error.message ? error.message : 'Failed to update vision.'
+            );
+          }
+        );
       });
     },
     [profile, runWithPending]

@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Edit3, X } from 'lucide-react';
 import { motion } from 'framer-motion';
+import type { PurposeLinks } from '@/types/profile';
 
 type OrganizationProfile = {
   id: string;
@@ -29,6 +30,8 @@ type OrganizationProfile = {
   tagline: string | null;
   mission: string | null;
   vision: string | null;
+  missionLinks: PurposeLinks;
+  visionLinks: PurposeLinks;
   website: string | null;
   foundedDate: string | null;
   industry: string | null;
@@ -129,6 +132,8 @@ export function OrganizationProfileView({
         <OrganizationPurpose
           mission={org.mission ?? undefined}
           vision={org.vision ?? undefined}
+          missionLinks={org.missionLinks}
+          visionLinks={org.visionLinks}
           culture={org.workCulture}
         />
 

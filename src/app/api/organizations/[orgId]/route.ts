@@ -6,6 +6,15 @@ import { and, eq } from 'drizzle-orm';
 import { normalizeOrganizationWebsite } from '@/lib/organizations/normalizeWebsite';
 import { LEGAL_FORM_VALUES, ORGANIZATION_SIZE_VALUES } from '@/lib/organizations/profile-options';
 import { normalizeOrganizationValues } from '@/lib/organizations/normalizeValues';
+import {
+  normalizeOrganizationCauses,
+  normalizeOrganizationPurposeLinks,
+  pruneOrganizationPurposeLinks,
+} from '@/lib/organizations/normalizePurposeLinks';
+import {
+  hasRequiredPurposeLinks,
+  type PurposeLinksShape,
+} from '@/lib/purpose/normalizePurposeLinks';
 
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 const ORGANIZATION_SIZE_SET = new Set<string>(ORGANIZATION_SIZE_VALUES);
@@ -30,14 +39,7 @@ function isValidIsoDate(value: string): boolean {
 }
 
 function normalizeCauses(causes: unknown): string[] {
-  if (!Array.isArray(causes)) {
-    return [];
-  }
-
-  return causes
-    .filter((cause): cause is string => typeof cause === 'string')
-    .map((cause) => cause.trim())
-    .filter(Boolean);
+  return normalizeOrganizationCauses(causes);
 }
 
 function parseValuesPayload(values: unknown): { value?: string[] | null; error?: string } {
@@ -72,6 +74,52 @@ function parseValuesPayload(values: unknown): { value?: string[] | null; error?:
 
     seen.add(trimmed);
     normalized.push(trimmed);
+  }
+
+  return { value: normalized };
+}
+
+function parsePurposeLinksPayload(
+  links: unknown,
+  fieldName: 'missionLinks' | 'visionLinks'
+): { value?: PurposeLinksShape | null; error?: string } {
+  if (links === undefined) {
+    return {};
+  }
+
+  if (links === null) {
+    return { value: { values: [], causes: [] } };
+  }
+
+  if (!links || typeof links !== 'object') {
+    return {
+      error: `${fieldName} must be an object with values and causes arrays or null`,
+    };
+  }
+
+  const normalized = normalizeOrganizationPurposeLinks(links);
+  const raw = links as { values?: unknown[]; causes?: unknown[] };
+
+  if (raw.values !== undefined && !Array.isArray(raw.values)) {
+    return { error: `${fieldName}.values must be an array of non-empty strings` };
+  }
+
+  if (raw.causes !== undefined && !Array.isArray(raw.causes)) {
+    return { error: `${fieldName}.causes must be an array of non-empty strings` };
+  }
+
+  const hasInvalidValues = Array.isArray(raw.values)
+    ? raw.values.some((value) => typeof value !== 'string' || !value.trim())
+    : false;
+  if (hasInvalidValues) {
+    return { error: `${fieldName}.values must contain non-empty strings only` };
+  }
+
+  const hasInvalidCauses = Array.isArray(raw.causes)
+    ? raw.causes.some((cause) => typeof cause !== 'string' || !cause.trim())
+    : false;
+  if (hasInvalidCauses) {
+    return { error: `${fieldName}.causes must contain non-empty strings only` };
   }
 
   return { value: normalized };
@@ -162,10 +210,20 @@ export async function PUT(
       legalForm,
       foundedDate,
       values,
+      missionLinks,
+      visionLinks,
     } = body;
     const parsedValues = parseValuesPayload(values);
     if (parsedValues.error) {
       return NextResponse.json({ error: parsedValues.error }, { status: 400 });
+    }
+    const parsedMissionLinks = parsePurposeLinksPayload(missionLinks, 'missionLinks');
+    if (parsedMissionLinks.error) {
+      return NextResponse.json({ error: parsedMissionLinks.error }, { status: 400 });
+    }
+    const parsedVisionLinks = parsePurposeLinksPayload(visionLinks, 'visionLinks');
+    if (parsedVisionLinks.error) {
+      return NextResponse.json({ error: parsedVisionLinks.error }, { status: 400 });
     }
 
     // Validate displayName if provided
@@ -257,6 +315,8 @@ export async function PUT(
       .select({
         mission: organizations.mission,
         vision: organizations.vision,
+        missionLinks: organizations.missionLinks,
+        visionLinks: organizations.visionLinks,
         values: organizations.values,
         causes: organizations.causes,
       })
@@ -280,6 +340,30 @@ export async function PUT(
           ? []
           : normalizeCauses(causes)
         : normalizeCauses(currentOrg.causes);
+    const nextMissionLinks =
+      missionLinks !== undefined
+        ? pruneOrganizationPurposeLinks(
+            parsedMissionLinks.value ?? { values: [], causes: [] },
+            nextValues,
+            nextCauses
+          )
+        : pruneOrganizationPurposeLinks(
+            normalizeOrganizationPurposeLinks(currentOrg.missionLinks),
+            nextValues,
+            nextCauses
+          );
+    const nextVisionLinks =
+      visionLinks !== undefined
+        ? pruneOrganizationPurposeLinks(
+            parsedVisionLinks.value ?? { values: [], causes: [] },
+            nextValues,
+            nextCauses
+          )
+        : pruneOrganizationPurposeLinks(
+            normalizeOrganizationPurposeLinks(currentOrg.visionLinks),
+            nextValues,
+            nextCauses
+          );
 
     const nextMission =
       mission !== undefined
@@ -314,6 +398,58 @@ export async function PUT(
           { status: 400 }
         );
       }
+
+      if (
+        mission !== undefined &&
+        nextMission.length > 0 &&
+        !hasRequiredPurposeLinks(nextMissionLinks)
+      ) {
+        return NextResponse.json(
+          {
+            error: 'Select at least one linked value and one linked cause before updating mission.',
+          },
+          { status: 400 }
+        );
+      }
+
+      if (
+        vision !== undefined &&
+        nextVision.length > 0 &&
+        !hasRequiredPurposeLinks(nextVisionLinks)
+      ) {
+        return NextResponse.json(
+          {
+            error: 'Select at least one linked value and one linked cause before updating vision.',
+          },
+          { status: 400 }
+        );
+      }
+
+      const nextValueSet = new Set(nextValues);
+      const nextCauseSet = new Set(nextCauses);
+      const missionLinksOutsideScope =
+        nextMissionLinks.values.some((value) => !nextValueSet.has(value)) ||
+        nextMissionLinks.causes.some((cause) => !nextCauseSet.has(cause));
+      if (missionLinksOutsideScope) {
+        return NextResponse.json(
+          {
+            error: 'Mission links must reference existing core values and causes.',
+          },
+          { status: 400 }
+        );
+      }
+
+      const visionLinksOutsideScope =
+        nextVisionLinks.values.some((value) => !nextValueSet.has(value)) ||
+        nextVisionLinks.causes.some((cause) => !nextCauseSet.has(cause));
+      if (visionLinksOutsideScope) {
+        return NextResponse.json(
+          {
+            error: 'Vision links must reference existing core values and causes.',
+          },
+          { status: 400 }
+        );
+      }
     }
 
     // Build update object with only provided fields
@@ -343,6 +479,14 @@ export async function PUT(
     if (legalForm !== undefined) updateData.legalForm = legalForm?.trim() || null;
     if (foundedDate !== undefined) updateData.foundedDate = foundedDate;
     if (values !== undefined) updateData.values = parsedValues.value ?? null;
+    if (missionLinks !== undefined) updateData.missionLinks = nextMissionLinks;
+    if (visionLinks !== undefined) updateData.visionLinks = nextVisionLinks;
+    if ((values !== undefined || causes !== undefined) && missionLinks === undefined) {
+      updateData.missionLinks = nextMissionLinks;
+    }
+    if ((values !== undefined || causes !== undefined) && visionLinks === undefined) {
+      updateData.visionLinks = nextVisionLinks;
+    }
 
     // Update organization
     const [updatedOrg] = await db

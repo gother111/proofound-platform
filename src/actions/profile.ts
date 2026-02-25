@@ -25,9 +25,18 @@ import { evaluateIndividualMatchability } from '@/lib/matching/eligibility';
 import { MATCHABILITY_STRONG_SKILLS_WITH_RECENCY } from '@/lib/matching/thresholds';
 import { sendEmail } from '@/lib/email/sender';
 import { buildExperienceTimeline } from '@/lib/profile/experience-timeline';
+import {
+  createIndividualDefaultPurposeLinks,
+  normalizeIndividualCauses,
+  normalizeIndividualPurposeLinks,
+  normalizeIndividualValueLabels,
+  pruneIndividualPurposeLinks,
+} from '@/lib/profile/normalizePurposeLinks';
+import { hasRequiredPurposeLinks } from '@/lib/purpose/normalizePurposeLinks';
 import type {
   ProfileData,
   BasicInfo,
+  PurposeLinks,
   Value,
   Skill,
   ImpactStory,
@@ -133,6 +142,7 @@ const purposeTextColumnMap = {
 async function updatePurposeTextField(
   field: PurposeTextField,
   value: string | null,
+  links: PurposeLinks | undefined,
   visibility: PurposeVisibility | undefined,
   defaultVisibility: PurposeVisibility
 ) {
@@ -144,31 +154,56 @@ async function updatePurposeTextField(
       fieldVisibility: individualProfiles.fieldVisibility,
       values: individualProfiles.values,
       causes: individualProfiles.causes,
+      missionLinks: individualProfiles.missionLinks,
+      visionLinks: individualProfiles.visionLinks,
     })
     .from(individualProfiles)
     .where(eq(individualProfiles.userId, user.id))
     .limit(1);
 
-  const currentValues = Array.isArray(current[0]?.values) ? current[0].values : [];
-  const currentCauses = Array.isArray(current[0]?.causes) ? current[0].causes : [];
-  const missingRequirements: string[] = [];
-  if (currentValues.length === 0) {
-    missingRequirements.push('at least one value');
-  }
-  if (currentCauses.length === 0) {
-    missingRequirements.push('at least one cause');
-  }
-  if (missingRequirements.length > 0) {
-    throw new Error(`Add ${missingRequirements.join(' and ')} before updating your ${field}.`);
+  const currentValues = normalizeIndividualValueLabels(current[0]?.values);
+  const currentCauses = normalizeIndividualCauses(current[0]?.causes);
+  const normalizedValue = typeof value === 'string' ? value.trim() : '';
+  const isSettingPurpose = normalizedValue.length > 0;
+
+  if (isSettingPurpose) {
+    const missingRequirements: string[] = [];
+    if (currentValues.length === 0) {
+      missingRequirements.push('at least one value');
+    }
+    if (currentCauses.length === 0) {
+      missingRequirements.push('at least one cause');
+    }
+    if (missingRequirements.length > 0) {
+      throw new Error(`Add ${missingRequirements.join(' and ')} before updating your ${field}.`);
+    }
   }
 
   const oldValue = (current[0]?.value as string | null | undefined) || null;
   const currentFieldVisibility = (current[0]?.fieldVisibility as FieldVisibility) || {};
+  const currentLinksRaw = field === 'mission' ? current[0]?.missionLinks : current[0]?.visionLinks;
+  const existingLinks = pruneIndividualPurposeLinks(
+    normalizeIndividualPurposeLinks(currentLinksRaw),
+    currentValues,
+    currentCauses
+  );
+  const requestedLinks = links ? normalizeIndividualPurposeLinks(links) : existingLinks;
+  const nextLinks = pruneIndividualPurposeLinks(requestedLinks, currentValues, currentCauses);
+
+  if (isSettingPurpose && !hasRequiredPurposeLinks(nextLinks)) {
+    throw new Error(
+      `Select at least one linked value and one linked cause before updating your ${field}.`
+    );
+  }
 
   const { logPurposeEdit } = await import('@/lib/audit/purpose-log');
-  await logPurposeEdit(user.id, field, oldValue, value || '');
+  await logPurposeEdit(user.id, field, oldValue, normalizedValue);
 
-  const updateData: Record<string, unknown> = { [field]: value };
+  const linksField = field === 'mission' ? 'missionLinks' : 'visionLinks';
+  const updateData: Record<string, unknown> = {
+    [field]: normalizedValue || null,
+    [linksField]: isSettingPurpose ? nextLinks : createIndividualDefaultPurposeLinks([], []),
+  };
   if (visibility) {
     updateData.fieldVisibility = {
       ...currentFieldVisibility,
@@ -184,8 +219,8 @@ async function updatePurposeTextField(
     userId: user.id,
     properties: {
       field,
-      wordCount: value?.split(/\s+/).length || 0,
-      hasValue: !!value,
+      wordCount: normalizedValue.split(/\s+/).filter(Boolean).length,
+      hasValue: Boolean(normalizedValue),
       visibility: visibility || currentFieldVisibility[field] || defaultVisibility,
     },
   });
@@ -197,10 +232,38 @@ async function updatePurposeTextField(
 
 async function replacePurposeListField(field: PurposeListField, values: Value[] | string[]) {
   const user = await requireAuth();
+  const [current] = await db
+    .select({
+      values: individualProfiles.values,
+      causes: individualProfiles.causes,
+      missionLinks: individualProfiles.missionLinks,
+      visionLinks: individualProfiles.visionLinks,
+    })
+    .from(individualProfiles)
+    .where(eq(individualProfiles.userId, user.id))
+    .limit(1);
+
+  const nextValues = field === 'values' ? normalizeIndividualValueLabels(values) : current?.values;
+  const nextCauses = field === 'causes' ? normalizeIndividualCauses(values) : current?.causes;
+
+  const nextMissionLinks = pruneIndividualPurposeLinks(
+    normalizeIndividualPurposeLinks(current?.missionLinks),
+    nextValues,
+    nextCauses
+  );
+  const nextVisionLinks = pruneIndividualPurposeLinks(
+    normalizeIndividualPurposeLinks(current?.visionLinks),
+    nextValues,
+    nextCauses
+  );
 
   await db
     .update(individualProfiles)
-    .set({ [field]: values } as Record<string, unknown>)
+    .set({
+      [field]: values,
+      missionLinks: nextMissionLinks,
+      visionLinks: nextVisionLinks,
+    } as Record<string, unknown>)
     .where(eq(individualProfiles.userId, user.id));
 
   const { emitEvent } = await import('@/lib/analytics/events');
@@ -452,6 +515,26 @@ export async function getProfileData(): Promise<ProfileData> {
       };
     });
 
+    const mappedValues = (profile?.values as Value[]) ?? [];
+    const mappedCauses = profile?.causes ?? [];
+    const missionLinks = pruneIndividualPurposeLinks(
+      normalizeIndividualPurposeLinks(profile?.missionLinks),
+      mappedValues,
+      mappedCauses
+    );
+    const visionLinks = pruneIndividualPurposeLinks(
+      normalizeIndividualPurposeLinks(profile?.visionLinks),
+      mappedValues,
+      mappedCauses
+    );
+    const defaultPurposeLinks = createIndividualDefaultPurposeLinks(mappedValues, mappedCauses);
+    const resolvedMissionLinks =
+      profile?.mission && !hasRequiredPurposeLinks(missionLinks)
+        ? defaultPurposeLinks
+        : missionLinks;
+    const resolvedVisionLinks =
+      profile?.vision && !hasRequiredPurposeLinks(visionLinks) ? defaultPurposeLinks : visionLinks;
+
     return {
       basicInfo: {
         name: profileBasics?.displayName ?? user.displayName ?? 'Your Name',
@@ -466,8 +549,10 @@ export async function getProfileData(): Promise<ProfileData> {
       },
       mission: profile?.mission ?? null,
       vision: profile?.vision ?? null,
-      values: (profile?.values as Value[]) ?? [],
-      causes: profile?.causes ?? [],
+      missionLinks: resolvedMissionLinks,
+      visionLinks: resolvedVisionLinks,
+      values: mappedValues,
+      causes: mappedCauses,
       skills: mappedSkills, // Now fetched from L4 skills table
       proofArtifactCount,
       acceptedVerificationCount,
@@ -509,6 +594,8 @@ export async function getProfileData(): Promise<ProfileData> {
       },
       mission: null,
       vision: null,
+      missionLinks: createIndividualDefaultPurposeLinks([], []),
+      visionLinks: createIndividualDefaultPurposeLinks([], []),
       values: [],
       causes: [],
       skills: [],
@@ -552,16 +639,18 @@ export async function updateBasicInfo(updates: Partial<BasicInfo>) {
 
 export async function updateMission(
   mission: string | null,
+  links?: PurposeLinks,
   visibility?: 'public' | 'network' | 'private'
 ) {
-  await updatePurposeTextField('mission', mission, visibility, 'public');
+  await updatePurposeTextField('mission', mission, links, visibility, 'public');
 }
 
 export async function updateVision(
   vision: string | null,
+  links?: PurposeLinks,
   visibility?: 'public' | 'network' | 'private'
 ) {
-  await updatePurposeTextField('vision', vision, visibility, 'network');
+  await updatePurposeTextField('vision', vision, links, visibility, 'network');
 }
 
 export async function replaceValues(values: Value[]) {

@@ -36,7 +36,14 @@ function buildSelectChain(rows: unknown[]) {
 
 function mockMembership(
   role: 'owner' | 'admin' | 'member' | null,
-  orgState?: { mission?: string | null; vision?: string | null; values?: unknown; causes?: unknown }
+  orgState?: {
+    mission?: string | null;
+    vision?: string | null;
+    missionLinks?: unknown;
+    visionLinks?: unknown;
+    values?: unknown;
+    causes?: unknown;
+  }
 ) {
   (db.select as any)
     .mockImplementationOnce(() => buildSelectChain(role ? [{ role }] : []))
@@ -45,6 +52,8 @@ function mockMembership(
         {
           mission: orgState?.mission ?? null,
           vision: orgState?.vision ?? null,
+          missionLinks: orgState?.missionLinks ?? { values: [], causes: [] },
+          visionLinks: orgState?.visionLinks ?? { values: [], causes: [] },
           values: orgState?.values ?? [],
           causes: orgState?.causes ?? [],
         },
@@ -298,6 +307,7 @@ describe('organizations [orgId] route', () => {
         mission: 'Build trust-led teams',
         values: ['Integrity'],
         causes: ['Climate Justice'],
+        missionLinks: { values: ['Integrity'], causes: ['Climate Justice'] },
       }),
       params
     );
@@ -308,6 +318,94 @@ describe('organizations [orgId] route', () => {
         mission: 'Build trust-led teams',
         values: ['Integrity'],
         causes: ['Climate Justice'],
+        missionLinks: { values: ['Integrity'], causes: ['Climate Justice'] },
+      })
+    );
+  });
+
+  it('rejects mission update when missionLinks are missing', async () => {
+    mockMembership('owner', {
+      values: ['Integrity'],
+      causes: ['Climate Justice'],
+    });
+
+    const response = await PUT(
+      buildPutRequest({
+        mission: 'Build trust-led teams',
+        missionLinks: { values: [], causes: [] },
+      }),
+      params
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe(
+      'Select at least one linked value and one linked cause before updating mission.'
+    );
+    expect(db.update).not.toHaveBeenCalled();
+  });
+
+  it('rejects vision update when visionLinks are missing', async () => {
+    mockMembership('owner', {
+      values: ['Integrity'],
+      causes: ['Climate Justice'],
+    });
+
+    const response = await PUT(
+      buildPutRequest({
+        vision: 'A fair future',
+        visionLinks: { values: ['Integrity'], causes: [] },
+      }),
+      params
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe(
+      'Select at least one linked value and one linked cause before updating vision.'
+    );
+    expect(db.update).not.toHaveBeenCalled();
+  });
+
+  it('rejects missionLinks payload with invalid shape', async () => {
+    mockMembership('owner', {
+      values: ['Integrity'],
+      causes: ['Climate Justice'],
+    });
+
+    const response = await PUT(
+      buildPutRequest({
+        mission: 'Build trust-led teams',
+        missionLinks: { values: 'Integrity', causes: ['Climate Justice'] } as any,
+      }),
+      params
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe('missionLinks.values must be an array of non-empty strings');
+    expect(db.update).not.toHaveBeenCalled();
+  });
+
+  it('auto-prunes mission and vision links when values are updated', async () => {
+    mockMembership('owner', {
+      mission: 'Build trust-led teams',
+      vision: 'A fair future',
+      values: ['Integrity', 'Transparency'],
+      causes: ['Climate Justice'],
+      missionLinks: { values: ['Integrity', 'Transparency'], causes: ['Climate Justice'] },
+      visionLinks: { values: ['Transparency'], causes: ['Climate Justice'] },
+    });
+    const { setMock } = mockUpdateReturningOrganization();
+
+    const response = await PUT(buildPutRequest({ values: ['Integrity'] }), params);
+
+    expect(response.status).toBe(200);
+    expect(setMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        values: ['Integrity'],
+        missionLinks: { values: ['Integrity'], causes: ['Climate Justice'] },
+        visionLinks: { values: [], causes: ['Climate Justice'] },
       })
     );
   });

@@ -21,6 +21,8 @@ type OrganizationRow = Pick<
   | 'tagline'
   | 'mission'
   | 'vision'
+  | 'missionLinks'
+  | 'visionLinks'
   | 'industry'
   | 'organizationSize'
   | 'impactArea'
@@ -72,6 +74,8 @@ function mapOrganization(
     tagline: row.tagline ?? null,
     mission: row.mission ?? null,
     vision: row.vision ?? null,
+    missionLinks: (row.missionLinks as OrganizationRow['missionLinks']) ?? null,
+    visionLinks: (row.visionLinks as OrganizationRow['visionLinks']) ?? null,
     industry: row.industry ?? null,
     organizationSize: row.organizationSize ?? null,
     impactArea: row.impactArea ?? null,
@@ -171,6 +175,8 @@ export async function getUserOrganizations(userId: string) {
           tagline,
           mission,
           vision,
+          missionLinks:mission_links,
+          visionLinks:vision_links,
           industry,
           organizationSize:organization_size,
           impactArea:impact_area,
@@ -247,6 +253,8 @@ export async function getActiveOrg(slug: string, userId: string) {
         tagline,
         mission,
         vision,
+        missionLinks:mission_links,
+        visionLinks:vision_links,
         industry,
         organizationSize:organization_size,
         impactArea:impact_area,
@@ -305,6 +313,12 @@ export async function getActiveOrg(slug: string, userId: string) {
       tagline: (data as Record<string, unknown>).tagline as string | null | undefined,
       mission: (data as Record<string, unknown>).mission as string | null | undefined,
       vision: (data as Record<string, unknown>).vision as string | null | undefined,
+      missionLinks: (data as Record<string, unknown>).missionLinks as
+        | OrganizationRow['missionLinks']
+        | undefined,
+      visionLinks: (data as Record<string, unknown>).visionLinks as
+        | OrganizationRow['visionLinks']
+        | undefined,
       industry: (data as Record<string, unknown>).industry as string | null | undefined,
       organizationSize: (data as Record<string, unknown>).organizationSize as
         | OrganizationRow['organizationSize']

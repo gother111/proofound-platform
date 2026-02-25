@@ -38,7 +38,7 @@ export function ProfileSidebar({
         className="cursor-pointer"
       >
         {profile.mission ? (
-          <MissionCard mission={profile.mission} />
+          <MissionCard mission={profile.mission} missionLinks={profile.missionLinks} />
         ) : (
           <Card className="p-6 rounded-3xl border-2 border-dashed border-[#7A9278]/30 bg-[#7A9278]/5 hover:bg-[#7A9278]/10 hover:border-[#7A9278]/50 hover:-translate-y-1 transition-all duration-300 group/card relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-[#7A9278]/10 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500" />
@@ -76,7 +76,7 @@ export function ProfileSidebar({
         className="cursor-pointer"
       >
         {profile.vision ? (
-          <VisionCard vision={profile.vision} />
+          <VisionCard vision={profile.vision} visionLinks={profile.visionLinks} />
         ) : (
           <Card className="p-6 rounded-3xl border-2 border-dashed border-[#7A9278]/30 bg-[#7A9278]/5 hover:bg-[#7A9278]/10 hover:border-[#7A9278]/50 hover:-translate-y-1 transition-all duration-300 group/card relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-[#7A9278]/10 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500" />

@@ -75,6 +75,8 @@ export const individualProfiles = pgTable('individual_profiles', {
   tagline: text('tagline'),
   mission: text('mission'),
   vision: text('vision'),
+  missionLinks: jsonb('mission_links'), // { values: string[], causes: string[] }
+  visionLinks: jsonb('vision_links'), // { values: string[], causes: string[] }
   coverImageUrl: text('cover_image_url'),
   verified: boolean('verified').default(false),
   joinedDate: timestamp('joined_date').defaultNow(),
@@ -149,6 +151,8 @@ export const organizations = pgTable('organizations', {
   tagline: text('tagline'),
   mission: text('mission'),
   vision: text('vision'),
+  missionLinks: jsonb('mission_links'), // { values: string[], causes: string[] }
+  visionLinks: jsonb('vision_links'), // { values: string[], causes: string[] }
   website: text('website'),
   // Business details
   industry: text('industry'),

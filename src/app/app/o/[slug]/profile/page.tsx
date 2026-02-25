@@ -2,6 +2,12 @@ import { requireAuth, getActiveOrg } from '@/lib/auth';
 import { notFound } from 'next/navigation';
 import { OrganizationProfileView } from '@/components/profile/OrganizationProfileView';
 import { normalizeOrganizationValues } from '@/lib/organizations/normalizeValues';
+import type { PurposeLinks } from '@/types/profile';
+import {
+  createOrganizationDefaultPurposeLinks,
+  normalizeOrganizationPurposeLinks,
+  pruneOrganizationPurposeLinks,
+} from '@/lib/organizations/normalizePurposeLinks';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,6 +23,8 @@ type ClientOrganizationProfile = {
   tagline: string | null;
   mission: string | null;
   vision: string | null;
+  missionLinks: PurposeLinks;
+  visionLinks: PurposeLinks;
   website: string | null;
   foundedDate: string | null;
   industry: string | null;
@@ -89,6 +97,16 @@ export default async function OrganizationProfilePage({
     tagline: org.tagline,
     mission: org.mission,
     vision: org.vision,
+    missionLinks: pruneOrganizationPurposeLinks(
+      normalizeOrganizationPurposeLinks(org.missionLinks),
+      normalizedValues,
+      org.causes ?? []
+    ),
+    visionLinks: pruneOrganizationPurposeLinks(
+      normalizeOrganizationPurposeLinks(org.visionLinks),
+      normalizedValues,
+      org.causes ?? []
+    ),
     website: org.website,
     foundedDate:
       typeof org.foundedDate === 'string'
@@ -105,6 +123,26 @@ export default async function OrganizationProfilePage({
     workCulture: org.workCulture ?? null,
     locations: org.locations ?? null,
   };
+
+  if (
+    org.mission &&
+    (clientOrg.missionLinks.values.length === 0 || clientOrg.missionLinks.causes.length === 0)
+  ) {
+    clientOrg.missionLinks = createOrganizationDefaultPurposeLinks(
+      normalizedValues,
+      org.causes ?? []
+    );
+  }
+
+  if (
+    org.vision &&
+    (clientOrg.visionLinks.values.length === 0 || clientOrg.visionLinks.causes.length === 0)
+  ) {
+    clientOrg.visionLinks = createOrganizationDefaultPurposeLinks(
+      normalizedValues,
+      org.causes ?? []
+    );
+  }
 
   return (
     <OrganizationProfileView

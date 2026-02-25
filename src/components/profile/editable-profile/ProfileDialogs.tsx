@@ -15,6 +15,7 @@ import type {
   Experience,
   ImpactStory,
   ProfileData,
+  PurposeLinks,
   Value,
   Volunteering,
 } from '@/types/profile';
@@ -47,8 +48,16 @@ type ProfileDialogsProps = {
   editingVolunteering: Volunteering | null;
   availableSkillNames: string[];
   onUpdateBasicInfo: (updates: Partial<ProfileData['basicInfo']>) => void;
-  onUpdateMission: (mission: string, visibility?: 'public' | 'network' | 'private') => void;
-  onUpdateVision: (vision: string, visibility?: 'public' | 'network' | 'private') => void;
+  onUpdateMission: (
+    mission: string,
+    links: PurposeLinks,
+    visibility?: 'public' | 'network' | 'private'
+  ) => void;
+  onUpdateVision: (
+    vision: string,
+    links: PurposeLinks,
+    visibility?: 'public' | 'network' | 'private'
+  ) => void;
   onReplaceValues: (values: Value[]) => void;
   onReplaceCauses: (causes: string[]) => void;
   onAddImpactStory: (story: Omit<ImpactStory, 'id'>) => Promise<void> | void;
@@ -114,6 +123,9 @@ export function ProfileDialogs({
         open={isMissionEditorOpen}
         onOpenChange={setIsMissionEditorOpen}
         mission={profile.mission}
+        missionLinks={profile.missionLinks}
+        availableValues={profile.values.map((value) => value.label)}
+        availableCauses={profile.causes}
         visibility={
           (profile.fieldVisibility?.mission as 'public' | 'network' | 'private') || 'public'
         }
@@ -123,6 +135,9 @@ export function ProfileDialogs({
         open={isVisionEditorOpen}
         onOpenChange={setIsVisionEditorOpen}
         vision={profile.vision}
+        visionLinks={profile.visionLinks}
+        availableValues={profile.values.map((value) => value.label)}
+        availableCauses={profile.causes}
         visibility={
           (profile.fieldVisibility?.vision as 'public' | 'network' | 'private') || 'network'
         }
