@@ -21,6 +21,8 @@
     "db:backup:checkpoint": "node ./scripts/db-backup-checkpoint.mjs",
     "db:audit:migrations": "node ./scripts/audit-migration-ledger.mjs",
     "email:dev": "email dev --dir src/emails",
+    "email:auth:templates:dry-run": "tsx scripts/sync-supabase-auth-templates.ts",
+    "email:auth:templates:sync": "tsx scripts/sync-supabase-auth-templates.ts --apply",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "node ./scripts/playwright-node20.mjs test",

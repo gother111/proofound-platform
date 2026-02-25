@@ -600,3 +600,22 @@ To force lint, set `FORCE_LINT=true` or run locally after `npm ci`.
 5. Run `npm run build` (a readiness check will warn if anything is missing).
 
 If you see `ENV_MISCONFIG` in the UI or logs, check the variables above.
+
+### Auth Template Sync (Supabase SMTP)
+
+For Supabase Auth emails (signup, recovery, magic link, invite, email change), templates are generated
+from code and can be synced to Supabase via Management API.
+
+Required env vars:
+
+- `SUPABASE_ACCESS_TOKEN`
+- `SUPABASE_PROJECT_REF`
+
+Commands:
+
+- Dry run: `npm run email:auth:templates:dry-run`
+- Apply update: `npm run email:auth:templates:sync`
+
+The sync command writes a backup snapshot of the current auth config to:
+
+- `artifacts/supabase-auth-config/`

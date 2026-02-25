@@ -4,6 +4,7 @@ import { normalizeSiteUrl, resolveSiteUrlFromHeaders, stripTrailingSlash } from 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { buildFallbackAuthTemplate } from '@/lib/email/auth-templates';
 // Rate limiting removed - server actions are protected by Vercel's built-in rate limiting
 import { headers } from 'next/headers';
 import type { AuthError } from '@supabase/supabase-js';
@@ -542,22 +543,6 @@ function isRecoveryEmailDeliveryFailure(error: AuthError): boolean {
   return /error sending recovery email/i.test(error.message);
 }
 
-function buildAuthFallbackEmailContent(type: AuthLinkType, actionLink: string) {
-  if (type === 'signup') {
-    return {
-      subject: 'Verify your email - Proofound',
-      html: `<p>Welcome to Proofound.</p><p>Please verify your email by clicking the link below:</p><p><a href="${actionLink}">Verify email</a></p>`,
-      text: `Welcome to Proofound.\n\nPlease verify your email by opening this link:\n${actionLink}`,
-    };
-  }
-
-  return {
-    subject: 'Reset your password - Proofound',
-    html: `<p>We received a request to reset your password.</p><p>Use the link below to continue:</p><p><a href="${actionLink}">Reset password</a></p>`,
-    text: `We received a request to reset your password.\n\nUse this link to continue:\n${actionLink}`,
-  };
-}
-
 async function sendAuthLinkFallbackViaResend(params: {
   type: AuthLinkType;
   email: string;
@@ -607,7 +592,7 @@ async function sendAuthLinkFallbackViaResend(params: {
       return false;
     }
 
-    const content = buildAuthFallbackEmailContent(params.type, actionLink);
+    const content = buildFallbackAuthTemplate(params.type, actionLink);
     const sendResult = await sendEmail({
       to: params.email,
       subject: content.subject,

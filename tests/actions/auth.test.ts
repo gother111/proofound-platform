@@ -196,6 +196,8 @@ describe('Auth Actions', () => {
         expect.objectContaining({
           to: 'smtp-issue@example.com',
           subject: 'Verify your email - Proofound',
+          html: expect.stringContaining('Verify your email'),
+          text: expect.stringContaining('Verify email:'),
         })
       );
     });
@@ -272,6 +274,8 @@ describe('Auth Actions', () => {
         expect.objectContaining({
           to: 'valid@example.com',
           subject: 'Reset your password - Proofound',
+          html: expect.stringContaining('Reset your password'),
+          text: expect.stringContaining('Reset password:'),
         })
       );
     });

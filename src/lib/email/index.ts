@@ -6,3 +6,4 @@
 export * from './config';
 export * from './sender';
 export * from './notifications';
+export * from './auth-templates';
