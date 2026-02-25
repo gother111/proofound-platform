@@ -1,16 +1,27 @@
 import type { ReactNode } from 'react';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
-import { ShieldCheck, Mail, Link2, Sparkles, CheckCircle2, Globe2, UserRound } from 'lucide-react';
+import {
+  ShieldCheck,
+  Mail,
+  Link2,
+  Sparkles,
+  CheckCircle2,
+  Globe2,
+  UserRound,
+  ArrowLeft,
+} from 'lucide-react';
 import { buildTrustSignals } from '@/lib/portfolio/trust-signals';
 import { mergeVisibilityFlags } from '@/lib/portfolio/visibility';
+import { sanitizeReturnPath } from '@/lib/navigation/sanitize-return-path';
 import { ShareLinkButton } from './ShareLinkButton';
 import { DownloadPdfButton } from './DownloadPdfButton';
-import { PortfolioVisibilityCard } from './visibility-card';
 import { CopyTextButton } from './CopyTextButton';
 import { ViewCounterClient } from './ViewCounterClient';
 
@@ -30,8 +41,18 @@ type SkillRow = {
 
 const FALLBACK_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
-export default async function PortfolioPage({ params }: { params: Promise<{ handle: string }> }) {
+export default async function PortfolioPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ handle: string }>;
+  searchParams?: Promise<{ returnTo?: string | string[] }>;
+}) {
   const { handle } = await params;
+  const resolvedSearchParams = (await searchParams) ?? {};
+  const returnPath = sanitizeReturnPath(resolvedSearchParams.returnTo, '/');
+  const returnLabel = returnPath.startsWith('/app/') ? 'Return to menu' : 'Return home';
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -202,6 +223,12 @@ export default async function PortfolioPage({ params }: { params: Promise<{ hand
                 </div>
               </div>
               <div className="flex items-center gap-3">
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={returnPath} className="inline-flex items-center gap-1.5">
+                    <ArrowLeft className="h-4 w-4" />
+                    {returnLabel}
+                  </Link>
+                </Button>
                 <ShareLinkButton url={shareUrl} />
                 {viewerIsOwner && <CopyTextButton />}
                 {viewerIsOwner && <DownloadPdfButton />}
@@ -416,7 +443,6 @@ export default async function PortfolioPage({ params }: { params: Promise<{ hand
               />
             </CardContent>
           </Card>
-          {viewerIsOwner && <PortfolioVisibilityCard />}
         </div>
       </div>
     </div>

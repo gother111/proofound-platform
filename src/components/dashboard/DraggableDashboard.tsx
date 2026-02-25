@@ -87,6 +87,7 @@ export function DraggableDashboard({
   onLoadingChange,
 }: DraggableDashboardProps) {
   const [layout, setLayout] = useState<DashboardWidget[]>(initialLayout || []);
+  const [widgetVisibility, setWidgetVisibility] = useState<Record<string, boolean>>({});
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -129,10 +130,12 @@ export function DraggableDashboard({
           const widgets = (data.widgets as DashboardWidget[] | undefined) || [];
           const sanitizedWidgets = sanitizeWidgets(widgets);
           setLayout(sanitizedWidgets);
+          setWidgetVisibility({});
           userLayoutRef.current = sanitizedWidgets;
         } else {
           const sanitizedDefault = sanitizeWidgets(DEFAULT_LAYOUT);
           setLayout(sanitizedDefault);
+          setWidgetVisibility({});
           userLayoutRef.current = sanitizedDefault;
         }
       } catch (error) {
@@ -140,6 +143,7 @@ export function DraggableDashboard({
         onErrorRef.current?.('Failed to load dashboard layout');
         const sanitizedDefault = sanitizeWidgets(DEFAULT_LAYOUT);
         setLayout(sanitizedDefault);
+        setWidgetVisibility({});
         userLayoutRef.current = sanitizedDefault;
       } finally {
         setLoading(false);
@@ -151,6 +155,7 @@ export function DraggableDashboard({
     } else {
       const sanitizedInitialLayout = sanitizeWidgets(initialLayout);
       setLayout(sanitizedInitialLayout);
+      setWidgetVisibility({});
       userLayoutRef.current = sanitizedInitialLayout;
       setLoading(false);
     }
@@ -200,9 +205,11 @@ export function DraggableDashboard({
             }
             return sanitizeWidgets(DEFAULT_LAYOUT);
           });
+          setWidgetVisibility({});
           setLoading(false);
         } else {
           setLayout(sanitizeWidgets(userLayoutRef.current || DEFAULT_LAYOUT));
+          setWidgetVisibility({});
         }
       }
     };
@@ -288,6 +295,7 @@ export function DraggableDashboard({
           (data.widgets as DashboardWidget[] | undefined) || []
         );
         setLayout(sanitizedWidgets);
+        setWidgetVisibility({});
         userLayoutRef.current = sanitizedWidgets;
         toast.success('Layout reset to default');
       }
@@ -301,11 +309,21 @@ export function DraggableDashboard({
     const preset = PRESET_LAYOUTS[presetKey];
     if (preset) {
       setLayout(preset.widgets);
+      setWidgetVisibility({});
       toast.success(`Applied ${preset.label} preset`);
     }
   };
 
   const handleToggleWidget = (widgetId: string, checked: boolean) => {
+    if (checked) {
+      setWidgetVisibility((previous) => {
+        if (!(widgetId in previous)) return previous;
+        const next = { ...previous };
+        delete next[widgetId];
+        return next;
+      });
+    }
+
     let eventType: 'dashboard_tile_added' | 'dashboard_tile_removed' | null = null;
     setLayout((prev) => {
       const existingIndex = prev.findIndex((w) => w.widgetId === widgetId);
@@ -345,10 +363,21 @@ export function DraggableDashboard({
     }
   };
 
+  const handleWidgetVisibilityChange = useCallback((widgetId: string, visible: boolean) => {
+    setWidgetVisibility((previous) => {
+      if (previous[widgetId] === visible) return previous;
+      return { ...previous, [widgetId]: visible };
+    });
+  }, []);
+
   const getWidgetComponent = (widgetId: string) => {
     switch (widgetId) {
       case 'while-away':
-        return <WhileAwayCard />;
+        return (
+          <WhileAwayCard
+            onVisibilityChange={(visible) => handleWidgetVisibilityChange(widgetId, visible)}
+          />
+        );
       case 'goals':
         return <GoalsCard />;
       case 'tasks':
@@ -417,7 +446,7 @@ export function DraggableDashboard({
   }
 
   // Filter to only show visible widgets
-  const visibleWidgets = layout.filter((w) => w.visible);
+  const visibleWidgets = layout.filter((w) => w.visible && widgetVisibility[w.widgetId] !== false);
 
   // Show empty state if no widgets
   if (visibleWidgets.length === 0) {

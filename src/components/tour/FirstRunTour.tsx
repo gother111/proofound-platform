@@ -14,7 +14,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   X,
   ArrowRight,
@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
+import { computeTooltipPosition, type TooltipPlacement } from '@/lib/tour/tooltip-position';
 
 interface FirstRunTourProps {
   onComplete: () => void;
@@ -143,6 +144,12 @@ export function FirstRunTour({ onComplete, onSkip, basePath = '/app/i' }: FirstR
   const [currentStep, setCurrentStep] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
   const [highlightPosition, setHighlightPosition] = useState<DOMRect | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState<{
+    top: number;
+    left: number;
+    placement: TooltipPlacement;
+  } | null>(null);
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
 
   const steps = individualTourSteps; // Can be extended for org tours
   const step = steps[currentStep];
@@ -204,8 +211,11 @@ export function FirstRunTour({ onComplete, onSkip, basePath = '/app/i' }: FirstR
   useEffect(() => {
     if (!step.target) {
       setHighlightPosition(null);
+      setTooltipPosition(null);
       return;
     }
+
+    setTooltipPosition(null);
 
     // Small delay to let DOM elements render
     const timer = setTimeout(() => {
@@ -220,11 +230,77 @@ export function FirstRunTour({ onComplete, onSkip, basePath = '/app/i' }: FirstR
           block: 'center',
           inline: 'nearest',
         });
+      } else {
+        setHighlightPosition(null);
       }
     }, step.revealDelay || 100);
 
     return () => clearTimeout(timer);
   }, [currentStep, step.target, step.revealDelay]);
+
+  useEffect(() => {
+    if (!step.target || step.placement === 'center') {
+      return;
+    }
+
+    const updateHighlightPosition = () => {
+      const targetElement = document.querySelector(step.target!);
+      if (!targetElement) {
+        setHighlightPosition(null);
+        return;
+      }
+
+      setHighlightPosition(targetElement.getBoundingClientRect());
+    };
+
+    window.addEventListener('resize', updateHighlightPosition);
+    window.addEventListener('scroll', updateHighlightPosition, true);
+
+    return () => {
+      window.removeEventListener('resize', updateHighlightPosition);
+      window.removeEventListener('scroll', updateHighlightPosition, true);
+    };
+  }, [step.target, step.placement]);
+
+  const updateTooltipPosition = useCallback(() => {
+    if (!highlightPosition || !tooltipRef.current) {
+      setTooltipPosition(null);
+      return;
+    }
+
+    const tooltipRect = tooltipRef.current.getBoundingClientRect();
+    if (tooltipRect.width <= 0 || tooltipRect.height <= 0) {
+      return;
+    }
+
+    const preferredPlacement: TooltipPlacement =
+      step.placement && step.placement !== 'center' ? step.placement : 'right';
+
+    const nextPosition = computeTooltipPosition({
+      targetRect: highlightPosition,
+      tooltipSize: {
+        width: tooltipRect.width,
+        height: tooltipRect.height,
+      },
+      preferredPlacement,
+      viewport: {
+        width: window.innerWidth,
+        height: window.innerHeight,
+      },
+    });
+
+    setTooltipPosition(nextPosition);
+  }, [highlightPosition, step.placement]);
+
+  useEffect(() => {
+    if (!highlightPosition || !step.target || step.placement === 'center') {
+      setTooltipPosition(null);
+      return;
+    }
+
+    const frame = window.requestAnimationFrame(updateTooltipPosition);
+    return () => window.cancelAnimationFrame(frame);
+  }, [highlightPosition, step.target, step.placement, updateTooltipPosition, currentStep]);
 
   const handleActionButton = () => {
     // For "complete" step, suggest going to public portfolio
@@ -359,28 +435,12 @@ export function FirstRunTour({ onComplete, onSkip, basePath = '/app/i' }: FirstR
       {/* Tooltip - positioned based on placement */}
       {highlightPosition && (
         <div
-          className="fixed z-[9999] bg-white rounded-lg shadow-2xl p-6 max-w-sm animate-in fade-in slide-in-from-left-4 duration-300"
+          ref={tooltipRef}
+          className="fixed z-[9999] bg-white rounded-lg shadow-2xl p-6 max-w-sm w-[min(calc(100vw-2rem),24rem)] max-h-[calc(100vh-2rem)] overflow-y-auto animate-in fade-in slide-in-from-left-4 duration-300"
           style={{
-            top:
-              step.placement === 'bottom'
-                ? highlightPosition.bottom + 20
-                : step.placement === 'top'
-                  ? highlightPosition.top - 20
-                  : highlightPosition.top + highlightPosition.height / 2,
-            left:
-              step.placement === 'right'
-                ? highlightPosition.right + 20
-                : step.placement === 'left'
-                  ? highlightPosition.left - 20
-                  : highlightPosition.left + highlightPosition.width / 2,
-            transform:
-              step.placement === 'bottom'
-                ? 'translateX(-50%)'
-                : step.placement === 'top'
-                  ? 'translate(-50%, -100%)'
-                  : step.placement === 'right'
-                    ? 'translateY(-50%)'
-                    : 'translate(-100%, -50%)',
+            top: tooltipPosition?.top ?? -9999,
+            left: tooltipPosition?.left ?? -9999,
+            visibility: tooltipPosition ? 'visible' : 'hidden',
           }}
         >
           {/* Close button */}

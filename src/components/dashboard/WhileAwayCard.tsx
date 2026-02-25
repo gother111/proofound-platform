@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { X } from 'lucide-react';
 
 import { Card } from '@/components/ui/card';
-import type { MomentumSummary } from '@/lib/momentum/types';
 
 const titles = [
   'While you were away making impact',
@@ -16,55 +15,69 @@ const titles = [
 interface WhileAwayCardProps {
   persona?: 'individual' | 'organization';
   orgRef?: string;
+  onVisibilityChange?: (visible: boolean) => void;
 }
 
-export function WhileAwayCard({ persona = 'individual', orgRef }: WhileAwayCardProps) {
+export function WhileAwayCard({
+  persona = 'individual',
+  orgRef,
+  onVisibilityChange,
+}: WhileAwayCardProps) {
   const [updates, setUpdates] = useState<Array<{ text: string; actionUrl?: string }>>([]);
   const [dismissed, setDismissed] = useState(false);
+  const [resolved, setResolved] = useState(false);
   const [title] = useState(() => titles[Math.floor(Math.random() * titles.length)]);
 
   useEffect(() => {
+    let isMounted = true;
+
     async function load() {
       try {
         const params = new URLSearchParams({ persona, limit: '6' });
         if (orgRef) params.set('org', orgRef);
 
         const response = await fetch(`/api/updates?${params.toString()}`, { cache: 'no-store' });
-        const payload = await response.json();
+        if (!response.ok) {
+          if (isMounted) {
+            setUpdates([]);
+          }
+          return;
+        }
 
+        const payload = await response.json();
         const eventUpdates = (payload.updates || []).map((item: any) => ({
           text: item.text,
           actionUrl: item.actionUrl,
         }));
-
-        if (eventUpdates.length > 0) {
+        if (isMounted) {
           setUpdates(eventUpdates);
-          return;
         }
-
-        const summaryResponse = await fetch(`/api/momentum/summary?${params.toString()}`, {
-          cache: 'no-store',
-        });
-        if (!summaryResponse.ok) {
-          setUpdates([]);
-          return;
-        }
-
-        const summary = (await summaryResponse.json()) as MomentumSummary;
-        const actionUpdates = (summary.topActions || []).map((action) => ({
-          text: action.title,
-          actionUrl: action.actionUrl,
-        }));
-        setUpdates(actionUpdates);
       } catch {
-        setUpdates([]);
+        if (isMounted) {
+          setUpdates([]);
+        }
+      } finally {
+        if (isMounted) {
+          setResolved(true);
+        }
       }
     }
 
     load();
+    return () => {
+      isMounted = false;
+    };
   }, [persona, orgRef]);
 
-  const hasContent = useMemo(() => updates.length > 0 && !dismissed, [updates.length, dismissed]);
+  const hasContent = useMemo(
+    () => resolved && updates.length > 0 && !dismissed,
+    [dismissed, resolved, updates.length]
+  );
+
+  useEffect(() => {
+    if (!resolved) return;
+    onVisibilityChange?.(hasContent);
+  }, [hasContent, onVisibilityChange, resolved]);
 
   if (!hasContent) return null;
 

@@ -20,7 +20,6 @@ import {
 import { MissionCard } from './MissionCard';
 import { ValuesCard } from './ValuesCard';
 import { CausesCard } from './CausesCard';
-import { SkillsCard } from './SkillsCard';
 
 interface ProfileViewProps {
   data: {
@@ -154,7 +153,6 @@ export function ProfileView({ data }: ProfileViewProps) {
               <MissionCard mission={profile.mission} />
               <ValuesCard values={profile.values} />
               <CausesCard causes={profile.causes} />
-              <SkillsCard skills={profile.skills} />
             </div>
 
             {/* Main Content - Tabs */}

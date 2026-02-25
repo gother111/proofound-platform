@@ -12,42 +12,118 @@ vi.mock('next/navigation', () => ({
   notFound: notFoundMock,
 }));
 
-vi.mock('@/lib/portfolio/public-organization', () => ({
-  getPublicOrganizationPortfolioBySlug: vi.fn(),
+vi.mock('@/lib/supabase/server', () => ({
+  createClient: vi.fn(),
 }));
 
+import { createClient } from '@/lib/supabase/server';
 import OrganizationPortfolioPublicPage from '@/app/portfolio/org/[slug]/page';
-import { getPublicOrganizationPortfolioBySlug } from '@/lib/portfolio/public-organization';
+
+function mockSupabaseClient({
+  organization,
+  activeAssignments = 4,
+  teamMembers = 8,
+}: {
+  organization: any;
+  activeAssignments?: number;
+  teamMembers?: number;
+}) {
+  return {
+    from: vi.fn((table: string) => {
+      if (table === 'organizations') {
+        const maybeSingle = vi.fn().mockResolvedValue({ data: organization });
+        const eq = vi.fn().mockReturnValue({ maybeSingle });
+        const select = vi.fn().mockReturnValue({ eq });
+        return { select };
+      }
+
+      if (table === 'assignments') {
+        const eqStatus = vi.fn().mockResolvedValue({ count: activeAssignments });
+        const eqOrgId = vi.fn().mockReturnValue({ eq: eqStatus });
+        const select = vi.fn().mockReturnValue({ eq: eqOrgId });
+        return { select };
+      }
+
+      if (table === 'organization_members') {
+        const eqStatus = vi.fn().mockResolvedValue({ count: teamMembers });
+        const eqOrgId = vi.fn().mockReturnValue({ eq: eqStatus });
+        const select = vi.fn().mockReturnValue({ eq: eqOrgId });
+        return { select };
+      }
+
+      throw new Error(`Unexpected table ${table}`);
+    }),
+  };
+}
 
 describe('Organization public portfolio page', () => {
-  it('renders public org portfolio content', async () => {
-    (getPublicOrganizationPortfolioBySlug as any).mockResolvedValue({
-      slug: 'acme',
-      displayName: 'Acme',
-      tagline: 'Build trust',
-      mission: 'Ship impact',
-      vision: null,
-      causes: ['Climate'],
-      website: 'https://acme.org/',
-      typeLabel: 'company',
-      foundedYear: 2019,
-      logoUrl: null,
-      hasVisibleContent: true,
-    });
+  it('renders public org content with return-to-menu link when returnTo is safe', async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      mockSupabaseClient({
+        organization: {
+          id: 'org-1',
+          slug: 'acme',
+          display_name: 'Acme',
+          tagline: 'Build trust',
+          mission: 'Ship impact',
+          website: 'https://acme.org/',
+          type: 'company',
+          values: [{ label: 'Transparency' }],
+          causes: ['Climate'],
+          verified: true,
+        },
+      }) as any
+    );
 
     const element = await OrganizationPortfolioPublicPage({
       params: Promise.resolve({ slug: 'acme' }),
+      searchParams: Promise.resolve({ returnTo: '/app/o/acme/home' }),
     });
 
     render(element);
 
     expect(screen.getByRole('heading', { name: 'Acme' })).toBeInTheDocument();
-    expect(screen.getByText(/public portfolio/i)).toBeInTheDocument();
-    expect(screen.getByText('Ship impact')).toBeInTheDocument();
+    expect(screen.getByText(/public organization portfolio/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /return to menu/i })).toHaveAttribute(
+      'href',
+      '/app/o/acme/home'
+    );
+  });
+
+  it('falls back to return-home link when returnTo is unsafe', async () => {
+    vi.mocked(createClient).mockResolvedValue(
+      mockSupabaseClient({
+        organization: {
+          id: 'org-1',
+          slug: 'acme',
+          display_name: 'Acme',
+          tagline: null,
+          mission: null,
+          website: null,
+          type: null,
+          values: [],
+          causes: [],
+          verified: false,
+        },
+      }) as any
+    );
+
+    const element = await OrganizationPortfolioPublicPage({
+      params: Promise.resolve({ slug: 'acme' }),
+      searchParams: Promise.resolve({ returnTo: '/portfolio/org/acme' }),
+    });
+
+    render(element);
+
+    expect(screen.getByRole('link', { name: /return home/i })).toHaveAttribute('href', '/');
   });
 
   it('calls notFound when slug has no public portfolio', async () => {
-    (getPublicOrganizationPortfolioBySlug as any).mockResolvedValue(null);
+    vi.mocked(createClient).mockResolvedValue(
+      mockSupabaseClient({
+        organization: null,
+      }) as any
+    );
 
     await expect(
       OrganizationPortfolioPublicPage({ params: Promise.resolve({ slug: 'missing' }) })
