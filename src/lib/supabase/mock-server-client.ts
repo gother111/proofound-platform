@@ -101,6 +101,17 @@ const mockSupabaseClient = {
 
       return { data: { user: { id: MOCK_USER_ID }, session: {} }, error: null };
     },
+    exchangeCodeForSession: async (code: string) => {
+      const normalized = (code || '').trim().toLowerCase();
+      if (!normalized || normalized.includes('invalid')) {
+        return {
+          data: { session: null, user: null },
+          error: { message: 'Invalid auth code', status: 400 },
+        };
+      }
+
+      return { data: { session: {}, user: { id: MOCK_USER_ID } }, error: null };
+    },
     resend: async () => ({ data: {}, error: null }),
     onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
   },

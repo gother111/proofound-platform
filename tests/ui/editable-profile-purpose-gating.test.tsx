@@ -159,9 +159,40 @@ describe('EditableProfileView purpose gating', () => {
     fireEvent.click(screen.getByRole('button', { name: 'empty-open-mission' }));
 
     expect(screen.getByTestId('empty-profile-state')).toBeInTheDocument();
+    expect(screen.getByTestId('values-editor-open')).toBeInTheDocument();
     expect(toastInfoMock).toHaveBeenCalledWith(
       'Add at least one value before editing your mission. Values and causes must be completed first.'
     );
+  });
+
+  it('opens values editor from empty-state values action', () => {
+    mockUseProfileData(
+      createProfile({
+        basicInfo: { name: 'Test User', avatar: null, tagline: '' },
+      })
+    );
+
+    render(<EditableProfileView />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'empty-open-values' }));
+
+    expect(screen.getByTestId('empty-profile-state')).toBeInTheDocument();
+    expect(screen.getByTestId('values-editor-open')).toBeInTheDocument();
+  });
+
+  it('opens causes editor from empty-state causes action', () => {
+    mockUseProfileData(
+      createProfile({
+        basicInfo: { name: 'Test User', avatar: null, tagline: '' },
+      })
+    );
+
+    render(<EditableProfileView />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'empty-open-causes' }));
+
+    expect(screen.getByTestId('empty-profile-state')).toBeInTheDocument();
+    expect(screen.getByTestId('causes-editor-open')).toBeInTheDocument();
   });
 
   it('opens causes editor first when values exist but causes are missing', () => {

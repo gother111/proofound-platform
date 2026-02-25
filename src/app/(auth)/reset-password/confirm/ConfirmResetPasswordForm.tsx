@@ -62,11 +62,12 @@ export function ConfirmResetPasswordForm() {
 
   useEffect(() => {
     const codeParam = searchParams.get('code');
+    const tokenHashParam = searchParams.get('token_hash') ?? searchParams.get('token');
 
-    if (!codeParam) {
+    if (!codeParam && !tokenHashParam) {
       if (typeof window !== 'undefined') {
         const hash = window.location.hash;
-        if (hash && hash.includes('code=')) {
+        if (hash && (hash.includes('code=') || hash.includes('token_hash='))) {
           return;
         }
       }
@@ -77,10 +78,27 @@ export function ConfirmResetPasswordForm() {
 
     let isMounted = true;
 
-    async function exchangeCode(currentCode: string) {
+    async function bootstrapRecoverySession() {
       try {
         const supabase = createClient();
-        const { error } = await supabase.auth.exchangeCodeForSession(currentCode);
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        let error: { message?: string } | null = null;
+
+        if (!session) {
+          if (codeParam) {
+            const exchangeResult = await supabase.auth.exchangeCodeForSession(codeParam);
+            error = exchangeResult.error;
+          } else if (tokenHashParam) {
+            const verifyResult = await supabase.auth.verifyOtp({
+              type: 'recovery',
+              token_hash: tokenHashParam,
+            });
+            error = verifyResult.error;
+          }
+        }
 
         if (!isMounted) {
           return;
@@ -102,7 +120,7 @@ export function ConfirmResetPasswordForm() {
       }
     }
 
-    exchangeCode(codeParam);
+    bootstrapRecoverySession();
 
     return () => {
       isMounted = false;

@@ -74,6 +74,31 @@ const mockSupabaseClient = {
         error: null,
       };
     },
+    resetPasswordForEmail: async () => ({ data: {}, error: null }),
+    verifyOtp: async (payload: { token_hash?: string }) => {
+      const token = (payload?.token_hash ?? '').trim();
+      const shouldFail = !token || token.includes('invalid') || token.length < 8;
+
+      if (shouldFail) {
+        return {
+          data: { user: null, session: null },
+          error: { message: 'Invalid or expired verification link', status: 400 },
+        };
+      }
+
+      return { data: { user: { id: MOCK_USER_ID }, session: {} }, error: null };
+    },
+    exchangeCodeForSession: async (code: string) => {
+      const normalized = (code || '').trim().toLowerCase();
+      if (!normalized || normalized.includes('invalid')) {
+        return {
+          data: { session: null, user: null },
+          error: { message: 'Invalid auth code', status: 400 },
+        };
+      }
+      return { data: { session: {}, user: { id: MOCK_USER_ID } }, error: null };
+    },
+    resend: async () => ({ data: {}, error: null }),
     onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
   },
   from: (table: string) => ({

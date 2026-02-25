@@ -139,6 +139,18 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 - Meeting creation:
   - Schedule an interview with `platform=zoom` and confirm the record has `meeting_link` populated.
 
+## Manual Smoke Checks (Auth Email via Supabase SMTP)
+
+- Trigger signup from `/signup` with a fresh email and confirm UI reaches "Check your email" success state.
+- Trigger forgot password from `/reset-password` with a known account and confirm UI reaches success state.
+- Confirm delivery path in logs:
+  - Supabase Auth logs (signup confirmation + recovery emails)
+  - Resend logs for sender `no-reply@proofound.io`
+- If Supabase SMTP send fails (`Error sending confirmation email` or `Error sending recovery email`), verify fallback delivery:
+  - Supabase admin `generateLink(...)` succeeded
+  - Resend API send succeeded for the generated action link
+  - Recipient receives a valid Supabase verify/recovery link.
+
 ## Manual Smoke Checks (Profile Sharing)
 
 - Health endpoint:

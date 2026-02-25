@@ -32,6 +32,7 @@ export type SignUpState = {
 };
 
 type ServerSupabaseClient = Awaited<ReturnType<typeof createClient>>;
+type AuthLinkType = 'signup' | 'recovery';
 
 export type OAuthState = {
   error: string | null;
@@ -131,38 +132,34 @@ export async function signUp(
       },
     });
 
-    // Fallback: If rate limited, try creating user via Admin API (bypasses rate limits)
-    if (error && (error.message?.includes('Over the email limit') || error.status === 429)) {
-      console.warn('Signup rate limited. Attempting fallback via Admin API...');
-      try {
-        const { createAdminClient } = await import('@/lib/supabase/admin');
-        const adminSupabase = createAdminClient();
-        const { data: adminData, error: adminError } = await adminSupabase.auth.admin.createUser({
-          email: result.data.email,
-          password: result.data.password,
-          email_confirm: true, // Auto-confirm to bypass email sending limits
-          user_metadata: {
-            persona: result.data.persona,
-          },
-        });
-
-        if (!adminError && adminData.user) {
-          console.log('Fallback signup successful via Admin API');
-          signUpResult = { user: adminData.user, session: null };
-          error = null;
-        } else {
-          console.error('Admin fallback failed:', adminError);
-        }
-      } catch (fallbackErr) {
-        console.error('Admin fallback exception:', fallbackErr);
-      }
-    }
-
     if (error) {
       console.error('Supabase SignUp Error:', error);
       if (/already registered/i.test(error.message)) {
         return {
           error: 'An account with this email already exists. Try logging in instead.',
+          success: false,
+        };
+      }
+
+      if (isSignUpEmailDeliveryFailure(error)) {
+        const fallbackSent = await sendAuthLinkFallbackViaResend({
+          type: 'signup',
+          email: result.data.email,
+          password: result.data.password,
+          persona: result.data.persona,
+          siteUrl,
+          nextPath,
+        });
+
+        if (fallbackSent) {
+          return { error: null, success: true };
+        }
+      }
+
+      if (shouldTreatSignUpErrorAsRetry(error)) {
+        return {
+          error:
+            'We are temporarily unable to send verification emails. Please wait a minute and try again.',
           success: false,
         };
       }
@@ -176,10 +173,11 @@ export async function signUp(
     const identities = signUpResult.user?.identities ?? [];
     if (identities.length === 0) {
       const verificationEmail = signUpResult.user?.email ?? result.data.email;
-      await resendVerificationEmail(supabase, verificationEmail, siteUrl, nextPath);
+      const resent = await resendVerificationEmail(supabase, verificationEmail, siteUrl, nextPath);
       return {
-        error:
-          'An account with this email already exists. We just sent a fresh verification link to your inbox.',
+        error: resent
+          ? 'An account with this email already exists. We just sent a fresh verification link to your inbox.'
+          : 'An account with this email already exists. We were unable to resend a verification link right now.',
         success: false,
       };
     }
@@ -405,7 +403,7 @@ async function resendVerificationEmail(
   nextPath?: string | null
 ) {
   try {
-    await supabase.auth.resend({
+    const { error } = await supabase.auth.resend({
       type: 'signup',
       email,
       options: {
@@ -414,8 +412,16 @@ async function resendVerificationEmail(
           : `${siteUrl}/auth/callback`,
       },
     });
+
+    if (error) {
+      console.error('Failed to resend verification email:', error);
+      return false;
+    }
+
+    return true;
   } catch (resendError) {
     console.error('Failed to resend verification email:', resendError);
+    return false;
   }
 }
 
@@ -481,6 +487,18 @@ export async function requestPasswordReset(formData: FormData) {
   });
 
   if (error) {
+    if (isRecoveryEmailDeliveryFailure(error)) {
+      const fallbackSent = await sendAuthLinkFallbackViaResend({
+        type: 'recovery',
+        email: result.data.email,
+        siteUrl,
+      });
+
+      if (fallbackSent) {
+        return { success: true };
+      }
+    }
+
     // Keep response non-enumerating and resilient to transient provider throttling.
     if (shouldTreatPasswordResetErrorAsSuccess(error)) {
       console.warn('Password reset request throttled or masked:', {
@@ -504,6 +522,109 @@ function shouldTreatPasswordResetErrorAsSuccess(error: AuthError): boolean {
     /rate limit|too many requests|throttle/.test(message) ||
     /for security purposes/.test(message)
   );
+}
+
+function shouldTreatSignUpErrorAsRetry(error: AuthError): boolean {
+  const message = error.message.toLowerCase();
+
+  return (
+    error.status === 429 ||
+    /error sending confirmation email/.test(message) ||
+    /over the email limit|rate limit|too many requests|throttle/.test(message)
+  );
+}
+
+function isSignUpEmailDeliveryFailure(error: AuthError): boolean {
+  return /error sending confirmation email/i.test(error.message);
+}
+
+function isRecoveryEmailDeliveryFailure(error: AuthError): boolean {
+  return /error sending recovery email/i.test(error.message);
+}
+
+function buildAuthFallbackEmailContent(type: AuthLinkType, actionLink: string) {
+  if (type === 'signup') {
+    return {
+      subject: 'Verify your email - Proofound',
+      html: `<p>Welcome to Proofound.</p><p>Please verify your email by clicking the link below:</p><p><a href="${actionLink}">Verify email</a></p>`,
+      text: `Welcome to Proofound.\n\nPlease verify your email by opening this link:\n${actionLink}`,
+    };
+  }
+
+  return {
+    subject: 'Reset your password - Proofound',
+    html: `<p>We received a request to reset your password.</p><p>Use the link below to continue:</p><p><a href="${actionLink}">Reset password</a></p>`,
+    text: `We received a request to reset your password.\n\nUse this link to continue:\n${actionLink}`,
+  };
+}
+
+async function sendAuthLinkFallbackViaResend(params: {
+  type: AuthLinkType;
+  email: string;
+  siteUrl: string;
+  nextPath?: string | null;
+  password?: string;
+  persona?: string;
+}): Promise<boolean> {
+  const callbackUrl =
+    params.type === 'signup'
+      ? params.nextPath
+        ? `${params.siteUrl}/auth/callback?next=${encodeURIComponent(params.nextPath)}`
+        : `${params.siteUrl}/auth/callback`
+      : `${params.siteUrl}/auth/callback?next=${encodeURIComponent('/reset-password/confirm')}`;
+
+  try {
+    const { createAdminClient } = await import('@/lib/supabase/admin');
+    const { sendEmail } = await import('@/lib/email/sender');
+    const adminSupabase = createAdminClient();
+
+    const generatePayload: Record<string, unknown> = {
+      type: params.type,
+      email: params.email,
+      options: {
+        redirectTo: callbackUrl,
+      },
+    };
+
+    if (params.type === 'signup') {
+      generatePayload.password = params.password;
+      generatePayload.options = {
+        redirectTo: callbackUrl,
+        data: params.persona ? { persona: params.persona } : undefined,
+      };
+    }
+
+    const { data, error } = await adminSupabase.auth.admin.generateLink(generatePayload as any);
+
+    if (error) {
+      console.error(`Fallback generateLink failed for ${params.type}:`, error);
+      return false;
+    }
+
+    const actionLink = data?.properties?.action_link;
+    if (!actionLink) {
+      console.error(`Fallback generateLink missing action_link for ${params.type}`);
+      return false;
+    }
+
+    const content = buildAuthFallbackEmailContent(params.type, actionLink);
+    const sendResult = await sendEmail({
+      to: params.email,
+      subject: content.subject,
+      html: content.html,
+      text: content.text,
+    });
+
+    if (!sendResult.success) {
+      console.error(`Fallback auth email send failed for ${params.type}:`, sendResult.error);
+      return false;
+    }
+
+    return true;
+  } catch (fallbackError) {
+    console.error(`Fallback auth email flow failed for ${params.type}:`, fallbackError);
+    return false;
+  }
 }
 
 export async function confirmPasswordReset(formData: FormData) {
@@ -536,6 +657,8 @@ export async function confirmPasswordReset(formData: FormData) {
 
 export async function verifyEmail(formData: FormData) {
   const token = formData.get('token') as string;
+  const verificationTypeRaw = formData.get('type');
+  const verificationType = verificationTypeRaw === 'signup' ? 'signup' : 'email';
 
   if (!token) {
     return { error: 'No verification token provided' };
@@ -545,7 +668,7 @@ export async function verifyEmail(formData: FormData) {
 
   const { error } = await supabase.auth.verifyOtp({
     token_hash: token,
-    type: 'email',
+    type: verificationType,
   });
 
   if (error) {

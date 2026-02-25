@@ -16,6 +16,7 @@ export function VerifyEmailContent() {
 
   useEffect(() => {
     const token = searchParams.get('token');
+    const verificationType = searchParams.get('type') === 'signup' ? 'signup' : 'email';
 
     if (!token) {
       setStatus('error');
@@ -26,6 +27,7 @@ export function VerifyEmailContent() {
     async function verify() {
       const formData = new FormData();
       formData.append('token', token!);
+      formData.append('type', verificationType);
 
       const result = await verifyEmail(formData);
 

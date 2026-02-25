@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { requestPasswordReset, signUp } from '@/actions/auth';
+import { requestPasswordReset, signUp, verifyEmail } from '@/actions/auth';
 
 // Mock dependencies
 vi.mock('next/headers', () => ({
@@ -21,6 +21,7 @@ const mockSupabase = {
     signUp: vi.fn(),
     resend: vi.fn(),
     resetPasswordForEmail: vi.fn(),
+    verifyOtp: vi.fn(),
   },
   from: vi.fn(() => ({
     select: vi.fn(() => ({
@@ -36,14 +37,23 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(() => Promise.resolve(mockSupabase)),
 }));
 
+const generateLinkMock = vi.fn();
+
 const mockAdminSupabase = {
   from: vi.fn(() => ({
     insert: vi.fn(() => Promise.resolve({ error: null })),
   })),
+  auth: {
+    admin: {
+      generateLink: generateLinkMock,
+    },
+  },
 };
 
+const createAdminClientMock = vi.fn(() => mockAdminSupabase);
+
 vi.mock('@/lib/supabase/admin', () => ({
-  createAdminClient: vi.fn(() => mockAdminSupabase),
+  createAdminClient: createAdminClientMock,
 }));
 
 vi.mock('@/lib/utils/privacy', () => ({
@@ -55,10 +65,27 @@ vi.mock('@/lib/analytics/events', () => ({
   emitUserSignup: vi.fn(),
 }));
 
+const sendEmailMock = vi.fn();
+
+vi.mock('@/lib/email/sender', () => ({
+  sendEmail: sendEmailMock,
+}));
+
 describe('Auth Actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockSupabase.auth.resetPasswordForEmail.mockResolvedValue({ error: null });
+    mockSupabase.auth.verifyOtp.mockResolvedValue({ error: null });
+    mockSupabase.auth.resend.mockResolvedValue({ error: null });
+    generateLinkMock.mockResolvedValue({
+      data: {
+        properties: {
+          action_link: 'https://example.com/auth/v1/verify?token=test&type=signup',
+        },
+      },
+      error: null,
+    });
+    sendEmailMock.mockResolvedValue({ success: true, id: 'email-1' });
   });
 
   describe('signUp', () => {
@@ -90,7 +117,9 @@ describe('Auth Actions', () => {
       // Verify auth.signUp called with correct persona
       expect(mockSupabase.auth.signUp).toHaveBeenCalledWith(
         expect.objectContaining({
+          email: 'test@org.com',
           options: expect.objectContaining({
+            emailRedirectTo: 'http://localhost/auth/callback',
             data: { persona: 'org_member' },
           }),
         })
@@ -116,6 +145,59 @@ describe('Auth Actions', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('valid email');
+    });
+
+    it('returns retry-safe error and keeps email verification semantics when signup is rate-limited', async () => {
+      mockSupabase.auth.signUp.mockResolvedValue({
+        data: { user: null },
+        error: { message: 'Over the email limit', status: 429 },
+      });
+
+      const formData = new FormData();
+      formData.append('email', 'throttle@example.com');
+      formData.append('password', 'password123');
+      formData.append('persona', 'individual');
+      formData.append('gdprConsent', 'true');
+      formData.append('marketingOptIn', 'false');
+
+      const result = await signUp(undefined, formData);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('temporarily unable to send verification emails');
+      expect(createAdminClientMock).not.toHaveBeenCalled();
+    });
+
+    it('falls back to admin generateLink + Resend API when Supabase cannot send confirmation email', async () => {
+      mockSupabase.auth.signUp.mockResolvedValue({
+        data: { user: null },
+        error: { message: 'Error sending confirmation email', status: 500 },
+      });
+
+      const formData = new FormData();
+      formData.append('email', 'smtp-issue@example.com');
+      formData.append('password', 'password123');
+      formData.append('persona', 'individual');
+      formData.append('gdprConsent', 'true');
+      formData.append('marketingOptIn', 'false');
+
+      const result = await signUp(undefined, formData);
+
+      expect(result.success).toBe(true);
+      expect(result.error).toBeNull();
+      expect(createAdminClientMock).toHaveBeenCalled();
+      expect(generateLinkMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'signup',
+          email: 'smtp-issue@example.com',
+          password: 'password123',
+        })
+      );
+      expect(sendEmailMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: 'smtp-issue@example.com',
+          subject: 'Verify your email - Proofound',
+        })
+      );
     });
   });
 
@@ -152,6 +234,75 @@ describe('Auth Actions', () => {
 
       expect(result).toEqual({ success: true });
       expect(mockSupabase.auth.resetPasswordForEmail).toHaveBeenCalledOnce();
+      expect(mockSupabase.auth.resetPasswordForEmail).toHaveBeenCalledWith(
+        'valid@example.com',
+        expect.objectContaining({
+          redirectTo: 'http://localhost/auth/callback?next=%2Freset-password%2Fconfirm',
+        })
+      );
+    });
+
+    it('falls back to admin generateLink + Resend API when Supabase recovery send fails', async () => {
+      mockSupabase.auth.resetPasswordForEmail.mockResolvedValue({
+        error: { message: 'Error sending recovery email', status: 500 },
+      });
+      generateLinkMock.mockResolvedValue({
+        data: {
+          properties: {
+            action_link: 'https://example.com/auth/v1/verify?token=recovery&type=recovery',
+          },
+        },
+        error: null,
+      });
+
+      const formData = new FormData();
+      formData.append('email', 'valid@example.com');
+
+      const result = await requestPasswordReset(formData);
+
+      expect(result).toEqual({ success: true });
+      expect(createAdminClientMock).toHaveBeenCalled();
+      expect(generateLinkMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'recovery',
+          email: 'valid@example.com',
+        })
+      );
+      expect(sendEmailMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: 'valid@example.com',
+          subject: 'Reset your password - Proofound',
+        })
+      );
+    });
+  });
+
+  describe('verifyEmail', () => {
+    it('uses email verification type by default', async () => {
+      const formData = new FormData();
+      formData.append('token', 'email-token');
+
+      const result = await verifyEmail(formData);
+
+      expect(result).toEqual({ success: true });
+      expect(mockSupabase.auth.verifyOtp).toHaveBeenCalledWith({
+        token_hash: 'email-token',
+        type: 'email',
+      });
+    });
+
+    it('uses signup verification type when provided', async () => {
+      const formData = new FormData();
+      formData.append('token', 'signup-token');
+      formData.append('type', 'signup');
+
+      const result = await verifyEmail(formData);
+
+      expect(result).toEqual({ success: true });
+      expect(mockSupabase.auth.verifyOtp).toHaveBeenCalledWith({
+        token_hash: 'signup-token',
+        type: 'signup',
+      });
     });
   });
 });

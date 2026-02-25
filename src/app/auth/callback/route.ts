@@ -34,17 +34,15 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  if (type === 'email' && tokenHash) {
+  if ((type === 'email' || type === 'signup') && tokenHash) {
     const verifyUrl = new URL('/verify-email', requestUrl.origin);
     verifyUrl.searchParams.set('token', tokenHash);
+    verifyUrl.searchParams.set('type', type);
     return NextResponse.redirect(verifyUrl);
   }
 
   if (type === 'recovery') {
     const resetUrl = new URL('/reset-password/confirm', requestUrl.origin);
-    if (code) {
-      resetUrl.searchParams.set('code', code);
-    }
     if (tokenHash) {
       resetUrl.searchParams.set('token_hash', tokenHash);
       resetUrl.searchParams.set('token', tokenHash);

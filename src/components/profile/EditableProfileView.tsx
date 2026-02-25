@@ -198,6 +198,46 @@ export function EditableProfileView() {
     }
   };
 
+  const profileDialogs = (
+    <ProfileDialogs
+      profile={profile}
+      isEditProfileOpen={isEditProfileOpen}
+      setIsEditProfileOpen={setIsEditProfileOpen}
+      isMissionEditorOpen={isMissionEditorOpen}
+      setIsMissionEditorOpen={setIsMissionEditorOpen}
+      isVisionEditorOpen={isVisionEditorOpen}
+      setIsVisionEditorOpen={setIsVisionEditorOpen}
+      isValuesEditorOpen={isValuesEditorOpen}
+      setIsValuesEditorOpen={setIsValuesEditorOpen}
+      isCausesEditorOpen={isCausesEditorOpen}
+      setIsCausesEditorOpen={setIsCausesEditorOpen}
+      isImpactStoryFormOpen={isImpactStoryFormOpen}
+      setIsImpactStoryFormOpen={setIsImpactStoryFormOpen}
+      isExperienceFormOpen={isExperienceFormOpen}
+      setIsExperienceFormOpen={setIsExperienceFormOpen}
+      isEducationFormOpen={isEducationFormOpen}
+      setIsEducationFormOpen={handleEducationFormOpenChange}
+      isVolunteerFormOpen={isVolunteerFormOpen}
+      setIsVolunteerFormOpen={handleVolunteeringFormOpenChange}
+      isShareDialogOpen={isShareDialogOpen}
+      setIsShareDialogOpen={setIsShareDialogOpen}
+      editingEducation={editingEducation}
+      editingVolunteering={editingVolunteering}
+      availableSkillNames={availableSkillNames}
+      onUpdateBasicInfo={updateBasicInfo}
+      onUpdateMission={updateMission}
+      onUpdateVision={updateVision}
+      onReplaceValues={replaceValues}
+      onReplaceCauses={replaceCauses}
+      onAddImpactStory={addImpactStory}
+      onAddExperience={addExperience}
+      onAddEducation={addEducation}
+      onUpdateEducation={updateEducation}
+      onAddVolunteering={addVolunteering}
+      onUpdateVolunteering={updateVolunteering}
+    />
+  );
+
   if (isLoading) {
     return <ProfileSkeleton />;
   }
@@ -227,22 +267,25 @@ export function EditableProfileView() {
 
   if (isEmptyProfile) {
     return (
-      <EmptyProfileStateView
-        basicInfo={profile.basicInfo}
-        profileCompletion={profileCompletion}
-        isPending={isPending}
-        pending={pending}
-        onEditProfile={() => setIsEditProfileOpen(true)}
-        onOpenMission={openMissionEditor}
-        onOpenValues={() => setIsValuesEditorOpen(true)}
-        onOpenCauses={() => setIsCausesEditorOpen(true)}
-        onOpenSkills={() => router.push('/app/i/expertise')}
-        onAddImpactStory={() => setIsImpactStoryFormOpen(true)}
-        onAddExperience={() => setIsExperienceFormOpen(true)}
-        onAddEducation={openAddEducation}
-        onAddVolunteering={openAddVolunteering}
-        onUpdateBasicInfo={updateBasicInfo}
-      />
+      <>
+        <EmptyProfileStateView
+          basicInfo={profile.basicInfo}
+          profileCompletion={profileCompletion}
+          isPending={isPending}
+          pending={pending}
+          onEditProfile={() => setIsEditProfileOpen(true)}
+          onOpenMission={openMissionEditor}
+          onOpenValues={() => setIsValuesEditorOpen(true)}
+          onOpenCauses={() => setIsCausesEditorOpen(true)}
+          onOpenSkills={() => router.push('/app/i/expertise')}
+          onAddImpactStory={() => setIsImpactStoryFormOpen(true)}
+          onAddExperience={() => setIsExperienceFormOpen(true)}
+          onAddEducation={openAddEducation}
+          onAddVolunteering={openAddVolunteering}
+          onUpdateBasicInfo={updateBasicInfo}
+        />
+        {profileDialogs}
+      </>
     );
   }
 
@@ -307,43 +350,7 @@ export function EditableProfileView() {
         </div>
       </div>
 
-      <ProfileDialogs
-        profile={profile}
-        isEditProfileOpen={isEditProfileOpen}
-        setIsEditProfileOpen={setIsEditProfileOpen}
-        isMissionEditorOpen={isMissionEditorOpen}
-        setIsMissionEditorOpen={setIsMissionEditorOpen}
-        isVisionEditorOpen={isVisionEditorOpen}
-        setIsVisionEditorOpen={setIsVisionEditorOpen}
-        isValuesEditorOpen={isValuesEditorOpen}
-        setIsValuesEditorOpen={setIsValuesEditorOpen}
-        isCausesEditorOpen={isCausesEditorOpen}
-        setIsCausesEditorOpen={setIsCausesEditorOpen}
-        isImpactStoryFormOpen={isImpactStoryFormOpen}
-        setIsImpactStoryFormOpen={setIsImpactStoryFormOpen}
-        isExperienceFormOpen={isExperienceFormOpen}
-        setIsExperienceFormOpen={setIsExperienceFormOpen}
-        isEducationFormOpen={isEducationFormOpen}
-        setIsEducationFormOpen={handleEducationFormOpenChange}
-        isVolunteerFormOpen={isVolunteerFormOpen}
-        setIsVolunteerFormOpen={handleVolunteeringFormOpenChange}
-        isShareDialogOpen={isShareDialogOpen}
-        setIsShareDialogOpen={setIsShareDialogOpen}
-        editingEducation={editingEducation}
-        editingVolunteering={editingVolunteering}
-        availableSkillNames={availableSkillNames}
-        onUpdateBasicInfo={updateBasicInfo}
-        onUpdateMission={updateMission}
-        onUpdateVision={updateVision}
-        onReplaceValues={replaceValues}
-        onReplaceCauses={replaceCauses}
-        onAddImpactStory={addImpactStory}
-        onAddExperience={addExperience}
-        onAddEducation={addEducation}
-        onUpdateEducation={updateEducation}
-        onAddVolunteering={addVolunteering}
-        onUpdateVolunteering={updateVolunteering}
-      />
+      {profileDialogs}
     </div>
   );
 }

@@ -30,6 +30,24 @@ node -v  # expect v20.20.0
 - Use `node update-env.cjs` only to generate a placeholder `.env.local` template. It intentionally does not include real credentials.
 - Strict E2E suites load `.env.local` by default; set `STRICT_ENV_FILE` to override the env file path when needed.
 
+## Auth Email Transport (Supabase SMTP)
+
+- Signup verification and password reset emails are sent by Supabase Auth by default.
+- Proofound code must keep auth email triggers on Supabase methods:
+  - `supabase.auth.signUp(...)`
+  - `supabase.auth.resend({ type: 'signup', ... })`
+  - `supabase.auth.resetPasswordForEmail(...)`
+- SMTP transport is configured in Supabase dashboard, not in repo code.
+- Resilience fallback in `src/actions/auth.ts`:
+  - If Supabase returns `Error sending confirmation email` or `Error sending recovery email`, server actions generate Supabase auth links via `admin.generateLink(...)` and send them via `src/lib/email/sender` (Resend API).
+  - Fallback still uses Supabase verify endpoints in the link and does not auto-confirm users.
+- Current expected SMTP settings:
+  - Host: `smtp.resend.com`
+  - Port: `465`
+  - Username: `resend`
+  - Sender: `no-reply@proofound.io`
+- `RESEND_API_KEY` in app env is for non-auth transactional emails (invitations, notifications, reports), not Supabase Auth SMTP.
+
 ## Vercel Deploy Retry Automation
 
 Use this when production can lag behind `master` because Vercel deploy quota is temporarily exhausted.
