@@ -25,12 +25,13 @@ function buildImpactAdminClient(overrides?: {
   impactRequest?: any;
   impactStory?: any;
   requesterProfile?: any;
+  storyOwnerProfile?: any;
   onImpactStoryUpdate?: (payload: any) => void;
 }) {
   const impactRequest = overrides?.impactRequest || {
     id: 'req-1',
     impact_story_id: 'story-1',
-    requester_profile_id: 'user-1',
+    requester_profile_id: 'requester-1',
     verifier_email: 'verifier@example.com',
     verifier_name: 'Verifier',
     verifier_relationship: 'Program Director',
@@ -48,11 +49,22 @@ function buildImpactAdminClient(overrides?: {
   const impactStory = overrides?.impactStory || {
     id: 'story-1',
     title: 'Impact Story',
-    user_id: 'user-1',
+    user_id: 'story-owner-1',
+    role_title: 'Program Lead',
+    role_scope: 'owned',
+    affiliation_details: 'Voice of Ukrainians in Sweden',
+    org_description: 'Community organization',
+    measured_outcomes: [{ id: 'o1', label: 'People supported', value: 120, unit: 'people' }],
+    supporting_artifacts: [{ id: 'artifact-1', title: 'Report' }],
   };
   const requesterProfile = overrides?.requesterProfile || {
     email: 'requester@example.com',
     display_name: 'Requester',
+    avatar_url: null,
+  };
+  const storyOwnerProfile = overrides?.storyOwnerProfile || {
+    email: 'owner@example.com',
+    display_name: 'Story Owner',
     avatar_url: null,
   };
 
@@ -95,9 +107,17 @@ function buildImpactAdminClient(overrides?: {
       if (table === 'profiles') {
         return {
           select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              maybeSingle: vi.fn().mockResolvedValue({ data: requesterProfile, error: null }),
-            }),
+            eq: vi.fn((_: string, value: string) => ({
+              maybeSingle: vi.fn().mockResolvedValue({
+                data:
+                  value === impactRequest.requester_profile_id
+                    ? requesterProfile
+                    : value === impactStory.user_id
+                      ? storyOwnerProfile
+                      : null,
+                error: null,
+              }),
+            })),
           }),
         };
       }
@@ -213,7 +233,7 @@ describe('verify impact token route', () => {
     sendEmailMock.mockResolvedValue({ success: true });
   });
 
-  it('GET returns impact-story verification payload when token matches impact request', async () => {
+  it('GET returns impact-story payload with non-empty why-you-are-receiving-this text', async () => {
     createAdminClientMock.mockReturnValue(buildImpactAdminClient());
 
     const response = await GET(new NextRequest(`http://localhost/api/verify/${TOKEN}`), {
@@ -225,12 +245,99 @@ describe('verify impact token route', () => {
     expect(body.verification.verification_type).toBe('impact_story');
     expect(body.verification.story_title).toBe('Impact Story');
     expect(body.verification.claims.roleClaim.id).toBe('role');
+    expect(body.verification.why_you_are_receiving_this).toContain('Requester');
+    expect(body.verification.why_you_are_receiving_this).toContain('Program Director');
   });
 
-  it('POST accepts impact claim confirmations and marks story verified', async () => {
+  it('GET prefers requester_profile_id over impact story owner for requester identity', async () => {
+    createAdminClientMock.mockReturnValue(
+      buildImpactAdminClient({
+        impactRequest: {
+          id: 'req-1',
+          impact_story_id: 'story-1',
+          requester_profile_id: 'requester-42',
+          verifier_email: 'verifier@example.com',
+          verifier_relationship: 'Reviewer',
+          status: 'pending',
+          claim_snapshot: {},
+          created_at: '2026-02-20T00:00:00.000Z',
+          expires_at: '2099-02-20T00:00:00.000Z',
+        },
+        impactStory: {
+          id: 'story-1',
+          title: 'Impact Story',
+          user_id: 'owner-99',
+          org_description: 'Community org',
+          measured_outcomes: [],
+          supporting_artifacts: [],
+        },
+        requesterProfile: {
+          email: 'requester42@example.com',
+          display_name: 'Requester Preferred',
+          avatar_url: null,
+        },
+        storyOwnerProfile: {
+          email: 'owner99@example.com',
+          display_name: 'Story Owner',
+          avatar_url: null,
+        },
+      })
+    );
+
+    const response = await GET(new NextRequest(`http://localhost/api/verify/${TOKEN}`), {
+      params: Promise.resolve({ token: TOKEN }),
+    });
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.verification.requester_name).toBe('Requester Preferred');
+    expect(body.verification.requester_email).toBe('requester42@example.com');
+  });
+
+  it('GET reconstructs claims from impact story when claim_snapshot is empty', async () => {
+    createAdminClientMock.mockReturnValue(
+      buildImpactAdminClient({
+        impactRequest: {
+          id: 'req-1',
+          impact_story_id: 'story-1',
+          requester_profile_id: 'requester-1',
+          verifier_email: 'verifier@example.com',
+          verifier_relationship: 'Program Director',
+          status: 'pending',
+          claim_snapshot: {},
+          created_at: '2026-02-20T00:00:00.000Z',
+          expires_at: '2099-02-20T00:00:00.000Z',
+        },
+      })
+    );
+
+    const response = await GET(new NextRequest(`http://localhost/api/verify/${TOKEN}`), {
+      params: Promise.resolve({ token: TOKEN }),
+    });
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.verification.claims.roleClaim.id).toBe('role');
+    expect(body.verification.claims.outcomeClaims.length).toBeGreaterThan(0);
+    expect(body.verification.claims.outcomeClaims[0].id).toBe('outcome:o1');
+    expect(body.verification.why_you_are_receiving_this).toMatch(/voice of ukrainians in sweden/i);
+  });
+
+  it('POST accepts impact claim confirmations from reconstructed claim data', async () => {
     let impactUpdatePayload: any = null;
     createAdminClientMock.mockReturnValue(
       buildImpactAdminClient({
+        impactRequest: {
+          id: 'req-1',
+          impact_story_id: 'story-1',
+          requester_profile_id: 'requester-1',
+          verifier_email: 'verifier@example.com',
+          verifier_relationship: 'Program Director',
+          status: 'pending',
+          claim_snapshot: {},
+          created_at: '2026-02-20T00:00:00.000Z',
+          expires_at: '2099-02-20T00:00:00.000Z',
+        },
         onImpactStoryUpdate: (payload) => {
           impactUpdatePayload = payload;
         },

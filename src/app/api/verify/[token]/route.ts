@@ -93,6 +93,267 @@ function normalizeBaseUrl(url?: string | null) {
   return base.endsWith('/') ? base.slice(0, -1) : base;
 }
 
+type ImpactClaim = {
+  id: string;
+  label: string;
+  outcomeId?: string;
+  enabled?: boolean;
+};
+
+type ImpactClaimsPayload = {
+  roleClaim: ImpactClaim;
+  outcomeClaims: ImpactClaim[];
+  artifactsClaim: ImpactClaim;
+};
+
+type ImpactStoryContext = {
+  id?: string | null;
+  title?: string | null;
+  user_id?: string | null;
+  role_title?: string | null;
+  role_scope?: string | null;
+  affiliation_details?: string | null;
+  org_description?: string | null;
+  measured_outcomes?: unknown;
+  supporting_artifacts?: unknown;
+};
+
+type ProfileContext = {
+  display_name?: string | null;
+  avatar_url?: string | null;
+  email?: string | null;
+};
+
+function isMissingAnyColumnError(error: unknown, columns: string[]) {
+  return columns.some((column) => isMissingColumnError(error, column));
+}
+
+function toStringOrNull(value: unknown): string | null {
+  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : null;
+}
+
+function parseSnapshotOutcomeClaims(value: unknown): ImpactClaim[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((row) => {
+      if (!row || typeof row !== 'object') {
+        return null;
+      }
+      const claim = row as Record<string, unknown>;
+      const id = toStringOrNull(claim.id);
+      if (!id) {
+        return null;
+      }
+      const label = toStringOrNull(claim.label) || 'Outcome confirmation';
+      const outcomeId = toStringOrNull(claim.outcomeId);
+      return outcomeId ? { id, label, outcomeId } : { id, label };
+    })
+    .filter((row): row is ImpactClaim => Boolean(row));
+}
+
+function parseStoryOutcomeClaims(measuredOutcomes: unknown): ImpactClaim[] {
+  if (!Array.isArray(measuredOutcomes)) {
+    return [];
+  }
+
+  return measuredOutcomes
+    .map((row, index) => {
+      if (!row || typeof row !== 'object') {
+        return null;
+      }
+
+      const outcome = row as Record<string, unknown>;
+      const outcomeId = toStringOrNull(outcome.id);
+      const label = toStringOrNull(outcome.label) || `Outcome ${index + 1}`;
+      const value = outcome.value;
+      const unit = toStringOrNull(outcome.unit);
+      const renderedValue =
+        typeof value === 'number' || typeof value === 'string' ? String(value).trim() : null;
+
+      const valueSuffix =
+        renderedValue && unit
+          ? ` (${renderedValue} ${unit})`
+          : renderedValue
+            ? ` (${renderedValue})`
+            : '';
+
+      const id = outcomeId ? `outcome:${outcomeId}` : `outcome:generated:${index + 1}`;
+      return outcomeId
+        ? { id, outcomeId, label: `${label}${valueSuffix}` }
+        : { id, label: `${label}${valueSuffix}` };
+    })
+    .filter((row): row is ImpactClaim => Boolean(row));
+}
+
+function buildFallbackRoleClaim(impactStory: ImpactStoryContext | null): ImpactClaim {
+  const roleTitle = toStringOrNull(impactStory?.role_title) || 'Contributor';
+  const roleScope = (toStringOrNull(impactStory?.role_scope) || 'contributed').replace(/_/g, ' ');
+  return {
+    id: 'role',
+    label: `Role participation (${roleTitle}, ${roleScope})`,
+  };
+}
+
+function buildFallbackArtifactsClaim(impactStory: ImpactStoryContext | null): ImpactClaim {
+  const hasArtifacts =
+    Array.isArray(impactStory?.supporting_artifacts) && impactStory.supporting_artifacts.length > 0;
+  return {
+    id: 'artifacts',
+    label: 'Supporting artifacts authenticity',
+    enabled: hasArtifacts,
+  };
+}
+
+function resolveImpactClaims(
+  claimSnapshot: unknown,
+  impactStory: ImpactStoryContext | null
+): ImpactClaimsPayload {
+  const snapshot = claimSnapshot && typeof claimSnapshot === 'object' ? claimSnapshot : {};
+  const snapshotRecord = snapshot as Record<string, unknown>;
+
+  const roleClaimRaw =
+    snapshotRecord.roleClaim && typeof snapshotRecord.roleClaim === 'object'
+      ? (snapshotRecord.roleClaim as Record<string, unknown>)
+      : null;
+  const roleClaimId = toStringOrNull(roleClaimRaw?.id);
+  const roleClaimLabel = toStringOrNull(roleClaimRaw?.label);
+
+  const roleClaim: ImpactClaim =
+    roleClaimId && roleClaimLabel
+      ? { id: roleClaimId, label: roleClaimLabel }
+      : buildFallbackRoleClaim(impactStory);
+
+  const outcomeClaimsFromSnapshot = parseSnapshotOutcomeClaims(snapshotRecord.outcomeClaims);
+  const outcomeClaims =
+    outcomeClaimsFromSnapshot.length > 0
+      ? outcomeClaimsFromSnapshot
+      : parseStoryOutcomeClaims(impactStory?.measured_outcomes);
+
+  const artifactsClaimRaw =
+    snapshotRecord.artifactsClaim && typeof snapshotRecord.artifactsClaim === 'object'
+      ? (snapshotRecord.artifactsClaim as Record<string, unknown>)
+      : null;
+  const artifactsClaimId = toStringOrNull(artifactsClaimRaw?.id);
+  const artifactsClaimLabel = toStringOrNull(artifactsClaimRaw?.label);
+  const artifactsClaimEnabled = artifactsClaimRaw?.enabled;
+
+  const artifactsClaim: ImpactClaim =
+    artifactsClaimId && artifactsClaimLabel
+      ? {
+          id: artifactsClaimId,
+          label: artifactsClaimLabel,
+          enabled: Boolean(artifactsClaimEnabled),
+        }
+      : buildFallbackArtifactsClaim(impactStory);
+
+  return {
+    roleClaim,
+    outcomeClaims,
+    artifactsClaim,
+  };
+}
+
+function getRequesterName(profile: ProfileContext | null) {
+  return profile?.display_name || profile?.email?.split('@')[0] || 'Unknown';
+}
+
+function buildImpactWhyYouAreReceivingThis(args: {
+  requesterName: string;
+  storyTitle: string;
+  verifierRelationship?: string | null;
+  roleTitle?: string | null;
+  organization?: string | null;
+}) {
+  const relationship = args.verifierRelationship?.trim() || 'a trusted collaborator';
+  const roleText = args.roleTitle?.trim() || 'their contribution';
+  const organization = args.organization?.trim() || 'their organization';
+
+  return `${args.requesterName} asked you to verify "${args.storyTitle}" including ${roleText} at ${organization}. You are receiving this because they listed you as ${relationship}.`;
+}
+
+async function getImpactStoryContext(
+  adminClient: ReturnType<typeof createAdminClient>,
+  impactStoryId: string
+) {
+  const primarySelect =
+    'id, title, user_id, role_title, role_scope, affiliation_details, org_description, measured_outcomes, supporting_artifacts';
+  const fallbackSelect = 'id, title, user_id, org_description';
+
+  const primaryLookup = await adminClient
+    .from('impact_stories')
+    .select(primarySelect)
+    .eq('id', impactStoryId)
+    .maybeSingle();
+
+  if (
+    !primaryLookup.error ||
+    !isMissingAnyColumnError(primaryLookup.error, [
+      'role_title',
+      'role_scope',
+      'affiliation_details',
+      'measured_outcomes',
+      'supporting_artifacts',
+    ])
+  ) {
+    return primaryLookup as { data: ImpactStoryContext | null; error: unknown };
+  }
+
+  const fallbackLookup = await adminClient
+    .from('impact_stories')
+    .select(fallbackSelect)
+    .eq('id', impactStoryId)
+    .maybeSingle();
+
+  if (fallbackLookup.error || !fallbackLookup.data) {
+    return fallbackLookup as { data: ImpactStoryContext | null; error: unknown };
+  }
+
+  return {
+    data: {
+      ...fallbackLookup.data,
+      role_title: null,
+      role_scope: null,
+      affiliation_details: null,
+      measured_outcomes: [],
+      supporting_artifacts: [],
+    } as ImpactStoryContext,
+    error: null,
+  };
+}
+
+async function getRequesterProfileForImpactVerification(
+  adminClient: ReturnType<typeof createAdminClient>,
+  requesterProfileId: string | null,
+  fallbackStoryOwnerId: string | null
+) {
+  const selectClause = 'display_name, avatar_url, email';
+
+  if (requesterProfileId) {
+    const requesterLookup = await adminClient
+      .from('profiles')
+      .select(selectClause)
+      .eq('id', requesterProfileId)
+      .maybeSingle();
+
+    if (requesterLookup.data || requesterLookup.error) {
+      return requesterLookup as { data: ProfileContext | null; error: unknown };
+    }
+  }
+
+  if (fallbackStoryOwnerId && fallbackStoryOwnerId !== requesterProfileId) {
+    return (await adminClient
+      .from('profiles')
+      .select(selectClause)
+      .eq('id', fallbackStoryOwnerId)
+      .maybeSingle()) as { data: ProfileContext | null; error: unknown };
+  }
+
+  return { data: null, error: null };
+}
+
 async function getImpactVerificationRequestByToken(
   adminClient: ReturnType<typeof createAdminClient>,
   token: string
@@ -151,28 +412,38 @@ export async function GET(
           impactVerification.status = 'expired';
         }
 
-        const { data: impactStory } = await adminClient
-          .from('impact_stories')
-          .select('id, title, user_id')
-          .eq('id', impactVerification.impact_story_id)
-          .maybeSingle();
+        const { data: impactStory, error: impactStoryError } = await getImpactStoryContext(
+          adminClient,
+          impactVerification.impact_story_id
+        );
+        if (impactStoryError) {
+          console.error('Impact story context lookup error:', impactStoryError);
+        }
 
-        const { data: requesterProfile } = impactStory?.user_id
-          ? await adminClient
-              .from('profiles')
-              .select('display_name, avatar_url, email')
-              .eq('id', impactStory.user_id)
-              .maybeSingle()
-          : { data: null };
+        const { data: requesterProfile, error: requesterProfileError } =
+          await getRequesterProfileForImpactVerification(
+            adminClient,
+            toStringOrNull(impactVerification.requester_profile_id),
+            toStringOrNull(impactStory?.user_id)
+          );
+        if (requesterProfileError) {
+          console.error('Impact requester profile lookup error:', requesterProfileError);
+        }
+
+        const claims = resolveImpactClaims(impactVerification.claim_snapshot, impactStory || null);
+        const requesterName = getRequesterName(requesterProfile);
+        const storyTitle = impactStory?.title || 'Impact story';
+        const organization =
+          toStringOrNull(impactStory?.affiliation_details) ||
+          toStringOrNull(impactStory?.org_description);
 
         return NextResponse.json({
           verification: {
             id: impactVerification.id,
             verification_type: 'impact_story',
-            story_id: impactStory?.id || null,
-            story_title: impactStory?.title || 'Impact story',
-            requester_name:
-              requesterProfile?.display_name || requesterProfile?.email?.split('@')[0] || 'Unknown',
+            story_id: impactStory?.id || impactVerification.impact_story_id || null,
+            story_title: storyTitle,
+            requester_name: requesterName,
             requester_email: requesterProfile?.email || '',
             requester_avatar: requesterProfile?.avatar_url || null,
             verifier_email: impactVerification.verifier_email,
@@ -180,7 +451,14 @@ export async function GET(
             verifier_relationship: impactVerification.verifier_relationship,
             message: impactVerification.message,
             status: impactVerification.status,
-            claims: impactVerification.claim_snapshot || {},
+            claims,
+            why_you_are_receiving_this: buildImpactWhyYouAreReceivingThis({
+              requesterName,
+              storyTitle,
+              verifierRelationship: toStringOrNull(impactVerification.verifier_relationship),
+              roleTitle: toStringOrNull(impactStory?.role_title),
+              organization,
+            }),
             created_at: impactVerification.created_at,
             expires_at: impactVerification.expires_at,
           },
@@ -334,15 +612,19 @@ export async function POST(
           );
         }
 
-        const claimSnapshot = (impactVerification.claim_snapshot || {}) as {
-          outcomeClaims?: Array<{ id?: string; outcomeId?: string }>;
-          artifactsClaim?: { enabled?: boolean };
-        };
+        const { data: impactStory, error: impactStoryError } = await getImpactStoryContext(
+          adminClient,
+          impactVerification.impact_story_id
+        );
+        if (impactStoryError) {
+          console.error('Impact story context lookup error (POST):', impactStoryError);
+        }
 
+        const claims = resolveImpactClaims(impactVerification.claim_snapshot, impactStory || null);
         const confirmedClaimIds = new Set(validated.confirmedClaimIds || []);
-        const outcomeClaims = Array.isArray(claimSnapshot.outcomeClaims)
-          ? claimSnapshot.outcomeClaims
-          : [];
+        const outcomeClaims = claims.outcomeClaims;
+        const roleClaimId = claims.roleClaim.id;
+        const artifactsClaimId = claims.artifactsClaim.id;
 
         const confirmedOutcomeIds =
           validated.action === 'accept'
@@ -352,11 +634,11 @@ export async function POST(
                 .filter((outcomeId): outcomeId is string => Boolean(outcomeId))
             : [];
 
-        const confirmedRole = validated.action === 'accept' && confirmedClaimIds.has('role');
+        const confirmedRole = validated.action === 'accept' && confirmedClaimIds.has(roleClaimId);
         const confirmedArtifacts =
           validated.action === 'accept' &&
-          Boolean(claimSnapshot.artifactsClaim?.enabled) &&
-          confirmedClaimIds.has('artifacts');
+          Boolean(claims.artifactsClaim.enabled) &&
+          confirmedClaimIds.has(artifactsClaimId);
 
         const { error: responseInsertError } = await adminClient
           .from('impact_story_verification_responses')

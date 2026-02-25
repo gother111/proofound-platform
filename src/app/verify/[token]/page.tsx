@@ -50,6 +50,7 @@ interface ImpactVerificationData {
   status: VerificationStatus;
   created_at: string;
   expires_at: string;
+  why_you_are_receiving_this: string;
   claims?: {
     roleClaim?: ImpactClaim;
     outcomeClaims?: ImpactClaim[];
@@ -66,7 +67,12 @@ function isImpactVerification(data: VerificationData | null): data is ImpactVeri
 export default function VerifySkillPage() {
   const params = useParams();
   const router = useRouter();
-  const token = params.token as string;
+  const token =
+    typeof params?.token === 'string'
+      ? params.token
+      : Array.isArray(params?.token)
+        ? params.token[0]
+        : null;
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -80,6 +86,11 @@ export default function VerifySkillPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
+        if (!token) {
+          setError('Invalid verification link');
+          return;
+        }
+
         const response = await fetch(`/api/verify/${token}`);
 
         if (!response.ok) {
@@ -97,9 +108,7 @@ export default function VerifySkillPage() {
       }
     };
 
-    if (token) {
-      void loadData();
-    }
+    void loadData();
   }, [token]);
 
   const handleClaimToggle = (claimId: string, checked: boolean) => {
@@ -327,6 +336,14 @@ export default function VerifySkillPage() {
 
           {isImpactVerification(data) ? (
             <div className="space-y-3">
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-[#6B6760]">Why you&apos;re receiving this</p>
+                <div className="p-3 bg-[#F7F6F1] rounded-lg text-sm text-[#2D3330]">
+                  {data.why_you_are_receiving_this ||
+                    `${data.requester_name} asked you to verify this impact story.`}
+                </div>
+              </div>
+
               <p className="text-sm font-medium text-[#6B6760]">Impact story</p>
               <div className="p-4 border-l-4 border-[#1C4D3A] bg-white rounded-r-lg">
                 <p className="font-semibold text-lg text-[#1C4D3A]">{data.story_title}</p>
