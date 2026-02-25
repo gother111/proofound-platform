@@ -101,10 +101,25 @@ async function updatePurposeTextField(
     .select({
       value: purposeTextColumnMap[field],
       fieldVisibility: individualProfiles.fieldVisibility,
+      values: individualProfiles.values,
+      causes: individualProfiles.causes,
     })
     .from(individualProfiles)
     .where(eq(individualProfiles.userId, user.id))
     .limit(1);
+
+  const currentValues = Array.isArray(current[0]?.values) ? current[0].values : [];
+  const currentCauses = Array.isArray(current[0]?.causes) ? current[0].causes : [];
+  const missingRequirements: string[] = [];
+  if (currentValues.length === 0) {
+    missingRequirements.push('at least one value');
+  }
+  if (currentCauses.length === 0) {
+    missingRequirements.push('at least one cause');
+  }
+  if (missingRequirements.length > 0) {
+    throw new Error(`Add ${missingRequirements.join(' and ')} before updating your ${field}.`);
+  }
 
   const oldValue = (current[0]?.value as string | null | undefined) || null;
   const currentFieldVisibility = (current[0]?.fieldVisibility as FieldVisibility) || {};

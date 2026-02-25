@@ -1,100 +1,136 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { updateVision, replaceCauses, updateMission } from '@/actions/profile';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { updateMission, updateVision } from '@/actions/profile';
 import { db } from '@/db';
 import { individualProfiles } from '@/db/schema';
 
-// Mock the database
+const mockDb = vi.hoisted(() => ({
+  select: vi.fn(),
+  update: vi.fn(),
+}));
+
+const mockRequireAuth = vi.hoisted(() => vi.fn());
+
 vi.mock('@/db', () => ({
   db: {
-    select: vi.fn(() => ({
-      from: vi.fn(() => ({
-        where: vi.fn(() => ({
-          limit: vi.fn(() => Promise.resolve([])),
-        })),
-      })),
-    })),
-    update: vi.fn(() => ({
-      set: vi.fn(() => ({
-        where: vi.fn(() => Promise.resolve()),
-      })),
-    })),
+    select: mockDb.select,
+    update: mockDb.update,
   },
 }));
 
-// Mock auth
 vi.mock('@/lib/auth', () => ({
-  requireAuth: vi.fn(() => Promise.resolve({ id: 'test-user-id' })),
+  requireAuth: mockRequireAuth,
 }));
 
-// Mock audit log
 vi.mock('@/lib/audit/purpose-log', () => ({
   logPurposeEdit: vi.fn(),
 }));
 
-// Mock analytics
 vi.mock('@/lib/analytics/events', () => ({
   emitEvent: vi.fn(),
   emitProfileActivated: vi.fn(),
 }));
 
-// Mock revalidatePath
+vi.mock('@/lib/matching/eligibility', () => ({
+  evaluateIndividualMatchability: vi.fn().mockResolvedValue({
+    eligible: false,
+    tier: 'baseline',
+    counts: {
+      skillsWithRecency: 0,
+      hasPurpose: false,
+      hasConstraints: false,
+      proofCount: 0,
+    },
+    nextTierTarget: null,
+  }),
+}));
+
 vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
 }));
 
-describe('Profile Actions', () => {
+function mockCurrentProfileRow(row: {
+  value: string | null;
+  fieldVisibility: Record<string, unknown>;
+  values: unknown[];
+  causes: string[];
+}) {
+  const limit = vi.fn().mockResolvedValue([row]);
+  const where = vi.fn().mockReturnValue({ limit });
+  const from = vi.fn().mockReturnValue({ where });
+  mockDb.select.mockReturnValue({ from });
+}
+
+function mockUpdateSuccess() {
+  const where = vi.fn().mockResolvedValue(undefined);
+  const set = vi.fn().mockReturnValue({ where });
+  mockDb.update.mockReturnValue({ set });
+  return { set, where };
+}
+
+describe('profile purpose actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockRequireAuth.mockResolvedValue({ id: 'test-user-id' });
   });
 
-  describe('updateVision', () => {
-    it('should update vision in the database', async () => {
-      const vision = 'To build a better future.';
-
-      // Setup mocks
-      const setMock = vi.fn(() => ({
-        where: vi.fn(() => Promise.resolve()),
-      }));
-      (db.update as any).mockReturnValue({ set: setMock });
-
-      await updateVision(vision);
-
-      expect(db.update).toHaveBeenCalledWith(individualProfiles);
-      expect(setMock).toHaveBeenCalledWith({ vision });
+  it('updates mission when at least one value and one cause exist', async () => {
+    mockCurrentProfileRow({
+      value: null,
+      fieldVisibility: {},
+      values: [{ id: 'v1', label: 'Integrity' }],
+      causes: ['Climate Justice'],
     });
+    const { set } = mockUpdateSuccess();
+
+    await updateMission('Build trustworthy systems');
+
+    expect(db.update).toHaveBeenCalledWith(individualProfiles);
+    expect(set).toHaveBeenCalledWith({ mission: 'Build trustworthy systems' });
   });
 
-  describe('replaceCauses', () => {
-    it('should update causes in the database', async () => {
-      const causes = ['Environment', 'Education'];
-
-      // Setup mocks
-      const setMock = vi.fn(() => ({
-        where: vi.fn(() => Promise.resolve()),
-      }));
-      (db.update as any).mockReturnValue({ set: setMock });
-
-      await replaceCauses(causes);
-
-      expect(db.update).toHaveBeenCalledWith(individualProfiles);
-      expect(setMock).toHaveBeenCalledWith({ causes });
+  it('rejects mission update when values are missing', async () => {
+    mockCurrentProfileRow({
+      value: null,
+      fieldVisibility: {},
+      values: [],
+      causes: ['Climate Justice'],
     });
+    mockUpdateSuccess();
+
+    await expect(updateMission('Build trustworthy systems')).rejects.toThrow(
+      'Add at least one value before updating your mission.'
+    );
+    expect(db.update).not.toHaveBeenCalled();
   });
 
-  describe('updateMission', () => {
-    it('should update mission in the database', async () => {
-      const mission = 'My mission is to learn.';
-
-      // Setup mocks
-      const setMock = vi.fn(() => ({
-        where: vi.fn(() => Promise.resolve()),
-      }));
-      (db.update as any).mockReturnValue({ set: setMock });
-
-      await updateMission(mission);
-
-      expect(db.update).toHaveBeenCalledWith(individualProfiles);
-      expect(setMock).toHaveBeenCalledWith({ mission });
+  it('rejects mission update when causes are missing', async () => {
+    mockCurrentProfileRow({
+      value: null,
+      fieldVisibility: {},
+      values: [{ id: 'v1', label: 'Integrity' }],
+      causes: [],
     });
+    mockUpdateSuccess();
+
+    await expect(updateMission('Build trustworthy systems')).rejects.toThrow(
+      'Add at least one cause before updating your mission.'
+    );
+    expect(db.update).not.toHaveBeenCalled();
+  });
+
+  it('rejects vision update when prerequisites are missing', async () => {
+    mockCurrentProfileRow({
+      value: null,
+      fieldVisibility: {},
+      values: [],
+      causes: [],
+    });
+    mockUpdateSuccess();
+
+    await expect(updateVision('A fair and open future')).rejects.toThrow(
+      'Add at least one value and at least one cause before updating your vision.'
+    );
+    expect(db.update).not.toHaveBeenCalled();
   });
 });
