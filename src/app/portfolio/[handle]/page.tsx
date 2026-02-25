@@ -22,7 +22,6 @@ import { mergeVisibilityFlags } from '@/lib/portfolio/visibility';
 import { sanitizeReturnPath } from '@/lib/navigation/sanitize-return-path';
 import { ShareLinkButton } from './ShareLinkButton';
 import { DownloadPdfButton } from './DownloadPdfButton';
-import { PortfolioVisibilityCard } from './visibility-card';
 import { CopyTextButton } from './CopyTextButton';
 import { ViewCounterClient } from './ViewCounterClient';
 
@@ -444,7 +443,6 @@ export default async function PortfolioPage({
               />
             </CardContent>
           </Card>
-          {viewerIsOwner && <PortfolioVisibilityCard />}
         </div>
       </div>
     </div>

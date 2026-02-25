@@ -12,7 +12,7 @@ vi.mock('next/navigation', () => ({
     refresh: refreshMock,
   }),
   useSearchParams: () => ({
-    get: (key: string) => (key === 'tab' ? 'integrations' : null),
+    get: (key: string) => (key === 'tab' ? 'privacy' : null),
   }),
 }));
 
@@ -59,7 +59,7 @@ vi.mock('@/components/settings/PortfolioVisibilityCard', () => ({
   PortfolioVisibilityCard: () => <div data-testid="portfolio-visibility-card" />,
 }));
 
-describe('Settings integrations discoverability', () => {
+describe('Settings privacy tab placement', () => {
   beforeEach(() => {
     vi.stubGlobal(
       'fetch',
@@ -74,13 +74,10 @@ describe('Settings integrations discoverability', () => {
     vi.restoreAllMocks();
   });
 
-  it('shows inline Zoom/Google integrations controls on the same settings tab', async () => {
+  it('renders portfolio visibility controls in privacy tab', async () => {
     render(<SettingsContent userId="user-1" />);
 
-    expect(await screen.findByTestId('video-integrations-manager')).toBeInTheDocument();
-    expect(screen.getByTestId('linkedin-connect')).toBeInTheDocument();
-    expect(
-      screen.queryByRole('link', { name: /manage zoom & google integrations/i })
-    ).not.toBeInTheDocument();
+    expect(await screen.findByTestId('portfolio-visibility-card')).toBeInTheDocument();
+    expect(screen.getByTestId('privacy-overview')).toBeInTheDocument();
   });
 });
