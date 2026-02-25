@@ -944,24 +944,35 @@ export const impactStories = pgTable('impact_stories', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-// Experiences - work experience focused on outcomes and collaboration
-export const experiences = pgTable('experiences', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id')
-    .references(() => profiles.id, { onDelete: 'cascade' })
-    .notNull(),
-  projectId: uuid('project_id').references(() => projects.id, { onDelete: 'set null' }),
-  title: text('title').notNull(), // "Leading systemic change" not "Director"
-  orgDescription: text('org_description').notNull(), // Size, industry, location
-  duration: text('duration').notNull(),
-  outcomes: text('outcomes').notNull(), // Measurable outcomes
-  projects: text('projects').notNull(), // Key projects and initiatives
-  colleagues: text('colleagues').notNull(), // Collaboration and team context
-  achievements: text('achievements').notNull(), // Notable achievements
-  verified: boolean('verified').default(false),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+// Experiences - work experience with timeline, outcomes, and collaboration context
+export const experiences = pgTable(
+  'experiences',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    projectId: uuid('project_id').references(() => projects.id, { onDelete: 'set null' }),
+    title: text('title').notNull(), // "Leading systemic change" not "Director"
+    orgDescription: text('org_description').notNull(), // Size, industry, location
+    duration: text('duration').notNull(),
+    startDate: date('start_date'),
+    endDate: date('end_date'),
+    outcomes: text('outcomes').notNull(), // Measurable outcomes
+    projects: text('projects').notNull(), // Key projects and initiatives
+    colleagues: text('colleagues').notNull(), // Collaboration and team context
+    achievements: text('achievements').notNull(), // Notable achievements
+    verified: boolean('verified').default(false),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    dateOrderCheck: check(
+      'experiences_date_order_check',
+      sql`${table.endDate} IS NULL OR ${table.startDate} IS NULL OR ${table.endDate} >= ${table.startDate}`
+    ),
+  })
+);
 
 // Education - focused on skills and meaningful projects
 export const education = pgTable('education', {

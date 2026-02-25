@@ -7,11 +7,11 @@
 
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { MatchingProfileEditor } from '@/components/matching/MatchingProfileEditor';
+import { MatchingPreferencesClient } from '@/components/matching/MatchingPreferencesClient';
 
 export const metadata = {
   title: 'Matching Preferences | Proofound',
-  description: 'Customize your matching preferences',
+  description: 'Set your personal matching preferences',
 };
 
 export default async function MatchingPreferencesPage() {
@@ -29,12 +29,11 @@ export default async function MatchingPreferencesPage() {
       <div className="space-y-2 mb-8">
         <h1 className="text-3xl font-bold">Matching Preferences</h1>
         <p className="text-muted-foreground">
-          Customize how we match you with opportunities. Adjust weights, set constraints, and
-          control your visibility.
+          Set your personal job preferences so we can match you with relevant opportunities.
         </p>
       </div>
 
-      <MatchingProfileEditor profileId={user.id} />
+      <MatchingPreferencesClient />
     </div>
   );
 }

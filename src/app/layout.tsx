@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/sonner';
+import { Toaster as LegacyToaster } from '@/components/ui/toaster';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -67,6 +68,7 @@ export default async function RootLayout({
               <TransitionProvider>{children}</TransitionProvider>
             </div>
             <Toaster />
+            <LegacyToaster />
             <ChatWidget />
             <CookieBanner />
             <OptionalTelemetry />

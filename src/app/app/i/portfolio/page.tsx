@@ -10,5 +10,6 @@ export default async function IndividualPortfolioShortcutPage() {
     redirect('/app/i/profile');
   }
 
-  redirect(`/portfolio/${user.handle}`);
+  const returnTo = encodeURIComponent('/app/i/home');
+  redirect(`/portfolio/${user.handle}?returnTo=${returnTo}`);
 }

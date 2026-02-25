@@ -10,10 +10,10 @@ import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api/fetch';
 
 interface Suggestion {
-  id: string;           // skill code
-  code: string;         // skill code
-  name: string;         // skill name from nameI18n.en
-  aliases: string[];    // alternative names
+  id: string; // skill code
+  code: string; // skill code
+  name: string; // skill name from nameI18n.en
+  aliases: string[]; // alternative names
   description: string | null;
   slug: string;
   tags: string[] | null;
@@ -40,7 +40,7 @@ export function CVJDAutoSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
 
     setLoading(true);
     try {
-      const response = await fetch('/api/expertise/auto-suggest', {
+      const response = await apiFetch('/api/expertise/auto-suggest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, context }),
@@ -78,7 +78,7 @@ export function CVJDAutoSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
   };
 
   const handleAddSelected = async () => {
-    const skillsToAdd = suggestions.filter(s => selectedSkills.has(s.id));
+    const skillsToAdd = suggestions.filter((s) => selectedSkills.has(s.id));
     if (skillsToAdd.length === 0) {
       toast.error('No skills selected');
       return;
@@ -192,11 +192,7 @@ export function CVJDAutoSuggest({ onSkillsAdded }: CVJDAutoSuggestProps) {
             className="font-mono text-sm"
           />
 
-          <Button
-            onClick={handleAnalyze}
-            disabled={loading || !text.trim()}
-            className="w-full"
-          >
+          <Button onClick={handleAnalyze} disabled={loading || !text.trim()} className="w-full">
             {loading ? 'Analyzing...' : 'Analyze & Suggest Skills'}
           </Button>
         </CardContent>

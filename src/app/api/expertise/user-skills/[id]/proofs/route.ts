@@ -4,14 +4,44 @@ import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
 import { emitSkillProofAddedAsync } from '@/lib/analytics/events';
 
-const CreateProofSchema = z.object({
-  proofType: z.enum(['project', 'certification', 'media', 'reference', 'link']),
-  title: z.string().min(1, 'Title is required'),
-  description: z.string().optional(),
-  url: z.string().url().optional().or(z.literal('')),
-  issuedDate: z.string().optional(),
-  metadata: z.record(z.any()).optional(),
-});
+function deriveProofTitleFromUrl(rawUrl: string): string {
+  try {
+    const parsed = new URL(rawUrl);
+    const pathname = parsed.pathname.replace(/\/+$/, '');
+    const lastSegment = pathname.split('/').filter(Boolean).pop();
+
+    if (lastSegment) {
+      const decoded = decodeURIComponent(lastSegment).replace(/[-_]+/g, ' ').trim();
+      if (decoded.length > 0) return decoded.slice(0, 80);
+    }
+
+    return parsed.hostname || 'Proof Link';
+  } catch {
+    return 'Proof Link';
+  }
+}
+
+const CreateProofSchema = z
+  .object({
+    proofType: z.enum(['project', 'certification', 'media', 'reference', 'link']),
+    title: z.string().trim().optional(),
+    description: z.string().optional(),
+    url: z.string().url().optional().or(z.literal('')),
+    issuedDate: z.string().optional(),
+    metadata: z.record(z.any()).optional(),
+  })
+  .superRefine((data, ctx) => {
+    const hasTitle = Boolean(data.title?.trim());
+    const hasUrl = Boolean(data.url);
+
+    if (!hasTitle && !hasUrl) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Title or URL is required',
+        path: ['title'],
+      });
+    }
+  });
 
 /**
  * POST /api/expertise/user-skills/[id]/proofs
@@ -27,6 +57,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     // Validate input
     const validated = CreateProofSchema.parse(body);
+    const proofTitle = validated.title?.trim() || deriveProofTitleFromUrl(validated.url || '');
 
     // Verify skill belongs to user
     const { data: skill, error: skillError } = await supabase
@@ -46,8 +77,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         skill_id: skillId,
         profile_id: user.id,
         proof_type: validated.proofType,
-        title: validated.title,
-        description: validated.description || null,
+        title: proofTitle,
+        description: validated.description?.trim() || null,
         url: validated.url || null,
         issued_date: validated.issuedDate || null,
         metadata: {
@@ -60,12 +91,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     if (proofError) {
       console.error('Error creating proof:', proofError);
-      return NextResponse.json({ error: 'Failed to create proof' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Failed to create proof', message: proofError.message },
+        { status: 500 }
+      );
     }
 
     // Emit analytics event for proof addition (PRD F3)
     emitSkillProofAddedAsync(user.id, skillId, proof.id, {
-      skill_name: validated.title, // Using proof title as context
+      skill_name: proofTitle,
       proof_type: validated.proofType,
     });
 
@@ -77,8 +111,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     );
   } catch (error) {
     if (error instanceof z.ZodError) {
+      const message = error.issues[0]?.message || 'Invalid proof payload';
       return NextResponse.json(
-        { error: 'Validation failed', details: error.issues },
+        { error: 'Validation failed', message, details: error.issues },
         { status: 400 }
       );
     }

@@ -42,6 +42,8 @@ export interface Experience {
   projects: string;
   colleagues: string;
   achievements: string;
+  startDate?: string | null;
+  endDate?: string | null;
   verified: boolean | null;
 }
 

@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { RotateCcw, Loader2 } from 'lucide-react';
 import { CustomizableDashboard } from '../dashboard/CustomizableDashboard';
 import { VideoIntegrationsManager } from './VideoIntegrationsManager';
+import { PortfolioVisibilityCard } from './PortfolioVisibilityCard';
 
 interface SettingsContentProps {
   userId: string;
@@ -273,6 +274,7 @@ export function SettingsContent({ userId }: SettingsContentProps) {
 
         {/* Privacy & Data Tab */}
         <TabsContent value="privacy" className="space-y-6">
+          <PortfolioVisibilityCard />
           <PrivacyOverview userId={userId} />
         </TabsContent>
       </Tabs>
