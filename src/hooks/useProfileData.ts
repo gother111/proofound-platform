@@ -315,6 +315,9 @@ export function useProfileData() {
                 }
               : prev
           );
+          if ((inserted as { verificationWarning?: string | null }).verificationWarning) {
+            toast.error((inserted as { verificationWarning?: string | null }).verificationWarning);
+          }
         });
       });
     },

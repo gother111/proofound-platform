@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
 import { sendEmail } from '@/lib/email/sender';
@@ -6,13 +7,42 @@ import { sendEmail } from '@/lib/email/sender';
 const VerifyResponseSchema = z.object({
   action: z.enum(['accept', 'decline']),
   message: z.string().optional(),
+  confirmedClaimIds: z.array(z.string()).optional(),
 });
+
+function isRelationMissingError(error: unknown) {
+  return Boolean(
+    error && typeof error === 'object' && (error as { code?: string }).code === '42P01'
+  );
+}
+
+function normalizeBaseUrl(url?: string | null) {
+  const base = (url || '').trim();
+  if (!base) return 'https://proofound.com';
+  return base.endsWith('/') ? base.slice(0, -1) : base;
+}
+
+async function getImpactVerificationRequestByToken(
+  adminClient: ReturnType<typeof createAdminClient>,
+  token: string
+) {
+  const { data, error } = await adminClient
+    .from('impact_story_verification_requests')
+    .select('*')
+    .eq('token', token)
+    .maybeSingle();
+
+  if (error && isRelationMissingError(error)) {
+    return { data: null, error: null };
+  }
+
+  return { data, error };
+}
 
 /**
  * GET /api/verify/[token]
  *
  * Get verification request details by token (public endpoint - no auth required)
- * PRD F7: Allow verifier to access verification page via magic link
  */
 export async function GET(
   request: NextRequest,
@@ -26,7 +56,70 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid verification token' }, { status: 400 });
     }
 
-    // Fetch verification request by token
+    // 1) Try impact story verification first (new flow)
+    try {
+      const adminClient = createAdminClient();
+      const { data: impactVerification, error: impactVerificationError } =
+        await getImpactVerificationRequestByToken(adminClient, token);
+
+      if (impactVerificationError) {
+        console.error('Impact verification lookup error:', impactVerificationError);
+      }
+
+      if (impactVerification) {
+        if (
+          impactVerification.expires_at &&
+          new Date(impactVerification.expires_at) < new Date() &&
+          impactVerification.status === 'pending'
+        ) {
+          await adminClient
+            .from('impact_story_verification_requests')
+            .update({ status: 'expired', updated_at: new Date().toISOString() })
+            .eq('id', impactVerification.id);
+
+          impactVerification.status = 'expired';
+        }
+
+        const { data: impactStory } = await adminClient
+          .from('impact_stories')
+          .select('id, title, user_id')
+          .eq('id', impactVerification.impact_story_id)
+          .maybeSingle();
+
+        const { data: requesterProfile } = impactStory?.user_id
+          ? await adminClient
+              .from('profiles')
+              .select('display_name, avatar_url, email')
+              .eq('id', impactStory.user_id)
+              .maybeSingle()
+          : { data: null };
+
+        return NextResponse.json({
+          verification: {
+            id: impactVerification.id,
+            verification_type: 'impact_story',
+            story_id: impactStory?.id || null,
+            story_title: impactStory?.title || 'Impact story',
+            requester_name:
+              requesterProfile?.display_name || requesterProfile?.email?.split('@')[0] || 'Unknown',
+            requester_email: requesterProfile?.email || '',
+            requester_avatar: requesterProfile?.avatar_url || null,
+            verifier_email: impactVerification.verifier_email,
+            verifier_name: impactVerification.verifier_name,
+            verifier_relationship: impactVerification.verifier_relationship,
+            message: impactVerification.message,
+            status: impactVerification.status,
+            claims: impactVerification.claim_snapshot || {},
+            created_at: impactVerification.created_at,
+            expires_at: impactVerification.expires_at,
+          },
+        });
+      }
+    } catch (impactError) {
+      console.error('Impact verification lookup failed, continuing to skill lookup:', impactError);
+    }
+
+    // 2) Fallback to existing skill verification flow
     const { data: verification, error: verificationError } = await supabase
       .from('skill_verification_requests')
       .select(
@@ -59,9 +152,7 @@ export async function GET(
       );
     }
 
-    // Check if expired
     if (verification.expires_at && new Date(verification.expires_at) < new Date()) {
-      // Update status to expired if not already
       if (verification.status === 'pending') {
         await supabase
           .from('skill_verification_requests')
@@ -72,19 +163,18 @@ export async function GET(
       return NextResponse.json({
         verification: {
           ...formatVerificationResponse(verification),
+          verification_type: 'skill',
           status: 'expired',
         },
       });
     }
 
-    // Get requester profile info
     const { data: requesterProfile } = await supabase
       .from('profiles')
       .select('display_name, avatar_url, email')
       .eq('id', verification.requester_profile_id)
       .single();
 
-    // Parse skill name from taxonomy or skill_id
     const skill = verification.skills as any;
     let skillName = 'Unknown Skill';
 
@@ -104,6 +194,7 @@ export async function GET(
     return NextResponse.json({
       verification: {
         id: verification.id,
+        verification_type: 'skill',
         skill_name: skillName,
         skill_code: skill?.skill_code || null,
         requester_name:
@@ -127,7 +218,6 @@ export async function GET(
  * POST /api/verify/[token]
  *
  * Accept or decline a verification request (public endpoint - no auth required)
- * PRD F7: Allow verifier to respond without needing an account
  */
 export async function POST(
   request: NextRequest,
@@ -138,14 +228,190 @@ export async function POST(
     const { token } = await params;
     const body = await request.json();
 
-    // Validate input
     const validated = VerifyResponseSchema.parse(body);
 
     if (!token || token.length < 32) {
       return NextResponse.json({ error: 'Invalid verification token' }, { status: 400 });
     }
 
-    // Fetch verification request with skill details
+    // 1) Try new impact-story verification flow first
+    try {
+      const adminClient = createAdminClient();
+      const { data: impactVerification, error: impactVerificationError } =
+        await getImpactVerificationRequestByToken(adminClient, token);
+
+      if (impactVerificationError) {
+        console.error('Impact verification lookup error:', impactVerificationError);
+      }
+
+      if (impactVerification) {
+        if (impactVerification.status !== 'pending') {
+          return NextResponse.json(
+            { error: `This request has already been ${impactVerification.status}` },
+            { status: 400 }
+          );
+        }
+
+        if (impactVerification.expires_at && new Date(impactVerification.expires_at) < new Date()) {
+          await adminClient
+            .from('impact_story_verification_requests')
+            .update({ status: 'expired', updated_at: new Date().toISOString() })
+            .eq('id', impactVerification.id);
+
+          return NextResponse.json(
+            { error: 'This verification request has expired' },
+            { status: 400 }
+          );
+        }
+
+        const claimSnapshot = (impactVerification.claim_snapshot || {}) as {
+          outcomeClaims?: Array<{ id?: string; outcomeId?: string }>;
+          artifactsClaim?: { enabled?: boolean };
+        };
+
+        const confirmedClaimIds = new Set(validated.confirmedClaimIds || []);
+        const outcomeClaims = Array.isArray(claimSnapshot.outcomeClaims)
+          ? claimSnapshot.outcomeClaims
+          : [];
+
+        const confirmedOutcomeIds =
+          validated.action === 'accept'
+            ? outcomeClaims
+                .filter((claim) => claim.id && confirmedClaimIds.has(claim.id))
+                .map((claim) => claim.outcomeId)
+                .filter((outcomeId): outcomeId is string => Boolean(outcomeId))
+            : [];
+
+        const confirmedRole = validated.action === 'accept' && confirmedClaimIds.has('role');
+        const confirmedArtifacts =
+          validated.action === 'accept' &&
+          Boolean(claimSnapshot.artifactsClaim?.enabled) &&
+          confirmedClaimIds.has('artifacts');
+
+        const { error: responseInsertError } = await adminClient
+          .from('impact_story_verification_responses')
+          .insert({
+            request_id: impactVerification.id,
+            responder_email: impactVerification.verifier_email,
+            action: validated.action,
+            confirmed_role: confirmedRole,
+            confirmed_artifacts: confirmedArtifacts,
+            confirmed_outcome_ids: confirmedOutcomeIds,
+            response_note: validated.message || null,
+          });
+
+        if (responseInsertError) {
+          console.error('Failed to insert impact verification response:', responseInsertError);
+          return NextResponse.json(
+            { error: 'Failed to record verification response' },
+            { status: 500 }
+          );
+        }
+
+        const nextStatus = validated.action === 'accept' ? 'accepted' : 'declined';
+
+        const { error: requestUpdateError } = await adminClient
+          .from('impact_story_verification_requests')
+          .update({
+            status: nextStatus,
+            responded_at: new Date().toISOString(),
+            response_message: validated.message || null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', impactVerification.id);
+
+        if (requestUpdateError) {
+          console.error('Failed to update impact verification request:', requestUpdateError);
+          return NextResponse.json(
+            { error: 'Failed to update verification request' },
+            { status: 500 }
+          );
+        }
+
+        if (
+          validated.action === 'accept' &&
+          (confirmedRole || confirmedArtifacts || confirmedOutcomeIds.length > 0)
+        ) {
+          const { error: impactStoryUpdateError } = await adminClient
+            .from('impact_stories')
+            .update({
+              verified: true,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', impactVerification.impact_story_id);
+
+          if (impactStoryUpdateError) {
+            console.error('Failed to mark impact story verified:', impactStoryUpdateError);
+          }
+        }
+
+        try {
+          const { data: requesterProfile } = await adminClient
+            .from('profiles')
+            .select('email, display_name')
+            .eq('id', impactVerification.requester_profile_id)
+            .maybeSingle();
+
+          const { data: impactStory } = await adminClient
+            .from('impact_stories')
+            .select('title')
+            .eq('id', impactVerification.impact_story_id)
+            .maybeSingle();
+
+          if (requesterProfile?.email) {
+            const actionLabel = validated.action === 'accept' ? 'accepted' : 'declined';
+            const storyTitle = impactStory?.title || 'impact story';
+            const confirmedCount =
+              (confirmedRole ? 1 : 0) + (confirmedArtifacts ? 1 : 0) + confirmedOutcomeIds.length;
+
+            await sendEmail({
+              to: requesterProfile.email,
+              subject: `Impact story verification ${actionLabel}`,
+              html: `
+                <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                  <h2 style="margin-bottom: 16px; color: #1a1a1a;">Impact verification update</h2>
+                  <p style="color: #4a4a4a; line-height: 1.6;">
+                    ${impactVerification.verifier_email} has <strong>${actionLabel}</strong> your verification request for <strong>${storyTitle}</strong>.
+                  </p>
+                  ${
+                    validated.action === 'accept'
+                      ? `<p style="color: #4a4a4a; line-height: 1.6;">Confirmed claims: <strong>${confirmedCount}</strong>.</p>`
+                      : ''
+                  }
+                  ${
+                    validated.message
+                      ? `<p style="color: #4a4a4a; line-height: 1.6;"><em>"${validated.message}"</em></p>`
+                      : ''
+                  }
+                </div>
+              `,
+              text: `${impactVerification.verifier_email} has ${actionLabel} your verification request for ${storyTitle}.`,
+            });
+          }
+        } catch (impactEmailError) {
+          console.error('Failed to send impact verification notification email:', impactEmailError);
+        }
+
+        return NextResponse.json({
+          success: true,
+          verification_type: 'impact_story',
+          status: nextStatus,
+          confirmed_claims: {
+            role: confirmedRole,
+            artifacts: confirmedArtifacts,
+            outcomes: confirmedOutcomeIds,
+          },
+          message:
+            validated.action === 'accept'
+              ? 'Impact story claims verified successfully.'
+              : 'Your response has been recorded.',
+        });
+      }
+    } catch (impactError) {
+      console.error('Impact verification submit failed, continuing to skill flow:', impactError);
+    }
+
+    // 2) Fallback to existing skill verification flow
     const { data: verification, error: verificationError } = await supabase
       .from('skill_verification_requests')
       .select(
@@ -176,7 +442,6 @@ export async function POST(
       );
     }
 
-    // Check if already responded
     if (verification.status !== 'pending') {
       return NextResponse.json(
         { error: `This request has already been ${verification.status}` },
@@ -184,7 +449,6 @@ export async function POST(
       );
     }
 
-    // Check if expired
     if (verification.expires_at && new Date(verification.expires_at) < new Date()) {
       await supabase
         .from('skill_verification_requests')
@@ -194,7 +458,6 @@ export async function POST(
       return NextResponse.json({ error: 'This verification request has expired' }, { status: 400 });
     }
 
-    // Update verification status
     const newStatus = validated.action === 'accept' ? 'accepted' : 'declined';
 
     const { error: updateError } = await supabase
@@ -211,9 +474,7 @@ export async function POST(
       return NextResponse.json({ error: 'Failed to update verification status' }, { status: 500 });
     }
 
-    // If accepted, update the skill's evidence strength
     if (validated.action === 'accept') {
-      // Get current evidence strength and increment it
       const { data: skill } = await supabase
         .from('skills')
         .select('evidence_strength')
@@ -221,7 +482,7 @@ export async function POST(
         .single();
 
       const currentStrength = parseFloat(skill?.evidence_strength || '0');
-      const newStrength = Math.min(currentStrength + 0.2, 1.0); // Add 0.2 per verification, max 1.0
+      const newStrength = Math.min(currentStrength + 0.2, 1.0);
 
       await supabase
         .from('skills')
@@ -232,7 +493,6 @@ export async function POST(
         .eq('id', verification.skill_id);
     }
 
-    // Emit verification provided analytics event (PRD F7)
     try {
       const { emitVerificationProvided } = await import('@/lib/analytics/events');
       await emitVerificationProvided(verification.requester_profile_id, verification.id, {
@@ -244,9 +504,7 @@ export async function POST(
       console.error('Failed to emit attestation_provided event:', analyticsError);
     }
 
-    // Send notification email to requester about the response
     try {
-      // Fetch requester's email
       const { data: requesterProfile } = await supabase
         .from('profiles')
         .select('email, display_name')
@@ -254,7 +512,6 @@ export async function POST(
         .single();
 
       if (requesterProfile?.email) {
-        // Determine skill name
         const skill = verification.skills as any;
         let skillName = 'your skill';
         if (skill?.taxonomy?.name_i18n?.en) {
@@ -267,7 +524,9 @@ export async function POST(
         const actionEmoji = validated.action === 'accept' ? '✅' : '❌';
         const relationshipText = verification.verifier_source || 'your contact';
 
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://proofound.com';
+        const baseUrl = normalizeBaseUrl(
+          process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL
+        );
         const expertiseUrl = `${baseUrl}/app/i/expertise`;
 
         await sendEmail({
@@ -278,16 +537,13 @@ export async function POST(
               <h2 style="color: #1a1a1a; margin-bottom: 16px;">
                 Skill Verification Update
               </h2>
-              
               <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
                 Hi${requesterProfile.display_name ? ` ${requesterProfile.display_name}` : ''},
               </p>
-              
               <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
                 <strong>${relationshipText}</strong> (${verification.verifier_email}) has ${actionText} your 
                 <strong>"${skillName}"</strong> skill.
               </p>
-              
               ${
                 validated.message
                   ? `
@@ -298,45 +554,24 @@ export async function POST(
               `
                   : ''
               }
-              
-              ${
-                validated.action === 'accept'
-                  ? `
-                <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
-                  🎉 Great news! This verification has been added to your skill profile and will help strengthen your credibility.
-                </p>
-              `
-                  : `
-                <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
-                  Don't worry - you can request verification from other colleagues or mentors who can attest to this skill.
-                </p>
-              `
-              }
-              
               <div style="margin-top: 24px;">
                 <a href="${expertiseUrl}" 
                    style="display: inline-block; background: #1a1a1a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 500;">
                   View Your Expertise Atlas
                 </a>
               </div>
-              
-              <p style="color: #9a9a9a; font-size: 14px; margin-top: 32px;">
-                — The Proofound Team
-              </p>
             </div>
           `,
           text: `Your skill verification request was ${validated.action === 'accept' ? 'accepted' : 'declined'}.\n\n${relationshipText} (${verification.verifier_email}) has ${actionText} your "${skillName}" skill.${validated.message ? `\n\nTheir message: "${validated.message}"` : ''}\n\nView your Expertise Atlas: ${expertiseUrl}`,
         });
-
-        console.log('[Verification] Notification email sent to requester:', requesterProfile.email);
       }
     } catch (emailError) {
-      // Don't fail the request if email sending fails
       console.error('Failed to send verification notification email:', emailError);
     }
 
     return NextResponse.json({
       success: true,
+      verification_type: 'skill',
       status: newStatus,
       message:
         validated.action === 'accept'

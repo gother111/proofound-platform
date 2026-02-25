@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Calendar, CheckCircle2, Plus, X } from 'lucide-react';
+import { getTaxonomyLabel, CAUSES_TAXONOMY } from '@/lib/taxonomy/data';
 
 export interface ImpactTabProps {
   impactStories: ImpactStory[];
@@ -21,6 +22,26 @@ export function ImpactTab({
   onDeleteStory,
   actionsDisabled,
 }: ImpactTabProps) {
+  const getTimelineLabel = (story: ImpactStory) => {
+    const timeline = story.timelineStructured;
+    if (!timeline) return story.timeline;
+    if (timeline.mode === 'single') return timeline.start;
+    if (timeline.ongoing) return `${timeline.start} - Present`;
+    return timeline.end ? `${timeline.start} - ${timeline.end}` : timeline.start;
+  };
+
+  const getRoleScopeLabel = (scope?: string | null) => {
+    if (scope === 'owned') return 'Owned';
+    if (scope === 'co_led') return 'Co-led';
+    if (scope === 'contributed') return 'Contributed';
+    return null;
+  };
+
+  const getCauseLabels = (story: ImpactStory) => {
+    const keys = [story.primaryCause, ...(story.secondaryCauses || [])].filter(Boolean) as string[];
+    return keys.map((key) => getTaxonomyLabel(key, CAUSES_TAXONOMY));
+  };
+
   return (
     <TabsContent value="impact" className="space-y-6">
       <div className="flex items-center justify-between mb-4">
@@ -128,8 +149,23 @@ export function ImpactTab({
                 <p className="text-sm text-muted-foreground mb-1">{story.orgDescription}</p>
                 <p className="text-xs text-muted-foreground flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
-                  {story.timeline}
+                  {getTimelineLabel(story)}
                 </p>
+                {(story.roleTitle || story.roleScope) && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {story.roleTitle || 'Contributor'}
+                    {story.roleScope ? ` • ${getRoleScopeLabel(story.roleScope)}` : ''}
+                  </p>
+                )}
+                {getCauseLabels(story).length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {getCauseLabels(story).map((cause) => (
+                      <Badge key={`${story.id}-${cause}`} variant="outline" className="text-xs">
+                        {cause}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
             <div className="space-y-4">
@@ -143,8 +179,52 @@ export function ImpactTab({
               </div>
               <div className="p-4 bg-muted/20 rounded-xl">
                 <h4 className="text-sm font-medium text-muted-foreground mb-2">Outcomes</h4>
-                <p className="text-sm">{story.outcomes}</p>
+                {story.measuredOutcomes && story.measuredOutcomes.length > 0 ? (
+                  <ul className="space-y-2">
+                    {story.measuredOutcomes.map((outcome) => (
+                      <li key={outcome.id} className="text-sm">
+                        <span className="font-medium">{outcome.label}:</span> {outcome.value}{' '}
+                        {outcome.unit}
+                        <span className="text-muted-foreground">
+                          {' '}
+                          ({outcome.valueMode}, {outcome.timeframe})
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm">{story.outcomes}</p>
+                )}
               </div>
+
+              {story.supportingArtifacts && story.supportingArtifacts.length > 0 && (
+                <div className="p-4 bg-muted/10 rounded-xl">
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">
+                    Supporting Artifacts
+                  </h4>
+                  <ul className="space-y-1">
+                    {story.supportingArtifacts.map((artifact) => (
+                      <li key={artifact.id} className="text-sm">
+                        <a
+                          href={artifact.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-[#1C4D3A] underline underline-offset-2"
+                        >
+                          {artifact.title}
+                        </a>{' '}
+                        <span className="text-muted-foreground">({artifact.kind})</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {story.verificationWarning && (
+                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-2">
+                  {story.verificationWarning}
+                </p>
+              )}
             </div>
           </Card>
         ))

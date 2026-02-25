@@ -2,12 +2,14 @@
 
 import { revalidatePath } from 'next/cache';
 import { eq, and } from 'drizzle-orm';
+import { randomBytes } from 'node:crypto';
 
 import { db } from '@/db';
 import {
   profiles,
   individualProfiles,
   impactStories,
+  impactStoryVerificationRequests,
   experiences,
   education,
   volunteering,
@@ -20,6 +22,7 @@ import { emitProfileActivated } from '@/lib/analytics/events';
 import { triggerProfileActivationSurvey } from '@/lib/surveys/sus-triggers';
 import { evaluateIndividualMatchability } from '@/lib/matching/eligibility';
 import { MATCHABILITY_STRONG_SKILLS_WITH_RECENCY } from '@/lib/matching/thresholds';
+import { sendEmail } from '@/lib/email/sender';
 import { buildExperienceTimeline } from '@/lib/profile/experience-timeline';
 import type {
   ProfileData,
@@ -27,6 +30,10 @@ import type {
   Value,
   Skill,
   ImpactStory,
+  ImpactStoryArtifact,
+  ImpactStoryOutcome,
+  ImpactStoryRoleScope,
+  ImpactStoryTimeline,
   Experience,
   Education as EducationType,
   Volunteering as VolunteeringType,
@@ -305,6 +312,15 @@ export async function getProfileData(): Promise<ProfileData> {
             businessValue: impactStories.businessValue,
             outcomes: impactStories.outcomes,
             timeline: impactStories.timeline,
+            timelineStructured: impactStories.timelineStructured,
+            affiliationType: impactStories.affiliationType,
+            affiliationDetails: impactStories.affiliationDetails,
+            roleTitle: impactStories.roleTitle,
+            roleScope: impactStories.roleScope,
+            primaryCause: impactStories.primaryCause,
+            secondaryCauses: impactStories.secondaryCauses,
+            measuredOutcomes: impactStories.measuredOutcomes,
+            supportingArtifacts: impactStories.supportingArtifacts,
             verified: impactStories.verified,
           })
           .from(impactStories)
@@ -545,24 +561,213 @@ export async function replaceSkills(skills: Skill[]) {
   revalidatePath('/app/i/profile');
 }
 
+const ROLE_SCOPE_LABELS: Record<ImpactStoryRoleScope, string> = {
+  owned: 'Owned',
+  co_led: 'Co-led',
+  contributed: 'Contributed',
+};
+
+type ImpactStoryCreateResult = ImpactStory & {
+  verificationWarning?: string | null;
+};
+
+function formatTimelineForLegacy(
+  timeline: ImpactStoryTimeline | null | undefined,
+  fallback: string
+) {
+  if (!timeline) return fallback;
+
+  if (timeline.mode === 'single') {
+    return timeline.start;
+  }
+
+  if (timeline.ongoing) {
+    return `${timeline.start} - Present`;
+  }
+
+  return timeline.end ? `${timeline.start} - ${timeline.end}` : timeline.start;
+}
+
+function formatOutcomesForLegacy(
+  measuredOutcomes: ImpactStoryOutcome[] | null | undefined,
+  fallback: string
+) {
+  if (!measuredOutcomes || measuredOutcomes.length === 0) return fallback;
+
+  return measuredOutcomes
+    .map((outcome) => {
+      const value = Number.isFinite(outcome.value) ? outcome.value : 0;
+      return `${outcome.label}: ${value} ${outcome.unit} (${outcome.valueMode})`;
+    })
+    .join('; ');
+}
+
+function buildLegacyOrgDescription(data: Omit<ImpactStory, 'id'>) {
+  if (data.orgDescription?.trim()) return data.orgDescription.trim();
+
+  if (data.affiliationType === 'organization') {
+    return data.affiliationDetails?.trim() || 'Affiliated organization';
+  }
+
+  return data.affiliationDetails?.trim() || 'Individual effort';
+}
+
+function buildLegacyImpact(data: Omit<ImpactStory, 'id'>) {
+  if (data.impact?.trim()) return data.impact.trim();
+
+  const scope = data.roleScope ? ROLE_SCOPE_LABELS[data.roleScope] : 'Contributed';
+  const role = data.roleTitle?.trim() || 'Contributor';
+  const causes = [data.primaryCause, ...(data.secondaryCauses || [])].filter(Boolean).join(', ');
+  return `${scope} as ${role}${causes ? ` across ${causes}` : ''}`;
+}
+
+function buildLegacyBusinessValue(data: Omit<ImpactStory, 'id'>) {
+  if (data.businessValue?.trim()) return data.businessValue.trim();
+  const outcomeCount = data.measuredOutcomes?.length || 0;
+  return outcomeCount > 0
+    ? `Delivered ${outcomeCount} measured outcome${outcomeCount > 1 ? 's' : ''}`
+    : 'Structured impact story recorded';
+}
+
+function buildClaimSnapshot(data: Omit<ImpactStory, 'id'>) {
+  const outcomeClaims = (data.measuredOutcomes || []).map((outcome) => ({
+    id: `outcome:${outcome.id}`,
+    outcomeId: outcome.id,
+    label: `${outcome.label} (${outcome.value} ${outcome.unit})`,
+  }));
+
+  return {
+    verificationType: 'impact_story',
+    title: data.title,
+    roleClaim: {
+      id: 'role',
+      label: `Role participation (${data.roleTitle || 'Contributor'}, ${data.roleScope || 'contributed'})`,
+    },
+    outcomeClaims,
+    artifactsClaim: {
+      id: 'artifacts',
+      label: 'Supporting artifacts authenticity',
+      enabled: (data.supportingArtifacts || []).length > 0,
+    },
+  };
+}
+
+function normalizeBaseUrl(url?: string | null) {
+  const base = (url || '').trim();
+  if (!base) return 'http://localhost:3000';
+  return base.endsWith('/') ? base.slice(0, -1) : base;
+}
+
 export async function createImpactStory(data: Omit<ImpactStory, 'id'>) {
   const user = await requireAuth();
+  const timelineText = formatTimelineForLegacy(data.timelineStructured, data.timeline);
+  const outcomesText = formatOutcomesForLegacy(data.measuredOutcomes, data.outcomes);
+  const legacyOrgDescription = buildLegacyOrgDescription(data);
+  const legacyImpact = buildLegacyImpact(data);
+  const legacyBusinessValue = buildLegacyBusinessValue(data);
+
   const [inserted] = await db
     .insert(impactStories)
     .values({
       userId: user.id,
       title: data.title,
-      orgDescription: data.orgDescription,
-      impact: data.impact,
-      businessValue: data.businessValue,
-      outcomes: data.outcomes,
-      timeline: data.timeline,
+      orgDescription: legacyOrgDescription,
+      impact: legacyImpact,
+      businessValue: legacyBusinessValue,
+      outcomes: outcomesText,
+      timeline: timelineText,
+      timelineStructured: data.timelineStructured || {},
+      affiliationType: data.affiliationType ?? null,
+      affiliationDetails: data.affiliationDetails ?? null,
+      roleTitle: data.roleTitle ?? null,
+      roleScope: data.roleScope ?? null,
+      primaryCause: data.primaryCause ?? null,
+      secondaryCauses: data.secondaryCauses ?? [],
+      measuredOutcomes: data.measuredOutcomes || [],
+      supportingArtifacts: data.supportingArtifacts || [],
       verified: data.verified ?? false,
     })
     .returning();
 
+  let verificationWarning: string | null = null;
+
+  if (data.verificationRequest?.verifierEmail) {
+    const token = randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+    const claimSnapshot = buildClaimSnapshot(data);
+
+    const [verificationRequest] = await db
+      .insert(impactStoryVerificationRequests)
+      .values({
+        impactStoryId: inserted.id,
+        requesterProfileId: user.id,
+        verifierEmail: data.verificationRequest.verifierEmail.toLowerCase(),
+        verifierName: data.verificationRequest.verifierName || null,
+        verifierRelationship: data.verificationRequest.verifierRelationship || null,
+        message: data.verificationRequest.message || null,
+        token,
+        status: 'pending',
+        expiresAt,
+        claimSnapshot,
+      })
+      .returning({
+        id: impactStoryVerificationRequests.id,
+      });
+
+    const baseUrl = normalizeBaseUrl(
+      process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || process.env.SITE_URL
+    );
+    const verifyUrl = `${baseUrl}/verify/${token}`;
+
+    const emailResult = await sendEmail({
+      to: data.verificationRequest.verifierEmail,
+      subject: `${data.title} verification request on Proofound`,
+      html: `
+        <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 640px; margin: 0 auto; padding: 20px;">
+          <h2 style="margin-bottom: 16px; color: #1f2937;">Impact story verification request</h2>
+          <p style="color: #374151;">You have been asked to verify claims for the impact story <strong>${data.title}</strong>.</p>
+          <p style="color: #374151;">Please review role participation, measurable outcomes, and supporting artifacts claims.</p>
+          ${
+            data.verificationRequest.message
+              ? `<p style="color: #374151;"><em>"${data.verificationRequest.message}"</em></p>`
+              : ''
+          }
+          <p style="margin-top: 24px;">
+            <a href="${verifyUrl}" style="display: inline-block; background: #1f4d3a; color: white; text-decoration: none; padding: 10px 16px; border-radius: 8px;">Open verification request</a>
+          </p>
+          <p style="color: #6b7280; font-size: 12px; margin-top: 16px;">This link expires on ${expiresAt.toISOString().split('T')[0]}.</p>
+        </div>
+      `,
+      text: `You have been asked to verify claims for "${data.title}". Open: ${verifyUrl}`,
+    });
+
+    if (!emailResult.success) {
+      verificationWarning =
+        emailResult.error || 'Impact story saved, but failed to send verification request.';
+      await db
+        .update(impactStoryVerificationRequests)
+        .set({
+          status: 'failed',
+          emailError: verificationWarning,
+          updatedAt: new Date(),
+        })
+        .where(eq(impactStoryVerificationRequests.id, verificationRequest.id));
+    } else {
+      await db
+        .update(impactStoryVerificationRequests)
+        .set({
+          emailSentAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(impactStoryVerificationRequests.id, verificationRequest.id));
+    }
+  }
+
   revalidatePath('/app/i/profile');
-  return inserted;
+  return {
+    ...inserted,
+    verificationWarning,
+  } as ImpactStoryCreateResult;
 }
 
 export async function deleteImpactStory(id: string) {
