@@ -55,6 +55,10 @@ vi.mock('@/components/settings/VideoIntegrationsManager', () => ({
   VideoIntegrationsManager: () => <div data-testid="video-integrations-manager" />,
 }));
 
+vi.mock('@/components/settings/PortfolioVisibilityCard', () => ({
+  PortfolioVisibilityCard: () => <div data-testid="portfolio-visibility-card" />,
+}));
+
 describe('Settings integrations discoverability', () => {
   beforeEach(() => {
     vi.stubGlobal(

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -41,6 +41,13 @@ interface TopBarProps {
 export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const pathname = usePathname();
+  const isDashboardTab = pathname?.includes('/home') ?? false;
+
+  useEffect(() => {
+    if (!isDashboardTab && customizeOpen) {
+      setCustomizeOpen(false);
+    }
+  }, [isDashboardTab, customizeOpen]);
 
   // Map routes to page titles
   const getPageTitle = () => {
@@ -96,15 +103,17 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
         {/* Right: Notification Bell + Customize + Avatar */}
         <div className="flex items-center gap-2 md:gap-3">
           <NotificationBell />
-          {/* Hide customize button on mobile for space */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCustomizeOpen(true)}
-            className="text-xs h-8 focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 hidden md:flex border-proofound-stone/60"
-          >
-            Customize
-          </Button>
+          {isDashboardTab && (
+            /* Hide customize button on mobile for space */
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCustomizeOpen(true)}
+              className="text-xs h-8 focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 hidden md:flex border-proofound-stone/60"
+            >
+              Customize
+            </Button>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
@@ -137,7 +146,7 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
         </div>
       </header>
 
-      <CustomizeModal open={customizeOpen} onOpenChange={setCustomizeOpen} />
+      {isDashboardTab && <CustomizeModal open={customizeOpen} onOpenChange={setCustomizeOpen} />}
     </>
   );
 }

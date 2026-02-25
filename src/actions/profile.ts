@@ -559,6 +559,29 @@ export async function createEducation(data: Omit<EducationType, 'id'>) {
   return inserted;
 }
 
+export async function updateEducation(id: string, data: Omit<EducationType, 'id'>) {
+  const user = await requireAuth();
+  const [updated] = await db
+    .update(education)
+    .set({
+      institution: data.institution,
+      degree: data.degree,
+      duration: data.duration,
+      skills: data.skills,
+      projects: data.projects,
+      verified: data.verified ?? false,
+    })
+    .where(and(eq(education.id, id), eq(education.userId, user.id)))
+    .returning();
+
+  if (!updated) {
+    throw new Error('Education entry not found.');
+  }
+
+  revalidatePath('/app/i/profile');
+  return updated;
+}
+
 export async function deleteEducation(id: string) {
   const user = await requireAuth();
   await db.delete(education).where(and(eq(education.id, id), eq(education.userId, user.id)));
@@ -584,6 +607,31 @@ export async function createVolunteering(data: Omit<VolunteeringType, 'id'>) {
 
   revalidatePath('/app/i/profile');
   return inserted;
+}
+
+export async function updateVolunteering(id: string, data: Omit<VolunteeringType, 'id'>) {
+  const user = await requireAuth();
+  const [updated] = await db
+    .update(volunteering)
+    .set({
+      title: data.title,
+      orgDescription: data.orgDescription,
+      duration: data.duration,
+      cause: data.cause,
+      impact: data.impact,
+      skillsDeployed: data.skillsDeployed,
+      personalWhy: data.personalWhy,
+      verified: data.verified ?? false,
+    })
+    .where(and(eq(volunteering.id, id), eq(volunteering.userId, user.id)))
+    .returning();
+
+  if (!updated) {
+    throw new Error('Volunteering entry not found.');
+  }
+
+  revalidatePath('/app/i/profile');
+  return updated;
 }
 
 export async function deleteVolunteering(id: string) {

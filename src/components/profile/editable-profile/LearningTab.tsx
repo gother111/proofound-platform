@@ -5,15 +5,21 @@ import type { Education } from '@/types/profile';
 import { Card } from '@/components/ui/card';
 import { TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, GraduationCap, Plus, X } from 'lucide-react';
+import { CheckCircle2, GraduationCap, Pencil, Plus, X } from 'lucide-react';
 
 export interface LearningTabProps {
   education: Education[];
   onAddEducation: () => void;
+  onEditEducation: (education: Education) => void;
   onDeleteEducation: (id: string) => void;
 }
 
-export function LearningTab({ education, onAddEducation, onDeleteEducation }: LearningTabProps) {
+export function LearningTab({
+  education,
+  onAddEducation,
+  onEditEducation,
+  onDeleteEducation,
+}: LearningTabProps) {
   return (
     <TabsContent value="learning" className="space-y-6">
       <div className="flex items-center justify-between mb-4">
@@ -85,18 +91,28 @@ export function LearningTab({ education, onAddEducation, onDeleteEducation }: Le
             className="p-6 border-2 hover:border-[#5C8B89]/30 hover:shadow-md transition-all duration-300 group relative overflow-hidden"
           >
             <div className="absolute top-0 left-0 w-1 h-full bg-[#5C8B89] opacity-0 group-hover:opacity-100 transition-opacity" />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={() => {
-                if (confirm('Are you sure you want to delete this education?')) {
-                  onDeleteEducation(edu.id);
-                }
-              }}
-            >
-              <X className="w-4 h-4" />
-            </Button>
+            <div className="absolute right-4 top-4 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onEditEducation(edu)}
+                aria-label={`Edit ${edu.degree}`}
+              >
+                <Pencil className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  if (confirm('Are you sure you want to delete this education?')) {
+                    onDeleteEducation(edu.id);
+                  }
+                }}
+                aria-label={`Delete ${edu.degree}`}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-full bg-muted/30 flex items-center justify-center flex-shrink-0">
                 <GraduationCap className="w-5 h-5 text-[#5C8B89]" />

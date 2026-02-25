@@ -53,8 +53,6 @@ export interface AddSkillDrawerViewProps {
   setLevel: Dispatch<SetStateAction<number>>;
   lastUsedDate: string;
   setLastUsedDate: Dispatch<SetStateAction<string>>;
-  relevance: 'current' | 'emerging' | 'obsolete';
-  setRelevance: Dispatch<SetStateAction<'current' | 'emerging' | 'obsolete'>>;
   proofUrl: string;
   setProofUrl: Dispatch<SetStateAction<string>>;
   proofNotes: string;
@@ -110,8 +108,6 @@ export function AddSkillDrawerView({
   setLevel,
   lastUsedDate,
   setLastUsedDate,
-  relevance,
-  setRelevance,
   proofUrl,
   setProofUrl,
   proofNotes,
@@ -225,8 +221,6 @@ export function AddSkillDrawerView({
             setLevel={setLevel}
             lastUsedDate={lastUsedDate}
             setLastUsedDate={setLastUsedDate}
-            relevance={relevance}
-            setRelevance={setRelevance}
             proofUrl={proofUrl}
             setProofUrl={setProofUrl}
             proofNotes={proofNotes}
