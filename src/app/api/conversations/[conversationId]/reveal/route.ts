@@ -17,6 +17,7 @@ import { eq } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { Resend } from 'resend';
 import IdentityRevealed from '@/../emails/IdentityRevealed';
+import { EMAIL_CONFIG } from '@/lib/email/config';
 
 function getResendClient(): Resend | null {
   const apiKey = process.env.RESEND_API_KEY;
@@ -203,11 +204,7 @@ async function sendIdentityRevealedEmails(
       return;
     }
 
-    const emailFrom = process.env.EMAIL_FROM;
-    if (!emailFrom) {
-      log.error('identity_revealed_email.missing_email_from', { conversationId });
-      return;
-    }
+    const emailFrom = EMAIL_CONFIG.from;
 
     // Fetch participant profiles
     const participantOne = await db.query.profiles.findFirst({

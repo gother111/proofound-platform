@@ -15,6 +15,7 @@ import { generateFairnessNote } from '@/lib/analytics/fairness-note-generator';
 import { db } from '@/db';
 import { fairnessNotes } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { EMAIL_CONFIG } from '@/lib/email/config';
 
 export async function GET(request: NextRequest) {
   // Verify cron secret for security
@@ -172,7 +173,7 @@ async function sendFairnessAlertEmail(note: any): Promise<void> {
       const resend = new Resend(process.env.RESEND_API_KEY);
 
       await resend.emails.send({
-        from: process.env.EMAIL_FROM || 'fairness@proofound.app',
+        from: EMAIL_CONFIG.from,
         to: process.env.FAIRNESS_ALERT_EMAILS?.split(',') || ['admin@proofound.app'],
         subject: `⚠️ Fairness Alert: ${note.releaseVersion} - Significant Gaps Detected`,
         html: emailContent,

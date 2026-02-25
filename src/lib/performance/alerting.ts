@@ -11,6 +11,7 @@ import { db } from '@/db';
 import { performanceMetrics, performanceAlerts } from '@/db/schema';
 import type { InsertPerformanceAlert } from '@/db/schema';
 import { and, gte, desc, isNotNull, sql } from 'drizzle-orm';
+import { EMAIL_CONFIG } from '@/lib/email/config';
 
 // SLA thresholds in milliseconds
 export const SLA_THRESHOLDS = {
@@ -330,7 +331,7 @@ async function sendEmailAlert(violations: AlertResult['violations']): Promise<vo
   `;
 
   await resend.emails.send({
-    from: process.env.EMAIL_FROM || 'alerts@proofound.app',
+    from: EMAIL_CONFIG.from,
     to: process.env.PERFORMANCE_ALERT_EMAILS?.split(',') || ['admin@proofound.app'],
     subject: `⚠️ Performance Alert: ${criticalViolations.length} Critical, ${highViolations.length} High Priority`,
     html: emailContent,
