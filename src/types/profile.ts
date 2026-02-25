@@ -38,6 +38,8 @@ export interface Experience {
   title: string;
   orgDescription: string;
   duration: string;
+  startDate?: string | null;
+  endDate?: string | null;
   learning: string;
   growth: string;
   verified: boolean | null;
