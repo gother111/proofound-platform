@@ -55,7 +55,12 @@
     "log:session": "node ./scripts/new-session-log.mjs session",
     "log:change": "node ./scripts/new-session-log.mjs change",
     "test:smoke:gap-service": "tsx scripts/smoke-skill-gaps.ts",
-    "test:smoke:learning": "tsx scripts/smoke-learning-provider.ts"
+    "test:smoke:learning": "tsx scripts/smoke-learning-provider.ts",
+    "test:taxonomy:coverage": "tsx scripts/check-taxonomy-coverage.ts",
+    "taxonomy:build:canonical": "tsx scripts/taxonomy-build-canonical-wave.ts",
+    "taxonomy:build:aliases": "tsx scripts/taxonomy-build-alias-wave.ts",
+    "taxonomy:validate:aliases": "tsx scripts/taxonomy-validate-alias-quality.ts",
+    "taxonomy:report:search-misses": "tsx scripts/taxonomy-report-search-misses.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",
