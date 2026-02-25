@@ -37,8 +37,6 @@ type BrowseModePanelProps = {
   setLevel: (value: number) => void;
   lastUsedDate: string;
   setLastUsedDate: (value: string) => void;
-  relevance: 'current' | 'emerging' | 'obsolete';
-  setRelevance: (value: 'current' | 'emerging' | 'obsolete') => void;
   proofUrl: string;
   setProofUrl: (value: string) => void;
   proofNotes: string;
@@ -74,8 +72,6 @@ export function BrowseModePanel({
   setLevel,
   lastUsedDate,
   setLastUsedDate,
-  relevance,
-  setRelevance,
   proofUrl,
   setProofUrl,
   proofNotes,
@@ -398,39 +394,6 @@ export function BrowseModePanel({
               className="mt-1"
             />
             <p className="text-xs text-[#6B6760] mt-1">When did you last use this skill?</p>
-          </div>
-
-          <div>
-            <Label className="text-[#2D3330] mb-3 block">Relevance</Label>
-            <RadioGroup value={relevance} onValueChange={setRelevance}>
-              <div className="flex items-center space-x-3 mb-2">
-                <RadioGroupItem value="current" id="relevance-current" />
-                <Label htmlFor="relevance-current" className="cursor-pointer">
-                  <Badge variant="outline" className="bg-[#EEF1EA] text-[#1C4D3A] border-[#7A9278]">
-                    Current
-                  </Badge>
-                  <span className="ml-2 text-sm text-[#6B6760]">Widely used today</span>
-                </Label>
-              </div>
-              <div className="flex items-center space-x-3 mb-2">
-                <RadioGroupItem value="emerging" id="relevance-emerging" />
-                <Label htmlFor="relevance-emerging" className="cursor-pointer">
-                  <Badge variant="outline" className="bg-[#E8F3F8] text-[#3E5C73] border-[#6B9AB8]">
-                    Emerging
-                  </Badge>
-                  <span className="ml-2 text-sm text-[#6B6760]">Growing in demand</span>
-                </Label>
-              </div>
-              <div className="flex items-center space-x-3">
-                <RadioGroupItem value="obsolete" id="relevance-obsolete" />
-                <Label htmlFor="relevance-obsolete" className="cursor-pointer">
-                  <Badge variant="outline" className="bg-[#FFF0F0] text-[#8B4A36] border-[#C76B4A]">
-                    Obsolete
-                  </Badge>
-                  <span className="ml-2 text-sm text-[#6B6760]">Declining use</span>
-                </Label>
-              </div>
-            </RadioGroup>
           </div>
 
           <div className="border-t border-[#E5E3DA] pt-6">

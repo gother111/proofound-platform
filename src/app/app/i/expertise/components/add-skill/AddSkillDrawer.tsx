@@ -53,7 +53,6 @@ export function AddSkillDrawer({
   const [l4Name, setL4Name] = useState('');
   const [level, setLevel] = useState(2);
   const [lastUsedDate, setLastUsedDate] = useState('');
-  const [relevance, setRelevance] = useState<'current' | 'emerging' | 'obsolete'>('current');
   const [proofUrl, setProofUrl] = useState('');
   const [proofNotes, setProofNotes] = useState('');
   const [saving, setSaving] = useState(false);
@@ -108,7 +107,6 @@ export function AddSkillDrawer({
         setL4Name('');
         setLevel(2);
         setLastUsedDate('');
-        setRelevance('current');
         setProofUrl('');
         setProofNotes('');
         setL4Skills([]);
@@ -374,7 +372,6 @@ export function AddSkillDrawer({
         level: 2,
         months_experience: 0,
         last_used_at: new Date().toISOString(),
-        relevance: 'current',
       });
 
       if (response.ok) {
@@ -460,7 +457,6 @@ export function AddSkillDrawer({
           level: 2,
           months_experience: 0,
           last_used_at: new Date().toISOString(),
-          relevance: 'current',
         });
 
         if (response.ok) {
@@ -564,7 +560,6 @@ export function AddSkillDrawer({
         level,
         months_experience: 0,
         last_used_at: lastUsedDate || new Date().toISOString(),
-        relevance,
       };
 
       if (selectedL4) {
@@ -623,7 +618,6 @@ export function AddSkillDrawer({
           setShowL4Dropdown(false);
           setLevel(2);
           setLastUsedDate('');
-          setRelevance('current');
           setProofUrl('');
           setProofNotes('');
         } else {
@@ -689,8 +683,6 @@ export function AddSkillDrawer({
       setLevel={setLevel}
       lastUsedDate={lastUsedDate}
       setLastUsedDate={setLastUsedDate}
-      relevance={relevance}
-      setRelevance={setRelevance}
       proofUrl={proofUrl}
       setProofUrl={setProofUrl}
       proofNotes={proofNotes}
