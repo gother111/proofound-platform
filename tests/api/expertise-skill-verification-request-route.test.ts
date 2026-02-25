@@ -34,8 +34,12 @@ function createRequest(origin: string, body: Record<string, unknown>) {
   });
 }
 
-function createSupabaseMock(insertResult: { id: string }) {
+function createSupabaseMock(
+  insertResult: { id: string },
+  options?: { missingTokenColumnOnFirstInsert?: boolean }
+) {
   const inserts: any[] = [];
+  let insertCalls = 0;
 
   const skillsQuery = {
     select: vi.fn().mockReturnThis(),
@@ -66,15 +70,29 @@ function createSupabaseMock(insertResult: { id: string }) {
   const verificationRequestsQuery = {
     insert: vi.fn().mockImplementation((payload: any) => {
       inserts.push(payload);
+      insertCalls += 1;
       return {
         select: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: {
-              ...insertResult,
-              ...payload,
-            },
-            error: null,
-          }),
+          single: vi.fn().mockResolvedValue(
+            options?.missingTokenColumnOnFirstInsert &&
+              insertCalls === 1 &&
+              payload?.verification_token
+              ? {
+                  data: null,
+                  error: {
+                    code: 'PGRST204',
+                    message:
+                      "Could not find the 'verification_token' column of 'skill_verification_requests' in the schema cache",
+                  },
+                }
+              : {
+                  data: {
+                    ...insertResult,
+                    ...payload,
+                  },
+                  error: null,
+                }
+          ),
         }),
       };
     }),
@@ -173,5 +191,40 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
 
     const sentEmailPayload = (sendEmail as any).mock.calls[0][0];
     expect(sentEmailPayload.html).toContain('https://staging.proofound.io/verify/');
+  });
+
+  it('falls back to legacy insert when verification_token column is missing', async () => {
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://proofound.io';
+    process.env.NEXT_PUBLIC_APP_URL = '';
+
+    const { supabase, inserts } = createSupabaseMock(
+      { id: '123e4567-e89b-42d3-a456-426614174000' },
+      { missingTokenColumnOnFirstInsert: true }
+    );
+    (createClient as any).mockResolvedValue(supabase);
+    (sendEmail as any).mockResolvedValue({ success: true, id: 'email-legacy' });
+
+    const response = await POST(
+      createRequest('https://proofound.io', {
+        verifierSource: 'peer',
+        verifierEmail: 'Legacy@Example.COM',
+      }),
+      params
+    );
+
+    expect(response.status).toBe(201);
+    const body = await response.json();
+    expect(body.email_sent).toBe(true);
+    expect(body.request.id).toBe('123e4567-e89b-42d3-a456-426614174000');
+
+    expect(inserts).toHaveLength(2);
+    expect(inserts[0].verification_token).toMatch(/^[a-f0-9]{64}$/);
+    expect(inserts[1].verification_token).toBeUndefined();
+    expect(inserts[1].verifier_email).toBe('legacy@example.com');
+
+    const sentEmailPayload = (sendEmail as any).mock.calls[0][0];
+    expect(sentEmailPayload.html).toContain(
+      'https://proofound.io/verify/123e4567-e89b-42d3-a456-426614174000'
+    );
   });
 });

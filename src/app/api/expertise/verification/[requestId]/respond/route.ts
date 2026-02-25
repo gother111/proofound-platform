@@ -11,7 +11,7 @@ const RespondSchema = z.object({
 
 /**
  * POST /api/expertise/verification/[requestId]/respond
- * 
+ *
  * Allow verifiers to accept or decline verification requests.
  */
 export async function POST(
@@ -23,46 +23,37 @@ export async function POST(
     const supabase = await createClient();
     const body = await request.json();
     const { requestId } = await params;
-    
+
     const validated = RespondSchema.parse(body);
-    
+
     // Fetch the verification request
     const { data: verificationRequest, error: fetchError } = await supabase
       .from('skill_verification_requests')
       .select('*')
       .eq('id', requestId)
       .single();
-    
+
     if (fetchError || !verificationRequest) {
-      return NextResponse.json(
-        { error: 'Verification request not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Verification request not found' }, { status: 404 });
     }
-    
+
     // Get current user's email
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('id', user.id)
-      .single();
-    
     const { data: authUser } = await supabase.auth.getUser();
-    const userEmail = authUser.user?.email;
-    
+    const userEmail = authUser.user?.email?.toLowerCase() || '';
+
     // Check if user is authorized to respond
     // User must be the intended verifier (by email or profile ID)
-    const isAuthorized = 
+    const isAuthorized =
       verificationRequest.verifier_profile_id === user.id ||
-      verificationRequest.verifier_email === userEmail;
-    
+      (verificationRequest.verifier_email || '').toLowerCase() === userEmail;
+
     if (!isAuthorized) {
       return NextResponse.json(
         { error: 'Not authorized to respond to this verification request' },
         { status: 403 }
       );
     }
-    
+
     // Check if request is still pending
     if (verificationRequest.status !== 'pending') {
       return NextResponse.json(
@@ -70,7 +61,7 @@ export async function POST(
         { status: 400 }
       );
     }
-    
+
     // Update verification request
     const { data: updated, error: updateError } = await supabase
       .from('skill_verification_requests')
@@ -83,13 +74,10 @@ export async function POST(
       .eq('id', requestId)
       .select()
       .single();
-    
+
     if (updateError) {
       console.error('Error updating verification request:', updateError);
-      return NextResponse.json(
-        { error: 'Failed to update verification request' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to update verification request' }, { status: 500 });
     }
 
     // Notify the requester that verification was completed
@@ -97,13 +85,13 @@ export async function POST(
       const { data: requesterProfile } = await supabase
         .from('profiles')
         .select('display_name, handle')
-        .eq('id', verificationRequest.requester_id)
+        .eq('id', verificationRequest.requester_profile_id)
         .single();
 
       const verifierName = requesterProfile?.display_name || requesterProfile?.handle || 'Someone';
 
       await notifyVerificationCompleted(
-        verificationRequest.requester_id,
+        verificationRequest.requester_profile_id,
         requestId,
         verifierName,
         validated.action === 'accept'
@@ -117,7 +105,6 @@ export async function POST(
       request: updated,
       message: `Verification request ${validated.action === 'accept' ? 'accepted' : 'declined'} successfully`,
     });
-    
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -129,4 +116,3 @@ export async function POST(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

@@ -16,6 +16,77 @@ function isRelationMissingError(error: unknown) {
   );
 }
 
+function isMissingColumnError(error: unknown, column: string) {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  const e = error as { code?: string; message?: string; details?: string; hint?: string };
+  const errorText = `${e.message || ''} ${e.details || ''} ${e.hint || ''}`.toLowerCase();
+  return (e.code === 'PGRST204' || e.code === '42703') && errorText.includes(column.toLowerCase());
+}
+
+function isNotFoundError(error: unknown) {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  const e = error as { code?: string; message?: string; details?: string };
+  if (e.code === 'PGRST116') {
+    return true;
+  }
+
+  const errorText = `${e.message || ''} ${e.details || ''}`.toLowerCase();
+  return errorText.includes('0 rows') || errorText.includes('no rows');
+}
+
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
+function shouldFallbackToLegacyRequestIdLookup(token: string, tokenLookupError: unknown): boolean {
+  if (!isUuid(token)) {
+    return false;
+  }
+
+  return (
+    isMissingColumnError(tokenLookupError, 'verification_token') ||
+    isNotFoundError(tokenLookupError)
+  );
+}
+
+async function getSkillVerificationByTokenOrLegacyId(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  token: string,
+  selectClause: string
+): Promise<{ data: any; error: any }> {
+  const tokenLookup = await supabase
+    .from('skill_verification_requests')
+    .select(selectClause)
+    .eq('verification_token', token)
+    .single();
+
+  if (tokenLookup.data) {
+    return { data: tokenLookup.data as any, error: null };
+  }
+
+  if (!shouldFallbackToLegacyRequestIdLookup(token, tokenLookup.error)) {
+    return { data: null, error: tokenLookup.error };
+  }
+
+  const idLookup = await supabase
+    .from('skill_verification_requests')
+    .select(selectClause)
+    .eq('id', token)
+    .single();
+
+  if (idLookup.data) {
+    return { data: idLookup.data as any, error: null };
+  }
+
+  return { data: null, error: idLookup.error || tokenLookup.error };
+}
+
 function normalizeBaseUrl(url?: string | null) {
   const base = (url || '').trim();
   if (!base) return 'https://proofound.com';
@@ -120,9 +191,10 @@ export async function GET(
     }
 
     // 2) Fallback to existing skill verification flow
-    const { data: verification, error: verificationError } = await supabase
-      .from('skill_verification_requests')
-      .select(
+    const { data: verification, error: verificationError } =
+      await getSkillVerificationByTokenOrLegacyId(
+        supabase,
+        token,
         `
         id,
         skill_id,
@@ -141,9 +213,7 @@ export async function GET(
           )
         )
       `
-      )
-      .eq('verification_token', token)
-      .single();
+      );
 
     if (verificationError || !verification) {
       return NextResponse.json(
@@ -412,9 +482,10 @@ export async function POST(
     }
 
     // 2) Fallback to existing skill verification flow
-    const { data: verification, error: verificationError } = await supabase
-      .from('skill_verification_requests')
-      .select(
+    const { data: verification, error: verificationError } =
+      await getSkillVerificationByTokenOrLegacyId(
+        supabase,
+        token,
         `
         id, 
         skill_id, 
@@ -431,9 +502,7 @@ export async function POST(
           )
         )
       `
-      )
-      .eq('verification_token', token)
-      .single();
+      );
 
     if (verificationError || !verification) {
       return NextResponse.json(

@@ -19,6 +19,17 @@ function generateVerificationToken(): string {
   return randomBytes(32).toString('hex');
 }
 
+function isMissingVerificationTokenColumnError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  const e = error as { code?: string; message?: string; details?: string; hint?: string };
+  const errorText = `${e.message || ''} ${e.details || ''} ${e.hint || ''}`.toLowerCase();
+
+  return (e.code === 'PGRST204' || e.code === '42703') && errorText.includes('verification_token');
+}
+
 /**
  * POST /api/expertise/user-skills/[id]/verification-request
  *
@@ -71,23 +82,53 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
 
-    // Create verification request with token
-    const { data: verificationRequest, error: createError } = await supabase
+    const verificationInsert = {
+      skill_id: skillId,
+      requester_profile_id: user.id,
+      verifier_email: normalizedVerifierEmail,
+      verifier_source: validated.verifierSource,
+      message: validated.message || null,
+      verification_token: verificationToken,
+      expires_at: expiresAt.toISOString(),
+    };
+
+    // Create verification request with token. Fallback to legacy insert when
+    // the DB has not received the verification_token migration yet.
+    const { data: verificationRequestWithToken, error: createWithTokenError } = await supabase
       .from('skill_verification_requests')
-      .insert({
-        skill_id: skillId,
-        requester_profile_id: user.id,
-        verifier_email: normalizedVerifierEmail,
-        verifier_source: validated.verifierSource,
-        message: validated.message || null,
-        verification_token: verificationToken,
-        expires_at: expiresAt.toISOString(),
-      })
+      .insert(verificationInsert)
       .select()
       .single();
 
-    if (createError) {
-      console.error('Error creating verification request:', createError);
+    let verificationRequest = verificationRequestWithToken;
+    let linkToken = verificationToken;
+
+    if (
+      !verificationRequestWithToken &&
+      isMissingVerificationTokenColumnError(createWithTokenError)
+    ) {
+      console.warn(
+        'verification_token column missing, retrying legacy verification request insert'
+      );
+      const { verification_token: _ignored, ...legacyInsert } = verificationInsert;
+      const { data: legacyVerificationRequest, error: legacyInsertError } = await supabase
+        .from('skill_verification_requests')
+        .insert(legacyInsert)
+        .select()
+        .single();
+
+      if (legacyInsertError || !legacyVerificationRequest) {
+        console.error('Error creating verification request (legacy fallback):', legacyInsertError);
+        return NextResponse.json(
+          { error: 'Failed to create verification request' },
+          { status: 500 }
+        );
+      }
+
+      verificationRequest = legacyVerificationRequest;
+      linkToken = legacyVerificationRequest.id;
+    } else if (createWithTokenError || !verificationRequestWithToken) {
+      console.error('Error creating verification request:', createWithTokenError);
       return NextResponse.json({ error: 'Failed to create verification request' }, { status: 500 });
     }
 
@@ -102,7 +143,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       process.env.NEXT_PUBLIC_SITE_URL ||
       process.env.NEXT_PUBLIC_APP_URL ||
       'http://localhost:3000';
-    const verifyUrl = `${baseUrl}/verify/${verificationToken}`;
+    const verifyUrl = `${baseUrl}/verify/${linkToken}`;
 
     // Get requester name
     const requesterName =

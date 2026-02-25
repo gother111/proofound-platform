@@ -19,6 +19,7 @@ vi.mock('@/lib/email/sender', () => ({
 }));
 
 const TOKEN = 'a'.repeat(64);
+const LEGACY_REQUEST_ID = '123e4567-e89b-42d3-a456-426614174000';
 
 function buildImpactAdminClient(overrides?: {
   impactRequest?: any;
@@ -112,6 +113,99 @@ function buildImpactAdminClient(overrides?: {
   };
 }
 
+function buildEmptyImpactAdminClient() {
+  return {
+    from: vi.fn(() => ({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+        }),
+      }),
+    })),
+  };
+}
+
+function buildSkillClientForLegacyIdLookup() {
+  const verificationRecord = {
+    id: LEGACY_REQUEST_ID,
+    skill_id: 'skill-1',
+    requester_profile_id: 'user-1',
+    verifier_email: 'verifier@example.com',
+    verifier_source: 'peer',
+    message: 'Please verify this skill',
+    status: 'pending',
+    created_at: '2026-02-24T00:00:00.000Z',
+    expires_at: '2099-02-24T00:00:00.000Z',
+    skills: {
+      skill_id: 'custom-1-2-3-system-design',
+      skill_code: null,
+      taxonomy: {
+        name_i18n: {
+          en: 'System Design',
+        },
+      },
+    },
+  };
+
+  return {
+    from: vi.fn((table: string) => {
+      if (table === 'skill_verification_requests') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn((column: string) => {
+              if (column === 'verification_token') {
+                return {
+                  single: vi.fn().mockResolvedValue({
+                    data: null,
+                    error: {
+                      code: 'PGRST204',
+                      message:
+                        "Could not find the 'verification_token' column of 'skill_verification_requests' in the schema cache",
+                    },
+                  }),
+                };
+              }
+
+              if (column === 'id') {
+                return {
+                  single: vi.fn().mockResolvedValue({
+                    data: verificationRecord,
+                    error: null,
+                  }),
+                };
+              }
+
+              throw new Error(`Unexpected lookup column: ${column}`);
+            }),
+          }),
+          update: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ error: null }),
+          }),
+        };
+      }
+
+      if (table === 'profiles') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({
+                data: {
+                  display_name: 'Requester',
+                  avatar_url: null,
+                  email: 'requester@example.com',
+                },
+                error: null,
+              }),
+            }),
+          }),
+        };
+      }
+
+      throw new Error(`Unexpected table: ${table}`);
+    }),
+  };
+}
+
 describe('verify impact token route', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -162,5 +256,23 @@ describe('verify impact token route', () => {
     expect(body.confirmed_claims.role).toBe(true);
     expect(body.confirmed_claims.outcomes).toEqual(['o1']);
     expect(impactUpdatePayload).toMatchObject({ verified: true });
+  });
+
+  it('GET falls back to legacy request id lookup when verification_token column is unavailable', async () => {
+    createAdminClientMock.mockReturnValue(buildEmptyImpactAdminClient());
+    createClientMock.mockReturnValue(buildSkillClientForLegacyIdLookup());
+
+    const response = await GET(
+      new NextRequest(`http://localhost/api/verify/${LEGACY_REQUEST_ID}`),
+      {
+        params: Promise.resolve({ token: LEGACY_REQUEST_ID }),
+      }
+    );
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.verification.verification_type).toBe('skill');
+    expect(body.verification.id).toBe(LEGACY_REQUEST_ID);
+    expect(body.verification.skill_name).toBe('System Design');
   });
 });
