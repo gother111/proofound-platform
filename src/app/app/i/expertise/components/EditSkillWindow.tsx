@@ -33,6 +33,23 @@ const LEVEL_LABELS = [
   { value: 5, label: 'Expert', description: 'Recognized authority' },
 ];
 
+function deriveProofTitleFromUrl(rawUrl: string): string {
+  try {
+    const parsed = new URL(rawUrl);
+    const pathname = parsed.pathname.replace(/\/+$/, '');
+    const lastSegment = pathname.split('/').filter(Boolean).pop();
+
+    if (lastSegment) {
+      const decoded = decodeURIComponent(lastSegment).replace(/[-_]+/g, ' ').trim();
+      if (decoded.length > 0) return decoded.slice(0, 80);
+    }
+
+    return parsed.hostname || 'Proof Link';
+  } catch {
+    return 'Proof Link';
+  }
+}
+
 type SkillRecord = {
   id: string;
   level?: number;
@@ -223,16 +240,31 @@ export function EditSkillWindow({
   };
 
   const handleAddProof = async () => {
-    if (!newProof.title) {
+    const hasTitle = Boolean(newProof.title?.trim());
+    const hasUrl = Boolean(newProof.url?.trim());
+
+    if (!hasTitle && !hasUrl) {
+      toast({
+        title: 'Missing proof details',
+        description: 'Add a title or a URL before submitting a proof.',
+        variant: 'destructive',
+      });
       return;
     }
+
+    const payload: ProofDraft = {
+      ...newProof,
+      title: hasTitle ? newProof.title.trim() : deriveProofTitleFromUrl(newProof.url.trim()),
+      description: newProof.description?.trim() || '',
+      url: newProof.url?.trim() || '',
+    };
 
     setAddingProof(true);
     try {
       const response = await apiFetch(`/api/expertise/user-skills/${skill.id}/proofs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newProof),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
@@ -240,7 +272,7 @@ export function EditSkillWindow({
         setProofs((current) => [...current, data.proof]);
         toast({
           title: '📎 Proof Added',
-          description: `"${newProof.title}" has been attached to this skill.`,
+          description: `"${payload.title}" has been attached to this skill.`,
         });
         setNewProof({
           proofType: 'project',
@@ -250,13 +282,14 @@ export function EditSkillWindow({
           issuedDate: '',
         });
         setShowAddProof(false);
+        onSkillUpdated();
         return;
       }
 
-      const error = (await response.json()) as { error?: string };
+      const error = (await response.json()) as { error?: string; message?: string };
       toast({
         title: 'Error',
-        description: error.error || 'Failed to add proof. Please try again.',
+        description: error.message || error.error || 'Failed to add proof. Please try again.',
         variant: 'destructive',
       });
     } catch (error) {
@@ -283,6 +316,7 @@ export function EditSkillWindow({
           title: 'Proof Removed',
           description: 'The proof has been removed from this skill.',
         });
+        onSkillUpdated();
         return;
       }
 

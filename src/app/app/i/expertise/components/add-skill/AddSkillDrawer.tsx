@@ -90,6 +90,23 @@ export function AddSkillDrawer({
     }
   };
 
+  const deriveProofTitleFromUrl = (rawUrl: string) => {
+    try {
+      const parsed = new URL(rawUrl);
+      const pathname = parsed.pathname.replace(/\/+$/, '');
+      const lastSegment = pathname.split('/').filter(Boolean).pop();
+
+      if (lastSegment) {
+        const decoded = decodeURIComponent(lastSegment).replace(/[-_]+/g, ' ').trim();
+        if (decoded.length > 0) return decoded.slice(0, 80);
+      }
+
+      return parsed.hostname || 'Proof Link';
+    } catch {
+      return 'Proof Link';
+    }
+  };
+
   // Reset drawer state when closed
   useEffect(() => {
     if (!open) {
@@ -580,28 +597,54 @@ export function AddSkillDrawer({
 
         // If proof URL is provided, attach it to the newly created skill
         let proofAttached = false;
-        if (proofUrl && skillData.skill?.id) {
+        let proofAttachError: string | null = null;
+        const trimmedProofUrl = proofUrl.trim();
+        const shouldAttachProof = Boolean(trimmedProofUrl && skillData.skill?.id);
+        if (shouldAttachProof) {
           try {
             const proofResponse = await attachSkillProof(skillData.skill.id, {
               proofType: 'link',
-              title: proofNotes || 'Proof Link',
-              description: proofNotes || '',
-              url: proofUrl,
+              title: proofNotes.trim() || deriveProofTitleFromUrl(trimmedProofUrl),
+              description: proofNotes.trim() || '',
+              url: trimmedProofUrl,
             });
-            proofAttached = proofResponse.ok;
+            if (proofResponse.ok) {
+              proofAttached = true;
+              if (skillData?.skill) {
+                skillData.skill.proof_count = (skillData.skill.proof_count || 0) + 1;
+              }
+            } else {
+              const proofErrorBody = (await proofResponse.json().catch(() => null)) as {
+                error?: string;
+                message?: string;
+              } | null;
+              proofAttachError =
+                proofErrorBody?.message ||
+                proofErrorBody?.error ||
+                `Proof API returned ${proofResponse.status}`;
+            }
           } catch (proofError) {
             console.error('Error attaching proof:', proofError);
-            // Don't fail the whole operation if proof attachment fails
+            proofAttachError = 'Network error while attaching proof.';
           }
         }
 
-        // Show success toast
-        toast({
-          title: '✅ Skill Added',
-          description: proofAttached
-            ? `"${l4Search}" has been added to your atlas with proof attached.`
-            : `"${l4Search}" has been added to your Expertise Atlas.`,
-        });
+        if (shouldAttachProof && !proofAttached) {
+          toast({
+            title: '⚠️ Skill added, proof failed',
+            description: proofAttachError
+              ? `The skill was saved, but proof could not be attached: ${proofAttachError}`
+              : 'The skill was saved, but proof could not be attached.',
+            variant: 'destructive',
+          });
+        } else {
+          toast({
+            title: '✅ Skill Added',
+            description: proofAttached
+              ? `"${l4Search}" has been added to your atlas with proof attached.`
+              : `"${l4Search}" has been added to your Expertise Atlas.`,
+          });
+        }
 
         onSkillAdded(skillData?.skill);
 
