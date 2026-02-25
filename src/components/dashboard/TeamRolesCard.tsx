@@ -36,6 +36,7 @@ interface TeamRolesCardProps {
   orgSlug?: string;
   orgId?: string;
   canManageSettings?: boolean;
+  onVisibilityChange?: (visible: boolean) => void;
 }
 
 // Type definitions
@@ -76,7 +77,12 @@ function getInitials(name: string | null | undefined): string {
     .toUpperCase();
 }
 
-export function TeamRolesCard({ orgSlug, orgId, canManageSettings = false }: TeamRolesCardProps) {
+export function TeamRolesCard({
+  orgSlug,
+  orgId,
+  canManageSettings = false,
+  onVisibilityChange,
+}: TeamRolesCardProps) {
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [stats, setStats] = useState<TeamStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -114,6 +120,17 @@ export function TeamRolesCard({ orgSlug, orgId, canManageSettings = false }: Tea
 
     fetchTeam();
   }, [orgId]);
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (!orgId) {
+      onVisibilityChange?.(true);
+      return;
+    }
+
+    const hasVisibleContent = error ? true : members.length > 0;
+    onVisibilityChange?.(hasVisibleContent);
+  }, [error, isLoading, members.length, onVisibilityChange, orgId]);
 
   // If no orgId provided, show individual placeholder
   if (!orgId) {

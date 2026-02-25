@@ -55,6 +55,9 @@ export function ExpertiseAtlasClient({
   const [isL2ModalOpen, setIsL2ModalOpen] = useState(false);
   const [isAddSkillDrawerOpen, setIsAddSkillDrawerOpen] = useState(false);
   const [isEditSkillWindowOpen, setIsEditSkillWindowOpen] = useState(false);
+  const [editSkillFocus, setEditSkillFocus] = useState<'details' | 'proofs' | 'verification'>(
+    'details'
+  );
   const [isLinkedInImportModalOpen, setIsLinkedInImportModalOpen] = useState(false);
   const [skillToEdit, setSkillToEdit] = useState<any | null>(null);
   const [expandedL4, setExpandedL4] = useState<string | null>(null);
@@ -285,8 +288,12 @@ export function ExpertiseAtlasClient({
     setExpandedL4(expandedL4 === skillId ? null : skillId);
   };
 
-  const handleSkillEdit = (skill: any) => {
+  const handleSkillEdit = (
+    skill: any,
+    focus: 'details' | 'proofs' | 'verification' = 'details'
+  ) => {
     setSkillToEdit(skill);
+    setEditSkillFocus(focus);
     setIsEditSkillWindowOpen(true);
   };
 
@@ -603,7 +610,7 @@ export function ExpertiseAtlasClient({
                         <L4Card
                           key={skill.id}
                           skill={skill}
-                          onEdit={() => handleSkillEdit(skill)}
+                          onEdit={(focus) => handleSkillEdit(skill, focus || 'details')}
                         />
                       ))}
                     </div>
@@ -647,8 +654,14 @@ export function ExpertiseAtlasClient({
         {/* Edit Skill Window */}
         <EditSkillWindow
           open={isEditSkillWindowOpen}
-          onOpenChange={setIsEditSkillWindowOpen}
+          onOpenChange={(open) => {
+            setIsEditSkillWindowOpen(open);
+            if (!open) {
+              setEditSkillFocus('details');
+            }
+          }}
           skill={skillToEdit}
+          initialFocus={editSkillFocus}
           onSkillUpdated={handleSkillAdded}
           onSkillDeleted={handleSkillDeleted}
         />

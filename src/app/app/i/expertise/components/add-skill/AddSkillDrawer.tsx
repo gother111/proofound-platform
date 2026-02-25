@@ -70,6 +70,8 @@ export function AddSkillDrawer({
   const [proofUploadError, setProofUploadError] = useState('');
   const [proofUploading, setProofUploading] = useState(false);
   const [proofNotes, setProofNotes] = useState('');
+  const [proofIssuedDate, setProofIssuedDate] = useState('');
+  const [proofExpiresDate, setProofExpiresDate] = useState('');
   const [requestVerification, setRequestVerification] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState('');
   const [verificationSource, setVerificationSource] = useState<SkillVerificationSource>('peer');
@@ -161,6 +163,8 @@ export function AddSkillDrawer({
         setProofUploadError('');
         setProofUploading(false);
         setProofNotes('');
+        setProofIssuedDate('');
+        setProofExpiresDate('');
         setRequestVerification(false);
         setVerificationEmail('');
         setVerificationSource('peer');
@@ -658,6 +662,19 @@ export function AddSkillDrawer({
       return;
     }
 
+    if (proofIssuedDate && proofExpiresDate) {
+      const issuedAt = new Date(proofIssuedDate).getTime();
+      const expiresAt = new Date(proofExpiresDate).getTime();
+      if (Number.isFinite(issuedAt) && Number.isFinite(expiresAt) && expiresAt < issuedAt) {
+        toast({
+          title: 'Invalid proof dates',
+          description: 'Expiration date must be on or after issued date.',
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+
     if (requestVerification) {
       const normalizedEmail = verificationEmail.trim().toLowerCase();
       if (!normalizedEmail) {
@@ -727,6 +744,8 @@ export function AddSkillDrawer({
               description: proofNotes.trim() || '',
               url: trimmedProofUrl,
               filePath: proofSource === 'document' ? trimmedProofFilePath : '',
+              issuedDate: proofIssuedDate || '',
+              expiresDate: proofExpiresDate || '',
             });
             if (proofResponse.ok) {
               proofAttached = true;
@@ -861,6 +880,8 @@ export function AddSkillDrawer({
           setProofUploadError('');
           setProofUploading(false);
           setProofNotes('');
+          setProofIssuedDate('');
+          setProofExpiresDate('');
           setRequestVerification(false);
           setVerificationEmail('');
           setVerificationSource('peer');
@@ -939,6 +960,10 @@ export function AddSkillDrawer({
       onProofFileSelected={handleProofFileUpload}
       proofNotes={proofNotes}
       setProofNotes={setProofNotes}
+      proofIssuedDate={proofIssuedDate}
+      setProofIssuedDate={setProofIssuedDate}
+      proofExpiresDate={proofExpiresDate}
+      setProofExpiresDate={setProofExpiresDate}
       requestVerification={requestVerification}
       setRequestVerification={setRequestVerification}
       verificationEmail={verificationEmail}

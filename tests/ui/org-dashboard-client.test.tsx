@@ -4,6 +4,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { OrgDashboardClient } from '../../src/app/app/o/[slug]/home/OrgDashboardClient';
 
+let orgPipelineVisible = true;
+
 vi.mock('sonner', () => ({
   toast: {
     success: vi.fn(),
@@ -21,7 +23,17 @@ vi.mock('@/components/dashboard/ProjectsCard', () => ({
   ProjectsCard: () => <div>widget:projects</div>,
 }));
 vi.mock('@/components/dashboard/OrgMatchingCard', () => ({
-  OrgMatchingCard: () => <div>widget:org-pipeline</div>,
+  OrgMatchingCard: ({
+    onVisibilityChange,
+  }: {
+    onVisibilityChange?: (visible: boolean) => void;
+  }) => {
+    React.useEffect(() => {
+      onVisibilityChange?.(orgPipelineVisible);
+    }, [onVisibilityChange]);
+
+    return <div>widget:org-pipeline</div>;
+  },
 }));
 vi.mock('@/components/dashboard/org/OrgReadinessCard', () => ({
   OrgReadinessCard: () => <div>widget:org-readiness</div>,
@@ -44,6 +56,7 @@ vi.mock('@/components/dashboard/WhileAwayCard', () => ({
 
 describe('OrgDashboardClient', () => {
   beforeEach(() => {
+    orgPipelineVisible = true;
     const storage = new Map<string, string>();
     const localStorageMock = {
       getItem: vi.fn((key: string) => storage.get(key) ?? null),
@@ -110,6 +123,28 @@ describe('OrgDashboardClient', () => {
 
     await waitFor(() => {
       expect(screen.queryByText('widget:while-away')).not.toBeInTheDocument();
+    });
+  });
+
+  it('omits org-pipeline widget when the card reports no data', async () => {
+    orgPipelineVisible = false;
+
+    localStorage.setItem(
+      'org-dashboard-layout-org-123',
+      JSON.stringify([
+        { widgetId: 'org-pipeline', position: 0, visible: true, size: 'large', settings: {} },
+        { widgetId: 'team', position: 1, visible: true, size: 'default', settings: {} },
+      ])
+    );
+
+    render(<OrgDashboardClient orgSlug="acme" orgId="org-123" userRole="owner" />);
+
+    await waitFor(() => {
+      expect(screen.getByText('widget:team')).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText('widget:org-pipeline')).not.toBeInTheDocument();
     });
   });
 });

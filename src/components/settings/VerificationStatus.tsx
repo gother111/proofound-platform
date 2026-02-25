@@ -5,18 +5,9 @@ import { useSearchParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import {
-  CheckCircle2,
-  ShieldCheck,
-  Mail,
-  Loader2,
-  AlertCircle,
-  XCircle,
-  Linkedin,
-} from 'lucide-react';
+import { CheckCircle2, Mail, Loader2, AlertCircle, XCircle, Linkedin } from 'lucide-react';
 import { toast } from 'sonner';
 import { WorkEmailVerificationForm } from './WorkEmailVerificationForm';
-import { VeriffVerification } from './VeriffVerification';
 import { LinkedInVerification } from './LinkedInVerification';
 
 interface VerificationStatusData {
@@ -26,6 +17,8 @@ interface VerificationStatusData {
   verifiedAt: string | null;
   workEmail: string | null;
   workEmailVerified: boolean;
+  workEmailReverifyDueAt: string | null;
+  workEmailNeedsReverify: boolean;
 }
 
 export function VerificationStatus() {
@@ -33,7 +26,6 @@ export function VerificationStatus() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showWorkEmailForm, setShowWorkEmailForm] = useState(false);
-  const [showVeriffFlow, setShowVeriffFlow] = useState(false);
   const [showLinkedInFlow, setShowLinkedInFlow] = useState(false);
   const searchParams = useSearchParams();
 
@@ -109,6 +101,8 @@ export function VerificationStatus() {
           verifiedAt: null,
           workEmail: null,
           workEmailVerified: false,
+          workEmailReverifyDueAt: null,
+          workEmailNeedsReverify: false,
         });
       } else {
         const errorMessage =
@@ -123,7 +117,6 @@ export function VerificationStatus() {
 
   const handleVerificationSuccess = () => {
     setShowWorkEmailForm(false);
-    setShowVeriffFlow(false);
     setShowLinkedInFlow(false);
     fetchStatus(); // Refresh status
   };
@@ -163,6 +156,8 @@ export function VerificationStatus() {
 
   // Show verification options based on status
   if (status.verificationStatus === 'verified' && status.verified) {
+    const canAddLinkedInVerification = status.verificationMethod !== 'linkedin';
+
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-xl">
@@ -189,6 +184,25 @@ export function VerificationStatus() {
         <p className="text-sm text-muted-foreground">
           Your verified badge is now visible on your profile to organizations.
         </p>
+        {status.workEmailNeedsReverify && (
+          <Alert className="border-amber-300 bg-amber-50 text-amber-900">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Your work email verification has expired. Re-verify to keep your work-email trust
+              signal active.
+            </AlertDescription>
+          </Alert>
+        )}
+        {canAddLinkedInVerification && (
+          <Button
+            variant="outline"
+            onClick={() => setShowLinkedInFlow(true)}
+            className="border-[#0A66C2] text-[#0A66C2] hover:bg-[#0A66C2]/10"
+          >
+            <Linkedin className="w-4 h-4 mr-2" />
+            Add LinkedIn Verification
+          </Button>
+        )}
       </div>
     );
   }
@@ -218,15 +232,7 @@ export function VerificationStatus() {
             Verification failed. Please try again or contact support if the issue persists.
           </AlertDescription>
         </Alert>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <Button
-            variant="outline"
-            onClick={() => setShowVeriffFlow(true)}
-            className="flex items-center gap-2"
-          >
-            <ShieldCheck className="w-4 h-4" />
-            Retry with ID
-          </Button>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Button
             variant="outline"
             onClick={() => setShowWorkEmailForm(true)}
@@ -249,17 +255,6 @@ export function VerificationStatus() {
   }
 
   // Unverified state - show options
-  if (showVeriffFlow) {
-    return (
-      <div className="space-y-4">
-        <Button variant="ghost" onClick={() => setShowVeriffFlow(false)} className="mb-2">
-          ← Back to options
-        </Button>
-        <VeriffVerification onSuccess={handleVerificationSuccess} />
-      </div>
-    );
-  }
-
   if (showWorkEmailForm) {
     return (
       <div className="space-y-4">
@@ -284,6 +279,18 @@ export function VerificationStatus() {
 
   return (
     <div className="space-y-6">
+      {status.workEmailNeedsReverify && (
+        <Alert className="border-amber-300 bg-amber-50 text-amber-900">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Your work email verification expired
+            {status.workEmailReverifyDueAt
+              ? ` on ${new Date(status.workEmailReverifyDueAt).toLocaleDateString()}`
+              : ''}{' '}
+            and now requires re-verification.
+          </AlertDescription>
+        </Alert>
+      )}
       <div className="space-y-2">
         <p className="text-sm text-muted-foreground">
           Verify your identity to unlock the verified badge on your profile. Choose one of the
@@ -292,30 +299,6 @@ export function VerificationStatus() {
       </div>
 
       <div className="grid grid-cols-1 gap-4">
-        {/* Veriff Option */}
-        <Card className="border-2 hover:border-proofound-forest/30 transition-colors cursor-pointer">
-          <CardContent className="p-6">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full bg-proofound-forest/10 flex items-center justify-center flex-shrink-0">
-                <ShieldCheck className="w-6 h-6 text-proofound-forest" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold mb-1">Government ID Verification</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Quick and secure verification using your passport, driver&apos;s license, or
-                  national ID. Powered by Veriff.
-                </p>
-                <Button
-                  onClick={() => setShowVeriffFlow(true)}
-                  className="bg-proofound-forest hover:bg-proofound-forest/90"
-                >
-                  Verify with ID
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Work Email Option */}
         <Card className="border-2 hover:border-proofound-terracotta/30 transition-colors cursor-pointer">
           <CardContent className="p-6">
@@ -368,7 +351,7 @@ export function VerificationStatus() {
       </div>
 
       <Alert>
-        <ShieldCheck className="h-4 w-4" />
+        <CheckCircle2 className="h-4 w-4" />
         <AlertDescription>
           <strong>Why verify?</strong> Verified profiles get a badge that helps organizations trust
           your identity and improves match quality.

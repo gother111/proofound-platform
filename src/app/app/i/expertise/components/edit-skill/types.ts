@@ -6,6 +6,7 @@ export interface Proof {
   url?: string;
   file_path?: string;
   issued_date?: string;
+  expires_date?: string;
   created_at?: string;
 }
 
@@ -16,6 +17,7 @@ export type ProofDraft = {
   url: string;
   filePath: string;
   issuedDate: string;
+  expiresDate: string;
 };
 
 export type VerificationDraft = {

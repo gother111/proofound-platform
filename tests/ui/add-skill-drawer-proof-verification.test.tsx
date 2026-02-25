@@ -77,6 +77,8 @@ vi.mock('@/app/app/i/expertise/components/add-skill/AddSkillDrawerView', () => (
           props.setL4Search('TypeScript');
           props.setProofSource('document');
           props.setProofNotes('');
+          props.setProofIssuedDate('2025-01-01');
+          props.setProofExpiresDate('2028-01-01');
           props.setRequestVerification(true);
           props.setVerificationEmail('Verifier@Example.com');
           props.setVerificationSource('peer');
@@ -162,6 +164,8 @@ describe('AddSkillDrawer proof + verification flow', () => {
         proofType: 'document',
         filePath: 'proof/user-1/doc.pdf',
         url: 'https://example.com/doc.pdf',
+        issuedDate: '2025-01-01',
+        expiresDate: '2028-01-01',
       })
     );
 

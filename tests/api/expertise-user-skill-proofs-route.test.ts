@@ -149,6 +149,34 @@ describe('expertise user-skill proofs route', () => {
     expect(payload.proof.title).toBe('portfolio.pdf');
   });
 
+  it('persists optional expiration date when provided', async () => {
+    const { supabase, proofInsertQuery } = createSupabaseMock();
+    vi.mocked(createClient).mockResolvedValue(supabase as any);
+
+    const request = new NextRequest('http://localhost/api/expertise/user-skills/skill-1/proofs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        proofType: 'certification',
+        title: 'AWS Certification',
+        issuedDate: '2025-01-01',
+        expiresDate: '2028-01-01',
+      }),
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ id: 'skill-1' }) });
+    const payload = await response.json();
+
+    expect(response.status).toBe(201);
+    expect(proofInsertQuery.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        issued_date: '2025-01-01',
+        expires_date: '2028-01-01',
+      })
+    );
+    expect(payload.proof.expires_date).toBe('2028-01-01');
+  });
+
   it('returns explicit validation message when title and URL are missing', async () => {
     const { supabase } = createSupabaseMock();
     vi.mocked(createClient).mockResolvedValue(supabase as any);
@@ -168,6 +196,29 @@ describe('expertise user-skill proofs route', () => {
     expect(response.status).toBe(400);
     expect(payload.error).toBe('Validation failed');
     expect(payload.message).toBe('Title, URL, or uploaded file is required');
+  });
+
+  it('returns validation error when expiration date is before issued date', async () => {
+    const { supabase, proofInsertQuery } = createSupabaseMock();
+    vi.mocked(createClient).mockResolvedValue(supabase as any);
+
+    const request = new NextRequest('http://localhost/api/expertise/user-skills/skill-1/proofs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        proofType: 'certification',
+        title: 'Expired Cert',
+        issuedDate: '2026-01-01',
+        expiresDate: '2025-01-01',
+      }),
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ id: 'skill-1' }) });
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload.message).toBe('Expiration date must be on or after issued date');
+    expect(proofInsertQuery.insert).not.toHaveBeenCalled();
   });
 
   it('rejects proof creation when skill already has the maximum number of proofs', async () => {

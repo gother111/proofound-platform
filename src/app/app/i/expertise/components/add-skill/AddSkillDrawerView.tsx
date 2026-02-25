@@ -71,6 +71,10 @@ export interface AddSkillDrawerViewProps {
   onProofFileSelected: (file: File | null) => void;
   proofNotes: string;
   setProofNotes: Dispatch<SetStateAction<string>>;
+  proofIssuedDate: string;
+  setProofIssuedDate: Dispatch<SetStateAction<string>>;
+  proofExpiresDate: string;
+  setProofExpiresDate: Dispatch<SetStateAction<string>>;
   requestVerification: boolean;
   setRequestVerification: Dispatch<SetStateAction<boolean>>;
   verificationEmail: string;
@@ -141,6 +145,10 @@ export function AddSkillDrawerView({
   onProofFileSelected,
   proofNotes,
   setProofNotes,
+  proofIssuedDate,
+  setProofIssuedDate,
+  proofExpiresDate,
+  setProofExpiresDate,
   requestVerification,
   setRequestVerification,
   verificationEmail,
@@ -269,6 +277,10 @@ export function AddSkillDrawerView({
             onProofFileSelected={onProofFileSelected}
             proofNotes={proofNotes}
             setProofNotes={setProofNotes}
+            proofIssuedDate={proofIssuedDate}
+            setProofIssuedDate={setProofIssuedDate}
+            proofExpiresDate={proofExpiresDate}
+            setProofExpiresDate={setProofExpiresDate}
             requestVerification={requestVerification}
             setRequestVerification={setRequestVerification}
             verificationEmail={verificationEmail}

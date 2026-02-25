@@ -15,6 +15,8 @@ type VerificationProfile = {
   verified_at: string | null;
   work_email: string | null;
   work_email_verified: boolean;
+  work_email_verified_at: string | null;
+  work_email_reverify_due_at: string | null;
   work_email_token: string | null;
   work_email_token_expires: string | null;
 };
@@ -78,6 +80,8 @@ describe('GET /api/verification/status', () => {
         verified_at: null,
         work_email: 'person@acme.org',
         work_email_verified: false,
+        work_email_verified_at: null,
+        work_email_reverify_due_at: null,
         work_email_token: 'token-123',
         work_email_token_expires: expiresAt,
       },
@@ -103,6 +107,8 @@ describe('GET /api/verification/status', () => {
         verified_at: null,
         work_email: 'person@acme.org',
         work_email_verified: false,
+        work_email_verified_at: null,
+        work_email_reverify_due_at: null,
         work_email_token: 'token-123',
         work_email_token_expires: expiresAt,
       },
@@ -115,5 +121,66 @@ describe('GET /api/verification/status', () => {
     const body = await response.json();
     expect(body.verificationStatus).toBe('failed');
     expect(body.verificationMethod).toBeNull();
+  });
+
+  it('marks work email as stale when re-verification due date is in the past', async () => {
+    const pastDue = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const verifiedAt = new Date(Date.now() - 366 * 24 * 60 * 60 * 1000).toISOString();
+    const supabase = createSupabaseMock({
+      profile: {
+        verified: true,
+        verification_method: 'work_email',
+        verification_status: 'verified',
+        verified_at: verifiedAt,
+        work_email: 'person@acme.org',
+        work_email_verified: true,
+        work_email_verified_at: verifiedAt,
+        work_email_reverify_due_at: pastDue,
+        work_email_token: null,
+        work_email_token_expires: null,
+      },
+    });
+    (createClient as any).mockResolvedValue(supabase);
+
+    const response = await GET(makeRequest());
+    expect(response.status).toBe(200);
+
+    const body = await response.json();
+    expect(body.verified).toBe(false);
+    expect(body.verificationStatus).toBe('unverified');
+    expect(body.verificationMethod).toBe('work_email');
+    expect(body.workEmailVerified).toBe(false);
+    expect(body.workEmailNeedsReverify).toBe(true);
+    expect(body.workEmailReverifyDueAt).toBe(pastDue);
+  });
+
+  it('keeps work email as valid when re-verification due date is in the future', async () => {
+    const futureDue = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    const verifiedAt = new Date().toISOString();
+    const supabase = createSupabaseMock({
+      profile: {
+        verified: true,
+        verification_method: 'work_email',
+        verification_status: 'verified',
+        verified_at: verifiedAt,
+        work_email: 'person@acme.org',
+        work_email_verified: true,
+        work_email_verified_at: verifiedAt,
+        work_email_reverify_due_at: futureDue,
+        work_email_token: null,
+        work_email_token_expires: null,
+      },
+    });
+    (createClient as any).mockResolvedValue(supabase);
+
+    const response = await GET(makeRequest());
+    expect(response.status).toBe(200);
+
+    const body = await response.json();
+    expect(body.verified).toBe(true);
+    expect(body.verificationStatus).toBe('verified');
+    expect(body.workEmailVerified).toBe(true);
+    expect(body.workEmailNeedsReverify).toBe(false);
+    expect(body.workEmailReverifyDueAt).toBe(futureDue);
   });
 });

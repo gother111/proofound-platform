@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Loader2, Save, Trash2 } from 'lucide-react';
 
 import { apiFetch } from '@/lib/api/fetch';
@@ -70,6 +70,7 @@ interface EditSkillWindowProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   skill: SkillRecord | null;
+  initialFocus?: 'details' | 'proofs' | 'verification' | null;
   onSkillUpdated: () => void;
   onSkillDeleted: () => void;
 }
@@ -78,6 +79,7 @@ export function EditSkillWindow({
   open,
   onOpenChange,
   skill,
+  initialFocus = 'details',
   onSkillUpdated,
   onSkillDeleted,
 }: EditSkillWindowProps) {
@@ -101,6 +103,7 @@ export function EditSkillWindow({
     url: '',
     filePath: '',
     issuedDate: '',
+    expiresDate: '',
   });
   const [proofUploading, setProofUploading] = useState(false);
   const [proofUploadError, setProofUploadError] = useState<string | null>(null);
@@ -115,6 +118,8 @@ export function EditSkillWindow({
     verifierSource: 'peer',
     message: '',
   });
+  const proofsSectionRef = useRef<HTMLDivElement | null>(null);
+  const verificationSectionRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -161,6 +166,22 @@ export function EditSkillWindow({
 
     loadData();
   }, [skill, open]);
+
+  useEffect(() => {
+    if (!open || !initialFocus || initialFocus === 'details') return;
+
+    const target =
+      initialFocus === 'proofs' ? proofsSectionRef.current : verificationSectionRef.current;
+    if (!target) return;
+
+    const timer = window.setTimeout(() => {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 120);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [initialFocus, loadingProofs, loadingVerifications, open]);
 
   if (!skill) {
     return null;
@@ -261,6 +282,19 @@ export function EditSkillWindow({
       return;
     }
 
+    if (newProof.issuedDate && newProof.expiresDate) {
+      const issuedAt = new Date(newProof.issuedDate).getTime();
+      const expiresAt = new Date(newProof.expiresDate).getTime();
+      if (Number.isFinite(issuedAt) && Number.isFinite(expiresAt) && expiresAt < issuedAt) {
+        toast({
+          title: 'Invalid proof dates',
+          description: 'Expiration date must be on or after issued date.',
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+
     const payload: ProofDraft = {
       ...newProof,
       title: hasTitle ? newProof.title.trim() : deriveProofTitleFromUrl(newProof.url.trim()),
@@ -291,6 +325,7 @@ export function EditSkillWindow({
           url: '',
           filePath: '',
           issuedDate: '',
+          expiresDate: '',
         });
         setProofUploadError(null);
         setProofUploadName('');
@@ -520,34 +555,38 @@ export function EditSkillWindow({
 
             <Separator />
 
-            <ProofsSection
-              proofs={proofs}
-              loadingProofs={loadingProofs}
-              showAddProof={showAddProof}
-              setShowAddProof={setShowAddProof}
-              newProof={newProof}
-              setNewProof={setNewProof}
-              addingProof={addingProof}
-              proofUploading={proofUploading}
-              proofUploadError={proofUploadError}
-              proofUploadName={proofUploadName}
-              onProofFileSelected={handleProofFileUpload}
-              onAddProof={handleAddProof}
-              onDeleteProof={handleDeleteProof}
-            />
+            <div ref={proofsSectionRef}>
+              <ProofsSection
+                proofs={proofs}
+                loadingProofs={loadingProofs}
+                showAddProof={showAddProof}
+                setShowAddProof={setShowAddProof}
+                newProof={newProof}
+                setNewProof={setNewProof}
+                addingProof={addingProof}
+                proofUploading={proofUploading}
+                proofUploadError={proofUploadError}
+                proofUploadName={proofUploadName}
+                onProofFileSelected={handleProofFileUpload}
+                onAddProof={handleAddProof}
+                onDeleteProof={handleDeleteProof}
+              />
+            </div>
 
             <Separator />
 
-            <VerificationSection
-              verificationRequests={verificationRequests}
-              loadingVerifications={loadingVerifications}
-              showRequestVerification={showRequestVerification}
-              setShowRequestVerification={setShowRequestVerification}
-              newVerificationRequest={newVerificationRequest}
-              setNewVerificationRequest={setNewVerificationRequest}
-              requestingVerification={requestingVerification}
-              onRequestVerification={handleRequestVerification}
-            />
+            <div ref={verificationSectionRef}>
+              <VerificationSection
+                verificationRequests={verificationRequests}
+                loadingVerifications={loadingVerifications}
+                showRequestVerification={showRequestVerification}
+                setShowRequestVerification={setShowRequestVerification}
+                newVerificationRequest={newVerificationRequest}
+                setNewVerificationRequest={setNewVerificationRequest}
+                requestingVerification={requestingVerification}
+                onRequestVerification={handleRequestVerification}
+              />
+            </div>
 
             <Separator />
 

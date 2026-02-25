@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Home,
+  Lock,
   User,
   Users,
   MapPin,
@@ -20,10 +21,10 @@ import {
   MessageCircle,
   UserCheck,
   UserRound,
-  Lock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 
 /**
  * LeftNav Component - Primary Navigation Sidebar
@@ -66,8 +67,8 @@ export function LeftNav({ basePath = '/app/i', individualPortfolioGate }: LeftNa
 
   const isOrg = basePath?.startsWith('/app/o/');
   const isPortfolioLocked = !isOrg && Boolean(individualPortfolioGate?.locked);
-  const portfolioLockReason =
-    individualPortfolioGate?.reason || 'Complete your profile requirements first.';
+  const portfolioLockReason = individualPortfolioGate?.reason ?? null;
+  const previousPortfolioLockRef = useRef(isPortfolioLocked);
 
   const individualNavItems: NavItem[] = [
     { href: `${basePath}/home`, icon: Home, label: 'Dashboard', dataTour: 'home-link' },
@@ -143,11 +144,30 @@ export function LeftNav({ basePath = '/app/i', individualPortfolioGate }: LeftNa
   ];
 
   const navItems = isOrg ? orgNavItems : individualNavItems;
+  const filteredNavItems = isPortfolioLocked
+    ? navItems.filter((item) => item.href !== `${basePath}/portfolio`)
+    : navItems;
   const settingsHref = `${basePath}/settings`;
-  const settingsNavItem = navItems.find((item) => item.href === settingsHref);
+  const settingsNavItem = filteredNavItems.find((item) => item.href === settingsHref);
   const mobileNavItems = settingsNavItem
-    ? [...navItems.filter((item) => item.href !== settingsHref).slice(0, 4), settingsNavItem]
-    : navItems.slice(0, 5);
+    ? [
+        ...filteredNavItems.filter((item) => item.href !== settingsHref).slice(0, 4),
+        settingsNavItem,
+      ]
+    : filteredNavItems.slice(0, 5);
+
+  useEffect(() => {
+    if (isOrg) return;
+    const wasLocked = previousPortfolioLockRef.current;
+    if (wasLocked && !isPortfolioLocked && typeof window !== 'undefined') {
+      const key = 'proofound-portfolio-unlock-toast-shown';
+      if (!window.sessionStorage.getItem(key)) {
+        toast.success('Public Portfolio is now unlocked in your navigation.');
+        window.sessionStorage.setItem(key, '1');
+      }
+    }
+    previousPortfolioLockRef.current = isPortfolioLocked;
+  }, [isOrg, isPortfolioLocked]);
 
   return (
     <>
@@ -162,7 +182,7 @@ export function LeftNav({ basePath = '/app/i', individualPortfolioGate }: LeftNa
         <div className="flex-1 py-3 overflow-y-auto">
           {/* Semantic navigation element with proper ARIA labeling */}
           <nav className="space-y-0.5 px-2" aria-label="Primary navigation">
-            {navItems.map((item) => {
+            {filteredNavItems.map((item) => {
               const Icon = item.icon;
               const isLocked = Boolean(item.locked);
               const isActive =

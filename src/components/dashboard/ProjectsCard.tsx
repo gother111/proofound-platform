@@ -58,6 +58,10 @@ interface ProjectsStats {
   paused: number;
 }
 
+interface ProjectsCardProps {
+  onVisibilityChange?: (visible: boolean) => void;
+}
+
 // Project type config
 const projectTypeConfig = {
   work: { label: 'Work', icon: Briefcase, color: '#1C4D3A', bg: '#D8EDE4' },
@@ -89,7 +93,7 @@ function formatDateRange(startDate: string, endDate?: string | null): string {
   return `${startStr} - ${endStr}`;
 }
 
-export function ProjectsCard() {
+export function ProjectsCard({ onVisibilityChange }: ProjectsCardProps) {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [stats, setStats] = useState<ProjectsStats | null>(null);
@@ -125,6 +129,12 @@ export function ProjectsCard() {
 
     fetchProjects();
   }, []);
+
+  useEffect(() => {
+    if (isLoading) return;
+    const hasVisibleContent = error ? true : projects.length > 0;
+    onVisibilityChange?.(hasVisibleContent);
+  }, [error, isLoading, onVisibilityChange, projects.length]);
 
   // Loading state
   if (isLoading) {

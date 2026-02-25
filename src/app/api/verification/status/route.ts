@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { resolveWorkEmailValidity } from '@/lib/verification/work-email-validity';
 
 function hasActiveWorkEmailToken(profile: {
   work_email_token?: string | null;
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest) {
     const { data: profile, error: profileError } = await supabase
       .from('individual_profiles')
       .select(
-        'verified, verification_method, verification_status, verified_at, work_email, work_email_verified, work_email_token, work_email_token_expires'
+        'verified, verification_method, verification_status, verified_at, work_email, work_email_verified, work_email_verified_at, work_email_reverify_due_at, work_email_token, work_email_token_expires'
       )
       .eq('user_id', user.id)
       .maybeSingle();
@@ -89,25 +90,40 @@ export async function GET(request: NextRequest) {
         verifiedAt: null,
         workEmail: null,
         workEmailVerified: false,
+        workEmailReverifyDueAt: null,
+        workEmailNeedsReverify: false,
       });
     }
 
+    const workEmailValidity = resolveWorkEmailValidity(profile);
     const hasPendingToken = hasActiveWorkEmailToken(profile);
     const hasExplicitStatus = Boolean(profile.verification_status);
-    const verificationStatus =
+    let verificationStatus: 'unverified' | 'pending' | 'verified' | 'failed' =
       !hasExplicitStatus && hasPendingToken
         ? 'pending'
-        : profile.verification_status || 'unverified';
-    const verificationMethod =
+        : (profile.verification_status as 'unverified' | 'pending' | 'verified' | 'failed') ||
+          'unverified';
+    let verificationMethod =
       profile.verification_method || (!hasExplicitStatus && hasPendingToken ? 'work_email' : null);
+    const isWorkEmailPrimaryVerification = verificationMethod === 'work_email';
+    const effectiveIdentityVerified =
+      Boolean(profile.verified) &&
+      !(isWorkEmailPrimaryVerification && workEmailValidity.needsReverify);
+
+    if (isWorkEmailPrimaryVerification && workEmailValidity.needsReverify) {
+      verificationStatus = 'unverified';
+      verificationMethod = 'work_email';
+    }
 
     return NextResponse.json({
-      verified: profile.verified || false,
+      verified: effectiveIdentityVerified,
       verificationMethod,
       verificationStatus,
       verifiedAt: profile.verified_at,
       workEmail: profile.work_email,
-      workEmailVerified: profile.work_email_verified || false,
+      workEmailVerified: workEmailValidity.isCurrentlyVerified,
+      workEmailReverifyDueAt: workEmailValidity.reverifyDueAt,
+      workEmailNeedsReverify: workEmailValidity.needsReverify,
     });
   } catch (error) {
     console.error('Error in verification status API:', error);

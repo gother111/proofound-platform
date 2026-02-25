@@ -49,6 +49,10 @@ interface GoalsApiResponse {
   stats: GoalsStats;
 }
 
+interface GoalsCardProps {
+  onVisibilityChange?: (visible: boolean) => void;
+}
+
 // Status color mapping
 const statusConfig = {
   planned: { label: 'Planned', icon: Clock, color: '#6B6760', bg: '#E8E6DD' },
@@ -58,7 +62,7 @@ const statusConfig = {
   archived: { label: 'Archived', icon: Clock, color: '#9CA3AF', bg: '#F3F4F6' },
 };
 
-export function GoalsCard() {
+export function GoalsCard({ onVisibilityChange }: GoalsCardProps) {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [stats, setStats] = useState<GoalsStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -94,6 +98,12 @@ export function GoalsCard() {
 
     fetchGoals();
   }, []);
+
+  useEffect(() => {
+    if (isLoading) return;
+    const hasVisibleContent = error ? true : goals.length > 0;
+    onVisibilityChange?.(hasVisibleContent);
+  }, [error, goals.length, isLoading, onVisibilityChange]);
 
   // Loading state
   if (isLoading) {

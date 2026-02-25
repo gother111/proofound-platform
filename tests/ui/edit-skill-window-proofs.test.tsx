@@ -223,6 +223,77 @@ describe('EditSkillWindow proof refresh behavior', () => {
     expect(payload.url).toBe('https://example.com/doc.pdf');
   });
 
+  it('submits issued and expiration dates for proofs', async () => {
+    apiFetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
+      if (url.endsWith('/proofs') && !init?.method) {
+        return mockResponse({ proofs: [] });
+      }
+      if (url.endsWith('/verification-request') && !init?.method) {
+        return mockResponse({ requests: [] });
+      }
+      if (url.endsWith('/proofs') && init?.method === 'POST') {
+        return mockResponse({
+          proof: {
+            id: 'proof-3',
+            proof_type: 'certification',
+            title: 'AWS Associate',
+            issued_date: '2025-01-01',
+            expires_date: '2028-01-01',
+          },
+        });
+      }
+      return mockResponse({});
+    });
+
+    render(
+      <EditSkillWindow
+        open
+        onOpenChange={vi.fn()}
+        skill={baseSkill}
+        onSkillUpdated={vi.fn()}
+        onSkillDeleted={vi.fn()}
+      />
+    );
+
+    await waitFor(() =>
+      expect(apiFetchMock).toHaveBeenCalledWith('/api/expertise/user-skills/skill-1/proofs')
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Proof' }));
+    fireEvent.change(screen.getByLabelText('Title'), {
+      target: { value: 'AWS Associate' },
+    });
+    fireEvent.change(screen.getByLabelText('Issued Date (Optional)'), {
+      target: { value: '2025-01-01' },
+    });
+    fireEvent.change(screen.getByLabelText('Expiration Date (Optional)'), {
+      target: { value: '2028-01-01' },
+    });
+
+    const addButtons = screen.getAllByRole('button', { name: 'Add Proof' });
+    fireEvent.click(addButtons[addButtons.length - 1]);
+
+    await waitFor(() =>
+      expect(apiFetchMock).toHaveBeenCalledWith(
+        '/api/expertise/user-skills/skill-1/proofs',
+        expect.objectContaining({ method: 'POST' })
+      )
+    );
+
+    const proofPostCall = apiFetchMock.mock.calls.find(
+      ([url, init]) =>
+        url === '/api/expertise/user-skills/skill-1/proofs' &&
+        (init as RequestInit | undefined)?.method === 'POST'
+    );
+
+    expect(proofPostCall).toBeTruthy();
+    const requestInit = proofPostCall?.[1] as RequestInit;
+    const payload = JSON.parse(requestInit.body as string);
+
+    expect(payload.issuedDate).toBe('2025-01-01');
+    expect(payload.expiresDate).toBe('2028-01-01');
+  });
+
   it('disables adding proofs once the per-skill proof limit is reached', async () => {
     apiFetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
       if (url.endsWith('/proofs') && !init?.method) {

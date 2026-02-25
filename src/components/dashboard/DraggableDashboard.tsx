@@ -379,11 +379,19 @@ export function DraggableDashboard({
           />
         );
       case 'goals':
-        return <GoalsCard />;
+        return (
+          <GoalsCard
+            onVisibilityChange={(visible) => handleWidgetVisibilityChange(widgetId, visible)}
+          />
+        );
       case 'tasks':
         return <TasksCard />;
       case 'projects':
-        return <ProjectsCard />;
+        return (
+          <ProjectsCard
+            onVisibilityChange={(visible) => handleWidgetVisibilityChange(widgetId, visible)}
+          />
+        );
       case 'matching-results':
         return <MatchingResultsCard />;
       case 'impact-snapshot':
@@ -426,7 +434,12 @@ export function DraggableDashboard({
       case 'zen-snapshot':
         return <ZenSnapshotCard useMockData={mockMode} />;
       case 'notifications':
-        return <NotificationsCard useMockData={mockMode} />;
+        return (
+          <NotificationsCard
+            useMockData={mockMode}
+            onVisibilityChange={(visible) => handleWidgetVisibilityChange(widgetId, visible)}
+          />
+        );
       default:
         return null;
     }

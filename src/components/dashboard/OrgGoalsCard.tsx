@@ -39,6 +39,7 @@ interface OrgGoalsCardProps {
   orgSlug: string;
   orgId: string;
   canManageSettings?: boolean;
+  onVisibilityChange?: (visible: boolean) => void;
 }
 
 // Type definitions for organization goal data
@@ -73,7 +74,12 @@ const statusConfig = {
   abandoned: { label: 'Abandoned', icon: AlertCircle, color: '#DC2626', bg: '#FEE2E2' },
 };
 
-export function OrgGoalsCard({ orgSlug, orgId, canManageSettings = false }: OrgGoalsCardProps) {
+export function OrgGoalsCard({
+  orgSlug,
+  orgId,
+  canManageSettings = false,
+  onVisibilityChange,
+}: OrgGoalsCardProps) {
   const [goals, setGoals] = useState<OrgGoal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -108,6 +114,12 @@ export function OrgGoalsCard({ orgSlug, orgId, canManageSettings = false }: OrgG
       fetchGoals();
     }
   }, [orgId]);
+
+  useEffect(() => {
+    if (isLoading) return;
+    const hasVisibleContent = error ? true : goals.length > 0;
+    onVisibilityChange?.(hasVisibleContent);
+  }, [error, goals.length, isLoading, onVisibilityChange]);
 
   // Calculate stats
   const stats = {

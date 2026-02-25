@@ -93,6 +93,8 @@ export const individualProfiles = pgTable('individual_profiles', {
   verifiedAt: timestamp('verified_at'),
   workEmail: text('work_email'),
   workEmailVerified: boolean('work_email_verified').default(false),
+  workEmailVerifiedAt: timestamp('work_email_verified_at'),
+  workEmailReverifyDueAt: timestamp('work_email_reverify_due_at'),
   workEmailOrgId: uuid('work_email_org_id').references(() => organizations.id, {
     onDelete: 'set null',
   }),
@@ -593,6 +595,7 @@ export const skillProofs = pgTable('skill_proofs', {
   url: text('url'),
   filePath: text('file_path'),
   issuedDate: date('issued_date'),
+  expiresDate: date('expires_date'),
   verified: boolean('verified').default(false).notNull(),
   metadata: jsonb('metadata').default(sql`'{}'::jsonb`),
   createdAt: timestamp('created_at').defaultNow().notNull(),

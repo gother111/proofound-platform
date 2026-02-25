@@ -176,6 +176,22 @@ export function ProofsSection({
               />
             </div>
             <div>
+              <Label htmlFor="proof-expires-date" className="text-[#2D3330]">
+                Expiration Date (Optional)
+              </Label>
+              <Input
+                id="proof-expires-date"
+                type="date"
+                value={newProof.expiresDate}
+                min={newProof.issuedDate || undefined}
+                onChange={(e) => setNewProof({ ...newProof, expiresDate: e.target.value })}
+                className="mt-1"
+              />
+              <p className="text-xs text-[#6B6760] mt-1">
+                Leave empty for proofs that do not expire.
+              </p>
+            </div>
+            <div>
               <Label htmlFor="proof-description" className="text-[#2D3330]">
                 Description (Optional)
               </Label>
@@ -251,46 +267,70 @@ export function ProofsSection({
         <div className="space-y-2">
           {proofs.map((proof) => (
             <Card key={proof.id} className="p-3 border-[#E5E3DA]">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Badge variant="outline" className="text-xs capitalize">
-                      {proof.proof_type}
-                    </Badge>
-                    <h4 className="font-medium text-[#2D3330]">{proof.title}</h4>
-                  </div>
-                  {proof.url && (
-                    <a
-                      href={proof.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-[#1C4D3A] hover:underline"
+              {(() => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const expiresDate = proof.expires_date ? new Date(proof.expires_date) : null;
+                if (expiresDate) {
+                  expiresDate.setHours(0, 0, 0, 0);
+                }
+                const isExpired = Boolean(
+                  expiresDate && Number.isFinite(expiresDate.getTime()) && expiresDate < today
+                );
+
+                return (
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge variant="outline" className="text-xs capitalize">
+                          {proof.proof_type}
+                        </Badge>
+                        <h4 className="font-medium text-[#2D3330]">{proof.title}</h4>
+                        {isExpired && (
+                          <Badge className="bg-[#FFF0F0] text-[#8B4A36] border border-[#F5D6CD]">
+                            Expired
+                          </Badge>
+                        )}
+                      </div>
+                      {proof.url && (
+                        <a
+                          href={proof.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-[#1C4D3A] hover:underline"
+                        >
+                          {proof.url}
+                        </a>
+                      )}
+                      {proof.file_path && (
+                        <p className="text-xs text-[#6B6760] mt-1">Document attached</p>
+                      )}
+                      {proof.description && (
+                        <p className="text-sm text-[#6B6760] mt-1">{proof.description}</p>
+                      )}
+                      {proof.issued_date && (
+                        <p className="text-xs text-[#6B6760] mt-1">
+                          Issued: {new Date(proof.issued_date).toLocaleDateString()}
+                        </p>
+                      )}
+                      {proof.expires_date && (
+                        <p className="text-xs text-[#6B6760] mt-1">
+                          Expires: {new Date(proof.expires_date).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onDeleteProof(proof.id)}
+                      aria-label={`Remove proof ${proof.title}`}
+                      className="text-[#C76B4A] hover:text-[#8B4A36] hover:bg-[#FFF0F0]"
                     >
-                      {proof.url}
-                    </a>
-                  )}
-                  {proof.file_path && (
-                    <p className="text-xs text-[#6B6760] mt-1">Document attached</p>
-                  )}
-                  {proof.description && (
-                    <p className="text-sm text-[#6B6760] mt-1">{proof.description}</p>
-                  )}
-                  {proof.issued_date && (
-                    <p className="text-xs text-[#6B6760] mt-1">
-                      Issued: {new Date(proof.issued_date).toLocaleDateString()}
-                    </p>
-                  )}
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onDeleteProof(proof.id)}
-                  aria-label={`Remove proof ${proof.title}`}
-                  className="text-[#C76B4A] hover:text-[#8B4A36] hover:bg-[#FFF0F0]"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                );
+              })()}
             </Card>
           ))}
         </div>

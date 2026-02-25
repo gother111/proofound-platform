@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 
 /**
  * GET /api/verification/work-email/verify?token=xxx
- * 
+ *
  * Verifies a work email using the token from the email link.
  */
 export async function GET(request: NextRequest) {
@@ -12,10 +12,7 @@ export async function GET(request: NextRequest) {
     const token = searchParams.get('token');
 
     if (!token) {
-      return NextResponse.json(
-        { error: 'Verification token is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Verification token is required' }, { status: 400 });
     }
 
     const supabase = await createClient();
@@ -28,10 +25,7 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (findError || !profile) {
-      return NextResponse.json(
-        { error: 'Invalid or expired verification token' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid or expired verification token' }, { status: 400 });
     }
 
     // Check if token is expired
@@ -64,14 +58,19 @@ export async function GET(request: NextRequest) {
 
     // Update profile: mark work email as verified and set overall verified status
     // The unique constraint will catch any race conditions that slip through
+    const nowIso = new Date().toISOString();
+    const reverifyDueAtIso = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
+
     const { error: updateError } = await supabase
       .from('individual_profiles')
       .update({
         work_email_verified: true,
+        work_email_verified_at: nowIso,
+        work_email_reverify_due_at: reverifyDueAtIso,
         verified: true,
         verification_method: 'work_email',
         verification_status: 'verified',
-        verified_at: new Date().toISOString(),
+        verified_at: nowIso,
         work_email_token: null, // Clear the token
         work_email_token_expires: null,
       })
@@ -79,7 +78,7 @@ export async function GET(request: NextRequest) {
 
     if (updateError) {
       console.error('Error updating profile after work email verification:', updateError);
-      
+
       // Handle unique constraint violation (PostgreSQL error code 23505)
       // This catches race conditions where two users verify the same email simultaneously
       if (updateError.code === '23505' || updateError.message?.includes('unique')) {
@@ -88,11 +87,8 @@ export async function GET(request: NextRequest) {
           { status: 400 }
         );
       }
-      
-      return NextResponse.json(
-        { error: 'Failed to verify work email' },
-        { status: 500 }
-      );
+
+      return NextResponse.json({ error: 'Failed to verify work email' }, { status: 500 });
     }
 
     return NextResponse.json({
@@ -102,10 +98,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error in work email verification:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

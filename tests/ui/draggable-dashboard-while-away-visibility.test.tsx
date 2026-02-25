@@ -5,6 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { DashboardWidget } from '../../src/lib/dashboard/layout';
 import { DraggableDashboard } from '../../src/components/dashboard/DraggableDashboard';
 
+let goalsVisible = true;
+
 vi.mock('sonner', () => ({
   toast: {
     success: vi.fn(),
@@ -23,7 +25,13 @@ vi.mock('@/components/dashboard/WhileAwayCard', () => ({
 }));
 
 vi.mock('@/components/dashboard/GoalsCard', () => ({
-  GoalsCard: () => <div data-testid="goals-card">goals</div>,
+  GoalsCard: ({ onVisibilityChange }: { onVisibilityChange?: (visible: boolean) => void }) => {
+    React.useEffect(() => {
+      onVisibilityChange?.(goalsVisible);
+    }, [onVisibilityChange]);
+
+    return <div data-testid="goals-card">goals</div>;
+  },
 }));
 
 vi.mock('@/components/dashboard/TasksCard', () => ({
@@ -68,6 +76,7 @@ vi.mock('@/components/dashboard/NotificationsCard', () => ({
 
 describe('DraggableDashboard while-away visibility', () => {
   beforeEach(() => {
+    goalsVisible = true;
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({
@@ -107,6 +116,37 @@ describe('DraggableDashboard while-away visibility', () => {
 
     await waitFor(() => {
       expect(screen.queryByTestId('while-away-card')).not.toBeInTheDocument();
+    });
+  });
+
+  it('removes goals tile when card reports no data', async () => {
+    goalsVisible = false;
+
+    const layout: DashboardWidget[] = [
+      {
+        widgetId: 'goals',
+        position: 0,
+        visible: true,
+        size: 'default',
+        settings: {},
+      },
+      {
+        widgetId: 'tasks',
+        position: 1,
+        visible: true,
+        size: 'default',
+        settings: {},
+      },
+    ];
+
+    render(<DraggableDashboard initialLayout={layout} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('tasks')).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('goals-card')).not.toBeInTheDocument();
     });
   });
 });

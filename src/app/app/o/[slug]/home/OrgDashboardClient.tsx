@@ -298,16 +298,32 @@ export function OrgDashboardClient({ orgSlug, orgId, userRole }: OrgDashboardCli
 
     switch (widgetId) {
       case 'org-pipeline':
-        return <OrgMatchingCard orgSlug={orgSlug} className="lg:col-span-2" />;
+        return (
+          <OrgMatchingCard
+            orgSlug={orgSlug}
+            className="lg:col-span-2"
+            onVisibilityChange={(visible) => handleWidgetVisibilityChange(widgetId, visible)}
+          />
+        );
       case 'org-goals':
         return (
-          <OrgGoalsCard orgSlug={orgSlug} orgId={orgId} canManageSettings={canManageSettings} />
+          <OrgGoalsCard
+            orgSlug={orgSlug}
+            orgId={orgId}
+            canManageSettings={canManageSettings}
+            onVisibilityChange={(visible) => handleWidgetVisibilityChange(widgetId, visible)}
+          />
         );
       case 'org-readiness':
         return <OrgReadinessCard orgRef={orgSlug} />;
       case 'team':
         return (
-          <TeamRolesCard orgSlug={orgSlug} orgId={orgId} canManageSettings={canManageSettings} />
+          <TeamRolesCard
+            orgSlug={orgSlug}
+            orgId={orgId}
+            canManageSettings={canManageSettings}
+            onVisibilityChange={(visible) => handleWidgetVisibilityChange(widgetId, visible)}
+          />
         );
       case 'tasks':
         return <TasksCard />;

@@ -36,6 +36,7 @@ import { apiFetch } from '@/lib/api/fetch';
 interface OrgMatchingCardProps {
   orgSlug: string;
   className?: string;
+  onVisibilityChange?: (visible: boolean) => void;
 }
 
 // Dashboard data types
@@ -72,7 +73,7 @@ const pipelineStages = [
   { key: 'intros', label: 'Intros', icon: MessageCircle, color: '#9333EA', bg: '#F3E8FF' },
 ];
 
-export function OrgMatchingCard({ orgSlug, className }: OrgMatchingCardProps) {
+export function OrgMatchingCard({ orgSlug, className, onVisibilityChange }: OrgMatchingCardProps) {
   const [dashboard, setDashboard] = useState<OrgDashboard | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -105,6 +106,14 @@ export function OrgMatchingCard({ orgSlug, className }: OrgMatchingCardProps) {
       fetchDashboard();
     }
   }, [orgSlug]);
+
+  useEffect(() => {
+    if (isLoading) return;
+    const hasVisibleContent = error
+      ? true
+      : Boolean(dashboard && dashboard.pipeline.openAssignments > 0);
+    onVisibilityChange?.(hasVisibleContent);
+  }, [dashboard, error, isLoading, onVisibilityChange]);
 
   // Loading state
   if (isLoading) {

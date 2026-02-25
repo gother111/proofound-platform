@@ -40,6 +40,7 @@ const CreateProofSchema = z
     url: z.string().url().optional().or(z.literal('')),
     filePath: z.string().trim().optional().or(z.literal('')),
     issuedDate: z.string().optional(),
+    expiresDate: z.string().optional(),
     metadata: z.record(z.any()).optional(),
   })
   .superRefine((data, ctx) => {
@@ -53,6 +54,18 @@ const CreateProofSchema = z
         message: 'Title, URL, or uploaded file is required',
         path: ['title'],
       });
+    }
+
+    if (data.issuedDate && data.expiresDate) {
+      const issuedAt = new Date(data.issuedDate).getTime();
+      const expiresAt = new Date(data.expiresDate).getTime();
+      if (Number.isFinite(issuedAt) && Number.isFinite(expiresAt) && expiresAt < issuedAt) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Expiration date must be on or after issued date',
+          path: ['expiresDate'],
+        });
+      }
     }
   });
 
@@ -120,6 +133,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         url: validated.url || null,
         file_path: validated.filePath || null,
         issued_date: validated.issuedDate || null,
+        expires_date: validated.expiresDate || null,
         metadata: {
           visibility: 'match-only', // default privacy guardrail
           ...(validated.metadata || {}),

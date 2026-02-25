@@ -34,7 +34,7 @@ interface L2ModalProps {
   expandedL4: string | null;
   onL3Click: (l3: L3Subcategory) => void;
   onL4Toggle: (skillId: string) => void;
-  onL4Edit: (skill: any) => void;
+  onL4Edit: (skill: any, focus?: 'details' | 'proofs' | 'verification') => void;
 }
 
 export function L2Modal({
@@ -263,7 +263,10 @@ export function L2Modal({
                                     {/* Expanded L4 Card View */}
                                     {isL4Expanded && (
                                       <div className="px-5 py-5 bg-white border-t border-proofound-stone animate-in slide-in-from-top-1 duration-200">
-                                        <L4Card skill={skill} onEdit={() => onL4Edit(skill)} />
+                                        <L4Card
+                                          skill={skill}
+                                          onEdit={(focus) => onL4Edit(skill, focus)}
+                                        />
                                       </div>
                                     )}
                                   </div>

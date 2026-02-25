@@ -62,6 +62,10 @@ type BrowseModePanelProps = {
   onProofFileSelected: (file: File | null) => void;
   proofNotes: string;
   setProofNotes: (value: string) => void;
+  proofIssuedDate: string;
+  setProofIssuedDate: (value: string) => void;
+  proofExpiresDate: string;
+  setProofExpiresDate: (value: string) => void;
   requestVerification: boolean;
   setRequestVerification: (value: boolean) => void;
   verificationEmail: string;
@@ -112,6 +116,10 @@ export function BrowseModePanel({
   onProofFileSelected,
   proofNotes,
   setProofNotes,
+  proofIssuedDate,
+  setProofIssuedDate,
+  proofExpiresDate,
+  setProofExpiresDate,
   requestVerification,
   setRequestVerification,
   verificationEmail,
@@ -526,6 +534,34 @@ export function BrowseModePanel({
                   rows={3}
                   className="mt-1"
                 />
+              </div>
+              <div>
+                <Label htmlFor="proof-issued-date" className="text-[#2D3330]">
+                  Issued Date (Optional)
+                </Label>
+                <Input
+                  id="proof-issued-date"
+                  type="date"
+                  value={proofIssuedDate}
+                  onChange={(e) => setProofIssuedDate(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="proof-expires-date" className="text-[#2D3330]">
+                  Expiration Date (Optional)
+                </Label>
+                <Input
+                  id="proof-expires-date"
+                  type="date"
+                  value={proofExpiresDate}
+                  min={proofIssuedDate || undefined}
+                  onChange={(e) => setProofExpiresDate(e.target.value)}
+                  className="mt-1"
+                />
+                <p className="text-xs text-[#6B6760] mt-1">
+                  Leave empty when the proof does not expire.
+                </p>
               </div>
             </div>
           </div>

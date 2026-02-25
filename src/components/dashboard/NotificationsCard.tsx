@@ -16,6 +16,7 @@ import Link from 'next/link';
 
 type NotificationsCardProps = {
   useMockData?: boolean;
+  onVisibilityChange?: (visible: boolean) => void;
 };
 
 type NotificationItem = {
@@ -31,7 +32,7 @@ type NotificationsResponse = {
   items?: NotificationItem[];
 };
 
-export function NotificationsCard({ useMockData }: NotificationsCardProps) {
+export function NotificationsCard({ useMockData, onVisibilityChange }: NotificationsCardProps) {
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -77,6 +78,11 @@ export function NotificationsCard({ useMockData }: NotificationsCardProps) {
 
     load();
   }, [useMockData]);
+
+  useEffect(() => {
+    if (loading) return;
+    onVisibilityChange?.(items.length > 0);
+  }, [items.length, loading, onVisibilityChange]);
 
   return (
     <Card className="h-full">

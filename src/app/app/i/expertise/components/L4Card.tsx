@@ -3,16 +3,7 @@
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Edit2,
-  FileText,
-  CheckCircle2,
-  Clock,
-  TrendingUp,
-  Link as LinkIcon,
-  Lock,
-  ShieldCheck,
-} from 'lucide-react';
+import { Edit2, FileText, CheckCircle2, Clock, TrendingUp, Lock, ShieldCheck } from 'lucide-react';
 
 interface L4Skill {
   id: string;
@@ -38,7 +29,7 @@ interface L4Skill {
 
 interface L4CardProps {
   skill: L4Skill;
-  onEdit: () => void;
+  onEdit: (focus?: 'details' | 'proofs' | 'verification') => void;
 }
 
 const RELEVANCE_COLORS = {
@@ -58,6 +49,8 @@ const LEVEL_LABELS = {
 export function L4Card({ skill, onEdit }: L4CardProps) {
   const relevanceStyle = RELEVANCE_COLORS[skill.relevance];
   const levelInfo = LEVEL_LABELS[skill.level as keyof typeof LEVEL_LABELS] || LEVEL_LABELS[1];
+  const proofCount = skill.proof_count ?? 0;
+  const verificationCount = skill.verification_count ?? 0;
 
   const recencyText = skill.lastUsedAt ? getRecencyText(new Date(skill.lastUsedAt)) : 'Never used';
 
@@ -83,19 +76,42 @@ export function L4Card({ skill, onEdit }: L4CardProps) {
           </Badge>
           <Badge variant="outline" className="gap-1 text-xs">
             <ShieldCheck className="h-3.5 w-3.5" />
-            {skill.verification_count && skill.verification_count > 0
-              ? `${skill.verification_count} verified`
-              : 'Request verification'}
+            {verificationCount > 0 ? `${verificationCount} verified` : 'Request verification'}
           </Badge>
         </div>
         <Button
           size="sm"
           variant="ghost"
-          onClick={onEdit}
+          onClick={() => onEdit('details')}
           className="text-proofound-forest hover:bg-proofound-forest/10 hover:text-proofound-forest rounded-full h-8 w-8 p-0"
         >
           <Edit2 className="h-4 w-4" />
         </Button>
+      </div>
+
+      <div className="rounded-lg border border-proofound-stone/70 bg-proofound-parchment/60 p-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">
+              Proofs and verifications
+            </p>
+            <p className="text-sm font-medium text-proofound-charcoal">
+              {proofCount} {proofCount === 1 ? 'proof' : 'proofs'} • {verificationCount}{' '}
+              {verificationCount === 1 ? 'verification' : 'verifications'}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Open this section directly to manage evidence.
+            </p>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onEdit('proofs')}
+            className="border-proofound-forest/40 text-proofound-forest hover:bg-proofound-forest/10"
+          >
+            Open Proofs
+          </Button>
+        </div>
       </div>
 
       {/* Metrics Grid */}
@@ -196,16 +212,16 @@ export function L4Card({ skill, onEdit }: L4CardProps) {
         <Button
           size="sm"
           variant="outline"
-          onClick={onEdit}
+          onClick={() => onEdit('proofs')}
           className="flex-1 text-proofound-forest border-proofound-forest/30 hover:bg-proofound-forest/5 hover:border-proofound-forest hover:text-proofound-forest transition-all"
         >
           <FileText className="h-4 w-4 mr-2" />
-          Add Proof
+          Open Proofs
         </Button>
         <Button
           size="sm"
           variant="outline"
-          onClick={onEdit}
+          onClick={() => onEdit('verification')}
           className="flex-1 text-proofound-teal border-proofound-teal/30 hover:bg-proofound-teal/5 hover:border-proofound-teal hover:text-proofound-teal transition-all"
         >
           <CheckCircle2 className="h-4 w-4 mr-2" />
