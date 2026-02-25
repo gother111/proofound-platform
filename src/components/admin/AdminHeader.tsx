@@ -40,7 +40,7 @@ export function AdminHeader({ adminEmail, adminRole, collapsed, setCollapsed }: 
   }, []);
 
   // Generate breadcrumbs from pathname
-  const breadcrumbs = pathname
+  const breadcrumbs = (pathname ?? '')
     .split('/')
     .filter((segment) => segment !== '')
     .map((segment, index, array) => {

@@ -40,7 +40,7 @@ function SignupSubmitButton({ children }: { children: React.ReactNode }) {
 export function SignupForm({ accountType, onBack }: SignupFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextPath = searchParams.get('next');
+  const nextPath = searchParams?.get('next');
   const [showPassword, setShowPassword] = useState(false);
   const [clientError, setClientError] = useState<string | null>(null);
   const [email, setEmail] = useState('');

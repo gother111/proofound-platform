@@ -99,12 +99,12 @@ export default function AssignmentBuilderPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const slug =
-    typeof params.slug === 'string'
+    typeof params?.slug === 'string'
       ? params.slug
-      : Array.isArray(params.slug)
+      : Array.isArray(params?.slug)
         ? params.slug[0]
         : '';
-  const draftId = searchParams.get('draftId');
+  const draftId = searchParams?.get('draftId');
   const [currentStep, setCurrentStep] = useState(1);
   const [builderMode, setBuilderMode] = useState<BuilderMode>(
     CLIENT_FF_DEFAULTS.assignmentBasicMode ? 'basic' : 'advanced'

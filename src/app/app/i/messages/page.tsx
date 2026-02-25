@@ -21,7 +21,7 @@ export const dynamic = 'force-dynamic';
 
 function MessagesPageContent() {
   const searchParams = useSearchParams();
-  const conversationParam = searchParams.get('conversation');
+  const conversationParam = searchParams?.get('conversation');
   const pathname = usePathname();
   const router = useRouter();
 
@@ -154,7 +154,7 @@ function MessagesPageContent() {
 
   const handleBackToConversationList = () => {
     setSelectedConversationId(undefined);
-    router.replace(pathname);
+    router.replace(pathname ?? '/app/i/messages');
   };
 
   // Show loading state if auth is not ready

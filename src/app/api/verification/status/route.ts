@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
         ? 'pending'
         : profile.verification_status || 'unverified';
     const verificationMethod =
-      profile.verification_method || (hasPendingToken ? 'work_email' : null);
+      profile.verification_method || (!hasExplicitStatus && hasPendingToken ? 'work_email' : null);
 
     return NextResponse.json({
       verified: profile.verified || false,

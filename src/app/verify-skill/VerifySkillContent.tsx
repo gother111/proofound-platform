@@ -14,8 +14,8 @@ import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 export function VerifySkillContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const token = searchParams.get('token');
-  const action = searchParams.get('action');
+  const token = searchParams?.get('token');
+  const action = searchParams?.get('action');
 
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);

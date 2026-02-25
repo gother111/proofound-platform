@@ -44,7 +44,7 @@ function SignInSubmitButton() {
 export function SignIn({ onBack, onCreateAccount }: SignInProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextPath = searchParams.get('next');
+  const nextPath = searchParams?.get('next');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [clientError, setClientError] = useState<string | null>(null);
@@ -52,7 +52,7 @@ export function SignIn({ onBack, onCreateAccount }: SignInProps) {
 
   // Surface OAuth errors passed back via the callback route
   useEffect(() => {
-    const oauthError = searchParams.get('error');
+    const oauthError = searchParams?.get('error');
     if (oauthError) {
       setClientError(oauthError);
     }

@@ -41,14 +41,22 @@ const STATUS_COLORS = {
 export default function ProjectDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const projectId =
+    typeof params?.id === 'string' ? params.id : Array.isArray(params?.id) ? params.id[0] : null;
   const [project, setProject] = useState<Project | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const loadProject = useCallback(async () => {
+    if (!projectId) {
+      setIsLoading(false);
+      router.push('/app/i/projects');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/projects/${params.id}`);
+      const response = await fetch(`/api/projects/${projectId}`);
       if (response.ok) {
         const data = await response.json();
         setProject(data.project);
@@ -60,17 +68,18 @@ export default function ProjectDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [params.id, router]);
+  }, [projectId, router]);
 
   useEffect(() => {
     loadProject();
   }, [loadProject]);
 
   const handleDelete = async () => {
+    if (!projectId) return;
     if (!confirm('Are you sure you want to archive this project?')) return;
 
     try {
-      const response = await fetch(`/api/projects/${params.id}`, {
+      const response = await fetch(`/api/projects/${projectId}`, {
         method: 'DELETE',
       });
 

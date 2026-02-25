@@ -121,9 +121,9 @@ export function AssignmentBuilderV2({ onComplete, onCancel }: AssignmentBuilderV
   const router = useRouter();
   const params = useParams();
   const slug =
-    typeof params.slug === 'string'
+    typeof params?.slug === 'string'
       ? params.slug
-      : Array.isArray(params.slug)
+      : Array.isArray(params?.slug)
         ? params.slug[0]
         : null;
   const [currentStep, setCurrentStep] = useState(1);

@@ -23,6 +23,7 @@ function createSupabaseMock(options: {
   authError?: Error | null;
   existingProfile?: IndividualProfileRow | null;
   upsertError?: { message: string } | null;
+  pendingStatusError?: { message: string } | null;
   profile?: { display_name: string } | null;
 }) {
   const {
@@ -30,11 +31,14 @@ function createSupabaseMock(options: {
     authError = null,
     existingProfile = null,
     upsertError = null,
+    pendingStatusError = null,
     profile = { display_name: 'Alice' },
   } = options;
 
   const profileRow = profile;
   const upsertPayloads: Array<Record<string, unknown>> = [];
+  const statusUpdatePayloads: Array<Record<string, unknown>> = [];
+  const statusUpdateEqCalls: Array<{ column: string; value: unknown }> = [];
 
   const individualProfilesQuery = {
     select: vi.fn().mockReturnThis(),
@@ -46,6 +50,15 @@ function createSupabaseMock(options: {
     upsert: vi.fn((payload: Record<string, unknown>) => {
       upsertPayloads.push(payload);
       return Promise.resolve({ error: upsertError });
+    }),
+    update: vi.fn((payload: Record<string, unknown>) => {
+      statusUpdatePayloads.push(payload);
+      return {
+        eq: vi.fn((column: string, value: unknown) => {
+          statusUpdateEqCalls.push({ column, value });
+          return Promise.resolve({ error: pendingStatusError });
+        }),
+      };
     }),
   };
 
@@ -81,7 +94,14 @@ function createSupabaseMock(options: {
     }),
   } as any;
 
-  return { supabase, upsertPayloads, individualProfilesQuery, profileQuery };
+  return {
+    supabase,
+    upsertPayloads,
+    statusUpdatePayloads,
+    statusUpdateEqCalls,
+    individualProfilesQuery,
+    profileQuery,
+  };
 }
 
 function makeRequest(body: Record<string, unknown>) {
@@ -100,10 +120,11 @@ describe('POST /api/verification/work-email/send', () => {
   });
 
   it('normalizes email, stores verification token, and sends work email verification', async () => {
-    const { supabase, upsertPayloads } = createSupabaseMock({
-      existingProfile: null,
-      profile: { display_name: 'Alice Researcher' },
-    });
+    const { supabase, upsertPayloads, statusUpdatePayloads, statusUpdateEqCalls } =
+      createSupabaseMock({
+        existingProfile: null,
+        profile: { display_name: 'Alice Researcher' },
+      });
     (createClient as any).mockResolvedValue(supabase);
     vi.mocked(sendWorkEmailVerification).mockResolvedValue();
 
@@ -119,6 +140,7 @@ describe('POST /api/verification/work-email/send', () => {
     const body = await response.json();
 
     expect(body.success).toBe(true);
+    expect(body.verificationStatus).toBe('pending');
     expect(upsertPayloads).toHaveLength(1);
     expect(upsertPayloads[0]).toMatchObject({
       user_id: 'user-1',
@@ -136,6 +158,12 @@ describe('POST /api/verification/work-email/send', () => {
     expect(typeof sentToken).toBe('string');
     expect(sentToken).toMatch(/^[a-f0-9]{64}$/);
     expect(vi.mocked(sendWorkEmailVerification).mock.calls[0][2]).toBe('Alice Researcher');
+    expect(statusUpdatePayloads).toHaveLength(1);
+    expect(statusUpdatePayloads[0]).toMatchObject({
+      verification_status: 'pending',
+      verification_method: 'work_email',
+    });
+    expect(statusUpdateEqCalls).toContainEqual({ column: 'user_id', value: 'user-1' });
   });
 
   it('returns 400 when work email is already verified by another account', async () => {

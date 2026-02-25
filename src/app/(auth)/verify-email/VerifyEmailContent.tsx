@@ -15,8 +15,8 @@ export function VerifyEmailContent() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = searchParams.get('token');
-    const verificationType = searchParams.get('type') === 'signup' ? 'signup' : 'email';
+    const token = searchParams?.get('token');
+    const verificationType = searchParams?.get('type') === 'signup' ? 'signup' : 'email';
 
     if (!token) {
       setStatus('error');

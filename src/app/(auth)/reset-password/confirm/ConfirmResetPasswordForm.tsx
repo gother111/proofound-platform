@@ -61,8 +61,8 @@ export function ConfirmResetPasswordForm() {
   }, [router]);
 
   useEffect(() => {
-    const codeParam = searchParams.get('code');
-    const tokenHashParam = searchParams.get('token_hash') ?? searchParams.get('token');
+    const codeParam = searchParams?.get('code');
+    const tokenHashParam = searchParams?.get('token_hash') ?? searchParams?.get('token');
 
     if (!codeParam && !tokenHashParam) {
       if (typeof window !== 'undefined') {

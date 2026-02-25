@@ -42,7 +42,7 @@ export function VerifyWorkEmailContent() {
   );
 
   useEffect(() => {
-    const token = searchParams.get('token');
+    const token = searchParams?.get('token');
 
     if (!token) {
       setStatus('error');

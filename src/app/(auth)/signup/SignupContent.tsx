@@ -29,7 +29,7 @@ export function SignupContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [signupType, setSignupType] = useState<SignupType>(() =>
-    resolveSignupTypeFromQueryParam(searchParams.get('type'))
+    resolveSignupTypeFromQueryParam(searchParams?.get('type') ?? null)
   );
 
   if (signupType === 'individual' || signupType === 'organization') {

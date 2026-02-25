@@ -335,7 +335,12 @@ export function useProfileData() {
 
       const verificationWarning = (inserted as { verificationWarning?: string | null })
         .verificationWarning;
+      const saveWarning = (inserted as { saveWarning?: string | null }).saveWarning;
       const requestedVerification = Boolean(story.verificationRequest?.verifierEmail);
+
+      if (saveWarning) {
+        toast.warning(saveWarning);
+      }
 
       if (requestedVerification) {
         if (verificationWarning) {
