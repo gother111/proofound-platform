@@ -22,8 +22,10 @@ import {
   createExperience,
   deleteExperience as deleteExperienceAction,
   createEducation,
+  updateEducation as updateEducationAction,
   deleteEducation as deleteEducationAction,
   createVolunteering,
+  updateVolunteering as updateVolunteeringAction,
   deleteVolunteering as deleteVolunteeringAction,
   toggleRedactMode as toggleRedactModeAction,
 } from '@/actions/profile';
@@ -421,6 +423,38 @@ export function useProfileData() {
     [profile, runWithPending]
   );
 
+  const updateEducation = useCallback(
+    (id: string, education: Omit<Education, 'id'>) => {
+      if (!profile) return;
+      setProfile((prev) =>
+        prev
+          ? {
+              ...prev,
+              education: prev.education.map((item) =>
+                item.id === id ? { ...education, id: item.id } : item
+              ),
+            }
+          : prev
+      );
+
+      startTransition(() => {
+        runWithPending('education', async () => {
+          const updated = await updateEducationAction(id, education);
+          if (!updated) return;
+          setProfile((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  education: prev.education.map((item) => (item.id === id ? updated : item)),
+                }
+              : prev
+          );
+        });
+      });
+    },
+    [profile, runWithPending]
+  );
+
   const addVolunteering = useCallback(
     (volunteering: Omit<Volunteering, 'id'>) => {
       if (!profile) return;
@@ -467,6 +501,38 @@ export function useProfileData() {
     [profile, runWithPending]
   );
 
+  const updateVolunteering = useCallback(
+    (id: string, volunteering: Omit<Volunteering, 'id'>) => {
+      if (!profile) return;
+      setProfile((prev) =>
+        prev
+          ? {
+              ...prev,
+              volunteering: prev.volunteering.map((item) =>
+                item.id === id ? { ...volunteering, id: item.id } : item
+              ),
+            }
+          : prev
+      );
+
+      startTransition(() => {
+        runWithPending('volunteering', async () => {
+          const updated = await updateVolunteeringAction(id, volunteering);
+          if (!updated) return;
+          setProfile((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  volunteering: prev.volunteering.map((item) => (item.id === id ? updated : item)),
+                }
+              : prev
+          );
+        });
+      });
+    },
+    [profile, runWithPending]
+  );
+
   const toggleRedactMode = useCallback(
     (enabled: boolean) => {
       if (!profile) return;
@@ -502,8 +568,10 @@ export function useProfileData() {
     deleteExperience,
     addEducation,
     deleteEducation,
+    updateEducation,
     addVolunteering,
     deleteVolunteering,
+    updateVolunteering,
     toggleRedactMode,
   };
 }

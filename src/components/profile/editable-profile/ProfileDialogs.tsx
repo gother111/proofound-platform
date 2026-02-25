@@ -36,11 +36,14 @@ type ProfileDialogsProps = {
   isExperienceFormOpen: boolean;
   setIsExperienceFormOpen: Dispatch<SetStateAction<boolean>>;
   isEducationFormOpen: boolean;
-  setIsEducationFormOpen: Dispatch<SetStateAction<boolean>>;
+  setIsEducationFormOpen: (open: boolean) => void;
   isVolunteerFormOpen: boolean;
-  setIsVolunteerFormOpen: Dispatch<SetStateAction<boolean>>;
+  setIsVolunteerFormOpen: (open: boolean) => void;
   isShareDialogOpen: boolean;
   setIsShareDialogOpen: Dispatch<SetStateAction<boolean>>;
+  editingEducation: Education | null;
+  editingVolunteering: Volunteering | null;
+  availableSkillNames: string[];
   onUpdateBasicInfo: (updates: Partial<ProfileData['basicInfo']>) => void;
   onUpdateMission: (mission: string, visibility?: 'public' | 'network' | 'private') => void;
   onUpdateVision: (vision: string, visibility?: 'public' | 'network' | 'private') => void;
@@ -49,7 +52,9 @@ type ProfileDialogsProps = {
   onAddImpactStory: (story: Omit<ImpactStory, 'id'>) => void;
   onAddExperience: (experience: Omit<Experience, 'id'>) => void;
   onAddEducation: (education: Omit<Education, 'id'>) => void;
+  onUpdateEducation: (id: string, education: Omit<Education, 'id'>) => void;
   onAddVolunteering: (volunteering: Omit<Volunteering, 'id'>) => void;
+  onUpdateVolunteering: (id: string, volunteering: Omit<Volunteering, 'id'>) => void;
 };
 
 export function ProfileDialogs({
@@ -74,6 +79,9 @@ export function ProfileDialogs({
   setIsVolunteerFormOpen,
   isShareDialogOpen,
   setIsShareDialogOpen,
+  editingEducation,
+  editingVolunteering,
+  availableSkillNames,
   onUpdateBasicInfo,
   onUpdateMission,
   onUpdateVision,
@@ -82,7 +90,9 @@ export function ProfileDialogs({
   onAddImpactStory,
   onAddExperience,
   onAddEducation,
+  onUpdateEducation,
   onAddVolunteering,
+  onUpdateVolunteering,
 }: ProfileDialogsProps) {
   return (
     <>
@@ -135,12 +145,28 @@ export function ProfileDialogs({
       <EducationForm
         open={isEducationFormOpen}
         onOpenChange={setIsEducationFormOpen}
-        onSave={onAddEducation}
+        education={editingEducation}
+        availableSkills={availableSkillNames}
+        onSave={(education) => {
+          if (editingEducation) {
+            onUpdateEducation(editingEducation.id, education);
+            return;
+          }
+          onAddEducation(education);
+        }}
       />
       <VolunteerForm
         open={isVolunteerFormOpen}
         onOpenChange={setIsVolunteerFormOpen}
-        onSave={onAddVolunteering}
+        volunteering={editingVolunteering}
+        availableSkills={availableSkillNames}
+        onSave={(volunteering) => {
+          if (editingVolunteering) {
+            onUpdateVolunteering(editingVolunteering.id, volunteering);
+            return;
+          }
+          onAddVolunteering(volunteering);
+        }}
       />
       <ShareProfileDialog
         isOpen={isShareDialogOpen}

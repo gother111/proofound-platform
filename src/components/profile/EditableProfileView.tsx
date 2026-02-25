@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { EmptyProfileStateView } from './EmptyProfileStateView';
@@ -15,6 +15,7 @@ import { useProfileData } from '@/hooks/useProfileData';
 import { MobileProfileHeader } from '@/components/profile/MobileProfileHeader';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import type { Education, Volunteering } from '@/types/profile';
 
 export function EditableProfileView() {
   const router = useRouter();
@@ -37,8 +38,10 @@ export function EditableProfileView() {
     deleteExperience,
     addEducation,
     deleteEducation,
+    updateEducation,
     addVolunteering,
     deleteVolunteering,
+    updateVolunteering,
     toggleRedactMode,
   } = useProfileData();
 
@@ -64,6 +67,8 @@ export function EditableProfileView() {
     isShareDialogOpen,
     setIsShareDialogOpen,
   } = useProfileViewState();
+  const [editingEducation, setEditingEducation] = useState<Education | null>(null);
+  const [editingVolunteering, setEditingVolunteering] = useState<Volunteering | null>(null);
 
   const isEmptyProfile = useMemo(() => {
     if (!profile) {
@@ -104,6 +109,45 @@ export function EditableProfileView() {
       !hasAnyEntries
     );
   }, [profile]);
+
+  const availableSkillNames = useMemo(
+    () => profile?.skills.map((skill) => skill.name).filter(Boolean) ?? [],
+    [profile?.skills]
+  );
+
+  const openAddEducation = () => {
+    setEditingEducation(null);
+    setIsEducationFormOpen(true);
+  };
+
+  const openEditEducation = (item: Education) => {
+    setEditingEducation(item);
+    setIsEducationFormOpen(true);
+  };
+
+  const handleEducationFormOpenChange = (open: boolean) => {
+    setIsEducationFormOpen(open);
+    if (!open) {
+      setEditingEducation(null);
+    }
+  };
+
+  const openAddVolunteering = () => {
+    setEditingVolunteering(null);
+    setIsVolunteerFormOpen(true);
+  };
+
+  const openEditVolunteering = (item: Volunteering) => {
+    setEditingVolunteering(item);
+    setIsVolunteerFormOpen(true);
+  };
+
+  const handleVolunteeringFormOpenChange = (open: boolean) => {
+    setIsVolunteerFormOpen(open);
+    if (!open) {
+      setEditingVolunteering(null);
+    }
+  };
 
   if (isLoading) {
     return <ProfileSkeleton />;
@@ -146,8 +190,8 @@ export function EditableProfileView() {
         onOpenSkills={() => router.push('/app/i/expertise')}
         onAddImpactStory={() => setIsImpactStoryFormOpen(true)}
         onAddExperience={() => setIsExperienceFormOpen(true)}
-        onAddEducation={() => setIsEducationFormOpen(true)}
-        onAddVolunteering={() => setIsVolunteerFormOpen(true)}
+        onAddEducation={openAddEducation}
+        onAddVolunteering={openAddVolunteering}
         onUpdateBasicInfo={updateBasicInfo}
       />
     );
@@ -203,9 +247,11 @@ export function EditableProfileView() {
               onDeleteImpactStory={deleteImpactStory}
               onAddExperience={() => setIsExperienceFormOpen(true)}
               onDeleteExperience={deleteExperience}
-              onAddEducation={() => setIsEducationFormOpen(true)}
+              onAddEducation={openAddEducation}
+              onEditEducation={openEditEducation}
               onDeleteEducation={deleteEducation}
-              onAddVolunteering={() => setIsVolunteerFormOpen(true)}
+              onAddVolunteering={openAddVolunteering}
+              onEditVolunteering={openEditVolunteering}
               onDeleteVolunteering={deleteVolunteering}
             />
           </div>
@@ -229,11 +275,14 @@ export function EditableProfileView() {
         isExperienceFormOpen={isExperienceFormOpen}
         setIsExperienceFormOpen={setIsExperienceFormOpen}
         isEducationFormOpen={isEducationFormOpen}
-        setIsEducationFormOpen={setIsEducationFormOpen}
+        setIsEducationFormOpen={handleEducationFormOpenChange}
         isVolunteerFormOpen={isVolunteerFormOpen}
-        setIsVolunteerFormOpen={setIsVolunteerFormOpen}
+        setIsVolunteerFormOpen={handleVolunteeringFormOpenChange}
         isShareDialogOpen={isShareDialogOpen}
         setIsShareDialogOpen={setIsShareDialogOpen}
+        editingEducation={editingEducation}
+        editingVolunteering={editingVolunteering}
+        availableSkillNames={availableSkillNames}
         onUpdateBasicInfo={updateBasicInfo}
         onUpdateMission={updateMission}
         onUpdateVision={updateVision}
@@ -242,7 +291,9 @@ export function EditableProfileView() {
         onAddImpactStory={addImpactStory}
         onAddExperience={addExperience}
         onAddEducation={addEducation}
+        onUpdateEducation={updateEducation}
         onAddVolunteering={addVolunteering}
+        onUpdateVolunteering={updateVolunteering}
       />
     </div>
   );

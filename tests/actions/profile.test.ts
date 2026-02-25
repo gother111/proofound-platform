@@ -1,7 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { updateVision, replaceCauses, updateMission } from '@/actions/profile';
+import {
+  updateVision,
+  replaceCauses,
+  updateMission,
+  updateEducation,
+  updateVolunteering,
+} from '@/actions/profile';
 import { db } from '@/db';
-import { individualProfiles } from '@/db/schema';
+import { education, individualProfiles, volunteering } from '@/db/schema';
 
 // Mock the database
 vi.mock('@/db', () => ({
@@ -95,6 +101,60 @@ describe('Profile Actions', () => {
 
       expect(db.update).toHaveBeenCalledWith(individualProfiles);
       expect(setMock).toHaveBeenCalledWith({ mission });
+    });
+  });
+
+  describe('updateEducation', () => {
+    it('should update the education row for the authenticated user', async () => {
+      const returningMock = vi.fn(() => Promise.resolve([{ id: 'edu-1' }]));
+      const whereMock = vi.fn(() => ({ returning: returningMock }));
+      const setMock = vi.fn(() => ({ where: whereMock }));
+      (db.update as any).mockReturnValue({ set: setMock });
+
+      const payload = {
+        institution: 'Updated Institute',
+        degree: 'Updated Degree',
+        duration: '2020 - 2022',
+        skills: 'React',
+        projects: 'Capstone',
+        verified: false,
+      };
+
+      const result = await updateEducation('edu-1', payload);
+
+      expect(db.update).toHaveBeenCalledWith(education);
+      expect(setMock).toHaveBeenCalledWith(payload);
+      expect(whereMock).toHaveBeenCalledTimes(1);
+      expect(returningMock).toHaveBeenCalledTimes(1);
+      expect(result).toEqual({ id: 'edu-1' });
+    });
+  });
+
+  describe('updateVolunteering', () => {
+    it('should update the volunteering row for the authenticated user', async () => {
+      const returningMock = vi.fn(() => Promise.resolve([{ id: 'vol-1' }]));
+      const whereMock = vi.fn(() => ({ returning: returningMock }));
+      const setMock = vi.fn(() => ({ where: whereMock }));
+      (db.update as any).mockReturnValue({ set: setMock });
+
+      const payload = {
+        title: 'Updated Role',
+        orgDescription: 'Org',
+        duration: '2021 - Present',
+        cause: 'Cause',
+        impact: 'Impact',
+        skillsDeployed: 'React',
+        personalWhy: 'Why',
+        verified: false,
+      };
+
+      const result = await updateVolunteering('vol-1', payload);
+
+      expect(db.update).toHaveBeenCalledWith(volunteering);
+      expect(setMock).toHaveBeenCalledWith(payload);
+      expect(whereMock).toHaveBeenCalledTimes(1);
+      expect(returningMock).toHaveBeenCalledTimes(1);
+      expect(result).toEqual({ id: 'vol-1' });
     });
   });
 });
