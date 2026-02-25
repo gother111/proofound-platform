@@ -20,6 +20,7 @@ import { emitProfileActivated } from '@/lib/analytics/events';
 import { triggerProfileActivationSurvey } from '@/lib/surveys/sus-triggers';
 import { evaluateIndividualMatchability } from '@/lib/matching/eligibility';
 import { MATCHABILITY_STRONG_SKILLS_WITH_RECENCY } from '@/lib/matching/thresholds';
+import { buildExperienceTimeline } from '@/lib/profile/experience-timeline';
 import type {
   ProfileData,
   BasicInfo,
@@ -31,6 +32,37 @@ import type {
   Volunteering as VolunteeringType,
   FieldVisibility,
 } from '@/types/profile';
+
+function coerceDateOnlyString(value: unknown): string | null {
+  if (!value) {
+    return null;
+  }
+
+  if (value instanceof Date) {
+    return value.toISOString().slice(0, 10);
+  }
+
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const isoDatePrefix = trimmed.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (isoDatePrefix) {
+    return isoDatePrefix[1];
+  }
+
+  const isoMonthOnly = trimmed.match(/^(\d{4}-\d{2})$/);
+  if (isoMonthOnly) {
+    return `${isoMonthOnly[1]}-01`;
+  }
+
+  return null;
+}
 
 /**
  * Track if profile was already activated (to avoid duplicate events)
@@ -283,6 +315,8 @@ export async function getProfileData(): Promise<ProfileData> {
             title: experiences.title,
             orgDescription: experiences.orgDescription,
             duration: experiences.duration,
+            startDate: experiences.startDate,
+            endDate: experiences.endDate,
             learning: experiences.learning,
             growth: experiences.growth,
             verified: experiences.verified,
@@ -358,6 +392,26 @@ export async function getProfileData(): Promise<ProfileData> {
       };
     });
 
+    const mappedExperiences: Experience[] = experienceRows.map((row: any) => {
+      const timeline = buildExperienceTimeline({
+        startDate: coerceDateOnlyString(row.startDate),
+        endDate: coerceDateOnlyString(row.endDate),
+        duration: row.duration,
+      });
+
+      return {
+        id: row.id,
+        title: row.title,
+        orgDescription: row.orgDescription,
+        duration: timeline.duration,
+        startDate: timeline.startDate,
+        endDate: timeline.endDate,
+        learning: row.learning,
+        growth: row.growth,
+        verified: row.verified,
+      };
+    });
+
     return {
       basicInfo: {
         name: profileBasics?.displayName ?? user.displayName ?? 'Your Name',
@@ -376,7 +430,7 @@ export async function getProfileData(): Promise<ProfileData> {
       causes: profile?.causes ?? [],
       skills: mappedSkills, // Now fetched from L4 skills table
       impactStories: impactRows,
-      experiences: experienceRows,
+      experiences: mappedExperiences,
       education: educationRows,
       volunteering: volunteeringRows,
       fieldVisibility:
@@ -517,13 +571,21 @@ export async function deleteImpactStory(id: string) {
 
 export async function createExperience(data: Omit<Experience, 'id'>) {
   const user = await requireAuth();
+  const timeline = buildExperienceTimeline({
+    startDate: data.startDate,
+    endDate: data.endDate,
+    duration: data.duration,
+  });
+
   const [inserted] = await db
     .insert(experiences)
     .values({
       userId: user.id,
       title: data.title,
       orgDescription: data.orgDescription,
-      duration: data.duration,
+      duration: timeline.duration,
+      startDate: timeline.startDate,
+      endDate: timeline.endDate,
       learning: data.learning,
       growth: data.growth,
       verified: data.verified ?? false,
@@ -531,7 +593,20 @@ export async function createExperience(data: Omit<Experience, 'id'>) {
     .returning();
 
   revalidatePath('/app/i/profile');
-  return inserted;
+  const normalizedStartDate = coerceDateOnlyString((inserted as any).startDate);
+  const normalizedEndDate = coerceDateOnlyString((inserted as any).endDate);
+  const normalizedTimeline = buildExperienceTimeline({
+    startDate: normalizedStartDate,
+    endDate: normalizedEndDate,
+    duration: (inserted as any).duration,
+  });
+
+  return {
+    ...(inserted as any),
+    startDate: normalizedTimeline.startDate,
+    endDate: normalizedTimeline.endDate,
+    duration: normalizedTimeline.duration,
+  };
 }
 
 export async function deleteExperience(id: string) {

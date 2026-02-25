@@ -15,14 +15,34 @@ import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import {
+  buildExperienceTimeline,
+  isoDateToMonthInput,
+  monthInputToIsoDate,
+} from '@/lib/profile/experience-timeline';
 
-const experienceSchema = z.object({
-  title: z.string().min(1, 'Title is required'),
-  orgDescription: z.string().min(1, 'Organization description is required'),
-  duration: z.string().min(1, 'Duration is required'),
-  learning: z.string().min(1, 'Learning description is required'),
-  growth: z.string().min(1, 'Growth description is required'),
-});
+const monthInputRegex = /^\d{4}-(0[1-9]|1[0-2])$/;
+const experienceSchema = z
+  .object({
+    title: z.string().min(1, 'Title is required'),
+    orgDescription: z.string().min(1, 'Organization description is required'),
+    startMonth: z.string().regex(monthInputRegex, 'Start month is required'),
+    endMonth: z
+      .string()
+      .optional()
+      .refine((value) => !value || monthInputRegex.test(value), 'End month must be a valid month'),
+    learning: z.string().min(1, 'Learning description is required'),
+    growth: z.string().min(1, 'Growth description is required'),
+  })
+  .superRefine((value, context) => {
+    if (value.endMonth && value.endMonth < value.startMonth) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'End month cannot be earlier than start month',
+        path: ['endMonth'],
+      });
+    }
+  });
 
 type ExperienceFormData = z.infer<typeof experienceSchema>;
 
@@ -45,7 +65,8 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
     defaultValues: {
       title: '',
       orgDescription: '',
-      duration: '',
+      startMonth: '',
+      endMonth: '',
       learning: '',
       growth: '',
     },
@@ -54,10 +75,17 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
   useEffect(() => {
     if (open) {
       if (experience) {
+        const timeline = buildExperienceTimeline({
+          startDate: experience.startDate,
+          endDate: experience.endDate,
+          duration: experience.duration,
+        });
+
         reset({
           title: experience.title,
           orgDescription: experience.orgDescription,
-          duration: experience.duration,
+          startMonth: isoDateToMonthInput(timeline.startDate),
+          endMonth: isoDateToMonthInput(timeline.endDate),
           learning: experience.learning,
           growth: experience.growth,
         });
@@ -65,7 +93,8 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
         reset({
           title: '',
           orgDescription: '',
-          duration: '',
+          startMonth: '',
+          endMonth: '',
           learning: '',
           growth: '',
         });
@@ -74,8 +103,19 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
   }, [open, experience, reset]);
 
   const onSubmit = (data: ExperienceFormData) => {
+    const timeline = buildExperienceTimeline({
+      startDate: monthInputToIsoDate(data.startMonth),
+      endDate: monthInputToIsoDate(data.endMonth),
+    });
+
     onSave({
-      ...data,
+      title: data.title,
+      orgDescription: data.orgDescription,
+      duration: timeline.duration,
+      startDate: timeline.startDate,
+      endDate: timeline.endDate,
+      learning: data.learning,
+      growth: data.growth,
       verified: false,
     });
     onOpenChange(false);
@@ -140,22 +180,48 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
               )}
             </motion.div>
 
-            {/* Duration */}
+            {/* Timeline */}
             <motion.div
               className="space-y-2"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <Label htmlFor="duration">
-                Duration <span className="text-red-500">*</span>
+              <Label>
+                Timeline <span className="text-red-500">*</span>
               </Label>
-              <Input
-                id="duration"
-                {...register('duration')}
-                placeholder='e.g., "2023 - Present"'
-                className={errors.duration ? 'border-red-500' : ''}
-              />
-              {errors.duration && <p className="text-xs text-red-500">{errors.duration.message}</p>}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="startMonth" className="text-xs text-muted-foreground">
+                    Start month
+                  </Label>
+                  <Input
+                    id="startMonth"
+                    type="month"
+                    {...register('startMonth')}
+                    className={errors.startMonth ? 'border-red-500' : ''}
+                  />
+                  {errors.startMonth && (
+                    <p className="text-xs text-red-500">{errors.startMonth.message}</p>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="endMonth" className="text-xs text-muted-foreground">
+                    End month
+                  </Label>
+                  <Input
+                    id="endMonth"
+                    type="month"
+                    {...register('endMonth')}
+                    className={errors.endMonth ? 'border-red-500' : ''}
+                  />
+                  {errors.endMonth && (
+                    <p className="text-xs text-red-500">{errors.endMonth.message}</p>
+                  )}
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Leave end month empty if this role is ongoing.
+              </p>
             </motion.div>
 
             {/* What I Learned */}
