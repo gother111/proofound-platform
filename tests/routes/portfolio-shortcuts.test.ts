@@ -14,7 +14,12 @@ vi.mock('@/lib/auth', () => ({
   requireAuth: vi.fn(),
 }));
 
+vi.mock('@/lib/profile/completion-flow.server', () => ({
+  getIndividualProfileCompletionState: vi.fn(),
+}));
+
 import { requireAuth } from '@/lib/auth';
+import { getIndividualProfileCompletionState } from '@/lib/profile/completion-flow.server';
 import IndividualPortfolioShortcutPage from '@/app/app/i/portfolio/page';
 import OrganizationPortfolioShortcutPage from '@/app/app/o/[slug]/portfolio/page';
 import LegacyAuthLoginPage from '@/app/auth/login/page';
@@ -26,14 +31,33 @@ describe('portfolio and compatibility shortcut routes', () => {
   });
 
   it('redirects individual shortcut to public portfolio URL', async () => {
-    (requireAuth as any).mockResolvedValue({ handle: 'strict-user' });
+    (requireAuth as any).mockResolvedValue({ id: 'user-1', handle: 'strict-user' });
+    (getIndividualProfileCompletionState as any).mockResolvedValue({
+      isPortfolioReady: true,
+      portfolioLockCode: null,
+    });
 
     await expect(IndividualPortfolioShortcutPage()).rejects.toThrow('NEXT_REDIRECT');
     expect(redirectMock).toHaveBeenCalledWith('/portfolio/strict-user?returnTo=%2Fapp%2Fi%2Fhome');
   });
 
+  it('redirects individual shortcut to profile when portfolio is locked', async () => {
+    (requireAuth as any).mockResolvedValue({ id: 'user-1', handle: 'strict-user' });
+    (getIndividualProfileCompletionState as any).mockResolvedValue({
+      isPortfolioReady: false,
+      portfolioLockCode: 'skills',
+    });
+
+    await expect(IndividualPortfolioShortcutPage()).rejects.toThrow('NEXT_REDIRECT');
+    expect(redirectMock).toHaveBeenCalledWith('/app/i/profile?portfolioLocked=1&lockReason=skills');
+  });
+
   it('redirects individual shortcut to profile when handle is missing', async () => {
-    (requireAuth as any).mockResolvedValue({ handle: null });
+    (requireAuth as any).mockResolvedValue({ id: 'user-1', handle: null });
+    (getIndividualProfileCompletionState as any).mockResolvedValue({
+      isPortfolioReady: true,
+      portfolioLockCode: null,
+    });
 
     await expect(IndividualPortfolioShortcutPage()).rejects.toThrow('NEXT_REDIRECT');
     expect(redirectMock).toHaveBeenCalledWith('/app/i/profile');

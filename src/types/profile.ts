@@ -149,6 +149,8 @@ export interface ProfileData {
   values: Value[];
   causes: string[];
   skills: Skill[];
+  proofArtifactCount?: number;
+  acceptedVerificationCount?: number;
   impactStories: ImpactStory[];
   experiences: Experience[];
   education: Education[];

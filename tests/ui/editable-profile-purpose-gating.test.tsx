@@ -6,10 +6,14 @@ import { EditableProfileView } from '@/components/profile/EditableProfileView';
 import { useProfileData } from '@/hooks/useProfileData';
 
 const toastInfoMock = vi.fn();
+const pushMock = vi.fn();
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
-    push: vi.fn(),
+    push: pushMock,
+  }),
+  useSearchParams: () => ({
+    get: () => null,
   }),
 }));
 
@@ -45,35 +49,39 @@ vi.mock('@/components/profile/MobileProfileHeader', () => ({
   MobileProfileHeader: () => <div data-testid="mobile-profile-header" />,
 }));
 
-vi.mock('@/components/profile/editable-profile/ProfileSidebar', () => ({
-  ProfileSidebar: ({ onOpenMission, onOpenVision, onOpenValues, onOpenCauses }: any) => (
-    <div data-testid="profile-sidebar">
-      <button onClick={onOpenMission}>sidebar-open-mission</button>
-      <button onClick={onOpenVision}>sidebar-open-vision</button>
-      <button onClick={onOpenValues}>sidebar-open-values</button>
-      <button onClick={onOpenCauses}>sidebar-open-causes</button>
+vi.mock('@/components/profile/GuidedProfileSetupView', () => ({
+  GuidedProfileSetupView: ({ completionState, onEditProfile, onOpenValues, onOpenCauses }: any) => (
+    <div data-testid="guided-profile-setup" data-stage={completionState.stage}>
+      <button onClick={onEditProfile}>guided-edit-profile</button>
+      <button onClick={onOpenValues}>guided-open-values</button>
+      <button onClick={onOpenCauses}>guided-open-causes</button>
     </div>
   ),
 }));
 
-vi.mock('@/components/profile/EmptyProfileStateView', () => ({
-  EmptyProfileStateView: ({ onOpenMission, onOpenValues, onOpenCauses }: any) => (
-    <div data-testid="empty-profile-state">
-      <button onClick={onOpenMission}>empty-open-mission</button>
-      <button onClick={onOpenValues}>empty-open-values</button>
-      <button onClick={onOpenCauses}>empty-open-causes</button>
+vi.mock('@/components/profile/editable-profile/PortfolioReadinessChecklist', () => ({
+  PortfolioReadinessChecklist: () => <div data-testid="portfolio-readiness-checklist" />,
+}));
+
+vi.mock('@/components/profile/editable-profile/ProfileSidebar', () => ({
+  ProfileSidebar: ({ onOpenMission, onOpenVision }: any) => (
+    <div data-testid="profile-sidebar">
+      <button onClick={onOpenMission}>sidebar-open-mission</button>
+      <button onClick={onOpenVision}>sidebar-open-vision</button>
     </div>
   ),
 }));
 
 vi.mock('@/components/profile/editable-profile/ProfileDialogs', () => ({
   ProfileDialogs: ({
+    isEditProfileOpen,
     isMissionEditorOpen,
     isVisionEditorOpen,
     isValuesEditorOpen,
     isCausesEditorOpen,
   }: any) => (
     <div data-testid="profile-dialogs">
+      {isEditProfileOpen && <span data-testid="edit-profile-open">edit-open</span>}
       {isMissionEditorOpen && <span data-testid="mission-editor-open">mission-open</span>}
       {isVisionEditorOpen && <span data-testid="vision-editor-open">vision-open</span>}
       {isValuesEditorOpen && <span data-testid="values-editor-open">values-open</span>}
@@ -96,6 +104,8 @@ function createProfile(overrides: Partial<any> = {}) {
     values: [],
     causes: [],
     skills: [],
+    proofArtifactCount: 0,
+    acceptedVerificationCount: 0,
     impactStories: [],
     experiences: [],
     education: [],
@@ -136,93 +146,69 @@ function mockUseProfileData(profile: any) {
     deleteExperience: vi.fn(),
     addEducation: vi.fn(),
     deleteEducation: vi.fn(),
+    updateEducation: vi.fn(),
     addVolunteering: vi.fn(),
     deleteVolunteering: vi.fn(),
+    updateVolunteering: vi.fn(),
     toggleRedactMode: vi.fn(),
   } as any);
 }
 
-describe('EditableProfileView purpose gating', () => {
+describe('EditableProfileView guided completion and purpose gating', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('opens values editor first from empty-state mission action when values are missing', () => {
+  it('shows guided Step 0 when name is missing and opens edit profile dialog', () => {
     mockUseProfileData(
       createProfile({
-        basicInfo: { name: 'Test User', avatar: null, tagline: '' },
+        basicInfo: { name: 'Your Name', avatar: null, tagline: '' },
       })
     );
 
     render(<EditableProfileView />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'empty-open-mission' }));
-
-    expect(screen.getByTestId('empty-profile-state')).toBeInTheDocument();
-    expect(screen.getByTestId('values-editor-open')).toBeInTheDocument();
-    expect(toastInfoMock).toHaveBeenCalledWith(
-      'Add at least one value before editing your mission. Values and causes must be completed first.'
-    );
+    expect(screen.getByTestId('guided-profile-setup')).toHaveAttribute('data-stage', 'step0_name');
+    fireEvent.click(screen.getByRole('button', { name: 'guided-edit-profile' }));
+    expect(screen.getByTestId('edit-profile-open')).toBeInTheDocument();
   });
 
-  it('opens values editor from empty-state values action', () => {
+  it('shows guided Step 1 when values/causes are missing and opens editors', () => {
     mockUseProfileData(
       createProfile({
-        basicInfo: { name: 'Test User', avatar: null, tagline: '' },
-      })
-    );
-
-    render(<EditableProfileView />);
-
-    fireEvent.click(screen.getByRole('button', { name: 'empty-open-values' }));
-
-    expect(screen.getByTestId('empty-profile-state')).toBeInTheDocument();
-    expect(screen.getByTestId('values-editor-open')).toBeInTheDocument();
-  });
-
-  it('opens causes editor from empty-state causes action', () => {
-    mockUseProfileData(
-      createProfile({
-        basicInfo: { name: 'Test User', avatar: null, tagline: '' },
-      })
-    );
-
-    render(<EditableProfileView />);
-
-    fireEvent.click(screen.getByRole('button', { name: 'empty-open-causes' }));
-
-    expect(screen.getByTestId('empty-profile-state')).toBeInTheDocument();
-    expect(screen.getByTestId('causes-editor-open')).toBeInTheDocument();
-  });
-
-  it('opens causes editor first when values exist but causes are missing', () => {
-    mockUseProfileData(
-      createProfile({
-        values: [{ id: 'v1', label: 'Integrity', icon: 'shield' }],
+        basicInfo: { name: 'Jane Doe', avatar: null, tagline: '' },
+        values: [],
         causes: [],
       })
     );
 
     render(<EditableProfileView />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'sidebar-open-vision' }));
-
-    expect(screen.getByTestId('causes-editor-open')).toBeInTheDocument();
-    expect(screen.queryByTestId('vision-editor-open')).not.toBeInTheDocument();
-    expect(toastInfoMock).toHaveBeenCalledWith(
-      'Add at least one cause before editing your vision. Values and causes must be completed first.'
+    expect(screen.getByTestId('guided-profile-setup')).toHaveAttribute(
+      'data-stage',
+      'step1_purpose'
     );
+
+    fireEvent.click(screen.getByRole('button', { name: 'guided-open-values' }));
+    expect(screen.getByTestId('values-editor-open')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'guided-open-causes' }));
+    expect(screen.getByTestId('causes-editor-open')).toBeInTheDocument();
   });
 
-  it('opens mission and vision editors when both values and causes exist', () => {
+  it('shows full profile view and opens mission/vision editors when prerequisites are met', () => {
     mockUseProfileData(
       createProfile({
+        basicInfo: { name: 'Jane Doe', avatar: null, tagline: '' },
         values: [{ id: 'v1', label: 'Integrity', icon: 'shield' }],
         causes: ['Climate Justice'],
       })
     );
 
     render(<EditableProfileView />);
+
+    expect(screen.queryByTestId('guided-profile-setup')).not.toBeInTheDocument();
+    expect(screen.getByTestId('profile-sidebar')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'sidebar-open-mission' }));
     fireEvent.click(screen.getByRole('button', { name: 'sidebar-open-vision' }));

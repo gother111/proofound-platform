@@ -3,6 +3,7 @@ import { LeftNav } from '@/components/app/LeftNav';
 import { TopBar } from '@/components/app/TopBar';
 import { TourProvider } from '@/components/tour/TourProvider';
 import { SUSTriggerProvider } from '@/components/feedback/SUSTriggerProvider';
+import { getIndividualProfileCompletionState } from '@/lib/profile/completion-flow.server';
 
 /**
  * Individual User Layout
@@ -17,6 +18,7 @@ import { SUSTriggerProvider } from '@/components/feedback/SUSTriggerProvider';
 
 export default async function IndividualLayout({ children }: { children: React.ReactNode }) {
   const user = await requirePersona('individual');
+  const completionState = await getIndividualProfileCompletionState(user.id);
 
   const userName = user.displayName || user.handle || 'User';
   const userInitials = userName
@@ -29,7 +31,13 @@ export default async function IndividualLayout({ children }: { children: React.R
   return (
     <SUSTriggerProvider userId={user.id}>
       <div className="flex h-screen bg-proofound-parchment">
-        <LeftNav basePath="/app/i" />
+        <LeftNav
+          basePath="/app/i"
+          individualPortfolioGate={{
+            locked: !completionState.isPortfolioReady,
+            reason: completionState.portfolioLockReason,
+          }}
+        />
         <div className="flex-1 flex flex-col min-w-0">
           <TopBar userName={userName} userInitials={userInitials} />
           {/* Main content region with ID for skip-to-content link */}

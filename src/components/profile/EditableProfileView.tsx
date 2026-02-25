@@ -1,12 +1,13 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 
-import { EmptyProfileStateView } from './EmptyProfileStateView';
+import { GuidedProfileSetupView } from './GuidedProfileSetupView';
 import { ProfileSkeleton } from './ProfileSkeleton';
 import { useProfileViewState } from './editable-profile/useProfileViewState';
+import { PortfolioReadinessChecklist } from './editable-profile/PortfolioReadinessChecklist';
 import { ProfileCompletionBanner } from './editable-profile/ProfileCompletionBanner';
 import { ProfileDialogs } from './editable-profile/ProfileDialogs';
 import { ProfileHeroSection } from './editable-profile/ProfileHeroSection';
@@ -16,10 +17,27 @@ import { useProfileData } from '@/hooks/useProfileData';
 import { MobileProfileHeader } from '@/components/profile/MobileProfileHeader';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { evaluateIndividualProfileCompletion } from '@/lib/profile/completion-flow';
 import type { Education, Volunteering } from '@/types/profile';
+
+function resolvePortfolioGateMessage(lockReason: string | null): string {
+  switch (lockReason) {
+    case 'name':
+      return 'Public Portfolio is locked until you add your first and last name.';
+    case 'purpose':
+      return 'Public Portfolio is locked until you add at least one value and one cause.';
+    case 'skills':
+      return 'Public Portfolio is locked until you add at least 3 skills.';
+    case 'artifact':
+      return 'Public Portfolio is locked until you add one proof or accepted verification.';
+    default:
+      return 'Complete the required profile steps to unlock Public Portfolio.';
+  }
+}
 
 export function EditableProfileView() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const {
     profile,
     isLoading,
@@ -71,45 +89,21 @@ export function EditableProfileView() {
   const [editingEducation, setEditingEducation] = useState<Education | null>(null);
   const [editingVolunteering, setEditingVolunteering] = useState<Volunteering | null>(null);
 
-  const isEmptyProfile = useMemo(() => {
-    if (!profile) {
-      return true;
-    }
-
-    const {
-      basicInfo,
-      mission,
-      values,
-      causes,
-      skills,
-      impactStories,
-      experiences,
-      education,
-      volunteering,
-    } = profile;
-
-    const hasAvatar = Boolean(basicInfo.avatar);
-    const hasTagline = Boolean(basicInfo.tagline?.trim());
-    const hasMission = Boolean(mission?.trim());
-    const hasValues = values.length > 0;
-    const hasCauses = causes.length > 0;
-    const hasSkills = skills.length > 0;
-    const hasAnyEntries =
-      impactStories.length > 0 ||
-      experiences.length > 0 ||
-      education.length > 0 ||
-      volunteering.length > 0;
-
-    return (
-      !hasAvatar &&
-      !hasTagline &&
-      !hasMission &&
-      !hasValues &&
-      !hasCauses &&
-      !hasSkills &&
-      !hasAnyEntries
-    );
-  }, [profile]);
+  const completionState = useMemo(
+    () =>
+      evaluateIndividualProfileCompletion({
+        displayName: profile?.basicInfo.name,
+        valuesCount: profile?.values.length ?? 0,
+        causesCount: profile?.causes.length ?? 0,
+        skillsCount: profile?.skills.length ?? 0,
+        proofCount:
+          profile?.proofArtifactCount ??
+          profile?.skills.filter((skill) => skill.verified).length ??
+          0,
+        acceptedVerificationCount: profile?.acceptedVerificationCount ?? 0,
+      }),
+    [profile]
+  );
 
   const openPurposeEditor = useCallback(
     (field: 'mission' | 'vision') => {
@@ -158,6 +152,14 @@ export function EditableProfileView() {
   const openVisionEditor = useCallback(() => {
     openPurposeEditor('vision');
   }, [openPurposeEditor]);
+
+  const showPortfolioGateNotice = searchParams.get('portfolioLocked') === '1';
+  const lockReasonFromRoute = searchParams.get('lockReason');
+  const portfolioGateNotice = showPortfolioGateNotice ? (
+    <Card className="mb-6 p-4 border-amber-300 bg-amber-50/70 text-amber-900">
+      <p className="text-sm">{resolvePortfolioGateMessage(lockReasonFromRoute)}</p>
+    </Card>
+  ) : null;
 
   const availableSkillNames = useMemo(
     () => profile?.skills.map((skill) => skill.name).filter(Boolean) ?? [],
@@ -264,26 +266,24 @@ export function EditableProfileView() {
   }
 
   const showCompletionBanner = profileCompletion < 80;
+  const showGuidedFlow = completionState.stage !== 'step2_profile';
 
-  if (isEmptyProfile) {
+  if (showGuidedFlow) {
     return (
       <>
-        <EmptyProfileStateView
-          basicInfo={profile.basicInfo}
-          profileCompletion={profileCompletion}
-          isPending={isPending}
-          pending={pending}
-          onEditProfile={() => setIsEditProfileOpen(true)}
-          onOpenMission={openMissionEditor}
-          onOpenValues={() => setIsValuesEditorOpen(true)}
-          onOpenCauses={() => setIsCausesEditorOpen(true)}
-          onOpenSkills={() => router.push('/app/i/expertise')}
-          onAddImpactStory={() => setIsImpactStoryFormOpen(true)}
-          onAddExperience={() => setIsExperienceFormOpen(true)}
-          onAddEducation={openAddEducation}
-          onAddVolunteering={openAddVolunteering}
-          onUpdateBasicInfo={updateBasicInfo}
-        />
+        <div className="min-h-screen bg-proofound-parchment dark:bg-background">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            {portfolioGateNotice}
+            <PortfolioReadinessChecklist completionState={completionState} />
+          </div>
+          <GuidedProfileSetupView
+            completionState={completionState}
+            onEditProfile={() => setIsEditProfileOpen(true)}
+            onOpenValues={() => setIsValuesEditorOpen(true)}
+            onOpenCauses={() => setIsCausesEditorOpen(true)}
+            onOpenSkills={() => router.push('/app/i/expertise')}
+          />
+        </div>
         {profileDialogs}
       </>
     );
@@ -316,6 +316,12 @@ export function EditableProfileView() {
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {portfolioGateNotice}
+        {!completionState.isPortfolioReady && (
+          <div className="mb-6">
+            <PortfolioReadinessChecklist completionState={completionState} />
+          </div>
+        )}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12 relative items-start">
           <div className="space-y-8 lg:sticky lg:top-24 lg:self-start">
             <ProfileSidebar

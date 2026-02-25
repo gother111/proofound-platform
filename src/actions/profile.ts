@@ -16,6 +16,7 @@ import {
   skills as skillsTable,
   skillsTaxonomy,
   skillProofs,
+  skillVerificationRequests,
 } from '@/db/schema';
 import { requireAuth } from '@/lib/auth';
 import { emitProfileActivated } from '@/lib/analytics/events';
@@ -389,16 +390,34 @@ export async function getProfileData(): Promise<ProfileData> {
     // Transform L4 skills to profile format
     // Check for proofs to determine verified status
     let proofCounts: Record<string, number> = {};
+    let proofArtifactCount = 0;
+    let acceptedVerificationCount = 0;
     try {
       const proofs = await db
         .select({ skillId: skillProofs.skillId })
         .from(skillProofs)
         .where(eq(skillProofs.profileId, user.id));
+      proofArtifactCount = proofs.length;
       proofs.forEach((p) => {
         proofCounts[p.skillId] = (proofCounts[p.skillId] || 0) + 1;
       });
     } catch {
       // Continue without proof counts
+    }
+
+    try {
+      const verificationRows = await db
+        .select({ id: skillVerificationRequests.id })
+        .from(skillVerificationRequests)
+        .where(
+          and(
+            eq(skillVerificationRequests.requesterProfileId, user.id),
+            eq(skillVerificationRequests.status, 'accepted')
+          )
+        );
+      acceptedVerificationCount = verificationRows.length;
+    } catch {
+      // Continue without accepted verification count
     }
 
     const mappedSkills: Skill[] = skillRows.map((row: any) => {
@@ -450,6 +469,8 @@ export async function getProfileData(): Promise<ProfileData> {
       values: (profile?.values as Value[]) ?? [],
       causes: profile?.causes ?? [],
       skills: mappedSkills, // Now fetched from L4 skills table
+      proofArtifactCount,
+      acceptedVerificationCount,
       impactStories: impactRows,
       experiences: mappedExperiences,
       education: educationRows,
@@ -491,6 +512,8 @@ export async function getProfileData(): Promise<ProfileData> {
       values: [],
       causes: [],
       skills: [],
+      proofArtifactCount: 0,
+      acceptedVerificationCount: 0,
       impactStories: [],
       experiences: [],
       education: [],

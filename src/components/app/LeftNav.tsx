@@ -20,6 +20,7 @@ import {
   MessageCircle,
   UserCheck,
   UserRound,
+  Lock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
@@ -43,6 +44,10 @@ import { motion } from 'framer-motion';
 
 interface LeftNavProps {
   basePath?: string;
+  individualPortfolioGate?: {
+    locked: boolean;
+    reason?: string | null;
+  };
 }
 
 interface NavItem {
@@ -50,14 +55,19 @@ interface NavItem {
   icon: typeof Home;
   label: string;
   dataTour?: string;
+  locked?: boolean;
+  lockReason?: string | null;
 }
 
-export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
+export function LeftNav({ basePath = '/app/i', individualPortfolioGate }: LeftNavProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const pathname = usePathname();
 
   const isOrg = basePath?.startsWith('/app/o/');
+  const isPortfolioLocked = !isOrg && Boolean(individualPortfolioGate?.locked);
+  const portfolioLockReason =
+    individualPortfolioGate?.reason || 'Complete your profile requirements first.';
 
   const individualNavItems: NavItem[] = [
     { href: `${basePath}/home`, icon: Home, label: 'Dashboard', dataTour: 'home-link' },
@@ -67,6 +77,8 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
       icon: UserRound,
       label: 'Public Portfolio',
       dataTour: 'portfolio-link',
+      locked: isPortfolioLocked,
+      lockReason: portfolioLockReason,
     },
     {
       href: `${basePath}/matching`,
@@ -152,7 +164,14 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
           <nav className="space-y-0.5 px-2" aria-label="Primary navigation">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const isActive = pathname === item.href || pathname?.startsWith(item.href);
+              const isLocked = Boolean(item.locked);
+              const isActive =
+                !isLocked && (pathname === item.href || pathname?.startsWith(item.href));
+              const tooltipText = !isExpanded
+                ? isLocked
+                  ? `${item.label} (Locked)`
+                  : item.label
+                : '';
 
               return (
                 <div
@@ -161,28 +180,51 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
                   onMouseEnter={() => setHoveredItem(item.label)}
                   onMouseLeave={() => setHoveredItem(null)}
                 >
-                  <Link
-                    href={item.href}
-                    data-tour={item.dataTour}
-                    className={`group flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-all duration-200 min-h-12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-light-50 ${
-                      isActive
-                        ? 'bg-proofound-forest text-proofound-parchment'
-                        : 'text-proofound-charcoal hover:bg-proofound-stone/50 focus-visible:bg-proofound-stone/60'
-                    }`}
-                    title={!isExpanded ? item.label : ''}
-                    aria-label={item.label}
-                    aria-current={isActive ? 'page' : undefined}
-                    onFocus={() => setHoveredItem(item.label)}
-                    onBlur={() => setHoveredItem(null)}
-                  >
-                    <Icon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-                    {isExpanded && <span className="text-sm whitespace-nowrap">{item.label}</span>}
-                  </Link>
+                  {isLocked ? (
+                    <button
+                      type="button"
+                      data-tour={item.dataTour}
+                      className="group flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-all duration-200 min-h-12 text-proofound-charcoal/60 bg-proofound-stone/30 cursor-not-allowed"
+                      title={isExpanded ? item.lockReason || '' : tooltipText}
+                      aria-label={`${item.label} (locked)`}
+                      aria-disabled="true"
+                      onFocus={() => setHoveredItem(item.label)}
+                      onBlur={() => setHoveredItem(null)}
+                    >
+                      <Icon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+                      {isExpanded && (
+                        <span className="text-sm whitespace-nowrap flex items-center gap-1.5">
+                          {item.label}
+                          <Lock className="w-3.5 h-3.5" aria-hidden="true" />
+                        </span>
+                      )}
+                    </button>
+                  ) : (
+                    <Link
+                      href={item.href}
+                      data-tour={item.dataTour}
+                      className={`group flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-all duration-200 min-h-12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-light-50 ${
+                        isActive
+                          ? 'bg-proofound-forest text-proofound-parchment'
+                          : 'text-proofound-charcoal hover:bg-proofound-stone/50 focus-visible:bg-proofound-stone/60'
+                      }`}
+                      title={tooltipText}
+                      aria-label={item.label}
+                      aria-current={isActive ? 'page' : undefined}
+                      onFocus={() => setHoveredItem(item.label)}
+                      onBlur={() => setHoveredItem(null)}
+                    >
+                      <Icon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+                      {isExpanded && (
+                        <span className="text-sm whitespace-nowrap">{item.label}</span>
+                      )}
+                    </Link>
+                  )}
 
                   {/* Enhanced tooltip for collapsed state */}
                   {!isExpanded && hoveredItem === item.label && (
                     <div className="absolute left-full ml-2 px-3 py-2 rounded-md shadow-lg whitespace-nowrap z-50 pointer-events-none bg-proofound-charcoal text-proofound-parchment top-1/2 -translate-y-1/2">
-                      {item.label}
+                      {item.locked ? `${item.label} (Locked)` : item.label}
                       <div className="absolute right-full top-1/2 border-4 border-transparent border-r-proofound-charcoal -translate-y-1/2" />
                     </div>
                   )}
@@ -219,7 +261,27 @@ export function LeftNav({ basePath = '/app/i' }: LeftNavProps) {
           {/* Show mobile nav items with settings always included */}
           {mobileNavItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href || pathname?.startsWith(item.href);
+            const isLocked = Boolean(item.locked);
+            const isActive =
+              !isLocked && (pathname === item.href || pathname?.startsWith(item.href));
+
+            if (isLocked) {
+              return (
+                <button
+                  key={item.href}
+                  type="button"
+                  className="relative flex flex-1 min-w-0 flex-col items-center gap-1 px-1 py-2 rounded-lg min-h-[64px] justify-center text-muted-foreground/60 cursor-not-allowed"
+                  aria-label={`${item.label} (locked)`}
+                  aria-disabled="true"
+                  title={item.lockReason || ''}
+                >
+                  <Icon className="w-6 h-6 relative z-10" aria-hidden="true" />
+                  <span className="w-full max-w-full truncate text-center text-[11px] font-medium leading-none relative z-10">
+                    {item.label}
+                  </span>
+                </button>
+              );
+            }
 
             return (
               <Link
