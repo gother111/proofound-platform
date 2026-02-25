@@ -18,10 +18,11 @@ import IdentityRevealed from '../../emails/IdentityRevealed';
 import VerificationApproved from '../../emails/VerificationApproved';
 import VerificationRejected from '../../emails/VerificationRejected';
 import { sendDebugIngest } from '@/lib/debug-ingest';
+import { EMAIL_CONFIG } from './email/config';
 
 // Allow build to succeed without RESEND_API_KEY
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder_key');
-const fromEmail = process.env.EMAIL_FROM || 'Proofound <no-reply@proofound.io>';
+const fromEmail = EMAIL_CONFIG.from;
 
 export async function sendVerificationEmail(email: string, token: string, persona?: string) {
   const verifyUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/verify-email?token=${token}`;

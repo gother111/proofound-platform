@@ -5,9 +5,40 @@
  * https://resend.com/docs
  */
 
+const normalizeProofoundAddress = (value: string | undefined, fallback: string): string => {
+  if (!value || !value.trim()) {
+    return fallback;
+  }
+
+  const trimmed = value.trim();
+  const withNameMatch = trimmed.match(/^(?<name>.*?)\s*<\s*(?<email>[^>]+)\s*>$/);
+  const emailPart =
+    withNameMatch?.groups?.email?.trim() ?? trimmed.match(/\S+@\S+\.\S+/)?.[0]?.trim() ?? trimmed;
+
+  const normalizedEmail = emailPart.toLowerCase().replace('proofound.com', 'proofound.io');
+
+  const isAllowedProofoundAddress = ['no-reply@proofound.io', 'hello@proofound.io'].includes(
+    normalizedEmail
+  );
+
+  if (!isAllowedProofoundAddress) {
+    return fallback;
+  }
+
+  if (!withNameMatch) {
+    return `Proofound <${normalizedEmail}>`;
+  }
+
+  const name = withNameMatch.groups?.name?.trim();
+  return name ? `${name} <${normalizedEmail}>` : `Proofound <${normalizedEmail}>`;
+};
+
+const DEFAULT_FROM = 'Proofound <no-reply@proofound.io>';
+const DEFAULT_REPLY_TO = 'hello@proofound.io';
+
 export const EMAIL_CONFIG = {
-  from: process.env.EMAIL_FROM || 'Proofound <noreply@proofound.com>',
-  replyTo: process.env.EMAIL_REPLY_TO || 'support@proofound.com',
+  from: normalizeProofoundAddress(process.env.EMAIL_FROM, DEFAULT_FROM),
+  replyTo: normalizeProofoundAddress(process.env.EMAIL_REPLY_TO, DEFAULT_REPLY_TO),
   apiKey: process.env.RESEND_API_KEY,
 };
 
