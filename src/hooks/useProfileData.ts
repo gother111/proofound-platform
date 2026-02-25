@@ -291,35 +291,57 @@ export function useProfileData() {
   );
 
   const addImpactStory = useCallback(
-    (story: Omit<ImpactStory, 'id'>) => {
+    async (story: Omit<ImpactStory, 'id'>) => {
       if (!profile) return;
+      const optimisticStoryId = crypto.randomUUID();
+
       setProfile((prev) =>
         prev
           ? {
               ...prev,
-              impactStories: [...prev.impactStories, { ...story, id: crypto.randomUUID() }],
+              impactStories: [...prev.impactStories, { ...story, id: optimisticStoryId }],
             }
           : prev
       );
 
-      startTransition(() => {
-        runWithPending('impactStory', async () => {
-          const inserted = await createImpactStory(story);
-          setProfile((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  impactStories: prev.impactStories.map((item) =>
-                    item.title === story.title && item.timeline === story.timeline ? inserted : item
-                  ),
-                }
-              : prev
-          );
-          if ((inserted as { verificationWarning?: string | null }).verificationWarning) {
-            toast.error((inserted as { verificationWarning?: string | null }).verificationWarning);
-          }
-        });
-      });
+      const inserted = await runWithPending('impactStory', () => createImpactStory(story));
+
+      if (!inserted) {
+        setProfile((prev) =>
+          prev
+            ? {
+                ...prev,
+                impactStories: prev.impactStories.filter((item) => item.id !== optimisticStoryId),
+              }
+            : prev
+        );
+        throw new Error('Failed to save impact story. Please try again.');
+      }
+
+      setProfile((prev) =>
+        prev
+          ? {
+              ...prev,
+              impactStories: prev.impactStories.map((item) =>
+                item.id === optimisticStoryId ? inserted : item
+              ),
+            }
+          : prev
+      );
+
+      const verificationWarning = (inserted as { verificationWarning?: string | null })
+        .verificationWarning;
+      const requestedVerification = Boolean(story.verificationRequest?.verifierEmail);
+
+      if (requestedVerification) {
+        if (verificationWarning) {
+          toast.error(verificationWarning);
+        } else {
+          toast.success('Impact story saved. Verification request sent and is pending.');
+        }
+      } else {
+        toast.success('Impact story saved.');
+      }
     },
     [profile, runWithPending]
   );

@@ -142,6 +142,7 @@ export function ImpactStoryForm({ open, onOpenChange, story, onSave }: ImpactSto
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState('');
 
   useEffect(() => {
     if (!open) return;
@@ -379,7 +380,12 @@ export function ImpactStoryForm({ open, onOpenChange, story, onSave }: ImpactSto
   const handleSave = async (event?: React.FormEvent) => {
     event?.preventDefault();
 
-    if (!validate()) return;
+    setSubmitMessage('');
+
+    if (!validate()) {
+      setSubmitMessage('Please fix highlighted fields before saving.');
+      return;
+    }
 
     const timelineStructured: ImpactStoryTimeline = {
       mode: timelineMode,
@@ -412,8 +418,8 @@ export function ImpactStoryForm({ open, onOpenChange, story, onSave }: ImpactSto
 
     setIsSaving(true);
 
-    await Promise.resolve(
-      onSave({
+    try {
+      await onSave({
         title: title.trim(),
         timeline: formatTimelineForLegacy(timelineStructured),
         timelineStructured,
@@ -444,12 +450,22 @@ export function ImpactStoryForm({ open, onOpenChange, story, onSave }: ImpactSto
               message: verificationMessage.trim() || null,
             }
           : null,
-      })
-    );
+      });
 
-    setIsSaving(false);
-    onOpenChange(false);
+      setSubmitMessage('');
+      onOpenChange(false);
+    } catch (error) {
+      setSubmitMessage(
+        error instanceof Error && error.message
+          ? error.message
+          : 'Unable to save impact story. Please try again.'
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  const submitLabel = requestVerification ? 'Add Story & Send Verification' : 'Add Story';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -845,6 +861,9 @@ export function ImpactStoryForm({ open, onOpenChange, story, onSave }: ImpactSto
                   Add artifact
                 </Button>
               </div>
+              <p className="text-xs text-muted-foreground">
+                Artifacts are added to this story when you submit the form.
+              </p>
 
               {artifacts.length > 0 && (
                 <div className="space-y-3">
@@ -1004,10 +1023,19 @@ export function ImpactStoryForm({ open, onOpenChange, story, onSave }: ImpactSto
                   </div>
                 </div>
               )}
+
+              <p className="text-xs text-muted-foreground">
+                Verification is sent only after this story is successfully saved.
+              </p>
             </div>
           </div>
 
           <DialogFooter>
+            {submitMessage && (
+              <p className="w-full text-sm text-red-600" role="status">
+                {submitMessage}
+              </p>
+            )}
             <Button
               type="button"
               variant="outline"
@@ -1017,7 +1045,7 @@ export function ImpactStoryForm({ open, onOpenChange, story, onSave }: ImpactSto
               Cancel
             </Button>
             <Button type="submit" disabled={isSaving || hasUploadingArtifacts}>
-              {isSaving ? 'Saving...' : story ? 'Save Changes' : 'Add Story'}
+              {isSaving ? 'Saving...' : story ? 'Save Changes' : submitLabel}
             </Button>
           </DialogFooter>
         </form>

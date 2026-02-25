@@ -156,4 +156,46 @@ describe('ImpactStoryForm', () => {
     });
     expect(onSave).not.toHaveBeenCalled();
   });
+
+  it('updates submit label when verification is enabled', async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+
+    render(<ImpactStoryForm open={true} onOpenChange={vi.fn()} onSave={onSave} />);
+
+    fillRequiredFields();
+    fireEvent.click(screen.getByLabelText(/Send verification request/i));
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /add story & send verification/i })).toBeTruthy()
+    );
+  });
+
+  it('shows a save error message when saving fails and keeps the dialog open', async () => {
+    const onSave = vi.fn().mockRejectedValue(new Error('Server error while saving.'));
+    const onOpenChange = vi.fn();
+
+    render(<ImpactStoryForm open={true} onOpenChange={onOpenChange} onSave={onSave} />);
+
+    fillRequiredFields();
+
+    fireEvent.submit(screen.getByRole('button', { name: /add story/i }).closest('form')!);
+
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+
+    expect(screen.getByText(/server error while saving/i)).toBeTruthy();
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+  });
+
+  it('shows validation message when required fields are missing', async () => {
+    const onSave = vi.fn();
+
+    render(<ImpactStoryForm open={true} onOpenChange={vi.fn()} onSave={onSave} />);
+
+    fireEvent.submit(screen.getByRole('button', { name: /add story/i }).closest('form')!);
+
+    await waitFor(() => {
+      expect(screen.getByText(/please fix highlighted fields before saving/i)).toBeTruthy();
+    });
+    expect(onSave).not.toHaveBeenCalled();
+  });
 });
