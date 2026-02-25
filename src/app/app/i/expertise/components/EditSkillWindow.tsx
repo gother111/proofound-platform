@@ -67,7 +67,6 @@ export function EditSkillWindow({
 
   const [level, setLevel] = useState(2);
   const [lastUsedDate, setLastUsedDate] = useState('');
-  const [relevance, setRelevance] = useState<'current' | 'emerging' | 'obsolete'>('current');
   const [saving, setSaving] = useState(false);
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -105,7 +104,6 @@ export function EditSkillWindow({
       setLastUsedDate(
         skill.last_used_at ? new Date(skill.last_used_at).toISOString().split('T')[0] : ''
       );
-      setRelevance(skill.relevance || 'current');
 
       setLoadingProofs(true);
       try {
@@ -152,7 +150,6 @@ export function EditSkillWindow({
       const payload = {
         level,
         last_used_at: lastUsedDate || new Date().toISOString(),
-        relevance,
       };
 
       const response = await apiFetch(`/api/expertise/user-skills/${skill.id}`, {
@@ -419,53 +416,6 @@ export function EditSkillWindow({
                 className="mt-2"
               />
               <p className="text-xs text-[#6B6760] mt-1">When did you last use this skill?</p>
-            </div>
-
-            <div>
-              <Label className="text-[#2D3330] mb-3 block font-medium">Relevance</Label>
-              <RadioGroup
-                value={relevance}
-                onValueChange={(value) =>
-                  setRelevance(value as 'current' | 'emerging' | 'obsolete')
-                }
-              >
-                <div className="flex items-center space-x-3 mb-2">
-                  <RadioGroupItem value="current" id="edit-relevance-current" />
-                  <Label htmlFor="edit-relevance-current" className="cursor-pointer">
-                    <Badge
-                      variant="outline"
-                      className="bg-[#EEF1EA] text-[#1C4D3A] border-[#7A9278]"
-                    >
-                      Current
-                    </Badge>
-                    <span className="ml-2 text-sm text-[#6B6760]">Widely used today</span>
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-3 mb-2">
-                  <RadioGroupItem value="emerging" id="edit-relevance-emerging" />
-                  <Label htmlFor="edit-relevance-emerging" className="cursor-pointer">
-                    <Badge
-                      variant="outline"
-                      className="bg-[#E8F3F8] text-[#3E5C73] border-[#6B9AB8]"
-                    >
-                      Emerging
-                    </Badge>
-                    <span className="ml-2 text-sm text-[#6B6760]">Growing in demand</span>
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <RadioGroupItem value="obsolete" id="edit-relevance-obsolete" />
-                  <Label htmlFor="edit-relevance-obsolete" className="cursor-pointer">
-                    <Badge
-                      variant="outline"
-                      className="bg-[#FFF0F0] text-[#8B4A36] border-[#C76B4A]"
-                    >
-                      Obsolete
-                    </Badge>
-                    <span className="ml-2 text-sm text-[#6B6760]">Declining use</span>
-                  </Label>
-                </div>
-              </RadioGroup>
             </div>
 
             <Separator />
