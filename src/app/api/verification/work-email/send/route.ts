@@ -11,7 +11,7 @@ const SendWorkEmailVerificationSchema = z.object({
 
 /**
  * POST /api/verification/work-email/send
- * 
+ *
  * Sends a work email verification email to the user.
  */
 export async function POST(request: NextRequest) {
@@ -63,25 +63,23 @@ export async function POST(request: NextRequest) {
     // Update or create individual profile with work email and token
     // Note: We set work_email_verified = false here, so it won't trigger the unique constraint
     // The constraint only applies when work_email_verified = true
-    const { error: updateError } = await supabase
-      .from('individual_profiles')
-      .upsert(
-        {
-          user_id: user.id,
-          work_email: normalizedEmail,
-          work_email_token: token,
-          work_email_token_expires: expiresAt.toISOString(),
-          work_email_org_id: orgId || null,
-          work_email_verified: false, // Not verified yet, so unique constraint doesn't apply
-        },
-        {
-          onConflict: 'user_id',
-        }
-      );
+    const { error: updateError } = await supabase.from('individual_profiles').upsert(
+      {
+        user_id: user.id,
+        work_email: normalizedEmail,
+        work_email_token: token,
+        work_email_token_expires: expiresAt.toISOString(),
+        work_email_org_id: orgId || null,
+        work_email_verified: false, // Not verified yet, so unique constraint doesn't apply
+      },
+      {
+        onConflict: 'user_id',
+      }
+    );
 
     if (updateError) {
       console.error('Error updating profile with work email:', updateError);
-      
+
       // Check if this is a unique constraint violation (shouldn't happen here since verified=false, but handle it anyway)
       if (updateError.code === '23505' || updateError.message?.includes('unique')) {
         return NextResponse.json(
@@ -89,11 +87,8 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-      
-      return NextResponse.json(
-        { error: 'Failed to save work email' },
-        { status: 500 }
-      );
+
+      return NextResponse.json({ error: 'Failed to save work email' }, { status: 500 });
     }
 
     // Get user's display name
@@ -110,23 +105,30 @@ export async function POST(request: NextRequest) {
       await sendWorkEmailVerification(workEmail, token, userName);
     } catch (emailError) {
       console.error('Error sending verification email:', emailError);
-      return NextResponse.json(
-        { error: 'Failed to send verification email' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to send verification email' }, { status: 500 });
+    }
+
+    // Explicitly mark verification flow as pending after successful dispatch.
+    const { error: pendingStatusError } = await supabase
+      .from('individual_profiles')
+      .update({
+        verification_status: 'pending',
+        verification_method: 'work_email',
+      })
+      .eq('user_id', user.id);
+
+    if (pendingStatusError) {
+      console.error('Failed to set work email verification status to pending:', pendingStatusError);
     }
 
     return NextResponse.json({
       success: true,
       message: 'Verification email sent',
+      verificationStatus: 'pending',
       expiresAt: expiresAt.toISOString(),
     });
   } catch (error) {
     console.error('Error in work email verification send:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

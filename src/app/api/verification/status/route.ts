@@ -1,9 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+function hasActiveWorkEmailToken(profile: {
+  work_email_token?: string | null;
+  work_email_token_expires?: string | null;
+  work_email_verified?: boolean | null;
+}) {
+  if (!profile.work_email_token || profile.work_email_verified) {
+    return false;
+  }
+
+  if (!profile.work_email_token_expires) {
+    return false;
+  }
+
+  const expiresAtMs = new Date(profile.work_email_token_expires).getTime();
+  if (!Number.isFinite(expiresAtMs)) {
+    return false;
+  }
+
+  return expiresAtMs > Date.now();
+}
+
 /**
  * GET /api/verification/status
- * 
+ *
  * Returns the current verification status for the logged-in user.
  */
 export async function GET(request: NextRequest) {
@@ -23,7 +44,7 @@ export async function GET(request: NextRequest) {
     const { data: profile, error: profileError } = await supabase
       .from('individual_profiles')
       .select(
-        'verified, verification_method, verification_status, verified_at, work_email, work_email_verified'
+        'verified, verification_method, verification_status, verified_at, work_email, work_email_verified, work_email_token, work_email_token_expires'
       )
       .eq('user_id', user.id)
       .maybeSingle();
@@ -38,19 +59,20 @@ export async function GET(request: NextRequest) {
         details: profileError.details,
         hint: profileError.hint,
       });
-      
+
       // PGRST116 = "not found" (PostgREST error code), which is expected when profile doesn't exist
       // Most Supabase clients return null without error for maybeSingle(), but some may return this code
       // Only treat as error if it's a real database error (not "not found")
-      const isNotFoundError = profileError.code === 'PGRST116' || 
-                               profileError.message?.toLowerCase().includes('not found') ||
-                               profileError.message?.toLowerCase().includes('no rows');
-      
+      const isNotFoundError =
+        profileError.code === 'PGRST116' ||
+        profileError.message?.toLowerCase().includes('not found') ||
+        profileError.message?.toLowerCase().includes('no rows');
+
       if (!isNotFoundError) {
         return NextResponse.json(
-          { 
+          {
             error: 'Failed to fetch verification status',
-            details: profileError.message || 'Database error'
+            details: profileError.message || 'Database error',
           },
           { status: 500 }
         );
@@ -70,20 +92,25 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    const hasPendingToken = hasActiveWorkEmailToken(profile);
+    const hasExplicitStatus = Boolean(profile.verification_status);
+    const verificationStatus =
+      !hasExplicitStatus && hasPendingToken
+        ? 'pending'
+        : profile.verification_status || 'unverified';
+    const verificationMethod =
+      profile.verification_method || (hasPendingToken ? 'work_email' : null);
+
     return NextResponse.json({
       verified: profile.verified || false,
-      verificationMethod: profile.verification_method,
-      verificationStatus: profile.verification_status || 'unverified',
+      verificationMethod,
+      verificationStatus,
       verifiedAt: profile.verified_at,
       workEmail: profile.work_email,
       workEmailVerified: profile.work_email_verified || false,
     });
   } catch (error) {
     console.error('Error in verification status API:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

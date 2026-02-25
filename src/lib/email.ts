@@ -183,12 +183,20 @@ export async function sendWorkEmailVerification(
   const verifyUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/verify-work-email?token=${token}`;
 
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: fromEmail,
       to: email,
       subject: 'Verify your work email - Proofound',
       react: WorkEmailVerification({ verifyUrl, userName }),
     });
+
+    if (result && typeof result === 'object' && 'error' in result && result.error) {
+      const errorMessage =
+        typeof result.error === 'object' && result.error !== null && 'message' in result.error
+          ? String((result.error as { message?: unknown }).message || 'Unknown email service error')
+          : String(result.error);
+      throw new Error(errorMessage);
+    }
   } catch (error) {
     console.error('Failed to send work email verification:', error);
     throw new Error('Failed to send work email verification');
