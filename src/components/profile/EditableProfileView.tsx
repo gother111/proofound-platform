@@ -1,7 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 import { EmptyProfileStateView } from './EmptyProfileStateView';
 import { ProfileSkeleton } from './ProfileSkeleton';
@@ -110,6 +111,54 @@ export function EditableProfileView() {
     );
   }, [profile]);
 
+  const openPurposeEditor = useCallback(
+    (field: 'mission' | 'vision') => {
+      if (!profile) {
+        return;
+      }
+
+      const hasValues = profile.values.length > 0;
+      const hasCauses = profile.causes.length > 0;
+
+      if (!hasValues) {
+        setIsValuesEditorOpen(true);
+        toast.info(
+          `Add at least one value before editing your ${field}. Values and causes must be completed first.`
+        );
+        return;
+      }
+
+      if (!hasCauses) {
+        setIsCausesEditorOpen(true);
+        toast.info(
+          `Add at least one cause before editing your ${field}. Values and causes must be completed first.`
+        );
+        return;
+      }
+
+      if (field === 'mission') {
+        setIsMissionEditorOpen(true);
+      } else {
+        setIsVisionEditorOpen(true);
+      }
+    },
+    [
+      profile,
+      setIsCausesEditorOpen,
+      setIsMissionEditorOpen,
+      setIsValuesEditorOpen,
+      setIsVisionEditorOpen,
+    ]
+  );
+
+  const openMissionEditor = useCallback(() => {
+    openPurposeEditor('mission');
+  }, [openPurposeEditor]);
+
+  const openVisionEditor = useCallback(() => {
+    openPurposeEditor('vision');
+  }, [openPurposeEditor]);
+
   const availableSkillNames = useMemo(
     () => profile?.skills.map((skill) => skill.name).filter(Boolean) ?? [],
     [profile?.skills]
@@ -184,7 +233,7 @@ export function EditableProfileView() {
         isPending={isPending}
         pending={pending}
         onEditProfile={() => setIsEditProfileOpen(true)}
-        onOpenMission={() => setIsMissionEditorOpen(true)}
+        onOpenMission={openMissionEditor}
         onOpenValues={() => setIsValuesEditorOpen(true)}
         onOpenCauses={() => setIsCausesEditorOpen(true)}
         onOpenSkills={() => router.push('/app/i/expertise')}
@@ -228,8 +277,8 @@ export function EditableProfileView() {
           <div className="space-y-8 lg:sticky lg:top-24 lg:self-start">
             <ProfileSidebar
               profile={profile}
-              onOpenMission={() => setIsMissionEditorOpen(true)}
-              onOpenVision={() => setIsVisionEditorOpen(true)}
+              onOpenMission={openMissionEditor}
+              onOpenVision={openVisionEditor}
               onOpenValues={() => setIsValuesEditorOpen(true)}
               onOpenCauses={() => setIsCausesEditorOpen(true)}
             />

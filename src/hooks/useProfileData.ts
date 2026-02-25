@@ -96,6 +96,13 @@ function isTransientProfileLoadError(error: unknown): boolean {
   return false;
 }
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+  return 'Something went wrong. Please try again.';
+}
+
 export function useProfileData() {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -192,7 +199,7 @@ export function useProfileData() {
         return await fn();
       } catch (error) {
         console.error('Profile action failed:', error);
-        toast.error('Something went wrong. Please try again.');
+        toast.error(getErrorMessage(error));
         return undefined;
       } finally {
         setPending((prev) => ({ ...prev, [key]: false }));
