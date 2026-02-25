@@ -623,6 +623,80 @@ CREATE POLICY "Verification requests - requester can update"
   WITH CHECK (profile_id = auth.uid());
 
 -- ============================================================================
+-- IMPACT STORY VERIFICATION REQUESTS
+-- ============================================================================
+DO $$
+BEGIN
+  IF to_regclass('public.impact_story_verification_requests') IS NOT NULL THEN
+    EXECUTE 'ALTER TABLE public.impact_story_verification_requests ENABLE ROW LEVEL SECURITY';
+
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_policies
+      WHERE schemaname = 'public'
+        AND tablename = 'impact_story_verification_requests'
+        AND policyname = 'Impact story verification requests - requester can select'
+    ) THEN
+      EXECUTE '
+        CREATE POLICY "Impact story verification requests - requester can select"
+        ON public.impact_story_verification_requests FOR SELECT
+        USING (requester_profile_id = auth.uid())
+      ';
+    END IF;
+
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_policies
+      WHERE schemaname = 'public'
+        AND tablename = 'impact_story_verification_requests'
+        AND policyname = 'Impact story verification requests - requester can insert'
+    ) THEN
+      EXECUTE '
+        CREATE POLICY "Impact story verification requests - requester can insert"
+        ON public.impact_story_verification_requests FOR INSERT
+        WITH CHECK (requester_profile_id = auth.uid())
+      ';
+    END IF;
+
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_policies
+      WHERE schemaname = 'public'
+        AND tablename = 'impact_story_verification_requests'
+        AND policyname = 'Impact story verification requests - requester can update'
+    ) THEN
+      EXECUTE '
+        CREATE POLICY "Impact story verification requests - requester can update"
+        ON public.impact_story_verification_requests FOR UPDATE
+        USING (requester_profile_id = auth.uid())
+        WITH CHECK (requester_profile_id = auth.uid())
+      ';
+    END IF;
+  END IF;
+
+  IF to_regclass('public.impact_story_verification_responses') IS NOT NULL THEN
+    EXECUTE 'ALTER TABLE public.impact_story_verification_responses ENABLE ROW LEVEL SECURITY';
+
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_policies
+      WHERE schemaname = 'public'
+        AND tablename = 'impact_story_verification_responses'
+        AND policyname = 'Impact story verification responses - requester can select'
+    ) THEN
+      EXECUTE '
+        CREATE POLICY "Impact story verification responses - requester can select"
+        ON public.impact_story_verification_responses FOR SELECT
+        USING (
+          EXISTS (
+            SELECT 1
+            FROM public.impact_story_verification_requests req
+            WHERE req.id = impact_story_verification_responses.request_id
+              AND req.requester_profile_id = auth.uid()
+          )
+        )
+      ';
+    END IF;
+  END IF;
+END $$;
+
+-- ============================================================================
 -- CONVERSATIONS & MESSAGES (private messaging)
 -- ============================================================================
 ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
