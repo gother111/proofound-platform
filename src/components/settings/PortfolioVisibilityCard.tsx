@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -78,7 +78,8 @@ export function PortfolioVisibilityCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Visibility</CardTitle>
+        <CardTitle>Public Portfolio Visibility</CardTitle>
+        <CardDescription>Controls what is shown on your public portfolio page.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3 text-sm text-slate-700">
         {loading ? (

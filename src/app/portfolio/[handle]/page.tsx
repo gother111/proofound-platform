@@ -10,7 +10,6 @@ import { buildTrustSignals } from '@/lib/portfolio/trust-signals';
 import { mergeVisibilityFlags } from '@/lib/portfolio/visibility';
 import { ShareLinkButton } from './ShareLinkButton';
 import { DownloadPdfButton } from './DownloadPdfButton';
-import { PortfolioVisibilityCard } from './visibility-card';
 import { CopyTextButton } from './CopyTextButton';
 import { ViewCounterClient } from './ViewCounterClient';
 
@@ -416,7 +415,6 @@ export default async function PortfolioPage({ params }: { params: Promise<{ hand
               />
             </CardContent>
           </Card>
-          {viewerIsOwner && <PortfolioVisibilityCard />}
         </div>
       </div>
     </div>
