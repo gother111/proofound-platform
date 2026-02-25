@@ -198,7 +198,7 @@ export function EditableProfileView() {
     }
   };
 
-  const profileDialogs = (
+  const profileDialogs = profile ? (
     <ProfileDialogs
       profile={profile}
       isEditProfileOpen={isEditProfileOpen}
@@ -236,7 +236,7 @@ export function EditableProfileView() {
       onAddVolunteering={addVolunteering}
       onUpdateVolunteering={updateVolunteering}
     />
-  );
+  ) : null;
 
   if (isLoading) {
     return <ProfileSkeleton />;
