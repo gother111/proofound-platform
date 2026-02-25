@@ -29,6 +29,7 @@ export type ImpactStoryRoleScope = 'owned' | 'co_led' | 'contributed';
 export type ImpactStoryOutcomeValueMode = 'delta' | 'absolute';
 export type ImpactStoryOutcomeConfidence = 'exact' | 'estimated' | 'directional';
 export type ImpactStoryArtifactKind = 'link' | 'file' | 'video' | 'doc' | 'image' | 'other';
+export type ImpactStorySaveMode = 'structured' | 'legacy_fallback';
 
 export interface ImpactStoryTimeline {
   mode: ImpactStoryTimelineMode;
@@ -86,6 +87,8 @@ export interface ImpactStory {
   supportingArtifacts?: ImpactStoryArtifact[];
   verificationRequest?: ImpactStoryVerificationRequestInput | null;
   verificationWarning?: string | null;
+  saveMode?: ImpactStorySaveMode;
+  saveWarning?: string | null;
 }
 
 export interface Experience {

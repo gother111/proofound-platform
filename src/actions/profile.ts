@@ -33,6 +33,7 @@ import type {
   ImpactStoryArtifact,
   ImpactStoryOutcome,
   ImpactStoryRoleScope,
+  ImpactStorySaveMode,
   ImpactStoryTimeline,
   Experience,
   Education as EducationType,
@@ -569,6 +570,8 @@ const ROLE_SCOPE_LABELS: Record<ImpactStoryRoleScope, string> = {
 
 type ImpactStoryCreateResult = ImpactStory & {
   verificationWarning?: string | null;
+  saveMode?: ImpactStorySaveMode;
+  saveWarning?: string | null;
 };
 
 function formatTimelineForLegacy(
@@ -658,6 +661,83 @@ function normalizeBaseUrl(url?: string | null) {
   return base.endsWith('/') ? base.slice(0, -1) : base;
 }
 
+function collectSchemaErrorText(error: unknown): string {
+  const values = [error];
+  const seen = new Set<unknown>();
+  const chunks: string[] = [];
+
+  while (values.length > 0) {
+    const current = values.pop();
+    if (!current || seen.has(current)) {
+      continue;
+    }
+    seen.add(current);
+
+    if (typeof current === 'string') {
+      chunks.push(current);
+      continue;
+    }
+
+    if (typeof current !== 'object') {
+      continue;
+    }
+
+    const objectValue = current as {
+      message?: unknown;
+      detail?: unknown;
+      details?: unknown;
+      hint?: unknown;
+      cause?: unknown;
+    };
+
+    if (typeof objectValue.message === 'string') chunks.push(objectValue.message);
+    if (typeof objectValue.detail === 'string') chunks.push(objectValue.detail);
+    if (typeof objectValue.details === 'string') chunks.push(objectValue.details);
+    if (typeof objectValue.hint === 'string') chunks.push(objectValue.hint);
+    if (objectValue.cause) values.push(objectValue.cause);
+  }
+
+  return chunks.join(' ').toLowerCase();
+}
+
+function getSchemaErrorCode(error: unknown): string | null {
+  const values = [error];
+  const seen = new Set<unknown>();
+
+  while (values.length > 0) {
+    const current = values.pop();
+    if (!current || seen.has(current)) {
+      continue;
+    }
+    seen.add(current);
+
+    if (typeof current !== 'object') {
+      continue;
+    }
+
+    const objectValue = current as { code?: unknown; cause?: unknown };
+    if (typeof objectValue.code === 'string' && objectValue.code.trim()) {
+      return objectValue.code;
+    }
+
+    if (objectValue.cause) {
+      values.push(objectValue.cause);
+    }
+  }
+
+  return null;
+}
+
+function isSchemaDriftError(error: unknown, markers: string[]): boolean {
+  const code = getSchemaErrorCode(error);
+  if (!code || !['42703', '42P01', 'PGRST204'].includes(code)) {
+    return false;
+  }
+
+  const text = collectSchemaErrorText(error);
+  return markers.some((marker) => text.includes(marker));
+}
+
 export async function createImpactStory(data: Omit<ImpactStory, 'id'>) {
   const user = await requireAuth();
   const timelineText = formatTimelineForLegacy(data.timelineStructured, data.timeline);
@@ -665,29 +745,64 @@ export async function createImpactStory(data: Omit<ImpactStory, 'id'>) {
   const legacyOrgDescription = buildLegacyOrgDescription(data);
   const legacyImpact = buildLegacyImpact(data);
   const legacyBusinessValue = buildLegacyBusinessValue(data);
+  const structuredInsertPayload = {
+    userId: user.id,
+    title: data.title,
+    orgDescription: legacyOrgDescription,
+    impact: legacyImpact,
+    businessValue: legacyBusinessValue,
+    outcomes: outcomesText,
+    timeline: timelineText,
+    timelineStructured: data.timelineStructured || {},
+    affiliationType: data.affiliationType ?? null,
+    affiliationDetails: data.affiliationDetails ?? null,
+    roleTitle: data.roleTitle ?? null,
+    roleScope: data.roleScope ?? null,
+    primaryCause: data.primaryCause ?? null,
+    secondaryCauses: data.secondaryCauses ?? [],
+    measuredOutcomes: data.measuredOutcomes || [],
+    supportingArtifacts: data.supportingArtifacts || [],
+    verified: data.verified ?? false,
+  };
+  const legacyInsertPayload = {
+    userId: user.id,
+    title: data.title,
+    orgDescription: legacyOrgDescription,
+    impact: legacyImpact,
+    businessValue: legacyBusinessValue,
+    outcomes: outcomesText,
+    timeline: timelineText,
+    verified: data.verified ?? false,
+  };
+  const structuredSchemaMarkers = [
+    'impact_stories',
+    'timeline_structured',
+    'affiliation_type',
+    'affiliation_details',
+    'role_title',
+    'role_scope',
+    'primary_cause',
+    'secondary_causes',
+    'measured_outcomes',
+    'supporting_artifacts',
+  ];
 
-  const [inserted] = await db
-    .insert(impactStories)
-    .values({
-      userId: user.id,
-      title: data.title,
-      orgDescription: legacyOrgDescription,
-      impact: legacyImpact,
-      businessValue: legacyBusinessValue,
-      outcomes: outcomesText,
-      timeline: timelineText,
-      timelineStructured: data.timelineStructured || {},
-      affiliationType: data.affiliationType ?? null,
-      affiliationDetails: data.affiliationDetails ?? null,
-      roleTitle: data.roleTitle ?? null,
-      roleScope: data.roleScope ?? null,
-      primaryCause: data.primaryCause ?? null,
-      secondaryCauses: data.secondaryCauses ?? [],
-      measuredOutcomes: data.measuredOutcomes || [],
-      supportingArtifacts: data.supportingArtifacts || [],
-      verified: data.verified ?? false,
-    })
-    .returning();
+  let saveMode: ImpactStorySaveMode = 'structured';
+  let saveWarning: string | null = null;
+  let inserted: any;
+
+  try {
+    [inserted] = await db.insert(impactStories).values(structuredInsertPayload).returning();
+  } catch (error) {
+    if (!isSchemaDriftError(error, structuredSchemaMarkers)) {
+      throw error;
+    }
+
+    [inserted] = await db.insert(impactStories).values(legacyInsertPayload).returning();
+    saveMode = 'legacy_fallback';
+    saveWarning =
+      'Saved in compatibility mode because structured impact columns are unavailable in the active schema.';
+  }
 
   let verificationWarning: string | null = null;
 
@@ -695,34 +810,54 @@ export async function createImpactStory(data: Omit<ImpactStory, 'id'>) {
     const token = randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
     const claimSnapshot = buildClaimSnapshot(data);
+    let verificationRequest: { id: string } | null = null;
 
-    const [verificationRequest] = await db
-      .insert(impactStoryVerificationRequests)
-      .values({
-        impactStoryId: inserted.id,
-        requesterProfileId: user.id,
-        verifierEmail: data.verificationRequest.verifierEmail.toLowerCase(),
-        verifierName: data.verificationRequest.verifierName || null,
-        verifierRelationship: data.verificationRequest.verifierRelationship || null,
-        message: data.verificationRequest.message || null,
-        token,
-        status: 'pending',
-        expiresAt,
-        claimSnapshot,
-      })
-      .returning({
-        id: impactStoryVerificationRequests.id,
-      });
+    try {
+      const [insertedVerificationRequest] = await db
+        .insert(impactStoryVerificationRequests)
+        .values({
+          impactStoryId: inserted.id,
+          requesterProfileId: user.id,
+          verifierEmail: data.verificationRequest.verifierEmail.toLowerCase(),
+          verifierName: data.verificationRequest.verifierName || null,
+          verifierRelationship: data.verificationRequest.verifierRelationship || null,
+          message: data.verificationRequest.message || null,
+          token,
+          status: 'pending',
+          expiresAt,
+          claimSnapshot,
+        })
+        .returning({
+          id: impactStoryVerificationRequests.id,
+        });
+      verificationRequest = insertedVerificationRequest || null;
+    } catch (error) {
+      const verificationMarkers = ['impact_story_verification_requests', 'claim_snapshot'];
+      if (!isSchemaDriftError(error, verificationMarkers)) {
+        throw error;
+      }
 
-    const baseUrl = normalizeBaseUrl(
-      process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || process.env.SITE_URL
-    );
-    const verifyUrl = `${baseUrl}/verify/${token}`;
+      verificationWarning =
+        'Impact story saved, but verification storage is unavailable until the latest migrations are applied.';
+      if (!saveWarning) {
+        saveWarning =
+          'Saved in compatibility mode because verification request tables are unavailable in the active schema.';
+      }
+      if (saveMode !== 'legacy_fallback') {
+        saveMode = 'legacy_fallback';
+      }
+    }
 
-    const emailResult = await sendEmail({
-      to: data.verificationRequest.verifierEmail,
-      subject: `${data.title} verification request on Proofound`,
-      html: `
+    if (verificationRequest) {
+      const baseUrl = normalizeBaseUrl(
+        process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || process.env.SITE_URL
+      );
+      const verifyUrl = `${baseUrl}/verify/${token}`;
+
+      const emailResult = await sendEmail({
+        to: data.verificationRequest.verifierEmail,
+        subject: `${data.title} verification request on Proofound`,
+        html: `
         <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 640px; margin: 0 auto; padding: 20px;">
           <h2 style="margin-bottom: 16px; color: #1f2937;">Impact story verification request</h2>
           <p style="color: #374151;">You have been asked to verify claims for the impact story <strong>${data.title}</strong>.</p>
@@ -738,34 +873,37 @@ export async function createImpactStory(data: Omit<ImpactStory, 'id'>) {
           <p style="color: #6b7280; font-size: 12px; margin-top: 16px;">This link expires on ${expiresAt.toISOString().split('T')[0]}.</p>
         </div>
       `,
-      text: `You have been asked to verify claims for "${data.title}". Open: ${verifyUrl}`,
-    });
+        text: `You have been asked to verify claims for "${data.title}". Open: ${verifyUrl}`,
+      });
 
-    if (!emailResult.success) {
-      verificationWarning =
-        emailResult.error || 'Impact story saved, but failed to send verification request.';
-      await db
-        .update(impactStoryVerificationRequests)
-        .set({
-          status: 'failed',
-          emailError: verificationWarning,
-          updatedAt: new Date(),
-        })
-        .where(eq(impactStoryVerificationRequests.id, verificationRequest.id));
-    } else {
-      await db
-        .update(impactStoryVerificationRequests)
-        .set({
-          emailSentAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .where(eq(impactStoryVerificationRequests.id, verificationRequest.id));
+      if (!emailResult.success) {
+        verificationWarning =
+          emailResult.error || 'Impact story saved, but failed to send verification request.';
+        await db
+          .update(impactStoryVerificationRequests)
+          .set({
+            status: 'failed',
+            emailError: verificationWarning,
+            updatedAt: new Date(),
+          })
+          .where(eq(impactStoryVerificationRequests.id, verificationRequest.id));
+      } else {
+        await db
+          .update(impactStoryVerificationRequests)
+          .set({
+            emailSentAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .where(eq(impactStoryVerificationRequests.id, verificationRequest.id));
+      }
     }
   }
 
   revalidatePath('/app/i/profile');
   return {
     ...inserted,
+    saveMode,
+    saveWarning,
     verificationWarning,
   } as ImpactStoryCreateResult;
 }
