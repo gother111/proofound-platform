@@ -57,11 +57,17 @@ describe('ExperienceForm', () => {
     fireEvent.change(screen.getByLabelText(/Organization/i), {
       target: { value: 'Proofound' },
     });
-    fireEvent.change(screen.getByLabelText(/What I Learned/i), {
-      target: { value: 'Built hiring systems.' },
+    fireEvent.change(screen.getByLabelText(/Outcomes/i), {
+      target: { value: 'Reduced average hiring cycle time by 32%.' },
     });
-    fireEvent.change(screen.getByLabelText(/How I Grew/i), {
-      target: { value: 'Improved facilitation.' },
+    fireEvent.change(screen.getByLabelText(/Projects/i), {
+      target: { value: 'Launched interview rubric revamp.' },
+    });
+    fireEvent.change(screen.getByLabelText(/Colleagues/i), {
+      target: { value: 'Partnered with recruiting and engineering leads.' },
+    });
+    fireEvent.change(screen.getByLabelText(/Achievements/i), {
+      target: { value: 'Established first skills-based hiring pilot.' },
     });
   }
 

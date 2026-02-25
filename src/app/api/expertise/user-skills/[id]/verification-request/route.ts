@@ -4,6 +4,7 @@ import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
 import { randomBytes } from 'crypto';
 import { sendEmail } from '@/lib/email/sender';
+import { resolveSiteUrlFromHeaders } from '@/lib/env';
 
 const CreateVerificationRequestSchema = z.object({
   verifierSource: z.enum(['peer', 'manager', 'external']),
@@ -33,6 +34,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     // Validate input
     const validated = CreateVerificationRequestSchema.parse(body);
+    const normalizedVerifierEmail = validated.verifierEmail.trim().toLowerCase();
 
     // Verify skill belongs to user and get skill details
     const { data: skill, error: skillError } = await supabase
@@ -75,7 +77,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       .insert({
         skill_id: skillId,
         requester_profile_id: user.id,
-        verifier_email: validated.verifierEmail,
+        verifier_email: normalizedVerifierEmail,
         verifier_source: validated.verifierSource,
         message: validated.message || null,
         verification_token: verificationToken,
@@ -94,11 +96,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       (skill.taxonomy as any)?.name_i18n?.en || parseCustomSkillName(skill.skill_id) || 'a skill';
 
     // Build magic link URL
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3002';
+    const baseUrl =
+      resolveSiteUrlFromHeaders(request.headers) ||
+      new URL(request.url).origin ||
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      'http://localhost:3000';
     const verifyUrl = `${baseUrl}/verify/${verificationToken}`;
 
     // Get requester name
-    const requesterName = requesterProfile?.display_name || (user as any).email?.split('@')[0] || 'Someone';
+    const requesterName =
+      requesterProfile?.display_name || (user as any).email?.split('@')[0] || 'Someone';
 
     // Send verification email to verifier
     const relationshipLabel =
@@ -109,7 +117,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           : 'a peer/colleague';
 
     const emailResult = await sendEmail({
-      to: validated.verifierEmail,
+      to: normalizedVerifierEmail,
       subject: `${requesterName} requested your verification on Proofound`,
       html: `
         <!DOCTYPE html>
@@ -138,15 +146,16 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
               </p>
             </div>
             
-            ${validated.message
-          ? `
+            ${
+              validated.message
+                ? `
               <div style="background: white; padding: 15px; border-radius: 8px; margin: 20px 0;">
                 <p style="font-size: 14px; color: #6B6760; margin: 0 0 8px 0; font-weight: 500;">Message from ${requesterName}:</p>
                 <p style="font-size: 14px; margin: 0; font-style: italic;">"${validated.message}"</p>
               </div>
             `
-          : ''
-        }
+                : ''
+            }
             
             <p style="font-size: 16px; margin-bottom: 25px;">
               By verifying, you're confirming that ${requesterName} has demonstrated this skill based on your professional interaction with them.

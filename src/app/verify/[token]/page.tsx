@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/componen
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, XCircle, Clock, Shield, Loader2, AlertCircle } from 'lucide-react';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface VerificationData {
   id: string;
@@ -66,7 +67,7 @@ export default function VerifySkillPage() {
 
     setSubmitting(true);
     try {
-      const response = await fetch(`/api/verify/${token}`, {
+      const response = await apiFetch(`/api/verify/${token}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

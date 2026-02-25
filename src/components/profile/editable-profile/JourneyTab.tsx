@@ -5,7 +5,7 @@ import type { Experience } from '@/types/profile';
 import { Card } from '@/components/ui/card';
 import { TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Briefcase, CheckCircle2, Lightbulb, Plus, TrendingUp, X } from 'lucide-react';
+import { Briefcase, CheckCircle2, FolderOpen, Plus, Target, Trophy, Users, X } from 'lucide-react';
 
 export interface JourneyTabProps {
   experiences: Experience[];
@@ -17,7 +17,9 @@ export function JourneyTab({ experiences, onAddExperience, onDeleteExperience }:
   return (
     <TabsContent value="journey" className="space-y-6">
       <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-muted-foreground">My professional growth and learning journey</p>
+        <p className="text-sm text-muted-foreground">
+          My professional outcomes, projects, and achievements
+        </p>
         {experiences.length > 0 && (
           <Button
             size="sm"
@@ -68,8 +70,8 @@ export function JourneyTab({ experiences, onAddExperience, onDeleteExperience }:
             <div className="space-y-2">
               <h3 className="text-lg font-semibold">Map Your Journey</h3>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                Share your professional experiences. Focus on what you learned, how you grew, and
-                the skills you developed along the way.
+                Share your professional experiences with outcomes, key projects, collaboration
+                context, and achievements.
               </p>
             </div>
             <Button
@@ -80,7 +82,7 @@ export function JourneyTab({ experiences, onAddExperience, onDeleteExperience }:
               Add Experience
             </Button>
             <div className="pt-4 text-xs text-muted-foreground">
-              <p>💡 Tip: Emphasize personal growth over job titles and responsibilities</p>
+              <p>💡 Tip: Emphasize outcomes and teamwork over generic responsibility lists</p>
             </div>
           </div>
         </Card>
@@ -117,17 +119,31 @@ export function JourneyTab({ experiences, onAddExperience, onDeleteExperience }:
                 <div className="space-y-3">
                   <div>
                     <h5 className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
-                      <Lightbulb className="w-3 h-3" />
-                      What I Learned
+                      <Target className="w-3 h-3" />
+                      Outcomes
                     </h5>
-                    <p className="text-sm">{exp.learning}</p>
+                    <p className="text-sm">{exp.outcomes}</p>
                   </div>
                   <div>
                     <h5 className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
-                      <TrendingUp className="w-3 h-3" />
-                      How I Grew
+                      <FolderOpen className="w-3 h-3" />
+                      Projects
                     </h5>
-                    <p className="text-sm">{exp.growth}</p>
+                    <p className="text-sm">{exp.projects}</p>
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
+                      <Users className="w-3 h-3" />
+                      Colleagues
+                    </h5>
+                    <p className="text-sm">{exp.colleagues}</p>
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
+                      <Trophy className="w-3 h-3" />
+                      Achievements
+                    </h5>
+                    <p className="text-sm">{exp.achievements}</p>
                   </div>
                 </div>
               </div>

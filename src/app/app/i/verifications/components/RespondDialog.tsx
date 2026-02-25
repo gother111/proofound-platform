@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { apiFetch } from '@/lib/api/fetch';
 
 interface RespondDialogProps {
   open: boolean;
@@ -46,7 +47,7 @@ export function RespondDialog({
     setError(null);
 
     try {
-      const response = await fetch(`/api/expertise/verification/${request.id}/respond`, {
+      const response = await apiFetch(`/api/expertise/verification/${request.id}/respond`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -101,7 +102,10 @@ export function RespondDialog({
         </DialogHeader>
 
         {/* Skill Details */}
-        <div className="p-4 rounded-lg border" style={{ borderColor: 'rgba(232, 230, 221, 0.6)', backgroundColor: '#F7F6F1' }}>
+        <div
+          className="p-4 rounded-lg border"
+          style={{ borderColor: 'rgba(232, 230, 221, 0.6)', backgroundColor: '#F7F6F1' }}
+        >
           <h4 className="font-semibold text-sm mb-2" style={{ color: '#2D3330' }}>
             Skill Details
           </h4>
@@ -116,7 +120,8 @@ export function RespondDialog({
             )}
             {competencyLevel && (
               <p className="text-sm" style={{ color: '#2D3330' }}>
-                <span className="font-medium">Competency:</span> {getCompetencyLabel(competencyLevel)}
+                <span className="font-medium">Competency:</span>{' '}
+                {getCompetencyLabel(competencyLevel)}
               </p>
             )}
           </div>
@@ -142,10 +147,12 @@ export function RespondDialog({
           <Textarea
             id="response-message"
             value={responseMessage}
-            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setResponseMessage(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+              setResponseMessage(e.target.value)
+            }
             placeholder={
               action === 'accept'
-                ? "Add a congratulatory message or feedback..."
+                ? 'Add a congratulatory message or feedback...'
                 : "Optionally explain why you're declining..."
             }
             rows={3}
@@ -199,4 +206,3 @@ export function RespondDialog({
     </Dialog>
   );
 }
-

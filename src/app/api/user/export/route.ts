@@ -142,7 +142,12 @@ export async function GET() {
           role: experience.title || undefined,
           startDate: timeline.startDate || undefined,
           endDate: timeline.endDate,
-          description: experience.learning || undefined,
+          description:
+            experience.outcomes ||
+            experience.achievements ||
+            experience.projects ||
+            experience.colleagues ||
+            undefined,
           location: undefined,
         };
       }),

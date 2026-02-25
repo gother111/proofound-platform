@@ -31,8 +31,10 @@ const experienceSchema = z
       .string()
       .optional()
       .refine((value) => !value || monthInputRegex.test(value), 'End month must be a valid month'),
-    learning: z.string().min(1, 'Learning description is required'),
-    growth: z.string().min(1, 'Growth description is required'),
+    outcomes: z.string().min(1, 'Outcomes are required'),
+    projects: z.string().min(1, 'Projects are required'),
+    colleagues: z.string().min(1, 'Colleagues are required'),
+    achievements: z.string().min(1, 'Achievements are required'),
   })
   .superRefine((value, context) => {
     if (value.endMonth && value.endMonth < value.startMonth) {
@@ -67,8 +69,10 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
       orgDescription: '',
       startMonth: '',
       endMonth: '',
-      learning: '',
-      growth: '',
+      outcomes: '',
+      projects: '',
+      colleagues: '',
+      achievements: '',
     },
   });
 
@@ -86,8 +90,10 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
           orgDescription: experience.orgDescription,
           startMonth: isoDateToMonthInput(timeline.startDate),
           endMonth: isoDateToMonthInput(timeline.endDate),
-          learning: experience.learning,
-          growth: experience.growth,
+          outcomes: experience.outcomes,
+          projects: experience.projects,
+          colleagues: experience.colleagues,
+          achievements: experience.achievements,
         });
       } else {
         reset({
@@ -95,8 +101,10 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
           orgDescription: '',
           startMonth: '',
           endMonth: '',
-          learning: '',
-          growth: '',
+          outcomes: '',
+          projects: '',
+          colleagues: '',
+          achievements: '',
         });
       }
     }
@@ -114,8 +122,10 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
       duration: timeline.duration,
       startDate: timeline.startDate,
       endDate: timeline.endDate,
-      learning: data.learning,
-      growth: data.growth,
+      outcomes: data.outcomes,
+      projects: data.projects,
+      colleagues: data.colleagues,
+      achievements: data.achievements,
       verified: false,
     });
     onOpenChange(false);
@@ -127,7 +137,8 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
         <DialogHeader>
           <DialogTitle>{experience ? 'Edit Experience' : 'Add Experience'}</DialogTitle>
           <DialogDescription>
-            Share your professional experiences. Focus on what you learned and how you grew.
+            Share your professional experiences with outcomes, projects, colleagues, and
+            achievements.
           </DialogDescription>
         </DialogHeader>
 
@@ -224,44 +235,88 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
               </p>
             </motion.div>
 
-            {/* What I Learned */}
+            {/* Outcomes */}
             <motion.div
               className="space-y-2"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <Label htmlFor="learning">
-                What I Learned <span className="text-red-500">*</span>
+              <Label htmlFor="outcomes">
+                Outcomes <span className="text-red-500">*</span>
               </Label>
               <textarea
-                id="learning"
-                {...register('learning')}
-                placeholder="What new skills, knowledge, or perspectives did you gain?"
+                id="outcomes"
+                {...register('outcomes')}
+                placeholder="What measurable outcomes did this experience produce?"
                 className={`flex min-h-[100px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${
-                  errors.learning ? 'border-red-500' : ''
+                  errors.outcomes ? 'border-red-500' : ''
                 }`}
               />
-              {errors.learning && <p className="text-xs text-red-500">{errors.learning.message}</p>}
+              {errors.outcomes && <p className="text-xs text-red-500">{errors.outcomes.message}</p>}
             </motion.div>
 
-            {/* How I Grew */}
+            {/* Projects */}
             <motion.div
               className="space-y-2"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <Label htmlFor="growth">
-                How I Grew <span className="text-red-500">*</span>
+              <Label htmlFor="projects">
+                Projects <span className="text-red-500">*</span>
               </Label>
               <textarea
-                id="growth"
-                {...register('growth')}
-                placeholder="How did this experience change you professionally?"
+                id="projects"
+                {...register('projects')}
+                placeholder="Which projects or initiatives did you lead or contribute to?"
                 className={`flex min-h-[100px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${
-                  errors.growth ? 'border-red-500' : ''
+                  errors.projects ? 'border-red-500' : ''
                 }`}
               />
-              {errors.growth && <p className="text-xs text-red-500">{errors.growth.message}</p>}
+              {errors.projects && <p className="text-xs text-red-500">{errors.projects.message}</p>}
+            </motion.div>
+
+            {/* Colleagues */}
+            <motion.div
+              className="space-y-2"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <Label htmlFor="colleagues">
+                Colleagues <span className="text-red-500">*</span>
+              </Label>
+              <textarea
+                id="colleagues"
+                {...register('colleagues')}
+                placeholder="Who did you collaborate with and what was your working dynamic?"
+                className={`flex min-h-[100px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${
+                  errors.colleagues ? 'border-red-500' : ''
+                }`}
+              />
+              {errors.colleagues && (
+                <p className="text-xs text-red-500">{errors.colleagues.message}</p>
+              )}
+            </motion.div>
+
+            {/* Achievements */}
+            <motion.div
+              className="space-y-2"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <Label htmlFor="achievements">
+                Achievements <span className="text-red-500">*</span>
+              </Label>
+              <textarea
+                id="achievements"
+                {...register('achievements')}
+                placeholder="What achievements or recognition stand out from this experience?"
+                className={`flex min-h-[100px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${
+                  errors.achievements ? 'border-red-500' : ''
+                }`}
+              />
+              {errors.achievements && (
+                <p className="text-xs text-red-500">{errors.achievements.message}</p>
+              )}
             </motion.div>
 
             {/* Guidance */}
@@ -272,8 +327,8 @@ export function ExperienceForm({ open, onOpenChange, experience, onSave }: Exper
             >
               <p className="font-medium mb-2">💡 Tip:</p>
               <p>
-                Emphasize personal growth over job titles and responsibilities. Share authentic
-                insights about your development.
+                Focus on concrete outcomes, collaboration context, and achievements instead of only
+                listing responsibilities.
               </p>
             </motion.div>
           </motion.div>

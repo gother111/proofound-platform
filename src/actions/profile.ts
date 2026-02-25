@@ -317,8 +317,10 @@ export async function getProfileData(): Promise<ProfileData> {
             duration: experiences.duration,
             startDate: experiences.startDate,
             endDate: experiences.endDate,
-            learning: experiences.learning,
-            growth: experiences.growth,
+            outcomes: experiences.outcomes,
+            projects: experiences.projects,
+            colleagues: experiences.colleagues,
+            achievements: experiences.achievements,
             verified: experiences.verified,
           })
           .from(experiences)
@@ -406,8 +408,10 @@ export async function getProfileData(): Promise<ProfileData> {
         duration: timeline.duration,
         startDate: timeline.startDate,
         endDate: timeline.endDate,
-        learning: row.learning,
-        growth: row.growth,
+        outcomes: row.outcomes,
+        projects: row.projects,
+        colleagues: row.colleagues,
+        achievements: row.achievements,
         verified: row.verified,
       };
     });
@@ -586,8 +590,10 @@ export async function createExperience(data: Omit<Experience, 'id'>) {
       duration: timeline.duration,
       startDate: timeline.startDate,
       endDate: timeline.endDate,
-      learning: data.learning,
-      growth: data.growth,
+      outcomes: data.outcomes,
+      projects: data.projects,
+      colleagues: data.colleagues,
+      achievements: data.achievements,
       verified: data.verified ?? false,
     })
     .returning();

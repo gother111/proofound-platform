@@ -80,7 +80,13 @@ function normalizeLegacyExportToV3(raw: any): UserDataImportV3 {
     role: experience?.role || experience?.title || undefined,
     startDate: experience?.startDate || undefined,
     endDate: experience?.endDate || null,
-    description: experience?.description || experience?.learning || undefined,
+    description:
+      experience?.description ||
+      experience?.outcomes ||
+      experience?.achievements ||
+      experience?.learning ||
+      experience?.growth ||
+      undefined,
     location: experience?.location || undefined,
   }));
 
