@@ -42,7 +42,24 @@ export async function searchL4Skills(query: string, signal?: AbortSignal): Promi
   const response = await fetch(`/api/expertise/taxonomy?search=${encodeURIComponent(query)}`, {
     signal,
   });
-  if (!response.ok) return [];
+
+  if (!response.ok) {
+    let message = 'Failed to search skills.';
+    try {
+      const payload = (await response.json()) as { error?: string; details?: string };
+      if (payload?.error) {
+        message = payload.error;
+      }
+      if (payload?.details) {
+        message = `${message} ${payload.details}`;
+      }
+    } catch {
+      // keep default message
+    }
+
+    throw new Error(message);
+  }
+
   const data = (await response.json()) as { l4_skills?: L4Skill[] };
   return data.l4_skills ?? [];
 }
