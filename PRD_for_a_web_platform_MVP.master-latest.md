@@ -824,8 +824,8 @@ Each flow follows a consistent mini‑spec: **Purpose • Entry • Steps • In
 
 **Purpose:** Record work with minimal friction; enable later linkage to skills & projects.  
 **Entry:** Profile → Journey tab (empty‑state hint).  
-**Steps:** Toggle “Work” → Organization → Role/Title → Dates → Location (optional) → **What I did** (few short sentences) → **Impact** (brief example‑guided) → **Projects** (optional, names/briefs; continuous vs time‑boxed) → Save Draft or Publish.  
-**Inputs/Data:** Structured fields; short texts.  
+**Steps:** Toggle “Work” → Organization → Role/Title → Timeline (start month, optional end month) → **Outcomes** → **Projects** → **Colleagues** → **Achievements** → Save Draft or Publish.  
+**Inputs/Data:** Structured fields; outcomes/projects/colleagues/achievements are required.  
 **Needs & Feelings:** Light, honest, safe; can edit later.  
 **System Support:** Example prompts (e.g., “Improved accessibility for commuters”); drafts; privacy controls.  
 **Done:** Work entry saved (draft or published).  
@@ -1400,11 +1400,11 @@ Each flow includes:
 
 **Goal:** Manage org security and compliance with strong safeguards.  
 **Entry:** Settings tab or header menu.  
-**Happy‑path steps:** Change password; setup **MFA**; manage privacy defaults; manage team/roles; **export JSON** of org data; **delete org** with multi‑step confirmations and manual text entry.  
-**Success:** Settings applied; exports/downloads complete; deletions irreversible.  
-**Key data:** Security settings, Export package, Deletion logs.  
-**Edge cases:** Legal hold blocking deletion; restore from JSON (future); role‑based access to sensitive actions.  
-**MVP:** Yes (MFA, privacy, export, guarded delete).
+**Happy‑path steps:** Manage profile/team/goals settings; manage visibility/privacy defaults; review audit log; use available exports (UI/API) for organization data. Organization deletion remains non-self-serve in the current UI.  
+**Success:** Settings and visibility updates are applied; exports/downloads complete; destructive org deletion remains restricted.  
+**Key data:** Organization settings, visibility settings, audit logs, export artifacts.  
+**Edge cases:** Role-based access restrictions for sensitive actions; legal/compliance review for deletion/export requests.  
+**MVP:** Yes (settings hub, visibility/privacy defaults, exports, audit logging). MFA and self-serve org deletion are post-MVP.
 
 ---
 
@@ -1910,6 +1910,14 @@ Each flow includes:
 **Error & Empty States**
 
 - Empty: show top 3 actions to raise score (e.g., add L4 proof, widen availability).
+- Critical individual empty/incomplete states must always show exactly 3 recovery CTAs:
+  - `Add a proof`
+  - `Add a skill`
+  - `Turn on matchable` (routes to matching preferences)
+- Organization matching empty/no-results states must always show exactly 3 recovery CTAs, including:
+  - `Turn on candidate matching`
+  - `Publish assignment` (or publish updates)
+  - `Add skill requirements`
 - Gate mismatch: banner explaining unmet verification.
 - Rate limiting: prevent mass introduces within a window.
 
