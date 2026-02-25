@@ -29,7 +29,7 @@ describe('portfolio and compatibility shortcut routes', () => {
     (requireAuth as any).mockResolvedValue({ handle: 'strict-user' });
 
     await expect(IndividualPortfolioShortcutPage()).rejects.toThrow('NEXT_REDIRECT');
-    expect(redirectMock).toHaveBeenCalledWith('/portfolio/strict-user');
+    expect(redirectMock).toHaveBeenCalledWith('/portfolio/strict-user?returnTo=%2Fapp%2Fi%2Fhome');
   });
 
   it('redirects individual shortcut to profile when handle is missing', async () => {
@@ -46,7 +46,9 @@ describe('portfolio and compatibility shortcut routes', () => {
       })
     ).rejects.toThrow('NEXT_REDIRECT');
 
-    expect(redirectMock).toHaveBeenCalledWith('/portfolio/org/acme');
+    expect(redirectMock).toHaveBeenCalledWith(
+      '/portfolio/org/acme?returnTo=%2Fapp%2Fo%2Facme%2Fhome'
+    );
   });
 
   it('redirects /auth/login compatibility route to /login', () => {
