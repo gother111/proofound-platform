@@ -604,6 +604,7 @@ export const skillVerificationRequests = pgTable('skill_verification_requests', 
   requesterProfileId: uuid('requester_profile_id')
     .references(() => profiles.id, { onDelete: 'cascade' })
     .notNull(),
+  verificationToken: text('verification_token').notNull(),
   verifierEmail: text('verifier_email').notNull(),
   verifierProfileId: uuid('verifier_profile_id').references(() => profiles.id, {
     onDelete: 'set null',

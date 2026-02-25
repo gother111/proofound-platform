@@ -322,12 +322,24 @@ export function EditSkillWindow({
       );
 
       if (response.ok) {
-        const data = (await response.json()) as { request: VerificationRequest };
+        const data = (await response.json()) as {
+          request: VerificationRequest;
+          email_sent?: boolean;
+        };
         setVerificationRequests((current) => [data.request, ...current]);
-        toast({
-          title: '✉️ Verification Request Sent',
-          description: `An email has been sent to ${newVerificationRequest.verifierEmail}.`,
-        });
+        if (data.email_sent) {
+          toast({
+            title: '✉️ Verification Request Sent',
+            description: `An email has been sent to ${newVerificationRequest.verifierEmail}.`,
+          });
+        } else {
+          toast({
+            title: 'Verification Request Saved',
+            description:
+              'The request was saved, but the email could not be sent. Please check email configuration.',
+            variant: 'destructive',
+          });
+        }
         setNewVerificationRequest({
           verifierEmail: '',
           verifierSource: 'peer',
