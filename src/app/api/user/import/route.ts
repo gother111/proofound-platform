@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { detectPII } from '@/lib/privacy/pii-detection';
 import { normalizeImportRequest } from '@/lib/contracts/data-portability';
+import { buildExperienceTimeline } from '@/lib/profile/experience-timeline';
 
 function parseOptionalDate(value?: string | null): Date | null {
   if (!value) {
@@ -194,17 +195,29 @@ export async function POST(request: NextRequest) {
 
       if (data.experiences.length > 0) {
         await tx.insert(experiences).values(
-          data.experiences.map((experience) => ({
-            userId: user.id,
-            title: experience.role || 'Imported Experience',
-            orgDescription: experience.organization,
-            duration:
-              experience.startDate && experience.endDate
-                ? `${experience.startDate} - ${experience.endDate}`
-                : experience.startDate || experience.endDate || 'Duration not specified',
-            learning: experience.description || 'No learning description provided',
-            growth: 'Imported from data portability export',
-          }))
+          data.experiences.map((experience) => {
+            const timeline = buildExperienceTimeline({
+              startDate: experience.startDate ?? null,
+              endDate: experience.endDate ?? null,
+              duration:
+                experience.startDate && experience.endDate
+                  ? `${experience.startDate} - ${experience.endDate}`
+                  : experience.startDate || experience.endDate || null,
+            });
+
+            return {
+              userId: user.id,
+              title: experience.role || 'Imported Experience',
+              orgDescription: experience.organization,
+              duration: timeline.duration,
+              startDate: timeline.startDate,
+              endDate: timeline.endDate,
+              outcomes: experience.description || 'Imported from data portability export',
+              projects: 'Imported from data portability export',
+              colleagues: 'Imported from data portability export',
+              achievements: experience.description || 'Imported from data portability export',
+            };
+          })
         );
       }
       importedCounts.experiences = data.experiences.length;

@@ -9,6 +9,7 @@ import {
   User,
   Briefcase,
   ExternalLink,
+  Mail,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -31,15 +32,15 @@ interface VerificationRequest {
   skills?: {
     id: string;
     competency_level: number;
-    name_i18n?: any;
+    name_i18n?: unknown;
     skills_taxonomy?: {
-      name_i18n?: any;
+      name_i18n?: unknown;
       skills_l3?: {
-        name_i18n?: any;
+        name_i18n?: unknown;
         skills_subcategories?: {
-          name_i18n?: any;
+          name_i18n?: unknown;
           skills_categories?: {
-            name_i18n?: any;
+            name_i18n?: unknown;
           };
         };
       };
@@ -54,22 +55,34 @@ interface VerificationRequest {
 }
 
 interface VerificationsClientProps {
-  requests: VerificationRequest[];
+  incomingRequests: VerificationRequest[];
+  sentRequests: VerificationRequest[];
   userEmail: string;
 }
 
+type RequestStatusFilter = 'pending' | 'accepted' | 'declined' | 'all';
+
+const STATUS_FILTERS: RequestStatusFilter[] = ['pending', 'accepted', 'declined', 'all'];
+
+function filterByStatus(
+  requests: VerificationRequest[],
+  filter: RequestStatusFilter
+): VerificationRequest[] {
+  if (filter === 'all') {
+    return requests;
+  }
+  return requests.filter((request) => request.status === filter);
+}
+
 export function VerificationsClient({
-  requests: initialRequests,
-  userEmail,
+  incomingRequests: initialIncomingRequests,
+  sentRequests: initialSentRequests,
 }: VerificationsClientProps) {
-  const [requests, setRequests] = useState(initialRequests);
+  const [incomingRequests, setIncomingRequests] = useState(initialIncomingRequests);
+  const [sentRequests] = useState(initialSentRequests);
   const [selectedRequest, setSelectedRequest] = useState<VerificationRequest | null>(null);
   const [respondDialogOpen, setRespondDialogOpen] = useState(false);
   const [respondAction, setRespondAction] = useState<'accept' | 'decline'>('accept');
-
-  const pendingRequests = requests.filter((r) => r.status === 'pending');
-  const acceptedRequests = requests.filter((r) => r.status === 'accepted');
-  const declinedRequests = requests.filter((r) => r.status === 'declined');
 
   const handleRespond = (request: VerificationRequest, action: 'accept' | 'decline') => {
     setSelectedRequest(request);
@@ -78,8 +91,9 @@ export function VerificationsClient({
   };
 
   const handleResponseComplete = (updatedRequest: VerificationRequest) => {
-    // Update the request in the list
-    setRequests((prev) => prev.map((r) => (r.id === updatedRequest.id ? updatedRequest : r)));
+    setIncomingRequests((prev) =>
+      prev.map((request) => (request.id === updatedRequest.id ? updatedRequest : request))
+    );
     setRespondDialogOpen(false);
     setSelectedRequest(null);
   };
@@ -88,16 +102,14 @@ export function VerificationsClient({
     const skill = request.skills;
     if (!skill) return 'Unknown Skill';
 
-    // Custom skill
-    if (skill.name_i18n && typeof skill.name_i18n === 'object' && skill.name_i18n.en) {
-      return skill.name_i18n.en;
+    if (skill.name_i18n && typeof skill.name_i18n === 'object' && 'en' in skill.name_i18n) {
+      return String((skill.name_i18n as Record<string, unknown>).en || 'Unknown Skill');
     }
 
-    // Taxonomy skill
     if (skill.skills_taxonomy?.name_i18n) {
       const taxName = skill.skills_taxonomy.name_i18n;
-      if (typeof taxName === 'object' && taxName.en) {
-        return taxName.en;
+      if (typeof taxName === 'object' && taxName && 'en' in taxName) {
+        return String((taxName as Record<string, unknown>).en || 'Unknown Skill');
       }
       if (typeof taxName === 'string') {
         return taxName;
@@ -118,18 +130,33 @@ export function VerificationsClient({
     const parts: string[] = [];
 
     if (l1?.name_i18n) {
-      const l1Name = typeof l1.name_i18n === 'object' ? l1.name_i18n.en : l1.name_i18n;
-      if (l1Name) parts.push(l1Name);
+      const l1Name =
+        typeof l1.name_i18n === 'object'
+          ? (l1.name_i18n as Record<string, unknown>).en
+          : l1.name_i18n;
+      if (typeof l1Name === 'string' && l1Name) {
+        parts.push(l1Name);
+      }
     }
 
     if (l2?.name_i18n) {
-      const l2Name = typeof l2.name_i18n === 'object' ? l2.name_i18n.en : l2.name_i18n;
-      if (l2Name) parts.push(l2Name);
+      const l2Name =
+        typeof l2.name_i18n === 'object'
+          ? (l2.name_i18n as Record<string, unknown>).en
+          : l2.name_i18n;
+      if (typeof l2Name === 'string' && l2Name) {
+        parts.push(l2Name);
+      }
     }
 
     if (l3.name_i18n) {
-      const l3Name = typeof l3.name_i18n === 'object' ? l3.name_i18n.en : l3.name_i18n;
-      if (l3Name) parts.push(l3Name);
+      const l3Name =
+        typeof l3.name_i18n === 'object'
+          ? (l3.name_i18n as Record<string, unknown>).en
+          : l3.name_i18n;
+      if (typeof l3Name === 'string' && l3Name) {
+        parts.push(l3Name);
+      }
     }
 
     return parts.join(' › ');
@@ -144,7 +171,7 @@ export function VerificationsClient({
     const name = getRequesterName(request);
     return name
       .split(' ')
-      .map((n) => n[0])
+      .map((part) => part[0])
       .join('')
       .toUpperCase()
       .slice(0, 2);
@@ -169,14 +196,62 @@ export function VerificationsClient({
     return `${Math.floor(diffDays / 365)} years ago`;
   };
 
-  const renderRequestCard = (request: VerificationRequest) => (
+  const renderStatusBadge = (request: VerificationRequest) => (
+    <Badge
+      variant="outline"
+      className="capitalize"
+      style={{
+        borderColor:
+          request.status === 'pending'
+            ? '#F59E0B'
+            : request.status === 'accepted'
+              ? '#10B981'
+              : '#EF4444',
+        color:
+          request.status === 'pending'
+            ? '#F59E0B'
+            : request.status === 'accepted'
+              ? '#10B981'
+              : '#EF4444',
+        backgroundColor:
+          request.status === 'pending'
+            ? '#FEF3C7'
+            : request.status === 'accepted'
+              ? '#D1FAE5'
+              : '#FEE2E2',
+      }}
+    >
+      {request.status === 'pending' && <Clock className="w-3 h-3 mr-1" />}
+      {request.status === 'accepted' && <CheckCircle2 className="w-3 h-3 mr-1" />}
+      {request.status === 'declined' && <XCircle className="w-3 h-3 mr-1" />}
+      {request.status}
+    </Badge>
+  );
+
+  const renderSourceBadge = (request: VerificationRequest) => (
+    <Badge
+      variant="outline"
+      className="capitalize"
+      style={{
+        borderColor: '#1C4D3A',
+        color: '#1C4D3A',
+        backgroundColor: '#E8F5E9',
+      }}
+    >
+      {request.verifier_source === 'peer' && <User className="w-3 h-3 mr-1" />}
+      {request.verifier_source === 'manager' && <Briefcase className="w-3 h-3 mr-1" />}
+      {request.verifier_source === 'external' && <ExternalLink className="w-3 h-3 mr-1" />}
+      {request.verifier_source}
+    </Badge>
+  );
+
+  const renderIncomingRequestCard = (request: VerificationRequest) => (
     <Card
       key={request.id}
       className="p-6 hover:shadow-md transition-shadow"
       style={{ backgroundColor: '#FDFCFA', borderColor: 'rgba(232, 230, 221, 0.6)' }}
     >
       <div className="flex gap-4">
-        {/* Avatar */}
         <div
           className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
           style={{ backgroundColor: '#E8E6DD', color: '#2D3330' }}
@@ -184,9 +259,7 @@ export function VerificationsClient({
           <span className="text-sm font-medium">{getRequesterInitials(request)}</span>
         </div>
 
-        {/* Content */}
         <div className="flex-1 min-w-0">
-          {/* Header */}
           <div className="flex items-start justify-between gap-4 mb-3">
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-base mb-1" style={{ color: '#2D3330' }}>
@@ -197,55 +270,11 @@ export function VerificationsClient({
               </p>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
-              <Badge
-                variant="outline"
-                className="capitalize"
-                style={{
-                  borderColor:
-                    request.status === 'pending'
-                      ? '#F59E0B'
-                      : request.status === 'accepted'
-                        ? '#10B981'
-                        : '#EF4444',
-                  color:
-                    request.status === 'pending'
-                      ? '#F59E0B'
-                      : request.status === 'accepted'
-                        ? '#10B981'
-                        : '#EF4444',
-                  backgroundColor:
-                    request.status === 'pending'
-                      ? '#FEF3C7'
-                      : request.status === 'accepted'
-                        ? '#D1FAE5'
-                        : '#FEE2E2',
-                }}
-              >
-                {request.status === 'pending' && <Clock className="w-3 h-3 mr-1" />}
-                {request.status === 'accepted' && <CheckCircle2 className="w-3 h-3 mr-1" />}
-                {request.status === 'declined' && <XCircle className="w-3 h-3 mr-1" />}
-                {request.status}
-              </Badge>
-              <Badge
-                variant="outline"
-                className="capitalize"
-                style={{
-                  borderColor: '#1C4D3A',
-                  color: '#1C4D3A',
-                  backgroundColor: '#E8F5E9',
-                }}
-              >
-                {request.verifier_source === 'peer' && <User className="w-3 h-3 mr-1" />}
-                {request.verifier_source === 'manager' && <Briefcase className="w-3 h-3 mr-1" />}
-                {request.verifier_source === 'external' && (
-                  <ExternalLink className="w-3 h-3 mr-1" />
-                )}
-                {request.verifier_source}
-              </Badge>
+              {renderStatusBadge(request)}
+              {renderSourceBadge(request)}
             </div>
           </div>
 
-          {/* Skill Info */}
           <div className="mb-3 p-3 rounded-lg" style={{ backgroundColor: '#F7F6F1' }}>
             <div className="flex items-center gap-2 mb-1">
               <ShieldCheck className="w-4 h-4" style={{ color: '#1C4D3A' }} />
@@ -265,7 +294,6 @@ export function VerificationsClient({
             )}
           </div>
 
-          {/* Message */}
           {request.message && (
             <div
               className="mb-3 p-3 rounded border"
@@ -277,7 +305,6 @@ export function VerificationsClient({
             </div>
           )}
 
-          {/* Response Message (if responded) */}
           {request.response_message && (
             <div
               className="mb-3 p-3 rounded border"
@@ -292,14 +319,12 @@ export function VerificationsClient({
             </div>
           )}
 
-          {/* Footer */}
           <div className="flex items-center justify-between gap-4 mt-4">
             <p className="text-xs" style={{ color: '#6B7470' }}>
               Requested {formatDate(request.created_at)}
               {request.responded_at && ` • Responded ${formatDate(request.responded_at)}`}
             </p>
 
-            {/* Action Buttons (pending only) */}
             {request.status === 'pending' && (
               <div className="flex gap-2">
                 <Button
@@ -335,111 +360,190 @@ export function VerificationsClient({
     </Card>
   );
 
-  const renderEmptyState = (status: string) => (
-    <div className="flex flex-col items-center justify-center py-16 px-4">
-      <div
-        className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
-        style={{ backgroundColor: '#E8E6DD' }}
-      >
-        <ShieldCheck className="w-8 h-8" style={{ color: '#6B7470' }} />
+  const renderSentRequestCard = (request: VerificationRequest) => (
+    <Card
+      key={request.id}
+      className="p-6"
+      style={{ backgroundColor: '#FDFCFA', borderColor: 'rgba(232, 230, 221, 0.6)' }}
+    >
+      <div className="flex items-start justify-between gap-4 mb-3">
+        <div className="flex-1 min-w-0">
+          <h3
+            className="font-semibold text-base mb-1 flex items-center gap-2"
+            style={{ color: '#2D3330' }}
+          >
+            <Mail className="w-4 h-4" />
+            {request.verifier_email}
+          </h3>
+          <p className="text-sm" style={{ color: '#6B7470' }}>
+            Verification request sent
+          </p>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {renderStatusBadge(request)}
+          {renderSourceBadge(request)}
+        </div>
       </div>
-      <h3 className="text-lg font-semibold mb-2" style={{ color: '#2D3330' }}>
-        No {status} requests
-      </h3>
-      <p className="text-sm text-center max-w-sm" style={{ color: '#6B7470' }}>
-        {status === 'pending'
-          ? "You don't have any pending verification requests to review."
-          : status === 'accepted'
-            ? "You haven't accepted any verification requests yet."
-            : status === 'declined'
-              ? "You haven't declined any verification requests yet."
-              : "You don't have any verification requests yet."}
+
+      <div className="mb-3 p-3 rounded-lg" style={{ backgroundColor: '#F7F6F1' }}>
+        <div className="flex items-center gap-2 mb-1">
+          <ShieldCheck className="w-4 h-4" style={{ color: '#1C4D3A' }} />
+          <span className="font-medium text-sm" style={{ color: '#2D3330' }}>
+            {getSkillName(request)}
+          </span>
+        </div>
+        {getBreadcrumb(request) && (
+          <p className="text-xs ml-6" style={{ color: '#6B7470' }}>
+            {getBreadcrumb(request)}
+          </p>
+        )}
+      </div>
+
+      {request.message && (
+        <div
+          className="mb-3 p-3 rounded border"
+          style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}
+        >
+          <p className="text-xs font-medium mb-1" style={{ color: '#6B7470' }}>
+            Your message:
+          </p>
+          <p className="text-sm" style={{ color: '#2D3330' }}>
+            &ldquo;{request.message}&rdquo;
+          </p>
+        </div>
+      )}
+
+      {request.response_message && (
+        <div
+          className="mb-3 p-3 rounded border"
+          style={{ borderColor: 'rgba(232, 230, 221, 0.6)', backgroundColor: '#F7F6F1' }}
+        >
+          <p className="text-xs font-medium mb-1" style={{ color: '#6B7470' }}>
+            Verifier response:
+          </p>
+          <p className="text-sm" style={{ color: '#2D3330' }}>
+            &ldquo;{request.response_message}&rdquo;
+          </p>
+        </div>
+      )}
+
+      <p className="text-xs" style={{ color: '#6B7470' }}>
+        Sent {formatDate(request.created_at)}
+        {request.responded_at && ` • Responded ${formatDate(request.responded_at)}`}
       </p>
-    </div>
+    </Card>
+  );
+
+  const renderEmptyState = (status: RequestStatusFilter, mode: 'incoming' | 'sent') => {
+    const modeText = mode === 'incoming' ? 'incoming' : 'sent';
+
+    return (
+      <div className="flex flex-col items-center justify-center py-16 px-4">
+        <div
+          className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
+          style={{ backgroundColor: '#E8E6DD' }}
+        >
+          <ShieldCheck className="w-8 h-8" style={{ color: '#6B7470' }} />
+        </div>
+        <h3 className="text-lg font-semibold mb-2" style={{ color: '#2D3330' }}>
+          No {status} {modeText} requests
+        </h3>
+        <p className="text-sm text-center max-w-sm" style={{ color: '#6B7470' }}>
+          {mode === 'incoming'
+            ? 'You do not have verification requests in this view yet.'
+            : 'You have not sent verification requests in this view yet.'}
+        </p>
+      </div>
+    );
+  };
+
+  const renderStatusTabs = (requests: VerificationRequest[], mode: 'incoming' | 'sent') => (
+    <Tabs defaultValue="pending" className="w-full">
+      <TabsList className="mb-6">
+        {STATUS_FILTERS.map((status) => {
+          const filteredCount = filterByStatus(requests, status).length;
+          const label = status.charAt(0).toUpperCase() + status.slice(1);
+
+          return (
+            <TabsTrigger key={status} value={status} className="relative">
+              {label}
+              {filteredCount > 0 && (
+                <span
+                  className="ml-2 px-2 py-0.5 rounded-full text-xs font-medium"
+                  style={{
+                    backgroundColor: status === 'pending' ? '#F59E0B' : '#E8E6DD',
+                    color: status === 'pending' ? '#FFF' : '#2D3330',
+                  }}
+                >
+                  {filteredCount}
+                </span>
+              )}
+            </TabsTrigger>
+          );
+        })}
+      </TabsList>
+
+      {STATUS_FILTERS.map((status) => {
+        const filteredRequests = filterByStatus(requests, status);
+        return (
+          <TabsContent key={status} value={status} className="space-y-4">
+            {filteredRequests.length === 0
+              ? renderEmptyState(status, mode)
+              : filteredRequests.map(
+                  mode === 'incoming' ? renderIncomingRequestCard : renderSentRequestCard
+                )}
+          </TabsContent>
+        );
+      })}
+    </Tabs>
   );
 
   return (
     <div className="h-full overflow-auto">
       <div className="max-w-5xl mx-auto p-8">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2" style={{ color: '#2D3330' }}>
             Verification Requests
           </h1>
           <p className="text-base" style={{ color: '#6B7470' }}>
-            Review and respond to verification requests from others
+            Track requests sent by you and review incoming verification requests
           </p>
         </div>
 
-        {/* Tabs */}
-        <Tabs defaultValue="pending" className="w-full">
+        <Tabs defaultValue="incoming" className="w-full">
           <TabsList className="mb-6">
-            <TabsTrigger value="pending" className="relative">
-              Pending
-              {pendingRequests.length > 0 && (
+            <TabsTrigger value="incoming" className="relative">
+              Incoming
+              {incomingRequests.length > 0 && (
                 <span
                   className="ml-2 px-2 py-0.5 rounded-full text-xs font-medium"
                   style={{ backgroundColor: '#F59E0B', color: '#FFF' }}
                 >
-                  {pendingRequests.length}
+                  {incomingRequests.length}
                 </span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="accepted">
-              Accepted
-              {acceptedRequests.length > 0 && (
-                <span className="ml-2 text-xs" style={{ color: '#6B7470' }}>
-                  ({acceptedRequests.length})
-                </span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="declined">
-              Declined
-              {declinedRequests.length > 0 && (
-                <span className="ml-2 text-xs" style={{ color: '#6B7470' }}>
-                  ({declinedRequests.length})
-                </span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="all">
-              All
-              {requests.length > 0 && (
-                <span className="ml-2 text-xs" style={{ color: '#6B7470' }}>
-                  ({requests.length})
+            <TabsTrigger value="sent" className="relative">
+              Sent
+              {sentRequests.length > 0 && (
+                <span
+                  className="ml-2 px-2 py-0.5 rounded-full text-xs font-medium"
+                  style={{ backgroundColor: '#E8E6DD', color: '#2D3330' }}
+                >
+                  {sentRequests.length}
                 </span>
               )}
             </TabsTrigger>
           </TabsList>
 
-          {/* Pending Tab */}
-          <TabsContent value="pending" className="space-y-4">
-            {pendingRequests.length === 0
-              ? renderEmptyState('pending')
-              : pendingRequests.map(renderRequestCard)}
+          <TabsContent value="incoming">
+            {renderStatusTabs(incomingRequests, 'incoming')}
           </TabsContent>
 
-          {/* Accepted Tab */}
-          <TabsContent value="accepted" className="space-y-4">
-            {acceptedRequests.length === 0
-              ? renderEmptyState('accepted')
-              : acceptedRequests.map(renderRequestCard)}
-          </TabsContent>
-
-          {/* Declined Tab */}
-          <TabsContent value="declined" className="space-y-4">
-            {declinedRequests.length === 0
-              ? renderEmptyState('declined')
-              : declinedRequests.map(renderRequestCard)}
-          </TabsContent>
-
-          {/* All Tab */}
-          <TabsContent value="all" className="space-y-4">
-            {requests.length === 0 ? renderEmptyState('all') : requests.map(renderRequestCard)}
-          </TabsContent>
+          <TabsContent value="sent">{renderStatusTabs(sentRequests, 'sent')}</TabsContent>
         </Tabs>
       </div>
 
-      {/* Respond Dialog */}
       {selectedRequest && (
         <RespondDialog
           open={respondDialogOpen}

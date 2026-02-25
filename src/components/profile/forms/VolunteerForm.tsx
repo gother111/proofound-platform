@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import Link from 'next/link';
 import {
   Dialog,
   DialogContent,
@@ -15,6 +16,9 @@ import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { ProfileSkillPicker } from './ProfileSkillPicker';
+import { mapLegacySkillsToAvailable, serializeSelectedSkills } from './skill-selection-utils';
+import { useState } from 'react';
 
 const volunteerSchema = z.object({
   title: z.string().min(1, 'Role/Title is required'),
@@ -22,7 +26,6 @@ const volunteerSchema = z.object({
   duration: z.string().min(1, 'Duration is required'),
   cause: z.string().min(1, 'Cause is required'),
   impact: z.string().min(1, 'Impact description is required'),
-  skillsDeployed: z.string().min(1, 'Skills deployed is required'),
   personalWhy: z.string().min(1, 'Personal motivation is required'),
 });
 
@@ -32,10 +35,20 @@ interface VolunteerFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   volunteering?: Volunteering | null;
+  availableSkills: string[];
   onSave: (volunteering: Omit<Volunteering, 'id'>) => void;
 }
 
-export function VolunteerForm({ open, onOpenChange, volunteering, onSave }: VolunteerFormProps) {
+export function VolunteerForm({
+  open,
+  onOpenChange,
+  volunteering,
+  availableSkills,
+  onSave,
+}: VolunteerFormProps) {
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [skillsError, setSkillsError] = useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -50,7 +63,6 @@ export function VolunteerForm({ open, onOpenChange, volunteering, onSave }: Volu
       duration: '',
       cause: '',
       impact: '',
-      skillsDeployed: '',
       personalWhy: '',
     },
   });
@@ -64,9 +76,9 @@ export function VolunteerForm({ open, onOpenChange, volunteering, onSave }: Volu
           duration: volunteering.duration,
           cause: volunteering.cause,
           impact: volunteering.impact,
-          skillsDeployed: volunteering.skillsDeployed,
           personalWhy: volunteering.personalWhy,
         });
+        setSelectedSkills(mapLegacySkillsToAvailable(volunteering.skillsDeployed, availableSkills));
       } else {
         reset({
           title: '',
@@ -74,16 +86,23 @@ export function VolunteerForm({ open, onOpenChange, volunteering, onSave }: Volu
           duration: '',
           cause: '',
           impact: '',
-          skillsDeployed: '',
           personalWhy: '',
         });
+        setSelectedSkills([]);
       }
+      setSkillsError(null);
     }
-  }, [open, volunteering, reset]);
+  }, [open, volunteering, reset, availableSkills]);
 
   const onSubmit = (data: VolunteerFormData) => {
+    if (selectedSkills.length === 0) {
+      setSkillsError('Select at least one skill');
+      return;
+    }
+
     onSave({
       ...data,
+      skillsDeployed: serializeSelectedSkills(selectedSkills),
       verified: false,
     });
     onOpenChange(false);
@@ -237,20 +256,35 @@ export function VolunteerForm({ open, onOpenChange, volunteering, onSave }: Volu
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <Label htmlFor="skillsDeployed">
+              <Label htmlFor="volunteer-skills-picker">
                 Skills Deployed <span className="text-red-500">*</span>
               </Label>
-              <textarea
-                id="skillsDeployed"
-                {...register('skillsDeployed')}
-                placeholder="What skills and expertise did you contribute?"
-                className={`flex min-h-[80px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${
-                  errors.skillsDeployed ? 'border-red-500' : ''
-                }`}
-              />
-              {errors.skillsDeployed && (
-                <p className="text-xs text-red-500">{errors.skillsDeployed.message}</p>
+              {availableSkills.length === 0 ? (
+                <div className="space-y-3 rounded-md border border-amber-200 bg-amber-50/40 p-3">
+                  <p className="text-sm text-amber-900">
+                    You need skills in your Expertise Atlas before adding volunteer work.
+                  </p>
+                  <Button asChild type="button" variant="outline" size="sm">
+                    <Link href="/app/i/expertise">Go to Expertise Atlas</Link>
+                  </Button>
+                </div>
+              ) : (
+                <ProfileSkillPicker
+                  inputId="volunteer-skills-picker"
+                  availableSkills={availableSkills}
+                  selectedSkills={selectedSkills}
+                  onChange={(nextSkills) => {
+                    setSelectedSkills(nextSkills);
+                    if (nextSkills.length > 0) {
+                      setSkillsError(null);
+                    }
+                  }}
+                />
               )}
+              <p className="text-xs text-muted-foreground">
+                Choose only from your existing Expertise Atlas skills
+              </p>
+              {skillsError ? <p className="text-xs text-red-500">{skillsError}</p> : null}
             </motion.div>
 
             {/* Guidance */}
@@ -271,7 +305,9 @@ export function VolunteerForm({ open, onOpenChange, volunteering, onSave }: Volu
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit">{volunteering ? 'Save Changes' : 'Add Volunteer Work'}</Button>
+            <Button type="submit" disabled={availableSkills.length === 0}>
+              {volunteering ? 'Save Changes' : 'Add Volunteer Work'}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

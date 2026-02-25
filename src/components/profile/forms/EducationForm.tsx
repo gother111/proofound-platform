@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import {
   Dialog,
   DialogContent,
@@ -12,19 +13,28 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Education } from '@/types/profile';
 import { motion } from 'framer-motion';
+import { ProfileSkillPicker } from './ProfileSkillPicker';
+import { mapLegacySkillsToAvailable, serializeSelectedSkills } from './skill-selection-utils';
 
 interface EducationFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   education?: Education | null;
+  availableSkills: string[];
   onSave: (education: Omit<Education, 'id'>) => void;
 }
 
-export function EducationForm({ open, onOpenChange, education, onSave }: EducationFormProps) {
+export function EducationForm({
+  open,
+  onOpenChange,
+  education,
+  availableSkills,
+  onSave,
+}: EducationFormProps) {
   const [institution, setInstitution] = useState('');
   const [degree, setDegree] = useState('');
   const [duration, setDuration] = useState('');
-  const [skills, setSkills] = useState('');
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [projects, setProjects] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -34,18 +44,18 @@ export function EducationForm({ open, onOpenChange, education, onSave }: Educati
         setInstitution(education.institution);
         setDegree(education.degree);
         setDuration(education.duration);
-        setSkills(education.skills);
+        setSelectedSkills(mapLegacySkillsToAvailable(education.skills, availableSkills));
         setProjects(education.projects);
       } else {
         setInstitution('');
         setDegree('');
         setDuration('');
-        setSkills('');
+        setSelectedSkills([]);
         setProjects('');
       }
       setErrors({});
     }
-  }, [open, education]);
+  }, [open, education, availableSkills]);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -53,7 +63,7 @@ export function EducationForm({ open, onOpenChange, education, onSave }: Educati
     if (!institution.trim()) newErrors.institution = 'Institution name is required';
     if (!degree.trim()) newErrors.degree = 'Degree/Program is required';
     if (!duration.trim()) newErrors.duration = 'Duration is required';
-    if (!skills.trim()) newErrors.skills = 'Skills gained is required';
+    if (selectedSkills.length === 0) newErrors.skills = 'Select at least one skill';
     if (!projects.trim()) newErrors.projects = 'Meaningful projects is required';
 
     setErrors(newErrors);
@@ -67,7 +77,7 @@ export function EducationForm({ open, onOpenChange, education, onSave }: Educati
       institution: institution.trim(),
       degree: degree.trim(),
       duration: duration.trim(),
-      skills: skills.trim(),
+      skills: serializeSelectedSkills(selectedSkills),
       projects: projects.trim(),
       verified: false,
     });
@@ -155,19 +165,34 @@ export function EducationForm({ open, onOpenChange, education, onSave }: Educati
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <Label htmlFor="skills">
+              <Label htmlFor="education-skills-picker">
                 Skills Gained <span className="text-red-500">*</span>
               </Label>
-              <textarea
-                id="skills"
-                value={skills}
-                onChange={(e) => setSkills(e.target.value)}
-                placeholder="List the practical skills and knowledge you gained"
-                className={`flex min-h-[100px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${
-                  errors.skills ? 'border-red-500' : ''
-                }`}
-              />
-              <p className="text-xs text-muted-foreground">Focus on practical, applicable skills</p>
+              {availableSkills.length === 0 ? (
+                <div className="space-y-3 rounded-md border border-amber-200 bg-amber-50/40 p-3">
+                  <p className="text-sm text-amber-900">
+                    You need skills in your Expertise Atlas before adding education entries.
+                  </p>
+                  <Button asChild type="button" variant="outline" size="sm">
+                    <Link href="/app/i/expertise">Go to Expertise Atlas</Link>
+                  </Button>
+                </div>
+              ) : (
+                <ProfileSkillPicker
+                  inputId="education-skills-picker"
+                  availableSkills={availableSkills}
+                  selectedSkills={selectedSkills}
+                  onChange={(nextSkills) => {
+                    setSelectedSkills(nextSkills);
+                    if (nextSkills.length > 0) {
+                      setErrors((prev) => ({ ...prev, skills: '' }));
+                    }
+                  }}
+                />
+              )}
+              <p className="text-xs text-muted-foreground">
+                Choose only from your existing Expertise Atlas skills
+              </p>
               {errors.skills && <p className="text-xs text-red-500">{errors.skills}</p>}
             </motion.div>
 
@@ -211,7 +236,7 @@ export function EducationForm({ open, onOpenChange, education, onSave }: Educati
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button type="button" onClick={handleSave}>
+          <Button type="button" onClick={handleSave} disabled={availableSkills.length === 0}>
             {education ? 'Save Changes' : 'Add Education'}
           </Button>
         </DialogFooter>

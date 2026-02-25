@@ -604,6 +604,7 @@ export const skillVerificationRequests = pgTable('skill_verification_requests', 
   requesterProfileId: uuid('requester_profile_id')
     .references(() => profiles.id, { onDelete: 'cascade' })
     .notNull(),
+  verificationToken: text('verification_token').notNull(),
   verifierEmail: text('verifier_email').notNull(),
   verifierProfileId: uuid('verifier_profile_id').references(() => profiles.id, {
     onDelete: 'set null',
@@ -621,6 +622,57 @@ export const skillVerificationRequests = pgTable('skill_verification_requests', 
   responseMessage: text('response_message'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   expiresAt: timestamp('expires_at').default(sql`NOW() + INTERVAL '30 days'`),
+});
+
+// Impact Story Verification Requests - claim-based verification for impact stories
+export const impactStoryVerificationRequests = pgTable('impact_story_verification_requests', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  impactStoryId: uuid('impact_story_id')
+    .references(() => impactStories.id, { onDelete: 'cascade' })
+    .notNull(),
+  requesterProfileId: uuid('requester_profile_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  verifierEmail: text('verifier_email').notNull(),
+  verifierName: text('verifier_name'),
+  verifierRelationship: text('verifier_relationship'),
+  message: text('message'),
+  token: text('token').notNull().unique(),
+  status: text('status', {
+    enum: ['pending', 'accepted', 'declined', 'expired', 'failed'],
+  })
+    .notNull()
+    .default('pending'),
+  expiresAt: timestamp('expires_at').notNull(),
+  claimSnapshot: jsonb('claim_snapshot')
+    .default(sql`'{}'::jsonb`)
+    .notNull(),
+  responseMessage: text('response_message'),
+  respondedAt: timestamp('responded_at'),
+  emailSentAt: timestamp('email_sent_at'),
+  emailError: text('email_error'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Impact Story Verification Responses - verifier-level claim confirmations
+export const impactStoryVerificationResponses = pgTable('impact_story_verification_responses', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  requestId: uuid('request_id')
+    .references(() => impactStoryVerificationRequests.id, { onDelete: 'cascade' })
+    .notNull(),
+  responderEmail: text('responder_email'),
+  action: text('action', {
+    enum: ['accept', 'decline'],
+  }).notNull(),
+  confirmedRole: boolean('confirmed_role').default(false).notNull(),
+  confirmedArtifacts: boolean('confirmed_artifacts').default(false).notNull(),
+  confirmedOutcomeIds: text('confirmed_outcome_ids')
+    .array()
+    .default(sql`'{}'::text[]`)
+    .notNull(),
+  responseNote: text('response_note'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
 // Assignment templates - reusable presets for assignment creation
@@ -938,27 +990,62 @@ export const impactStories = pgTable('impact_stories', {
   businessValue: text('business_value').notNull(), // Broader impact
   outcomes: text('outcomes').notNull(), // Measurable results
   timeline: text('timeline').notNull(),
+  timelineStructured: jsonb('timeline_structured')
+    .default(sql`'{}'::jsonb`)
+    .notNull(),
+  affiliationType: text('affiliation_type', {
+    enum: ['organization', 'individual'],
+  }),
+  affiliationDetails: text('affiliation_details'),
+  roleTitle: text('role_title'),
+  roleScope: text('role_scope', {
+    enum: ['owned', 'co_led', 'contributed'],
+  }),
+  primaryCause: text('primary_cause'),
+  secondaryCauses: text('secondary_causes')
+    .array()
+    .default(sql`'{}'::text[]`)
+    .notNull(),
+  measuredOutcomes: jsonb('measured_outcomes')
+    .default(sql`'[]'::jsonb`)
+    .notNull(),
+  supportingArtifacts: jsonb('supporting_artifacts')
+    .default(sql`'[]'::jsonb`)
+    .notNull(),
   verified: boolean('verified').default(false),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-// Experiences - work experience focused on growth and learning
-export const experiences = pgTable('experiences', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id')
-    .references(() => profiles.id, { onDelete: 'cascade' })
-    .notNull(),
-  projectId: uuid('project_id').references(() => projects.id, { onDelete: 'set null' }),
-  title: text('title').notNull(), // "Leading systemic change" not "Director"
-  orgDescription: text('org_description').notNull(), // Size, industry, location
-  duration: text('duration').notNull(),
-  learning: text('learning').notNull(), // What they learned
-  growth: text('growth').notNull(), // How they grew
-  verified: boolean('verified').default(false),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+// Experiences - work experience with timeline, outcomes, and collaboration context
+export const experiences = pgTable(
+  'experiences',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
+      .references(() => profiles.id, { onDelete: 'cascade' })
+      .notNull(),
+    projectId: uuid('project_id').references(() => projects.id, { onDelete: 'set null' }),
+    title: text('title').notNull(), // "Leading systemic change" not "Director"
+    orgDescription: text('org_description').notNull(), // Size, industry, location
+    duration: text('duration').notNull(),
+    startDate: date('start_date'),
+    endDate: date('end_date'),
+    outcomes: text('outcomes').notNull(), // Measurable outcomes
+    projects: text('projects').notNull(), // Key projects and initiatives
+    colleagues: text('colleagues').notNull(), // Collaboration and team context
+    achievements: text('achievements').notNull(), // Notable achievements
+    verified: boolean('verified').default(false),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    dateOrderCheck: check(
+      'experiences_date_order_check',
+      sql`${table.endDate} IS NULL OR ${table.startDate} IS NULL OR ${table.endDate} >= ${table.startDate}`
+    ),
+  })
+);
 
 // Education - focused on skills and meaningful projects
 export const education = pgTable('education', {
@@ -2070,6 +2157,12 @@ export type VerificationRequest = typeof verificationRequests.$inferSelect;
 export type InsertVerificationRequest = typeof verificationRequests.$inferInsert;
 export type VerificationResponse = typeof verificationResponses.$inferSelect;
 export type InsertVerificationResponse = typeof verificationResponses.$inferInsert;
+export type ImpactStoryVerificationRequest = typeof impactStoryVerificationRequests.$inferSelect;
+export type InsertImpactStoryVerificationRequest =
+  typeof impactStoryVerificationRequests.$inferInsert;
+export type ImpactStoryVerificationResponse = typeof impactStoryVerificationResponses.$inferSelect;
+export type InsertImpactStoryVerificationResponse =
+  typeof impactStoryVerificationResponses.$inferInsert;
 export type VerificationAppeal = typeof verificationAppeals.$inferSelect;
 export type InsertVerificationAppeal = typeof verificationAppeals.$inferInsert;
 export type OrgVerification = typeof orgVerification.$inferSelect;

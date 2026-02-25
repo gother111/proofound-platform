@@ -22,6 +22,50 @@ export interface Skill {
   verified: boolean;
 }
 
+export type ImpactStoryTimelineMode = 'single' | 'range';
+export type ImpactStoryTimelinePrecision = 'date' | 'year';
+export type ImpactStoryAffiliationType = 'organization' | 'individual';
+export type ImpactStoryRoleScope = 'owned' | 'co_led' | 'contributed';
+export type ImpactStoryOutcomeValueMode = 'delta' | 'absolute';
+export type ImpactStoryOutcomeConfidence = 'exact' | 'estimated' | 'directional';
+export type ImpactStoryArtifactKind = 'link' | 'file' | 'video' | 'doc' | 'image' | 'other';
+
+export interface ImpactStoryTimeline {
+  mode: ImpactStoryTimelineMode;
+  precision: ImpactStoryTimelinePrecision;
+  start: string;
+  end?: string | null;
+  ongoing?: boolean;
+}
+
+export interface ImpactStoryOutcome {
+  id: string;
+  label: string;
+  value: number;
+  unit: string;
+  valueMode: ImpactStoryOutcomeValueMode;
+  timeframe: string;
+  baseline?: number | null;
+  after?: number | null;
+  confidence?: ImpactStoryOutcomeConfidence | null;
+}
+
+export interface ImpactStoryArtifact {
+  id: string;
+  kind: ImpactStoryArtifactKind;
+  title: string;
+  url: string;
+  filePath?: string | null;
+  mimeType?: string | null;
+}
+
+export interface ImpactStoryVerificationRequestInput {
+  verifierEmail: string;
+  verifierName?: string | null;
+  verifierRelationship?: string | null;
+  message?: string | null;
+}
+
 export interface ImpactStory {
   id: string;
   title: string;
@@ -31,6 +75,17 @@ export interface ImpactStory {
   outcomes: string;
   timeline: string;
   verified: boolean | null;
+  timelineStructured?: ImpactStoryTimeline | null;
+  affiliationType?: ImpactStoryAffiliationType | null;
+  affiliationDetails?: string | null;
+  roleTitle?: string | null;
+  roleScope?: ImpactStoryRoleScope | null;
+  primaryCause?: string | null;
+  secondaryCauses?: string[];
+  measuredOutcomes?: ImpactStoryOutcome[];
+  supportingArtifacts?: ImpactStoryArtifact[];
+  verificationRequest?: ImpactStoryVerificationRequestInput | null;
+  verificationWarning?: string | null;
 }
 
 export interface Experience {
@@ -38,8 +93,12 @@ export interface Experience {
   title: string;
   orgDescription: string;
   duration: string;
-  learning: string;
-  growth: string;
+  outcomes: string;
+  projects: string;
+  colleagues: string;
+  achievements: string;
+  startDate?: string | null;
+  endDate?: string | null;
   verified: boolean | null;
 }
 

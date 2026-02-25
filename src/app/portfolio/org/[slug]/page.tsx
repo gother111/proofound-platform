@@ -1,10 +1,21 @@
 import type { ReactNode } from 'react';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Briefcase, Building2, Globe2, ShieldCheck, Sparkles, Users } from 'lucide-react';
+import {
+  ArrowLeft,
+  Briefcase,
+  Building2,
+  Globe2,
+  ShieldCheck,
+  Sparkles,
+  Users,
+} from 'lucide-react';
+import { sanitizeReturnPath } from '@/lib/navigation/sanitize-return-path';
 import { ShareLinkButton } from '../../[handle]/ShareLinkButton';
 
 const FALLBACK_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
@@ -31,10 +42,16 @@ function toValueLabels(values: unknown): string[] {
 
 export default async function OrganizationPortfolioPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams?: Promise<{ returnTo?: string | string[] }>;
 }) {
   const { slug } = await params;
+  const resolvedSearchParams = (await searchParams) ?? {};
+  const returnPath = sanitizeReturnPath(resolvedSearchParams.returnTo, '/');
+  const returnLabel = returnPath.startsWith('/app/') ? 'Return to menu' : 'Return home';
+
   const supabase = await createClient();
 
   const { data: organization } = await supabase
@@ -118,6 +135,12 @@ export default async function OrganizationPortfolioPage({
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
+              <Button variant="outline" size="sm" asChild>
+                <Link href={returnPath} className="inline-flex items-center gap-1.5">
+                  <ArrowLeft className="h-4 w-4" />
+                  {returnLabel}
+                </Link>
+              </Button>
               <ShareLinkButton url={shareUrl} />
               {organization.website ? (
                 <a
