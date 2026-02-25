@@ -59,6 +59,8 @@ const org = {
   legalForm: null,
   foundedDate: null,
   website: null,
+  values: ['Integrity'],
+  causes: ['Climate Justice'],
 };
 
 describe('OrganizationBasicInfoEditor', () => {
@@ -96,6 +98,10 @@ describe('OrganizationBasicInfoEditor', () => {
 
     render(<OrganizationBasicInfoEditor org={org} canEdit={true} onSaved={onSaved} />);
 
+    fireEvent.change(screen.getByLabelText(/Add Core Value/i), {
+      target: { value: 'Transparency' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Add Value/i }));
     fireEvent.change(screen.getByLabelText(/Tagline/i), { target: { value: 'Trust-led hiring' } });
     fireEvent.change(screen.getByLabelText(/Industry/i), { target: { value: 'Technology' } });
     fireEvent.change(screen.getByLabelText(/Organization Size/i), { target: { value: '11-50' } });
@@ -111,6 +117,7 @@ describe('OrganizationBasicInfoEditor', () => {
     const payload = JSON.parse(requestInit.body);
 
     expect(payload.website).toBe('https://example.com/');
+    expect(payload.values).toEqual(['Integrity', 'Transparency']);
     expect(payload.tagline).toBe('Trust-led hiring');
     expect(payload.industry).toBe('Technology');
     expect(payload.organizationSize).toBe('11-50');
@@ -125,5 +132,27 @@ describe('OrganizationBasicInfoEditor', () => {
         description: 'Basic information has been saved successfully.',
       })
     );
+  });
+
+  it('blocks mission and vision save when core value or cause prerequisites are missing', async () => {
+    render(<OrganizationBasicInfoEditor org={{ ...org, values: [], causes: [] }} canEdit={true} />);
+
+    fireEvent.change(screen.getByLabelText(/Mission Statement/i), {
+      target: { value: 'Build trust first teams' },
+    });
+    fireEvent.submit(screen.getByRole('button', { name: /save changes/i }).closest('form')!);
+
+    expect(apiFetchMock).not.toHaveBeenCalled();
+    expect(toastMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Missing prerequisites',
+        description:
+          'Add at least one core value and at least one cause before setting mission or vision.',
+        variant: 'destructive',
+      })
+    );
+    expect(
+      screen.getByText(/Add at least one value before setting mission or vision/i)
+    ).toBeInTheDocument();
   });
 });

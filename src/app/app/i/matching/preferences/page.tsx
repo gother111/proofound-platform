@@ -25,7 +25,7 @@ export default async function MatchingPreferencesPage() {
   }
 
   return (
-    <div className="container max-w-4xl py-8">
+    <div className="mx-auto w-full max-w-4xl px-4 py-8">
       <div className="space-y-2 mb-8">
         <h1 className="text-3xl font-bold">Matching Preferences</h1>
         <p className="text-muted-foreground">

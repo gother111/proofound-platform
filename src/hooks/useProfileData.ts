@@ -230,8 +230,10 @@ export function useProfileData() {
       if (!profile) return;
       setProfile((prev) => (prev ? { ...prev, mission } : prev));
       startTransition(() => {
-        runWithPending('mission', () => updateMissionAction(mission, visibility)).catch(() => {
-          toast.error('Failed to update mission.');
+        runWithPending('mission', () => updateMissionAction(mission, visibility)).catch((error) => {
+          toast.error(
+            error instanceof Error && error.message ? error.message : 'Failed to update mission.'
+          );
         });
       });
     },
@@ -243,8 +245,10 @@ export function useProfileData() {
       if (!profile) return;
       setProfile((prev) => (prev ? { ...prev, vision } : prev));
       startTransition(() => {
-        runWithPending('vision', () => updateVisionAction(vision, visibility)).catch(() => {
-          toast.error('Failed to update vision.');
+        runWithPending('vision', () => updateVisionAction(vision, visibility)).catch((error) => {
+          toast.error(
+            error instanceof Error && error.message ? error.message : 'Failed to update vision.'
+          );
         });
       });
     },

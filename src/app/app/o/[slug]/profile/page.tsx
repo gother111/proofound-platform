@@ -1,6 +1,7 @@
 import { requireAuth, getActiveOrg } from '@/lib/auth';
 import { notFound } from 'next/navigation';
 import { OrganizationProfileView } from '@/components/profile/OrganizationProfileView';
+import { normalizeOrganizationValues } from '@/lib/organizations/normalizeValues';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,7 +23,7 @@ type ClientOrganizationProfile = {
   organizationSize: string | null;
   impactArea: string | null;
   legalForm: string | null;
-  values: unknown;
+  values: string[] | null;
   causes: string[] | null;
   workCulture: unknown;
   locations: string[] | null;
@@ -42,6 +43,7 @@ export default async function OrganizationProfilePage({
   }
 
   const { org, membership } = result;
+  const normalizedValues = normalizeOrganizationValues(org.values);
 
   // Check if user can edit
   const canEdit = membership.role === 'owner' || membership.role === 'admin';
@@ -51,7 +53,7 @@ export default async function OrganizationProfilePage({
   const hasBusinessDetails = Boolean(
     org.industry || org.organizationSize || org.impactArea || org.legalForm
   );
-  const hasExtendedInfo = Boolean(org.values || org.workCulture || org.legalName);
+  const hasExtendedInfo = Boolean(normalizedValues.length > 0 || org.workCulture || org.legalName);
 
   const isEmptyProfile = !hasBasicInfo && !hasBusinessDetails && !hasExtendedInfo;
 
@@ -68,7 +70,7 @@ export default async function OrganizationProfilePage({
     org.foundedDate,
     org.legalName,
     org.website,
-    org.values,
+    normalizedValues.length > 0 ? normalizedValues : null,
     org.workCulture,
   ];
   const completedFields = completionFields.filter((field) => Boolean(field)).length;
@@ -98,7 +100,7 @@ export default async function OrganizationProfilePage({
     organizationSize: org.organizationSize,
     impactArea: org.impactArea,
     legalForm: org.legalForm,
-    values: org.values ?? null,
+    values: normalizedValues.length > 0 ? normalizedValues : null,
     causes: org.causes ?? null,
     workCulture: org.workCulture ?? null,
     locations: org.locations ?? null,

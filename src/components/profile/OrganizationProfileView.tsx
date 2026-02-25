@@ -35,6 +35,7 @@ type OrganizationProfile = {
   organizationSize: string | null;
   impactArea: string | null;
   legalForm: string | null;
+  values: string[] | null;
   causes: string[] | null;
   workCulture: unknown;
   locations: string[] | null;

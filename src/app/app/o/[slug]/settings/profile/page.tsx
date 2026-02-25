@@ -1,5 +1,6 @@
 import { OrganizationBasicInfoEditor } from '@/components/organization/OrganizationBasicInfoEditor';
 import { getActiveOrg, requireAuth } from '@/lib/auth';
+import { normalizeOrganizationValues } from '@/lib/organizations/normalizeValues';
 import { notFound, redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
@@ -18,6 +19,10 @@ export default async function OrganizationProfileSettingsPage({
   }
 
   const { org, membership } = result;
+  const normalizedValues = normalizeOrganizationValues(org.values);
+  const normalizedCauses = Array.isArray(org.causes)
+    ? org.causes.filter((cause): cause is string => typeof cause === 'string')
+    : [];
   const canManageSettings = membership.role === 'owner' || membership.role === 'admin';
   if (!canManageSettings) {
     redirect(`/app/o/${slug}/home`);
@@ -53,6 +58,8 @@ export default async function OrganizationProfileSettingsPage({
                 ? String(org.foundedDate)
                 : null,
           website: org.website,
+          values: normalizedValues,
+          causes: normalizedCauses,
         }}
         canEdit={canManageSettings}
       />

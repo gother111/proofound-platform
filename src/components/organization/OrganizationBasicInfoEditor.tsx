@@ -5,10 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api/fetch';
 import { normalizeOrganizationWebsite } from '@/lib/organizations/normalizeWebsite';
+import { normalizeOrganizationValues } from '@/lib/organizations/normalizeValues';
 import {
   LEGAL_FORM_OPTIONS,
   type LegalFormValue,
@@ -17,6 +19,7 @@ import {
   ORGANIZATION_SIZE_OPTIONS,
   ORGANIZATION_SIZE_VALUES,
 } from '@/lib/organizations/profile-options';
+import { Plus, X } from 'lucide-react';
 
 interface OrganizationBasicInfoEditorProps {
   org: {
@@ -32,6 +35,8 @@ interface OrganizationBasicInfoEditorProps {
     legalForm: string | null;
     foundedDate: string | null;
     website: string | null;
+    values: string[] | null;
+    causes: string[] | null;
   };
   canEdit: boolean;
   onSaved?: () => void;
@@ -45,11 +50,43 @@ export function OrganizationBasicInfoEditor({
   const { toast } = useToast();
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
+  const [values, setValues] = useState<string[]>(() => normalizeOrganizationValues(org.values));
+  const [newValue, setNewValue] = useState('');
+  const [valueError, setValueError] = useState<string | null>(null);
 
   const isOrganizationSizeValue = (value: string): value is OrganizationSizeValue =>
     ORGANIZATION_SIZE_VALUES.some((option) => option === value);
   const isLegalFormValue = (value: string): value is LegalFormValue =>
     LEGAL_FORM_VALUES.some((option) => option === value);
+  const hasCauses = Array.isArray(org.causes) && org.causes.length > 0;
+
+  const handleAddValue = () => {
+    const trimmed = newValue.trim();
+
+    if (!trimmed) {
+      setValueError('Value cannot be empty.');
+      return;
+    }
+
+    if (values.includes(trimmed)) {
+      setValueError('Value already added.');
+      return;
+    }
+
+    if (values.length >= 5) {
+      setValueError('Maximum of 5 core values allowed.');
+      return;
+    }
+
+    setValues((prev) => [...prev, trimmed]);
+    setNewValue('');
+    setValueError(null);
+  };
+
+  const handleRemoveValue = (valueToRemove: string) => {
+    setValues((prev) => prev.filter((value) => value !== valueToRemove));
+    setValueError(null);
+  };
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -70,6 +107,8 @@ export function OrganizationBasicInfoEditor({
     const legalFormRaw = String(formData.get('legalForm') ?? '').trim();
     const foundedDateRaw = String(formData.get('foundedDate') ?? '').trim();
     const websiteInput = String(formData.get('website') ?? '');
+    const hasValues = values.length > 0;
+    const isSettingPurpose = mission.length > 0 || vision.length > 0;
 
     if (!displayName) {
       toast({
@@ -97,6 +136,23 @@ export function OrganizationBasicInfoEditor({
       return;
     }
 
+    if (isSettingPurpose && (!hasValues || !hasCauses)) {
+      const missingRequirements: string[] = [];
+      if (!hasValues) {
+        missingRequirements.push('at least one core value');
+      }
+      if (!hasCauses) {
+        missingRequirements.push('at least one cause');
+      }
+
+      toast({
+        title: 'Missing prerequisites',
+        description: `Add ${missingRequirements.join(' and ')} before setting mission or vision.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsPending(true);
     try {
       const response = await apiFetch(`/api/organizations/${org.id}`, {
@@ -114,6 +170,7 @@ export function OrganizationBasicInfoEditor({
           legalForm,
           foundedDate,
           website: normalizedWebsite.value,
+          values: values.length > 0 ? values : null,
         }),
       });
 
@@ -176,6 +233,69 @@ export function OrganizationBasicInfoEditor({
               placeholder="Legal company name"
               className="border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
             />
+          </div>
+
+          <div>
+            <Label className="text-proofound-charcoal dark:text-foreground">Core Values</Label>
+            <p className="text-xs text-proofound-charcoal/70 dark:text-muted-foreground mt-1 mb-3">
+              Add at least one value before setting mission or vision. Maximum 5 values.
+            </p>
+            {values.length > 0 ? (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {values.map((value) => (
+                  <Badge key={value} variant="outline" className="gap-1.5 py-1">
+                    {value}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveValue(value)}
+                      className="inline-flex items-center"
+                      aria-label={`Remove ${value}`}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            ) : null}
+            <div className="flex gap-2">
+              <Input
+                id="newCoreValue"
+                name="newCoreValue"
+                value={newValue}
+                onChange={(event) => setNewValue(event.target.value)}
+                placeholder="Add core value (for example: Integrity)"
+                className="border-proofound-stone dark:border-border focus-visible:ring-proofound-forest"
+                maxLength={80}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault();
+                    handleAddValue();
+                  }
+                }}
+                aria-label="Add Core Value"
+                disabled={values.length >= 5}
+              />
+              <Button
+                type="button"
+                onClick={handleAddValue}
+                variant="outline"
+                disabled={values.length >= 5}
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add Value
+              </Button>
+            </div>
+            <p className="text-xs text-proofound-charcoal/60 dark:text-muted-foreground/60 mt-1">
+              {values.length}/5 values added
+            </p>
+            {valueError ? (
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1">{valueError}</p>
+            ) : null}
+            <p className="text-xs text-proofound-charcoal/70 dark:text-muted-foreground mt-3">
+              {hasCauses
+                ? 'Causes prerequisite is met.'
+                : 'Add at least one cause in the Causes panel before setting mission or vision.'}
+            </p>
           </div>
 
           <div>

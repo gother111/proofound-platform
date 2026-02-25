@@ -24,14 +24,32 @@ function buildPutRequest(body: Record<string, unknown>) {
   });
 }
 
-function mockMembership(role: 'owner' | 'admin' | 'member' | null) {
-  (db.select as any).mockReturnValue({
+function buildSelectChain(rows: unknown[]) {
+  return {
     from: vi.fn().mockReturnValue({
       where: vi.fn().mockReturnValue({
-        limit: vi.fn().mockResolvedValue(role ? [{ role }] : []),
+        limit: vi.fn().mockResolvedValue(rows),
       }),
     }),
-  });
+  };
+}
+
+function mockMembership(
+  role: 'owner' | 'admin' | 'member' | null,
+  orgState?: { mission?: string | null; vision?: string | null; values?: unknown; causes?: unknown }
+) {
+  (db.select as any)
+    .mockImplementationOnce(() => buildSelectChain(role ? [{ role }] : []))
+    .mockImplementationOnce(() =>
+      buildSelectChain([
+        {
+          mission: orgState?.mission ?? null,
+          vision: orgState?.vision ?? null,
+          values: orgState?.values ?? [],
+          causes: orgState?.causes ?? [],
+        },
+      ])
+    );
 }
 
 function mockUpdateReturningOrganization() {
@@ -45,7 +63,7 @@ function mockUpdateReturningOrganization() {
 
 describe('organizations [orgId] route', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     (requireAuth as any).mockResolvedValue({ id: 'user-1' });
   });
 
@@ -155,6 +173,7 @@ describe('organizations [orgId] route', () => {
     let response = await PUT(buildPutRequest({ foundedDate: null }), params);
     expect(response.status).toBe(200);
 
+    mockMembership('owner');
     response = await PUT(buildPutRequest({ foundedDate: '2024-02-29' }), params);
     expect(response.status).toBe(200);
     expect(setMock).toHaveBeenCalledWith(expect.objectContaining({ foundedDate: '2024-02-29' }));
@@ -197,6 +216,98 @@ describe('organizations [orgId] route', () => {
         organizationSize: '11-50',
         legalForm: 'llc',
         industry: 'Tech',
+      })
+    );
+  });
+
+  it('returns 400 when values is not an array', async () => {
+    mockMembership('owner');
+
+    const response = await PUT(buildPutRequest({ values: 'integrity' as any }), params);
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe('Values must be an array of non-empty strings or null');
+    expect(db.update).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when values includes empty or non-string values', async () => {
+    mockMembership('owner');
+
+    const response = await PUT(buildPutRequest({ values: ['Integrity', '', 123] as any }), params);
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe('Values must contain non-empty strings only');
+    expect(db.update).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when values exceeds max allowed', async () => {
+    mockMembership('owner');
+
+    const response = await PUT(
+      buildPutRequest({
+        values: ['Integrity', 'Transparency', 'Trust', 'Care', 'Impact', 'Inclusion'],
+      }),
+      params
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe('Maximum of 5 values allowed');
+    expect(db.update).not.toHaveBeenCalled();
+  });
+
+  it('rejects mission update when core values are missing', async () => {
+    mockMembership('owner', {
+      values: [],
+      causes: ['Climate Justice'],
+    });
+
+    const response = await PUT(buildPutRequest({ mission: 'Build trust-led teams' }), params);
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe('Add at least one core value before updating mission or vision.');
+    expect(db.update).not.toHaveBeenCalled();
+  });
+
+  it('rejects vision update when causes are missing', async () => {
+    mockMembership('owner', {
+      values: ['Integrity'],
+      causes: [],
+    });
+
+    const response = await PUT(buildPutRequest({ vision: 'A fair future of work' }), params);
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe('Add at least one cause before updating mission or vision.');
+    expect(db.update).not.toHaveBeenCalled();
+  });
+
+  it('allows mission update when values and causes exist in resulting state', async () => {
+    mockMembership('owner', {
+      values: [],
+      causes: [],
+    });
+    const { setMock } = mockUpdateReturningOrganization();
+
+    const response = await PUT(
+      buildPutRequest({
+        mission: 'Build trust-led teams',
+        values: ['Integrity'],
+        causes: ['Climate Justice'],
+      }),
+      params
+    );
+
+    expect(response.status).toBe(200);
+    expect(setMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mission: 'Build trust-led teams',
+        values: ['Integrity'],
+        causes: ['Climate Justice'],
       })
     );
   });

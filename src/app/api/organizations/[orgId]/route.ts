@@ -5,6 +5,7 @@ import { organizations, organizationMembers } from '@/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { normalizeOrganizationWebsite } from '@/lib/organizations/normalizeWebsite';
 import { LEGAL_FORM_VALUES, ORGANIZATION_SIZE_VALUES } from '@/lib/organizations/profile-options';
+import { normalizeOrganizationValues } from '@/lib/organizations/normalizeValues';
 
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 const ORGANIZATION_SIZE_SET = new Set<string>(ORGANIZATION_SIZE_VALUES);
@@ -26,6 +27,54 @@ function isValidIsoDate(value: string): boolean {
     date.getUTCMonth() === month - 1 &&
     date.getUTCDate() === day
   );
+}
+
+function normalizeCauses(causes: unknown): string[] {
+  if (!Array.isArray(causes)) {
+    return [];
+  }
+
+  return causes
+    .filter((cause): cause is string => typeof cause === 'string')
+    .map((cause) => cause.trim())
+    .filter(Boolean);
+}
+
+function parseValuesPayload(values: unknown): { value?: string[] | null; error?: string } {
+  if (values === undefined) {
+    return {};
+  }
+
+  if (values === null) {
+    return { value: null };
+  }
+
+  if (!Array.isArray(values)) {
+    return { error: 'Values must be an array of non-empty strings or null' };
+  }
+
+  if (values.length > 5) {
+    return { error: 'Maximum of 5 values allowed' };
+  }
+
+  const normalized: string[] = [];
+  const seen = new Set<string>();
+
+  for (const value of values) {
+    if (typeof value !== 'string' || !value.trim()) {
+      return { error: 'Values must contain non-empty strings only' };
+    }
+
+    const trimmed = value.trim();
+    if (seen.has(trimmed)) {
+      continue;
+    }
+
+    seen.add(trimmed);
+    normalized.push(trimmed);
+  }
+
+  return { value: normalized };
 }
 
 // GET - Fetch organization details
@@ -114,6 +163,10 @@ export async function PUT(
       foundedDate,
       values,
     } = body;
+    const parsedValues = parseValuesPayload(values);
+    if (parsedValues.error) {
+      return NextResponse.json({ error: parsedValues.error }, { status: 400 });
+    }
 
     // Validate displayName if provided
     if (displayName !== undefined && (typeof displayName !== 'string' || !displayName.trim())) {
@@ -200,6 +253,69 @@ export async function PUT(
       }
     }
 
+    const [currentOrg] = await db
+      .select({
+        mission: organizations.mission,
+        vision: organizations.vision,
+        values: organizations.values,
+        causes: organizations.causes,
+      })
+      .from(organizations)
+      .where(eq(organizations.id, orgId))
+      .limit(1);
+
+    if (!currentOrg) {
+      return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
+    }
+
+    const nextValues =
+      values !== undefined
+        ? parsedValues.value === null
+          ? []
+          : (parsedValues.value ?? [])
+        : normalizeOrganizationValues(currentOrg.values);
+    const nextCauses =
+      causes !== undefined
+        ? causes === null
+          ? []
+          : normalizeCauses(causes)
+        : normalizeCauses(currentOrg.causes);
+
+    const nextMission =
+      mission !== undefined
+        ? typeof mission === 'string'
+          ? mission.trim()
+          : ''
+        : currentOrg.mission || '';
+    const nextVision =
+      vision !== undefined
+        ? typeof vision === 'string'
+          ? vision.trim()
+          : ''
+        : currentOrg.vision || '';
+    const isSettingPurpose =
+      (mission !== undefined && nextMission.length > 0) ||
+      (vision !== undefined && nextVision.length > 0);
+
+    if (isSettingPurpose) {
+      const missingRequirements: string[] = [];
+      if (nextValues.length === 0) {
+        missingRequirements.push('at least one core value');
+      }
+      if (nextCauses.length === 0) {
+        missingRequirements.push('at least one cause');
+      }
+
+      if (missingRequirements.length > 0) {
+        return NextResponse.json(
+          {
+            error: `Add ${missingRequirements.join(' and ')} before updating mission or vision.`,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     // Build update object with only provided fields
     const updateData: any = {
       updatedAt: new Date(),
@@ -226,7 +342,7 @@ export async function PUT(
     if (impactArea !== undefined) updateData.impactArea = impactArea?.trim() || null;
     if (legalForm !== undefined) updateData.legalForm = legalForm?.trim() || null;
     if (foundedDate !== undefined) updateData.foundedDate = foundedDate;
-    if (values !== undefined) updateData.values = values;
+    if (values !== undefined) updateData.values = parsedValues.value ?? null;
 
     // Update organization
     const [updatedOrg] = await db
