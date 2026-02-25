@@ -32,15 +32,17 @@ type ProfileDialogsProps = {
   isCausesEditorOpen: boolean;
   setIsCausesEditorOpen: Dispatch<SetStateAction<boolean>>;
   isImpactStoryFormOpen: boolean;
-  setIsImpactStoryFormOpen: Dispatch<SetStateAction<boolean>>;
+  setIsImpactStoryFormOpen: (open: boolean) => void;
   isExperienceFormOpen: boolean;
-  setIsExperienceFormOpen: Dispatch<SetStateAction<boolean>>;
+  setIsExperienceFormOpen: (open: boolean) => void;
   isEducationFormOpen: boolean;
   setIsEducationFormOpen: (open: boolean) => void;
   isVolunteerFormOpen: boolean;
   setIsVolunteerFormOpen: (open: boolean) => void;
   isShareDialogOpen: boolean;
   setIsShareDialogOpen: Dispatch<SetStateAction<boolean>>;
+  editingImpactStory: ImpactStory | null;
+  editingExperience: Experience | null;
   editingEducation: Education | null;
   editingVolunteering: Volunteering | null;
   availableSkillNames: string[];
@@ -50,7 +52,9 @@ type ProfileDialogsProps = {
   onReplaceValues: (values: Value[]) => void;
   onReplaceCauses: (causes: string[]) => void;
   onAddImpactStory: (story: Omit<ImpactStory, 'id'>) => Promise<void> | void;
+  onUpdateImpactStory: (id: string, story: Omit<ImpactStory, 'id'>) => Promise<void> | void;
   onAddExperience: (experience: Omit<Experience, 'id'>) => void;
+  onUpdateExperience: (id: string, experience: Omit<Experience, 'id'>) => Promise<void> | void;
   onAddEducation: (education: Omit<Education, 'id'>) => void;
   onUpdateEducation: (id: string, education: Omit<Education, 'id'>) => void;
   onAddVolunteering: (volunteering: Omit<Volunteering, 'id'>) => void;
@@ -79,6 +83,8 @@ export function ProfileDialogs({
   setIsVolunteerFormOpen,
   isShareDialogOpen,
   setIsShareDialogOpen,
+  editingImpactStory,
+  editingExperience,
   editingEducation,
   editingVolunteering,
   availableSkillNames,
@@ -88,7 +94,9 @@ export function ProfileDialogs({
   onReplaceValues,
   onReplaceCauses,
   onAddImpactStory,
+  onUpdateImpactStory,
   onAddExperience,
+  onUpdateExperience,
   onAddEducation,
   onUpdateEducation,
   onAddVolunteering,
@@ -135,12 +143,32 @@ export function ProfileDialogs({
       <ImpactStoryForm
         open={isImpactStoryFormOpen}
         onOpenChange={setIsImpactStoryFormOpen}
-        onSave={onAddImpactStory}
+        story={editingImpactStory}
+        onSave={(story) => {
+          if (editingImpactStory) {
+            onUpdateImpactStory(editingImpactStory.id, {
+              ...story,
+              verified: editingImpactStory.verified ?? false,
+            });
+            return;
+          }
+          onAddImpactStory(story);
+        }}
       />
       <ExperienceForm
         open={isExperienceFormOpen}
         onOpenChange={setIsExperienceFormOpen}
-        onSave={onAddExperience}
+        experience={editingExperience}
+        onSave={(experience) => {
+          if (editingExperience) {
+            onUpdateExperience(editingExperience.id, {
+              ...experience,
+              verified: editingExperience.verified ?? false,
+            });
+            return;
+          }
+          onAddExperience(experience);
+        }}
       />
       <EducationForm
         open={isEducationFormOpen}

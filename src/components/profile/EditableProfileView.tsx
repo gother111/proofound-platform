@@ -18,7 +18,7 @@ import { MobileProfileHeader } from '@/components/profile/MobileProfileHeader';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { evaluateIndividualProfileCompletion } from '@/lib/profile/completion-flow';
-import type { Education, Volunteering } from '@/types/profile';
+import type { Education, Experience, ImpactStory, Volunteering } from '@/types/profile';
 
 function resolvePortfolioGateMessage(lockReason: string | null): string {
   switch (lockReason) {
@@ -53,8 +53,10 @@ export function EditableProfileView() {
     replaceCauses,
     addImpactStory,
     deleteImpactStory,
+    updateImpactStory,
     addExperience,
     deleteExperience,
+    updateExperience,
     addEducation,
     deleteEducation,
     updateEducation,
@@ -86,6 +88,8 @@ export function EditableProfileView() {
     isShareDialogOpen,
     setIsShareDialogOpen,
   } = useProfileViewState();
+  const [editingImpactStory, setEditingImpactStory] = useState<ImpactStory | null>(null);
+  const [editingExperience, setEditingExperience] = useState<Experience | null>(null);
   const [editingEducation, setEditingEducation] = useState<Education | null>(null);
   const [editingVolunteering, setEditingVolunteering] = useState<Volunteering | null>(null);
 
@@ -166,6 +170,40 @@ export function EditableProfileView() {
     [profile?.skills]
   );
 
+  const openAddImpactStory = () => {
+    setEditingImpactStory(null);
+    setIsImpactStoryFormOpen(true);
+  };
+
+  const openEditImpactStory = (story: ImpactStory) => {
+    setEditingImpactStory(story);
+    setIsImpactStoryFormOpen(true);
+  };
+
+  const handleImpactStoryFormOpenChange = (open: boolean) => {
+    setIsImpactStoryFormOpen(open);
+    if (!open) {
+      setEditingImpactStory(null);
+    }
+  };
+
+  const openAddExperience = () => {
+    setEditingExperience(null);
+    setIsExperienceFormOpen(true);
+  };
+
+  const openEditExperience = (experience: Experience) => {
+    setEditingExperience(experience);
+    setIsExperienceFormOpen(true);
+  };
+
+  const handleExperienceFormOpenChange = (open: boolean) => {
+    setIsExperienceFormOpen(open);
+    if (!open) {
+      setEditingExperience(null);
+    }
+  };
+
   const openAddEducation = () => {
     setEditingEducation(null);
     setIsEducationFormOpen(true);
@@ -214,15 +252,17 @@ export function EditableProfileView() {
       isCausesEditorOpen={isCausesEditorOpen}
       setIsCausesEditorOpen={setIsCausesEditorOpen}
       isImpactStoryFormOpen={isImpactStoryFormOpen}
-      setIsImpactStoryFormOpen={setIsImpactStoryFormOpen}
+      setIsImpactStoryFormOpen={handleImpactStoryFormOpenChange}
       isExperienceFormOpen={isExperienceFormOpen}
-      setIsExperienceFormOpen={setIsExperienceFormOpen}
+      setIsExperienceFormOpen={handleExperienceFormOpenChange}
       isEducationFormOpen={isEducationFormOpen}
       setIsEducationFormOpen={handleEducationFormOpenChange}
       isVolunteerFormOpen={isVolunteerFormOpen}
       setIsVolunteerFormOpen={handleVolunteeringFormOpenChange}
       isShareDialogOpen={isShareDialogOpen}
       setIsShareDialogOpen={setIsShareDialogOpen}
+      editingImpactStory={editingImpactStory}
+      editingExperience={editingExperience}
       editingEducation={editingEducation}
       editingVolunteering={editingVolunteering}
       availableSkillNames={availableSkillNames}
@@ -232,7 +272,9 @@ export function EditableProfileView() {
       onReplaceValues={replaceValues}
       onReplaceCauses={replaceCauses}
       onAddImpactStory={addImpactStory}
+      onUpdateImpactStory={updateImpactStory}
       onAddExperience={addExperience}
+      onUpdateExperience={updateExperience}
       onAddEducation={addEducation}
       onUpdateEducation={updateEducation}
       onAddVolunteering={addVolunteering}
@@ -341,9 +383,11 @@ export function EditableProfileView() {
               volunteering={profile.volunteering}
               isPending={isPending}
               impactPending={pending.impactStory}
-              onAddImpactStory={() => setIsImpactStoryFormOpen(true)}
+              onAddImpactStory={openAddImpactStory}
+              onEditImpactStory={openEditImpactStory}
               onDeleteImpactStory={deleteImpactStory}
-              onAddExperience={() => setIsExperienceFormOpen(true)}
+              onAddExperience={openAddExperience}
+              onEditExperience={openEditExperience}
               onDeleteExperience={deleteExperience}
               onAddEducation={openAddEducation}
               onEditEducation={openEditEducation}

@@ -21,8 +21,10 @@ type ProfileTabsSectionProps = {
   isPending: boolean;
   impactPending: boolean;
   onAddImpactStory: () => void;
+  onEditImpactStory: (story: ImpactStory) => void;
   onDeleteImpactStory: (id: string) => void;
   onAddExperience: () => void;
+  onEditExperience: (experience: Experience) => void;
   onDeleteExperience: (id: string) => void;
   onAddEducation: () => void;
   onEditEducation: (education: Education) => void;
@@ -40,8 +42,10 @@ export function ProfileTabsSection({
   isPending,
   impactPending,
   onAddImpactStory,
+  onEditImpactStory,
   onDeleteImpactStory,
   onAddExperience,
+  onEditExperience,
   onDeleteExperience,
   onAddEducation,
   onEditEducation,
@@ -96,6 +100,7 @@ export function ProfileTabsSection({
       <ImpactTab
         impactStories={impactStories}
         onAddStory={onAddImpactStory}
+        onEditStory={onEditImpactStory}
         onDeleteStory={onDeleteImpactStory}
         actionsDisabled={impactPending || isPending}
       />
@@ -103,6 +108,7 @@ export function ProfileTabsSection({
       <JourneyTab
         experiences={experiences}
         onAddExperience={onAddExperience}
+        onEditExperience={onEditExperience}
         onDeleteExperience={onDeleteExperience}
       />
 

@@ -931,6 +931,81 @@ export async function createImpactStory(data: Omit<ImpactStory, 'id'>) {
   } as ImpactStoryCreateResult;
 }
 
+export async function updateImpactStory(id: string, data: Omit<ImpactStory, 'id'>) {
+  const user = await requireAuth();
+  const timelineText = formatTimelineForLegacy(data.timelineStructured, data.timeline);
+  const outcomesText = formatOutcomesForLegacy(data.measuredOutcomes, data.outcomes);
+  const legacyOrgDescription = buildLegacyOrgDescription(data);
+  const legacyImpact = buildLegacyImpact(data);
+  const legacyBusinessValue = buildLegacyBusinessValue(data);
+  const structuredUpdatePayload = {
+    title: data.title,
+    orgDescription: legacyOrgDescription,
+    impact: legacyImpact,
+    businessValue: legacyBusinessValue,
+    outcomes: outcomesText,
+    timeline: timelineText,
+    timelineStructured: data.timelineStructured || {},
+    affiliationType: data.affiliationType ?? null,
+    affiliationDetails: data.affiliationDetails ?? null,
+    roleTitle: data.roleTitle ?? null,
+    roleScope: data.roleScope ?? null,
+    primaryCause: data.primaryCause ?? null,
+    secondaryCauses: data.secondaryCauses ?? [],
+    measuredOutcomes: data.measuredOutcomes || [],
+    supportingArtifacts: data.supportingArtifacts || [],
+    verified: data.verified ?? false,
+  };
+  const legacyUpdatePayload = {
+    title: data.title,
+    orgDescription: legacyOrgDescription,
+    impact: legacyImpact,
+    businessValue: legacyBusinessValue,
+    outcomes: outcomesText,
+    timeline: timelineText,
+    verified: data.verified ?? false,
+  };
+  const structuredSchemaMarkers = [
+    'impact_stories',
+    'timeline_structured',
+    'affiliation_type',
+    'affiliation_details',
+    'role_title',
+    'role_scope',
+    'primary_cause',
+    'secondary_causes',
+    'measured_outcomes',
+    'supporting_artifacts',
+  ];
+
+  let updated: any;
+
+  try {
+    [updated] = await db
+      .update(impactStories)
+      .set(structuredUpdatePayload)
+      .where(and(eq(impactStories.id, id), eq(impactStories.userId, user.id)))
+      .returning();
+  } catch (error) {
+    if (!isSchemaDriftError(error, structuredSchemaMarkers)) {
+      throw error;
+    }
+
+    [updated] = await db
+      .update(impactStories)
+      .set(legacyUpdatePayload)
+      .where(and(eq(impactStories.id, id), eq(impactStories.userId, user.id)))
+      .returning();
+  }
+
+  if (!updated) {
+    throw new Error('Impact story not found.');
+  }
+
+  revalidatePath('/app/i/profile');
+  return updated as ImpactStoryCreateResult;
+}
+
 export async function deleteImpactStory(id: string) {
   const user = await requireAuth();
   await db
@@ -975,6 +1050,52 @@ export async function createExperience(data: Omit<Experience, 'id'>) {
 
   return {
     ...(inserted as any),
+    startDate: normalizedTimeline.startDate,
+    endDate: normalizedTimeline.endDate,
+    duration: normalizedTimeline.duration,
+  };
+}
+
+export async function updateExperience(id: string, data: Omit<Experience, 'id'>) {
+  const user = await requireAuth();
+  const timeline = buildExperienceTimeline({
+    startDate: data.startDate,
+    endDate: data.endDate,
+    duration: data.duration,
+  });
+
+  const [updated] = await db
+    .update(experiences)
+    .set({
+      title: data.title,
+      orgDescription: data.orgDescription,
+      duration: timeline.duration,
+      startDate: timeline.startDate,
+      endDate: timeline.endDate,
+      outcomes: data.outcomes,
+      projects: data.projects,
+      colleagues: data.colleagues,
+      achievements: data.achievements,
+      verified: data.verified ?? false,
+    })
+    .where(and(eq(experiences.id, id), eq(experiences.userId, user.id)))
+    .returning();
+
+  if (!updated) {
+    throw new Error('Experience entry not found.');
+  }
+
+  revalidatePath('/app/i/profile');
+  const normalizedStartDate = coerceDateOnlyString((updated as any).startDate);
+  const normalizedEndDate = coerceDateOnlyString((updated as any).endDate);
+  const normalizedTimeline = buildExperienceTimeline({
+    startDate: normalizedStartDate,
+    endDate: normalizedEndDate,
+    duration: (updated as any).duration,
+  });
+
+  return {
+    ...(updated as any),
     startDate: normalizedTimeline.startDate,
     endDate: normalizedTimeline.endDate,
     duration: normalizedTimeline.duration,

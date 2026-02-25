@@ -5,15 +5,31 @@ import type { Experience } from '@/types/profile';
 import { Card } from '@/components/ui/card';
 import { TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Briefcase, CheckCircle2, FolderOpen, Plus, Target, Trophy, Users, X } from 'lucide-react';
+import {
+  Briefcase,
+  CheckCircle2,
+  FolderOpen,
+  Pencil,
+  Plus,
+  Target,
+  Trophy,
+  Users,
+  X,
+} from 'lucide-react';
 
 export interface JourneyTabProps {
   experiences: Experience[];
   onAddExperience: () => void;
+  onEditExperience: (experience: Experience) => void;
   onDeleteExperience: (id: string) => void;
 }
 
-export function JourneyTab({ experiences, onAddExperience, onDeleteExperience }: JourneyTabProps) {
+export function JourneyTab({
+  experiences,
+  onAddExperience,
+  onEditExperience,
+  onDeleteExperience,
+}: JourneyTabProps) {
   return (
     <TabsContent value="journey" className="space-y-6">
       <div className="flex items-center justify-between mb-4">
@@ -93,18 +109,28 @@ export function JourneyTab({ experiences, onAddExperience, onDeleteExperience }:
             className="p-6 border-2 hover:border-[#C67B5C]/30 hover:shadow-md transition-all duration-300 group relative overflow-hidden"
           >
             <div className="absolute top-0 left-0 w-1 h-full bg-[#C67B5C] opacity-0 group-hover:opacity-100 transition-opacity" />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={() => {
-                if (confirm('Are you sure you want to delete this experience?')) {
-                  onDeleteExperience(exp.id);
-                }
-              }}
-            >
-              <X className="w-4 h-4" />
-            </Button>
+            <div className="absolute right-4 top-4 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onEditExperience(exp)}
+                aria-label={`Edit ${exp.title}`}
+              >
+                <Pencil className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  if (confirm('Are you sure you want to delete this experience?')) {
+                    onDeleteExperience(exp.id);
+                  }
+                }}
+                aria-label={`Delete ${exp.title}`}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-full bg-muted/30 flex items-center justify-center flex-shrink-0">
                 <Briefcase className="w-5 h-5 text-[#C67B5C]" />

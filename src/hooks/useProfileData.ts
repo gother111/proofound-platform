@@ -18,8 +18,10 @@ import {
   replaceCauses,
   replaceSkills,
   createImpactStory,
+  updateImpactStory as updateImpactStoryAction,
   deleteImpactStory as deleteImpactStoryAction,
   createExperience,
+  updateExperience as updateExperienceAction,
   deleteExperience as deleteExperienceAction,
   createEducation,
   updateEducation as updateEducationAction,
@@ -370,6 +372,35 @@ export function useProfileData() {
     [profile, runWithPending]
   );
 
+  const updateImpactStory = useCallback(
+    async (id: string, story: Omit<ImpactStory, 'id'>) => {
+      if (!profile) return;
+      setProfile((prev) =>
+        prev
+          ? {
+              ...prev,
+              impactStories: prev.impactStories.map((item) =>
+                item.id === id ? { ...story, id: item.id } : item
+              ),
+            }
+          : prev
+      );
+
+      const updated = await runWithPending('impactStory', () => updateImpactStoryAction(id, story));
+      if (!updated) return;
+
+      setProfile((prev) =>
+        prev
+          ? {
+              ...prev,
+              impactStories: prev.impactStories.map((item) => (item.id === id ? updated : item)),
+            }
+          : prev
+      );
+    },
+    [profile, runWithPending]
+  );
+
   const addExperience = useCallback(
     (experience: Omit<Experience, 'id'>) => {
       if (!profile) return;
@@ -414,6 +445,37 @@ export function useProfileData() {
       startTransition(() => {
         runWithPending('experience', () => deleteExperienceAction(id));
       });
+    },
+    [profile, runWithPending]
+  );
+
+  const updateExperience = useCallback(
+    async (id: string, experience: Omit<Experience, 'id'>) => {
+      if (!profile) return;
+      setProfile((prev) =>
+        prev
+          ? {
+              ...prev,
+              experiences: prev.experiences.map((item) =>
+                item.id === id ? { ...experience, id: item.id } : item
+              ),
+            }
+          : prev
+      );
+
+      const updated = await runWithPending('experience', () =>
+        updateExperienceAction(id, experience)
+      );
+      if (!updated) return;
+
+      setProfile((prev) =>
+        prev
+          ? {
+              ...prev,
+              experiences: prev.experiences.map((item) => (item.id === id ? updated : item)),
+            }
+          : prev
+      );
     },
     [profile, runWithPending]
   );
@@ -605,8 +667,10 @@ export function useProfileData() {
     replaceSkills: onReplaceSkills,
     addImpactStory,
     deleteImpactStory,
+    updateImpactStory,
     addExperience,
     deleteExperience,
+    updateExperience,
     addEducation,
     deleteEducation,
     updateEducation,

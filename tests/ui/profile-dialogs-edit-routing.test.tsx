@@ -19,11 +19,64 @@ vi.mock('@/components/profile/ValuesEditor', () => ({
 vi.mock('@/components/profile/CausesEditor', () => ({
   CausesEditor: () => null,
 }));
-vi.mock('@/components/profile/ImpactStoryForm', () => ({
-  ImpactStoryForm: () => null,
+vi.mock('@/components/profile/forms/ImpactStoryForm', () => ({
+  ImpactStoryForm: ({ onSave }: any) => (
+    <button
+      type="button"
+      onClick={() =>
+        onSave({
+          title: 'Updated impact',
+          orgDescription: 'Org',
+          impact: 'Impact',
+          businessValue: 'Business value',
+          outcomes: 'Outcome',
+          timeline: '2024',
+          timelineStructured: {
+            mode: 'single',
+            precision: 'year',
+            start: '2024',
+            end: null,
+            ongoing: false,
+          },
+          affiliationType: 'organization',
+          affiliationDetails: 'Org details',
+          roleTitle: 'Lead',
+          roleScope: 'owned',
+          primaryCause: 'education',
+          secondaryCauses: [],
+          measuredOutcomes: [],
+          supportingArtifacts: [],
+          verificationRequest: null,
+          verified: false,
+        })
+      }
+    >
+      save-impact
+    </button>
+  ),
 }));
 vi.mock('@/components/profile/forms/ExperienceForm', () => ({
-  ExperienceForm: () => null,
+  ExperienceForm: ({ onSave }: any) => (
+    <button
+      type="button"
+      onClick={() =>
+        onSave({
+          title: 'Updated Experience',
+          orgDescription: 'Updated Org',
+          duration: '2024 - Present',
+          startDate: '2024-01-01',
+          endDate: null,
+          outcomes: 'Updated outcomes',
+          projects: 'Updated project',
+          colleagues: 'Updated colleagues',
+          achievements: 'Updated achievements',
+          verified: false,
+        })
+      }
+    >
+      save-experience
+    </button>
+  ),
 }));
 vi.mock('@/components/profile/ShareProfileDialog', () => ({
   ShareProfileDialog: () => null,
@@ -70,7 +123,11 @@ vi.mock('@/components/profile/forms/VolunteerForm', () => ({
 }));
 
 describe('ProfileDialogs edit routing', () => {
-  it('routes education/volunteering save to update handlers when edit targets are set', () => {
+  it('routes all artifact saves to update handlers when edit targets are set', () => {
+    const onAddImpactStory = vi.fn();
+    const onUpdateImpactStory = vi.fn();
+    const onAddExperience = vi.fn();
+    const onUpdateExperience = vi.fn();
     const onAddEducation = vi.fn();
     const onUpdateEducation = vi.fn();
     const onAddVolunteering = vi.fn();
@@ -109,9 +166,9 @@ describe('ProfileDialogs edit routing', () => {
         setIsValuesEditorOpen={() => {}}
         isCausesEditorOpen={false}
         setIsCausesEditorOpen={() => {}}
-        isImpactStoryFormOpen={false}
+        isImpactStoryFormOpen={true}
         setIsImpactStoryFormOpen={() => {}}
-        isExperienceFormOpen={false}
+        isExperienceFormOpen={true}
         setIsExperienceFormOpen={() => {}}
         isEducationFormOpen={true}
         setIsEducationFormOpen={() => {}}
@@ -119,6 +176,45 @@ describe('ProfileDialogs edit routing', () => {
         setIsVolunteerFormOpen={() => {}}
         isShareDialogOpen={false}
         setIsShareDialogOpen={() => {}}
+        editingImpactStory={{
+          id: 'impact-1',
+          title: 'Impact',
+          orgDescription: 'Org',
+          impact: 'Impact',
+          businessValue: 'Value',
+          outcomes: 'Outcome',
+          timeline: '2024',
+          verified: true,
+          timelineStructured: {
+            mode: 'single',
+            precision: 'year',
+            start: '2024',
+            end: null,
+            ongoing: false,
+          },
+          affiliationType: 'organization',
+          affiliationDetails: 'Org details',
+          roleTitle: 'Lead',
+          roleScope: 'owned',
+          primaryCause: 'education',
+          secondaryCauses: [],
+          measuredOutcomes: [],
+          supportingArtifacts: [],
+          verificationRequest: null,
+        }}
+        editingExperience={{
+          id: 'exp-1',
+          title: 'Experience',
+          orgDescription: 'Org',
+          duration: '2022 - 2024',
+          outcomes: 'Outcome',
+          projects: 'Project',
+          colleagues: 'Colleagues',
+          achievements: 'Achievement',
+          startDate: '2022-01-01',
+          endDate: '2024-01-01',
+          verified: true,
+        }}
         editingEducation={{
           id: 'edu-1',
           institution: 'Institute',
@@ -145,8 +241,10 @@ describe('ProfileDialogs edit routing', () => {
         onUpdateVision={() => {}}
         onReplaceValues={() => {}}
         onReplaceCauses={() => {}}
-        onAddImpactStory={() => {}}
-        onAddExperience={() => {}}
+        onAddImpactStory={onAddImpactStory}
+        onUpdateImpactStory={onUpdateImpactStory}
+        onAddExperience={onAddExperience}
+        onUpdateExperience={onUpdateExperience}
         onAddEducation={onAddEducation}
         onUpdateEducation={onUpdateEducation}
         onAddVolunteering={onAddVolunteering}
@@ -154,8 +252,20 @@ describe('ProfileDialogs edit routing', () => {
       />
     );
 
+    fireEvent.click(screen.getByRole('button', { name: 'save-impact' }));
+    fireEvent.click(screen.getByRole('button', { name: 'save-experience' }));
     fireEvent.click(screen.getByRole('button', { name: 'save-education' }));
     fireEvent.click(screen.getByRole('button', { name: 'save-volunteer' }));
+
+    expect(onUpdateImpactStory).toHaveBeenCalledTimes(1);
+    expect(onUpdateImpactStory.mock.calls[0][0]).toBe('impact-1');
+    expect(onUpdateImpactStory.mock.calls[0][1].verified).toBe(true);
+    expect(onAddImpactStory).not.toHaveBeenCalled();
+
+    expect(onUpdateExperience).toHaveBeenCalledTimes(1);
+    expect(onUpdateExperience.mock.calls[0][0]).toBe('exp-1');
+    expect(onUpdateExperience.mock.calls[0][1].verified).toBe(true);
+    expect(onAddExperience).not.toHaveBeenCalled();
 
     expect(onUpdateEducation).toHaveBeenCalledTimes(1);
     expect(onUpdateEducation.mock.calls[0][0]).toBe('edu-1');

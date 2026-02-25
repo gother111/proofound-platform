@@ -1,13 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   updateVision,
-  replaceCauses,
   updateMission,
+  updateImpactStory,
+  updateExperience,
   updateEducation,
   updateVolunteering,
 } from '@/actions/profile';
 import { db } from '@/db';
-import { education, individualProfiles, volunteering } from '@/db/schema';
+import {
+  education,
+  experiences,
+  impactStories,
+  individualProfiles,
+  volunteering,
+} from '@/db/schema';
 
 const mockDb = vi.hoisted(() => ({
   select: vi.fn(),
@@ -162,6 +169,95 @@ describe('profile purpose actions', () => {
       expect(whereMock).toHaveBeenCalledTimes(1);
       expect(returningMock).toHaveBeenCalledTimes(1);
       expect(result).toEqual({ id: 'edu-1' });
+    });
+  });
+
+  describe('updateImpactStory', () => {
+    it('should update the impact story row for the authenticated user', async () => {
+      const returningMock = vi.fn(() => Promise.resolve([{ id: 'impact-1' }]));
+      const whereMock = vi.fn(() => ({ returning: returningMock }));
+      const setMock = vi.fn(() => ({ where: whereMock }));
+      (db.update as any).mockReturnValue({ set: setMock });
+
+      const payload = {
+        title: 'Updated impact',
+        orgDescription: 'Org',
+        impact: 'Impact',
+        businessValue: 'Business value',
+        outcomes: 'Outcome',
+        timeline: '2024',
+        timelineStructured: {
+          mode: 'single' as const,
+          precision: 'year' as const,
+          start: '2024',
+          end: null,
+          ongoing: false,
+        },
+        affiliationType: 'organization' as const,
+        affiliationDetails: 'Org details',
+        roleTitle: 'Lead',
+        roleScope: 'owned' as const,
+        primaryCause: 'education',
+        secondaryCauses: [],
+        measuredOutcomes: [],
+        supportingArtifacts: [],
+        verificationRequest: null,
+        verified: true,
+      };
+
+      const result = await updateImpactStory('impact-1', payload);
+
+      expect(db.update).toHaveBeenCalledWith(impactStories);
+      expect(setMock).toHaveBeenCalledTimes(1);
+      expect(whereMock).toHaveBeenCalledTimes(1);
+      expect(returningMock).toHaveBeenCalledTimes(1);
+      expect(result).toEqual({ id: 'impact-1' });
+    });
+  });
+
+  describe('updateExperience', () => {
+    it('should update the experience row for the authenticated user', async () => {
+      const returningMock = vi.fn(() =>
+        Promise.resolve([
+          {
+            id: 'exp-1',
+            title: 'Updated role',
+            orgDescription: 'Org',
+            duration: 'Jan 2024 - Present',
+            startDate: '2024-01-01',
+            endDate: null,
+            outcomes: 'Outcomes',
+            projects: 'Projects',
+            colleagues: 'Colleagues',
+            achievements: 'Achievements',
+            verified: true,
+          },
+        ])
+      );
+      const whereMock = vi.fn(() => ({ returning: returningMock }));
+      const setMock = vi.fn(() => ({ where: whereMock }));
+      (db.update as any).mockReturnValue({ set: setMock });
+
+      const payload = {
+        title: 'Updated role',
+        orgDescription: 'Org',
+        duration: 'Jan 2024 - Present',
+        startDate: '2024-01-01',
+        endDate: null,
+        outcomes: 'Outcomes',
+        projects: 'Projects',
+        colleagues: 'Colleagues',
+        achievements: 'Achievements',
+        verified: true,
+      };
+
+      const result = await updateExperience('exp-1', payload);
+
+      expect(db.update).toHaveBeenCalledWith(experiences);
+      expect(setMock).toHaveBeenCalledTimes(1);
+      expect(whereMock).toHaveBeenCalledTimes(1);
+      expect(returningMock).toHaveBeenCalledTimes(1);
+      expect(result).toMatchObject({ id: 'exp-1', startDate: '2024-01-01', endDate: null });
     });
   });
 

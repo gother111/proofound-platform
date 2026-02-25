@@ -6,12 +6,13 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Calendar, CheckCircle2, Plus, X } from 'lucide-react';
+import { Calendar, CheckCircle2, Pencil, Plus, X } from 'lucide-react';
 import { getTaxonomyLabel, CAUSES_TAXONOMY } from '@/lib/taxonomy/data';
 
 export interface ImpactTabProps {
   impactStories: ImpactStory[];
   onAddStory: () => void;
+  onEditStory: (story: ImpactStory) => void;
   onDeleteStory: (id: string) => void;
   actionsDisabled: boolean;
 }
@@ -19,6 +20,7 @@ export interface ImpactTabProps {
 export function ImpactTab({
   impactStories,
   onAddStory,
+  onEditStory,
   onDeleteStory,
   actionsDisabled,
 }: ImpactTabProps) {
@@ -119,19 +121,30 @@ export function ImpactTab({
             className="p-6 border-2 hover:border-[#7A9278]/30 hover:shadow-md transition-all duration-300 group relative overflow-hidden"
           >
             <div className="absolute top-0 left-0 w-1 h-full bg-[#7A9278] opacity-0 group-hover:opacity-100 transition-opacity" />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={() => {
-                if (confirm('Are you sure you want to delete this impact story?')) {
-                  onDeleteStory(story.id);
-                }
-              }}
-              disabled={actionsDisabled}
-            >
-              <X className="w-4 h-4" />
-            </Button>
+            <div className="absolute right-4 top-4 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onEditStory(story)}
+                aria-label={`Edit ${story.title}`}
+                disabled={actionsDisabled}
+              >
+                <Pencil className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  if (confirm('Are you sure you want to delete this impact story?')) {
+                    onDeleteStory(story.id);
+                  }
+                }}
+                aria-label={`Delete ${story.title}`}
+                disabled={actionsDisabled}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
             <div className="flex items-start justify-between mb-4 pr-8">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-3">
