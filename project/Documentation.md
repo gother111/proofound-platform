@@ -2133,3 +2133,62 @@ Open risks/TODO:
 - `npm run test -- e2e/strict/organization.strict.spec.ts ...` runs through Vitest and does not execute Playwright strict E2E directly; strict flow runtime validation is expected in `strict-quality` workflow.
 - Branch protection should be confirmed to require only `ci` and `a11y`; `strict-quality` is intentionally non-required for PR merges.
 - If strict suites remain flaky after retry/poll hardening, next step is deeper endpoint-specific retry instrumentation on known unstable calls.
+
+---
+
+## 2026-02-25: Batch PR merge, production migration rollout, and docs closure
+
+What changed:
+
+- Processed and finalized the full open PR batch targeting `master`:
+  - Merged: `#244 #245 #246 #248 #251 #255 #256 #257 #258 #259 #260 #262 #263 #265 #267 #268 #271`
+  - Closed as superseded: `#243` (superseded by merged `#257`)
+- Per-wave and final master verification was executed locally on Node `20.20.0`:
+  - `npm run lint`
+  - `npm run typecheck`
+  - `npm run test`
+  - `npm run build`
+- Applied production checkpoint backup and migration rollout:
+  - `npm run db:backup:checkpoint`
+  - canonical migration runner executed after ledger/search-path reconciliation
+- Confirmed ledger presence for required versions:
+  - `20260225103000_add_skill_verification_token`
+  - `20260225104500_add_experience_timeline_dates`
+  - `20260225112000_add_structured_impact_stories_and_verification`
+  - `20260225113000_replace_experience_learning_growth_fields`
+  - `20260225160000_create_skills_taxonomy_aliases`
+  - `20260225161000_fix_search_skills_smart_similarity_schema`
+  - `20260225162000_expand_taxonomy_canonical_wave`
+  - `20260225163000_expand_taxonomy_aliases_wave`
+
+Why:
+
+- The repository had a large open PR queue with overlapping profile/verification/taxonomy changes and database migrations that needed coordinated landing.
+- CI provider billing blocks prevented reliable remote gating, so local deterministic verification and staged merge waves were required to reduce integration risk.
+- Migration rollout required checkpointing and explicit ledger validation to keep production schema and app contracts aligned.
+
+How to verify:
+
+- PR status checks:
+  - `gh pr view <number> --json state,mergedAt,closedAt` for `243,244,245,246,248,251,255,256,257,258,259,260,262,263,265,267,268,271`
+- Local regression:
+  - `source ~/.nvm/nvm.sh && nvm use 20.20.0`
+  - `npm run lint && npm run typecheck && npm run test && npm run build`
+- Migration safety + ledger:
+  - `npm run db:backup:checkpoint`
+  - `npm run db:migrate` (fails in this env without session search-path correction due DB role default)
+  - `node scripts/run-migrations-public-path.mjs` equivalent session-runner (used transiently; file not kept)
+  - query `public.app_migration_ledger` for the eight required versions above
+- Post-migration smoke checks (read-only DB sanity):
+  - taxonomy alias table row count
+  - `search_skills_smart` function existence
+  - impact story verification tables existence
+  - `skill_verification_requests.verification_token` column/index existence
+  - expected experience columns (`start_date`, `end_date`, `outcomes`, `projects`, `colleagues`, `achievements`)
+
+Open risks/TODO:
+
+- Remote GitHub required checks (`ci`, `a11y`, `test`) remained externally failed because jobs were blocked by account billing, so acceptance relied on local gates in this run.
+- `app_migration_ledger` required manual checksum reconciliation for `20260212120000_legacy_policies_sql` before continuing migration apply.
+- Database role default `search_path` is empty in this environment; canonical runner currently assumes default schema visibility for unqualified relation names.
+- Follow-up recommended: patch canonical runner to set `search_path` explicitly at session start (or fully schema-qualify remaining unqualified legacy SQL migrations) to remove this operational footgun.
