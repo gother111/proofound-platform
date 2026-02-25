@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
+import { uploadFile, validateFile } from '@/lib/upload';
 
 import { DeleteSkillDialog } from './edit-skill/DeleteSkillDialog';
 import { ProofsSection } from './edit-skill/ProofsSection';
@@ -98,8 +99,12 @@ export function EditSkillWindow({
     title: '',
     description: '',
     url: '',
+    filePath: '',
     issuedDate: '',
   });
+  const [proofUploading, setProofUploading] = useState(false);
+  const [proofUploadError, setProofUploadError] = useState<string | null>(null);
+  const [proofUploadName, setProofUploadName] = useState('');
 
   const [verificationRequests, setVerificationRequests] = useState<VerificationRequest[]>([]);
   const [loadingVerifications, setLoadingVerifications] = useState(false);
@@ -121,6 +126,9 @@ export function EditSkillWindow({
       setLastUsedDate(
         skill.last_used_at ? new Date(skill.last_used_at).toISOString().split('T')[0] : ''
       );
+      setProofUploading(false);
+      setProofUploadError(null);
+      setProofUploadName('');
 
       setLoadingProofs(true);
       try {
@@ -242,11 +250,12 @@ export function EditSkillWindow({
   const handleAddProof = async () => {
     const hasTitle = Boolean(newProof.title?.trim());
     const hasUrl = Boolean(newProof.url?.trim());
+    const hasFilePath = Boolean(newProof.filePath?.trim());
 
-    if (!hasTitle && !hasUrl) {
+    if (!hasTitle && !hasUrl && !hasFilePath) {
       toast({
         title: 'Missing proof details',
-        description: 'Add a title or a URL before submitting a proof.',
+        description: 'Add a title, URL, or uploaded file before submitting a proof.',
         variant: 'destructive',
       });
       return;
@@ -257,6 +266,7 @@ export function EditSkillWindow({
       title: hasTitle ? newProof.title.trim() : deriveProofTitleFromUrl(newProof.url.trim()),
       description: newProof.description?.trim() || '',
       url: newProof.url?.trim() || '',
+      filePath: newProof.filePath?.trim() || '',
     };
 
     setAddingProof(true);
@@ -279,8 +289,11 @@ export function EditSkillWindow({
           title: '',
           description: '',
           url: '',
+          filePath: '',
           issuedDate: '',
         });
+        setProofUploadError(null);
+        setProofUploadName('');
         setShowAddProof(false);
         onSkillUpdated();
         return;
@@ -301,6 +314,47 @@ export function EditSkillWindow({
       });
     } finally {
       setAddingProof(false);
+    }
+  };
+
+  const handleProofFileUpload = async (file: File | null) => {
+    if (!file) return;
+
+    const validation = validateFile(file, 'document', { category: 'proof' });
+    if (!validation.valid) {
+      setProofUploadError(validation.error || 'Invalid file');
+      return;
+    }
+
+    setProofUploadError(null);
+    setProofUploading(true);
+    setProofUploadName(file.name);
+
+    try {
+      const result = await uploadFile({
+        file,
+        type: 'document',
+        category: 'proof',
+      });
+
+      if (!result.success || !result.path) {
+        setProofUploadError(result.error || result.message || 'Upload failed');
+        return;
+      }
+
+      setNewProof((current) => ({
+        ...current,
+        proofType: 'document',
+        url: result.url || current.url,
+        filePath: result.path || '',
+        title: current.title.trim() || result.fileName || file.name || '',
+      }));
+      setProofUploadError(null);
+    } catch (error) {
+      console.error('Error uploading proof document:', error);
+      setProofUploadError('Upload failed. Please try again.');
+    } finally {
+      setProofUploading(false);
     }
   };
 
@@ -474,6 +528,10 @@ export function EditSkillWindow({
               newProof={newProof}
               setNewProof={setNewProof}
               addingProof={addingProof}
+              proofUploading={proofUploading}
+              proofUploadError={proofUploadError}
+              proofUploadName={proofUploadName}
+              onProofFileSelected={handleProofFileUpload}
               onAddProof={handleAddProof}
               onDeleteProof={handleDeleteProof}
             />

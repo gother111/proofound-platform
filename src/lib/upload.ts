@@ -3,6 +3,11 @@
  */
 
 import { getUserErrorMessage, logError } from '@/lib/error-handler';
+import {
+  MAX_PROOF_UPLOAD_SIZE_BYTES,
+  PROOF_ALLOWED_EXTENSIONS_LABEL,
+  isAllowedProofFile,
+} from '@/lib/proofs/constants';
 
 export type UploadType = 'avatar' | 'cover' | 'document';
 export type DocumentCategory = 'proof' | 'certificate' | 'artifact';
@@ -139,7 +144,11 @@ export async function deleteFile(path: string, type: UploadType): Promise<Upload
 /**
  * Validate file before upload
  */
-export function validateFile(file: File, type: UploadType): { valid: boolean; error?: string } {
+export function validateFile(
+  file: File,
+  type: UploadType,
+  options?: { category?: DocumentCategory }
+): { valid: boolean; error?: string } {
   const MAX_SIZES: Record<UploadType, number> = {
     avatar: 5 * 1024 * 1024, // 5MB
     cover: 10 * 1024 * 1024, // 10MB
@@ -159,6 +168,24 @@ export function validateFile(file: File, type: UploadType): { valid: boolean; er
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     ],
   };
+
+  if (type === 'document' && options?.category === 'proof') {
+    if (!isAllowedProofFile(file.type, file.name)) {
+      return {
+        valid: false,
+        error: `Invalid file type. Please upload ${PROOF_ALLOWED_EXTENSIONS_LABEL}`,
+      };
+    }
+
+    if (file.size > MAX_PROOF_UPLOAD_SIZE_BYTES) {
+      return {
+        valid: false,
+        error: `File size exceeds ${MAX_PROOF_UPLOAD_SIZE_BYTES / (1024 * 1024)}MB limit`,
+      };
+    }
+
+    return { valid: true };
+  }
 
   const maxSize = MAX_SIZES[type];
   const acceptedTypes = ACCEPTED_TYPES[type];

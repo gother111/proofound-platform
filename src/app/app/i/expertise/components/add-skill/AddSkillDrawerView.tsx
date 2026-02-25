@@ -14,7 +14,14 @@ import {
 
 import { BrowseModePanel } from './BrowseModePanel';
 import { SearchModePanel } from './SearchModePanel';
-import type { L1Domain, L2Category, L3Subcategory, L4Skill } from './types';
+import type {
+  L1Domain,
+  L2Category,
+  L3Subcategory,
+  L4Skill,
+  SkillProofSource,
+  SkillVerificationSource,
+} from './types';
 
 export interface AddSkillDrawerViewProps {
   open: boolean;
@@ -53,10 +60,25 @@ export interface AddSkillDrawerViewProps {
   setLevel: Dispatch<SetStateAction<number>>;
   lastUsedDate: string;
   setLastUsedDate: Dispatch<SetStateAction<string>>;
+  proofSource: SkillProofSource;
+  setProofSource: Dispatch<SetStateAction<SkillProofSource>>;
   proofUrl: string;
   setProofUrl: Dispatch<SetStateAction<string>>;
+  proofFilePath: string;
+  proofFileName: string;
+  proofUploadError: string;
+  proofUploading: boolean;
+  onProofFileSelected: (file: File | null) => void;
   proofNotes: string;
   setProofNotes: Dispatch<SetStateAction<string>>;
+  requestVerification: boolean;
+  setRequestVerification: Dispatch<SetStateAction<boolean>>;
+  verificationEmail: string;
+  setVerificationEmail: Dispatch<SetStateAction<string>>;
+  verificationSource: SkillVerificationSource;
+  setVerificationSource: Dispatch<SetStateAction<SkillVerificationSource>>;
+  verificationMessage: string;
+  setVerificationMessage: Dispatch<SetStateAction<string>>;
   saving: boolean;
   handleSave: (saveAndAddAnother?: boolean) => void;
 
@@ -108,10 +130,25 @@ export function AddSkillDrawerView({
   setLevel,
   lastUsedDate,
   setLastUsedDate,
+  proofSource,
+  setProofSource,
   proofUrl,
   setProofUrl,
+  proofFilePath,
+  proofFileName,
+  proofUploadError,
+  proofUploading,
+  onProofFileSelected,
   proofNotes,
   setProofNotes,
+  requestVerification,
+  setRequestVerification,
+  verificationEmail,
+  setVerificationEmail,
+  verificationSource,
+  setVerificationSource,
+  verificationMessage,
+  setVerificationMessage,
   saving,
   handleSave,
   searchQuery,
@@ -221,10 +258,25 @@ export function AddSkillDrawerView({
             setLevel={setLevel}
             lastUsedDate={lastUsedDate}
             setLastUsedDate={setLastUsedDate}
+            proofSource={proofSource}
+            setProofSource={setProofSource}
             proofUrl={proofUrl}
             setProofUrl={setProofUrl}
+            proofFilePath={proofFilePath}
+            proofFileName={proofFileName}
+            proofUploadError={proofUploadError}
+            proofUploading={proofUploading}
+            onProofFileSelected={onProofFileSelected}
             proofNotes={proofNotes}
             setProofNotes={setProofNotes}
+            requestVerification={requestVerification}
+            setRequestVerification={setRequestVerification}
+            verificationEmail={verificationEmail}
+            setVerificationEmail={setVerificationEmail}
+            verificationSource={verificationSource}
+            setVerificationSource={setVerificationSource}
+            verificationMessage={verificationMessage}
+            setVerificationMessage={setVerificationMessage}
             saving={saving}
             handleSave={handleSave}
             handleBack={handleBack}

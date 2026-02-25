@@ -1,9 +1,14 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
+import {
+  MAX_PROOF_UPLOAD_SIZE_BYTES,
+  PROOF_ALLOWED_EXTENSIONS_LABEL,
+  isAllowedProofFile,
+} from '@/lib/proofs/constants';
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const ACCEPTED_TYPES = [
+const DEFAULT_MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const DEFAULT_ACCEPTED_TYPES = [
   'application/pdf',
   'image/jpeg',
   'image/jpg',
@@ -18,6 +23,8 @@ const TYPE_LABELS: Record<string, string> = {
   'image/jpeg': 'JPEG',
   'image/jpg': 'JPEG',
   'image/png': 'PNG',
+  'image/heif': 'HEIF',
+  'image/heic': 'HEIC',
   'image/webp': 'WebP',
   'application/msword': 'DOC',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'DOCX',
@@ -38,7 +45,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    if (!ACCEPTED_TYPES.includes(file.type)) {
+    const isProofUpload = category === 'proof';
+    const maxFileSize = isProofUpload ? MAX_PROOF_UPLOAD_SIZE_BYTES : DEFAULT_MAX_FILE_SIZE;
+
+    if (isProofUpload && !isAllowedProofFile(file.type, file.name)) {
+      return NextResponse.json(
+        {
+          error: 'Invalid file type',
+          message: `Proof files must be ${PROOF_ALLOWED_EXTENSIONS_LABEL}`,
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!isProofUpload && !DEFAULT_ACCEPTED_TYPES.includes(file.type)) {
       return NextResponse.json(
         {
           error: 'Invalid file type',
@@ -48,8 +68,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: 'File size exceeds 10MB limit' }, { status: 400 });
+    if (file.size > maxFileSize) {
+      return NextResponse.json(
+        { error: `File size exceeds ${maxFileSize / (1024 * 1024)}MB limit` },
+        { status: 400 }
+      );
     }
 
     const arrayBuffer = await file.arrayBuffer();
@@ -57,7 +80,6 @@ export async function POST(request: NextRequest) {
 
     // Sanitize filename and add timestamp
     const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_').substring(0, 100);
-    const fileExt = sanitizedName.split('.').pop();
     const fileName = `${user.id}-${Date.now()}-${sanitizedName}`;
 
     // Organize by category

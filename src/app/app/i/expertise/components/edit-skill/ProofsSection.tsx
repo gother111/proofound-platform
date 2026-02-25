@@ -6,6 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  MAX_PROOFS_PER_SKILL,
+  MAX_PROOF_UPLOAD_SIZE_BYTES,
+  PROOF_ALLOWED_EXTENSIONS_LABEL,
+  PROOF_FILE_ACCEPT_ATTRIBUTE,
+} from '@/lib/proofs/constants';
 import { Textarea } from '@/components/ui/textarea';
 import { getIndividualRecoveryActions } from '@/lib/ui/recovery-actions';
 
@@ -19,6 +25,10 @@ type ProofsSectionProps = {
   newProof: ProofDraft;
   setNewProof: (proof: ProofDraft) => void;
   addingProof: boolean;
+  proofUploading: boolean;
+  proofUploadError: string | null;
+  proofUploadName: string;
+  onProofFileSelected: (file: File | null) => void;
   onAddProof: () => void;
   onDeleteProof: (proofId: string) => void;
 };
@@ -31,31 +41,47 @@ export function ProofsSection({
   newProof,
   setNewProof,
   addingProof,
+  proofUploading,
+  proofUploadError,
+  proofUploadName,
+  onProofFileSelected,
   onAddProof,
   onDeleteProof,
 }: ProofsSectionProps) {
   const router = useRouter();
   const recoveryActions = getIndividualRecoveryActions('proofs-empty');
+  const isProofLimitReached = proofs.length >= MAX_PROOFS_PER_SKILL;
 
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
         <div>
           <h3 className="font-medium text-[#2D3330]">Proofs</h3>
-          <p className="text-sm text-[#6B6760]">Add evidence to strengthen credibility</p>
+          <p className="text-sm text-[#6B6760]">
+            Add evidence to strengthen credibility ({proofs.length}/{MAX_PROOFS_PER_SKILL})
+          </p>
         </div>
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setShowAddProof(!showAddProof)}
+          onClick={() => {
+            if (isProofLimitReached) return;
+            setShowAddProof(!showAddProof);
+          }}
+          disabled={isProofLimitReached}
           className="border-[#1C4D3A] text-[#1C4D3A] hover:bg-[#EEF1EA]"
         >
           <Plus className="h-4 w-4 mr-1" />
           Add Proof
         </Button>
       </div>
+      {isProofLimitReached && (
+        <p className="text-xs text-[#6B6760] mb-3">
+          You have reached the maximum of {MAX_PROOFS_PER_SKILL} proofs for this skill.
+        </p>
+      )}
 
-      {showAddProof && (
+      {showAddProof && !isProofLimitReached && (
         <Card className="p-4 mb-4 border-[#E5E3DA]">
           <div className="space-y-3">
             <div>
@@ -78,6 +104,7 @@ export function ProofsSection({
                 <option value="media">Media</option>
                 <option value="reference">Reference</option>
                 <option value="link">Link</option>
+                <option value="document">Document</option>
               </select>
             </div>
             <div>
@@ -98,7 +125,7 @@ export function ProofsSection({
             </div>
             <div>
               <Label htmlFor="proof-url" className="text-[#2D3330]">
-                URL (Optional)
+                URL {newProof.proofType === 'document' ? '(Optional)' : ''}
               </Label>
               <Input
                 id="proof-url"
@@ -109,6 +136,33 @@ export function ProofsSection({
                 className="mt-1"
               />
             </div>
+            {newProof.proofType === 'document' && (
+              <div>
+                <Label htmlFor="proof-file" className="text-[#2D3330]">
+                  Upload Document
+                </Label>
+                <Input
+                  id="proof-file"
+                  type="file"
+                  accept={PROOF_FILE_ACCEPT_ATTRIBUTE}
+                  onChange={(event) => onProofFileSelected(event.target.files?.[0] || null)}
+                  className="mt-1"
+                />
+                <p className="text-xs text-[#6B6760] mt-1">
+                  Accepted: {PROOF_ALLOWED_EXTENSIONS_LABEL}. Max size:{' '}
+                  {MAX_PROOF_UPLOAD_SIZE_BYTES / (1024 * 1024)}MB.
+                </p>
+                {proofUploading && (
+                  <p className="text-xs text-[#6B6760] mt-1">Uploading document...</p>
+                )}
+                {proofUploadName && !proofUploading && (
+                  <p className="text-xs text-[#6B6760] mt-1">Uploaded: {proofUploadName}</p>
+                )}
+                {proofUploadError && (
+                  <p className="text-xs text-[#C76B4A] mt-1">{proofUploadError}</p>
+                )}
+              </div>
+            )}
             <div>
               <Label htmlFor="proof-date" className="text-[#2D3330]">
                 Issued Date (Optional)
@@ -137,7 +191,12 @@ export function ProofsSection({
             <div className="flex gap-2">
               <Button
                 onClick={onAddProof}
-                disabled={(!newProof.title.trim() && !newProof.url.trim()) || addingProof}
+                disabled={
+                  (!newProof.title.trim() && !newProof.url.trim() && !newProof.filePath.trim()) ||
+                  addingProof ||
+                  proofUploading ||
+                  isProofLimitReached
+                }
                 className="bg-[#1C4D3A] text-white hover:bg-[#2D5F4A]"
               >
                 {addingProof ? (
@@ -209,6 +268,9 @@ export function ProofsSection({
                     >
                       {proof.url}
                     </a>
+                  )}
+                  {proof.file_path && (
+                    <p className="text-xs text-[#6B6760] mt-1">Document attached</p>
                   )}
                   {proof.description && (
                     <p className="text-sm text-[#6B6760] mt-1">{proof.description}</p>

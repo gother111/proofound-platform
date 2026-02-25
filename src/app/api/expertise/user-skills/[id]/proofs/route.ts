@@ -3,6 +3,7 @@ import { requireAuth } from '@/lib/auth';
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
 import { emitSkillProofAddedAsync } from '@/lib/analytics/events';
+import { MAX_PROOFS_PER_SKILL } from '@/lib/proofs/constants';
 
 function deriveProofTitleFromUrl(rawUrl: string): string {
   try {
@@ -21,23 +22,35 @@ function deriveProofTitleFromUrl(rawUrl: string): string {
   }
 }
 
+function deriveProofTitleFromFilePath(rawPath: string): string {
+  const normalized = rawPath.trim().replace(/\/+$/, '');
+  if (!normalized) return 'Uploaded Document';
+
+  const lastSegment = normalized.split('/').filter(Boolean).pop();
+  if (!lastSegment) return 'Uploaded Document';
+
+  return decodeURIComponent(lastSegment).replace(/[-_]+/g, ' ').slice(0, 80) || 'Uploaded Document';
+}
+
 const CreateProofSchema = z
   .object({
-    proofType: z.enum(['project', 'certification', 'media', 'reference', 'link']),
+    proofType: z.enum(['project', 'certification', 'media', 'reference', 'link', 'document']),
     title: z.string().trim().optional(),
     description: z.string().optional(),
     url: z.string().url().optional().or(z.literal('')),
+    filePath: z.string().trim().optional().or(z.literal('')),
     issuedDate: z.string().optional(),
     metadata: z.record(z.any()).optional(),
   })
   .superRefine((data, ctx) => {
     const hasTitle = Boolean(data.title?.trim());
     const hasUrl = Boolean(data.url);
+    const hasFilePath = Boolean(data.filePath?.trim());
 
-    if (!hasTitle && !hasUrl) {
+    if (!hasTitle && !hasUrl && !hasFilePath) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Title or URL is required',
+        message: 'Title, URL, or uploaded file is required',
         path: ['title'],
       });
     }
@@ -57,7 +70,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     // Validate input
     const validated = CreateProofSchema.parse(body);
-    const proofTitle = validated.title?.trim() || deriveProofTitleFromUrl(validated.url || '');
+    const proofTitle =
+      validated.title?.trim() ||
+      (validated.url ? deriveProofTitleFromUrl(validated.url) : '') ||
+      (validated.filePath ? deriveProofTitleFromFilePath(validated.filePath) : '') ||
+      'Proof Link';
 
     // Verify skill belongs to user
     const { data: skill, error: skillError } = await supabase
@@ -70,6 +87,27 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: 'Skill not found' }, { status: 404 });
     }
 
+    const { data: existingProofs, error: existingProofsError } = await supabase
+      .from('skill_proofs')
+      .select('id')
+      .eq('skill_id', skillId)
+      .eq('profile_id', user.id);
+
+    if (existingProofsError) {
+      console.error('Error checking proof limit:', existingProofsError);
+      return NextResponse.json({ error: 'Failed to validate proof limit' }, { status: 500 });
+    }
+
+    if ((existingProofs || []).length >= MAX_PROOFS_PER_SKILL) {
+      return NextResponse.json(
+        {
+          error: 'Proof limit reached',
+          message: `A maximum of ${MAX_PROOFS_PER_SKILL} proofs can be attached to a skill.`,
+        },
+        { status: 409 }
+      );
+    }
+
     // Create proof
     const { data: proof, error: proofError } = await supabase
       .from('skill_proofs')
@@ -80,6 +118,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         title: proofTitle,
         description: validated.description?.trim() || null,
         url: validated.url || null,
+        file_path: validated.filePath || null,
         issued_date: validated.issuedDate || null,
         metadata: {
           visibility: 'match-only', // default privacy guardrail

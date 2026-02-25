@@ -580,7 +580,7 @@ export const skillProofs = pgTable('skill_proofs', {
     .references(() => profiles.id, { onDelete: 'cascade' })
     .notNull(),
   proofType: text('proof_type', {
-    enum: ['project', 'certification', 'media', 'reference', 'link'],
+    enum: ['project', 'certification', 'media', 'reference', 'link', 'document'],
   })
     .notNull()
     .default('link'),

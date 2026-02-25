@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { ToastAction } from '@/components/ui/toast';
+import { apiFetch } from '@/lib/api/fetch';
+import { uploadFile, validateFile } from '@/lib/upload';
 import { normalizeSkillForClient } from '../../utils/normalizeSkill';
 import {
   fetchL1Domains,
@@ -14,7 +16,15 @@ import {
   deleteUserSkill,
   attachSkillProof,
 } from './api';
-import type { AddSkillDrawerProps, L1Domain, L2Category, L3Subcategory, L4Skill } from './types';
+import type {
+  AddSkillDrawerProps,
+  L1Domain,
+  L2Category,
+  L3Subcategory,
+  L4Skill,
+  SkillProofSource,
+  SkillVerificationSource,
+} from './types';
 import { useDebouncedSearch } from './useDebouncedSearch';
 import { AddSkillDrawerView } from './AddSkillDrawerView';
 
@@ -53,8 +63,17 @@ export function AddSkillDrawer({
   const [l4Name, setL4Name] = useState('');
   const [level, setLevel] = useState(2);
   const [lastUsedDate, setLastUsedDate] = useState('');
+  const [proofSource, setProofSource] = useState<SkillProofSource>('url');
   const [proofUrl, setProofUrl] = useState('');
+  const [proofFilePath, setProofFilePath] = useState('');
+  const [proofFileName, setProofFileName] = useState('');
+  const [proofUploadError, setProofUploadError] = useState('');
+  const [proofUploading, setProofUploading] = useState(false);
   const [proofNotes, setProofNotes] = useState('');
+  const [requestVerification, setRequestVerification] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState('');
+  const [verificationSource, setVerificationSource] = useState<SkillVerificationSource>('peer');
+  const [verificationMessage, setVerificationMessage] = useState('');
   const [saving, setSaving] = useState(false);
 
   // L4 Skills autocomplete (for both modes)
@@ -107,6 +126,17 @@ export function AddSkillDrawer({
     }
   };
 
+  const deriveProofTitleFromFilePath = (rawPath: string) => {
+    const normalized = rawPath.trim().replace(/\/+$/, '');
+    if (!normalized) return 'Uploaded Document';
+
+    const lastSegment = normalized.split('/').filter(Boolean).pop();
+    if (!lastSegment) return 'Uploaded Document';
+
+    const decoded = decodeURIComponent(lastSegment).replace(/[-_]+/g, ' ').trim();
+    return decoded.length > 0 ? decoded.slice(0, 80) : 'Uploaded Document';
+  };
+
   // Reset drawer state when closed
   useEffect(() => {
     if (!open) {
@@ -124,8 +154,17 @@ export function AddSkillDrawer({
         setL4Name('');
         setLevel(2);
         setLastUsedDate('');
+        setProofSource('url');
         setProofUrl('');
+        setProofFilePath('');
+        setProofFileName('');
+        setProofUploadError('');
+        setProofUploading(false);
         setProofNotes('');
+        setRequestVerification(false);
+        setVerificationEmail('');
+        setVerificationSource('peer');
+        setVerificationMessage('');
         setL4Skills([]);
         setL4Search('');
         setShowL4Dropdown(false);
@@ -520,6 +559,46 @@ export function AddSkillDrawer({
     }
   };
 
+  const handleProofFileUpload = async (file: File | null) => {
+    if (!file) return;
+
+    const validation = validateFile(file, 'document', { category: 'proof' });
+    if (!validation.valid) {
+      setProofUploadError(validation.error || 'Invalid file');
+      return;
+    }
+
+    setProofUploading(true);
+    setProofUploadError('');
+    setProofFileName(file.name);
+
+    try {
+      const result = await uploadFile({
+        file,
+        type: 'document',
+        category: 'proof',
+      });
+
+      if (!result.success || !result.path) {
+        setProofUploadError(result.error || result.message || 'Upload failed');
+        return;
+      }
+
+      setProofSource('document');
+      setProofFilePath(result.path || '');
+      setProofUrl(result.url || '');
+      setProofUploadError('');
+      if (!proofNotes.trim()) {
+        setProofNotes(result.fileName || file.name);
+      }
+    } catch (error) {
+      console.error('Proof upload failed:', error);
+      setProofUploadError('Upload failed. Please try again.');
+    } finally {
+      setProofUploading(false);
+    }
+  };
+
   const handleSave = async (saveAndAddAnother: boolean = false) => {
     if (!taxonomyReady) {
       toast({
@@ -570,6 +649,35 @@ export function AddSkillDrawer({
       return;
     }
 
+    if (proofUploading) {
+      toast({
+        title: 'Proof upload in progress',
+        description: 'Please wait for the document upload to complete before saving.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (requestVerification) {
+      const normalizedEmail = verificationEmail.trim().toLowerCase();
+      if (!normalizedEmail) {
+        toast({
+          title: 'Verifier email required',
+          description: 'Enter an email address before requesting verification.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      if (!/^\S+@\S+\.\S+$/.test(normalizedEmail)) {
+        toast({
+          title: 'Invalid verifier email',
+          description: 'Enter a valid verifier email address.',
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       // Create payload - different based on whether skill is from taxonomy or custom
@@ -595,18 +703,30 @@ export function AddSkillDrawer({
       if (response.ok) {
         const skillData = await response.json();
 
-        // If proof URL is provided, attach it to the newly created skill
+        // Optionally attach proof to the newly created skill.
         let proofAttached = false;
         let proofAttachError: string | null = null;
         const trimmedProofUrl = proofUrl.trim();
-        const shouldAttachProof = Boolean(trimmedProofUrl && skillData.skill?.id);
+        const trimmedProofFilePath = proofFilePath.trim();
+        const shouldAttachProof = Boolean(
+          skillData.skill?.id &&
+            (proofSource === 'url' ? trimmedProofUrl : trimmedProofFilePath || trimmedProofUrl)
+        );
+
         if (shouldAttachProof) {
           try {
+            const proofType = proofSource === 'document' ? 'document' : 'link';
+            const proofTitle = proofNotes.trim()
+              ? proofNotes.trim()
+              : proofSource === 'document'
+                ? deriveProofTitleFromFilePath(trimmedProofFilePath)
+                : deriveProofTitleFromUrl(trimmedProofUrl);
             const proofResponse = await attachSkillProof(skillData.skill.id, {
-              proofType: 'link',
-              title: proofNotes.trim() || deriveProofTitleFromUrl(trimmedProofUrl),
+              proofType,
+              title: proofTitle,
               description: proofNotes.trim() || '',
               url: trimmedProofUrl,
+              filePath: proofSource === 'document' ? trimmedProofFilePath : '',
             });
             if (proofResponse.ok) {
               proofAttached = true;
@@ -629,20 +749,93 @@ export function AddSkillDrawer({
           }
         }
 
+        // Optionally request verification after save.
+        let verificationRequested = false;
+        let verificationError: string | null = null;
+        const shouldRequestVerification = Boolean(
+          requestVerification && verificationEmail.trim() && skillData.skill?.id
+        );
+
+        if (shouldRequestVerification) {
+          try {
+            const verificationResponse = await apiFetch(
+              `/api/expertise/user-skills/${skillData.skill.id}/verification-request`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  verifierSource: verificationSource,
+                  verifierEmail: verificationEmail.trim().toLowerCase(),
+                  message: verificationMessage.trim(),
+                }),
+              }
+            );
+            if (verificationResponse.ok) {
+              verificationRequested = true;
+              if (skillData?.skill) {
+                skillData.skill.verification_count = (skillData.skill.verification_count || 0) + 1;
+              }
+            } else {
+              const verificationErrorBody =
+                ((await verificationResponse.json().catch(() => null)) as {
+                  error?: string;
+                  details?: string;
+                } | null) || null;
+              verificationError =
+                verificationErrorBody?.error ||
+                verificationErrorBody?.details ||
+                `Verification API returned ${verificationResponse.status}`;
+            }
+          } catch (verificationRequestError) {
+            console.error(
+              'Error requesting verification from add skill flow:',
+              verificationRequestError
+            );
+            verificationError = 'Network error while requesting verification.';
+          }
+        }
+
+        const warnings: string[] = [];
         if (shouldAttachProof && !proofAttached) {
+          warnings.push(
+            proofAttachError
+              ? `proof could not be attached: ${proofAttachError}`
+              : 'proof could not be attached'
+          );
+        }
+        if (shouldRequestVerification && !verificationRequested) {
+          warnings.push(
+            verificationError
+              ? `verification request failed: ${verificationError}`
+              : 'verification request failed'
+          );
+        }
+
+        if (warnings.length > 0) {
           toast({
-            title: '⚠️ Skill added, proof failed',
-            description: proofAttachError
-              ? `The skill was saved, but proof could not be attached: ${proofAttachError}`
-              : 'The skill was saved, but proof could not be attached.',
+            title: '⚠️ Skill added with follow-up needed',
+            description: `The skill was saved, but ${warnings.join('; ')}.`,
             variant: 'destructive',
+          });
+        } else if (proofAttached && verificationRequested) {
+          toast({
+            title: '✅ Skill Added',
+            description: `"${l4Search}" was added with proof attached and verification requested.`,
+          });
+        } else if (proofAttached) {
+          toast({
+            title: '✅ Skill Added',
+            description: `"${l4Search}" was added with proof attached.`,
+          });
+        } else if (verificationRequested) {
+          toast({
+            title: '✅ Skill Added',
+            description: `"${l4Search}" was added and verification was requested.`,
           });
         } else {
           toast({
             title: '✅ Skill Added',
-            description: proofAttached
-              ? `"${l4Search}" has been added to your atlas with proof attached.`
-              : `"${l4Search}" has been added to your Expertise Atlas.`,
+            description: `"${l4Search}" has been added to your Expertise Atlas.`,
           });
         }
 
@@ -661,8 +854,17 @@ export function AddSkillDrawer({
           setShowL4Dropdown(false);
           setLevel(2);
           setLastUsedDate('');
+          setProofSource('url');
           setProofUrl('');
+          setProofFilePath('');
+          setProofFileName('');
+          setProofUploadError('');
+          setProofUploading(false);
           setProofNotes('');
+          setRequestVerification(false);
+          setVerificationEmail('');
+          setVerificationSource('peer');
+          setVerificationMessage('');
         } else {
           // Close drawer
           onOpenChange(false);
@@ -726,10 +928,25 @@ export function AddSkillDrawer({
       setLevel={setLevel}
       lastUsedDate={lastUsedDate}
       setLastUsedDate={setLastUsedDate}
+      proofSource={proofSource}
+      setProofSource={setProofSource}
       proofUrl={proofUrl}
       setProofUrl={setProofUrl}
+      proofFilePath={proofFilePath}
+      proofFileName={proofFileName}
+      proofUploadError={proofUploadError}
+      proofUploading={proofUploading}
+      onProofFileSelected={handleProofFileUpload}
       proofNotes={proofNotes}
       setProofNotes={setProofNotes}
+      requestVerification={requestVerification}
+      setRequestVerification={setRequestVerification}
+      verificationEmail={verificationEmail}
+      setVerificationEmail={setVerificationEmail}
+      verificationSource={verificationSource}
+      setVerificationSource={setVerificationSource}
+      verificationMessage={verificationMessage}
+      setVerificationMessage={setVerificationMessage}
       saving={saving}
       handleSave={handleSave}
       searchQuery={searchQuery}

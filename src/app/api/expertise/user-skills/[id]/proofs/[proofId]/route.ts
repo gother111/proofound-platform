@@ -21,7 +21,7 @@ export async function DELETE(
     // Also fetch title and type for analytics
     const { data: proof, error: proofError } = await supabase
       .from('skill_proofs')
-      .select('id, skill_id, profile_id, title, proof_type')
+      .select('id, skill_id, profile_id, title, proof_type, file_path')
       .eq('id', proofId)
       .eq('skill_id', skillId)
       .eq('profile_id', user.id)
@@ -37,6 +37,16 @@ export async function DELETE(
     if (deleteError) {
       console.error('Error deleting proof:', deleteError);
       return NextResponse.json({ error: 'Failed to delete proof' }, { status: 500 });
+    }
+
+    // Best-effort cleanup for uploaded documents. Never fail DELETE because of storage cleanup.
+    if (proof.file_path && proof.file_path.includes(user.id)) {
+      const { error: storageDeleteError } = await supabase.storage
+        .from('user-uploads')
+        .remove([proof.file_path]);
+      if (storageDeleteError) {
+        console.warn('Failed to delete proof file from storage:', storageDeleteError);
+      }
     }
 
     // Emit analytics event for proof deletion (PRD F3)

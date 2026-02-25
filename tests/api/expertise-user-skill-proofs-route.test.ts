@@ -20,6 +20,7 @@ vi.mock('@/lib/analytics/events', () => ({
 
 function createSupabaseMock() {
   let insertedProofPayload: Record<string, any> | null = null;
+  let existingProofCount = 0;
 
   const skillsQuery = {
     select: vi.fn().mockReturnThis(),
@@ -30,10 +31,16 @@ function createSupabaseMock() {
     }),
   };
 
-  const proofsQuery = {
+  const proofCountQuery = {
+    eq: vi.fn().mockReturnThis(),
+    data: [] as Array<{ id: string }>,
+    error: null as null | { message: string },
+  };
+
+  const proofInsertQuery = {
     insert: vi.fn().mockImplementation((payload: Record<string, any>) => {
       insertedProofPayload = payload;
-      return proofsQuery;
+      return proofInsertQuery;
     }),
     select: vi.fn().mockReturnThis(),
     single: vi.fn().mockImplementation(async () => ({
@@ -42,15 +49,35 @@ function createSupabaseMock() {
     })),
   };
 
+  const skillProofsTable = {
+    select: vi.fn((columns: string) => {
+      if (columns === 'id') {
+        proofCountQuery.data = Array.from({ length: existingProofCount }, (_, index) => ({
+          id: `proof-${index + 1}`,
+        }));
+        return proofCountQuery;
+      }
+      throw new Error(`Unexpected select columns: ${columns}`);
+    }),
+    insert: proofInsertQuery.insert,
+  };
+
   const supabase = {
     from: vi.fn((table: string) => {
       if (table === 'skills') return skillsQuery;
-      if (table === 'skill_proofs') return proofsQuery;
+      if (table === 'skill_proofs') return skillProofsTable;
       throw new Error(`Unexpected table: ${table}`);
     }),
   };
 
-  return { supabase, skillsQuery, proofsQuery };
+  return {
+    supabase,
+    skillsQuery,
+    proofInsertQuery,
+    setExistingProofCount: (value: number) => {
+      existingProofCount = value;
+    },
+  };
 }
 
 describe('expertise user-skill proofs route', () => {
@@ -60,7 +87,7 @@ describe('expertise user-skill proofs route', () => {
   });
 
   it('creates proof with deterministic title fallback when only URL is provided', async () => {
-    const { supabase, proofsQuery } = createSupabaseMock();
+    const { supabase, proofInsertQuery } = createSupabaseMock();
     vi.mocked(createClient).mockResolvedValue(supabase as any);
 
     const request = new NextRequest('http://localhost/api/expertise/user-skills/skill-1/proofs', {
@@ -76,7 +103,7 @@ describe('expertise user-skill proofs route', () => {
     const payload = await response.json();
 
     expect(response.status).toBe(201);
-    expect(proofsQuery.insert).toHaveBeenCalledWith(
+    expect(proofInsertQuery.insert).toHaveBeenCalledWith(
       expect.objectContaining({
         title: 'project alpha',
         url: 'https://example.com/project-alpha',
@@ -92,6 +119,34 @@ describe('expertise user-skill proofs route', () => {
         proof_type: 'link',
       })
     );
+  });
+
+  it('creates a document proof when uploaded file path is provided', async () => {
+    const { supabase, proofInsertQuery } = createSupabaseMock();
+    vi.mocked(createClient).mockResolvedValue(supabase as any);
+
+    const request = new NextRequest('http://localhost/api/expertise/user-skills/skill-1/proofs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        proofType: 'document',
+        filePath: 'proof/user-1/portfolio.pdf',
+        url: '',
+        title: '',
+      }),
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ id: 'skill-1' }) });
+    const payload = await response.json();
+
+    expect(response.status).toBe(201);
+    expect(proofInsertQuery.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        proof_type: 'document',
+        file_path: 'proof/user-1/portfolio.pdf',
+      })
+    );
+    expect(payload.proof.title).toBe('portfolio.pdf');
   });
 
   it('returns explicit validation message when title and URL are missing', async () => {
@@ -112,6 +167,30 @@ describe('expertise user-skill proofs route', () => {
 
     expect(response.status).toBe(400);
     expect(payload.error).toBe('Validation failed');
-    expect(payload.message).toBe('Title or URL is required');
+    expect(payload.message).toBe('Title, URL, or uploaded file is required');
+  });
+
+  it('rejects proof creation when skill already has the maximum number of proofs', async () => {
+    const { supabase, proofInsertQuery, setExistingProofCount } = createSupabaseMock();
+    setExistingProofCount(5);
+    vi.mocked(createClient).mockResolvedValue(supabase as any);
+
+    const request = new NextRequest('http://localhost/api/expertise/user-skills/skill-1/proofs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        proofType: 'link',
+        title: 'Proof at limit',
+        url: 'https://example.com/limit',
+      }),
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ id: 'skill-1' }) });
+    const payload = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(payload.error).toBe('Proof limit reached');
+    expect(payload.message).toContain('maximum of 5 proofs');
+    expect(proofInsertQuery.insert).not.toHaveBeenCalled();
   });
 });

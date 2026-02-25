@@ -3,13 +3,27 @@ import { Check, ChevronRight, Loader2, Lock, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  MAX_PROOFS_PER_SKILL,
+  MAX_PROOF_UPLOAD_SIZE_BYTES,
+  PROOF_ALLOWED_EXTENSIONS_LABEL,
+  PROOF_FILE_ACCEPT_ATTRIBUTE,
+} from '@/lib/proofs/constants';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 
 import { DOMAIN_COLORS, LEVEL_LABELS } from './constants';
-import type { L1Domain, L2Category, L3Subcategory, L4Skill } from './types';
+import type {
+  L1Domain,
+  L2Category,
+  L3Subcategory,
+  L4Skill,
+  SkillProofSource,
+  SkillVerificationSource,
+} from './types';
 
 type BrowseModePanelProps = {
   step: number;
@@ -37,10 +51,25 @@ type BrowseModePanelProps = {
   setLevel: (value: number) => void;
   lastUsedDate: string;
   setLastUsedDate: (value: string) => void;
+  proofSource: SkillProofSource;
+  setProofSource: (value: SkillProofSource) => void;
   proofUrl: string;
   setProofUrl: (value: string) => void;
+  proofFilePath: string;
+  proofFileName: string;
+  proofUploadError: string;
+  proofUploading: boolean;
+  onProofFileSelected: (file: File | null) => void;
   proofNotes: string;
   setProofNotes: (value: string) => void;
+  requestVerification: boolean;
+  setRequestVerification: (value: boolean) => void;
+  verificationEmail: string;
+  setVerificationEmail: (value: string) => void;
+  verificationSource: SkillVerificationSource;
+  setVerificationSource: (value: SkillVerificationSource) => void;
+  verificationMessage: string;
+  setVerificationMessage: (value: string) => void;
   saving: boolean;
   handleSave: (saveAndAddAnother?: boolean) => void;
   handleBack: () => void;
@@ -72,10 +101,25 @@ export function BrowseModePanel({
   setLevel,
   lastUsedDate,
   setLastUsedDate,
+  proofSource,
+  setProofSource,
   proofUrl,
   setProofUrl,
+  proofFilePath,
+  proofFileName,
+  proofUploadError,
+  proofUploading,
+  onProofFileSelected,
   proofNotes,
   setProofNotes,
+  requestVerification,
+  setRequestVerification,
+  verificationEmail,
+  setVerificationEmail,
+  verificationSource,
+  setVerificationSource,
+  verificationMessage,
+  setVerificationMessage,
   saving,
   handleSave,
   handleBack,
@@ -404,9 +448,28 @@ export function BrowseModePanel({
               visibility later.
             </div>
             <div className="space-y-3">
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={proofSource === 'url' ? 'default' : 'outline'}
+                  onClick={() => setProofSource('url')}
+                >
+                  Proof URL
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={proofSource === 'document' ? 'default' : 'outline'}
+                  onClick={() => setProofSource('document')}
+                >
+                  Document Upload
+                </Button>
+              </div>
+
               <div>
                 <Label htmlFor="proof-url" className="text-[#2D3330]">
-                  Proof URL
+                  Proof URL {proofSource === 'document' ? '(Optional)' : ''}
                 </Label>
                 <Input
                   id="proof-url"
@@ -416,7 +479,41 @@ export function BrowseModePanel({
                   onChange={(e) => setProofUrl(e.target.value)}
                   className="mt-1"
                 />
+                <p className="text-xs text-[#6B6760] mt-1">
+                  Up to {MAX_PROOFS_PER_SKILL} proofs can be attached per skill.
+                </p>
               </div>
+
+              {proofSource === 'document' && (
+                <div>
+                  <Label htmlFor="proof-document" className="text-[#2D3330]">
+                    Upload document
+                  </Label>
+                  <Input
+                    id="proof-document"
+                    type="file"
+                    accept={PROOF_FILE_ACCEPT_ATTRIBUTE}
+                    onChange={(event) => onProofFileSelected(event.target.files?.[0] || null)}
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-[#6B6760] mt-1">
+                    Accepted: {PROOF_ALLOWED_EXTENSIONS_LABEL}. Max size:{' '}
+                    {MAX_PROOF_UPLOAD_SIZE_BYTES / (1024 * 1024)}MB.
+                  </p>
+                  {proofUploading && (
+                    <p className="text-xs text-[#6B6760] mt-1">Uploading document...</p>
+                  )}
+                  {proofFilePath && !proofUploading && (
+                    <p className="text-xs text-[#6B6760] mt-1">
+                      Uploaded: {proofFileName || 'Document'}
+                    </p>
+                  )}
+                  {proofUploadError && (
+                    <p className="text-xs text-[#C76B4A] mt-1">{proofUploadError}</p>
+                  )}
+                </div>
+              )}
+
               <div>
                 <Label htmlFor="proof-notes" className="text-[#2D3330]">
                   Notes
@@ -431,6 +528,67 @@ export function BrowseModePanel({
                 />
               </div>
             </div>
+          </div>
+
+          <div className="border-t border-[#E5E3DA] pt-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Checkbox
+                id="request-verification-on-add"
+                checked={requestVerification}
+                onCheckedChange={(checked) => setRequestVerification(Boolean(checked))}
+              />
+              <Label htmlFor="request-verification-on-add" className="text-[#2D3330]">
+                Send verification request after save (optional)
+              </Label>
+            </div>
+
+            {requestVerification && (
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="verification-email" className="text-[#2D3330]">
+                    Verifier Email
+                  </Label>
+                  <Input
+                    id="verification-email"
+                    type="email"
+                    placeholder="colleague@example.com"
+                    value={verificationEmail}
+                    onChange={(event) => setVerificationEmail(event.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="verification-source" className="text-[#2D3330]">
+                    Relationship
+                  </Label>
+                  <select
+                    id="verification-source"
+                    value={verificationSource}
+                    onChange={(event) =>
+                      setVerificationSource(event.target.value as SkillVerificationSource)
+                    }
+                    className="mt-1 w-full px-3 py-2 border border-[#E5E3DA] rounded-md"
+                  >
+                    <option value="peer">Peer / Colleague</option>
+                    <option value="manager">Manager / Supervisor</option>
+                    <option value="external">External / Client</option>
+                  </select>
+                </div>
+                <div>
+                  <Label htmlFor="verification-message" className="text-[#2D3330]">
+                    Message (Optional)
+                  </Label>
+                  <Textarea
+                    id="verification-message"
+                    placeholder="Add context for the verifier..."
+                    value={verificationMessage}
+                    onChange={(event) => setVerificationMessage(event.target.value)}
+                    rows={3}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-3 pt-4 border-t border-[#E5E3DA]">

@@ -52,6 +52,9 @@ export interface L4Skill {
   };
 }
 
+export type SkillProofSource = 'url' | 'document';
+export type SkillVerificationSource = 'peer' | 'manager' | 'external';
+
 export type AddSkillDrawerProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;

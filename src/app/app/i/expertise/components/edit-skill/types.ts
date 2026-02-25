@@ -1,18 +1,20 @@
 export interface Proof {
   id: string;
-  proof_type: 'project' | 'certification' | 'media' | 'reference' | 'link';
+  proof_type: 'project' | 'certification' | 'media' | 'reference' | 'link' | 'document';
   title: string;
   description?: string;
   url?: string;
+  file_path?: string;
   issued_date?: string;
   created_at?: string;
 }
 
 export type ProofDraft = {
-  proofType: 'project' | 'certification' | 'media' | 'reference' | 'link';
+  proofType: 'project' | 'certification' | 'media' | 'reference' | 'link' | 'document';
   title: string;
   description: string;
   url: string;
+  filePath: string;
   issuedDate: string;
 };
 
