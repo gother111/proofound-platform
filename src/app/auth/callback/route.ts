@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { resolveUserHomePath } from '@/lib/auth';
+import { reconcileVerifierContradictions } from '@/lib/verification/contradiction';
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -25,6 +26,20 @@ export async function GET(request: NextRequest) {
         return redirectToLoginWithError(
           'We could not validate your authentication link. Please try again.'
         );
+      }
+
+      try {
+        const { data: authUser } = await supabase.auth.getUser();
+        const userId = authUser.user?.id || null;
+        const userEmail = authUser.user?.email || null;
+        if (userId || userEmail) {
+          await reconcileVerifierContradictions({
+            verifierProfileId: userId,
+            verifierEmail: userEmail,
+          });
+        }
+      } catch (reconcileError) {
+        console.error('Auth callback contradiction reconciliation failed:', reconcileError);
       }
     } catch (exchangeError) {
       console.error('Failed to exchange OAuth code for session:', exchangeError);

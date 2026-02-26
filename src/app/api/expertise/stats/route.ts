@@ -72,7 +72,8 @@ export async function GET() {
       .from('skill_verification_requests')
       .select('skill_id')
       .eq('requester_profile_id', user.id)
-      .eq('status', 'accepted');
+      .eq('status', 'accepted')
+      .eq('integrity_status', 'clear');
 
     if (verificationsError) {
       console.error('Error fetching skill verifications:', verificationsError);

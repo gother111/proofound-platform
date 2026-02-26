@@ -102,7 +102,8 @@ export default async function ExpertiseAtlasPage({ searchParams }: ExpertiseAtla
       .from('skill_verification_requests')
       .select('skill_id, verifier_source, status')
       .eq('requester_profile_id', user.id)
-      .eq('status', 'accepted');
+      .eq('status', 'accepted')
+      .eq('integrity_status', 'clear');
 
     if (verificationsError) {
       logger.error('Failed to fetch skill verifications', verificationsError);

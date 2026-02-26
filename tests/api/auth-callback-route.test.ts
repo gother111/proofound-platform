@@ -1,13 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
-const { exchangeCodeForSessionMock, createClientMock, resolveUserHomePathMock } = vi.hoisted(
-  () => ({
-    exchangeCodeForSessionMock: vi.fn(),
-    createClientMock: vi.fn(),
-    resolveUserHomePathMock: vi.fn(),
-  })
-);
+const {
+  exchangeCodeForSessionMock,
+  createClientMock,
+  resolveUserHomePathMock,
+  getUserMock,
+  reconcileVerifierContradictionsMock,
+} = vi.hoisted(() => ({
+  exchangeCodeForSessionMock: vi.fn(),
+  createClientMock: vi.fn(),
+  resolveUserHomePathMock: vi.fn(),
+  getUserMock: vi.fn(),
+  reconcileVerifierContradictionsMock: vi.fn(),
+}));
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: createClientMock,
@@ -17,18 +23,27 @@ vi.mock('@/lib/auth', () => ({
   resolveUserHomePath: resolveUserHomePathMock,
 }));
 
+vi.mock('@/lib/verification/contradiction', () => ({
+  reconcileVerifierContradictions: reconcileVerifierContradictionsMock,
+}));
+
 import { GET } from '@/app/auth/callback/route';
 
 describe('auth callback route', () => {
   const mockSupabase = {
     auth: {
       exchangeCodeForSession: exchangeCodeForSessionMock,
+      getUser: getUserMock,
     },
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
     exchangeCodeForSessionMock.mockResolvedValue({ error: null });
+    getUserMock.mockResolvedValue({
+      data: { user: { id: 'user-1', email: 'person@example.com' } },
+      error: null,
+    });
     createClientMock.mockResolvedValue(mockSupabase);
     resolveUserHomePathMock.mockResolvedValue('/app/i/home');
   });
@@ -88,6 +103,10 @@ describe('auth callback route', () => {
 
     expect(exchangeCodeForSessionMock).toHaveBeenCalledTimes(1);
     expect(exchangeCodeForSessionMock).toHaveBeenCalledWith('oauth-code');
+    expect(reconcileVerifierContradictionsMock).toHaveBeenCalledWith({
+      verifierProfileId: 'user-1',
+      verifierEmail: 'person@example.com',
+    });
     expect(resolveUserHomePathMock).toHaveBeenCalledTimes(1);
     expect(resolveUserHomePathMock).toHaveBeenCalledWith(mockSupabase);
 

@@ -5,8 +5,13 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
 }));
 
+vi.mock('@/lib/verification/contradiction', () => ({
+  reconcileVerifierContradictions: vi.fn(),
+}));
+
 import { createClient } from '@/lib/supabase/server';
 import { GET } from '@/app/api/verification/work-email/verify/route';
+import { reconcileVerifierContradictions } from '@/lib/verification/contradiction';
 
 describe('GET /api/verification/work-email/verify', () => {
   beforeEach(() => {
@@ -92,5 +97,9 @@ describe('GET /api/verification/work-email/verify', () => {
     const reverifyDueAt = new Date(updatePayload!.work_email_reverify_due_at).getTime();
     expect(reverifyDueAt).toBeGreaterThan(verifiedAt);
     expect(reverifyDueAt - verifiedAt).toBeGreaterThanOrEqual(364 * 24 * 60 * 60 * 1000);
+    expect(reconcileVerifierContradictions).toHaveBeenCalledWith({
+      verifierProfileId: 'user-1',
+      verifierEmail: 'person@acme.org',
+    });
   });
 });

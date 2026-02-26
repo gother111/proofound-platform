@@ -1,5 +1,6 @@
 import { requireApiAuthContext } from '@/lib/auth';
 import { NextResponse, NextRequest } from 'next/server';
+import { normalizeEmail } from '@/lib/verification/integrity';
 
 /**
  * GET /api/expertise/verifications/incoming
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
 
     // Get current user's email
     const { data: authUser } = await supabase.auth.getUser();
-    const userEmail = authUser.user?.email;
+    const userEmail = normalizeEmail(authUser.user?.email || null);
 
     if (!userEmail) {
       return NextResponse.json({ error: 'User email not found' }, { status: 400 });

@@ -111,7 +111,8 @@ export default async function PortfolioPage({
         .from('skill_verification_requests')
         .select('id', { count: 'exact', head: true })
         .eq('requester_profile_id', profile.id)
-        .eq('status', 'accepted');
+        .eq('status', 'accepted')
+        .eq('integrity_status', 'clear');
       acceptedVerificationsCount = count || 0;
     } catch {
       acceptedVerificationsCount = 0;

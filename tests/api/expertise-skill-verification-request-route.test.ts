@@ -31,7 +31,7 @@ function createRequest(origin: string, body: Record<string, unknown>) {
 
 function createSupabaseMock(
   insertResult: { id: string },
-  options?: { missingTokenColumnOnFirstInsert?: boolean }
+  options?: { missingTokenColumnOnFirstInsert?: boolean; requesterEmail?: string | null }
 ) {
   const inserts: any[] = [];
   let insertCalls = 0;
@@ -94,6 +94,16 @@ function createSupabaseMock(
   };
 
   const supabase = {
+    auth: {
+      getUser: vi.fn().mockResolvedValue({
+        data: {
+          user: {
+            email: options?.requesterEmail ?? 'alice@proofound.io',
+          },
+        },
+        error: null,
+      }),
+    },
     from: vi.fn((table: string) => {
       if (table === 'skills') return skillsQuery;
       if (table === 'profiles') return profilesQuery;
@@ -242,5 +252,27 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
 
     expect(response.status).toBe(401);
     await expect(response.json()).resolves.toEqual({ error: 'Unauthorized' });
+  });
+
+  it('blocks self verification requests by canonical email identity', async () => {
+    const { supabase } = createSupabaseMock(
+      { id: 'req-blocked' },
+      { requesterEmail: 'alice@proofound.io' }
+    );
+    authContext.supabase = supabase;
+
+    const response = await POST(
+      createRequest('https://proofound.io', {
+        verifierSource: 'peer',
+        verifierEmail: 'Alice+alias@Proofound.io',
+      }),
+      params
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      code: 'SELF_VERIFICATION_BLOCKED',
+    });
+    expect(sendEmail).not.toHaveBeenCalled();
   });
 });

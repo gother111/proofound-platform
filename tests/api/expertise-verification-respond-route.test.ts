@@ -114,6 +114,8 @@ describe('POST /api/expertise/verification/[requestId]/respond', () => {
     expect(response.status).toBe(200);
     expect(requestedProfileId).toBe(requesterProfileId);
     expect(updatePayload?.verifier_profile_id).toBe('verifier-user-1');
+    expect(updatePayload?.response_auth_method).toBe('authenticated');
+    expect(updatePayload?.response_actor_email).toBe('verifier@example.com');
     expect(notifyVerificationCompleted).toHaveBeenCalledWith(
       requesterProfileId,
       requestId,

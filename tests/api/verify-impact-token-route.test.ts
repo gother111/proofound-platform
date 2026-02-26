@@ -27,6 +27,7 @@ function buildImpactAdminClient(overrides?: {
   requesterProfile?: any;
   storyOwnerProfile?: any;
   onImpactStoryUpdate?: (payload: any) => void;
+  onImpactRequestUpdate?: (payload: any) => void;
 }) {
   const impactRequest = overrides?.impactRequest || {
     id: 'req-1',
@@ -37,6 +38,14 @@ function buildImpactAdminClient(overrides?: {
     verifier_relationship: 'Program Director',
     message: 'Please verify claims',
     status: 'pending',
+    requires_authenticated_verifier: false,
+    integrity_status: 'clear',
+    integrity_reason: null,
+    risk_signals: {},
+    requester_ip_hash: null,
+    requester_user_agent_hash: null,
+    integrity_meta: {},
+    integrity_flagged_at: null,
     claim_snapshot: {
       roleClaim: { id: 'role', label: 'Role participation' },
       outcomeClaims: [{ id: 'outcome:o1', outcomeId: 'o1', label: 'Outcome one' }],
@@ -74,8 +83,11 @@ function buildImpactAdminClient(overrides?: {
     }),
   });
 
-  const impactRequestUpdate = vi.fn().mockReturnValue({
-    eq: vi.fn().mockResolvedValue({ error: null }),
+  const impactRequestUpdate = vi.fn((payload: any) => {
+    overrides?.onImpactRequestUpdate?.(payload);
+    return {
+      eq: vi.fn().mockResolvedValue({ error: null }),
+    };
   });
 
   const impactStoryUpdateEq = vi.fn().mockResolvedValue({ error: null });
@@ -229,7 +241,12 @@ function buildSkillClientForLegacyIdLookup() {
 describe('verify impact token route', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    createClientMock.mockReturnValue({ from: vi.fn() });
+    createClientMock.mockReturnValue({
+      from: vi.fn(),
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
+      },
+    });
     sendEmailMock.mockResolvedValue({ success: true });
   });
 
@@ -363,6 +380,161 @@ describe('verify impact token route', () => {
     expect(body.confirmed_claims.role).toBe(true);
     expect(body.confirmed_claims.outcomes).toEqual(['o1']);
     expect(impactUpdatePayload).toMatchObject({ verified: true });
+  });
+
+  it('POST returns AUTH_REQUIRED for flagged requests that require authenticated verifier', async () => {
+    createAdminClientMock.mockReturnValue(
+      buildImpactAdminClient({
+        impactRequest: {
+          id: 'req-need-auth',
+          impact_story_id: 'story-1',
+          requester_profile_id: 'requester-1',
+          verifier_email: 'verifier@example.com',
+          status: 'pending',
+          requires_authenticated_verifier: true,
+          integrity_status: 'flagged',
+          integrity_reason: 'suspected_collusion',
+          risk_signals: {},
+          requester_ip_hash: null,
+          requester_user_agent_hash: null,
+          integrity_meta: {},
+          integrity_flagged_at: null,
+          claim_snapshot: {},
+          created_at: '2026-02-20T00:00:00.000Z',
+          expires_at: '2099-02-20T00:00:00.000Z',
+        },
+      })
+    );
+
+    createClientMock.mockReturnValue({
+      from: vi.fn(),
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
+      },
+    });
+
+    const response = await POST(
+      new NextRequest(`http://localhost/api/verify/${TOKEN}`, {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'accept',
+          confirmedClaimIds: ['role'],
+        }),
+      }),
+      { params: Promise.resolve({ token: TOKEN }) }
+    );
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toMatchObject({
+      code: 'AUTH_REQUIRED',
+    });
+  });
+
+  it('POST rejects authenticated mismatched verifier identity', async () => {
+    createAdminClientMock.mockReturnValue(
+      buildImpactAdminClient({
+        impactRequest: {
+          id: 'req-mismatch',
+          impact_story_id: 'story-1',
+          requester_profile_id: 'requester-1',
+          verifier_email: 'verifier@example.com',
+          status: 'pending',
+          requires_authenticated_verifier: true,
+          integrity_status: 'flagged',
+          integrity_reason: 'suspected_collusion',
+          risk_signals: {},
+          requester_ip_hash: null,
+          requester_user_agent_hash: null,
+          integrity_meta: {},
+          integrity_flagged_at: null,
+          claim_snapshot: {},
+          created_at: '2026-02-20T00:00:00.000Z',
+          expires_at: '2099-02-20T00:00:00.000Z',
+        },
+      })
+    );
+
+    createClientMock.mockReturnValue({
+      from: vi.fn(),
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { id: 'other-user', email: 'other@example.com' } },
+          error: null,
+        }),
+      },
+    });
+
+    const response = await POST(
+      new NextRequest(`http://localhost/api/verify/${TOKEN}`, {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'accept',
+          confirmedClaimIds: ['role'],
+        }),
+      }),
+      { params: Promise.resolve({ token: TOKEN }) }
+    );
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toMatchObject({
+      code: 'VERIFIER_IDENTITY_MISMATCH',
+    });
+  });
+
+  it('POST allows matching authenticated verifier and records authenticated response method', async () => {
+    let impactRequestUpdatePayload: any = null;
+    createAdminClientMock.mockReturnValue(
+      buildImpactAdminClient({
+        impactRequest: {
+          id: 'req-auth-ok',
+          impact_story_id: 'story-1',
+          requester_profile_id: 'requester-1',
+          verifier_email: 'verifier@example.com',
+          status: 'pending',
+          requires_authenticated_verifier: true,
+          integrity_status: 'flagged',
+          integrity_reason: 'suspected_collusion',
+          risk_signals: {},
+          requester_ip_hash: null,
+          requester_user_agent_hash: null,
+          integrity_meta: {},
+          integrity_flagged_at: null,
+          claim_snapshot: {},
+          created_at: '2026-02-20T00:00:00.000Z',
+          expires_at: '2099-02-20T00:00:00.000Z',
+        },
+        onImpactRequestUpdate: (payload) => {
+          impactRequestUpdatePayload = payload;
+        },
+      })
+    );
+
+    createClientMock.mockReturnValue({
+      from: vi.fn(),
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { id: 'verifier-user-1', email: 'verifier@example.com' } },
+          error: null,
+        }),
+      },
+    });
+
+    const response = await POST(
+      new NextRequest(`http://localhost/api/verify/${TOKEN}`, {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'accept',
+          confirmedClaimIds: ['role'],
+        }),
+      }),
+      { params: Promise.resolve({ token: TOKEN }) }
+    );
+
+    expect(response.status).toBe(200);
+    expect(impactRequestUpdatePayload).toMatchObject({
+      response_auth_method: 'authenticated',
+      response_actor_email: 'verifier@example.com',
+    });
   });
 
   it('GET falls back to legacy request id lookup when verification_token column is unavailable', async () => {

@@ -1,6 +1,7 @@
 import { requireAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { VerificationsClient } from './VerificationsClient';
+import { normalizeEmail } from '@/lib/verification/integrity';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,7 +11,7 @@ export default async function VerificationsPage() {
 
   // Get user's email
   const { data: authUser } = await supabase.auth.getUser();
-  const userEmail = authUser.user?.email?.toLowerCase() || '';
+  const userEmail = normalizeEmail(authUser.user?.email || null) || '';
 
   const verificationSelect = `
     id,

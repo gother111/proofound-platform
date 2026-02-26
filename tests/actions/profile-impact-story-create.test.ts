@@ -4,6 +4,8 @@ const mockDbInsert = vi.hoisted(() => vi.fn());
 const mockDbUpdate = vi.hoisted(() => vi.fn());
 const mockRequireAuth = vi.hoisted(() => vi.fn());
 const mockSendEmail = vi.hoisted(() => vi.fn());
+const mockCreateClient = vi.hoisted(() => vi.fn());
+const mockHeaders = vi.hoisted(() => vi.fn());
 
 vi.mock('@/db', () => ({
   db: {
@@ -18,6 +20,14 @@ vi.mock('@/lib/auth', () => ({
 
 vi.mock('@/lib/email/sender', () => ({
   sendEmail: mockSendEmail,
+}));
+
+vi.mock('@/lib/supabase/server', () => ({
+  createClient: mockCreateClient,
+}));
+
+vi.mock('next/headers', () => ({
+  headers: mockHeaders,
 }));
 
 vi.mock('next/cache', () => ({
@@ -74,6 +84,15 @@ describe('createImpactStory schema-drift compatibility', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockRequireAuth.mockResolvedValue({ id: 'user-1' });
+    mockCreateClient.mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { email: 'requester@example.com' } },
+          error: null,
+        }),
+      },
+    });
+    mockHeaders.mockResolvedValue(new Headers());
   });
 
   it('falls back to legacy insert mode when structured impact columns are unavailable', async () => {
@@ -91,13 +110,11 @@ describe('createImpactStory schema-drift compatibility', () => {
 
         if (impactInsertAttempt === 1) {
           return {
-            returning: vi
-              .fn()
-              .mockRejectedValue(
-                new Error('column "timeline_structured" does not exist', {
-                  cause: { code: '42703' },
-                } as any)
-              ),
+            returning: vi.fn().mockRejectedValue(
+              new Error('column "timeline_structured" does not exist', {
+                cause: { code: '42703' },
+              } as any)
+            ),
           };
         }
 

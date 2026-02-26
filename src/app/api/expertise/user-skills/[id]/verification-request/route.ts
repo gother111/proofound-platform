@@ -4,6 +4,12 @@ import { z } from 'zod';
 import { randomBytes } from 'crypto';
 import { sendEmail } from '@/lib/email/sender';
 import { resolveSiteUrlFromHeaders } from '@/lib/env';
+import {
+  VERIFICATION_INTEGRITY_REASONS,
+  assessVerificationRequestIntegrity,
+  normalizeEmail,
+  writeVerificationAuditLog,
+} from '@/lib/verification/integrity';
 
 const CreateVerificationRequestSchema = z.object({
   verifierSource: z.enum(['peer', 'manager', 'external']),
@@ -47,7 +53,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     // Validate input
     const validated = CreateVerificationRequestSchema.parse(body);
-    const normalizedVerifierEmail = validated.verifierEmail.trim().toLowerCase();
+    const normalizedVerifierEmail = normalizeEmail(validated.verifierEmail);
+    if (!normalizedVerifierEmail) {
+      return NextResponse.json({ error: 'Valid email is required' }, { status: 400 });
+    }
 
     // Verify skill belongs to user and get skill details
     const { data: skill, error: skillError } = await supabase
@@ -77,6 +86,40 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       .eq('id', user.id)
       .single();
 
+    const { data: authUserData } = await supabase.auth.getUser();
+    const requesterEmail = normalizeEmail(authUserData.user?.email || null);
+
+    const integrityAssessment = await assessVerificationRequestIntegrity({
+      requesterProfileId: user.id,
+      requesterEmail,
+      verifierEmail: normalizedVerifierEmail,
+      verifierSource: validated.verifierSource,
+      headers: request.headers,
+    });
+
+    if (integrityAssessment.policy.blockSelf) {
+      await writeVerificationAuditLog({
+        actorId: user.id,
+        action: 'verification.request.blocked',
+        targetType: 'skill',
+        targetId: skillId,
+        meta: {
+          reason: VERIFICATION_INTEGRITY_REASONS.SELF_VERIFICATION_BLOCKED,
+          verifier_email: normalizedVerifierEmail,
+          verifier_source: validated.verifierSource,
+          risk_signals: integrityAssessment.riskSignals,
+        },
+      });
+
+      return NextResponse.json(
+        {
+          error: 'You cannot request verification from yourself.',
+          code: 'SELF_VERIFICATION_BLOCKED',
+        },
+        { status: 400 }
+      );
+    }
+
     // Generate secure verification token for magic link
     const verificationToken = generateVerificationToken();
 
@@ -87,9 +130,26 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const verificationInsert = {
       skill_id: skillId,
       requester_profile_id: user.id,
+      requester_email_snapshot: integrityAssessment.normalizedRequesterEmail,
+      requester_domain_snapshot: integrityAssessment.requesterDomain,
       verifier_email: normalizedVerifierEmail,
+      verifier_domain_snapshot: integrityAssessment.verifierDomain,
+      verifier_profile_id: integrityAssessment.verifierProfileId,
       verifier_source: validated.verifierSource,
       message: validated.message || null,
+      risk_signals: integrityAssessment.riskSignals,
+      requires_authenticated_verifier: integrityAssessment.policy.requiresAuthenticatedVerifier,
+      integrity_status: integrityAssessment.policy.integrityStatus,
+      integrity_reason: integrityAssessment.policy.integrityReason,
+      integrity_meta: {
+        policy: {
+          requires_authenticated_verifier: integrityAssessment.policy.requiresAuthenticatedVerifier,
+          integrity_status: integrityAssessment.policy.integrityStatus,
+          integrity_reason: integrityAssessment.policy.integrityReason,
+        },
+      },
+      requester_ip_hash: integrityAssessment.requesterFingerprints.ipHash,
+      requester_user_agent_hash: integrityAssessment.requesterFingerprints.userAgentHash,
       verification_token: verificationToken,
       expires_at: expiresAt.toISOString(),
     };
@@ -260,6 +320,22 @@ This email was sent by Proofound on behalf of ${requesterName}.
       // Don't fail the request - the verification request is created, email is optional
     }
 
+    await writeVerificationAuditLog({
+      actorId: user.id,
+      action: 'verification.request.created',
+      targetType: 'skill_verification_request',
+      targetId: verificationRequest.id,
+      meta: {
+        skill_id: skillId,
+        verifier_email: normalizedVerifierEmail,
+        verifier_source: validated.verifierSource,
+        integrity_status: verificationRequest.integrity_status || 'clear',
+        requires_authenticated_verifier:
+          verificationRequest.requires_authenticated_verifier || false,
+        risk_signals: verificationRequest.risk_signals || {},
+      },
+    });
+
     // Emit verification requested analytics event (PRD F7)
     try {
       const { emitVerificationRequestedAsync } = await import('@/lib/analytics/events');
@@ -276,6 +352,9 @@ This email was sent by Proofound on behalf of ${requesterName}.
       {
         request: verificationRequest,
         email_sent: emailResult.success,
+        integrity_status: verificationRequest.integrity_status || 'clear',
+        requires_authenticated_verifier:
+          verificationRequest.requires_authenticated_verifier || false,
       },
       { status: 201 }
     );
@@ -344,7 +423,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     // Determine overall verification status
-    const hasAccepted = requests?.some((r) => r.status === 'accepted');
+    const hasAccepted = requests?.some(
+      (r) => r.status === 'accepted' && (r.integrity_status || 'clear') === 'clear'
+    );
     const verification_status = hasAccepted ? 'verified' : 'pending';
 
     return NextResponse.json({

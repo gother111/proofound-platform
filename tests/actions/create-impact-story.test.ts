@@ -6,6 +6,8 @@ const mockDbInsert = vi.hoisted(() => vi.fn());
 const mockDbUpdate = vi.hoisted(() => vi.fn());
 const mockRequireAuth = vi.hoisted(() => vi.fn());
 const mockSendEmail = vi.hoisted(() => vi.fn());
+const mockCreateClient = vi.hoisted(() => vi.fn());
+const mockHeaders = vi.hoisted(() => vi.fn());
 
 vi.mock('@/db', () => ({
   db: {
@@ -20,6 +22,14 @@ vi.mock('@/lib/auth', () => ({
 
 vi.mock('@/lib/email/sender', () => ({
   sendEmail: mockSendEmail,
+}));
+
+vi.mock('@/lib/supabase/server', () => ({
+  createClient: mockCreateClient,
+}));
+
+vi.mock('next/headers', () => ({
+  headers: mockHeaders,
 }));
 
 vi.mock('next/cache', () => ({
@@ -75,6 +85,15 @@ describe('createImpactStory verification email path', () => {
     mockRequireAuth.mockResolvedValue({ id: 'user-1' });
     mockDbInsert.mockReset();
     mockDbUpdate.mockReset();
+    mockCreateClient.mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { email: 'requester@example.com' } },
+          error: null,
+        }),
+      },
+    });
+    mockHeaders.mockResolvedValue(new Headers());
   });
 
   function createProfileInsertMock({
@@ -153,7 +172,7 @@ describe('createImpactStory verification email path', () => {
 
     const sentArgs = vi.mocked(mockSendEmail).mock.calls[0];
     expect(sentArgs?.[0]).toMatchObject({
-      to: 'Verifier@Example.com',
+      to: 'verifier@example.com',
       subject: `${BASE_STORY.title} verification request on Proofound`,
     });
     expect(sentArgs?.[0].html).toMatch(/https?:\/\/[^\"'\\s]+\/verify\/[a-f0-9]{64}/);
@@ -198,5 +217,51 @@ describe('createImpactStory verification email path', () => {
         emailError: 'Resend unavailable',
       }),
     });
+  });
+
+  it('keeps impact story save and blocks self verification request creation', async () => {
+    const insertCalls: Array<{ table: unknown; payload: any }> = [];
+    mockCreateClient.mockResolvedValueOnce({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { email: 'owner+alias@example.com' } },
+          error: null,
+        }),
+      },
+    });
+
+    mockDbInsert.mockImplementation((table: unknown) => {
+      return {
+        values: vi.fn((payload: any) => {
+          insertCalls.push({ table, payload });
+
+          if (table === impactStories) {
+            return {
+              returning: vi.fn().mockResolvedValue([{ id: 'story-self', title: payload.title }]),
+            };
+          }
+
+          if (table === impactStoryVerificationRequests) {
+            throw new Error('Verification insert should not be called for self verification');
+          }
+
+          throw new Error(`Unexpected insert table: ${String(table)}`);
+        }),
+      };
+    });
+
+    const result = await createImpactStory({
+      ...(BASE_STORY as any),
+      verificationRequest: {
+        verifierEmail: 'owner@example.com',
+        verifierName: 'Owner',
+        verifierRelationship: 'Manager',
+      },
+    } as any);
+
+    expect(result.id).toBe('story-self');
+    expect(result.verificationWarning).toMatch(/self-verification requests are not allowed/i);
+    expect(insertCalls).toHaveLength(1);
+    expect(mockSendEmail).not.toHaveBeenCalled();
   });
 });

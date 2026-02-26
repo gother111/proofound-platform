@@ -2,6 +2,13 @@ import { requireApiAuthContext } from '@/lib/auth';
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
 import { notifyVerificationCompleted } from '@/lib/notifications';
+import {
+  extractRequestFingerprints,
+  hasSameDeviceSignal,
+  mergeIntegrityWithResponseSignal,
+  normalizeEmail,
+  writeVerificationAuditLog,
+} from '@/lib/verification/integrity';
 
 const RespondSchema = z.object({
   action: z.enum(['accept', 'decline']),
@@ -41,7 +48,7 @@ export async function POST(
 
     // Get current user's email
     const { data: authUser } = await supabase.auth.getUser();
-    const userEmail = authUser.user?.email?.toLowerCase() || '';
+    const userEmail = normalizeEmail(authUser.user?.email || null) || '';
 
     // Check if user is authorized to respond
     // User must be the intended verifier (by email or profile ID)
@@ -65,13 +72,53 @@ export async function POST(
     }
 
     // Update verification request
+    const respondedAt = new Date().toISOString();
+    const responderFingerprints = extractRequestFingerprints(request.headers);
+    const sameDeviceSignal = hasSameDeviceSignal({
+      requesterIpHash: verificationRequest.requester_ip_hash,
+      requesterUserAgentHash: verificationRequest.requester_user_agent_hash,
+      responderIpHash: responderFingerprints.ipHash,
+      responderUserAgentHash: responderFingerprints.userAgentHash,
+    });
+    const mergedIntegrity = mergeIntegrityWithResponseSignal({
+      currentStatus: verificationRequest.integrity_status,
+      currentReason: verificationRequest.integrity_reason,
+      currentSignals: verificationRequest.risk_signals,
+      sameDeviceSignal,
+    });
+    const existingIntegrityMeta =
+      verificationRequest.integrity_meta && typeof verificationRequest.integrity_meta === 'object'
+        ? (verificationRequest.integrity_meta as Record<string, unknown>)
+        : {};
+    const integrityMeta = {
+      ...existingIntegrityMeta,
+      response: {
+        same_device_signal: sameDeviceSignal,
+        response_auth_method: 'authenticated',
+        response_actor_email: userEmail,
+        responded_at: respondedAt,
+      },
+    };
+
     const { data: updated, error: updateError } = await supabase
       .from('skill_verification_requests')
       .update({
         status: validated.action === 'accept' ? 'accepted' : 'declined',
-        responded_at: new Date().toISOString(),
+        responded_at: respondedAt,
         response_message: validated.responseMessage || null,
         verifier_profile_id: user.id, // Link to user profile if they have one
+        responder_ip_hash: responderFingerprints.ipHash,
+        responder_user_agent_hash: responderFingerprints.userAgentHash,
+        response_auth_method: 'authenticated',
+        response_actor_email: userEmail,
+        risk_signals: mergedIntegrity.riskSignals,
+        integrity_status: mergedIntegrity.integrityStatus,
+        integrity_reason: mergedIntegrity.integrityReason,
+        integrity_meta: integrityMeta,
+        integrity_flagged_at:
+          mergedIntegrity.integrityStatus === 'flagged'
+            ? verificationRequest.integrity_flagged_at || mergedIntegrity.integrityFlaggedAt
+            : null,
       })
       .eq('id', requestId)
       .select()
@@ -103,9 +150,30 @@ export async function POST(
       // Don't fail the request if notification fails
     }
 
+    await writeVerificationAuditLog({
+      actorId: user.id,
+      action: 'verification.response.recorded',
+      targetType: 'skill_verification_request',
+      targetId: requestId,
+      meta: {
+        response_status: updated.status,
+        response_action: validated.action,
+        response_auth_method: 'authenticated',
+        response_actor_email: userEmail,
+        integrity_status: updated.integrity_status || mergedIntegrity.integrityStatus,
+        integrity_reason: updated.integrity_reason || mergedIntegrity.integrityReason,
+        same_device_signal: sameDeviceSignal,
+      },
+    });
+
     return NextResponse.json({
       request: updated,
       message: `Verification request ${validated.action === 'accept' ? 'accepted' : 'declined'} successfully`,
+      integrity_status: updated.integrity_status || mergedIntegrity.integrityStatus,
+      integrity_reason:
+        (updated.integrity_status || mergedIntegrity.integrityStatus) === 'flagged'
+          ? updated.integrity_reason || mergedIntegrity.integrityReason
+          : null,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

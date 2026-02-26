@@ -24,6 +24,9 @@ interface SkillVerificationData {
   verifier_source: 'peer' | 'manager' | 'external';
   message?: string;
   status: VerificationStatus;
+  requires_authenticated_verifier?: boolean;
+  integrity_status?: 'clear' | 'flagged';
+  integrity_reason?: string | null;
   created_at: string;
   expires_at: string;
 }
@@ -48,6 +51,9 @@ interface ImpactVerificationData {
   verifier_relationship?: string | null;
   message?: string;
   status: VerificationStatus;
+  requires_authenticated_verifier?: boolean;
+  integrity_status?: 'clear' | 'flagged';
+  integrity_reason?: string | null;
   created_at: string;
   expires_at: string;
   why_you_are_receiving_this: string;
@@ -82,6 +88,7 @@ export default function VerifySkillPage() {
   const [confirmedClaimIds, setConfirmedClaimIds] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
   const [submittedAction, setSubmittedAction] = useState<'accepted' | 'declined' | null>(null);
+  const [authRequired, setAuthRequired] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -147,6 +154,7 @@ export default function VerifySkillPage() {
 
     setSubmitting(true);
     setError(null);
+    setAuthRequired(false);
 
     try {
       const response = await apiFetch(`/api/verify/${token}`, {
@@ -161,6 +169,12 @@ export default function VerifySkillPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
+        if (
+          errorData?.code === 'AUTH_REQUIRED' ||
+          errorData?.code === 'VERIFIER_IDENTITY_MISMATCH'
+        ) {
+          setAuthRequired(true);
+        }
         setError(errorData.error || 'Failed to submit response');
         return;
       }
@@ -336,6 +350,12 @@ export default function VerifySkillPage() {
 
           {isImpactVerification(data) ? (
             <div className="space-y-3">
+              {data.requires_authenticated_verifier && (
+                <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+                  This request requires sign-in by the intended verifier before it can be submitted.
+                </div>
+              )}
+
               <div className="space-y-2">
                 <p className="text-sm font-medium text-[#6B6760]">Why you&apos;re receiving this</p>
                 <div className="p-3 bg-[#F7F6F1] rounded-lg text-sm text-[#2D3330]">
@@ -378,6 +398,12 @@ export default function VerifySkillPage() {
             </div>
           ) : (
             <>
+              {data.requires_authenticated_verifier && (
+                <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+                  This request requires sign-in by the intended verifier before it can be submitted.
+                </div>
+              )}
+
               <div className="space-y-3">
                 <p className="text-sm font-medium text-[#6B6760]">Skill to verify</p>
                 <div className="p-4 border-l-4 border-[#1C4D3A] bg-white rounded-r-lg">
@@ -408,6 +434,13 @@ export default function VerifySkillPage() {
             </div>
           )}
 
+          {data.integrity_status === 'flagged' && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+              This request has integrity risk flags and accepted responses may be treated as
+              non-independent.
+            </div>
+          )}
+
           <div className="space-y-2">
             <label htmlFor="response-message" className="text-sm font-medium text-[#6B6760]">
               Add a note (optional)
@@ -423,6 +456,19 @@ export default function VerifySkillPage() {
           </div>
 
           {error && <p className="text-sm text-red-600">{error}</p>}
+
+          {authRequired && (
+            <div className="flex flex-col gap-2 rounded-lg border border-[#1C4D3A]/20 bg-[#F7F6F1] p-3">
+              <p className="text-sm text-[#2D3330]">Sign in with the verifier email to continue.</p>
+              <Button
+                variant="outline"
+                className="w-fit border-[#1C4D3A] text-[#1C4D3A]"
+                onClick={() => router.push(`/login?next=${encodeURIComponent(`/verify/${token}`)}`)}
+              >
+                Sign In to Continue
+              </Button>
+            </div>
+          )}
 
           <p className="text-xs text-[#6B6760] text-center">
             This request expires on {new Date(data.expires_at || '').toLocaleDateString()}

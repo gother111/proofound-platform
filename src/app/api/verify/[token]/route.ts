@@ -3,6 +3,13 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
 import { sendEmail } from '@/lib/email/sender';
+import {
+  extractRequestFingerprints,
+  hasSameDeviceSignal,
+  mergeIntegrityWithResponseSignal,
+  normalizeEmail,
+  writeVerificationAuditLog,
+} from '@/lib/verification/integrity';
 
 const VerifyResponseSchema = z.object({
   action: z.enum(['accept', 'decline']),
@@ -91,6 +98,43 @@ function normalizeBaseUrl(url?: string | null) {
   const base = (url || '').trim();
   if (!base) return 'https://proofound.com';
   return base.endsWith('/') ? base.slice(0, -1) : base;
+}
+
+type OptionalAuthIdentity = {
+  isAuthenticated: boolean;
+  email: string | null;
+  profileId: string | null;
+};
+
+async function getOptionalAuthIdentity(
+  supabase: Awaited<ReturnType<typeof createClient>>
+): Promise<OptionalAuthIdentity> {
+  try {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) {
+      return {
+        isAuthenticated: false,
+        email: null,
+        profileId: null,
+      };
+    }
+
+    return {
+      isAuthenticated: true,
+      email: normalizeEmail(data.user.email || null),
+      profileId: data.user.id || null,
+    };
+  } catch {
+    return {
+      isAuthenticated: false,
+      email: null,
+      profileId: null,
+    };
+  }
+}
+
+function getResponseAuthMethod(identity: OptionalAuthIdentity): 'token' | 'authenticated' {
+  return identity.isAuthenticated ? 'authenticated' : 'token';
 }
 
 type ImpactClaim = {
@@ -451,6 +495,13 @@ export async function GET(
             verifier_relationship: impactVerification.verifier_relationship,
             message: impactVerification.message,
             status: impactVerification.status,
+            requires_authenticated_verifier:
+              impactVerification.requires_authenticated_verifier || false,
+            integrity_status: impactVerification.integrity_status || 'clear',
+            integrity_reason:
+              (impactVerification.integrity_status || 'clear') === 'flagged'
+                ? impactVerification.integrity_reason || null
+                : null,
             claims,
             why_you_are_receiving_this: buildImpactWhyYouAreReceivingThis({
               requesterName,
@@ -481,6 +532,9 @@ export async function GET(
         verifier_source,
         message,
         status,
+        requires_authenticated_verifier,
+        integrity_status,
+        integrity_reason,
         created_at,
         expires_at,
         skills (
@@ -552,6 +606,12 @@ export async function GET(
         verifier_source: verification.verifier_source,
         message: verification.message,
         status: verification.status,
+        requires_authenticated_verifier: verification.requires_authenticated_verifier || false,
+        integrity_status: verification.integrity_status || 'clear',
+        integrity_reason:
+          (verification.integrity_status || 'clear') === 'flagged'
+            ? verification.integrity_reason || null
+            : null,
         created_at: verification.created_at,
         expires_at: verification.expires_at,
       },
@@ -581,6 +641,9 @@ export async function POST(
     if (!token || token.length < 32) {
       return NextResponse.json({ error: 'Invalid verification token' }, { status: 400 });
     }
+
+    const authIdentity = await getOptionalAuthIdentity(supabase);
+    const responderFingerprints = extractRequestFingerprints(request.headers);
 
     // 1) Try new impact-story verification flow first
     try {
@@ -612,6 +675,29 @@ export async function POST(
           );
         }
 
+        const normalizedVerifierEmail = normalizeEmail(impactVerification.verifier_email);
+        if (impactVerification.requires_authenticated_verifier) {
+          if (!authIdentity.isAuthenticated || !authIdentity.email) {
+            return NextResponse.json(
+              {
+                error: 'Authentication is required to respond to this verification request.',
+                code: 'AUTH_REQUIRED',
+              },
+              { status: 401 }
+            );
+          }
+
+          if (!normalizedVerifierEmail || authIdentity.email !== normalizedVerifierEmail) {
+            return NextResponse.json(
+              {
+                error: 'Signed-in account does not match the intended verifier.',
+                code: 'VERIFIER_IDENTITY_MISMATCH',
+              },
+              { status: 403 }
+            );
+          }
+        }
+
         const { data: impactStory, error: impactStoryError } = await getImpactStoryContext(
           adminClient,
           impactVerification.impact_story_id
@@ -640,11 +726,42 @@ export async function POST(
           Boolean(claims.artifactsClaim.enabled) &&
           confirmedClaimIds.has(artifactsClaimId);
 
+        const respondedAt = new Date().toISOString();
+        const sameDeviceSignal = hasSameDeviceSignal({
+          requesterIpHash: impactVerification.requester_ip_hash,
+          requesterUserAgentHash: impactVerification.requester_user_agent_hash,
+          responderIpHash: responderFingerprints.ipHash,
+          responderUserAgentHash: responderFingerprints.userAgentHash,
+        });
+
+        const mergedIntegrity = mergeIntegrityWithResponseSignal({
+          currentStatus: impactVerification.integrity_status,
+          currentReason: impactVerification.integrity_reason,
+          currentSignals: impactVerification.risk_signals,
+          sameDeviceSignal,
+        });
+
+        const existingIntegrityMeta =
+          impactVerification.integrity_meta && typeof impactVerification.integrity_meta === 'object'
+            ? (impactVerification.integrity_meta as Record<string, unknown>)
+            : {};
+
+        const integrityMeta = {
+          ...existingIntegrityMeta,
+          response: {
+            same_device_signal: sameDeviceSignal,
+            response_auth_method: getResponseAuthMethod(authIdentity),
+            response_actor_email: authIdentity.email,
+            responded_at: respondedAt,
+          },
+        };
+
         const { error: responseInsertError } = await adminClient
           .from('impact_story_verification_responses')
           .insert({
             request_id: impactVerification.id,
-            responder_email: impactVerification.verifier_email,
+            responder_email:
+              authIdentity.email || normalizedVerifierEmail || impactVerification.verifier_email,
             action: validated.action,
             confirmed_role: confirmedRole,
             confirmed_artifacts: confirmedArtifacts,
@@ -666,9 +783,23 @@ export async function POST(
           .from('impact_story_verification_requests')
           .update({
             status: nextStatus,
-            responded_at: new Date().toISOString(),
+            responded_at: respondedAt,
             response_message: validated.message || null,
-            updated_at: new Date().toISOString(),
+            responder_ip_hash: responderFingerprints.ipHash,
+            responder_user_agent_hash: responderFingerprints.userAgentHash,
+            response_auth_method: getResponseAuthMethod(authIdentity),
+            response_actor_email: authIdentity.email,
+            verifier_profile_id:
+              authIdentity.profileId || impactVerification.verifier_profile_id || null,
+            risk_signals: mergedIntegrity.riskSignals,
+            integrity_status: mergedIntegrity.integrityStatus,
+            integrity_reason: mergedIntegrity.integrityReason,
+            integrity_meta: integrityMeta,
+            integrity_flagged_at:
+              mergedIntegrity.integrityStatus === 'flagged'
+                ? impactVerification.integrity_flagged_at || mergedIntegrity.integrityFlaggedAt
+                : null,
+            updated_at: respondedAt,
           })
           .eq('id', impactVerification.id);
 
@@ -682,6 +813,7 @@ export async function POST(
 
         if (
           validated.action === 'accept' &&
+          mergedIntegrity.integrityStatus === 'clear' &&
           (confirmedRole || confirmedArtifacts || confirmedOutcomeIds.length > 0)
         ) {
           const { error: impactStoryUpdateError } = await adminClient
@@ -744,10 +876,31 @@ export async function POST(
           console.error('Failed to send impact verification notification email:', impactEmailError);
         }
 
+        await writeVerificationAuditLog({
+          actorId: authIdentity.profileId,
+          action: 'verification.response.recorded',
+          targetType: 'impact_story_verification_request',
+          targetId: impactVerification.id,
+          meta: {
+            response_status: nextStatus,
+            response_action: validated.action,
+            requires_authenticated_verifier:
+              impactVerification.requires_authenticated_verifier || false,
+            response_auth_method: getResponseAuthMethod(authIdentity),
+            response_actor_email: authIdentity.email,
+            integrity_status: mergedIntegrity.integrityStatus,
+            integrity_reason: mergedIntegrity.integrityReason,
+            same_device_signal: sameDeviceSignal,
+          },
+        });
+
         return NextResponse.json({
           success: true,
           verification_type: 'impact_story',
           status: nextStatus,
+          integrity_status: mergedIntegrity.integrityStatus,
+          integrity_reason:
+            mergedIntegrity.integrityStatus === 'flagged' ? mergedIntegrity.integrityReason : null,
           confirmed_claims: {
             role: confirmedRole,
             artifacts: confirmedArtifacts,
@@ -776,6 +929,15 @@ export async function POST(
         requester_profile_id,
         verifier_email,
         verifier_source,
+        verifier_profile_id,
+        requires_authenticated_verifier,
+        integrity_status,
+        integrity_reason,
+        integrity_meta,
+        integrity_flagged_at,
+        risk_signals,
+        requester_ip_hash,
+        requester_user_agent_hash,
         skills (
           skill_code,
           custom_skill_name,
@@ -791,6 +953,29 @@ export async function POST(
         { error: 'Verification request not found or invalid token' },
         { status: 404 }
       );
+    }
+
+    const normalizedSkillVerifierEmail = normalizeEmail(verification.verifier_email);
+    if (verification.requires_authenticated_verifier) {
+      if (!authIdentity.isAuthenticated || !authIdentity.email) {
+        return NextResponse.json(
+          {
+            error: 'Authentication is required to respond to this verification request.',
+            code: 'AUTH_REQUIRED',
+          },
+          { status: 401 }
+        );
+      }
+
+      if (!normalizedSkillVerifierEmail || authIdentity.email !== normalizedSkillVerifierEmail) {
+        return NextResponse.json(
+          {
+            error: 'Signed-in account does not match the intended verifier.',
+            code: 'VERIFIER_IDENTITY_MISMATCH',
+          },
+          { status: 403 }
+        );
+      }
     }
 
     if (verification.status !== 'pending') {
@@ -810,13 +995,54 @@ export async function POST(
     }
 
     const newStatus = validated.action === 'accept' ? 'accepted' : 'declined';
+    const respondedAt = new Date().toISOString();
+    const sameDeviceSignal = hasSameDeviceSignal({
+      requesterIpHash: verification.requester_ip_hash,
+      requesterUserAgentHash: verification.requester_user_agent_hash,
+      responderIpHash: responderFingerprints.ipHash,
+      responderUserAgentHash: responderFingerprints.userAgentHash,
+    });
+    const mergedIntegrity = mergeIntegrityWithResponseSignal({
+      currentStatus: verification.integrity_status,
+      currentReason: verification.integrity_reason,
+      currentSignals: verification.risk_signals,
+      sameDeviceSignal,
+    });
+
+    const existingSkillIntegrityMeta =
+      verification.integrity_meta && typeof verification.integrity_meta === 'object'
+        ? (verification.integrity_meta as Record<string, unknown>)
+        : {};
+
+    const skillIntegrityMeta = {
+      ...existingSkillIntegrityMeta,
+      response: {
+        same_device_signal: sameDeviceSignal,
+        response_auth_method: getResponseAuthMethod(authIdentity),
+        response_actor_email: authIdentity.email,
+        responded_at: respondedAt,
+      },
+    };
 
     const { error: updateError } = await supabase
       .from('skill_verification_requests')
       .update({
         status: newStatus,
-        responded_at: new Date().toISOString(),
+        responded_at: respondedAt,
         response_message: validated.message || null,
+        responder_ip_hash: responderFingerprints.ipHash,
+        responder_user_agent_hash: responderFingerprints.userAgentHash,
+        response_auth_method: getResponseAuthMethod(authIdentity),
+        response_actor_email: authIdentity.email,
+        verifier_profile_id: authIdentity.profileId || verification.verifier_profile_id || null,
+        risk_signals: mergedIntegrity.riskSignals,
+        integrity_status: mergedIntegrity.integrityStatus,
+        integrity_reason: mergedIntegrity.integrityReason,
+        integrity_meta: skillIntegrityMeta,
+        integrity_flagged_at:
+          mergedIntegrity.integrityStatus === 'flagged'
+            ? verification.integrity_flagged_at || mergedIntegrity.integrityFlaggedAt
+            : null,
       })
       .eq('id', verification.id);
 
@@ -825,7 +1051,7 @@ export async function POST(
       return NextResponse.json({ error: 'Failed to update verification status' }, { status: 500 });
     }
 
-    if (validated.action === 'accept') {
+    if (validated.action === 'accept' && mergedIntegrity.integrityStatus === 'clear') {
       const { data: skill } = await supabase
         .from('skills')
         .select('evidence_strength')
@@ -920,10 +1146,30 @@ export async function POST(
       console.error('Failed to send verification notification email:', emailError);
     }
 
+    await writeVerificationAuditLog({
+      actorId: authIdentity.profileId,
+      action: 'verification.response.recorded',
+      targetType: 'skill_verification_request',
+      targetId: verification.id,
+      meta: {
+        response_status: newStatus,
+        response_action: validated.action,
+        requires_authenticated_verifier: verification.requires_authenticated_verifier || false,
+        response_auth_method: getResponseAuthMethod(authIdentity),
+        response_actor_email: authIdentity.email,
+        integrity_status: mergedIntegrity.integrityStatus,
+        integrity_reason: mergedIntegrity.integrityReason,
+        same_device_signal: sameDeviceSignal,
+      },
+    });
+
     return NextResponse.json({
       success: true,
       verification_type: 'skill',
       status: newStatus,
+      integrity_status: mergedIntegrity.integrityStatus,
+      integrity_reason:
+        mergedIntegrity.integrityStatus === 'flagged' ? mergedIntegrity.integrityReason : null,
       message:
         validated.action === 'accept'
           ? 'Thank you for verifying this skill!'
@@ -968,6 +1214,12 @@ function formatVerificationResponse(verification: any) {
     verifier_source: verification.verifier_source,
     message: verification.message,
     status: verification.status,
+    requires_authenticated_verifier: verification.requires_authenticated_verifier || false,
+    integrity_status: verification.integrity_status || 'clear',
+    integrity_reason:
+      (verification.integrity_status || 'clear') === 'flagged'
+        ? verification.integrity_reason || null
+        : null,
     created_at: verification.created_at,
     expires_at: verification.expires_at,
   };

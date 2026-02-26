@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { reconcileVerifierContradictions } from '@/lib/verification/contradiction';
 
 /**
  * GET /api/verification/work-email/verify?token=xxx
@@ -89,6 +90,15 @@ export async function GET(request: NextRequest) {
       }
 
       return NextResponse.json({ error: 'Failed to verify work email' }, { status: 500 });
+    }
+
+    try {
+      await reconcileVerifierContradictions({
+        verifierProfileId: profile.user_id,
+        verifierEmail: profile.work_email,
+      });
+    } catch (reconcileError) {
+      console.error('Work email contradiction reconciliation failed:', reconcileError);
     }
 
     return NextResponse.json({

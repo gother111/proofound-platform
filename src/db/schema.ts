@@ -611,8 +611,11 @@ export const skillVerificationRequests = pgTable('skill_verification_requests', 
   requesterProfileId: uuid('requester_profile_id')
     .references(() => profiles.id, { onDelete: 'cascade' })
     .notNull(),
+  requesterEmailSnapshot: text('requester_email_snapshot'),
+  requesterDomainSnapshot: text('requester_domain_snapshot'),
   verificationToken: text('verification_token').notNull(),
   verifierEmail: text('verifier_email').notNull(),
+  verifierDomainSnapshot: text('verifier_domain_snapshot'),
   verifierProfileId: uuid('verifier_profile_id').references(() => profiles.id, {
     onDelete: 'set null',
   }),
@@ -620,6 +623,24 @@ export const skillVerificationRequests = pgTable('skill_verification_requests', 
     enum: ['peer', 'manager', 'external'],
   }).notNull(),
   message: text('message'),
+  riskSignals: jsonb('risk_signals')
+    .default(sql`'{}'::jsonb`)
+    .notNull(),
+  requiresAuthenticatedVerifier: boolean('requires_authenticated_verifier')
+    .default(false)
+    .notNull(),
+  integrityStatus: text('integrity_status', {
+    enum: ['clear', 'flagged'],
+  })
+    .default('clear')
+    .notNull(),
+  integrityReason: text('integrity_reason'),
+  integrityMeta: jsonb('integrity_meta')
+    .default(sql`'{}'::jsonb`)
+    .notNull(),
+  integrityFlaggedAt: timestamp('integrity_flagged_at'),
+  requesterIpHash: text('requester_ip_hash'),
+  requesterUserAgentHash: text('requester_user_agent_hash'),
   status: text('status', {
     enum: ['pending', 'accepted', 'declined', 'expired'],
   })
@@ -627,6 +648,12 @@ export const skillVerificationRequests = pgTable('skill_verification_requests', 
     .default('pending'),
   respondedAt: timestamp('responded_at'),
   responseMessage: text('response_message'),
+  responderIpHash: text('responder_ip_hash'),
+  responderUserAgentHash: text('responder_user_agent_hash'),
+  responseAuthMethod: text('response_auth_method', {
+    enum: ['token', 'authenticated'],
+  }),
+  responseActorEmail: text('response_actor_email'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   expiresAt: timestamp('expires_at').default(sql`NOW() + INTERVAL '30 days'`),
 });
@@ -640,7 +667,13 @@ export const impactStoryVerificationRequests = pgTable('impact_story_verificatio
   requesterProfileId: uuid('requester_profile_id')
     .references(() => profiles.id, { onDelete: 'cascade' })
     .notNull(),
+  requesterEmailSnapshot: text('requester_email_snapshot'),
+  requesterDomainSnapshot: text('requester_domain_snapshot'),
   verifierEmail: text('verifier_email').notNull(),
+  verifierDomainSnapshot: text('verifier_domain_snapshot'),
+  verifierProfileId: uuid('verifier_profile_id').references(() => profiles.id, {
+    onDelete: 'set null',
+  }),
   verifierName: text('verifier_name'),
   verifierRelationship: text('verifier_relationship'),
   message: text('message'),
@@ -650,12 +683,36 @@ export const impactStoryVerificationRequests = pgTable('impact_story_verificatio
   })
     .notNull()
     .default('pending'),
+  riskSignals: jsonb('risk_signals')
+    .default(sql`'{}'::jsonb`)
+    .notNull(),
+  requiresAuthenticatedVerifier: boolean('requires_authenticated_verifier')
+    .default(false)
+    .notNull(),
+  integrityStatus: text('integrity_status', {
+    enum: ['clear', 'flagged'],
+  })
+    .notNull()
+    .default('clear'),
+  integrityReason: text('integrity_reason'),
+  integrityMeta: jsonb('integrity_meta')
+    .default(sql`'{}'::jsonb`)
+    .notNull(),
+  integrityFlaggedAt: timestamp('integrity_flagged_at'),
+  requesterIpHash: text('requester_ip_hash'),
+  requesterUserAgentHash: text('requester_user_agent_hash'),
   expiresAt: timestamp('expires_at').notNull(),
   claimSnapshot: jsonb('claim_snapshot')
     .default(sql`'{}'::jsonb`)
     .notNull(),
   responseMessage: text('response_message'),
   respondedAt: timestamp('responded_at'),
+  responderIpHash: text('responder_ip_hash'),
+  responderUserAgentHash: text('responder_user_agent_hash'),
+  responseAuthMethod: text('response_auth_method', {
+    enum: ['token', 'authenticated'],
+  }),
+  responseActorEmail: text('response_actor_email'),
   emailSentAt: timestamp('email_sent_at'),
   emailError: text('email_error'),
   createdAt: timestamp('created_at').defaultNow().notNull(),

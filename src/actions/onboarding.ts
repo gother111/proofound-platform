@@ -7,6 +7,7 @@ import { randomUUID } from 'crypto';
 import { createClient } from '@/lib/supabase/server';
 import { resolvePublicSnippetBaseUrl } from '@/lib/profile/snippet-generator';
 import { ORGANIZATION_DAY_ONE_VISIBILITY } from '@/lib/portfolio/public-organization';
+import { reconcileVerifierContradictions } from '@/lib/verification/contradiction';
 
 const choosePersonaSchema = z.object({
   persona: z.enum(['individual', 'org_member']),
@@ -118,6 +119,15 @@ export async function completeIndividualOnboarding(formData: FormData) {
 
     revalidatePath('/app/i');
     revalidatePath(publicPortfolioPath);
+
+    try {
+      await reconcileVerifierContradictions({
+        verifierProfileId: user.id,
+      });
+    } catch (reconcileError) {
+      console.error('Individual onboarding contradiction reconciliation failed:', reconcileError);
+    }
+
     return {
       success: true,
       handle: normalizedHandle,

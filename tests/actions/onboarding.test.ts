@@ -3,6 +3,7 @@ import { completeIndividualOnboarding, completeOrganizationOnboarding } from '@/
 import { requireAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { reconcileVerifierContradictions } from '@/lib/verification/contradiction';
 
 vi.mock('@/lib/auth', () => ({
   requireAuth: vi.fn(),
@@ -14,6 +15,10 @@ vi.mock('@/lib/supabase/server', () => ({
 
 vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
+}));
+
+vi.mock('@/lib/verification/contradiction', () => ({
+  reconcileVerifierContradictions: vi.fn(),
 }));
 
 describe('onboarding actions', () => {
@@ -62,6 +67,9 @@ describe('onboarding actions', () => {
         }),
       })
     );
+    expect(reconcileVerifierContradictions).toHaveBeenCalledWith({
+      verifierProfileId: 'user-1',
+    });
     expect(revalidatePath).toHaveBeenCalledWith('/portfolio/jane_founder');
   });
 
