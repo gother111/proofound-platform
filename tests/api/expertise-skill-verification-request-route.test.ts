@@ -2,11 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
 vi.mock('@/lib/auth', () => ({
-  requireAuth: vi.fn(),
-}));
-
-vi.mock('@/lib/supabase/server', () => ({
-  createClient: vi.fn(),
+  requireApiAuthContext: vi.fn(),
 }));
 
 vi.mock('@/lib/email/sender', () => ({
@@ -17,8 +13,7 @@ vi.mock('@/lib/analytics/events', () => ({
   emitVerificationRequestedAsync: vi.fn(),
 }));
 
-import { requireAuth } from '@/lib/auth';
-import { createClient } from '@/lib/supabase/server';
+import { requireApiAuthContext } from '@/lib/auth';
 import { sendEmail } from '@/lib/email/sender';
 import { POST } from '@/app/api/expertise/user-skills/[id]/verification-request/route';
 
@@ -113,14 +108,20 @@ function createSupabaseMock(
 describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
   const originalSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
   const originalAppUrl = process.env.NEXT_PUBLIC_APP_URL;
+  let authContext: { user: { id: string; email: string }; supabase: any };
 
   beforeEach(() => {
     vi.clearAllMocks();
+    const { supabase } = createSupabaseMock({ id: 'bootstrap' });
+    authContext = {
+      user: {
+        id: 'user-1',
+        email: 'alice@proofound.io',
+      },
+      supabase,
+    };
 
-    (requireAuth as any).mockResolvedValue({
-      id: 'user-1',
-      email: 'alice@proofound.io',
-    });
+    (requireApiAuthContext as any).mockImplementation(async () => authContext);
   });
 
   afterEach(() => {
@@ -133,7 +134,7 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
     process.env.NEXT_PUBLIC_APP_URL = '';
 
     const { supabase, inserts } = createSupabaseMock({ id: 'req-1' });
-    (createClient as any).mockResolvedValue(supabase);
+    authContext.supabase = supabase;
     (sendEmail as any).mockResolvedValue({ success: true, id: 'email-1' });
 
     const response = await POST(
@@ -171,7 +172,7 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
     process.env.NEXT_PUBLIC_APP_URL = '';
 
     const { supabase, inserts } = createSupabaseMock({ id: 'req-2' });
-    (createClient as any).mockResolvedValue(supabase);
+    authContext.supabase = supabase;
     (sendEmail as any).mockResolvedValue({ success: false, error: 'Email service not configured' });
 
     const response = await POST(
@@ -201,7 +202,7 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
       { id: '123e4567-e89b-42d3-a456-426614174000' },
       { missingTokenColumnOnFirstInsert: true }
     );
-    (createClient as any).mockResolvedValue(supabase);
+    authContext.supabase = supabase;
     (sendEmail as any).mockResolvedValue({ success: true, id: 'email-legacy' });
 
     const response = await POST(
@@ -226,5 +227,20 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
     expect(sentEmailPayload.html).toContain(
       'https://proofound.io/verify/123e4567-e89b-42d3-a456-426614174000'
     );
+  });
+
+  it('returns 401 when API auth context is unavailable', async () => {
+    (requireApiAuthContext as any).mockResolvedValue(null);
+
+    const response = await POST(
+      createRequest('https://proofound.io', {
+        verifierSource: 'peer',
+        verifierEmail: 'mentor@example.com',
+      }),
+      params
+    );
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({ error: 'Unauthorized' });
   });
 });

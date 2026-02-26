@@ -46,6 +46,11 @@ type OrganizationMemberRow = Pick<
   'orgId' | 'userId' | 'role' | 'status' | 'joinedAt'
 >;
 
+export type ApiAuthContext = {
+  user: ProfileRow;
+  supabase: SupabaseClient;
+};
+
 function mapProfile(row: Partial<ProfileRow> & { id: string }): ProfileRow {
   return {
     id: row.id,
@@ -107,8 +112,7 @@ function mapMembership(
   };
 }
 
-export async function getCurrentUser() {
-  const supabase = await createClient();
+async function getCurrentUserWithClient(supabase: SupabaseClient): Promise<ProfileRow | null> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -144,12 +148,28 @@ export async function getCurrentUser() {
   return mapProfile(data as ProfileRow);
 }
 
+export async function getCurrentUser() {
+  const supabase = await createClient();
+  return getCurrentUserWithClient(supabase);
+}
+
 export async function requireAuth() {
   const user = await getCurrentUser();
   if (!user) {
     redirect('/login');
   }
   return user;
+}
+
+export async function requireApiAuthContext(): Promise<ApiAuthContext | null> {
+  const supabase = await createClient({ allowCookieWrite: true });
+  const user = await getCurrentUserWithClient(supabase);
+
+  if (!user) {
+    return null;
+  }
+
+  return { user, supabase };
 }
 
 export async function getUserOrganizations(userId: string) {

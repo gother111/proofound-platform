@@ -1,5 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
 import { randomBytes } from 'crypto';
@@ -38,8 +37,11 @@ function isMissingVerificationTokenColumnError(error: unknown): boolean {
  */
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const user = await requireAuth();
-    const supabase = await createClient();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user, supabase } = authContext;
     const body = await request.json();
     const { id: skillId } = await params;
 
@@ -118,7 +120,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         .single();
 
       if (legacyInsertError || !legacyVerificationRequest) {
-        console.error('Error creating verification request (legacy fallback):', legacyInsertError);
+        console.error('Error creating verification request (legacy fallback):', {
+          code: legacyInsertError?.code,
+          message: legacyInsertError?.message,
+          details: legacyInsertError?.details,
+          hint: legacyInsertError?.hint,
+        });
         return NextResponse.json(
           { error: 'Failed to create verification request' },
           { status: 500 }
@@ -128,7 +135,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       verificationRequest = legacyVerificationRequest;
       linkToken = legacyVerificationRequest.id;
     } else if (createWithTokenError || !verificationRequestWithToken) {
-      console.error('Error creating verification request:', createWithTokenError);
+      console.error('Error creating verification request:', {
+        code: createWithTokenError?.code,
+        message: createWithTokenError?.message,
+        details: createWithTokenError?.details,
+        hint: createWithTokenError?.hint,
+      });
       return NextResponse.json({ error: 'Failed to create verification request' }, { status: 500 });
     }
 
@@ -300,8 +312,11 @@ function parseCustomSkillName(skillId: string | null): string | null {
  */
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const user = await requireAuth();
-    const supabase = await createClient();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user, supabase } = authContext;
     const { id: skillId } = await params;
 
     // Verify skill belongs to user
