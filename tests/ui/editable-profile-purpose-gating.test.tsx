@@ -7,14 +7,16 @@ import { useProfileData } from '@/hooks/useProfileData';
 
 const toastInfoMock = vi.fn();
 const pushMock = vi.fn();
+const replaceMock = vi.fn();
+let searchParamsState = new URLSearchParams();
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: pushMock,
+    replace: replaceMock,
   }),
-  useSearchParams: () => ({
-    get: () => null,
-  }),
+  useSearchParams: () => searchParamsState,
+  usePathname: () => '/app/i/profile',
 }));
 
 vi.mock('sonner', () => ({
@@ -50,9 +52,16 @@ vi.mock('@/components/profile/MobileProfileHeader', () => ({
 }));
 
 vi.mock('@/components/profile/GuidedProfileSetupView', () => ({
-  GuidedProfileSetupView: ({ completionState, onEditProfile, onOpenValues, onOpenCauses }: any) => (
+  GuidedProfileSetupView: ({
+    completionState,
+    onEditProfile,
+    onOpenFullProfile,
+    onOpenValues,
+    onOpenCauses,
+  }: any) => (
     <div data-testid="guided-profile-setup" data-stage={completionState.stage}>
       <button onClick={onEditProfile}>guided-edit-profile</button>
+      <button onClick={onOpenFullProfile}>guided-open-full-profile</button>
       <button onClick={onOpenValues}>guided-open-values</button>
       <button onClick={onOpenCauses}>guided-open-causes</button>
     </div>
@@ -157,6 +166,7 @@ function mockUseProfileData(profile: any) {
 describe('EditableProfileView guided completion and purpose gating', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    searchParamsState = new URLSearchParams();
   });
 
   it('shows guided Step 0 when name is missing and opens edit profile dialog', () => {
@@ -216,5 +226,43 @@ describe('EditableProfileView guided completion and purpose gating', () => {
     expect(screen.getByTestId('mission-editor-open')).toBeInTheDocument();
     expect(screen.getByTestId('vision-editor-open')).toBeInTheDocument();
     expect(toastInfoMock).not.toHaveBeenCalled();
+  });
+
+  it('shows full profile when incomplete profile has profileView=full override', () => {
+    searchParamsState = new URLSearchParams('profileView=full');
+    mockUseProfileData(
+      createProfile({
+        basicInfo: { name: 'Jane Doe', avatar: null, tagline: '' },
+        values: [],
+        causes: [],
+      })
+    );
+
+    render(<EditableProfileView />);
+
+    expect(screen.queryByTestId('guided-profile-setup')).not.toBeInTheDocument();
+    expect(screen.getByTestId('profile-sidebar')).toBeInTheDocument();
+  });
+
+  it('preserves query params and sets profileView=full when opening full profile from guided flow', () => {
+    searchParamsState = new URLSearchParams('portfolioLocked=1&lockReason=purpose');
+    mockUseProfileData(
+      createProfile({
+        basicInfo: { name: 'Jane Doe', avatar: null, tagline: '' },
+        values: [],
+        causes: [],
+      })
+    );
+
+    render(<EditableProfileView />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'guided-open-full-profile' }));
+
+    expect(replaceMock).toHaveBeenCalledTimes(1);
+    const nextUrl = String(replaceMock.mock.calls[0][0]);
+    expect(nextUrl.startsWith('/app/i/profile?')).toBe(true);
+    expect(nextUrl).toContain('portfolioLocked=1');
+    expect(nextUrl).toContain('lockReason=purpose');
+    expect(nextUrl).toContain('profileView=full');
   });
 });

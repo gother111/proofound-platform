@@ -9,6 +9,7 @@ import type { IndividualProfileCompletionState } from '@/lib/profile/completion-
 type GuidedProfileSetupViewProps = {
   completionState: IndividualProfileCompletionState;
   onEditProfile: () => void;
+  onOpenFullProfile: () => void;
   onOpenValues: () => void;
   onOpenCauses: () => void;
   onOpenSkills: () => void;
@@ -46,6 +47,7 @@ function StepIcon({ state }: { state: StepState }) {
 export function GuidedProfileSetupView({
   completionState,
   onEditProfile,
+  onOpenFullProfile,
   onOpenValues,
   onOpenCauses,
   onOpenSkills,
@@ -57,12 +59,22 @@ export function GuidedProfileSetupView({
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8" data-testid="guided-profile-setup">
       <Card className="p-6 sm:p-8 border-proofound-stone/60">
-        <div className="space-y-2 mb-6">
-          <h1 className="text-2xl font-display text-proofound-charcoal">Complete your profile</h1>
-          <p className="text-sm text-muted-foreground">
-            Follow these steps in order. We unlock the rest of your profile once essentials are in
-            place.
-          </p>
+        <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+          <div className="space-y-2">
+            <h1 className="text-2xl font-display text-proofound-charcoal">Complete your profile</h1>
+            <p className="text-sm text-muted-foreground">
+              Follow these steps in order. We unlock the rest of your profile once essentials are in
+              place.
+            </p>
+          </div>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={onOpenFullProfile}
+            data-testid="guided-open-full-profile"
+          >
+            Open full profile
+          </Button>
         </div>
 
         <div className="space-y-5">

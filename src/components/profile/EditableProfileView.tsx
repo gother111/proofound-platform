@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 
 import { GuidedProfileSetupView } from './GuidedProfileSetupView';
@@ -37,6 +37,7 @@ function resolvePortfolioGateMessage(lockReason: string | null): string {
 
 export function EditableProfileView() {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const {
     profile,
@@ -159,6 +160,7 @@ export function EditableProfileView() {
 
   const showPortfolioGateNotice = searchParams.get('portfolioLocked') === '1';
   const lockReasonFromRoute = searchParams.get('lockReason');
+  const fullProfileOverride = searchParams.get('profileView') === 'full';
   const portfolioGateNotice = showPortfolioGateNotice ? (
     <Card className="mb-6 p-4 border-amber-300 bg-amber-50/70 text-amber-900">
       <p className="text-sm">{resolvePortfolioGateMessage(lockReasonFromRoute)}</p>
@@ -169,6 +171,32 @@ export function EditableProfileView() {
     () => profile?.skills.map((skill) => skill.name).filter(Boolean) ?? [],
     [profile?.skills]
   );
+  const valuesCount = profile?.values.length ?? 0;
+  const causesCount = profile?.causes.length ?? 0;
+
+  const openFullProfileView = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('profileView', 'full');
+
+    const query = params.toString();
+    const nextUrl = query
+      ? `${pathname ?? '/app/i/profile'}?${query}`
+      : (pathname ?? '/app/i/profile');
+    router.replace(nextUrl);
+
+    void fetch('/api/analytics/events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        event_type: 'profile_guided_open_full',
+        event_data: {
+          stage: completionState.stage,
+          valuesCount,
+          causesCount,
+        },
+      }),
+    }).catch(() => undefined);
+  }, [causesCount, completionState.stage, pathname, router, searchParams, valuesCount]);
 
   const openAddImpactStory = () => {
     setEditingImpactStory(null);
@@ -308,7 +336,7 @@ export function EditableProfileView() {
   }
 
   const showCompletionBanner = profileCompletion < 80;
-  const showGuidedFlow = completionState.stage !== 'step2_profile';
+  const showGuidedFlow = completionState.stage !== 'step2_profile' && !fullProfileOverride;
 
   if (showGuidedFlow) {
     return (
@@ -321,6 +349,7 @@ export function EditableProfileView() {
           <GuidedProfileSetupView
             completionState={completionState}
             onEditProfile={() => setIsEditProfileOpen(true)}
+            onOpenFullProfile={openFullProfileView}
             onOpenValues={() => setIsValuesEditorOpen(true)}
             onOpenCauses={() => setIsCausesEditorOpen(true)}
             onOpenSkills={() => router.push('/app/i/expertise')}
