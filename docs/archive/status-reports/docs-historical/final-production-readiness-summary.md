@@ -1,3 +1,17 @@
+> Doc Class: `historical`
+> Historical Snapshot Reviewed: `2026-02-26`
+> Canonical Current Testing Docs:
+>
+> - `docs/testing-strategy.md`
+> - `docs/qa/e2e-matrix.md`
+> - `docs/qa/summary.md`
+> - `agent/checklists/verification.md`
+> - `agent/runbooks/setup.md`
+>
+> Note: This archived file preserves historical context. For current routes, commands, and gate criteria, use the canonical docs above.
+
+---
+
 # Final Production Readiness Summary
 
 **Project**: Proofound Platform MVP
@@ -100,8 +114,8 @@ All tasks from the 8-week Launch-Ready MVP plan plus additional pre-launch tasks
 ✅ /tests/integration/setup.ts
 ✅ /tests/integration/matching.test.ts
 ✅ /tests/integration/data-portability.test.ts
-✅ /tests/e2e/helpers/page-objects.ts
-✅ /tests/e2e/complete-user-journey.spec.ts
+✅ tests/e2e/helpers/page-objects.ts
+✅ legacy tests/e2e/complete-user-journey.spec.ts
 ✅ /tests/load/artillery-matching.yml
 ✅ /tests/load/artillery-metrics.yml
 ✅ /tests/load/RESULTS.md

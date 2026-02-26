@@ -1,3 +1,17 @@
+> Doc Class: `historical`
+> Historical Snapshot Reviewed: `2026-02-26`
+> Canonical Current Testing Docs:
+>
+> - `docs/testing-strategy.md`
+> - `docs/qa/e2e-matrix.md`
+> - `docs/qa/summary.md`
+> - `agent/checklists/verification.md`
+> - `agent/runbooks/setup.md`
+>
+> Note: This archived file preserves historical context. For current routes, commands, and gate criteria, use the canonical docs above.
+
+---
+
 # PRD Comprehensive Audit: Implementation vs Documentation
 
 **Date:** November 1, 2025  
@@ -17,6 +31,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 - **Alignment Issues**: Mismatches between PRD specifications and actual implementation
 
 **Key Findings:**
+
 - ✅ **Strong foundation**: Skills taxonomy, matching algorithm, RLS policies, core flows
 - ❌ **Critical gaps**: Vision field, Zen Hub backend, metrics instrumentation, 5-step assignments
 - ⚠️ **Positive drift**: Richer data model with value-adding extensions
@@ -29,6 +44,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 ### F1 - Purpose Block (Mission, Vision, Values, Causes)
 
 **PRD Requirements (Part 5, Part 7):**
+
 - Mission (≤300 chars), Vision (≤300 chars), Values (≤5), Causes (≤5)
 - Field-level visibility controls (public/link_only/match_only/private)
 - PAC (Purpose-Alignment Contribution) shown in Match Detail
@@ -36,6 +52,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 - Optional public snippet export
 
 **Implementation Status:**
+
 - ✅ **Mission field** exists in `individual_profiles.mission` (text, no length constraint)
 - ❌ **Vision field** is MISSING from database schema
 - ✅ **Values** exist as `individual_profiles.values` (jsonb)
@@ -47,6 +64,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 - ❌ **Public snippet export** - Not found
 
 **Gap Analysis:**
+
 - **Critical**: Vision field missing from schema
 - **High**: Visibility controls incomplete
 - **Medium**: Audit trail and export not implemented
@@ -56,6 +74,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 ### F2 - Customizable Dashboard
 
 **PRD Requirements (Part 5, Part 7):**
+
 - Add/remove/reorder tiles
 - Tiles: Matches, Applications, Expertise Depth, Evidence, Zen Hub, Next Best Action
 - Dashboard loads < 2.0s P75
@@ -63,6 +82,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 - Persona presets
 
 **Implementation Status:**
+
 - ❌ **No tile customization** found in `/app/i/home/page.tsx`
 - ⚠️ **Static dashboard cards** exist (Tasks, Goals, Projects, Impacts, etc.) but not user-configurable
 - ❌ **No tile reordering** or add/remove functionality
@@ -70,6 +90,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 - ❌ **Performance budgets** not verified
 
 **Gap Analysis:**
+
 - **High**: Dashboard is static; all customization features missing
 
 ---
@@ -77,6 +98,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 ### F3 - Expertise Atlas (L1→L4 Taxonomy)
 
 **PRD Requirements (Part 5, Part 7):**
+
 - L1→L4 hierarchy with ≥10 L4 skills addable
 - L4 properties: level (0-5), months, proofs (files/links), visibility
 - Auto-suggest from pasted CV/JD
@@ -84,6 +106,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 - Gap Map
 
 **Implementation Status:**
+
 - ✅ **L1-L4 taxonomy** fully implemented - 6 domains, ~20K L4 skills
 - ✅ **Skills table** with level, monthsExperience, evidenceStrength, recencyMultiplier
 - ✅ **Skill proofs** table (`skill_proofs`) with files/links
@@ -93,6 +116,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 - ❌ **Activation threshold** - Not verified
 
 **Gap Analysis:**
+
 - **Medium**: CV import and Gap Map features not found
 - **Low**: Activation metrics not instrumented
 
@@ -103,6 +127,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 ### F4 - Matching Hub
 
 **PRD Requirements (Part 5, Part 7):**
+
 - Composite score with PAC (Purpose-Alignment Contribution)
 - TTFQI median ≤ 72 hours (Part 2)
 - "Why this match" explainer with subscores
@@ -110,6 +135,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 - Fairness note per release
 
 **Implementation Status:**
+
 - ✅ **Matching algorithm** exists in `/lib/core/matching/scorers.ts`
 - ✅ **PAC calculation** - `scoreCauses()` and `scoreValues()` functions exist
 - ✅ **Composite scoring** - `composeWeighted()` combines subscores
@@ -120,6 +146,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 - ❌ **Fairness note generation** - Not found
 
 **Gap Analysis:**
+
 - **High**: UI features incomplete (snooze, match explanation)
 - **High**: Fairness monitoring not implemented
 
@@ -130,6 +157,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 ### F5 - Zen Hub (Well-being Center)
 
 **PRD Requirements (Part 5, Part 7):**
+
 - Opt-in, non-diagnostic 1-5 check-ins (stress, sense of control)
 - Reflections linked to milestones (rejection, interview, offer)
 - Well-Being Delta (14/30 days)
@@ -137,6 +165,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 - Privacy banner on first use
 
 **Implementation Status:**
+
 - ✅ **Zen Hub UI** exists (`/app/i/zen/page.tsx`)
 - ✅ **Practices catalog** with filters (short/long, spiritual/secular)
 - ✅ **Risk signal UI** (normal/elevated/high states)
@@ -148,6 +177,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 - ❌ **NO privacy banner** implementation
 
 **Gap Analysis:**
+
 - **CRITICAL**: Zen Hub is a static UI demo with NO backend integration
 - **All PRD features missing**: This is essentially a mockup
 
@@ -156,11 +186,13 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 ### F6 - Visibility & Boundary Controls
 
 **PRD Requirements (Part 5, Part 7):**
+
 - Field-level visibility (public/link_only/match_only/private)
 - One-click Redact mode (name/photo)
 - Privacy settings surfaced in relevant flows
 
 **Implementation Status:**
+
 - ✅ **Profile visibility** exists (`individual_profiles.visibility`: public/network/private)
 - ⚠️ **Assignment field visibility** schema exists (`assignment_field_visibility` table)
 - ❌ **Individual field-level visibility** - Not found for profile fields
@@ -168,6 +200,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 - ❌ **Privacy controls in flows** - Not verified
 
 **Gap Analysis:**
+
 - **High**: Fine-grained field visibility not implemented
 - **Medium**: Redact mode missing
 
@@ -176,11 +209,13 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 ### F7 - Verification & Attestations (v1)
 
 **PRD Requirements (Part 5, Part 7):**
+
 - Peer/mentor attests via magic link
 - Assignment verification gates displayed pre-intro
 - Time-to-first verified proof ≤ 7 days P50
 
 **Implementation Status:**
+
 - ✅ **Skill verification requests** table (`skill_verification_requests`)
 - ✅ **Magic link** system with tokens and expiry
 - ✅ **Verification API** (`/api/expertise/verification`)
@@ -190,6 +225,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 - ❌ **Time-to-verification metrics** - Not instrumented
 
 **Gap Analysis:**
+
 - **Medium**: Verification workflow UI incomplete
 - **Low**: Metrics not tracked
 
@@ -200,10 +236,12 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 ### O1 - Org Purpose Block
 
 **PRD Requirements:**
+
 - Mission, Vision, Values (≤5), Causes (≤5)
 - Contributes to PAC in matching
 
 **Implementation Status:**
+
 - ✅ **Mission** (`organizations.mission`)
 - ✅ **Vision** (`organizations.vision`)
 - ✅ **Values** (`organizations.values` jsonb)
@@ -211,6 +249,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 - ⚠️ **Assignments have causes** (`assignments.causeTags`) but org-level missing
 
 **Gap Analysis:**
+
 - **Critical**: Organizations lack causes field; inconsistent with individual profiles
 
 ---
@@ -218,11 +257,13 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 ### O2 - Structure Block
 
 **PRD Requirements:**
+
 - Departments/teams with hierarchy
 - Link to Assignments
 - Export org map
 
 **Implementation Status:**
+
 - ✅ **Organization structure** table (`organization_structure`)
 - ✅ **Entity types**: executive_team, department, team, working_group
 - ✅ **Hierarchy** via `parentId`
@@ -230,6 +271,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 - ❌ **Export org map** - Not found
 
 **Gap Analysis:**
+
 - **Medium**: Export and assignment linking not implemented
 
 ---
@@ -237,16 +279,19 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 ### O3 - Culture Block
 
 **PRD Requirements:**
+
 - Work norms (async/sync, meeting load)
 - Accessibility commitments
 - Visible to candidates pre-intro
 
 **Implementation Status:**
+
 - ✅ **Work culture** field (`organizations.workCulture` jsonb)
 - ❌ **Structured norms** - Field exists but PRD-specified structure unclear
 - ❌ **Pre-intro visibility** - Not verified in match flow
 
 **Gap Analysis:**
+
 - **Medium**: Culture structure undefined; visibility not confirmed
 
 ---
@@ -254,15 +299,18 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 ### O4 - Impact Block
 
 **PRD Requirements:**
+
 - Impact entries with metrics
 - Export Evidence Pack (PDF)
 
 **Implementation Status:**
+
 - ✅ **Organization projects** table (`organization_projects`) with impact fields
 - ✅ **Organization partnerships** table with impact tracking
 - ❌ **Evidence Pack PDF export** - Not found
 
 **Gap Analysis:**
+
 - **Medium**: Evidence Pack export not implemented
 
 ---
@@ -270,17 +318,20 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 ### O5 - Projects Block
 
 **PRD Requirements:**
+
 - List projects
 - Link artifacts and Assignments
 - Status tags
 
 **Implementation Status:**
+
 - ✅ **Organization projects** table with status enum
 - ✅ **Project fields**: title, description, impactCreated, businessValue, outcomes
 - ❌ **Artifact linking** - Structure unclear
 - ❌ **Assignment linking** - Not verified
 
 **Gap Analysis:**
+
 - **Low**: Linkage features not confirmed
 
 ---
@@ -288,12 +339,14 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 ### O6 - Enterprise Expertise Hub
 
 **PRD Requirements:**
+
 - Declare capability domains
 - Map required L4s
 - JD paste → suggested L4s
 - Team coverage analytics
 
 **Implementation Status:**
+
 - ✅ **Assignment expertise matrix** table (`assignment_expertise_matrix`)
 - ✅ **Skill codes** linked to assignments
 - ⚠️ **JD paste feature** - Mentioned in docs but not verified in UI
@@ -301,6 +354,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 - ❌ **Organization-level capability declaration** - Unclear
 
 **Gap Analysis:**
+
 - **Medium**: JD mapping and team analytics not implemented
 
 ---
@@ -308,15 +362,18 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 ### O7 - Assignment Creation (5-Step)
 
 **PRD Requirements (Part 5, Organization Flows):**
+
 1. Role & outcomes
 2. Must/Nice skills (L4)
 3. Verification gates
 4. Logistics (location/time/comp)
 5. Review & publish
+
 - Time-to-publish ≤ 15 minutes P50
 - Task success ≥ 90%, drop-off < 10%
 
 **Implementation Status:**
+
 - ✅ **Assignments table** with all required fields
 - ✅ **Assignment creation pipeline** table (`assignment_creation_pipeline`)
 - ✅ **API** `/api/assignments` for creation
@@ -334,6 +391,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 - ❌ **Time-to-publish metrics** - Not instrumented
 
 **Gap Analysis:**
+
 - **Low**: Metrics not tracked (acceptable for MVP)
 
 **Status Update (Nov 3, 2025):** ✅ **IMPLEMENTED** - This feature is now complete
@@ -343,10 +401,12 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 ### O8 - Company Dashboard
 
 **PRD Requirements:**
+
 - Tiles: Open Assignments, Shortlists, Intros, TTSC trend, Fairness note, Next actions
 - Loads < 2.0s P75
 
 **Implementation Status:**
+
 - ⚠️ **Org dashboard** exists (`/app/o/[slug]/home`) but is basic
 - ❌ **TTSC trend** - Not found
 - ❌ **Fairness note** - Not displayed
@@ -354,6 +414,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 - ❌ **Tile customization** - Not implemented
 
 **Gap Analysis:**
+
 - **High**: Dashboard lacks most PRD-specified features
 
 ---
@@ -361,10 +422,12 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 ### O9 - Team Management Hub
 
 **PRD Requirements:**
+
 - Invite members with roles (Owner/Manager/Reviewer)
 - SSO config placeholder
 
 **Implementation Status:**
+
 - ✅ **Organization members** table with roles (owner/admin/member/viewer)
 - ✅ **Org invitations** table with tokens
 - ✅ **Invite API** and UI (`/app/o/[slug]/members`)
@@ -372,6 +435,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 - ❌ **SSO config** - Not found
 
 **Gap Analysis:**
+
 - **Low**: Role naming mismatch (acceptable drift)
 - **Medium**: SSO not implemented (acceptable for MVP)
 
@@ -380,16 +444,19 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 ### O10 - Organization Type Differentiation
 
 **PRD Requirements:**
+
 - For-profit vs Non-profit selection
 - Toggles copy defaults (e.g., "donors" vs "investors")
 
 **Implementation Status:**
+
 - ✅ **Organization type** field (`organizations.type`: company/ngo/government/network/other)
 - ⚠️ **More granular than PRD** (5 types vs 2 - acceptable drift)
 - ❌ **Copy differentiation** - Not found in UI
 - ❌ **Type-specific defaults** - Not verified
 
 **Gap Analysis:**
+
 - **Medium**: Type-based UI tailoring not implemented
 
 ---
@@ -400,22 +467,23 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 
 **PRD Part 9 Key Entities:**
 
-| Entity | PRD | Implementation | Status |
-|--------|-----|----------------|--------|
-| User | 1:1 Profile | ✅ `profiles` table | ✅ Aligned |
-| Profile (Individual) | 1:1 MatchingProfile | ✅ `individual_profiles`, `matching_profiles` | ✅ Aligned |
-| Organization | 1:N Assignment | ✅ `organizations`, `assignments` | ✅ Aligned |
-| SkillsTaxonomy | L1→L4 | ✅ 4 tables (categories, subcategories, l3, taxonomy) | ✅ Aligned |
-| ProfileSkill | Level 0-5, months | ✅ `skills` table | ✅ Aligned |
-| Assignment | Must/nice skills, gates | ✅ `assignments` with all fields | ✅ Aligned |
-| Match | Score, subscores, PAC | ✅ `matches` with vector jsonb | ✅ Aligned |
-| Verification | Attestation requests | ✅ `skill_verification_requests`, `verification_requests` | ✅ Aligned |
-| Message | Basic contact thread | ✅ `conversations`, `messages` | ✅ Full implementation (Nov 3, 2025) |
-| ConsentRecord | Versioned acceptances | ✅ `user_consents` | ⚠️ Needs verification |
-| AuditLog | Immutable changes | ✅ `audit_logs` | ✅ Aligned |
-| AnalyticsEvent | Anonymized interactions | ✅ `analytics_events` | ✅ Aligned |
+| Entity               | PRD                     | Implementation                                            | Status                               |
+| -------------------- | ----------------------- | --------------------------------------------------------- | ------------------------------------ |
+| User                 | 1:1 Profile             | ✅ `profiles` table                                       | ✅ Aligned                           |
+| Profile (Individual) | 1:1 MatchingProfile     | ✅ `individual_profiles`, `matching_profiles`             | ✅ Aligned                           |
+| Organization         | 1:N Assignment          | ✅ `organizations`, `assignments`                         | ✅ Aligned                           |
+| SkillsTaxonomy       | L1→L4                   | ✅ 4 tables (categories, subcategories, l3, taxonomy)     | ✅ Aligned                           |
+| ProfileSkill         | Level 0-5, months       | ✅ `skills` table                                         | ✅ Aligned                           |
+| Assignment           | Must/nice skills, gates | ✅ `assignments` with all fields                          | ✅ Aligned                           |
+| Match                | Score, subscores, PAC   | ✅ `matches` with vector jsonb                            | ✅ Aligned                           |
+| Verification         | Attestation requests    | ✅ `skill_verification_requests`, `verification_requests` | ✅ Aligned                           |
+| Message              | Basic contact thread    | ✅ `conversations`, `messages`                            | ✅ Full implementation (Nov 3, 2025) |
+| ConsentRecord        | Versioned acceptances   | ✅ `user_consents`                                        | ⚠️ Needs verification                |
+| AuditLog             | Immutable changes       | ✅ `audit_logs`                                           | ✅ Aligned                           |
+| AnalyticsEvent       | Anonymized interactions | ✅ `analytics_events`                                     | ✅ Aligned                           |
 
 **Additional entities BEYOND PRD (Positive Drift):**
+
 - `skill_proofs` - supports evidence attachment
 - `capabilities`, `evidence` - enhanced expertise model
 - `skill_endorsements`, `growth_plans` - additional features
@@ -434,12 +502,14 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 ### Row-Level Security
 
 **PRD Requirements:**
+
 - JWT-based auth with role/record-level authorization
 - Deny-by-default policies
 - Encrypted at rest & in transit
 - Consent & audit logs
 
 **Implementation Status:**
+
 - ✅ **RLS enabled** on 20 tables (`RLS_DEPLOYMENT_SUMMARY.md`)
 - ✅ **124 policies** deployed (`migrations/001_enable_rls_policies.sql`)
 - ✅ **Supabase Auth** integrated (JWT-based)
@@ -450,6 +520,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 - ⚠️ **Field-level redaction** - Schema exists but implementation unclear
 
 **Gap Analysis:**
+
 - **Medium**: PII scrubbing in analytics/logs needs verification
 - **Medium**: Field-level controls incomplete
 
@@ -460,16 +531,19 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 ### Performance
 
 **PRD Requirements (Part 8):**
+
 - P95 TTI ≤ 2.5s (desktop), ≤ 3.5s (mobile)
 - P95 API latency ≤ 1.5s
 - Rate limiting: 100 req/min per IP
 
 **Implementation Status:**
+
 - ⚠️ **Performance budgets** - Not instrumented
 - ⚠️ **Rate limiting** - `rate_limits` table exists but middleware unclear
 - ❌ **Performance monitoring** - Not verified
 
 **Gap Analysis:**
+
 - **High**: Performance SLAs not instrumented or enforced
 
 ---
@@ -477,16 +551,19 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 ### Accessibility
 
 **PRD Requirements (Part 8):**
+
 - WCAG 2.1 AA baselines
 - Semantic HTML, ARIA, keyboard nav
 - Automated a11y checks in CI
 
 **Implementation Status:**
+
 - ✅ **@axe-core/playwright** installed
 - ⚠️ **Manual audits** - Not verified
 - ❌ **CI integration** - Not found in GitHub Actions
 
 **Gap Analysis:**
+
 - **Medium**: Accessibility testing not active in CI
 
 ---
@@ -497,25 +574,25 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 
 **Critical flows:**
 
-| Flow ID | PRD Spec | Implementation | Status |
-|---------|----------|----------------|--------|
-| I-01 | Account Creation (Email/Google/LinkedIn) | ✅ `/signup` | ⚠️ LinkedIn missing |
-| I-02 | Consent & Policy (Terms, Privacy, AI-assist) | ⚠️ Basic consent | ❌ AI-assist missing |
-| I-03 | First-Run Tour (Reveal UI, Zero-State) | ❌ Not found | ❌ Missing |
-| I-04 | Dashboard (Observer-Only) | ✅ `/app/i/home` | ⚠️ Not observer-only |
-| I-05 | Profile Basics (Avatar, Cover, Core Info) | ✅ Implemented | ✅ Aligned |
-| I-06 | Mission & Vision (Private by default) | ⚠️ Mission only | ❌ Vision missing |
-| I-07 | Values & Causes (Up to 5 each) | ✅ Implemented | ✅ Aligned |
-| I-11 | Expertise Hub (Guided vs Explore) | ✅ `/app/i/expertise` | ⚠️ Modes unclear |
-| I-12 | Taxonomy Nav (L1→L3→L4) | ✅ Implemented | ✅ Aligned |
-| I-13 | Skill Creation (Level, Proof, Verify) | ✅ Implemented | ✅ Aligned |
-| I-15 | Matching Profile (Focus Areas, Weighting) | ✅ `/app/i/matching` | ⚠️ Weighting unclear |
-| I-17 | Matching Results (Refresh cadence) | ✅ API exists | ❌ Cadence not found |
-| I-18 | Rank Transparency (Why you match, rank) | ⚠️ API exists | ❌ UI unclear |
-| I-20 | Secure Messaging (Text-only, no paste) | ✅ Full implementation | ✅ Complete (Nov 3, 2025) |
-| I-21 | Interview Scheduling (One 30-min, ≤7 days, Zoom/Google Meet) | ✅ Backend complete | ⚠️ UI needs verification |
-| I-24 | Data Portability (Export/Import JSON) | ⚠️ Export API | ❌ Import missing |
-| I-26 | Zen Hub Check-in (Mood, UI adaptation) | ❌ UI only | ❌ Backend missing |
+| Flow ID | PRD Spec                                                     | Implementation         | Status                    |
+| ------- | ------------------------------------------------------------ | ---------------------- | ------------------------- |
+| I-01    | Account Creation (Email/Google/LinkedIn)                     | ✅ `/signup`           | ⚠️ LinkedIn missing       |
+| I-02    | Consent & Policy (Terms, Privacy, AI-assist)                 | ⚠️ Basic consent       | ❌ AI-assist missing      |
+| I-03    | First-Run Tour (Reveal UI, Zero-State)                       | ❌ Not found           | ❌ Missing                |
+| I-04    | Dashboard (Observer-Only)                                    | ✅ `/app/i/home`       | ⚠️ Not observer-only      |
+| I-05    | Profile Basics (Avatar, Cover, Core Info)                    | ✅ Implemented         | ✅ Aligned                |
+| I-06    | Mission & Vision (Private by default)                        | ⚠️ Mission only        | ❌ Vision missing         |
+| I-07    | Values & Causes (Up to 5 each)                               | ✅ Implemented         | ✅ Aligned                |
+| I-11    | Expertise Hub (Guided vs Explore)                            | ✅ `/app/i/expertise`  | ⚠️ Modes unclear          |
+| I-12    | Taxonomy Nav (L1→L3→L4)                                      | ✅ Implemented         | ✅ Aligned                |
+| I-13    | Skill Creation (Level, Proof, Verify)                        | ✅ Implemented         | ✅ Aligned                |
+| I-15    | Matching Profile (Focus Areas, Weighting)                    | ✅ `/app/i/matching`   | ⚠️ Weighting unclear      |
+| I-17    | Matching Results (Refresh cadence)                           | ✅ API exists          | ❌ Cadence not found      |
+| I-18    | Rank Transparency (Why you match, rank)                      | ⚠️ API exists          | ❌ UI unclear             |
+| I-20    | Secure Messaging (Text-only, no paste)                       | ✅ Full implementation | ✅ Complete (Nov 3, 2025) |
+| I-21    | Interview Scheduling (One 30-min, ≤7 days, Zoom/Google Meet) | ✅ Backend complete    | ⚠️ UI needs verification  |
+| I-24    | Data Portability (Export/Import JSON)                        | ⚠️ Export API          | ❌ Import missing         |
+| I-26    | Zen Hub Check-in (Mood, UI adaptation)                       | ❌ UI only             | ❌ Backend missing        |
 
 **PRD Update (Nov 1, 2025):** Interview scheduling (I-21) must be conducted via Zoom or Google Meet with automatic video link generation. System should integrate with one or both platforms to create meeting links upon interview confirmation. This includes calendar invites with video links, timezone handling, and reminder functionality.
 
@@ -529,15 +606,15 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 
 **Critical flows:**
 
-| Flow ID | PRD Spec | Implementation | Status |
-|---------|----------|----------------|--------|
-| O-02 | Org Setup & Team (Roles, invites) | ✅ `/app/o/[slug]/members` | ✅ Aligned |
-| O-03 | Verify Org (Domain email, docs) | ⚠️ Schema exists | ❌ UI unclear |
-| O-04 | Org Profile (Mission, vision, values, impact) | ✅ `/app/o/[slug]/profile` | ⚠️ Causes missing |
-| O-05 | Create Assignment (5-step flow) | ⚠️ Form exists | ❌ 5-step missing |
-| O-06 | Matching Weights (Adjust weights, gates) | ⚠️ Schema exists | ❌ UI unclear |
-| O-08 | View Ranked Matches (Shortlist with scores) | ✅ `/app/o/[slug]/matching` | ⚠️ Features unclear |
-| O-13 | Assignment Creation (5 steps with stakeholders) | ⚠️ Pipeline schema | ❌ Flow not implemented |
+| Flow ID | PRD Spec                                        | Implementation              | Status                  |
+| ------- | ----------------------------------------------- | --------------------------- | ----------------------- |
+| O-02    | Org Setup & Team (Roles, invites)               | ✅ `/app/o/[slug]/members`  | ✅ Aligned              |
+| O-03    | Verify Org (Domain email, docs)                 | ⚠️ Schema exists            | ❌ UI unclear           |
+| O-04    | Org Profile (Mission, vision, values, impact)   | ✅ `/app/o/[slug]/profile`  | ⚠️ Causes missing       |
+| O-05    | Create Assignment (5-step flow)                 | ⚠️ Form exists              | ❌ 5-step missing       |
+| O-06    | Matching Weights (Adjust weights, gates)        | ⚠️ Schema exists            | ❌ UI unclear           |
+| O-08    | View Ranked Matches (Shortlist with scores)     | ✅ `/app/o/[slug]/matching` | ⚠️ Features unclear     |
+| O-13    | Assignment Creation (5 steps with stakeholders) | ⚠️ Pipeline schema          | ❌ Flow not implemented |
 
 **Verdict:** Org flows 50% complete; workflow features missing
 
@@ -547,15 +624,15 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 
 **PRD explicitly excludes:**
 
-| Feature | PRD Exclusion | Codebase Status | Verdict |
-|---------|---------------|-----------------|---------|
-| Social content feeds | ✅ Excluded | ✅ Not present | ✅ Aligned |
-| Clinical mental-health tools | ✅ Excluded | ✅ Zen Hub non-diagnostic | ✅ Aligned |
-| Deep ATS/HRIS integrations | ✅ Excluded | ✅ Not present | ✅ Aligned |
-| Hard verification (KYC/ID) | ✅ Excluded | ⚠️ Veriff integration found | ⚠️ **DRIFT** |
-| Payments & contracting | ✅ Excluded | ✅ Not present | ✅ Aligned |
-| Mobile apps | ✅ Excluded | ✅ Not present | ✅ Aligned |
-| Public directories | ✅ Excluded | ✅ Not present | ✅ Aligned |
+| Feature                      | PRD Exclusion | Codebase Status             | Verdict      |
+| ---------------------------- | ------------- | --------------------------- | ------------ |
+| Social content feeds         | ✅ Excluded   | ✅ Not present              | ✅ Aligned   |
+| Clinical mental-health tools | ✅ Excluded   | ✅ Zen Hub non-diagnostic   | ✅ Aligned   |
+| Deep ATS/HRIS integrations   | ✅ Excluded   | ✅ Not present              | ✅ Aligned   |
+| Hard verification (KYC/ID)   | ✅ Excluded   | ⚠️ Veriff integration found | ⚠️ **DRIFT** |
+| Payments & contracting       | ✅ Excluded   | ✅ Not present              | ✅ Aligned   |
+| Mobile apps                  | ✅ Excluded   | ✅ Not present              | ✅ Aligned   |
+| Public directories           | ✅ Excluded   | ✅ Not present              | ✅ Aligned   |
 
 **Drift Finding:** Veriff integration exists (`veriff_session_id` field in `individual_profiles`) despite PRD stating "soft attestations only" for MVP.
 
@@ -567,17 +644,18 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 
 **PRD Metrics:**
 
-| Metric | PRD Target | Instrumentation | Status |
-|--------|------------|-----------------|--------|
-| **TTSC** | Median ≤30 days | ❌ Not found | ❌ Missing |
-| **TTFQI** | Median ≤72 hours | ❌ Not found | ❌ Missing |
-| **TTV** | Median ≤7 days | ❌ Not found | ❌ Missing |
-| **PAC Lift** | ≥20% higher intro acceptance | ❌ Not tracked | ❌ Missing |
-| **SUS** | ≥75 | ❌ Not tracked | ❌ Missing |
-| **Well-Being Delta** | ≥60% show +1 improvement | ❌ Backend missing | ❌ Missing |
-| **Fairness Gap** | No significant negative gap | ❌ Not tracked | ❌ Missing |
+| Metric               | PRD Target                   | Instrumentation    | Status     |
+| -------------------- | ---------------------------- | ------------------ | ---------- |
+| **TTSC**             | Median ≤30 days              | ❌ Not found       | ❌ Missing |
+| **TTFQI**            | Median ≤72 hours             | ❌ Not found       | ❌ Missing |
+| **TTV**              | Median ≤7 days               | ❌ Not found       | ❌ Missing |
+| **PAC Lift**         | ≥20% higher intro acceptance | ❌ Not tracked     | ❌ Missing |
+| **SUS**              | ≥75                          | ❌ Not tracked     | ❌ Missing |
+| **Well-Being Delta** | ≥60% show +1 improvement     | ❌ Backend missing | ❌ Missing |
+| **Fairness Gap**     | No significant negative gap  | ❌ Not tracked     | ❌ Missing |
 
 **Analytics Events (PRD Part 9):**
+
 - ✅ **Analytics events** table exists
 - ⚠️ **Event schema** - Basic structure present, but PRD-specific events unclear
 
@@ -624,7 +702,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 ✅ **Matching Algorithm** - Sophisticated with PAC calculation  
 ✅ **RLS Policies** - 124 policies, comprehensive coverage  
 ✅ **Data Model** - Rich, extensible, future-proof  
-✅ **Core Flows** - Auth, onboarding, profile basics solid  
+✅ **Core Flows** - Auth, onboarding, profile basics solid
 
 ---
 
@@ -642,6 +720,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 4. Migration script for schema changes
 
 **Files to modify:**
+
 - `/src/db/schema.ts`
 - Create migration: `/src/db/migrations/YYYYMMDD_add_vision_causes_zen.sql`
 
@@ -660,6 +739,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 3. Add SUS survey collection points
 
 **Files to create/modify:**
+
 - `/src/lib/analytics/metrics.ts` - Metric calculation functions
 - `/src/lib/analytics/events.ts` - Event emission helpers
 - Update `/src/app/api/core/matching/` endpoints to emit events
@@ -677,6 +757,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 5. Link reflections to milestone triggers
 
 **Files to create:**
+
 - `/src/app/api/wellbeing/checkin/route.ts`
 - `/src/app/api/wellbeing/reflections/route.ts`
 - `/src/app/api/wellbeing/delta/route.ts`
@@ -694,6 +775,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 4. Track time-to-publish metrics
 
 **Files to refactor:**
+
 - `/src/components/matching/AssignmentBuilder.tsx` → Multi-step wizard
 - Create `/src/components/matching/assignment-steps/` directory
 - `/src/app/api/assignments/route.ts` - Add pipeline tracking
@@ -710,6 +792,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 4. Store layout preferences per user
 
 **Files to create/modify:**
+
 - `/src/components/dashboard/TileCustomizer.tsx`
 - `/src/app/api/user/dashboard-preferences/route.ts`
 - Update `/src/app/app/i/home/page.tsx` and `/src/app/o/[slug]/home/page.tsx`
@@ -726,6 +809,7 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 4. Add read receipts and typing indicators
 
 **Files to create:**
+
 - `/src/app/app/i/messages/page.tsx`
 - `/src/components/messaging/ConversationList.tsx`
 - `/src/components/messaging/MessageThread.tsx`
@@ -776,24 +860,29 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 ## Files Requiring Review/Modification
 
 ### Schema Changes
+
 - `/src/db/schema.ts` - Add Vision, Causes, Zen Hub tables
 
 ### Backend APIs
+
 - `/src/app/api/wellbeing/` - Create new endpoints
 - `/src/app/api/messages/` - Create new endpoints
 - `/src/app/api/core/matching/` - Add event emission
 
 ### Frontend Components
+
 - `/src/app/app/i/zen/page.tsx` - Add backend integration
 - `/src/components/matching/AssignmentBuilder.tsx` - Refactor to 5-step
 - `/src/components/dashboard/*.tsx` - Add customization
 - `/src/components/messaging/` - Create from scratch
 
 ### Analytics
+
 - `/src/lib/analytics.ts` - Instrument PRD metrics
 - Create `/src/lib/analytics/metrics.ts`
 
 ### Tests
+
 - `/e2e/` - Add critical path tests
 - `.github/workflows/` - Add accessibility CI checks
 
@@ -813,18 +902,17 @@ This audit cross-references the PRD (`PRD_for_a_web_platform_MVP.md`) against th
 
 **Overall Implementation**: 65-70% aligned with PRD
 
-| Category | Alignment | Notes |
-|----------|-----------|-------|
-| Data Model | 85% | Richer than PRD (positive) |
-| Core Features | 70% | Strong foundation, missing advanced features |
-| User Flows | 60% | Core flows solid, advanced flows missing |
-| Security | 90% | Excellent RLS implementation |
-| Metrics | 0% | Complete gap - needs immediate attention |
-| NFRs | 40% | Schema ready, instrumentation missing |
+| Category      | Alignment | Notes                                        |
+| ------------- | --------- | -------------------------------------------- |
+| Data Model    | 85%       | Richer than PRD (positive)                   |
+| Core Features | 70%       | Strong foundation, missing advanced features |
+| User Flows    | 60%       | Core flows solid, advanced flows missing     |
+| Security      | 90%       | Excellent RLS implementation                 |
+| Metrics       | 0%        | Complete gap - needs immediate attention     |
+| NFRs          | 40%       | Schema ready, instrumentation missing        |
 
 **Recommendation**: MVP is 75% ready (updated Nov 3, 2025). Requires critical gaps (Vision, Causes, Metrics, Zen Hub backend) before launch. Significant progress made on Assignment Creation and Messaging systems.
 
 ---
 
 **Document End**
-

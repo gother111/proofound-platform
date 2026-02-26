@@ -1,3 +1,17 @@
+> Doc Class: `historical`
+> Historical Snapshot Reviewed: `2026-02-26`
+> Canonical Current Testing Docs:
+>
+> - `docs/testing-strategy.md`
+> - `docs/qa/e2e-matrix.md`
+> - `docs/qa/summary.md`
+> - `agent/checklists/verification.md`
+> - `agent/runbooks/setup.md`
+>
+> Note: This archived file preserves historical context. For current routes, commands, and gate criteria, use the canonical docs above.
+
+---
+
 # WCAG 2.1 AA Accessibility Audit Report
 
 **Date:** November 8, 2025  

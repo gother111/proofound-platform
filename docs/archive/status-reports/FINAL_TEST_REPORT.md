@@ -1,3 +1,17 @@
+> Doc Class: `historical`
+> Historical Snapshot Reviewed: `2026-02-26`
+> Canonical Current Testing Docs:
+>
+> - `docs/testing-strategy.md`
+> - `docs/qa/e2e-matrix.md`
+> - `docs/qa/summary.md`
+> - `agent/checklists/verification.md`
+> - `agent/runbooks/setup.md`
+>
+> Note: This archived file preserves historical context. For current routes, commands, and gate criteria, use the canonical docs above.
+
+---
+
 # Final Comprehensive Test Report - PRD Flows
 
 **Date:** 2025-01-27  
@@ -116,7 +130,7 @@ All foreign key relationships verified:
 
 **Test Files:**
 
-- `tests/e2e/prd-flows-individual.spec.ts` - Playwright E2E tests
+- `legacy tests/e2e/prd-flows-individual.spec.ts` - Playwright E2E tests
 - `MANUAL_TESTING_CHECKLIST.md` - Comprehensive manual testing guide
 
 **Database Verification Ready:**
@@ -327,8 +341,8 @@ All foreign key relationships verified with 0 orphaned records:
 1. `tests/comprehensive-prd-test.ts` - Database connectivity and schema tests
 2. `tests/api-endpoints-test.ts` - API endpoint testing script
 3. `tests/database-persistence-verification.ts` - Database persistence checks
-4. `tests/e2e/prd-flows-individual.spec.ts` - Individual flows E2E tests
-5. `tests/e2e/prd-flows-organization.spec.ts` - Organization flows E2E tests
+4. `legacy tests/e2e/prd-flows-individual.spec.ts` - Individual flows E2E tests
+5. `legacy tests/e2e/prd-flows-organization.spec.ts` - Organization flows E2E tests
 
 ### 5.2 Manual Testing Documentation
 

@@ -1,55 +1,47 @@
+> Doc Class: `active`
+> Last Verified: `2026-02-26`
+
 # QA Summary
 
-This document is the running summary for the end-to-end QA automation effort.
+## Scope
 
-References:
+This summary tracks the currently enforced QA automation surface and launch-gate ordering.
 
-- `docs/qa/e2e-matrix.md` (flows and actor matrix)
-- `docs/qa/bugs.md` (bug log)
-- Verification checklist: `agent/checklists/verification.md`
+## Automated Coverage (Current)
 
-## What Was Tested
+- Unit/API baseline: `npm run test`
+- Privacy baseline: `npm run test:privacy`
+- E2E baseline: `npm run test:e2e`
+- Auth contracts:
+  - `npm run test:e2e:auth` (mock)
+  - `npm run test:e2e:auth:real` (real runtime contract)
+- A11y contracts:
+  - `npm run test:a11y`
+  - `npm run test:a11y:strict`
+- Strict MVP contracts:
+  - `npm run test:e2e:individual:strict`
+  - `npm run test:e2e:org:strict`
+  - `npm run test:e2e:privacy:strict`
+  - `npm run test:e2e:providers:strict`
+- Ops gates:
+  - `BASE_URL=http://localhost:3000 npm run perf:budgets`
+  - `BASE_URL=http://localhost:3000 SUS_STUDY_COMPLETE=true npm run go:no-go`
 
-- Public pages accessibility:
-  - `/`
-  - `/login`
-  - `/signup`
-- Authentication flows in mock mode:
-  - Signup (individual, organization)
-  - Login
-  - Password reset (UI flow)
-  - Email verification (UI flow)
+## Primary Suite Ownership
 
-## What Was Automated
+- Auth: `e2e/auth.real.spec.ts`
+- Individual strict: `e2e/strict/individual.strict.spec.ts`
+- Organization strict: `e2e/strict/organization.strict.spec.ts`
+- Privacy strict: `e2e/strict/privacy.strict.spec.ts`
+- Providers strict: `e2e/strict/providers.strict.spec.ts`
+- A11y: `tests/a11y/*.spec.ts`
 
-- Accessibility (axe-core + Playwright): `npm run test:a11y`
-  - Tests live in `tests/a11y/*`
-- Auth E2E (mock Supabase): `npm run test:e2e:auth`
-  - Tests live in `e2e/auth.spec.ts`
+## Current Known Risks
 
-## Bugs Found
+- Provider strict flows require deterministic connected provider credentials and complete env setup.
+- Launch strict runs can fail due to missing env vars or provider account readiness rather than functional regressions.
+- `npm run db:push` remains dev-only and is not a production migration path.
 
-See `docs/qa/bugs.md` for full details.
+## Canonical Verification Checklist
 
-Fixed in this pass so far:
-
-- Skip link focus target was missing on public pages.
-- Footer icon-only links lacked accessible names.
-- Auth pages had WCAG contrast violations.
-- A11y scans were unstable during animations.
-- Mock E2E login helper used an ambiguous password selector.
-- Mock Supabase query chain lacked `.or()` which crashed `/api/interviews/schedule` in mock mode.
-
-Open risks:
-
-- `npm run db:push` currently fails due to Drizzle dependency mismatch.
-- Login page includes hardcoded localhost ingest debug calls.
-- Playwright CI workflow likely needs a DB service when using a local `DATABASE_URL` fallback.
-
-## Next Steps (Planned)
-
-- Implement deterministic smoke E2E for:
-  - Individual shell navigation
-  - Org shell navigation and role enforcement
-  - Admin dashboard access and core lists
-- Add a CI-friendly E2E command that provisions dependencies (local Postgres) and runs smoke tests headless.
+- `agent/checklists/verification.md`

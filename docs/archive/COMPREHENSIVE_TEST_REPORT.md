@@ -1,3 +1,17 @@
+> Doc Class: `historical`
+> Historical Snapshot Reviewed: `2026-02-26`
+> Canonical Current Testing Docs:
+>
+> - `docs/testing-strategy.md`
+> - `docs/qa/e2e-matrix.md`
+> - `docs/qa/summary.md`
+> - `agent/checklists/verification.md`
+> - `agent/runbooks/setup.md`
+>
+> Note: This archived file preserves historical context. For current routes, commands, and gate criteria, use the canonical docs above.
+
+---
+
 # Comprehensive PRD Flow Testing Report
 
 **Date:** 2025-01-27  
@@ -117,7 +131,7 @@
 
 - **Status:** ⏳ PENDING MANUAL TEST
 - **Test Steps:**
-  1. Test email signup: `/auth/signup`
+  1. Test email signup: `/signup`
   2. Test Google OAuth: Click "Sign in with Google"
   3. Test LinkedIn OAuth: Click "Sign in with LinkedIn"
   4. Verify user created in `profiles` table

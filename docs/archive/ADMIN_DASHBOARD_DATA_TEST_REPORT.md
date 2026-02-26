@@ -1,6 +1,21 @@
+> Doc Class: `historical`
+> Historical Snapshot Reviewed: `2026-02-26`
+> Canonical Current Testing Docs:
+>
+> - `docs/testing-strategy.md`
+> - `docs/qa/e2e-matrix.md`
+> - `docs/qa/summary.md`
+> - `agent/checklists/verification.md`
+> - `agent/runbooks/setup.md`
+>
+> Note: This archived file preserves historical context. For current routes, commands, and gate criteria, use the canonical docs above.
+
+---
+
 # Admin Dashboard Data Loading Test Report
 
 ## Overview
+
 This document summarizes the testing and validation of data loading for the admin dashboard at `/admin`. All API endpoints and components have been tested to ensure data loads correctly and displays properly.
 
 ## Test Results Summary
@@ -8,6 +23,7 @@ This document summarizes the testing and validation of data loading for the admi
 ### ✅ API Endpoints Tested
 
 #### 1. Overview API (`/api/admin/analytics/overview`)
+
 - **Status**: ✅ PASSED
 - **Response Structure**: Valid
 - **Required Fields**: All present
@@ -22,6 +38,7 @@ This document summarizes the testing and validation of data loading for the admi
 - **Authentication**: Requires `platform_admin` or `super_admin` role
 
 #### 2. Metrics API (`/api/metrics/all?days=30`)
+
 - **Status**: ✅ PASSED
 - **Response Structure**: Valid
 - **Required Metrics**: All 6 metrics present
@@ -41,19 +58,21 @@ This document summarizes the testing and validation of data loading for the admi
 - **Authentication**: Requires `platform_admin` or `super_admin` role
 
 #### 3. Growth API (`/api/admin/analytics/growth?period=30d&groupBy=day`)
+
 - **Status**: ✅ PASSED
 - **Response Structure**: Valid
 - **Data Structure**:
   - `users`: Array of { period, count, cumulative }
   - `organizations`: Array of { period, count, cumulative }
   - `period`: { start, end, groupBy }
-- **Data Validation**: 
+- **Data Validation**:
   - Cumulative values increase or stay the same over time (validated)
   - All data points have required fields
 - **Period Filters**: Tested 7d, 30d, 90d - all working correctly
 - **Authentication**: Requires `platform_admin` or `super_admin` role
 
 #### 4. Fairness API (`/api/analytics/fairness`)
+
 - **Status**: ✅ PASSED (with note)
 - **Response Structure**: Valid when data exists
 - **Data Structure**:
@@ -66,6 +85,7 @@ This document summarizes the testing and validation of data loading for the admi
 ### ✅ Component Rendering
 
 #### 1. AdminDashboard Component
+
 - **Location**: `src/components/admin/AdminDashboard.tsx`
 - **Status**: ✅ PASSED
 - **Features Tested**:
@@ -74,12 +94,13 @@ This document summarizes the testing and validation of data loading for the admi
   - Quick Actions card
   - Loading state displays correctly
   - Error state displays correctly
-- **Data Validation**: 
+- **Data Validation**:
   - All numeric values use `safeToLocaleString()` utility
   - Conversion rate uses `safePercentage()` utility to prevent division by zero
   - No NaN, undefined, or null values displayed
 
 #### 2. MetricsDashboard Component
+
 - **Location**: `src/components/admin/MetricsDashboard.tsx`
 - **Status**: ✅ PASSED
 - **Features Tested**:
@@ -88,12 +109,13 @@ This document summarizes the testing and validation of data loading for the admi
   - Refresh button works
   - Loading state displays correctly
   - Error state with retry button works
-- **Data Validation**: 
+- **Data Validation**:
   - All numeric values use `.toFixed()` with proper decimal places
   - Percentiles display correctly
   - Sample sizes display correctly
 
 #### 3. AdminGrowthChart Component
+
 - **Location**: `src/components/admin/analytics/AdminGrowthChart.tsx`
 - **Status**: ✅ PASSED
 - **Features Tested**:
@@ -102,11 +124,12 @@ This document summarizes the testing and validation of data loading for the admi
   - Metric selector (users/organizations) works
   - Loading state displays correctly
   - Empty state displays correctly
-- **Data Validation**: 
+- **Data Validation**:
   - Chart handles empty data gracefully
   - Date formatting is correct
 
 #### 4. FairnessNoteDashboard Component
+
 - **Location**: `src/components/analytics/FairnessNoteDashboard.tsx`
 - **Status**: ✅ PASSED
 - **Features Tested**:
@@ -115,7 +138,7 @@ This document summarizes the testing and validation of data loading for the admi
   - Refresh button works
   - Loading state displays correctly
   - Empty state displays correctly
-- **Data Validation**: 
+- **Data Validation**:
   - Status badges display correctly
   - Cohort metrics display correctly
   - Gaps display correctly with significance indicators
@@ -123,6 +146,7 @@ This document summarizes the testing and validation of data loading for the admi
 ### ✅ Data Validation Improvements
 
 #### New Utility Functions
+
 - **Location**: `src/lib/utils/data-validation.ts`
 - **Functions Added**:
   - `safeNumber()`: Handles NaN, null, undefined
@@ -133,18 +157,21 @@ This document summarizes the testing and validation of data loading for the admi
   - `isValidNumber()`: Type guard for valid numbers
 
 #### Components Updated
+
 - `AdminDashboard.tsx`: Now uses validation utilities for all numeric displays
 
 ### ✅ Error Handling
 
 #### Authentication Errors
+
 - **Status**: ✅ WORKING
-- **Behavior**: 
+- **Behavior**:
   - Unauthenticated users: Redirected to login
   - Non-admin users: 403 Forbidden
   - Proper error messages displayed
 
 #### Network Errors
+
 - **Status**: ✅ WORKING
 - **Behavior**:
   - Components show error states
@@ -152,6 +179,7 @@ This document summarizes the testing and validation of data loading for the admi
   - Toast notifications for errors
 
 #### Empty Data
+
 - **Status**: ✅ WORKING
 - **Behavior**:
   - Components handle empty data gracefully
@@ -161,14 +189,17 @@ This document summarizes the testing and validation of data loading for the admi
 ### ✅ Edge Cases Tested
 
 #### 1. Empty Database
+
 - **Status**: ✅ HANDLED
 - **Behavior**: All components display "0" values correctly, no errors
 
 #### 2. Large Numbers
+
 - **Status**: ✅ HANDLED
 - **Behavior**: `toLocaleString()` formats large numbers correctly (e.g., 1,234,567)
 
 #### 3. Date Range Filters
+
 - **Status**: ✅ WORKING
 - **Tested**:
   - Growth chart: 7d, 30d, 90d periods
@@ -177,6 +208,7 @@ This document summarizes the testing and validation of data loading for the admi
 - **Result**: All filters work correctly
 
 #### 4. Division by Zero
+
 - **Status**: ✅ HANDLED
 - **Location**: Conversion rate calculation in AdminDashboard
 - **Solution**: Uses `safePercentage()` utility
@@ -184,6 +216,7 @@ This document summarizes the testing and validation of data loading for the admi
 ## Test Script
 
 A comprehensive test script has been created at:
+
 - **Location**: `scripts/test-admin-dashboard-data.js`
 - **Usage**: `node scripts/test-admin-dashboard-data.js`
 - **Features**:
@@ -196,6 +229,7 @@ A comprehensive test script has been created at:
 ## Recommendations
 
 ### ✅ Completed
+
 1. ✅ Added data validation utilities
 2. ✅ Updated AdminDashboard to use safe formatting
 3. ✅ Created comprehensive test script
@@ -203,6 +237,7 @@ A comprehensive test script has been created at:
 5. ✅ Verified all components render correctly
 
 ### 🔄 Optional Improvements
+
 1. Add unit tests for validation utilities
 2. Add E2E tests for admin dashboard
 3. Add monitoring/alerting for API endpoint failures
@@ -213,4 +248,3 @@ A comprehensive test script has been created at:
 All admin dashboard data loading has been tested and validated. All API endpoints return valid data structures, all components render correctly, and data validation utilities prevent display of invalid values. The dashboard is ready for production use.
 
 **Overall Status**: ✅ **ALL TESTS PASSED**
-

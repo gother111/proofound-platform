@@ -1,3 +1,17 @@
+> Doc Class: `historical`
+> Historical Snapshot Reviewed: `2026-02-26`
+> Canonical Current Testing Docs:
+>
+> - `docs/testing-strategy.md`
+> - `docs/qa/e2e-matrix.md`
+> - `docs/qa/summary.md`
+> - `agent/checklists/verification.md`
+> - `agent/runbooks/setup.md`
+>
+> Note: This archived file preserves historical context. For current routes, commands, and gate criteria, use the canonical docs above.
+
+---
+
 # PROOFOUND TECHNOLOGY STACK AUDIT
 
 **Document Version**: 1.0
@@ -20,6 +34,7 @@ The current technology stack is **exceptionally well-suited** for Proofound's pl
 - ✅ **Talent Availability**: Large pool of Next.js/React developers
 
 **Key Findings**:
+
 - **No technology changes required for MVP**
 - Stack aligns perfectly with platform requirements (matching, real-time, auth, storage)
 - Minor additions needed: Rate limiting, vector search (Phase 2)
@@ -47,17 +62,17 @@ The current technology stack is **exceptionally well-suited** for Proofound's pl
 
 ### 1.1 Core Technologies
 
-| Technology | Version | Role | MVP Ready | Scale Ready | Grade |
-|-----------|---------|------|-----------|-------------|-------|
-| **Next.js** | 15.5.4 | Frontend + API | ✅ | ✅ | A+ |
-| **React** | 19 | UI Library | ✅ | ✅ | A+ |
-| **TypeScript** | 5.x | Type Safety | ✅ | ✅ | A+ |
-| **Supabase** | Latest | Backend (Postgres + Auth + Storage) | ✅ | ✅ | A |
-| **Drizzle ORM** | Latest | Database Client | ✅ | ✅ | A |
-| **Tailwind CSS** | 3.x | Styling | ✅ | ✅ | A+ |
-| **Radix UI** | Latest | Accessible Components | ✅ | ✅ | A |
-| **Resend** | Latest | Transactional Email | ✅ | ⚠️ | B+ |
-| **Vercel** | N/A | Hosting + CI/CD | ✅ | ✅ | A |
+| Technology       | Version | Role                                | MVP Ready | Scale Ready | Grade |
+| ---------------- | ------- | ----------------------------------- | --------- | ----------- | ----- |
+| **Next.js**      | 15.5.4  | Frontend + API                      | ✅        | ✅          | A+    |
+| **React**        | 19      | UI Library                          | ✅        | ✅          | A+    |
+| **TypeScript**   | 5.x     | Type Safety                         | ✅        | ✅          | A+    |
+| **Supabase**     | Latest  | Backend (Postgres + Auth + Storage) | ✅        | ✅          | A     |
+| **Drizzle ORM**  | Latest  | Database Client                     | ✅        | ✅          | A     |
+| **Tailwind CSS** | 3.x     | Styling                             | ✅        | ✅          | A+    |
+| **Radix UI**     | Latest  | Accessible Components               | ✅        | ✅          | A     |
+| **Resend**       | Latest  | Transactional Email                 | ✅        | ⚠️          | B+    |
+| **Vercel**       | N/A     | Hosting + CI/CD                     | ✅        | ✅          | A     |
 
 **Overall Stack Grade**: **A+ (95/100)**
 
@@ -104,20 +119,20 @@ The current technology stack is **exceptionally well-suited** for Proofound's pl
 
 ### 2.1 Requirements Coverage Matrix
 
-| MVP Requirement | Current Stack | Sufficiency | Gap |
-|----------------|---------------|-------------|-----|
-| **Authentication** (Email, Google, LinkedIn, MFA) | Supabase Auth | ✅ 100% | None |
-| **Database** (Relational, JSONB, Full-text) | Supabase Postgres | ✅ 100% | None |
-| **File Storage** (Proofs, avatars, PDFs) | Supabase Storage | ✅ 100% | Config needed |
-| **Real-time** (Messaging, notifications) | Supabase Realtime | ✅ 90% | Polling for MVP OK |
-| **Email** (Verification, notifications) | Resend | ✅ 95% | Templates needed |
-| **Matching Algorithm** (Scoring, filtering) | Next.js API + Postgres | ✅ 100% | None |
-| **Search** (Full-text, filters) | Postgres `ts_vector` | ✅ 80% | Good for MVP |
-| **Security** (RLS, Auth, RBAC) | Supabase RLS + JWT | ✅ 100% | None |
-| **CI/CD** (Preview, production) | Vercel | ✅ 100% | None |
-| **Analytics** (Event tracking) | Custom + Postgres | ✅ 90% | Implement tracking |
-| **Rate Limiting** | Not implemented | ⚠️ 0% | **Critical gap** |
-| **Moderation** (Content review) | Not implemented | ⚠️ 0% | **Critical gap** |
+| MVP Requirement                                   | Current Stack          | Sufficiency | Gap                |
+| ------------------------------------------------- | ---------------------- | ----------- | ------------------ |
+| **Authentication** (Email, Google, LinkedIn, MFA) | Supabase Auth          | ✅ 100%     | None               |
+| **Database** (Relational, JSONB, Full-text)       | Supabase Postgres      | ✅ 100%     | None               |
+| **File Storage** (Proofs, avatars, PDFs)          | Supabase Storage       | ✅ 100%     | Config needed      |
+| **Real-time** (Messaging, notifications)          | Supabase Realtime      | ✅ 90%      | Polling for MVP OK |
+| **Email** (Verification, notifications)           | Resend                 | ✅ 95%      | Templates needed   |
+| **Matching Algorithm** (Scoring, filtering)       | Next.js API + Postgres | ✅ 100%     | None               |
+| **Search** (Full-text, filters)                   | Postgres `ts_vector`   | ✅ 80%      | Good for MVP       |
+| **Security** (RLS, Auth, RBAC)                    | Supabase RLS + JWT     | ✅ 100%     | None               |
+| **CI/CD** (Preview, production)                   | Vercel                 | ✅ 100%     | None               |
+| **Analytics** (Event tracking)                    | Custom + Postgres      | ✅ 90%      | Implement tracking |
+| **Rate Limiting**                                 | Not implemented        | ⚠️ 0%       | **Critical gap**   |
+| **Moderation** (Content review)                   | Not implemented        | ⚠️ 0%       | **Critical gap**   |
 
 **MVP Readiness Score**: **85/100** (Excellent)
 
@@ -126,15 +141,15 @@ The current technology stack is **exceptionally well-suited** for Proofound's pl
 
 ### 2.2 Feature Implementation Feasibility
 
-| Feature Category | Implementation Complexity | Current Stack Fit | ETA |
-|-----------------|--------------------------|-------------------|-----|
-| **Matching Engine** | Medium | Perfect | 2 weeks |
-| **Verification System** | Medium | Perfect | 2 weeks |
-| **Messaging (Stage 1/2)** | Medium | Perfect | 2 weeks |
-| **Profile Builder** | Low | Perfect | 1 week |
-| **Assignment Management** | Low | Perfect | 1 week |
-| **Analytics Dashboard** | Medium | Good | 1 week |
-| **Admin Tools** | Low | Perfect | 1 week |
+| Feature Category          | Implementation Complexity | Current Stack Fit | ETA     |
+| ------------------------- | ------------------------- | ----------------- | ------- |
+| **Matching Engine**       | Medium                    | Perfect           | 2 weeks |
+| **Verification System**   | Medium                    | Perfect           | 2 weeks |
+| **Messaging (Stage 1/2)** | Medium                    | Perfect           | 2 weeks |
+| **Profile Builder**       | Low                       | Perfect           | 1 week  |
+| **Assignment Management** | Low                       | Perfect           | 1 week  |
+| **Analytics Dashboard**   | Medium                    | Good              | 1 week  |
+| **Admin Tools**           | Low                       | Perfect           | 1 week  |
 
 **Verdict**: Current stack can deliver **100% of MVP features** without additions.
 
@@ -144,16 +159,16 @@ The current technology stack is **exceptionally well-suited** for Proofound's pl
 
 ### 3.1 Core Requirements vs Stack Capabilities
 
-| Platform Requirement | Weight | Next.js | Supabase | Drizzle | Overall Fit |
-|---------------------|--------|---------|----------|---------|-------------|
-| **Matching Algorithm** (60% Skills + 25% Values + 20% Practical) | 🔴 Critical | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | **Perfect** |
-| **Verification Workflow** (Email automation, tracking) | 🔴 Critical | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | **Excellent** |
-| **Real-time Messaging** (Stage 1: polling, Stage 2: real-time) | 🔴 Critical | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | **Perfect** |
-| **Profile Management** (CRUD, uploads, privacy) | 🟡 High | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | **Perfect** |
-| **Search & Discovery** (Full-text, filters, ranking) | 🟡 High | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | **Good** |
-| **Security & Privacy** (RLS, auth, PII handling) | 🔴 Critical | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | **Perfect** |
-| **Analytics & Metrics** (Event tracking, dashboards) | 🟡 High | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | **Good** |
-| **Scalability** (100K+ users, 1M+ matches) | 🟡 High | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | **Excellent** |
+| Platform Requirement                                             | Weight      | Next.js    | Supabase   | Drizzle    | Overall Fit   |
+| ---------------------------------------------------------------- | ----------- | ---------- | ---------- | ---------- | ------------- |
+| **Matching Algorithm** (60% Skills + 25% Values + 20% Practical) | 🔴 Critical | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | **Perfect**   |
+| **Verification Workflow** (Email automation, tracking)           | 🔴 Critical | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐   | ⭐⭐⭐⭐⭐ | **Excellent** |
+| **Real-time Messaging** (Stage 1: polling, Stage 2: real-time)   | 🔴 Critical | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐   | **Perfect**   |
+| **Profile Management** (CRUD, uploads, privacy)                  | 🟡 High     | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | **Perfect**   |
+| **Search & Discovery** (Full-text, filters, ranking)             | 🟡 High     | ⭐⭐⭐⭐   | ⭐⭐⭐⭐   | ⭐⭐⭐⭐   | **Good**      |
+| **Security & Privacy** (RLS, auth, PII handling)                 | 🔴 Critical | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | **Perfect**   |
+| **Analytics & Metrics** (Event tracking, dashboards)             | 🟡 High     | ⭐⭐⭐⭐   | ⭐⭐⭐⭐   | ⭐⭐⭐⭐⭐ | **Good**      |
+| **Scalability** (100K+ users, 1M+ matches)                       | 🟡 High     | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐   | ⭐⭐⭐⭐⭐ | **Excellent** |
 
 **Alignment Score**: **98/100** (Exceptional fit)
 
@@ -195,6 +210,7 @@ The current technology stack is **exceptionally well-suited** for Proofound's pl
 #### Why Next.js?
 
 **Strengths**:
+
 - ✅ **App Router**: RSC (React Server Components) keep sensitive logic server-side
 - ✅ **API Routes**: Unified codebase for frontend + backend
 - ✅ **TypeScript**: End-to-end type safety with Drizzle
@@ -204,6 +220,7 @@ The current technology stack is **exceptionally well-suited** for Proofound's pl
 - ✅ **Deployment**: One-click Vercel deployment, edge functions, preview deploys
 
 **Weaknesses**:
+
 - ⚠️ **Bundle Size**: React 19 is larger than alternatives (Vue, Svelte)
   - **Mitigation**: Tree-shaking, dynamic imports, code splitting
 - ⚠️ **Learning Curve**: App Router is new (released 2023)
@@ -212,6 +229,7 @@ The current technology stack is **exceptionally well-suited** for Proofound's pl
 **MVP Fit**: **⭐⭐⭐⭐⭐ Perfect**
 
 **Alternatives Considered**:
+
 - **Remix**: Similar to Next.js but smaller ecosystem
 - **SvelteKit**: Smaller bundles but less mature, smaller talent pool
 - **Nuxt (Vue)**: Great but React has larger hiring pool
@@ -225,6 +243,7 @@ The current technology stack is **exceptionally well-suited** for Proofound's pl
 #### What is Supabase?
 
 Open-source Firebase alternative built on:
+
 - **PostgreSQL 15** (relational database)
 - **PostgREST** (auto-generated REST API)
 - **GoTrue** (JWT-based auth)
@@ -234,6 +253,7 @@ Open-source Firebase alternative built on:
 #### Why Supabase?
 
 **Strengths**:
+
 - ✅ **Postgres**: Most powerful open-source RDBMS
   - JSONB for flexible schemas
   - Full-text search (`ts_vector`)
@@ -246,6 +266,7 @@ Open-source Firebase alternative built on:
 - ✅ **Cost**: Free tier → $25/mo → $599/mo (scales gracefully)
 
 **Weaknesses**:
+
 - ⚠️ **Vendor Lock-in Risk**: Moderate (but self-hostable)
 - ⚠️ **Realtime Limitations**: Not as robust as dedicated message queues (Redis, Kafka)
   - **Mitigation**: Start with polling, add Redis Pub/Sub if needed
@@ -255,6 +276,7 @@ Open-source Firebase alternative built on:
 **MVP Fit**: **⭐⭐⭐⭐⭐ Perfect**
 
 **Alternatives Considered**:
+
 - **Firebase**: NoSQL is poor fit for matching (needs joins)
 - **Prisma + Raw Postgres**: More setup, no auth/storage built-in
 - **AWS Amplify**: More complex, higher cost
@@ -269,6 +291,7 @@ Open-source Firebase alternative built on:
 #### Why Drizzle over Prisma?
 
 **Strengths**:
+
 - ✅ **Type Safety**: Infers TypeScript types from schema
 - ✅ **Performance**: Generates optimized SQL, no extra round-trips
 - ✅ **SQL-like**: Query API feels like SQL (easier to optimize)
@@ -277,12 +300,14 @@ Open-source Firebase alternative built on:
 - ✅ **Supabase RLS**: Works seamlessly with RLS policies
 
 **Weaknesses**:
+
 - ⚠️ **Smaller Community**: Newer than Prisma (released 2022)
 - ⚠️ **Fewer Integrations**: Prisma has more tooling (Prisma Studio, etc.)
 
 **MVP Fit**: **⭐⭐⭐⭐⭐ Perfect**
 
 **Alternatives Considered**:
+
 - **Prisma**: More mature but heavier, slower queries
 - **Kysely**: Great but more verbose
 - **Raw SQL**: Fastest but no type safety
@@ -296,12 +321,14 @@ Open-source Firebase alternative built on:
 #### Why This UI Stack?
 
 **Tailwind CSS**:
+
 - ✅ **Utility-first**: Rapid prototyping, consistent design system
 - ✅ **Customization**: Easily theme for brand
 - ✅ **Performance**: PurgeCSS removes unused styles
 - ✅ **Industry Standard**: Most popular CSS framework
 
 **Radix UI**:
+
 - ✅ **Accessibility**: WCAG 2.1 AA compliant out-of-the-box
 - ✅ **Unstyled**: Full control over styling
 - ✅ **Composable**: Build complex components easily
@@ -310,6 +337,7 @@ Open-source Firebase alternative built on:
 **MVP Fit**: **⭐⭐⭐⭐⭐ Perfect**
 
 **Alternatives Considered**:
+
 - **Material UI**: Opinionated design, harder to customize
 - **Chakra UI**: Good but styled by default (less flexibility)
 - **Headless UI**: Similar to Radix but less feature-rich
@@ -323,12 +351,14 @@ Open-source Firebase alternative built on:
 #### Why Resend?
 
 **Strengths**:
+
 - ✅ **Developer Experience**: Best-in-class API, React email templates
 - ✅ **Deliverability**: Built by ex-Vercel team, excellent reputation
 - ✅ **Pricing**: $20/mo for 50K emails (very competitive)
 - ✅ **React Templates**: Write emails in React (reuse components)
 
 **Weaknesses**:
+
 - ⚠️ **Young Service**: Founded 2022 (less track record than SendGrid)
 - ⚠️ **Scale**: Unproven at 1M+ emails/month
   - **Mitigation**: Easy to migrate to SendGrid/AWS SES if needed
@@ -336,6 +366,7 @@ Open-source Firebase alternative built on:
 **MVP Fit**: **⭐⭐⭐⭐ Excellent**
 
 **Alternatives Considered**:
+
 - **SendGrid**: More mature but worse DX, more expensive
 - **AWS SES**: Cheapest but requires SMTP setup, poor DX
 - **Postmark**: Great but more expensive than Resend
@@ -349,6 +380,7 @@ Open-source Firebase alternative built on:
 #### Why Vercel?
 
 **Strengths**:
+
 - ✅ **Next.js Native**: Made by Next.js creators, perfect integration
 - ✅ **Edge Network**: Global CDN, 99.99% uptime SLA (Pro)
 - ✅ **Preview Deploys**: Every PR gets a unique URL for testing
@@ -357,6 +389,7 @@ Open-source Firebase alternative built on:
 - ✅ **Analytics**: Built-in Web Vitals tracking
 
 **Weaknesses**:
+
 - ⚠️ **Cost**: Can get expensive at scale ($20/mo free → $20/seat/mo Pro)
   - **Mitigation**: Self-host on AWS/GCP after 100K users if needed
 - ⚠️ **Vendor Lock-in**: Moderate (Next.js is portable)
@@ -364,6 +397,7 @@ Open-source Firebase alternative built on:
 **MVP Fit**: **⭐⭐⭐⭐⭐ Perfect**
 
 **Alternatives Considered**:
+
 - **Netlify**: Similar but worse Next.js support
 - **AWS Amplify**: More complex, steeper learning curve
 - **Self-hosted (Docker + Kubernetes)**: Too much overhead for MVP
@@ -377,32 +411,34 @@ Open-source Firebase alternative built on:
 ### 5.1 Alternative Stack Comparisons
 
 #### Option A: Current Stack (Next.js + Supabase + Drizzle)
+
 **Grade**: A+ (95/100)
 
-| Criteria | Score | Notes |
-|----------|-------|-------|
-| MVP Speed | 10/10 | Can ship in 8-10 weeks |
+| Criteria             | Score | Notes                          |
+| -------------------- | ----- | ------------------------------ |
+| MVP Speed            | 10/10 | Can ship in 8-10 weeks         |
 | Developer Experience | 10/10 | Excellent tooling, type safety |
-| Cost (First Year) | 9/10 | ~$3K-5K for first 10K users |
-| Scalability | 9/10 | Proven to 100K+ users |
-| Hiring | 10/10 | Large Next.js talent pool |
-| Flexibility | 9/10 | Can add any library/service |
+| Cost (First Year)    | 9/10  | ~$3K-5K for first 10K users    |
+| Scalability          | 9/10  | Proven to 100K+ users          |
+| Hiring               | 10/10 | Large Next.js talent pool      |
+| Flexibility          | 9/10  | Can add any library/service    |
 
 **Total**: **57/60** (95%)
 
 ---
 
 #### Option B: Django + Postgres + React SPA
+
 **Grade**: B+ (83/100)
 
-| Criteria | Score | Notes |
-|----------|-------|-------|
-| MVP Speed | 7/10 | Slower (separate FE/BE repos) |
-| Developer Experience | 8/10 | Good but less integrated |
-| Cost (First Year) | 9/10 | Similar to Option A |
-| Scalability | 10/10 | Battle-tested at Instagram scale |
-| Hiring | 8/10 | Large Python/Django talent pool |
-| Flexibility | 9/10 | Mature ecosystem |
+| Criteria             | Score | Notes                            |
+| -------------------- | ----- | -------------------------------- |
+| MVP Speed            | 7/10  | Slower (separate FE/BE repos)    |
+| Developer Experience | 8/10  | Good but less integrated         |
+| Cost (First Year)    | 9/10  | Similar to Option A              |
+| Scalability          | 10/10 | Battle-tested at Instagram scale |
+| Hiring               | 8/10  | Large Python/Django talent pool  |
+| Flexibility          | 9/10  | Mature ecosystem                 |
 
 **Total**: **51/60** (85%)
 
@@ -411,16 +447,17 @@ Open-source Firebase alternative built on:
 ---
 
 #### Option C: Ruby on Rails + Hotwire + Postgres
+
 **Grade**: B (80/100)
 
-| Criteria | Score | Notes |
-|----------|-------|-------|
-| MVP Speed | 9/10 | Very fast prototyping |
-| Developer Experience | 8/10 | Convention over configuration |
-| Cost (First Year) | 8/10 | Similar costs |
-| Scalability | 7/10 | Requires more work to scale |
-| Hiring | 7/10 | Smaller Rails talent pool (2024) |
-| Flexibility | 8/10 | Mature but less modern |
+| Criteria             | Score | Notes                            |
+| -------------------- | ----- | -------------------------------- |
+| MVP Speed            | 9/10  | Very fast prototyping            |
+| Developer Experience | 8/10  | Convention over configuration    |
+| Cost (First Year)    | 8/10  | Similar costs                    |
+| Scalability          | 7/10  | Requires more work to scale      |
+| Hiring               | 7/10  | Smaller Rails talent pool (2024) |
+| Flexibility          | 8/10  | Mature but less modern           |
 
 **Total**: **47/60** (78%)
 
@@ -429,16 +466,17 @@ Open-source Firebase alternative built on:
 ---
 
 #### Option D: MERN (MongoDB + Express + React + Node)
+
 **Grade**: C+ (75/100)
 
-| Criteria | Score | Notes |
-|----------|-------|-------|
-| MVP Speed | 7/10 | Requires more setup |
-| Developer Experience | 6/10 | Less integrated, manual auth |
-| Cost (First Year) | 8/10 | MongoDB Atlas costs |
-| Scalability | 8/10 | Good for document-heavy apps |
-| Hiring | 9/10 | Very large talent pool |
-| Flexibility | 8/10 | Very flexible |
+| Criteria             | Score | Notes                        |
+| -------------------- | ----- | ---------------------------- |
+| MVP Speed            | 7/10  | Requires more setup          |
+| Developer Experience | 6/10  | Less integrated, manual auth |
+| Cost (First Year)    | 8/10  | MongoDB Atlas costs          |
+| Scalability          | 8/10  | Good for document-heavy apps |
+| Hiring               | 9/10  | Very large talent pool       |
+| Flexibility          | 8/10  | Very flexible                |
 
 **Total**: **46/60** (77%)
 
@@ -468,6 +506,7 @@ MERN Stack        7      6      8      8       9      8     46/60
 **No Changes Needed**
 
 **Add**:
+
 1. ✅ **Rate Limiting** (Upstash Redis or DB-based)
    - 60 req/min per IP
    - 120 req/min per authenticated user
@@ -494,6 +533,7 @@ MERN Stack        7      6      8      8       9      8     46/60
 ### 6.2 Phase 1: Public Launch (Months 3-6) — **Minor Additions**
 
 **Add**:
+
 1. ✅ **pgvector** (Semantic Search)
    - Enable `pgvector` extension in Supabase
    - Embed mission/vision statements (OpenAI `text-embedding-ada-002`)
@@ -519,6 +559,7 @@ MERN Stack        7      6      8      8       9      8     46/60
 ### 6.3 Phase 2: Feature Complete (Months 7-12) — **Strategic Additions**
 
 **Add**:
+
 1. ✅ **Learning-to-Rank (ML)**
    - Train LTR model on match acceptance data
    - Deploy via Supabase Edge Functions (Deno + TensorFlow.js)
@@ -543,6 +584,7 @@ MERN Stack        7      6      8      8       9      8     46/60
 ### 6.4 Phase 3: Scale (Months 13-18) — **Infrastructure Evolution**
 
 **Consider** (only if needed):
+
 1. ⚠️ **Database Sharding**
    - If Supabase Postgres becomes bottleneck (unlikely before 500K users)
    - Shard by: `user_id`, `org_id`
@@ -566,12 +608,12 @@ MERN Stack        7      6      8      8       9      8     46/60
 
 ### 6.5 Recommendation Summary
 
-| Phase | Timeline | Changes | Investment | Risk |
-|-------|----------|---------|-----------|------|
-| **MVP** (0-10 weeks) | Now | ✅ Rate limiting, Email, Storage config | 8 hours + $30/mo | 🟢 Low |
-| **Public Launch** (3-6 mo) | Q2 2025 | ✅ pgvector, Redis, Sentry | 3 weeks + $50/mo | 🟢 Low |
-| **Feature Complete** (7-12 mo) | Q3-Q4 2025 | ✅ LTR, Elasticsearch, Bull | 7 weeks + $250/mo | 🟡 Medium |
-| **Scale** (13-18 mo) | 2026 | ⚠️ Sharding, Kafka (if needed) | 12 weeks + $500/mo | 🟡 Medium |
+| Phase                          | Timeline   | Changes                                 | Investment         | Risk      |
+| ------------------------------ | ---------- | --------------------------------------- | ------------------ | --------- |
+| **MVP** (0-10 weeks)           | Now        | ✅ Rate limiting, Email, Storage config | 8 hours + $30/mo   | 🟢 Low    |
+| **Public Launch** (3-6 mo)     | Q2 2025    | ✅ pgvector, Redis, Sentry              | 3 weeks + $50/mo   | 🟢 Low    |
+| **Feature Complete** (7-12 mo) | Q3-Q4 2025 | ✅ LTR, Elasticsearch, Bull             | 7 weeks + $250/mo  | 🟡 Medium |
+| **Scale** (13-18 mo)           | 2026       | ⚠️ Sharding, Kafka (if needed)          | 12 weeks + $500/mo | 🟡 Medium |
 
 **Key Insight**: Current stack is sufficient for first **50K users** without major changes.
 
@@ -583,13 +625,13 @@ MERN Stack        7      6      8      8       9      8     46/60
 
 #### Month 0-3: Development & MVP
 
-| Service | Tier | Cost/Month |
-|---------|------|-----------|
-| Vercel | Pro (2 seats) | $40 |
-| Supabase | Pro | $25 |
-| Resend | Starter | $20 |
-| Domain | .com | $1 |
-| **Total** | | **$86/mo** |
+| Service   | Tier          | Cost/Month |
+| --------- | ------------- | ---------- |
+| Vercel    | Pro (2 seats) | $40        |
+| Supabase  | Pro           | $25        |
+| Resend    | Starter       | $20        |
+| Domain    | .com          | $1         |
+| **Total** |               | **$86/mo** |
 
 **Annual**: ~$1,000
 
@@ -597,15 +639,15 @@ MERN Stack        7      6      8      8       9      8     46/60
 
 #### Month 3-6: Public Launch (1K-5K Users)
 
-| Service | Tier | Cost/Month |
-|---------|------|-----------|
-| Vercel | Pro (3 seats) | $60 |
-| Supabase | Pro + Compute | $75 |
-| Resend | Starter | $20 |
-| Upstash Redis | Pro | $10 |
-| Sentry | Team | $26 |
-| OpenAI (Embeddings) | API | $5 |
-| **Total** | | **$196/mo** |
+| Service             | Tier          | Cost/Month  |
+| ------------------- | ------------- | ----------- |
+| Vercel              | Pro (3 seats) | $60         |
+| Supabase            | Pro + Compute | $75         |
+| Resend              | Starter       | $20         |
+| Upstash Redis       | Pro           | $10         |
+| Sentry              | Team          | $26         |
+| OpenAI (Embeddings) | API           | $5          |
+| **Total**           |               | **$196/mo** |
 
 **Quarterly**: ~$600
 
@@ -613,16 +655,16 @@ MERN Stack        7      6      8      8       9      8     46/60
 
 #### Month 6-12: Growth (5K-20K Users)
 
-| Service | Tier | Cost/Month |
-|---------|------|-----------|
-| Vercel | Pro (5 seats) | $100 |
-| Supabase | Pro + Extra Compute | $150 |
-| Resend | Pro | $80 |
-| Upstash Redis | Pro | $10 |
-| Sentry | Team | $26 |
-| OpenAI (Embeddings) | API | $20 |
-| AWS S3 (Backups) | Standard | $10 |
-| **Total** | | **$396/mo** |
+| Service             | Tier                | Cost/Month  |
+| ------------------- | ------------------- | ----------- |
+| Vercel              | Pro (5 seats)       | $100        |
+| Supabase            | Pro + Extra Compute | $150        |
+| Resend              | Pro                 | $80         |
+| Upstash Redis       | Pro                 | $10         |
+| Sentry              | Team                | $26         |
+| OpenAI (Embeddings) | API                 | $20         |
+| AWS S3 (Backups)    | Standard            | $10         |
+| **Total**           |                     | **$396/mo** |
 
 **Semi-Annual**: ~$2,400
 
@@ -630,17 +672,17 @@ MERN Stack        7      6      8      8       9      8     46/60
 
 #### Month 12-24: Scale (20K-100K Users)
 
-| Service | Tier | Cost/Month |
-|---------|------|-----------|
-| Vercel | Pro (10 seats) | $200 |
-| Supabase | Team | $599 |
-| Resend | Growth | $250 |
-| Redis Cloud | Pro | $15 |
-| Sentry | Business | $89 |
-| OpenAI (Embeddings) | API | $100 |
-| AWS S3 (Backups) | Standard | $50 |
-| Elasticsearch | Elastic Cloud | $95 |
-| **Total** | | **$1,398/mo** |
+| Service             | Tier           | Cost/Month    |
+| ------------------- | -------------- | ------------- |
+| Vercel              | Pro (10 seats) | $200          |
+| Supabase            | Team           | $599          |
+| Resend              | Growth         | $250          |
+| Redis Cloud         | Pro            | $15           |
+| Sentry              | Business       | $89           |
+| OpenAI (Embeddings) | API            | $100          |
+| AWS S3 (Backups)    | Standard       | $50           |
+| Elasticsearch       | Elastic Cloud  | $95           |
+| **Total**           |                | **$1,398/mo** |
 
 **Annual**: ~$17,000
 
@@ -648,22 +690,22 @@ MERN Stack        7      6      8      8       9      8     46/60
 
 ### 7.2 Cost Summary (2-Year Total)
 
-| Period | Users | Total Cost |
-|--------|-------|-----------|
-| Year 1 (MVP → Launch → Growth) | 0 → 20K | **$4,000** |
-| Year 2 (Scale) | 20K → 100K | **$17,000** |
-| **2-Year Total** | 0 → 100K | **$21,000** |
+| Period                         | Users      | Total Cost  |
+| ------------------------------ | ---------- | ----------- |
+| Year 1 (MVP → Launch → Growth) | 0 → 20K    | **$4,000**  |
+| Year 2 (Scale)                 | 20K → 100K | **$17,000** |
+| **2-Year Total**               | 0 → 100K   | **$21,000** |
 
 **Cost per User (Year 2)**: **$0.17/user** (very efficient)
 
 ### 7.3 Cost Comparison vs Alternatives
 
-| Stack | Year 1 Cost | Year 2 Cost | 2-Year Total |
-|-------|------------|-------------|--------------|
-| **Current (Next.js + Supabase)** | $4,000 | $17,000 | **$21,000** ✅ |
-| Django + AWS RDS + EC2 | $5,000 | $25,000 | $30,000 |
-| Rails + Heroku + Postgres | $6,000 | $30,000 | $36,000 |
-| MERN + MongoDB Atlas + AWS | $4,500 | $20,000 | $24,500 |
+| Stack                            | Year 1 Cost | Year 2 Cost | 2-Year Total   |
+| -------------------------------- | ----------- | ----------- | -------------- |
+| **Current (Next.js + Supabase)** | $4,000      | $17,000     | **$21,000** ✅ |
+| Django + AWS RDS + EC2           | $5,000      | $25,000     | $30,000        |
+| Rails + Heroku + Postgres        | $6,000      | $30,000     | $36,000        |
+| MERN + MongoDB Atlas + AWS       | $4,500      | $20,000     | $24,500        |
 
 **Verdict**: Current stack is **most cost-efficient** while maintaining best developer experience.
 
@@ -673,38 +715,38 @@ MERN Stack        7      6      8      8       9      8     46/60
 
 ### 8.1 Technical Risks
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|-----------|--------|-----------|
-| **Supabase Downtime** | Low | High | Multi-region backups, status monitoring, self-hosting exit path |
-| **Postgres Performance** | Medium | Medium | Query optimization, caching (Redis), read replicas |
-| **Vercel Cost Overruns** | Low | Medium | Set usage alerts, migrate to self-hosted if needed |
-| **Resend Deliverability** | Low | High | Monitor bounce rates, fallback to SendGrid ready |
-| **Next.js Breaking Changes** | Low | Low | Pin versions, gradual upgrades, test thoroughly |
-| **Drizzle Community Support** | Medium | Low | Active Discord, growing ecosystem, can migrate to Prisma if needed |
+| Risk                          | Likelihood | Impact | Mitigation                                                         |
+| ----------------------------- | ---------- | ------ | ------------------------------------------------------------------ |
+| **Supabase Downtime**         | Low        | High   | Multi-region backups, status monitoring, self-hosting exit path    |
+| **Postgres Performance**      | Medium     | Medium | Query optimization, caching (Redis), read replicas                 |
+| **Vercel Cost Overruns**      | Low        | Medium | Set usage alerts, migrate to self-hosted if needed                 |
+| **Resend Deliverability**     | Low        | High   | Monitor bounce rates, fallback to SendGrid ready                   |
+| **Next.js Breaking Changes**  | Low        | Low    | Pin versions, gradual upgrades, test thoroughly                    |
+| **Drizzle Community Support** | Medium     | Low    | Active Discord, growing ecosystem, can migrate to Prisma if needed |
 
 **Overall Risk**: 🟢 **LOW** - All risks have clear mitigation strategies
 
 ### 8.2 Vendor Lock-in Assessment
 
-| Service | Lock-in Risk | Exit Strategy | Effort to Migrate |
-|---------|-------------|---------------|-------------------|
-| **Next.js** | 🟢 Low | Remix, Nuxt, SvelteKit | 4-6 weeks |
-| **Supabase** | 🟡 Medium | Self-host Postgres + PostgREST | 2-3 weeks |
-| **Vercel** | 🟢 Low | AWS Amplify, Netlify, self-host | 1 week |
-| **Resend** | 🟢 Low | SendGrid, AWS SES | 2 days |
-| **Drizzle** | 🟢 Low | Prisma, Kysely | 1 week |
+| Service      | Lock-in Risk | Exit Strategy                   | Effort to Migrate |
+| ------------ | ------------ | ------------------------------- | ----------------- |
+| **Next.js**  | 🟢 Low       | Remix, Nuxt, SvelteKit          | 4-6 weeks         |
+| **Supabase** | 🟡 Medium    | Self-host Postgres + PostgREST  | 2-3 weeks         |
+| **Vercel**   | 🟢 Low       | AWS Amplify, Netlify, self-host | 1 week            |
+| **Resend**   | 🟢 Low       | SendGrid, AWS SES               | 2 days            |
+| **Drizzle**  | 🟢 Low       | Prisma, Kysely                  | 1 week            |
 
 **Verdict**: Minimal lock-in risk. All components are portable.
 
 ### 8.3 Scalability Risks
 
-| Bottleneck | Threshold | Symptoms | Solution |
-|-----------|-----------|----------|----------|
-| **Postgres CPU** | >70% sustained | Slow queries, timeouts | Read replicas, connection pooling, caching |
-| **Matching Algorithm** | >10K active assignments | High latency | Pre-compute scores, Redis cache, ANN index |
-| **File Storage** | >10TB | Cost, latency | Migrate to AWS S3 + CloudFront |
-| **Email Sending** | >100K/day | Rate limits | Add SendGrid/AWS SES as backup |
-| **API Rate Limits** | >100 req/sec | 429 errors | Horizontal scaling (Vercel auto-scales) |
+| Bottleneck             | Threshold               | Symptoms               | Solution                                   |
+| ---------------------- | ----------------------- | ---------------------- | ------------------------------------------ |
+| **Postgres CPU**       | >70% sustained          | Slow queries, timeouts | Read replicas, connection pooling, caching |
+| **Matching Algorithm** | >10K active assignments | High latency           | Pre-compute scores, Redis cache, ANN index |
+| **File Storage**       | >10TB                   | Cost, latency          | Migrate to AWS S3 + CloudFront             |
+| **Email Sending**      | >100K/day               | Rate limits            | Add SendGrid/AWS SES as backup             |
+| **API Rate Limits**    | >100 req/sec            | 429 errors             | Horizontal scaling (Vercel auto-scales)    |
 
 **Thresholds**: All bottlenecks are **well above MVP scale** (first 10K users).
 
@@ -715,35 +757,41 @@ MERN Stack        7      6      8      8       9      8     46/60
 ### 9.1 Why This Stack Wins
 
 #### 1. **MVP Speed** (10/10)
+
 - ✅ All core features implementable with current stack
 - ✅ No technology learning curve
 - ✅ Can ship in 8-10 weeks (1 developer) or 4-5 weeks (2 developers)
 
 #### 2. **Developer Experience** (10/10)
+
 - ✅ End-to-end type safety (TypeScript + Drizzle)
 - ✅ Single language (JavaScript/TypeScript) across entire stack
 - ✅ Excellent tooling (VS Code, ESLint, Prettier)
 - ✅ Hot reload, Fast Refresh for rapid iteration
 
 #### 3. **Cost Efficiency** (9/10)
+
 - ✅ $86/mo for first 3 months
 - ✅ ~$400/mo at 20K users
 - ✅ ~$1,400/mo at 100K users
 - ✅ No upfront infrastructure costs
 
 #### 4. **Scalability** (9/10)
+
 - ✅ Proven to 100K+ users on similar stacks
 - ✅ Vertical scaling: Upgrade Supabase compute
 - ✅ Horizontal scaling: Vercel auto-scales serverless functions
 - ✅ Exit path: Self-host on AWS/GCP if needed
 
 #### 5. **Hiring** (10/10)
+
 - ✅ Next.js/React: Largest developer pool (21% of all developers)
 - ✅ TypeScript: 78% of JavaScript developers use it
 - ✅ Postgres: Most popular RDBMS
 - ✅ Easy to onboard junior developers
 
 #### 6. **Flexibility** (9/10)
+
 - ✅ Can add any npm package
 - ✅ Can swap Supabase for raw Postgres
 - ✅ Can add microservices as needed
@@ -762,12 +810,14 @@ Final Score:    55/60 (92%) — EXCELLENT
 **Recommendation**: ✅ **APPROVE CURRENT STACK**
 
 **No changes needed for MVP.** The current technology stack is:
+
 - ✅ Perfectly aligned with platform requirements
 - ✅ Cost-efficient for first 100K users
 - ✅ Well-positioned for long-term scalability
 - ✅ Built on proven, open-source technologies with exit paths
 
 **Next Steps**:
+
 1. ✅ Implement rate limiting (3 hours)
 2. ✅ Configure Resend email templates (4 hours)
 3. ✅ Set up Supabase Storage buckets (30 minutes)
@@ -779,34 +829,34 @@ Final Score:    55/60 (92%) — EXCELLENT
 
 ### A.1 Database Comparison
 
-| Database | Relational | JSONB | Full-text | Vectors | Scalability | Cost |
-|----------|-----------|-------|-----------|---------|-------------|------|
-| **Postgres** | ✅ Best | ✅ Yes | ✅ Good | ✅ pgvector | ✅ Excellent | $$ |
-| MongoDB | ❌ No | ✅ Native | ⚠️ Limited | ⚠️ Atlas | ✅ Excellent | $$$ |
-| MySQL | ✅ Good | ⚠️ JSON | ⚠️ Limited | ❌ No | ✅ Good | $$ |
-| DynamoDB | ❌ No | ✅ Yes | ❌ No | ❌ No | ✅ Unlimited | $ |
+| Database     | Relational | JSONB     | Full-text  | Vectors     | Scalability  | Cost |
+| ------------ | ---------- | --------- | ---------- | ----------- | ------------ | ---- |
+| **Postgres** | ✅ Best    | ✅ Yes    | ✅ Good    | ✅ pgvector | ✅ Excellent | $$   |
+| MongoDB      | ❌ No      | ✅ Native | ⚠️ Limited | ⚠️ Atlas    | ✅ Excellent | $$$  |
+| MySQL        | ✅ Good    | ⚠️ JSON   | ⚠️ Limited | ❌ No       | ✅ Good      | $$   |
+| DynamoDB     | ❌ No      | ✅ Yes    | ❌ No      | ❌ No       | ✅ Unlimited | $    |
 
 **Winner**: **Postgres** (best for relational + flexible data)
 
 ### A.2 Auth Provider Comparison
 
-| Provider | Email | OAuth | MFA | RLS | Cost |
-|----------|-------|-------|-----|-----|------|
-| **Supabase Auth** | ✅ | ✅ | ✅ | ✅ Native | $ |
-| Auth0 | ✅ | ✅ | ✅ | ❌ | $$$ |
-| Firebase Auth | ✅ | ✅ | ✅ | ⚠️ Rules | $$ |
-| AWS Cognito | ✅ | ✅ | ✅ | ❌ | $$ |
+| Provider          | Email | OAuth | MFA | RLS       | Cost |
+| ----------------- | ----- | ----- | --- | --------- | ---- |
+| **Supabase Auth** | ✅    | ✅    | ✅  | ✅ Native | $    |
+| Auth0             | ✅    | ✅    | ✅  | ❌        | $$$  |
+| Firebase Auth     | ✅    | ✅    | ✅  | ⚠️ Rules  | $$   |
+| AWS Cognito       | ✅    | ✅    | ✅  | ❌        | $$   |
 
 **Winner**: **Supabase Auth** (integrated with database RLS)
 
 ### A.3 Email Service Comparison
 
-| Provider | API Quality | Deliverability | Templates | Cost (50K emails/mo) |
-|----------|------------|----------------|-----------|---------------------|
-| **Resend** | ✅ Excellent | ✅ Great | ✅ React | $20 |
-| SendGrid | ⚠️ Complex | ✅ Best | ⚠️ HTML | $35 |
-| AWS SES | ⚠️ Low-level | ✅ Great | ❌ No | $5 |
-| Postmark | ✅ Excellent | ✅ Great | ⚠️ HTML | $50 |
+| Provider   | API Quality  | Deliverability | Templates | Cost (50K emails/mo) |
+| ---------- | ------------ | -------------- | --------- | -------------------- |
+| **Resend** | ✅ Excellent | ✅ Great       | ✅ React  | $20                  |
+| SendGrid   | ⚠️ Complex   | ✅ Best        | ⚠️ HTML   | $35                  |
+| AWS SES    | ⚠️ Low-level | ✅ Great       | ❌ No     | $5                   |
+| Postmark   | ✅ Excellent | ✅ Great       | ⚠️ HTML   | $50                  |
 
 **Winner**: **Resend** (best DX + cost for MVP)
 
@@ -816,25 +866,26 @@ Final Score:    55/60 (92%) — EXCELLENT
 
 ### B.1 When to Add Technologies
 
-| Technology | Add When | Why | Cost |
-|-----------|----------|-----|------|
-| **Redis** | 5K MAU | Caching, session management | $10-15/mo |
-| **pgvector** | MVP Launch | Semantic search for mission/vision | $0 (+ OpenAI $5/mo) |
-| **Elasticsearch** | 50K assignments | Advanced full-text search | $95/mo |
-| **Kafka** | 100K MAU | Event streaming, webhooks | $100/mo |
-| **Read Replicas** | 70% Postgres CPU | Separate read/write traffic | $100/mo |
-| **Sharding** | 500K users | Database horizontal scaling | $200/mo per shard |
+| Technology        | Add When         | Why                                | Cost                |
+| ----------------- | ---------------- | ---------------------------------- | ------------------- |
+| **Redis**         | 5K MAU           | Caching, session management        | $10-15/mo           |
+| **pgvector**      | MVP Launch       | Semantic search for mission/vision | $0 (+ OpenAI $5/mo) |
+| **Elasticsearch** | 50K assignments  | Advanced full-text search          | $95/mo              |
+| **Kafka**         | 100K MAU         | Event streaming, webhooks          | $100/mo             |
+| **Read Replicas** | 70% Postgres CPU | Separate read/write traffic        | $100/mo             |
+| **Sharding**      | 500K users       | Database horizontal scaling        | $200/mo per shard   |
 
 ### B.2 Supabase Scaling Limits
 
-| Metric | Free | Pro ($25/mo) | Team ($599/mo) | Enterprise |
-|--------|------|-------------|---------------|------------|
-| Database Size | 500MB | 8GB | 500GB | Unlimited |
-| Bandwidth | 5GB | 250GB | 1TB | Custom |
-| Storage | 1GB | 100GB | 1TB | Unlimited |
-| Auth Users | Unlimited | Unlimited | Unlimited | Unlimited |
+| Metric        | Free      | Pro ($25/mo) | Team ($599/mo) | Enterprise |
+| ------------- | --------- | ------------ | -------------- | ---------- |
+| Database Size | 500MB     | 8GB          | 500GB          | Unlimited  |
+| Bandwidth     | 5GB       | 250GB        | 1TB            | Custom     |
+| Storage       | 1GB       | 100GB        | 1TB            | Unlimited  |
+| Auth Users    | Unlimited | Unlimited    | Unlimited      | Unlimited  |
 
 **Proofound Projection**:
+
 - **10K users**: Pro ($25/mo) — 2GB DB, 50GB bandwidth
 - **50K users**: Team ($599/mo) — 20GB DB, 500GB bandwidth
 - **100K+ users**: Enterprise or self-host
@@ -848,6 +899,7 @@ Final Score:    55/60 (92%) — EXCELLENT
 **Scenario**: Cost, performance, or feature limitations
 
 **Migration Path**:
+
 1. **Postgres**: Already using standard Postgres → Migrate to AWS RDS, GCP Cloud SQL, or self-hosted
 2. **Auth**: Migrate to Auth0, Clerk, or self-hosted GoTrue
 3. **Storage**: Migrate to AWS S3, Cloudflare R2
@@ -861,6 +913,7 @@ Final Score:    55/60 (92%) — EXCELLENT
 **Scenario**: Cost optimization at scale
 
 **Migration Path**:
+
 1. **Docker**: Containerize Next.js app
 2. **Deploy to**: AWS ECS, Google Cloud Run, Railway, Fly.io
 3. **CDN**: Cloudflare

@@ -1,123 +1,64 @@
-# Database Integration Test Results
+> Doc Class: `reference-spec`
+> Last Verified: `2026-02-26`
 
-## Phase 1: Schema & Migrations ✅
+# Database Flow Verification Guide
 
-- **Status**: PASSED
-- All 27 migrations applied successfully
-- All required tables exist with proper columns and relationships
-- RLS enabled on all public tables
-- Foreign key constraints properly configured
+## Purpose
 
-## Phase 2: Organization Onboarding Fix ✅
+Track database-oriented verification flows for local and pre-release checks.
 
-- **Issue Found**: RLS chicken-and-egg problem during org creation
-- **Root Cause**: Organizations SELECT policy required existing membership, but membership couldn't be created until org was readable
-- **Fix Applied**:
-  1. Updated RLS policy to allow creators to immediately SELECT their organization
-  2. Modified `completeOrganizationOnboarding` to handle RLS read-back errors gracefully
-  3. Fixed 1 orphaned organization by adding missing membership
-- **Status**: FIXED
+## Canonical Commands
 
-## Phase 3: Data Integrity Check ✅
+### Schema and Migration Discipline
 
-### Profiles
+- `npm run db:drift-check`
+- `npm run db:migrate`
 
-- 7 total profiles in database
-- All profiles have auth.users records
-- 1 user successfully completed org onboarding
-- Fixed orphaned organizations
+### Safety and Audit Helpers
 
-### Organizations
+- `npm run db:backup:checkpoint`
+- `npm run db:audit:migrations`
 
-- 2 organizations: "pavlo" and "pavlik"
-- Both now have proper owner memberships
-- All RLS policies working correctly
+### Privacy and Policy Validation
 
-## Phase 4: API Endpoints Review ✅
+- `npm run test:privacy`
+- `npm run test:privacy:extended`
 
-### Reviewed and Verified:
+## What to Validate
 
-- ✅ `/api/matching-profile` - Proper upsert logic, skills handling
-- ✅ `/api/assignments` - Proper auth, org membership checking
-- ✅ Profile actions (individual_profiles CRUD) - Using Drizzle ORM correctly
-- ✅ Onboarding actions - Now handles RLS errors properly
+### 1) Migration Path Integrity
 
-## Phase 5: Remaining Testing Needed
+- Ordered SQL migration files are present and ledger-consistent.
+- No production workflow depends on `npm run db:push`.
 
-### To Test Manually (Browser Required):
+### 2) Core Entity Persistence
 
-1. **Individual Onboarding Flow**
-   - Signup → Email verification → Select "Individual"
-   - Fill out profile (handle, display name, headline, bio)
-   - Verify redirect to `/app/i/home`
-   - Check data persists in `profiles` and `individual_profiles` tables
+- Profile data persists in expected profile tables.
+- Organization creation persists membership and role relations.
+- Matching setup persists profile and skill entities.
+- Assignment creation persists correctly and links to org context.
 
-2. **Organization Onboarding Flow**
-   - Signup → Email verification → Select "Organization"
-   - Create organization (slug, type, mission)
-   - Verify redirect to `/app/o/{slug}/home`
-   - Check data in `organizations` and `organization_members` tables
+### 3) Privacy and RLS Behavior
 
-3. **Profile Editing**
-   - Edit basic info (name, tagline, location)
-   - Update mission statement
-   - Add/edit values, causes, skills
-   - Upload avatar and cover image
-   - Verify all changes persist after page refresh
+- Cross-user and cross-org data access is blocked by policy.
+- Visibility semantics are enforced by API + DB policy layer.
 
-4. **Matching Profile Setup**
-   - Navigate to `/app/i/matching`
-   - Complete matching profile form
-   - Verify data saves to `matching_profiles` and `skills` tables
-   - Test match generation
+### 4) Verification Data Integrity
 
-5. **Assignment Creation** (Organization)
-   - Navigate to `/app/o/{slug}/matching`
-   - Create new assignment
-   - Verify saves to `assignments` table
-   - Test viewing candidates
+- Verification request/respond/status flows persist expected transitions.
+- Expiration/reverification constraints are honored.
 
-## Security Advisors
+## Manual SQL Spot Checks (Example Targets)
 
-### Security
+- `profiles`, `individual_profiles`
+- `organizations`, `organization_members`
+- `matching_profiles`, `skills`
+- `assignments`, `matches`
+- verification-related tables introduced by latest migrations
 
-- ⚠️ **WARN**: Leaked password protection disabled (non-critical)
-  - Action: Enable HaveIBeenPwned integration in Supabase Auth settings
+## Canonical References
 
-### Performance
-
-- ℹ️ **INFO**: 11 unused indexes detected
-  - Normal for new system with limited data
-  - Will be used as system grows
-
-## Recommendations
-
-### Immediate Actions Needed:
-
-1. ✅ Fix organization onboarding RLS issue - **COMPLETED**
-2. 🔄 Test complete user journeys in browser
-3. 🔄 Add error boundary components for better error handling
-4. 🔄 Add loading skeletons for async data fetching
-5. 🔄 Implement optimistic UI updates where appropriate
-
-### Database Improvements:
-
-1. Consider adding composite indexes for common query patterns
-2. Add database triggers for automatic `updated_at` timestamps
-3. Consider adding check constraints for business rules
-
-### Code Quality:
-
-1. ✅ All server actions use proper auth checks
-2. ✅ All API routes validate input with Zod
-3. ✅ Proper error logging throughout
-4. ⚠️ Consider adding retry logic for transient failures
-5. ⚠️ Consider adding optimistic locking for concurrent updates
-
-## Summary
-
-**Major Issue Fixed**: Organization onboarding now works correctly with proper RLS policy handling.
-
-**Current State**: Database schema, migrations, and server-side code are solid. Core CRUD operations are properly implemented with good error handling and validation.
-
-**Next Steps**: Manual browser testing of complete user flows to verify end-to-end functionality.
+- `agent/runbooks/setup.md`
+- `agent/checklists/verification.md`
+- `RUN_MIGRATIONS_GUIDE.md`
+- `APPLY_MIGRATIONS_MANUAL.md`

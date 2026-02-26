@@ -256,4 +256,6 @@ Columns: `path`, `class`, `owner-surface`, `verification-source`, `last-verified
 
 | `PRD_for_a_web_platform_MVP.master-latest.md` | `reference-spec` | `root` | `repo` | `2026-02-26` | `-` | `false` |
 | `agent/runbooks/expertise-taxonomy-recovery.md` | `active` | `agent` | `repo+live` | `2026-02-26` | `-` | `false` |
+| `artifacts/docs-reconciliation/squirrel-full-2026-02-26.llm.md` | `reference-spec` | `artifacts` | `repo` | `2026-02-26` | `-` | `false` |
+| `artifacts/docs-reconciliation/squirrel-surface-2026-02-26.llm.md` | `reference-spec` | `artifacts` | `repo` | `2026-02-26` | `-` | `false` |
 | `docs/mobile/IOS_PARITY_MATRIX.md` | `reference-spec` | `docs` | `repo` | `2026-02-26` | `-` | `false` |
