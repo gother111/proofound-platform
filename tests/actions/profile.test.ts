@@ -3,6 +3,7 @@ import {
   updateVision,
   replaceValues,
   updateMission,
+  getProfileData,
   updateImpactStory,
   updateExperience,
   updateEducation,
@@ -20,6 +21,7 @@ import {
 const mockDb = vi.hoisted(() => ({
   select: vi.fn(),
   update: vi.fn(),
+  insert: vi.fn(),
 }));
 
 const mockRequireAuth = vi.hoisted(() => vi.fn());
@@ -28,6 +30,7 @@ vi.mock('@/db', () => ({
   db: {
     select: mockDb.select,
     update: mockDb.update,
+    insert: mockDb.insert,
   },
 }));
 
@@ -81,6 +84,25 @@ function mockUpdateSuccess() {
   const set = vi.fn().mockReturnValue({ where });
   mockDb.update.mockReturnValue({ set });
   return { set, where };
+}
+
+function mockSelectWithLimit(result: unknown[]) {
+  const limit = vi.fn().mockResolvedValue(result);
+  const where = vi.fn().mockReturnValue({ limit });
+  const from = vi.fn().mockReturnValue({ where });
+  mockDb.select.mockReturnValueOnce({ from });
+}
+
+function mockSelectWithWhere(result: unknown[]) {
+  const where = vi.fn().mockResolvedValue(result);
+  const chain = {
+    leftJoin: vi.fn(),
+    where,
+  };
+  chain.leftJoin.mockReturnValue(chain);
+
+  const from = vi.fn().mockReturnValue(chain);
+  mockDb.select.mockReturnValueOnce({ from });
 }
 
 describe('profile purpose actions', () => {
@@ -283,6 +305,76 @@ describe('profile purpose actions', () => {
 
     expect(setFallback).toHaveBeenCalledWith({ values: nextValues });
     expect(whereFallback).toHaveBeenCalledTimes(1);
+  });
+
+  it('normalizes legacy JSON string shapes when reading profile data', async () => {
+    const profileRow = {
+      values: JSON.stringify([
+        { id: 'v1', icon: 'Shield', label: 'Integrity', verified: true },
+        'Trust',
+        { label: 'Integrity', icon: 'Leaf', verified: false },
+      ]),
+      causes: ['Climate Justice'],
+      mission: 'Build trust',
+      vision: 'Expand trust',
+      missionLinks: JSON.stringify({
+        values: ['Integrity', 'Unknown'],
+        causes: ['Climate Justice', 'Unknown Cause'],
+      }),
+      visionLinks: JSON.stringify({
+        values: ['Trust'],
+        causes: ['Climate Justice'],
+      }),
+      tagline: null,
+      location: null,
+      coverImageUrl: null,
+      fieldVisibility: null,
+      redactMode: false,
+    };
+
+    mockRequireAuth.mockResolvedValue({
+      id: 'test-user-id',
+      displayName: 'Auth User',
+      avatarUrl: null,
+      persona: 'individual',
+      locale: 'en',
+    });
+
+    const onConflictDoNothing = vi.fn().mockResolvedValue(undefined);
+    const insertValues = vi.fn().mockReturnValue({ onConflictDoNothing });
+    mockDb.insert.mockReturnValue({ values: insertValues });
+
+    mockSelectWithLimit([profileRow]); // initial profile row check
+    mockSelectWithLimit([profileRow]); // profile fetch
+    mockSelectWithLimit([
+      {
+        displayName: 'Test User',
+        avatarUrl: null,
+        createdAt: new Date('2025-01-01T00:00:00Z'),
+      },
+    ]);
+    mockSelectWithWhere([]); // impact stories
+    mockSelectWithWhere([]); // experiences
+    mockSelectWithWhere([]); // education
+    mockSelectWithWhere([]); // volunteering
+    mockSelectWithWhere([]); // skills
+    mockSelectWithWhere([]); // proofs
+    mockSelectWithWhere([]); // accepted verifications
+
+    const profile = await getProfileData();
+
+    expect(profile.values).toEqual([
+      { id: 'v1', icon: 'Shield', label: 'Integrity', verified: true },
+      { id: 'legacy-1-trust', icon: 'Heart', label: 'Trust', verified: false },
+    ]);
+    expect(profile.missionLinks).toEqual({
+      values: ['Integrity'],
+      causes: ['Climate Justice'],
+    });
+    expect(profile.visionLinks).toEqual({
+      values: ['Trust'],
+      causes: ['Climate Justice'],
+    });
   });
 
   describe('updateEducation', () => {

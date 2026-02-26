@@ -29,6 +29,7 @@ import { isMissingColumnError } from '@/lib/db/schemaCompatibility';
 import {
   createIndividualDefaultPurposeLinks,
   normalizeIndividualCauses,
+  normalizeIndividualValues,
   normalizeIndividualPurposeLinks,
   normalizeIndividualValueLabels,
   pruneIndividualPurposeLinks,
@@ -530,8 +531,8 @@ export async function getProfileData(): Promise<ProfileData> {
       };
     });
 
-    const mappedValues = (profile?.values as Value[]) ?? [];
-    const mappedCauses = profile?.causes ?? [];
+    const mappedValues = normalizeIndividualValues(profile?.values);
+    const mappedCauses = normalizeIndividualCauses(profile?.causes);
     const missionLinks = pruneIndividualPurposeLinks(
       normalizeIndividualPurposeLinks(profile?.missionLinks),
       mappedValues,
