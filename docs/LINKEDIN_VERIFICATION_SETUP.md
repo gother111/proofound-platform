@@ -26,6 +26,11 @@ LINKEDIN_CLIENT_SECRET=your_linkedin_client_secret
 LINKEDIN_REDIRECT_URI=https://proofound.io/api/auth/linkedin/callback
 ```
 
+Important callback split:
+
+- Proofound LinkedIn verification/integrations callback: `https://proofound.io/api/auth/linkedin/callback`
+- Supabase LinkedIn social-login callback: `https://<supabase-project-ref>.supabase.co/auth/v1/callback`
+
 ### Getting LinkedIn OAuth Credentials
 
 1. Go to https://www.linkedin.com/developers/apps
@@ -36,15 +41,17 @@ LINKEDIN_REDIRECT_URI=https://proofound.io/api/auth/linkedin/callback
    - Privacy policy URL: https://proofound.io/privacy
    - App logo: Upload Proofound logo
 4. Once created, go to **"Auth"** tab
-5. Add these redirect URLs:
-   - Local: `http://localhost:3000/api/auth/linkedin/callback`
-   - Production: `https://proofound.io/api/auth/linkedin/callback`
+5. Add these redirect URLs in the same LinkedIn app:
+   - Production app callback: `https://proofound.io/api/auth/linkedin/callback`
+   - Supabase callback: `https://<supabase-project-ref>.supabase.co/auth/v1/callback`
+   - Local app callback (optional, for local testing): `http://localhost:3000/api/auth/linkedin/callback`
+   - Additional live domains (optional): `https://<domain>/api/auth/linkedin/callback` for every domain that can initiate `/api/auth/linkedin`
 6. Under **"OAuth 2.0 scopes"**, request:
    - `openid` (required)
    - `profile` (required)
    - `email` (required)
 7. Copy **Client ID** and **Client Secret** to your `.env.local`
-8. Set `LINKEDIN_REDIRECT_URI` in your environment to the exact callback configured in LinkedIn (recommended: `https://proofound.io/api/auth/linkedin/callback` without a trailing slash)
+8. Set `LINKEDIN_REDIRECT_URI` in your environment to your canonical app callback (recommended: `https://proofound.io/api/auth/linkedin/callback` without a trailing slash)
 
 ## Optional Environment Variables
 
@@ -194,13 +201,17 @@ The automated system analyzes:
 - Verify `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`, and `LINKEDIN_REDIRECT_URI` are set.
 - Verify `LINKEDIN_REDIRECT_URI` exactly matches LinkedIn Developer callback (including host, path, and trailing slash behavior).
 
-### OAuth redirect fails
+### OAuth redirect fails (`The redirect_uri does not match the registered value`)
 
 **Solution**:
 
+- Confirm the LinkedIn app includes both callback families:
+  - `https://proofound.io/api/auth/linkedin/callback`
+  - `https://<supabase-project-ref>.supabase.co/auth/v1/callback`
 - Check redirect URL matches LinkedIn app settings exactly
 - For local dev, use ngrok HTTPS URL
 - Verify `NEXT_PUBLIC_SITE_URL` is set correctly
+- Verify `LINKEDIN_REDIRECT_URI` is set to your canonical app callback (not the Supabase callback)
 
 ### "Playwright not found" error
 

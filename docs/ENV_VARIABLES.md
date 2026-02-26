@@ -344,6 +344,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 - `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` — Required for Google Meet integration and Google social login through Supabase.
 - `GOOGLE_REDIRECT_URI` — Must match the app integration callback (recommended: `https://yourdomain.com/api/integrations/google/callback`).
 - `LINKEDIN_CLIENT_ID` and `LINKEDIN_CLIENT_SECRET` — Required for LinkedIn settings integration callback and LinkedIn social login through Supabase.
+- `LINKEDIN_REDIRECT_URI` - Set to your canonical app callback (recommended: `https://yourdomain.com/api/auth/linkedin/callback`).
 - `NEXT_PUBLIC_SITE_URL` — Canonical app base URL used for OAuth callback construction (`NEXT_PUBLIC_URL` is legacy fallback only).
 
 **Provider callback split (important)**:
@@ -378,6 +379,8 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 4. Configure LinkedIn app callback URIs:
    - `https://yourdomain.com/api/auth/linkedin/callback`
    - `https://<supabase-project>.supabase.co/auth/v1/callback`
+   - Optional local callback for local OAuth testing: `http://localhost:3000/api/auth/linkedin/callback`
+   - Optional additional live-domain callbacks for each domain that can initiate `/api/auth/linkedin` (for example `https://demo.yourdomain.com/api/auth/linkedin/callback`)
 5. Set `NEXT_PUBLIC_SITE_URL` to your canonical domain (for example `https://proofound.io`).
 
 ---
