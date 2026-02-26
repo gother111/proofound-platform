@@ -269,10 +269,19 @@ export function AddSkillDrawer({
       setL4Skills(skills);
     } catch (error) {
       console.error('Error fetching L4 skills:', error);
+      setL4Skills([]);
+      toast({
+        title: 'Could not load L4 skills',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Please retry in a few moments. You can still add a custom skill.',
+        variant: 'destructive',
+      });
     } finally {
       setL4Loading(false);
     }
-  }, [selectedL3]);
+  }, [selectedL3, toast]);
 
   // Fetch L2 categories when L1 is selected
   useEffect(() => {

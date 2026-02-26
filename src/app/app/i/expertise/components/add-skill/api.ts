@@ -33,7 +33,23 @@ export async function fetchL4Skills(input: {
   const response = await fetch(
     `/api/expertise/taxonomy?l3_id=${input.catId}.${input.subcatId}.${input.l3Id}`
   );
-  if (!response.ok) return [];
+  if (!response.ok) {
+    let message = 'Failed to load skills for this category.';
+    try {
+      const payload = (await response.json()) as { error?: string; details?: string };
+      if (payload?.error) {
+        message = payload.error;
+      }
+      if (payload?.details) {
+        message = `${message} ${payload.details}`;
+      }
+    } catch {
+      // keep default message
+    }
+
+    throw new Error(message);
+  }
+
   const data = (await response.json()) as { l4_skills?: L4Skill[] };
   return data.l4_skills ?? [];
 }

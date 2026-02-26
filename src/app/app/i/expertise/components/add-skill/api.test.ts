@@ -1,6 +1,31 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { searchL4Skills } from './api';
+import { fetchL4Skills, searchL4Skills } from './api';
+
+describe('fetchL4Skills', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('throws with backend error details when l3 lookup fails', async () => {
+    vi.spyOn(global, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: 'Failed to fetch skills',
+          details: 'Could not find a relationship between skills_taxonomy and skills_categories',
+        }),
+        {
+          status: 500,
+          headers: { 'content-type': 'application/json' },
+        }
+      )
+    );
+
+    await expect(fetchL4Skills({ catId: 1, subcatId: 3, l3Id: 17 })).rejects.toThrow(
+      'Failed to fetch skills Could not find a relationship between skills_taxonomy and skills_categories'
+    );
+  });
+});
 
 describe('searchL4Skills', () => {
   afterEach(() => {

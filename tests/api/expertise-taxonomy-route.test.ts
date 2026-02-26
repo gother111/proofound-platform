@@ -12,6 +12,8 @@ type SupabaseMockOptions = {
   rpcError?: { message: string } | null;
   codeLookupData?: any[];
   codeLookupError?: { message: string } | null;
+  l3QueryResults?: any[];
+  l3QueryError?: { message: string } | null;
   nameResults?: any[];
   slugResults?: any[];
   descriptionResults?: any[];
@@ -70,7 +72,10 @@ function createSupabaseMock(options: SupabaseMockOptions = {}) {
             };
           }
 
-          return { data: [], error: null };
+          return {
+            data: options.l3QueryResults || [],
+            error: options.l3QueryError ?? null,
+          };
         }),
       };
 
@@ -270,5 +275,63 @@ describe('GET /api/expertise/taxonomy (search mode)', () => {
 
     expect(response.status).toBe(500);
     expect(body.error).toBe('Failed to fetch skills');
+  });
+});
+
+describe('GET /api/expertise/taxonomy (l3 mode)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns l4 skills with parent context without FK-hint joins', async () => {
+    const swedishSkill = {
+      code: '04.105.840.95013',
+      cat_id: 4,
+      subcat_id: 105,
+      l3_id: 840,
+      slug: 'swedish-language-proficiency',
+      name_i18n: { en: 'Swedish language proficiency' },
+      description_i18n: { en: 'Use Swedish effectively in professional communication.' },
+      tags: ['l', 'language', 'cefr', 'swedish'],
+      status: 'active',
+      version: 1,
+    };
+
+    const supabase = createSupabaseMock({
+      l3QueryResults: [swedishSkill],
+      l1Data: [{ cat_id: 4, slug: 'languages-culture', name_i18n: { en: 'Languages & Culture' } }],
+      l2Data: [
+        {
+          cat_id: 4,
+          subcat_id: 105,
+          slug: 'l-lang',
+          name_i18n: { en: 'Natural Languages' },
+        },
+      ],
+      l3Data: [
+        {
+          cat_id: 4,
+          subcat_id: 105,
+          l3_id: 840,
+          slug: 'l-lang-cefr-proficiency-mapping',
+          name_i18n: { en: 'CEFR proficiency mapping' },
+        },
+      ],
+    });
+
+    (createClient as any).mockResolvedValue(supabase);
+
+    const response = await GET(
+      new Request('http://localhost/api/expertise/taxonomy?l3_id=4.105.840')
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.l4_skills).toHaveLength(1);
+    expect(body.l4_skills[0].nameI18n.en).toBe('Swedish language proficiency');
+    expect(body.l4_skills[0].l1.nameI18n.en).toBe('Languages & Culture');
+    expect(body.l4_skills[0].l2.nameI18n.en).toBe('Natural Languages');
+    expect(body.l4_skills[0].l3.nameI18n.en).toBe('CEFR proficiency mapping');
+    expect(supabase.rpc).not.toHaveBeenCalled();
   });
 });

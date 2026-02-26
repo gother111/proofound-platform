@@ -641,24 +641,26 @@ export async function GET(request: Request) {
       } else if (l3Id) {
         // Regular L3 filtering
         const [catId, subcatId, l3IdNum] = l3Id.split('.').map(Number);
+        if (![catId, subcatId, l3IdNum].every((value) => Number.isFinite(value))) {
+          return NextResponse.json({ error: 'Invalid L3 identifier' }, { status: 400 });
+        }
+
         const { data: l3Skills, error: l3Error } = await supabase
           .from('skills_taxonomy')
-          .select(
-            `
-            *,
-            l1:skills_categories!skills_taxonomy_cat_id_fkey(cat_id, slug, name_i18n),
-            l2:skills_subcategories!skills_taxonomy_cat_id_subcat_id_fkey(subcat_id, cat_id, slug, name_i18n),
-            l3:skills_l3!skills_taxonomy_cat_id_subcat_id_l3_id_fkey(l3_id, subcat_id, cat_id, slug, name_i18n)
-          `
-          )
+          .select('*')
           .eq('status', 'active')
           .eq('cat_id', catId)
           .eq('subcat_id', subcatId)
           .eq('l3_id', l3IdNum)
           .limit(100);
 
-        skills = l3Skills || [];
-        error = l3Error;
+        if (l3Error) {
+          skills = [];
+          error = l3Error;
+        } else {
+          skills = await enrichSkillsWithParentContext(supabase, l3Skills || []);
+          error = null;
+        }
       } else {
         skills = [];
         error = null;
