@@ -30,19 +30,21 @@ interface CausesEditorProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   causes: string[];
-  onSave: (causes: string[]) => void;
+  onSave: (causes: string[]) => Promise<void> | void;
 }
 
 export function CausesEditor({ open, onOpenChange, causes, onSave }: CausesEditorProps) {
   const [editedCauses, setEditedCauses] = useState<string[]>([]);
   const [newCause, setNewCause] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (open) {
       setEditedCauses([...causes]);
       setNewCause('');
       setError(null);
+      setIsSaving(false);
     }
   }, [open, causes]);
 
@@ -72,14 +74,21 @@ export function CausesEditor({ open, onOpenChange, causes, onSave }: CausesEdito
     setEditedCauses(editedCauses.filter((c) => c !== cause));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (editedCauses.length === 0) {
       setError('Please add at least one cause');
       return;
     }
 
-    onSave(editedCauses);
-    onOpenChange(false);
+    setIsSaving(true);
+    try {
+      await onSave(editedCauses);
+      onOpenChange(false);
+    } catch (saveError) {
+      setError(saveError instanceof Error && saveError.message ? saveError.message : 'Save failed');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const availableSuggestions = SUGGESTED_CAUSES.filter((cause) => !editedCauses.includes(cause));
@@ -136,7 +145,12 @@ export function CausesEditor({ open, onOpenChange, causes, onSave }: CausesEdito
                   }
                 }}
               />
-              <Button type="button" variant="outline" onClick={handleAddCustomCause}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleAddCustomCause}
+                disabled={isSaving}
+              >
                 Add
               </Button>
             </div>
@@ -166,11 +180,16 @@ export function CausesEditor({ open, onOpenChange, causes, onSave }: CausesEdito
         </div>
 
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isSaving}
+          >
             Cancel
           </Button>
-          <Button type="button" onClick={handleSave}>
-            Save Causes
+          <Button type="button" onClick={handleSave} disabled={isSaving}>
+            {isSaving ? 'Saving...' : 'Save Causes'}
           </Button>
         </DialogFooter>
       </DialogContent>

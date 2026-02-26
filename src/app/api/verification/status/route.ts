@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { resolveWorkEmailValidity } from '@/lib/verification/work-email-validity';
+import { isMissingColumnError } from '@/lib/db/schemaCompatibility';
 
 function hasActiveWorkEmailToken(profile: {
   work_email_token?: string | null;
@@ -40,15 +41,41 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Fetch individual profile with verification status
-    // Use maybeSingle() to handle case where profile doesn't exist yet
-    const { data: profile, error: profileError } = await supabase
+    const latestSelect =
+      'verified, verification_method, verification_status, verified_at, work_email, work_email_verified, work_email_verified_at, work_email_reverify_due_at, work_email_token, work_email_token_expires';
+    const legacySelect =
+      'verified, verification_method, verification_status, verified_at, work_email, work_email_verified, work_email_token, work_email_token_expires';
+    const reverifyColumns = ['work_email_verified_at', 'work_email_reverify_due_at'];
+
+    // Fetch individual profile with verification status.
+    // Fallback keeps this endpoint working when deployments run against slightly older schemas.
+    let { data: profile, error: profileError } = await supabase
       .from('individual_profiles')
-      .select(
-        'verified, verification_method, verification_status, verified_at, work_email, work_email_verified, work_email_verified_at, work_email_reverify_due_at, work_email_token, work_email_token_expires'
-      )
+      .select(latestSelect)
       .eq('user_id', user.id)
       .maybeSingle();
+
+    if (profileError && isMissingColumnError(profileError, reverifyColumns)) {
+      console.warn('Falling back to legacy verification status query due to schema lag.', {
+        code: profileError.code,
+        message: profileError.message,
+      });
+
+      const { data: legacyProfile, error: legacyProfileError } = await supabase
+        .from('individual_profiles')
+        .select(legacySelect)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      profileError = legacyProfileError;
+      profile = legacyProfile
+        ? {
+            ...legacyProfile,
+            work_email_verified_at: null,
+            work_email_reverify_due_at: null,
+          }
+        : legacyProfile;
+    }
 
     // Handle errors - maybeSingle() typically returns null data and no error if not found
     // But if there's an error, log it and only fail on real database errors

@@ -245,6 +245,46 @@ describe('profile purpose actions', () => {
     );
   });
 
+  it('falls back to values-only update when purpose link columns are missing', async () => {
+    const nextValues = [{ id: 'v1', label: 'Integrity', icon: 'Shield', verified: false }];
+
+    const limit = vi.fn().mockResolvedValue([
+      {
+        values: nextValues,
+        causes: ['Climate Justice'],
+        missionLinks: {
+          values: ['Integrity'],
+          causes: ['Climate Justice'],
+        },
+        visionLinks: {
+          values: ['Integrity'],
+          causes: ['Climate Justice'],
+        },
+      },
+    ]);
+    const whereSelect = vi.fn().mockReturnValue({ limit });
+    const from = vi.fn().mockReturnValue({ where: whereSelect });
+    mockDb.select.mockReturnValue({ from });
+
+    const whereWithLinks = vi.fn().mockRejectedValue({
+      code: '42703',
+      message: 'column "mission_links" does not exist',
+    });
+    const setWithLinks = vi.fn().mockReturnValue({ where: whereWithLinks });
+
+    const whereFallback = vi.fn().mockResolvedValue(undefined);
+    const setFallback = vi.fn().mockReturnValue({ where: whereFallback });
+
+    mockDb.update
+      .mockReturnValueOnce({ set: setWithLinks })
+      .mockReturnValueOnce({ set: setFallback });
+
+    await replaceValues(nextValues as any);
+
+    expect(setFallback).toHaveBeenCalledWith({ values: nextValues });
+    expect(whereFallback).toHaveBeenCalledTimes(1);
+  });
+
   describe('updateEducation', () => {
     it('should update the education row for the authenticated user', async () => {
       const returningMock = vi.fn(() => Promise.resolve([{ id: 'edu-1' }]));

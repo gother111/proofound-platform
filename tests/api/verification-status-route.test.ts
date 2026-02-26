@@ -21,26 +21,45 @@ type VerificationProfile = {
   work_email_token_expires: string | null;
 };
 
+type ProfileQueryResult = {
+  data: VerificationProfile | null;
+  error?: { code?: string; message?: string; details?: string | null; hint?: string | null } | null;
+};
+
 function createSupabaseMock(options: {
   authUser?: { id: string } | null;
   authError?: Error | null;
   profile?: VerificationProfile | null;
   profileError?: { code?: string; message?: string; details?: string } | null;
+  profileResponses?: ProfileQueryResult[];
 }) {
   const {
     authUser = { id: 'user-1' },
     authError = null,
     profile = null,
     profileError = null,
+    profileResponses = [],
   } = options;
+
+  const maybeSingle = vi.fn();
+  if (profileResponses.length > 0) {
+    profileResponses.forEach((response) => {
+      maybeSingle.mockResolvedValueOnce({
+        data: response.data,
+        error: response.error ?? null,
+      });
+    });
+  } else {
+    maybeSingle.mockResolvedValue({
+      data: profile,
+      error: profileError,
+    });
+  }
 
   const individualProfilesQuery = {
     select: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
-    maybeSingle: vi.fn().mockResolvedValue({
-      data: profile,
-      error: profileError,
-    }),
+    maybeSingle,
   };
 
   return {
@@ -182,5 +201,43 @@ describe('GET /api/verification/status', () => {
     expect(body.workEmailVerified).toBe(true);
     expect(body.workEmailNeedsReverify).toBe(false);
     expect(body.workEmailReverifyDueAt).toBe(futureDue);
+  });
+
+  it('falls back to legacy profile query when re-verification columns are missing', async () => {
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    const supabase = createSupabaseMock({
+      profileResponses: [
+        {
+          data: null,
+          error: {
+            code: '42703',
+            message: 'column individual_profiles.work_email_verified_at does not exist',
+          },
+        },
+        {
+          data: {
+            verified: false,
+            verification_method: null,
+            verification_status: null,
+            verified_at: null,
+            work_email: 'person@acme.org',
+            work_email_verified: false,
+            work_email_verified_at: null,
+            work_email_reverify_due_at: null,
+            work_email_token: 'token-legacy',
+            work_email_token_expires: expiresAt,
+          },
+        },
+      ],
+    });
+    (createClient as any).mockResolvedValue(supabase);
+
+    const response = await GET(makeRequest());
+    expect(response.status).toBe(200);
+    const body = await response.json();
+
+    expect(body.verificationStatus).toBe('pending');
+    expect(body.verificationMethod).toBe('work_email');
+    expect(body.workEmailNeedsReverify).toBe(false);
   });
 });

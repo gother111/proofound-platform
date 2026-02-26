@@ -32,12 +32,6 @@ function getLevelColor(avgLevel: number): string {
   return 'bg-proofound-forest text-white';
 }
 
-// Helper to get text color - now handled in getLevelColor for simplicity,
-// but keeping this if needed for specific overrides or just returning empty string
-function getTextColor(avgLevel: number): string {
-  return '';
-}
-
 export function CoverageHeatmap({ data, onCellClick }: CoverageHeatmapProps) {
   // Empty state
   if (data.length === 0) {
@@ -68,9 +62,10 @@ export function CoverageHeatmap({ data, onCellClick }: CoverageHeatmapProps) {
     });
   });
 
-  // Get all unique L2 IDs across all L1s
-  const allL2Ids = Array.from(new Set(data.map((d) => d.l2))).sort((a, b) => a - b);
-  const maxL2Count = allL2Ids.length;
+  const visibleL1Entries = Object.entries(L1_NAMES).filter(([l1Id]) => {
+    const l1Data = groupedData[Number(l1Id)] || [];
+    return l1Data.length > 0;
+  });
 
   return (
     <div className="w-full">
@@ -89,7 +84,7 @@ export function CoverageHeatmap({ data, onCellClick }: CoverageHeatmapProps) {
       </div>
 
       <div className="space-y-6 overflow-x-auto pb-2">
-        {Object.entries(L1_NAMES).map(([l1Id, l1Name]) => {
+        {visibleL1Entries.map(([l1Id, l1Name]) => {
           const l1Data = groupedData[Number(l1Id)] || [];
 
           return (
@@ -99,31 +94,27 @@ export function CoverageHeatmap({ data, onCellClick }: CoverageHeatmapProps) {
               </h4>
 
               <div className="flex flex-wrap gap-3">
-                {l1Data.length === 0 ? (
-                  <div className="text-xs text-muted-foreground italic py-2">No skills yet</div>
-                ) : (
-                  l1Data.map((item) => (
-                    <button
-                      key={`${l1Id}-${item.l2}`}
-                      onClick={() => onCellClick(Number(l1Id), item.l2)}
-                      className={`
-                        flex flex-col items-center justify-center
-                        min-w-[100px] h-24 p-3 rounded-xl border border-transparent
-                        hover:scale-105 transition-all duration-200 shadow-sm
-                        ${getLevelColor(item.avgLevel)}
-                      `}
-                      title={`${item.l2Name || `L2-${item.l2}`}: ${item.count} skills, avg level ${item.avgLevel.toFixed(1)}`}
-                    >
-                      <span className="text-xs text-center line-clamp-2 mb-1 font-medium leading-tight">
-                        {item.l2Name || `L2-${item.l2}`}
-                      </span>
-                      <span className="text-xl font-bold font-display">{item.count}</span>
-                      <span className="text-[10px] opacity-80 uppercase tracking-wider mt-1">
-                        Lvl {item.avgLevel.toFixed(1)}
-                      </span>
-                    </button>
-                  ))
-                )}
+                {l1Data.map((item) => (
+                  <button
+                    key={`${l1Id}-${item.l2}`}
+                    onClick={() => onCellClick(Number(l1Id), item.l2)}
+                    className={`
+                      flex flex-col items-center justify-center
+                      min-w-[100px] h-24 p-3 rounded-xl border border-transparent
+                      hover:scale-105 transition-all duration-200 shadow-sm
+                      ${getLevelColor(item.avgLevel)}
+                    `}
+                    title={`${item.l2Name || `L2-${item.l2}`}: ${item.count} skills, avg level ${item.avgLevel.toFixed(1)}`}
+                  >
+                    <span className="text-xs text-center line-clamp-2 mb-1 font-medium leading-tight">
+                      {item.l2Name || `L2-${item.l2}`}
+                    </span>
+                    <span className="text-xl font-bold font-display">{item.count}</span>
+                    <span className="text-[10px] opacity-80 uppercase tracking-wider mt-1">
+                      Lvl {item.avgLevel.toFixed(1)}
+                    </span>
+                  </button>
+                ))}
               </div>
             </div>
           );

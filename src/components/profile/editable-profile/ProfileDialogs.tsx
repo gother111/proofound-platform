@@ -58,8 +58,8 @@ type ProfileDialogsProps = {
     links: PurposeLinks,
     visibility?: 'public' | 'network' | 'private'
   ) => void;
-  onReplaceValues: (values: Value[]) => void;
-  onReplaceCauses: (causes: string[]) => void;
+  onReplaceValues: (values: Value[]) => Promise<void> | void;
+  onReplaceCauses: (causes: string[]) => Promise<void> | void;
   onAddImpactStory: (story: Omit<ImpactStory, 'id'>) => Promise<void> | void;
   onUpdateImpactStory: (id: string, story: Omit<ImpactStory, 'id'>) => Promise<void> | void;
   onAddExperience: (experience: Omit<Experience, 'id'>) => void;

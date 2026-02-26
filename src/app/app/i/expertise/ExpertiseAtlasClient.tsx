@@ -344,6 +344,37 @@ export function ExpertiseAtlasClient({
   };
 
   const selectedDomain = domains.find((d) => d.catId === selectedL1);
+  const credibilityTotal = widgetData
+    ? (widgetData.credibility?.verified || 0) +
+      (widgetData.credibility?.proofOnly || 0) +
+      (widgetData.credibility?.claimOnly || 0)
+    : 0;
+  const relevanceTotal = widgetData
+    ? (widgetData.relevance?.obsolete || 0) +
+      (widgetData.relevance?.current || 0) +
+      (widgetData.relevance?.emerging || 0)
+    : 0;
+  const verificationSourcesTotal = widgetData
+    ? (widgetData.verificationSources?.self || 0) +
+      (widgetData.verificationSources?.peer || 0) +
+      (widgetData.verificationSources?.manager || 0) +
+      (widgetData.verificationSources?.external || 0)
+    : 0;
+  const shouldShowCredibility = credibilityTotal > 0;
+  const shouldShowRelevance = relevanceTotal > 0;
+  const shouldShowSkillWheel = Boolean(widgetData?.skillWheel?.length);
+  const shouldShowVerificationSources = verificationSourcesTotal > 0;
+  const shouldShowScatter = Boolean(widgetData?.scatter?.length);
+  const shouldShowCoverage = Boolean(widgetData?.coverage?.length);
+  const shouldShowNextBestActions = Boolean(widgetData?.nextBestActions?.length);
+  const shouldShowAnyWidget =
+    shouldShowCredibility ||
+    shouldShowRelevance ||
+    shouldShowSkillWheel ||
+    shouldShowVerificationSources ||
+    shouldShowScatter ||
+    shouldShowCoverage ||
+    shouldShowNextBestActions;
 
   const handleSkillsImportedFromCV = () => {
     router.refresh();
@@ -499,78 +530,98 @@ export function ExpertiseAtlasClient({
                     <DashboardFilters filters={filters} onFilterChange={setFilters} />
 
                     {/* Widgets Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      {/* Row 1 */}
-                      <div className="bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
-                        <p className="text-xs text-muted-foreground mb-2">
-                          Why this matters: proofs + verifications boost trust in matches.
-                        </p>
-                        <CredibilityPie
-                          data={widgetData.credibility}
-                          onSegmentClick={handleCredibilityClick}
-                        />
-                      </div>
-                      <div className="bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
-                        <p className="text-xs text-muted-foreground mb-2">
-                          Why this matters: align your skills to what roles need now.
-                        </p>
-                        <RelevanceBars
-                          data={widgetData.relevance}
-                          onBarClick={handleRelevanceClick}
-                        />
-                      </div>
+                    {shouldShowAnyWidget && (
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Row 1 */}
+                        {shouldShowCredibility && (
+                          <div className="bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
+                            <p className="text-xs text-muted-foreground mb-2">
+                              Why this matters: proofs + verifications boost trust in matches.
+                            </p>
+                            <CredibilityPie
+                              data={widgetData.credibility}
+                              onSegmentClick={handleCredibilityClick}
+                            />
+                          </div>
+                        )}
+                        {shouldShowRelevance && (
+                          <div className="bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
+                            <p className="text-xs text-muted-foreground mb-2">
+                              Why this matters: align your skills to what roles need now.
+                            </p>
+                            <RelevanceBars
+                              data={widgetData.relevance}
+                              onBarClick={handleRelevanceClick}
+                            />
+                          </div>
+                        )}
 
-                      {/* Row 2 */}
-                      <div className="bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
-                        <p className="text-xs text-muted-foreground mb-2">
-                          Why this matters: breadth vs focus—click a sector to deepen proof.
-                        </p>
-                        <SkillWheel data={widgetData.skillWheel} onSectorClick={handleWheelClick} />
-                      </div>
-                      <div className="bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
-                        <p className="text-xs text-muted-foreground mb-2">
-                          Why this matters: see where verifications come from; rebalance if needed.
-                        </p>
-                        <VerificationSourcesPie
-                          data={widgetData.verificationSources}
-                          onSegmentClick={handleVerificationClick}
-                        />
-                      </div>
+                        {/* Row 2 */}
+                        {shouldShowSkillWheel && (
+                          <div className="bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
+                            <p className="text-xs text-muted-foreground mb-2">
+                              Why this matters: breadth vs focus—click a sector to deepen proof.
+                            </p>
+                            <SkillWheel
+                              data={widgetData.skillWheel}
+                              onSectorClick={handleWheelClick}
+                            />
+                          </div>
+                        )}
+                        {shouldShowVerificationSources && (
+                          <div className="bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
+                            <p className="text-xs text-muted-foreground mb-2">
+                              Why this matters: see where verifications come from; rebalance if
+                              needed.
+                            </p>
+                            <VerificationSourcesPie
+                              data={widgetData.verificationSources}
+                              onSegmentClick={handleVerificationClick}
+                            />
+                          </div>
+                        )}
 
-                      {/* Row 3 - Full Width */}
-                      <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
-                        <p className="text-xs text-muted-foreground mb-2">
-                          Why this matters: freshness drives match rank. Update stale items.
-                        </p>
-                        <RecencyScatter
-                          data={widgetData.scatter}
-                          onSkillClick={handleScatterClick}
-                        />
-                      </div>
+                        {/* Row 3 - Full Width */}
+                        {shouldShowScatter && (
+                          <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
+                            <p className="text-xs text-muted-foreground mb-2">
+                              Why this matters: freshness drives match rank. Update stale items.
+                            </p>
+                            <RecencyScatter
+                              data={widgetData.scatter}
+                              onSkillClick={handleScatterClick}
+                            />
+                          </div>
+                        )}
 
-                      {/* Row 4 - Full Width */}
-                      <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
-                        <p className="text-xs text-muted-foreground mb-2">
-                          Why this matters: coverage shows where you’re strong and what to fill
-                          next.
-                        </p>
-                        <CoverageHeatmap
-                          data={widgetData.coverage}
-                          onCellClick={handleCoverageClick}
-                        />
-                      </div>
+                        {/* Row 4 - Full Width */}
+                        {shouldShowCoverage && (
+                          <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
+                            <p className="text-xs text-muted-foreground mb-2">
+                              Why this matters: coverage shows where you’re strong and what to fill
+                              next.
+                            </p>
+                            <CoverageHeatmap
+                              data={widgetData.coverage}
+                              onCellClick={handleCoverageClick}
+                            />
+                          </div>
+                        )}
 
-                      {/* Row 5 - Full Width */}
-                      <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
-                        <p className="text-xs text-muted-foreground mb-2">
-                          Why this matters: do the next best actions to lift readiness quickly.
-                        </p>
-                        <NextBestActions
-                          actions={widgetData.nextBestActions}
-                          onActionClick={handleActionClick}
-                        />
+                        {/* Row 5 - Full Width */}
+                        {shouldShowNextBestActions && (
+                          <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-proofound-stone hover:shadow-md transition-shadow duration-300">
+                            <p className="text-xs text-muted-foreground mb-2">
+                              Why this matters: do the next best actions to lift readiness quickly.
+                            </p>
+                            <NextBestActions
+                              actions={widgetData.nextBestActions}
+                              onActionClick={handleActionClick}
+                            />
+                          </div>
+                        )}
                       </div>
-                    </div>
+                    )}
                   </div>
                 )}
 

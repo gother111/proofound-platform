@@ -25,6 +25,7 @@ import { evaluateIndividualMatchability } from '@/lib/matching/eligibility';
 import { MATCHABILITY_STRONG_SKILLS_WITH_RECENCY } from '@/lib/matching/thresholds';
 import { sendEmail } from '@/lib/email/sender';
 import { buildExperienceTimeline } from '@/lib/profile/experience-timeline';
+import { isMissingColumnError } from '@/lib/db/schemaCompatibility';
 import {
   createIndividualDefaultPurposeLinks,
   normalizeIndividualCauses,
@@ -257,14 +258,28 @@ async function replacePurposeListField(field: PurposeListField, values: Value[] 
     nextCauses
   );
 
-  await db
-    .update(individualProfiles)
-    .set({
-      [field]: values,
-      missionLinks: nextMissionLinks,
-      visionLinks: nextVisionLinks,
-    } as Record<string, unknown>)
-    .where(eq(individualProfiles.userId, user.id));
+  try {
+    await db
+      .update(individualProfiles)
+      .set({
+        [field]: values,
+        missionLinks: nextMissionLinks,
+        visionLinks: nextVisionLinks,
+      } as Record<string, unknown>)
+      .where(eq(individualProfiles.userId, user.id));
+  } catch (error) {
+    if (!isMissingColumnError(error, ['mission_links', 'vision_links'])) {
+      throw error;
+    }
+
+    console.warn('Purpose link columns are unavailable, falling back to list-only update.', {
+      field,
+    });
+    await db
+      .update(individualProfiles)
+      .set({ [field]: values } as Record<string, unknown>)
+      .where(eq(individualProfiles.userId, user.id));
+  }
 
   const { emitEvent } = await import('@/lib/analytics/events');
   await emitEvent({

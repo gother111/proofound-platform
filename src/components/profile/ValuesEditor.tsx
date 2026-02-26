@@ -47,7 +47,7 @@ interface ValuesEditorProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   values: Value[];
-  onSave: (values: Value[]) => void;
+  onSave: (values: Value[]) => Promise<void> | void;
 }
 
 export function ValuesEditor({ open, onOpenChange, values, onSave }: ValuesEditorProps) {
@@ -55,6 +55,7 @@ export function ValuesEditor({ open, onOpenChange, values, onSave }: ValuesEdito
   const [newValueLabel, setNewValueLabel] = useState('');
   const [newValueIcon, setNewValueIcon] = useState('Heart');
   const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -62,6 +63,7 @@ export function ValuesEditor({ open, onOpenChange, values, onSave }: ValuesEdito
       setNewValueLabel('');
       setNewValueIcon('Heart');
       setError(null);
+      setIsSaving(false);
     }
   }, [open, values]);
 
@@ -93,14 +95,21 @@ export function ValuesEditor({ open, onOpenChange, values, onSave }: ValuesEdito
     setEditedValues(editedValues.filter((v) => v.id !== id));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (editedValues.length === 0) {
       setError('Please add at least one value');
       return;
     }
 
-    onSave(editedValues);
-    onOpenChange(false);
+    setIsSaving(true);
+    try {
+      await onSave(editedValues);
+      onOpenChange(false);
+    } catch (saveError) {
+      setError(saveError instanceof Error && saveError.message ? saveError.message : 'Save failed');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -203,8 +212,8 @@ export function ValuesEditor({ open, onOpenChange, values, onSave }: ValuesEdito
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button type="button" onClick={handleSave}>
-            Save Values
+          <Button type="button" onClick={handleSave} disabled={isSaving}>
+            {isSaving ? 'Saving...' : 'Save Values'}
           </Button>
         </DialogFooter>
       </DialogContent>
