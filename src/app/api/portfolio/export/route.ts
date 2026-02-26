@@ -5,6 +5,8 @@ import { generateTrustPdf } from '@/lib/portfolio/pdf';
 import { emitPortfolioPdfExportSucceeded } from '@/lib/analytics/events';
 
 const FALLBACK_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
@@ -38,17 +40,16 @@ export async function GET() {
       visibility: data.visibility,
     });
 
-    // Use a Blob to satisfy NextResponse BodyInit typing across runtimes.
-    // `Uint8Array.from` copies into a new ArrayBuffer (avoids Buffer/SharedArrayBuffer typing issues).
+    // Copy into a fresh typed array so the response body is runtime-safe across Node environments.
     const bytes = Uint8Array.from(buffer);
-    const blob = new Blob([bytes], { type: 'application/pdf' });
-
-    await emitPortfolioPdfExportSucceeded(user.id, {
+    void emitPortfolioPdfExportSucceeded(user.id, {
       source: 'portfolio_export_route',
       handle: data.profile.handle,
+    }).catch((analyticsError) => {
+      console.error('portfolio export analytics failed', analyticsError);
     });
 
-    return new NextResponse(blob, {
+    return new NextResponse(bytes, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
