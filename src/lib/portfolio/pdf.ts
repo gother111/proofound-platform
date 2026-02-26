@@ -67,9 +67,16 @@ export async function generateTrustPdf(input: TrustPdfInput): Promise<Buffer> {
         ],
         [
           'LinkedIn',
-          input.signals.linkedin.confidence !== undefined
-            ? `Confidence ${Math.round(input.signals.linkedin.confidence)}${input.signals.linkedin.hasVerificationBadge ? ' + badge' : ''}`
-            : 'Not checked',
+          input.signals.linkedin.verificationStatus === 'pending'
+            ? 'Pending'
+            : input.signals.linkedin.verificationStatus === 'verified' &&
+                input.signals.linkedin.hasIdentityVerification
+              ? 'Verified (Identity badge)'
+              : input.signals.linkedin.verificationStatus === 'verified'
+                ? 'Verified (no identity badge)'
+                : input.signals.linkedin.verificationStatus === 'failed'
+                  ? 'Failed'
+                  : 'Not checked',
           input.visibility.linkedin,
         ],
         ['Proofs added', `${input.signals.proofs.count}`, input.visibility.counts],

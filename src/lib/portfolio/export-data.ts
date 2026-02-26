@@ -36,6 +36,8 @@ export async function fetchTrustExportData(
           verified_at,
           work_email,
           work_email_verified,
+          linkedin_verification_status,
+          linkedin_verified_at,
           linkedin_verification_data,
           verified
         ),

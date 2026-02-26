@@ -43,6 +43,7 @@ interface VerificationItem {
   verificationStatus: string;
   createdAt: string;
   confidence: number;
+  hasIdentityVerification: boolean;
   hasVerificationBadge: boolean;
   recommendation: 'approve' | 'review_manually' | 'reject';
   signals: VerificationSignals;
@@ -111,6 +112,7 @@ export function AdminVerificationDashboard() {
           body: JSON.stringify({
             decision: 'approved',
             notes: 'Quick approved - high confidence',
+            grantIdentity: verification.hasIdentityVerification,
           }),
         }
       );
@@ -299,7 +301,7 @@ export function AdminVerificationDashboard() {
               {verification.hasVerificationBadge && (
                 <Badge variant="outline" className="border-green-500 text-green-700 bg-green-50">
                   <Award className="w-3 h-3 mr-1" />
-                  Verified
+                  {verification.hasIdentityVerification ? 'Identity verified' : 'Badge detected'}
                 </Badge>
               )}
             </div>

@@ -33,11 +33,16 @@ export function buildTextPack(data: TrustExportData): string {
     if (visibility.linkedin) {
       lines.push(
         `- LinkedIn: ${
-          signals.linkedin.confidence !== undefined
-            ? `Confidence ${Math.round(signals.linkedin.confidence)}${
-                signals.linkedin.hasVerificationBadge ? ' + badge' : ''
-              }`
-            : 'Not checked'
+          signals.linkedin.verificationStatus === 'pending'
+            ? 'Pending'
+            : signals.linkedin.verificationStatus === 'verified' &&
+                signals.linkedin.hasIdentityVerification
+              ? 'Verified (Identity badge)'
+              : signals.linkedin.verificationStatus === 'verified'
+                ? 'Verified (no identity badge)'
+                : signals.linkedin.verificationStatus === 'failed'
+                  ? 'Failed'
+                  : 'Not checked'
         }`
       );
     }

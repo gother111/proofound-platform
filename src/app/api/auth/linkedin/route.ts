@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { generateLinkedInAuthUrl } from '@/lib/linkedin';
+import { generateLinkedInAuthUrl, getLinkedInAuthScopes } from '@/lib/linkedin';
 import { randomBytes } from 'crypto';
 import { resolveOAuthRedirectUri } from '@/lib/integrations/oauth-helpers';
 
@@ -61,7 +61,8 @@ export async function GET(request: NextRequest) {
     );
 
     // Store state in cookie for verification on callback
-    const response = NextResponse.redirect(generateLinkedInAuthUrl(state, redirectUri));
+    const scopes = getLinkedInAuthScopes(context);
+    const response = NextResponse.redirect(generateLinkedInAuthUrl(state, redirectUri, scopes));
 
     response.cookies.set('linkedin_oauth_state', state, {
       httpOnly: true,

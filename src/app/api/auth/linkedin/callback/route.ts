@@ -11,7 +11,7 @@ import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { userIntegrations } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
-import { exchangeLinkedInCode, fetchLinkedInProfile } from '@/lib/linkedin';
+import { exchangeLinkedInCode } from '@/lib/linkedin';
 import { resolveOAuthRedirectUri } from '@/lib/integrations/oauth-helpers';
 
 type LinkedInOAuthContext = 'integrations' | 'verification';
@@ -131,9 +131,6 @@ export async function GET(request: NextRequest) {
 
     // Exchange authorization code for access token
     const tokenData = await exchangeLinkedInCode(code, redirectUri);
-
-    // Fetch LinkedIn profile data
-    const profileData = await fetchLinkedInProfile(tokenData.access_token);
 
     // Calculate token expiry time
     const tokenExpiry = new Date();

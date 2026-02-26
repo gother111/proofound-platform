@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card } from '@/components/ui/card';
@@ -26,10 +26,13 @@ import { toast } from 'sonner';
 
 interface LinkedInVerificationProps {
   onSuccess?: () => void;
+  autoStart?: boolean;
+  onAutoStartHandled?: () => void;
 }
 
 interface AutomatedCheckResult {
   confidence: number;
+  hasIdentityVerification?: boolean;
   hasVerificationBadge: boolean;
   signals?: {
     hasVerificationBadge: boolean;
@@ -43,12 +46,17 @@ interface AutomatedCheckResult {
   sources: string[];
 }
 
-export function LinkedInVerification({ onSuccess }: LinkedInVerificationProps) {
+export function LinkedInVerification({
+  onSuccess,
+  autoStart = false,
+  onAutoStartHandled,
+}: LinkedInVerificationProps) {
   const [connected, setConnected] = useState<boolean | null>(null);
   const [checkingConnection, setCheckingConnection] = useState(true);
   const [loading, setLoading] = useState(false);
   const [checkResult, setCheckResult] = useState<AutomatedCheckResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const autoStartTriggeredRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -79,7 +87,7 @@ export function LinkedInVerification({ onSuccess }: LinkedInVerificationProps) {
     window.location.href = '/api/auth/linkedin?context=verification';
   };
 
-  const handleInitiateVerification = async () => {
+  const handleInitiateVerification = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -97,8 +105,20 @@ export function LinkedInVerification({ onSuccess }: LinkedInVerificationProps) {
       }
 
       const data = await response.json();
+      const warnings: Array<{ code?: string; message?: string }> = Array.isArray(data.warnings)
+        ? data.warnings
+        : [];
 
-      setCheckResult(data.automatedCheck);
+      setCheckResult({
+        ...data.automatedCheck,
+        hasIdentityVerification: Boolean(data.hasIdentityVerification),
+      });
+
+      if (warnings.length > 0 && warnings[0].message) {
+        toast.warning(warnings[0].message, {
+          duration: 6000,
+        });
+      }
 
       toast.success(data.message || 'Verification check complete!', {
         duration: 5000,
@@ -123,7 +143,28 @@ export function LinkedInVerification({ onSuccess }: LinkedInVerificationProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [onSuccess]);
+
+  useEffect(() => {
+    if (!autoStart || autoStartTriggeredRef.current) return;
+    if (checkingConnection || loading || checkResult) return;
+
+    if (connected === true) {
+      autoStartTriggeredRef.current = true;
+      onAutoStartHandled?.();
+      void handleInitiateVerification();
+    } else {
+      onAutoStartHandled?.();
+    }
+  }, [
+    autoStart,
+    checkingConnection,
+    loading,
+    checkResult,
+    connected,
+    handleInitiateVerification,
+    onAutoStartHandled,
+  ]);
 
   const getConfidenceBadge = (confidence: number) => {
     if (confidence >= 80) {
@@ -160,7 +201,13 @@ export function LinkedInVerification({ onSuccess }: LinkedInVerificationProps) {
               <h4 className="font-semibold mb-2">Confidence Score</h4>
               <div className="flex items-center gap-3">
                 {getConfidenceBadge(checkResult.confidence)}
-                {checkResult.hasVerificationBadge && (
+                {checkResult.hasIdentityVerification && (
+                  <Badge variant="outline" className="border-green-500 text-green-700">
+                    <Award className="w-3 h-3 mr-1" />
+                    Identity Verification Detected
+                  </Badge>
+                )}
+                {!checkResult.hasIdentityVerification && checkResult.hasVerificationBadge && (
                   <Badge variant="outline" className="border-green-500 text-green-700">
                     <Award className="w-3 h-3 mr-1" />
                     Verification Badge Detected

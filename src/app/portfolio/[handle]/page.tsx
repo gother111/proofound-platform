@@ -75,6 +75,8 @@ export default async function PortfolioPage({
           verified_at,
           work_email,
           work_email_verified,
+          linkedin_verification_status,
+          linkedin_verified_at,
           linkedin_verification_data,
           verified
         ),
@@ -281,16 +283,30 @@ export default async function PortfolioPage({
                   <TrustRow
                     label="LinkedIn"
                     value={
-                      signals.linkedin.confidence !== undefined
-                        ? `Confidence ${Math.round(signals.linkedin.confidence)}`
-                        : 'Not checked'
+                      signals.linkedin.verificationStatus === 'pending'
+                        ? 'Pending'
+                        : signals.linkedin.verificationStatus === 'verified' &&
+                            signals.linkedin.hasIdentityVerification
+                          ? 'Verified (Identity badge)'
+                          : signals.linkedin.verificationStatus === 'verified'
+                            ? 'Verified (no identity badge)'
+                            : signals.linkedin.verificationStatus === 'failed'
+                              ? 'Failed'
+                              : 'Not checked'
                     }
                     helper={
-                      signals.linkedin.hasVerificationBadge
-                        ? 'LinkedIn badge detected.'
-                        : 'Run LinkedIn check for a quick boost.'
+                      signals.linkedin.verificationStatus === 'pending'
+                        ? 'LinkedIn verification is under review.'
+                        : signals.linkedin.verificationStatus === 'verified' &&
+                            signals.linkedin.hasIdentityVerification
+                          ? 'Official LinkedIn identity verification detected.'
+                          : signals.linkedin.verificationStatus === 'verified'
+                            ? 'LinkedIn verification completed without identity badge.'
+                            : signals.linkedin.verificationStatus === 'failed'
+                              ? 'Retry LinkedIn verification to refresh this signal.'
+                              : 'Run LinkedIn check for a quick trust boost.'
                     }
-                    positive={signals.linkedin.confidence !== undefined}
+                    positive={signals.linkedin.verificationStatus === 'verified'}
                   />
                 )}
                 {visibility.counts && (

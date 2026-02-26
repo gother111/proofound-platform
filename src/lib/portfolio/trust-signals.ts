@@ -13,6 +13,8 @@ export type PortfolioProfile = {
         verified_at?: string | null;
         work_email?: string | null;
         work_email_verified?: boolean | null;
+        linkedin_verification_status?: string | null;
+        linkedin_verified_at?: string | null;
         linkedin_verification_data?: Record<string, unknown> | null;
         verified?: boolean | null;
       }
@@ -25,6 +27,8 @@ export type PortfolioProfile = {
         verified_at?: string | null;
         work_email?: string | null;
         work_email_verified?: boolean | null;
+        linkedin_verification_status?: string | null;
+        linkedin_verified_at?: string | null;
         linkedin_verification_data?: Record<string, unknown> | null;
         verified?: boolean | null;
       }>
@@ -48,7 +52,10 @@ export type TrustSignals = {
   };
   linkedin: {
     confidence?: number;
+    hasIdentityVerification?: boolean;
     hasVerificationBadge?: boolean;
+    verificationStatus?: string | null;
+    verifiedAt?: string | null;
   };
   proofs: {
     count: number;
@@ -76,11 +83,39 @@ function parseLinkedInConfidence(data: Record<string, unknown> | null | undefine
   return undefined;
 }
 
+function resolveHasLinkedInIdentityVerification(
+  data: Record<string, unknown> | null | undefined
+): boolean {
+  if (!data || typeof data !== 'object') return false;
+  if (data.hasIdentityVerification === true) return true;
+
+  const apiReport =
+    data.apiReport && typeof data.apiReport === 'object'
+      ? (data.apiReport as Record<string, unknown>)
+      : null;
+  if (apiReport?.hasIdentityVerification === true) return true;
+
+  const verifications = Array.isArray(apiReport?.verifications)
+    ? apiReport?.verifications
+    : Array.isArray(data.verifications)
+      ? data.verifications
+      : [];
+
+  return verifications.some(
+    (item) => typeof item === 'string' && item.toUpperCase().includes('IDENTITY')
+  );
+}
+
 export function buildTrustSignals(
   profile: PortfolioProfile | null,
   counts: TrustCounts = {}
 ): TrustSignals {
   const individual = pickIndividual(profile?.individual_profiles);
+  const linkedInVerificationData =
+    (individual?.linkedin_verification_data as Record<string, unknown> | null | undefined) ??
+    undefined;
+  const hasLinkedInIdentityVerification =
+    resolveHasLinkedInIdentityVerification(linkedInVerificationData);
   const identityVerified =
     individual?.verification_status === 'verified' || individual?.verified === true;
 
@@ -98,13 +133,14 @@ export function buildTrustSignals(
       verified: Boolean(individual?.work_email_verified),
     },
     linkedin: {
-      confidence: parseLinkedInConfidence(
-        (individual?.linkedin_verification_data as Record<string, unknown> | null | undefined) ??
-          undefined
-      ),
+      hasIdentityVerification: hasLinkedInIdentityVerification,
+      confidence: parseLinkedInConfidence(linkedInVerificationData),
       hasVerificationBadge: Boolean(
-        (individual?.linkedin_verification_data as any)?.hasVerificationBadge
+        hasLinkedInIdentityVerification ||
+          (individual?.linkedin_verification_data as any)?.hasVerificationBadge
       ),
+      verificationStatus: individual?.linkedin_verification_status ?? null,
+      verifiedAt: individual?.linkedin_verified_at ?? null,
     },
     proofs: {
       count: proofsCount,

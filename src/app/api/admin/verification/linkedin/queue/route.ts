@@ -11,7 +11,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { individualProfiles, profiles } from '@/db/schema';
-import { eq, and, isNotNull, desc, sql } from 'drizzle-orm';
+import { eq, and, or, isNotNull, desc, sql } from 'drizzle-orm';
+import { resolveHasLinkedInIdentityVerification } from '@/lib/linkedin-verified';
 
 export async function GET(request: NextRequest) {
   try {
@@ -50,13 +51,17 @@ export async function GET(request: NextRequest) {
         linkedinUrl: individualProfiles.linkedinProfileUrl,
         verificationData: individualProfiles.linkedinVerificationData,
         verificationStatus: individualProfiles.verificationStatus,
+        linkedinVerificationStatus: individualProfiles.linkedinVerificationStatus,
         createdAt: profiles.updatedAt,
       })
       .from(individualProfiles)
       .innerJoin(profiles, eq(profiles.id, individualProfiles.userId))
       .where(
         and(
-          eq(individualProfiles.verificationStatus, 'pending'),
+          or(
+            eq(individualProfiles.linkedinVerificationStatus, 'pending'),
+            eq(individualProfiles.verificationStatus, 'pending')
+          ),
           isNotNull(individualProfiles.linkedinProfileUrl)
         )
       )
@@ -67,15 +72,25 @@ export async function GET(request: NextRequest) {
       .map((v) => {
         const data = v.verificationData as any;
         const confidence = data?.automatedCheck?.confidence || 0;
-        const hasVerificationBadge = data?.hasVerificationBadge || false;
+        const hasIdentityVerification = resolveHasLinkedInIdentityVerification(data);
+        const hasVerificationBadge = hasIdentityVerification || Boolean(data?.hasVerificationBadge);
         const recommendation = data?.automatedCheck?.recommendation || 'review_manually';
 
         return {
           ...v,
           confidence,
+          hasIdentityVerification,
           hasVerificationBadge,
           recommendation,
-          signals: data?.automatedCheck?.signals || {},
+          signals: {
+            hasVerificationBadge: false,
+            connectionCount: null,
+            experienceCount: 0,
+            profileCompleteness: 0,
+            hasProfilePhoto: false,
+            accountAge: 'new',
+            ...(data?.automatedCheck?.signals || {}),
+          },
           sources: data?.automatedCheck?.sources || ['playwright'],
         };
       })

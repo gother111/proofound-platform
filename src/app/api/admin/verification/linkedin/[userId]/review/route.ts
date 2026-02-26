@@ -11,10 +11,12 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { sendVerificationApprovedEmail, sendVerificationRejectedEmail } from '@/lib/email';
 import { requirePlatformAdminJson } from '@/lib/api/route-helpers';
+import { resolveHasLinkedInIdentityVerification } from '@/lib/linkedin-verified';
 
 interface ReviewRequest {
   decision: 'approved' | 'rejected';
   notes?: string;
+  grantIdentity?: boolean;
 }
 
 export async function POST(
@@ -30,7 +32,7 @@ export async function POST(
 
     // 2. Parse request body
     const body: ReviewRequest = await request.json();
-    const { decision, notes } = body;
+    const { decision, notes, grantIdentity } = body;
 
     if (!decision || !['approved', 'rejected'].includes(decision)) {
       return NextResponse.json(
@@ -42,7 +44,9 @@ export async function POST(
     // 3. Get current verification data
     const { data: currentProfile, error: fetchError } = await supabase
       .from('individual_profiles')
-      .select('linkedin_verification_data, verification_status')
+      .select(
+        'linkedin_verification_data, verification_status, verification_method, verified, linkedin_verification_status'
+      )
       .eq('user_id', userId)
       .single();
 
@@ -66,14 +70,35 @@ export async function POST(
       linkedin_verification_data: updatedVerificationData,
     };
 
+    const nowIso = new Date().toISOString();
+    const hasIdentityVerification = resolveHasLinkedInIdentityVerification(updatedVerificationData);
+    const shouldGrantIdentity = Boolean(hasIdentityVerification || grantIdentity === true);
+
     if (decision === 'approved') {
-      updateData.verification_status = 'verified';
-      updateData.verification_method = 'linkedin';
-      updateData.verified = true;
-      updateData.verified_at = new Date().toISOString();
+      updateData.linkedin_verification_status = 'verified';
+      updateData.linkedin_verified_at = nowIso;
+
+      if (shouldGrantIdentity) {
+        updateData.verification_status = 'verified';
+        updateData.verification_method = 'linkedin';
+        updateData.verified = true;
+        updateData.verified_at = nowIso;
+      } else if (
+        currentProfile.verification_status === 'pending' &&
+        currentProfile.verified !== true &&
+        (!currentProfile.verification_method || currentProfile.verification_method === 'linkedin')
+      ) {
+        updateData.verification_status = 'unverified';
+      }
     } else {
-      updateData.verification_status = 'failed';
-      updateData.verified = false;
+      updateData.linkedin_verification_status = 'failed';
+      if (
+        currentProfile.verification_status === 'pending' &&
+        currentProfile.verified !== true &&
+        (!currentProfile.verification_method || currentProfile.verification_method === 'linkedin')
+      ) {
+        updateData.verification_status = 'unverified';
+      }
     }
 
     const { error: updateError } = await supabase
@@ -121,6 +146,8 @@ export async function POST(
     return NextResponse.json({
       success: true,
       decision,
+      hasIdentityVerification,
+      identityGranted: decision === 'approved' ? shouldGrantIdentity : false,
       message: `Verification ${decision} successfully`,
     });
   } catch (error) {

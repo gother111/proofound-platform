@@ -51,6 +51,7 @@ interface VerificationItem {
   verificationStatus: string;
   createdAt: string;
   confidence: number;
+  hasIdentityVerification: boolean;
   hasVerificationBadge: boolean;
   recommendation: 'approve' | 'review_manually' | 'reject';
   signals: VerificationSignals;
@@ -65,6 +66,7 @@ interface AdminReviewModalProps {
 
 export function AdminReviewModal({ verification, onClose, onComplete }: AdminReviewModalProps) {
   const [notes, setNotes] = useState('');
+  const [grantIdentity, setGrantIdentity] = useState(verification.hasIdentityVerification);
   const [processing, setProcessing] = useState(false);
   const [decision, setDecision] = useState<'approved' | 'rejected' | null>(null);
 
@@ -89,6 +91,7 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
           body: JSON.stringify({
             decision: selectedDecision,
             notes: notes.trim() || null,
+            grantIdentity: selectedDecision === 'approved' ? grantIdentity : false,
           }),
         }
       );
@@ -199,13 +202,13 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
             <h4 className="font-semibold text-[#2D3330]">Automated Confidence Score</h4>
             <div className="flex items-center gap-3">
               {getConfidenceBadge(verification.confidence)}
-              {verification.hasVerificationBadge && (
+              {verification.hasIdentityVerification && (
                 <Badge
                   variant="outline"
                   className="border-green-500 text-green-700 bg-green-50 px-3 py-2"
                 >
                   <Award className="w-4 h-4 mr-1" />
-                  LinkedIn Verified Badge Detected
+                  LinkedIn Identity Verification Detected
                 </Badge>
               )}
             </div>
@@ -226,19 +229,21 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
               <div className="flex items-start gap-3 p-4 border border-[#E8E6DD] rounded-lg transition-all duration-200 hover:shadow-md hover:border-[#D0CEC5]">
                 <div
                   className={`p-2 rounded-full ${
-                    verification.signals.hasVerificationBadge ? 'bg-green-100' : 'bg-gray-100'
+                    verification.hasIdentityVerification ? 'bg-green-100' : 'bg-gray-100'
                   }`}
                 >
-                  {verification.signals.hasVerificationBadge ? (
+                  {verification.hasIdentityVerification ? (
                     <CheckCircle2 className="w-5 h-5 text-green-600" />
                   ) : (
                     <XCircle className="w-5 h-5 text-gray-600" />
                   )}
                 </div>
                 <div>
-                  <p className="font-medium text-sm text-[#2D3330]">LinkedIn Verification Badge</p>
+                  <p className="font-medium text-sm text-[#2D3330]">
+                    LinkedIn Identity Verification
+                  </p>
                   <p className="text-xs text-[#6B6760]">
-                    {verification.signals.hasVerificationBadge ? 'Detected' : 'Not detected'}
+                    {verification.hasIdentityVerification ? 'Detected' : 'Not detected'}
                   </p>
                 </div>
               </div>
@@ -358,6 +363,28 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
               disabled={processing}
             />
             <p className="text-xs text-[#9B9891] text-right">{notes.length}/500 characters</p>
+          </div>
+
+          <div className="rounded-lg border border-[#E8E6DD] p-4 space-y-2">
+            <p className="font-semibold text-[#2D3330]">Identity Verification Decision</p>
+            <label className="flex items-start gap-2 text-sm text-[#4B4A44]">
+              <input
+                type="checkbox"
+                className="mt-1 h-4 w-4"
+                checked={grantIdentity}
+                onChange={(event) => setGrantIdentity(event.target.checked)}
+                disabled={processing}
+              />
+              <span>
+                Grant Proofound identity verification for this user.
+                {!verification.hasIdentityVerification && (
+                  <span className="block text-xs text-amber-700 mt-1">
+                    LinkedIn identity verification was not detected. Enabling this is a manual
+                    override.
+                  </span>
+                )}
+              </span>
+            </label>
           </div>
         </div>
 

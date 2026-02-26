@@ -43,9 +43,13 @@ function buildSupabaseMock() {
             single: vi.fn().mockResolvedValue({
               data: {
                 linkedin_verification_data: {
+                  hasIdentityVerification: true,
                   automatedCheck: { confidence: 88 },
                 },
                 verification_status: 'pending',
+                verification_method: null,
+                verified: false,
+                linkedin_verification_status: 'pending',
               },
               error: null,
             }),
@@ -131,6 +135,7 @@ describe('admin linkedin review route', () => {
     expect(response.status).toBe(200);
     expect(updateSpy).toHaveBeenCalledWith(
       expect.objectContaining({
+        linkedin_verification_status: 'verified',
         verification_status: 'verified',
         verification_method: 'linkedin',
         verified: true,
@@ -141,6 +146,173 @@ describe('admin linkedin review route', () => {
       'Candidate Display Name',
       'linkedin',
       'user-1'
+    );
+  });
+
+  it('does not grant identity by default when LinkedIn identity signal is missing', async () => {
+    vi.mocked(requirePlatformAdminJson).mockResolvedValue({
+      adminLevel: 'platform_admin',
+      userId: 'admin-1',
+      email: 'admin@example.com',
+      platformRole: 'platform_admin',
+    });
+
+    const updateSpy = vi.fn().mockReturnValue({
+      eq: vi.fn().mockResolvedValue({ error: null }),
+    });
+
+    const fromSpy = vi.fn((table: string) => {
+      if (table === 'individual_profiles') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({
+                data: {
+                  linkedin_verification_data: {
+                    hasIdentityVerification: false,
+                    automatedCheck: { confidence: 82 },
+                  },
+                  verification_status: 'pending',
+                  verification_method: null,
+                  verified: false,
+                  linkedin_verification_status: 'pending',
+                },
+                error: null,
+              }),
+            }),
+          }),
+          update: updateSpy,
+        };
+      }
+
+      if (table === 'profiles') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              maybeSingle: vi.fn().mockResolvedValue({
+                data: { display_name: 'Candidate Display Name' },
+                error: null,
+              }),
+            }),
+          }),
+        };
+      }
+
+      return {};
+    });
+
+    vi.mocked(createClient).mockResolvedValue({ from: fromSpy } as any);
+    vi.mocked(createAdminClient).mockReturnValue({
+      auth: {
+        admin: {
+          getUserById: vi.fn().mockResolvedValue({
+            data: {
+              user: {
+                email: 'candidate@example.com',
+                user_metadata: { full_name: 'Candidate Full Name' },
+              },
+            },
+          }),
+        },
+      },
+    } as any);
+
+    const response = await POST(buildRequest({ decision: 'approved' }), {
+      params: Promise.resolve({ userId: 'user-1' }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(updateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        linkedin_verification_status: 'verified',
+        verification_status: 'unverified',
+      })
+    );
+    expect(updateSpy).not.toHaveBeenCalledWith(
+      expect.objectContaining({ verification_method: 'linkedin' })
+    );
+  });
+
+  it('grants identity when admin override is explicitly requested', async () => {
+    vi.mocked(requirePlatformAdminJson).mockResolvedValue({
+      adminLevel: 'platform_admin',
+      userId: 'admin-1',
+      email: 'admin@example.com',
+      platformRole: 'platform_admin',
+    });
+
+    const updateSpy = vi.fn().mockReturnValue({
+      eq: vi.fn().mockResolvedValue({ error: null }),
+    });
+
+    const fromSpy = vi.fn((table: string) => {
+      if (table === 'individual_profiles') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({
+                data: {
+                  linkedin_verification_data: {
+                    hasIdentityVerification: false,
+                    automatedCheck: { confidence: 77 },
+                  },
+                  verification_status: 'pending',
+                  verification_method: null,
+                  verified: false,
+                  linkedin_verification_status: 'pending',
+                },
+                error: null,
+              }),
+            }),
+          }),
+          update: updateSpy,
+        };
+      }
+
+      if (table === 'profiles') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              maybeSingle: vi.fn().mockResolvedValue({
+                data: { display_name: 'Candidate Display Name' },
+                error: null,
+              }),
+            }),
+          }),
+        };
+      }
+
+      return {};
+    });
+
+    vi.mocked(createClient).mockResolvedValue({ from: fromSpy } as any);
+    vi.mocked(createAdminClient).mockReturnValue({
+      auth: {
+        admin: {
+          getUserById: vi.fn().mockResolvedValue({
+            data: {
+              user: {
+                email: 'candidate@example.com',
+                user_metadata: { full_name: 'Candidate Full Name' },
+              },
+            },
+          }),
+        },
+      },
+    } as any);
+
+    const response = await POST(buildRequest({ decision: 'approved', grantIdentity: true }), {
+      params: Promise.resolve({ userId: 'user-1' }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(updateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        linkedin_verification_status: 'verified',
+        verification_status: 'verified',
+        verification_method: 'linkedin',
+        verified: true,
+      })
     );
   });
 });

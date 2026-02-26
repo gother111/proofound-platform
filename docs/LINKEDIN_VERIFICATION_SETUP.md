@@ -9,7 +9,7 @@ The LinkedIn verification feature allows users to verify their identity by conne
 ## Features
 
 - ✅ **Free automated checking** using Playwright (already installed)
-- ✅ **Multi-layer verification**: OAuth + Automated scraping + Optional enrichment + Admin review
+- ✅ **Multi-layer verification**: OAuth + LinkedIn Verified API + Automated scraping + Optional enrichment + Admin review
 - ✅ **Quick approvals**: High-confidence cases can be approved in 1-click
 - ✅ **Smart confidence scoring**: 0-100 score based on multiple signals
 - ✅ **Admin dashboard** with confidence-based tabs
@@ -24,6 +24,8 @@ Add these to your `.env.local` file:
 LINKEDIN_CLIENT_ID=your_linkedin_client_id
 LINKEDIN_CLIENT_SECRET=your_linkedin_client_secret
 LINKEDIN_REDIRECT_URI=https://proofound.io/api/auth/linkedin/callback
+# Optional. Defaults to 202510.
+LINKEDIN_API_VERSION=202510
 ```
 
 Important callback split:
@@ -50,6 +52,8 @@ Important callback split:
    - `openid` (required)
    - `profile` (required)
    - `email` (required)
+   - `r_profile_basicinfo` (required for LinkedIn `/rest/identityMe`)
+   - `r_verify` (required for LinkedIn `/rest/verificationReport`)
 7. Copy **Client ID** and **Client Secret** to your `.env.local`
 8. Set `LINKEDIN_REDIRECT_URI` in your environment to your canonical app callback (recommended: `https://proofound.io/api/auth/linkedin/callback` without a trailing slash)
 
@@ -154,8 +158,10 @@ Access at: `/admin/verification`
   - Quick Approve / Review Manually / Reject buttons
 
 - **Review actions**:
-  - Approve → Sets `verified = true`, `verification_method = 'linkedin'`
-  - Reject → Sets `verification_status = 'failed'`
+  - Approve → Always sets `linkedin_verification_status = 'verified'`
+  - Approve + identity signal (`IDENTITY`) or explicit override → Sets global identity verified (`verified = true`, `verification_method = 'linkedin'`)
+  - Approve without identity signal and without override → Keeps global identity unverified by default
+  - Reject → Sets `linkedin_verification_status = 'failed'`
   - Both actions log admin notes
 
 ## What Gets Checked
@@ -163,7 +169,7 @@ Access at: `/admin/verification`
 The automated system analyzes:
 
 1. **Verification Badge** (Primary, +50 points)
-   - LinkedIn's official identity verification badge
+   - LinkedIn `verificationReport` signal (IDENTITY) is the primary identity signal
 2. **Connections** (+15 points max)
    - 500+ connections = high trust
 3. **Profile Completeness** (+15 points max)
@@ -200,6 +206,14 @@ The automated system analyzes:
 
 - Verify `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`, and `LINKEDIN_REDIRECT_URI` are set.
 - Verify `LINKEDIN_REDIRECT_URI` exactly matches LinkedIn Developer callback (including host, path, and trailing slash behavior).
+
+### "LinkedIn verification scope is missing" warning
+
+**Solution**:
+
+- Ensure the LinkedIn app has access to Verified on LinkedIn product.
+- Ensure OAuth scopes include `r_profile_basicinfo` and `r_verify`.
+- Reconnect LinkedIn after scope changes so the token carries the new grants.
 
 ### OAuth redirect fails (`The redirect_uri does not match the registered value`)
 
@@ -278,6 +292,6 @@ For issues or questions:
 
 ---
 
-**Last Updated**: 2025-11-01  
+**Last Updated**: 2026-02-26  
 **Feature Status**: ✅ Fully Implemented  
-**Migration**: `drizzle/0029_add_linkedin_verification.sql`
+**Migration**: `src/db/migrations/20260226180000_add_linkedin_verification_status_tracking.sql`

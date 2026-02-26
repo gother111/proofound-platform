@@ -5,6 +5,7 @@ import { db } from '@/db';
 import { individualProfiles } from '@/db/schema';
 import { requireMobileAuth } from '@/lib/api/mobile/auth';
 import { mobileError, mobileSuccess } from '@/lib/api/mobile/response';
+import { resolveHasLinkedInIdentityVerification } from '@/lib/linkedin-verified';
 import { resolveWorkEmailValidity } from '@/lib/verification/work-email-validity';
 
 export const dynamic = 'force-dynamic';
@@ -22,6 +23,9 @@ export async function GET(request: NextRequest) {
         verificationMethod: individualProfiles.verificationMethod,
         verificationStatus: individualProfiles.verificationStatus,
         verifiedAt: individualProfiles.verifiedAt,
+        linkedinVerificationStatus: individualProfiles.linkedinVerificationStatus,
+        linkedinVerifiedAt: individualProfiles.linkedinVerifiedAt,
+        linkedinVerificationData: individualProfiles.linkedinVerificationData,
         workEmail: individualProfiles.workEmail,
         workEmailVerified: individualProfiles.workEmailVerified,
         workEmailVerifiedAt: individualProfiles.workEmailVerifiedAt,
@@ -37,6 +41,9 @@ export async function GET(request: NextRequest) {
         verificationMethod: null,
         verificationStatus: 'unverified',
         verifiedAt: null,
+        linkedinVerificationStatus: 'unverified',
+        linkedinHasIdentityVerification: false,
+        linkedinVerifiedAt: null,
         workEmail: null,
         workEmailVerified: false,
         workEmailReverifyDueAt: null,
@@ -58,12 +65,19 @@ export async function GET(request: NextRequest) {
       isWorkEmailPrimaryVerification && workEmailValidity.needsReverify
         ? 'unverified'
         : profile.verificationStatus;
+    const linkedinVerificationStatus = profile.linkedinVerificationStatus || 'unverified';
+    const linkedinHasIdentityVerification = resolveHasLinkedInIdentityVerification(
+      profile.linkedinVerificationData
+    );
 
     return mobileSuccess({
       verified: effectiveIdentityVerified,
       verificationMethod: profile.verificationMethod,
       verificationStatus: effectiveVerificationStatus,
       verifiedAt: profile.verifiedAt,
+      linkedinVerificationStatus,
+      linkedinHasIdentityVerification,
+      linkedinVerifiedAt: profile.linkedinVerifiedAt,
       workEmail: profile.workEmail,
       workEmailVerified: workEmailValidity.isCurrentlyVerified,
       workEmailReverifyDueAt: workEmailValidity.reverifyDueAt,

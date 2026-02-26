@@ -345,6 +345,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 - `GOOGLE_REDIRECT_URI` — Must match the app integration callback (recommended: `https://yourdomain.com/api/integrations/google/callback`).
 - `LINKEDIN_CLIENT_ID` and `LINKEDIN_CLIENT_SECRET` — Required for LinkedIn settings integration callback and LinkedIn social login through Supabase.
 - `LINKEDIN_REDIRECT_URI` - Set to your canonical app callback (recommended: `https://yourdomain.com/api/auth/linkedin/callback`).
+- `LINKEDIN_API_VERSION` - Optional LinkedIn REST version header for Verified APIs (`/rest/verificationReport`, `/rest/identityMe`). Defaults to `202510`.
 - `NEXT_PUBLIC_SITE_URL` — Canonical app base URL used for OAuth callback construction (`NEXT_PUBLIC_URL` is legacy fallback only).
 
 **Provider callback split (important)**:
@@ -381,6 +382,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
    - `https://<supabase-project>.supabase.co/auth/v1/callback`
    - Optional local callback for local OAuth testing: `http://localhost:3000/api/auth/linkedin/callback`
    - Optional additional live-domain callbacks for each domain that can initiate `/api/auth/linkedin` (for example `https://demo.yourdomain.com/api/auth/linkedin/callback`)
+   - For LinkedIn verification, ensure OAuth scopes include `r_profile_basicinfo` and `r_verify` in addition to `openid profile email`.
 5. Set `NEXT_PUBLIC_SITE_URL` to your canonical domain (for example `https://proofound.io`).
 
 ---

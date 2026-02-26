@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { resolveWorkEmailValidity } from '@/lib/verification/work-email-validity';
 import { isMissingColumnError } from '@/lib/db/schemaCompatibility';
+import { resolveHasLinkedInIdentityVerification } from '@/lib/linkedin-verified';
 
 function hasActiveWorkEmailToken(profile: {
   work_email_token?: string | null;
@@ -42,10 +43,16 @@ export async function GET(request: NextRequest) {
     }
 
     const latestSelect =
-      'verified, verification_method, verification_status, verified_at, work_email, work_email_verified, work_email_verified_at, work_email_reverify_due_at, work_email_token, work_email_token_expires';
+      'verified, verification_method, verification_status, verified_at, work_email, work_email_verified, work_email_verified_at, work_email_reverify_due_at, work_email_token, work_email_token_expires, linkedin_verification_status, linkedin_verified_at, linkedin_verification_data';
     const legacySelect =
       'verified, verification_method, verification_status, verified_at, work_email, work_email_verified, work_email_token, work_email_token_expires';
-    const reverifyColumns = ['work_email_verified_at', 'work_email_reverify_due_at'];
+    const latestOnlyColumns = [
+      'work_email_verified_at',
+      'work_email_reverify_due_at',
+      'linkedin_verification_status',
+      'linkedin_verified_at',
+      'linkedin_verification_data',
+    ];
 
     // Fetch individual profile with verification status.
     // Fallback keeps this endpoint working when deployments run against slightly older schemas.
@@ -55,7 +62,7 @@ export async function GET(request: NextRequest) {
       .eq('user_id', user.id)
       .maybeSingle();
 
-    if (profileError && isMissingColumnError(profileError, reverifyColumns)) {
+    if (profileError && isMissingColumnError(profileError, latestOnlyColumns)) {
       console.warn('Falling back to legacy verification status query due to schema lag.', {
         code: profileError.code,
         message: profileError.message,
@@ -73,6 +80,9 @@ export async function GET(request: NextRequest) {
             ...legacyProfile,
             work_email_verified_at: null,
             work_email_reverify_due_at: null,
+            linkedin_verification_status: 'unverified',
+            linkedin_verified_at: null,
+            linkedin_verification_data: null,
           }
         : legacyProfile;
     }
@@ -115,6 +125,9 @@ export async function GET(request: NextRequest) {
         verificationMethod: null,
         verificationStatus: 'unverified',
         verifiedAt: null,
+        linkedinVerificationStatus: 'unverified',
+        linkedinHasIdentityVerification: false,
+        linkedinVerifiedAt: null,
         workEmail: null,
         workEmailVerified: false,
         workEmailReverifyDueAt: null,
@@ -142,11 +155,25 @@ export async function GET(request: NextRequest) {
       verificationMethod = 'work_email';
     }
 
+    const linkedinVerificationStatus =
+      (profile.linkedin_verification_status as
+        | 'unverified'
+        | 'pending'
+        | 'verified'
+        | 'failed'
+        | null) || 'unverified';
+    const linkedinHasIdentityVerification = resolveHasLinkedInIdentityVerification(
+      profile.linkedin_verification_data
+    );
+
     return NextResponse.json({
       verified: effectiveIdentityVerified,
       verificationMethod,
       verificationStatus,
       verifiedAt: profile.verified_at,
+      linkedinVerificationStatus,
+      linkedinHasIdentityVerification,
+      linkedinVerifiedAt: profile.linkedin_verified_at,
       workEmail: profile.work_email,
       workEmailVerified: workEmailValidity.isCurrentlyVerified,
       workEmailReverifyDueAt: workEmailValidity.reverifyDueAt,

@@ -105,6 +105,10 @@ export const individualProfiles = pgTable('individual_profiles', {
   redactMode: boolean('redact_mode').default(false), // Quick-hide sensitive info
   // LinkedIn verification fields
   linkedinProfileUrl: text('linkedin_profile_url'),
+  linkedinVerificationStatus: text('linkedin_verification_status', {
+    enum: ['unverified', 'pending', 'verified', 'failed'],
+  }).default('unverified'),
+  linkedinVerifiedAt: timestamp('linkedin_verified_at'),
   linkedinVerificationData: jsonb('linkedin_verification_data'),
   // Stores: {
   //   hasVerificationBadge: boolean,

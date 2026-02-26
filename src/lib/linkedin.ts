@@ -25,6 +25,8 @@ export interface LinkedInTokenResponse {
 }
 
 const LINKEDIN_CALLBACK_PATH = '/api/auth/linkedin/callback';
+const DEFAULT_LINKEDIN_OIDC_SCOPES = ['openid', 'profile', 'email'];
+const LINKEDIN_VERIFICATION_SCOPES = ['r_profile_basicinfo', 'r_verify'];
 
 function normalizeHttpUrl(value: string): string | null {
   const trimmed = value.trim();
@@ -241,24 +243,40 @@ export function constructLinkedInProfileUrl(profile: LinkedInProfile): string {
   return `https://www.linkedin.com/in/${namePart}`;
 }
 
+function uniqueScopes(scopes: string[]): string[] {
+  return [...new Set(scopes.map((scope) => scope.trim()).filter(Boolean))];
+}
+
+export function getLinkedInAuthScopes(context: 'integrations' | 'verification' = 'integrations') {
+  if (context === 'verification') {
+    return uniqueScopes([...DEFAULT_LINKEDIN_OIDC_SCOPES, ...LINKEDIN_VERIFICATION_SCOPES]);
+  }
+
+  return [...DEFAULT_LINKEDIN_OIDC_SCOPES];
+}
+
 /**
  * Generate LinkedIn OAuth authorization URL
  */
-export function generateLinkedInAuthUrl(state: string, redirectUri: string): string {
+export function generateLinkedInAuthUrl(
+  state: string,
+  redirectUri: string,
+  scopes: string[] = DEFAULT_LINKEDIN_OIDC_SCOPES
+): string {
   const clientId = process.env.LINKEDIN_CLIENT_ID;
 
   if (!clientId) {
     throw new Error('LinkedIn Client ID not configured');
   }
 
-  const scopes = ['openid', 'profile', 'email'];
+  const normalizedScopes = uniqueScopes(scopes);
 
   const params = new URLSearchParams({
     response_type: 'code',
     client_id: clientId,
     redirect_uri: redirectUri,
     state,
-    scope: scopes.join(' '),
+    scope: normalizedScopes.join(' '),
   });
 
   return `https://www.linkedin.com/oauth/v2/authorization?${params.toString()}`;

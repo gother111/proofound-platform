@@ -13,6 +13,9 @@ type VerificationProfile = {
   verification_method: 'veriff' | 'work_email' | 'linkedin' | null;
   verification_status: 'unverified' | 'pending' | 'verified' | 'failed' | null;
   verified_at: string | null;
+  linkedin_verification_status?: 'unverified' | 'pending' | 'verified' | 'failed' | null;
+  linkedin_verified_at?: string | null;
+  linkedin_verification_data?: Record<string, unknown> | null;
   work_email: string | null;
   work_email_verified: boolean;
   work_email_verified_at: string | null;
@@ -239,5 +242,39 @@ describe('GET /api/verification/status', () => {
     expect(body.verificationStatus).toBe('pending');
     expect(body.verificationMethod).toBe('work_email');
     expect(body.workEmailNeedsReverify).toBe(false);
+    expect(body.linkedinVerificationStatus).toBe('unverified');
+    expect(body.linkedinHasIdentityVerification).toBe(false);
+  });
+
+  it('returns LinkedIn-specific status fields when present', async () => {
+    const nowIso = new Date().toISOString();
+    const supabase = createSupabaseMock({
+      profile: {
+        verified: false,
+        verification_method: null,
+        verification_status: 'unverified',
+        verified_at: null,
+        linkedin_verification_status: 'verified',
+        linkedin_verified_at: nowIso,
+        linkedin_verification_data: {
+          hasIdentityVerification: true,
+        },
+        work_email: null,
+        work_email_verified: false,
+        work_email_verified_at: null,
+        work_email_reverify_due_at: null,
+        work_email_token: null,
+        work_email_token_expires: null,
+      },
+    });
+    (createClient as any).mockResolvedValue(supabase);
+
+    const response = await GET(makeRequest());
+    expect(response.status).toBe(200);
+
+    const body = await response.json();
+    expect(body.linkedinVerificationStatus).toBe('verified');
+    expect(body.linkedinHasIdentityVerification).toBe(true);
+    expect(body.linkedinVerifiedAt).toBe(nowIso);
   });
 });

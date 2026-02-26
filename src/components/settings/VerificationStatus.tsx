@@ -15,10 +15,86 @@ interface VerificationStatusData {
   verificationMethod: 'veriff' | 'work_email' | 'linkedin' | null;
   verificationStatus: 'unverified' | 'pending' | 'verified' | 'failed';
   verifiedAt: string | null;
+  linkedinVerificationStatus: 'unverified' | 'pending' | 'verified' | 'failed';
+  linkedinHasIdentityVerification: boolean;
+  linkedinVerifiedAt: string | null;
   workEmail: string | null;
   workEmailVerified: boolean;
   workEmailReverifyDueAt: string | null;
   workEmailNeedsReverify: boolean;
+}
+
+interface OAuthFeedbackBanner {
+  type: 'success' | 'error';
+  message: string;
+}
+
+function getLinkedInStatusText(status: VerificationStatusData) {
+  if (status.linkedinVerificationStatus === 'pending') {
+    return {
+      label: 'Pending',
+      helper: 'LinkedIn verification is under review.',
+      tone: 'neutral' as const,
+    };
+  }
+
+  if (status.linkedinVerificationStatus === 'verified') {
+    if (status.linkedinHasIdentityVerification) {
+      return {
+        label: 'Verified (Identity badge)',
+        helper: 'Official LinkedIn identity verification detected.',
+        tone: 'positive' as const,
+      };
+    }
+
+    return {
+      label: 'Verified (no identity badge)',
+      helper: 'LinkedIn verification is complete, but identity is not granted by default.',
+      tone: 'neutral' as const,
+    };
+  }
+
+  if (status.linkedinVerificationStatus === 'failed') {
+    return {
+      label: 'Failed',
+      helper: 'LinkedIn verification failed. You can retry.',
+      tone: 'negative' as const,
+    };
+  }
+
+  return {
+    label: 'Not checked',
+    helper: 'Run LinkedIn verification to add an additional trust signal.',
+    tone: 'neutral' as const,
+  };
+}
+
+function LinkedInStatusPanel({ status }: { status: VerificationStatusData }) {
+  const linkedInStatus = getLinkedInStatusText(status);
+  const statusToneClass =
+    linkedInStatus.tone === 'positive'
+      ? 'border-green-200 bg-green-50'
+      : linkedInStatus.tone === 'negative'
+        ? 'border-red-200 bg-red-50'
+        : 'border-slate-200 bg-slate-50';
+
+  return (
+    <div className={`rounded-xl border p-4 ${statusToneClass}`}>
+      <div className="flex items-start gap-3">
+        <Linkedin className="w-5 h-5 text-[#0A66C2] mt-0.5" />
+        <div className="space-y-1">
+          <p className="text-sm font-medium">LinkedIn Trust Signal</p>
+          <p className="text-sm">{linkedInStatus.label}</p>
+          <p className="text-xs text-muted-foreground">{linkedInStatus.helper}</p>
+          {status.linkedinVerifiedAt && (
+            <p className="text-xs text-muted-foreground">
+              Updated on {new Date(status.linkedinVerifiedAt).toLocaleDateString()}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function VerificationStatus() {
@@ -27,6 +103,8 @@ export function VerificationStatus() {
   const [error, setError] = useState<string | null>(null);
   const [showWorkEmailForm, setShowWorkEmailForm] = useState(false);
   const [showLinkedInFlow, setShowLinkedInFlow] = useState(false);
+  const [oauthFeedback, setOauthFeedback] = useState<OAuthFeedbackBanner | null>(null);
+  const [autoStartLinkedInCheck, setAutoStartLinkedInCheck] = useState(false);
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -44,10 +122,22 @@ export function VerificationStatus() {
 
     if (verification === 'linkedin_connected') {
       setShowLinkedInFlow(true);
-      toast.success('LinkedIn connected successfully. Continue with verification check.');
+      setAutoStartLinkedInCheck(true);
+      setOauthFeedback({
+        type: 'success',
+        message: 'LinkedIn connected successfully. Running verification check now.',
+      });
+      toast.success('LinkedIn connected successfully.');
     } else if (verificationError === 'linkedin_auth_failed') {
-      toast.error(message || 'LinkedIn connection failed. Please try again.');
+      const errorMessage = message || 'LinkedIn connection failed. Please try again.';
+      setOauthFeedback({
+        type: 'error',
+        message: errorMessage,
+      });
+      toast.error(errorMessage);
     }
+
+    fetchStatus();
 
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
@@ -66,9 +156,8 @@ export function VerificationStatus() {
       setLoading(true);
       setError(null);
 
-      // Add timeout to prevent infinite loading
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
 
       const response = await fetch('/api/verification/status', {
         signal: controller.signal,
@@ -77,7 +166,6 @@ export function VerificationStatus() {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        // Try to get error details from response
         const errorData = await response.json().catch(() => ({}));
         const errorMessage =
           errorData.error || `Failed to fetch verification status (${response.status})`;
@@ -86,19 +174,19 @@ export function VerificationStatus() {
       }
 
       const data = await response.json();
-      console.log('✅ Verification status loaded:', data);
       setStatus(data);
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {
         const timeoutMessage = 'Request timed out. Please check your connection and try again.';
-        console.error('Verification status request timed out');
         setError(timeoutMessage);
-        // Set default unverified status on timeout
         setStatus({
           verified: false,
           verificationMethod: null,
           verificationStatus: 'unverified',
           verifiedAt: null,
+          linkedinVerificationStatus: 'unverified',
+          linkedinHasIdentityVerification: false,
+          linkedinVerifiedAt: null,
           workEmail: null,
           workEmailVerified: false,
           workEmailReverifyDueAt: null,
@@ -107,7 +195,6 @@ export function VerificationStatus() {
       } else {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to load verification status';
-        console.error('Error fetching verification status:', err);
         setError(errorMessage);
       }
     } finally {
@@ -118,7 +205,8 @@ export function VerificationStatus() {
   const handleVerificationSuccess = () => {
     setShowWorkEmailForm(false);
     setShowLinkedInFlow(false);
-    fetchStatus(); // Refresh status
+    setAutoStartLinkedInCheck(false);
+    fetchStatus();
   };
 
   if (loading) {
@@ -154,12 +242,60 @@ export function VerificationStatus() {
     return null;
   }
 
-  // Show verification options based on status
-  if (status.verificationStatus === 'verified' && status.verified) {
-    const canAddLinkedInVerification = status.verificationMethod !== 'linkedin';
-
+  if (showWorkEmailForm) {
     return (
       <div className="space-y-4">
+        <Button variant="ghost" onClick={() => setShowWorkEmailForm(false)} className="mb-2">
+          ← Back to options
+        </Button>
+        <WorkEmailVerificationForm onSuccess={handleVerificationSuccess} />
+      </div>
+    );
+  }
+
+  if (showLinkedInFlow) {
+    return (
+      <div className="space-y-4">
+        <Button variant="ghost" onClick={() => setShowLinkedInFlow(false)} className="mb-2">
+          ← Back to options
+        </Button>
+        {oauthFeedback && (
+          <Alert variant={oauthFeedback.type === 'error' ? 'destructive' : 'default'}>
+            {oauthFeedback.type === 'error' ? (
+              <AlertCircle className="h-4 w-4" />
+            ) : (
+              <CheckCircle2 className="h-4 w-4" />
+            )}
+            <AlertDescription>{oauthFeedback.message}</AlertDescription>
+          </Alert>
+        )}
+        <LinkedInVerification
+          onSuccess={handleVerificationSuccess}
+          autoStart={autoStartLinkedInCheck}
+          onAutoStartHandled={() => setAutoStartLinkedInCheck(false)}
+        />
+      </div>
+    );
+  }
+
+  const canAddLinkedInVerification =
+    status.linkedinVerificationStatus !== 'verified' &&
+    status.linkedinVerificationStatus !== 'pending';
+
+  // Show verification options based on identity status
+  if (status.verificationStatus === 'verified' && status.verified) {
+    return (
+      <div className="space-y-4">
+        {oauthFeedback && (
+          <Alert variant={oauthFeedback.type === 'error' ? 'destructive' : 'default'}>
+            {oauthFeedback.type === 'error' ? (
+              <AlertCircle className="h-4 w-4" />
+            ) : (
+              <CheckCircle2 className="h-4 w-4" />
+            )}
+            <AlertDescription>{oauthFeedback.message}</AlertDescription>
+          </Alert>
+        )}
         <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-xl">
           <CheckCircle2 className="w-6 h-6 text-green-600 dark:text-green-400 flex-shrink-0" />
           <div className="flex-1">
@@ -180,6 +316,8 @@ export function VerificationStatus() {
             )}
           </div>
         </div>
+
+        <LinkedInStatusPanel status={status} />
 
         <p className="text-sm text-muted-foreground">
           Your verified badge is now visible on your profile to organizations.
@@ -210,12 +348,23 @@ export function VerificationStatus() {
   if (status.verificationStatus === 'pending') {
     return (
       <div className="space-y-4">
+        {oauthFeedback && (
+          <Alert variant={oauthFeedback.type === 'error' ? 'destructive' : 'default'}>
+            {oauthFeedback.type === 'error' ? (
+              <AlertCircle className="h-4 w-4" />
+            ) : (
+              <CheckCircle2 className="h-4 w-4" />
+            )}
+            <AlertDescription>{oauthFeedback.message}</AlertDescription>
+          </Alert>
+        )}
         <Alert>
           <Loader2 className="h-4 w-4 animate-spin" />
           <AlertDescription>
-            Verification in progress... This may take a few moments.
+            Identity verification is in progress. This may take a few moments.
           </AlertDescription>
         </Alert>
+        <LinkedInStatusPanel status={status} />
         <Button variant="outline" onClick={fetchStatus} className="w-full">
           Refresh Status
         </Button>
@@ -226,12 +375,23 @@ export function VerificationStatus() {
   if (status.verificationStatus === 'failed') {
     return (
       <div className="space-y-4">
+        {oauthFeedback && (
+          <Alert variant={oauthFeedback.type === 'error' ? 'destructive' : 'default'}>
+            {oauthFeedback.type === 'error' ? (
+              <AlertCircle className="h-4 w-4" />
+            ) : (
+              <CheckCircle2 className="h-4 w-4" />
+            )}
+            <AlertDescription>{oauthFeedback.message}</AlertDescription>
+          </Alert>
+        )}
         <Alert variant="destructive">
           <XCircle className="h-4 w-4" />
           <AlertDescription>
-            Verification failed. Please try again or contact support if the issue persists.
+            Identity verification failed. Please try again or contact support if the issue persists.
           </AlertDescription>
         </Alert>
+        <LinkedInStatusPanel status={status} />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Button
             variant="outline"
@@ -254,31 +414,18 @@ export function VerificationStatus() {
     );
   }
 
-  // Unverified state - show options
-  if (showWorkEmailForm) {
-    return (
-      <div className="space-y-4">
-        <Button variant="ghost" onClick={() => setShowWorkEmailForm(false)} className="mb-2">
-          ← Back to options
-        </Button>
-        <WorkEmailVerificationForm onSuccess={handleVerificationSuccess} />
-      </div>
-    );
-  }
-
-  if (showLinkedInFlow) {
-    return (
-      <div className="space-y-4">
-        <Button variant="ghost" onClick={() => setShowLinkedInFlow(false)} className="mb-2">
-          ← Back to options
-        </Button>
-        <LinkedInVerification onSuccess={handleVerificationSuccess} />
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
+      {oauthFeedback && (
+        <Alert variant={oauthFeedback.type === 'error' ? 'destructive' : 'default'}>
+          {oauthFeedback.type === 'error' ? (
+            <AlertCircle className="h-4 w-4" />
+          ) : (
+            <CheckCircle2 className="h-4 w-4" />
+          )}
+          <AlertDescription>{oauthFeedback.message}</AlertDescription>
+        </Alert>
+      )}
       {status.workEmailNeedsReverify && (
         <Alert className="border-amber-300 bg-amber-50 text-amber-900">
           <AlertCircle className="h-4 w-4" />
@@ -291,6 +438,7 @@ export function VerificationStatus() {
           </AlertDescription>
         </Alert>
       )}
+      <LinkedInStatusPanel status={status} />
       <div className="space-y-2">
         <p className="text-sm text-muted-foreground">
           Verify your identity to unlock the verified badge on your profile. Choose one of the
@@ -299,7 +447,6 @@ export function VerificationStatus() {
       </div>
 
       <div className="grid grid-cols-1 gap-4">
-        {/* Work Email Option */}
         <Card className="border-2 hover:border-proofound-terracotta/30 transition-colors cursor-pointer">
           <CardContent className="p-6">
             <div className="flex items-start gap-4">
@@ -324,7 +471,6 @@ export function VerificationStatus() {
           </CardContent>
         </Card>
 
-        {/* LinkedIn Option */}
         <Card className="border-2 hover:border-[#0A66C2]/30 transition-colors cursor-pointer">
           <CardContent className="p-6">
             <div className="flex items-start gap-4">
@@ -334,8 +480,8 @@ export function VerificationStatus() {
               <div className="flex-1">
                 <h3 className="font-semibold mb-1">LinkedIn Verification</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Fast automated check if your LinkedIn profile has an identity verification badge.
-                  Quick admin review (typically &lt;1 hour).
+                  Check LinkedIn verification signals and complete admin review. LinkedIn identity
+                  badge can grant identity verification.
                 </p>
                 <Button
                   onClick={() => setShowLinkedInFlow(true)}

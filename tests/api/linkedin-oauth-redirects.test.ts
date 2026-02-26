@@ -125,6 +125,9 @@ describe('LinkedIn OAuth redirects', () => {
     expect(linkedinUrl.searchParams.get('redirect_uri')).toBe(
       'https://proofound.io/api/auth/linkedin/callback'
     );
+    const scope = linkedinUrl.searchParams.get('scope') || '';
+    expect(scope).toContain('r_verify');
+    expect(scope).toContain('r_profile_basicinfo');
   });
 
   it('GET /api/auth/linkedin falls back to request origin when public site env vars are missing', async () => {
