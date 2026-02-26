@@ -25,6 +25,12 @@ declare module 'pdfkit' {
   export default PDFDocument;
 }
 
+declare module 'pdfkit/js/pdfkit.standalone.js' {
+  import PDFDocument from 'pdfkit';
+
+  export default PDFDocument;
+}
+
 declare namespace PDFKit {
   // Minimal surface used by our code (PDFKit.PDFDocument).
   type PDFDocument = import('pdfkit').default;

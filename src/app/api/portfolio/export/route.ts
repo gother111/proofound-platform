@@ -58,7 +58,11 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error('portfolio export failed', error);
+    console.error('portfolio export failed', {
+      name: error instanceof Error ? error.name : 'UnknownError',
+      message: error instanceof Error ? error.message : 'Unknown error',
+      error,
+    });
     return NextResponse.json({ error: 'Failed to generate PDF' }, { status: 500 });
   }
 }
