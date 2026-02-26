@@ -1,5 +1,8 @@
 # Environment Variables Reference
 
+> Doc Class: `active`
+> Last Verified: `2026-02-26`
+
 Complete guide to all environment variables used in Proofound, including which features require which variables and how to configure them.
 
 > **📍 PRODUCTION DOMAIN**
@@ -7,7 +10,7 @@ Complete guide to all environment variables used in Proofound, including which f
 > Current production domain: **`https://proofound.io`**
 >
 > Update `NEXT_PUBLIC_SITE_URL` in Vercel environment variables to match your actual domain.
-> `proofound.com` is legacy/parked and should not be used for app URLs.
+> Use only the canonical production domain for app URLs and callbacks.
 
 ## Quick Reference
 
@@ -36,7 +39,7 @@ GOOGLE_REDIRECT_URI=https://yourdomain.com/api/integrations/google/callback
 LINKEDIN_CLIENT_ID=your_linkedin_client_id
 LINKEDIN_CLIENT_SECRET=your_linkedin_client_secret
 E2E_PROVIDER_USER_ID=deterministic_user_uuid
-E2E_PROVIDER_USER_EMAIL=provider-e2e@test.proofound.com
+E2E_PROVIDER_USER_EMAIL=provider-e2e@test.proofound.io
 E2E_PROVIDER_USER_PASSWORD=your_deterministic_test_password
 STRICT_PROVIDER_E2E_REQUIRE_CONNECTED=true
 STRICT_PROVIDER_E2E_REQUIRE_BOTH=true
@@ -214,7 +217,7 @@ NEXT_PUBLIC_SITE_URL=https://proofound.io
 **Important**:
 
 - ✅ Canonical domain: `https://proofound.io`
-- ❌ Legacy/parked domain: `https://proofound.com`
+- ❌ Parked legacy domains for app callbacks
 - ✅ No trailing slash: `https://proofound.io`
 - ❌ No trailing slash: `https://proofound.io/`
 - ✅ Include protocol (http/https)

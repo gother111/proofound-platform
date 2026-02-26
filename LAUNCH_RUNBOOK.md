@@ -1,5 +1,8 @@
 # Proofound MVP Launch Runbook
 
+> Doc Class: `active`
+> Last Verified: `2026-02-26`
+
 **Version:** 1.0  
 **Last Updated:** November 5, 2025  
 **Document Owner:** Pavlo Samoshko (CEO) & Yurii Bakurov (Technical Lead)  

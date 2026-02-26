@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `Plans.md`
-> Last Verified: `2026-02-12`
+> Last Verified: `2026-02-26`
 
 # MVP Milestones (Proposal)
 

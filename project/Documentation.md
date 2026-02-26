@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `Documentation.md`
-> Last Verified: `2026-02-12`
+> Last Verified: `2026-02-26`
 
 # Documentation (Status + Index)
 
@@ -12,8 +12,8 @@ This file is now a historical governance index. Routine per-task updates should 
 
 ## Known Drift (Repo Truth)
 
-- `.github/workflows/ci.yml` matrix runs Node 18.x and 20.x, but `package.json` engines require Node `>=20.20.0 <21` (and `.nvmrc` pins `20.20.0`). (source: .github/workflows/ci.yml, package.json, .nvmrc)
-- `.github/workflows/playwright.yml` uses `node-version: lts/*`, which is not pinned to `package.json` engines and can drift as the LTS line changes over time. (source: .github/workflows/playwright.yml, package.json)
+- As of `2026-02-26`, no standing docs-freshness drift is expected when `STRICT_DOCS_FRESHNESS=true` is used with current registry and active docs.
+- Continue treating generated API inventory (`docs/API_REFERENCE.md`) and registry metadata (`docs/DOCS_REGISTRY.md`) as high-churn surfaces that must be refreshed alongside route or docs-class changes.
 
 ## Decisions
 
@@ -23,6 +23,58 @@ This file is now a historical governance index. Routine per-task updates should 
 - Create session logs with `npm run log:session` in `agent/scratchpad/entries/`.
 - Create change logs with `npm run log:change` in `project/changes/entries/`.
 - Do not add routine per-task entries to `agent/scratchpad.md` or `project/Documentation.md`.
+
+## 2026-02-26: Repository-Wide Documentation Reconciliation
+
+What changed:
+
+- Added deterministic docs reconciliation artifacts:
+  - `artifacts/docs-reconciliation/drift-matrix-2026-02-26.json`
+  - `artifacts/docs-reconciliation/drift-matrix-2026-02-26.csv`
+  - `artifacts/docs-reconciliation/api-routes-2026-02-26.json`
+  - `artifacts/docs-reconciliation/public-route-metadata-files-2026-02-26.json`
+- Added deterministic API reference generator and regenerated canonical API docs from route files:
+  - `scripts/generate-api-reference.mjs`
+  - `docs/API_REFERENCE.md`
+- Synced governance mirror pairs to canonical sources:
+  - `Prompt.md` -> `project/Prompt.md`
+  - `Plans.md` -> `project/Plans.md`
+  - `Architecture.md` -> `project/Architecture.md`
+  - `Implement.md` -> `project/Implement.md`
+  - `setup.md` -> `agent/runbooks/setup.md`
+  - `preflight.md` -> `agent/checklists/preflight.md`
+  - `verification.md` -> `agent/checklists/verification.md`
+  - `Documentation.md` and `metrics.md` -> `project/Documentation.md`
+- Updated active operational docs for current repo truth:
+  - `README.md`
+  - `docs/ENV_VARIABLES.md`
+  - `docs/deployment-guide.md`
+  - `docs/testing-strategy.md`
+  - `RUN_MIGRATIONS_GUIDE.md`
+  - `APPLY_MIGRATIONS_MANUAL.md`
+- Updated docs registry and metadata hygiene:
+  - `docs/DOCS_REGISTRY.md` (added missing entries and refreshed verification dates)
+
+Why:
+
+- Active documentation had accumulated drift after multiple backend, migration, verification, and public-route updates.
+- Governance mirror files were no longer in content sync with their canonical project and agent counterparts.
+- API reference needed complete route-file parity to avoid stale endpoint surface documentation.
+
+How to verify:
+
+- `npm run docs:freshness`
+- `STRICT_DOCS_FRESHNESS=true npm run docs:freshness`
+- `npm run lint`
+- `npm run typecheck`
+- `node scripts/generate-api-reference.mjs`
+- `find src/app/api -name route.ts | wc -l`
+- Playwright crawl of public/legal/support routes (`/about`, `/manifesto`, `/careers`, `/contact`, `/support`, `/privacy`, `/terms`, `/cookies`, `/cookies/settings`)
+
+Open risks/TODO:
+
+- API auth-tier classification in generated docs is heuristic and should be reviewed when auth logic is refactored.
+- Very large reference-spec files remain intentionally narrative-first; route-level truth should continue to defer to generated API docs plus source paths.
 
 ## 2026-02-19: Sharded Session and Change Logs + PR Guardrail
 

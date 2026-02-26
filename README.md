@@ -1,7 +1,7 @@
 # Proofound Platform MVP
 
 > Doc Class: `active`
-> Last Verified: `2026-02-12`
+> Last Verified: `2026-02-26`
 
 Production-ready scaffold for a credibility and connection platform with Individual and Organization personas.
 
@@ -53,9 +53,10 @@ flowchart LR
 ## Documentation map
 
 - Product/architecture: `PRD_TECHNICAL_REQUIREMENTS.md`, `SYSTEM_ARCHITECTURE_COMPREHENSIVE.md`, `SYSTEM_ARCHITECTURE_SUPPLEMENT.md`, `PRD_for_a_web_platform_MVP.md`.
-- APIs: `docs/API_REFERENCE.md` (historical API specs are archived under `docs/archive/legacy-platform/api-reference-history/`).
+- APIs: `docs/API_REFERENCE.md` (generated from `src/app/api/**/route.ts` via `node scripts/generate-api-reference.mjs`; historical API specs remain archived under `docs/archive/legacy-platform/api-reference-history/`).
 - Runbooks: `LAUNCH_RUNBOOK.md`, `PRODUCTION_CHECKLIST.md`, `APPLY_MIGRATIONS_MANUAL.md`, `RUN_MIGRATIONS_GUIDE.md`, `OAUTH_SETUP_GUIDE.md`, `SETUP_SUPABASE.md`.
 - Archives: historical docs are grouped under `docs/archive/legacy-platform/`, status reports under `docs/archive/status-reports/`, demo artifacts under `docs/archive/demos/`.
+- Public/legal pages and metadata surfaces: `/about`, `/manifesto`, `/careers`, `/contact`, `/support`, `/privacy`, `/terms`, `/cookies`, `/cookies/settings`, `src/lib/seo/public-metadata.ts`, `src/app/sitemap.ts`, `src/app/layout.tsx`, and `public/favicon.svg`.
 
 ## Tech Stack
 

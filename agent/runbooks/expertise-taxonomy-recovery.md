@@ -1,3 +1,6 @@
+> Doc Class: `active`
+> Last Verified: `2026-02-26`
+
 # Expertise Taxonomy Recovery Runbook
 
 ## Purpose

@@ -1,5 +1,8 @@
 # Manual Migration Instructions
 
+> Doc Class: `active`
+> Last Verified: `2026-02-26`
+
 Prefer the repository migration runner over ad hoc SQL execution.
 
 ## Standard Flow

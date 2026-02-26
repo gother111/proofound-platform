@@ -1,5 +1,8 @@
 # Testing Strategy
 
+> Doc Class: `active`
+> Last Verified: `2026-02-26`
+
 **Project**: Proofound MVP
 **Last Updated**: 2025-11-04
 
@@ -18,6 +21,7 @@ This document outlines the comprehensive testing strategy for the Proofound plat
 **Location**: `src/**/__tests__/*.test.ts`
 
 **Coverage**:
+
 - ✅ CSRF protection (`src/lib/__tests__/csrf.test.ts`) - 16 tests
 - ✅ Rate limiting (`src/lib/__tests__/rate-limit.test.ts`) - 13 tests
 - ✅ Analytics metrics (`src/lib/analytics/__tests__/metrics.test.ts`) - 27 tests
@@ -27,6 +31,7 @@ This document outlines the comprehensive testing strategy for the Proofound plat
 **Test Framework**: Vitest
 
 **Running Tests**:
+
 ```bash
 npm run test                    # Run all unit tests
 npm run test -- --watch        # Watch mode
@@ -44,6 +49,7 @@ Integration tests verify that different modules work together correctly, particu
 **Priority Endpoints to Test**:
 
 #### P0 - Critical Path
+
 1. **Authentication Flow** (`/api/auth/*`)
    - User signup
    - User login
@@ -63,6 +69,7 @@ Integration tests verify that different modules work together correctly, particu
    - Email notifications triggered
 
 #### P1 - Core Features
+
 4. **Data Export/Import** (`/api/data-export`, `/api/data-import`)
    - Full data export
    - Data import validation
@@ -122,6 +129,7 @@ describe('Matching API Integration', () => {
 ```
 
 **Database Setup for Integration Tests**:
+
 - Use dedicated test database (`.env.test`)
 - Seed minimal realistic data
 - Test database migrations
@@ -137,6 +145,7 @@ describe('Matching API Integration', () => {
 **Framework**: Playwright
 
 **Running E2E Tests**:
+
 ```bash
 npm run test:e2e           # Run all E2E tests headless
 npm run test:e2e:ui        # Run with Playwright UI
@@ -145,7 +154,9 @@ npm run test:e2e:ui        # Run with Playwright UI
 ### 📋 Critical E2E Test Scenarios
 
 #### Scenario 1: Individual User Signup to First Match
+
 **Steps**:
+
 1. User visits homepage
 2. Clicks "Sign Up" as individual
 3. Completes profile setup
@@ -167,7 +178,7 @@ test('Individual: signup to first match', async ({ page }) => {
   await page.click('[type="submit"]');
 
   // Complete onboarding
-  await page.click('text=I\'m an individual');
+  await page.click("text=I'm an individual");
   // ... fill out profile
 
   // Navigate to matching
@@ -183,7 +194,9 @@ test('Individual: signup to first match', async ({ page }) => {
 ```
 
 #### Scenario 2: Organization Posts Assignment to Acceptance
+
 **Steps**:
+
 1. Org user logs in
 2. Creates new assignment
 3. Assignment becomes active
@@ -194,7 +207,9 @@ test('Individual: signup to first match', async ({ page }) => {
 **Test File**: `tests/e2e/org-assignment-to-acceptance.spec.ts`
 
 #### Scenario 3: Complete Contract Signing Flow
+
 **Steps**:
+
 1. Candidate and org agree on match
 2. Contract created
 3. Candidate signs (attestation)
@@ -206,7 +221,9 @@ test('Individual: signup to first match', async ({ page }) => {
 **Test File**: `tests/e2e/contract-signing-flow.spec.ts`
 
 #### Scenario 4: Data Export and Import
+
 **Steps**:
+
 1. User with complete profile
 2. Requests data export
 3. Downloads JSON file
@@ -219,6 +236,7 @@ test('Individual: signup to first match', async ({ page }) => {
 ### E2E Test Best Practices
 
 1. **Use Page Object Pattern**:
+
 ```typescript
 // tests/e2e/pages/MatchingPage.ts
 export class MatchingPage {
@@ -239,6 +257,7 @@ export class MatchingPage {
 ```
 
 2. **Add data-testid attributes** to critical UI elements:
+
 ```tsx
 <div data-testid="match-card" data-assignment-id={assignment.id}>
   {/* Match content */}
@@ -246,6 +265,7 @@ export class MatchingPage {
 ```
 
 3. **Mock external services** (Zoom, Google Meet, Resend):
+
 ```typescript
 await page.route('**/api/auth/zoom/**', (route) => {
   route.fulfill({
@@ -264,6 +284,7 @@ await page.route('**/api/auth/zoom/**', (route) => {
 **Location**: `tests/privacy/*.test.ts`
 
 **Running RLS Tests**:
+
 ```bash
 npm run test:privacy          # Basic RLS policies
 npm run test:privacy:all      # All privacy tests
@@ -272,6 +293,7 @@ npm run test:privacy:watch    # Watch mode
 ```
 
 **What's Tested**:
+
 - Row-level security policies on all tables
 - User isolation (users can only see their own data)
 - Organization access control
@@ -286,6 +308,7 @@ npm run test:privacy:watch    # Watch mode
 **Tool**: [Artillery](https://www.artillery.io/) or [k6](https://k6.io/)
 
 **Critical Endpoints to Load Test**:
+
 1. `/api/core/matching/profile` - Matching engine (most expensive)
 2. `/api/metrics` - Analytics calculations
 3. `/api/contracts/*` - Contract operations
@@ -294,34 +317,36 @@ npm run test:privacy:watch    # Watch mode
 **Load Test Scenarios**:
 
 #### Scenario 1: Matching Engine Under Load
+
 ```yaml
 # artillery-matching.yml
 config:
-  target: "https://your-production-url.com"
+  target: 'https://your-production-url.com'
   phases:
     - duration: 60
       arrivalRate: 10
-      name: "Warm up"
+      name: 'Warm up'
     - duration: 180
       arrivalRate: 50
-      name: "Sustained load"
+      name: 'Sustained load'
     - duration: 60
       arrivalRate: 100
-      name: "Peak load"
+      name: 'Peak load'
 
 scenarios:
-  - name: "Match profile request"
+  - name: 'Match profile request'
     flow:
       - post:
-          url: "/api/core/matching/profile"
+          url: '/api/core/matching/profile'
           headers:
-            x-csrf-token: "{{ csrfToken }}"
+            x-csrf-token: '{{ csrfToken }}'
           json:
-            mode: "balanced"
+            mode: 'balanced'
             k: 20
 ```
 
 **Running Load Tests**:
+
 ```bash
 # Install Artillery
 npm install -g artillery
@@ -335,6 +360,7 @@ artillery report report.json
 ```
 
 **Performance Targets**:
+
 - Matching API: P95 < 500ms, P99 < 1000ms
 - Metrics API (cached): P95 < 200ms
 - Data Export: P95 < 3000ms
@@ -347,6 +373,7 @@ artillery report report.json
 ### ✅ Implemented Monitoring
 
 **Sentry Error Tracking**: Already configured
+
 - Location: `/src/instrumentation.ts`
 - Automatic error capture
 - Source maps uploaded to Sentry
@@ -354,6 +381,7 @@ artillery report report.json
 ### Monitoring Setup
 
 **Services**:
+
 1. **Sentry** (already configured) - Error tracking
 2. **Vercel Analytics** (included) - Performance monitoring
 3. **Better Uptime** or **Pingdom** - Uptime monitoring
@@ -361,6 +389,7 @@ artillery report report.json
 ### Critical Metrics to Monitor
 
 #### Application Metrics
+
 1. **Error Rate**
    - Target: < 0.1% of requests
    - Alert: > 1% error rate for 5 minutes
@@ -374,6 +403,7 @@ artillery report report.json
    - Alert: > 100 rate limit hits/hour
 
 #### Business Metrics
+
 4. **TTSC (Time to Signed Contract)**
    - Target: Median ≤ 30 days
    - Alert: Median > 35 days for 7 days
@@ -387,6 +417,7 @@ artillery report report.json
    - Alert: < 15% acceptance lift for 7 days
 
 #### Infrastructure Metrics
+
 7. **Database Connection Pool**
    - Monitor: Connection exhaustion
    - Alert: > 80% pool utilization
@@ -402,6 +433,7 @@ artillery report report.json
 ### Alert Configuration
 
 **Sentry Alerts** (already in Sentry UI):
+
 1. **New Error Type**: Notify immediately
 2. **Error Volume**: > 100 errors/hour
 3. **Performance Regression**: P95 > 1s
@@ -448,12 +480,15 @@ export async function GET() {
 ```
 
 **Cron Schedule** (in `vercel.json`):
+
 ```json
 {
-  "crons": [{
-    "path": "/api/cron/health-check",
-    "schedule": "*/5 * * * *"
-  }]
+  "crons": [
+    {
+      "path": "/api/cron/health-check",
+      "schedule": "*/5 * * * *"
+    }
+  ]
 }
 ```
 
@@ -475,6 +510,7 @@ console.log('Contract signed!'); // No context
 ```
 
 **Log Levels**:
+
 - `log.debug()`: Development-only details
 - `log.info()`: Normal operations (user actions, state changes)
 - `log.warn()`: Recoverable issues (rate limit hit, cache miss)
@@ -485,12 +521,14 @@ console.log('Contract signed!'); // No context
 ## 7. Test Coverage Goals
 
 ### Current Coverage
+
 - Unit tests: **56 tests** across critical modules
 - Integration tests: **0 tests** (to be implemented)
 - E2E tests: **Existing** (signup, matching flows)
 - RLS tests: **Comprehensive** (all tables covered)
 
 ### Coverage Targets
+
 - **Unit Tests**: > 80% coverage for business logic
 - **Integration Tests**: 100% coverage of critical API routes
 - **E2E Tests**: 100% coverage of critical user paths
@@ -526,47 +564,49 @@ console.log('Contract signed!'); // No context
 ### GitHub Actions Workflow
 
 ```yaml
-# .github/workflows/test.yml
-name: Test Suite
+# .github/workflows/ci.yml (required)
+name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [master, develop]
   pull_request:
-    branches: [main]
+    branches: [master, develop]
+    types: [opened, reopened, synchronize, ready_for_review]
+  pull_request_target:
+    branches: [master, develop]
+    types: [opened, reopened, synchronize, ready_for_review]
 
 jobs:
-  unit-tests:
+  ci:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version-file: '.nvmrc'
       - run: npm ci
-      - run: npm run test
-      - run: npm run test:privacy
-
-  e2e-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-      - run: npm ci
-      - run: npx playwright install --with-deps
-      - run: npm run test:e2e
-
-  type-check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-      - run: npm ci
+      - run: npm run docs:freshness
+      - run: npm run lint
       - run: npm run typecheck
+      - run: npm run db:drift-check
+      - run: npm run test
+      - run: npm run build
+      - run: npx playwright install --with-deps
+      - run: npm run test:e2e:auth:real
+      - run: npm run test:e2e:landing
+
+  a11y:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+      - run: npm ci
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:a11y
 ```
 
 ---
@@ -595,6 +635,6 @@ jobs:
 
 ---
 
-**Document Version**: 1.0
-**Last Updated**: 2025-11-04
+**Document Version**: 1.1
+**Last Updated**: 2026-02-26
 **Next Review**: Before production launch

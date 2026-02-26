@@ -1,8 +1,17 @@
 # Deployment Guide
 
+> Doc Class: `active`
+> Last Verified: `2026-02-26`
+
 ## Overview
 
 This guide provides step-by-step instructions for deploying the Proofound application to production using Vercel, Supabase, and associated services.
+
+Canonical deployment references for this repository:
+
+- Production branch: `master`
+- Production domain: `https://proofound.io`
+- Node runtime source of truth: `.nvmrc` (`20.20.0`) and `package.json` engines
 
 ---
 

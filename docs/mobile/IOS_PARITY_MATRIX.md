@@ -1,3 +1,6 @@
+> Doc Class: `reference-spec`
+> Last Verified: `2026-02-26`
+
 # iOS Parity Matrix (SwiftUI)
 
 Last updated: 2026-02-13

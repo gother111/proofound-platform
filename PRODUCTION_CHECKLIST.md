@@ -1,5 +1,8 @@
 # 🚀 Production Deployment Checklist
 
+> Doc Class: `active`
+> Last Verified: `2026-02-26`
+
 This checklist ensures your Proofound application is properly configured for production deployment on Vercel.
 
 ## ✅ Environment Variables (Vercel)

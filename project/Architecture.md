@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `Architecture.md`
-> Last Verified: `2026-02-12`
+> Last Verified: `2026-02-26`
 
 # Architecture Snapshot
 
@@ -57,8 +57,6 @@ This document records a lightweight, repo-grounded architecture view. Statements
 
 ## Risk Areas / TODOs
 
-- Repo Truth: CI tests Node 18.x and 20.x, but engines require Node >= 20.20.0. (source: .github/workflows/ci.yml, package.json, .nvmrc)
-- TODO: `npm run test:a11y` references `playwright.a11y.config.ts`; validate that file exists and is aligned. Do not create it in docs-only runs. (source: package.json)
-- TODO: `scripts/go-no-go-check.mjs` requires `ACCESSIBILITY_AUDIT_REPORT.md`; ensure the repo contains the required evidence file(s) before relying on this gate. Do not invent missing evidence files. (source: scripts/go-no-go-check.mjs)
 - Repo Truth: CSP/security headers are set in both `next.config.js` and `src/middleware.ts`. (source: next.config.js, src/middleware.ts)
-- Guidance: Coordinate changes across both to avoid conflicting policies.
+- Guidance: Coordinate security header changes across both surfaces to avoid policy drift.
+- Go/no-go evidence remains an operational dependency through `ACCESSIBILITY_AUDIT_REPORT.md` in `scripts/go-no-go-check.mjs`. (source: scripts/go-no-go-check.mjs, ACCESSIBILITY_AUDIT_REPORT.md)

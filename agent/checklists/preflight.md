@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `preflight.md`
-> Last Verified: `2026-02-12`
+> Last Verified: `2026-02-26`
 
 # Preflight Checklist (Before Making Changes)
 

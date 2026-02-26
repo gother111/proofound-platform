@@ -1,5 +1,8 @@
 # How to Run Database Migrations
 
+> Doc Class: `active`
+> Last Verified: `2026-02-26`
+
 ## Canonical Method (Recommended)
 
 This repository applies SQL migrations from `src/db/migrations/` via:

@@ -1,0 +1,958 @@
+{
+  "generatedAt": "2026-02-26T13:41:25.895Z",
+  "inScopeCount": 127,
+  "rows": [
+    {
+      "file": ".github/SECURITY.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": ".vercel-deploy-trigger.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-11-07",
+      "driftType": "none"
+    },
+    {
+      "file": "ACCESSIBILITY_AUDIT_REPORT.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "ADMIN_DASHBOARD_TESTING_GUIDE.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "AGENTS.md",
+      "class": "active",
+      "lastVerified": "2026-02-19",
+      "lastCommit": "2026-02-19",
+      "driftType": "none"
+    },
+    {
+      "file": "ANALYTICS_GDPR_SETUP.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-10-30",
+      "driftType": "none"
+    },
+    {
+      "file": "API_DOCUMENTATION_FINAL.md",
+      "class": "historical",
+      "lastVerified": "-",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "API_DOCUMENTATION_NEW_ENDPOINTS.md",
+      "class": "historical",
+      "lastVerified": "-",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "APPLY_MIGRATIONS_MANUAL.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-26",
+      "driftType": "freshness"
+    },
+    {
+      "file": "Architecture.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "CODEBASE_AUDIT_REPORT.md",
+      "class": "historical",
+      "lastVerified": "-",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "CROSS_DOCUMENT_PRIVACY_AUDIT.md",
+      "class": "reference-spec",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "DATA_REQUIREMENTS_AND_AI_STRATEGY.md",
+      "class": "reference-spec",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "DATA_SECURITY_PRIVACY_ARCHITECTURE.md",
+      "class": "reference-spec",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "DB_INTEGRATION_SUMMARY.md",
+      "class": "historical",
+      "lastVerified": "-",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "DEPLOYMENT_NOTES.md",
+      "class": "historical",
+      "lastVerified": "-",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "DEPLOYMENT_STEPS_SMART_SEARCH.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-11-05",
+      "driftType": "none"
+    },
+    {
+      "file": "Documentation.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "EMAIL_SUPPORT_SETUP.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-11-05",
+      "driftType": "none"
+    },
+    {
+      "file": "FIX_INSTRUCTIONS.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "FULL_PRODUCT_ARCHITECTURE_PLAN.md",
+      "class": "reference-spec",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-10-30",
+      "driftType": "none"
+    },
+    {
+      "file": "GDPR_ANALYTICS_FIX_COMPLETE.md",
+      "class": "historical",
+      "lastVerified": "-",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "IDENTITY_VERIFICATION_IMPLEMENTATION.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "IMPLEMENTATION_STATUS_CURRENT.md",
+      "class": "historical",
+      "lastVerified": "-",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "INTEGRATION_TEST_PLAN.md",
+      "class": "reference-spec",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-11-07",
+      "driftType": "none"
+    },
+    {
+      "file": "Implement.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "LAUNCH_RUNBOOK.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-19",
+      "driftType": "freshness"
+    },
+    {
+      "file": "LINEAR_SETUP_INSTRUCTIONS.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-10-29",
+      "driftType": "none"
+    },
+    {
+      "file": "LOGGING_MIGRATION_GUIDE.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-11-04",
+      "driftType": "none"
+    },
+    {
+      "file": "MANUAL_TESTING_CHECKLIST.md",
+      "class": "reference-spec",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-11-25",
+      "driftType": "none"
+    },
+    {
+      "file": "MANUAL_TESTING_GUIDE.md",
+      "class": "reference-spec",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-10-29",
+      "driftType": "none"
+    },
+    {
+      "file": "MCP_STATUS.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-11",
+      "driftType": "none"
+    },
+    {
+      "file": "METRICS_INSTRUMENTATION_COMPLETE.md",
+      "class": "historical",
+      "lastVerified": "-",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "OAUTH_SETUP_GUIDE.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-07",
+      "driftType": "none"
+    },
+    {
+      "file": "PRD_TECHNICAL_REQUIREMENTS.md",
+      "class": "reference-spec",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-23",
+      "driftType": "freshness"
+    },
+    {
+      "file": "PRD_for_a_web_platform_MVP.master-latest.md",
+      "class": "unregistered",
+      "lastVerified": "-",
+      "lastCommit": "2026-02-25",
+      "driftType": "orphan"
+    },
+    {
+      "file": "PRD_for_a_web_platform_MVP.md",
+      "class": "reference-spec",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-23",
+      "driftType": "freshness"
+    },
+    {
+      "file": "PRIVACY_DASHBOARD_IMPLEMENTATION_SUMMARY.md",
+      "class": "historical",
+      "lastVerified": "-",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "PRIVACY_DASHBOARD_TODO.md",
+      "class": "historical",
+      "lastVerified": "-",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "PRODUCTION_CHECKLIST.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-19",
+      "driftType": "freshness"
+    },
+    {
+      "file": "Plans.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "Prompt.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "Proofound_Core_User_Flows_v1.md",
+      "class": "reference-spec",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-10-30",
+      "driftType": "none"
+    },
+    {
+      "file": "Proofound_PRD_MVP.md",
+      "class": "reference-spec",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-23",
+      "driftType": "freshness"
+    },
+    {
+      "file": "QUICK_START.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "README.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-26",
+      "driftType": "freshness"
+    },
+    {
+      "file": "RESEARCH_FINDINGS_Skill_Quality_Best_Practices.md",
+      "class": "reference-spec",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-10-31",
+      "driftType": "none"
+    },
+    {
+      "file": "RLS_DEPLOYMENT_SUMMARY.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "RUN_MIGRATIONS_GUIDE.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-26",
+      "driftType": "freshness"
+    },
+    {
+      "file": "SECURITY_REVIEW_REPORT.md",
+      "class": "historical",
+      "lastVerified": "-",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "SETUP_SUPABASE.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-11",
+      "driftType": "none"
+    },
+    {
+      "file": "SPRINT_1_PLAN.md",
+      "class": "reference-spec",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "SUPABASE_FIGMA_ALIGNMENT_SUMMARY.md",
+      "class": "historical",
+      "lastVerified": "-",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "SUPABASE_MCP_COMPLETE.md",
+      "class": "historical",
+      "lastVerified": "-",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "SUPPORT.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-11-05",
+      "driftType": "none"
+    },
+    {
+      "file": "SYSTEM_ARCHITECTURE_COMPREHENSIVE.md",
+      "class": "reference-spec",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "SYSTEM_ARCHITECTURE_SUPPLEMENT.md",
+      "class": "reference-spec",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-10-29",
+      "driftType": "none"
+    },
+    {
+      "file": "UI_UX_AUDIT_REPORT.md",
+      "class": "historical",
+      "lastVerified": "-",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "USER_FLOWS_TECHNICAL_SPECIFICATIONS.md",
+      "class": "reference-spec",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-10-30",
+      "driftType": "none"
+    },
+    {
+      "file": "VERCEL_CRON_LIMIT_WORKAROUND.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-11-07",
+      "driftType": "none"
+    },
+    {
+      "file": "agent/checklists/preflight.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-19",
+      "driftType": "freshness"
+    },
+    {
+      "file": "agent/checklists/verification.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-26",
+      "driftType": "freshness"
+    },
+    {
+      "file": "agent/runbooks/expertise-taxonomy-recovery.md",
+      "class": "unregistered",
+      "lastVerified": "-",
+      "lastCommit": "2026-02-13",
+      "driftType": "orphan"
+    },
+    {
+      "file": "agent/runbooks/setup.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-26",
+      "driftType": "freshness"
+    },
+    {
+      "file": "agent/scratchpad.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-25",
+      "driftType": "freshness"
+    },
+    {
+      "file": "agent/scratchpad/README.md",
+      "class": "active",
+      "lastVerified": "2026-02-19",
+      "lastCommit": "2026-02-19",
+      "driftType": "none"
+    },
+    {
+      "file": "data/README-EXPERTISE-ATLAS-SKILLS.md",
+      "class": "reference-spec",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-12-07",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/ACCESSIBILITY.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/ACCESSIBILITY_TESTING_GUIDE.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-11-07",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/ANIMATION_NOTES.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-10-14",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/API_REFERENCE.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-23",
+      "driftType": "freshness"
+    },
+    {
+      "file": "docs/CRON_SETUP.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-11-03",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/DATA_PROCESSING_AGREEMENTS.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/DEPLOYMENT_CHECKLIST.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/DOCS_REGISTRY.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-19",
+      "driftType": "freshness"
+    },
+    {
+      "file": "docs/ENV_VARIABLES.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-19",
+      "driftType": "freshness"
+    },
+    {
+      "file": "docs/EXPERTISE_ATLAS_SETUP.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-23",
+      "driftType": "freshness"
+    },
+    {
+      "file": "docs/LINKEDIN_VERIFICATION_IMPLEMENTATION_SUMMARY.md",
+      "class": "historical",
+      "lastVerified": "-",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/LINKEDIN_VERIFICATION_SETUP.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-18",
+      "driftType": "freshness"
+    },
+    {
+      "file": "docs/RESEND_SETUP.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/RESTORATION_COMPLETE.md",
+      "class": "historical",
+      "lastVerified": "-",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/SECURITY_INCIDENT_RESPONSE_RUNBOOK.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/SPRINT_0_1_IMPLEMENTATION_SUMMARY.md",
+      "class": "historical",
+      "lastVerified": "-",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/STORAGE_SETUP.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-11-01",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/STYLEMAP.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-10-14",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/SUPABASE_MCP_SETUP.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-11",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/TROUBLESHOOTING_LINT.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-10-14",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/alert-configuration.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/api-documentation.md",
+      "class": "historical",
+      "lastVerified": "-",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/caching-pagination.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-11-03",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/deployment-guide.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-19",
+      "driftType": "freshness"
+    },
+    {
+      "file": "docs/features/cv-import-testing-guide.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-11-05",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/features/cv-import.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-11-05",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/final-production-readiness-summary.md",
+      "class": "historical",
+      "lastVerified": "-",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/local-dev.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-07",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/mobile/IOS_PARITY_MATRIX.md",
+      "class": "unregistered",
+      "lastVerified": "-",
+      "lastCommit": "2026-02-18",
+      "driftType": "orphan"
+    },
+    {
+      "file": "docs/monitoring-alerting.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/performance-testing.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/platform-completion-implementation-summary.md",
+      "class": "historical",
+      "lastVerified": "-",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/production-readiness-checklist.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/qa/bugs.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-07",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/qa/e2e-matrix.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-07",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/qa/summary.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-07",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/release-checklist.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/security-audit-report.md",
+      "class": "historical",
+      "lastVerified": "-",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/security-scan-results.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/sentry-setup.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/structured-logging.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-11-03",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/testing-strategy.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-11-04",
+      "driftType": "none"
+    },
+    {
+      "file": "docs/weeks-6-8-summary.md",
+      "class": "historical",
+      "lastVerified": "-",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "e2e/PRD_CRITERIA_VALIDATION.md",
+      "class": "reference-spec",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-12-04",
+      "driftType": "none"
+    },
+    {
+      "file": "metrics.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "preflight.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "project/Architecture.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "project/Documentation.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-25",
+      "driftType": "freshness"
+    },
+    {
+      "file": "project/Implement.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-19",
+      "driftType": "freshness"
+    },
+    {
+      "file": "project/MVP_FLOW_MATRIX_2026-02-12.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "project/PR_TRIAGE_2026-02.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "project/Plans.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "project/Prompt.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "project/changes/README.md",
+      "class": "active",
+      "lastVerified": "2026-02-19",
+      "lastCommit": "2026-02-19",
+      "driftType": "none"
+    },
+    {
+      "file": "setup.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "test-db-flows.md",
+      "class": "reference-spec",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-10-27",
+      "driftType": "none"
+    },
+    {
+      "file": "tests/load/RESULTS.md",
+      "class": "reference-spec",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-11-04",
+      "driftType": "none"
+    },
+    {
+      "file": "tests/privacy/ENV_SETUP.md",
+      "class": "reference-spec",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2025-10-30",
+      "driftType": "none"
+    },
+    {
+      "file": "tests/privacy/README.md",
+      "class": "reference-spec",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-06",
+      "driftType": "none"
+    },
+    {
+      "file": "verification.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "none"
+    },
+    {
+      "file": "Prompt.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "mirror"
+    },
+    {
+      "file": "Plans.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "mirror"
+    },
+    {
+      "file": "Architecture.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "mirror"
+    },
+    {
+      "file": "Implement.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "mirror"
+    },
+    {
+      "file": "setup.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "mirror"
+    },
+    {
+      "file": "preflight.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "mirror"
+    },
+    {
+      "file": "verification.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "mirror"
+    },
+    {
+      "file": "Documentation.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "mirror"
+    },
+    {
+      "file": "metrics.md",
+      "class": "active",
+      "lastVerified": "2026-02-12",
+      "lastCommit": "2026-02-12",
+      "driftType": "mirror"
+    }
+  ]
+}

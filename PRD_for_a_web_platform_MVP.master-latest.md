@@ -1,3 +1,6 @@
+> Doc Class: `reference-spec`
+> Last Verified: `2026-02-26`
+
 # Addendum — Public Portfolio Brief (v0.1)
 
 Objective: Make day-1 value tangible for both personas by guaranteeing a public, shareable portfolio URL that can be copied and sent immediately.

@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `Implement.md`
-> Last Verified: `2026-02-12`
+> Last Verified: `2026-02-26`
 
 # Implementation Operating Contract
 

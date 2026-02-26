@@ -1,6 +1,6 @@
 > Doc Class: `governance`
 > Sync Pair: `setup.md`
-> Last Verified: `2026-02-12`
+> Last Verified: `2026-02-26`
 
 # Setup Runbook (Local Dev + CI Parity)
 
@@ -144,7 +144,7 @@ Strict provider E2E deterministic account:
 
 - E2E: `npm run test:e2e` (Playwright config in `playwright.config.ts`) (source: package.json, playwright.config.ts)
 - A11y: `npm run test:a11y` (source: package.json)
-  - TODO: Validate `playwright.a11y.config.ts` exists; do not create it as part of docs bootstrap. (source: package.json)
+  - `playwright.a11y.config.ts` and `playwright.a11y.strict.config.ts` are both present in repo. (source: playwright.a11y.config.ts, playwright.a11y.strict.config.ts)
 
 ## CI Gates Beyond Tests (Repo Truth)
 
