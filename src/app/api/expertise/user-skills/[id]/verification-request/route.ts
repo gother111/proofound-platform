@@ -13,7 +13,7 @@ import {
 
 const CreateVerificationRequestSchema = z.object({
   verifierSource: z.enum(['peer', 'manager', 'external']),
-  verifierEmail: z.string().email('Valid email is required'),
+  verifierEmail: z.string().trim().email('Valid email is required'),
   message: z.string().optional(),
 });
 

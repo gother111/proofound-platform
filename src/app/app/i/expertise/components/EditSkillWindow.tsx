@@ -33,6 +33,7 @@ const LEVEL_LABELS = [
   { value: 4, label: 'Advanced', description: 'Deep expertise' },
   { value: 5, label: 'Expert', description: 'Recognized authority' },
 ];
+const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 function deriveProofTitleFromUrl(rawUrl: string): string {
   try {
@@ -51,10 +52,47 @@ function deriveProofTitleFromUrl(rawUrl: string): string {
   }
 }
 
+function toDateInputValue(value?: string | null): string {
+  if (!value) return '';
+
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+
+  if (DATE_ONLY_PATTERN.test(trimmed)) {
+    return trimmed;
+  }
+
+  const parsed = new Date(trimmed);
+  if (Number.isNaN(parsed.getTime())) {
+    return '';
+  }
+
+  return parsed.toISOString().split('T')[0];
+}
+
+function normalizeLastUsedAtForPayload(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return new Date().toISOString();
+  }
+
+  if (DATE_ONLY_PATTERN.test(trimmed)) {
+    return `${trimmed}T00:00:00.000Z`;
+  }
+
+  const parsed = new Date(trimmed);
+  if (Number.isNaN(parsed.getTime())) {
+    return trimmed;
+  }
+
+  return parsed.toISOString();
+}
+
 type SkillRecord = {
   id: string;
   level?: number;
   last_used_at?: string;
+  lastUsedAt?: string;
   relevance?: 'current' | 'emerging' | 'obsolete';
   skill_name?: string;
   custom_skill_name?: string;
@@ -128,9 +166,7 @@ export function EditSkillWindow({
       }
 
       setLevel(skill.level || 2);
-      setLastUsedDate(
-        skill.last_used_at ? new Date(skill.last_used_at).toISOString().split('T')[0] : ''
-      );
+      setLastUsedDate(toDateInputValue(skill.last_used_at || skill.lastUsedAt || ''));
       setProofUploading(false);
       setProofUploadError(null);
       setProofUploadName('');
@@ -195,7 +231,7 @@ export function EditSkillWindow({
     try {
       const payload = {
         level,
-        last_used_at: lastUsedDate || new Date().toISOString(),
+        last_used_at: normalizeLastUsedAtForPayload(lastUsedDate),
       };
 
       const response = await apiFetch(`/api/expertise/user-skills/${skill.id}`, {
@@ -426,7 +462,8 @@ export function EditSkillWindow({
   };
 
   const handleRequestVerification = async () => {
-    if (!newVerificationRequest.verifierEmail) {
+    const normalizedVerifierEmail = newVerificationRequest.verifierEmail.trim().toLowerCase();
+    if (!normalizedVerifierEmail) {
       return;
     }
 
@@ -437,7 +474,10 @@ export function EditSkillWindow({
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(newVerificationRequest),
+          body: JSON.stringify({
+            ...newVerificationRequest,
+            verifierEmail: normalizedVerifierEmail,
+          }),
         }
       );
 
@@ -450,7 +490,7 @@ export function EditSkillWindow({
         if (data.email_sent) {
           toast({
             title: '✉️ Verification Request Sent',
-            description: `An email has been sent to ${newVerificationRequest.verifierEmail}.`,
+            description: `An email has been sent to ${normalizedVerifierEmail}.`,
           });
         } else {
           toast({

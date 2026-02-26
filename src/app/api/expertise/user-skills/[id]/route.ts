@@ -2,10 +2,59 @@ import { requireApiAuthContext } from '@/lib/auth';
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
 
+const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const ISO_DATE_TIME_WITH_OFFSET_SCHEMA = z.string().datetime({ offset: true });
+const ISO_DATE_TIME_SCHEMA = z.string().datetime();
+
+function isValidDateOnly(value: string): boolean {
+  if (!DATE_ONLY_PATTERN.test(value)) {
+    return false;
+  }
+
+  const [year, month, day] = value.split('-').map((part) => Number.parseInt(part, 10));
+  const normalized = new Date(Date.UTC(year, month - 1, day));
+
+  return (
+    normalized.getUTCFullYear() === year &&
+    normalized.getUTCMonth() === month - 1 &&
+    normalized.getUTCDate() === day
+  );
+}
+
+function normalizeLastUsedAt(value: string): string {
+  if (DATE_ONLY_PATTERN.test(value)) {
+    return `${value}T00:00:00.000Z`;
+  }
+
+  return value;
+}
+
+const LastUsedAtSchema = z
+  .string()
+  .trim()
+  .superRefine((value, ctx) => {
+    if (isValidDateOnly(value)) {
+      return;
+    }
+
+    if (
+      ISO_DATE_TIME_SCHEMA.safeParse(value).success ||
+      ISO_DATE_TIME_WITH_OFFSET_SCHEMA.safeParse(value).success
+    ) {
+      return;
+    }
+
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'last_used_at must be a valid ISO datetime or YYYY-MM-DD date',
+    });
+  })
+  .transform((value) => normalizeLastUsedAt(value));
+
 const UpdateSkillSchema = z.object({
   level: z.number().int().min(1).max(5).optional(),
   relevance: z.enum(['obsolete', 'current', 'emerging']).optional(),
-  last_used_at: z.string().datetime().optional(),
+  last_used_at: LastUsedAtSchema.optional(),
   months_experience: z.number().int().min(0).optional(),
 });
 

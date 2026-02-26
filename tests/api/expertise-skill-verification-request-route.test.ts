@@ -171,6 +171,35 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
     expect(sentEmailPayload.html).toContain('https://proofound.io/verify/');
   });
 
+  it('accepts verifier emails with surrounding whitespace', async () => {
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://proofound.io';
+    process.env.NEXT_PUBLIC_APP_URL = '';
+
+    const { supabase, inserts } = createSupabaseMock();
+    authContext.supabase = supabase;
+    (sendEmail as any).mockResolvedValue({ success: true, id: 'email-2' });
+
+    const response = await POST(
+      createRequest('https://proofound.io', {
+        verifierSource: 'peer',
+        verifierEmail: '  Mentor@Example.COM  ',
+      }),
+      params
+    );
+
+    expect(response.status).toBe(201);
+    const body = await response.json();
+    expect(body.email_sent).toBe(true);
+    expect(body.request.id).toBe(inserts[0].id);
+    expect(inserts[0].verifier_email).toBe('mentor@example.com');
+
+    expect(sendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: 'mentor@example.com',
+      })
+    );
+  });
+
   it('returns email_sent=false while keeping request persisted when email fails', async () => {
     process.env.NEXT_PUBLIC_SITE_URL = '';
     process.env.NEXT_PUBLIC_APP_URL = '';

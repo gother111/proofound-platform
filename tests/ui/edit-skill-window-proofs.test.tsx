@@ -325,4 +325,124 @@ describe('EditSkillWindow proof refresh behavior', () => {
     await screen.findByText('You have reached the maximum of 5 proofs for this skill.');
     expect(screen.getByRole('button', { name: 'Add Proof' })).toBeDisabled();
   });
+
+  it('normalizes last_used_at to ISO datetime when saving edited skill details', async () => {
+    const onOpenChange = vi.fn();
+
+    apiFetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
+      if (url.endsWith('/proofs') && !init?.method) {
+        return mockResponse({ proofs: [] });
+      }
+      if (url.endsWith('/verification-request') && !init?.method) {
+        return mockResponse({ requests: [] });
+      }
+      if (url.endsWith('/user-skills/skill-1') && init?.method === 'PATCH') {
+        return mockResponse({ skill: { id: 'skill-1' } });
+      }
+      return mockResponse({});
+    });
+
+    render(
+      <EditSkillWindow
+        open
+        onOpenChange={onOpenChange}
+        skill={{ ...baseSkill, last_used_at: '2026-02-20T14:45:00.000Z' }}
+        onSkillUpdated={vi.fn()}
+        onSkillDeleted={vi.fn()}
+      />
+    );
+
+    await waitFor(() =>
+      expect(apiFetchMock).toHaveBeenCalledWith('/api/expertise/user-skills/skill-1/proofs')
+    );
+
+    fireEvent.change(screen.getByLabelText('Last Used'), {
+      target: { value: '2026-02-26' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
+
+    await waitFor(() =>
+      expect(apiFetchMock).toHaveBeenCalledWith(
+        '/api/expertise/user-skills/skill-1',
+        expect.objectContaining({ method: 'PATCH' })
+      )
+    );
+
+    const patchCall = apiFetchMock.mock.calls.find(
+      ([url, init]) =>
+        url === '/api/expertise/user-skills/skill-1' &&
+        (init as RequestInit | undefined)?.method === 'PATCH'
+    );
+
+    expect(patchCall).toBeTruthy();
+    const patchInit = patchCall?.[1] as RequestInit;
+    const payload = JSON.parse(patchInit.body as string);
+
+    expect(payload.last_used_at).toBe('2026-02-26T00:00:00.000Z');
+    await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+  });
+
+  it('normalizes verifier email before requesting verification from edit flow', async () => {
+    apiFetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
+      if (url.endsWith('/proofs') && !init?.method) {
+        return mockResponse({ proofs: [] });
+      }
+      if (url.endsWith('/verification-request') && !init?.method) {
+        return mockResponse({ requests: [] });
+      }
+      if (url.endsWith('/verification-request') && init?.method === 'POST') {
+        return mockResponse({
+          request: {
+            id: 'req-1',
+            status: 'pending',
+            verifier_source: 'peer',
+            verifier_email: 'mentor@example.com',
+            created_at: '2026-02-26T00:00:00.000Z',
+          },
+          email_sent: true,
+        });
+      }
+      return mockResponse({});
+    });
+
+    render(
+      <EditSkillWindow
+        open
+        onOpenChange={vi.fn()}
+        skill={baseSkill}
+        onSkillUpdated={vi.fn()}
+        onSkillDeleted={vi.fn()}
+      />
+    );
+
+    await waitFor(() =>
+      expect(apiFetchMock).toHaveBeenCalledWith('/api/expertise/user-skills/skill-1/proofs')
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Request Verification' }));
+    fireEvent.change(screen.getByLabelText('Verifier Email'), {
+      target: { value: '  Mentor@Example.COM  ' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Send Request' }));
+
+    await waitFor(() =>
+      expect(apiFetchMock).toHaveBeenCalledWith(
+        '/api/expertise/user-skills/skill-1/verification-request',
+        expect.objectContaining({ method: 'POST' })
+      )
+    );
+
+    const verificationCall = apiFetchMock.mock.calls.find(
+      ([url, init]) =>
+        url === '/api/expertise/user-skills/skill-1/verification-request' &&
+        (init as RequestInit | undefined)?.method === 'POST'
+    );
+
+    expect(verificationCall).toBeTruthy();
+    const verificationInit = verificationCall?.[1] as RequestInit;
+    const payload = JSON.parse(verificationInit.body as string);
+
+    expect(payload.verifierEmail).toBe('mentor@example.com');
+  });
 });
