@@ -29,10 +29,10 @@ function createRequest(origin: string, body: Record<string, unknown>) {
   });
 }
 
-function createSupabaseMock(
-  insertResult: { id: string },
-  options?: { missingTokenColumnOnFirstInsert?: boolean; requesterEmail?: string | null }
-) {
+function createSupabaseMock(options?: {
+  missingTokenColumnOnFirstInsert?: boolean;
+  requesterEmail?: string | null;
+}) {
   const inserts: any[] = [];
   let insertCalls = 0;
 
@@ -63,33 +63,26 @@ function createSupabaseMock(
   };
 
   const verificationRequestsQuery = {
-    insert: vi.fn().mockImplementation((payload: any) => {
+    select: vi.fn().mockImplementation(() => {
+      throw new Error('Unexpected post-insert select invocation');
+    }),
+    insert: vi.fn().mockImplementation(async (payload: any) => {
       inserts.push(payload);
       insertCalls += 1;
-      return {
-        select: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue(
-            options?.missingTokenColumnOnFirstInsert &&
-              insertCalls === 1 &&
-              payload?.verification_token
-              ? {
-                  data: null,
-                  error: {
-                    code: 'PGRST204',
-                    message:
-                      "Could not find the 'verification_token' column of 'skill_verification_requests' in the schema cache",
-                  },
-                }
-              : {
-                  data: {
-                    ...insertResult,
-                    ...payload,
-                  },
-                  error: null,
-                }
-          ),
-        }),
-      };
+      if (
+        options?.missingTokenColumnOnFirstInsert &&
+        insertCalls === 1 &&
+        payload?.verification_token
+      ) {
+        return {
+          error: {
+            code: 'PGRST204',
+            message:
+              "Could not find the 'verification_token' column of 'skill_verification_requests' in the schema cache",
+          },
+        };
+      }
+      return { error: null };
     }),
   };
 
@@ -112,7 +105,7 @@ function createSupabaseMock(
     }),
   };
 
-  return { supabase, inserts };
+  return { supabase, inserts, verificationRequestsQuery };
 }
 
 describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
@@ -122,7 +115,7 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    const { supabase } = createSupabaseMock({ id: 'bootstrap' });
+    const { supabase } = createSupabaseMock();
     authContext = {
       user: {
         id: 'user-1',
@@ -143,7 +136,7 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
     process.env.NEXT_PUBLIC_SITE_URL = 'https://proofound.io';
     process.env.NEXT_PUBLIC_APP_URL = '';
 
-    const { supabase, inserts } = createSupabaseMock({ id: 'req-1' });
+    const { supabase, inserts } = createSupabaseMock();
     authContext.supabase = supabase;
     (sendEmail as any).mockResolvedValue({ success: true, id: 'email-1' });
 
@@ -159,6 +152,7 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
     expect(response.status).toBe(201);
     const body = await response.json();
     expect(body.email_sent).toBe(true);
+    expect(body.request.id).toBe(inserts[0].id);
 
     expect(inserts[0]).toMatchObject({
       verifier_email: 'mentor@example.com',
@@ -181,7 +175,7 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
     process.env.NEXT_PUBLIC_SITE_URL = '';
     process.env.NEXT_PUBLIC_APP_URL = '';
 
-    const { supabase, inserts } = createSupabaseMock({ id: 'req-2' });
+    const { supabase, inserts } = createSupabaseMock();
     authContext.supabase = supabase;
     (sendEmail as any).mockResolvedValue({ success: false, error: 'Email service not configured' });
 
@@ -196,7 +190,7 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
     expect(response.status).toBe(201);
     const body = await response.json();
     expect(body.email_sent).toBe(false);
-    expect(body.request.id).toBe('req-2');
+    expect(body.request.id).toBe(inserts[0].id);
 
     expect(inserts[0].verifier_email).toBe('boss@company.com');
 
@@ -208,10 +202,7 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
     process.env.NEXT_PUBLIC_SITE_URL = 'https://proofound.io';
     process.env.NEXT_PUBLIC_APP_URL = '';
 
-    const { supabase, inserts } = createSupabaseMock(
-      { id: '123e4567-e89b-42d3-a456-426614174000' },
-      { missingTokenColumnOnFirstInsert: true }
-    );
+    const { supabase, inserts } = createSupabaseMock({ missingTokenColumnOnFirstInsert: true });
     authContext.supabase = supabase;
     (sendEmail as any).mockResolvedValue({ success: true, id: 'email-legacy' });
 
@@ -226,7 +217,7 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
     expect(response.status).toBe(201);
     const body = await response.json();
     expect(body.email_sent).toBe(true);
-    expect(body.request.id).toBe('123e4567-e89b-42d3-a456-426614174000');
+    expect(body.request.id).toBe(inserts[1].id);
 
     expect(inserts).toHaveLength(2);
     expect(inserts[0].verification_token).toMatch(/^[a-f0-9]{64}$/);
@@ -234,9 +225,27 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
     expect(inserts[1].verifier_email).toBe('legacy@example.com');
 
     const sentEmailPayload = (sendEmail as any).mock.calls[0][0];
-    expect(sentEmailPayload.html).toContain(
-      'https://proofound.io/verify/123e4567-e89b-42d3-a456-426614174000'
+    expect(sentEmailPayload.html).toContain(`https://proofound.io/verify/${inserts[1].id}`);
+  });
+
+  it('creates request without post-insert readback selection', async () => {
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://proofound.io';
+    process.env.NEXT_PUBLIC_APP_URL = '';
+
+    const { supabase, verificationRequestsQuery } = createSupabaseMock();
+    authContext.supabase = supabase;
+    (sendEmail as any).mockResolvedValue({ success: true, id: 'email-no-readback' });
+
+    const response = await POST(
+      createRequest('https://proofound.io', {
+        verifierSource: 'peer',
+        verifierEmail: 'NoReadback@Example.COM',
+      }),
+      params
     );
+
+    expect(response.status).toBe(201);
+    expect(verificationRequestsQuery.select).not.toHaveBeenCalled();
   });
 
   it('returns 401 when API auth context is unavailable', async () => {

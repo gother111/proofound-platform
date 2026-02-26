@@ -1,7 +1,7 @@
 import { requireApiAuthContext } from '@/lib/auth';
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
-import { randomBytes } from 'crypto';
+import { randomBytes, randomUUID } from 'crypto';
 import { sendEmail } from '@/lib/email/sender';
 import { resolveSiteUrlFromHeaders } from '@/lib/env';
 import {
@@ -121,6 +121,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     // Generate secure verification token for magic link
+    const verificationRequestId = randomUUID();
+    const createdAt = new Date().toISOString();
     const verificationToken = generateVerificationToken();
 
     // Calculate expiration (7 days from now per PRD F7)
@@ -128,6 +130,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     expiresAt.setDate(expiresAt.getDate() + 7);
 
     const verificationInsert = {
+      id: verificationRequestId,
       skill_id: skillId,
       requester_profile_id: user.id,
       requester_email_snapshot: integrityAssessment.normalizedRequesterEmail,
@@ -151,35 +154,39 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       requester_ip_hash: integrityAssessment.requesterFingerprints.ipHash,
       requester_user_agent_hash: integrityAssessment.requesterFingerprints.userAgentHash,
       verification_token: verificationToken,
+      status: 'pending',
       expires_at: expiresAt.toISOString(),
     };
 
     // Create verification request with token. Fallback to legacy insert when
     // the DB has not received the verification_token migration yet.
-    const { data: verificationRequestWithToken, error: createWithTokenError } = await supabase
+    const { error: createWithTokenError } = await supabase
       .from('skill_verification_requests')
-      .insert(verificationInsert)
-      .select()
-      .single();
+      .insert(verificationInsert);
 
-    let verificationRequest = verificationRequestWithToken;
+    let verificationRequest: Omit<typeof verificationInsert, 'verification_token'> & {
+      verification_token?: string;
+      created_at: string;
+      responded_at: null;
+      response_message: null;
+    } = {
+      ...verificationInsert,
+      created_at: createdAt,
+      responded_at: null,
+      response_message: null,
+    };
     let linkToken = verificationToken;
 
-    if (
-      !verificationRequestWithToken &&
-      isMissingVerificationTokenColumnError(createWithTokenError)
-    ) {
+    if (isMissingVerificationTokenColumnError(createWithTokenError)) {
       console.warn(
         'verification_token column missing, retrying legacy verification request insert'
       );
       const { verification_token: _ignored, ...legacyInsert } = verificationInsert;
-      const { data: legacyVerificationRequest, error: legacyInsertError } = await supabase
+      const { error: legacyInsertError } = await supabase
         .from('skill_verification_requests')
-        .insert(legacyInsert)
-        .select()
-        .single();
+        .insert(legacyInsert);
 
-      if (legacyInsertError || !legacyVerificationRequest) {
+      if (legacyInsertError) {
         console.error('Error creating verification request (legacy fallback):', {
           code: legacyInsertError?.code,
           message: legacyInsertError?.message,
@@ -192,9 +199,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         );
       }
 
-      verificationRequest = legacyVerificationRequest;
-      linkToken = legacyVerificationRequest.id;
-    } else if (createWithTokenError || !verificationRequestWithToken) {
+      delete verificationRequest.verification_token;
+      linkToken = verificationRequestId;
+    } else if (createWithTokenError) {
       console.error('Error creating verification request:', {
         code: createWithTokenError?.code,
         message: createWithTokenError?.message,
