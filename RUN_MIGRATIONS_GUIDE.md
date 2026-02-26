@@ -1,43 +1,51 @@
-# How to Run Critical Gaps Migrations
+# How to Run Database Migrations
 
-## Recommended Method: Supabase CLI (Remote)
+## Canonical Method (Recommended)
 
-This repo uses Supabase migrations (tracked in `supabase/migrations/`). The canonical migration history is stored remotely in `supabase_migrations.schema_migrations`.
-
-Because the remote DB is accessed via the Supabase pooler (`:6543`), the Supabase CLI must be run with pooler-safe settings (disable prepared statement caching).
-
-1. Ensure `.env.local` has `DATABASE_URL`.
-2. Build a CLI connection string where:
-   - the password is percent-encoded
-   - the URL includes: `sslmode=require&statement_cache_capacity=0&prefer_simple_protocol=true&pgbouncer=true`
-3. Run:
+This repository applies SQL migrations from `src/db/migrations/` via:
 
 ```bash
-supabase db push --db-url "postgresql://...:6543/postgres?sslmode=require&statement_cache_capacity=0&prefer_simple_protocol=true&pgbouncer=true" --dry-run
-supabase db push --db-url "postgresql://...:6543/postgres?sslmode=require&statement_cache_capacity=0&prefer_simple_protocol=true&pgbouncer=true" --yes
+npm run db:migrate
+```
+
+`db:migrate` also tracks supplemental versions for `src/db/policies.sql` and `src/db/triggers.sql` in `public.app_migration_ledger`.
+
+## Safety Sequence
+
+Before applying production DDL, run:
+
+```bash
+npm run db:backup:checkpoint
+npm run db:audit:migrations
+npm run db:migrate
+```
+
+- `db:audit:migrations` (default mode) checks canonical parity:
+  - local: `src/db/migrations/*.sql` + supplemental policy/trigger versions
+  - remote: `public.app_migration_ledger`
+
+## Optional Legacy Supabase Audit
+
+For strict legacy parity against the current DB history baseline, run:
+
+```bash
+npm run db:audit:migrations -- --mode legacy-supabase-baseline --baseline supabase/ledger-baseline/schema_migrations.current-db.json
+```
+
+This checks remote `supabase_migrations.schema_migrations` against the committed baseline snapshot.
+
+Diagnostics-only legacy file inventory comparison remains available:
+
+```bash
+npm run db:audit:migrations -- --mode legacy-supabase
 ```
 
 ## Verification
 
-If you need to confirm critical gaps tables exist:
+After migration apply, run:
 
-```sql
-select table_name
-from information_schema.tables
-where table_schema = 'public'
-  and table_name in ('interviews', 'fairness_reports', 'matching_profiles')
-order by table_name;
+```bash
+npm run typecheck
+npm run test
+npm run build
 ```
-
-## ⚠️ Troubleshooting
-
-If the Supabase CLI errors with prepared statement collisions, the DB URL is missing one of:
-
-- `statement_cache_capacity=0`
-- `prefer_simple_protocol=true`
-- `pgbouncer=true`
-
-**If you get permission errors:**
-
-- Make sure you're logged in as the project owner
-- Check that you have database access enabled

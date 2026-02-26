@@ -106,7 +106,9 @@ Repo Truth items include citations like `(source: README.md)`. Anything else is 
 ## Migration and Data Safety (Before Production DDL)
 
 - Create a checkpoint: `npm run db:backup:checkpoint`
-- Reconcile migration ledger: `npm run db:audit:migrations`
+- Reconcile canonical migration ledger: `npm run db:audit:migrations`
+- Optional strict legacy baseline parity audit: `npm run db:audit:migrations -- --mode legacy-supabase-baseline --baseline supabase/ledger-baseline/schema_migrations.current-db.json`
+- Diagnostics-only legacy file inventory audit: `npm run db:audit:migrations -- --mode legacy-supabase`
 - Apply production schema changes through ordered SQL under `src/db/migrations/*.sql` and apply with `npm run db:migrate` (prefer `DIRECT_URL` for DDL).
 - Do not run `npm run db:push` against production.
 

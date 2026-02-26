@@ -1,0 +1,455 @@
+{
+  "capturedAt": "2026-02-26T09:32:24.026Z",
+  "source": "current-configured-database-url",
+  "rowCount": 112,
+  "rows": [
+    {
+      "version": "20251001000000",
+      "name": "base_schema"
+    },
+    {
+      "version": "20251025184033",
+      "name": "20251025_create_matching_tables"
+    },
+    {
+      "version": "20251025195143",
+      "name": "add_expertise_tables"
+    },
+    {
+      "version": "20251025200533",
+      "name": "restore_expertise_tables"
+    },
+    {
+      "version": "20251025200555",
+      "name": "restore_expertise_policies"
+    },
+    {
+      "version": "20251025221657",
+      "name": "enable_rls_critical_tables"
+    },
+    {
+      "version": "20251025221705",
+      "name": "add_missing_rls_policies"
+    },
+    {
+      "version": "20251025222138",
+      "name": "optimize_rls_policies_performance"
+    },
+    {
+      "version": "20251025222159",
+      "name": "optimize_rls_policies_performance_part2"
+    },
+    {
+      "version": "20251025222211",
+      "name": "optimize_rls_policies_performance_part3"
+    },
+    {
+      "version": "20251025222221",
+      "name": "optimize_rls_policies_performance_part4"
+    },
+    {
+      "version": "20251025222230",
+      "name": "optimize_rls_policies_performance_part5"
+    },
+    {
+      "version": "20251025222234",
+      "name": "consolidate_audit_logs_policies"
+    },
+    {
+      "version": "20251025222241",
+      "name": "add_foreign_key_indexes"
+    },
+    {
+      "version": "20251025222244",
+      "name": "fix_function_search_paths"
+    },
+    {
+      "version": "20251025222256",
+      "name": "fix_remaining_function_search_paths"
+    },
+    {
+      "version": "20251025222307",
+      "name": "fix_duplicate_index"
+    },
+    {
+      "version": "20251026090543",
+      "name": "fix_org_member_policy"
+    },
+    {
+      "version": "20251026094406",
+      "name": "update_trigger_for_persona_metadata"
+    },
+    {
+      "version": "20251026095007",
+      "name": "fix_org_member_insert_policy"
+    },
+    {
+      "version": "20251026095444",
+      "name": "fix_organizations_rls_policies"
+    },
+    {
+      "version": "20251026095454",
+      "name": "fix_organization_members_all_rls_policies"
+    },
+    {
+      "version": "20251026101150",
+      "name": "fix_org_member_insert_policy_self_owner"
+    },
+    {
+      "version": "20251026101207",
+      "name": "align_other_org_member_policies"
+    },
+    {
+      "version": "20251026102120",
+      "name": "reset_org_member_policies_simple"
+    },
+    {
+      "version": "20251026102217",
+      "name": "restore_org_member_policies"
+    },
+    {
+      "version": "20251026102734",
+      "name": "fix_org_member_rls_no_recursion"
+    },
+    {
+      "version": "20251027152240",
+      "name": "fix_organization_rls_for_onboarding"
+    },
+    {
+      "version": "20251028111923",
+      "name": "backfill_persona_metadata"
+    },
+    {
+      "version": "20251029165008",
+      "name": "enable_pgvector_extension"
+    },
+    {
+      "version": "20251029165134",
+      "name": "add_skills_taxonomy"
+    },
+    {
+      "version": "20251029165244",
+      "name": "add_project_skills_linkage"
+    },
+    {
+      "version": "20251029165349",
+      "name": "add_benefits_and_work_authorization"
+    },
+    {
+      "version": "20251029165453",
+      "name": "add_assignment_workflow_system"
+    },
+    {
+      "version": "20251029204426",
+      "name": "extend_organization_profile"
+    },
+    {
+      "version": "20251030163238",
+      "name": "enable_rls_policies_existing_tables"
+    },
+    {
+      "version": "20251031083729",
+      "name": "add_identity_verification"
+    },
+    {
+      "version": "20251031090514",
+      "name": "add_work_email_unique_constraint"
+    },
+    {
+      "version": "20251031090622",
+      "name": "add_skill_code_foreign_key"
+    },
+    {
+      "version": "20251031112120",
+      "name": "fix_org_members_select_policy_recursion"
+    },
+    {
+      "version": "20251031112239",
+      "name": "fix_org_members_select_policy_simple"
+    },
+    {
+      "version": "20251031112244",
+      "name": "fix_org_members_select_policy_with_rls_bypass"
+    },
+    {
+      "version": "20251031112251",
+      "name": "fix_organizations_select_policy_recursion"
+    },
+    {
+      "version": "20251031112310",
+      "name": "remove_duplicate_recursive_policies"
+    },
+    {
+      "version": "20251031112431",
+      "name": "fix_organizations_update_policies_recursion"
+    },
+    {
+      "version": "20251031112443",
+      "name": "improve_is_org_member_function_replace"
+    },
+    {
+      "version": "20251031112455",
+      "name": "fix_is_org_member_use_bypass"
+    },
+    {
+      "version": "20251031113104",
+      "name": "final_fix_org_members_recursion"
+    },
+    {
+      "version": "20251031132929",
+      "name": "remove_duplicate_recursive_policies"
+    },
+    {
+      "version": "20251101093700",
+      "name": "add_vision_causes_wellbeing_tables"
+    },
+    {
+      "version": "20251101201843",
+      "name": "add_linkedin_verification"
+    },
+    {
+      "version": "20251104140456",
+      "name": "final_fix_org_members_recursion"
+    },
+    {
+      "version": "20251104140459",
+      "name": "remove_duplicate_recursive_policies"
+    },
+    {
+      "version": "20251104140504",
+      "name": "add_org_impact_and_visibility"
+    },
+    {
+      "version": "20251104140610",
+      "name": "create_dashboard_layouts_and_apply_updates"
+    },
+    {
+      "version": "20251105000000",
+      "name": "add_skills_search_indexes"
+    },
+    {
+      "version": "20251105192010",
+      "name": "add_fairness_reports_table"
+    },
+    {
+      "version": "20251105192012",
+      "name": "add_matching_profiles_table"
+    },
+    {
+      "version": "20251105192047",
+      "name": "add_interviews_table"
+    },
+    {
+      "version": "20251105192050",
+      "name": "add_fairness_reports_table"
+    },
+    {
+      "version": "20251106",
+      "name": "20251106_staged_messaging_system"
+    },
+    {
+      "version": "20251107000000",
+      "name": "verification_privacy"
+    },
+    {
+      "version": "20251107193724",
+      "name": "add_analytics_events"
+    },
+    {
+      "version": "20251107193744",
+      "name": "add_sus_responses"
+    },
+    {
+      "version": "20251107193749",
+      "name": "add_video_integrations"
+    },
+    {
+      "version": "20251107193901",
+      "name": "add_decisions_and_reminders_v2"
+    },
+    {
+      "version": "20251107193929",
+      "name": "add_web_vitals_metrics"
+    },
+    {
+      "version": "20251107193937",
+      "name": "add_profile_snippets"
+    },
+    {
+      "version": "20251108",
+      "name": "20251108_add_analytics_events"
+    },
+    {
+      "version": "20251109",
+      "name": "add_embedding_columns"
+    },
+    {
+      "version": "20251124205743",
+      "name": "add_missing_individual_profile_columns"
+    },
+    {
+      "version": "20251124211613",
+      "name": "add_skills_relevance_column"
+    },
+    {
+      "version": "20251124212225",
+      "name": "add_profile_field_visibility_table"
+    },
+    {
+      "version": "20251124212543",
+      "name": "add_messaging_and_notifications_tables"
+    },
+    {
+      "version": "20251124212736",
+      "name": "create_skill_proofs_and_verification_tables"
+    },
+    {
+      "version": "20251124212759",
+      "name": "create_user_integrations_table"
+    },
+    {
+      "version": "20251124213802",
+      "name": "add_org_id_column_to_analytics_events"
+    },
+    {
+      "version": "20251124213911",
+      "name": "add_verification_token"
+    },
+    {
+      "version": "20251124214426",
+      "name": "enable_realtime_for_messaging"
+    },
+    {
+      "version": "20251124220207",
+      "name": "update_interviews_platform_constraint"
+    },
+    {
+      "version": "20251125100704",
+      "name": "enable_rls_user_tables"
+    },
+    {
+      "version": "20251125100726",
+      "name": "enable_rls_admin_tables"
+    },
+    {
+      "version": "20251125100909",
+      "name": "fix_function_search_path"
+    },
+    {
+      "version": "20251208131316",
+      "name": "add_assignment_templates"
+    },
+    {
+      "version": "20251208131332",
+      "name": "20251208_two_way_feedback_loop"
+    },
+    {
+      "version": "20251208163055",
+      "name": "add_outcomes_to_assignments"
+    },
+    {
+      "version": "20251208185350",
+      "name": "20251208_add_profile_deletion_columns"
+    },
+    {
+      "version": "20260203000000",
+      "name": "enable_rls_security_advisor"
+    },
+    {
+      "version": "20260203144204",
+      "name": "enable_rls_security_advisor"
+    },
+    {
+      "version": "20260204",
+      "name": "security_advisor_fixes"
+    },
+    {
+      "version": "20260205000000",
+      "name": "schema_alignment"
+    },
+    {
+      "version": "20260205152855",
+      "name": "20260205180000_optimize_rls_initplan"
+    },
+    {
+      "version": "20260205152931",
+      "name": "20260205181000_dedupe_rls_policies"
+    },
+    {
+      "version": "20260205152944",
+      "name": "20260205182000_rls_service_role_only"
+    },
+    {
+      "version": "20260205152957",
+      "name": "20260205183000_add_missing_fk_indexes"
+    },
+    {
+      "version": "20260205153050",
+      "name": "20260205181000_dedupe_rls_policies"
+    },
+    {
+      "version": "20260205153102",
+      "name": "20260205182000_rls_service_role_only"
+    },
+    {
+      "version": "20260205153114",
+      "name": "20260205183000_add_missing_fk_indexes"
+    },
+    {
+      "version": "20260205153126",
+      "name": "20260205184000_drop_duplicate_indexes"
+    },
+    {
+      "version": "20260205153306",
+      "name": "20260205184500_add_missing_fk_indexes_followup"
+    },
+    {
+      "version": "20260205160000",
+      "name": "security_advisor_view_rls_fixes"
+    },
+    {
+      "version": "20260205170000",
+      "name": "fix_function_search_path_more"
+    },
+    {
+      "version": "20260205190000",
+      "name": "analytics_events_hardening"
+    },
+    {
+      "version": "20260208234500",
+      "name": "db_verify_missing_objects"
+    },
+    {
+      "version": "20260208235500",
+      "name": "profiles_platform_role_protect"
+    },
+    {
+      "version": "20260211123000",
+      "name": "20260211123000_cron_idempotency_guards"
+    },
+    {
+      "version": "20260211185000",
+      "name": "20260211185000_tighten_verification_requests_rls"
+    },
+    {
+      "version": "20260212110000",
+      "name": "20260212110000_extend_profile_snippets_for_org"
+    },
+    {
+      "version": "20260212163500",
+      "name": "profile_field_visibility_contract_parity"
+    },
+    {
+      "version": "20260212164500",
+      "name": "profile_field_visibility_legacy_constraint_relax"
+    },
+    {
+      "version": "20260212183000",
+      "name": "20260212183000_eu_launch_readiness_hardening"
+    },
+    {
+      "version": "99999999999999",
+      "name": "seed_expertise_atlas_skills"
+    }
+  ]
+}

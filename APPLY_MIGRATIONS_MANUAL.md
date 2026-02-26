@@ -1,70 +1,53 @@
 # Manual Migration Instructions
 
-Prefer applying migrations via `supabase db push` (remote). Only use the Dashboard for emergency hotfixes.
+Prefer the repository migration runner over ad hoc SQL execution.
 
-## Recommended: Apply Via CLI (Remote)
+## Standard Flow
 
-This repo uses the Supabase pooler (`:6543`), which requires disabling prepared statement caching for the Supabase CLI.
-
-1. Read `DATABASE_URL` from `.env.local`.
-2. Percent-encode the password portion (but not the entire URL).
-3. Append pooler-safe params:
-   - `statement_cache_capacity=0`
-   - `prefer_simple_protocol=true`
-   - `pgbouncer=true`
-4. Run:
+1. Create a DB checkpoint:
 
 ```bash
-supabase db push --db-url "postgresql://...:6543/postgres?sslmode=require&statement_cache_capacity=0&prefer_simple_protocol=true&pgbouncer=true" --dry-run
-supabase db push --db-url "postgresql://...:6543/postgres?sslmode=require&statement_cache_capacity=0&prefer_simple_protocol=true&pgbouncer=true" --yes
+npm run db:backup:checkpoint
 ```
 
-## Notes On Legacy Migration Files
+2. Audit canonical migration parity:
 
-Some older migration scripts (for example staged messaging + verification privacy) are **not safe to re-apply** on an already-migrated database (they include non-idempotent `CREATE POLICY` / `CREATE INDEX` statements). Those files are kept for reference under:
-
-`supabase/migrations_legacy/`
-
-The canonical migration history is the remote `supabase_migrations.schema_migrations` table.
-
-## Verify Success (Remote)
-
-Run this query to confirm tables were created:
-
-```sql
-SELECT table_name,
-       (SELECT COUNT(*) FROM information_schema.columns c WHERE c.table_name = t.table_name) as column_count
-FROM information_schema.tables t
-WHERE table_schema = 'public'
-  AND table_name IN ('conversations', 'messages', 'verification_requests')
-ORDER BY table_name;
+```bash
+npm run db:audit:migrations
 ```
 
-Expected result:
+3. Apply migrations:
 
-- conversations: 17 columns
-- messages: 12 columns
-- verification_requests: 19 columns
-
-Check RLS policy counts:
-
-```sql
-SELECT tablename, COUNT(*) as policy_count
-FROM pg_policies
-WHERE schemaname = 'public'
-  AND tablename IN ('conversations', 'messages', 'verification_requests')
-GROUP BY tablename
-ORDER BY tablename;
+```bash
+npm run db:migrate
 ```
 
-Expected:
+## Ledger Modes
 
-- conversations: ~8 policies
-- messages: ~4 policies
-- verification_requests: ~6 policies
+- Default audit mode (`canonical`) checks:
+  - Local `src/db/migrations/*.sql` + supplemental policy/trigger versions
+  - Remote `public.app_migration_ledger`
+- Optional strict legacy baseline audit:
 
----
+```bash
+npm run db:audit:migrations -- --mode legacy-supabase-baseline --baseline supabase/ledger-baseline/schema_migrations.current-db.json
+```
 
-## ✅ Success!
+- Optional diagnostics-only legacy file inventory audit:
 
-Once both migrations are applied, your staged messaging and verification privacy systems are live!
+```bash
+npm run db:audit:migrations -- --mode legacy-supabase
+```
+
+## Notes
+
+- Do not use `npm run db:push` for production.
+- Do not rely on direct SQL execution for migration tracking. Use `db:migrate` so versions are recorded in `public.app_migration_ledger`.
+
+## Verify Success
+
+```bash
+npm run typecheck
+npm run test
+npm run build
+```

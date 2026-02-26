@@ -162,7 +162,9 @@ PATH=/opt/homebrew/opt/node@20/bin:$PATH npm run db:seed-taxonomy
 - `npm run db:drift-check` — Enforce canonical migration-path discipline in CI.
 - `npm run db:push` — Dev-only. Push the current schema directly to a database (bypasses migration files). Do not use this for production.
 - `npm run db:backup:checkpoint` — Create a database checkpoint before risky DDL.
-- `npm run db:audit:migrations` — Audit Supabase migration ledger drift (local files vs remote `supabase_migrations.schema_migrations`).
+- `npm run db:audit:migrations` — Audit canonical migration ledger drift (`src/db/migrations` + supplemental policy/trigger versions vs `public.app_migration_ledger`).
+  - Strict legacy baseline audit: `npm run db:audit:migrations -- --mode legacy-supabase-baseline --baseline supabase/ledger-baseline/schema_migrations.current-db.json`.
+  - Optional diagnostics-only file inventory audit: `npm run db:audit:migrations -- --mode legacy-supabase`.
 - `npm run db:seed` — Seed feature flags (and demo data when enabled).
 - `npm run db:seed-taxonomy` — Seed the expertise taxonomy slice used by matching.
 
@@ -251,7 +253,7 @@ npm run db:migrate       # Run ordered SQL migrations + policy/trigger supplemen
 npm run db:drift-check   # Check migration path drift
 npm run db:push          # Dev-only schema push (do not use for production)
 npm run db:backup:checkpoint  # Create a DB checkpoint before risky DDL
-npm run db:audit:migrations   # Audit Supabase migration ledger drift
+npm run db:audit:migrations   # Audit canonical migration ledger drift
 npm run db:studio        # Open Drizzle Studio
 npm run db:seed          # Seed database
 

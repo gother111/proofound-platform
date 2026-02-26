@@ -134,7 +134,10 @@ Strict provider E2E deterministic account:
   - `RUN_MIGRATIONS_GUIDE.md`, `APPLY_MIGRATIONS_MANUAL.md` (source: RUN_MIGRATIONS_GUIDE.md, APPLY_MIGRATIONS_MANUAL.md)
 - Safety scripts:
   - `npm run db:backup:checkpoint` creates schema and critical-table checkpoints before production DDL.
-  - Migration ledger checks are run via `npm run db:drift-check` and `npm run db:migrate` against `src/db/migrations/` (and `src/db/policies.sql`/`src/db/triggers.sql` where applicable).
+  - `npm run db:audit:migrations` audits canonical ledger parity for `src/db/migrations/` plus supplemental policy/trigger versions against `public.app_migration_ledger`.
+  - Strict legacy baseline audit: `npm run db:audit:migrations -- --mode legacy-supabase-baseline --baseline supabase/ledger-baseline/schema_migrations.current-db.json`.
+  - Diagnostics-only legacy file inventory audit: `npm run db:audit:migrations -- --mode legacy-supabase`.
+  - Migration path discipline is enforced via `npm run db:drift-check` and migration apply via `npm run db:migrate`.
 - Policy: do not run `npm run db:push` against production. Use explicit SQL migration files.
 
 ## E2E / Accessibility (Repo Truth)
