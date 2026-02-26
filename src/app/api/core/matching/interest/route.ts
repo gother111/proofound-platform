@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { and, eq, inArray, isNull, or } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
 import {
   assignments,
@@ -38,7 +38,11 @@ async function hasOrgAccess(userId: string, orgId: string) {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const body = await request.json();
     const validated = InterestSchema.parse(body);
     const { assignmentId, targetProfileId } = validated;
@@ -289,7 +293,11 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const { searchParams } = new URL(request.url);
     const assignmentId = searchParams.get('assignmentId');
 

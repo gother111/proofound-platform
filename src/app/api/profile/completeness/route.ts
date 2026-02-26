@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
-import { createClient } from '@/lib/supabase/server';
+import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
 import { profiles, skills, skillProofs, skillVerificationRequests, experiences } from '@/db/schema';
 import { eq, and, count } from 'drizzle-orm';
@@ -24,8 +23,11 @@ interface NextBestAction {
  */
 export async function GET() {
   try {
-    const user = await requireAuth();
-    const supabase = await createClient();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user, supabase } = authContext;
 
     // Fetch profile data
     const { data: profile } = await supabase

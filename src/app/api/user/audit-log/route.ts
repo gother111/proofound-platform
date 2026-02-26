@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { desc, eq, sql } from 'drizzle-orm';
 import { analyticsEvents } from '@/db/schema';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { log } from '@/lib/log';
 import { db } from '@/db';
 
@@ -16,16 +16,16 @@ const AuditLogQuerySchema = z.object({
 
 /**
  * GET /api/user/audit-log
- * 
+ *
  * GDPR Article 15 (Right to Access) - Audit Log
- * 
+ *
  * Fetches recent user activity from the user_audit_log view (backed by analytics_events)
  * Returns last 50 events by default with pagination support
- * 
+ *
  * Query params:
  * - limit: Number of events to return (default: 50, max: 200)
  * - offset: Pagination offset (default: 0)
- * 
+ *
  * Response includes:
  * - timestamp: When the action occurred
  * - action: Type of event (e.g., "profile_updated", "match_accepted")
@@ -35,7 +35,11 @@ const AuditLogQuerySchema = z.object({
  */
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
 
     // Parse and validate query parameters
     const { searchParams } = new URL(request.url);
@@ -74,17 +78,16 @@ export async function GET(request: NextRequest) {
     // Transform events for user-friendly display
     const transformedEvents = events.map((event) => {
       // Abbreviate IP hash for display (first 8 chars + "...")
-      const abbreviatedIpHash = event.ipHash 
-        ? `${event.ipHash.substring(0, 8)}...` 
-        : 'N/A';
+      const abbreviatedIpHash = event.ipHash ? `${event.ipHash.substring(0, 8)}...` : 'N/A';
 
       // Parse device from user agent hash (simplified - in production, use a proper UA parser)
       // For now, we'll extract from properties if available, or show hash
-      const device = event.properties && typeof event.properties === 'object' && 'device' in event.properties
-        ? String(event.properties.device)
-        : event.userAgentHash 
-          ? `Device (${event.userAgentHash.substring(0, 8)}...)`
-          : 'Unknown';
+      const device =
+        event.properties && typeof event.properties === 'object' && 'device' in event.properties
+          ? String(event.properties.device)
+          : event.userAgentHash
+            ? `Device (${event.userAgentHash.substring(0, 8)}...)`
+            : 'Unknown';
 
       // Convert event type to human-readable action
       const humanReadableAction = convertEventTypeToHumanReadable(event.action);
@@ -148,43 +151,44 @@ export async function GET(request: NextRequest) {
 function convertEventTypeToHumanReadable(eventType: string): string {
   const actionMap: Record<string, string> = {
     // Profile actions
-    'profile_created': 'Created profile',
-    'profile_updated': 'Updated profile',
-    'profile_viewed': 'Viewed profile',
-    
+    profile_created: 'Created profile',
+    profile_updated: 'Updated profile',
+    profile_viewed: 'Viewed profile',
+
     // Skills & expertise
-    'skill_added': 'Added skill',
-    'skill_updated': 'Updated skill',
-    'capability_verified': 'Skill verified',
-    
+    skill_added: 'Added skill',
+    skill_updated: 'Updated skill',
+    capability_verified: 'Skill verified',
+
     // Matching
-    'match_viewed': 'Viewed match',
-    'match_accepted': 'Accepted match',
-    'match_declined': 'Declined match',
-    'interest_expressed': 'Expressed interest',
-    
+    match_viewed: 'Viewed match',
+    match_accepted: 'Accepted match',
+    match_declined: 'Declined match',
+    interest_expressed: 'Expressed interest',
+
     // Messaging
-    'message_sent': 'Sent message',
-    'conversation_started': 'Started conversation',
-    
+    message_sent: 'Sent message',
+    conversation_started: 'Started conversation',
+
     // Projects
-    'project_created': 'Created project',
-    'project_updated': 'Updated project',
-    
+    project_created: 'Created project',
+    project_updated: 'Updated project',
+
     // Auth
-    'signed_in': 'Signed in',
-    'signed_out': 'Signed out',
-    'password_changed': 'Changed password',
-    
+    signed_in: 'Signed in',
+    signed_out: 'Signed out',
+    password_changed: 'Changed password',
+
     // Privacy
-    'data_exported': 'Downloaded data',
-    'account_deletion_requested': 'Requested account deletion',
-    'account_deletion_cancelled': 'Cancelled account deletion',
-    
+    data_exported: 'Downloaded data',
+    account_deletion_requested: 'Requested account deletion',
+    account_deletion_cancelled: 'Cancelled account deletion',
+
     // Analytics
-    'page_view': 'Viewed page',
+    page_view: 'Viewed page',
   };
 
-  return actionMap[eventType] || eventType.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  return (
+    actionMap[eventType] || eventType.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+  );
 }
-

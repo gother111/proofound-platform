@@ -6,14 +6,18 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { calculateNextActions } from '@/lib/analytics/next-actions';
 import { log } from '@/lib/log';
 import { createClient } from '@/lib/supabase/server';
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const { searchParams } = new URL(request.url);
     const orgId = searchParams.get('orgId');
 
@@ -41,7 +45,10 @@ export async function GET(request: NextRequest) {
     }
 
     if (!membership) {
-      return NextResponse.json({ error: 'Forbidden: No access to this organization' }, { status: 403 });
+      return NextResponse.json(
+        { error: 'Forbidden: No access to this organization' },
+        { status: 403 }
+      );
     }
 
     const actions = await calculateNextActions(orgId);

@@ -9,7 +9,7 @@ import { eq } from 'drizzle-orm';
 
 import { db } from '@/db';
 import { matchingProfiles } from '@/db/schema';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { log } from '@/lib/log';
 
 const DEFAULT_WEIGHTS = {
@@ -153,7 +153,11 @@ async function upsertCompatProfile(userId: string, data: z.infer<typeof CompatPr
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const parsed = CompatProfileSchema.safeParse(await req.json());
 
     if (!parsed.success) {
@@ -179,7 +183,11 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const parsed = CompatProfileSchema.safeParse(await req.json());
 
     if (!parsed.success) {
@@ -209,7 +217,11 @@ export async function PUT(req: NextRequest) {
 
 export async function GET() {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
 
     const profile = await db.query.matchingProfiles.findFirst({
       where: eq(matchingProfiles.profileId, user.id),

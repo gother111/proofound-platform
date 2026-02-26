@@ -7,14 +7,18 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { computeSkillGaps } from '@/lib/skills/gap-service';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const search = request.nextUrl.searchParams;
 
     const roleFilter = search.get('role') || undefined;
@@ -44,4 +48,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

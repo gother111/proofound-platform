@@ -8,7 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
 import { projects, organizations } from '@/db/schema';
 import { eq, and, desc, sql } from 'drizzle-orm';
@@ -33,7 +33,11 @@ const CreateProjectSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
 
     // Get query parameters for filtering
     const searchParams = request.nextUrl.searchParams;
@@ -111,7 +115,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const body = await request.json();
 
     // Validate input

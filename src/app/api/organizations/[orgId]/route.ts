@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
 import { organizations, organizationMembers } from '@/db/schema';
 import { and, eq } from 'drizzle-orm';
@@ -131,7 +131,11 @@ export async function GET(
   { params }: { params: Promise<{ orgId: string }> }
 ) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const { orgId } = await params;
 
     // Verify user is a member of the organization
@@ -171,7 +175,11 @@ export async function PUT(
   { params }: { params: Promise<{ orgId: string }> }
 ) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const { orgId } = await params;
 
     // Verify user has admin or owner role

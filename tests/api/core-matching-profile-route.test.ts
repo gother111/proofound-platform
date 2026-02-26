@@ -3,10 +3,11 @@ import { NextRequest } from 'next/server';
 
 import { GET, PUT } from '@/app/api/core/matching/matching-profile/route';
 import { db } from '@/db';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext, requireAuth } from '@/lib/auth';
 import { evaluateIndividualMatchability } from '@/lib/matching/eligibility';
 
 vi.mock('@/lib/auth', () => ({
+  requireApiAuthContext: vi.fn(),
   requireAuth: vi.fn(),
 }));
 
@@ -46,6 +47,10 @@ describe('core matching profile route', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    (requireApiAuthContext as any).mockImplementation(async () => {
+      const user = await (requireAuth as any)();
+      return user ? { user, supabase: {} } : null;
+    });
     (requireAuth as any).mockResolvedValue({ id: userId });
     (evaluateIndividualMatchability as any).mockResolvedValue({
       eligible: false,

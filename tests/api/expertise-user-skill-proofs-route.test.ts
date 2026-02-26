@@ -2,16 +2,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
 import { POST } from '@/app/api/expertise/user-skills/[id]/proofs/route';
-import { createClient } from '@/lib/supabase/server';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { emitSkillProofAddedAsync } from '@/lib/analytics/events';
 
-vi.mock('@/lib/supabase/server', () => ({
-  createClient: vi.fn(),
-}));
-
 vi.mock('@/lib/auth', () => ({
-  requireAuth: vi.fn(),
+  requireApiAuthContext: vi.fn(),
 }));
 
 vi.mock('@/lib/analytics/events', () => ({
@@ -81,14 +76,19 @@ function createSupabaseMock() {
 }
 
 describe('expertise user-skill proofs route', () => {
+  const authContext: { user: { id: string }; supabase: unknown } = {
+    user: { id: 'user-1' },
+    supabase: null,
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(requireAuth).mockResolvedValue({ id: 'user-1' } as any);
+    vi.mocked(requireApiAuthContext).mockImplementation(async () => authContext as any);
   });
 
   it('creates proof with deterministic title fallback when only URL is provided', async () => {
     const { supabase, proofInsertQuery } = createSupabaseMock();
-    vi.mocked(createClient).mockResolvedValue(supabase as any);
+    authContext.supabase = supabase;
 
     const request = new NextRequest('http://localhost/api/expertise/user-skills/skill-1/proofs', {
       method: 'POST',
@@ -123,7 +123,7 @@ describe('expertise user-skill proofs route', () => {
 
   it('creates a document proof when uploaded file path is provided', async () => {
     const { supabase, proofInsertQuery } = createSupabaseMock();
-    vi.mocked(createClient).mockResolvedValue(supabase as any);
+    authContext.supabase = supabase;
 
     const request = new NextRequest('http://localhost/api/expertise/user-skills/skill-1/proofs', {
       method: 'POST',
@@ -151,7 +151,7 @@ describe('expertise user-skill proofs route', () => {
 
   it('persists optional expiration date when provided', async () => {
     const { supabase, proofInsertQuery } = createSupabaseMock();
-    vi.mocked(createClient).mockResolvedValue(supabase as any);
+    authContext.supabase = supabase;
 
     const request = new NextRequest('http://localhost/api/expertise/user-skills/skill-1/proofs', {
       method: 'POST',
@@ -179,7 +179,7 @@ describe('expertise user-skill proofs route', () => {
 
   it('returns explicit validation message when title and URL are missing', async () => {
     const { supabase } = createSupabaseMock();
-    vi.mocked(createClient).mockResolvedValue(supabase as any);
+    authContext.supabase = supabase;
 
     const request = new NextRequest('http://localhost/api/expertise/user-skills/skill-1/proofs', {
       method: 'POST',
@@ -200,7 +200,7 @@ describe('expertise user-skill proofs route', () => {
 
   it('returns validation error when expiration date is before issued date', async () => {
     const { supabase, proofInsertQuery } = createSupabaseMock();
-    vi.mocked(createClient).mockResolvedValue(supabase as any);
+    authContext.supabase = supabase;
 
     const request = new NextRequest('http://localhost/api/expertise/user-skills/skill-1/proofs', {
       method: 'POST',
@@ -224,7 +224,7 @@ describe('expertise user-skill proofs route', () => {
   it('rejects proof creation when skill already has the maximum number of proofs', async () => {
     const { supabase, proofInsertQuery, setExistingProofCount } = createSupabaseMock();
     setExistingProofCount(5);
-    vi.mocked(createClient).mockResolvedValue(supabase as any);
+    authContext.supabase = supabase;
 
     const request = new NextRequest('http://localhost/api/expertise/user-skills/skill-1/proofs', {
       method: 'POST',

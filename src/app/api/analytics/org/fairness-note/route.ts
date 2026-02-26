@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
 import { fairnessNotes, analyticsEvents } from '@/db/schema';
 import { desc, eq, sql } from 'drizzle-orm';
@@ -14,7 +14,11 @@ import { log } from '@/lib/log';
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const { searchParams } = new URL(request.url);
     const orgSlug = searchParams.get('orgSlug');
 

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { eq, sql } from 'drizzle-orm';
 import { profiles } from '@/db/schema';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { log } from '@/lib/log';
 import { db } from '@/db';
 import { createClient } from '@/lib/supabase/server';
@@ -30,7 +30,11 @@ const AccountDeletionSchema = z.object({
  */
 export async function DELETE(request: NextRequest) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
 
     // Parse and validate request body
     const body = await request.json();
@@ -178,7 +182,11 @@ export async function DELETE(request: NextRequest) {
  */
 export async function GET() {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
 
     const [profile] = await db
       .select({

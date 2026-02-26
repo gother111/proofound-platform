@@ -3,9 +3,10 @@ import { NextRequest } from 'next/server';
 
 import { GET, POST } from '@/app/api/matching/profile/route';
 import { db } from '@/db';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext, requireAuth } from '@/lib/auth';
 
 vi.mock('@/lib/auth', () => ({
+  requireApiAuthContext: vi.fn(),
   requireAuth: vi.fn(),
 }));
 
@@ -32,6 +33,10 @@ const now = new Date('2026-02-12T00:00:00.000Z');
 describe('matching profile legacy compatibility route', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    (requireApiAuthContext as any).mockImplementation(async () => {
+      const user = await (requireAuth as any)();
+      return user ? { user, supabase: {} } : null;
+    });
   });
 
   it('persists and returns compat name/constraints in POST flow', async () => {

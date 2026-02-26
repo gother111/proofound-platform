@@ -6,7 +6,7 @@ import { assignmentOutcomes, assignments, organizations } from '@/db/schema';
 import { checkAndEmitAssignmentActivation } from '@/lib/assignments/activation';
 import { verifyAssignmentMutationAccess } from '@/lib/assignments/access';
 import { emitAssignmentPublishSucceeded } from '@/lib/analytics/events';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
 import { isFeatureEnabled } from '@/lib/feature-flags/server';
 import { log } from '@/lib/log';
@@ -75,7 +75,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   let assignmentId: string | undefined;
 
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const resolved = await params;
     assignmentId = resolved.id;
 

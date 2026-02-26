@@ -3,9 +3,10 @@ import { NextRequest } from 'next/server';
 
 import { POST } from '@/app/api/assignments/[id]/publish/route';
 import { db } from '@/db';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext, requireAuth } from '@/lib/auth';
 
 vi.mock('@/lib/auth', () => ({
+  requireApiAuthContext: vi.fn(),
   requireAuth: vi.fn(),
 }));
 
@@ -39,6 +40,10 @@ describe('assignment publish route', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    (requireApiAuthContext as any).mockImplementation(async () => {
+      const user = await (requireAuth as any)();
+      return user ? { user, supabase: {} } : null;
+    });
   });
 
   it('publishes assignment for authorized org member', async () => {

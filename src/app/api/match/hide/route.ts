@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
 import { matches, assignments, organizations } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
@@ -34,7 +34,11 @@ function normalizeVector(raw: unknown) {
  */
 export async function GET() {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
 
     // Fetch all, then filter hidden in JS to tolerate legacy stringified vectors
     const rows = await db
@@ -86,7 +90,11 @@ export async function GET() {
  */
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const body = await request.json();
     const { matchId } = body;
 
@@ -127,7 +135,11 @@ export async function POST(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const { searchParams } = new URL(request.url);
     const matchId = searchParams.get('matchId');
 
@@ -161,4 +173,3 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to unhide match' }, { status: 500 });
   }
 }
-

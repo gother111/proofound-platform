@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
 import { fairnessMetrics, demographicOptIns, matches, assignments } from '@/db/schema';
 import { eq, and, isNotNull } from 'drizzle-orm';
@@ -16,7 +16,11 @@ export async function GET(
   { params }: { params: Promise<{ assignmentId: string }> }
 ) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const { assignmentId } = await params;
 
     // Verify user has permission to view this assignment
@@ -172,7 +176,11 @@ export async function POST(
   { params }: { params: Promise<{ assignmentId: string }> }
 ) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const { assignmentId } = await params;
 
     // Delete existing metrics

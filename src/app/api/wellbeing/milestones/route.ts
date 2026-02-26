@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
 import { analyticsEvents } from '@/db/schema';
 import { and, eq, inArray, gte } from 'drizzle-orm';
@@ -20,7 +20,9 @@ const MILESTONE_EVENTS = [
 
 type MilestoneEvent = (typeof MILESTONE_EVENTS)[number];
 
-function mapEventToMilestone(eventType: MilestoneEvent): 'interview' | 'offer' | 'rejection' | null {
+function mapEventToMilestone(
+  eventType: MilestoneEvent
+): 'interview' | 'offer' | 'rejection' | null {
   if (eventType === 'interview_completed') return 'interview';
   if (eventType === 'contract_signed') return 'offer';
   if (eventType === 'contract_declined' || eventType === 'decision_made') return 'rejection';
@@ -29,7 +31,11 @@ function mapEventToMilestone(eventType: MilestoneEvent): 'interview' | 'offer' |
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
 
     const daysParam = request.nextUrl.searchParams.get('days');
     const days = Number.parseInt(daysParam || '7', 10);

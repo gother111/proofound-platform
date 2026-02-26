@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
 import { userIntegrations } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
@@ -16,7 +16,11 @@ export async function DELETE(
   { params }: { params: Promise<{ provider: string }> }
 ) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const { provider } = await params;
 
     if (!['zoom', 'google', 'linkedin'].includes(provider)) {
@@ -26,7 +30,12 @@ export async function DELETE(
     // Delete integration
     await db
       .delete(userIntegrations)
-      .where(and(eq(userIntegrations.userId, user.id), eq(userIntegrations.provider, provider as 'zoom' | 'google' | 'linkedin')));
+      .where(
+        and(
+          eq(userIntegrations.userId, user.id),
+          eq(userIntegrations.provider, provider as 'zoom' | 'google' | 'linkedin')
+        )
+      );
 
     return NextResponse.json({
       success: true,

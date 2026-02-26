@@ -2,19 +2,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 
 vi.mock('@/lib/auth', () => ({
-  requireAuth: vi.fn(),
-}));
-
-vi.mock('@/lib/supabase/server', () => ({
-  createClient: vi.fn(),
+  requireApiAuthContext: vi.fn(),
 }));
 
 vi.mock('@/lib/notifications', () => ({
   notifyVerificationCompleted: vi.fn(),
 }));
 
-import { requireAuth } from '@/lib/auth';
-import { createClient } from '@/lib/supabase/server';
+import { requireApiAuthContext } from '@/lib/auth';
 import { notifyVerificationCompleted } from '@/lib/notifications';
 import { POST } from '@/app/api/expertise/verification/[requestId]/respond/route';
 
@@ -36,10 +31,6 @@ describe('POST /api/expertise/verification/[requestId]/respond', () => {
 
     let requestedProfileId = '';
     let updatePayload: Record<string, unknown> | null = null;
-
-    (requireAuth as any).mockResolvedValue({
-      id: 'verifier-user-1',
-    });
 
     const supabase = {
       auth: {
@@ -102,7 +93,12 @@ describe('POST /api/expertise/verification/[requestId]/respond', () => {
       }),
     };
 
-    (createClient as any).mockResolvedValue(supabase);
+    (requireApiAuthContext as any).mockResolvedValue({
+      user: {
+        id: 'verifier-user-1',
+      },
+      supabase,
+    });
 
     const response = await POST(
       new NextRequest(`http://localhost/api/expertise/verification/${requestId}/respond`, {

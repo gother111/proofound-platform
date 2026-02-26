@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
 import { matches, assignments, organizations } from '@/db/schema';
 import { eq, and, isNotNull, gt } from 'drizzle-orm';
@@ -13,7 +13,11 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET() {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const now = new Date();
 
     // Fetch snoozed matches with assignment and org details

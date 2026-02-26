@@ -8,7 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import {
   getPendingSUSPrompts,
   markPromptAsShown,
@@ -18,7 +18,11 @@ import { log } from '@/lib/log';
 
 export async function GET() {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
 
     const prompt = await getPendingSUSPrompts(user.id);
     if (!prompt) {
@@ -45,7 +49,11 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const { promptId, action } = await request.json();
 
     if (!promptId || !['shown', 'skip'].includes(action)) {
@@ -66,4 +74,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to update SUS prompt' }, { status: 500 });
   }
 }
-

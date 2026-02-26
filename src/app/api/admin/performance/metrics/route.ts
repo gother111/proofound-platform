@@ -6,7 +6,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { performanceMetrics, performanceAlerts } from '@/db/schema';
 import { and, gte, desc, isNotNull, sql } from 'drizzle-orm';
@@ -133,10 +132,13 @@ export async function GET(request: NextRequest) {
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     const errorStack = error instanceof Error ? error.stack : undefined;
 
-    return NextResponse.json({
-      error: errorMessage,
-      details: errorStack
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: errorMessage,
+        details: errorStack,
+      },
+      { status: 500 }
+    );
   }
 }
 

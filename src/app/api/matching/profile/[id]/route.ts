@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { matchingProfiles } from '@/db/schema';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { addDeprecationHeaders } from '@/lib/api/deprecation';
 import { GET as getCanonicalMatchingProfile } from '@/app/api/core/matching/matching-profile/route';
 
@@ -73,7 +73,11 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const user = await requireAuth();
+  const authContext = await requireApiAuthContext();
+  if (!authContext) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  const { user } = authContext;
 
   if (id !== user.id) {
     return addDeprecationHeaders(

@@ -1,5 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
 import { notifyVerificationCompleted } from '@/lib/notifications';
@@ -19,8 +18,11 @@ export async function POST(
   { params }: { params: Promise<{ requestId: string }> }
 ) {
   try {
-    const user = await requireAuth();
-    const supabase = await createClient();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user, supabase } = authContext;
     const body = await request.json();
     const { requestId } = await params;
 

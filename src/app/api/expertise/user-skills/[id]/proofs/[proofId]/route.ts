@@ -1,5 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { NextResponse, NextRequest } from 'next/server';
 import { emitSkillProofDeletedAsync } from '@/lib/analytics/events';
 
@@ -13,8 +12,11 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string; proofId: string }> }
 ) {
   try {
-    const user = await requireAuth();
-    const supabase = await createClient();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user, supabase } = authContext;
     const { id: skillId, proofId } = await params;
 
     // Verify proof belongs to user and is for this skill

@@ -10,7 +10,7 @@ import { revalidatePath } from 'next/cache';
 import { db } from '@/db';
 import { matches } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { log } from '@/lib/log';
 import { emitAnalyticsEvent } from '@/lib/analytics/events';
 
@@ -21,7 +21,11 @@ interface SnoozeParams {
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const { id: matchId } = await params;
     const body: SnoozeParams = await request.json();
 
@@ -94,7 +98,11 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const { id: matchId } = await params;
 
     // Verify match belongs to user

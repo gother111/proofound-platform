@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,7 +9,10 @@ export const dynamic = 'force-dynamic';
  * Deletion is immediate in the current model, so cancellation is not supported.
  */
 export async function POST() {
-  await requireAuth();
+  const authContext = await requireApiAuthContext();
+  if (!authContext) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   return NextResponse.json(
     {

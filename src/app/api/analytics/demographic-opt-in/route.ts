@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
 import { demographicOptIns } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -23,7 +23,11 @@ const DemographicOptInSchema = z.object({
  */
 export async function GET() {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
 
     // Fetch existing opt-in data
     const [optIn] = await db
@@ -60,7 +64,11 @@ export async function GET() {
  */
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const body = await request.json();
 
     // Validate input
@@ -124,7 +132,11 @@ export async function POST(request: NextRequest) {
  */
 export async function DELETE() {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
 
     await db.delete(demographicOptIns).where(eq(demographicOptIns.profileId, user.id));
 
@@ -137,4 +149,3 @@ export async function DELETE() {
     return NextResponse.json({ error: 'Failed to delete demographic data' }, { status: 500 });
   }
 }
-

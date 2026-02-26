@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 import { db } from '@/db';
 import { assignments, organizationMembers } from '@/db/schema';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { computeAssignmentMatches } from '@/lib/core/matching/assignmentMatcher';
 import { getPreset, normalizeWeights, type PresetKey } from '@/lib/core/matching/presets';
 import { log } from '@/lib/log';
@@ -31,7 +31,11 @@ export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const body = await request.json();
 
     const validatedData = MatchRequestSchema.parse(body);

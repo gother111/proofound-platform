@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
 import { organizationOwnership } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
@@ -21,7 +21,10 @@ export async function PUT(
   { params }: { params: Promise<{ orgId: string; ownershipId: string }> }
 ) {
   try {
-    await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const { orgId, ownershipId } = await params;
     const body = await request.json();
     const validated = OwnershipSchema.parse(body);
@@ -47,7 +50,10 @@ export async function DELETE(
   { params }: { params: Promise<{ orgId: string; ownershipId: string }> }
 ) {
   try {
-    await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const { orgId, ownershipId } = await params;
 
     const [deleted] = await db

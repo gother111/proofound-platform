@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
 import { assignmentInvitations, organizations } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -24,7 +24,11 @@ const InvitationSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const body = await request.json();
     const validated = InvitationSchema.parse(body);
 
@@ -80,16 +84,16 @@ export async function POST(request: NextRequest) {
       // Don't fail the request if email fails, just log it
     }
 
-    return NextResponse.json({
-      invitation,
-      invitationUrl,
-    }, { status: 201 });
+    return NextResponse.json(
+      {
+        invitation,
+        invitationUrl,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid data', details: error.errors },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid data', details: error.errors }, { status: 400 });
     }
     console.error('Error creating invitation:', error);
     return NextResponse.json({ error: 'Failed to create invitation' }, { status: 500 });

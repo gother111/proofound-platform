@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
 import { assignmentExpertiseMatrix, assignments, matches, skillsTaxonomy } from '@/db/schema';
 import { eq, and, inArray, sql } from 'drizzle-orm';
@@ -99,7 +99,11 @@ const AssignmentCreateSchema = AssignmentSchema.extend({
 export async function GET(request: NextRequest) {
   return withApiObservability(request, '/api/assignments', async (ctx) => {
     try {
-      const user = await requireAuth();
+      const authContext = await requireApiAuthContext();
+      if (!authContext) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      const { user } = authContext;
 
       const searchParams = request.nextUrl.searchParams;
       const orgIdFilter = searchParams.get('orgId');
@@ -241,7 +245,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   return withApiObservability(request, '/api/assignments', async (ctx) => {
     try {
-      const user = await requireAuth();
+      const authContext = await requireApiAuthContext();
+      if (!authContext) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      const { user } = authContext;
 
       const body = await request.json();
 

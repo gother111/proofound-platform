@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
 import { userIntegrations } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -13,7 +13,11 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET() {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
 
     const integrations = await db
       .select({
@@ -39,4 +43,3 @@ export async function GET() {
     return NextResponse.json({ error: 'Failed to fetch integrations' }, { status: 500 });
   }
 }
-

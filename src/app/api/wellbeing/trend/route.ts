@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { getWellBeingTrend } from '@/lib/wellbeing/delta';
 
 /**
@@ -11,7 +11,11 @@ import { getWellBeingTrend } from '@/lib/wellbeing/delta';
  */
 export async function GET(req: NextRequest) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const { searchParams } = new URL(req.url);
     const weeks = parseInt(searchParams.get('weeks') || '4', 10);
 

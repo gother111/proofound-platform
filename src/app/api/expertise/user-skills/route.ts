@@ -1,5 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
 
@@ -54,8 +53,11 @@ const UpdateSkillSchema = z.object({
  */
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireAuth();
-    const supabase = await createClient();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user, supabase } = authContext;
     const { searchParams } = new URL(request.url);
 
     const l1Filter = searchParams.get('l1');
@@ -162,8 +164,11 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireAuth();
-    const supabase = await createClient();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user, supabase } = authContext;
     const body = await request.json();
 
     // Validate input
@@ -314,17 +319,20 @@ export async function POST(request: NextRequest) {
             .single();
 
           // Calculate approximate activation duration (from profile creation)
-          const activationDurationMs = Date.now() - new Date((user as any).createdAt || Date.now()).getTime();
+          const activationDurationMs =
+            Date.now() - new Date((user as any).createdAt || Date.now()).getTime();
           emitProfileActivatedAsync(user.id, activationDurationMs, {
             l4_count: skillCount,
             has_proofs: false, // TODO: Check actual proof count
             has_mission: !!individualProfile?.mission,
             has_vision: !!individualProfile?.vision,
-            has_values: !!(individualProfile?.values &&
+            has_values: !!(
+              individualProfile?.values &&
               Array.isArray(individualProfile.values) &&
               individualProfile.values.length > 0
             ),
-            has_causes: !!(individualProfile?.causes &&
+            has_causes: !!(
+              individualProfile?.causes &&
               Array.isArray(individualProfile.causes) &&
               individualProfile.causes.length > 0
             ),

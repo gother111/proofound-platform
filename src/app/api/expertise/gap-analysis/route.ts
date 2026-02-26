@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
-import { createClient } from '@/lib/supabase/server';
+import { requireApiAuthContext } from '@/lib/auth';
 import { computeSkillGaps } from '@/lib/skills/gap-service';
 
 export const dynamic = 'force-dynamic';
@@ -13,8 +12,11 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireAuth();
-    const supabase = await createClient();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user, supabase } = authContext;
     const params = request.nextUrl.searchParams;
     const roleFilter = params.get('role') || undefined;
     const timeframe = Number(params.get('timeframe') ?? 180);

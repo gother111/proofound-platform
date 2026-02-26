@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { requireAuth } from '@/lib/auth';
-import { createClient } from '@/lib/supabase/server';
+import { requireApiAuthContext } from '@/lib/auth';
 import { computeSkillGaps } from '@/lib/skills/gap-service';
 import { courseraProvider } from '@/lib/learning/coursera';
 
@@ -9,8 +8,11 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const user = await requireAuth();
-    const supabase = await createClient();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user, supabase } = authContext;
 
     const analysis = await computeSkillGaps({ profileId: user.id, supabase });
 

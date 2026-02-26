@@ -5,7 +5,7 @@ import { POST as postProfile } from '@/app/api/core/matching/profile/route';
 import { POST as postNearMatches } from '@/app/api/core/matching/near-matches/route';
 import { evaluateIndividualMatchability } from '@/lib/matching/eligibility';
 import { requireApiAuth } from '@/lib/api/auth';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext, requireAuth } from '@/lib/auth';
 
 vi.mock('@/db', () => ({
   db: {},
@@ -29,6 +29,7 @@ vi.mock('@/lib/api/auth', () => ({
 }));
 
 vi.mock('@/lib/auth', () => ({
+  requireApiAuthContext: vi.fn(),
   requireAuth: vi.fn(),
 }));
 
@@ -76,6 +77,10 @@ const baseEligibility = {
 describe('core matching gating routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    (requireApiAuthContext as any).mockImplementation(async () => {
+      const user = await (requireAuth as any)();
+      return user ? { user, supabase: {} } : null;
+    });
     (requireApiAuth as any).mockResolvedValue({
       user: { id: baseEligibility.profileId },
     });

@@ -12,7 +12,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
 import { impactStories, capabilities, matches, projects, verificationRequests } from '@/db/schema';
 import { eq, and, sql, desc, gte } from 'drizzle-orm';
@@ -21,7 +21,11 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
 
     // Fetch multiple metrics concurrently for performance (PRD Part 7)
     const [
@@ -78,7 +82,10 @@ export async function GET() {
         })
         .from(verificationRequests)
         .where(
-          and(eq(verificationRequests.profileId, user.id), eq(verificationRequests.status, 'pending'))
+          and(
+            eq(verificationRequests.profileId, user.id),
+            eq(verificationRequests.status, 'pending')
+          )
         ),
     ]);
 

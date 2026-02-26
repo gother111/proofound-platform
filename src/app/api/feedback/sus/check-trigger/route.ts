@@ -14,7 +14,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
 import { analyticsEvents } from '@/db/schema';
 import { eq, and, desc, gte } from 'drizzle-orm';
@@ -29,7 +29,11 @@ type TriggerPoint = 'post_activation' | 'post_match' | 'post_contract' | 'period
  */
 export async function GET() {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
 
     const triggerPoint = await determineTriggerPoint(user.id);
 
@@ -49,7 +53,11 @@ export async function GET() {
  */
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const body = await request.json();
     const { event } = body;
 

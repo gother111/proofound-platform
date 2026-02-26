@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { getZoomAuthUrl } from '@/lib/integrations/zoom';
 import { log } from '@/lib/log';
 import { randomBytes } from 'crypto';
@@ -14,7 +14,11 @@ import { resolveOAuthRedirectUri } from '@/lib/integrations/oauth-helpers';
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
 
     // Get redirect URI
     const redirectUri = resolveOAuthRedirectUri(

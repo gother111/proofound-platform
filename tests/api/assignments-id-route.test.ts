@@ -3,11 +3,12 @@ import { NextRequest } from 'next/server';
 
 import { DELETE, PUT } from '@/app/api/assignments/[id]/route';
 import { db } from '@/db';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext, requireAuth } from '@/lib/auth';
 import { verifyAssignmentMutationAccess } from '@/lib/assignments/access';
 import { checkAndEmitAssignmentActivation } from '@/lib/assignments/activation';
 
 vi.mock('@/lib/auth', () => ({
+  requireApiAuthContext: vi.fn(),
   requireAuth: vi.fn(),
 }));
 
@@ -56,6 +57,10 @@ const params = { params: Promise.resolve({ id: 'assignment-1' }) };
 describe('assignment [id] mutation routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    (requireApiAuthContext as any).mockImplementation(async () => {
+      const user = await (requireAuth as any)();
+      return user ? { user, supabase: {} } : null;
+    });
     (requireAuth as any).mockResolvedValue({ id: 'user-1' });
   });
 

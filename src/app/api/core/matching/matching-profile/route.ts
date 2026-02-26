@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
 import { matchingProfiles, skills } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -96,7 +96,11 @@ const MatchingProfileSchema = z.object({
  */
 export async function GET() {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
 
     // Fetch matching profile and auto-bootstrap baseline row if missing.
     let profile = await db.query.matchingProfiles.findFirst({
@@ -150,7 +154,11 @@ export async function GET() {
  */
 export async function PUT(request: NextRequest) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const body = await request.json();
 
     // Validate input

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
 import { notifications } from '@/db/schema';
 import { eq, desc, and, sql } from 'drizzle-orm';
@@ -39,7 +39,11 @@ const CreateNotificationSchema = z.object({
  */
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const searchParams = request.nextUrl.searchParams;
 
     const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 50);
@@ -86,7 +90,11 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const body = await request.json();
 
     const validatedData = CreateNotificationSchema.parse(body);

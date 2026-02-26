@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { getZoomAuthUrl } from '@/lib/video/zoom';
 import { getGoogleAuthUrl } from '@/lib/video/google-meet';
 import { randomBytes } from 'crypto';
@@ -16,7 +16,11 @@ export async function GET(
   { params }: { params: Promise<{ provider: string }> }
 ) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const { provider } = await params;
 
     // Generate state for CSRF protection

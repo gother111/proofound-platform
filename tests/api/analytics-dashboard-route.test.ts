@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
 vi.mock('@/lib/auth', () => ({
+  requireApiAuthContext: vi.fn(),
   requireAuth: vi.fn(),
 }));
 
@@ -14,7 +15,7 @@ vi.mock('@/lib/privacy/analytics-consent', () => ({
 }));
 
 import { POST } from '@/app/api/analytics/dashboard/route';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext, requireAuth } from '@/lib/auth';
 import { trackEvent } from '@/lib/analytics';
 import { requireAnalyticsConsentForUser } from '@/lib/privacy/analytics-consent';
 
@@ -31,6 +32,10 @@ function buildRequest(body: Record<string, unknown>) {
 describe('POST /api/analytics/dashboard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    (requireApiAuthContext as any).mockImplementation(async () => {
+      const user = await (requireAuth as any)();
+      return user ? { user, supabase: {} } : null;
+    });
     (requireAuth as any).mockResolvedValue({ id: 'user-1' });
     (trackEvent as any).mockResolvedValue(undefined);
     (requireAnalyticsConsentForUser as any).mockResolvedValue(true);

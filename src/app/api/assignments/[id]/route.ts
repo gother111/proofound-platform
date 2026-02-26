@@ -10,7 +10,7 @@ import {
 } from '@/lib/assignments/expertise-matrix';
 import { checkAndEmitAssignmentActivation } from '@/lib/assignments/activation';
 import { verifyAssignmentAccess, verifyAssignmentMutationAccess } from '@/lib/assignments/access';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { log } from '@/lib/log';
 
 export const dynamic = 'force-dynamic';
@@ -22,7 +22,11 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   let assignmentId: string | undefined;
 
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const resolvedParams = await params;
     assignmentId = resolvedParams.id;
 
@@ -171,7 +175,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   let assignmentId: string | undefined;
 
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const resolvedParams = await params;
     assignmentId = resolvedParams.id;
 
@@ -288,7 +296,11 @@ export async function DELETE(
   let assignmentId: string | undefined;
 
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const resolvedParams = await params;
     assignmentId = resolvedParams.id;
 

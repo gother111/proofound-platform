@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
 import { assignmentTemplates, organizationMembers } from '@/db/schema';
 import { and, eq } from 'drizzle-orm';
@@ -30,12 +30,13 @@ async function userCanAccessOrg(orgId: string | null, userId: string) {
   return !!membership;
 }
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const { id } = await params;
 
     const template = await db.query.assignmentTemplates.findFirst({
@@ -61,19 +62,17 @@ export async function GET(
     log.error('assignment_templates.detail.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
     });
-    return NextResponse.json(
-      { error: 'Failed to load template' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to load template' }, { status: 500 });
   }
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const { id } = await params;
     const body = await request.json();
     const validated = UpdateTemplateSchema.parse(body);
@@ -95,10 +94,7 @@ export async function PATCH(
 
     const allowed = await userCanAccessOrg(existing.orgId, user.id);
     if (!allowed) {
-      return NextResponse.json(
-        { error: 'Not authorized to edit this template' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: 'Not authorized to edit this template' }, { status: 403 });
     }
 
     const updatePayload: Record<string, any> = {};
@@ -131,10 +127,6 @@ export async function PATCH(
     log.error('assignment_templates.update.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
     });
-    return NextResponse.json(
-      { error: 'Failed to update template' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to update template' }, { status: 500 });
   }
 }
-

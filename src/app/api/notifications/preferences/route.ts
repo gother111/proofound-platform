@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
 import { notificationPreferences } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -36,7 +36,11 @@ const UpdatePreferencesSchema = z.object({
  */
 export async function GET() {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
 
     let prefs = await db.query.notificationPreferences.findFirst({
       where: eq(notificationPreferences.userId, user.id),
@@ -70,7 +74,11 @@ export async function GET() {
  */
 export async function PATCH(request: NextRequest) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const body = await request.json();
 
     const validatedData = UpdatePreferencesSchema.parse(body);

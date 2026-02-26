@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { and, desc, eq } from 'drizzle-orm';
 import { capabilities, growthPlans, skills } from '@/db/schema';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { log } from '@/lib/log';
 import { db } from '@/db';
 
@@ -38,7 +38,11 @@ const ExpertiseProfileSchema = z.object({
 
 export async function GET() {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
 
     // Load every capability for this profile
     const capabilityRows = await db
@@ -78,7 +82,11 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const body = await request.json();
     const parsed = ExpertiseProfileSchema.parse(body);
 
@@ -327,29 +335,33 @@ export async function PUT(request: NextRequest) {
         errors: error.flatten(),
       });
       return NextResponse.json(
-        { 
-          error: 'Invalid expertise payload', 
+        {
+          error: 'Invalid expertise payload',
           details: error.flatten(),
-          message: 'Some expertise data is invalid. Please check your skills and capabilities.'
+          message: 'Some expertise data is invalid. Please check your skills and capabilities.',
         },
         { status: 400 }
       );
     }
 
     // Database connection errors
-    if (error instanceof Error && (
-      error.message.includes('connect') || 
-      error.message.includes('ECONNREFUSED') ||
-      error.message.includes('timeout')
-    )) {
+    if (
+      error instanceof Error &&
+      (error.message.includes('connect') ||
+        error.message.includes('ECONNREFUSED') ||
+        error.message.includes('timeout'))
+    ) {
       log.error('expertise.profile.db.connection.failed', {
         error: error.message,
         stack: error.stack,
       });
-      return NextResponse.json({ 
-        error: 'Database connection failed',
-        message: 'Unable to save expertise profile. Please try again later.'
-      }, { status: 503 });
+      return NextResponse.json(
+        {
+          error: 'Database connection failed',
+          message: 'Unable to save expertise profile. Please try again later.',
+        },
+        { status: 503 }
+      );
     }
 
     log.error('expertise.profile.put.failed', {
@@ -357,9 +369,12 @@ export async function PUT(request: NextRequest) {
       stack: error instanceof Error ? error.stack : undefined,
     });
 
-    return NextResponse.json({ 
-      error: 'Failed to update expertise profile',
-      message: error instanceof Error ? error.message : 'An unexpected error occurred.'
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Failed to update expertise profile',
+        message: error instanceof Error ? error.message : 'An unexpected error occurred.',
+      },
+      { status: 500 }
+    );
   }
 }

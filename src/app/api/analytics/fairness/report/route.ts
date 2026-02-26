@@ -15,7 +15,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { fairnessReports } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { calculateFairnessGaps, type FairnessReport } from '@/lib/analytics/fairness';
 import { log } from '@/lib/log';
 
@@ -24,7 +24,11 @@ import { log } from '@/lib/log';
  */
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
 
     // Only platform admins can generate fairness reports
     const profile = await db.query.profiles.findFirst({
@@ -96,7 +100,11 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
 
     // Only platform admins can view fairness reports
     const profile = await db.query.profiles.findFirst({

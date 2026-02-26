@@ -15,7 +15,7 @@ import {
   matchInterest,
   analyticsEvents,
 } from '@/db/schema';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { log } from '@/lib/log';
 import { db } from '@/db';
 import { buildExperienceTimeline } from '@/lib/profile/experience-timeline';
@@ -60,7 +60,11 @@ function toDateOnlyString(value: unknown): string | null {
  */
 export async function GET() {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const exportedAt = new Date().toISOString();
 
     log.info('privacy.export.requested', { userId: user.id });

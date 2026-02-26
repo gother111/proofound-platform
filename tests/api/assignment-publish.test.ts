@@ -3,8 +3,10 @@ import { NextRequest } from 'next/server';
 
 import { POST } from '@/app/api/assignments/[id]/publish/route';
 import { db } from '@/db';
+import { requireApiAuthContext, requireAuth } from '@/lib/auth';
 
 vi.mock('@/lib/auth', () => ({
+  requireApiAuthContext: vi.fn(),
   requireAuth: vi.fn(() => Promise.resolve({ id: 'test-user-id' })),
 }));
 
@@ -50,6 +52,10 @@ vi.mock('@/db', () => {
 describe('Assignment publish API', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    (requireApiAuthContext as any).mockImplementation(async () => {
+      const user = await (requireAuth as any)();
+      return user ? { user, supabase: {} } : null;
+    });
   });
 
   it('returns 400 when required publish sections are missing', async () => {

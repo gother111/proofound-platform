@@ -2,9 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 import { PUT } from '@/app/api/organizations/[orgId]/route';
 import { db } from '@/db';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext, requireAuth } from '@/lib/auth';
 
 vi.mock('@/lib/auth', () => ({
+  requireApiAuthContext: vi.fn(),
   requireAuth: vi.fn(),
 }));
 
@@ -73,6 +74,10 @@ function mockUpdateReturningOrganization() {
 describe('organizations [orgId] route', () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    (requireApiAuthContext as any).mockImplementation(async () => {
+      const user = await (requireAuth as any)();
+      return user ? { user, supabase: {} } : null;
+    });
     (requireAuth as any).mockResolvedValue({ id: 'user-1' });
   });
 

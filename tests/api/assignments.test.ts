@@ -2,11 +2,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, POST } from '@/app/api/assignments/route';
 import { NextRequest } from 'next/server';
 import { db } from '@/db';
+import { requireApiAuthContext, requireAuth } from '@/lib/auth';
 
 const TEST_ORG_ID = '11111111-1111-1111-1111-111111111111';
 
 // Mock dependencies
 vi.mock('@/lib/auth', () => ({
+  requireApiAuthContext: vi.fn(),
   requireAuth: vi.fn(() => Promise.resolve({ id: 'test-user-id' })),
 }));
 
@@ -110,6 +112,10 @@ vi.mock('@/lib/surveys/sus-triggers', () => ({
 describe('Assignment API', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    (requireApiAuthContext as any).mockImplementation(async () => {
+      const user = await (requireAuth as any)();
+      return user ? { user, supabase: {} } : null;
+    });
   });
 
   describe('POST', () => {

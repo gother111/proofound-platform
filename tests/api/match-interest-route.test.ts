@@ -3,9 +3,10 @@ import { NextRequest } from 'next/server';
 
 import { POST } from '@/app/api/core/matching/interest/route';
 import { db } from '@/db';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext, requireAuth } from '@/lib/auth';
 
 vi.mock('@/lib/auth', () => ({
+  requireApiAuthContext: vi.fn(),
   requireAuth: vi.fn(),
 }));
 
@@ -47,6 +48,10 @@ describe('match interest route', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    (requireApiAuthContext as any).mockImplementation(async () => {
+      const user = await (requireAuth as any)();
+      return user ? { user, supabase: {} } : null;
+    });
   });
 
   it('rejects org-side interest when actor is not an active org member', async () => {

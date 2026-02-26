@@ -10,12 +10,16 @@ import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { exchangeGoogleCode } from '@/lib/integrations/google-meet';
 import { log } from '@/lib/log';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { buildOAuthCallbackHtml, resolveOAuthRedirectUri } from '@/lib/integrations/oauth-helpers';
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
 
     const searchParams = request.nextUrl.searchParams;
     const code = searchParams.get('code');

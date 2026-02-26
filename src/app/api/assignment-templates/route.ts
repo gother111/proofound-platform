@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { requireAuth } from '@/lib/auth';
+import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
 import { assignmentTemplates, organizationMembers, organizations } from '@/db/schema';
 import { and, eq, or, desc } from 'drizzle-orm';
@@ -108,10 +108,7 @@ async function resolveOrgIdForUser(userId: string, orgSlug?: string | null) {
   }
 
   const membership = await db.query.organizationMembers.findFirst({
-    where: and(
-      eq(organizationMembers.userId, userId),
-      eq(organizationMembers.status, 'active')
-    ),
+    where: and(eq(organizationMembers.userId, userId), eq(organizationMembers.status, 'active')),
   });
 
   return membership?.orgId ?? null;
@@ -119,7 +116,11 @@ async function resolveOrgIdForUser(userId: string, orgSlug?: string | null) {
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const searchParams = request.nextUrl.searchParams;
     const orgSlug = searchParams.get('orgSlug');
     const roleFamily = searchParams.get('roleFamily');
@@ -165,16 +166,17 @@ export async function GET(request: NextRequest) {
     log.error('assignment_templates.list.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
     });
-    return NextResponse.json(
-      { error: 'Failed to load templates' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to load templates' }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireAuth();
+    const authContext = await requireApiAuthContext();
+    if (!authContext) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { user } = authContext;
     const searchParams = request.nextUrl.searchParams;
     const orgSlug = searchParams.get('orgSlug');
     const orgId = await resolveOrgIdForUser(user.id, orgSlug);
@@ -220,10 +222,6 @@ export async function POST(request: NextRequest) {
     log.error('assignment_templates.create.failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
     });
-    return NextResponse.json(
-      { error: 'Failed to create template' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to create template' }, { status: 500 });
   }
 }
-
