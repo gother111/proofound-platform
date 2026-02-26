@@ -27,6 +27,14 @@ import { TransitionProvider } from '@/components/ui/transition-provider';
 export const metadata: Metadata = {
   title: 'Proofound - Focus on what matters',
   description: 'A credibility and connection platform built for authenticity, not algorithms.',
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/logo.png', type: 'image/png' },
+    ],
+    shortcut: '/favicon.svg',
+    apple: '/logo.png',
+  },
   metadataBase: (() => {
     const fallbackUrl = 'https://proofound.io';
     const rawUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || fallbackUrl;
@@ -56,6 +64,10 @@ export default async function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta charSet="utf-8" />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+      </head>
       <body className="font-sans antialiased">
         <SkipToContentLink />
         <ErrorBoundary>

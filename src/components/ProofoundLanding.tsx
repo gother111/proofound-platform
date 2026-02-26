@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { motion, useScroll, useSpring, useReducedMotion, useTransform } from 'framer-motion';
 import { useRouter } from 'next/navigation';
@@ -227,13 +226,14 @@ export function ProofoundLanding({
       >
         <div className="pointer-events-auto">
           <Link href="/" aria-label="Proofound home">
-            <Image
+            <img
               src="/logo.png"
               alt="Proofound"
               width={120}
               height={48}
+              loading="eager"
+              decoding="async"
               className="h-12 w-auto"
-              priority
             />
           </Link>
         </div>
@@ -251,7 +251,6 @@ export function ProofoundLanding({
               shouldReduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 150, damping: 20 }
             }
             className={`pointer-events-auto ${showStickyProgress ? '' : 'hidden md:block invisible'}`}
-            aria-hidden={!showStickyProgress}
           >
             <MagneticButton
               onClick={handleGetStarted}

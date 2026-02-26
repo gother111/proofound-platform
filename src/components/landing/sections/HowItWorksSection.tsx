@@ -152,10 +152,7 @@ export function HowItWorksSection({ shouldReduceMotion }: HowItWorksSectionProps
                 </p>
 
                 {/* Progress Indicator (Desktop only) */}
-                <div
-                  className="hidden md:flex flex-col gap-4 relative pl-5 border-l-2 border-border/50"
-                  aria-hidden="true"
-                >
+                <div className="hidden md:flex flex-col gap-4 relative pl-5 border-l-2 border-border/50">
                   <motion.div
                     className="absolute left-[-2px] top-0 w-[2px] bg-proofound-forest transition-all duration-500 ease-out origin-top"
                     style={{ height: `${((activeStep + 1) / features.length) * 100}%` }}

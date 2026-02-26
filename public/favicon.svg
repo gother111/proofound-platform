@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Proofound favicon">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1C4D3A" />
+      <stop offset="100%" stop-color="#C76B4A" />
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="56" height="56" rx="14" fill="url(#g)" />
+  <path d="M20 44V20h14c6.1 0 10 3.4 10 8.7 0 5.3-3.9 8.5-10 8.5h-7v6.8zM27 31.2h6.5c2.7 0 4.4-1.1 4.4-3.5 0-2.4-1.7-3.5-4.4-3.5H27z" fill="#F7F6F1"/>
+</svg>

@@ -17,6 +17,13 @@ export function MarketingPage({
   ctaLabel = 'Return to home',
   ctaHref = '/',
 }: MarketingPageProps) {
+  const trustLinks = [
+    { label: 'Support', href: '/support' },
+    { label: 'Privacy Policy', href: '/privacy' },
+    { label: 'Terms of Service', href: '/terms' },
+    { label: 'Cookie Policy', href: '/cookies' },
+  ];
+
   return (
     <main className="mx-auto flex min-h-[60vh] max-w-4xl flex-col gap-6 px-6 py-16 md:px-10">
       <div className="flex flex-col gap-3">
@@ -36,6 +43,23 @@ export function MarketingPage({
         >
           {ctaLabel}
         </Link>
+      </div>
+
+      <div className="rounded-xl border border-border bg-card/30 p-4">
+        <p className="text-sm text-muted-foreground">
+          Need help or policy details? Use our support and legal links:
+        </p>
+        <nav aria-label="Support and legal navigation" className="mt-3 flex flex-wrap gap-4">
+          {trustLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="text-sm font-semibold text-proofound-forest underline underline-offset-4"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
       </div>
     </main>
   );

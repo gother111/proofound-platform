@@ -5,11 +5,14 @@ import { NetworkBackground } from '@/components/NetworkBackground';
 import { ArrowLeft, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { POLICY_EFFECTIVE_DATES, POLICY_VERSIONS } from '@/lib/privacy/policy-version-config';
+import { buildPublicMetadata } from '@/lib/seo/public-metadata';
 
-export const metadata: Metadata = {
-  title: 'Privacy Policy | Proofound',
-  description: 'Privacy Policy for Proofound',
-};
+export const metadata: Metadata = buildPublicMetadata({
+  title: 'Privacy Policy | Proofound privacy and consent controls',
+  description:
+    'Read how Proofound collects and processes personal information, applies consent controls, secures platform records, and supports user rights requests.',
+  path: '/privacy',
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -56,9 +59,9 @@ export default function PrivacyPolicyPage() {
                 <h2 className="font-display text-2xl font-semibold text-[#2D3330]">1. Scope</h2>
                 <p className="mt-3 leading-7">
                   This policy explains how Proofound collects, uses, stores, and protects personal
-                  data across account creation, matching, verification, moderation, and support.
-                  Processing is performed under applicable privacy laws, including GDPR and ePrivacy
-                  rules.
+                  information across account creation, matching, verification, moderation, and
+                  support. Processing is performed under applicable privacy laws, including GDPR and
+                  ePrivacy rules.
                 </p>
               </section>
 
@@ -67,14 +70,16 @@ export default function PrivacyPolicyPage() {
                   2. Data We Process
                 </h2>
                 <ul className="mt-3 list-disc space-y-2 pl-6 leading-7">
-                  <li>Account data: email, display name, authentication identifiers.</li>
-                  <li>Profile data: expertise, projects, preferences, and verification status.</li>
+                  <li>Account records: email, display name, authentication identifiers.</li>
                   <li>
-                    Operational data: moderation reports, consent records, security and audit logs.
+                    Profile information: expertise, projects, preferences, and verification status.
                   </li>
                   <li>
-                    Optional analytics data: event-level telemetry only when analytics consent is
-                    granted.
+                    Operational records: moderation reports, consent records, security and audit
+                    logs.
+                  </li>
+                  <li>
+                    Optional analytics events: telemetry only when analytics consent is granted.
                   </li>
                 </ul>
               </section>
@@ -149,6 +154,18 @@ export default function PrivacyPolicyPage() {
                   .
                 </p>
               </section>
+
+              <section>
+                <h2 className="font-display text-2xl font-semibold text-[#2D3330]">
+                  9. Processors and Operational Accountability
+                </h2>
+                <p className="mt-3 leading-7">
+                  We rely on vetted subprocessors for hosting, authentication, email delivery, and
+                  observability. Access is restricted by role, reviewed periodically, and monitored
+                  through audit controls. When processor lists or handling practices change in ways
+                  that materially affect users, we update this policy and related notices.
+                </p>
+              </section>
             </div>
           </Card>
 
@@ -162,6 +179,13 @@ export default function PrivacyPolicyPage() {
             </Button>
             <Button asChild className="bg-proofound-forest text-white hover:bg-[#2D5D4A]">
               <Link href="/cookies">View Cookie Policy</Link>
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              className="border-[#E8E6DD] text-[#2D3330] hover:border-proofound-forest hover:bg-proofound-forest/5"
+            >
+              <Link href="/support">Visit Support</Link>
             </Button>
           </div>
         </main>

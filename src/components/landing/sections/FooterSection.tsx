@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Twitter, Linkedin, Github, Mail, ArrowUpRight } from 'lucide-react';
@@ -27,6 +26,7 @@ export function FooterSection({ shouldReduceMotion }: FooterSectionProps) {
       { label: 'Manifesto', href: '/manifesto' },
       { label: 'Careers', href: '/careers' },
       { label: 'Contact', href: '/contact' },
+      { label: 'Support', href: '/support' },
     ],
     legal: [
       { label: 'Privacy Policy', href: '/privacy' },
@@ -51,11 +51,13 @@ export function FooterSection({ shouldReduceMotion }: FooterSectionProps) {
         <div className="grid md:grid-cols-12 gap-12 mb-24">
           <div className="md:col-span-5 space-y-8">
             <Link href="/" className="inline-block" aria-label="Proofound home">
-              <Image
+              <img
                 src="/logo.png"
                 alt="Proofound"
                 width={120}
                 height={48}
+                loading="eager"
+                decoding="async"
                 className="h-12 w-auto brightness-0 invert opacity-90"
               />
             </Link>
@@ -87,7 +89,7 @@ export function FooterSection({ shouldReduceMotion }: FooterSectionProps) {
           </div>
 
           <div className="md:col-span-2 md:col-start-7">
-            <h4 className="text-lg font-display mb-8 text-white">Platform</h4>
+            <h3 className="text-lg font-display mb-8 text-white">Platform</h3>
             <ul className="space-y-4 font-sans">
               {links.platform.map((link, idx) => (
                 <li key={idx}>
@@ -110,7 +112,7 @@ export function FooterSection({ shouldReduceMotion }: FooterSectionProps) {
           </div>
 
           <div className="md:col-span-2">
-            <h4 className="text-lg font-display mb-8 text-white">Company</h4>
+            <h3 className="text-lg font-display mb-8 text-white">Company</h3>
             <ul className="space-y-4 font-sans">
               {links.company.map((link, idx) => (
                 <li key={idx}>
@@ -133,7 +135,7 @@ export function FooterSection({ shouldReduceMotion }: FooterSectionProps) {
           </div>
 
           <div className="md:col-span-2">
-            <h4 className="text-lg font-display mb-8 text-white">Legal</h4>
+            <h3 className="text-lg font-display mb-8 text-white">Legal</h3>
             <ul className="space-y-4 font-sans">
               {links.legal.map((link, idx) => (
                 <li key={idx}>

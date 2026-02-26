@@ -1,6 +1,8 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { ArrowLeft, Cookie } from 'lucide-react';
 import { CookieSettingsClient } from '@/components/cookies/CookieSettingsClient';
+import { buildPublicMetadata } from '@/lib/seo/public-metadata';
 
 /**
  * Cookie Settings Page
@@ -14,6 +16,13 @@ import { CookieSettingsClient } from '@/components/cookies/CookieSettingsClient'
 
 // Force dynamic rendering since we use searchParams
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = buildPublicMetadata({
+  title: 'Cookie Settings | Manage Proofound consent preferences',
+  description:
+    'Manage cookie consent preferences for Proofound, including essential and optional categories, with clear controls and privacy-safe defaults.',
+  path: '/cookies/settings',
+});
 
 export default async function CookieSettingsPage({
   searchParams,
@@ -34,7 +43,7 @@ export default async function CookieSettingsPage({
               className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back
+              Return to previous page
             </Link>
             {/* Logo */}
             <Link href="/" className="font-serif text-2xl font-bold text-proofound-forest">
@@ -74,6 +83,26 @@ export default async function CookieSettingsPage({
         {/* Additional Information */}
         <div className="mt-12 pt-8 border-t space-y-4">
           <h2 className="text-xl font-semibold text-proofound-forest mb-4">Learn More</h2>
+
+          <p className="text-sm leading-6 text-muted-foreground">
+            Essential cookies keep authentication, security protections, and core routing stable.
+            Optional categories are off by default and only enabled after explicit consent. Changes
+            are saved immediately, and you can revisit this page any time to review or withdraw
+            prior choices.
+          </p>
+
+          <p className="text-sm leading-6 text-muted-foreground">
+            We periodically review cookie usage to keep processing limited to justified purposes. If
+            we introduce materially different optional tracking behavior, we will update policy
+            versions and request renewed consent where required.
+          </p>
+
+          <p className="text-sm leading-6 text-muted-foreground">
+            Your settings apply to this browser session context and can be revisited whenever your
+            preferences change. If cookies are cleared by browser tools, consent choices may reset
+            and you can reconfigure them from this page. We aim to keep controls understandable so
+            consent decisions remain practical, reversible, and transparent.
+          </p>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Link

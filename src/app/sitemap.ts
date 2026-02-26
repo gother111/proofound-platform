@@ -22,9 +22,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/manifesto',
     '/careers',
     '/contact',
+    '/support',
     '/privacy',
     '/terms',
     '/cookies',
+    '/cookies/settings',
   ];
 
   return urls.map((path) => ({

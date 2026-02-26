@@ -163,6 +163,8 @@ export function HeroSection({
             alt="Abstract organic shape"
             width={1200}
             height={1200}
+            quality={55}
+            sizes="(min-width: 1536px) 50vw, (min-width: 1024px) 58vw, 0px"
             className="h-full w-auto object-contain"
             priority
           />
