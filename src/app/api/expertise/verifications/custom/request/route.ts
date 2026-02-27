@@ -36,6 +36,32 @@ type SelectedArtifactRecord = {
   label: string;
 };
 
+function isUniqueViolationError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  const e = error as { code?: string };
+  return e.code === '23505';
+}
+
+function isDuplicateSkillVerificationConstraintError(error: unknown): boolean {
+  if (!isUniqueViolationError(error)) {
+    return false;
+  }
+
+  const e = error as { message?: string; details?: string; hint?: string; constraint?: string };
+  const errorText =
+    `${e.constraint || ''} ${e.message || ''} ${e.details || ''} ${e.hint || ''}`.toLowerCase();
+
+  return (
+    errorText.includes('idx_skill_verification_active_unique_verifier') ||
+    (errorText.includes('skill_verification_requests') &&
+      errorText.includes('requester_profile_id') &&
+      errorText.includes('skill_id'))
+  );
+}
+
 function readI18nEnglish(value: unknown): string | null {
   if (!value) {
     return null;
@@ -445,6 +471,17 @@ export async function POST(request: NextRequest) {
         .insert(skillRequestRows);
 
       if (linkedSkillRowsError) {
+        if (isDuplicateSkillVerificationConstraintError(linkedSkillRowsError)) {
+          return NextResponse.json(
+            {
+              error:
+                'An active verification request already exists for at least one selected skill and verifier.',
+              code: 'DUPLICATE_VERIFICATION_REQUEST',
+            },
+            { status: 409 }
+          );
+        }
+
         console.error('Failed to create linked skill verification requests:', linkedSkillRowsError);
         return NextResponse.json(
           { error: 'Failed to create linked skill verification requests' },

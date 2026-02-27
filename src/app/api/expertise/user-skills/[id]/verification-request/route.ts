@@ -35,6 +35,91 @@ function isMissingVerificationTokenColumnError(error: unknown): boolean {
   return (e.code === 'PGRST204' || e.code === '42703') && errorText.includes('verification_token');
 }
 
+function isUniqueViolationError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  const e = error as { code?: string };
+  return e.code === '23505';
+}
+
+function isDuplicateSkillVerificationConstraintError(error: unknown): boolean {
+  if (!isUniqueViolationError(error)) {
+    return false;
+  }
+
+  const e = error as { message?: string; details?: string; hint?: string; constraint?: string };
+  const errorText =
+    `${e.constraint || ''} ${e.message || ''} ${e.details || ''} ${e.hint || ''}`.toLowerCase();
+
+  return (
+    errorText.includes('idx_skill_verification_active_unique_verifier') ||
+    (errorText.includes('skill_verification_requests') &&
+      errorText.includes('requester_profile_id') &&
+      errorText.includes('skill_id'))
+  );
+}
+
+type ExistingActiveSkillVerificationRequest = {
+  id: string;
+  status: 'pending' | 'accepted';
+  verifier_email: string | null;
+  created_at: string;
+};
+
+function toDuplicateVerificationResponse(
+  existingRequest?: ExistingActiveSkillVerificationRequest | null
+) {
+  return NextResponse.json(
+    {
+      error: 'An active verification request already exists for this skill and verifier.',
+      code: 'DUPLICATE_VERIFICATION_REQUEST',
+      existingRequestId: existingRequest?.id || null,
+      existingStatus: existingRequest?.status || null,
+    },
+    { status: 409 }
+  );
+}
+
+async function findExistingActiveVerificationRequest(params: {
+  supabase: any;
+  requesterProfileId: string;
+  skillId: string;
+  verifierEmail: string;
+}): Promise<ExistingActiveSkillVerificationRequest | null> {
+  const { data, error } = await params.supabase
+    .from('skill_verification_requests')
+    .select('id, status, verifier_email, created_at')
+    .eq('requester_profile_id', params.requesterProfileId)
+    .eq('skill_id', params.skillId)
+    .in('status', ['pending', 'accepted']);
+
+  if (error || !Array.isArray(data)) {
+    return null;
+  }
+
+  const matchingRows = data
+    .filter((row) => normalizeEmail(row.verifier_email) === params.verifierEmail)
+    .map((row) => row as ExistingActiveSkillVerificationRequest);
+
+  if (matchingRows.length === 0) {
+    return null;
+  }
+
+  matchingRows.sort((left, right) => {
+    const leftPriority = left.status === 'accepted' ? 0 : 1;
+    const rightPriority = right.status === 'accepted' ? 0 : 1;
+    if (leftPriority !== rightPriority) {
+      return leftPriority - rightPriority;
+    }
+
+    return new Date(right.created_at).getTime() - new Date(left.created_at).getTime();
+  });
+
+  return matchingRows[0] || null;
+}
+
 /**
  * POST /api/expertise/user-skills/[id]/verification-request
  *
@@ -120,6 +205,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       );
     }
 
+    const existingRequest = await findExistingActiveVerificationRequest({
+      supabase,
+      requesterProfileId: user.id,
+      skillId,
+      verifierEmail: normalizedVerifierEmail,
+    });
+
+    if (existingRequest) {
+      return toDuplicateVerificationResponse(existingRequest);
+    }
+
     // Generate secure verification token for magic link
     const verificationRequestId = randomUUID();
     const createdAt = new Date().toISOString();
@@ -187,6 +283,16 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         .insert(legacyInsert);
 
       if (legacyInsertError) {
+        if (isDuplicateSkillVerificationConstraintError(legacyInsertError)) {
+          const existingDuringRace = await findExistingActiveVerificationRequest({
+            supabase,
+            requesterProfileId: user.id,
+            skillId,
+            verifierEmail: normalizedVerifierEmail,
+          });
+          return toDuplicateVerificationResponse(existingDuringRace);
+        }
+
         console.error('Error creating verification request (legacy fallback):', {
           code: legacyInsertError?.code,
           message: legacyInsertError?.message,
@@ -202,6 +308,16 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       delete verificationRequest.verification_token;
       linkToken = verificationRequestId;
     } else if (createWithTokenError) {
+      if (isDuplicateSkillVerificationConstraintError(createWithTokenError)) {
+        const existingDuringRace = await findExistingActiveVerificationRequest({
+          supabase,
+          requesterProfileId: user.id,
+          skillId,
+          verifierEmail: normalizedVerifierEmail,
+        });
+        return toDuplicateVerificationResponse(existingDuringRace);
+      }
+
       console.error('Error creating verification request:', {
         code: createWithTokenError?.code,
         message: createWithTokenError?.message,

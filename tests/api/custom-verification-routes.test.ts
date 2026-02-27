@@ -93,6 +93,119 @@ describe('custom verification API routes', () => {
     expect(response.status).toBe(400);
   });
 
+  it('returns 409 when linked skill verification rows hit active duplicate constraint', async () => {
+    const skillId = '11111111-1111-4111-8111-111111111111';
+
+    vi.mocked(createClient).mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { email: 'requester@example.com' } },
+          error: null,
+        }),
+      },
+      from: vi.fn((table: string) => {
+        if (table === 'skills') {
+          return {
+            select: vi.fn(() =>
+              thenableResult({
+                data: [
+                  {
+                    id: skillId,
+                    skill_id: 'custom-1-2-3-typescript',
+                    skill_code: null,
+                    name_i18n: { en: 'TypeScript' },
+                    taxonomy: null,
+                  },
+                ],
+                error: null,
+              })
+            ),
+          };
+        }
+
+        if (table === 'skill_verification_requests') {
+          return {
+            select: vi.fn(() => thenableResult({ data: [], error: null })),
+            insert: vi.fn().mockResolvedValue({
+              error: {
+                code: '23505',
+                message:
+                  'duplicate key value violates unique constraint "idx_skill_verification_active_unique_verifier"',
+              },
+            }),
+          };
+        }
+
+        if (table === 'custom_verification_requests') {
+          return {
+            insert: vi.fn(() => ({
+              select: vi.fn(() => ({
+                single: vi.fn().mockResolvedValue({
+                  data: {
+                    id: 'custom-request-1',
+                    status: 'pending',
+                    verifier_email: 'mentor@example.com',
+                    verifier_relationship: 'peer',
+                    created_at: new Date().toISOString(),
+                    expires_at: new Date(Date.now() + 86400000).toISOString(),
+                  },
+                  error: null,
+                }),
+              })),
+            })),
+          };
+        }
+
+        if (table === 'custom_verification_request_items') {
+          return {
+            insert: vi.fn().mockResolvedValue({ error: null }),
+          };
+        }
+
+        if (table === 'profiles') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                single: vi.fn().mockResolvedValue({
+                  data: { display_name: 'Requester Name' },
+                  error: null,
+                }),
+              })),
+            })),
+          };
+        }
+
+        throw new Error(`Unexpected table: ${table}`);
+      }),
+    } as any);
+
+    vi.mocked(createAdminClient).mockReturnValue({
+      from: vi.fn(() => ({
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+          })),
+        })),
+      })),
+    } as any);
+
+    const response = await postCustomRequest(
+      new NextRequest('http://localhost/api/expertise/verifications/custom/request', {
+        method: 'POST',
+        body: JSON.stringify({
+          verifierEmail: 'mentor@example.com',
+          relationship: 'peer',
+          artifacts: [{ type: 'skill', id: skillId }],
+        }),
+      })
+    );
+
+    expect(response.status).toBe(409);
+    await expect(response.json()).resolves.toMatchObject({
+      code: 'DUPLICATE_VERIFICATION_REQUEST',
+    });
+  });
+
   it('returns proofound user email hint when account exists', async () => {
     vi.mocked(createAdminClient).mockReturnValue({
       from: vi.fn(() => ({

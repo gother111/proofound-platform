@@ -31,10 +31,15 @@ function createRequest(origin: string, body: Record<string, unknown>) {
 
 function createSupabaseMock(options?: {
   missingTokenColumnOnFirstInsert?: boolean;
+  uniqueConflictOnInsert?: boolean;
+  precheckResults?: Array<
+    Array<{ id: string; status: 'pending' | 'accepted'; verifier_email: string }>
+  >;
   requesterEmail?: string | null;
 }) {
   const inserts: any[] = [];
   let insertCalls = 0;
+  let precheckCalls = 0;
 
   const skillsQuery = {
     select: vi.fn().mockReturnThis(),
@@ -64,11 +69,35 @@ function createSupabaseMock(options?: {
 
   const verificationRequestsQuery = {
     select: vi.fn().mockImplementation(() => {
-      throw new Error('Unexpected post-insert select invocation');
+      const builder: any = {};
+      builder.eq = vi.fn().mockImplementation(() => builder);
+      builder.in = vi.fn().mockImplementation(() => {
+        const resultSet =
+          options?.precheckResults?.[
+            Math.min(precheckCalls, Math.max((options.precheckResults?.length || 1) - 1, 0))
+          ] || [];
+        precheckCalls += 1;
+
+        return Promise.resolve({
+          data: resultSet,
+          error: null,
+        });
+      });
+
+      return builder;
     }),
     insert: vi.fn().mockImplementation(async (payload: any) => {
       inserts.push(payload);
       insertCalls += 1;
+      if (options?.uniqueConflictOnInsert) {
+        return {
+          error: {
+            code: '23505',
+            message:
+              'duplicate key value violates unique constraint "idx_skill_verification_active_unique_verifier"',
+          },
+        };
+      }
       if (
         options?.missingTokenColumnOnFirstInsert &&
         insertCalls === 1 &&
@@ -105,7 +134,7 @@ function createSupabaseMock(options?: {
     }),
   };
 
-  return { supabase, inserts, verificationRequestsQuery };
+  return { supabase, inserts, verificationRequestsQuery, precheckCallCount: () => precheckCalls };
 }
 
 describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
@@ -257,7 +286,7 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
     expect(sentEmailPayload.html).toContain(`https://proofound.io/verify/${inserts[1].id}`);
   });
 
-  it('creates request without post-insert readback selection', async () => {
+  it('runs only the active-duplicate precheck select before insert', async () => {
     process.env.NEXT_PUBLIC_SITE_URL = 'https://proofound.io';
     process.env.NEXT_PUBLIC_APP_URL = '';
 
@@ -274,7 +303,7 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
     );
 
     expect(response.status).toBe(201);
-    expect(verificationRequestsQuery.select).not.toHaveBeenCalled();
+    expect(verificationRequestsQuery.select).toHaveBeenCalledTimes(1);
   });
 
   it('returns 401 when API auth context is unavailable', async () => {
@@ -293,10 +322,7 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
   });
 
   it('blocks self verification requests by canonical email identity', async () => {
-    const { supabase } = createSupabaseMock(
-      { id: 'req-blocked' },
-      { requesterEmail: 'alice@proofound.io' }
-    );
+    const { supabase } = createSupabaseMock({ requesterEmail: 'alice@proofound.io' });
     authContext.supabase = supabase;
 
     const response = await POST(
@@ -311,6 +337,85 @@ describe('POST /api/expertise/user-skills/[id]/verification-request', () => {
     await expect(response.json()).resolves.toMatchObject({
       code: 'SELF_VERIFICATION_BLOCKED',
     });
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+
+  it('returns 409 when a pending active duplicate exists', async () => {
+    const { supabase } = createSupabaseMock({
+      precheckResults: [
+        [{ id: 'req-pending', status: 'pending', verifier_email: 'mentor@example.com' }],
+      ],
+    });
+    authContext.supabase = supabase;
+
+    const response = await POST(
+      createRequest('https://proofound.io', {
+        verifierSource: 'peer',
+        verifierEmail: 'Mentor@Example.com',
+      }),
+      params
+    );
+
+    expect(response.status).toBe(409);
+    await expect(response.json()).resolves.toMatchObject({
+      code: 'DUPLICATE_VERIFICATION_REQUEST',
+      existingRequestId: 'req-pending',
+      existingStatus: 'pending',
+    });
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+
+  it('returns 409 when an accepted active duplicate exists', async () => {
+    const { supabase } = createSupabaseMock({
+      precheckResults: [
+        [{ id: 'req-accepted', status: 'accepted', verifier_email: 'mentor@example.com' }],
+      ],
+    });
+    authContext.supabase = supabase;
+
+    const response = await POST(
+      createRequest('https://proofound.io', {
+        verifierSource: 'manager',
+        verifierEmail: 'mentor@example.com',
+      }),
+      params
+    );
+
+    expect(response.status).toBe(409);
+    await expect(response.json()).resolves.toMatchObject({
+      code: 'DUPLICATE_VERIFICATION_REQUEST',
+      existingRequestId: 'req-accepted',
+      existingStatus: 'accepted',
+    });
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+
+  it('returns 409 when unique constraint race occurs during insert', async () => {
+    const { supabase, inserts, precheckCallCount } = createSupabaseMock({
+      uniqueConflictOnInsert: true,
+      precheckResults: [
+        [],
+        [{ id: 'req-race', status: 'pending', verifier_email: 'mentor@example.com' }],
+      ],
+    });
+    authContext.supabase = supabase;
+
+    const response = await POST(
+      createRequest('https://proofound.io', {
+        verifierSource: 'peer',
+        verifierEmail: 'mentor@example.com',
+      }),
+      params
+    );
+
+    expect(response.status).toBe(409);
+    await expect(response.json()).resolves.toMatchObject({
+      code: 'DUPLICATE_VERIFICATION_REQUEST',
+      existingRequestId: 'req-race',
+      existingStatus: 'pending',
+    });
+    expect(inserts).toHaveLength(1);
+    expect(precheckCallCount()).toBe(2);
     expect(sendEmail).not.toHaveBeenCalled();
   });
 });

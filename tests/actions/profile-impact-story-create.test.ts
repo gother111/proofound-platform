@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockDbInsert = vi.hoisted(() => vi.fn());
 const mockDbUpdate = vi.hoisted(() => vi.fn());
+const mockDbSelect = vi.hoisted(() => vi.fn());
 const mockRequireAuth = vi.hoisted(() => vi.fn());
 const mockSendEmail = vi.hoisted(() => vi.fn());
 const mockCreateClient = vi.hoisted(() => vi.fn());
@@ -11,6 +12,7 @@ vi.mock('@/db', () => ({
   db: {
     insert: mockDbInsert,
     update: mockDbUpdate,
+    select: mockDbSelect,
   },
 }));
 
@@ -84,6 +86,11 @@ describe('createImpactStory schema-drift compatibility', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockRequireAuth.mockResolvedValue({ id: 'user-1' });
+    mockDbSelect.mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue([]),
+      }),
+    });
     mockCreateClient.mockResolvedValue({
       auth: {
         getUser: vi.fn().mockResolvedValue({
@@ -172,5 +179,61 @@ describe('createImpactStory schema-drift compatibility', () => {
     expect(result.saveWarning).toMatch(/verification request tables are unavailable/i);
     expect(result.verificationWarning).toMatch(/verification storage is unavailable/i);
     expect(mockSendEmail).not.toHaveBeenCalled();
+  });
+
+  it('reuses existing active impact verification requests and avoids duplicate inserts', async () => {
+    mockDbSelect.mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue([
+          {
+            id: 'existing-impact-request',
+            status: 'accepted',
+            verifierEmail: 'verifier@example.com',
+            createdAt: new Date('2026-02-20T10:00:00.000Z'),
+            emailSentAt: new Date('2026-02-20T10:05:00.000Z'),
+            emailError: null,
+          },
+        ]),
+      }),
+    });
+
+    mockDbInsert.mockImplementation((table: unknown) => ({
+      values: vi.fn((payload: Record<string, unknown>) => {
+        if (table === impactStories) {
+          return {
+            returning: vi.fn().mockResolvedValue([{ id: 'story-dup', ...payload }]),
+          };
+        }
+
+        if (table === impactStoryVerificationRequests) {
+          return {
+            returning: vi.fn().mockResolvedValue([{ id: 'should-not-be-created' }]),
+          };
+        }
+
+        throw new Error(`Unexpected table insert: ${String(table)}`);
+      }),
+    }));
+
+    const result = await createImpactStory({
+      ...(BASE_STORY as any),
+      verificationRequest: {
+        verifierEmail: 'Verifier@Example.com',
+        verifierName: 'Verifier',
+        verifierRelationship: 'manager',
+        message: 'Please validate this story.',
+      },
+    });
+
+    expect(result.id).toBe('story-dup');
+    expect(result.verificationRequestStatus).toBe('accepted');
+    expect(result.verificationVerifierEmail).toBe('verifier@example.com');
+    expect(result.verificationWarning).toMatch(/active verification request already exists/i);
+    expect(mockSendEmail).not.toHaveBeenCalled();
+
+    const verificationInsertCalls = mockDbInsert.mock.calls.filter(
+      ([table]) => table === impactStoryVerificationRequests
+    );
+    expect(verificationInsertCalls).toHaveLength(0);
   });
 });

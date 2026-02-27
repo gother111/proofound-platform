@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, or } from 'drizzle-orm';
 import { randomBytes } from 'node:crypto';
 
 import { db } from '@/db';
@@ -802,6 +802,118 @@ type ImpactStoryVerificationRequestInternalResult = {
   storageUnavailable: boolean;
 };
 
+const ACTIVE_IMPACT_VERIFICATION_STATUSES = ['pending', 'accepted'] as const;
+const DUPLICATE_IMPACT_VERIFICATION_WARNING =
+  'An active verification request already exists for this verifier.';
+
+type ExistingImpactVerificationRow = {
+  id: string;
+  status: ImpactStoryVerificationRequestStatus;
+  verifierEmail: string | null;
+  createdAt: Date | string | null;
+  emailSentAt: Date | string | null;
+  emailError: string | null;
+};
+
+function impactVerificationStatusPriority(status: ImpactStoryVerificationRequestStatus): number {
+  return status === 'accepted' ? 0 : 1;
+}
+
+function mapExistingImpactVerificationToRecord(
+  row: ExistingImpactVerificationRow,
+  verifierEmail: string
+): ImpactStoryVerificationRecord {
+  return {
+    requestId: row.id,
+    status: row.status,
+    emailSent: Boolean(row.emailSentAt),
+    emailError: row.emailError || null,
+    warning: DUPLICATE_IMPACT_VERIFICATION_WARNING,
+    verifierEmail,
+    createdAt: toIsoStringOrNull(row.createdAt) || new Date().toISOString(),
+    emailSentAt: toIsoStringOrNull(row.emailSentAt),
+  };
+}
+
+function extractDatabaseErrorCode(error: unknown): string | null {
+  if (!error || typeof error !== 'object') {
+    return null;
+  }
+
+  const err = error as { code?: unknown; cause?: unknown };
+  if (typeof err.code === 'string' && err.code.trim().length > 0) {
+    return err.code;
+  }
+
+  if (err.cause) {
+    return extractDatabaseErrorCode(err.cause);
+  }
+
+  return null;
+}
+
+function isImpactDuplicateConstraintError(error: unknown): boolean {
+  if (extractDatabaseErrorCode(error) !== '23505') {
+    return false;
+  }
+
+  const errorText = collectSchemaErrorText(error).toLowerCase();
+  return (
+    errorText.includes('idx_impact_verification_active_unique_verifier') ||
+    (errorText.includes('impact_story_verification_requests') &&
+      errorText.includes('requester_profile_id') &&
+      errorText.includes('impact_story_id'))
+  );
+}
+
+async function findExistingActiveImpactVerificationRequest(args: {
+  userId: string;
+  impactStoryId: string;
+  verifierEmail: string;
+}): Promise<ExistingImpactVerificationRow | null> {
+  const rows = await db
+    .select({
+      id: impactStoryVerificationRequests.id,
+      status: impactStoryVerificationRequests.status,
+      verifierEmail: impactStoryVerificationRequests.verifierEmail,
+      createdAt: impactStoryVerificationRequests.createdAt,
+      emailSentAt: impactStoryVerificationRequests.emailSentAt,
+      emailError: impactStoryVerificationRequests.emailError,
+    })
+    .from(impactStoryVerificationRequests)
+    .where(
+      and(
+        eq(impactStoryVerificationRequests.requesterProfileId, args.userId),
+        eq(impactStoryVerificationRequests.impactStoryId, args.impactStoryId),
+        or(
+          eq(impactStoryVerificationRequests.status, ACTIVE_IMPACT_VERIFICATION_STATUSES[0]),
+          eq(impactStoryVerificationRequests.status, ACTIVE_IMPACT_VERIFICATION_STATUSES[1])
+        )
+      )
+    );
+
+  const matchingRows = rows.filter(
+    (row) => normalizeEmail(row.verifierEmail) === args.verifierEmail
+  ) as ExistingImpactVerificationRow[];
+
+  if (matchingRows.length === 0) {
+    return null;
+  }
+
+  matchingRows.sort((left, right) => {
+    const priorityDiff =
+      impactVerificationStatusPriority(left.status) -
+      impactVerificationStatusPriority(right.status);
+    if (priorityDiff !== 0) {
+      return priorityDiff;
+    }
+
+    return new Date(right.createdAt || 0).getTime() - new Date(left.createdAt || 0).getTime();
+  });
+
+  return matchingRows[0] || null;
+}
+
 function formatTimelineForLegacy(
   timeline: ImpactStoryTimeline | null | undefined,
   fallback: string
@@ -1056,6 +1168,23 @@ async function createImpactStoryVerificationRequestInternal(
     };
   }
 
+  const existingActiveRequest = await findExistingActiveImpactVerificationRequest({
+    userId: input.userId,
+    impactStoryId: input.impactStoryId,
+    verifierEmail: normalizedVerifierEmail,
+  });
+
+  if (existingActiveRequest) {
+    return {
+      verification: mapExistingImpactVerificationToRecord(
+        existingActiveRequest,
+        normalizedVerifierEmail
+      ),
+      warning: DUPLICATE_IMPACT_VERIFICATION_WARNING,
+      storageUnavailable: false,
+    };
+  }
+
   const token = randomBytes(32).toString('hex');
   const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
   const claimSnapshot = buildClaimSnapshot(input.storyData, {
@@ -1119,6 +1248,25 @@ async function createImpactStoryVerificationRequestInternal(
         warning: 'Verification storage is unavailable until the latest migrations are applied.',
         storageUnavailable: true,
       };
+    }
+
+    if (isImpactDuplicateConstraintError(error)) {
+      const existingDuringRace = await findExistingActiveImpactVerificationRequest({
+        userId: input.userId,
+        impactStoryId: input.impactStoryId,
+        verifierEmail: normalizedVerifierEmail,
+      });
+
+      if (existingDuringRace) {
+        return {
+          verification: mapExistingImpactVerificationToRecord(
+            existingDuringRace,
+            normalizedVerifierEmail
+          ),
+          warning: DUPLICATE_IMPACT_VERIFICATION_WARNING,
+          storageUnavailable: false,
+        };
+      }
     }
 
     throw error;
