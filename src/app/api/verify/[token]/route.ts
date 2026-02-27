@@ -381,6 +381,20 @@ function getRequesterEmailFromClaimSnapshot(claimSnapshot: unknown): string | nu
   return toStringOrNull(context?.requesterEmail ?? context?.requester_email ?? null);
 }
 
+function getRequesterNameFromClaimSnapshot(claimSnapshot: unknown): string | null {
+  if (!claimSnapshot || typeof claimSnapshot !== 'object') {
+    return null;
+  }
+
+  const snapshotRecord = claimSnapshot as Record<string, unknown>;
+  const context =
+    snapshotRecord.context && typeof snapshotRecord.context === 'object'
+      ? (snapshotRecord.context as Record<string, unknown>)
+      : null;
+
+  return toStringOrNull(context?.requesterName ?? context?.requester_name ?? null);
+}
+
 function resolveImpactRequesterIdentity(args: {
   profile: ProfileContext | null;
   requesterEmailSnapshot: unknown;
@@ -389,11 +403,13 @@ function resolveImpactRequesterIdentity(args: {
   const profileName = toStringOrNull(args.profile?.display_name);
   const profileEmail = toStringOrNull(args.profile?.email);
   const snapshotEmail = toStringOrNull(args.requesterEmailSnapshot);
+  const snapshotName = getRequesterNameFromClaimSnapshot(args.claimSnapshot);
   const claimSnapshotEmail = getRequesterEmailFromClaimSnapshot(args.claimSnapshot);
   const resolvedEmail = profileEmail || snapshotEmail || claimSnapshotEmail || '';
 
   const requesterName =
     profileName ||
+    snapshotName ||
     formatDisplayNameFromEmail(profileEmail) ||
     formatDisplayNameFromEmail(snapshotEmail) ||
     formatDisplayNameFromEmail(claimSnapshotEmail) ||
@@ -476,25 +492,50 @@ async function getRequesterProfileForImpactVerification(
   fallbackStoryOwnerId: string | null
 ) {
   const selectClause = 'display_name, avatar_url, email';
+  const fallbackSelectClause = 'display_name, avatar_url';
 
-  if (requesterProfileId) {
-    const requesterLookup = await adminClient
+  const getProfile = async (profileId: string) => {
+    const primaryLookup = await adminClient
       .from('profiles')
       .select(selectClause)
-      .eq('id', requesterProfileId)
+      .eq('id', profileId)
       .maybeSingle();
 
+    if (!isMissingColumnError(primaryLookup.error, 'email')) {
+      return primaryLookup as { data: ProfileContext | null; error: unknown };
+    }
+
+    const fallbackLookup = await adminClient
+      .from('profiles')
+      .select(fallbackSelectClause)
+      .eq('id', profileId)
+      .maybeSingle();
+
+    if (fallbackLookup.error) {
+      return fallbackLookup as { data: ProfileContext | null; error: unknown };
+    }
+
+    return {
+      data: fallbackLookup.data
+        ? ({
+            ...fallbackLookup.data,
+            email: null,
+          } as ProfileContext)
+        : null,
+      error: null,
+    };
+  };
+
+  if (requesterProfileId) {
+    const requesterLookup = await getProfile(requesterProfileId);
+
     if (requesterLookup.data || requesterLookup.error) {
-      return requesterLookup as { data: ProfileContext | null; error: unknown };
+      return requesterLookup;
     }
   }
 
   if (fallbackStoryOwnerId && fallbackStoryOwnerId !== requesterProfileId) {
-    return (await adminClient
-      .from('profiles')
-      .select(selectClause)
-      .eq('id', fallbackStoryOwnerId)
-      .maybeSingle()) as { data: ProfileContext | null; error: unknown };
+    return getProfile(fallbackStoryOwnerId);
   }
 
   return { data: null, error: null };

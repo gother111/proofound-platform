@@ -606,6 +606,11 @@ describe('profile purpose actions', () => {
 
   describe('requestImpactStoryVerification', () => {
     it('sends verification request for existing impact story and returns pending status', async () => {
+      mockRequireAuth.mockResolvedValueOnce({
+        id: 'test-user-id',
+        displayName: 'Pavlo Samoshko',
+      });
+
       const storyRow = {
         id: 'impact-1',
         title: 'Saved impact',
@@ -669,6 +674,11 @@ describe('profile purpose actions', () => {
           impactStoryId: 'impact-1',
           verifierEmail: 'verifier@example.com',
           status: 'pending',
+          claimSnapshot: expect.objectContaining({
+            context: expect.objectContaining({
+              requesterName: 'Pavlo Samoshko',
+            }),
+          }),
         }),
       });
       expect(mockSendEmail).toHaveBeenCalledWith(

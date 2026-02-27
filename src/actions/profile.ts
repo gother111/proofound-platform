@@ -789,6 +789,7 @@ type ImpactStoryVerificationRecord = {
 
 type ImpactStoryVerificationRequestInternalInput = {
   userId: string;
+  requesterDisplayName?: string | null;
   impactStoryId: string;
   storyData: Omit<ImpactStory, 'id'>;
   verificationRequest: ImpactStoryVerificationRequestInput;
@@ -879,6 +880,7 @@ function buildClaimSnapshot(
     requesterDomain?: string | null;
     verifierDomain?: string | null;
     requesterEmail?: string | null;
+    requesterName?: string | null;
   }
 ) {
   const measuredOutcomeClaims = (data.measuredOutcomes || []).map((outcome) => ({
@@ -918,6 +920,7 @@ function buildClaimSnapshot(
       requesterDomain: context?.requesterDomain || null,
       verifierDomain: context?.verifierDomain || null,
       requesterEmail: context?.requesterEmail || null,
+      requesterName: context?.requesterName || null,
     },
   };
 }
@@ -1060,6 +1063,7 @@ async function createImpactStoryVerificationRequestInternal(
     requesterDomain: integrityAssessment.requesterDomain,
     verifierDomain: integrityAssessment.verifierDomain,
     requesterEmail: integrityAssessment.normalizedRequesterEmail,
+    requesterName: input.requesterDisplayName || null,
   });
 
   let verificationRequest: {
@@ -1382,6 +1386,7 @@ export async function createImpactStory(data: Omit<ImpactStory, 'id'>) {
 
     const verificationResult = await createImpactStoryVerificationRequestInternal({
       userId: user.id,
+      requesterDisplayName: user.displayName || null,
       impactStoryId: inserted.id,
       storyData: mapImpactStoryRowToDraft(
         {
@@ -1563,6 +1568,7 @@ export async function requestImpactStoryVerification(
 
   const verificationResult = await createImpactStoryVerificationRequestInternal({
     userId: user.id,
+    requesterDisplayName: user.displayName || null,
     impactStoryId: baseStory.id,
     storyData: verificationStoryDraft,
     verificationRequest,

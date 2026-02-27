@@ -458,6 +458,108 @@ describe('verify impact token route', () => {
     expect(body.verification.why_you_are_receiving_this).toContain('Snapshot Person');
   });
 
+  it('GET preserves profile display name when profiles email column is unavailable', async () => {
+    const impactRequest = {
+      id: 'req-email-drift',
+      impact_story_id: 'story-1',
+      requester_profile_id: 'requester-1',
+      requester_email_snapshot: 'p.samoshko97@icloud.com',
+      verifier_email: 'verifier@example.com',
+      verifier_relationship: 'Program Director',
+      status: 'pending',
+      claim_snapshot: {
+        context: {
+          requesterEmail: 'p.samoshko97@icloud.com',
+        },
+      },
+      created_at: '2026-02-20T00:00:00.000Z',
+      expires_at: '2099-02-20T00:00:00.000Z',
+    };
+
+    const impactStory = {
+      id: 'story-1',
+      title: 'Impact Story',
+      user_id: 'story-owner-1',
+      role_title: 'Program Lead',
+      role_scope: 'owned',
+      affiliation_details: 'Voice of Ukrainians in Sweden',
+      org_description: 'Community organization',
+      measured_outcomes: [],
+      supporting_artifacts: [],
+    };
+
+    createAdminClientMock.mockReturnValue({
+      from: vi.fn((table: string) => {
+        if (table === 'impact_story_verification_requests') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                maybeSingle: vi.fn().mockResolvedValue({ data: impactRequest, error: null }),
+              }),
+            }),
+            update: vi.fn().mockReturnValue({
+              eq: vi.fn().mockResolvedValue({ error: null }),
+            }),
+          };
+        }
+
+        if (table === 'impact_stories') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                maybeSingle: vi.fn().mockResolvedValue({ data: impactStory, error: null }),
+              }),
+            }),
+          };
+        }
+
+        if (table === 'profiles') {
+          return {
+            select: vi.fn((selectClause: string) => ({
+              eq: vi.fn().mockReturnValue({
+                maybeSingle: vi.fn().mockResolvedValue(
+                  selectClause.includes('email')
+                    ? {
+                        data: null,
+                        error: {
+                          code: 'PGRST204',
+                          message:
+                            "Could not find the 'email' column of 'profiles' in the schema cache",
+                        },
+                      }
+                    : {
+                        data: {
+                          display_name: 'Pavlo Samoshko',
+                          avatar_url: null,
+                        },
+                        error: null,
+                      }
+                ),
+              }),
+            })),
+          };
+        }
+
+        if (table === 'impact_story_verification_responses') {
+          return {
+            insert: vi.fn().mockResolvedValue({ error: null }),
+          };
+        }
+
+        throw new Error(`Unexpected table: ${table}`);
+      }),
+    });
+
+    const response = await GET(new NextRequest(`http://localhost/api/verify/${TOKEN}`), {
+      params: Promise.resolve({ token: TOKEN }),
+    });
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.verification.requester_name).toBe('Pavlo Samoshko');
+    expect(body.verification.requester_email).toBe('p.samoshko97@icloud.com');
+  });
+
   it('GET reconstructs legacy outcome claims from outcomes text when structured outcomes are missing', async () => {
     createAdminClientMock.mockReturnValue(
       buildImpactAdminClient({
