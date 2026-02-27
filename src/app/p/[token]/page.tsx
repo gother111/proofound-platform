@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PublicSnippetView } from '@/components/profile/PublicSnippetView';
@@ -7,17 +8,77 @@ import {
   getSnippetByToken,
   recordSnippetView,
 } from '@/lib/profile/public-snippet';
+import {
+  buildPublicProfileMetadata,
+  buildUnavailablePublicProfileMetadata,
+} from '@/lib/seo/public-profile-metadata';
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ token: string }>;
+}): Promise<Metadata> {
+  const { token } = await params;
+  const safePath = `/p/${encodeURIComponent(token)}`;
+  try {
+    const snippet = await getSnippetByToken(token);
+
+    if (!snippet) {
+      return buildUnavailablePublicProfileMetadata(safePath);
+    }
+
+    const viewModel = await buildPublicSnippetViewModel(snippet);
+    if (!viewModel) {
+      return buildUnavailablePublicProfileMetadata(safePath);
+    }
+
+    if (viewModel.redacted) {
+      return buildPublicProfileMetadata({
+        title: 'Profile is currently hidden | Proofound',
+        description:
+          'This public profile link is currently hidden by the owner and is temporarily unavailable.',
+        path: safePath,
+        ogTitle: 'Profile is currently hidden',
+        ogDescription:
+          'This public profile link is currently hidden by the owner and is temporarily unavailable.',
+      });
+    }
+
+    const subtitle =
+      typeof viewModel.subtitle === 'string' && viewModel.subtitle.trim().length > 0
+        ? viewModel.subtitle.trim()
+        : null;
+    const about =
+      typeof viewModel.about === 'string' && viewModel.about.trim().length > 0
+        ? viewModel.about.trim().slice(0, 140)
+        : null;
+
+    return buildPublicProfileMetadata({
+      title: `${viewModel.title} | Proofound Public Profile`,
+      description:
+        subtitle || about || `Explore this public ${viewModel.profileType} profile on Proofound.`,
+      path: safePath,
+      ogTitle: `${viewModel.title} on Proofound`,
+      ogDescription:
+        subtitle || about || `View this public ${viewModel.profileType} profile on Proofound.`,
+    });
+  } catch {
+    return buildUnavailablePublicProfileMetadata(safePath);
+  }
+}
 
 function InvalidSnippetState() {
   return (
     <div className="min-h-screen bg-[#F7F6F1] flex items-center justify-center p-6">
-      <Card className="max-w-lg w-full border-slate-200">
+      <Card className="max-w-lg w-full border-[#E8E6DD] bg-white/95 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-xl">This shared profile is unavailable</CardTitle>
+          <CardTitle className="text-xl text-[#2D3330]">
+            This shared profile is unavailable
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm text-slate-600">
+        <CardContent className="space-y-2 text-sm text-[#6B6760]">
           <p>The link may be expired, deleted, or invalid.</p>
           <p>Ask the owner to generate a new sharing link.</p>
         </CardContent>

@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -25,6 +26,10 @@ import {
 import { buildTrustSignals } from '@/lib/portfolio/trust-signals';
 import { mergeVisibilityFlags } from '@/lib/portfolio/visibility';
 import { sanitizeReturnPath } from '@/lib/navigation/sanitize-return-path';
+import {
+  buildPublicProfileMetadata,
+  buildUnavailablePublicProfileMetadata,
+} from '@/lib/seo/public-profile-metadata';
 import { ShareLinkButton } from './ShareLinkButton';
 import { DownloadPdfButton } from './DownloadPdfButton';
 import { CopyTextButton } from './CopyTextButton';
@@ -45,6 +50,64 @@ type SkillRow = {
 };
 
 const FALLBACK_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ handle: string }>;
+}): Promise<Metadata> {
+  const { handle } = await params;
+  const safePath = `/portfolio/${encodeURIComponent(handle)}`;
+
+  try {
+    const supabase = await createClient();
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select(
+        `
+          handle,
+          display_name,
+          individual_profiles (
+            headline,
+            tagline
+          ),
+          field_visibility: individual_profiles(field_visibility)
+        `
+      )
+      .eq('handle', handle)
+      .maybeSingle();
+
+    if (!profile) {
+      return buildUnavailablePublicProfileMetadata(safePath);
+    }
+
+    const visibility = mergeVisibilityFlags(
+      Array.isArray((profile as any).field_visibility)
+        ? (profile as any).field_visibility[0]?.field_visibility
+        : (profile as any).field_visibility?.field_visibility
+    );
+
+    const individual = Array.isArray(profile.individual_profiles)
+      ? profile.individual_profiles[0]
+      : profile.individual_profiles;
+    const displayName = profile.display_name || profile.handle || 'Proofound Member';
+    const headline = visibility.header ? individual?.headline || individual?.tagline || null : null;
+
+    return buildPublicProfileMetadata({
+      title: `${displayName} | Proofound Public Portfolio`,
+      description: headline
+        ? `${displayName} on Proofound. ${headline}`
+        : `Explore ${displayName}'s public Proofound portfolio with trust signals and verified achievements.`,
+      path: safePath,
+      ogTitle: `${displayName} on Proofound`,
+      ogDescription: headline
+        ? `${headline} View this public profile on Proofound.`
+        : `View ${displayName}'s public profile and trust signals on Proofound.`,
+    });
+  } catch {
+    return buildUnavailablePublicProfileMetadata(safePath);
+  }
+}
 
 export default async function PortfolioPage({
   params,
@@ -200,20 +263,24 @@ export default async function PortfolioPage({
     : 'This is a public, read-only view. Owner-only actions are hidden.';
 
   return (
-    <AppSurface density="comfortable" className="min-h-screen">
+    <AppSurface
+      density="comfortable"
+      withBackground={false}
+      className="min-h-screen bg-gradient-to-b from-[#F7F6F1] via-[#FBFAF6] to-white"
+    >
       <FadeIn duration={0.6}>
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 lg:flex-row lg:py-8">
           <div className="flex-1 space-y-6">
             <SlideUp delay={0.1}>
-              <GlassCard interactive>
+              <GlassCard interactive className="border-[#E8E6DD] bg-white/95 shadow-sm">
                 <CardContent className="flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-lg font-semibold text-white">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#1C4D3A] to-[#C76B4A] text-lg font-semibold text-white">
                       {displayName[0]?.toUpperCase() || 'P'}
                     </div>
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <h1 className="text-xl font-semibold text-slate-900">{displayName}</h1>
+                        <h1 className="text-xl font-semibold text-[#2D3330]">{displayName}</h1>
                         {visibility.identity && signals.identity.verified && (
                           <Badge
                             variant="outline"
@@ -226,8 +293,8 @@ export default async function PortfolioPage({
                       </div>
                       {visibility.header && (
                         <>
-                          <p className="text-sm text-slate-600">@{profile.handle}</p>
-                          <p className="text-sm text-slate-700">{headline}</p>
+                          <p className="text-sm text-[#6B6760]">@{profile.handle}</p>
+                          <p className="text-sm text-[#2D3330]">{headline}</p>
                         </>
                       )}
                     </div>
@@ -250,9 +317,9 @@ export default async function PortfolioPage({
 
             {publicMessage && (
               <SlideUp delay={0.2}>
-                <GlassCard>
-                  <CardContent className="flex items-center gap-3 p-4 text-sm text-slate-700">
-                    <Globe2 className="h-4 w-4 text-slate-500" />
+                <GlassCard className="border-[#E8E6DD] bg-white/95">
+                  <CardContent className="flex items-center gap-3 p-4 text-sm text-[#2D3330]">
+                    <Globe2 className="h-4 w-4 text-[#6B6760]" />
                     {publicMessage}
                   </CardContent>
                 </GlassCard>
@@ -261,7 +328,7 @@ export default async function PortfolioPage({
 
             {visibility.proofBar && (
               <SlideUp delay={0.3}>
-                <GlassCard>
+                <GlassCard className="border-[#E8E6DD] bg-white/95">
                   <CardHeader>
                     <CardTitle>Trust signals</CardTitle>
                   </CardHeader>
@@ -354,16 +421,16 @@ export default async function PortfolioPage({
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {visibility.bio ? (
-                    <p className="text-sm text-slate-700">{bio}</p>
+                    <p className="text-sm text-[#2D3330]">{bio}</p>
                   ) : (
-                    <p className="text-sm text-slate-600">
+                    <p className="text-sm text-[#6B6760]">
                       {viewerIsOwner
                         ? 'Bio/About is hidden from public view.'
                         : 'This section is hidden.'}
                     </p>
                   )}
                   {viewerIsOwner && (
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-[#6B6760]">
                       Edit your profile, proofs, and verifications from Settings or Expertise Hub.
                     </p>
                   )}
@@ -374,10 +441,10 @@ export default async function PortfolioPage({
 
           <div className="flex-1 space-y-6">
             <SlideUp delay={0.5}>
-              <GlassCard>
+              <GlassCard className="border-[#E8E6DD] bg-white/95">
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle>Proofs & verifications</CardTitle>
-                  <Badge variant="outline" className="gap-1">
+                  <Badge variant="outline" className="gap-1 border-[#D9D5CC] text-[#6B6760]">
                     <Sparkles className="h-3.5 w-3.5" />
                     High-signal
                   </Badge>
@@ -403,14 +470,14 @@ export default async function PortfolioPage({
                         description="Trusted confirmations attached to your profile."
                       />
                       {viewerIsOwner && (
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-[#6B6760]">
                           Tip: Add proof to your top 3 skills, then request one verification each
                           for a fast trust lift.
                         </p>
                       )}
                     </>
                   ) : (
-                    <p className="text-sm text-slate-600">
+                    <p className="text-sm text-[#6B6760]">
                       {viewerIsOwner
                         ? 'Counts are hidden from public view.'
                         : 'This section is hidden.'}
@@ -421,10 +488,10 @@ export default async function PortfolioPage({
             </SlideUp>
 
             <SlideUp delay={0.6}>
-              <GlassCard>
+              <GlassCard className="border-[#E8E6DD] bg-white/95">
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle>Skills snapshot</CardTitle>
-                  <Badge variant="outline" className="gap-1">
+                  <Badge variant="outline" className="gap-1 border-[#D9D5CC] text-[#6B6760]">
                     <UserRound className="h-3.5 w-3.5" />
                     {skillView.length || 'Add skills'}
                   </Badge>
@@ -432,7 +499,7 @@ export default async function PortfolioPage({
                 <CardContent className="space-y-3">
                   {visibility.skills ? (
                     skillView.length === 0 ? (
-                      <p className="text-sm text-slate-600">
+                      <p className="text-sm text-[#6B6760]">
                         {viewerIsOwner
                           ? 'Add your top skills and proofs to light up this section.'
                           : 'Skills will appear here once added.'}
@@ -440,9 +507,9 @@ export default async function PortfolioPage({
                     ) : (
                       skillView.map((skill) => (
                         <div key={skill.id} className="space-y-1.5">
-                          <div className="flex items-center justify-between text-sm text-slate-800">
+                          <div className="flex items-center justify-between text-sm text-[#2D3330]">
                             <span>{skill.name}</span>
-                            <span className="text-slate-500">
+                            <span className="text-[#6B6760]">
                               {Math.round((skill.level / 5) * 100)}%
                             </span>
                           </div>
@@ -451,7 +518,7 @@ export default async function PortfolioPage({
                       ))
                     )
                   ) : (
-                    <p className="text-sm text-slate-600">
+                    <p className="text-sm text-[#6B6760]">
                       {viewerIsOwner ? 'Skills hidden from public view.' : 'Skills are hidden.'}
                     </p>
                   )}
@@ -460,7 +527,7 @@ export default async function PortfolioPage({
             </SlideUp>
 
             <SlideUp delay={0.7}>
-              <GlassCard>
+              <GlassCard className="border-[#E8E6DD] bg-white/95">
                 <CardHeader>
                   <CardTitle>Contact</CardTitle>
                 </CardHeader>
@@ -468,7 +535,7 @@ export default async function PortfolioPage({
                   {individual?.work_email && visibility.contact ? (
                     <ContactPill href={`mailto:${individual.work_email}`} label="Work email" />
                   ) : (
-                    <span className="rounded-full border border-slate-200 px-3 py-1 text-slate-500">
+                    <span className="rounded-full border border-[#D9D5CC] px-3 py-1 text-[#6B6760]">
                       Contact email hidden
                     </span>
                   )}
@@ -500,19 +567,19 @@ function TrustRow({
 }) {
   return (
     <HoverTilt intensity={2}>
-      <div className="h-full rounded-lg border border-slate-200 bg-white/60 p-3 shadow-sm transition-colors hover:bg-white/80 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:bg-slate-900/80">
+      <div className="h-full rounded-lg border border-[#E8E6DD] bg-[#FCFBF8] p-3 shadow-sm transition-colors hover:bg-white">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <ShieldCheck
-              className={`h-4 w-4 ${positive ? 'text-emerald-600' : 'text-slate-400'}`}
+              className={`h-4 w-4 ${positive ? 'text-emerald-600' : 'text-[#9A958D]'}`}
             />
-            <p className="text-sm font-semibold text-slate-900">{label}</p>
+            <p className="text-sm font-semibold text-[#2D3330]">{label}</p>
           </div>
           <Badge variant={positive ? 'default' : 'outline'} className="text-xs">
             {value}
           </Badge>
         </div>
-        {helper && <p className="mt-2 text-xs text-slate-600">{helper}</p>}
+        {helper && <p className="mt-2 text-xs text-[#6B6760]">{helper}</p>}
       </div>
     </HoverTilt>
   );
@@ -529,12 +596,12 @@ function SummaryRow({
 }) {
   return (
     <HoverTilt intensity={2} className="block w-full">
-      <div className="flex items-start justify-between gap-3 rounded-lg p-2 transition-colors hover:bg-slate-100/50 dark:hover:bg-slate-800/50">
+      <div className="flex items-start justify-between gap-3 rounded-lg p-2 transition-colors hover:bg-[#F7F6F1]">
         <div>
-          <p className="text-sm font-semibold text-slate-900">{label}</p>
-          <p className="text-xs text-slate-600">{description}</p>
+          <p className="text-sm font-semibold text-[#2D3330]">{label}</p>
+          <p className="text-xs text-[#6B6760]">{description}</p>
         </div>
-        <div className="flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-800">
+        <div className="flex items-center gap-1 rounded-full bg-[#F7F6F1] px-3 py-1 text-sm font-medium text-[#2D3330]">
           <CheckCircle2 className="h-4 w-4 text-emerald-600" />
           {value}
         </div>
@@ -562,7 +629,7 @@ function ContactPill({
       className={`flex items-center gap-2 rounded-full border px-3 py-1 ${
         muted
           ? 'border-slate-200 text-slate-500'
-          : 'border-slate-200 text-slate-700 hover:border-indigo-300 hover:text-indigo-700'
+          : 'border-[#D9D5CC] text-[#2D3330] hover:border-[#1C4D3A]/40 hover:text-[#1C4D3A]'
       }`}
     >
       {icon ?? <Mail className="h-4 w-4" />}

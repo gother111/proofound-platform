@@ -11,23 +11,23 @@ type PublicSnippetViewProps = {
 
 function themeSurface(theme: PublicSnippetViewModel['theme']) {
   if (theme === 'dark') {
-    return 'bg-slate-950 text-slate-100';
+    return 'bg-[#1E2421] text-[#F5F1E9]';
   }
-  return 'bg-gradient-to-b from-[#F5F1E9] via-[#FAF8F3] to-white text-slate-900';
+  return 'bg-gradient-to-b from-[#F7F6F1] via-[#FBFAF6] to-white text-[#2D3330]';
 }
 
 function sectionTitle(text: string) {
-  return <h2 className="text-sm font-semibold tracking-wide uppercase text-slate-500">{text}</h2>;
+  return <h2 className="text-sm font-semibold tracking-wide uppercase text-[#6B6760]">{text}</h2>;
 }
 
 export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetViewProps) {
   if (viewModel.redacted) {
     return (
       <div className="min-h-[240px] flex items-center justify-center p-6">
-        <Card className="w-full max-w-xl border-slate-200">
+        <Card className="w-full max-w-xl border-[#E8E6DD] bg-white/95 shadow-sm">
           <CardContent className="py-10 text-center space-y-2">
-            <p className="text-lg font-semibold">Profile is currently hidden</p>
-            <p className="text-sm text-slate-600">
+            <p className="text-lg font-semibold text-[#2D3330]">Profile is currently hidden</p>
+            <p className="text-sm text-[#6B6760]">
               The owner enabled privacy mode and this public snapshot is unavailable right now.
             </p>
           </CardContent>
@@ -51,7 +51,7 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
       className={`w-full ${themeSurface(viewModel.theme)} ${compact ? 'p-4' : 'min-h-screen p-6 md:p-10'}`}
     >
       <div className={`mx-auto ${compact ? 'max-w-2xl' : 'max-w-5xl'} space-y-6`}>
-        <Card className="overflow-hidden border-slate-200/80 shadow-lg">
+        <Card className="overflow-hidden border-[#E8E6DD] bg-white/95 shadow-sm">
           <CardContent className="p-0">
             {viewModel.heroImage ? (
               <div
@@ -71,9 +71,9 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
                     </Badge>
                   </div>
                   {viewModel.subtitle && (
-                    <p className="text-sm text-slate-600">{viewModel.subtitle}</p>
+                    <p className="text-sm text-[#6B6760]">{viewModel.subtitle}</p>
                   )}
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600">
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-[#6B6760]">
                     {viewModel.location && (
                       <span className="inline-flex items-center gap-1">
                         <MapPin className="h-3.5 w-3.5" />
@@ -85,7 +85,7 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
                         href={viewModel.website}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 hover:text-slate-900"
+                        className="inline-flex items-center gap-1 hover:text-[#1C4D3A]"
                       >
                         <Globe className="h-3.5 w-3.5" />
                         Website
@@ -105,7 +105,7 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
                     height={64}
                     sizes="64px"
                     unoptimized
-                    className="h-16 w-16 rounded-xl object-cover border border-slate-200"
+                    className="h-16 w-16 rounded-xl object-cover border border-[#E8E6DD]"
                   />
                 ) : null}
               </div>
@@ -114,10 +114,12 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
         </Card>
 
         {!viewModel.hasVisibleFields ? (
-          <Card className="border-dashed border-slate-300">
+          <Card className="border-dashed border-[#D9D5CC] bg-white/95">
             <CardContent className="py-10 text-center space-y-2">
-              <p className="font-medium">Nothing is publicly visible in this shared profile yet.</p>
-              <p className="text-sm text-slate-600">
+              <p className="font-medium text-[#2D3330]">
+                Nothing is publicly visible in this shared profile yet.
+              </p>
+              <p className="text-sm text-[#6B6760]">
                 The owner can enable more sections from the profile sharing settings.
               </p>
             </CardContent>
@@ -125,10 +127,10 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
         ) : (
           <>
             {viewModel.about && (
-              <Card className="border-slate-200/80">
+              <Card className="border-[#E8E6DD] bg-white/95">
                 <CardHeader className="pb-2">{sectionTitle('About')}</CardHeader>
                 <CardContent>
-                  <p className="text-sm leading-6 whitespace-pre-line text-slate-700">
+                  <p className="text-sm leading-6 whitespace-pre-line text-[#2D3330]">
                     {viewModel.about}
                   </p>
                 </CardContent>
@@ -138,7 +140,7 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
             {(skills.length > 0 || experiences.length > 0 || education.length > 0) && (
               <div className="grid gap-4 md:grid-cols-3">
                 {skills.length > 0 && (
-                  <Card className="border-slate-200/80">
+                  <Card className="border-[#E8E6DD] bg-white/95">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-base flex items-center gap-2">
                         <Sparkles className="h-4 w-4" />
@@ -159,7 +161,7 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
                 )}
 
                 {experiences.length > 0 && (
-                  <Card className="border-slate-200/80">
+                  <Card className="border-[#E8E6DD] bg-white/95">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-base flex items-center gap-2">
                         <Briefcase className="h-4 w-4" />
@@ -171,10 +173,10 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
                         <div key={entry.id} className="text-sm">
                           <p className="font-medium">{entry.title}</p>
                           {entry.orgDescription && (
-                            <p className="text-slate-600">{entry.orgDescription}</p>
+                            <p className="text-[#6B6760]">{entry.orgDescription}</p>
                           )}
                           {entry.duration && (
-                            <p className="text-xs text-slate-500">{entry.duration}</p>
+                            <p className="text-xs text-[#6B6760]">{entry.duration}</p>
                           )}
                         </div>
                       ))}
@@ -183,7 +185,7 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
                 )}
 
                 {education.length > 0 && (
-                  <Card className="border-slate-200/80">
+                  <Card className="border-[#E8E6DD] bg-white/95">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-base flex items-center gap-2">
                         <GraduationCap className="h-4 w-4" />
@@ -194,9 +196,9 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
                       {education.map((entry) => (
                         <div key={entry.id} className="text-sm">
                           <p className="font-medium">{entry.degree}</p>
-                          <p className="text-slate-600">{entry.institution}</p>
+                          <p className="text-[#6B6760]">{entry.institution}</p>
                           {entry.duration && (
-                            <p className="text-xs text-slate-500">{entry.duration}</p>
+                            <p className="text-xs text-[#6B6760]">{entry.duration}</p>
                           )}
                         </div>
                       ))}
@@ -209,7 +211,7 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
             {(values.length > 0 || causes.length > 0 || culture.length > 0) && (
               <div className="grid gap-4 md:grid-cols-3">
                 {values.length > 0 && (
-                  <Card className="border-slate-200/80">
+                  <Card className="border-[#E8E6DD] bg-white/95">
                     <CardHeader className="pb-2">{sectionTitle('Values')}</CardHeader>
                     <CardContent className="flex flex-wrap gap-2">
                       {values.map((value) => (
@@ -221,7 +223,7 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
                   </Card>
                 )}
                 {causes.length > 0 && (
-                  <Card className="border-slate-200/80">
+                  <Card className="border-[#E8E6DD] bg-white/95">
                     <CardHeader className="pb-2">{sectionTitle('Causes')}</CardHeader>
                     <CardContent className="flex flex-wrap gap-2">
                       {causes.map((cause) => (
@@ -233,11 +235,11 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
                   </Card>
                 )}
                 {culture.length > 0 && (
-                  <Card className="border-slate-200/80">
+                  <Card className="border-[#E8E6DD] bg-white/95">
                     <CardHeader className="pb-2">{sectionTitle('Work Culture')}</CardHeader>
                     <CardContent className="space-y-2">
                       {culture.map((item) => (
-                        <p key={item} className="text-sm text-slate-700 capitalize">
+                        <p key={item} className="text-sm text-[#2D3330] capitalize">
                           {item}
                         </p>
                       ))}
@@ -248,7 +250,7 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
             )}
 
             {impactEntries.length > 0 && (
-              <Card className="border-slate-200/80">
+              <Card className="border-[#E8E6DD] bg-white/95">
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
                     <Target className="h-4 w-4" />
@@ -259,25 +261,25 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
                   {impactEntries.map((entry) => (
                     <div
                       key={entry.id}
-                      className="space-y-2 border-b border-slate-200/80 pb-4 last:border-b-0"
+                      className="space-y-2 border-b border-[#E8E6DD] pb-4 last:border-b-0"
                     >
                       <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
                         <p className="font-medium">{entry.title}</p>
                         {entry.timeframe && (
-                          <p className="text-xs text-slate-500">{entry.timeframe}</p>
+                          <p className="text-xs text-[#6B6760]">{entry.timeframe}</p>
                         )}
                       </div>
                       {entry.description && (
-                        <p className="text-sm text-slate-700">{entry.description}</p>
+                        <p className="text-sm text-[#2D3330]">{entry.description}</p>
                       )}
                       {entry.metrics.length > 0 && (
                         <div className="grid gap-2 md:grid-cols-3">
                           {entry.metrics.map((metric) => (
                             <div
                               key={`${entry.id}-${metric.name}`}
-                              className="rounded-md border border-slate-200 p-2"
+                              className="rounded-md border border-[#E8E6DD] p-2"
                             >
-                              <p className="text-xs text-slate-500">{metric.name}</p>
+                              <p className="text-xs text-[#6B6760]">{metric.name}</p>
                               <p className="text-sm font-medium">
                                 {metric.value}
                                 {metric.unit ? ` ${metric.unit}` : ''}

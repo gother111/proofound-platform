@@ -23,8 +23,8 @@ function resolveFormat(format: string | undefined, fallback: SnippetFormat): Sni
 function InvalidEmbedState() {
   return (
     <div className="min-h-[140px] bg-[#F7F6F1] p-3">
-      <Card className="border-slate-200">
-        <CardContent className="py-8 text-center text-sm text-slate-600">
+      <Card className="border-[#E8E6DD] bg-white/95 shadow-sm">
+        <CardContent className="py-8 text-center text-sm text-[#6B6760]">
           This shared profile snippet is unavailable.
         </CardContent>
       </Card>
