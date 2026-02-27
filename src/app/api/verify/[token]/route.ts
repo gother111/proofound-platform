@@ -63,11 +63,22 @@ function shouldFallbackToLegacyRequestIdLookup(token: string, tokenLookupError: 
 }
 
 async function getSkillVerificationByTokenOrLegacyId(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  client: {
+    from: (table: string) => {
+      select: (query: string) => {
+        eq: (
+          column: string,
+          value: string
+        ) => {
+          single: () => Promise<{ data: any; error: any }>;
+        };
+      };
+    };
+  },
   token: string,
   selectClause: string
 ): Promise<{ data: any; error: any }> {
-  const tokenLookup = await supabase
+  const tokenLookup = await client
     .from('skill_verification_requests')
     .select(selectClause)
     .eq('verification_token', token)
@@ -81,7 +92,7 @@ async function getSkillVerificationByTokenOrLegacyId(
     return { data: null, error: tokenLookup.error };
   }
 
-  const idLookup = await supabase
+  const idLookup = await client
     .from('skill_verification_requests')
     .select(selectClause)
     .eq('id', token)
@@ -518,6 +529,9 @@ export async function GET(
   try {
     const supabase = await createClient();
     const { token } = await params;
+    let skillDataClient:
+      | ReturnType<typeof createAdminClient>
+      | Awaited<ReturnType<typeof createClient>> = supabase;
 
     if (!token || token.length < 32) {
       return NextResponse.json({ error: 'Invalid verification token' }, { status: 400 });
@@ -615,10 +629,19 @@ export async function GET(
       console.error('Impact verification lookup failed, continuing to skill lookup:', impactError);
     }
 
+    try {
+      skillDataClient = createAdminClient();
+    } catch (adminClientError) {
+      console.error(
+        'Skill verification admin client unavailable; falling back to request-scoped client',
+        adminClientError
+      );
+    }
+
     // 2) Fallback to existing skill verification flow
     const { data: verification, error: verificationError } =
       await getSkillVerificationByTokenOrLegacyId(
-        supabase,
+        skillDataClient,
         token,
         `
         id,
@@ -652,7 +675,7 @@ export async function GET(
 
     if (verification.expires_at && new Date(verification.expires_at) < new Date()) {
       if (verification.status === 'pending') {
-        await supabase
+        await skillDataClient
           .from('skill_verification_requests')
           .update({ status: 'expired' })
           .eq('id', verification.id);
@@ -667,7 +690,7 @@ export async function GET(
       });
     }
 
-    const { data: requesterProfile } = await supabase
+    const { data: requesterProfile } = await skillDataClient
       .from('profiles')
       .select('display_name, avatar_url, email')
       .eq('id', verification.requester_profile_id)
@@ -731,6 +754,9 @@ export async function POST(
     const supabase = await createClient();
     const { token } = await params;
     const body = await request.json();
+    let skillDataClient:
+      | ReturnType<typeof createAdminClient>
+      | Awaited<ReturnType<typeof createClient>> = supabase;
 
     const validated = VerifyResponseSchema.parse(body);
 
@@ -1012,10 +1038,19 @@ export async function POST(
       console.error('Impact verification submit failed, continuing to skill flow:', impactError);
     }
 
+    try {
+      skillDataClient = createAdminClient();
+    } catch (adminClientError) {
+      console.error(
+        'Skill verification admin client unavailable; falling back to request-scoped client',
+        adminClientError
+      );
+    }
+
     // 2) Fallback to existing skill verification flow
     const { data: verification, error: verificationError } =
       await getSkillVerificationByTokenOrLegacyId(
-        supabase,
+        skillDataClient,
         token,
         `
         id, 
@@ -1120,7 +1155,7 @@ export async function POST(
       },
     };
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await skillDataClient
       .from('skill_verification_requests')
       .update({
         status: newStatus,
@@ -1148,7 +1183,7 @@ export async function POST(
     }
 
     if (validated.action === 'accept' && mergedIntegrity.integrityStatus === 'clear') {
-      const { data: skill } = await supabase
+      const { data: skill } = await skillDataClient
         .from('skills')
         .select('evidence_strength')
         .eq('id', verification.skill_id)
@@ -1157,7 +1192,7 @@ export async function POST(
       const currentStrength = parseFloat(skill?.evidence_strength || '0');
       const newStrength = Math.min(currentStrength + 0.2, 1.0);
 
-      await supabase
+      await skillDataClient
         .from('skills')
         .update({
           evidence_strength: newStrength.toString(),
@@ -1178,7 +1213,7 @@ export async function POST(
     }
 
     try {
-      const { data: requesterProfile } = await supabase
+      const { data: requesterProfile } = await skillDataClient
         .from('profiles')
         .select('email, display_name')
         .eq('id', verification.requester_profile_id)
