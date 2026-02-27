@@ -33,7 +33,9 @@ interface LinkedInVerificationProps {
 interface AutomatedCheckResult {
   confidence: number;
   hasIdentityVerification?: boolean;
+  hasWorkplaceVerification?: boolean;
   linkedinVerificationStatus: 'verified' | 'pending';
+  linkedinVerificationLevel: 'identity' | 'workplace' | 'pending';
   identityGranted: boolean;
   hasVerificationBadge: boolean;
   signals?: {
@@ -114,7 +116,15 @@ export function LinkedInVerification({
       setCheckResult({
         ...data.automatedCheck,
         hasIdentityVerification: Boolean(data.hasIdentityVerification),
+        hasWorkplaceVerification: Boolean(data.hasWorkplaceVerification),
         linkedinVerificationStatus: data.linkedinVerificationStatus,
+        linkedinVerificationLevel:
+          data.linkedinVerificationLevel ||
+          (data.hasIdentityVerification
+            ? 'identity'
+            : data.linkedinVerificationStatus === 'verified'
+              ? 'workplace'
+              : 'pending'),
         identityGranted: Boolean(data.identityGranted),
       });
 
@@ -129,7 +139,7 @@ export function LinkedInVerification({
       });
 
       // For pending reviews, call out quick-review expectation at high confidence.
-      if (data.linkedinVerificationStatus === 'pending' && data.automatedCheck.confidence >= 80) {
+      if (data.linkedinVerificationLevel === 'pending' && data.automatedCheck.confidence >= 80) {
         toast.info('High confidence detected! Admin review typically completes within 1 hour.', {
           duration: 5000,
         });
@@ -195,13 +205,17 @@ export function LinkedInVerification({
           <AlertDescription>
             <strong>
               {checkResult.linkedinVerificationStatus === 'verified'
-                ? 'LinkedIn Verification Approved!'
+                ? checkResult.linkedinVerificationLevel === 'identity'
+                  ? 'LinkedIn Identity Verification Approved!'
+                  : 'LinkedIn Workplace Verification Approved!'
                 : 'Verification Check Complete!'}
             </strong>
             <p className="mt-2">
-              {checkResult.linkedinVerificationStatus === 'verified'
-                ? 'LinkedIn identity verification was detected and your profile is now verified.'
-                : 'Your LinkedIn profile has been analyzed. Pending admin review.'}
+              {checkResult.linkedinVerificationLevel === 'identity'
+                ? 'LinkedIn identity verification was detected and your profile now has identity-level verification.'
+                : checkResult.linkedinVerificationLevel === 'workplace'
+                  ? 'LinkedIn workplace verification was detected. Your profile now has workplace-level verification.'
+                  : 'Your LinkedIn profile has been analyzed. Pending admin review.'}
             </p>
           </AlertDescription>
         </Alert>
@@ -219,6 +233,12 @@ export function LinkedInVerification({
                     Identity Verification Detected
                   </Badge>
                 )}
+                {!checkResult.hasIdentityVerification && checkResult.hasWorkplaceVerification && (
+                  <Badge variant="outline" className="border-blue-500 text-blue-700">
+                    <Award className="w-3 h-3 mr-1" />
+                    Workplace Verification Detected
+                  </Badge>
+                )}
                 {!checkResult.hasIdentityVerification && checkResult.hasVerificationBadge && (
                   <Badge variant="outline" className="border-green-500 text-green-700">
                     <Award className="w-3 h-3 mr-1" />
@@ -227,13 +247,15 @@ export function LinkedInVerification({
                 )}
               </div>
               <p className="text-sm text-muted-foreground mt-2">
-                {checkResult.linkedinVerificationStatus === 'verified'
+                {checkResult.linkedinVerificationLevel === 'identity'
                   ? 'Auto-approved using LinkedIn official identity verification.'
-                  : checkResult.confidence >= 80
-                    ? 'High confidence - Quick admin approval typically within 1 hour'
-                    : checkResult.confidence >= 50
-                      ? 'Medium confidence - Manual admin review within 1-2 business days'
-                      : 'Low confidence - Consider using another verification method'}
+                  : checkResult.linkedinVerificationLevel === 'workplace'
+                    ? 'Auto-approved using LinkedIn official workplace verification.'
+                    : checkResult.confidence >= 80
+                      ? 'High confidence - Quick admin approval typically within 1 hour'
+                      : checkResult.confidence >= 50
+                        ? 'Medium confidence - Manual admin review within 1-2 business days'
+                        : 'Low confidence - Consider using another verification method'}
               </p>
             </div>
 
@@ -286,10 +308,15 @@ export function LinkedInVerification({
             {/* Recommendation */}
             <div className="pt-4 border-t">
               <p className="text-sm text-muted-foreground">
-                {checkResult.linkedinVerificationStatus === 'verified' ? (
+                {checkResult.linkedinVerificationLevel === 'identity' ? (
                   <>
                     <strong>Next Steps:</strong> No further action is required. Your identity
                     verification is active.
+                  </>
+                ) : checkResult.linkedinVerificationLevel === 'workplace' ? (
+                  <>
+                    <strong>Next Steps:</strong> Your workplace verification is active. Run the
+                    check again after enabling LinkedIn identity verification to upgrade.
                   </>
                 ) : (
                   <>
@@ -326,8 +353,8 @@ export function LinkedInVerification({
               <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
                 <li>Connect your LinkedIn account (OAuth)</li>
                 <li>Automated check runs in 5-10 seconds</li>
-                <li>Auto-approval happens if LinkedIn identity verification is detected</li>
-                <li>Otherwise, admins review the automated findings</li>
+                <li>Auto-approval happens for LinkedIn identity or workplace signals</li>
+                <li>Without official signals, admins review the automated findings</li>
               </ol>
             </div>
 

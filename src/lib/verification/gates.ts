@@ -12,6 +12,8 @@ import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { log } from '@/lib/log';
 import { getRows } from '@/lib/db/rows';
+import { resolveCanonicalVerificationTier } from '@/lib/verification/tier';
+import { resolveWorkEmailValidity } from '@/lib/verification/work-email-validity';
 
 // Re-export types from client-safe utils
 export type {
@@ -180,10 +182,17 @@ async function getUserVerifications(userId: string): Promise<VerificationStatus[
   // Get individual profile data
   const profile = await db.execute(sql`
     SELECT
+      verification_tier,
+      verification_tier_source,
       verification_status,
       verification_method,
+      verified,
       verified_at,
-      work_email_verified
+      work_email_verified,
+      work_email_verified_at,
+      work_email_reverify_due_at,
+      linkedin_verification_status,
+      linkedin_verification_data
     FROM individual_profiles
     WHERE user_id = ${userId}
   `);
@@ -191,19 +200,35 @@ async function getUserVerifications(userId: string): Promise<VerificationStatus[
   const profileRows = getRows(profile as any) as any[];
   if (profileRows.length > 0) {
     const row = profileRows[0] as any;
+    const workEmailValidity = resolveWorkEmailValidity({
+      work_email_verified: row.work_email_verified,
+      work_email_verified_at: row.work_email_verified_at,
+      work_email_reverify_due_at: row.work_email_reverify_due_at,
+      verified_at: row.verified_at,
+    });
+    const canonicalTier = resolveCanonicalVerificationTier({
+      currentTier: row.verification_tier,
+      currentTierSource: row.verification_tier_source,
+      verificationMethod: row.verification_method,
+      verificationStatus: row.verification_status,
+      verified: row.verified,
+      linkedinVerificationStatus: row.linkedin_verification_status,
+      linkedinVerificationData: row.linkedin_verification_data,
+      workEmailCurrentlyVerified: workEmailValidity.isCurrentlyVerified,
+    });
 
     // Identity verification
-    if (row.verification_status === 'verified') {
+    if (canonicalTier.verificationTier === 'identity_verified') {
       verifications.push({
         type: 'identity',
         verified: true,
         verifiedAt: row.verified_at ? new Date(row.verified_at) : undefined,
-        provider: row.verification_method,
+        provider: canonicalTier.verificationTierSource === 'veriff' ? 'veriff' : 'linkedin',
       });
     }
 
     // Work email verification
-    if (row.work_email_verified) {
+    if (workEmailValidity.isCurrentlyVerified) {
       verifications.push({
         type: 'work_email',
         verified: true,

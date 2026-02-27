@@ -12,7 +12,11 @@ import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { individualProfiles, profiles } from '@/db/schema';
 import { eq, and, or, desc, sql } from 'drizzle-orm';
-import { resolveHasLinkedInIdentityVerification } from '@/lib/linkedin-verified';
+import {
+  resolveHasLinkedInIdentityVerification,
+  resolveHasLinkedInWorkplaceVerification,
+} from '@/lib/linkedin-verified';
+import { resolveLinkedInVerificationLevel } from '@/lib/verification/tier';
 
 export async function GET(request: NextRequest) {
   try {
@@ -52,6 +56,7 @@ export async function GET(request: NextRequest) {
         verificationData: individualProfiles.linkedinVerificationData,
         verificationStatus: individualProfiles.verificationStatus,
         linkedinVerificationStatus: individualProfiles.linkedinVerificationStatus,
+        linkedinVerificationLevel: individualProfiles.linkedinVerificationLevel,
         createdAt: profiles.updatedAt,
       })
       .from(individualProfiles)
@@ -72,13 +77,25 @@ export async function GET(request: NextRequest) {
         const data = v.verificationData as any;
         const confidence = data?.automatedCheck?.confidence || 0;
         const hasIdentityVerification = resolveHasLinkedInIdentityVerification(data);
-        const hasVerificationBadge = hasIdentityVerification || Boolean(data?.hasVerificationBadge);
+        const hasWorkplaceVerification = resolveHasLinkedInWorkplaceVerification(data);
+        const hasVerificationBadge =
+          hasIdentityVerification ||
+          hasWorkplaceVerification ||
+          Boolean(data?.hasVerificationBadge);
         const recommendation = data?.automatedCheck?.recommendation || 'review_manually';
+        const linkedinVerificationLevel =
+          v.linkedinVerificationLevel ||
+          resolveLinkedInVerificationLevel({
+            linkedinVerificationStatus: v.linkedinVerificationStatus,
+            linkedinVerificationData: data,
+          });
 
         return {
           ...v,
           confidence,
           hasIdentityVerification,
+          hasWorkplaceVerification,
+          linkedinVerificationLevel,
           hasVerificationBadge,
           recommendation,
           signals: {

@@ -12,8 +12,23 @@ type VerificationProfile = {
   verified: boolean;
   verification_method: 'veriff' | 'work_email' | 'linkedin' | null;
   verification_status: 'unverified' | 'pending' | 'verified' | 'failed' | null;
+  verification_tier?: 'unverified' | 'workplace_verified' | 'identity_verified' | null;
+  verification_tier_source?:
+    | 'linkedin_identity'
+    | 'linkedin_workplace'
+    | 'work_email'
+    | 'veriff'
+    | 'unknown'
+    | null;
   verified_at: string | null;
   linkedin_verification_status?: 'unverified' | 'pending' | 'verified' | 'failed' | null;
+  linkedin_verification_level?:
+    | 'unverified'
+    | 'pending'
+    | 'workplace'
+    | 'identity'
+    | 'failed'
+    | null;
   linkedin_verified_at?: string | null;
   linkedin_verification_data?: Record<string, unknown> | null;
   work_email: string | null;
@@ -116,6 +131,8 @@ describe('GET /api/verification/status', () => {
     const body = await response.json();
     expect(body.verificationStatus).toBe('pending');
     expect(body.verificationMethod).toBe('work_email');
+    expect(body.verificationTier).toBe('unverified');
+    expect(body.verificationTierSource).toBe('unknown');
     expect(body.workEmail).toBe('person@acme.org');
   });
 
@@ -143,6 +160,7 @@ describe('GET /api/verification/status', () => {
     const body = await response.json();
     expect(body.verificationStatus).toBe('failed');
     expect(body.verificationMethod).toBeNull();
+    expect(body.verificationTier).toBe('unverified');
   });
 
   it('marks work email as stale when re-verification due date is in the past', async () => {
@@ -171,6 +189,7 @@ describe('GET /api/verification/status', () => {
     expect(body.verified).toBe(false);
     expect(body.verificationStatus).toBe('unverified');
     expect(body.verificationMethod).toBe('work_email');
+    expect(body.verificationTier).toBe('unverified');
     expect(body.workEmailVerified).toBe(false);
     expect(body.workEmailNeedsReverify).toBe(true);
     expect(body.workEmailReverifyDueAt).toBe(pastDue);
@@ -199,8 +218,11 @@ describe('GET /api/verification/status', () => {
     expect(response.status).toBe(200);
 
     const body = await response.json();
-    expect(body.verified).toBe(true);
-    expect(body.verificationStatus).toBe('verified');
+    expect(body.verified).toBe(false);
+    expect(body.verificationStatus).toBe('unverified');
+    expect(body.verificationTier).toBe('workplace_verified');
+    expect(body.verificationTierSource).toBe('work_email');
+    expect(body.verificationMethod).toBe('work_email');
     expect(body.workEmailVerified).toBe(true);
     expect(body.workEmailNeedsReverify).toBe(false);
     expect(body.workEmailReverifyDueAt).toBe(futureDue);
@@ -241,8 +263,11 @@ describe('GET /api/verification/status', () => {
 
     expect(body.verificationStatus).toBe('pending');
     expect(body.verificationMethod).toBe('work_email');
+    expect(body.verificationTier).toBe('unverified');
+    expect(body.verificationTierSource).toBe('unknown');
     expect(body.workEmailNeedsReverify).toBe(false);
     expect(body.linkedinVerificationStatus).toBe('unverified');
+    expect(body.linkedinVerificationLevel).toBe('unverified');
     expect(body.linkedinHasIdentityVerification).toBe(false);
   });
 
@@ -274,7 +299,11 @@ describe('GET /api/verification/status', () => {
 
     const body = await response.json();
     expect(body.linkedinVerificationStatus).toBe('verified');
+    expect(body.linkedinVerificationLevel).toBe('identity');
     expect(body.linkedinHasIdentityVerification).toBe(true);
     expect(body.linkedinVerifiedAt).toBe(nowIso);
+    expect(body.verificationTier).toBe('identity_verified');
+    expect(body.verificationTierSource).toBe('linkedin_identity');
+    expect(body.verified).toBe(true);
   });
 });

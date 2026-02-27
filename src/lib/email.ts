@@ -489,6 +489,7 @@ export async function sendLinkedInVerificationPendingReviewEmail(params: {
   candidateProfileId: string;
   confidence: number;
   hasIdentityVerification: boolean;
+  hasWorkplaceVerification: boolean;
   linkedinProfileUrl: string | null;
 }): Promise<void> {
   const recipients = resolveLinkedInVerificationAdminRecipients();
@@ -513,6 +514,7 @@ export async function sendLinkedInVerificationPendingReviewEmail(params: {
         candidateProfileId: params.candidateProfileId,
         confidence: params.confidence,
         hasIdentityVerification: params.hasIdentityVerification,
+        hasWorkplaceVerification: params.hasWorkplaceVerification,
         linkedinProfileUrl: params.linkedinProfileUrl,
         adminQueueUrl,
       }),

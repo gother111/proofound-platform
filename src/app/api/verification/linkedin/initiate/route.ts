@@ -20,6 +20,11 @@ import { checkLinkedInVerification } from '@/lib/linkedin-scraper';
 import { enrichLinkedInProfile, combineVerificationData } from '@/lib/linkedin-enrichment';
 import { sendLinkedInVerificationPendingReviewEmail } from '@/lib/email';
 import {
+  resolveCanonicalVerificationTier,
+  type LinkedInVerificationLevel,
+} from '@/lib/verification/tier';
+import { resolveWorkEmailValidity } from '@/lib/verification/work-email-validity';
+import {
   fetchLinkedInIdentityMe,
   fetchLinkedInVerificationReport,
   LinkedInRestApiError,
@@ -95,6 +100,24 @@ export async function POST(_request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { data: existingProfile, error: existingProfileError } = await supabase
+      .from('individual_profiles')
+      .select(
+        'verified, verified_at, verification_method, verification_status, verification_tier, verification_tier_source, work_email_verified, work_email_verified_at, work_email_reverify_due_at'
+      )
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (existingProfileError) {
+      console.error('Failed to load current verification profile state:', existingProfileError);
+      return NextResponse.json(
+        { error: 'Failed to load verification state before LinkedIn check' },
+        { status: 500 }
+      );
+    }
+
+    const workEmailValidity = resolveWorkEmailValidity(existingProfile || {});
+
     // 2. Check if LinkedIn is connected
     const integration = await db
       .select()
@@ -142,6 +165,7 @@ export async function POST(_request: NextRequest) {
     }
 
     const hasIdentityVerification = verificationReport?.hasIdentityVerification ?? false;
+    const hasWorkplaceVerification = verificationReport?.hasWorkplaceVerification ?? false;
 
     const nowIso = new Date().toISOString();
 
@@ -150,6 +174,7 @@ export async function POST(_request: NextRequest) {
     let thirdPartyData = null;
     let automatedSummary: AutomatedCheckSummary;
     let linkedinVerificationStatus: 'verified' | 'pending';
+    let linkedinVerificationLevel: LinkedInVerificationLevel;
     let identityGranted = false;
 
     if (hasIdentityVerification) {
@@ -167,7 +192,23 @@ export async function POST(_request: NextRequest) {
         originalConfidence: 100,
       };
       linkedinVerificationStatus = 'verified';
+      linkedinVerificationLevel = 'identity';
       identityGranted = true;
+    } else if (hasWorkplaceVerification) {
+      automatedSummary = {
+        confidence: 90,
+        hasVerificationBadge: true,
+        signals: {
+          ...DEFAULT_AUTOMATED_SIGNALS,
+          hasVerificationBadge: true,
+        },
+        recommendation: 'approve',
+        checkedAt: nowIso,
+        sources: ['linkedin-api'],
+        originalConfidence: 90,
+      };
+      linkedinVerificationStatus = 'verified';
+      linkedinVerificationLevel = 'workplace';
     } else {
       // Manual review path: gather secondary confidence signals.
       if (!profileUrl) {
@@ -277,14 +318,20 @@ export async function POST(_request: NextRequest) {
         originalConfidence: automatedConfidence,
       };
       linkedinVerificationStatus = 'pending';
+      linkedinVerificationLevel = 'pending';
     }
 
     // 6. Store verification data
+    const autoApproved =
+      linkedinVerificationLevel === 'identity' || linkedinVerificationLevel === 'workplace';
     const verificationData = {
       hasIdentityVerification,
+      hasWorkplaceVerification,
+      linkedinVerificationLevel,
       hasVerificationBadge: automatedSummary.hasVerificationBadge,
       apiReport: {
         hasIdentityVerification,
+        hasWorkplaceVerification,
         verifications: verificationReport?.verifications || [],
         identityMe: identityMe?.raw || null,
         verificationReport: verificationReport?.raw || null,
@@ -300,28 +347,67 @@ export async function POST(_request: NextRequest) {
         sources: automatedSummary.sources,
       },
       thirdPartyData: thirdPartyData?.success ? thirdPartyData : null,
-      adminReviewed: hasIdentityVerification,
-      adminNotes: hasIdentityVerification ? 'Auto-approved via LinkedIn identity signal.' : null,
-      adminDecision: hasIdentityVerification ? 'approved' : null,
-      reviewedAt: hasIdentityVerification ? nowIso : null,
-      reviewedBy: hasIdentityVerification ? 'system:auto-linkedin-identity' : null,
+      adminReviewed: autoApproved,
+      adminNotes:
+        linkedinVerificationLevel === 'identity'
+          ? 'Auto-approved via LinkedIn identity signal.'
+          : linkedinVerificationLevel === 'workplace'
+            ? 'Auto-approved via LinkedIn workplace signal.'
+            : null,
+      adminDecision: autoApproved ? 'approved' : null,
+      reviewedAt: autoApproved ? nowIso : null,
+      reviewedBy:
+        linkedinVerificationLevel === 'identity'
+          ? 'system:auto-linkedin-identity'
+          : linkedinVerificationLevel === 'workplace'
+            ? 'system:auto-linkedin-workplace'
+            : null,
     };
+
+    const canonicalTier = resolveCanonicalVerificationTier({
+      currentTier: existingProfile?.verification_tier,
+      currentTierSource: existingProfile?.verification_tier_source,
+      verificationMethod: existingProfile?.verification_method,
+      verificationStatus: existingProfile?.verification_status,
+      verified: existingProfile?.verified,
+      linkedinVerificationStatus,
+      linkedinVerificationData: verificationData,
+      workEmailCurrentlyVerified: workEmailValidity.isCurrentlyVerified,
+    });
 
     const updatePayload: Record<string, unknown> = {
       linkedin_verification_data: verificationData,
       linkedin_verification_status: linkedinVerificationStatus,
+      linkedin_verification_level: linkedinVerificationLevel,
+      verification_tier: canonicalTier.verificationTier,
+      verification_tier_source: canonicalTier.verificationTierSource,
     };
 
     if (profileUrl) {
       updatePayload.linkedin_profile_url = profileUrl;
     }
 
-    if (hasIdentityVerification) {
+    if (linkedinVerificationLevel === 'identity' || linkedinVerificationLevel === 'workplace') {
       updatePayload.linkedin_verified_at = nowIso;
+    }
+
+    if (canonicalTier.verificationTier === 'identity_verified') {
       updatePayload.verification_status = 'verified';
-      updatePayload.verification_method = 'linkedin';
+      updatePayload.verification_method =
+        canonicalTier.verificationTierSource === 'veriff' ? 'veriff' : 'linkedin';
       updatePayload.verified = true;
-      updatePayload.verified_at = nowIso;
+      updatePayload.verified_at = existingProfile?.verified_at || nowIso;
+      identityGranted = linkedinVerificationLevel === 'identity';
+    } else if (linkedinVerificationLevel === 'pending') {
+      updatePayload.verification_status = 'pending';
+      updatePayload.verification_method = 'linkedin';
+      updatePayload.verified = false;
+    } else {
+      // Workplace-tier and unverified states do not grant identity badge.
+      updatePayload.verification_status = 'unverified';
+      updatePayload.verification_method =
+        canonicalTier.verificationTierSource === 'work_email' ? 'work_email' : null;
+      updatePayload.verified = false;
     }
 
     // 7. Persist profile updates
@@ -335,7 +421,7 @@ export async function POST(_request: NextRequest) {
       return NextResponse.json({ error: 'Failed to store verification data' }, { status: 500 });
     }
 
-    if (!hasIdentityVerification) {
+    if (linkedinVerificationLevel === 'pending') {
       try {
         const { data: profileInfo } = await supabase
           .from('profiles')
@@ -355,6 +441,7 @@ export async function POST(_request: NextRequest) {
           candidateProfileId: user.id,
           confidence: automatedSummary.confidence,
           hasIdentityVerification,
+          hasWorkplaceVerification,
           linkedinProfileUrl: profileUrl,
         });
       } catch (notificationError) {
@@ -368,22 +455,27 @@ export async function POST(_request: NextRequest) {
     console.log('LinkedIn verification initiated successfully');
 
     const bestWarning = warnings[0]?.message || null;
-    const message = hasIdentityVerification
-      ? 'LinkedIn identity verification signal detected. Your verification has been automatically approved.'
-      : `Verification check complete. ${
-          automatedSummary.confidence >= 80
-            ? 'High confidence - pending quick admin review (typically < 1 hour).'
-            : automatedSummary.confidence >= 50
-              ? 'Medium confidence - pending manual admin review (1-2 business days).'
-              : 'Low confidence - please try another verification method.'
-        }`;
+    const message =
+      linkedinVerificationLevel === 'identity'
+        ? 'LinkedIn identity verification signal detected. Your identity verification has been automatically approved.'
+        : linkedinVerificationLevel === 'workplace'
+          ? 'LinkedIn workplace verification signal detected. Workplace verification has been automatically approved.'
+          : `Verification check complete. ${
+              automatedSummary.confidence >= 80
+                ? 'High confidence - pending quick admin review (typically < 1 hour).'
+                : automatedSummary.confidence >= 50
+                  ? 'Medium confidence - pending manual admin review (1-2 business days).'
+                  : 'Low confidence - please try another verification method.'
+            }`;
 
     // 8. Return results to frontend
     return NextResponse.json({
       success: true,
       profileUrl: profileUrl || null,
       hasIdentityVerification,
+      hasWorkplaceVerification,
       linkedinVerificationStatus,
+      linkedinVerificationLevel,
       identityGranted,
       automatedCheck: {
         confidence: automatedSummary.confidence,

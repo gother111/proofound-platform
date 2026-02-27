@@ -44,6 +44,8 @@ interface VerificationItem {
   createdAt: string;
   confidence: number;
   hasIdentityVerification: boolean;
+  hasWorkplaceVerification: boolean;
+  linkedinVerificationLevel: 'unverified' | 'pending' | 'workplace' | 'identity' | 'failed';
   hasVerificationBadge: boolean;
   recommendation: 'approve' | 'review_manually' | 'reject';
   signals: VerificationSignals;
@@ -301,7 +303,11 @@ export function AdminVerificationDashboard() {
               {verification.hasVerificationBadge && (
                 <Badge variant="outline" className="border-green-500 text-green-700 bg-green-50">
                   <Award className="w-3 h-3 mr-1" />
-                  {verification.hasIdentityVerification ? 'Identity verified' : 'Badge detected'}
+                  {verification.linkedinVerificationLevel === 'identity'
+                    ? 'Identity verified'
+                    : verification.linkedinVerificationLevel === 'workplace'
+                      ? 'Workplace verified'
+                      : 'Badge detected'}
                 </Badge>
               )}
             </div>

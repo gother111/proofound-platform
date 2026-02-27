@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { resolveWorkEmailValidity } from '@/lib/verification/work-email-validity';
 import { isMissingColumnError } from '@/lib/db/schemaCompatibility';
 import { resolveHasLinkedInIdentityVerification } from '@/lib/linkedin-verified';
+import { resolveCanonicalVerificationTier } from '@/lib/verification/tier';
 
 function hasActiveWorkEmailToken(profile: {
   work_email_token?: string | null;
@@ -43,13 +44,16 @@ export async function GET(request: NextRequest) {
     }
 
     const latestSelect =
-      'verified, verification_method, verification_status, verified_at, work_email, work_email_verified, work_email_verified_at, work_email_reverify_due_at, work_email_token, work_email_token_expires, linkedin_verification_status, linkedin_verified_at, linkedin_verification_data';
+      'verified, verification_method, verification_status, verification_tier, verification_tier_source, verified_at, work_email, work_email_verified, work_email_verified_at, work_email_reverify_due_at, work_email_token, work_email_token_expires, linkedin_verification_status, linkedin_verification_level, linkedin_verified_at, linkedin_verification_data';
     const legacySelect =
       'verified, verification_method, verification_status, verified_at, work_email, work_email_verified, work_email_token, work_email_token_expires';
     const latestOnlyColumns = [
+      'verification_tier',
+      'verification_tier_source',
       'work_email_verified_at',
       'work_email_reverify_due_at',
       'linkedin_verification_status',
+      'linkedin_verification_level',
       'linkedin_verified_at',
       'linkedin_verification_data',
     ];
@@ -80,7 +84,10 @@ export async function GET(request: NextRequest) {
             ...legacyProfile,
             work_email_verified_at: null,
             work_email_reverify_due_at: null,
+            verification_tier: 'unverified',
+            verification_tier_source: 'unknown',
             linkedin_verification_status: 'unverified',
+            linkedin_verification_level: 'unverified',
             linkedin_verified_at: null,
             linkedin_verification_data: null,
           }
@@ -124,8 +131,11 @@ export async function GET(request: NextRequest) {
         verified: false,
         verificationMethod: null,
         verificationStatus: 'unverified',
+        verificationTier: 'unverified',
+        verificationTierSource: 'unknown',
         verifiedAt: null,
         linkedinVerificationStatus: 'unverified',
+        linkedinVerificationLevel: 'unverified',
         linkedinHasIdentityVerification: false,
         linkedinVerifiedAt: null,
         workEmail: null,
@@ -137,24 +147,16 @@ export async function GET(request: NextRequest) {
 
     const workEmailValidity = resolveWorkEmailValidity(profile);
     const hasPendingToken = hasActiveWorkEmailToken(profile);
-    const hasExplicitStatus = Boolean(profile.verification_status);
-    let verificationStatus: 'unverified' | 'pending' | 'verified' | 'failed' =
-      !hasExplicitStatus && hasPendingToken
-        ? 'pending'
-        : (profile.verification_status as 'unverified' | 'pending' | 'verified' | 'failed') ||
-          'unverified';
-    let verificationMethod =
-      profile.verification_method || (!hasExplicitStatus && hasPendingToken ? 'work_email' : null);
-    const isWorkEmailPrimaryVerification = verificationMethod === 'work_email';
-    const effectiveIdentityVerified =
-      Boolean(profile.verified) &&
-      !(isWorkEmailPrimaryVerification && workEmailValidity.needsReverify);
-
-    if (isWorkEmailPrimaryVerification && workEmailValidity.needsReverify) {
-      verificationStatus = 'unverified';
-      verificationMethod = 'work_email';
-    }
-
+    const canonicalTier = resolveCanonicalVerificationTier({
+      currentTier: profile.verification_tier,
+      currentTierSource: profile.verification_tier_source,
+      verificationMethod: profile.verification_method,
+      verificationStatus: profile.verification_status,
+      verified: profile.verified,
+      linkedinVerificationStatus: profile.linkedin_verification_status,
+      linkedinVerificationData: profile.linkedin_verification_data,
+      workEmailCurrentlyVerified: workEmailValidity.isCurrentlyVerified,
+    });
     const linkedinVerificationStatus =
       (profile.linkedin_verification_status as
         | 'unverified'
@@ -162,16 +164,59 @@ export async function GET(request: NextRequest) {
         | 'verified'
         | 'failed'
         | null) || 'unverified';
-    const linkedinHasIdentityVerification = resolveHasLinkedInIdentityVerification(
-      profile.linkedin_verification_data
-    );
+    const linkedinVerificationLevel =
+      (profile.linkedin_verification_level as
+        | 'unverified'
+        | 'pending'
+        | 'workplace'
+        | 'identity'
+        | 'failed'
+        | null) || canonicalTier.linkedinVerificationLevel;
+    const linkedinHasIdentityVerification =
+      linkedinVerificationLevel === 'identity' ||
+      resolveHasLinkedInIdentityVerification(profile.linkedin_verification_data);
+
+    let verificationStatus: 'unverified' | 'pending' | 'verified' | 'failed' = 'unverified';
+    let verificationMethod: 'veriff' | 'work_email' | 'linkedin' | null = null;
+    const effectiveIdentityVerified = canonicalTier.verificationTier === 'identity_verified';
+
+    if (effectiveIdentityVerified) {
+      verificationStatus = 'verified';
+      verificationMethod =
+        canonicalTier.verificationTierSource === 'veriff' ? 'veriff' : 'linkedin';
+    } else {
+      const hasFailedStatus = profile.verification_status === 'failed';
+      const hasManualPending =
+        linkedinVerificationStatus === 'pending' ||
+        canonicalTier.linkedinVerificationLevel === 'pending' ||
+        profile.verification_status === 'pending' ||
+        hasPendingToken;
+      if (hasFailedStatus) {
+        verificationStatus = 'failed';
+        verificationMethod =
+          (profile.verification_method as 'veriff' | 'work_email' | 'linkedin' | null) || null;
+      } else if (hasManualPending) {
+        verificationStatus = 'pending';
+        verificationMethod = hasPendingToken ? 'work_email' : 'linkedin';
+      } else {
+        verificationStatus = 'unverified';
+        verificationMethod =
+          canonicalTier.verificationTierSource === 'work_email' ||
+          profile.verification_method === 'work_email'
+            ? 'work_email'
+            : null;
+      }
+    }
 
     return NextResponse.json({
       verified: effectiveIdentityVerified,
       verificationMethod,
       verificationStatus,
+      verificationTier: canonicalTier.verificationTier,
+      verificationTierSource: canonicalTier.verificationTierSource,
       verifiedAt: profile.verified_at,
       linkedinVerificationStatus,
+      linkedinVerificationLevel,
       linkedinHasIdentityVerification,
       linkedinVerifiedAt: profile.linkedin_verified_at,
       workEmail: profile.work_email,

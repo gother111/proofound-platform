@@ -4,7 +4,7 @@ import crypto from 'crypto';
 
 /**
  * POST /api/verification/veriff/webhook
- * 
+ *
  * Receives verification decisions from Veriff.
  * This endpoint is called by Veriff when a verification is completed.
  */
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     const data = JSON.parse(body);
-    
+
     // Extract verification data
     const {
       id: sessionId,
@@ -89,6 +89,11 @@ export async function POST(request: NextRequest) {
     if (verificationStatus === 'verified') {
       updateData.verification_method = 'veriff';
       updateData.verified_at = new Date().toISOString();
+      updateData.verification_tier = 'identity_verified';
+      updateData.verification_tier_source = 'veriff';
+    } else if (verificationStatus === 'failed') {
+      updateData.verification_tier = 'unverified';
+      updateData.verification_tier_source = 'unknown';
     }
 
     const { error: updateError } = await supabase
@@ -99,10 +104,7 @@ export async function POST(request: NextRequest) {
 
     if (updateError) {
       console.error('Error updating profile after verification:', updateError);
-      return NextResponse.json(
-        { error: 'Failed to update profile' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 });
     }
 
     console.log(`Verification ${sessionId} for user ${userId}: ${verificationStatus}`);
@@ -110,10 +112,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, status: verificationStatus });
   } catch (error) {
     console.error('Error processing Veriff webhook:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

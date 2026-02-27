@@ -25,18 +25,23 @@ vi.mock('@/lib/linkedin-enrichment', () => ({
   combineVerificationData: vi.fn(),
 }));
 
-vi.mock('@/lib/linkedin-verified', () => ({
-  fetchLinkedInIdentityMe: vi.fn(),
-  fetchLinkedInVerificationReport: vi.fn(),
-  LinkedInRestApiError: class extends Error {
-    status: number;
+vi.mock('@/lib/linkedin-verified', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/linkedin-verified')>();
 
-    constructor(status = 500) {
-      super('LinkedIn error');
-      this.status = status;
-    }
-  },
-}));
+  return {
+    ...actual,
+    fetchLinkedInIdentityMe: vi.fn(),
+    fetchLinkedInVerificationReport: vi.fn(),
+    LinkedInRestApiError: class extends Error {
+      status: number;
+
+      constructor(status = 500) {
+        super('LinkedIn error');
+        this.status = status;
+      }
+    },
+  };
+});
 
 vi.mock('@/lib/email', () => ({
   sendLinkedInVerificationPendingReviewEmail: vi.fn(),
@@ -78,6 +83,21 @@ function buildSupabaseMock() {
     eq: updateEqSpy,
   });
 
+  const profileMaybeSingleSpy = vi.fn().mockResolvedValue({
+    data: {
+      verified: false,
+      verified_at: null,
+      verification_method: null,
+      verification_status: 'unverified',
+      verification_tier: 'unverified',
+      verification_tier_source: 'unknown',
+      work_email_verified: false,
+      work_email_verified_at: null,
+      work_email_reverify_due_at: null,
+    },
+    error: null,
+  });
+
   const maybeSingleSpy = vi.fn().mockResolvedValue({
     data: {
       display_name: 'Candidate Example',
@@ -88,6 +108,11 @@ function buildSupabaseMock() {
   const fromSpy = vi.fn((table: string) => {
     if (table === 'individual_profiles') {
       return {
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            maybeSingle: profileMaybeSingleSpy,
+          }),
+        }),
         update: updateSpy,
       };
     }
@@ -152,10 +177,14 @@ describe('POST /api/verification/linkedin/initiate', () => {
 
     expect(response.status).toBe(200);
     expect(body.linkedinVerificationStatus).toBe('verified');
+    expect(body.linkedinVerificationLevel).toBe('identity');
     expect(body.identityGranted).toBe(true);
     expect(updateSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         linkedin_verification_status: 'verified',
+        linkedin_verification_level: 'identity',
+        verification_tier: 'identity_verified',
+        verification_tier_source: 'linkedin_identity',
         verification_status: 'verified',
         verification_method: 'linkedin',
         verified: true,
@@ -173,6 +202,7 @@ describe('POST /api/verification/linkedin/initiate', () => {
       raw: { verifications: [] },
       verifications: [],
       hasIdentityVerification: false,
+      hasWorkplaceVerification: false,
     });
     (fetchLinkedInIdentityMe as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       raw: {},
@@ -190,10 +220,14 @@ describe('POST /api/verification/linkedin/initiate', () => {
 
     expect(response.status).toBe(200);
     expect(body.linkedinVerificationStatus).toBe('pending');
+    expect(body.linkedinVerificationLevel).toBe('pending');
     expect(body.identityGranted).toBe(false);
     expect(updateSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         linkedin_verification_status: 'pending',
+        linkedin_verification_level: 'pending',
+        verification_tier: 'unverified',
+        verification_tier_source: 'unknown',
       })
     );
     expect(body.warnings).toEqual(
@@ -207,8 +241,44 @@ describe('POST /api/verification/linkedin/initiate', () => {
         candidateName: 'Candidate Example',
         confidence: 0,
         hasIdentityVerification: false,
+        hasWorkplaceVerification: false,
         linkedinProfileUrl: null,
       })
     );
+  });
+
+  it('auto-approves workplace tier when LinkedIn workplace signal exists', async () => {
+    const { supabase, updateSpy } = buildSupabaseMock();
+    (createClient as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(supabase as any);
+
+    (fetchLinkedInVerificationReport as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      raw: { verifications: ['WORKPLACE'] },
+      verifications: ['WORKPLACE'],
+      hasIdentityVerification: false,
+      hasWorkplaceVerification: true,
+    });
+    (fetchLinkedInIdentityMe as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      raw: { basicInfo: { profileUrl: 'https://www.linkedin.com/profile-thirdparty-redirect/x' } },
+      profileUrl: 'https://www.linkedin.com/profile-thirdparty-redirect/x',
+      publicIdentifier: null,
+      memberUrn: 'urn:li:member:2',
+    });
+
+    const response = await POST(buildRequest());
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.linkedinVerificationStatus).toBe('verified');
+    expect(body.linkedinVerificationLevel).toBe('workplace');
+    expect(body.identityGranted).toBe(false);
+    expect(updateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        linkedin_verification_status: 'verified',
+        linkedin_verification_level: 'workplace',
+        verification_tier: 'workplace_verified',
+      })
+    );
+    expect(sendLinkedInVerificationPendingReviewEmail).not.toHaveBeenCalled();
+    expect(checkLinkedInVerification).not.toHaveBeenCalled();
   });
 });

@@ -16,6 +16,7 @@ interface LinkedInVerificationPendingReviewProps {
   candidateProfileId: string;
   confidence: number;
   hasIdentityVerification: boolean;
+  hasWorkplaceVerification: boolean;
   linkedinProfileUrl: string | null;
   adminQueueUrl: string;
 }
@@ -26,6 +27,7 @@ export default function LinkedInVerificationPendingReview({
   candidateProfileId,
   confidence,
   hasIdentityVerification,
+  hasWorkplaceVerification,
   linkedinProfileUrl,
   adminQueueUrl,
 }: LinkedInVerificationPendingReviewProps) {
@@ -56,6 +58,10 @@ export default function LinkedInVerificationPendingReview({
               <Text style={detailLine}>
                 <strong>LinkedIn identity signal:</strong>{' '}
                 {hasIdentityVerification ? 'Detected' : 'Not detected'}
+              </Text>
+              <Text style={detailLine}>
+                <strong>LinkedIn workplace signal:</strong>{' '}
+                {hasWorkplaceVerification ? 'Detected' : 'Not detected'}
               </Text>
               <Text style={detailLine}>
                 <strong>LinkedIn profile URL:</strong>{' '}

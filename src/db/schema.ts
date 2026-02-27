@@ -89,6 +89,12 @@ export const individualProfiles = pgTable('individual_profiles', {
   verificationStatus: text('verification_status', {
     enum: ['unverified', 'pending', 'verified', 'failed'],
   }).default('unverified'),
+  verificationTier: text('verification_tier', {
+    enum: ['unverified', 'workplace_verified', 'identity_verified'],
+  }).default('unverified'),
+  verificationTierSource: text('verification_tier_source', {
+    enum: ['linkedin_identity', 'linkedin_workplace', 'work_email', 'veriff', 'unknown'],
+  }).default('unknown'),
   veriffSessionId: text('veriff_session_id'),
   verifiedAt: timestamp('verified_at'),
   workEmail: text('work_email'),
@@ -107,6 +113,9 @@ export const individualProfiles = pgTable('individual_profiles', {
   linkedinProfileUrl: text('linkedin_profile_url'),
   linkedinVerificationStatus: text('linkedin_verification_status', {
     enum: ['unverified', 'pending', 'verified', 'failed'],
+  }).default('unverified'),
+  linkedinVerificationLevel: text('linkedin_verification_level', {
+    enum: ['unverified', 'pending', 'workplace', 'identity', 'failed'],
   }).default('unverified'),
   linkedinVerifiedAt: timestamp('linkedin_verified_at'),
   linkedinVerificationData: jsonb('linkedin_verification_data'),

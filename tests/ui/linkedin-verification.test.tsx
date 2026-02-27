@@ -51,8 +51,10 @@ describe('LinkedInVerification', () => {
       ok: true,
       json: async () => ({
         linkedinVerificationStatus: 'pending',
+        linkedinVerificationLevel: 'pending',
         identityGranted: false,
         hasIdentityVerification: false,
+        hasWorkplaceVerification: false,
         automatedCheck: {
           confidence: 55,
           hasVerificationBadge: false,
@@ -90,8 +92,10 @@ describe('LinkedInVerification', () => {
       ok: true,
       json: async () => ({
         linkedinVerificationStatus: 'verified',
+        linkedinVerificationLevel: 'identity',
         identityGranted: true,
         hasIdentityVerification: true,
+        hasWorkplaceVerification: false,
         automatedCheck: {
           confidence: 100,
           hasVerificationBadge: true,
@@ -108,7 +112,7 @@ describe('LinkedInVerification', () => {
     fireEvent.click(button);
 
     await waitFor(() =>
-      expect(screen.getByText(/LinkedIn Verification Approved!/i)).toBeInTheDocument()
+      expect(screen.getByText(/LinkedIn Identity Verification Approved!/i)).toBeInTheDocument()
     );
     expect(screen.getByText(/No further action is required/i)).toBeInTheDocument();
   });
@@ -122,5 +126,36 @@ describe('LinkedInVerification', () => {
     await waitFor(() =>
       expect(screen.getAllByText(/pending admin review/i).length).toBeGreaterThan(0)
     );
+  });
+
+  it('shows workplace-approved messaging when workplace signal is detected', async () => {
+    const { apiFetch } = await import('@/lib/api/fetch');
+    (apiFetch as any).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        linkedinVerificationStatus: 'verified',
+        linkedinVerificationLevel: 'workplace',
+        identityGranted: false,
+        hasIdentityVerification: false,
+        hasWorkplaceVerification: true,
+        automatedCheck: {
+          confidence: 90,
+          hasVerificationBadge: true,
+          recommendation: 'approve',
+          sources: ['linkedin-api'],
+        },
+        message: 'LinkedIn workplace verification signal detected.',
+      }),
+    });
+
+    render(<LinkedInVerification />);
+
+    const button = await screen.findByRole('button', { name: /start verification check/i });
+    fireEvent.click(button);
+
+    await waitFor(() =>
+      expect(screen.getByText(/LinkedIn Workplace Verification Approved!/i)).toBeInTheDocument()
+    );
+    expect(screen.getByText(/workplace verification is active/i)).toBeInTheDocument();
   });
 });

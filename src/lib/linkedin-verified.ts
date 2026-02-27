@@ -83,7 +83,28 @@ function extractVerifications(raw: unknown): string[] {
 }
 
 function hasIdentityVerificationFromLabels(labels: string[]): boolean {
-  return labels.some((label) => label.toUpperCase().includes('IDENTITY'));
+  return labels.some((label) => {
+    const normalized = label
+      .trim()
+      .toUpperCase()
+      .replace(/[\s-]+/g, '_');
+
+    return (
+      normalized.includes('IDENTITY') ||
+      normalized.includes('GOVERNMENT_ID') ||
+      normalized.includes('GOVT_ID')
+    );
+  });
+}
+
+function hasWorkplaceVerificationFromLabels(labels: string[]): boolean {
+  return labels.some((label) => {
+    const normalized = label
+      .trim()
+      .toUpperCase()
+      .replace(/[\s-]+/g, '_');
+    return normalized.includes('WORKPLACE') || normalized.includes('WORK_EMAIL');
+  });
 }
 
 export function resolveHasLinkedInIdentityVerification(data: unknown): boolean {
@@ -103,6 +124,25 @@ export function resolveHasLinkedInIdentityVerification(data: unknown): boolean {
 
   const labels = extractVerifications(record);
   return hasIdentityVerificationFromLabels(labels);
+}
+
+export function resolveHasLinkedInWorkplaceVerification(data: unknown): boolean {
+  if (!data || typeof data !== 'object') return false;
+  const record = data as Record<string, unknown>;
+
+  if (record.hasWorkplaceVerification === true) return true;
+
+  const apiReport = record.apiReport;
+  if (apiReport && typeof apiReport === 'object') {
+    const apiRecord = apiReport as Record<string, unknown>;
+    if (apiRecord.hasWorkplaceVerification === true) return true;
+
+    const apiLabels = extractVerifications(apiRecord);
+    if (hasWorkplaceVerificationFromLabels(apiLabels)) return true;
+  }
+
+  const labels = extractVerifications(record);
+  return hasWorkplaceVerificationFromLabels(labels);
 }
 
 export class LinkedInRestApiError extends Error {
@@ -153,6 +193,7 @@ export type LinkedInVerificationReport = {
   raw: unknown;
   verifications: string[];
   hasIdentityVerification: boolean;
+  hasWorkplaceVerification: boolean;
 };
 
 export async function fetchLinkedInVerificationReport(
@@ -165,6 +206,7 @@ export async function fetchLinkedInVerificationReport(
     raw,
     verifications,
     hasIdentityVerification: hasIdentityVerificationFromLabels(verifications),
+    hasWorkplaceVerification: hasWorkplaceVerificationFromLabels(verifications),
   };
 }
 
@@ -189,20 +231,32 @@ export async function fetchLinkedInIdentityMe(accessToken: string): Promise<Link
 
   const record = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
   const profile = record.profile && typeof record.profile === 'object' ? record.profile : {};
+  const basicInfo =
+    record.basicInfo && typeof record.basicInfo === 'object' ? record.basicInfo : {};
+
+  const profileRecord = profile as Record<string, unknown>;
+  const basicInfoRecord = basicInfo as Record<string, unknown>;
+
   const publicIdentifier = firstString([
     record.publicIdentifier,
     record.vanityName,
-    (profile as Record<string, unknown>).publicIdentifier,
-    (profile as Record<string, unknown>).vanityName,
-    (profile as Record<string, unknown>).profileHandle,
+    profileRecord.publicIdentifier,
+    profileRecord.vanityName,
+    profileRecord.profileHandle,
+    basicInfoRecord.publicIdentifier,
+    basicInfoRecord.vanityName,
+    basicInfoRecord.profileHandle,
   ]);
 
   const rawProfileUrl = firstString([
     record.profileUrl,
     record.publicProfileUrl,
-    (profile as Record<string, unknown>).profileUrl,
-    (profile as Record<string, unknown>).publicProfileUrl,
-    (profile as Record<string, unknown>).url,
+    profileRecord.profileUrl,
+    profileRecord.publicProfileUrl,
+    profileRecord.url,
+    basicInfoRecord.profileUrl,
+    basicInfoRecord.publicProfileUrl,
+    basicInfoRecord.url,
   ]);
 
   const profileUrl =
@@ -213,7 +267,16 @@ export async function fetchLinkedInIdentityMe(accessToken: string): Promise<Link
 
   return {
     raw,
-    memberUrn: firstString([record.member, record.memberUrn, record.id, record.entityUrn]),
+    memberUrn: firstString([
+      record.member,
+      record.memberUrn,
+      record.id,
+      record.entityUrn,
+      basicInfoRecord.member,
+      basicInfoRecord.memberUrn,
+      basicInfoRecord.id,
+      basicInfoRecord.entityUrn,
+    ]),
     profileUrl,
     publicIdentifier,
   };

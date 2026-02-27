@@ -41,8 +41,11 @@ describe('VerificationStatus', () => {
           verified: false,
           verificationMethod: null,
           verificationStatus: 'unverified',
+          verificationTier: 'unverified',
+          verificationTierSource: 'unknown',
           verifiedAt: null,
           linkedinVerificationStatus: 'unverified',
+          linkedinVerificationLevel: 'unverified',
           linkedinHasIdentityVerification: false,
           linkedinVerifiedAt: null,
           workEmail: null,
@@ -71,8 +74,11 @@ describe('VerificationStatus', () => {
           verified: true,
           verificationMethod: 'work_email',
           verificationStatus: 'verified',
+          verificationTier: 'workplace_verified',
+          verificationTierSource: 'work_email',
           verifiedAt: new Date().toISOString(),
           linkedinVerificationStatus: 'unverified',
+          linkedinVerificationLevel: 'unverified',
           linkedinHasIdentityVerification: false,
           linkedinVerifiedAt: null,
           workEmail: 'person@acme.org',
@@ -86,8 +92,8 @@ describe('VerificationStatus', () => {
     render(<VerificationStatus />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Identity Verified/i)).toBeInTheDocument();
+      expect(screen.getByText(/Workplace Verified/i)).toBeInTheDocument();
     });
-    expect(screen.getByRole('button', { name: /Add LinkedIn Verification/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Check LinkedIn Again/i })).toBeInTheDocument();
   });
 });

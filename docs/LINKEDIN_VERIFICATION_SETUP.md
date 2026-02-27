@@ -4,11 +4,17 @@ This guide explains how to set up and configure the LinkedIn identity verificati
 
 ## Overview
 
-The LinkedIn verification feature allows users to verify their identity by connecting their LinkedIn account. The system automatically checks for LinkedIn's official identity verification badge and analyzes profile signals using Playwright (free!) with optional third-party enrichment.
+The LinkedIn verification feature allows users to connect LinkedIn and classify trust at two official levels:
+
+- `IDENTITY` -> identity-level verification (highest assurance)
+- `WORKPLACE` -> workplace-level verification (not identity-level)
+
+When no official LinkedIn signal is available, the system falls back to automated confidence analysis and admin review.
 
 ## Features
 
 - ✅ **Free automated checking** using Playwright (already installed)
+- ✅ **Tiered verification model**: Identity vs workplace vs pending manual review
 - ✅ **Multi-layer verification**: OAuth + LinkedIn Verified API + Automated scraping + Optional enrichment + Admin review
 - ✅ **Quick approvals**: High-confidence cases can be approved in 1-click
 - ✅ **Smart confidence scoring**: 0-100 score based on multiple signals
@@ -75,19 +81,24 @@ PHANTOMBUSTER_API_KEY=your_phantombuster_key
 
 ## Database Setup
 
-1. Apply the migration:
+1. Apply migrations:
 
 ```bash
-# Option 1: Using Drizzle
-npm run db:push
-
-# Option 2: Manually apply SQL
-# Run the SQL in: drizzle/0029_add_linkedin_verification.sql
+npm run db:migrate
 ```
 
 2. Verify schema changes:
-   - `individual_profiles.verification_method` now accepts 'linkedin'
-   - New columns: `linkedin_profile_url`, `linkedin_verification_data`
+   - `individual_profiles.linkedin_verification_level` exists (`unverified|pending|workplace|identity|failed`)
+   - `individual_profiles.verification_tier` exists (`unverified|workplace_verified|identity_verified`)
+   - `individual_profiles.verification_tier_source` exists
+   - Existing compatibility columns remain (`verified`, `verification_status`, `verification_method`, `linkedin_verification_status`)
+
+3. Backfill existing users into canonical tiers:
+
+```bash
+npx tsx scripts/backfill-verification-tiers.ts --dry-run
+npx tsx scripts/backfill-verification-tiers.ts --apply
+```
 
 ## Testing Locally
 
@@ -139,10 +150,12 @@ ngrok http 3000
    - Generates confidence score (0-100)
 4. **Optional enrichment**: If Proxycurl configured, fetches additional data
 5. **Decision split**:
-   - If LinkedIn `verificationReport` includes `IDENTITY`, the request is auto-approved and identity is granted immediately.
-   - If no LinkedIn identity signal exists, request is marked pending for admin review.
+   - If LinkedIn `verificationReport` includes `IDENTITY`, auto-approve as `identity_verified`.
+   - If LinkedIn `verificationReport` includes `WORKPLACE` only, auto-approve as `workplace_verified`.
+   - If no official LinkedIn signal exists, mark as pending for admin review.
 6. **Status**:
-   - Auto-approved path: user sees verified result immediately.
+   - Identity auto-approved path: user gets identity-tier verification and verified badge.
+   - Workplace auto-approved path: user gets workplace-tier verification (no identity badge).
    - Manual path: user sees pending admin review status.
 7. **Admin review** (manual path only): Admin dashboard shows request sorted by confidence.
 8. **Approval**: Admin approves/rejects pending requests (1-click for high confidence).
@@ -172,19 +185,20 @@ Access at: `/admin/verification`
   - If both are unset, email is skipped and queue remains the source of truth.
 
 - **Review actions**:
-  - System auto-approve (`IDENTITY` detected at initiate time) -> sets `linkedin_verification_status = 'verified'` and grants global identity (`verified = true`, `verification_method = 'linkedin'`)
-  - Approve → Always sets `linkedin_verification_status = 'verified'`
-  - Approve + identity signal (`IDENTITY`) or explicit override → Sets global identity verified (`verified = true`, `verification_method = 'linkedin'`)
-  - Approve without identity signal and without override → Keeps global identity unverified by default
-  - Reject → Sets `linkedin_verification_status = 'failed'`
-  - Both actions log admin notes
+  - System auto-approve (`IDENTITY`) -> `linkedin_verification_level='identity'`, `verification_tier='identity_verified'`
+  - System auto-approve (`WORKPLACE`) -> `linkedin_verification_level='workplace'`, `verification_tier='workplace_verified'`
+  - Manual approve with identity signal (or explicit identity override) -> identity tier
+  - Manual approve without identity signal -> workplace tier
+  - Reject -> `linkedin_verification_status='failed'`, `linkedin_verification_level='failed'`
+  - All actions keep legacy fields populated for compatibility
 
 ## What Gets Checked
 
 The automated system analyzes:
 
-1. **Verification Badge** (Primary, +50 points)
-   - LinkedIn `verificationReport` signal (IDENTITY) is the primary identity signal
+1. **Official LinkedIn verification labels** (Primary)
+   - `IDENTITY`, `GOVERNMENT_ID`, `GOVT_ID` -> identity-level
+   - `WORKPLACE` -> workplace-level
 2. **Connections** (+15 points max)
    - 500+ connections = high trust
 3. **Profile Completeness** (+15 points max)

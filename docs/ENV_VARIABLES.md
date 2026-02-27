@@ -366,6 +366,10 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 - `LINKEDIN_REDIRECT_URI` - Set to your canonical app callback (recommended: `https://yourdomain.com/api/auth/linkedin/callback`).
 - `LINKEDIN_API_VERSION` - Optional LinkedIn REST version header for Verified APIs (`/rest/verificationReport`, `/rest/identityMe`). Defaults to `202510`.
 - `NEXT_PUBLIC_SITE_URL` — Canonical app base URL used for OAuth callback construction (`NEXT_PUBLIC_URL` is legacy fallback only).
+- LinkedIn verification tier behavior (no extra env needed):
+  - `IDENTITY` label maps to `identity_verified`
+  - `WORKPLACE` label maps to `workplace_verified`
+  - Pending/manual-review applies only when no official LinkedIn label is present.
 
 **Provider callback split (important)**:
 

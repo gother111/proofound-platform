@@ -11,7 +11,11 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { sendVerificationApprovedEmail, sendVerificationRejectedEmail } from '@/lib/email';
 import { requirePlatformAdminJson } from '@/lib/api/route-helpers';
-import { resolveHasLinkedInIdentityVerification } from '@/lib/linkedin-verified';
+import {
+  resolveHasLinkedInIdentityVerification,
+  resolveHasLinkedInWorkplaceVerification,
+} from '@/lib/linkedin-verified';
+import { resolveWorkEmailValidity } from '@/lib/verification/work-email-validity';
 
 interface ReviewRequest {
   decision: 'approved' | 'rejected';
@@ -45,7 +49,7 @@ export async function POST(
     const { data: currentProfile, error: fetchError } = await supabase
       .from('individual_profiles')
       .select(
-        'linkedin_verification_data, verification_status, verification_method, verified, linkedin_verification_status'
+        'linkedin_verification_data, verification_status, verification_method, verification_tier, verification_tier_source, verified, verified_at, linkedin_verification_status, work_email_verified, work_email_verified_at, work_email_reverify_due_at'
       )
       .eq('user_id', userId)
       .single();
@@ -72,32 +76,48 @@ export async function POST(
 
     const nowIso = new Date().toISOString();
     const hasIdentityVerification = resolveHasLinkedInIdentityVerification(updatedVerificationData);
+    const hasWorkplaceVerification =
+      resolveHasLinkedInWorkplaceVerification(updatedVerificationData);
     const shouldGrantIdentity = Boolean(hasIdentityVerification || grantIdentity === true);
+    const workEmailValidity = resolveWorkEmailValidity({
+      work_email_verified: currentProfile.work_email_verified,
+      work_email_verified_at: currentProfile.work_email_verified_at,
+      work_email_reverify_due_at: currentProfile.work_email_reverify_due_at,
+      verified_at: currentProfile.verified_at,
+    });
 
     if (decision === 'approved') {
       updateData.linkedin_verification_status = 'verified';
       updateData.linkedin_verified_at = nowIso;
 
       if (shouldGrantIdentity) {
+        updateData.linkedin_verification_level = 'identity';
+        updateData.verification_tier = 'identity_verified';
+        updateData.verification_tier_source = 'linkedin_identity';
         updateData.verification_status = 'verified';
         updateData.verification_method = 'linkedin';
         updateData.verified = true;
-        updateData.verified_at = nowIso;
-      } else if (
-        currentProfile.verification_status === 'pending' &&
-        currentProfile.verified !== true &&
-        (!currentProfile.verification_method || currentProfile.verification_method === 'linkedin')
-      ) {
+        updateData.verified_at = currentProfile.verified_at || nowIso;
+      } else {
+        const isWorkEmailTier = workEmailValidity.isCurrentlyVerified;
+        updateData.linkedin_verification_level = 'workplace';
+        updateData.verification_tier = 'workplace_verified';
+        updateData.verification_tier_source = isWorkEmailTier ? 'work_email' : 'linkedin_workplace';
         updateData.verification_status = 'unverified';
+        updateData.verification_method = isWorkEmailTier ? 'work_email' : null;
+        updateData.verified = false;
+        updateData.verified_at = null;
       }
     } else {
       updateData.linkedin_verification_status = 'failed';
+      updateData.linkedin_verification_level = 'failed';
       if (
         currentProfile.verification_status === 'pending' &&
         currentProfile.verified !== true &&
         (!currentProfile.verification_method || currentProfile.verification_method === 'linkedin')
       ) {
         updateData.verification_status = 'unverified';
+        updateData.verification_method = null;
       }
     }
 
@@ -147,7 +167,10 @@ export async function POST(
       success: true,
       decision,
       hasIdentityVerification,
+      hasWorkplaceVerification,
       identityGranted: decision === 'approved' ? shouldGrantIdentity : false,
+      linkedinVerificationLevel:
+        decision === 'approved' ? (shouldGrantIdentity ? 'identity' : 'workplace') : 'failed',
       message: `Verification ${decision} successfully`,
     });
   } catch (error) {

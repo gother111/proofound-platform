@@ -44,12 +44,19 @@ function buildSupabaseMock() {
               data: {
                 linkedin_verification_data: {
                   hasIdentityVerification: true,
+                  hasWorkplaceVerification: false,
                   automatedCheck: { confidence: 88 },
                 },
                 verification_status: 'pending',
                 verification_method: null,
+                verification_tier: 'unverified',
+                verification_tier_source: 'unknown',
                 verified: false,
+                verified_at: null,
                 linkedin_verification_status: 'pending',
+                work_email_verified: false,
+                work_email_verified_at: null,
+                work_email_reverify_due_at: null,
               },
               error: null,
             }),
@@ -136,6 +143,9 @@ describe('admin linkedin review route', () => {
     expect(updateSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         linkedin_verification_status: 'verified',
+        linkedin_verification_level: 'identity',
+        verification_tier: 'identity_verified',
+        verification_tier_source: 'linkedin_identity',
         verification_status: 'verified',
         verification_method: 'linkedin',
         verified: true,
@@ -170,12 +180,19 @@ describe('admin linkedin review route', () => {
                 data: {
                   linkedin_verification_data: {
                     hasIdentityVerification: false,
+                    hasWorkplaceVerification: false,
                     automatedCheck: { confidence: 82 },
                   },
                   verification_status: 'pending',
                   verification_method: null,
+                  verification_tier: 'unverified',
+                  verification_tier_source: 'unknown',
                   verified: false,
+                  verified_at: null,
                   linkedin_verification_status: 'pending',
+                  work_email_verified: false,
+                  work_email_verified_at: null,
+                  work_email_reverify_due_at: null,
                 },
                 error: null,
               }),
@@ -225,6 +242,9 @@ describe('admin linkedin review route', () => {
     expect(updateSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         linkedin_verification_status: 'verified',
+        linkedin_verification_level: 'workplace',
+        verification_tier: 'workplace_verified',
+        verification_tier_source: 'linkedin_workplace',
         verification_status: 'unverified',
       })
     );
@@ -254,12 +274,19 @@ describe('admin linkedin review route', () => {
                 data: {
                   linkedin_verification_data: {
                     hasIdentityVerification: false,
+                    hasWorkplaceVerification: false,
                     automatedCheck: { confidence: 77 },
                   },
                   verification_status: 'pending',
                   verification_method: null,
+                  verification_tier: 'unverified',
+                  verification_tier_source: 'unknown',
                   verified: false,
+                  verified_at: null,
                   linkedin_verification_status: 'pending',
+                  work_email_verified: false,
+                  work_email_verified_at: null,
+                  work_email_reverify_due_at: null,
                 },
                 error: null,
               }),
@@ -309,6 +336,9 @@ describe('admin linkedin review route', () => {
     expect(updateSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         linkedin_verification_status: 'verified',
+        linkedin_verification_level: 'identity',
+        verification_tier: 'identity_verified',
+        verification_tier_source: 'linkedin_identity',
         verification_status: 'verified',
         verification_method: 'linkedin',
         verified: true,

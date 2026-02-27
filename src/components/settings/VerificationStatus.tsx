@@ -14,8 +14,16 @@ interface VerificationStatusData {
   verified: boolean;
   verificationMethod: 'veriff' | 'work_email' | 'linkedin' | null;
   verificationStatus: 'unverified' | 'pending' | 'verified' | 'failed';
+  verificationTier: 'unverified' | 'workplace_verified' | 'identity_verified';
+  verificationTierSource:
+    | 'linkedin_identity'
+    | 'linkedin_workplace'
+    | 'work_email'
+    | 'veriff'
+    | 'unknown';
   verifiedAt: string | null;
   linkedinVerificationStatus: 'unverified' | 'pending' | 'verified' | 'failed';
+  linkedinVerificationLevel: 'unverified' | 'pending' | 'workplace' | 'identity' | 'failed';
   linkedinHasIdentityVerification: boolean;
   linkedinVerifiedAt: string | null;
   workEmail: string | null;
@@ -30,10 +38,26 @@ interface OAuthFeedbackBanner {
 }
 
 function getLinkedInStatusText(status: VerificationStatusData) {
-  if (status.linkedinVerificationStatus === 'pending') {
+  if (status.linkedinVerificationLevel === 'pending') {
     return {
       label: 'Pending',
       helper: 'LinkedIn verification is under review.',
+      tone: 'neutral' as const,
+    };
+  }
+
+  if (status.linkedinVerificationLevel === 'identity') {
+    return {
+      label: 'Verified (Identity)',
+      helper: 'Official LinkedIn identity verification detected.',
+      tone: 'positive' as const,
+    };
+  }
+
+  if (status.linkedinVerificationLevel === 'workplace') {
+    return {
+      label: 'Verified (Workplace)',
+      helper: 'LinkedIn workplace verification detected. Identity badge is not granted.',
       tone: 'neutral' as const,
     };
   }
@@ -64,7 +88,7 @@ function getLinkedInStatusText(status: VerificationStatusData) {
 
   return {
     label: 'Not checked',
-    helper: 'Run LinkedIn verification to add an additional trust signal.',
+    helper: 'Run LinkedIn verification to add workplace or identity trust signals.',
     tone: 'neutral' as const,
   };
 }
@@ -174,7 +198,18 @@ export function VerificationStatus() {
       }
 
       const data = await response.json();
-      setStatus(data);
+      setStatus({
+        ...data,
+        verificationTier: data.verificationTier || 'unverified',
+        verificationTierSource: data.verificationTierSource || 'unknown',
+        linkedinVerificationLevel:
+          data.linkedinVerificationLevel ||
+          (data.linkedinHasIdentityVerification
+            ? 'identity'
+            : data.linkedinVerificationStatus === 'verified'
+              ? 'workplace'
+              : data.linkedinVerificationStatus || 'unverified'),
+      });
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {
         const timeoutMessage = 'Request timed out. Please check your connection and try again.';
@@ -183,8 +218,11 @@ export function VerificationStatus() {
           verified: false,
           verificationMethod: null,
           verificationStatus: 'unverified',
+          verificationTier: 'unverified',
+          verificationTierSource: 'unknown',
           verifiedAt: null,
           linkedinVerificationStatus: 'unverified',
+          linkedinVerificationLevel: 'unverified',
           linkedinHasIdentityVerification: false,
           linkedinVerifiedAt: null,
           workEmail: null,
@@ -279,11 +317,11 @@ export function VerificationStatus() {
   }
 
   const canAddLinkedInVerification =
-    status.linkedinVerificationStatus !== 'verified' &&
-    status.linkedinVerificationStatus !== 'pending';
+    status.linkedinVerificationLevel !== 'identity' &&
+    status.linkedinVerificationLevel !== 'pending';
 
   // Show verification options based on identity status
-  if (status.verificationStatus === 'verified' && status.verified) {
+  if (status.verificationTier === 'identity_verified') {
     return (
       <div className="space-y-4">
         {oauthFeedback && (
@@ -302,11 +340,9 @@ export function VerificationStatus() {
             <p className="font-medium text-green-900 dark:text-green-100">Identity Verified</p>
             <p className="text-sm text-green-700 dark:text-green-300">
               Verified via{' '}
-              {status.verificationMethod === 'veriff'
+              {status.verificationTierSource === 'veriff' || status.verificationMethod === 'veriff'
                 ? 'Government ID'
-                : status.verificationMethod === 'work_email'
-                  ? 'Work Email'
-                  : 'LinkedIn'}
+                : 'LinkedIn Identity'}
               {status.verifiedAt && ` on ${new Date(status.verifiedAt).toLocaleDateString()}`}
             </p>
             {status.workEmail && (
@@ -341,6 +377,67 @@ export function VerificationStatus() {
             Add LinkedIn Verification
           </Button>
         )}
+      </div>
+    );
+  }
+
+  if (status.verificationTier === 'workplace_verified' && status.verificationStatus !== 'pending') {
+    return (
+      <div className="space-y-4">
+        {oauthFeedback && (
+          <Alert variant={oauthFeedback.type === 'error' ? 'destructive' : 'default'}>
+            {oauthFeedback.type === 'error' ? (
+              <AlertCircle className="h-4 w-4" />
+            ) : (
+              <CheckCircle2 className="h-4 w-4" />
+            )}
+            <AlertDescription>{oauthFeedback.message}</AlertDescription>
+          </Alert>
+        )}
+        <div className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+          <CheckCircle2 className="w-6 h-6 text-blue-600 flex-shrink-0" />
+          <div className="flex-1">
+            <p className="font-medium text-blue-900">Workplace Verified</p>
+            <p className="text-sm text-blue-700">
+              Verified via{' '}
+              {status.verificationTierSource === 'work_email'
+                ? 'Work Email'
+                : 'LinkedIn Workplace Verification'}
+              . Identity badge is not granted at this tier.
+            </p>
+          </div>
+        </div>
+        <LinkedInStatusPanel status={status} />
+        <p className="text-sm text-muted-foreground">
+          Upgrade to identity verification to unlock the full verified identity badge.
+        </p>
+        {status.workEmailNeedsReverify && (
+          <Alert className="border-amber-300 bg-amber-50 text-amber-900">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Your work email verification has expired. Re-verify to keep workplace verification
+              active.
+            </AlertDescription>
+          </Alert>
+        )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Button
+            variant="outline"
+            onClick={() => setShowWorkEmailForm(true)}
+            className="flex items-center gap-2"
+          >
+            <Mail className="w-4 h-4" />
+            Re-verify Work Email
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setShowLinkedInFlow(true)}
+            className="flex items-center gap-2 border-[#0A66C2] text-[#0A66C2] hover:bg-[#0A66C2]/10"
+          >
+            <Linkedin className="w-4 h-4" />
+            Check LinkedIn Again
+          </Button>
+        </div>
       </div>
     );
   }
@@ -441,8 +538,8 @@ export function VerificationStatus() {
       <LinkedInStatusPanel status={status} />
       <div className="space-y-2">
         <p className="text-sm text-muted-foreground">
-          Verify your identity to unlock the verified badge on your profile. Choose one of the
-          following methods:
+          Choose a verification method. Workplace verification improves trust, while identity
+          verification unlocks the full verified badge.
         </p>
       </div>
 
@@ -456,8 +553,8 @@ export function VerificationStatus() {
               <div className="flex-1">
                 <h3 className="font-semibold mb-1">Work Email Verification</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Verify using your company email address. This will also link your profile to your
-                  organization.
+                  Verify using your company email address for workplace verification. This also
+                  links your profile to your organization.
                 </p>
                 <Button
                   onClick={() => setShowWorkEmailForm(true)}
@@ -480,8 +577,8 @@ export function VerificationStatus() {
               <div className="flex-1">
                 <h3 className="font-semibold mb-1">LinkedIn Verification</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  LinkedIn identity verification can auto-approve your profile. If identity is not
-                  detected, the request goes to admin review.
+                  LinkedIn can auto-approve workplace or identity verification. If no official
+                  LinkedIn signal is detected, the request goes to admin review.
                 </p>
                 <Button
                   onClick={() => setShowLinkedInFlow(true)}
@@ -499,8 +596,8 @@ export function VerificationStatus() {
       <Alert>
         <CheckCircle2 className="h-4 w-4" />
         <AlertDescription>
-          <strong>Why verify?</strong> Verified profiles get a badge that helps organizations trust
-          your identity and improves match quality.
+          <strong>Why verify?</strong> Workplace and identity verification increase trust for
+          organizations and improve match quality.
         </AlertDescription>
       </Alert>
     </div>

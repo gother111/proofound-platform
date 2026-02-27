@@ -52,6 +52,8 @@ interface VerificationItem {
   createdAt: string;
   confidence: number;
   hasIdentityVerification: boolean;
+  hasWorkplaceVerification: boolean;
+  linkedinVerificationLevel: 'unverified' | 'pending' | 'workplace' | 'identity' | 'failed';
   hasVerificationBadge: boolean;
   recommendation: 'approve' | 'review_manually' | 'reject';
   signals: VerificationSignals;
@@ -216,6 +218,15 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
                 >
                   <Award className="w-4 h-4 mr-1" />
                   LinkedIn Identity Verification Detected
+                </Badge>
+              )}
+              {!verification.hasIdentityVerification && verification.hasWorkplaceVerification && (
+                <Badge
+                  variant="outline"
+                  className="border-blue-500 text-blue-700 bg-blue-50 px-3 py-2"
+                >
+                  <Award className="w-4 h-4 mr-1" />
+                  LinkedIn Workplace Verification Detected
                 </Badge>
               )}
             </div>

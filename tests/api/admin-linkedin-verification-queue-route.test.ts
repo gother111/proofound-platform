@@ -98,6 +98,8 @@ describe('GET /api/admin/verification/linkedin/queue', () => {
     expect(response.status).toBe(200);
     expect(body.queue.all).toHaveLength(1);
     expect(body.queue.all[0].linkedinUrl).toBeNull();
+    expect(body.queue.all[0].linkedinVerificationLevel).toBe('pending');
+    expect(body.queue.all[0].hasWorkplaceVerification).toBe(false);
     expect(body.stats.total).toBe(1);
   });
 });
