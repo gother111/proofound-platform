@@ -29,6 +29,9 @@ function mockSupabaseClient({
   teamMembers?: number;
 }) {
   return {
+    auth: {
+      getUser: vi.fn().mockResolvedValue({ data: { user: null } }),
+    },
     from: vi.fn((table: string) => {
       if (table === 'organizations') {
         const maybeSingle = vi.fn().mockResolvedValue({ data: organization });

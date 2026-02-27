@@ -1,5 +1,6 @@
 import { buildTrustSignals } from '@/lib/portfolio/trust-signals';
 import { mergeVisibilityFlags } from '@/lib/portfolio/visibility';
+import { normalizeOrganizationWebsite } from '@/lib/organizations/normalizeWebsite';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export type TrustExportData = {
@@ -15,6 +16,57 @@ export type TrustExportData = {
   skills: Array<{ id: string; name: string; level: number }>;
   visibility: ReturnType<typeof mergeVisibilityFlags>;
 };
+
+export type OrganizationTrustExportData = {
+  organization: {
+    id: string;
+    slug: string;
+    displayName: string;
+    tagline?: string;
+    mission?: string;
+    website?: string;
+    type?: string;
+    verified: boolean;
+    values: string[];
+    causes: string[];
+  };
+  metrics: {
+    activeAssignments: number;
+    teamMembers: number;
+  };
+};
+
+function toValueLabels(values: unknown): string[] {
+  if (!Array.isArray(values)) {
+    return [];
+  }
+
+  return values
+    .map((item) => {
+      if (typeof item === 'string') {
+        return item.trim();
+      }
+      if (item && typeof item === 'object' && 'label' in item) {
+        const label = (item as { label?: unknown }).label;
+        return typeof label === 'string' ? label.trim() : '';
+      }
+      return '';
+    })
+    .filter((item) => item.length > 0)
+    .slice(0, 8);
+}
+
+function toStringList(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .filter((entry): entry is string => typeof entry === 'string')
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0)
+    .slice(0, 8);
+}
 
 export async function fetchTrustExportData(
   supabase: SupabaseClient,
@@ -147,5 +199,65 @@ export async function fetchTrustExportData(
         ? (profile as any).field_visibility[0]?.field_visibility
         : (profile as any).field_visibility?.field_visibility
     ),
+  };
+}
+
+export async function fetchOrganizationTrustExportData(
+  supabase: SupabaseClient,
+  orgId: string
+): Promise<OrganizationTrustExportData | null> {
+  const { data: organization } = await supabase
+    .from('organizations')
+    .select(
+      `
+        id,
+        slug,
+        display_name,
+        tagline,
+        mission,
+        website,
+        type,
+        values,
+        causes,
+        verified
+      `
+    )
+    .eq('id', orgId)
+    .maybeSingle();
+
+  if (!organization || !organization.slug) {
+    return null;
+  }
+
+  const [activeAssignmentsResult, teamMembersResult] = await Promise.all([
+    supabase
+      .from('assignments')
+      .select('id', { count: 'exact', head: true })
+      .eq('org_id', organization.id)
+      .eq('status', 'active'),
+    supabase
+      .from('organization_members')
+      .select('user_id', { count: 'exact', head: true })
+      .eq('org_id', organization.id)
+      .eq('status', 'active'),
+  ]);
+
+  return {
+    organization: {
+      id: organization.id,
+      slug: organization.slug,
+      displayName: organization.display_name || organization.slug,
+      tagline: organization.tagline || undefined,
+      mission: organization.mission || undefined,
+      website: normalizeOrganizationWebsite(organization.website).value || undefined,
+      type: organization.type || undefined,
+      verified: Boolean(organization.verified),
+      values: toValueLabels(organization.values),
+      causes: toStringList(organization.causes),
+    },
+    metrics: {
+      activeAssignments: activeAssignmentsResult.count || 0,
+      teamMembers: teamMembersResult.count || 0,
+    },
   };
 }

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { sanitizeReturnPath } from '@/lib/navigation/sanitize-return-path';
 import { ShareLinkButton } from '../../[handle]/ShareLinkButton';
+import { DownloadOrganizationPdfButton } from './DownloadOrganizationPdfButton';
 
 const FALLBACK_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
@@ -53,6 +54,9 @@ export default async function OrganizationPortfolioPage({
   const returnLabel = returnPath.startsWith('/app/') ? 'Return to menu' : 'Return home';
 
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const { data: organization } = await supabase
     .from('organizations')
@@ -77,7 +81,7 @@ export default async function OrganizationPortfolioPage({
     return notFound();
   }
 
-  const [activeAssignmentsResult, teamMembersResult] = await Promise.all([
+  const [activeAssignmentsResult, teamMembersResult, membershipResult] = await Promise.all([
     supabase
       .from('assignments')
       .select('id', { count: 'exact', head: true })
@@ -88,6 +92,14 @@ export default async function OrganizationPortfolioPage({
       .select('user_id', { count: 'exact', head: true })
       .eq('org_id', organization.id)
       .eq('status', 'active'),
+    user?.id
+      ? supabase
+          .from('organization_members')
+          .select('user_id', { count: 'exact', head: true })
+          .eq('org_id', organization.id)
+          .eq('user_id', user.id)
+          .eq('status', 'active')
+      : Promise.resolve({ count: 0 }),
   ]);
 
   const values = toValueLabels(organization.values);
@@ -98,6 +110,7 @@ export default async function OrganizationPortfolioPage({
   const shareUrl = `${FALLBACK_URL.replace(/\/$/, '')}/portfolio/org/${slug}`;
   const activeAssignments = activeAssignmentsResult.count ?? 0;
   const teamMembers = teamMembersResult.count ?? 0;
+  const viewerIsMember = Boolean(membershipResult.count && membershipResult.count > 0);
 
   return (
     <div className="min-h-screen bg-proofound-parchment">
@@ -142,6 +155,7 @@ export default async function OrganizationPortfolioPage({
                 </Link>
               </Button>
               <ShareLinkButton url={shareUrl} />
+              {viewerIsMember ? <DownloadOrganizationPdfButton slug={slug} /> : null}
               {organization.website ? (
                 <a
                   href={organization.website}
