@@ -14,6 +14,8 @@ import type {
   Education,
   Experience,
   ImpactStory,
+  ImpactStoryVerificationRequestDispatchParams,
+  ImpactStoryVerificationRequestDispatchResult,
   ProfileData,
   PurposeLinks,
   Value,
@@ -61,6 +63,11 @@ type ProfileDialogsProps = {
   onReplaceValues: (values: Value[]) => Promise<void> | void;
   onReplaceCauses: (causes: string[]) => Promise<void> | void;
   onAddImpactStory: (story: Omit<ImpactStory, 'id'>) => Promise<void> | void;
+  onRequestImpactStoryVerification: (
+    params: ImpactStoryVerificationRequestDispatchParams
+  ) =>
+    | Promise<ImpactStoryVerificationRequestDispatchResult>
+    | ImpactStoryVerificationRequestDispatchResult;
   onUpdateImpactStory: (id: string, story: Omit<ImpactStory, 'id'>) => Promise<void> | void;
   onAddExperience: (experience: Omit<Experience, 'id'>) => void;
   onUpdateExperience: (id: string, experience: Omit<Experience, 'id'>) => Promise<void> | void;
@@ -103,6 +110,7 @@ export function ProfileDialogs({
   onReplaceValues,
   onReplaceCauses,
   onAddImpactStory,
+  onRequestImpactStoryVerification,
   onUpdateImpactStory,
   onAddExperience,
   onUpdateExperience,
@@ -159,16 +167,15 @@ export function ProfileDialogs({
         open={isImpactStoryFormOpen}
         onOpenChange={setIsImpactStoryFormOpen}
         story={editingImpactStory}
-        onSave={(story) => {
-          if (editingImpactStory) {
-            onUpdateImpactStory(editingImpactStory.id, {
-              ...story,
-              verified: editingImpactStory.verified ?? false,
-            });
-            return;
-          }
-          onAddImpactStory(story);
+        onSave={onAddImpactStory}
+        onSaveExisting={(storyId, story) => {
+          const resolvedVerifiedValue = editingImpactStory?.verified ?? false;
+          return onUpdateImpactStory(storyId, {
+            ...story,
+            verified: resolvedVerifiedValue,
+          });
         }}
+        onSendVerificationRequest={onRequestImpactStoryVerification}
       />
       <ExperienceForm
         open={isExperienceFormOpen}

@@ -26,6 +26,7 @@ import { triggerProfileActivationSurvey } from '@/lib/surveys/sus-triggers';
 import { evaluateIndividualMatchability } from '@/lib/matching/eligibility';
 import { MATCHABILITY_STRONG_SKILLS_WITH_RECENCY } from '@/lib/matching/thresholds';
 import { sendEmail } from '@/lib/email/sender';
+import { resolveSiteUrlFromHeaders } from '@/lib/env';
 import { buildExperienceTimeline } from '@/lib/profile/experience-timeline';
 import { isMissingColumnError } from '@/lib/db/schemaCompatibility';
 import {
@@ -55,6 +56,10 @@ import type {
   ImpactStoryRoleScope,
   ImpactStorySaveMode,
   ImpactStoryTimeline,
+  ImpactStoryVerificationRequestDispatchParams,
+  ImpactStoryVerificationRequestDispatchResult,
+  ImpactStoryVerificationRequestInput,
+  ImpactStoryVerificationRequestStatus,
   Experience,
   Education as EducationType,
   Volunteering as VolunteeringType,
@@ -385,6 +390,7 @@ export async function getProfileData(): Promise<ProfileData> {
     }
 
     let impactRows: any[] = [];
+    let impactVerificationRows: any[] = [];
     let experienceRows: any[] = [];
     let educationRows: any[] = [];
     let volunteeringRows: any[] = [];
@@ -474,6 +480,32 @@ export async function getProfileData(): Promise<ProfileData> {
       // Continue with empty arrays
     }
 
+    try {
+      impactVerificationRows = await db
+        .select({
+          impactStoryId: impactStoryVerificationRequests.impactStoryId,
+          status: impactStoryVerificationRequests.status,
+          verifierEmail: impactStoryVerificationRequests.verifierEmail,
+          createdAt: impactStoryVerificationRequests.createdAt,
+          emailSentAt: impactStoryVerificationRequests.emailSentAt,
+          emailError: impactStoryVerificationRequests.emailError,
+        })
+        .from(impactStoryVerificationRequests)
+        .where(eq(impactStoryVerificationRequests.requesterProfileId, user.id));
+
+      impactVerificationRows.sort((a, b) => {
+        const left = toIsoStringOrNull(a?.createdAt) || '';
+        const right = toIsoStringOrNull(b?.createdAt) || '';
+        return right.localeCompare(left);
+      });
+    } catch (error) {
+      const verificationMarkers = ['impact_story_verification_requests', 'created_at'];
+      if (!isSchemaDriftError(error, verificationMarkers)) {
+        console.error('Failed to fetch impact verification summaries:', error);
+      }
+      impactVerificationRows = [];
+    }
+
     // Transform L4 skills to profile format
     // Check for proofs to determine verified status
     let proofCounts: Record<string, number> = {};
@@ -558,6 +590,40 @@ export async function getProfileData(): Promise<ProfileData> {
         : missionLinks;
     const resolvedVisionLinks =
       profile?.vision && !hasRequiredPurposeLinks(visionLinks) ? defaultPurposeLinks : visionLinks;
+    const latestImpactVerificationByStory = new Map<
+      string,
+      {
+        status: ImpactStoryVerificationRequestStatus;
+        verifierEmail: string | null;
+        createdAt: string | null;
+        emailSentAt: string | null;
+        emailError: string | null;
+      }
+    >();
+
+    for (const verificationRow of impactVerificationRows) {
+      if (!verificationRow?.impactStoryId) continue;
+      if (latestImpactVerificationByStory.has(verificationRow.impactStoryId)) continue;
+      latestImpactVerificationByStory.set(verificationRow.impactStoryId, {
+        status: verificationRow.status as ImpactStoryVerificationRequestStatus,
+        verifierEmail: verificationRow.verifierEmail || null,
+        createdAt: toIsoStringOrNull(verificationRow.createdAt),
+        emailSentAt: toIsoStringOrNull(verificationRow.emailSentAt),
+        emailError: verificationRow.emailError || null,
+      });
+    }
+
+    const impactStoriesWithVerification: ImpactStory[] = impactRows.map((row: any) => {
+      const verificationSummary = latestImpactVerificationByStory.get(row.id);
+      return {
+        ...row,
+        verificationRequestStatus: verificationSummary?.status || null,
+        verificationRequestedAt: verificationSummary?.createdAt || null,
+        verificationVerifierEmail: verificationSummary?.verifierEmail || null,
+        verificationEmailSentAt: verificationSummary?.emailSentAt || null,
+        verificationEmailError: verificationSummary?.emailError || null,
+      };
+    });
 
     return {
       basicInfo: {
@@ -580,7 +646,7 @@ export async function getProfileData(): Promise<ProfileData> {
       skills: mappedSkills, // Now fetched from L4 skills table
       proofArtifactCount,
       acceptedVerificationCount,
-      impactStories: impactRows,
+      impactStories: impactStoriesWithVerification,
       experiences: mappedExperiences,
       education: educationRows,
       volunteering: volunteeringRows,
@@ -710,6 +776,31 @@ type ImpactStoryCreateResult = ImpactStory & {
   saveWarning?: string | null;
 };
 
+type ImpactStoryVerificationRecord = {
+  requestId: string;
+  status: ImpactStoryVerificationRequestStatus;
+  emailSent: boolean;
+  emailError: string | null;
+  warning: string | null;
+  verifierEmail: string;
+  createdAt: string;
+  emailSentAt: string | null;
+};
+
+type ImpactStoryVerificationRequestInternalInput = {
+  userId: string;
+  impactStoryId: string;
+  storyData: Omit<ImpactStory, 'id'>;
+  verificationRequest: ImpactStoryVerificationRequestInput;
+  requestHeaders?: Headers | null;
+};
+
+type ImpactStoryVerificationRequestInternalResult = {
+  verification: ImpactStoryVerificationRecord | null;
+  warning: string | null;
+  storageUnavailable: boolean;
+};
+
 function formatTimelineForLegacy(
   timeline: ImpactStoryTimeline | null | undefined,
   fallback: string
@@ -809,6 +900,305 @@ function normalizeBaseUrl(url?: string | null) {
   const base = (url || '').trim();
   if (!base) return 'http://localhost:3000';
   return base.endsWith('/') ? base.slice(0, -1) : base;
+}
+
+function toIsoStringOrNull(value: unknown): string | null {
+  if (!value) {
+    return null;
+  }
+
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return null;
+    }
+    const parsed = new Date(trimmed);
+    return Number.isNaN(parsed.getTime()) ? trimmed : parsed.toISOString();
+  }
+
+  return null;
+}
+
+async function resolveRequesterEmailSnapshot(): Promise<string | null> {
+  try {
+    const supabase = await createClient({ allowCookieWrite: true });
+    const { data: authUserData } = await supabase.auth.getUser();
+    return normalizeEmail(authUserData.user?.email || null);
+  } catch (authContextError) {
+    console.warn('impact verification: unable to resolve requester auth email', authContextError);
+    return null;
+  }
+}
+
+function mapImpactStoryRowToDraft(
+  row: {
+    title: string;
+    orgDescription: string;
+    impact: string;
+    businessValue: string;
+    outcomes: string;
+    timeline: string;
+    timelineStructured: unknown;
+    affiliationType: string | null;
+    affiliationDetails: string | null;
+    roleTitle: string | null;
+    roleScope: string | null;
+    primaryCause: string | null;
+    secondaryCauses: unknown;
+    measuredOutcomes: unknown;
+    supportingArtifacts: unknown;
+    verified: boolean | null;
+  },
+  verificationRequest?: ImpactStoryVerificationRequestInput | null
+): Omit<ImpactStory, 'id'> {
+  const measuredOutcomes = Array.isArray(row.measuredOutcomes)
+    ? (row.measuredOutcomes as ImpactStoryOutcome[])
+    : [];
+  const supportingArtifacts = Array.isArray(row.supportingArtifacts)
+    ? (row.supportingArtifacts as ImpactStoryArtifact[])
+    : [];
+  const secondaryCauses = Array.isArray(row.secondaryCauses)
+    ? row.secondaryCauses.filter((item): item is string => typeof item === 'string')
+    : [];
+
+  return {
+    title: row.title,
+    orgDescription: row.orgDescription,
+    impact: row.impact,
+    businessValue: row.businessValue,
+    outcomes: row.outcomes,
+    timeline: row.timeline,
+    verified: row.verified ?? false,
+    timelineStructured: (row.timelineStructured as ImpactStoryTimeline) || null,
+    affiliationType: (row.affiliationType as ImpactStory['affiliationType']) || null,
+    affiliationDetails: row.affiliationDetails || null,
+    roleTitle: row.roleTitle || null,
+    roleScope: (row.roleScope as ImpactStoryRoleScope) || null,
+    primaryCause: row.primaryCause || null,
+    secondaryCauses,
+    measuredOutcomes,
+    supportingArtifacts,
+    verificationRequest: verificationRequest || null,
+  };
+}
+
+async function createImpactStoryVerificationRequestInternal(
+  input: ImpactStoryVerificationRequestInternalInput
+): Promise<ImpactStoryVerificationRequestInternalResult> {
+  const normalizedVerifierEmail = normalizeEmail(input.verificationRequest.verifierEmail);
+  if (!normalizedVerifierEmail) {
+    return {
+      verification: null,
+      warning: 'Verifier email must be valid.',
+      storageUnavailable: false,
+    };
+  }
+
+  const requesterEmail = await resolveRequesterEmailSnapshot();
+  const integrityAssessment = await assessVerificationRequestIntegrity({
+    requesterProfileId: input.userId,
+    requesterEmail,
+    verifierEmail: normalizedVerifierEmail,
+    verifierSource: null,
+    headers: input.requestHeaders || null,
+  });
+
+  if (integrityAssessment.policy.blockSelf) {
+    await writeVerificationAuditLog({
+      actorId: input.userId,
+      action: 'verification.request.blocked',
+      targetType: 'impact_story',
+      targetId: input.impactStoryId,
+      meta: {
+        reason: VERIFICATION_INTEGRITY_REASONS.SELF_VERIFICATION_BLOCKED,
+        verifier_email: normalizedVerifierEmail,
+        risk_signals: integrityAssessment.riskSignals,
+      },
+    });
+
+    return {
+      verification: null,
+      warning: 'Self-verification requests are not allowed. Choose an independent verifier.',
+      storageUnavailable: false,
+    };
+  }
+
+  const token = randomBytes(32).toString('hex');
+  const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+  const claimSnapshot = buildClaimSnapshot(input.storyData, {
+    verifierRelationship: input.verificationRequest.verifierRelationship || null,
+    requesterDomain: integrityAssessment.requesterDomain,
+    verifierDomain: integrityAssessment.verifierDomain,
+    requesterEmail: integrityAssessment.normalizedRequesterEmail,
+  });
+
+  let verificationRequest: {
+    id: string;
+    integrityStatus?: string | null;
+    createdAt?: Date | string | null;
+  } | null = null;
+
+  try {
+    const [insertedVerificationRequest] = await db
+      .insert(impactStoryVerificationRequests)
+      .values({
+        impactStoryId: input.impactStoryId,
+        requesterProfileId: input.userId,
+        requesterEmailSnapshot: integrityAssessment.normalizedRequesterEmail,
+        requesterDomainSnapshot: integrityAssessment.requesterDomain,
+        verifierEmail: normalizedVerifierEmail,
+        verifierDomainSnapshot: integrityAssessment.verifierDomain,
+        verifierProfileId: integrityAssessment.verifierProfileId,
+        verifierName: input.verificationRequest.verifierName || null,
+        verifierRelationship: input.verificationRequest.verifierRelationship || null,
+        message: input.verificationRequest.message || null,
+        riskSignals: integrityAssessment.riskSignals,
+        requiresAuthenticatedVerifier: integrityAssessment.policy.requiresAuthenticatedVerifier,
+        integrityStatus: integrityAssessment.policy.integrityStatus,
+        integrityReason: integrityAssessment.policy.integrityReason,
+        integrityMeta: {
+          policy: {
+            requires_authenticated_verifier:
+              integrityAssessment.policy.requiresAuthenticatedVerifier,
+            integrity_status: integrityAssessment.policy.integrityStatus,
+            integrity_reason: integrityAssessment.policy.integrityReason,
+          },
+        },
+        requesterIpHash: integrityAssessment.requesterFingerprints.ipHash,
+        requesterUserAgentHash: integrityAssessment.requesterFingerprints.userAgentHash,
+        token,
+        status: 'pending',
+        expiresAt,
+        claimSnapshot,
+      })
+      .returning({
+        id: impactStoryVerificationRequests.id,
+        integrityStatus: impactStoryVerificationRequests.integrityStatus,
+        createdAt: impactStoryVerificationRequests.createdAt,
+      });
+    verificationRequest = insertedVerificationRequest || null;
+  } catch (error) {
+    const verificationMarkers = ['impact_story_verification_requests', 'claim_snapshot'];
+    if (isSchemaDriftError(error, verificationMarkers)) {
+      return {
+        verification: null,
+        warning: 'Verification storage is unavailable until the latest migrations are applied.',
+        storageUnavailable: true,
+      };
+    }
+
+    throw error;
+  }
+
+  if (!verificationRequest) {
+    return {
+      verification: null,
+      warning: 'Failed to create verification request.',
+      storageUnavailable: false,
+    };
+  }
+
+  await writeVerificationAuditLog({
+    actorId: input.userId,
+    action: 'verification.request.created',
+    targetType: 'impact_story_verification_request',
+    targetId: verificationRequest.id,
+    meta: {
+      impact_story_id: input.impactStoryId,
+      verifier_email: normalizedVerifierEmail,
+      integrity_status: verificationRequest.integrityStatus || 'clear',
+      requires_authenticated_verifier: integrityAssessment.policy.requiresAuthenticatedVerifier,
+      risk_signals: integrityAssessment.riskSignals,
+    },
+  });
+
+  const headerBaseUrl = input.requestHeaders ? resolveSiteUrlFromHeaders(input.requestHeaders) : '';
+  const baseUrl = normalizeBaseUrl(
+    headerBaseUrl ||
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      process.env.SITE_URL
+  );
+  const verifyUrl = `${baseUrl}/verify/${token}`;
+
+  const emailResult = await sendEmail({
+    to: normalizedVerifierEmail,
+    subject: `${input.storyData.title} verification request on Proofound`,
+    html: `
+        <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 640px; margin: 0 auto; padding: 20px;">
+          <h2 style="margin-bottom: 16px; color: #1f2937;">Impact story verification request</h2>
+          <p style="color: #374151;">You have been asked to verify claims for the impact story <strong>${input.storyData.title}</strong>.</p>
+          <p style="color: #374151;">Please review role participation, measurable outcomes, and supporting artifacts claims.</p>
+          ${
+            input.verificationRequest.message
+              ? `<p style="color: #374151;"><em>"${input.verificationRequest.message}"</em></p>`
+              : ''
+          }
+          <p style="margin-top: 24px;">
+            <a href="${verifyUrl}" style="display: inline-block; background: #1f4d3a; color: white; text-decoration: none; padding: 10px 16px; border-radius: 8px;">Open verification request</a>
+          </p>
+          <p style="color: #6b7280; font-size: 12px; margin-top: 16px;">This link expires on ${expiresAt.toISOString().split('T')[0]}.</p>
+        </div>
+      `,
+    text: `You have been asked to verify claims for "${input.storyData.title}". Open: ${verifyUrl}`,
+  });
+
+  const createdAtIso = toIsoStringOrNull(verificationRequest.createdAt) || new Date().toISOString();
+
+  if (!emailResult.success) {
+    const warning = emailResult.error || 'Failed to send verification request email.';
+    await db
+      .update(impactStoryVerificationRequests)
+      .set({
+        status: 'failed',
+        emailError: warning,
+        updatedAt: new Date(),
+      })
+      .where(eq(impactStoryVerificationRequests.id, verificationRequest.id));
+
+    return {
+      verification: {
+        requestId: verificationRequest.id,
+        status: 'failed',
+        emailSent: false,
+        emailError: warning,
+        warning,
+        verifierEmail: normalizedVerifierEmail,
+        createdAt: createdAtIso,
+        emailSentAt: null,
+      },
+      warning,
+      storageUnavailable: false,
+    };
+  }
+
+  const emailSentAt = new Date();
+  await db
+    .update(impactStoryVerificationRequests)
+    .set({
+      emailSentAt,
+      updatedAt: emailSentAt,
+    })
+    .where(eq(impactStoryVerificationRequests.id, verificationRequest.id));
+
+  return {
+    verification: {
+      requestId: verificationRequest.id,
+      status: 'pending',
+      emailSent: true,
+      emailError: null,
+      warning: null,
+      verifierEmail: normalizedVerifierEmail,
+      createdAt: createdAtIso,
+      emailSentAt: emailSentAt.toISOString(),
+    },
+    warning: null,
+    storageUnavailable: false,
+  };
 }
 
 function collectSchemaErrorText(error: unknown): string {
@@ -957,182 +1347,68 @@ export async function createImpactStory(data: Omit<ImpactStory, 'id'>) {
   let verificationWarning: string | null = null;
 
   if (data.verificationRequest?.verifierEmail) {
-    const normalizedVerifierEmail = normalizeEmail(data.verificationRequest.verifierEmail);
-    if (!normalizedVerifierEmail) {
-      verificationWarning = 'Impact story saved, but verifier email was invalid.';
-    } else {
-      let requesterEmail: string | null = null;
-      try {
-        const supabase = await createClient({ allowCookieWrite: true });
-        const { data: authUserData } = await supabase.auth.getUser();
-        requesterEmail = normalizeEmail(authUserData.user?.email || null);
-      } catch (authContextError) {
-        console.warn('createImpactStory: unable to resolve requester auth email', authContextError);
+    let requestHeaders: Headers | null = null;
+    try {
+      requestHeaders = (await headers()) as unknown as Headers;
+    } catch {
+      requestHeaders = null;
+    }
+
+    const verificationResult = await createImpactStoryVerificationRequestInternal({
+      userId: user.id,
+      impactStoryId: inserted.id,
+      storyData: mapImpactStoryRowToDraft(
+        {
+          title: inserted.title,
+          orgDescription: inserted.orgDescription,
+          impact: inserted.impact,
+          businessValue: inserted.businessValue,
+          outcomes: inserted.outcomes,
+          timeline: inserted.timeline,
+          timelineStructured: inserted.timelineStructured,
+          affiliationType: inserted.affiliationType,
+          affiliationDetails: inserted.affiliationDetails,
+          roleTitle: inserted.roleTitle,
+          roleScope: inserted.roleScope,
+          primaryCause: inserted.primaryCause,
+          secondaryCauses: inserted.secondaryCauses,
+          measuredOutcomes: inserted.measuredOutcomes,
+          supportingArtifacts: inserted.supportingArtifacts,
+          verified: inserted.verified,
+        },
+        data.verificationRequest
+      ),
+      verificationRequest: data.verificationRequest,
+      requestHeaders,
+    });
+
+    if (verificationResult.storageUnavailable) {
+      verificationWarning =
+        verificationResult.warning ||
+        'Impact story saved, but verification storage is unavailable until the latest migrations are applied.';
+      if (!saveWarning) {
+        saveWarning =
+          'Saved in compatibility mode because verification request tables are unavailable in the active schema.';
       }
-
-      let requestHeaders: Headers | null = null;
-      try {
-        requestHeaders = (await headers()) as unknown as Headers;
-      } catch {
-        requestHeaders = null;
+      if (saveMode !== 'legacy_fallback') {
+        saveMode = 'legacy_fallback';
       }
+    } else if (verificationResult.warning) {
+      verificationWarning =
+        verificationResult.warning === 'Verifier email must be valid.'
+          ? 'Impact story saved, but verifier email was invalid.'
+          : verificationResult.warning;
+    }
 
-      const integrityAssessment = await assessVerificationRequestIntegrity({
-        requesterProfileId: user.id,
-        requesterEmail,
-        verifierEmail: normalizedVerifierEmail,
-        verifierSource: null,
-        headers: requestHeaders,
-      });
-
-      if (integrityAssessment.policy.blockSelf) {
-        verificationWarning =
-          'Impact story saved, but self-verification requests are not allowed. Choose an independent verifier.';
-        await writeVerificationAuditLog({
-          actorId: user.id,
-          action: 'verification.request.blocked',
-          targetType: 'impact_story',
-          targetId: inserted.id,
-          meta: {
-            reason: VERIFICATION_INTEGRITY_REASONS.SELF_VERIFICATION_BLOCKED,
-            verifier_email: normalizedVerifierEmail,
-            risk_signals: integrityAssessment.riskSignals,
-          },
-        });
-      } else {
-        const token = randomBytes(32).toString('hex');
-        const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
-        const claimSnapshot = buildClaimSnapshot(data, {
-          verifierRelationship: data.verificationRequest.verifierRelationship || null,
-          requesterDomain: integrityAssessment.requesterDomain,
-          verifierDomain: integrityAssessment.verifierDomain,
-          requesterEmail: integrityAssessment.normalizedRequesterEmail,
-        });
-        let verificationRequest: { id: string; integrityStatus?: string | null } | null = null;
-
-        try {
-          const [insertedVerificationRequest] = await db
-            .insert(impactStoryVerificationRequests)
-            .values({
-              impactStoryId: inserted.id,
-              requesterProfileId: user.id,
-              requesterEmailSnapshot: integrityAssessment.normalizedRequesterEmail,
-              requesterDomainSnapshot: integrityAssessment.requesterDomain,
-              verifierEmail: normalizedVerifierEmail,
-              verifierDomainSnapshot: integrityAssessment.verifierDomain,
-              verifierProfileId: integrityAssessment.verifierProfileId,
-              verifierName: data.verificationRequest.verifierName || null,
-              verifierRelationship: data.verificationRequest.verifierRelationship || null,
-              message: data.verificationRequest.message || null,
-              riskSignals: integrityAssessment.riskSignals,
-              requiresAuthenticatedVerifier:
-                integrityAssessment.policy.requiresAuthenticatedVerifier,
-              integrityStatus: integrityAssessment.policy.integrityStatus,
-              integrityReason: integrityAssessment.policy.integrityReason,
-              integrityMeta: {
-                policy: {
-                  requires_authenticated_verifier:
-                    integrityAssessment.policy.requiresAuthenticatedVerifier,
-                  integrity_status: integrityAssessment.policy.integrityStatus,
-                  integrity_reason: integrityAssessment.policy.integrityReason,
-                },
-              },
-              requesterIpHash: integrityAssessment.requesterFingerprints.ipHash,
-              requesterUserAgentHash: integrityAssessment.requesterFingerprints.userAgentHash,
-              token,
-              status: 'pending',
-              expiresAt,
-              claimSnapshot,
-            })
-            .returning({
-              id: impactStoryVerificationRequests.id,
-              integrityStatus: impactStoryVerificationRequests.integrityStatus,
-            });
-          verificationRequest = insertedVerificationRequest || null;
-        } catch (error) {
-          const verificationMarkers = ['impact_story_verification_requests', 'claim_snapshot'];
-          if (!isSchemaDriftError(error, verificationMarkers)) {
-            throw error;
-          }
-
-          verificationWarning =
-            'Impact story saved, but verification storage is unavailable until the latest migrations are applied.';
-          if (!saveWarning) {
-            saveWarning =
-              'Saved in compatibility mode because verification request tables are unavailable in the active schema.';
-          }
-          if (saveMode !== 'legacy_fallback') {
-            saveMode = 'legacy_fallback';
-          }
-        }
-
-        if (verificationRequest) {
-          await writeVerificationAuditLog({
-            actorId: user.id,
-            action: 'verification.request.created',
-            targetType: 'impact_story_verification_request',
-            targetId: verificationRequest.id,
-            meta: {
-              impact_story_id: inserted.id,
-              verifier_email: normalizedVerifierEmail,
-              integrity_status: verificationRequest.integrityStatus || 'clear',
-              requires_authenticated_verifier:
-                integrityAssessment.policy.requiresAuthenticatedVerifier,
-              risk_signals: integrityAssessment.riskSignals,
-            },
-          });
-
-          const baseUrl = normalizeBaseUrl(
-            process.env.NEXT_PUBLIC_SITE_URL ||
-              process.env.NEXT_PUBLIC_APP_URL ||
-              process.env.SITE_URL
-          );
-          const verifyUrl = `${baseUrl}/verify/${token}`;
-
-          const emailResult = await sendEmail({
-            to: normalizedVerifierEmail,
-            subject: `${data.title} verification request on Proofound`,
-            html: `
-        <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 640px; margin: 0 auto; padding: 20px;">
-          <h2 style="margin-bottom: 16px; color: #1f2937;">Impact story verification request</h2>
-          <p style="color: #374151;">You have been asked to verify claims for the impact story <strong>${data.title}</strong>.</p>
-          <p style="color: #374151;">Please review role participation, measurable outcomes, and supporting artifacts claims.</p>
-          ${
-            data.verificationRequest.message
-              ? `<p style="color: #374151;"><em>"${data.verificationRequest.message}"</em></p>`
-              : ''
-          }
-          <p style="margin-top: 24px;">
-            <a href="${verifyUrl}" style="display: inline-block; background: #1f4d3a; color: white; text-decoration: none; padding: 10px 16px; border-radius: 8px;">Open verification request</a>
-          </p>
-          <p style="color: #6b7280; font-size: 12px; margin-top: 16px;">This link expires on ${expiresAt.toISOString().split('T')[0]}.</p>
-        </div>
-      `,
-            text: `You have been asked to verify claims for "${data.title}". Open: ${verifyUrl}`,
-          });
-
-          if (!emailResult.success) {
-            verificationWarning =
-              emailResult.error || 'Impact story saved, but failed to send verification request.';
-            await db
-              .update(impactStoryVerificationRequests)
-              .set({
-                status: 'failed',
-                emailError: verificationWarning,
-                updatedAt: new Date(),
-              })
-              .where(eq(impactStoryVerificationRequests.id, verificationRequest.id));
-          } else {
-            await db
-              .update(impactStoryVerificationRequests)
-              .set({
-                emailSentAt: new Date(),
-                updatedAt: new Date(),
-              })
-              .where(eq(impactStoryVerificationRequests.id, verificationRequest.id));
-          }
-        }
-      }
+    if (verificationResult.verification) {
+      inserted = {
+        ...inserted,
+        verificationRequestStatus: verificationResult.verification.status,
+        verificationRequestedAt: verificationResult.verification.createdAt,
+        verificationVerifierEmail: verificationResult.verification.verifierEmail,
+        verificationEmailSentAt: verificationResult.verification.emailSentAt,
+        verificationEmailError: verificationResult.verification.emailError,
+      };
     }
   }
 
@@ -1143,6 +1419,132 @@ export async function createImpactStory(data: Omit<ImpactStory, 'id'>) {
     saveWarning,
     verificationWarning,
   } as ImpactStoryCreateResult;
+}
+
+export async function requestImpactStoryVerification(
+  params: ImpactStoryVerificationRequestDispatchParams
+): Promise<ImpactStoryVerificationRequestDispatchResult> {
+  const user = await requireAuth();
+  const storyId = params.storyId?.trim();
+  const verificationRequest = params.verificationRequest;
+
+  let baseStory: ImpactStoryCreateResult;
+  let verificationStoryDraft: Omit<ImpactStory, 'id'>;
+  let saveWarning: string | null = null;
+
+  if (storyId) {
+    const [storyRow] = await db
+      .select({
+        id: impactStories.id,
+        title: impactStories.title,
+        orgDescription: impactStories.orgDescription,
+        impact: impactStories.impact,
+        businessValue: impactStories.businessValue,
+        outcomes: impactStories.outcomes,
+        timeline: impactStories.timeline,
+        timelineStructured: impactStories.timelineStructured,
+        affiliationType: impactStories.affiliationType,
+        affiliationDetails: impactStories.affiliationDetails,
+        roleTitle: impactStories.roleTitle,
+        roleScope: impactStories.roleScope,
+        primaryCause: impactStories.primaryCause,
+        secondaryCauses: impactStories.secondaryCauses,
+        measuredOutcomes: impactStories.measuredOutcomes,
+        supportingArtifacts: impactStories.supportingArtifacts,
+        verified: impactStories.verified,
+      })
+      .from(impactStories)
+      .where(and(eq(impactStories.id, storyId), eq(impactStories.userId, user.id)))
+      .limit(1);
+
+    if (!storyRow) {
+      throw new Error('Impact story not found.');
+    }
+
+    baseStory = {
+      ...storyRow,
+    } as ImpactStoryCreateResult;
+    verificationStoryDraft = mapImpactStoryRowToDraft(storyRow, verificationRequest);
+  } else {
+    if (!params.storyDraft) {
+      throw new Error('Story details are required before requesting verification.');
+    }
+
+    const createdStory = await createImpactStory({
+      ...params.storyDraft,
+      verificationRequest: null,
+    });
+
+    baseStory = createdStory;
+    saveWarning = createdStory.saveWarning || null;
+    verificationStoryDraft = mapImpactStoryRowToDraft(
+      {
+        title: createdStory.title,
+        orgDescription: createdStory.orgDescription,
+        impact: createdStory.impact,
+        businessValue: createdStory.businessValue,
+        outcomes: createdStory.outcomes,
+        timeline: createdStory.timeline,
+        timelineStructured: createdStory.timelineStructured,
+        affiliationType: createdStory.affiliationType || null,
+        affiliationDetails: createdStory.affiliationDetails || null,
+        roleTitle: createdStory.roleTitle || null,
+        roleScope: createdStory.roleScope || null,
+        primaryCause: createdStory.primaryCause || null,
+        secondaryCauses: createdStory.secondaryCauses || [],
+        measuredOutcomes: createdStory.measuredOutcomes || [],
+        supportingArtifacts: createdStory.supportingArtifacts || [],
+        verified: createdStory.verified,
+      },
+      verificationRequest
+    );
+  }
+
+  let requestHeaders: Headers | null = null;
+  try {
+    requestHeaders = (await headers()) as unknown as Headers;
+  } catch {
+    requestHeaders = null;
+  }
+
+  const verificationResult = await createImpactStoryVerificationRequestInternal({
+    userId: user.id,
+    impactStoryId: baseStory.id,
+    storyData: verificationStoryDraft,
+    verificationRequest,
+    requestHeaders,
+  });
+
+  if (!verificationResult.verification) {
+    throw new Error(verificationResult.warning || 'Failed to create verification request.');
+  }
+
+  const storyWithVerification: ImpactStoryCreateResult = {
+    ...baseStory,
+    verificationRequestStatus: verificationResult.verification.status,
+    verificationRequestedAt: verificationResult.verification.createdAt,
+    verificationVerifierEmail: verificationResult.verification.verifierEmail,
+    verificationEmailSentAt: verificationResult.verification.emailSentAt,
+    verificationEmailError: verificationResult.verification.emailError,
+    verificationWarning: verificationResult.warning,
+  };
+
+  revalidatePath('/app/i/profile');
+
+  return {
+    story: storyWithVerification,
+    verification: {
+      requestId: verificationResult.verification.requestId,
+      status: verificationResult.verification.status,
+      emailSent: verificationResult.verification.emailSent,
+      emailError: verificationResult.verification.emailError,
+      warning: verificationResult.verification.warning,
+      verifierEmail: verificationResult.verification.verifierEmail,
+      createdAt: verificationResult.verification.createdAt,
+      emailSentAt: verificationResult.verification.emailSentAt,
+    },
+    saveWarning,
+  };
 }
 
 export async function updateImpactStory(id: string, data: Omit<ImpactStory, 'id'>) {

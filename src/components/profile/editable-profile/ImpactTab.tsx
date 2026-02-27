@@ -1,6 +1,6 @@
 'use client';
 
-import type { ImpactStory } from '@/types/profile';
+import type { ImpactStory, ImpactStoryVerificationRequestStatus } from '@/types/profile';
 
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,7 +8,6 @@ import { TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Calendar, CheckCircle2, Pencil, Plus, X } from 'lucide-react';
 import { getTaxonomyLabel, CAUSES_TAXONOMY } from '@/lib/taxonomy/data';
-
 export interface ImpactTabProps {
   impactStories: ImpactStory[];
   onAddStory: () => void;
@@ -42,6 +41,29 @@ export function ImpactTab({
   const getCauseLabels = (story: ImpactStory) => {
     const keys = [story.primaryCause, ...(story.secondaryCauses || [])].filter(Boolean) as string[];
     return keys.map((key) => getTaxonomyLabel(key, CAUSES_TAXONOMY));
+  };
+
+  const getVerificationBadge = (
+    status: ImpactStoryVerificationRequestStatus | null | undefined
+  ) => {
+    if (!status) return null;
+
+    if (status === 'accepted') {
+      return (
+        <Badge
+          variant="outline"
+          className="gap-1 bg-[#7A9278]/10 border-[#7A9278]/30 text-[#7A9278]"
+        >
+          Request Accepted
+        </Badge>
+      );
+    }
+
+    if (status === 'failed') {
+      return <Badge variant="destructive">Request Email Failed</Badge>;
+    }
+
+    return <Badge variant="outline">Request {status}</Badge>;
   };
 
   return (
@@ -158,6 +180,7 @@ export function ImpactTab({
                       Verified
                     </Badge>
                   )}
+                  {getVerificationBadge(story.verificationRequestStatus)}
                 </div>
                 <p className="text-sm text-muted-foreground mb-1">{story.orgDescription}</p>
                 <p className="text-xs text-muted-foreground flex items-center gap-1">
@@ -242,6 +265,22 @@ export function ImpactTab({
               {story.verificationWarning && story.verificationWarning !== story.saveWarning && (
                 <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-2">
                   {story.verificationWarning}
+                </p>
+              )}
+
+              {story.verificationRequestStatus && (
+                <p className="text-xs text-muted-foreground">
+                  Latest verification request: {story.verificationRequestStatus}
+                  {story.verificationVerifierEmail ? ` • ${story.verificationVerifierEmail}` : ''}
+                  {story.verificationRequestedAt
+                    ? ` • ${new Date(story.verificationRequestedAt).toLocaleDateString()}`
+                    : ''}
+                </p>
+              )}
+
+              {story.verificationEmailError && (
+                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-2">
+                  {story.verificationEmailError}
                 </p>
               )}
             </div>

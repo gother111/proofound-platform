@@ -30,6 +30,12 @@ export type ImpactStoryOutcomeValueMode = 'delta' | 'absolute';
 export type ImpactStoryOutcomeConfidence = 'exact' | 'estimated' | 'directional';
 export type ImpactStoryArtifactKind = 'link' | 'file' | 'video' | 'doc' | 'image' | 'other';
 export type ImpactStorySaveMode = 'structured' | 'legacy_fallback';
+export type ImpactStoryVerificationRequestStatus =
+  | 'pending'
+  | 'accepted'
+  | 'declined'
+  | 'expired'
+  | 'failed';
 
 export interface ImpactStoryTimeline {
   mode: ImpactStoryTimelineMode;
@@ -67,6 +73,27 @@ export interface ImpactStoryVerificationRequestInput {
   message?: string | null;
 }
 
+export interface ImpactStoryVerificationRequestDispatchParams {
+  storyId?: string;
+  storyDraft?: Omit<ImpactStory, 'id'>;
+  verificationRequest: ImpactStoryVerificationRequestInput;
+}
+
+export interface ImpactStoryVerificationRequestDispatchResult {
+  story: ImpactStory;
+  verification: {
+    requestId: string;
+    status: ImpactStoryVerificationRequestStatus;
+    emailSent: boolean;
+    emailError?: string | null;
+    warning?: string | null;
+    verifierEmail: string;
+    createdAt: string;
+    emailSentAt?: string | null;
+  };
+  saveWarning?: string | null;
+}
+
 export interface ImpactStory {
   id: string;
   title: string;
@@ -86,6 +113,11 @@ export interface ImpactStory {
   measuredOutcomes?: ImpactStoryOutcome[];
   supportingArtifacts?: ImpactStoryArtifact[];
   verificationRequest?: ImpactStoryVerificationRequestInput | null;
+  verificationRequestStatus?: ImpactStoryVerificationRequestStatus | null;
+  verificationRequestedAt?: string | null;
+  verificationVerifierEmail?: string | null;
+  verificationEmailSentAt?: string | null;
+  verificationEmailError?: string | null;
   verificationWarning?: string | null;
   saveMode?: ImpactStorySaveMode;
   saveWarning?: string | null;

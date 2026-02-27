@@ -25,7 +25,7 @@ import { ValuesCard } from './ValuesCard';
 import { CausesCard } from './CausesCard';
 import { SkillsCard } from './SkillsCard';
 import { getTaxonomyLabel, CAUSES_TAXONOMY } from '@/lib/taxonomy/data';
-import type { ImpactStory } from '@/types/profile';
+import type { ImpactStory, ImpactStoryVerificationRequestStatus } from '@/types/profile';
 
 interface ProfileViewProps {
   data: {
@@ -96,6 +96,29 @@ export function ProfileView({ data }: ProfileViewProps) {
   const getCauseLabels = (story: ImpactStory) => {
     const keys = [story.primaryCause, ...(story.secondaryCauses || [])].filter(Boolean) as string[];
     return keys.map((key) => getTaxonomyLabel(key, CAUSES_TAXONOMY));
+  };
+
+  const getVerificationBadge = (
+    status: ImpactStoryVerificationRequestStatus | null | undefined
+  ) => {
+    if (!status) return null;
+
+    if (status === 'accepted') {
+      return (
+        <Badge
+          variant="outline"
+          className="gap-1 bg-[#7A9278]/10 border-[#7A9278]/30 text-[#7A9278]"
+        >
+          Request Accepted
+        </Badge>
+      );
+    }
+
+    if (status === 'failed') {
+      return <Badge variant="destructive">Request Email Failed</Badge>;
+    }
+
+    return <Badge variant="outline">Request {status}</Badge>;
   };
 
   return (
@@ -231,6 +254,7 @@ export function ProfileView({ data }: ProfileViewProps) {
                                 Verified
                               </Badge>
                             )}
+                            {getVerificationBadge(story.verificationRequestStatus)}
                           </div>
                           <p className="text-sm text-muted-foreground mb-1">
                             {story.orgDescription}
@@ -331,6 +355,24 @@ export function ProfileView({ data }: ProfileViewProps) {
                               {story.verificationWarning}
                             </p>
                           )}
+
+                        {story.verificationRequestStatus && (
+                          <p className="text-xs text-muted-foreground">
+                            Latest verification request: {story.verificationRequestStatus}
+                            {story.verificationVerifierEmail
+                              ? ` • ${story.verificationVerifierEmail}`
+                              : ''}
+                            {story.verificationRequestedAt
+                              ? ` • ${new Date(story.verificationRequestedAt).toLocaleDateString()}`
+                              : ''}
+                          </p>
+                        )}
+
+                        {story.verificationEmailError && (
+                          <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-2">
+                            {story.verificationEmailError}
+                          </p>
+                        )}
                       </div>
                     </GlassCard>
                   ))}

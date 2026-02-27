@@ -4,6 +4,8 @@ import type {
   BasicInfo,
   PurposeLinks,
   ImpactStory,
+  ImpactStoryVerificationRequestDispatchParams,
+  ImpactStoryVerificationRequestDispatchResult,
   Experience,
   Education,
   Volunteering,
@@ -19,6 +21,7 @@ import {
   replaceCauses,
   replaceSkills,
   createImpactStory,
+  requestImpactStoryVerification as requestImpactStoryVerificationAction,
   updateImpactStory as updateImpactStoryAction,
   deleteImpactStory as deleteImpactStoryAction,
   createExperience,
@@ -43,6 +46,7 @@ interface PendingState {
   causes: boolean;
   skills: boolean;
   impactStory: boolean;
+  impactStoryVerification: boolean;
   experience: boolean;
   education: boolean;
   volunteering: boolean;
@@ -57,6 +61,7 @@ const initialPending: PendingState = {
   causes: false,
   skills: false,
   impactStory: false,
+  impactStoryVerification: false,
   experience: false,
   education: false,
   volunteering: false,
@@ -358,6 +363,66 @@ export function useProfileData() {
       } else {
         toast.success('Impact story saved.');
       }
+    },
+    [profile, runWithPending]
+  );
+
+  const sendImpactStoryVerificationRequest = useCallback(
+    async (
+      params: ImpactStoryVerificationRequestDispatchParams
+    ): Promise<ImpactStoryVerificationRequestDispatchResult> => {
+      if (!profile) {
+        throw new Error('Profile data is not loaded yet.');
+      }
+
+      const result = await runWithPending('impactStoryVerification', () =>
+        requestImpactStoryVerificationAction(params)
+      );
+
+      if (!result) {
+        throw new Error('Failed to send impact story verification request.');
+      }
+
+      setProfile((prev) => {
+        if (!prev) return prev;
+
+        const mergedStory: ImpactStory = {
+          ...result.story,
+          verificationRequestStatus: result.verification.status,
+          verificationRequestedAt: result.verification.createdAt,
+          verificationVerifierEmail: result.verification.verifierEmail,
+          verificationEmailSentAt: result.verification.emailSentAt || null,
+          verificationEmailError: result.verification.emailError || null,
+          verificationWarning: result.verification.warning || null,
+        };
+
+        const storyExists = prev.impactStories.some((item) => item.id === mergedStory.id);
+        if (storyExists) {
+          return {
+            ...prev,
+            impactStories: prev.impactStories.map((item) =>
+              item.id === mergedStory.id ? mergedStory : item
+            ),
+          };
+        }
+
+        return {
+          ...prev,
+          impactStories: [...prev.impactStories, mergedStory],
+        };
+      });
+
+      if (result.saveWarning) {
+        toast.warning(result.saveWarning);
+      }
+
+      if (result.verification.warning) {
+        toast.error(result.verification.warning);
+      } else {
+        toast.success('Verification request sent and is pending.');
+      }
+
+      return result;
     },
     [profile, runWithPending]
   );
@@ -671,6 +736,7 @@ export function useProfileData() {
     replaceCauses: onReplaceCauses,
     replaceSkills: onReplaceSkills,
     addImpactStory,
+    sendImpactStoryVerificationRequest,
     deleteImpactStory,
     updateImpactStory,
     addExperience,

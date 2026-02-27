@@ -53,6 +53,7 @@ export function EditableProfileView() {
     replaceValues,
     replaceCauses,
     addImpactStory,
+    sendImpactStoryVerificationRequest,
     deleteImpactStory,
     updateImpactStory,
     addExperience,
@@ -300,6 +301,7 @@ export function EditableProfileView() {
       onReplaceValues={replaceValues}
       onReplaceCauses={replaceCauses}
       onAddImpactStory={addImpactStory}
+      onRequestImpactStoryVerification={sendImpactStoryVerificationRequest}
       onUpdateImpactStory={updateImpactStory}
       onAddExperience={addExperience}
       onUpdateExperience={updateExperience}

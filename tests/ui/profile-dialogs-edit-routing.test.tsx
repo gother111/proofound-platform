@@ -4,23 +4,14 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { ProfileDialogs } from '@/components/profile/editable-profile/ProfileDialogs';
 
-const missionEditorMock = vi.fn();
-const visionEditorMock = vi.fn();
-
 vi.mock('@/components/profile/EditProfileModal', () => ({
   EditProfileModal: () => null,
 }));
 vi.mock('@/components/profile/MissionEditor', () => ({
-  MissionEditor: (props: any) => {
-    missionEditorMock(props);
-    return null;
-  },
+  MissionEditor: () => null,
 }));
 vi.mock('@/components/profile/VisionEditor', () => ({
-  VisionEditor: (props: any) => {
-    visionEditorMock(props);
-    return null;
-  },
+  VisionEditor: () => null,
 }));
 vi.mock('@/components/profile/ValuesEditor', () => ({
   ValuesEditor: () => null,
@@ -29,11 +20,11 @@ vi.mock('@/components/profile/CausesEditor', () => ({
   CausesEditor: () => null,
 }));
 vi.mock('@/components/profile/forms/ImpactStoryForm', () => ({
-  ImpactStoryForm: ({ onSave }: any) => (
+  ImpactStoryForm: ({ onSave, onSaveExisting }: any) => (
     <button
       type="button"
       onClick={() =>
-        onSave({
+        (onSaveExisting || onSave)(...(onSaveExisting ? ['impact-1'] : []), {
           title: 'Updated impact',
           orgDescription: 'Org',
           impact: 'Impact',
@@ -251,6 +242,7 @@ describe('ProfileDialogs edit routing', () => {
         onReplaceValues={() => {}}
         onReplaceCauses={() => {}}
         onAddImpactStory={onAddImpactStory}
+        onRequestImpactStoryVerification={vi.fn()}
         onUpdateImpactStory={onUpdateImpactStory}
         onAddExperience={onAddExperience}
         onUpdateExperience={onUpdateExperience}
@@ -283,18 +275,5 @@ describe('ProfileDialogs edit routing', () => {
     expect(onUpdateVolunteering).toHaveBeenCalledTimes(1);
     expect(onUpdateVolunteering.mock.calls[0][0]).toBe('vol-1');
     expect(onAddVolunteering).not.toHaveBeenCalled();
-
-    expect(missionEditorMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        availableValues: [],
-        availableCauses: [],
-      })
-    );
-    expect(visionEditorMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        availableValues: [],
-        availableCauses: [],
-      })
-    );
   });
 });

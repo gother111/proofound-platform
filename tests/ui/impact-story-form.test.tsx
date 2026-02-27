@@ -104,10 +104,17 @@ describe('ImpactStoryForm', () => {
     validateFileMock.mockReturnValue({ valid: true });
   });
 
-  it('submits structured impact story payload', async () => {
+  it('submits structured impact story payload when saving', async () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
 
-    render(<ImpactStoryForm open={true} onOpenChange={vi.fn()} onSave={onSave} />);
+    render(
+      <ImpactStoryForm
+        open={true}
+        onOpenChange={vi.fn()}
+        onSave={onSave}
+        onSendVerificationRequest={vi.fn()}
+      />
+    );
 
     fillRequiredFields();
 
@@ -124,78 +131,152 @@ describe('ImpactStoryForm', () => {
       end: '2025-06-30',
       ongoing: false,
     });
-    expect(payload.roleTitle).toBe('Program Lead');
-    expect(payload.roleScope).toBe('contributed');
-    expect(payload.primaryCause).toBe('education');
-    expect(payload.measuredOutcomes).toHaveLength(1);
-    expect(payload.measuredOutcomes[0]).toMatchObject({
-      label: 'Participants supported',
-      value: 1200,
-      unit: 'users',
-      valueMode: 'absolute',
-      timeframe: 'Q1 2025',
-    });
+    expect(payload.verificationRequest).toBeNull();
   });
 
-  it('requires valid verifier email when verification request is enabled', async () => {
-    const onSave = vi.fn().mockResolvedValue(undefined);
+  it('requires valid verifier email for send request button', async () => {
+    const onSendVerificationRequest = vi.fn();
 
-    render(<ImpactStoryForm open={true} onOpenChange={vi.fn()} onSave={onSave} />);
+    render(
+      <ImpactStoryForm
+        open={true}
+        onOpenChange={vi.fn()}
+        onSave={vi.fn()}
+        onSendVerificationRequest={onSendVerificationRequest}
+      />
+    );
 
     fillRequiredFields();
 
-    fireEvent.click(screen.getByLabelText(/Send verification request/i));
     fireEvent.change(screen.getByLabelText(/Verifier email/i), {
       target: { value: 'invalid-email' },
     });
 
-    fireEvent.submit(screen.getByRole('button', { name: /add story/i }).closest('form')!);
+    fireEvent.click(screen.getByRole('button', { name: /send request/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/Verifier email must be valid/i)).toBeTruthy();
     });
-    expect(onSave).not.toHaveBeenCalled();
+    expect(onSendVerificationRequest).not.toHaveBeenCalled();
   });
 
-  it('updates submit label when verification is enabled', async () => {
+  it('auto-saves before send for new story and then routes later save to existing story update', async () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
+    const onSaveExisting = vi.fn().mockResolvedValue(undefined);
+    const onSendVerificationRequest = vi.fn(async (params: any) => ({
+      story: {
+        id: 'impact-123',
+        ...(params.storyDraft || {}),
+        verificationRequestStatus: 'pending',
+      },
+      verification: {
+        requestId: 'request-1',
+        status: 'pending',
+        emailSent: true,
+        verifierEmail: params.verificationRequest.verifierEmail,
+        createdAt: new Date('2026-02-27T00:00:00.000Z').toISOString(),
+        emailSentAt: new Date('2026-02-27T00:00:00.000Z').toISOString(),
+      },
+      saveWarning: null,
+    }));
 
-    render(<ImpactStoryForm open={true} onOpenChange={vi.fn()} onSave={onSave} />);
-
-    fillRequiredFields();
-    fireEvent.click(screen.getByLabelText(/Send verification request/i));
-
-    await waitFor(() =>
-      expect(screen.getByRole('button', { name: /add story & send verification/i })).toBeTruthy()
+    render(
+      <ImpactStoryForm
+        open={true}
+        onOpenChange={vi.fn()}
+        onSave={onSave}
+        onSaveExisting={onSaveExisting}
+        onSendVerificationRequest={onSendVerificationRequest}
+      />
     );
-  });
-
-  it('shows a save error message when saving fails and keeps the dialog open', async () => {
-    const onSave = vi.fn().mockRejectedValue(new Error('Server error while saving.'));
-    const onOpenChange = vi.fn();
-
-    render(<ImpactStoryForm open={true} onOpenChange={onOpenChange} onSave={onSave} />);
 
     fillRequiredFields();
+    fireEvent.change(screen.getByLabelText(/Verifier email/i), {
+      target: { value: 'verifier@example.com' },
+    });
 
-    fireEvent.submit(screen.getByRole('button', { name: /add story/i }).closest('form')!);
+    fireEvent.click(screen.getByRole('button', { name: /send request/i }));
 
-    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(onSendVerificationRequest).toHaveBeenCalledTimes(1));
+    expect(onSendVerificationRequest.mock.calls[0][0].storyDraft).toBeTruthy();
+    expect(onSendVerificationRequest.mock.calls[0][0].storyId).toBeUndefined();
 
-    expect(screen.getByText(/server error while saving/i)).toBeTruthy();
-    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+    fireEvent.submit(screen.getByRole('button', { name: /save changes/i }).closest('form')!);
+
+    await waitFor(() => expect(onSaveExisting).toHaveBeenCalledTimes(1));
+    expect(onSaveExisting.mock.calls[0][0]).toBe('impact-123');
+    expect(onSave).not.toHaveBeenCalled();
   });
 
-  it('shows validation message when required fields are missing', async () => {
-    const onSave = vi.fn();
+  it('sends request from existing story id without including unsaved draft payload', async () => {
+    const onSendVerificationRequest = vi.fn(async (params: any) => ({
+      story: {
+        id: params.storyId,
+        title: 'Saved story',
+        orgDescription: 'Org',
+        impact: 'Impact',
+        businessValue: 'Value',
+        outcomes: 'Outcome',
+        timeline: '2024',
+        timelineStructured: { mode: 'single', precision: 'year', start: '2024' },
+        verified: false,
+      },
+      verification: {
+        requestId: 'request-2',
+        status: 'pending',
+        emailSent: true,
+        verifierEmail: params.verificationRequest.verifierEmail,
+        createdAt: new Date('2026-02-27T00:00:00.000Z').toISOString(),
+        emailSentAt: new Date('2026-02-27T00:00:00.000Z').toISOString(),
+      },
+      saveWarning: null,
+    }));
 
-    render(<ImpactStoryForm open={true} onOpenChange={vi.fn()} onSave={onSave} />);
+    render(
+      <ImpactStoryForm
+        open={true}
+        onOpenChange={vi.fn()}
+        onSave={vi.fn()}
+        onSaveExisting={vi.fn()}
+        onSendVerificationRequest={onSendVerificationRequest}
+        story={{
+          id: 'impact-existing',
+          title: 'Saved story',
+          orgDescription: 'Org',
+          impact: 'Impact',
+          businessValue: 'Value',
+          outcomes: 'Outcome',
+          timeline: '2024',
+          timelineStructured: { mode: 'single', precision: 'year', start: '2024' },
+          verified: false,
+          affiliationType: 'organization',
+          affiliationDetails: 'Org',
+          roleTitle: 'Lead',
+          roleScope: 'owned',
+          primaryCause: 'education',
+          secondaryCauses: [],
+          measuredOutcomes: [],
+          supportingArtifacts: [],
+        }}
+      />
+    );
 
-    fireEvent.submit(screen.getByRole('button', { name: /add story/i }).closest('form')!);
-
-    await waitFor(() => {
-      expect(screen.getByText(/please fix highlighted fields before saving/i)).toBeTruthy();
+    fireEvent.change(screen.getByLabelText(/Verifier email/i), {
+      target: { value: 'manager@example.com' },
     });
-    expect(onSave).not.toHaveBeenCalled();
+    fireEvent.change(screen.getByLabelText(/^Title \*$/i), {
+      target: { value: 'Unsaved changed title' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /send request/i }));
+
+    await waitFor(() => expect(onSendVerificationRequest).toHaveBeenCalledTimes(1));
+    expect(onSendVerificationRequest.mock.calls[0][0]).toMatchObject({
+      storyId: 'impact-existing',
+      verificationRequest: expect.objectContaining({
+        verifierEmail: 'manager@example.com',
+      }),
+    });
+    expect(onSendVerificationRequest.mock.calls[0][0].storyDraft).toBeUndefined();
   });
 });

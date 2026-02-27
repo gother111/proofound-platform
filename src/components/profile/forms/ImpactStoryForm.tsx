@@ -22,6 +22,9 @@ import type {
   ImpactStoryOutcome,
   ImpactStoryOutcomeConfidence,
   ImpactStoryOutcomeValueMode,
+  ImpactStoryVerificationRequestDispatchParams,
+  ImpactStoryVerificationRequestDispatchResult,
+  ImpactStoryVerificationRequestStatus,
   ImpactStoryRoleScope,
   ImpactStoryTimeline,
   ImpactStoryTimelineMode,
@@ -33,6 +36,12 @@ interface ImpactStoryFormProps {
   onOpenChange: (open: boolean) => void;
   story?: ImpactStory | null;
   onSave: (story: Omit<ImpactStory, 'id'>) => Promise<void> | void;
+  onSaveExisting?: (storyId: string, story: Omit<ImpactStory, 'id'>) => Promise<void> | void;
+  onSendVerificationRequest?: (
+    params: ImpactStoryVerificationRequestDispatchParams
+  ) =>
+    | Promise<ImpactStoryVerificationRequestDispatchResult>
+    | ImpactStoryVerificationRequestDispatchResult;
 }
 
 type OutcomeDraft = {
@@ -112,7 +121,19 @@ function formatTimelineForLegacy(timeline: ImpactStoryTimeline): string {
   return timeline.end ? `${timeline.start} - ${timeline.end}` : timeline.start;
 }
 
-export function ImpactStoryForm({ open, onOpenChange, story, onSave }: ImpactStoryFormProps) {
+function getVerificationStatusLabel(status: ImpactStoryVerificationRequestStatus | null) {
+  if (!status) return null;
+  return status.charAt(0).toUpperCase() + status.slice(1);
+}
+
+export function ImpactStoryForm({
+  open,
+  onOpenChange,
+  story,
+  onSave,
+  onSaveExisting,
+  onSendVerificationRequest,
+}: ImpactStoryFormProps) {
   const [title, setTitle] = useState('');
   const [timelineMode, setTimelineMode] = useState<ImpactStoryTimelineMode>('range');
   const [timelinePrecision, setTimelinePrecision] = useState<ImpactStoryTimelinePrecision>('date');
@@ -134,14 +155,19 @@ export function ImpactStoryForm({ open, onOpenChange, story, onSave }: ImpactSto
   const [outcomes, setOutcomes] = useState<OutcomeDraft[]>([createOutcomeDraft()]);
   const [artifacts, setArtifacts] = useState<ArtifactDraft[]>([]);
 
-  const [requestVerification, setRequestVerification] = useState(false);
   const [verifierEmail, setVerifierEmail] = useState('');
   const [verifierName, setVerifierName] = useState('');
   const [verifierRelationship, setVerifierRelationship] = useState('');
   const [verificationMessage, setVerificationMessage] = useState('');
+  const [verificationStatus, setVerificationStatus] =
+    useState<ImpactStoryVerificationRequestStatus | null>(null);
+  const [verificationRequestedAt, setVerificationRequestedAt] = useState<string | null>(null);
+  const [verificationFeedbackMessage, setVerificationFeedbackMessage] = useState('');
+  const [persistedStoryId, setPersistedStoryId] = useState<string | null>(null);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [isSendingVerification, setIsSendingVerification] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
 
   useEffect(() => {
@@ -213,13 +239,18 @@ export function ImpactStoryForm({ open, onOpenChange, story, onSave }: ImpactSto
       setArtifacts([]);
     }
 
-    setRequestVerification(false);
+    setPersistedStoryId(story?.id || null);
     setVerifierEmail('');
     setVerifierName('');
     setVerifierRelationship('');
     setVerificationMessage('');
+    setVerificationStatus(story?.verificationRequestStatus || null);
+    setVerificationRequestedAt(story?.verificationRequestedAt || null);
+    setVerificationFeedbackMessage('');
     setErrors({});
     setIsSaving(false);
+    setIsSendingVerification(false);
+    setSubmitMessage('');
   }, [open, story]);
 
   const availableSecondaryCauses = useMemo(
@@ -360,15 +391,6 @@ export function ImpactStoryForm({ open, onOpenChange, story, onSave }: ImpactSto
         nextErrors[`artifact.${index}.url`] = 'Artifact URL or uploaded file is required';
     });
 
-    if (requestVerification) {
-      const email = verifierEmail.trim();
-      if (!email) {
-        nextErrors.verifierEmail = 'Verifier email is required';
-      } else if (!/^\S+@\S+\.\S+$/.test(email)) {
-        nextErrors.verifierEmail = 'Verifier email must be valid';
-      }
-    }
-
     if (hasUploadingArtifacts) {
       nextErrors.artifactsUploading = 'Please wait for all artifact uploads to finish';
     }
@@ -377,16 +399,23 @@ export function ImpactStoryForm({ open, onOpenChange, story, onSave }: ImpactSto
     return Object.keys(nextErrors).length === 0;
   };
 
-  const handleSave = async (event?: React.FormEvent) => {
-    event?.preventDefault();
-
-    setSubmitMessage('');
-
-    if (!validate()) {
-      setSubmitMessage('Please fix highlighted fields before saving.');
-      return;
+  const validateVerificationFields = () => {
+    const email = verifierEmail.trim();
+    if (!email) {
+      setErrors((prev) => ({ ...prev, verifierEmail: 'Verifier email is required' }));
+      return false;
     }
 
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      setErrors((prev) => ({ ...prev, verifierEmail: 'Verifier email must be valid' }));
+      return false;
+    }
+
+    setErrors((prev) => ({ ...prev, verifierEmail: '' }));
+    return true;
+  };
+
+  const buildStoryPayload = (): Omit<ImpactStory, 'id'> => {
     const timelineStructured: ImpactStoryTimeline = {
       mode: timelineMode,
       precision: timelinePrecision,
@@ -416,41 +445,56 @@ export function ImpactStoryForm({ open, onOpenChange, story, onSave }: ImpactSto
       mimeType: artifact.mimeType || null,
     }));
 
+    return {
+      title: title.trim(),
+      timeline: formatTimelineForLegacy(timelineStructured),
+      timelineStructured,
+      orgDescription:
+        affiliationDetails.trim() ||
+        (affiliationType === 'organization' ? 'Affiliated organization' : 'Individual effort'),
+      impact: `${ROLE_SCOPE_OPTIONS.find((item) => item.value === roleScope)?.label || 'Contributed'} as ${roleTitle.trim()}`,
+      businessValue: measuredOutcomes.length
+        ? `Delivered ${measuredOutcomes.length} measured outcome${measuredOutcomes.length > 1 ? 's' : ''}`
+        : 'Structured impact story',
+      outcomes: measuredOutcomes
+        .map((outcome) => `${outcome.label}: ${outcome.value} ${outcome.unit}`)
+        .join('; '),
+      affiliationType,
+      affiliationDetails: affiliationDetails.trim() || null,
+      roleTitle: roleTitle.trim(),
+      roleScope,
+      primaryCause,
+      secondaryCauses,
+      measuredOutcomes,
+      supportingArtifacts,
+      verified: false,
+      verificationRequest: null,
+    };
+  };
+
+  const handleSave = async (event?: React.FormEvent) => {
+    event?.preventDefault();
+
+    setSubmitMessage('');
+
+    if (!validate()) {
+      setSubmitMessage('Please fix highlighted fields before saving.');
+      return;
+    }
+    const payload = buildStoryPayload();
+    const currentStoryId = story?.id || persistedStoryId;
+
     setIsSaving(true);
 
     try {
-      await onSave({
-        title: title.trim(),
-        timeline: formatTimelineForLegacy(timelineStructured),
-        timelineStructured,
-        orgDescription:
-          affiliationDetails.trim() ||
-          (affiliationType === 'organization' ? 'Affiliated organization' : 'Individual effort'),
-        impact: `${ROLE_SCOPE_OPTIONS.find((item) => item.value === roleScope)?.label || 'Contributed'} as ${roleTitle.trim()}`,
-        businessValue: measuredOutcomes.length
-          ? `Delivered ${measuredOutcomes.length} measured outcome${measuredOutcomes.length > 1 ? 's' : ''}`
-          : 'Structured impact story',
-        outcomes: measuredOutcomes
-          .map((outcome) => `${outcome.label}: ${outcome.value} ${outcome.unit}`)
-          .join('; '),
-        affiliationType,
-        affiliationDetails: affiliationDetails.trim() || null,
-        roleTitle: roleTitle.trim(),
-        roleScope,
-        primaryCause,
-        secondaryCauses,
-        measuredOutcomes,
-        supportingArtifacts,
-        verified: false,
-        verificationRequest: requestVerification
-          ? {
-              verifierEmail: verifierEmail.trim(),
-              verifierName: verifierName.trim() || null,
-              verifierRelationship: verifierRelationship.trim() || null,
-              message: verificationMessage.trim() || null,
-            }
-          : null,
-      });
+      if (currentStoryId) {
+        if (!onSaveExisting) {
+          throw new Error('Unable to save changes for this impact story.');
+        }
+        await onSaveExisting(currentStoryId, payload);
+      } else {
+        await onSave(payload);
+      }
 
       setSubmitMessage('');
       onOpenChange(false);
@@ -465,17 +509,82 @@ export function ImpactStoryForm({ open, onOpenChange, story, onSave }: ImpactSto
     }
   };
 
-  const submitLabel = requestVerification ? 'Add Story & Send Verification' : 'Add Story';
+  const handleSendVerification = async () => {
+    if (!onSendVerificationRequest) {
+      setVerificationFeedbackMessage('Verification sending is currently unavailable.');
+      return;
+    }
+
+    setSubmitMessage('');
+    setVerificationFeedbackMessage('');
+
+    if (!validateVerificationFields()) {
+      setVerificationFeedbackMessage('Enter a valid verifier email before sending.');
+      return;
+    }
+
+    const verificationRequest = {
+      verifierEmail: verifierEmail.trim(),
+      verifierName: verifierName.trim() || null,
+      verifierRelationship: verifierRelationship.trim() || null,
+      message: verificationMessage.trim() || null,
+    };
+
+    const currentStoryId = story?.id || persistedStoryId;
+
+    if (!currentStoryId && !validate()) {
+      setVerificationFeedbackMessage(
+        'Please fix highlighted fields before sending the verification request.'
+      );
+      return;
+    }
+
+    setIsSendingVerification(true);
+
+    try {
+      const result = await onSendVerificationRequest(
+        currentStoryId
+          ? {
+              storyId: currentStoryId,
+              verificationRequest,
+            }
+          : {
+              storyDraft: buildStoryPayload(),
+              verificationRequest,
+            }
+      );
+
+      setPersistedStoryId(result.story.id);
+      setVerificationStatus(result.verification.status);
+      setVerificationRequestedAt(result.verification.createdAt);
+      setVerificationFeedbackMessage(
+        result.verification.warning
+          ? result.verification.warning
+          : 'Verification request sent. Status is now pending.'
+      );
+    } catch (error) {
+      setVerificationFeedbackMessage(
+        error instanceof Error && error.message
+          ? error.message
+          : 'Failed to send verification request. Please try again.'
+      );
+    } finally {
+      setIsSendingVerification(false);
+    }
+  };
+
+  const currentStoryId = story?.id || persistedStoryId;
+  const submitLabel = currentStoryId ? 'Save Changes' : 'Add Story';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleSave} className="space-y-6">
           <DialogHeader>
-            <DialogTitle>{story ? 'Edit Impact Story' : 'Add Impact Story'}</DialogTitle>
+            <DialogTitle>{currentStoryId ? 'Edit Impact Story' : 'Add Impact Story'}</DialogTitle>
             <DialogDescription>
-              Capture structured impact and optionally send one verification request with
-              claim-level checks.
+              Capture structured impact, save changes independently, and send verification requests
+              when needed.
             </DialogDescription>
           </DialogHeader>
 
@@ -962,71 +1071,98 @@ export function ImpactStoryForm({ open, onOpenChange, story, onSave }: ImpactSto
             </div>
 
             <div className="space-y-3 rounded-lg border p-4">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="request-verification"
-                  checked={requestVerification}
-                  onCheckedChange={(checked) => setRequestVerification(Boolean(checked))}
-                />
-                <Label htmlFor="request-verification">Send verification request (optional)</Label>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <Label htmlFor="verifier-email" className="text-sm font-medium">
+                  Verification request
+                </Label>
+                {verificationStatus && (
+                  <Badge variant={verificationStatus === 'failed' ? 'destructive' : 'outline'}>
+                    {getVerificationStatusLabel(verificationStatus)}
+                  </Badge>
+                )}
               </div>
 
-              {requestVerification && (
-                <div className="space-y-2">
+              <div className="space-y-2">
+                <div className="space-y-1">
+                  <Label htmlFor="verifier-email">Verifier email *</Label>
+                  <Input
+                    id="verifier-email"
+                    type="email"
+                    value={verifierEmail}
+                    onChange={(e) => {
+                      setVerifierEmail(e.target.value);
+                      setErrors((prev) => ({ ...prev, verifierEmail: '' }));
+                    }}
+                    placeholder="name@company.com"
+                  />
+                  {errors.verifierEmail && (
+                    <p className="text-xs text-red-500">{errors.verifierEmail}</p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <Label htmlFor="verifier-email">Verifier email *</Label>
+                    <Label htmlFor="verifier-name">Verifier name (optional)</Label>
                     <Input
-                      id="verifier-email"
-                      type="email"
-                      value={verifierEmail}
-                      onChange={(e) => {
-                        setVerifierEmail(e.target.value);
-                        setErrors((prev) => ({ ...prev, verifierEmail: '' }));
-                      }}
-                      placeholder="name@company.com"
+                      id="verifier-name"
+                      value={verifierName}
+                      onChange={(e) => setVerifierName(e.target.value)}
+                      placeholder="e.g., Jane Doe"
                     />
-                    {errors.verifierEmail && (
-                      <p className="text-xs text-red-500">{errors.verifierEmail}</p>
-                    )}
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <div className="space-y-1">
-                      <Label htmlFor="verifier-name">Verifier name (optional)</Label>
-                      <Input
-                        id="verifier-name"
-                        value={verifierName}
-                        onChange={(e) => setVerifierName(e.target.value)}
-                        placeholder="e.g., Jane Doe"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label htmlFor="verifier-relationship">Relationship (optional)</Label>
-                      <Input
-                        id="verifier-relationship"
-                        value={verifierRelationship}
-                        onChange={(e) => setVerifierRelationship(e.target.value)}
-                        placeholder="e.g., Program Director"
-                      />
-                    </div>
-                  </div>
-
                   <div className="space-y-1">
-                    <Label htmlFor="verification-message">Message (optional)</Label>
-                    <Textarea
-                      id="verification-message"
-                      value={verificationMessage}
-                      onChange={(e) => setVerificationMessage(e.target.value)}
-                      placeholder="Add context for the verifier"
-                      rows={3}
+                    <Label htmlFor="verifier-relationship">Relationship (optional)</Label>
+                    <Input
+                      id="verifier-relationship"
+                      value={verifierRelationship}
+                      onChange={(e) => setVerifierRelationship(e.target.value)}
+                      placeholder="e.g., Program Director"
                     />
                   </div>
                 </div>
-              )}
 
-              <p className="text-xs text-muted-foreground">
-                Verification is sent only after this story is successfully saved.
-              </p>
+                <div className="space-y-1">
+                  <Label htmlFor="verification-message">Message (optional)</Label>
+                  <Textarea
+                    id="verification-message"
+                    value={verificationMessage}
+                    onChange={(e) => setVerificationMessage(e.target.value)}
+                    placeholder="Add context for the verifier"
+                    rows={3}
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => void handleSendVerification()}
+                  disabled={isSendingVerification || isSaving}
+                >
+                  {isSendingVerification ? 'Sending...' : 'Send Request'}
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  {currentStoryId
+                    ? 'Request uses last saved story details. Save changes separately when ready.'
+                    : 'For new stories, Send Request auto-saves first and keeps this dialog open.'}
+                </p>
+              </div>
+
+              {(verificationFeedbackMessage || verificationRequestedAt) && (
+                <p
+                  className={`text-xs rounded-md border p-2 ${
+                    verificationStatus === 'failed'
+                      ? 'text-amber-800 bg-amber-50 border-amber-200'
+                      : 'text-[#1C4D3A] bg-[#EEF6F2] border-[#B8D8C8]'
+                  }`}
+                >
+                  {verificationFeedbackMessage || 'Verification request status updated.'}
+                  {verificationRequestedAt
+                    ? ` Requested on ${new Date(verificationRequestedAt).toLocaleDateString()}.`
+                    : ''}
+                </p>
+              )}
             </div>
           </div>
 
@@ -1040,12 +1176,15 @@ export function ImpactStoryForm({ open, onOpenChange, story, onSave }: ImpactSto
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={isSaving}
+              disabled={isSaving || isSendingVerification}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSaving || hasUploadingArtifacts}>
-              {isSaving ? 'Saving...' : story ? 'Save Changes' : submitLabel}
+            <Button
+              type="submit"
+              disabled={isSaving || isSendingVerification || hasUploadingArtifacts}
+            >
+              {isSaving ? 'Saving...' : submitLabel}
             </Button>
           </DialogFooter>
         </form>

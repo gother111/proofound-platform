@@ -4,6 +4,7 @@ import {
   replaceValues,
   updateMission,
   getProfileData,
+  requestImpactStoryVerification,
   updateImpactStory,
   updateExperience,
   updateEducation,
@@ -14,6 +15,7 @@ import {
   education,
   experiences,
   impactStories,
+  impactStoryVerificationRequests,
   individualProfiles,
   volunteering,
 } from '@/db/schema';
@@ -25,6 +27,11 @@ const mockDb = vi.hoisted(() => ({
 }));
 
 const mockRequireAuth = vi.hoisted(() => vi.fn());
+const mockSendEmail = vi.hoisted(() => vi.fn());
+const mockCreateClient = vi.hoisted(() => vi.fn());
+const mockHeaders = vi.hoisted(() => vi.fn());
+const mockAssessVerificationRequestIntegrity = vi.hoisted(() => vi.fn());
+const mockWriteVerificationAuditLog = vi.hoisted(() => vi.fn());
 
 vi.mock('@/db', () => ({
   db: {
@@ -38,8 +45,34 @@ vi.mock('@/lib/auth', () => ({
   requireAuth: mockRequireAuth,
 }));
 
+vi.mock('@/lib/email/sender', () => ({
+  sendEmail: mockSendEmail,
+}));
+
+vi.mock('@/lib/supabase/server', () => ({
+  createClient: mockCreateClient,
+}));
+
+vi.mock('next/headers', () => ({
+  headers: mockHeaders,
+}));
+
 vi.mock('@/lib/audit/purpose-log', () => ({
   logPurposeEdit: vi.fn(),
+}));
+
+vi.mock('@/lib/verification/integrity', () => ({
+  VERIFICATION_INTEGRITY_REASONS: {
+    SELF_VERIFICATION_BLOCKED: 'self_verification_blocked',
+  },
+  assessVerificationRequestIntegrity: mockAssessVerificationRequestIntegrity,
+  normalizeEmail: (value: string | null | undefined) => {
+    if (!value || typeof value !== 'string') return null;
+    const normalized = value.trim().toLowerCase();
+    if (!normalized) return null;
+    return normalized.replace(/(\+[^@]+)(?=@)/, '');
+  },
+  writeVerificationAuditLog: mockWriteVerificationAuditLog,
 }));
 
 vi.mock('@/lib/analytics/events', () => ({
@@ -109,6 +142,34 @@ describe('profile purpose actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockRequireAuth.mockResolvedValue({ id: 'test-user-id' });
+    mockSendEmail.mockResolvedValue({ success: true, id: 'email-1' });
+    mockCreateClient.mockResolvedValue({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { email: 'requester@example.com' } },
+          error: null,
+        }),
+      },
+    });
+    mockHeaders.mockResolvedValue(new Headers());
+    mockAssessVerificationRequestIntegrity.mockResolvedValue({
+      normalizedRequesterEmail: 'requester@example.com',
+      requesterDomain: 'example.com',
+      verifierDomain: 'example.com',
+      verifierProfileId: null,
+      riskSignals: {},
+      requesterFingerprints: {
+        ipHash: null,
+        userAgentHash: null,
+      },
+      policy: {
+        blockSelf: false,
+        requiresAuthenticatedVerifier: false,
+        integrityStatus: 'clear',
+        integrityReason: null,
+      },
+    });
+    mockWriteVerificationAuditLog.mockResolvedValue(undefined);
   });
 
   it('updates mission when at least one value and one cause exist', async () => {
@@ -358,6 +419,7 @@ describe('profile purpose actions', () => {
     mockSelectWithWhere([]); // education
     mockSelectWithWhere([]); // volunteering
     mockSelectWithWhere([]); // skills
+    mockSelectWithWhere([]); // impact verification summaries
     mockSelectWithWhere([]); // proofs
     mockSelectWithWhere([]); // accepted verifications
 
@@ -375,6 +437,102 @@ describe('profile purpose actions', () => {
       values: ['Trust'],
       causes: ['Climate Justice'],
     });
+  });
+
+  it('attaches latest impact verification summary to impact stories', async () => {
+    const profileRow = {
+      values: [],
+      causes: [],
+      mission: null,
+      vision: null,
+      missionLinks: null,
+      visionLinks: null,
+      tagline: null,
+      location: null,
+      coverImageUrl: null,
+      fieldVisibility: null,
+      redactMode: false,
+    };
+
+    mockRequireAuth.mockResolvedValue({
+      id: 'test-user-id',
+      displayName: 'Auth User',
+      avatarUrl: null,
+      persona: 'individual',
+      locale: 'en',
+    });
+
+    mockDb.insert.mockReturnValue({
+      values: vi
+        .fn()
+        .mockReturnValue({ onConflictDoNothing: vi.fn().mockResolvedValue(undefined) }),
+    });
+
+    mockSelectWithLimit([profileRow]); // initial profile row check
+    mockSelectWithLimit([profileRow]); // profile fetch
+    mockSelectWithLimit([
+      {
+        displayName: 'Test User',
+        avatarUrl: null,
+        createdAt: new Date('2025-01-01T00:00:00Z'),
+      },
+    ]);
+    mockSelectWithWhere([
+      {
+        id: 'impact-1',
+        title: 'Impact',
+        orgDescription: 'Org',
+        impact: 'Impact',
+        businessValue: 'Value',
+        outcomes: 'Outcome',
+        timeline: '2024',
+        timelineStructured: { mode: 'single', precision: 'year', start: '2024' },
+        affiliationType: 'organization',
+        affiliationDetails: 'Org',
+        roleTitle: 'Lead',
+        roleScope: 'owned',
+        primaryCause: 'education',
+        secondaryCauses: [],
+        measuredOutcomes: [],
+        supportingArtifacts: [],
+        verified: false,
+      },
+    ]); // impact stories
+    mockSelectWithWhere([]); // experiences
+    mockSelectWithWhere([]); // education
+    mockSelectWithWhere([]); // volunteering
+    mockSelectWithWhere([]); // skills
+    mockSelectWithWhere([
+      {
+        impactStoryId: 'impact-1',
+        status: 'failed',
+        verifierEmail: 'verifier@example.com',
+        createdAt: new Date('2026-02-27T09:00:00.000Z'),
+        emailSentAt: null,
+        emailError: 'Resend unavailable',
+      },
+      {
+        impactStoryId: 'impact-1',
+        status: 'pending',
+        verifierEmail: 'older@example.com',
+        createdAt: new Date('2026-02-26T09:00:00.000Z'),
+        emailSentAt: new Date('2026-02-26T09:01:00.000Z'),
+        emailError: null,
+      },
+    ]); // impact verification summaries
+    mockSelectWithWhere([]); // proofs
+    mockSelectWithWhere([]); // accepted verifications
+
+    const profile = await getProfileData();
+
+    expect(profile.impactStories).toHaveLength(1);
+    expect(profile.impactStories[0]).toMatchObject({
+      id: 'impact-1',
+      verificationRequestStatus: 'failed',
+      verificationVerifierEmail: 'verifier@example.com',
+      verificationEmailError: 'Resend unavailable',
+    });
+    expect(profile.impactStories[0].verificationRequestedAt).toBeTruthy();
   });
 
   describe('updateEducation', () => {
@@ -443,6 +601,162 @@ describe('profile purpose actions', () => {
       expect(whereMock).toHaveBeenCalledTimes(1);
       expect(returningMock).toHaveBeenCalledTimes(1);
       expect(result).toEqual({ id: 'impact-1' });
+    });
+  });
+
+  describe('requestImpactStoryVerification', () => {
+    it('sends verification request for existing impact story and returns pending status', async () => {
+      const storyRow = {
+        id: 'impact-1',
+        title: 'Saved impact',
+        orgDescription: 'Org',
+        impact: 'Impact',
+        businessValue: 'Value',
+        outcomes: 'Outcome',
+        timeline: '2024',
+        timelineStructured: {
+          mode: 'single',
+          precision: 'year',
+          start: '2024',
+        },
+        affiliationType: 'organization',
+        affiliationDetails: 'Org details',
+        roleTitle: 'Lead',
+        roleScope: 'owned',
+        primaryCause: 'education',
+        secondaryCauses: [],
+        measuredOutcomes: [],
+        supportingArtifacts: [],
+        verified: false,
+      };
+
+      const selectLimitMock = vi.fn().mockResolvedValue([storyRow]);
+      const selectWhereMock = vi.fn().mockReturnValue({ limit: selectLimitMock });
+      const selectFromMock = vi.fn().mockReturnValue({ where: selectWhereMock });
+      mockDb.select.mockReturnValueOnce({ from: selectFromMock });
+
+      const insertPayloads: any[] = [];
+      mockDb.insert.mockImplementation((table: unknown) => ({
+        values: vi.fn((payload: any) => {
+          insertPayloads.push({ table, payload });
+          return {
+            returning: vi.fn().mockResolvedValue([
+              {
+                id: 'request-1',
+                integrityStatus: 'clear',
+                createdAt: new Date('2026-02-27T09:00:00.000Z'),
+              },
+            ]),
+          };
+        }),
+      }));
+
+      const updateWhereMock = vi.fn().mockResolvedValue(undefined);
+      const updateSetMock = vi.fn().mockReturnValue({ where: updateWhereMock });
+      mockDb.update.mockReturnValue({ set: updateSetMock });
+
+      const result = await requestImpactStoryVerification({
+        storyId: 'impact-1',
+        verificationRequest: {
+          verifierEmail: 'Verifier@Example.com',
+          verifierName: 'Verifier Name',
+        },
+      });
+
+      expect(insertPayloads[0]).toMatchObject({
+        table: impactStoryVerificationRequests,
+        payload: expect.objectContaining({
+          impactStoryId: 'impact-1',
+          verifierEmail: 'verifier@example.com',
+          status: 'pending',
+        }),
+      });
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: 'verifier@example.com',
+        })
+      );
+      expect(updateSetMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          emailSentAt: expect.any(Date),
+        })
+      );
+      expect(result.story.id).toBe('impact-1');
+      expect(result.verification).toMatchObject({
+        requestId: 'request-1',
+        status: 'pending',
+        emailSent: true,
+      });
+    });
+
+    it('marks request as failed when receiver email send fails', async () => {
+      const storyRow = {
+        id: 'impact-2',
+        title: 'Saved impact',
+        orgDescription: 'Org',
+        impact: 'Impact',
+        businessValue: 'Value',
+        outcomes: 'Outcome',
+        timeline: '2024',
+        timelineStructured: {
+          mode: 'single',
+          precision: 'year',
+          start: '2024',
+        },
+        affiliationType: 'organization',
+        affiliationDetails: 'Org details',
+        roleTitle: 'Lead',
+        roleScope: 'owned',
+        primaryCause: 'education',
+        secondaryCauses: [],
+        measuredOutcomes: [],
+        supportingArtifacts: [],
+        verified: false,
+      };
+
+      const selectLimitMock = vi.fn().mockResolvedValue([storyRow]);
+      const selectWhereMock = vi.fn().mockReturnValue({ limit: selectLimitMock });
+      const selectFromMock = vi.fn().mockReturnValue({ where: selectWhereMock });
+      mockDb.select.mockReturnValueOnce({ from: selectFromMock });
+
+      mockDb.insert.mockReturnValue({
+        values: vi.fn(() => ({
+          returning: vi.fn().mockResolvedValue([
+            {
+              id: 'request-2',
+              integrityStatus: 'clear',
+              createdAt: new Date('2026-02-27T09:00:00.000Z'),
+            },
+          ]),
+        })),
+      });
+
+      const updateSetCalls: any[] = [];
+      const updateWhereMock = vi.fn().mockResolvedValue(undefined);
+      mockDb.update.mockReturnValue({
+        set: vi.fn((payload: any) => {
+          updateSetCalls.push(payload);
+          return { where: updateWhereMock };
+        }),
+      });
+      mockSendEmail.mockResolvedValueOnce({ success: false, error: 'Resend unavailable' });
+
+      const result = await requestImpactStoryVerification({
+        storyId: 'impact-2',
+        verificationRequest: {
+          verifierEmail: 'Verifier@Example.com',
+        },
+      });
+
+      expect(result.verification).toMatchObject({
+        status: 'failed',
+        emailSent: false,
+        emailError: 'Resend unavailable',
+      });
+      expect(updateSetCalls[0]).toMatchObject({
+        status: 'failed',
+        emailError: 'Resend unavailable',
+      });
     });
   });
 
