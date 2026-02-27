@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 
 import { requireApiAuthContext } from '@/lib/auth';
-import { getIndividualReadiness } from '@/lib/readiness/individual';
+import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
+import { isFeatureEnabled } from '@/lib/feature-flags/server';
+import { getIndividualReadiness, getIndividualReadinessCached } from '@/lib/readiness/individual';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,7 +14,14 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const { user } = authContext;
-    const readiness = await getIndividualReadiness(user.id);
+    const usePerfCache = await isFeatureEnabled(
+      FEATURE_FLAG_KEYS.PLATFORM_PERF_CACHE,
+      { userId: user.id },
+      true
+    );
+    const readiness = usePerfCache
+      ? await getIndividualReadinessCached(user.id)
+      : await getIndividualReadiness(user.id);
     return NextResponse.json(readiness);
   } catch (error) {
     return NextResponse.json(

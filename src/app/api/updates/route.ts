@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { requireApiAuthContext } from '@/lib/auth';
+import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
+import { isFeatureEnabled } from '@/lib/feature-flags/server';
 import {
-  getIndividualActivityEvents,
-  getLatestOrgIdForUser,
-  getOrganizationActivityEvents,
-} from '@/lib/momentum/activity';
-import { resolveOrganizationId } from '@/lib/readiness/organization';
-import type { ActivityEvent } from '@/lib/momentum/types';
+  getMomentumUpdatesForPersona,
+  getMomentumUpdatesForPersonaCached,
+} from '@/lib/momentum/summary';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,24 +32,18 @@ export async function GET(request: NextRequest) {
     const limit = Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 20) : 8;
 
     const persona = personaParam === 'organization' ? 'organization' : 'individual';
-
-    let updates: ActivityEvent[] = [];
-
-    if (persona === 'organization') {
-      const orgId = orgParam
-        ? await resolveOrganizationId(orgParam)
-        : await getLatestOrgIdForUser(user.id);
-
-      if (orgId) {
-        updates = await getOrganizationActivityEvents(orgId, limit);
-      }
-    } else {
-      updates = await getIndividualActivityEvents(user.id, limit);
-    }
+    const usePerfCache = await isFeatureEnabled(
+      FEATURE_FLAG_KEYS.PLATFORM_PERF_CACHE,
+      { userId: user.id },
+      true
+    );
+    const updatesPayload = usePerfCache
+      ? await getMomentumUpdatesForPersonaCached(user.id, persona, limit, orgParam || undefined)
+      : await getMomentumUpdatesForPersona(user.id, persona, limit, orgParam || undefined);
 
     return NextResponse.json({
-      updates,
-      persona,
+      updates: updatesPayload.updates,
+      persona: updatesPayload.persona,
       eventTypes: [
         'goal_progress',
         'profile_progress',

@@ -10,11 +10,14 @@ import {
   skillVerificationRequests,
 } from '@/db/schema';
 import { computeSkillGaps } from '@/lib/skills/gap-service';
+import { getOrSetTtlCache, PLATFORM_PERF_CACHE_TTL_MS } from '@/lib/performance/ttl-cache';
 import type {
   IndividualReadiness,
   ReadinessAction,
   ReadinessScoreBreakdown,
 } from '@/lib/momentum/types';
+
+const INDIVIDUAL_READINESS_CACHE_PREFIX = 'readiness:individual';
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
@@ -234,4 +237,12 @@ export async function getIndividualReadiness(userId: string): Promise<Individual
       skillsCount,
     },
   };
+}
+
+export async function getIndividualReadinessCached(userId: string): Promise<IndividualReadiness> {
+  return getOrSetTtlCache(
+    `${INDIVIDUAL_READINESS_CACHE_PREFIX}:${userId}`,
+    () => getIndividualReadiness(userId),
+    { ttlMs: PLATFORM_PERF_CACHE_TTL_MS }
+  );
 }

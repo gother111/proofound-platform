@@ -9,11 +9,14 @@ import {
   organizations,
 } from '@/db/schema';
 import { calculateNextActions } from '@/lib/analytics/next-actions';
+import { getOrSetTtlCache, PLATFORM_PERF_CACHE_TTL_MS } from '@/lib/performance/ttl-cache';
 import type {
   OrganizationReadiness,
   ReadinessAction,
   ReadinessScoreBreakdown,
 } from '@/lib/momentum/types';
+
+const ORGANIZATION_READINESS_CACHE_PREFIX = 'readiness:organization';
 
 function classifyAvailability(count: number): 'scarce' | 'emerging' | 'available' {
   if (count <= 2) return 'scarce';
@@ -273,4 +276,14 @@ export async function getOrganizationReadiness(orgId: string): Promise<Organizat
       activeAssignments: totalActiveAssignments,
     },
   };
+}
+
+export async function getOrganizationReadinessCached(
+  orgId: string
+): Promise<OrganizationReadiness> {
+  return getOrSetTtlCache(
+    `${ORGANIZATION_READINESS_CACHE_PREFIX}:${orgId}`,
+    () => getOrganizationReadiness(orgId),
+    { ttlMs: PLATFORM_PERF_CACHE_TTL_MS }
+  );
 }

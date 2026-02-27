@@ -4,7 +4,13 @@ import { and, eq, sql } from 'drizzle-orm';
 import { requireApiAuthContext } from '@/lib/auth';
 import { db } from '@/db';
 import { organizationMembers } from '@/db/schema';
-import { getOrganizationReadiness, resolveOrganizationId } from '@/lib/readiness/organization';
+import { FEATURE_FLAG_KEYS } from '@/lib/featureFlags';
+import { isFeatureEnabled } from '@/lib/feature-flags/server';
+import {
+  getOrganizationReadiness,
+  getOrganizationReadinessCached,
+  resolveOrganizationId,
+} from '@/lib/readiness/organization';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,7 +48,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const readiness = await getOrganizationReadiness(orgId);
+    const usePerfCache = await isFeatureEnabled(
+      FEATURE_FLAG_KEYS.PLATFORM_PERF_CACHE,
+      { userId: user.id, orgId },
+      true
+    );
+    const readiness = usePerfCache
+      ? await getOrganizationReadinessCached(orgId)
+      : await getOrganizationReadiness(orgId);
     return NextResponse.json(readiness);
   } catch (error) {
     return NextResponse.json(

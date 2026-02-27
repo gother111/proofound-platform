@@ -5,13 +5,12 @@ import { Toaster as LegacyToaster } from '@/components/ui/toaster';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { ChatWidget } from '@/components/support/ChatWidget';
 import { CookieBanner } from '@/components/CookieBanner';
 import { GlobalErrorHandler } from '@/components/GlobalErrorHandler';
 import { OptionalTelemetry } from '@/components/OptionalTelemetry';
-import { SUSPromptHost } from '@/components/surveys/SUSPromptHost';
 import { SkipToContentLink } from '@/components/a11y/SkipToContentLink';
 import { TransitionProvider } from '@/components/ui/transition-provider';
+import { DeferredAppEnhancements } from '@/components/root/DeferredAppEnhancements';
 
 /**
  * Root Layout Component
@@ -73,7 +72,6 @@ export default async function RootLayout({
         <ErrorBoundary>
           <NextIntlClientProvider messages={messages}>
             <GlobalErrorHandler />
-            <SUSPromptHost />
 
             {/* Focus target for the skip link. Avoid wrapping in <main> to prevent nested main landmarks. */}
             <div id="main-content" tabIndex={-1}>
@@ -81,7 +79,7 @@ export default async function RootLayout({
             </div>
             <Toaster />
             <LegacyToaster />
-            <ChatWidget />
+            <DeferredAppEnhancements />
             <CookieBanner />
             <OptionalTelemetry />
           </NextIntlClientProvider>

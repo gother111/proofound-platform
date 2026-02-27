@@ -10,7 +10,18 @@ import {
 } from '@/lib/momentum/activity';
 import { getIndividualReadiness } from '@/lib/readiness/individual';
 import { getOrganizationReadiness, resolveOrganizationId } from '@/lib/readiness/organization';
-import type { MomentumSummary } from '@/lib/momentum/types';
+import { getOrSetTtlCache, PLATFORM_PERF_CACHE_TTL_MS } from '@/lib/performance/ttl-cache';
+import type { ActivityEvent, MomentumSummary } from '@/lib/momentum/types';
+
+const MOMENTUM_SUMMARY_CACHE_PREFIX = 'momentum:summary';
+const MOMENTUM_UPDATES_CACHE_PREFIX = 'momentum:updates';
+
+type MomentumPersona = 'individual' | 'organization';
+
+export type MomentumUpdatesPayload = {
+  persona: MomentumPersona;
+  updates: ActivityEvent[];
+};
 
 export async function getMomentumSummaryForIndividual(userId: string): Promise<MomentumSummary> {
   const [readiness, updates, unreadCount] = await Promise.all([
@@ -125,7 +136,7 @@ export async function getMomentumSummaryForOrganization(
 
 export async function getMomentumSummary(
   userId: string,
-  persona: 'individual' | 'organization',
+  persona: MomentumPersona,
   orgRef?: string
 ): Promise<MomentumSummary> {
   if (persona === 'organization') {
@@ -133,4 +144,56 @@ export async function getMomentumSummary(
   }
 
   return getMomentumSummaryForIndividual(userId);
+}
+
+export async function getMomentumSummaryCached(
+  userId: string,
+  persona: MomentumPersona,
+  orgRef?: string
+): Promise<MomentumSummary> {
+  return getOrSetTtlCache(
+    `${MOMENTUM_SUMMARY_CACHE_PREFIX}:${persona}:${userId}:${orgRef ?? ''}`,
+    () => getMomentumSummary(userId, persona, orgRef),
+    { ttlMs: PLATFORM_PERF_CACHE_TTL_MS }
+  );
+}
+
+export async function getMomentumUpdatesForPersona(
+  userId: string,
+  persona: MomentumPersona,
+  limit: number,
+  orgRef?: string
+): Promise<MomentumUpdatesPayload> {
+  if (persona === 'organization') {
+    const resolvedOrgId = orgRef
+      ? await resolveOrganizationId(orgRef)
+      : await getLatestOrgIdForUser(userId);
+
+    if (!resolvedOrgId) {
+      return { persona, updates: [] };
+    }
+
+    return {
+      persona,
+      updates: await getOrganizationActivityEvents(resolvedOrgId, limit),
+    };
+  }
+
+  return {
+    persona,
+    updates: await getIndividualActivityEvents(userId, limit),
+  };
+}
+
+export async function getMomentumUpdatesForPersonaCached(
+  userId: string,
+  persona: MomentumPersona,
+  limit: number,
+  orgRef?: string
+): Promise<MomentumUpdatesPayload> {
+  return getOrSetTtlCache(
+    `${MOMENTUM_UPDATES_CACHE_PREFIX}:${persona}:${userId}:${orgRef ?? ''}:${limit}`,
+    () => getMomentumUpdatesForPersona(userId, persona, limit, orgRef),
+    { ttlMs: PLATFORM_PERF_CACHE_TTL_MS }
+  );
 }

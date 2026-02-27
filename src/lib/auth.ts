@@ -2,6 +2,7 @@ import { createClient } from './supabase/server';
 import type { Organization, OrganizationMember, Profile } from '@/db/schema';
 import { redirect } from 'next/navigation';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import * as React from 'react';
 
 type ProfileRow = Pick<
   Profile,
@@ -50,6 +51,44 @@ export type ApiAuthContext = {
   user: ProfileRow;
   supabase: SupabaseClient;
 };
+
+function dedupeInFlight<TArgs extends unknown[], TResult>(
+  fn: (...args: TArgs) => Promise<TResult>
+): (...args: TArgs) => Promise<TResult> {
+  const inFlight = new Map<string, Promise<TResult>>();
+
+  return async (...args: TArgs) => {
+    const key = JSON.stringify(args);
+    const existing = inFlight.get(key);
+    if (existing) {
+      return existing;
+    }
+
+    const promise = fn(...args).finally(() => {
+      inFlight.delete(key);
+    });
+    inFlight.set(key, promise);
+    return promise;
+  };
+}
+
+function cache<TArgs extends unknown[], TResult>(
+  fn: (...args: TArgs) => Promise<TResult>
+): (...args: TArgs) => Promise<TResult> {
+  const reactCache = (React as { cache?: unknown }).cache;
+
+  if (typeof reactCache === 'function') {
+    return (
+      reactCache as (
+        inner: (...args: TArgs) => Promise<TResult>
+      ) => (...args: TArgs) => Promise<TResult>
+    )(fn);
+  }
+
+  return dedupeInFlight(fn);
+}
+
+const getRequestScopedClient = cache(async () => createClient());
 
 function mapProfile(row: Partial<ProfileRow> & { id: string }): ProfileRow {
   return {
@@ -148,9 +187,13 @@ async function getCurrentUserWithClient(supabase: SupabaseClient): Promise<Profi
   return mapProfile(data as ProfileRow);
 }
 
-export async function getCurrentUser() {
-  const supabase = await createClient();
+const getCurrentUserCached = cache(async () => {
+  const supabase = await getRequestScopedClient();
   return getCurrentUserWithClient(supabase);
+});
+
+export async function getCurrentUser() {
+  return getCurrentUserCached();
 }
 
 export async function requireAuth() {
@@ -172,8 +215,8 @@ export async function requireApiAuthContext(): Promise<ApiAuthContext | null> {
   return { user, supabase };
 }
 
-export async function getUserOrganizations(userId: string) {
-  const supabase = await createClient();
+const getUserOrganizationsCached = cache(async (userId: string) => {
+  const supabase = await getRequestScopedClient();
   const { data, error } = await supabase
     .from('organization_members')
     .select(
@@ -254,10 +297,14 @@ export async function getUserOrganizations(userId: string) {
       };
     })
     .filter((item): item is NonNullable<typeof item> => item !== null);
+});
+
+export async function getUserOrganizations(userId: string) {
+  return getUserOrganizationsCached(userId);
 }
 
-export async function getActiveOrg(slug: string, userId: string) {
-  const supabase = await createClient();
+const getActiveOrgCached = cache(async (slug: string, userId: string) => {
+  const supabase = await getRequestScopedClient();
   const { data, error } = await supabase
     .from('organizations')
     .select(
@@ -378,6 +425,10 @@ export async function getActiveOrg(slug: string, userId: string) {
         : undefined,
     }),
   };
+});
+
+export async function getActiveOrg(slug: string, userId: string) {
+  return getActiveOrgCached(slug, userId);
 }
 
 export async function assertOrgRole(orgId: string, userId: string, roles: string[]) {

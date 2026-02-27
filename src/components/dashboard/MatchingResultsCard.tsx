@@ -10,7 +10,6 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { apiFetch } from '@/lib/api/fetch';
-import type { ReadinessAction } from '@/lib/momentum/types';
 import { getIndividualRecoveryActions } from '@/lib/ui/recovery-actions';
 
 interface MatchingResultsCardProps {
@@ -57,7 +56,6 @@ export function MatchingResultsCard({ className, basePath = '/app/i' }: Matching
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [noProfile, setNoProfile] = useState(false);
-  const [readinessActions, setReadinessActions] = useState<ReadinessAction[]>([]);
 
   useEffect(() => {
     async function fetchData() {
@@ -66,19 +64,11 @@ export function MatchingResultsCard({ className, basePath = '/app/i' }: Matching
         setError(null);
         setNoProfile(false);
 
-        const [matchesResponse, readinessResponse] = await Promise.all([
-          apiFetch('/api/match/profile', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ k: 5 }),
-          }),
-          fetch('/api/individual/readiness', { cache: 'no-store' }),
-        ]);
-
-        if (readinessResponse.ok) {
-          const readinessPayload = await readinessResponse.json();
-          setReadinessActions(readinessPayload.topActions || []);
-        }
+        const matchesResponse = await apiFetch('/api/match/profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ k: 5 }),
+        });
 
         if (matchesResponse.status === 404) {
           setNoProfile(true);
@@ -160,8 +150,7 @@ export function MatchingResultsCard({ className, basePath = '/app/i' }: Matching
 
   if (noProfile || matches.length === 0) {
     const fallbackActions = getIndividualRecoveryActions(
-      noProfile ? 'profile-incomplete' : 'matching-empty',
-      readinessActions
+      noProfile ? 'profile-incomplete' : 'matching-empty'
     );
 
     return (
