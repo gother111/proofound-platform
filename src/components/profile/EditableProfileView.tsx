@@ -316,9 +316,12 @@ export function EditableProfileView() {
     return <ProfileSkeleton />;
   }
 
+  const isV2 = process.env.NEXT_PUBLIC_UI_REFACTOR_V2 === 'true';
+  const bgClass = isV2 ? 'bg-transparent' : 'bg-proofound-parchment dark:bg-background';
+
   if (loadError || !profile) {
     return (
-      <div className="min-h-screen bg-proofound-parchment dark:bg-background">
+      <div className={`min-h-[calc(100vh-3.5rem)] ${bgClass}`}>
         <div className="max-w-2xl mx-auto px-6 py-16">
           <Card className="p-8 text-center space-y-4" data-testid="profile-load-error">
             <h1 className="text-2xl font-display">Unable to load your profile</h1>
@@ -343,7 +346,7 @@ export function EditableProfileView() {
   if (showGuidedFlow) {
     return (
       <>
-        <div className="min-h-screen bg-proofound-parchment dark:bg-background">
+        <div className={`min-h-[calc(100vh-3.5rem)] ${bgClass}`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             {portfolioGateNotice}
             <PortfolioReadinessChecklist completionState={completionState} />
@@ -364,7 +367,7 @@ export function EditableProfileView() {
 
   return (
     <div
-      className="min-h-screen bg-proofound-parchment dark:bg-background"
+      className={`min-h-[calc(100vh-3.5rem)] pb-12 ${bgClass}`}
       data-testid="individual-profile-root"
     >
       {showCompletionBanner && <ProfileCompletionBanner profileCompletion={profileCompletion} />}

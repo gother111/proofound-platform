@@ -15,6 +15,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { RespondDialog } from './components/RespondDialog';
 
 interface VerificationRequest {
@@ -499,8 +500,8 @@ export function VerificationsClient({
   );
 
   return (
-    <div className="h-full overflow-auto">
-      <div className="max-w-5xl mx-auto p-8">
+    <AppSurface>
+      <div className="max-w-5xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2" style={{ color: '#2D3330' }}>
             Verification Requests
@@ -557,6 +558,6 @@ export function VerificationsClient({
           getCompetencyLabel={getCompetencyLabel}
         />
       )}
-    </div>
+    </AppSurface>
   );
 }

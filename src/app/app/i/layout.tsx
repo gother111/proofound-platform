@@ -28,9 +28,11 @@ export default async function IndividualLayout({ children }: { children: React.R
     .toUpperCase()
     .slice(0, 2);
 
+  const isV2 = process.env.NEXT_PUBLIC_UI_REFACTOR_V2 === 'true';
+
   return (
     <SUSTriggerProvider userId={user.id}>
-      <div className="flex h-screen bg-proofound-parchment">
+      <div className={`flex h-screen ${isV2 ? 'bg-japandi-bg' : 'bg-proofound-parchment'}`}>
         <LeftNav
           basePath="/app/i"
           individualPortfolioGate={{

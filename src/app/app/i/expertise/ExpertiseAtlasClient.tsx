@@ -380,8 +380,11 @@ export function ExpertiseAtlasClient({
     router.refresh();
   };
 
+  const isV2 = process.env.NEXT_PUBLIC_UI_REFACTOR_V2 === 'true';
+  const bgClass = isV2 ? 'bg-transparent' : 'bg-proofound-parchment';
+
   return (
-    <div className="min-h-screen bg-proofound-parchment">
+    <div className={`min-h-[calc(100vh-3.5rem)] ${bgClass}`}>
       <div className="mx-auto max-w-7xl px-6 py-8">
         {/* Header */}
         <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">

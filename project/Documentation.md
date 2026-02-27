@@ -24,6 +24,29 @@ This file is now a historical governance index. Routine per-task updates should 
 - Create change logs with `npm run log:change` in `project/changes/entries/`.
 - Do not add routine per-task entries to `agent/scratchpad.md` or `project/Documentation.md`.
 
+## 2026-02-27: V2 Organization UI Migration (Phase 4)
+
+What changed:
+
+- Extracted V2 Core shell elements `AppSurface` and migrated the remaining Organization application routes to standardize under the new visual design.
+  - Organization routes migrated: `home`, `profile`, `assignments`, `matching`, `candidates`, `shortlist`, `messages`, `interviews`, `opportunities`, `members`, `team`, `projects`, `analytics/fairness`, `portfolio`, `invitations/[token]`, `settings` and all nested settings routes.
+
+Why:
+
+- The UI refactor V2 requires migrating all individual and organization apps into the new standardized layout models to reduce style debt and present a modern application aesthetic. Phase 4 targeted the organization routes, closing out the route migration.
+
+How to verify:
+
+- `npm run typecheck`
+- `npm run test`
+- `npm run test:e2e:individual:strict`
+- `npm run test:e2e:org:strict`
+- `npm run test:a11y:strict`
+
+Open risks/TODO:
+
+- Visually QA settings routes to verify nested AppSurface interaction isn't causing double-padding issues on specific viewports.
+
 ## 2026-02-26: Repository-Wide Documentation Reconciliation
 
 What changed:

@@ -7,6 +7,7 @@ import { DataBreakdown } from '@/components/privacy/DataBreakdown';
 import { AuditLogTable } from '@/components/privacy/AuditLogTable';
 import { DeleteAccountSection } from '@/components/privacy/DeleteAccountSection';
 import { toast } from 'sonner';
+import { AppSurface } from '@/components/ui/v2/AppSurface';
 
 export function PrivacySettingsClient() {
   const [initialVisibility, setInitialVisibility] = useState<any>(null);
@@ -53,22 +54,20 @@ export function PrivacySettingsClient() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F7F6F1] flex items-center justify-center">
-        <div className="text-[#6B6760]">Loading privacy settings...</div>
-      </div>
+      <AppSurface>
+        <div className="flex items-center justify-center">
+          <div className="text-[#6B6760]">Loading privacy settings...</div>
+        </div>
+      </AppSurface>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F6F1]">
-      <div className="mx-auto max-w-4xl px-6 py-8">
+    <AppSurface>
+      <div className="mx-auto max-w-4xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-semibold text-[#2D3330] mb-2">
-            Privacy Settings
-          </h1>
-          <p className="text-[#6B6760]">
-            Control who can see your profile information
-          </p>
+          <h1 className="text-3xl font-semibold text-[#2D3330] mb-2">Privacy Settings</h1>
+          <p className="text-[#6B6760]">Control who can see your profile information</p>
         </div>
 
         <div className="space-y-6">
@@ -92,6 +91,6 @@ export function PrivacySettingsClient() {
           <DeleteAccountSection />
         </div>
       </div>
-    </div>
+    </AppSurface>
   );
 }

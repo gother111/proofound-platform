@@ -15,6 +15,7 @@ import { OrgDashboardClient } from './OrgDashboardClient';
 import { db } from '@/db';
 import { assignments, matches, matchInterest, organizationMembers } from '@/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
+import { AppSurface } from '@/components/ui/v2/AppSurface';
 
 export const dynamic = 'force-dynamic';
 
@@ -90,7 +91,7 @@ export default async function OrganizationHomePage({
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#F7F6F1' }}>
+    <AppSurface>
       <div className="max-w-[1400px] mx-auto px-4 py-4">
         <div className="space-y-4">
           {/* Hero Section */}
@@ -188,6 +189,6 @@ export default async function OrganizationHomePage({
           <OrgDashboardClient orgSlug={slug} orgId={org.id} userRole={membership.role} />
         </div>
       </div>
-    </div>
+    </AppSurface>
   );
 }

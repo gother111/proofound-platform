@@ -1,0 +1,77 @@
+import {
+  Home,
+  User,
+  Settings,
+  Briefcase,
+  Users,
+  MessageSquare,
+  Bell,
+  CheckCircle,
+  Calendar,
+  Sparkles,
+  Award,
+  BookOpen,
+  PieChart,
+  LucideIcon,
+} from 'lucide-react';
+
+export interface RouteMeta {
+  title: string;
+  description: string;
+  icon: LucideIcon;
+}
+
+export const getRouteMeta = (pathname: string): RouteMeta => {
+  const path = pathname || '';
+
+  if (path.includes('/home'))
+    return { title: 'Dashboard', description: 'Overview of your current activity', icon: Home };
+  if (path.includes('/matching'))
+    return { title: 'Matching', description: 'Discover relevant matches', icon: Users };
+  if (path.includes('/expertise'))
+    return { title: 'Expertise', description: 'Manage your skills and domains', icon: Award };
+  if (path.includes('/interviews'))
+    return { title: 'Interviews', description: 'Upcoming and past interviews', icon: Calendar };
+  if (path.includes('/messages'))
+    return { title: 'Messages', description: 'Your conversations', icon: MessageSquare };
+  if (path.includes('/notifications'))
+    return { title: 'Notifications', description: 'Recent alerts and updates', icon: Bell };
+  if (path.includes('/opportunities'))
+    return { title: 'Opportunities', description: 'Explore available positions', icon: Briefcase };
+  if (path.includes('/profile'))
+    return { title: 'Profile', description: 'Your core identity', icon: User };
+  if (path.includes('/settings'))
+    return {
+      title: 'Settings',
+      description: 'Account and application preferences',
+      icon: Settings,
+    };
+  if (path.includes('/verifications'))
+    return {
+      title: 'Verifications',
+      description: 'Identity and credential status',
+      icon: CheckCircle,
+    };
+  if (path.includes('/projects'))
+    return { title: 'Projects', description: 'Active and completed projects', icon: Briefcase };
+  if (path.includes('/zen'))
+    return { title: 'Zen Hub', description: 'Focus and wellbeing', icon: Sparkles };
+  if (path.includes('/skill-gaps'))
+    return { title: 'Skill Gaps', description: 'Areas for growth', icon: BookOpen };
+  if (path.includes('/portfolio'))
+    return { title: 'Portfolio', description: 'Your work showcase', icon: Briefcase };
+  if (path.includes('/assignments'))
+    return { title: 'Assignments', description: 'Manage tasks and roles', icon: Briefcase };
+  if (path.includes('/shortlist'))
+    return { title: 'Shortlist', description: 'Saved candidates and matches', icon: Users };
+  if (path.includes('/candidates'))
+    return { title: 'Candidates', description: 'Applicant tracking', icon: Users };
+  if (path.includes('/members'))
+    return { title: 'Members', description: 'Organization members', icon: Users };
+  if (path.includes('/team')) return { title: 'Team', description: 'Team management', icon: Users };
+  if (path.includes('/analytics/fairness'))
+    return { title: 'Fairness Analytics', description: 'Bias and equity tracking', icon: PieChart };
+
+  // Fallback
+  return { title: 'Dashboard', description: 'Overview', icon: Home };
+};

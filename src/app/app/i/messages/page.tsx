@@ -166,8 +166,11 @@ function MessagesPageContent() {
     );
   }
 
+  const isV2 = process.env.NEXT_PUBLIC_UI_REFACTOR_V2 === 'true';
+  const rightPaneBgClass = isV2 ? 'bg-transparent' : 'bg-[#F7F6F1]';
+
   return (
-    <div className="h-full min-h-0 flex flex-col md:flex-row">
+    <div className="h-full min-h-[calc(100vh-3.5rem)] flex flex-col md:flex-row">
       {/* Left: Conversation List */}
       <div
         className={`w-full min-h-0 md:w-80 flex-shrink-0 ${
@@ -184,7 +187,7 @@ function MessagesPageContent() {
 
       {/* Right: Message Thread or Empty State */}
       <div
-        className={`h-full min-h-0 min-w-0 flex-1 bg-[#F7F6F1] ${
+        className={`h-full min-h-0 min-w-0 flex-1 ${rightPaneBgClass} ${
           !selectedConversationId ? 'hidden md:flex md:items-center md:justify-center' : 'flex'
         }`}
       >

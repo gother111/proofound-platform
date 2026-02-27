@@ -7,6 +7,7 @@ import {
   pruneOrganizationPurposeLinks,
 } from '@/lib/organizations/normalizePurposeLinks';
 import { notFound, redirect } from 'next/navigation';
+import { AppSurface } from '@/components/ui/v2/AppSurface';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,48 +45,50 @@ export default async function OrganizationProfileSettingsPage({
   }
 
   return (
-    <div className="max-w-4xl mx-auto min-h-screen bg-proofound-parchment dark:bg-background p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-['Crimson_Pro'] font-semibold text-proofound-forest dark:text-primary mb-2">
-          Profile Settings
-        </h1>
-        <p className="text-proofound-charcoal/70 dark:text-muted-foreground">
-          Update your core organization profile information.
-        </p>
-      </div>
+    <AppSurface>
+      <div className="max-w-4xl mx-auto space-y-6 w-full">
+        <div>
+          <h1 className="text-3xl font-['Crimson_Pro'] font-semibold text-proofound-forest dark:text-primary mb-2">
+            Profile Settings
+          </h1>
+          <p className="text-proofound-charcoal/70 dark:text-muted-foreground">
+            Update your core organization profile information.
+          </p>
+        </div>
 
-      <OrganizationBasicInfoEditor
-        org={{
-          id: org.id,
-          displayName: org.displayName,
-          legalName: org.legalName,
-          tagline: org.tagline,
-          mission: org.mission,
-          vision: org.vision,
-          missionLinks:
-            org.mission && (missionLinks.values.length === 0 || missionLinks.causes.length === 0)
-              ? createOrganizationDefaultPurposeLinks(normalizedValues, normalizedCauses)
-              : missionLinks,
-          visionLinks:
-            org.vision && (visionLinks.values.length === 0 || visionLinks.causes.length === 0)
-              ? createOrganizationDefaultPurposeLinks(normalizedValues, normalizedCauses)
-              : visionLinks,
-          industry: org.industry,
-          organizationSize: org.organizationSize,
-          impactArea: org.impactArea,
-          legalForm: org.legalForm,
-          foundedDate:
-            typeof org.foundedDate === 'string'
-              ? org.foundedDate
-              : org.foundedDate
-                ? String(org.foundedDate)
-                : null,
-          website: org.website,
-          values: normalizedValues,
-          causes: normalizedCauses,
-        }}
-        canEdit={canManageSettings}
-      />
-    </div>
+        <OrganizationBasicInfoEditor
+          org={{
+            id: org.id,
+            displayName: org.displayName,
+            legalName: org.legalName,
+            tagline: org.tagline,
+            mission: org.mission,
+            vision: org.vision,
+            missionLinks:
+              org.mission && (missionLinks.values.length === 0 || missionLinks.causes.length === 0)
+                ? createOrganizationDefaultPurposeLinks(normalizedValues, normalizedCauses)
+                : missionLinks,
+            visionLinks:
+              org.vision && (visionLinks.values.length === 0 || visionLinks.causes.length === 0)
+                ? createOrganizationDefaultPurposeLinks(normalizedValues, normalizedCauses)
+                : visionLinks,
+            industry: org.industry,
+            organizationSize: org.organizationSize,
+            impactArea: org.impactArea,
+            legalForm: org.legalForm,
+            foundedDate:
+              typeof org.foundedDate === 'string'
+                ? org.foundedDate
+                : org.foundedDate
+                  ? String(org.foundedDate)
+                  : null,
+            website: org.website,
+            values: normalizedValues,
+            causes: normalizedCauses,
+          }}
+          canEdit={canManageSettings}
+        />
+      </div>
+    </AppSurface>
   );
 }

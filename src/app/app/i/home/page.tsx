@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { DashboardClient } from './DashboardClient';
 import { ReadinessSprintPanel } from '@/components/dashboard/ReadinessSprintPanel';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { getDashboardMetrics } from '@/lib/dashboard/metrics';
 import {
   TrendingUp,
@@ -15,6 +14,10 @@ import {
   AlertCircle,
   ArrowRight,
 } from 'lucide-react';
+
+import { AppSurface } from '@/components/ui/v2/AppSurface';
+import { MetricStrip } from '@/components/ui/v2/MetricStrip';
+import { StatTileModel } from '@/lib/ui/v2/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -59,129 +62,109 @@ export default async function IndividualHomePage() {
     },
   ];
 
-  const kpiCards = [
+  const kpiCards: StatTileModel[] = [
     {
+      id: 'matches',
       title: 'Quality Matches',
       value: String(metrics.qualityMatches),
-      description: '80%+ fit suggestions',
-      footnote:
+      description:
         metrics.qualityMatches > 0
           ? 'Keep proofs fresh to climb higher.'
           : 'Add proofs to strengthen your public portfolio and unlock stronger matches.',
-      Icon: Users,
-      changeColor: '#5F745D',
+      icon: <Users className="w-5 h-5" />,
+      trend: { direction: 'up', label: '80%+ fit suggestions' },
     },
     {
+      id: 'verifications',
       title: 'Pending Verifications',
       value: String(metrics.pendingVerifications),
       description: 'Reviews waiting',
-      ctaLabel: metrics.pendingVerifications > 0 ? 'Review now' : 'Request more proofs',
-      Icon: ShieldCheck,
-      changeColor: '#C76B4A',
-      ctaHref: '/app/i/profile',
+      icon: <ShieldCheck className="w-5 h-5" />,
+      action: {
+        id: 'review-verifs',
+        label: metrics.pendingVerifications > 0 ? 'Review now' : 'Request more proofs',
+        href: '/app/i/profile',
+      },
     },
     {
+      id: 'applications',
       title: 'Active Applications',
       value: String(metrics.activeApplications),
-      description: 'Assignments in progress',
-      footnote:
+      description:
         metrics.activeApplications > 0
           ? 'Follow up to stay top of mind.'
           : 'Explore opportunities to get started.',
-      Icon: Briefcase,
-      changeColor: '#9F563B',
+      icon: <Briefcase className="w-5 h-5" />,
+      trend: { direction: 'neutral', label: 'Assignments in progress' },
     },
   ];
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#F7F6F1' }}>
-      <div className="max-w-[1400px] mx-auto px-4 py-4">
-        <div className="space-y-4">
-          {/* Hero */}
-          <section
-            className="rounded-2xl p-6 text-white"
-            style={{
-              background: 'linear-gradient(135deg, #1C4D3A 0%, #2D5F4A 45%, #1C4D3A 100%)',
-            }}
-          >
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-              <div className="space-y-3 max-w-xl">
-                <h1 className="text-3xl font-['Crimson_Pro']">Welcome back, {firstName}</h1>
-                <p className="text-white/90 text-sm leading-relaxed">
-                  Your public portfolio is your day-1 asset. You currently have{' '}
-                  {metrics.pendingVerifications} verification
-                  {metrics.pendingVerifications === 1 ? '' : 's'} awaiting review and{' '}
-                  {metrics.qualityMatches} high-fit matches building in the background.
-                </p>
-                <div className="flex flex-wrap gap-4 text-sm">
-                  {heroStats.map(({ icon: Icon, label, value }) => (
-                    <div key={label} className="flex items-center gap-2">
-                      <Icon className="w-5 h-5" />
-                      <span className="font-medium">{value}</span>
-                      <span className="text-white/70">{label}</span>
-                    </div>
-                  ))}
-                </div>
-                <Link href="/app/i/portfolio">
-                  <Button
-                    size="sm"
-                    className="text-sm mt-1 bg-white text-[#1C4D3A] hover:bg-[#F7F6F1]"
-                  >
-                    Open public portfolio
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </section>
+    <AppSurface>
+      {/* Hero Section */}
+      <div className="relative overflow-hidden rounded-3xl bg-proofound-forest text-white shadow-xl isolate">
+        <div className="absolute inset-0 bg-gradient-to-br from-proofound-forest via-proofound-forest/90 to-extended-clay/60 mix-blend-multiply" />
 
-          {/* KPI Grid */}
-          <section data-tour="dashboard" className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {kpiCards.map(
-              ({ title, value, description, footnote, Icon, changeColor, ctaHref, ctaLabel }) => (
-                <Card
-                  key={title}
-                  className="p-4"
-                  style={{ borderColor: 'rgba(232, 230, 221, 0.6)' }}
+        {/* Glassmorphism accent */}
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-[600px] h-[600px] bg-white/10 blur-3xl rounded-full pointer-events-none" />
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-[400px] h-[400px] bg-extended-clay/20 blur-3xl rounded-full pointer-events-none" />
+
+        <div className="relative p-8 md:p-12 lg:p-14 flex flex-col md:flex-row gap-8 items-start justify-between">
+          <div className="max-w-3xl space-y-8">
+            <h1 className="text-4xl md:text-5xl font-display font-medium tracking-tight">
+              Welcome back, {firstName}
+            </h1>
+            <p className="text-white/80 text-lg leading-relaxed max-w-2xl">
+              Your public portfolio is your day-1 asset. You currently have{' '}
+              <span className="text-white font-semibold">{metrics.pendingVerifications}</span>{' '}
+              verification
+              {metrics.pendingVerifications === 1 ? '' : 's'} awaiting review and{' '}
+              <span className="text-white font-semibold">{metrics.qualityMatches}</span> high-fit
+              matches building in the background.
+            </p>
+
+            <div className="flex flex-wrap gap-4 pt-2">
+              {heroStats.map(({ icon: Icon, label, value }) => (
+                <div
+                  key={label}
+                  className="flex items-center gap-3 bg-white/10 rounded-2xl px-5 py-3 backdrop-blur-md border border-white/10 shadow-sm"
                 >
-                  <div className="flex items-center justify-between mb-3">
-                    <Icon className="w-5 h-5" style={{ color: '#1C4D3A' }} />
-                    {title === 'Pending Verifications' ? (
-                      <AlertCircle className="w-4 h-4" style={{ color: '#D4A574' }} />
-                    ) : (
-                      <TrendingUp className="w-4 h-4" style={{ color: '#7A9278' }} />
-                    )}
+                  <div className="bg-white/20 p-2.5 rounded-xl text-white">
+                    <Icon className="w-5 h-5" />
                   </div>
-                  <p className="text-3xl font-['Crimson_Pro']" style={{ color: '#2D3330' }}>
-                    {value}
-                  </p>
-                  <p className="text-xs" style={{ color: '#6B6760' }}>
-                    {description}
-                  </p>
-                  {ctaHref ? (
-                    <Link
-                      href={ctaHref}
-                      className="mt-3 inline-flex text-xs font-medium"
-                      style={{ color: '#1C4D3A' }}
-                    >
-                      {ctaLabel ?? 'Review now'} <ArrowRight className="w-3 h-3 ml-1" />
-                    </Link>
-                  ) : (
-                    <p className="text-xs mt-2" style={{ color: changeColor }}>
-                      {footnote}
-                    </p>
-                  )}
-                </Card>
-              )
-            )}
-          </section>
+                  <div className="flex flex-col">
+                    <span className="text-xs text-white/70 tracking-wide uppercase font-medium">
+                      {label}
+                    </span>
+                    <span className="font-semibold text-xl tracking-tight mt-0.5">{value}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
 
-          <ReadinessSprintPanel />
-
-          {/* Customizable Dashboard */}
-          <DashboardClient />
+            <div className="pt-6">
+              <Button
+                size="lg"
+                className="bg-white text-proofound-forest hover:bg-neutral-light-50 rounded-xl shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md font-medium text-base h-12 px-6"
+                asChild
+              >
+                <Link href="/app/i/portfolio">
+                  Open public portfolio
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Link>
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+
+      <div data-tour="dashboard">
+        <MetricStrip metrics={kpiCards} />
+      </div>
+
+      <ReadinessSprintPanel />
+
+      <DashboardClient />
+    </AppSurface>
   );
 }

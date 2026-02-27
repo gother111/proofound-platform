@@ -12,6 +12,7 @@ import { Calendar, Clock, Video, ExternalLink, CalendarPlus, Download } from 'lu
 import { ScheduleInterviewButton } from '@/components/interviews/ScheduleInterviewButton';
 import { SkeletonCard } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
+import { AppSurface } from '@/components/ui/v2/AppSurface';
 import {
   buildGoogleCalendarUrl,
   downloadInterviewIcs,
@@ -103,7 +104,7 @@ export default function InterviewsPage() {
 
   if (isLoading) {
     return (
-      <div className="p-8">
+      <AppSurface>
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">
             <div className="h-8 w-48 bg-[#E8E6DD] dark:bg-[#2C3244] rounded animate-pulse mb-2" />
@@ -115,12 +116,12 @@ export default function InterviewsPage() {
             ))}
           </div>
         </div>
-      </div>
+      </AppSurface>
     );
   }
 
   return (
-    <div className="p-8">
+    <AppSurface>
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -260,6 +261,6 @@ export default function InterviewsPage() {
           </div>
         )}
       </div>
-    </div>
+    </AppSurface>
   );
 }

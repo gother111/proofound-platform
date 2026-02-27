@@ -17,6 +17,8 @@ import { signOut } from '@/actions/auth';
 import { CustomizeModal } from '@/components/dashboard/CustomizeModal';
 import { Logo } from '@/components/brand/Logo';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
+import { getRouteMeta } from '@/lib/ui/v2/routeMeta';
+import { cn } from '@/lib/utils';
 
 /**
  * TopBar Component - Application Header
@@ -43,14 +45,21 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
   const pathname = usePathname();
   const isDashboardTab = pathname?.includes('/home') ?? false;
 
+  // V2 Feature Flag
+  const isV2 = process.env.NEXT_PUBLIC_UI_REFACTOR_V2 === 'true';
+
   useEffect(() => {
     if (!isDashboardTab && customizeOpen) {
       setCustomizeOpen(false);
     }
   }, [isDashboardTab, customizeOpen]);
 
-  // Map routes to page titles
+  // V2 uses the centralized metadata map, otherwise fallback to old hardcoded text
   const getPageTitle = () => {
+    if (isV2 && pathname) {
+      return getRouteMeta(pathname).title;
+    }
+
     if (!pathname) return 'Dashboard';
 
     if (pathname.includes('/home')) return 'Dashboard';
@@ -79,7 +88,12 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
     <>
       {/* Semantic header with role="banner" for main site header */}
       <header
-        className="sticky top-0 z-50 min-h-14 px-4 border-b flex items-center justify-between gap-2 md:gap-4 py-2 md:py-0 bg-neutral-light-50 border-proofound-stone/60"
+        className={cn(
+          'sticky top-0 z-40 min-h-14 px-4 flex items-center justify-between gap-2 md:gap-4 py-2 md:py-0 transition-all',
+          isV2
+            ? 'bg-white/80 backdrop-blur-md border-b border-proofound-stone/40 shadow-sm'
+            : 'bg-neutral-light-50 border-b border-proofound-stone/60'
+        )}
         role="banner"
       >
         {/* Left: Logo + Proofound + Separator + Title */}
@@ -92,10 +106,19 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
             </span>
           </div>
 
-          <Separator orientation="vertical" className="h-6 hidden sm:block" aria-hidden="true" />
+          <Separator
+            orientation="vertical"
+            className="h-4 bg-proofound-stone hidden sm:block"
+            aria-hidden="true"
+          />
 
           {/* Current page indicator - hide on very small screens */}
-          <h1 className="text-base font-normal hidden sm:block text-proofound-charcoal">
+          <h1
+            className={cn(
+              'text-base hidden sm:block text-proofound-charcoal',
+              isV2 ? 'font-medium' : 'font-normal'
+            )}
+          >
             {getPageTitle()}
           </h1>
         </div>
@@ -109,7 +132,12 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
               variant="outline"
               size="sm"
               onClick={() => setCustomizeOpen(true)}
-              className="text-xs h-8 focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 hidden md:flex border-proofound-stone/60"
+              className={cn(
+                'text-xs h-8 focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 hidden md:flex',
+                isV2
+                  ? 'border-proofound-stone/40 hover:bg-proofound-stone/20'
+                  : 'border-proofound-stone/60'
+              )}
             >
               Customize
             </Button>
@@ -119,23 +147,29 @@ export function TopBar({ userName = 'User', userInitials = 'U' }: TopBarProps) {
               <button
                 type="button"
                 aria-label="Open profile menu"
-                className="rounded-full min-h-[44px] min-w-[44px] flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2"
+                className="rounded-full min-h-[44px] min-w-[44px] flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 transition-transform hover:scale-105"
               >
-                <Avatar className="w-7 h-7">
+                <Avatar className="w-8 h-8 border border-white shadow-sm">
                   <AvatarFallback className="text-xs font-medium bg-proofound-forest text-proofound-parchment">
                     {userInitials}
                   </AvatarFallback>
                 </Avatar>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 border-proofound-stone/60">
+            <DropdownMenuContent
+              align="end"
+              className="w-48 border-proofound-stone/60 rounded-xl shadow-lg"
+            >
               <DropdownMenuLabel className="flex flex-col">
                 <span className="text-sm font-medium">{userName}</span>
                 <span className="text-xs text-muted-foreground">Signed in</span>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <form action={signOut}>
-                <DropdownMenuItem asChild>
+                <DropdownMenuItem
+                  asChild
+                  className="cursor-pointer focus:bg-rose-50 focus:text-rose-600 rounded-md"
+                >
                   <button type="submit" className="w-full text-left">
                     Log out
                   </button>

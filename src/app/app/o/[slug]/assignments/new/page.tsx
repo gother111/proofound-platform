@@ -22,6 +22,7 @@ import {
 import { TemplatePicker, type AssignmentTemplate } from '@/components/matching/TemplatePicker';
 import { mapTemplateToAssignmentForm } from '@/lib/templates/prefill';
 import { CLIENT_FF_DEFAULTS } from '@/lib/featureFlags';
+import { AppSurface } from '@/components/ui/v2/AppSurface';
 
 export const dynamic = 'force-dynamic';
 
@@ -815,8 +816,8 @@ export default function AssignmentBuilderPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F6F1] p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <AppSurface>
+      <div className="max-w-4xl mx-auto w-full space-y-6">
         {assignmentBasicModeEnabled && flagsLoaded ? (
           <Card className="p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -950,6 +951,6 @@ export default function AssignmentBuilderPage() {
         onApply={handleApplyTemplate}
         appliedTemplateId={appliedTemplateId}
       />
-    </div>
+    </AppSurface>
   );
 }

@@ -26,6 +26,7 @@ import {
   downloadInterviewIcs,
   type InterviewCalendarPayload,
 } from '@/lib/interviews/calendar';
+import { AppSurface } from '@/components/ui/v2/AppSurface';
 
 export const dynamic = 'force-dynamic';
 
@@ -132,19 +133,19 @@ export default function OrganizationInterviewsPage() {
 
   if (isLoading) {
     return (
-      <div className="p-8">
+      <AppSurface>
         <div className="max-w-4xl mx-auto">
           <h1 className="text-2xl font-semibold mb-6" style={{ color: '#2D3330' }}>
             Interviews
           </h1>
           <p className="text-gray-600">Loading...</p>
         </div>
-      </div>
+      </AppSurface>
     );
   }
 
   return (
-    <div className="p-8">
+    <AppSurface>
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -325,6 +326,6 @@ export default function OrganizationInterviewsPage() {
           />
         )}
       </div>
-    </div>
+    </AppSurface>
   );
 }

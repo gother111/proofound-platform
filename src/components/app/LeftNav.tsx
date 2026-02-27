@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { cn } from '@/lib/utils';
 import {
   Home,
   Lock,
@@ -156,6 +157,8 @@ export function LeftNav({ basePath = '/app/i', individualPortfolioGate }: LeftNa
       ]
     : filteredNavItems.slice(0, 5);
 
+  const isV2 = process.env.NEXT_PUBLIC_UI_REFACTOR_V2 === 'true';
+
   useEffect(() => {
     if (isOrg) return;
     const wasLocked = previousPortfolioLockRef.current;
@@ -174,9 +177,13 @@ export function LeftNav({ basePath = '/app/i', individualPortfolioGate }: LeftNa
       {/* Desktop/Tablet Sidebar Navigation */}
       <aside
         data-tour="left-nav"
-        className={`hidden md:flex border-r transition-all duration-300 ease-in-out flex-shrink-0 flex-col bg-neutral-light-50 border-proofound-stone/60 ${
+        className={cn(
+          'hidden md:flex border-r transition-all duration-300 ease-in-out flex-shrink-0 flex-col z-30',
+          isV2
+            ? 'bg-white border-proofound-stone/40 shadow-sm'
+            : 'bg-neutral-light-50 border-proofound-stone/60',
           isExpanded ? 'w-52' : 'w-14'
-        }`}
+        )}
         aria-label={isExpanded ? 'Main navigation' : 'Main navigation (collapsed)'}
       >
         <div className="flex-1 py-3 overflow-y-auto">
@@ -193,6 +200,15 @@ export function LeftNav({ basePath = '/app/i', individualPortfolioGate }: LeftNa
                   : item.label
                 : '';
 
+              // V2 Active/Hover styles vs Legacy
+              const itemStyles = isV2
+                ? isActive
+                  ? 'bg-proofound-forest text-white shadow-sm'
+                  : 'text-proofound-charcoal hover:bg-proofound-stone/20 focus-visible:bg-proofound-stone/20'
+                : isActive
+                  ? 'bg-proofound-forest text-proofound-parchment'
+                  : 'text-proofound-charcoal hover:bg-proofound-stone/50 focus-visible:bg-proofound-stone/60';
+
               return (
                 <div
                   key={item.href}
@@ -204,7 +220,7 @@ export function LeftNav({ basePath = '/app/i', individualPortfolioGate }: LeftNa
                     <button
                       type="button"
                       data-tour={item.dataTour}
-                      className="group flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-all duration-200 min-h-12 text-proofound-charcoal/60 bg-proofound-stone/30 cursor-not-allowed"
+                      className="group flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-all duration-200 min-h-12 text-proofound-charcoal/40 bg-proofound-stone/10 cursor-not-allowed"
                       title={isExpanded ? item.lockReason || '' : tooltipText}
                       aria-label={`${item.label} (locked)`}
                       aria-disabled="true"
@@ -213,7 +229,7 @@ export function LeftNav({ basePath = '/app/i', individualPortfolioGate }: LeftNa
                     >
                       <Icon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
                       {isExpanded && (
-                        <span className="text-sm whitespace-nowrap flex items-center gap-1.5">
+                        <span className="text-sm font-medium whitespace-nowrap flex items-center gap-1.5">
                           {item.label}
                           <Lock className="w-3.5 h-3.5" aria-hidden="true" />
                         </span>
@@ -223,11 +239,10 @@ export function LeftNav({ basePath = '/app/i', individualPortfolioGate }: LeftNa
                     <Link
                       href={item.href}
                       data-tour={item.dataTour}
-                      className={`group flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-all duration-200 min-h-12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-light-50 ${
-                        isActive
-                          ? 'bg-proofound-forest text-proofound-parchment'
-                          : 'text-proofound-charcoal hover:bg-proofound-stone/50 focus-visible:bg-proofound-stone/60'
-                      }`}
+                      className={cn(
+                        'group flex items-center gap-3 w-full px-3 py-2.5 rounded-lg transition-all duration-200 min-h-12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-proofound-forest focus-visible:ring-offset-2',
+                        itemStyles
+                      )}
                       title={tooltipText}
                       aria-label={item.label}
                       aria-current={isActive ? 'page' : undefined}
@@ -236,7 +251,9 @@ export function LeftNav({ basePath = '/app/i', individualPortfolioGate }: LeftNa
                     >
                       <Icon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
                       {isExpanded && (
-                        <span className="text-sm whitespace-nowrap">{item.label}</span>
+                        <span className={cn('text-sm whitespace-nowrap', isV2 && 'font-medium')}>
+                          {item.label}
+                        </span>
                       )}
                     </Link>
                   )}

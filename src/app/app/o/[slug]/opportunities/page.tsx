@@ -6,6 +6,7 @@ import { eq, desc, count, and } from 'drizzle-orm';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { AppSurface } from '@/components/ui/v2/AppSurface';
 
 export const dynamic = 'force-dynamic';
 
@@ -109,152 +110,154 @@ export default async function OpportunitiesPage({ params }: { params: Promise<{ 
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-4xl font-display font-semibold text-primary-500 mb-2">
-            Opportunities
-          </h1>
-          <p className="text-neutral-dark-600">
-            Manage your open positions and assignments for {org.displayName}
-          </p>
-        </div>
-        {canManage && (
-          <Link href={`/app/o/${slug}/matching`}>
-            <Button size="lg">Create New Opportunity</Button>
-          </Link>
-        )}
-      </div>
-
-      {orgAssignments.length === 0 ? (
-        <Card className="text-center py-12">
-          <CardContent>
-            <h3 className="text-xl font-semibold text-neutral-dark-700 mb-2">
-              No opportunities yet
-            </h3>
-            <p className="text-neutral-dark-500 mb-6">
-              Get started by creating your first opportunity to find the right talent
+    <AppSurface>
+      <div className="max-w-6xl mx-auto space-y-8 w-full">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-display font-semibold text-primary-500 mb-2">
+              Opportunities
+            </h1>
+            <p className="text-neutral-dark-600">
+              Manage your open positions and assignments for {org.displayName}
             </p>
-            {canManage && (
-              <Link href={`/app/o/${slug}/matching`}>
-                <Button>Create Your First Opportunity</Button>
-              </Link>
-            )}
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-6">
-          {orgAssignments.map((assignment) => {
-            const mustHaveSkillsArray = (assignment.mustHaveSkills as any[]) || [];
-            const matchCount = matchCountMap[assignment.id] || 0;
+          </div>
+          {canManage && (
+            <Link href={`/app/o/${slug}/matching`}>
+              <Button size="lg">Create New Opportunity</Button>
+            </Link>
+          )}
+        </div>
 
-            return (
-              <Card key={assignment.id}>
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <CardTitle className="text-2xl">{assignment.role}</CardTitle>
-                        <span
-                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium capitalize ${getStatusBadgeClass(
-                            assignment.status
-                          )}`}
-                        >
-                          {assignment.status}
-                        </span>
-                      </div>
-                      <CardDescription className="text-base">
-                        {assignment.description || 'No description provided'}
-                      </CardDescription>
-                    </div>
-                    <div className="flex gap-2">
-                      {canManage && (
-                        <>
-                          <Link href={`/app/o/${slug}/assignments/${assignment.id}`}>
-                            <Button variant="outline" size="sm">
-                              Edit
-                            </Button>
-                          </Link>
-                          <Link href={`/app/o/${slug}/matching?assignment=${assignment.id}`}>
-                            <Button size="sm">View Matches ({matchCount})</Button>
-                          </Link>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Location */}
-                    <div>
-                      <h4 className="text-sm font-medium text-neutral-dark-500 mb-1">Location</h4>
-                      <p className="text-neutral-dark-700">{formatLocation(assignment)}</p>
-                    </div>
+        {orgAssignments.length === 0 ? (
+          <Card className="text-center py-12">
+            <CardContent>
+              <h3 className="text-xl font-semibold text-neutral-dark-700 mb-2">
+                No opportunities yet
+              </h3>
+              <p className="text-neutral-dark-500 mb-6">
+                Get started by creating your first opportunity to find the right talent
+              </p>
+              {canManage && (
+                <Link href={`/app/o/${slug}/matching`}>
+                  <Button>Create Your First Opportunity</Button>
+                </Link>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-6">
+            {orgAssignments.map((assignment) => {
+              const mustHaveSkillsArray = (assignment.mustHaveSkills as any[]) || [];
+              const matchCount = matchCountMap[assignment.id] || 0;
 
-                    {/* Compensation */}
-                    <div>
-                      <h4 className="text-sm font-medium text-neutral-dark-500 mb-1">
-                        Compensation
-                      </h4>
-                      <p className="text-neutral-dark-700">{formatCompensation(assignment)}</p>
-                    </div>
-
-                    {/* Skills */}
-                    <div>
-                      <h4 className="text-sm font-medium text-neutral-dark-500 mb-1">
-                        Required Skills ({mustHaveSkillsArray.length})
-                      </h4>
-                      <div className="flex flex-wrap gap-2">
-                        {mustHaveSkillsArray.slice(0, 3).map((skill: any, index: number) => (
+              return (
+                <Card key={assignment.id}>
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <CardTitle className="text-2xl">{assignment.role}</CardTitle>
                           <span
-                            key={index}
-                            className="inline-flex items-center rounded-md bg-primary-50 px-2 py-1 text-xs font-medium text-primary-700"
+                            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium capitalize ${getStatusBadgeClass(
+                              assignment.status
+                            )}`}
                           >
-                            {getSkillDisplayLabel(skill)} L{skill.level}
+                            {assignment.status}
                           </span>
-                        ))}
-                        {mustHaveSkillsArray.length > 3 && (
-                          <span className="inline-flex items-center rounded-md bg-neutral-light-100 px-2 py-1 text-xs font-medium text-neutral-dark-700">
-                            +{mustHaveSkillsArray.length - 3} more
-                          </span>
+                        </div>
+                        <CardDescription className="text-base">
+                          {assignment.description || 'No description provided'}
+                        </CardDescription>
+                      </div>
+                      <div className="flex gap-2">
+                        {canManage && (
+                          <>
+                            <Link href={`/app/o/${slug}/assignments/${assignment.id}`}>
+                              <Button variant="outline" size="sm">
+                                Edit
+                              </Button>
+                            </Link>
+                            <Link href={`/app/o/${slug}/matching?assignment=${assignment.id}`}>
+                              <Button size="sm">View Matches ({matchCount})</Button>
+                            </Link>
+                          </>
                         )}
                       </div>
                     </div>
-                  </div>
-
-                  {/* Footer Info */}
-                  <div className="mt-6 pt-6 border-t border-neutral-light-200 flex items-center justify-between text-sm text-neutral-dark-500">
-                    <div>Created {new Date(assignment.createdAt).toLocaleDateString()}</div>
-                    {matchCount > 0 && (
-                      <div className="font-medium text-primary-600">
-                        {matchCount} candidate{matchCount !== 1 ? 's' : ''} matched
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {/* Location */}
+                      <div>
+                        <h4 className="text-sm font-medium text-neutral-dark-500 mb-1">Location</h4>
+                        <p className="text-neutral-dark-700">{formatLocation(assignment)}</p>
                       </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
 
-      {/* Status Filter (future enhancement) */}
-      {orgAssignments.length > 0 && (
-        <div className="flex items-center gap-4 text-sm">
-          <span className="text-neutral-dark-600">Filter by status:</span>
-          <div className="flex gap-2">
-            {['all', 'active', 'draft', 'paused', 'closed'].map((status) => (
-              <Link
-                key={status}
-                href={`/app/o/${slug}/opportunities${status !== 'all' ? `?status=${status}` : ''}`}
-                className="px-3 py-1 rounded-md hover:bg-neutral-light-100 capitalize"
-              >
-                {status}
-              </Link>
-            ))}
+                      {/* Compensation */}
+                      <div>
+                        <h4 className="text-sm font-medium text-neutral-dark-500 mb-1">
+                          Compensation
+                        </h4>
+                        <p className="text-neutral-dark-700">{formatCompensation(assignment)}</p>
+                      </div>
+
+                      {/* Skills */}
+                      <div>
+                        <h4 className="text-sm font-medium text-neutral-dark-500 mb-1">
+                          Required Skills ({mustHaveSkillsArray.length})
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {mustHaveSkillsArray.slice(0, 3).map((skill: any, index: number) => (
+                            <span
+                              key={index}
+                              className="inline-flex items-center rounded-md bg-primary-50 px-2 py-1 text-xs font-medium text-primary-700"
+                            >
+                              {getSkillDisplayLabel(skill)} L{skill.level}
+                            </span>
+                          ))}
+                          {mustHaveSkillsArray.length > 3 && (
+                            <span className="inline-flex items-center rounded-md bg-neutral-light-100 px-2 py-1 text-xs font-medium text-neutral-dark-700">
+                              +{mustHaveSkillsArray.length - 3} more
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Footer Info */}
+                    <div className="mt-6 pt-6 border-t border-neutral-light-200 flex items-center justify-between text-sm text-neutral-dark-500">
+                      <div>Created {new Date(assignment.createdAt).toLocaleDateString()}</div>
+                      {matchCount > 0 && (
+                        <div className="font-medium text-primary-600">
+                          {matchCount} candidate{matchCount !== 1 ? 's' : ''} matched
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
-        </div>
-      )}
-    </div>
+        )}
+
+        {/* Status Filter (future enhancement) */}
+        {orgAssignments.length > 0 && (
+          <div className="flex items-center gap-4 text-sm">
+            <span className="text-neutral-dark-600">Filter by status:</span>
+            <div className="flex gap-2">
+              {['all', 'active', 'draft', 'paused', 'closed'].map((status) => (
+                <Link
+                  key={status}
+                  href={`/app/o/${slug}/opportunities${status !== 'all' ? `?status=${status}` : ''}`}
+                  className="px-3 py-1 rounded-md hover:bg-neutral-light-100 capitalize"
+                >
+                  {status}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </AppSurface>
   );
 }

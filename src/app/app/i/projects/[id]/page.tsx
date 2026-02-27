@@ -15,6 +15,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ProjectForm } from '@/components/profile/forms/ProjectForm';
+import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { format } from 'date-fns';
 
 export const dynamic = 'force-dynamic';
@@ -101,113 +102,119 @@ export default function ProjectDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-6">
-        <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
-        <div className="h-64 bg-gray-200 rounded-lg animate-pulse" />
-      </div>
+      <AppSurface>
+        <div className="space-y-6 max-w-5xl mx-auto">
+          <div className="h-8 w-48 bg-[#E8E6DD] dark:bg-[#2C3244] rounded animate-pulse" />
+          <div className="h-64 bg-[#E8E6DD] dark:bg-[#2C3244] rounded-lg animate-pulse" />
+        </div>
+      </AppSurface>
     );
   }
 
   if (!project) {
     return (
-      <div className="p-6">
-        <p>Project not found</p>
-      </div>
+      <AppSurface>
+        <div className="max-w-5xl mx-auto">
+          <p className="text-[#6B6760]">Project not found</p>
+        </div>
+      </AppSurface>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <Button variant="ghost" onClick={() => router.push('/app/i/projects')} className="gap-2">
-          <ArrowLeft className="h-4 w-4" />
-          Back to Projects
-        </Button>
+    <AppSurface>
+      <div className="space-y-6 max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <Button variant="ghost" onClick={() => router.push('/app/i/projects')} className="gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Projects
+          </Button>
 
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => setIsEditDialogOpen(true)} className="gap-2">
-            <Edit className="h-4 w-4" />
-            Edit
-          </Button>
-          <Button
-            variant="outline"
-            onClick={handleDelete}
-            className="gap-2 text-red-600 hover:text-red-700"
-          >
-            <Trash2 className="h-4 w-4" />
-            Archive
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(true)} className="gap-2">
+              <Edit className="h-4 w-4" />
+              Edit
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleDelete}
+              className="gap-2 text-red-600 hover:text-red-700"
+            >
+              <Trash2 className="h-4 w-4" />
+              Archive
+            </Button>
+          </div>
         </div>
+
+        {/* Project Details */}
+        <Card className="p-8">
+          <div className="space-y-6">
+            {/* Title and Status */}
+            <div className="flex items-start justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-[#2D3330]">{project.title}</h1>
+                {project.organization && (
+                  <p className="text-lg text-[#6B6760] mt-1">{project.organization}</p>
+                )}
+                {project.role && <p className="text-sm text-[#6B6760] mt-1">{project.role}</p>}
+              </div>
+              <Badge variant="outline" className={STATUS_COLORS[project.status]}>
+                {project.status}
+              </Badge>
+            </div>
+
+            {/* Date Range */}
+            <div className="flex items-center gap-2 text-[#6B6760]">
+              <span>
+                {format(new Date(project.startDate), 'MMMM yyyy')} -{' '}
+                {project.endDate ? format(new Date(project.endDate), 'MMMM yyyy') : 'Present'}
+              </span>
+            </div>
+
+            {/* Description */}
+            {project.description && (
+              <div className="prose max-w-none">
+                <h3 className="text-lg font-semibold text-[#2D3330] mb-2">Description</h3>
+                <p className="text-[#6B6760] whitespace-pre-wrap">{project.description}</p>
+              </div>
+            )}
+
+            {/* TODO: Add tabs for Skills, Outcomes, Artifacts, Verification */}
+            <div className="pt-6 border-t">
+              <p className="text-sm text-[#6B6760]">
+                Skills, outcomes, and artifacts features coming soon. For now, you can edit the
+                basic project details.
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        {/* Edit Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Project</DialogTitle>
+            </DialogHeader>
+            <ProjectForm
+              initialData={{
+                title: project.title,
+                type: project.type,
+                status: project.status,
+                startDate: project.startDate,
+                endDate: project.endDate,
+                description: project.description,
+                organization: project.organization,
+                role: project.role,
+                isOngoing: !project.endDate,
+              }}
+              projectId={project.id}
+              onSuccess={handleProjectUpdated}
+              onCancel={() => setIsEditDialogOpen(false)}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
-
-      {/* Project Details */}
-      <Card className="p-8">
-        <div className="space-y-6">
-          {/* Title and Status */}
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-[#2D3330]">{project.title}</h1>
-              {project.organization && (
-                <p className="text-lg text-[#6B6760] mt-1">{project.organization}</p>
-              )}
-              {project.role && <p className="text-sm text-[#6B6760] mt-1">{project.role}</p>}
-            </div>
-            <Badge variant="outline" className={STATUS_COLORS[project.status]}>
-              {project.status}
-            </Badge>
-          </div>
-
-          {/* Date Range */}
-          <div className="flex items-center gap-2 text-[#6B6760]">
-            <span>
-              {format(new Date(project.startDate), 'MMMM yyyy')} -{' '}
-              {project.endDate ? format(new Date(project.endDate), 'MMMM yyyy') : 'Present'}
-            </span>
-          </div>
-
-          {/* Description */}
-          {project.description && (
-            <div className="prose max-w-none">
-              <h3 className="text-lg font-semibold text-[#2D3330] mb-2">Description</h3>
-              <p className="text-[#6B6760] whitespace-pre-wrap">{project.description}</p>
-            </div>
-          )}
-
-          {/* TODO: Add tabs for Skills, Outcomes, Artifacts, Verification */}
-          <div className="pt-6 border-t">
-            <p className="text-sm text-[#6B6760]">
-              Skills, outcomes, and artifacts features coming soon. For now, you can edit the basic
-              project details.
-            </p>
-          </div>
-        </div>
-      </Card>
-
-      {/* Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Project</DialogTitle>
-          </DialogHeader>
-          <ProjectForm
-            initialData={{
-              title: project.title,
-              type: project.type,
-              status: project.status,
-              startDate: project.startDate,
-              endDate: project.endDate,
-              description: project.description,
-              organization: project.organization,
-              role: project.role,
-              isOngoing: !project.endDate,
-            }}
-            projectId={project.id}
-            onSuccess={handleProjectUpdated}
-            onCancel={() => setIsEditDialogOpen(false)}
-          />
-        </DialogContent>
-      </Dialog>
-    </div>
+    </AppSurface>
   );
 }

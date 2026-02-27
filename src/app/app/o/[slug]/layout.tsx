@@ -29,8 +29,10 @@ export default async function OrganizationLayout({
     .toUpperCase()
     .slice(0, 2);
 
+  const isV2 = process.env.NEXT_PUBLIC_UI_REFACTOR_V2 === 'true';
+
   return (
-    <div className="flex h-screen bg-proofound-parchment">
+    <div className={`flex h-screen ${isV2 ? 'bg-japandi-bg' : 'bg-proofound-parchment'}`}>
       <LeftNav basePath={`/app/o/${slug}`} />
       <div className="flex-1 flex flex-col min-w-0">
         <TopBar userName={orgName} userInitials={orgInitials} />

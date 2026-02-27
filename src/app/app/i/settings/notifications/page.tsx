@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
+import { AppSurface } from '@/components/ui/v2/AppSurface';
 
 export const dynamic = 'force-dynamic';
 
@@ -146,17 +147,17 @@ export default function NotificationPreferencesPage() {
 
   if (isLoading || !preferences) {
     return (
-      <div className="min-h-screen bg-[#F7F6F1] p-6">
-        <div className="max-w-4xl mx-auto">
+      <AppSurface>
+        <div className="max-w-4xl mx-auto w-full">
           <p className="text-[#6B6760]">Loading preferences...</p>
         </div>
-      </div>
+      </AppSurface>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F6F1] p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <AppSurface>
+      <div className="max-w-4xl mx-auto w-full space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -270,6 +271,6 @@ export default function NotificationPreferencesPage() {
           </div>
         )}
       </div>
-    </div>
+    </AppSurface>
   );
 }

@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { cn } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
@@ -104,7 +105,7 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F6F1] p-6">
+    <AppSurface>
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -223,6 +224,6 @@ export default function NotificationsPage() {
           </div>
         )}
       </div>
-    </div>
+    </AppSurface>
   );
 }
