@@ -45,6 +45,7 @@ export interface AddSkillDrawerViewProps {
   l3Subcategories: L3Subcategory[];
   l3Loading: boolean;
   handleL3Select: (subcategory: L3Subcategory) => void;
+  selectedL3: L3Subcategory | null;
 
   l4Skills: L4Skill[];
   l4Search: string;
@@ -121,6 +122,7 @@ export function AddSkillDrawerView({
   l3Subcategories,
   l3Loading,
   handleL3Select,
+  selectedL3,
   l4Skills,
   l4Search,
   setL4Search,
@@ -253,6 +255,7 @@ export function AddSkillDrawerView({
             l3Subcategories={l3Subcategories}
             l3Loading={l3Loading}
             handleL3Select={handleL3Select}
+            selectedL3={selectedL3}
             l4Skills={l4Skills}
             l4Search={l4Search}
             setL4Search={setL4Search}

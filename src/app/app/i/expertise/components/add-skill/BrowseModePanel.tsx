@@ -38,6 +38,7 @@ type BrowseModePanelProps = {
   l3Subcategories: L3Subcategory[];
   l3Loading: boolean;
   handleL3Select: (subcategory: L3Subcategory) => void;
+  selectedL3: L3Subcategory | null;
   l4Skills: L4Skill[];
   l4Search: string;
   setL4Search: (value: string) => void;
@@ -92,6 +93,7 @@ export function BrowseModePanel({
   l3Subcategories,
   l3Loading,
   handleL3Select,
+  selectedL3,
   l4Skills,
   l4Search,
   setL4Search,
@@ -162,6 +164,29 @@ export function BrowseModePanel({
           <span>Category</span>
           <span>Subcategory</span>
           <span>Details</span>
+        </div>
+      </div>
+
+      <div
+        className="mb-6 rounded-lg border border-[#E5E3DA] bg-[#F7F6F1] p-3"
+        data-testid="browse-current-location"
+      >
+        <p className="text-xs font-medium text-[#2D3330]">Current location</p>
+        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+          <span className="inline-flex items-center gap-1 rounded-full border border-[#D8D3C8] bg-white px-2.5 py-1">
+            <span className="font-medium text-[#2D3330]">Domain</span>
+            <span className="text-[#6B6760]">{selectedL1?.nameI18n?.en || 'Not selected'}</span>
+          </span>
+          <ChevronRight className="h-3.5 w-3.5 text-[#8B867A]" aria-hidden />
+          <span className="inline-flex items-center gap-1 rounded-full border border-[#D8D3C8] bg-white px-2.5 py-1">
+            <span className="font-medium text-[#2D3330]">Category</span>
+            <span className="text-[#6B6760]">{selectedL2?.nameI18n?.en || 'Not selected'}</span>
+          </span>
+          <ChevronRight className="h-3.5 w-3.5 text-[#8B867A]" aria-hidden />
+          <span className="inline-flex items-center gap-1 rounded-full border border-[#D8D3C8] bg-white px-2.5 py-1">
+            <span className="font-medium text-[#2D3330]">Subcategory</span>
+            <span className="text-[#6B6760]">{selectedL3?.nameI18n?.en || 'Not selected'}</span>
+          </span>
         </div>
       </div>
 
@@ -272,7 +297,12 @@ export function BrowseModePanel({
             </Button>
             <h3 className="text-lg font-medium text-[#2D3330] mb-2">Step 3: Choose Subcategory</h3>
             <p className="text-sm text-[#6B6760] mb-4">
-              Select a subcategory within <strong>{selectedL2?.nameI18n?.en || 'Unknown'}</strong>.
+              Select a subcategory within{' '}
+              <strong>
+                {selectedL1?.nameI18n?.en || 'Not selected'} {'->'}{' '}
+                {selectedL2?.nameI18n?.en || 'Not selected'}
+              </strong>
+              .
             </p>
           </div>
 
@@ -318,7 +348,9 @@ export function BrowseModePanel({
               ← Back to Subcategories
             </Button>
             <h3 className="text-lg font-medium text-[#2D3330] mb-2">Step 4: Skill Details</h3>
-            <p className="text-sm text-[#6B6760] mb-4">Fill in the details for your skill.</p>
+            <p className="text-sm text-[#6B6760] mb-4">
+              Fill in the details for your skill. Your current location is shown above.
+            </p>
           </div>
 
           <div className="relative">
