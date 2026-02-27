@@ -6,6 +6,7 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
+  AlertCircle,
   User,
   Briefcase,
   ExternalLink,
@@ -19,17 +20,22 @@ import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { RespondDialog } from './components/RespondDialog';
 
 interface VerificationRequest {
+  request_type: 'skill' | 'impact_story';
   id: string;
-  skill_id: string;
+  skill_id?: string;
+  impact_story_id?: string;
+  impact_story_title?: string | null;
   requester_profile_id: string;
   verifier_email: string;
-  verifier_source: 'peer' | 'manager' | 'external';
-  message?: string;
-  status: 'pending' | 'accepted' | 'declined' | 'expired';
+  verifier_source?: 'peer' | 'manager' | 'external';
+  verifier_name?: string | null;
+  verifier_relationship?: string | null;
+  message?: string | null;
+  status: 'pending' | 'accepted' | 'declined' | 'expired' | 'failed';
   created_at: string;
-  responded_at?: string;
-  response_message?: string;
-  expires_at?: string;
+  responded_at?: string | null;
+  response_message?: string | null;
+  expires_at?: string | null;
   skills?: {
     id: string;
     competency_level: number;
@@ -49,9 +55,9 @@ interface VerificationRequest {
   };
   profiles?: {
     id: string;
-    display_name?: string;
-    handle?: string;
-    avatar_url?: string;
+    display_name?: string | null;
+    handle?: string | null;
+    avatar_url?: string | null;
   };
 }
 
@@ -91,9 +97,13 @@ export function VerificationsClient({
     setRespondDialogOpen(true);
   };
 
-  const handleResponseComplete = (updatedRequest: VerificationRequest) => {
+  const handleResponseComplete = (
+    updatedRequest: Partial<VerificationRequest> & { id: string }
+  ) => {
     setIncomingRequests((prev) =>
-      prev.map((request) => (request.id === updatedRequest.id ? updatedRequest : request))
+      prev.map((request) =>
+        request.id === updatedRequest.id ? { ...request, ...updatedRequest } : request
+      )
     );
     setRespondDialogOpen(false);
     setSelectedRequest(null);
@@ -120,7 +130,16 @@ export function VerificationsClient({
     return 'Unknown Skill';
   };
 
+  const getRequestSubject = (request: VerificationRequest): string => {
+    if (request.request_type === 'impact_story') {
+      return request.impact_story_title || 'Impact Story';
+    }
+    return getSkillName(request);
+  };
+
   const getBreadcrumb = (request: VerificationRequest): string => {
+    if (request.request_type !== 'skill') return '';
+
     const skill = request.skills;
     if (!skill?.skills_taxonomy?.skills_l3) return '';
 
@@ -183,6 +202,19 @@ export function VerificationsClient({
     return labels[level] || 'Unknown';
   };
 
+  const getStatusStyle = (status: VerificationRequest['status']) => {
+    if (status === 'pending') {
+      return { border: '#F59E0B', text: '#F59E0B', bg: '#FEF3C7' };
+    }
+    if (status === 'accepted') {
+      return { border: '#10B981', text: '#10B981', bg: '#D1FAE5' };
+    }
+    if (status === 'declined' || status === 'failed') {
+      return { border: '#EF4444', text: '#EF4444', bg: '#FEE2E2' };
+    }
+    return { border: '#9CA3AF', text: '#6B7470', bg: '#F3F4F6' };
+  };
+
   const formatDate = (dateStr: string): string => {
     const date = new Date(dateStr);
     const now = new Date();
@@ -202,53 +234,44 @@ export function VerificationsClient({
       variant="outline"
       className="capitalize"
       style={{
-        borderColor:
-          request.status === 'pending'
-            ? '#F59E0B'
-            : request.status === 'accepted'
-              ? '#10B981'
-              : '#EF4444',
-        color:
-          request.status === 'pending'
-            ? '#F59E0B'
-            : request.status === 'accepted'
-              ? '#10B981'
-              : '#EF4444',
-        backgroundColor:
-          request.status === 'pending'
-            ? '#FEF3C7'
-            : request.status === 'accepted'
-              ? '#D1FAE5'
-              : '#FEE2E2',
+        borderColor: getStatusStyle(request.status).border,
+        color: getStatusStyle(request.status).text,
+        backgroundColor: getStatusStyle(request.status).bg,
       }}
     >
       {request.status === 'pending' && <Clock className="w-3 h-3 mr-1" />}
       {request.status === 'accepted' && <CheckCircle2 className="w-3 h-3 mr-1" />}
       {request.status === 'declined' && <XCircle className="w-3 h-3 mr-1" />}
+      {request.status === 'failed' && <AlertCircle className="w-3 h-3 mr-1" />}
+      {request.status === 'expired' && <Clock className="w-3 h-3 mr-1" />}
       {request.status}
     </Badge>
   );
 
-  const renderSourceBadge = (request: VerificationRequest) => (
-    <Badge
-      variant="outline"
-      className="capitalize"
-      style={{
-        borderColor: '#1C4D3A',
-        color: '#1C4D3A',
-        backgroundColor: '#E8F5E9',
-      }}
-    >
-      {request.verifier_source === 'peer' && <User className="w-3 h-3 mr-1" />}
-      {request.verifier_source === 'manager' && <Briefcase className="w-3 h-3 mr-1" />}
-      {request.verifier_source === 'external' && <ExternalLink className="w-3 h-3 mr-1" />}
-      {request.verifier_source}
-    </Badge>
-  );
+  const renderSourceBadge = (request: VerificationRequest) => {
+    if (!request.verifier_source) return null;
+
+    return (
+      <Badge
+        variant="outline"
+        className="capitalize"
+        style={{
+          borderColor: '#1C4D3A',
+          color: '#1C4D3A',
+          backgroundColor: '#E8F5E9',
+        }}
+      >
+        {request.verifier_source === 'peer' && <User className="w-3 h-3 mr-1" />}
+        {request.verifier_source === 'manager' && <Briefcase className="w-3 h-3 mr-1" />}
+        {request.verifier_source === 'external' && <ExternalLink className="w-3 h-3 mr-1" />}
+        {request.verifier_source}
+      </Badge>
+    );
+  };
 
   const renderIncomingRequestCard = (request: VerificationRequest) => (
     <Card
-      key={request.id}
+      key={`${request.request_type}-${request.id}`}
       className="p-6 hover:shadow-md transition-shadow"
       style={{ backgroundColor: '#FDFCFA', borderColor: 'rgba(232, 230, 221, 0.6)' }}
     >
@@ -267,7 +290,9 @@ export function VerificationsClient({
                 {getRequesterName(request)}
               </h3>
               <p className="text-sm" style={{ color: '#6B7470' }}>
-                wants you to verify their skill
+                {request.request_type === 'impact_story'
+                  ? 'wants you to verify their impact story'
+                  : 'wants you to verify their skill'}
               </p>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
@@ -280,7 +305,7 @@ export function VerificationsClient({
             <div className="flex items-center gap-2 mb-1">
               <ShieldCheck className="w-4 h-4" style={{ color: '#1C4D3A' }} />
               <span className="font-medium text-sm" style={{ color: '#2D3330' }}>
-                {getSkillName(request)}
+                {getRequestSubject(request)}
               </span>
             </div>
             {getBreadcrumb(request) && (
@@ -288,9 +313,14 @@ export function VerificationsClient({
                 {getBreadcrumb(request)}
               </p>
             )}
-            {request.skills?.competency_level && (
+            {request.request_type === 'skill' && request.skills?.competency_level && (
               <p className="text-xs ml-6 mt-1" style={{ color: '#6B7470' }}>
                 Competency: {getCompetencyLabel(request.skills.competency_level)}
+              </p>
+            )}
+            {request.request_type === 'impact_story' && request.verifier_relationship && (
+              <p className="text-xs ml-6 mt-1" style={{ color: '#6B7470' }}>
+                Relationship: {request.verifier_relationship}
               </p>
             )}
           </div>
@@ -326,7 +356,7 @@ export function VerificationsClient({
               {request.responded_at && ` • Responded ${formatDate(request.responded_at)}`}
             </p>
 
-            {request.status === 'pending' && (
+            {request.request_type === 'skill' && request.status === 'pending' && (
               <div className="flex gap-2">
                 <Button
                   size="sm"
@@ -355,6 +385,11 @@ export function VerificationsClient({
                 </Button>
               </div>
             )}
+            {request.request_type === 'impact_story' && request.status === 'pending' && (
+              <p className="text-xs" style={{ color: '#6B7470' }}>
+                Respond using the verification link that was sent to your email.
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -363,7 +398,7 @@ export function VerificationsClient({
 
   const renderSentRequestCard = (request: VerificationRequest) => (
     <Card
-      key={request.id}
+      key={`${request.request_type}-${request.id}`}
       className="p-6"
       style={{ backgroundColor: '#FDFCFA', borderColor: 'rgba(232, 230, 221, 0.6)' }}
     >
@@ -377,7 +412,9 @@ export function VerificationsClient({
             {request.verifier_email}
           </h3>
           <p className="text-sm" style={{ color: '#6B7470' }}>
-            Verification request sent
+            {request.request_type === 'impact_story'
+              ? 'Impact story verification request sent'
+              : 'Verification request sent'}
           </p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -390,12 +427,17 @@ export function VerificationsClient({
         <div className="flex items-center gap-2 mb-1">
           <ShieldCheck className="w-4 h-4" style={{ color: '#1C4D3A' }} />
           <span className="font-medium text-sm" style={{ color: '#2D3330' }}>
-            {getSkillName(request)}
+            {getRequestSubject(request)}
           </span>
         </div>
         {getBreadcrumb(request) && (
           <p className="text-xs ml-6" style={{ color: '#6B7470' }}>
             {getBreadcrumb(request)}
+          </p>
+        )}
+        {request.request_type === 'impact_story' && request.verifier_relationship && (
+          <p className="text-xs ml-6 mt-1" style={{ color: '#6B7470' }}>
+            Relationship: {request.verifier_relationship}
           </p>
         )}
       </div>
@@ -545,7 +587,7 @@ export function VerificationsClient({
         </Tabs>
       </div>
 
-      {selectedRequest && (
+      {selectedRequest && selectedRequest.request_type === 'skill' && (
         <RespondDialog
           open={respondDialogOpen}
           onOpenChange={setRespondDialogOpen}
