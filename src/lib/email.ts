@@ -17,6 +17,7 @@ import InterviewScheduled from '../../emails/InterviewScheduled';
 import IdentityRevealed from '../../emails/IdentityRevealed';
 import VerificationApproved from '../../emails/VerificationApproved';
 import VerificationRejected from '../../emails/VerificationRejected';
+import LinkedInVerificationPendingReview from '../../emails/LinkedInVerificationPendingReview';
 import { sendDebugIngest } from '@/lib/debug-ingest';
 import { EMAIL_CONFIG } from './email/config';
 
@@ -453,6 +454,72 @@ export async function sendVerificationApprovedEmail(
   } catch (error) {
     console.error('Failed to send verification approved email:', error);
     throw new Error('Failed to send verification approved email');
+  }
+}
+
+function parseEmailRecipientList(raw: string | undefined): string[] {
+  if (!raw) return [];
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const deduped = new Set<string>();
+
+  for (const candidate of raw.split(',')) {
+    const normalized = candidate.trim().toLowerCase();
+    if (!normalized || !emailRegex.test(normalized)) continue;
+    deduped.add(normalized);
+  }
+
+  return [...deduped];
+}
+
+function resolveLinkedInVerificationAdminRecipients(): string[] {
+  const explicitRecipients = parseEmailRecipientList(
+    process.env.LINKEDIN_VERIFICATION_ADMIN_EMAILS
+  );
+  if (explicitRecipients.length > 0) {
+    return explicitRecipients;
+  }
+
+  return parseEmailRecipientList(process.env.PLATFORM_ADMIN_EMAILS);
+}
+
+export async function sendLinkedInVerificationPendingReviewEmail(params: {
+  candidateName: string;
+  candidateEmail: string | null;
+  candidateProfileId: string;
+  confidence: number;
+  hasIdentityVerification: boolean;
+  linkedinProfileUrl: string | null;
+}): Promise<void> {
+  const recipients = resolveLinkedInVerificationAdminRecipients();
+
+  if (recipients.length === 0) {
+    console.warn(
+      'Skipping LinkedIn verification pending-review notification: no admin recipients configured'
+    );
+    return;
+  }
+
+  const adminQueueUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/admin/verification`;
+
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to: recipients,
+      subject: `LinkedIn verification pending review: ${params.candidateName}`,
+      react: LinkedInVerificationPendingReview({
+        candidateName: params.candidateName,
+        candidateEmail: params.candidateEmail,
+        candidateProfileId: params.candidateProfileId,
+        confidence: params.confidence,
+        hasIdentityVerification: params.hasIdentityVerification,
+        linkedinProfileUrl: params.linkedinProfileUrl,
+        adminQueueUrl,
+      }),
+    });
+  } catch (error) {
+    console.error('Failed to send LinkedIn pending review notification email:', error);
+    throw new Error('Failed to send LinkedIn pending review notification email');
   }
 }
 

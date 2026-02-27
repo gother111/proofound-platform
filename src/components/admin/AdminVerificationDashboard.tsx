@@ -38,7 +38,7 @@ interface VerificationItem {
   userName: string;
   userEmail: string | null;
   userAvatar: string | null;
-  linkedinUrl: string;
+  linkedinUrl: string | null;
   verificationData: any;
   verificationStatus: string;
   createdAt: string;
@@ -328,16 +328,23 @@ export function AdminVerificationDashboard() {
           </div>
 
           {/* LinkedIn profile link */}
-          <a
-            href={verification.linkedinUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-sm text-[#0A66C2] hover:underline mb-4 transition-all duration-200 hover:gap-3"
-          >
-            <Linkedin className="w-4 h-4" />
-            View LinkedIn Profile
-            <ExternalLink className="w-3 h-3" />
-          </a>
+          {verification.linkedinUrl ? (
+            <a
+              href={verification.linkedinUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm text-[#0A66C2] hover:underline mb-4 transition-all duration-200 hover:gap-3"
+            >
+              <Linkedin className="w-4 h-4" />
+              View LinkedIn Profile
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          ) : (
+            <div className="flex items-center gap-2 text-sm text-[#6B6760] mb-4">
+              <Linkedin className="w-4 h-4" />
+              LinkedIn profile URL unavailable (review from API report/signals)
+            </div>
+          )}
 
           {/* Action buttons */}
           <div className="flex gap-2">

@@ -33,6 +33,8 @@ interface LinkedInVerificationProps {
 interface AutomatedCheckResult {
   confidence: number;
   hasIdentityVerification?: boolean;
+  linkedinVerificationStatus: 'verified' | 'pending';
+  identityGranted: boolean;
   hasVerificationBadge: boolean;
   signals?: {
     hasVerificationBadge: boolean;
@@ -112,6 +114,8 @@ export function LinkedInVerification({
       setCheckResult({
         ...data.automatedCheck,
         hasIdentityVerification: Boolean(data.hasIdentityVerification),
+        linkedinVerificationStatus: data.linkedinVerificationStatus,
+        identityGranted: Boolean(data.identityGranted),
       });
 
       if (warnings.length > 0 && warnings[0].message) {
@@ -124,8 +128,8 @@ export function LinkedInVerification({
         duration: 5000,
       });
 
-      // If high confidence, notify user of quick approval
-      if (data.automatedCheck.confidence >= 80) {
+      // For pending reviews, call out quick-review expectation at high confidence.
+      if (data.linkedinVerificationStatus === 'pending' && data.automatedCheck.confidence >= 80) {
         toast.info('High confidence detected! Admin review typically completes within 1 hour.', {
           duration: 5000,
         });
@@ -189,8 +193,16 @@ export function LinkedInVerification({
         <Alert className="border-[#0A66C2] bg-[#0A66C2]/5">
           <CheckCircle2 className="h-4 w-4 text-[#0A66C2]" />
           <AlertDescription>
-            <strong>Verification Check Complete!</strong>
-            <p className="mt-2">Your LinkedIn profile has been analyzed. Pending admin review.</p>
+            <strong>
+              {checkResult.linkedinVerificationStatus === 'verified'
+                ? 'LinkedIn Verification Approved!'
+                : 'Verification Check Complete!'}
+            </strong>
+            <p className="mt-2">
+              {checkResult.linkedinVerificationStatus === 'verified'
+                ? 'LinkedIn identity verification was detected and your profile is now verified.'
+                : 'Your LinkedIn profile has been analyzed. Pending admin review.'}
+            </p>
           </AlertDescription>
         </Alert>
 
@@ -215,11 +227,13 @@ export function LinkedInVerification({
                 )}
               </div>
               <p className="text-sm text-muted-foreground mt-2">
-                {checkResult.confidence >= 80
-                  ? 'High confidence - Quick admin approval typically within 1 hour'
-                  : checkResult.confidence >= 50
-                    ? 'Medium confidence - Manual admin review within 1-2 business days'
-                    : 'Low confidence - Consider using another verification method'}
+                {checkResult.linkedinVerificationStatus === 'verified'
+                  ? 'Auto-approved using LinkedIn official identity verification.'
+                  : checkResult.confidence >= 80
+                    ? 'High confidence - Quick admin approval typically within 1 hour'
+                    : checkResult.confidence >= 50
+                      ? 'Medium confidence - Manual admin review within 1-2 business days'
+                      : 'Low confidence - Consider using another verification method'}
               </p>
             </div>
 
@@ -272,8 +286,17 @@ export function LinkedInVerification({
             {/* Recommendation */}
             <div className="pt-4 border-t">
               <p className="text-sm text-muted-foreground">
-                <strong>Next Steps:</strong> Your verification request is now pending admin review.
-                You&apos;ll receive a notification once the review is complete.
+                {checkResult.linkedinVerificationStatus === 'verified' ? (
+                  <>
+                    <strong>Next Steps:</strong> No further action is required. Your identity
+                    verification is active.
+                  </>
+                ) : (
+                  <>
+                    <strong>Next Steps:</strong> Your verification request is now pending admin
+                    review. You&apos;ll receive a notification once the review is complete.
+                  </>
+                )}
               </p>
             </div>
           </div>
@@ -303,8 +326,8 @@ export function LinkedInVerification({
               <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
                 <li>Connect your LinkedIn account (OAuth)</li>
                 <li>Automated check runs in 5-10 seconds</li>
-                <li>Admin reviews the automated findings</li>
-                <li>Get verified badge on your profile</li>
+                <li>Auto-approval happens if LinkedIn identity verification is detected</li>
+                <li>Otherwise, admins review the automated findings</li>
               </ol>
             </div>
 

@@ -11,6 +11,7 @@ vi.mock('sonner', () => ({
   toast: {
     success: vi.fn(),
     info: vi.fn(),
+    warning: vi.fn(),
     error: vi.fn(),
   },
 }));
@@ -49,6 +50,9 @@ describe('LinkedInVerification', () => {
     (apiFetch as any).mockResolvedValue({
       ok: true,
       json: async () => ({
+        linkedinVerificationStatus: 'pending',
+        identityGranted: false,
+        hasIdentityVerification: false,
         automatedCheck: {
           confidence: 55,
           hasVerificationBadge: false,
@@ -77,6 +81,46 @@ describe('LinkedInVerification', () => {
     expect(apiFetch).toHaveBeenCalledWith(
       '/api/verification/linkedin/initiate',
       expect.objectContaining({ method: 'POST' })
+    );
+  });
+
+  it('shows auto-approved messaging when LinkedIn identity signal is detected', async () => {
+    const { apiFetch } = await import('@/lib/api/fetch');
+    (apiFetch as any).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        linkedinVerificationStatus: 'verified',
+        identityGranted: true,
+        hasIdentityVerification: true,
+        automatedCheck: {
+          confidence: 100,
+          hasVerificationBadge: true,
+          recommendation: 'approve',
+          sources: ['linkedin-api'],
+        },
+        message: 'LinkedIn identity verification signal detected.',
+      }),
+    });
+
+    render(<LinkedInVerification />);
+
+    const button = await screen.findByRole('button', { name: /start verification check/i });
+    fireEvent.click(button);
+
+    await waitFor(() =>
+      expect(screen.getByText(/LinkedIn Verification Approved!/i)).toBeInTheDocument()
+    );
+    expect(screen.getByText(/No further action is required/i)).toBeInTheDocument();
+  });
+
+  it('shows pending-review messaging when identity signal is not detected', async () => {
+    render(<LinkedInVerification />);
+
+    const button = await screen.findByRole('button', { name: /start verification check/i });
+    fireEvent.click(button);
+
+    await waitFor(() =>
+      expect(screen.getAllByText(/pending admin review/i).length).toBeGreaterThan(0)
     );
   });
 });

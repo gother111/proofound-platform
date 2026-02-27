@@ -29,6 +29,7 @@ NEXT_PUBLIC_SITE_URL=https://proofound.io
 # ============================================================================
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxxx
 EMAIL_FROM="Proofound <no-reply@proofound.io>"
+LINKEDIN_VERIFICATION_ADMIN_EMAILS=admin1@proofound.io,admin2@proofound.io
 CRON_SECRET=your_secure_random_token_here
 ZOOM_CLIENT_ID=your_zoom_client_id
 ZOOM_CLIENT_SECRET=your_zoom_client_secret
@@ -291,6 +292,24 @@ const fromEmail = process.env.EMAIL_FROM || 'Proofound <no-reply@proofound.io>';
 - ✅ Use professional domain (not gmail/yahoo)
 - ✅ Verify domain in Resend dashboard
 - ✅ Configure SPF/DKIM records for deliverability
+
+---
+
+### LINKEDIN_VERIFICATION_ADMIN_EMAILS
+
+**Purpose**: Comma-separated admin recipients for LinkedIn manual-review notifications.
+
+**Format**:
+
+```env
+LINKEDIN_VERIFICATION_ADMIN_EMAILS=admin1@proofound.io,admin2@proofound.io
+```
+
+**Behavior**:
+
+- Used when a LinkedIn verification request remains in manual-review (`pending`) state.
+- If unset or empty, the app falls back to `PLATFORM_ADMIN_EMAILS`.
+- If both are unset, notification emails are skipped (request still succeeds).
 
 ---
 
@@ -581,6 +600,7 @@ SUPABASE_SERVICE_ROLE_KEY=eyJ...
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 RESEND_API_KEY=re_...
 EMAIL_FROM="Proofound <no-reply@proofound.io>"
+LINKEDIN_VERIFICATION_ADMIN_EMAILS=admin1@proofound.io,admin2@proofound.io
 CRON_SECRET=your_local_secret
 ```
 
@@ -778,15 +798,15 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 
 ## Feature → Variable Matrix
 
-| Feature                 | Required Variables                                                                       |
-| ----------------------- | ---------------------------------------------------------------------------------------- |
-| **Database**            | `DATABASE_URL`                                                                           |
-| **Authentication**      | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` |
-| **Email Sending**       | `RESEND_API_KEY`, `EMAIL_FROM`, `NEXT_PUBLIC_SITE_URL`                                   |
-| **Cron Jobs**           | `CRON_SECRET`, `NEXT_PUBLIC_SITE_URL`, `SUPABASE_SERVICE_ROLE_KEY`                       |
-| **File Uploads**        | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`                              |
-| **Matching System**     | `DATABASE_URL`, `MATCHING_FEATURE_ENABLED` (optional)                                    |
-| **Real-time Messaging** | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`                              |
+| Feature                 | Required Variables                                                                                                        |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **Database**            | `DATABASE_URL`                                                                                                            |
+| **Authentication**      | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`                                  |
+| **Email Sending**       | `RESEND_API_KEY`, `EMAIL_FROM`, `NEXT_PUBLIC_SITE_URL`, `LINKEDIN_VERIFICATION_ADMIN_EMAILS` (or `PLATFORM_ADMIN_EMAILS`) |
+| **Cron Jobs**           | `CRON_SECRET`, `NEXT_PUBLIC_SITE_URL`, `SUPABASE_SERVICE_ROLE_KEY`                                                        |
+| **File Uploads**        | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`                                                               |
+| **Matching System**     | `DATABASE_URL`, `MATCHING_FEATURE_ENABLED` (optional)                                                                     |
+| **Real-time Messaging** | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`                                                               |
 
 ---
 
@@ -806,6 +826,7 @@ Use this checklist when setting up a new environment:
 
 - [ ] `RESEND_API_KEY` - Resend API key
 - [ ] `EMAIL_FROM` - Sender email address
+- [ ] `LINKEDIN_VERIFICATION_ADMIN_EMAILS` or `PLATFORM_ADMIN_EMAILS` - LinkedIn manual-review recipients
 - [ ] Domain verified in Resend
 - [ ] DNS records configured (SPF, DKIM)
 

@@ -26,6 +26,9 @@ LINKEDIN_CLIENT_SECRET=your_linkedin_client_secret
 LINKEDIN_REDIRECT_URI=https://proofound.io/api/auth/linkedin/callback
 # Optional. Defaults to 202510.
 LINKEDIN_API_VERSION=202510
+# Optional manual-review notification recipients.
+# Falls back to PLATFORM_ADMIN_EMAILS when unset.
+LINKEDIN_VERIFICATION_ADMIN_EMAILS=pavlos@profound.io,yuriib@proofound.io
 ```
 
 Important callback split:
@@ -135,10 +138,15 @@ ngrok http 3000
    - Analyzes signals (connections, completeness, age)
    - Generates confidence score (0-100)
 4. **Optional enrichment**: If Proxycurl configured, fetches additional data
-5. **Status**: User sees results and pending admin review message
-6. **Admin review**: Admin dashboard shows request sorted by confidence
-7. **Approval**: Admin approves/rejects (1-click for high confidence)
-8. **Complete**: User receives verified badge
+5. **Decision split**:
+   - If LinkedIn `verificationReport` includes `IDENTITY`, the request is auto-approved and identity is granted immediately.
+   - If no LinkedIn identity signal exists, request is marked pending for admin review.
+6. **Status**:
+   - Auto-approved path: user sees verified result immediately.
+   - Manual path: user sees pending admin review status.
+7. **Admin review** (manual path only): Admin dashboard shows request sorted by confidence.
+8. **Approval**: Admin approves/rejects pending requests (1-click for high confidence).
+9. **Complete**: User receives final verified/failed status.
 
 ## Admin Dashboard
 
@@ -152,12 +160,19 @@ Access at: `/admin/verification`
   - Low Confidence (<50%) - Likely rejection
 
 - **For each verification**:
-  - User info and LinkedIn profile link
+  - User info and LinkedIn profile link (when available)
   - Confidence badge and score
   - Detected signals checklist
   - Quick Approve / Review Manually / Reject buttons
+  - Pending requests can still be reviewed when profile URL is unavailable (API report + signals fallback)
+
+- **Admin notifications for manual review**:
+  - Sent via email when a request stays pending.
+  - Recipient order: `LINKEDIN_VERIFICATION_ADMIN_EMAILS` -> `PLATFORM_ADMIN_EMAILS`.
+  - If both are unset, email is skipped and queue remains the source of truth.
 
 - **Review actions**:
+  - System auto-approve (`IDENTITY` detected at initiate time) -> sets `linkedin_verification_status = 'verified'` and grants global identity (`verified = true`, `verification_method = 'linkedin'`)
   - Approve → Always sets `linkedin_verification_status = 'verified'`
   - Approve + identity signal (`IDENTITY`) or explicit override → Sets global identity verified (`verified = true`, `verification_method = 'linkedin'`)
   - Approve without identity signal and without override → Keeps global identity unverified by default

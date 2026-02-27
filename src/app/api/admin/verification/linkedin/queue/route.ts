@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/db';
 import { individualProfiles, profiles } from '@/db/schema';
-import { eq, and, or, isNotNull, desc, sql } from 'drizzle-orm';
+import { eq, and, or, desc, sql } from 'drizzle-orm';
 import { resolveHasLinkedInIdentityVerification } from '@/lib/linkedin-verified';
 
 export async function GET(request: NextRequest) {
@@ -61,8 +61,7 @@ export async function GET(request: NextRequest) {
           or(
             eq(individualProfiles.linkedinVerificationStatus, 'pending'),
             eq(individualProfiles.verificationStatus, 'pending')
-          ),
-          isNotNull(individualProfiles.linkedinProfileUrl)
+          )
         )
       )
       .orderBy(desc(profiles.updatedAt));

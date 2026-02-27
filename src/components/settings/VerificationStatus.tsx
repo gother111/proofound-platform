@@ -480,8 +480,8 @@ export function VerificationStatus() {
               <div className="flex-1">
                 <h3 className="font-semibold mb-1">LinkedIn Verification</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Check LinkedIn verification signals and complete admin review. LinkedIn identity
-                  badge can grant identity verification.
+                  LinkedIn identity verification can auto-approve your profile. If identity is not
+                  detected, the request goes to admin review.
                 </p>
                 <Button
                   onClick={() => setShowLinkedInFlow(true)}

@@ -46,7 +46,7 @@ interface VerificationItem {
   userName: string;
   userEmail: string | null;
   userAvatar: string | null;
-  linkedinUrl: string;
+  linkedinUrl: string | null;
   verificationData: any;
   verificationStatus: string;
   createdAt: string;
@@ -184,16 +184,23 @@ export function AdminReviewModal({ verification, onClose, onComplete }: AdminRev
               {verification.userEmail && (
                 <p className="text-sm text-[#6B6760] mb-3">{verification.userEmail}</p>
               )}
-              <a
-                href={verification.linkedinUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-sm text-[#0A66C2] hover:underline transition-all duration-200 hover:gap-3"
-              >
-                <Linkedin className="w-4 h-4" />
-                View LinkedIn Profile
-                <ExternalLink className="w-3 h-3" />
-              </a>
+              {verification.linkedinUrl ? (
+                <a
+                  href={verification.linkedinUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm text-[#0A66C2] hover:underline transition-all duration-200 hover:gap-3"
+                >
+                  <Linkedin className="w-4 h-4" />
+                  View LinkedIn Profile
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              ) : (
+                <p className="inline-flex items-center gap-2 text-sm text-[#6B6760]">
+                  <Linkedin className="w-4 h-4" />
+                  LinkedIn profile URL unavailable
+                </p>
+              )}
             </div>
           </div>
 

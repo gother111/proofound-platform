@@ -18,6 +18,7 @@ import { eq, and } from 'drizzle-orm';
 import { constructLinkedInProfileUrl, fetchLinkedInProfile } from '@/lib/linkedin';
 import { checkLinkedInVerification } from '@/lib/linkedin-scraper';
 import { enrichLinkedInProfile, combineVerificationData } from '@/lib/linkedin-enrichment';
+import { sendLinkedInVerificationPendingReviewEmail } from '@/lib/email';
 import {
   fetchLinkedInIdentityMe,
   fetchLinkedInVerificationReport,
@@ -29,13 +30,32 @@ type VerificationWarning = {
   message: string;
 };
 
-const DEFAULT_AUTOMATED_SIGNALS = {
+type AutomatedSignals = {
+  hasVerificationBadge: boolean;
+  connectionCount: number | null;
+  experienceCount: number;
+  profileCompleteness: number;
+  hasProfilePhoto: boolean;
+  accountAge: 'new' | 'medium' | 'old';
+};
+
+const DEFAULT_AUTOMATED_SIGNALS: AutomatedSignals = {
   hasVerificationBadge: false,
   connectionCount: null,
   experienceCount: 0,
   profileCompleteness: 0,
   hasProfilePhoto: false,
   accountAge: 'new' as const,
+};
+
+type AutomatedCheckSummary = {
+  confidence: number;
+  hasVerificationBadge: boolean;
+  signals: AutomatedSignals;
+  recommendation: 'approve' | 'review_manually' | 'reject';
+  checkedAt: string;
+  sources: string[];
+  originalConfidence?: number;
 };
 
 function warningFromLinkedInError(endpoint: string, error: unknown): VerificationWarning {
@@ -123,188 +143,254 @@ export async function POST(_request: NextRequest) {
 
     const hasIdentityVerification = verificationReport?.hasIdentityVerification ?? false;
 
-    // 5. Derive profile URL for scraper-based secondary checks.
+    const nowIso = new Date().toISOString();
+
+    // 5. Derive profile URL from identity endpoint first.
     let profileUrl = identityMe?.profileUrl ?? null;
-    if (!profileUrl) {
-      try {
-        const profileData = await fetchLinkedInProfile(accessToken);
-        profileUrl = constructLinkedInProfileUrl(profileData);
-      } catch (error) {
-        warnings.push({
-          code: 'legacy_profile_fetch_failed',
-          message:
-            'Could not derive a LinkedIn profile URL for scraper-based confidence signals. API report was still captured.',
-        });
-        console.warn('LinkedIn legacy profile fetch failed:', error);
+    let thirdPartyData = null;
+    let automatedSummary: AutomatedCheckSummary;
+    let linkedinVerificationStatus: 'verified' | 'pending';
+    let identityGranted = false;
+
+    if (hasIdentityVerification) {
+      // Official LinkedIn identity signal is sufficient for auto-approval.
+      automatedSummary = {
+        confidence: 100,
+        hasVerificationBadge: true,
+        signals: {
+          ...DEFAULT_AUTOMATED_SIGNALS,
+          hasVerificationBadge: true,
+        },
+        recommendation: 'approve',
+        checkedAt: nowIso,
+        sources: ['linkedin-api'],
+        originalConfidence: 100,
+      };
+      linkedinVerificationStatus = 'verified';
+      identityGranted = true;
+    } else {
+      // Manual review path: gather secondary confidence signals.
+      if (!profileUrl) {
+        try {
+          const profileData = await fetchLinkedInProfile(accessToken);
+          profileUrl = constructLinkedInProfileUrl(profileData);
+        } catch (error) {
+          warnings.push({
+            code: 'legacy_profile_fetch_failed',
+            message:
+              'Could not derive a LinkedIn profile URL for scraper-based confidence signals. API report was still captured.',
+          });
+          console.warn('LinkedIn legacy profile fetch failed:', error);
+        }
       }
-    }
 
-    console.log('Starting LinkedIn verification check for:', profileUrl);
+      console.log('Starting LinkedIn verification check for:', profileUrl);
 
-    // 6. RUN AUTOMATED CHECK (secondary signal, optional when profile URL is unavailable)
-    let automatedCheck:
-      | Awaited<ReturnType<typeof checkLinkedInVerification>>
-      | {
-          success: true;
-          confidence: number;
-          signals: typeof DEFAULT_AUTOMATED_SIGNALS;
-          recommendation: 'review_manually';
-          checkedAt: string;
-        };
+      let automatedCheck:
+        | Awaited<ReturnType<typeof checkLinkedInVerification>>
+        | {
+            success: true;
+            confidence: number;
+            signals: typeof DEFAULT_AUTOMATED_SIGNALS;
+            recommendation: 'review_manually';
+            checkedAt: string;
+          };
 
-    if (profileUrl) {
-      const scraped = await checkLinkedInVerification(profileUrl);
-      if (!scraped.success) {
+      if (profileUrl) {
+        const scraped = await checkLinkedInVerification(profileUrl);
+        if (!scraped.success) {
+          warnings.push({
+            code: 'scraper_check_failed',
+            message:
+              'LinkedIn scraper check failed. Admin review will rely on API report and fallback signals.',
+          });
+          automatedCheck = {
+            success: true,
+            confidence: 0,
+            signals: DEFAULT_AUTOMATED_SIGNALS,
+            recommendation: 'review_manually',
+            checkedAt: nowIso,
+          };
+        } else {
+          automatedCheck = scraped;
+        }
+      } else {
         warnings.push({
-          code: 'scraper_check_failed',
+          code: 'profile_url_unavailable',
           message:
-            'LinkedIn scraper check failed. Admin review will rely on API report and fallback signals.',
+            'LinkedIn profile URL unavailable. Scraper and enrichment checks were skipped; API report was captured.',
         });
         automatedCheck = {
           success: true,
           confidence: 0,
           signals: DEFAULT_AUTOMATED_SIGNALS,
           recommendation: 'review_manually',
-          checkedAt: new Date().toISOString(),
+          checkedAt: nowIso,
         };
-      } else {
-        automatedCheck = scraped;
       }
-    } else {
-      warnings.push({
-        code: 'profile_url_unavailable',
-        message:
-          'LinkedIn profile URL unavailable. Scraper and enrichment checks were skipped; API report was captured.',
-      });
-      automatedCheck = {
-        success: true,
-        confidence: 0,
-        signals: DEFAULT_AUTOMATED_SIGNALS,
-        recommendation: 'review_manually',
-        checkedAt: new Date().toISOString(),
+
+      const automatedConfidence =
+        typeof automatedCheck.confidence === 'number' ? automatedCheck.confidence : 0;
+      const automatedSignals = automatedCheck.signals ?? DEFAULT_AUTOMATED_SIGNALS;
+      const automatedRecommendation = automatedCheck.recommendation ?? 'review_manually';
+      const automatedCheckedAt = automatedCheck.checkedAt ?? nowIso;
+
+      if (profileUrl) {
+        try {
+          thirdPartyData = await enrichLinkedInProfile(profileUrl);
+          console.log('Third-party enrichment:', thirdPartyData?.success ? 'success' : 'skipped');
+        } catch (error) {
+          console.warn('Third-party enrichment failed:', error);
+        }
+      }
+
+      const combinedData = thirdPartyData
+        ? combineVerificationData(
+            {
+              confidence: automatedConfidence,
+              signals: automatedSignals,
+            },
+            thirdPartyData
+          )
+        : {
+            finalConfidence: automatedConfidence,
+            hasVerificationBadge: automatedSignals.hasVerificationBadge,
+            sources: ['playwright'],
+          };
+      const combinedConfidence =
+        typeof combinedData.finalConfidence === 'number'
+          ? combinedData.finalConfidence
+          : automatedConfidence;
+      const combinedHasVerificationBadge = Boolean(combinedData.hasVerificationBadge);
+      const combinedSources =
+        Array.isArray(combinedData.sources) && combinedData.sources.length > 0
+          ? combinedData.sources
+          : ['playwright'];
+
+      automatedSummary = {
+        confidence: combinedConfidence,
+        hasVerificationBadge: combinedHasVerificationBadge,
+        signals: automatedSignals,
+        recommendation: automatedRecommendation,
+        checkedAt: automatedCheckedAt,
+        sources: combinedSources,
+        originalConfidence: automatedConfidence,
       };
+      linkedinVerificationStatus = 'pending';
     }
 
-    console.log('Automated check complete:', {
-      confidence: automatedCheck.confidence,
-      hasVerificationBadge: automatedCheck.signals?.hasVerificationBadge,
-      recommendation: automatedCheck.recommendation,
-    });
-
-    const automatedConfidence =
-      typeof automatedCheck.confidence === 'number' ? automatedCheck.confidence : 0;
-    const automatedSignals = automatedCheck.signals ?? DEFAULT_AUTOMATED_SIGNALS;
-    const automatedRecommendation = automatedCheck.recommendation ?? 'review_manually';
-    const automatedCheckedAt = automatedCheck.checkedAt ?? new Date().toISOString();
-
-    // 7. OPTIONAL: Run third-party enrichment if configured
-    let thirdPartyData = null;
-    if (profileUrl) {
-      try {
-        thirdPartyData = await enrichLinkedInProfile(profileUrl);
-        console.log('Third-party enrichment:', thirdPartyData?.success ? 'success' : 'skipped');
-      } catch (error) {
-        // Enrichment is optional, don't fail the whole request
-        console.warn('Third-party enrichment failed:', error);
-      }
-    }
-
-    // 8. Combine data from both secondary sources
-    const combinedData = thirdPartyData
-      ? combineVerificationData(
-          {
-            confidence: automatedConfidence,
-            signals: automatedSignals,
-          },
-          thirdPartyData
-        )
-      : {
-          finalConfidence: automatedConfidence,
-          hasVerificationBadge: automatedSignals.hasVerificationBadge,
-          sources: ['playwright'],
-        };
-    const combinedConfidence =
-      typeof combinedData.finalConfidence === 'number'
-        ? combinedData.finalConfidence
-        : automatedConfidence;
-    const combinedHasVerificationBadge = Boolean(combinedData.hasVerificationBadge);
-    const combinedSources =
-      Array.isArray(combinedData.sources) && combinedData.sources.length > 0
-        ? combinedData.sources
-        : ['playwright'];
-
-    // 9. Store all verification data
+    // 6. Store verification data
     const verificationData = {
       hasIdentityVerification,
-      hasVerificationBadge: combinedHasVerificationBadge,
+      hasVerificationBadge: automatedSummary.hasVerificationBadge,
       apiReport: {
         hasIdentityVerification,
         verifications: verificationReport?.verifications || [],
         identityMe: identityMe?.raw || null,
         verificationReport: verificationReport?.raw || null,
         warnings,
-        checkedAt: new Date().toISOString(),
+        checkedAt: nowIso,
       },
       automatedCheck: {
-        confidence: combinedConfidence,
-        originalConfidence: automatedConfidence,
-        signals: automatedSignals,
-        recommendation: automatedRecommendation,
-        checkedAt: automatedCheckedAt,
-        sources: combinedSources,
+        confidence: automatedSummary.confidence,
+        originalConfidence: automatedSummary.originalConfidence ?? automatedSummary.confidence,
+        signals: automatedSummary.signals,
+        recommendation: automatedSummary.recommendation,
+        checkedAt: automatedSummary.checkedAt,
+        sources: automatedSummary.sources,
       },
       thirdPartyData: thirdPartyData?.success ? thirdPartyData : null,
-      adminReviewed: false,
-      adminNotes: null,
+      adminReviewed: hasIdentityVerification,
+      adminNotes: hasIdentityVerification ? 'Auto-approved via LinkedIn identity signal.' : null,
+      adminDecision: hasIdentityVerification ? 'approved' : null,
+      reviewedAt: hasIdentityVerification ? nowIso : null,
+      reviewedBy: hasIdentityVerification ? 'system:auto-linkedin-identity' : null,
     };
 
     const updatePayload: Record<string, unknown> = {
       linkedin_verification_data: verificationData,
-      linkedin_verification_status: 'pending',
+      linkedin_verification_status: linkedinVerificationStatus,
     };
 
     if (profileUrl) {
       updatePayload.linkedin_profile_url = profileUrl;
     }
 
-    // 10. Update individual profile with verification request
-    const { data: profile, error: updateError } = await supabase
+    if (hasIdentityVerification) {
+      updatePayload.linkedin_verified_at = nowIso;
+      updatePayload.verification_status = 'verified';
+      updatePayload.verification_method = 'linkedin';
+      updatePayload.verified = true;
+      updatePayload.verified_at = nowIso;
+    }
+
+    // 7. Persist profile updates
+    const { error: updateError } = await supabase
       .from('individual_profiles')
       .update(updatePayload)
-      .eq('user_id', user.id)
-      .select()
-      .single();
+      .eq('user_id', user.id);
 
     if (updateError) {
       console.error('Error updating profile:', updateError);
       return NextResponse.json({ error: 'Failed to store verification data' }, { status: 500 });
     }
 
+    if (!hasIdentityVerification) {
+      try {
+        const { data: profileInfo } = await supabase
+          .from('profiles')
+          .select('display_name')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        const candidateName =
+          profileInfo?.display_name ||
+          ((user.user_metadata?.full_name as string | undefined) ?? null) ||
+          user.email?.split('@')[0] ||
+          'Unknown user';
+
+        await sendLinkedInVerificationPendingReviewEmail({
+          candidateName,
+          candidateEmail: user.email ?? null,
+          candidateProfileId: user.id,
+          confidence: automatedSummary.confidence,
+          hasIdentityVerification,
+          linkedinProfileUrl: profileUrl,
+        });
+      } catch (notificationError) {
+        console.error(
+          'Failed to send admin notification for LinkedIn manual review:',
+          notificationError
+        );
+      }
+    }
+
     console.log('LinkedIn verification initiated successfully');
 
     const bestWarning = warnings[0]?.message || null;
     const message = hasIdentityVerification
-      ? 'LinkedIn identity verification signal detected. Pending admin review.'
+      ? 'LinkedIn identity verification signal detected. Your verification has been automatically approved.'
       : `Verification check complete. ${
-          combinedConfidence >= 80
+          automatedSummary.confidence >= 80
             ? 'High confidence - pending quick admin review (typically < 1 hour).'
-            : combinedConfidence >= 50
+            : automatedSummary.confidence >= 50
               ? 'Medium confidence - pending manual admin review (1-2 business days).'
               : 'Low confidence - please try another verification method.'
         }`;
 
-    // 11. Return results to frontend
+    // 8. Return results to frontend
     return NextResponse.json({
       success: true,
       profileUrl: profileUrl || null,
       hasIdentityVerification,
-      linkedinVerificationStatus: 'pending',
+      linkedinVerificationStatus,
+      identityGranted,
       automatedCheck: {
-        confidence: combinedConfidence,
-        hasVerificationBadge: combinedHasVerificationBadge,
-        signals: automatedSignals,
-        recommendation: automatedRecommendation,
-        sources: combinedSources,
+        confidence: automatedSummary.confidence,
+        hasVerificationBadge: automatedSummary.hasVerificationBadge,
+        signals: automatedSummary.signals,
+        recommendation: automatedSummary.recommendation,
+        sources: automatedSummary.sources,
       },
       warnings,
       message: bestWarning ? `${message} ${bestWarning}` : message,
