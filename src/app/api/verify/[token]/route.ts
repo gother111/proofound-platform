@@ -47,6 +47,26 @@ function isNotFoundError(error: unknown) {
   return errorText.includes('0 rows') || errorText.includes('no rows');
 }
 
+function isSkillRelationQueryError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  const e = error as { code?: string; message?: string; details?: unknown; hint?: string };
+  if (e.code !== 'PGRST200' && e.code !== 'PGRST201') {
+    return false;
+  }
+
+  const errorText =
+    `${e.message || ''} ${JSON.stringify(e.details || '')} ${e.hint || ''}`.toLowerCase();
+  return (
+    errorText.includes('skill_verification_requests') ||
+    errorText.includes('skills_taxonomy') ||
+    errorText.includes('skills') ||
+    errorText.includes('relationship')
+  );
+}
+
 function isUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
@@ -76,13 +96,100 @@ async function getSkillVerificationByTokenOrLegacyId(
     };
   },
   token: string,
-  selectClause: string
+  selectClause: string,
+  options?: {
+    fallbackSelectClause?: string;
+    hydrateSkillWhenMissing?: boolean;
+  }
 ): Promise<{ data: any; error: any }> {
-  const tokenLookup = await client
-    .from('skill_verification_requests')
-    .select(selectClause)
-    .eq('verification_token', token)
-    .single();
+  const hydrateSkillWhenMissing = options?.hydrateSkillWhenMissing ?? false;
+  const fallbackSelectClause = options?.fallbackSelectClause || null;
+
+  const loadSkillDetails = async (skillId: string) => {
+    const hintedLookup = await client
+      .from('skills')
+      .select(
+        `
+        skill_id,
+        skill_code,
+        custom_skill_name,
+        taxonomy:skills_taxonomy!skills_skill_code_fkey (
+          name_i18n
+        )
+      `
+      )
+      .eq('id', skillId)
+      .single();
+
+    if (hintedLookup.data || !isSkillRelationQueryError(hintedLookup.error)) {
+      return hintedLookup;
+    }
+
+    const fallbackLookup = await client
+      .from('skills')
+      .select('skill_id, skill_code, custom_skill_name')
+      .eq('id', skillId)
+      .single();
+
+    return fallbackLookup;
+  };
+
+  const hydrateSkill = async (verification: any) => {
+    if (
+      !hydrateSkillWhenMissing ||
+      !verification ||
+      verification.skills ||
+      !verification.skill_id
+    ) {
+      return { data: verification, error: null };
+    }
+
+    const { data: skillData, error: skillError } = await loadSkillDetails(verification.skill_id);
+    if (skillData) {
+      return {
+        data: {
+          ...verification,
+          skills: skillData,
+        },
+        error: null,
+      };
+    }
+
+    return {
+      data: verification,
+      error: skillError,
+    };
+  };
+
+  const runLookup = async (column: 'verification_token' | 'id', value: string) => {
+    const primaryLookup = await client
+      .from('skill_verification_requests')
+      .select(selectClause)
+      .eq(column, value)
+      .single();
+
+    if (primaryLookup.data) {
+      return hydrateSkill(primaryLookup.data);
+    }
+
+    if (!fallbackSelectClause || !isSkillRelationQueryError(primaryLookup.error)) {
+      return { data: null, error: primaryLookup.error };
+    }
+
+    const fallbackLookup = await client
+      .from('skill_verification_requests')
+      .select(fallbackSelectClause)
+      .eq(column, value)
+      .single();
+
+    if (fallbackLookup.data) {
+      return hydrateSkill(fallbackLookup.data);
+    }
+
+    return { data: null, error: fallbackLookup.error || primaryLookup.error };
+  };
+
+  const tokenLookup = await runLookup('verification_token', token);
 
   if (tokenLookup.data) {
     return { data: tokenLookup.data as any, error: null };
@@ -92,11 +199,7 @@ async function getSkillVerificationByTokenOrLegacyId(
     return { data: null, error: tokenLookup.error };
   }
 
-  const idLookup = await client
-    .from('skill_verification_requests')
-    .select(selectClause)
-    .eq('id', token)
-    .single();
+  const idLookup = await runLookup('id', token);
 
   if (idLookup.data) {
     return { data: idLookup.data as any, error: null };
@@ -697,14 +800,31 @@ export async function GET(
         integrity_reason,
         created_at,
         expires_at,
-        skills (
+        skills!skill_verification_requests_skill_id_fkey (
           skill_id,
           skill_code,
-          taxonomy:skill_code (
+          taxonomy:skills_taxonomy!skills_skill_code_fkey (
             name_i18n
           )
         )
-      `
+      `,
+        {
+          fallbackSelectClause: `
+            id,
+            skill_id,
+            requester_profile_id,
+            verifier_email,
+            verifier_source,
+            message,
+            status,
+            requires_authenticated_verifier,
+            integrity_status,
+            integrity_reason,
+            created_at,
+            expires_at
+          `,
+          hydrateSkillWhenMissing: true,
+        }
       );
 
     if (verificationError || !verification) {
@@ -1110,14 +1230,36 @@ export async function POST(
         risk_signals,
         requester_ip_hash,
         requester_user_agent_hash,
-        skills (
+        skills!skill_verification_requests_skill_id_fkey (
           skill_code,
           custom_skill_name,
-          taxonomy:skill_code (
+          skill_id,
+          taxonomy:skills_taxonomy!skills_skill_code_fkey (
             name_i18n
           )
         )
-      `
+      `,
+        {
+          fallbackSelectClause: `
+            id,
+            skill_id,
+            status,
+            expires_at,
+            requester_profile_id,
+            verifier_email,
+            verifier_source,
+            verifier_profile_id,
+            requires_authenticated_verifier,
+            integrity_status,
+            integrity_reason,
+            integrity_meta,
+            integrity_flagged_at,
+            risk_signals,
+            requester_ip_hash,
+            requester_user_agent_hash
+          `,
+          hydrateSkillWhenMissing: true,
+        }
       );
 
     if (verificationError || !verification) {

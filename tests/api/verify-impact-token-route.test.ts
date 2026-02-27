@@ -53,6 +53,24 @@ const SKILL_VERIFICATION_RECORD = {
   },
 };
 
+const SKILL_RELATION_AMBIGUITY_ERROR = {
+  code: 'PGRST201',
+  message:
+    "Could not embed because more than one relationship was found for 'skill_verification_requests' and 'skills'",
+  details: [
+    {
+      cardinality: 'many-to-one',
+      embedding: 'skill_verification_requests with skills',
+      relationship: 'skill_verification_requests_skill_id_fkey',
+    },
+    {
+      cardinality: 'many-to-one',
+      embedding: 'skill_verification_requests with skills',
+      relationship: 'skill_verification_requests_skill_id_skills_id_fk',
+    },
+  ],
+};
+
 function buildImpactAdminClient(overrides?: {
   impactRequest?: any;
   impactStory?: any;
@@ -858,6 +876,200 @@ describe('verify impact token route', () => {
     const body = await response.json();
     expect(body.verification.verification_type).toBe('skill');
     expect(body.verification.id).toBe('skill-req-token');
+  });
+
+  it('GET succeeds for valid skill token when relation embed is ambiguous (PGRST201)', async () => {
+    const { skills: _ignoredSkills, ...verificationWithoutEmbeddedSkill } =
+      SKILL_VERIFICATION_RECORD;
+    const hydratedSkill = {
+      skill_id: 'custom-1-2-3-system-design',
+      skill_code: null,
+      custom_skill_name: null,
+      taxonomy: {
+        name_i18n: {
+          en: 'System Design',
+        },
+      },
+    };
+
+    createAdminClientMock.mockReturnValue({
+      from: vi.fn((table: string) => {
+        if (table === 'impact_story_verification_requests') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+              }),
+            }),
+          };
+        }
+
+        if (table === 'skill_verification_requests') {
+          return {
+            select: vi.fn((query: string) => ({
+              eq: vi.fn((column: string) => ({
+                single: vi.fn().mockResolvedValue(
+                  column === 'verification_token'
+                    ? query.includes('skills!skill_verification_requests_skill_id_fkey')
+                      ? { data: null, error: SKILL_RELATION_AMBIGUITY_ERROR }
+                      : { data: verificationWithoutEmbeddedSkill, error: null }
+                    : {
+                        data: null,
+                        error: { code: 'PGRST116', message: 'No rows found' },
+                      }
+                ),
+              })),
+            })),
+          };
+        }
+
+        if (table === 'skills') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: hydratedSkill, error: null }),
+              }),
+            }),
+          };
+        }
+
+        if (table === 'profiles') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: {
+                    display_name: 'Requester',
+                    avatar_url: null,
+                    email: 'requester@example.com',
+                  },
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+
+        throw new Error(`Unexpected table: ${table}`);
+      }),
+    });
+
+    const response = await GET(new NextRequest(`http://localhost/api/verify/${TOKEN}`), {
+      params: Promise.resolve({ token: TOKEN }),
+    });
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.verification.verification_type).toBe('skill');
+    expect(body.verification.skill_name).toBe('System Design');
+  });
+
+  it('POST succeeds for valid skill token when relation embed is ambiguous (PGRST201)', async () => {
+    const { skills: _ignoredSkills, ...verificationWithoutEmbeddedSkill } =
+      SKILL_VERIFICATION_RECORD;
+    const hydratedSkill = {
+      skill_id: 'custom-1-2-3-system-design',
+      skill_code: null,
+      custom_skill_name: null,
+      taxonomy: {
+        name_i18n: {
+          en: 'System Design',
+        },
+      },
+    };
+    let updatePayload: any = null;
+
+    createAdminClientMock.mockReturnValue({
+      from: vi.fn((table: string) => {
+        if (table === 'impact_story_verification_requests') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+              }),
+            }),
+          };
+        }
+
+        if (table === 'skill_verification_requests') {
+          return {
+            select: vi.fn((query: string) => ({
+              eq: vi.fn((column: string) => ({
+                single: vi.fn().mockResolvedValue(
+                  column === 'verification_token'
+                    ? query.includes('skills!skill_verification_requests_skill_id_fkey')
+                      ? { data: null, error: SKILL_RELATION_AMBIGUITY_ERROR }
+                      : { data: verificationWithoutEmbeddedSkill, error: null }
+                    : {
+                        data: null,
+                        error: { code: 'PGRST116', message: 'No rows found' },
+                      }
+                ),
+              })),
+            })),
+            update: vi.fn((payload: any) => {
+              updatePayload = payload;
+              return {
+                eq: vi.fn().mockResolvedValue({ error: null }),
+              };
+            }),
+          };
+        }
+
+        if (table === 'skills') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({ data: hydratedSkill, error: null }),
+              }),
+            }),
+          };
+        }
+
+        if (table === 'profiles') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: { email: 'requester@example.com', display_name: 'Requester' },
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+
+        throw new Error(`Unexpected table: ${table}`);
+      }),
+    });
+
+    createClientMock.mockReturnValue({
+      from: vi.fn(),
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
+      },
+    });
+
+    const response = await POST(
+      new NextRequest(`http://localhost/api/verify/${TOKEN}`, {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'decline',
+          message: 'Cannot verify right now',
+        }),
+      }),
+      { params: Promise.resolve({ token: TOKEN }) }
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      success: true,
+      status: 'declined',
+      verification_type: 'skill',
+    });
+    expect(updatePayload).toMatchObject({
+      status: 'declined',
+    });
   });
 
   it('POST allows unauthenticated skill verifier when authenticated verifier is not required', async () => {
