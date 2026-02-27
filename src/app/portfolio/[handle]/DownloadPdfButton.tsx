@@ -4,7 +4,11 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileDown, Loader2 } from 'lucide-react';
 
-export function DownloadPdfButton() {
+type DownloadPdfButtonProps = {
+  endpoint?: string;
+};
+
+export function DownloadPdfButton({ endpoint = '/api/portfolio/export' }: DownloadPdfButtonProps) {
   const [loading, setLoading] = useState(false);
 
   const getErrorMessage = async (res: Response): Promise<string> => {
@@ -35,7 +39,7 @@ export function DownloadPdfButton() {
   const handleDownload = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/portfolio/export', {
+      const res = await fetch(endpoint, {
         method: 'GET',
         cache: 'no-store',
       });

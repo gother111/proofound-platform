@@ -4,14 +4,18 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Clipboard, ClipboardCheck, Loader2 } from 'lucide-react';
 
-export function CopyTextButton() {
+type CopyTextButtonProps = {
+  endpoint?: string;
+};
+
+export function CopyTextButton({ endpoint = '/api/portfolio/text-pack' }: CopyTextButtonProps) {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/portfolio/text-pack');
+      const res = await fetch(endpoint);
       if (!res.ok) throw new Error('Failed to fetch text pack');
       const text = await res.text();
       await navigator.clipboard.writeText(text);
@@ -34,7 +38,7 @@ export function CopyTextButton() {
       ) : (
         <Clipboard className="h-4 w-4" />
       )}
-      {loading ? 'Preparing...' : copied ? 'Copied' : 'Copy text pack'}
+      {loading ? 'Preparing...' : copied ? 'Copied' : 'Copy recruiter summary'}
     </Button>
   );
 }

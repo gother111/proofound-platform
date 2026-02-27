@@ -36,6 +36,50 @@ export type OrganizationTrustExportData = {
   };
 };
 
+type ProfileExportRow = {
+  id: string;
+  handle: string;
+  display_name: string | null;
+  individual_profiles:
+    | Array<{
+        headline?: string | null;
+        bio?: string | null;
+        tagline?: string | null;
+        verification_status?: string | null;
+        verification_method?: string | null;
+        verified_at?: string | null;
+        work_email?: string | null;
+        work_email_verified?: boolean | null;
+        linkedin_verification_status?: string | null;
+        linkedin_verified_at?: string | null;
+        linkedin_verification_data?: Record<string, unknown> | null;
+        verified?: boolean | null;
+      }>
+    | {
+        headline?: string | null;
+        bio?: string | null;
+        tagline?: string | null;
+        verification_status?: string | null;
+        verification_method?: string | null;
+        verified_at?: string | null;
+        work_email?: string | null;
+        work_email_verified?: boolean | null;
+        linkedin_verification_status?: string | null;
+        linkedin_verified_at?: string | null;
+        linkedin_verification_data?: Record<string, unknown> | null;
+        verified?: boolean | null;
+      }
+    | null;
+  field_visibility:
+    | Array<{
+        field_visibility?: Record<string, unknown> | null;
+      }>
+    | {
+        field_visibility?: Record<string, unknown> | null;
+      }
+    | null;
+};
+
 function toValueLabels(values: unknown): string[] {
   if (!Array.isArray(values)) {
     return [];
@@ -66,6 +110,154 @@ function toStringList(value: unknown): string[] {
     .map((entry) => entry.trim())
     .filter((entry) => entry.length > 0)
     .slice(0, 8);
+}
+
+async function loadTrustCounts(
+  supabase: SupabaseClient,
+  profileId: string
+): Promise<{
+  proofsCount: number;
+  acceptedVerificationsCount: number;
+  attestationCount: number;
+}> {
+  let proofsCount = 0;
+  let acceptedVerificationsCount = 0;
+  let attestationCount = 0;
+
+  try {
+    const { count } = await supabase
+      .from('skill_proofs')
+      .select('id', { count: 'exact', head: true })
+      .eq('profile_id', profileId);
+    proofsCount = count || 0;
+  } catch {
+    proofsCount = 0;
+  }
+
+  try {
+    const { count } = await supabase
+      .from('skill_verification_requests')
+      .select('id', { count: 'exact', head: true })
+      .eq('requester_profile_id', profileId)
+      .eq('status', 'accepted')
+      .eq('integrity_status', 'clear');
+    acceptedVerificationsCount = count || 0;
+  } catch {
+    acceptedVerificationsCount = 0;
+  }
+
+  try {
+    const { count } = await supabase
+      .from('attestations')
+      .select('id', { count: 'exact', head: true })
+      .eq('subject_user_id', profileId)
+      .eq('status', 'verified');
+    attestationCount = count || 0;
+  } catch {
+    attestationCount = 0;
+  }
+
+  return {
+    proofsCount,
+    acceptedVerificationsCount,
+    attestationCount,
+  };
+}
+
+async function loadTopSkills(
+  supabase: SupabaseClient,
+  profileId: string
+): Promise<Array<{ id: string; name: string; level: number }>> {
+  try {
+    const { data } = await supabase
+      .from('skills')
+      .select(
+        `
+          id,
+          level,
+          skill_code,
+          taxonomy:skill_code (
+            name_i18n
+          )
+        `
+      )
+      .eq('profile_id', profileId)
+      .order('level', { ascending: false })
+      .limit(6);
+
+    return (
+      data?.map((skill) => {
+        const name =
+          (skill.taxonomy as any)?.name_i18n?.en ||
+          (skill.taxonomy as any)?.name_i18n?.default ||
+          skill.skill_code ||
+          'Skill';
+        return {
+          id: skill.id,
+          name,
+          level: skill.level ?? 0,
+        };
+      }) || []
+    );
+  } catch {
+    return [];
+  }
+}
+
+function toVisibility(profile: ProfileExportRow): ReturnType<typeof mergeVisibilityFlags> {
+  return mergeVisibilityFlags(
+    Array.isArray(profile.field_visibility)
+      ? profile.field_visibility[0]?.field_visibility
+      : profile.field_visibility?.field_visibility
+  );
+}
+
+function toIndividual(profile: ProfileExportRow) {
+  return Array.isArray(profile.individual_profiles)
+    ? profile.individual_profiles[0]
+    : profile.individual_profiles;
+}
+
+function buildTrustExportPayload(
+  profile: ProfileExportRow,
+  counts: {
+    proofsCount: number;
+    acceptedVerificationsCount: number;
+    attestationCount: number;
+  },
+  skills: Array<{ id: string; name: string; level: number }>,
+  visibilityOverride?: ReturnType<typeof mergeVisibilityFlags>
+): TrustExportData {
+  const visibility = visibilityOverride ?? toVisibility(profile);
+  const individual = toIndividual(profile);
+
+  const signals = buildTrustSignals(profile as any, {
+    proofsCount: visibility.counts ? counts.proofsCount : 0,
+    acceptedVerificationsCount: visibility.counts ? counts.acceptedVerificationsCount : 0,
+    attestationCount: visibility.counts ? counts.attestationCount : 0,
+  });
+
+  const safeHeadline =
+    visibility.header && (individual?.headline || individual?.tagline)
+      ? (individual?.headline || individual?.tagline || '').trim()
+      : '';
+
+  return {
+    profile: {
+      id: profile.id,
+      handle: profile.handle,
+      displayName: profile.display_name || profile.handle,
+      headline: safeHeadline || 'Proofound portfolio',
+      bio: visibility.bio ? individual?.bio || undefined : undefined,
+      contactEmail:
+        visibility.contact && visibility.workEmail
+          ? individual?.work_email || undefined
+          : undefined,
+    },
+    signals,
+    skills: visibility.skills ? skills : [],
+    visibility,
+  };
 }
 
 export async function fetchTrustExportData(
@@ -101,105 +293,49 @@ export async function fetchTrustExportData(
 
   if (!profile || !profile.handle) return null;
 
-  let proofsCount = 0;
-  let acceptedVerificationsCount = 0;
-  let attestationCount = 0;
-  let skills: Array<{ id: string; name: string; level: number }> = [];
+  const counts = await loadTrustCounts(supabase, profile.id);
+  const skills = await loadTopSkills(supabase, profile.id);
+  return buildTrustExportPayload(profile as ProfileExportRow, counts, skills);
+}
 
-  try {
-    const { count } = await supabase
-      .from('skill_proofs')
-      .select('id', { count: 'exact', head: true })
-      .eq('profile_id', profile.id);
-    proofsCount = count || 0;
-  } catch {
-    proofsCount = 0;
+export async function fetchPublicTrustExportDataByHandle(
+  supabase: SupabaseClient,
+  handle: string
+): Promise<TrustExportData | null> {
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select(
+      `
+        id,
+        handle,
+        display_name,
+        individual_profiles (
+          headline,
+          bio,
+          tagline,
+          verification_status,
+          verification_method,
+          verified_at,
+          work_email,
+          work_email_verified,
+          linkedin_verification_status,
+          linkedin_verified_at,
+          linkedin_verification_data,
+          verified
+        ),
+        field_visibility: individual_profiles ( field_visibility )
+      `
+    )
+    .eq('handle', handle)
+    .maybeSingle();
+
+  if (!profile || !profile.handle) {
+    return null;
   }
 
-  try {
-    const { count } = await supabase
-      .from('skill_verification_requests')
-      .select('id', { count: 'exact', head: true })
-      .eq('requester_profile_id', profile.id)
-      .eq('status', 'accepted')
-      .eq('integrity_status', 'clear');
-    acceptedVerificationsCount = count || 0;
-  } catch {
-    acceptedVerificationsCount = 0;
-  }
-
-  try {
-    const { count } = await supabase
-      .from('attestations')
-      .select('id', { count: 'exact', head: true })
-      .eq('subject_user_id', profile.id)
-      .eq('status', 'verified');
-    attestationCount = count || 0;
-  } catch {
-    attestationCount = 0;
-  }
-
-  try {
-    const { data } = await supabase
-      .from('skills')
-      .select(
-        `
-          id,
-          level,
-          skill_code,
-          taxonomy:skill_code (
-            name_i18n
-          )
-        `
-      )
-      .eq('profile_id', profile.id)
-      .order('level', { ascending: false })
-      .limit(6);
-
-    skills =
-      data?.map((skill) => {
-        const name =
-          (skill.taxonomy as any)?.name_i18n?.en ||
-          (skill.taxonomy as any)?.name_i18n?.default ||
-          skill.skill_code ||
-          'Skill';
-        return {
-          id: skill.id,
-          name,
-          level: skill.level ?? 0,
-        };
-      }) || [];
-  } catch {
-    skills = [];
-  }
-
-  const signals = buildTrustSignals(profile as any, {
-    proofsCount,
-    acceptedVerificationsCount,
-    attestationCount,
-  });
-
-  const individual = Array.isArray((profile as any).individual_profiles)
-    ? (profile as any).individual_profiles[0]
-    : (profile as any).individual_profiles;
-
-  return {
-    profile: {
-      id: profile.id,
-      handle: profile.handle,
-      displayName: profile.display_name || profile.handle,
-      headline: individual?.headline || individual?.tagline || 'Proofound portfolio',
-      bio: individual?.bio || undefined,
-      contactEmail: individual?.work_email || undefined,
-    },
-    signals,
-    skills,
-    visibility: mergeVisibilityFlags(
-      Array.isArray((profile as any).field_visibility)
-        ? (profile as any).field_visibility[0]?.field_visibility
-        : (profile as any).field_visibility?.field_visibility
-    ),
-  };
+  const counts = await loadTrustCounts(supabase, profile.id);
+  const skills = await loadTopSkills(supabase, profile.id);
+  return buildTrustExportPayload(profile as ProfileExportRow, counts, skills);
 }
 
 export async function fetchOrganizationTrustExportData(
