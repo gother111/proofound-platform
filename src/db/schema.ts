@@ -616,6 +616,59 @@ export const skillProofs = pgTable('skill_proofs', {
 });
 
 // Skill Verification Requests - peer/manager/external verification requests
+export const customVerificationRequests = pgTable('custom_verification_requests', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  requesterProfileId: uuid('requester_profile_id')
+    .references(() => profiles.id, { onDelete: 'cascade' })
+    .notNull(),
+  verifierEmail: text('verifier_email').notNull(),
+  verifierProfileId: uuid('verifier_profile_id').references(() => profiles.id, {
+    onDelete: 'set null',
+  }),
+  verifierRelationship: text('verifier_relationship', {
+    enum: ['peer', 'manager', 'external'],
+  }).notNull(),
+  message: text('message'),
+  tokenHash: text('token_hash').notNull().unique(),
+  status: text('status', {
+    enum: ['pending', 'accepted', 'declined', 'expired', 'cancelled'],
+  })
+    .notNull()
+    .default('pending'),
+  respondedAt: timestamp('responded_at'),
+  responseMessage: text('response_message'),
+  expiresAt: timestamp('expires_at')
+    .default(sql`NOW() + INTERVAL '14 days'`)
+    .notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const customVerificationRequestItems = pgTable(
+  'custom_verification_request_items',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    requestId: uuid('request_id')
+      .references(() => customVerificationRequests.id, { onDelete: 'cascade' })
+      .notNull(),
+    artifactType: text('artifact_type', {
+      enum: ['skill', 'experience', 'education', 'impact_story', 'project', 'volunteering'],
+    }).notNull(),
+    artifactId: uuid('artifact_id').notNull(),
+    displayLabel: text('display_label').notNull(),
+    status: text('status', {
+      enum: ['pending', 'accepted', 'declined', 'expired'],
+    })
+      .notNull()
+      .default('pending'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    requestArtifactUnique: unique().on(table.requestId, table.artifactType, table.artifactId),
+  })
+);
+
 export const skillVerificationRequests = pgTable('skill_verification_requests', {
   id: uuid('id').defaultRandom().primaryKey(),
   skillId: uuid('skill_id')
@@ -654,6 +707,9 @@ export const skillVerificationRequests = pgTable('skill_verification_requests', 
   integrityFlaggedAt: timestamp('integrity_flagged_at'),
   requesterIpHash: text('requester_ip_hash'),
   requesterUserAgentHash: text('requester_user_agent_hash'),
+  customRequestId: uuid('custom_request_id').references(() => customVerificationRequests.id, {
+    onDelete: 'set null',
+  }),
   status: text('status', {
     enum: ['pending', 'accepted', 'declined', 'expired'],
   })
@@ -2232,6 +2288,11 @@ export type InsertGrowthPlan = typeof growthPlans.$inferInsert;
 // Verification system types
 export type VerificationRequest = typeof verificationRequests.$inferSelect;
 export type InsertVerificationRequest = typeof verificationRequests.$inferInsert;
+export type CustomVerificationRequest = typeof customVerificationRequests.$inferSelect;
+export type InsertCustomVerificationRequest = typeof customVerificationRequests.$inferInsert;
+export type CustomVerificationRequestItem = typeof customVerificationRequestItems.$inferSelect;
+export type InsertCustomVerificationRequestItem =
+  typeof customVerificationRequestItems.$inferInsert;
 export type VerificationResponse = typeof verificationResponses.$inferSelect;
 export type InsertVerificationResponse = typeof verificationResponses.$inferInsert;
 export type ImpactStoryVerificationRequest = typeof impactStoryVerificationRequests.$inferSelect;

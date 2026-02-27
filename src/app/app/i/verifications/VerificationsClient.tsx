@@ -11,6 +11,7 @@ import {
   Briefcase,
   ExternalLink,
   Mail,
+  Send,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +19,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { AppSurface } from '@/components/ui/v2/AppSurface';
 import { RespondDialog } from './components/RespondDialog';
+import { CustomVerificationRequestDialog } from './components/CustomVerificationRequestDialog';
 
 interface VerificationRequest {
   request_type: 'skill' | 'impact_story';
@@ -90,6 +92,7 @@ export function VerificationsClient({
   const [selectedRequest, setSelectedRequest] = useState<VerificationRequest | null>(null);
   const [respondDialogOpen, setRespondDialogOpen] = useState(false);
   const [respondAction, setRespondAction] = useState<'accept' | 'decline'>('accept');
+  const [customDialogOpen, setCustomDialogOpen] = useState(false);
 
   const handleRespond = (request: VerificationRequest, action: 'accept' | 'decline') => {
     setSelectedRequest(request);
@@ -544,13 +547,23 @@ export function VerificationsClient({
   return (
     <AppSurface>
       <div className="max-w-5xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2" style={{ color: '#2D3330' }}>
-            Verification Requests
-          </h1>
-          <p className="text-base" style={{ color: '#6B7470' }}>
-            Track requests sent by you and review incoming verification requests
-          </p>
+        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold mb-2" style={{ color: '#2D3330' }}>
+              Verification Requests
+            </h1>
+            <p className="text-base" style={{ color: '#6B7470' }}>
+              Track requests sent by you and review incoming verification requests
+            </p>
+          </div>
+          <Button
+            onClick={() => setCustomDialogOpen(true)}
+            style={{ backgroundColor: '#1C4D3A', color: '#F7F6F1' }}
+            className="hover:opacity-90 w-full md:w-auto"
+          >
+            <Send className="w-4 h-4 mr-2" />
+            Custom verification request
+          </Button>
         </div>
 
         <Tabs defaultValue="incoming" className="w-full">
@@ -600,6 +613,7 @@ export function VerificationsClient({
           getCompetencyLabel={getCompetencyLabel}
         />
       )}
+      <CustomVerificationRequestDialog open={customDialogOpen} onOpenChange={setCustomDialogOpen} />
     </AppSurface>
   );
 }
