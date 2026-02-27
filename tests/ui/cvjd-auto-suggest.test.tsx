@@ -8,6 +8,7 @@ const apiFetchMock = vi.fn();
 const toastSuccessMock = vi.fn();
 const toastInfoMock = vi.fn();
 const toastErrorMock = vi.fn();
+const pdfGetDocumentMock = vi.fn();
 
 vi.mock('@/lib/api/fetch', () => ({
   apiFetch: (...args: any[]) => apiFetchMock(...args),
@@ -21,67 +22,134 @@ vi.mock('sonner', () => ({
   },
 }));
 
+vi.mock('pdfjs-dist/legacy/build/pdf.mjs', () => ({
+  getDocument: (...args: any[]) => pdfGetDocumentMock(...args),
+}));
+
 describe('CVJDAutoSuggest', () => {
+  const originalFlag = process.env.NEXT_PUBLIC_CV_IMPORT_V2;
+
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  it('uses apiFetch for CV analysis POST and renders returned suggestions', async () => {
-    apiFetchMock.mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        suggestions: [
-          {
-            id: 'react',
-            code: 'react',
-            name: 'React',
-            aliases: ['ReactJS'],
-            description: 'UI library',
-            slug: 'react',
-            tags: null,
-            score: 2,
-            confidence: 0.91,
-          },
-        ],
+    delete process.env.NEXT_PUBLIC_CV_IMPORT_V2;
+    pdfGetDocumentMock.mockReturnValue({
+      promise: Promise.resolve({
+        numPages: 1,
+        getPage: async () => ({
+          getTextContent: async () => ({
+            items: [{ str: 'React TypeScript' }],
+          }),
+        }),
       }),
     });
+  });
+
+  afterEach(() => {
+    if (originalFlag === undefined) {
+      delete process.env.NEXT_PUBLIC_CV_IMPORT_V2;
+    } else {
+      process.env.NEXT_PUBLIC_CV_IMPORT_V2 = originalFlag;
+    }
+  });
+
+  it('renders the new PDF import workflow by default', () => {
+    render(<CVJDAutoSuggest />);
+
+    expect(screen.getByText('CV Skills Import (PDF, Privacy-first)')).toBeInTheDocument();
+    expect(screen.getByTestId('cv-upload')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeInTheDocument();
+  });
+
+  it('renders legacy textarea workflow when v2 flag is disabled', () => {
+    process.env.NEXT_PUBLIC_CV_IMPORT_V2 = 'false';
 
     render(<CVJDAutoSuggest />);
 
-    fireEvent.change(screen.getByPlaceholderText(/paste your cv, resume, or job description/i), {
-      target: { value: 'Built React apps for enterprise products.' },
+    expect(screen.getByText('Legacy Import (Rollback Mode)')).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText(/paste your cv, resume, or job description/i)
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Analyze & Suggest Skills/i })).toBeInTheDocument();
+  });
+
+  it('uploads multiple PDFs and sends structured multi-document payload for analysis', async () => {
+    apiFetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          documents: [
+            {
+              document_id: 'doc-1',
+              file_name: 'cv-1.pdf',
+              context: 'cv',
+              candidate_count: 0,
+              candidates: [],
+            },
+            {
+              document_id: 'doc-2',
+              file_name: 'cv-2.pdf',
+              context: 'cv',
+              candidate_count: 0,
+              candidates: [],
+            },
+          ],
+          metadata: {
+            semantic_used: false,
+            semantic_fallback_triggered: false,
+            unmapped_candidates_count: 0,
+            limits: {
+              max_documents: 5,
+              max_chars_per_document: 30000,
+              max_total_chars: 90000,
+            },
+          },
+        }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    );
+
+    render(<CVJDAutoSuggest />);
+
+    const uploadInput = screen.getByTestId('cv-upload');
+    const fileOne = new File(['dummy-one'], 'cv-1.pdf', { type: 'application/pdf' });
+    const fileTwo = new File(['dummy-two'], 'cv-2.pdf', { type: 'application/pdf' });
+    Object.defineProperty(fileOne, 'arrayBuffer', {
+      value: async () => new TextEncoder().encode('dummy-one').buffer,
     });
-    fireEvent.click(screen.getByRole('button', { name: /analyze & suggest skills/i }));
+    Object.defineProperty(fileTwo, 'arrayBuffer', {
+      value: async () => new TextEncoder().encode('dummy-two').buffer,
+    });
+
+    fireEvent.change(uploadInput, {
+      target: {
+        files: [fileOne, fileTwo],
+      },
+    });
+
+    await waitFor(() => {
+      expect(pdfGetDocumentMock).toHaveBeenCalledTimes(2);
+    });
+
+    const analyzeButton = screen.getByRole('button', { name: /Analyze Uploaded PDFs/i });
+    fireEvent.click(analyzeButton);
 
     await waitFor(() => {
       expect(apiFetchMock).toHaveBeenCalledWith(
-        '/api/expertise/auto-suggest',
-        expect.objectContaining({
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-        })
+        '/api/expertise/cv-import/suggest',
+        expect.objectContaining({ method: 'POST' })
       );
     });
 
-    expect(await screen.findByText('Suggested Skills (1)')).toBeInTheDocument();
-    expect(screen.getByText('React')).toBeInTheDocument();
-  });
+    const suggestCall = apiFetchMock.mock.calls.find(
+      ([url]) => url === '/api/expertise/cv-import/suggest'
+    );
+    expect(suggestCall).toBeDefined();
 
-  it('surfaces backend error messages when analysis fails', async () => {
-    apiFetchMock.mockResolvedValue({
-      ok: false,
-      json: async () => ({ message: 'CSRF validation failed' }),
-    });
-
-    render(<CVJDAutoSuggest />);
-
-    fireEvent.change(screen.getByPlaceholderText(/paste your cv, resume, or job description/i), {
-      target: { value: 'Any text' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: /analyze & suggest skills/i }));
-
-    await waitFor(() => {
-      expect(toastErrorMock).toHaveBeenCalledWith('CSRF validation failed');
-    });
+    const requestPayload = JSON.parse(String(suggestCall?.[1]?.body || '{}'));
+    expect(requestPayload.documents).toHaveLength(2);
+    expect(requestPayload.documents[0].text).toContain('React TypeScript');
+    expect(requestPayload.documents[1].text).toContain('React TypeScript');
   });
 });

@@ -105,6 +105,7 @@ const KNOWN_SKILL_PATTERNS: Record<string, string[]> = {
   numpy: ['numpy'],
   scikit: ['scikit-learn', 'sklearn', 'scikit'],
   spark: ['spark', 'apache spark', 'pyspark'],
+  'jupyter notebook': ['jupyter notebook', 'jupyter', 'ipynb', 'google colab', 'colab'],
 
   // Design & UX
   figma: ['figma'],

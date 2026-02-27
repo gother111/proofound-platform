@@ -1,0 +1,304 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const mockSelect = vi.fn();
+
+vi.mock('@/db', () => ({
+  db: {
+    select: (...args: unknown[]) => mockSelect(...args),
+  },
+}));
+
+vi.mock('@/db/schema', () => ({
+  skillsTaxonomy: {
+    code: 'code',
+    nameI18n: 'nameI18n',
+    aliasesI18n: 'aliasesI18n',
+    embedding: 'embedding',
+    status: 'status',
+  },
+}));
+
+const taxonomyRows = [
+  {
+    code: 'skill_react',
+    nameI18n: { en: 'React' },
+    aliasesI18n: [{ en: 'ReactJS' }],
+    embedding: null,
+  },
+  {
+    code: 'skill_typescript',
+    nameI18n: { en: 'TypeScript' },
+    aliasesI18n: [{ en: 'TS' }],
+    embedding: null,
+  },
+  {
+    code: 'skill_nodejs',
+    nameI18n: { en: 'Node.js' },
+    aliasesI18n: [{ en: 'NodeJS' }, { en: 'Node' }],
+    embedding: null,
+  },
+  {
+    code: 'skill_nextjs',
+    nameI18n: { en: 'Next.js' },
+    aliasesI18n: [{ en: 'NextJS' }],
+    embedding: null,
+  },
+  {
+    code: 'skill_python',
+    nameI18n: { en: 'Python' },
+    aliasesI18n: [{ en: 'Python3' }],
+    embedding: null,
+  },
+  {
+    code: 'skill_jupyter_notebook',
+    nameI18n: { en: 'Jupyter Notebook' },
+    aliasesI18n: [{ en: 'Jupyter' }, { en: 'Google Colab' }, { en: 'Colab' }, { en: 'ipynb' }],
+    embedding: null,
+  },
+  {
+    code: 'skill_c_plus_plus',
+    nameI18n: { en: 'C++' },
+    aliasesI18n: [{ en: 'cpp' }, { en: 'c plus plus' }],
+    embedding: null,
+  },
+  {
+    code: 'skill_c_sharp',
+    nameI18n: { en: 'C#' },
+    aliasesI18n: [{ en: 'csharp' }, { en: '.net' }],
+    embedding: null,
+  },
+  {
+    code: 'skill_ci_cd',
+    nameI18n: { en: 'CI/CD' },
+    aliasesI18n: [
+      { en: 'cicd' },
+      { en: 'continuous integration' },
+      { en: 'continuous deployment' },
+    ],
+    embedding: null,
+  },
+  {
+    code: 'skill_github_actions',
+    nameI18n: { en: 'GitHub Actions' },
+    aliasesI18n: [{ en: 'gh actions' }],
+    embedding: null,
+  },
+  {
+    code: 'skill_docker',
+    nameI18n: { en: 'Docker' },
+    aliasesI18n: [{ en: 'containers' }],
+    embedding: null,
+  },
+  {
+    code: 'skill_kubernetes',
+    nameI18n: { en: 'Kubernetes' },
+    aliasesI18n: [{ en: 'k8s' }],
+    embedding: null,
+  },
+  {
+    code: 'skill_communication',
+    nameI18n: { en: 'Communication' },
+    aliasesI18n: [{ en: 'communication skills' }],
+    embedding: null,
+  },
+  {
+    code: 'skill_leadership',
+    nameI18n: { en: 'Leadership' },
+    aliasesI18n: [{ en: 'leading teams' }],
+    embedding: null,
+  },
+];
+
+function mockTaxonomyQuery(rows = taxonomyRows) {
+  mockSelect.mockReturnValue({
+    from: () => ({
+      where: async () => rows,
+    }),
+  });
+}
+
+function collectSuggestedIds(
+  candidates: Array<{ suggestions: Array<{ skill_id: string }> }>
+): Set<string> {
+  const ids = new Set<string>();
+  for (const candidate of candidates) {
+    for (const suggestion of candidate.suggestions) {
+      ids.add(suggestion.skill_id);
+    }
+  }
+  return ids;
+}
+
+describe('cv-import-suggest quality benchmark', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.resetModules();
+    mockTaxonomyQuery();
+  });
+
+  it('maps diverse CV text snippets to expected taxonomy skill_ids with evidence', async () => {
+    const { suggestSkillsForDocuments } = await import('@/lib/expertise/cv-import-suggest');
+
+    const inputs = [
+      {
+        document_id: 'cv-frontend',
+        file_name: 'frontend.pdf',
+        text: 'Senior engineer building React and Next.js products in TypeScript and Node.js for SaaS apps.',
+        expectedIds: ['skill_react', 'skill_nextjs', 'skill_typescript', 'skill_nodejs'],
+      },
+      {
+        document_id: 'cv-ml',
+        file_name: 'ml.pdf',
+        text: 'Built ML pipelines in Python using Jupyter Notebook and Google Colab for model iteration.',
+        expectedIds: ['skill_python', 'skill_jupyter_notebook'],
+      },
+      {
+        document_id: 'cv-devops',
+        file_name: 'devops.pdf',
+        text: 'Implemented CI/CD with GitHub Actions and deployed C++ and C# services to Docker and Kubernetes.',
+        expectedIds: [
+          'skill_ci_cd',
+          'skill_github_actions',
+          'skill_c_plus_plus',
+          'skill_c_sharp',
+          'skill_docker',
+          'skill_kubernetes',
+        ],
+      },
+      {
+        document_id: 'cv-soft',
+        file_name: 'soft.pdf',
+        text: 'Strong communication and leadership skills while mentoring cross-functional engineering teams.',
+        expectedIds: ['skill_communication', 'skill_leadership'],
+      },
+    ];
+
+    const response = await suggestSkillsForDocuments(
+      {
+        documents: inputs.map((input) => ({
+          document_id: input.document_id,
+          file_name: input.file_name,
+          text: input.text,
+          context: 'cv' as const,
+        })),
+      },
+      {
+        maxDocuments: 10,
+        maxCharsPerDocument: 30000,
+        maxTotalChars: 100000,
+      },
+      {
+        semanticEnabled: false,
+        fuzzyThreshold: 0.7,
+      }
+    );
+
+    for (const input of inputs) {
+      const result = response.documents.find((item) => item.document_id === input.document_id);
+      expect(result, `missing document result for ${input.document_id}`).toBeDefined();
+      const suggestions = collectSuggestedIds(result!.candidates);
+
+      for (const expectedId of input.expectedIds) {
+        expect(suggestions.has(expectedId), `expected ${expectedId} for ${input.document_id}`).toBe(
+          true
+        );
+      }
+
+      for (const candidate of result!.candidates) {
+        expect(candidate.evidence_snippets.length).toBeGreaterThan(0);
+        for (const snippet of candidate.evidence_snippets) {
+          expect(input.text.toLowerCase()).toContain(snippet.toLowerCase());
+        }
+      }
+    }
+  });
+
+  it('keeps unmapped candidates excluded from suggestions until manually mapped', async () => {
+    const { suggestSkillsForDocuments } = await import('@/lib/expertise/cv-import-suggest');
+
+    const response = await suggestSkillsForDocuments(
+      {
+        documents: [
+          {
+            document_id: 'cv-unmapped',
+            file_name: 'unmapped.pdf',
+            text: 'Designed low-latency engines in Rust and optimized performance profiling workflows.',
+            context: 'cv',
+          },
+        ],
+      },
+      {
+        maxDocuments: 5,
+        maxCharsPerDocument: 30000,
+        maxTotalChars: 50000,
+      },
+      {
+        semanticEnabled: false,
+        fuzzyThreshold: 0.8,
+      }
+    );
+
+    const rustCandidate = response.documents[0].candidates.find((candidate) =>
+      candidate.raw_skill_text.toLowerCase().includes('rust')
+    );
+
+    expect(rustCandidate).toBeDefined();
+    expect(rustCandidate?.unmapped_candidate).toBe(true);
+    expect(rustCandidate?.suggestions).toHaveLength(0);
+  });
+
+  it('remains deterministic across repeated runs with the same multi-CV payload', async () => {
+    const { suggestSkillsForDocuments } = await import('@/lib/expertise/cv-import-suggest');
+    const request = {
+      documents: [
+        {
+          document_id: 'repeat-1',
+          file_name: 'repeat-1.pdf',
+          text: 'React, TypeScript, Node.js and Next.js were used in production projects.',
+          context: 'cv' as const,
+        },
+        {
+          document_id: 'repeat-2',
+          file_name: 'repeat-2.pdf',
+          text: 'Built CI/CD with GitHub Actions and containerized workloads with Docker.',
+          context: 'cv' as const,
+        },
+      ],
+    };
+
+    const runSignatures: string[] = [];
+
+    for (let run = 0; run < 8; run++) {
+      const response = await suggestSkillsForDocuments(
+        request,
+        {
+          maxDocuments: 5,
+          maxCharsPerDocument: 30000,
+          maxTotalChars: 50000,
+        },
+        {
+          semanticEnabled: false,
+          fuzzyThreshold: 0.72,
+        }
+      );
+
+      const signature = JSON.stringify(
+        response.documents.map((document) => ({
+          document_id: document.document_id,
+          candidates: document.candidates.map((candidate) => ({
+            raw_skill_text: candidate.raw_skill_text,
+            suggestion_ids: candidate.suggestions.map((suggestion) => suggestion.skill_id),
+            unmapped_candidate: candidate.unmapped_candidate,
+          })),
+        }))
+      );
+
+      runSignatures.push(signature);
+    }
+
+    const first = runSignatures[0];
+    for (const signature of runSignatures.slice(1)) {
+      expect(signature).toBe(first);
+    }
+  });
+});
