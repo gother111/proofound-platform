@@ -859,6 +859,19 @@ function buildLegacyBusinessValue(data: Omit<ImpactStory, 'id'>) {
     : 'Structured impact story recorded';
 }
 
+function buildLegacyOutcomeClaimLabel(outcomesText: string | null | undefined) {
+  if (!outcomesText) return null;
+
+  const collapsed = outcomesText.replace(/\s+/g, ' ').trim();
+  if (!collapsed) return null;
+
+  const maxLength = 140;
+  const normalizedText =
+    collapsed.length > maxLength ? `${collapsed.slice(0, maxLength - 3).trimEnd()}...` : collapsed;
+
+  return `Outcome confirmation (${normalizedText})`;
+}
+
 function buildClaimSnapshot(
   data: Omit<ImpactStory, 'id'>,
   context?: {
@@ -868,11 +881,24 @@ function buildClaimSnapshot(
     requesterEmail?: string | null;
   }
 ) {
-  const outcomeClaims = (data.measuredOutcomes || []).map((outcome) => ({
+  const measuredOutcomeClaims = (data.measuredOutcomes || []).map((outcome) => ({
     id: `outcome:${outcome.id}`,
     outcomeId: outcome.id,
     label: `${outcome.label} (${outcome.value} ${outcome.unit})`,
   }));
+  const legacyOutcomeClaimLabel =
+    measuredOutcomeClaims.length > 0 ? null : buildLegacyOutcomeClaimLabel(data.outcomes);
+  const outcomeClaims =
+    measuredOutcomeClaims.length > 0
+      ? measuredOutcomeClaims
+      : legacyOutcomeClaimLabel
+        ? [
+            {
+              id: 'outcome:legacy',
+              label: legacyOutcomeClaimLabel,
+            },
+          ]
+        : [];
 
   return {
     verificationType: 'impact_story',
@@ -1432,7 +1458,35 @@ export async function requestImpactStoryVerification(
   let verificationStoryDraft: Omit<ImpactStory, 'id'>;
   let saveWarning: string | null = null;
 
-  if (storyId) {
+  if (storyId && params.storyDraft) {
+    const updatedStory = await updateImpactStory(storyId, {
+      ...params.storyDraft,
+      verificationRequest: null,
+    });
+
+    baseStory = updatedStory;
+    verificationStoryDraft = mapImpactStoryRowToDraft(
+      {
+        title: updatedStory.title,
+        orgDescription: updatedStory.orgDescription,
+        impact: updatedStory.impact,
+        businessValue: updatedStory.businessValue,
+        outcomes: updatedStory.outcomes,
+        timeline: updatedStory.timeline,
+        timelineStructured: updatedStory.timelineStructured || null,
+        affiliationType: updatedStory.affiliationType || null,
+        affiliationDetails: updatedStory.affiliationDetails || null,
+        roleTitle: updatedStory.roleTitle || null,
+        roleScope: updatedStory.roleScope || null,
+        primaryCause: updatedStory.primaryCause || null,
+        secondaryCauses: updatedStory.secondaryCauses || [],
+        measuredOutcomes: updatedStory.measuredOutcomes || [],
+        supportingArtifacts: updatedStory.supportingArtifacts || [],
+        verified: updatedStory.verified,
+      },
+      verificationRequest
+    );
+  } else if (storyId) {
     const [storyRow] = await db
       .select({
         id: impactStories.id,

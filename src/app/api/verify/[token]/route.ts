@@ -154,6 +154,7 @@ type ImpactStoryContext = {
   id?: string | null;
   title?: string | null;
   user_id?: string | null;
+  outcomes?: string | null;
   role_title?: string | null;
   role_scope?: string | null;
   affiliation_details?: string | null;
@@ -232,6 +233,38 @@ function parseStoryOutcomeClaims(measuredOutcomes: unknown): ImpactClaim[] {
     .filter((row): row is ImpactClaim => Boolean(row));
 }
 
+function parseLegacyOutcomeClaimLabel(outcomesText: unknown): string | null {
+  if (typeof outcomesText !== 'string') {
+    return null;
+  }
+
+  const normalized = outcomesText.replace(/\s+/g, ' ').trim();
+  if (!normalized) {
+    return null;
+  }
+
+  const maxLength = 140;
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+
+  return `${normalized.slice(0, maxLength - 3).trimEnd()}...`;
+}
+
+function parseLegacyOutcomeClaims(outcomesText: unknown): ImpactClaim[] {
+  const label = parseLegacyOutcomeClaimLabel(outcomesText);
+  if (!label) {
+    return [];
+  }
+
+  return [
+    {
+      id: 'outcome:legacy',
+      label: `Outcome confirmation (${label})`,
+    },
+  ];
+}
+
 function buildFallbackRoleClaim(impactStory: ImpactStoryContext | null): ImpactClaim {
   const roleTitle = toStringOrNull(impactStory?.role_title) || 'Contributor';
   const roleScope = (toStringOrNull(impactStory?.role_scope) || 'contributed').replace(/_/g, ' ');
@@ -271,10 +304,14 @@ function resolveImpactClaims(
       : buildFallbackRoleClaim(impactStory);
 
   const outcomeClaimsFromSnapshot = parseSnapshotOutcomeClaims(snapshotRecord.outcomeClaims);
+  const outcomeClaimsFromStructuredStory = parseStoryOutcomeClaims(impactStory?.measured_outcomes);
+  const outcomeClaimsFromLegacyStory = parseLegacyOutcomeClaims(impactStory?.outcomes);
   const outcomeClaims =
     outcomeClaimsFromSnapshot.length > 0
       ? outcomeClaimsFromSnapshot
-      : parseStoryOutcomeClaims(impactStory?.measured_outcomes);
+      : outcomeClaimsFromStructuredStory.length > 0
+        ? outcomeClaimsFromStructuredStory
+        : outcomeClaimsFromLegacyStory;
 
   const artifactsClaimRaw =
     snapshotRecord.artifactsClaim && typeof snapshotRecord.artifactsClaim === 'object'
@@ -300,8 +337,61 @@ function resolveImpactClaims(
   };
 }
 
-function getRequesterName(profile: ProfileContext | null) {
-  return profile?.display_name || profile?.email?.split('@')[0] || 'Unknown';
+function formatDisplayNameFromEmail(email: string | null) {
+  const normalizedEmail = toStringOrNull(email);
+  if (!normalizedEmail) {
+    return null;
+  }
+
+  const localPart = normalizedEmail.split('@')[0]?.trim();
+  if (!localPart) {
+    return null;
+  }
+
+  const normalizedLocalPart = localPart.replace(/[._-]+/g, ' ').trim();
+  if (!normalizedLocalPart) {
+    return null;
+  }
+
+  return normalizedLocalPart.replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function getRequesterEmailFromClaimSnapshot(claimSnapshot: unknown): string | null {
+  if (!claimSnapshot || typeof claimSnapshot !== 'object') {
+    return null;
+  }
+
+  const snapshotRecord = claimSnapshot as Record<string, unknown>;
+  const context =
+    snapshotRecord.context && typeof snapshotRecord.context === 'object'
+      ? (snapshotRecord.context as Record<string, unknown>)
+      : null;
+
+  return toStringOrNull(context?.requesterEmail ?? context?.requester_email ?? null);
+}
+
+function resolveImpactRequesterIdentity(args: {
+  profile: ProfileContext | null;
+  requesterEmailSnapshot: unknown;
+  claimSnapshot: unknown;
+}) {
+  const profileName = toStringOrNull(args.profile?.display_name);
+  const profileEmail = toStringOrNull(args.profile?.email);
+  const snapshotEmail = toStringOrNull(args.requesterEmailSnapshot);
+  const claimSnapshotEmail = getRequesterEmailFromClaimSnapshot(args.claimSnapshot);
+  const resolvedEmail = profileEmail || snapshotEmail || claimSnapshotEmail || '';
+
+  const requesterName =
+    profileName ||
+    formatDisplayNameFromEmail(profileEmail) ||
+    formatDisplayNameFromEmail(snapshotEmail) ||
+    formatDisplayNameFromEmail(claimSnapshotEmail) ||
+    'Proofound member';
+
+  return {
+    requesterName,
+    requesterEmail: resolvedEmail,
+  };
 }
 
 function buildImpactWhyYouAreReceivingThis(args: {
@@ -323,8 +413,8 @@ async function getImpactStoryContext(
   impactStoryId: string
 ) {
   const primarySelect =
-    'id, title, user_id, role_title, role_scope, affiliation_details, org_description, measured_outcomes, supporting_artifacts';
-  const fallbackSelect = 'id, title, user_id, org_description';
+    'id, title, user_id, outcomes, role_title, role_scope, affiliation_details, org_description, measured_outcomes, supporting_artifacts';
+  const fallbackSelect = 'id, title, user_id, outcomes, org_description';
 
   const primaryLookup = await adminClient
     .from('impact_stories')
@@ -358,6 +448,7 @@ async function getImpactStoryContext(
   return {
     data: {
       ...fallbackLookup.data,
+      outcomes: toStringOrNull((fallbackLookup.data as ImpactStoryContext).outcomes),
       role_title: null,
       role_scope: null,
       affiliation_details: null,
@@ -475,7 +566,12 @@ export async function GET(
         }
 
         const claims = resolveImpactClaims(impactVerification.claim_snapshot, impactStory || null);
-        const requesterName = getRequesterName(requesterProfile);
+        const requesterIdentity = resolveImpactRequesterIdentity({
+          profile: requesterProfile || null,
+          requesterEmailSnapshot: impactVerification.requester_email_snapshot,
+          claimSnapshot: impactVerification.claim_snapshot,
+        });
+        const requesterName = requesterIdentity.requesterName;
         const storyTitle = impactStory?.title || 'Impact story';
         const organization =
           toStringOrNull(impactStory?.affiliation_details) ||
@@ -488,7 +584,7 @@ export async function GET(
             story_id: impactStory?.id || impactVerification.impact_story_id || null,
             story_title: storyTitle,
             requester_name: requesterName,
-            requester_email: requesterProfile?.email || '',
+            requester_email: requesterIdentity.requesterEmail,
             requester_avatar: requesterProfile?.avatar_url || null,
             verifier_email: impactVerification.verifier_email,
             verifier_name: impactVerification.verifier_name,

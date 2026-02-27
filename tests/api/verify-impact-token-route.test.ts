@@ -340,6 +340,85 @@ describe('verify impact token route', () => {
     expect(body.verification.why_you_are_receiving_this).toMatch(/voice of ukrainians in sweden/i);
   });
 
+  it('GET falls back to requester_email_snapshot when profile identity is unavailable', async () => {
+    createAdminClientMock.mockReturnValue(
+      buildImpactAdminClient({
+        impactRequest: {
+          id: 'req-1',
+          impact_story_id: 'story-1',
+          requester_profile_id: 'requester-1',
+          requester_email_snapshot: 'snapshot.person@example.com',
+          verifier_email: 'verifier@example.com',
+          verifier_relationship: 'Program Director',
+          status: 'pending',
+          claim_snapshot: {},
+          created_at: '2026-02-20T00:00:00.000Z',
+          expires_at: '2099-02-20T00:00:00.000Z',
+        },
+        requesterProfile: {
+          email: null,
+          display_name: null,
+          avatar_url: null,
+        },
+      })
+    );
+
+    const response = await GET(new NextRequest(`http://localhost/api/verify/${TOKEN}`), {
+      params: Promise.resolve({ token: TOKEN }),
+    });
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.verification.requester_name).toBe('Snapshot Person');
+    expect(body.verification.requester_email).toBe('snapshot.person@example.com');
+    expect(body.verification.why_you_are_receiving_this).toContain('Snapshot Person');
+  });
+
+  it('GET reconstructs legacy outcome claims from outcomes text when structured outcomes are missing', async () => {
+    createAdminClientMock.mockReturnValue(
+      buildImpactAdminClient({
+        impactRequest: {
+          id: 'req-legacy',
+          impact_story_id: 'story-legacy',
+          requester_profile_id: 'requester-1',
+          verifier_email: 'verifier@example.com',
+          verifier_relationship: 'Program Director',
+          status: 'pending',
+          claim_snapshot: {},
+          created_at: '2026-02-20T00:00:00.000Z',
+          expires_at: '2099-02-20T00:00:00.000Z',
+        },
+        impactStory: {
+          id: 'story-legacy',
+          title: 'Legacy Impact Story',
+          user_id: 'story-owner-1',
+          role_title: 'Program Lead',
+          role_scope: 'owned',
+          affiliation_details: 'Voice of Ukrainians in Sweden',
+          org_description: 'Community organization',
+          outcomes: 'Supported 12 families with housing aid',
+          measured_outcomes: [],
+          supporting_artifacts: [],
+        },
+      })
+    );
+
+    const response = await GET(new NextRequest(`http://localhost/api/verify/${TOKEN}`), {
+      params: Promise.resolve({ token: TOKEN }),
+    });
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.verification.claims.outcomeClaims).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'outcome:legacy',
+        }),
+      ])
+    );
+    expect(body.verification.claims.outcomeClaims[0].label).toMatch(/Supported 12 families/i);
+  });
+
   it('POST accepts impact claim confirmations from reconstructed claim data', async () => {
     let impactUpdatePayload: any = null;
     createAdminClientMock.mockReturnValue(

@@ -532,12 +532,14 @@ export function ImpactStoryForm({
 
     const currentStoryId = story?.id || persistedStoryId;
 
-    if (!currentStoryId && !validate()) {
+    if (!validate()) {
       setVerificationFeedbackMessage(
         'Please fix highlighted fields before sending the verification request.'
       );
       return;
     }
+
+    const storyDraft = buildStoryPayload();
 
     setIsSendingVerification(true);
 
@@ -546,10 +548,11 @@ export function ImpactStoryForm({
         currentStoryId
           ? {
               storyId: currentStoryId,
+              storyDraft,
               verificationRequest,
             }
           : {
-              storyDraft: buildStoryPayload(),
+              storyDraft,
               verificationRequest,
             }
       );
@@ -1144,7 +1147,7 @@ export function ImpactStoryForm({
                 </Button>
                 <p className="text-xs text-muted-foreground">
                   {currentStoryId
-                    ? 'Request uses last saved story details. Save changes separately when ready.'
+                    ? 'For existing stories, Send Request auto-saves current edits first and keeps this dialog open.'
                     : 'For new stories, Send Request auto-saves first and keeps this dialog open.'}
                 </p>
               </div>

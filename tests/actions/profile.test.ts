@@ -689,6 +689,152 @@ describe('profile purpose actions', () => {
       });
     });
 
+    it('persists existing story draft before sending and snapshots updated outcomes', async () => {
+      const updatedStoryRow = {
+        id: 'impact-3',
+        title: 'Updated draft title',
+        orgDescription: 'Org',
+        impact: 'Impact',
+        businessValue: 'Value',
+        outcomes: 'Draft outcomes text',
+        timeline: '2025',
+        timelineStructured: {
+          mode: 'single',
+          precision: 'year',
+          start: '2025',
+        },
+        affiliationType: 'organization',
+        affiliationDetails: 'Org details',
+        roleTitle: 'Director',
+        roleScope: 'owned',
+        primaryCause: 'education',
+        secondaryCauses: [],
+        measuredOutcomes: [
+          {
+            id: 'outcome-new',
+            label: 'Families reached',
+            value: 42,
+            unit: 'families',
+            valueMode: 'absolute',
+            timeframe: 'Q2 2025',
+            baseline: null,
+            after: null,
+            confidence: 'exact',
+          },
+        ],
+        supportingArtifacts: [],
+        verified: false,
+      };
+
+      const updateCalls: Array<{ table: unknown; payload: any }> = [];
+      mockDb.update.mockImplementation((table: unknown) => ({
+        set: vi.fn((payload: any) => {
+          updateCalls.push({ table, payload });
+
+          if (table === impactStories) {
+            return {
+              where: vi.fn(() => ({
+                returning: vi.fn().mockResolvedValue([updatedStoryRow]),
+              })),
+            };
+          }
+
+          return {
+            where: vi.fn().mockResolvedValue(undefined),
+          };
+        }),
+      }));
+
+      const insertPayloads: any[] = [];
+      mockDb.insert.mockImplementation((table: unknown) => ({
+        values: vi.fn((payload: any) => {
+          insertPayloads.push({ table, payload });
+          return {
+            returning: vi.fn().mockResolvedValue([
+              {
+                id: 'request-3',
+                integrityStatus: 'clear',
+                createdAt: new Date('2026-02-27T09:30:00.000Z'),
+              },
+            ]),
+          };
+        }),
+      }));
+
+      const result = await requestImpactStoryVerification({
+        storyId: 'impact-3',
+        storyDraft: {
+          title: 'Updated draft title',
+          orgDescription: 'Org',
+          impact: 'Impact',
+          businessValue: 'Value',
+          outcomes: 'Draft outcomes text',
+          timeline: '2025',
+          timelineStructured: {
+            mode: 'single',
+            precision: 'year',
+            start: '2025',
+          },
+          affiliationType: 'organization',
+          affiliationDetails: 'Org details',
+          roleTitle: 'Director',
+          roleScope: 'owned',
+          primaryCause: 'education',
+          secondaryCauses: [],
+          measuredOutcomes: [
+            {
+              id: 'outcome-new',
+              label: 'Families reached',
+              value: 42,
+              unit: 'families',
+              valueMode: 'absolute',
+              timeframe: 'Q2 2025',
+              baseline: null,
+              after: null,
+              confidence: 'exact',
+            },
+          ],
+          supportingArtifacts: [],
+          verified: false,
+          verificationRequest: null,
+        },
+        verificationRequest: {
+          verifierEmail: 'draft-verifier@example.com',
+        },
+      });
+
+      expect(updateCalls[0]).toMatchObject({
+        table: impactStories,
+        payload: expect.objectContaining({
+          title: 'Updated draft title',
+          measuredOutcomes: expect.arrayContaining([
+            expect.objectContaining({
+              id: 'outcome-new',
+              label: 'Families reached',
+            }),
+          ]),
+        }),
+      });
+
+      expect(insertPayloads[0]).toMatchObject({
+        table: impactStoryVerificationRequests,
+        payload: expect.objectContaining({
+          impactStoryId: 'impact-3',
+          claimSnapshot: expect.objectContaining({
+            outcomeClaims: expect.arrayContaining([
+              expect.objectContaining({
+                id: 'outcome:outcome-new',
+                outcomeId: 'outcome-new',
+              }),
+            ]),
+          }),
+        }),
+      });
+
+      expect(result.story.title).toBe('Updated draft title');
+      expect(result.verification.status).toBe('pending');
+    });
+
     it('marks request as failed when receiver email send fails', async () => {
       const storyRow = {
         id: 'impact-2',

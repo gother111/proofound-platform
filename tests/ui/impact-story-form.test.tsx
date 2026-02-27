@@ -208,11 +208,11 @@ describe('ImpactStoryForm', () => {
     expect(onSave).not.toHaveBeenCalled();
   });
 
-  it('sends request from existing story id without including unsaved draft payload', async () => {
+  it('sends request from existing story with current draft payload and story id', async () => {
     const onSendVerificationRequest = vi.fn(async (params: any) => ({
       story: {
         id: params.storyId,
-        title: 'Saved story',
+        title: params.storyDraft?.title || 'Saved story',
         orgDescription: 'Org',
         impact: 'Impact',
         businessValue: 'Value',
@@ -255,7 +255,19 @@ describe('ImpactStoryForm', () => {
           roleScope: 'owned',
           primaryCause: 'education',
           secondaryCauses: [],
-          measuredOutcomes: [],
+          measuredOutcomes: [
+            {
+              id: 'o1',
+              label: 'Participants supported',
+              value: 1200,
+              unit: 'users',
+              valueMode: 'absolute',
+              timeframe: 'Q1 2025',
+              baseline: null,
+              after: null,
+              confidence: 'exact',
+            },
+          ],
           supportingArtifacts: [],
         }}
       />
@@ -273,10 +285,73 @@ describe('ImpactStoryForm', () => {
     await waitFor(() => expect(onSendVerificationRequest).toHaveBeenCalledTimes(1));
     expect(onSendVerificationRequest.mock.calls[0][0]).toMatchObject({
       storyId: 'impact-existing',
+      storyDraft: expect.objectContaining({
+        title: 'Unsaved changed title',
+      }),
       verificationRequest: expect.objectContaining({
         verifierEmail: 'manager@example.com',
       }),
     });
-    expect(onSendVerificationRequest.mock.calls[0][0].storyDraft).toBeUndefined();
+  });
+
+  it('blocks existing-story send when required fields are invalid', async () => {
+    const onSendVerificationRequest = vi.fn();
+
+    render(
+      <ImpactStoryForm
+        open={true}
+        onOpenChange={vi.fn()}
+        onSave={vi.fn()}
+        onSaveExisting={vi.fn()}
+        onSendVerificationRequest={onSendVerificationRequest}
+        story={{
+          id: 'impact-existing-invalid',
+          title: 'Saved story',
+          orgDescription: 'Org',
+          impact: 'Impact',
+          businessValue: 'Value',
+          outcomes: 'Outcome',
+          timeline: '2024',
+          timelineStructured: { mode: 'single', precision: 'year', start: '2024' },
+          verified: false,
+          affiliationType: 'organization',
+          affiliationDetails: 'Org',
+          roleTitle: 'Lead',
+          roleScope: 'owned',
+          primaryCause: 'education',
+          secondaryCauses: [],
+          measuredOutcomes: [
+            {
+              id: 'o1',
+              label: 'Participants supported',
+              value: 1200,
+              unit: 'users',
+              valueMode: 'absolute',
+              timeframe: 'Q1 2025',
+              baseline: null,
+              after: null,
+              confidence: 'exact',
+            },
+          ],
+          supportingArtifacts: [],
+        }}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText(/Verifier email/i), {
+      target: { value: 'manager@example.com' },
+    });
+    fireEvent.change(screen.getByLabelText(/^Role title \*$/i), {
+      target: { value: '' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /send request/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Please fix highlighted fields before sending the verification request/i)
+      ).toBeTruthy();
+    });
+    expect(onSendVerificationRequest).not.toHaveBeenCalled();
   });
 });
