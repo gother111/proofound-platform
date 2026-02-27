@@ -77,6 +77,7 @@ type BrowseModePanelProps = {
   setVerificationMessage: (value: string) => void;
   saving: boolean;
   handleSave: (saveAndAddAnother?: boolean) => void;
+  onNavigateToStep: (targetStep: 1 | 2 | 3 | 4) => void;
   handleBack: () => void;
 };
 
@@ -132,61 +133,110 @@ export function BrowseModePanel({
   setVerificationMessage,
   saving,
   handleSave,
+  onNavigateToStep,
   handleBack,
 }: BrowseModePanelProps) {
+  const canNavigateToStep = (targetStep: 1 | 2 | 3 | 4) => {
+    if (targetStep === 1) return true;
+    if (targetStep === 2) return Boolean(selectedL1);
+    if (targetStep === 3) return Boolean(selectedL1 && selectedL2);
+    return Boolean(selectedL1 && selectedL2 && selectedL3);
+  };
+
+  const stepMeta: Array<{ step: 1 | 2 | 3 | 4; label: string }> = [
+    { step: 1, label: 'Domain' },
+    { step: 2, label: 'Category' },
+    { step: 3, label: 'Subcategory' },
+    { step: 4, label: 'Details' },
+  ];
+
   return (
     <>
       <div className="mt-6 mb-8">
         <div className="flex items-center justify-between mb-2">
-          {[1, 2, 3, 4].map((itemStep) => (
-            <div key={itemStep} className="flex items-center">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
-                  itemStep === step
-                    ? 'bg-[#1C4D3A] text-white'
-                    : itemStep < step
-                      ? 'bg-[#7A9278] text-white'
-                      : 'bg-[#E5E3DA] text-[#6B6760]'
-                }`}
-              >
-                {itemStep < step ? <Check className="h-4 w-4" /> : itemStep}
+          {stepMeta.map(({ step: itemStep, label }) => {
+            const isActive = itemStep === step;
+            const isCompleted = itemStep < step;
+            const isReachable = canNavigateToStep(itemStep);
+            return (
+              <div key={itemStep} className="flex items-center">
+                <button
+                  type="button"
+                  data-testid={`browse-step-${itemStep}`}
+                  aria-label={`Go to ${label} step`}
+                  disabled={!isReachable}
+                  onClick={() => onNavigateToStep(itemStep)}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-[#1C4D3A] text-white'
+                      : isCompleted
+                        ? 'bg-[#7A9278] text-white'
+                        : 'bg-[#E5E3DA] text-[#6B6760]'
+                  } ${
+                    isReachable
+                      ? 'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1C4D3A] focus-visible:ring-offset-2'
+                      : 'cursor-not-allowed opacity-70'
+                  }`}
+                >
+                  {isCompleted ? <Check className="h-4 w-4" /> : itemStep}
+                </button>
+                {itemStep < 4 && (
+                  <div
+                    className={`h-0.5 w-16 mx-2 ${isCompleted ? 'bg-[#7A9278]' : 'bg-[#E5E3DA]'}`}
+                  />
+                )}
               </div>
-              {itemStep < 4 && (
-                <div
-                  className={`h-0.5 w-16 mx-2 ${itemStep < step ? 'bg-[#7A9278]' : 'bg-[#E5E3DA]'}`}
-                />
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
         <div className="flex justify-between text-xs text-[#6B6760] mt-2">
-          <span>Domain</span>
-          <span>Category</span>
-          <span>Subcategory</span>
-          <span>Details</span>
+          {stepMeta.map(({ label }) => (
+            <span key={label}>{label}</span>
+          ))}
         </div>
-      </div>
-
-      <div
-        className="mb-6 rounded-lg border border-[#E5E3DA] bg-[#F7F6F1] p-3"
-        data-testid="browse-current-location"
-      >
-        <p className="text-xs font-medium text-[#2D3330]">Current location</p>
-        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-          <span className="inline-flex items-center gap-1 rounded-full border border-[#D8D3C8] bg-white px-2.5 py-1">
+        <div
+          className="mt-3 flex flex-wrap items-center gap-2 text-xs"
+          data-testid="browse-current-location-inline"
+        >
+          <button
+            type="button"
+            data-testid="browse-location-domain"
+            onClick={() => onNavigateToStep(1)}
+            className="inline-flex items-center gap-1 rounded-full border border-[#D8D3C8] bg-white px-2.5 py-1 text-left transition-colors hover:bg-[#F7F6F1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1C4D3A] focus-visible:ring-offset-2"
+          >
             <span className="font-medium text-[#2D3330]">Domain</span>
             <span className="text-[#6B6760]">{selectedL1?.nameI18n?.en || 'Not selected'}</span>
-          </span>
+          </button>
           <ChevronRight className="h-3.5 w-3.5 text-[#8B867A]" aria-hidden />
-          <span className="inline-flex items-center gap-1 rounded-full border border-[#D8D3C8] bg-white px-2.5 py-1">
+          <button
+            type="button"
+            data-testid="browse-location-category"
+            disabled={!canNavigateToStep(2)}
+            onClick={() => onNavigateToStep(2)}
+            className={`inline-flex items-center gap-1 rounded-full border border-[#D8D3C8] bg-white px-2.5 py-1 text-left transition-colors ${
+              canNavigateToStep(2)
+                ? 'hover:bg-[#F7F6F1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1C4D3A] focus-visible:ring-offset-2'
+                : 'cursor-not-allowed opacity-70'
+            }`}
+          >
             <span className="font-medium text-[#2D3330]">Category</span>
             <span className="text-[#6B6760]">{selectedL2?.nameI18n?.en || 'Not selected'}</span>
-          </span>
+          </button>
           <ChevronRight className="h-3.5 w-3.5 text-[#8B867A]" aria-hidden />
-          <span className="inline-flex items-center gap-1 rounded-full border border-[#D8D3C8] bg-white px-2.5 py-1">
+          <button
+            type="button"
+            data-testid="browse-location-subcategory"
+            disabled={!canNavigateToStep(3)}
+            onClick={() => onNavigateToStep(3)}
+            className={`inline-flex items-center gap-1 rounded-full border border-[#D8D3C8] bg-white px-2.5 py-1 text-left transition-colors ${
+              canNavigateToStep(3)
+                ? 'hover:bg-[#F7F6F1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1C4D3A] focus-visible:ring-offset-2'
+                : 'cursor-not-allowed opacity-70'
+            }`}
+          >
             <span className="font-medium text-[#2D3330]">Subcategory</span>
             <span className="text-[#6B6760]">{selectedL3?.nameI18n?.en || 'Not selected'}</span>
-          </span>
+          </button>
         </div>
       </div>
 

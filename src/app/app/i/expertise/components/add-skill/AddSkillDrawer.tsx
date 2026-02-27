@@ -926,6 +926,46 @@ export function AddSkillDrawer({
     }
   };
 
+  const navigateToStep = (targetStep: 1 | 2 | 3 | 4) => {
+    if (targetStep === 1) {
+      setStep(1);
+      setSelectedL2(null);
+      setSelectedL3(null);
+      setSelectedL4(null);
+      setL4Search('');
+      setL4Name('');
+      setShowL4Dropdown(false);
+      lastSelectionsRef.current.l2 = undefined;
+      lastSelectionsRef.current.l3 = undefined;
+      return;
+    }
+
+    if (targetStep === 2) {
+      if (!selectedL1) return;
+      setStep(2);
+      setSelectedL3(null);
+      setSelectedL4(null);
+      setL4Search('');
+      setL4Name('');
+      setShowL4Dropdown(false);
+      lastSelectionsRef.current.l3 = undefined;
+      return;
+    }
+
+    if (targetStep === 3) {
+      if (!selectedL1 || !selectedL2) return;
+      setStep(3);
+      setSelectedL4(null);
+      setL4Search('');
+      setL4Name('');
+      setShowL4Dropdown(false);
+      return;
+    }
+
+    if (!selectedL1 || !selectedL2 || !selectedL3) return;
+    setStep(4);
+  };
+
   return (
     <AddSkillDrawerView
       open={open}
@@ -997,6 +1037,7 @@ export function AddSkillDrawer({
       quickAddingCodes={quickAddingCodes}
       handleQuickAdd={handleQuickAdd}
       handleSearchResultSelect={handleSearchResultSelect}
+      onNavigateToStep={navigateToStep}
       handleBack={handleBack}
     />
   );

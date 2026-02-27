@@ -1,5 +1,5 @@
 import type { ComponentProps } from 'react';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { BrowseModePanel } from '@/app/app/i/expertise/components/add-skill/BrowseModePanel';
@@ -83,51 +83,18 @@ function createProps(overrides: Partial<ComponentProps<typeof BrowseModePanel>> 
     setVerificationMessage: vi.fn(),
     saving: false,
     handleSave: vi.fn(),
+    onNavigateToStep: vi.fn(),
     handleBack: vi.fn(),
     ...overrides,
   };
 }
 
-describe('BrowseModePanel current location context', () => {
-  it('shows selected domain and placeholders on step 2', () => {
-    render(
-      <BrowseModePanel
-        {...createProps({
-          step: 2,
-          selectedL1: L1_DOMAIN,
-        })}
-      />
-    );
-
-    const location = screen.getByTestId('browse-current-location');
-    expect(within(location).getByText('Current location')).toBeInTheDocument();
-    expect(within(location).getByText('Universal Capabilities')).toBeInTheDocument();
-    expect(within(location).getAllByText('Not selected')).toHaveLength(2);
-  });
-
-  it('shows domain and category context on step 3 and updates helper copy', () => {
+describe('BrowseModePanel clickable inline location navigation', () => {
+  it('renders inline location row and removes separate location tile', () => {
     render(
       <BrowseModePanel
         {...createProps({
           step: 3,
-          selectedL1: L1_DOMAIN,
-          selectedL2: L2_CATEGORY,
-        })}
-      />
-    );
-
-    const location = screen.getByTestId('browse-current-location');
-    expect(within(location).getByText('Universal Capabilities')).toBeInTheDocument();
-    expect(within(location).getByText('Communication')).toBeInTheDocument();
-    expect(within(location).getAllByText('Not selected')).toHaveLength(1);
-    expect(screen.getByText(/Universal Capabilities\s*->\s*Communication/)).toBeInTheDocument();
-  });
-
-  it('shows full context on step 4 when domain/category/subcategory are selected', () => {
-    render(
-      <BrowseModePanel
-        {...createProps({
-          step: 4,
           selectedL1: L1_DOMAIN,
           selectedL2: L2_CATEGORY,
           selectedL3: L3_SUBCATEGORY,
@@ -135,29 +102,84 @@ describe('BrowseModePanel current location context', () => {
       />
     );
 
-    const location = screen.getByTestId('browse-current-location');
-    expect(within(location).getByText('Universal Capabilities')).toBeInTheDocument();
-    expect(within(location).getByText('Communication')).toBeInTheDocument();
-    expect(within(location).getByText('Written Communication')).toBeInTheDocument();
-    expect(within(location).queryByText('Not selected')).not.toBeInTheDocument();
-    expect(screen.getByText(/Your current location is shown above\./)).toBeInTheDocument();
+    const inlineLocation = screen.getByTestId('browse-current-location-inline');
+    expect(inlineLocation).toBeInTheDocument();
+    expect(screen.queryByText('Current location')).not.toBeInTheDocument();
+
+    expect(within(inlineLocation).getByText('Universal Capabilities')).toBeInTheDocument();
+    expect(within(inlineLocation).getByText('Communication')).toBeInTheDocument();
+    expect(within(inlineLocation).getByText('Written Communication')).toBeInTheDocument();
   });
 
-  it('keeps placeholders visible on step 4 when some parent context is missing', () => {
+  it('uses clickable location chips and blocks disabled chip navigation', () => {
+    const onNavigateToStep = vi.fn();
+
     render(
       <BrowseModePanel
         {...createProps({
-          step: 4,
+          step: 2,
           selectedL1: L1_DOMAIN,
           selectedL2: null,
           selectedL3: null,
+          onNavigateToStep,
         })}
       />
     );
 
-    const location = screen.getByTestId('browse-current-location');
-    expect(within(location).getByText('Universal Capabilities')).toBeInTheDocument();
-    expect(within(location).getAllByText('Not selected')).toHaveLength(2);
-    expect(screen.getByText(/Your current location is shown above\./)).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('browse-location-domain'));
+    expect(onNavigateToStep).toHaveBeenCalledWith(1);
+
+    fireEvent.click(screen.getByTestId('browse-location-category'));
+    expect(onNavigateToStep).toHaveBeenCalledWith(2);
+
+    const subcategoryChip = screen.getByTestId('browse-location-subcategory');
+    expect(subcategoryChip).toBeDisabled();
+    fireEvent.click(subcategoryChip);
+    expect(onNavigateToStep).not.toHaveBeenCalledWith(3);
+  });
+
+  it('enables reachable step circles and disables details until full context exists', () => {
+    const onNavigateToStep = vi.fn();
+
+    const { rerender } = render(
+      <BrowseModePanel
+        {...createProps({
+          step: 3,
+          selectedL1: L1_DOMAIN,
+          selectedL2: L2_CATEGORY,
+          selectedL3: null,
+          onNavigateToStep,
+        })}
+      />
+    );
+
+    const detailsStepWithoutL3 = screen.getByTestId('browse-step-4');
+    expect(detailsStepWithoutL3).toBeDisabled();
+    fireEvent.click(detailsStepWithoutL3);
+    expect(onNavigateToStep).not.toHaveBeenCalledWith(4);
+
+    fireEvent.click(screen.getByTestId('browse-step-1'));
+    fireEvent.click(screen.getByTestId('browse-step-2'));
+    fireEvent.click(screen.getByTestId('browse-step-3'));
+    expect(onNavigateToStep).toHaveBeenCalledWith(1);
+    expect(onNavigateToStep).toHaveBeenCalledWith(2);
+    expect(onNavigateToStep).toHaveBeenCalledWith(3);
+
+    rerender(
+      <BrowseModePanel
+        {...createProps({
+          step: 4,
+          selectedL1: L1_DOMAIN,
+          selectedL2: L2_CATEGORY,
+          selectedL3: L3_SUBCATEGORY,
+          onNavigateToStep,
+        })}
+      />
+    );
+
+    const detailsStepWithL3 = screen.getByTestId('browse-step-4');
+    expect(detailsStepWithL3).not.toBeDisabled();
+    fireEvent.click(detailsStepWithL3);
+    expect(onNavigateToStep).toHaveBeenCalledWith(4);
   });
 });

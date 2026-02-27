@@ -100,6 +100,7 @@ export interface AddSkillDrawerViewProps {
   quickAddingCodes: Set<string>;
   handleQuickAdd: (skill: L4Skill) => void;
   handleSearchResultSelect: (skill: L4Skill) => void;
+  onNavigateToStep: (targetStep: 1 | 2 | 3 | 4) => void;
 
   handleBack: () => void;
 }
@@ -174,6 +175,7 @@ export function AddSkillDrawerView({
   quickAddingCodes,
   handleQuickAdd,
   handleSearchResultSelect,
+  onNavigateToStep,
   handleBack,
 }: AddSkillDrawerViewProps) {
   const handleKeyActivate = (event: KeyboardEvent, action: () => void) => {
@@ -294,6 +296,7 @@ export function AddSkillDrawerView({
             setVerificationMessage={setVerificationMessage}
             saving={saving}
             handleSave={handleSave}
+            onNavigateToStep={onNavigateToStep}
             handleBack={handleBack}
           />
         )}
