@@ -1,7 +1,7 @@
 import Image from 'next/image';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Globe, GraduationCap, MapPin, Sparkles, Briefcase, Target } from 'lucide-react';
+import { PublicProfileSection } from '@/components/public-profile/PublicProfileSection';
+import { PublicProfileShell } from '@/components/public-profile/PublicProfileShell';
 import type { PublicSnippetViewModel } from '@/lib/profile/public-snippet';
 
 type PublicSnippetViewProps = {
@@ -9,30 +9,24 @@ type PublicSnippetViewProps = {
   compact?: boolean;
 };
 
-function themeSurface(theme: PublicSnippetViewModel['theme']) {
+function themeWrapper(theme: PublicSnippetViewModel['theme']): string {
   if (theme === 'dark') {
-    return 'bg-[#1E2421] text-[#F5F1E9]';
+    return 'bg-[#1E2421]';
   }
-  return 'bg-gradient-to-b from-[#F7F6F1] via-[#FBFAF6] to-white text-[#2D3330]';
-}
-
-function sectionTitle(text: string) {
-  return <h2 className="text-sm font-semibold tracking-wide uppercase text-[#6B6760]">{text}</h2>;
+  return 'bg-[#F7F6F1]';
 }
 
 export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetViewProps) {
   if (viewModel.redacted) {
     return (
-      <div className="min-h-[240px] flex items-center justify-center p-6">
-        <Card className="w-full max-w-xl border-[#E8E6DD] bg-white/95 shadow-sm">
-          <CardContent className="py-10 text-center space-y-2">
-            <p className="text-lg font-semibold text-[#2D3330]">Profile is currently hidden</p>
-            <p className="text-sm text-[#6B6760]">
-              The owner enabled privacy mode and this public snapshot is unavailable right now.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <PublicProfileShell compact={compact} maxWidthClassName={compact ? 'max-w-2xl' : 'max-w-4xl'}>
+        <PublicProfileSection title="Public profile status">
+          <p className="text-sm font-semibold text-[#2D3330]">Profile is currently hidden</p>
+          <p className="mt-1 text-sm text-[#6B6760]">
+            The owner enabled privacy mode and this public snapshot is unavailable right now.
+          </p>
+        </PublicProfileSection>
+      </PublicProfileShell>
     );
   }
 
@@ -47,255 +41,246 @@ export function PublicSnippetView({ viewModel, compact = false }: PublicSnippetV
     : viewModel.workCultureHighlights;
 
   return (
-    <div
-      className={`w-full ${themeSurface(viewModel.theme)} ${compact ? 'p-4' : 'min-h-screen p-6 md:p-10'}`}
-    >
-      <div className={`mx-auto ${compact ? 'max-w-2xl' : 'max-w-5xl'} space-y-6`}>
-        <Card className="overflow-hidden border-[#E8E6DD] bg-white/95 shadow-sm">
-          <CardContent className="p-0">
-            {viewModel.heroImage ? (
-              <div
-                className="h-28 bg-cover bg-center"
-                style={{ backgroundImage: `url(${viewModel.heroImage})` }}
-              />
-            ) : (
-              <div className="h-24 bg-gradient-to-r from-[#28503A] via-[#4C7C64] to-[#8BAF90]" />
-            )}
-            <div className="px-5 py-5">
-              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <h1 className="text-2xl font-semibold">{viewModel.title}</h1>
-                    <Badge variant="outline" className="capitalize">
-                      {viewModel.profileType}
-                    </Badge>
-                  </div>
-                  {viewModel.subtitle && (
-                    <p className="text-sm text-[#6B6760]">{viewModel.subtitle}</p>
-                  )}
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-[#6B6760]">
-                    {viewModel.location && (
-                      <span className="inline-flex items-center gap-1">
-                        <MapPin className="h-3.5 w-3.5" />
-                        {viewModel.location}
-                      </span>
-                    )}
-                    {viewModel.website && (
-                      <a
-                        href={viewModel.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 hover:text-[#1C4D3A]"
-                      >
-                        <Globe className="h-3.5 w-3.5" />
-                        Website
-                      </a>
-                    )}
-                    {viewModel.foundedYear && <span>Founded {viewModel.foundedYear}</span>}
-                    {viewModel.typeLabel && (
-                      <span className="capitalize">{viewModel.typeLabel}</span>
-                    )}
-                  </div>
-                </div>
-                {viewModel.avatarImage ? (
-                  <Image
-                    src={viewModel.avatarImage}
-                    alt={`${viewModel.title} avatar`}
-                    width={64}
-                    height={64}
-                    sizes="64px"
-                    unoptimized
-                    className="h-16 w-16 rounded-xl object-cover border border-[#E8E6DD]"
-                  />
-                ) : null}
+    <PublicProfileShell
+      compact={compact}
+      className={themeWrapper(viewModel.theme)}
+      maxWidthClassName={compact ? 'max-w-3xl' : 'max-w-5xl'}
+      header={
+        <div className="space-y-2">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-semibold text-[#2D3330]">{viewModel.title}</h1>
+                <span className="rounded-full border border-[#D9D5CC] bg-[#F7F6F1] px-2.5 py-1 text-xs capitalize text-[#2D3330]">
+                  {viewModel.profileType}
+                </span>
               </div>
+              {viewModel.subtitle ? (
+                <p className="text-sm text-[#6B6760]">{viewModel.subtitle}</p>
+              ) : null}
             </div>
-          </CardContent>
-        </Card>
-
-        {!viewModel.hasVisibleFields ? (
-          <Card className="border-dashed border-[#D9D5CC] bg-white/95">
-            <CardContent className="py-10 text-center space-y-2">
-              <p className="font-medium text-[#2D3330]">
-                Nothing is publicly visible in this shared profile yet.
+            {viewModel.avatarImage ? (
+              <Image
+                src={viewModel.avatarImage}
+                alt={`${viewModel.title} avatar`}
+                width={64}
+                height={64}
+                sizes="64px"
+                unoptimized
+                className="h-16 w-16 rounded-xl border border-[#E8E6DD] object-cover"
+              />
+            ) : null}
+          </div>
+          <div className="flex flex-wrap items-center gap-3 text-xs text-[#6B6760]">
+            {viewModel.location ? (
+              <span className="inline-flex items-center gap-1">
+                <MapPin className="h-3.5 w-3.5" />
+                {viewModel.location}
+              </span>
+            ) : null}
+            {viewModel.website ? (
+              <a
+                href={viewModel.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 hover:text-[#1C4D3A]"
+              >
+                <Globe className="h-3.5 w-3.5" />
+                Website
+              </a>
+            ) : null}
+            {viewModel.foundedYear ? <span>Founded {viewModel.foundedYear}</span> : null}
+            {viewModel.typeLabel ? <span className="capitalize">{viewModel.typeLabel}</span> : null}
+          </div>
+        </div>
+      }
+      footer={
+        <div className="flex items-center justify-between">
+          <span>proofound Public Profile template</span>
+          <span>Shared link view</span>
+        </div>
+      }
+    >
+      {!viewModel.hasVisibleFields ? (
+        <PublicProfileSection title="Public visibility">
+          <p className="text-sm font-medium text-[#2D3330]">
+            Nothing is publicly visible in this shared profile yet.
+          </p>
+          <p className="mt-1 text-sm text-[#6B6760]">
+            The owner can enable more sections from profile sharing settings.
+          </p>
+        </PublicProfileSection>
+      ) : (
+        <div className="space-y-4">
+          {viewModel.about ? (
+            <PublicProfileSection title="Profile narrative">
+              <p className="whitespace-pre-line text-sm leading-6 text-[#2D3330]">
+                {viewModel.about}
               </p>
-              <p className="text-sm text-[#6B6760]">
-                The owner can enable more sections from the profile sharing settings.
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <>
-            {viewModel.about && (
-              <Card className="border-[#E8E6DD] bg-white/95">
-                <CardHeader className="pb-2">{sectionTitle('About')}</CardHeader>
-                <CardContent>
-                  <p className="text-sm leading-6 whitespace-pre-line text-[#2D3330]">
-                    {viewModel.about}
-                  </p>
-                </CardContent>
-              </Card>
-            )}
+            </PublicProfileSection>
+          ) : null}
 
-            {(skills.length > 0 || experiences.length > 0 || education.length > 0) && (
-              <div className="grid gap-4 md:grid-cols-3">
-                {skills.length > 0 && (
-                  <Card className="border-[#E8E6DD] bg-white/95">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <Sparkles className="h-4 w-4" />
-                        Skills
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      {skills.map((skill) => (
-                        <div key={skill.id} className="flex items-center justify-between text-sm">
-                          <span>{skill.name}</span>
-                          {typeof skill.level === 'number' && (
-                            <Badge variant="secondary">L{skill.level}</Badge>
-                          )}
-                        </div>
-                      ))}
-                    </CardContent>
-                  </Card>
-                )}
+          {skills.length > 0 || experiences.length > 0 || education.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-3">
+              {skills.length > 0 ? (
+                <PublicProfileSection
+                  title="Skills snapshot"
+                  right={<Sparkles className="h-4 w-4 text-[#6B6760]" />}
+                >
+                  <div className="space-y-2">
+                    {skills.map((skill) => (
+                      <div
+                        key={skill.id}
+                        className="flex items-center justify-between text-sm text-[#2D3330]"
+                      >
+                        <span>{skill.name}</span>
+                        {typeof skill.level === 'number' ? (
+                          <span className="rounded-full border border-[#D9D5CC] bg-[#F7F6F1] px-2 py-0.5 text-xs">
+                            L{skill.level}
+                          </span>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                </PublicProfileSection>
+              ) : null}
 
-                {experiences.length > 0 && (
-                  <Card className="border-[#E8E6DD] bg-white/95">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <Briefcase className="h-4 w-4" />
-                        Experience
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      {experiences.map((entry) => (
-                        <div key={entry.id} className="text-sm">
-                          <p className="font-medium">{entry.title}</p>
-                          {entry.orgDescription && (
-                            <p className="text-[#6B6760]">{entry.orgDescription}</p>
-                          )}
-                          {entry.duration && (
-                            <p className="text-xs text-[#6B6760]">{entry.duration}</p>
-                          )}
-                        </div>
-                      ))}
-                    </CardContent>
-                  </Card>
-                )}
+              {experiences.length > 0 ? (
+                <PublicProfileSection
+                  title="Experience"
+                  right={<Briefcase className="h-4 w-4 text-[#6B6760]" />}
+                >
+                  <div className="space-y-2.5">
+                    {experiences.map((entry) => (
+                      <div key={entry.id} className="text-sm">
+                        <p className="font-medium text-[#2D3330]">{entry.title}</p>
+                        {entry.orgDescription ? (
+                          <p className="text-[#6B6760]">{entry.orgDescription}</p>
+                        ) : null}
+                        {entry.duration ? (
+                          <p className="text-xs text-[#6B6760]">{entry.duration}</p>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                </PublicProfileSection>
+              ) : null}
 
-                {education.length > 0 && (
-                  <Card className="border-[#E8E6DD] bg-white/95">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <GraduationCap className="h-4 w-4" />
-                        Education
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      {education.map((entry) => (
-                        <div key={entry.id} className="text-sm">
-                          <p className="font-medium">{entry.degree}</p>
-                          <p className="text-[#6B6760]">{entry.institution}</p>
-                          {entry.duration && (
-                            <p className="text-xs text-[#6B6760]">{entry.duration}</p>
-                          )}
-                        </div>
-                      ))}
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            )}
+              {education.length > 0 ? (
+                <PublicProfileSection
+                  title="Education"
+                  right={<GraduationCap className="h-4 w-4 text-[#6B6760]" />}
+                >
+                  <div className="space-y-2.5">
+                    {education.map((entry) => (
+                      <div key={entry.id} className="text-sm">
+                        <p className="font-medium text-[#2D3330]">{entry.degree}</p>
+                        <p className="text-[#6B6760]">{entry.institution}</p>
+                        {entry.duration ? (
+                          <p className="text-xs text-[#6B6760]">{entry.duration}</p>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                </PublicProfileSection>
+              ) : null}
+            </div>
+          ) : null}
 
-            {(values.length > 0 || causes.length > 0 || culture.length > 0) && (
-              <div className="grid gap-4 md:grid-cols-3">
-                {values.length > 0 && (
-                  <Card className="border-[#E8E6DD] bg-white/95">
-                    <CardHeader className="pb-2">{sectionTitle('Values')}</CardHeader>
-                    <CardContent className="flex flex-wrap gap-2">
+          {values.length > 0 || causes.length > 0 || culture.length > 0 ? (
+            <PublicProfileSection title="Values, causes, and culture">
+              <div className="space-y-3">
+                {values.length > 0 ? (
+                  <div>
+                    <p className="mb-1 text-xs uppercase tracking-wide text-[#6B6760]">Values</p>
+                    <div className="flex flex-wrap gap-2">
                       {values.map((value) => (
-                        <Badge key={value} variant="secondary">
+                        <span
+                          key={value}
+                          className="rounded-full border border-[#D9D5CC] bg-[#F7F6F1] px-2.5 py-1 text-xs text-[#2D3330]"
+                        >
                           {value}
-                        </Badge>
+                        </span>
                       ))}
-                    </CardContent>
-                  </Card>
-                )}
-                {causes.length > 0 && (
-                  <Card className="border-[#E8E6DD] bg-white/95">
-                    <CardHeader className="pb-2">{sectionTitle('Causes')}</CardHeader>
-                    <CardContent className="flex flex-wrap gap-2">
+                    </div>
+                  </div>
+                ) : null}
+                {causes.length > 0 ? (
+                  <div>
+                    <p className="mb-1 text-xs uppercase tracking-wide text-[#6B6760]">Causes</p>
+                    <div className="flex flex-wrap gap-2">
                       {causes.map((cause) => (
-                        <Badge key={cause} variant="outline">
+                        <span
+                          key={cause}
+                          className="rounded-full border border-[#D9D5CC] bg-[#F7F6F1] px-2.5 py-1 text-xs text-[#2D3330]"
+                        >
                           {cause}
-                        </Badge>
+                        </span>
                       ))}
-                    </CardContent>
-                  </Card>
-                )}
-                {culture.length > 0 && (
-                  <Card className="border-[#E8E6DD] bg-white/95">
-                    <CardHeader className="pb-2">{sectionTitle('Work Culture')}</CardHeader>
-                    <CardContent className="space-y-2">
+                    </div>
+                  </div>
+                ) : null}
+                {culture.length > 0 ? (
+                  <div>
+                    <p className="mb-1 text-xs uppercase tracking-wide text-[#6B6760]">
+                      Work culture
+                    </p>
+                    <div className="space-y-1">
                       {culture.map((item) => (
-                        <p key={item} className="text-sm text-[#2D3330] capitalize">
+                        <p key={item} className="text-sm capitalize text-[#2D3330]">
                           {item}
                         </p>
                       ))}
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            )}
-
-            {impactEntries.length > 0 && (
-              <Card className="border-[#E8E6DD] bg-white/95">
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Target className="h-4 w-4" />
-                    Impact
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {impactEntries.map((entry) => (
-                    <div
-                      key={entry.id}
-                      className="space-y-2 border-b border-[#E8E6DD] pb-4 last:border-b-0"
-                    >
-                      <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
-                        <p className="font-medium">{entry.title}</p>
-                        {entry.timeframe && (
-                          <p className="text-xs text-[#6B6760]">{entry.timeframe}</p>
-                        )}
-                      </div>
-                      {entry.description && (
-                        <p className="text-sm text-[#2D3330]">{entry.description}</p>
-                      )}
-                      {entry.metrics.length > 0 && (
-                        <div className="grid gap-2 md:grid-cols-3">
-                          {entry.metrics.map((metric) => (
-                            <div
-                              key={`${entry.id}-${metric.name}`}
-                              className="rounded-md border border-[#E8E6DD] p-2"
-                            >
-                              <p className="text-xs text-[#6B6760]">{metric.name}</p>
-                              <p className="text-sm font-medium">
-                                {metric.value}
-                                {metric.unit ? ` ${metric.unit}` : ''}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      )}
                     </div>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
-          </>
-        )}
-      </div>
-    </div>
+                  </div>
+                ) : null}
+              </div>
+            </PublicProfileSection>
+          ) : null}
+
+          {impactEntries.length > 0 ? (
+            <PublicProfileSection
+              title="Impact"
+              right={<Target className="h-4 w-4 text-[#6B6760]" />}
+            >
+              <div className="space-y-3">
+                {impactEntries.map((entry) => (
+                  <div
+                    key={entry.id}
+                    className="space-y-1.5 border-b border-[#E8E6DD] pb-3 last:border-b-0 last:pb-0"
+                  >
+                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                      <p className="text-sm font-medium text-[#2D3330]">{entry.title}</p>
+                      {entry.timeframe ? (
+                        <p className="text-xs text-[#6B6760]">{entry.timeframe}</p>
+                      ) : null}
+                    </div>
+                    {entry.description ? (
+                      <p className="text-sm text-[#2D3330]">{entry.description}</p>
+                    ) : null}
+                    {entry.metrics.length > 0 ? (
+                      <div className="grid gap-2 sm:grid-cols-3">
+                        {entry.metrics.map((metric) => (
+                          <div
+                            key={`${entry.id}-${metric.name}`}
+                            className="rounded-md border border-[#E8E6DD] bg-white px-2.5 py-2"
+                          >
+                            <p className="text-xs text-[#6B6760]">{metric.name}</p>
+                            <p className="text-sm font-medium text-[#2D3330]">
+                              {metric.value}
+                              {metric.unit ? ` ${metric.unit}` : ''}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            </PublicProfileSection>
+          ) : null}
+        </div>
+      )}
+    </PublicProfileShell>
   );
 }

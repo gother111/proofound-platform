@@ -74,6 +74,8 @@ describe('Public individual portfolio page', () => {
     render(element);
 
     expect(screen.getByRole('heading', { name: 'Jane Doe' })).toBeInTheDocument();
+    expect(screen.getByText(/trust summary/i)).toBeInTheDocument();
+    expect(screen.getByText(/profile narrative/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /return to menu/i })).toHaveAttribute(
       'href',
       '/app/i/home'

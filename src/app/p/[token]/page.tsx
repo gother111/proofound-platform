@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PublicProfileShell } from '@/components/public-profile/PublicProfileShell';
+import { PublicProfileSection } from '@/components/public-profile/PublicProfileSection';
 import { PublicSnippetView } from '@/components/profile/PublicSnippetView';
 import {
   buildPublicSnippetViewModel,
@@ -22,9 +23,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { token } = await params;
   const safePath = `/p/${encodeURIComponent(token)}`;
+
   try {
     const snippet = await getSnippetByToken(token);
-
     if (!snippet) {
       return buildUnavailablePublicProfileMetadata(safePath);
     }
@@ -71,19 +72,13 @@ export async function generateMetadata({
 
 function InvalidSnippetState() {
   return (
-    <div className="min-h-screen bg-[#F7F6F1] flex items-center justify-center p-6">
-      <Card className="max-w-lg w-full border-[#E8E6DD] bg-white/95 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-xl text-[#2D3330]">
-            This shared profile is unavailable
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm text-[#6B6760]">
-          <p>The link may be expired, deleted, or invalid.</p>
-          <p>Ask the owner to generate a new sharing link.</p>
-        </CardContent>
-      </Card>
-    </div>
+    <PublicProfileShell maxWidthClassName="max-w-3xl">
+      <PublicProfileSection title="Shared profile status">
+        <p className="text-base font-semibold text-[#2D3330]">This shared profile is unavailable</p>
+        <p className="mt-1 text-sm text-[#6B6760]">The link may be expired, deleted, or invalid.</p>
+        <p className="text-sm text-[#6B6760]">Ask the owner to generate a new sharing link.</p>
+      </PublicProfileSection>
+    </PublicProfileShell>
   );
 }
 

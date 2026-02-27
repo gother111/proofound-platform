@@ -29,6 +29,16 @@ describe('public profile metadata helpers', () => {
     expect(metadata.alternates?.canonical).toContain('/p/abc123');
   });
 
+  it('normalizes missing leading slash in paths', () => {
+    const metadata = buildPublicProfileMetadata({
+      title: 'Example',
+      description: 'Example',
+      path: 'portfolio/jane',
+    });
+
+    expect(metadata.alternates?.canonical).toContain('/portfolio/jane');
+  });
+
   it('returns safe unavailable metadata copy', () => {
     const metadata = buildUnavailablePublicProfileMetadata('/p/missing-token');
     expect(metadata.title).toBe('Public Profile Unavailable | Proofound');

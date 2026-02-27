@@ -4,25 +4,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Button } from '@/components/ui/button';
-import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { GlassCard } from '@/components/ui/glass-card';
-import { AppSurface } from '@/components/ui/v2/AppSurface';
-import { HoverTilt } from '@/components/ui/hover-tilt';
-import { FadeIn } from '@/components/ui/fade-in';
-import { SlideUp } from '@/components/ui/slide-up';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
-import {
-  ShieldCheck,
-  Mail,
-  Link2,
-  Sparkles,
-  CheckCircle2,
-  Globe2,
-  UserRound,
-  ArrowLeft,
-} from 'lucide-react';
+import { ArrowLeft, Link2, Mail, ShieldCheck } from 'lucide-react';
 import { buildTrustSignals } from '@/lib/portfolio/trust-signals';
 import { mergeVisibilityFlags } from '@/lib/portfolio/visibility';
 import { sanitizeReturnPath } from '@/lib/navigation/sanitize-return-path';
@@ -30,6 +14,8 @@ import {
   buildPublicProfileMetadata,
   buildUnavailablePublicProfileMetadata,
 } from '@/lib/seo/public-profile-metadata';
+import { PublicProfileSection } from '@/components/public-profile/PublicProfileSection';
+import { PublicProfileShell } from '@/components/public-profile/PublicProfileShell';
 import { ShareLinkButton } from './ShareLinkButton';
 import { DownloadPdfButton } from './DownloadPdfButton';
 import { CopyTextButton } from './CopyTextButton';
@@ -90,14 +76,17 @@ export async function generateMetadata({
     const individual = Array.isArray(profile.individual_profiles)
       ? profile.individual_profiles[0]
       : profile.individual_profiles;
+
     const displayName = profile.display_name || profile.handle || 'Proofound Member';
-    const headline = visibility.header ? individual?.headline || individual?.tagline || null : null;
+    const headline = visibility.header
+      ? (individual?.headline || individual?.tagline || '').trim() || null
+      : null;
 
     return buildPublicProfileMetadata({
       title: `${displayName} | Proofound Public Portfolio`,
       description: headline
-        ? `${displayName} on Proofound. ${headline}`
-        : `Explore ${displayName}'s public Proofound portfolio with trust signals and verified achievements.`,
+        ? `${displayName}. ${headline}`
+        : `Explore ${displayName}'s public Proofound portfolio and trust signals.`,
       path: safePath,
       ogTitle: `${displayName} on Proofound`,
       ogDescription: headline
@@ -251,6 +240,7 @@ export default async function PortfolioPage({
       (skill.taxonomy as any)?.name_i18n?.default ||
       skill.skill_code ||
       'Skill';
+
     return {
       id: skill.id,
       name,
@@ -263,298 +253,267 @@ export default async function PortfolioPage({
     : 'This is a public, read-only view. Owner-only actions are hidden.';
 
   return (
-    <AppSurface
-      density="comfortable"
-      withBackground={false}
-      className="min-h-screen bg-gradient-to-b from-[#F7F6F1] via-[#FBFAF6] to-white"
-    >
-      <FadeIn duration={0.6}>
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 lg:flex-row lg:py-8">
-          <div className="flex-1 space-y-6">
-            <SlideUp delay={0.1}>
-              <GlassCard interactive className="border-[#E8E6DD] bg-white/95 shadow-sm">
-                <CardContent className="flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#1C4D3A] to-[#C76B4A] text-lg font-semibold text-white">
-                      {displayName[0]?.toUpperCase() || 'P'}
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h1 className="text-xl font-semibold text-[#2D3330]">{displayName}</h1>
-                        {visibility.identity && signals.identity.verified && (
-                          <Badge
-                            variant="outline"
-                            className="gap-1 border-emerald-200 text-emerald-700"
-                          >
-                            <ShieldCheck className="h-3.5 w-3.5" />
-                            Verified
-                          </Badge>
-                        )}
-                      </div>
-                      {visibility.header && (
-                        <>
-                          <p className="text-sm text-[#6B6760]">@{profile.handle}</p>
-                          <p className="text-sm text-[#2D3330]">{headline}</p>
-                        </>
-                      )}
-                    </div>
+    <PublicProfileShell
+      maxWidthClassName="max-w-5xl"
+      header={
+        <div className="space-y-3">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#1C4D3A] to-[#C76B4A] text-lg font-semibold text-white">
+                  {displayName[0]?.toUpperCase() || 'P'}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-2xl font-semibold text-[#2D3330]">{displayName}</h1>
+                    {visibility.identity && signals.identity.verified ? (
+                      <Badge variant="outline" className="border-emerald-200 text-emerald-700">
+                        Verified
+                      </Badge>
+                    ) : null}
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={returnPath} className="inline-flex items-center gap-1.5">
-                        <ArrowLeft className="h-4 w-4" />
-                        {returnLabel}
-                      </Link>
-                    </Button>
-                    <ShareLinkButton url={shareUrl} />
-                    {viewerIsOwner && <CopyTextButton />}
-                    {viewerIsOwner && <DownloadPdfButton />}
-                    <ViewCounterClient handle={handle} showCount={viewerIsOwner} />
-                  </div>
-                </CardContent>
-              </GlassCard>
-            </SlideUp>
-
-            {publicMessage && (
-              <SlideUp delay={0.2}>
-                <GlassCard className="border-[#E8E6DD] bg-white/95">
-                  <CardContent className="flex items-center gap-3 p-4 text-sm text-[#2D3330]">
-                    <Globe2 className="h-4 w-4 text-[#6B6760]" />
-                    {publicMessage}
-                  </CardContent>
-                </GlassCard>
-              </SlideUp>
-            )}
-
-            {visibility.proofBar && (
-              <SlideUp delay={0.3}>
-                <GlassCard className="border-[#E8E6DD] bg-white/95">
-                  <CardHeader>
-                    <CardTitle>Trust signals</CardTitle>
-                  </CardHeader>
-                  <CardContent className="grid gap-3 md:grid-cols-2">
-                    {visibility.identity && (
-                      <TrustRow
-                        label="Identity"
-                        value={signals.identity.verified ? 'Verified' : 'Not verified'}
-                        helper={
-                          signals.identity.verified
-                            ? `Method: ${signals.identity.method ?? '—'}`
-                            : 'Complete identity verification to boost trust.'
-                        }
-                        positive={signals.identity.verified}
-                      />
-                    )}
-                    {visibility.workEmail && (
-                      <TrustRow
-                        label="Work email"
-                        value={signals.workEmail.verified ? 'Verified' : 'Not verified'}
-                        helper={
-                          signals.workEmail.verified
-                            ? 'Work email confirmed.'
-                            : 'Verify a work email for extra credibility.'
-                        }
-                        positive={signals.workEmail.verified}
-                      />
-                    )}
-                    {visibility.linkedin && (
-                      <TrustRow
-                        label="LinkedIn"
-                        value={
-                          signals.linkedin.verificationStatus === 'pending'
-                            ? 'Pending'
-                            : signals.linkedin.verificationStatus === 'verified' &&
-                                signals.linkedin.hasIdentityVerification
-                              ? 'Verified (Identity badge)'
-                              : signals.linkedin.verificationStatus === 'verified'
-                                ? 'Verified (no identity badge)'
-                                : signals.linkedin.verificationStatus === 'failed'
-                                  ? 'Failed'
-                                  : 'Not checked'
-                        }
-                        helper={
-                          signals.linkedin.verificationStatus === 'pending'
-                            ? 'LinkedIn verification is under review.'
-                            : signals.linkedin.verificationStatus === 'verified' &&
-                                signals.linkedin.hasIdentityVerification
-                              ? 'Official LinkedIn identity verification detected.'
-                              : signals.linkedin.verificationStatus === 'verified'
-                                ? 'LinkedIn verification completed without identity badge.'
-                                : signals.linkedin.verificationStatus === 'failed'
-                                  ? 'Retry LinkedIn verification to refresh this signal.'
-                                  : 'Run LinkedIn check for a quick trust boost.'
-                        }
-                        positive={signals.linkedin.verificationStatus === 'verified'}
-                      />
-                    )}
-                    {visibility.counts && (
-                      <>
-                        <TrustRow
-                          label="Proofs"
-                          value={`${signals.proofs.count} added`}
-                          helper="Add proof links or uploads to your top skills."
-                          positive={signals.proofs.count > 0}
-                        />
-                        <TrustRow
-                          label="Verified skills"
-                          value={`${signals.verifications.count} accepted`}
-                          helper="Ask a peer/manager to verify a skill."
-                          positive={signals.verifications.count > 0}
-                        />
-                        <TrustRow
-                          label="Peer attestations"
-                          value={`${signals.attestations.count} received`}
-                          helper="Collect attestations to strengthen trust."
-                          positive={signals.attestations.count > 0}
-                        />
-                      </>
-                    )}
-                  </CardContent>
-                </GlassCard>
-              </SlideUp>
-            )}
-
-            <SlideUp delay={0.4}>
-              <GlassCard>
-                <CardHeader>
-                  <CardTitle>About</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {visibility.bio ? (
-                    <p className="text-sm text-[#2D3330]">{bio}</p>
-                  ) : (
-                    <p className="text-sm text-[#6B6760]">
-                      {viewerIsOwner
-                        ? 'Bio/About is hidden from public view.'
-                        : 'This section is hidden.'}
-                    </p>
-                  )}
-                  {viewerIsOwner && (
-                    <p className="text-xs text-[#6B6760]">
-                      Edit your profile, proofs, and verifications from Settings or Expertise Hub.
-                    </p>
-                  )}
-                </CardContent>
-              </GlassCard>
-            </SlideUp>
-          </div>
-
-          <div className="flex-1 space-y-6">
-            <SlideUp delay={0.5}>
-              <GlassCard className="border-[#E8E6DD] bg-white/95">
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>Proofs & verifications</CardTitle>
-                  <Badge variant="outline" className="gap-1 border-[#D9D5CC] text-[#6B6760]">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    High-signal
-                  </Badge>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {visibility.counts ? (
+                  {visibility.header ? (
                     <>
-                      <SummaryRow
-                        label="Proofs added"
-                        value={signals.proofs.count}
-                        description="Links, media, certifications, or project evidence."
-                      />
-                      <Separator />
-                      <SummaryRow
-                        label="Skills verified"
-                        value={signals.verifications.count}
-                        description="Accepted verification requests from peers or managers."
-                      />
-                      <Separator />
-                      <SummaryRow
-                        label="Peer attestations"
-                        value={signals.attestations.count}
-                        description="Trusted confirmations attached to your profile."
-                      />
-                      {viewerIsOwner && (
-                        <p className="text-xs text-[#6B6760]">
-                          Tip: Add proof to your top 3 skills, then request one verification each
-                          for a fast trust lift.
-                        </p>
-                      )}
+                      <p className="text-sm text-[#6B6760]">@{profile.handle}</p>
+                      <p className="text-sm text-[#2D3330]">{headline}</p>
                     </>
-                  ) : (
-                    <p className="text-sm text-[#6B6760]">
-                      {viewerIsOwner
-                        ? 'Counts are hidden from public view.'
-                        : 'This section is hidden.'}
-                    </p>
-                  )}
-                </CardContent>
-              </GlassCard>
-            </SlideUp>
+                  ) : null}
+                </div>
+              </div>
+              {publicMessage ? <p className="text-sm text-[#6B6760]">{publicMessage}</p> : null}
+            </div>
 
-            <SlideUp delay={0.6}>
-              <GlassCard className="border-[#E8E6DD] bg-white/95">
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>Skills snapshot</CardTitle>
-                  <Badge variant="outline" className="gap-1 border-[#D9D5CC] text-[#6B6760]">
-                    <UserRound className="h-3.5 w-3.5" />
-                    {skillView.length || 'Add skills'}
-                  </Badge>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {visibility.skills ? (
-                    skillView.length === 0 ? (
-                      <p className="text-sm text-[#6B6760]">
-                        {viewerIsOwner
-                          ? 'Add your top skills and proofs to light up this section.'
-                          : 'Skills will appear here once added.'}
-                      </p>
-                    ) : (
-                      skillView.map((skill) => (
-                        <div key={skill.id} className="space-y-1.5">
-                          <div className="flex items-center justify-between text-sm text-[#2D3330]">
-                            <span>{skill.name}</span>
-                            <span className="text-[#6B6760]">
-                              {Math.round((skill.level / 5) * 100)}%
-                            </span>
-                          </div>
-                          <Progress value={(skill.level / 5) * 100} className="h-2" />
-                        </div>
-                      ))
-                    )
-                  ) : (
-                    <p className="text-sm text-[#6B6760]">
-                      {viewerIsOwner ? 'Skills hidden from public view.' : 'Skills are hidden.'}
-                    </p>
-                  )}
-                </CardContent>
-              </GlassCard>
-            </SlideUp>
-
-            <SlideUp delay={0.7}>
-              <GlassCard className="border-[#E8E6DD] bg-white/95">
-                <CardHeader>
-                  <CardTitle>Contact</CardTitle>
-                </CardHeader>
-                <CardContent className="flex flex-wrap gap-3 text-sm">
-                  {individual?.work_email && visibility.contact ? (
-                    <ContactPill href={`mailto:${individual.work_email}`} label="Work email" />
-                  ) : (
-                    <span className="rounded-full border border-[#D9D5CC] px-3 py-1 text-[#6B6760]">
-                      Contact email hidden
-                    </span>
-                  )}
-                  <ContactPill
-                    href={shareUrl}
-                    label="Shareable link"
-                    icon={<Link2 className="h-4 w-4" />}
-                  />
-                </CardContent>
-              </GlassCard>
-            </SlideUp>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="outline" size="sm" asChild>
+                <Link href={returnPath} className="inline-flex items-center gap-1.5">
+                  <ArrowLeft className="h-4 w-4" />
+                  {returnLabel}
+                </Link>
+              </Button>
+              <ShareLinkButton url={shareUrl} />
+              {viewerIsOwner ? <CopyTextButton /> : null}
+              {viewerIsOwner ? <DownloadPdfButton /> : null}
+              <ViewCounterClient handle={handle} showCount={viewerIsOwner} />
+            </div>
           </div>
         </div>
-      </FadeIn>
-    </AppSurface>
+      }
+      footer={
+        <div className="flex items-center justify-between">
+          <span>proofound.io/portfolio/{profile.handle}</span>
+          <span>Proofound public profile</span>
+        </div>
+      }
+    >
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+        <div className="space-y-4">
+          <PublicProfileSection title="Trust summary">
+            {visibility.identity ||
+            visibility.workEmail ||
+            visibility.linkedin ||
+            visibility.counts ? (
+              <div className="space-y-1.5">
+                {visibility.identity ? (
+                  <TrustSummaryRow
+                    label="Identity"
+                    value={signals.identity.verified ? 'Verified' : 'Not verified'}
+                    helper={
+                      signals.identity.verified
+                        ? `Method: ${signals.identity.method ?? 'Not specified'}`
+                        : 'Complete identity verification to boost trust.'
+                    }
+                    positive={signals.identity.verified}
+                  />
+                ) : null}
+                {visibility.workEmail ? (
+                  <TrustSummaryRow
+                    label="Work Email"
+                    value={signals.workEmail.verified ? 'Verified' : 'Not verified'}
+                    helper={
+                      signals.workEmail.verified
+                        ? 'Work email confirmed.'
+                        : 'Verify a work email for extra credibility.'
+                    }
+                    positive={signals.workEmail.verified}
+                  />
+                ) : null}
+                {visibility.linkedin ? (
+                  <TrustSummaryRow
+                    label="LinkedIn"
+                    value={formatLinkedinStatus(signals)}
+                    helper={formatLinkedinHelper(signals)}
+                    positive={signals.linkedin.verificationStatus === 'verified'}
+                  />
+                ) : null}
+                {visibility.counts ? (
+                  <TrustSummaryRow
+                    label="Proofs Added"
+                    value={`${signals.proofs.count}`}
+                    helper="Skills proofs, accepted verifications, and attestations shown below."
+                    positive={signals.proofs.count > 0}
+                  />
+                ) : null}
+              </div>
+            ) : (
+              <p className="text-sm text-[#6B6760]">
+                {viewerIsOwner
+                  ? 'Trust summary is hidden from public view.'
+                  : 'This section is hidden.'}
+              </p>
+            )}
+          </PublicProfileSection>
+
+          <PublicProfileSection
+            title="Skills snapshot"
+            right={
+              <span className="rounded-full border border-[#D9D5CC] bg-[#F7F6F1] px-2.5 py-1 text-xs text-[#2D3330]">
+                {skillView.length || 'Add skills'}
+              </span>
+            }
+          >
+            {visibility.skills ? (
+              skillView.length > 0 ? (
+                <div className="space-y-2.5">
+                  {skillView.map((skill) => {
+                    const levelPercent = Math.round((skill.level / 5) * 100);
+
+                    return (
+                      <div key={skill.id} className="space-y-1">
+                        <div className="flex items-center justify-between gap-2 text-sm text-[#2D3330]">
+                          <span>{skill.name}</span>
+                          <span className="text-[#6B6760]">{levelPercent}%</span>
+                        </div>
+                        <Progress
+                          value={levelPercent}
+                          className="h-1.5 bg-[#E8E6DD]"
+                          indicatorClassName="bg-[#1C4D3A]"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-sm text-[#6B6760]">
+                  {viewerIsOwner
+                    ? 'Add your top skills and proofs to light up this section.'
+                    : 'Skills will appear here once added.'}
+                </p>
+              )
+            ) : (
+              <p className="text-sm text-[#6B6760]">
+                {viewerIsOwner ? 'Skills hidden from public view.' : 'Skills are hidden.'}
+              </p>
+            )}
+          </PublicProfileSection>
+
+          <PublicProfileSection title="Profile narrative">
+            {visibility.bio ? (
+              <p className="whitespace-pre-line text-sm leading-6 text-[#2D3330]">{bio}</p>
+            ) : (
+              <p className="text-sm text-[#6B6760]">
+                {viewerIsOwner
+                  ? 'Bio/About is hidden from public view.'
+                  : 'This section is hidden.'}
+              </p>
+            )}
+            {viewerIsOwner ? (
+              <p className="mt-2 text-xs text-[#6B6760]">
+                Edit your profile, proofs, and verifications from Settings or Expertise Hub.
+              </p>
+            ) : null}
+          </PublicProfileSection>
+        </div>
+
+        <div className="space-y-4">
+          <PublicProfileSection title="Proof totals">
+            {visibility.counts ? (
+              <div className="space-y-2">
+                <MetricRow label="Proofs added" value={signals.proofs.count} />
+                <MetricRow label="Skills verified" value={signals.verifications.count} />
+                <MetricRow label="Peer attestations" value={signals.attestations.count} />
+                {viewerIsOwner ? (
+                  <p className="pt-1 text-xs text-[#6B6760]">
+                    Tip: add proof to your top 3 skills, then request one verification each for a
+                    fast trust lift.
+                  </p>
+                ) : null}
+              </div>
+            ) : (
+              <p className="text-sm text-[#6B6760]">
+                {viewerIsOwner ? 'Counts are hidden from public view.' : 'This section is hidden.'}
+              </p>
+            )}
+          </PublicProfileSection>
+
+          <PublicProfileSection title="Contact">
+            <div className="flex flex-wrap gap-2 text-sm">
+              {individual?.work_email && visibility.contact ? (
+                <ContactPill href={`mailto:${individual.work_email}`} label="Work email" />
+              ) : (
+                <span className="rounded-full border border-[#D9D5CC] px-3 py-1 text-[#6B6760]">
+                  Contact email hidden
+                </span>
+              )}
+              <ContactPill
+                href={shareUrl}
+                label="Shareable link"
+                icon={<Link2 className="h-4 w-4" />}
+              />
+            </div>
+          </PublicProfileSection>
+        </div>
+      </div>
+    </PublicProfileShell>
   );
 }
 
-function TrustRow({
+function formatLinkedinStatus(signals: ReturnType<typeof buildTrustSignals>): string {
+  if (signals.linkedin.verificationStatus === 'pending') {
+    return 'Pending';
+  }
+
+  if (
+    signals.linkedin.verificationStatus === 'verified' &&
+    signals.linkedin.hasIdentityVerification
+  ) {
+    return 'Verified badge';
+  }
+
+  if (signals.linkedin.verificationStatus === 'verified') {
+    return 'Verified';
+  }
+
+  if (signals.linkedin.verificationStatus === 'failed') {
+    return 'Failed';
+  }
+
+  return 'Not checked';
+}
+
+function formatLinkedinHelper(signals: ReturnType<typeof buildTrustSignals>): string {
+  if (signals.linkedin.verificationStatus === 'pending') {
+    return 'LinkedIn verification is under review.';
+  }
+
+  if (
+    signals.linkedin.verificationStatus === 'verified' &&
+    signals.linkedin.hasIdentityVerification
+  ) {
+    return 'Official LinkedIn identity verification detected.';
+  }
+
+  if (signals.linkedin.verificationStatus === 'verified') {
+    return 'LinkedIn verification completed without identity badge.';
+  }
+
+  if (signals.linkedin.verificationStatus === 'failed') {
+    return 'Retry LinkedIn verification to refresh this signal.';
+  }
+
+  return 'Run LinkedIn check for a quick trust boost.';
+}
+
+function TrustSummaryRow({
   label,
   value,
   helper,
@@ -566,71 +525,37 @@ function TrustRow({
   positive?: boolean;
 }) {
   return (
-    <HoverTilt intensity={2}>
-      <div className="h-full rounded-lg border border-[#E8E6DD] bg-[#FCFBF8] p-3 shadow-sm transition-colors hover:bg-white">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <ShieldCheck
-              className={`h-4 w-4 ${positive ? 'text-emerald-600' : 'text-[#9A958D]'}`}
-            />
-            <p className="text-sm font-semibold text-[#2D3330]">{label}</p>
-          </div>
-          <Badge variant={positive ? 'default' : 'outline'} className="text-xs">
-            {value}
-          </Badge>
+    <div className="rounded-lg border border-[#E8E6DD] bg-white px-3 py-2">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className={`h-4 w-4 ${positive ? 'text-emerald-600' : 'text-[#9A958D]'}`} />
+          <span className="text-sm font-medium text-[#2D3330]">{label}</span>
         </div>
-        {helper && <p className="mt-2 text-xs text-[#6B6760]">{helper}</p>}
+        <span className="text-sm font-semibold text-[#1C4D3A]">{value}</span>
       </div>
-    </HoverTilt>
+      {helper ? <p className="pt-1 text-xs text-[#6B6760]">{helper}</p> : null}
+    </div>
   );
 }
 
-function SummaryRow({
-  label,
-  value,
-  description,
-}: {
-  label: string;
-  value: number | string;
-  description: string;
-}) {
+function MetricRow({ label, value }: { label: string; value: number | string }) {
   return (
-    <HoverTilt intensity={2} className="block w-full">
-      <div className="flex items-start justify-between gap-3 rounded-lg p-2 transition-colors hover:bg-[#F7F6F1]">
-        <div>
-          <p className="text-sm font-semibold text-[#2D3330]">{label}</p>
-          <p className="text-xs text-[#6B6760]">{description}</p>
-        </div>
-        <div className="flex items-center gap-1 rounded-full bg-[#F7F6F1] px-3 py-1 text-sm font-medium text-[#2D3330]">
-          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-          {value}
-        </div>
-      </div>
-    </HoverTilt>
+    <div className="flex items-center justify-between gap-3 rounded-md border border-[#E8E6DD] bg-white px-3 py-2">
+      <span className="text-sm text-[#2D3330]">{label}</span>
+      <span className="rounded-full bg-[#F7F6F1] px-2.5 py-0.5 text-sm font-semibold text-[#2D3330]">
+        {value}
+      </span>
+    </div>
   );
 }
 
-function ContactPill({
-  href,
-  label,
-  icon,
-  muted,
-}: {
-  href: string;
-  label: string;
-  icon?: ReactNode;
-  muted?: boolean;
-}) {
+function ContactPill({ href, label, icon }: { href: string; label: string; icon?: ReactNode }) {
   return (
     <a
       href={href}
       target={href.startsWith('http') ? '_blank' : undefined}
       rel="noreferrer"
-      className={`flex items-center gap-2 rounded-full border px-3 py-1 ${
-        muted
-          ? 'border-slate-200 text-slate-500'
-          : 'border-[#D9D5CC] text-[#2D3330] hover:border-[#1C4D3A]/40 hover:text-[#1C4D3A]'
-      }`}
+      className="flex items-center gap-2 rounded-full border border-[#D9D5CC] px-3 py-1 text-[#2D3330] hover:border-[#1C4D3A]/40 hover:text-[#1C4D3A]"
     >
       {icon ?? <Mail className="h-4 w-4" />}
       {label}

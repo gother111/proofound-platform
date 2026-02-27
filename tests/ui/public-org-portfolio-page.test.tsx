@@ -87,6 +87,8 @@ describe('Organization public portfolio page', () => {
 
     expect(screen.getByRole('heading', { name: 'Acme' })).toBeInTheDocument();
     expect(screen.getByText(/public organization portfolio/i)).toBeInTheDocument();
+    expect(screen.getByText(/trust summary/i)).toBeInTheDocument();
+    expect(screen.getByText(/mission/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /return to menu/i })).toHaveAttribute(
       'href',
       '/app/o/acme/home'

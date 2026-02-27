@@ -5,26 +5,14 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { GlassCard } from '@/components/ui/glass-card';
-import { AppSurface } from '@/components/ui/v2/AppSurface';
-import { FadeIn } from '@/components/ui/fade-in';
-import { SlideUp } from '@/components/ui/slide-up';
-import {
-  ArrowLeft,
-  Briefcase,
-  Building2,
-  Globe2,
-  ShieldCheck,
-  Sparkles,
-  Users,
-} from 'lucide-react';
+import { ArrowLeft, Building2, Globe2, ShieldCheck, Users, Briefcase } from 'lucide-react';
 import { sanitizeReturnPath } from '@/lib/navigation/sanitize-return-path';
 import {
   buildPublicProfileMetadata,
   buildUnavailablePublicProfileMetadata,
 } from '@/lib/seo/public-profile-metadata';
+import { PublicProfileSection } from '@/components/public-profile/PublicProfileSection';
+import { PublicProfileShell } from '@/components/public-profile/PublicProfileShell';
 import { ShareLinkButton } from '../../[handle]/ShareLinkButton';
 import { DownloadOrganizationPdfButton } from './DownloadOrganizationPdfButton';
 
@@ -42,7 +30,7 @@ export async function generateMetadata({
     const supabase = await createClient();
     const { data: organization } = await supabase
       .from('organizations')
-      .select('slug, display_name, tagline')
+      .select('slug, display_name, tagline, mission')
       .eq('slug', slug)
       .maybeSingle();
 
@@ -55,17 +43,21 @@ export async function generateMetadata({
       typeof organization.tagline === 'string' && organization.tagline.trim().length > 0
         ? organization.tagline.trim()
         : null;
+    const mission =
+      typeof organization.mission === 'string' && organization.mission.trim().length > 0
+        ? organization.mission.trim()
+        : null;
 
     return buildPublicProfileMetadata({
       title: `${displayName} | Proofound Organization Portfolio`,
-      description: tagline
-        ? `${displayName} on Proofound. ${tagline}`
-        : `Explore ${displayName}'s public organization portfolio on Proofound.`,
+      description:
+        tagline ||
+        mission ||
+        `Explore ${displayName}'s public organization portfolio on Proofound.`,
       path: safePath,
       ogTitle: `${displayName} on Proofound`,
-      ogDescription: tagline
-        ? `${tagline} View this public organization profile on Proofound.`
-        : `View ${displayName}'s public organization profile on Proofound.`,
+      ogDescription:
+        tagline || mission || `View ${displayName}'s public organization profile on Proofound.`,
     });
   } catch {
     return buildUnavailablePublicProfileMetadata(safePath);
@@ -164,162 +156,180 @@ export default async function OrganizationPortfolioPage({
   const viewerIsMember = Boolean(membershipResult.count && membershipResult.count > 0);
 
   return (
-    <AppSurface
-      withBackground={false}
-      density="comfortable"
-      className="min-h-screen bg-gradient-to-b from-[#F7F6F1] via-[#FBFAF6] to-white"
-    >
-      <FadeIn duration={0.6}>
-        <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
-          <SlideUp delay={0.1}>
-            <GlassCard className="border-[#E8E6DD] bg-white/95 shadow-sm">
-              <CardContent className="flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between">
-                <div className="space-y-2">
+    <PublicProfileShell
+      maxWidthClassName="max-w-5xl"
+      header={
+        <div className="space-y-3">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1C4D3A] text-white">
+                  <Building2 className="h-5 w-5" />
+                </div>
+                <div>
                   <div className="flex items-center gap-2">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1C4D3A] text-white">
-                      <Building2 className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h1 className="text-2xl font-semibold text-[#2D3330]">
-                          {organization.display_name}
-                        </h1>
-                        {organization.verified ? (
-                          <Badge variant="outline" className="border-emerald-200 text-emerald-700">
-                            <ShieldCheck className="mr-1 h-3.5 w-3.5" />
-                            Verified
-                          </Badge>
-                        ) : null}
-                      </div>
-                      <p className="text-sm text-[#6B6760]">Public organization portfolio</p>
-                    </div>
+                    <h1 className="text-2xl font-semibold text-[#2D3330]">
+                      {organization.display_name}
+                    </h1>
+                    {organization.verified ? (
+                      <Badge variant="outline" className="border-emerald-200 text-emerald-700">
+                        <ShieldCheck className="mr-1 h-3.5 w-3.5" />
+                        Verified
+                      </Badge>
+                    ) : null}
                   </div>
-
-                  {organization.tagline ? (
-                    <p className="text-sm text-[#2D3330]">{organization.tagline}</p>
-                  ) : (
-                    <p className="text-sm text-[#6B6760]">
-                      Purpose-led organization profile and active opportunities.
-                    </p>
-                  )}
+                  <p className="text-sm text-[#6B6760]">Public organization portfolio</p>
                 </div>
+              </div>
+              <p className="text-sm text-[#2D3330]">
+                {organization.tagline ||
+                  'Purpose-led organization profile and active opportunities.'}
+              </p>
+            </div>
 
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={returnPath} className="inline-flex items-center gap-1.5">
-                      <ArrowLeft className="h-4 w-4" />
-                      {returnLabel}
-                    </Link>
-                  </Button>
-                  <ShareLinkButton url={shareUrl} />
-                  {viewerIsMember ? <DownloadOrganizationPdfButton slug={slug} /> : null}
-                  {organization.website ? (
-                    <a
-                      href={organization.website}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-2 rounded-md border border-[#D9D5CC] bg-[#FCFBF8] px-3 py-2 text-sm text-[#2D3330] transition-colors hover:border-[#1C4D3A]/40 hover:text-[#1C4D3A]"
-                    >
-                      <Globe2 className="h-4 w-4" />
-                      Website
-                    </a>
-                  ) : null}
-                </div>
-              </CardContent>
-            </GlassCard>
-          </SlideUp>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <SlideUp delay={0.2}>
-              <GlassCard className="h-full border-[#E8E6DD] bg-white/95">
-                <CardHeader>
-                  <CardTitle className="text-lg">Mission</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-[#2D3330]">
-                    {organization.mission || 'Mission statement is not published yet.'}
-                  </p>
-                </CardContent>
-              </GlassCard>
-            </SlideUp>
-
-            <SlideUp delay={0.3}>
-              <GlassCard className="h-full border-[#E8E6DD] bg-white/95">
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle className="text-lg">Trust Summary</CardTitle>
-                  <Badge variant="outline" className="gap-1 border-[#D9D5CC] text-[#6B6760]">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    Lean MVP
-                  </Badge>
-                </CardHeader>
-                <CardContent className="space-y-3 text-sm text-[#2D3330]">
-                  <SummaryItem
-                    label="Active assignments"
-                    value={activeAssignments}
-                    icon={<Briefcase className="h-4 w-4 text-[#1C4D3A]" />}
-                  />
-                  <Separator />
-                  <SummaryItem
-                    label="Team members"
-                    value={teamMembers}
-                    icon={<Users className="h-4 w-4 text-[#1C4D3A]" />}
-                  />
-                  <Separator />
-                  <SummaryItem
-                    label="Organization type"
-                    value={organization.type || 'not specified'}
-                    icon={<Building2 className="h-4 w-4 text-[#1C4D3A]" />}
-                  />
-                </CardContent>
-              </GlassCard>
-            </SlideUp>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="outline" size="sm" asChild>
+                <Link href={returnPath} className="inline-flex items-center gap-1.5">
+                  <ArrowLeft className="h-4 w-4" />
+                  {returnLabel}
+                </Link>
+              </Button>
+              <ShareLinkButton url={shareUrl} />
+              {viewerIsMember ? <DownloadOrganizationPdfButton slug={slug} /> : null}
+              {organization.website ? (
+                <a
+                  href={organization.website}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-md border border-[#D9D5CC] bg-[#FCFBF8] px-3 py-2 text-sm text-[#2D3330] hover:border-[#1C4D3A]/40 hover:text-[#1C4D3A]"
+                >
+                  <Globe2 className="h-4 w-4" />
+                  Website
+                </a>
+              ) : null}
+            </div>
           </div>
-
-          <SlideUp delay={0.4}>
-            <GlassCard className="border-[#E8E6DD] bg-white/95">
-              <CardHeader>
-                <CardTitle className="text-lg">Values and Causes</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <p className="mb-2 text-sm font-medium text-[#2D3330]">Values</p>
-                  {values.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {values.map((value) => (
-                        <Badge
-                          key={value}
-                          variant="secondary"
-                          className="bg-[#F7F6F1] text-[#2D3330]"
-                        >
-                          {value}
-                        </Badge>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-[#6B6760]">No public values listed yet.</p>
-                  )}
-                </div>
-
-                <div>
-                  <p className="mb-2 text-sm font-medium text-[#2D3330]">Causes</p>
-                  {causes.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {causes.map((cause) => (
-                        <Badge key={cause} variant="outline" className="border-[#D9D5CC]">
-                          {cause}
-                        </Badge>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-[#6B6760]">No public causes listed yet.</p>
-                  )}
-                </div>
-              </CardContent>
-            </GlassCard>
-          </SlideUp>
         </div>
-      </FadeIn>
-    </AppSurface>
+      }
+      footer={
+        <div className="flex items-center justify-between">
+          <span>proofound.io/portfolio/org/{slug}</span>
+          <span>Organization public profile</span>
+        </div>
+      }
+    >
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+        <div className="space-y-4">
+          <PublicProfileSection title="Organization">
+            <div className="space-y-2">
+              <p className="text-sm text-[#2D3330]">
+                {organization.display_name || 'Organization profile'}
+              </p>
+              {organization.tagline ? (
+                <p className="text-sm text-[#6B6760]">{organization.tagline}</p>
+              ) : null}
+              <div className="flex flex-wrap gap-2">
+                {organization.type ? (
+                  <span className="rounded-full border border-[#D9D5CC] bg-[#F7F6F1] px-2.5 py-1 text-xs text-[#2D3330] capitalize">
+                    {organization.type}
+                  </span>
+                ) : null}
+                {organization.verified ? (
+                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs text-emerald-700">
+                    Verified
+                  </span>
+                ) : null}
+              </div>
+            </div>
+          </PublicProfileSection>
+
+          <PublicProfileSection title="Mission">
+            <p className="whitespace-pre-line text-sm leading-6 text-[#2D3330]">
+              {organization.mission || 'Mission statement is not published yet.'}
+            </p>
+          </PublicProfileSection>
+
+          <PublicProfileSection title="Values & causes">
+            <div className="space-y-3">
+              <div>
+                <p className="mb-1.5 text-xs uppercase tracking-wide text-[#6B6760]">Values</p>
+                {values.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {values.map((value) => (
+                      <span
+                        key={value}
+                        className="rounded-full border border-[#D9D5CC] bg-[#F7F6F1] px-2.5 py-1 text-xs text-[#2D3330]"
+                      >
+                        {value}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-[#6B6760]">No public values listed yet.</p>
+                )}
+              </div>
+              <div>
+                <p className="mb-1.5 text-xs uppercase tracking-wide text-[#6B6760]">Causes</p>
+                {causes.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {causes.map((cause) => (
+                      <span
+                        key={cause}
+                        className="rounded-full border border-[#D9D5CC] bg-[#F7F6F1] px-2.5 py-1 text-xs text-[#2D3330]"
+                      >
+                        {cause}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-[#6B6760]">No public causes listed yet.</p>
+                )}
+              </div>
+            </div>
+          </PublicProfileSection>
+        </div>
+
+        <div className="space-y-4">
+          <PublicProfileSection title="Trust summary">
+            <div className="space-y-2">
+              <SummaryItem
+                label="Active assignments"
+                value={activeAssignments}
+                icon={<Briefcase className="h-4 w-4 text-[#1C4D3A]" />}
+              />
+              <SummaryItem
+                label="Team members"
+                value={teamMembers}
+                icon={<Users className="h-4 w-4 text-[#1C4D3A]" />}
+              />
+              <SummaryItem
+                label="Organization type"
+                value={organization.type || 'not specified'}
+                icon={<Building2 className="h-4 w-4 text-[#1C4D3A]" />}
+              />
+            </div>
+          </PublicProfileSection>
+
+          <PublicProfileSection title="Links">
+            <div className="space-y-2 text-sm">
+              <p className="break-all text-[#2D3330]">{shareUrl}</p>
+              {organization.website ? (
+                <a
+                  href={organization.website}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="break-all text-[#1C4D3A] hover:underline"
+                >
+                  {organization.website}
+                </a>
+              ) : (
+                <p className="text-[#6B6760]">No public website listed.</p>
+              )}
+            </div>
+          </PublicProfileSection>
+        </div>
+      </div>
+    </PublicProfileShell>
   );
 }
 
@@ -333,12 +343,12 @@ function SummaryItem({
   icon: ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3">
+    <div className="flex items-center justify-between gap-3 rounded-md border border-[#E8E6DD] bg-white px-3 py-2">
       <div className="flex items-center gap-2">
         {icon}
         <span className="text-sm text-[#2D3330]">{label}</span>
       </div>
-      <span className="rounded-full bg-[#F7F6F1] px-3 py-1 text-sm font-medium text-[#2D3330]">
+      <span className="rounded-full bg-[#F7F6F1] px-2.5 py-0.5 text-sm font-semibold text-[#2D3330]">
         {value}
       </span>
     </div>
