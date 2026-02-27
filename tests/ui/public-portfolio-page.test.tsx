@@ -26,30 +26,18 @@ import PortfolioPage from '@/app/portfolio/[handle]/page';
 type Fixtures = {
   authUser: { id: string } | null;
   profile: any;
-  proofsCount?: number;
-  verificationCount?: number;
-  attestationCount?: number;
-  skills?: any[];
-  skillProofRows?: Array<{ skill_id: string | null }>;
   matchingProfile?: any;
   impactStories?: any[];
   fallbackSkillProofs?: any[];
-  verificationActivity?: any[];
 };
 
 function mockSupabaseClient(fixtures: Fixtures) {
   const {
     authUser,
     profile,
-    proofsCount = 0,
-    verificationCount = 0,
-    attestationCount = 0,
-    skills = [],
-    skillProofRows = [],
     matchingProfile = null,
     impactStories = [],
     fallbackSkillProofs = [],
-    verificationActivity = [],
   } = fixtures;
 
   return {
@@ -66,18 +54,6 @@ function mockSupabaseClient(fixtures: Fixtures) {
 
       if (table === 'skill_proofs') {
         const select = vi.fn((query: string, options?: { head?: boolean; count?: string }) => {
-          if (options?.head) {
-            return {
-              eq: vi.fn().mockResolvedValue({ count: proofsCount }),
-            };
-          }
-
-          if (query.trim() === 'skill_id') {
-            return {
-              eq: vi.fn().mockResolvedValue({ data: skillProofRows }),
-            };
-          }
-
           return {
             eq: vi.fn().mockReturnValue({
               order: vi.fn().mockReturnValue({
@@ -88,60 +64,6 @@ function mockSupabaseClient(fixtures: Fixtures) {
         });
 
         return { select };
-      }
-
-      if (table === 'skill_verification_requests') {
-        const select = vi.fn((query: string, options?: { head?: boolean; count?: string }) => {
-          if (options?.head) {
-            return {
-              eq: vi.fn().mockReturnValue({
-                eq: vi.fn().mockReturnValue({
-                  eq: vi.fn().mockResolvedValue({ count: verificationCount }),
-                }),
-              }),
-            };
-          }
-
-          if (query.includes('skill:skill_id')) {
-            return {
-              eq: vi.fn().mockReturnValue({
-                eq: vi.fn().mockReturnValue({
-                  eq: vi.fn().mockReturnValue({
-                    order: vi.fn().mockReturnValue({
-                      limit: vi.fn().mockResolvedValue({ data: verificationActivity }),
-                    }),
-                  }),
-                }),
-              }),
-            };
-          }
-
-          throw new Error(`Unexpected skill_verification_requests query: ${query}`);
-        });
-
-        return { select };
-      }
-
-      if (table === 'attestations') {
-        return {
-          select: vi.fn(() => ({
-            eq: vi.fn().mockReturnValue({
-              eq: vi.fn().mockResolvedValue({ count: attestationCount }),
-            }),
-          })),
-        };
-      }
-
-      if (table === 'skills') {
-        return {
-          select: vi.fn(() => ({
-            eq: vi.fn().mockReturnValue({
-              order: vi.fn().mockReturnValue({
-                limit: vi.fn().mockResolvedValue({ data: skills }),
-              }),
-            }),
-          })),
-        };
       }
 
       if (table === 'matching_profiles') {
@@ -172,7 +94,7 @@ function mockSupabaseClient(fixtures: Fixtures) {
 }
 
 describe('Public individual portfolio page', () => {
-  it('renders proof-first public view with intentional empty states and no return link', async () => {
+  it('renders public read-only view with updated sections and no owner-only details', async () => {
     vi.mocked(createClient).mockResolvedValue(
       mockSupabaseClient({
         authUser: null,
@@ -185,6 +107,9 @@ describe('Public individual portfolio page', () => {
             {
               headline: null,
               bio: null,
+              location: 'Stockholm, Sweden',
+              mission: 'Build equitable systems.',
+              vision: 'A fairer labor market.',
               tagline: null,
               verification_status: null,
               verification_method: null,
@@ -210,10 +135,17 @@ describe('Public individual portfolio page', () => {
     render(element);
 
     expect(screen.getByRole('heading', { name: 'Jane Doe' })).toBeInTheDocument();
-    expect(screen.getByText(/credibility at a glance/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /proof-based summary/i })).toBeInTheDocument();
     expect(screen.getByText(/featured proofs/i)).toBeInTheDocument();
+    expect(screen.getByText(/expertise snapshot/i)).toBeInTheDocument();
+    expect(screen.getByText(/my next challenge/i)).toBeInTheDocument();
+    expect(screen.getByText(/mission & vision/i)).toBeInTheDocument();
+    expect(screen.getByText(/location hidden/i)).toBeInTheDocument();
+    expect(screen.getByText(/mission is private in this view/i)).toBeInTheDocument();
     expect(screen.getByText(/no proofs published yet/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /copy recruiter summary/i })).toBeInTheDocument();
+    expect(screen.queryByText(/credibility at a glance/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/verification activity/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /return to menu/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /return home/i })).not.toBeInTheDocument();
   });
@@ -222,47 +154,39 @@ describe('Public individual portfolio page', () => {
     vi.mocked(createClient).mockResolvedValue(
       mockSupabaseClient({
         authUser: { id: 'user-1' },
-        proofsCount: 2,
-        verificationCount: 1,
-        attestationCount: 1,
-        skills: [
-          {
-            id: 'skill-1',
-            level: 4,
-            last_used_at: '2026-02-01T00:00:00.000Z',
-            skill_code: 'product-strategy',
-            taxonomy: { name_i18n: { en: 'Product Strategy' } },
-          },
-        ],
-        skillProofRows: [{ skill_id: 'skill-1' }],
         matchingProfile: {
           desired_roles: ['Product Lead'],
           work_mode: 'remote',
         },
+        fallbackSkillProofs: [
+          {
+            id: 'proof-verified',
+            title: 'Verified proof item',
+            proof_type: 'project',
+            description: 'Delivered measurable outcomes',
+            url: 'https://example.com/verified',
+            verified: true,
+            created_at: '2026-01-15T00:00:00.000Z',
+          },
+          {
+            id: 'proof-pending',
+            title: 'Pending proof item',
+            proof_type: 'project',
+            description: 'Pending outcome',
+            url: 'https://example.com/pending',
+            verified: false,
+            created_at: '2026-01-16T00:00:00.000Z',
+          },
+        ],
         impactStories: [
           {
             id: 'impact-1',
-            title: 'Launch readiness program',
+            title: 'Impact story should not appear',
             role_title: 'Program lead',
             timeline: 'Q4 2025',
-            outcomes: 'Shipped faster;Raised confidence',
-            measured_outcomes: [],
-            supporting_artifacts: [],
+            outcomes: 'Story outcome',
             verified: true,
             updated_at: '2026-01-15T00:00:00.000Z',
-          },
-        ],
-        verificationActivity: [
-          {
-            id: 'ver-1',
-            responded_at: '2026-02-10T00:00:00.000Z',
-            created_at: '2026-02-09T00:00:00.000Z',
-            verifier_source: 'peer',
-            verifier_email: 'reviewer@example.com',
-            skill: {
-              skill_code: 'product-strategy',
-              taxonomy: { name_i18n: { en: 'Product Strategy' } },
-            },
           },
         ],
         profile: {
@@ -274,6 +198,9 @@ describe('Public individual portfolio page', () => {
             {
               headline: 'Impact builder',
               bio: 'I build measurable change.',
+              location: 'Stockholm, Sweden',
+              mission: 'Build equitable systems.',
+              vision: 'A fairer labor market.',
               tagline: null,
               verification_status: 'verified',
               verification_method: 'veriff',
@@ -302,8 +229,15 @@ describe('Public individual portfolio page', () => {
       'href',
       '/app/i/home'
     );
-    expect(screen.getAllByRole('link', { name: /edit profile/i }).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole('link', { name: /add proof/i }).length).toBeGreaterThan(0);
+    expect(screen.getByText('Stockholm, Sweden')).toBeInTheDocument();
+    expect(screen.getByText('Build equitable systems.')).toBeInTheDocument();
+    expect(screen.getByText('Verified proof item')).toBeInTheDocument();
+    expect(screen.queryByText('Pending proof item')).not.toBeInTheDocument();
+    expect(screen.queryByText('Impact story should not appear')).not.toBeInTheDocument();
+    expect(screen.queryByText(/pending verification/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /edit profile/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /add proof/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /request verification/i })).not.toBeInTheDocument();
   });
 
   it('calls notFound when handle does not resolve to a profile', async () => {
