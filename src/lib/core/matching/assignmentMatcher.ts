@@ -24,6 +24,7 @@ import {
   type LocationMode,
 } from '@/lib/core/matching/scorers';
 import { annRetrieveSimilarProfiles, batchGetMissionVisionScores } from '@/lib/matching/semantic';
+import { toAnnualCompensationRange } from '@/lib/matching/compensation';
 
 export type AssignmentMatchResult = {
   profileId: string;
@@ -287,10 +288,15 @@ export async function computeAssignmentMatches(input: ComputeAssignmentMatchesIn
     }
 
     // Compensation
-    if (assignment.compMin && assignment.compMax && profile.compMin && profile.compMax) {
+    const profileAnnualComp = toAnnualCompensationRange({
+      min: profile.compMin,
+      max: profile.compMax,
+      period: profile.compPeriod,
+    });
+    if (assignment.compMin && assignment.compMax && profileAnnualComp) {
       subscores.compensation = scoreCompensation(
         { min: assignment.compMin, max: assignment.compMax } as Range,
-        { min: profile.compMin, max: profile.compMax } as Range
+        profileAnnualComp as Range
       );
     } else {
       subscores.compensation = 1.0;

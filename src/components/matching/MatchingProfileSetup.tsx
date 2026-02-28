@@ -50,12 +50,14 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
   const [orgTypes, setOrgTypes] = useState<string[]>([]);
   const [weightBias, setWeightBias] = useState(50);
   const [location, setLocation] = useState<LocationPreference>({ workMode: '' });
-  const [hoursMin, setHoursMin] = useState(10);
-  const [hoursMax, setHoursMax] = useState(40);
+  const [hoursMinInput, setHoursMinInput] = useState('10');
+  const [hoursMaxInput, setHoursMaxInput] = useState('40');
+  const [hoursValidationHint, setHoursValidationHint] = useState<string | null>(null);
   const [compensation, setCompensation] = useState<CompensationRange>({
     min: 0,
     max: 0,
     currency: 'USD',
+    period: 'annual',
   });
   const [availability, setAvailability] = useState<DateWindow>({ earliest: '', latest: '' });
   const [languages, setLanguages] = useState<LanguageProficiency[]>([]);
@@ -197,6 +199,61 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
     }
   };
 
+  const parseHoursValue = (value: string): number | null => {
+    if (value.trim() === '') {
+      return null;
+    }
+    const parsed = Number.parseInt(value, 10);
+    if (Number.isNaN(parsed) || parsed < 0) {
+      return null;
+    }
+    return parsed;
+  };
+
+  const resolveHours = () => ({
+    min: parseHoursValue(hoursMinInput),
+    max: parseHoursValue(hoursMaxInput),
+  });
+
+  const validateWorkStepHours = () => {
+    const { min, max } = resolveHours();
+    const isValid = min !== null && max !== null && min > 0 && max > 0;
+
+    if (!isValid) {
+      setHoursValidationHint('Minimum desired hours is 1. Enter values above 0 to continue.');
+      return false;
+    }
+
+    setHoursValidationHint(null);
+    return true;
+  };
+
+  const handleTabChange = (nextTab: string) => {
+    const requiresWorkValidation = nextTab === 'languages' || nextTab === 'review';
+    if (requiresWorkValidation && !validateWorkStepHours()) {
+      setCurrentTab('work');
+      return;
+    }
+    setCurrentTab(nextTab);
+  };
+
+  useEffect(() => {
+    if (!hoursValidationHint) {
+      return;
+    }
+    const min =
+      hoursMinInput.trim() === '' || Number.isNaN(Number.parseInt(hoursMinInput, 10))
+        ? null
+        : Number.parseInt(hoursMinInput, 10);
+    const max =
+      hoursMaxInput.trim() === '' || Number.isNaN(Number.parseInt(hoursMaxInput, 10))
+        ? null
+        : Number.parseInt(hoursMaxInput, 10);
+    if (min !== null && max !== null && min > 0 && max > 0) {
+      setHoursValidationHint(null);
+    }
+  }, [hoursMaxInput, hoursMinInput, hoursValidationHint]);
+
   // Calculate progress
   const calculateProgress = () => {
     let completed = 0;
@@ -225,9 +282,21 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
 
   // Submit
   const handleSubmit = async () => {
+    if (!validateWorkStepHours()) {
+      setCurrentTab('work');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
+      const { min: hoursMin, max: hoursMax } = resolveHours();
+      if (hoursMin === null || hoursMax === null) {
+        setCurrentTab('work');
+        setHoursValidationHint('Minimum desired hours is 1. Enter values above 0 to continue.');
+        return;
+      }
+
       const weights = weightsFromMissionSkillsBias(weightBias);
       const response = await apiFetch('/api/matching-profile', {
         method: 'PUT',
@@ -247,6 +316,7 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
           compMin: compensation.min,
           compMax: compensation.max,
           currency: compensation.currency,
+          compPeriod: compensation.period,
           availabilityEarliest: availability.earliest,
           availabilityLatest: availability.latest,
           languages,
@@ -293,7 +363,7 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
       </div>
 
       {/* Wizard tabs */}
-      <Tabs value={currentTab} onValueChange={setCurrentTab} className="space-y-6">
+      <Tabs value={currentTab} onValueChange={handleTabChange} className="space-y-6">
         <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="atlas-skills">Atlas Skills</TabsTrigger>
           <TabsTrigger value="focus-weights">Focus & Weights</TabsTrigger>
@@ -414,22 +484,38 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
 
           <div>
             <Label>Hours per Week</Label>
+            <p className="mb-2 text-xs text-[#6B6760]">Desired range (minimum to maximum)</p>
             <div className="grid grid-cols-2 gap-3">
-              <Input
-                type="number"
-                min="1"
-                value={hoursMin}
-                onChange={(e) => setHoursMin(parseInt(e.target.value, 10) || 1)}
-                placeholder="Min"
-              />
-              <Input
-                type="number"
-                min="1"
-                value={hoursMax}
-                onChange={(e) => setHoursMax(parseInt(e.target.value, 10) || 40)}
-                placeholder="Max"
-              />
+              <div>
+                <Label htmlFor="hours-min" className="text-xs" style={{ color: '#6B6760' }}>
+                  Minimum desired
+                </Label>
+                <Input
+                  id="hours-min"
+                  type="number"
+                  min="0"
+                  value={hoursMinInput}
+                  onChange={(e) => setHoursMinInput(e.target.value)}
+                  placeholder="Min"
+                />
+              </div>
+              <div>
+                <Label htmlFor="hours-max" className="text-xs" style={{ color: '#6B6760' }}>
+                  Maximum desired
+                </Label>
+                <Input
+                  id="hours-max"
+                  type="number"
+                  min="0"
+                  value={hoursMaxInput}
+                  onChange={(e) => setHoursMaxInput(e.target.value)}
+                  placeholder="Max"
+                />
+              </div>
             </div>
+            {hoursValidationHint ? (
+              <p className="mt-2 text-xs text-[#9A3412]">{hoursValidationHint}</p>
+            ) : null}
           </div>
 
           <CompensationInput value={compensation} onChange={setCompensation} />
@@ -440,7 +526,16 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
             <Button variant="outline" onClick={() => setCurrentTab('values')}>
               Back
             </Button>
-            <Button onClick={() => setCurrentTab('languages')}>Next: Languages</Button>
+            <Button
+              onClick={() => {
+                if (!validateWorkStepHours()) {
+                  return;
+                }
+                setCurrentTab('languages');
+              }}
+            >
+              Next: Languages
+            </Button>
           </div>
         </TabsContent>
 
@@ -477,7 +572,7 @@ export function MatchingProfileSetup({ onComplete, onCancel }: MatchingProfileSe
             <Button variant="outline" onClick={() => setCurrentTab('work')}>
               Back
             </Button>
-            <Button onClick={() => setCurrentTab('review')}>Review & Activate</Button>
+            <Button onClick={() => handleTabChange('review')}>Review & Activate</Button>
           </div>
         </TabsContent>
 

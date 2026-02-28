@@ -522,6 +522,11 @@ export const matchingProfiles = pgTable('matching_profiles', {
   hoursMax: integer('hours_max'),
   compMin: integer('comp_min'),
   compMax: integer('comp_max'),
+  compPeriod: text('comp_period', {
+    enum: ['annual', 'monthly', 'hourly'],
+  })
+    .default('annual')
+    .notNull(),
   currency: text('currency').default('USD'),
   desiredRoles: text('desired_roles')
     .array()

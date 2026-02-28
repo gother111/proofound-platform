@@ -86,6 +86,7 @@ describe('core matching profile route', () => {
         availabilityLatest: '2026-04-01',
         compMin: 90000,
         compMax: 120000,
+        compPeriod: 'monthly',
         currency: 'USD',
       }),
     });
@@ -100,6 +101,7 @@ describe('core matching profile route', () => {
         desiredRoles: ['Staff Engineer'],
         desiredIndustries: ['Technology'],
         orgTypes: ['startup'],
+        compPeriod: 'monthly',
       })
     );
     expect(payload.profile.desiredRoles).toEqual(['Staff Engineer']);

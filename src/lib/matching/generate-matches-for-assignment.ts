@@ -20,6 +20,7 @@ import {
   type LocationMode,
 } from '@/lib/core/matching/scorers';
 import { getPreset } from '@/lib/core/matching/presets';
+import { toAnnualCompensationRange } from '@/lib/matching/compensation';
 
 /**
  * Generate matches for an assignment and upsert the top results into the `matches` table.
@@ -151,10 +152,15 @@ export async function generateMatchesForAssignment(
       }
 
       // Compensation
-      if (assignment.compMin && assignment.compMax && profile.compMin && profile.compMax) {
+      const profileAnnualComp = toAnnualCompensationRange({
+        min: profile.compMin,
+        max: profile.compMax,
+        period: profile.compPeriod,
+      });
+      if (assignment.compMin && assignment.compMax && profileAnnualComp) {
         subscores.compensation = scoreCompensation(
           { min: assignment.compMin, max: assignment.compMax } as Range,
-          { min: profile.compMin, max: profile.compMax } as Range
+          profileAnnualComp as Range
         );
       } else {
         subscores.compensation = 1.0;

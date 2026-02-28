@@ -63,6 +63,8 @@ const SkillInputSchema = z.object({
   monthsExperience: z.number().min(0),
 });
 
+const CompensationPeriodSchema = z.enum(['annual', 'monthly', 'hourly']);
+
 const MatchingProfileSchema = z.object({
   valuesTags: z.array(z.string()).optional(),
   causeTags: z.array(z.string()).optional(),
@@ -80,6 +82,7 @@ const MatchingProfileSchema = z.object({
   hoursMax: z.number().optional(),
   compMin: z.number().optional(),
   compMax: z.number().optional(),
+  compPeriod: CompensationPeriodSchema.optional(),
   currency: z.string().optional(),
   desiredRoles: z.array(z.string()).optional(),
   desiredIndustries: z.array(z.string()).optional(),

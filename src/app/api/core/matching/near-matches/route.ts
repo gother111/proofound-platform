@@ -27,6 +27,7 @@ import {
 import { getPreset, normalizeWeights, type PresetKey } from '@/lib/core/matching/presets';
 import { evaluateIndividualMatchability, toNotMatchablePayload } from '@/lib/matching/eligibility';
 import { calculateFocusBoost } from '@/lib/core/matching/focus';
+import { toAnnualCompensationRange } from '@/lib/matching/compensation';
 
 export const dynamic = 'force-dynamic';
 
@@ -233,10 +234,15 @@ export async function POST(request: NextRequest) {
       }
 
       // Compensation
-      if (assignment.compMin && assignment.compMax && profile.compMin && profile.compMax) {
+      const profileAnnualComp = toAnnualCompensationRange({
+        min: profile.compMin,
+        max: profile.compMax,
+        period: profile.compPeriod,
+      });
+      if (assignment.compMin && assignment.compMax && profileAnnualComp) {
         subscores.compensation = scoreCompensation(
           { min: assignment.compMin, max: assignment.compMax } as Range,
-          { min: profile.compMin, max: profile.compMax } as Range
+          profileAnnualComp as Range
         );
       } else {
         subscores.compensation = 1.0;

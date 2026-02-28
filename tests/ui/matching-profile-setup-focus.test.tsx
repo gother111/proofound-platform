@@ -37,7 +37,9 @@ vi.mock('@/components/matching/LocationInput', () => ({
 
 vi.mock('@/components/matching/CompensationInput', () => ({
   CompensationInput: ({ onChange }: any) => (
-    <button onClick={() => onChange({ min: 90000, max: 120000, currency: 'USD' })}>
+    <button
+      onClick={() => onChange({ min: 90000, max: 120000, currency: 'USD', period: 'monthly' })}
+    >
       set compensation
     </button>
   ),
@@ -131,9 +133,33 @@ describe('MatchingProfileSetup focus and weighting step', () => {
     expect(payload.desiredRoles).toEqual(['Software Engineer']);
     expect(payload.orgTypes).toEqual(['startup']);
     expect(payload.weightBias).toBe(80);
+    expect(payload.compPeriod).toBe('monthly');
     expect(typeof payload.weights).toBe('object');
     expect(
       Object.values(payload.weights).reduce((acc: number, n: any) => acc + Number(n), 0)
     ).toBeCloseTo(1, 4);
+  });
+
+  it('allows intermediate empty/zero edits but blocks progressing from Work step when final value is 0', async () => {
+    render(<MatchingProfileSetup onComplete={vi.fn()} onCancel={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /next: focus & weights/i }));
+    fireEvent.click(screen.getByRole('button', { name: /next: values & causes/i }));
+    fireEvent.click(screen.getByRole('button', { name: /next: work preferences/i }));
+
+    const minInput = screen.getByLabelText('Minimum desired');
+    fireEvent.change(minInput, { target: { value: '' } });
+    expect(minInput).toHaveValue(null);
+
+    fireEvent.change(minInput, { target: { value: '30' } });
+    expect(minInput).toHaveValue(30);
+
+    fireEvent.change(minInput, { target: { value: '0' } });
+    fireEvent.click(screen.getByRole('button', { name: /next: languages/i }));
+
+    expect(
+      screen.getByText('Minimum desired hours is 1. Enter values above 0 to continue.')
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Languages & Proficiency')).not.toBeInTheDocument();
   });
 });
