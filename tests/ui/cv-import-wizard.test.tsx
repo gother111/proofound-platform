@@ -263,4 +263,75 @@ describe('CvImportWizard', () => {
     expect(requestPayload.documents).toHaveLength(1);
     expect(requestPayload.documents[0].skill_ids).toContain('skill_react');
   });
+
+  it('shows detailed backend message when wizard suggest returns generic wrapper error', async () => {
+    apiFetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          error: 'Failed to process CV wizard suggestions',
+          message:
+            'CV wizard dependencies are temporarily unavailable. Please retry in a few minutes.',
+          code: 'WIZARD_DEPENDENCY_UNAVAILABLE',
+        }),
+        {
+          status: 503,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    );
+
+    render(<CvImportWizard />);
+
+    const uploadInput = screen.getByTestId('cv-upload');
+    const file = new File(['dummy'], 'cv.pdf', { type: 'application/pdf' });
+    Object.defineProperty(file, 'arrayBuffer', {
+      value: async () => new TextEncoder().encode('dummy').buffer,
+    });
+
+    fireEvent.change(uploadInput, {
+      target: {
+        files: [file],
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i })).toBeEnabled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Analyze Uploaded PDFs/i }));
+
+    await waitFor(() => {
+      expect(toastErrorMock).toHaveBeenCalledWith(
+        'CV wizard dependencies are temporarily unavailable. Please retry in a few minutes.'
+      );
+    });
+  });
+
+  it('shows parser-init friendly message when getDocument path fails', async () => {
+    pdfGetDocumentMock.mockReturnValueOnce({
+      promise: Promise.reject(
+        new Error("Cannot read properties of undefined (reading 'getDocument')")
+      ),
+    });
+
+    render(<CvImportWizard />);
+
+    const uploadInput = screen.getByTestId('cv-upload');
+    const file = new File(['dummy'], 'cv-init-error.pdf', { type: 'application/pdf' });
+    Object.defineProperty(file, 'arrayBuffer', {
+      value: async () => new TextEncoder().encode('dummy').buffer,
+    });
+
+    fireEvent.change(uploadInput, {
+      target: {
+        files: [file],
+      },
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('PDF parser could not start. Please refresh and re-upload the file.')
+      ).toBeInTheDocument();
+    });
+  });
 });

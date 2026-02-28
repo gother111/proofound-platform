@@ -145,4 +145,72 @@ describe('cv-import wizard suggest route', () => {
     expect(response.status).toBe(408);
     expect(body.error).toBe('CV wizard processing timed out');
   });
+
+  it('returns 503 with dependency code when taxonomy dependency is unavailable', async () => {
+    (createClient as any).mockResolvedValue({
+      auth: {
+        getUser: async () => ({ data: { user: { id: 'user-1' } } }),
+      },
+    });
+
+    (suggestWizardForDocuments as any).mockRejectedValue(
+      new Error('relation "skills_taxonomy" does not exist')
+    );
+
+    const request = new NextRequest('http://localhost/api/expertise/cv-import/wizard-suggest', {
+      method: 'POST',
+      body: JSON.stringify({
+        documents: [
+          {
+            document_id: 'doc-1',
+            file_name: 'cv.pdf',
+            text: 'React TypeScript',
+            context: 'cv',
+          },
+        ],
+      }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const response = await POST(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body.error).toBe('Failed to process CV wizard suggestions');
+    expect(body.code).toBe('WIZARD_DEPENDENCY_UNAVAILABLE');
+    expect(body.message).toContain('temporarily unavailable');
+  });
+
+  it('returns structured 500 with processing code for unknown failures', async () => {
+    (createClient as any).mockResolvedValue({
+      auth: {
+        getUser: async () => ({ data: { user: { id: 'user-1' } } }),
+      },
+    });
+
+    (suggestWizardForDocuments as any).mockRejectedValue(new Error('unexpected parser branch'));
+
+    const request = new NextRequest('http://localhost/api/expertise/cv-import/wizard-suggest', {
+      method: 'POST',
+      body: JSON.stringify({
+        documents: [
+          {
+            document_id: 'doc-1',
+            file_name: 'cv.pdf',
+            text: 'React TypeScript',
+            context: 'cv',
+          },
+        ],
+      }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const response = await POST(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body.error).toBe('Failed to process CV wizard suggestions');
+    expect(body.code).toBe('WIZARD_PROCESSING_FAILED');
+    expect(body.message).toContain('unexpected parser branch');
+  });
 });

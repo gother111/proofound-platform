@@ -16,6 +16,9 @@ const DEFAULT_LIMITS: CvImportLimits = {
 };
 
 const DEFAULT_SERVER_TIMEOUT_MS = 7000;
+const GENERIC_WIZARD_ERROR = 'Failed to process CV wizard suggestions';
+const WIZARD_DEPENDENCY_UNAVAILABLE_CODE = 'WIZARD_DEPENDENCY_UNAVAILABLE';
+const WIZARD_PROCESSING_FAILED_CODE = 'WIZARD_PROCESSING_FAILED';
 
 function parsePositiveInt(value: string | undefined, fallback: number): number {
   if (!value) {
@@ -44,6 +47,28 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
         reject(error);
       });
   });
+}
+
+function isDependencyUnavailableError(error: Error): boolean {
+  const message = error.message.toLowerCase();
+
+  const dependencyIndicators = [
+    'skills_taxonomy',
+    'relation',
+    'column',
+    'does not exist',
+    'connection terminated',
+    'connection refused',
+    'timeout expired',
+    'database',
+    'econnrefused',
+    'etimedout',
+    'enotfound',
+    'ehostunreach',
+    'server closed the connection unexpectedly',
+  ];
+
+  return dependencyIndicators.some((indicator) => message.includes(indicator));
 }
 
 export async function POST(request: NextRequest) {
@@ -131,10 +156,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
+    if (error instanceof Error && isDependencyUnavailableError(error)) {
+      return NextResponse.json(
+        {
+          error: GENERIC_WIZARD_ERROR,
+          message:
+            'CV wizard dependencies are temporarily unavailable. Please retry in a few minutes.',
+          code: WIZARD_DEPENDENCY_UNAVAILABLE_CODE,
+        },
+        { status: 503 }
+      );
+    }
+
     return NextResponse.json(
       {
-        error: 'Failed to process CV wizard suggestions',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        error: GENERIC_WIZARD_ERROR,
+        message:
+          error instanceof Error && error.message.trim().length > 0
+            ? `CV wizard processing failed: ${error.message}`
+            : 'CV wizard processing failed due to an unknown error. Please retry.',
+        code: WIZARD_PROCESSING_FAILED_CODE,
       },
       { status: 500 }
     );

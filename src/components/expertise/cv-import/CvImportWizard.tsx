@@ -181,6 +181,11 @@ const DEFAULT_METADATA: ApiMetadata = {
   },
 };
 
+const GENERIC_BACKEND_ERRORS = new Set([
+  'Failed to process CV wizard suggestions',
+  'Failed to process CV documents',
+]);
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
@@ -205,11 +210,21 @@ async function readErrorMessage(response: Response, fallback: string): Promise<s
   const payload = await readJsonSafely(response);
   if (isRecord(payload)) {
     const error = payload.error;
+    const message = payload.message;
+
+    if (
+      typeof error === 'string' &&
+      typeof message === 'string' &&
+      message.trim().length > 0 &&
+      GENERIC_BACKEND_ERRORS.has(error.trim())
+    ) {
+      return message;
+    }
+
     if (typeof error === 'string' && error.trim().length > 0) {
       return error;
     }
 
-    const message = payload.message;
     if (typeof message === 'string' && message.trim().length > 0) {
       return message;
     }

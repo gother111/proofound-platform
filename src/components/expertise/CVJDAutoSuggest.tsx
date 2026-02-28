@@ -117,6 +117,11 @@ const DEFAULT_API_METADATA: ApiSuggestResponse['metadata'] = {
   limits: DEFAULT_IMPORT_LIMITS,
 };
 
+const GENERIC_BACKEND_ERRORS = new Set([
+  'Failed to process CV wizard suggestions',
+  'Failed to process CV documents',
+]);
+
 const CATEGORY_OPTIONS: CandidateCategory[] = [
   'technical',
   'soft_skills',
@@ -272,11 +277,21 @@ async function readErrorMessage(response: Response, fallback: string): Promise<s
   const payload = await readJsonSafely(response);
   if (isRecord(payload)) {
     const error = payload.error;
+    const message = payload.message;
+
+    if (
+      typeof error === 'string' &&
+      typeof message === 'string' &&
+      message.trim().length > 0 &&
+      GENERIC_BACKEND_ERRORS.has(error.trim())
+    ) {
+      return message;
+    }
+
     if (typeof error === 'string' && error.trim().length > 0) {
       return error;
     }
 
-    const message = payload.message;
     if (typeof message === 'string' && message.trim().length > 0) {
       return message;
     }
